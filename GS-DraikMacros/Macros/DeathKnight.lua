@@ -90,4 +90,3 @@ PostMacro = [[
 /script UIErrorsFrame:Hide();
 ]],
 }
-Talents:1111131
