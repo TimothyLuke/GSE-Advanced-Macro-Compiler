@@ -3,10 +3,15 @@ local Sequences = GSMasterSequences
 ------------------
 ----- Rogue
 ------------------
-Sequences['ComSimple'] = {
+-- Outlaw 260
+-- Assination 259
+
+
+
+Sequences['Outlaw'] = {
 specID = 260,
-author = "Draik",
-helpTxt = "Single Target",
+author = "Suiseiseki - www.wowlazymacros.com",
+helpTxt = "Outlaw - 1223122",
 StepFunction = [[
 		limit = limit or 1
 		if step == limit then
@@ -15,87 +20,20 @@ StepFunction = [[
 		else
 			step = step % #macros + 1
 		end
-	]],   PreMacro = [[
-/cancelaura Blade Flurry
-/targetenemy [noharm][dead]
-/startattack
-/cast [nostealth,nocombat]Stealth
-    ]],
-'/castsequence reset=target Revealing Strike,Slice and Dice,null',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Eviscerate',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/castsequence reset=35 Revealing Strike,Slice and DIce',
-PostMacro = [[
-/cast [combat] Adrenaline Rush
-/use [combat]14
-/startattack
-    ]],
-
-}
-
-Sequences["ROGUE-ASS"] = {
-	specID = 259,
-	author = "Draik",
-	helpTxt = "Rogue Assassination",
-	PreMacro = [[
+	]],
+    PreMacro = [[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
-/cast [stealth] Cheap Shot
-]],
-'/castsequence reset=19 Mutilate,Mutilate,Recuperate,null',
-'/castsequence reset=6 Mutilate,Feint,Mutilate,Mutilate,Rupture,Mutilate,Mutilate,Envenom',
-'/cast [combat]Cloak of Shadows',
-'/cast [combat]Combat Readiness',
-'/cast [combat]!Vendetta]]',
-'/cast [combat]!Dispatch]]',
-'/cast [combat]Evasion]]',
-PostMacro = [[
-/startattack
-]],
-}
-
-
-Sequences['ComSimpleAOE'] = {
-specID = 260,
-author = "Draik",
-helpTxt = "Single Target",
-StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],   PreMacro = [[
-/cast [nomod] !Blade Flurry
-/targetenemy [noharm][dead]
-/startattack
+/cast [combat] Marked for Death
     ]],
-'/castsequence reset=target Revealing Strike,Slice and Dice,null',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Crimson Tempest',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Sinister Strike',
-'/cast Killing Spree', 
-'/castsequence reset=35 Revealing Strike,Slice and DIce',
-PostMacro = [[
-/cast [combat] Adrenaline Rush
-/startattack
+'/castsequence Ghostly Strike, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Saber Slash',
+'/castsequence Saber Slash, Run Through, Saber Slash, Pistol Shot',
+'/castsequence [talent:7/1] Slice and Dice; [talent:7/2][talent:7/3] Roll the Bones, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot, Run Through, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot',
+'/castsequence Ghostly Strike, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot',
+'/cast [@focus] Tricks of the Trade',
+  PostMacro = [[
+/use [combat] 13
 /use [combat]14
+/script UIErrorsFrame:Hide();
     ]],
-
 }
-

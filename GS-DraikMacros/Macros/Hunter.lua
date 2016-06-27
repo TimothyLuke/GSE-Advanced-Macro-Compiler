@@ -3,6 +3,10 @@ local Sequences = GnomeSequencer_Sequences
 ------------------
 ----- Hunter
 ------------------
+-- Beast Mastery 253
+-- Survival 255
+-- Marksmanship - 254
+
 Sequences['BMsingle'] = {
 	specID = 253,
 	author = "Jimmy Boy Albrecht",
@@ -72,6 +76,34 @@ PostMacro = [[
 /startattack
 /petattack
 /cast Aspect of the Wild
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences['SurvivelH'] = {
+	specID = 255,
+	author = "Jimmy Boy Albrecht",
+ 	helpTxt = "Single Target - Talent: 3111323",
+StepFunction = [[
+    limit = limit or 1
+    if step == limit then
+        limit = limit % #macros + 1
+        step = 1
+    else
+        step = step % #macros + 1
+    end
+]],
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/cast Mongoose Bite',
+'/cast Lacerate',
+'/cast Flanking Strike',
+'/cast A Murder of Crows',
+'/cast Raptor Strike',
+PostMacro = [[
+/startattack
 /use [combat]13
 /use [combat]14
 ]],

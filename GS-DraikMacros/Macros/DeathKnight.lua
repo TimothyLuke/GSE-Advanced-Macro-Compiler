@@ -36,3 +36,58 @@ StepFunction = [[
 ]],
 }
 
+Sequences['Frost'] = {
+specID = 251,
+author = "Suiseiseki",
+helpTxt = "Talents: 2132113",
+StepFunction = [[
+		limit = limit or 1
+		if step == limit then
+			limit = limit % #macros + 1
+			step = 1
+		else
+			step = step % #macros + 1
+		end
+	]],
+    PreMacro = [[
+/use [combat] Obliteration
+/use [combat] Pillar Of Frost
+    ]],
+	'/cast [combat] Glacial Advance',
+	'/cast Frost Strike',
+	"/cast [combat] Remorseless Winter",
+	'/castsequence Howling Blast, Frostscythe, Howling Blast, Obliterate',
+	'/castsequence Howling Blast, Howling Blast, Frostscythe, Howling Blast, Obliterate',
+    PostMacro = [[
+/script UIErrorsFrame:Hide();
+    ]],
+}
+
+Sequences['FDK2'] = {
+specID = 251,
+author = "Tazkilla",
+helpTxt = "Talents:1111131",
+StepFunction = [[
+limit = limit or 1
+if step == limit then
+limit = limit % #macros + 1
+step = 1
+else
+step = step % #macros + 1
+end
+]],
+PreMacro = [[
+/cast [combat] Pillar of Frost
+/cast [combat] Anti-Magic Shell
+]],
+'/castsequence reset=combat Frost Strike',
+'/cast Obliterate',
+'/cast Obliteration',
+'/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Obliterate',
+'/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Howling Blast',
+PostMacro = [[
+/targetenemy [noharm][dead]
+/script UIErrorsFrame:Hide();
+]],
+}
+Talents:1111131
