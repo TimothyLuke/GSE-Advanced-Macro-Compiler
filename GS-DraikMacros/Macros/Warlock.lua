@@ -1,28 +1,22 @@
-local Sequences = GnomeSequencer_Sequences
-
-
+local Sequences = GSMasterSequences
 ------------------
 ----- Warlock
 ------------------
-— Affliction Legion
-—talents 2111212
+-- Affliction Legion
+-- talents 2111212
 Sequences['aff'] = {
 specID = 265,
 author = "Ojoverde",
 helpTxt = "Single Target talents 2111212",
 PreMacro = [[
-/targetenemy [noharm][dead]
-/petattack [@target,harm]
-
+'/targetenemy [noharm][dead]',
+'/petattack [@target,harm]'
 ]],
-
 '/castsequence [nochanneling] reset=target/38 Agony,Corruption,Unstable Affliction,siphon life, drain life, life tap',
 '/cast [combat] phantom singularity',
-
 PostMacro = [[
 /use [combat]13
 /use [combat]14
-
 ]],
 }
 

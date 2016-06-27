@@ -7,12 +7,12 @@ local Sequences = GSMasterSequences
 --Feral 103
 --Balance 102
 
-Sequences[“Legionbear1”] = {
+Sequences["Legionbear1"] = {
 specID = 104,
 author = "Druccy www.wowlazymacros.com",
 helpTxt = " —2331111—",
 PreMacro = [[
-/targetenemy [noharm][dead]reset=target
+/targetenemy [noharm][dead]reset=target,
 /console Sound_EnableSFX 0
 ]],
 [[/cast !Mangle]],
@@ -40,7 +40,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences[“legionbear2”] = {
+Sequences["legionbear2"] = {
 specID = 104,
 author = "Druccy www.wowlazymacros.com",
 helpTxt = " —2331111—",

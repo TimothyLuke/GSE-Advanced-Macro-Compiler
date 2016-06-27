@@ -1,4 +1,4 @@
-local Sequences = GnomeSequencer_Sequences
+local Sequences = GSMasterSequences
 
 ------------------
 ----- Paladin
