@@ -3,7 +3,6 @@ local Sequences = GSMasterSequences
 ------------------
 ----- Warrior
 ------------------
--- PROT - 73
 -- ARMS - 71
 
 
@@ -71,4 +70,29 @@ PostMacro = [[
 /use [combat]13
 /use [combat]14
 ]],
+}
+
+Sequences['ProtWar'] = {
+specID = 73,
+author = "Suiseiseki - wowlazymacros.com",
+helpTxt = "Talents: 1223212",
+PreMacro = [[
+/targetenemy [noharm][dead]
+    ]],
+"/castsequence Devastate",
+"/castsequence Shield Slam",
+"/castsequence Revenge",
+"/castsequence Ignore Pain",
+"/castsequence Focused Rage",
+"/castsequence [combat] Thunder Clap, Shield Block",
+"/castsequence [combat] Shockwave",
+"/castsequence Shield Slam",
+'/cast Victory Rush',
+PostMacro = [[
+/cast [combat] Demoralizing Shout
+/cast [combat] Battle Cry
+/use [combat] 13
+/use [combat] 14
+/script UIErrorsFrame:Hide();
+    ]],
 }
