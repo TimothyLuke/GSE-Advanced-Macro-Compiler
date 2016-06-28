@@ -13,6 +13,100 @@ each press until it reaches the end and starts over.
 
 This was originally written by semlar and released at http://www.wowinterface.com/downloads/info23234-GnomeSequencer.html
 
+
+When you first install the addon you will need to create a "Sequences.lua" file and open the file in a text editor to add 
+your own sequences.  Alternatively to this you can load a Macro Pack from another author.
+
+
+===================================
+Writing Sequences
+===================================
+
+The Sequences file contains a couple examples to get you started with writing your own sequences, I'll post its entirety here.
+Lua Code:
+
+    local GNOME, Sequences = ... -- Don't touch this
+     
+    ----
+    -- Rename this file to Sequences.lua before you get started, it uses a different file name so as not to overwrite your existing file with a future update.
+    -- Every entry in the Sequences table defines a single sequence of macros which behave similarly to /castsequence.
+    -- Sequence names must be unique and contain no more than 16 characters.
+    -- To use a macro sequence, create a blank macro in-game with the same name you picked for the sequence here and it will overwrite it.
+    ----
+     
+    ----
+    -- Here's a large demonstration sequence documenting the format:
+    Sequences["GnomeExample1"] = {
+        -- StepFunction optionally defines how the step is incremented when pressing the button.
+        -- This example increments the step in the following order: 1 12 123 1234 etc. until it reaches the end and starts over
+        -- DO NOT DEFINE A STEP FUNCTION UNLESS YOU THINK YOU KNOW WHAT YOU'RE DOING
+        StepFunction = [[
+            limit = limit or 1
+            if step == limit then
+                limit = limit % #macros + 1
+                step = 1
+            else
+                step = step % #macros + 1
+            end
+        ]],
+        
+        -- PreMacro is optional macro text that you want executed before every single button press.
+        -- This is if you want to add something like /startattack or /stopcasting before all of the macros in the sequence.
+        PreMacro = [[
+    /run print("-- PreMacro Script --")
+    /startattack    
+        ]],
+        
+        -- PostMacro is optional macro text that you want executed after every single button press.
+        -- I don't know what you would need this for, but it's here anyway.
+        PostMacro = [[
+    /run print("-- PostMacro Script --")
+        ]],
+        
+        -- Macro 1
+        [[
+    /run print("Executing macro 1!")
+    /cast SpellName1
+        ]],
+        
+        -- Macro 2
+        [[
+    /run print("Executing macro 2!")
+    /cast SpellName2
+        ]],
+        
+        -- Macro 3
+        [[
+    /run print("Executing macro 3!")
+    /cast SpellName3
+        ]],
+    }
+     
+    ----
+    -- Here is a short example which is what most sequences will look like
+    Sequences["GnomeExample2"] = {
+        -- Macro 1
+        [[
+    /run print("Executing macro 1!")
+    /cast SpellName1
+        ]],
+        
+        -- Macro 2
+        [[
+    /run print("Executing macro 2!")
+    /cast SpellName2
+        ]],
+        
+        -- Macro 3
+        [[
+    /run print("Executing macro 3!")
+    /cast SpellName3
+        ]],
+    }
+
+
+
+
 ===================================
 What is different on this fork?
 ===================================
@@ -41,18 +135,18 @@ Inside that folder make two files with a text editor:
 
 Inside GS-NewMacros.toc:
 
-## Interface: 70000
-## Title: GS New Macros
-## Notes: A sample random collection of new macros
-## Author: Draik
-## Version: r1
-## RequiredDeps: GS-Core
-## LoadOnDemand: 1
-NewSequences.lua
+  ## Interface: 70000
+  ## Title: GS New Macros
+  ## Notes: A sample random collection of new macros
+  ## Author: Draik
+  ## Version: r1
+  ## RequiredDeps: GS-Core
+  ## LoadOnDemand: 1
+  NewSequences.lua
 
 Start the first line of the NewSequences.lua with the following line then continue as before:
 
-local Sequences = GSMasterSequences
+  local Sequences = GSMasterSequences
 
 ===================================
 Macro SpecID
@@ -97,3 +191,12 @@ Each Macro has a Class and Spec ID. The table of SpecID's are as follows:
 577 - Demon Hunter: Havoc
 581 - Demon Hunter: Vengence
 http://wowprogramming.com/docs/api_types#specID
+
+
+===================================
+GSStaticPriority
+===================================
+'GSStaticPriority' is a static step function that goes 1121231234123451234561234567
+use this like StepFunction = GSStaticPriority, in a macro
+This overides the sequential behaviour that is standard in GS
+
