@@ -11,15 +11,8 @@ Sequences['BMsingle'] = {
 	specID = 253,
 	author = "Jimmy Boy Albrecht",
  	helpTxt = "Single Target - Talent: 3111323",
-	StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],   PreMacro = [[
+	StepFunction = GSStaticPriority,
+   PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -48,15 +41,8 @@ Sequences['BMaoe'] = {
 	specID = 253,
 	author = "Jimmy Boy Albrecht",
 	helpTxt = "AoE - Talent: 3111323",
-	StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],   PreMacro = [[
+	StepFunction = GSStaticPriority,
+   PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -85,15 +71,7 @@ Sequences['SurvivelH'] = {
 	specID = 255,
 	author = "Jimmy Boy Albrecht",
  	helpTxt = "Single Target - Talent: 3111323",
-StepFunction = [[
-    limit = limit or 1
-    if step == limit then
-        limit = limit % #macros + 1
-        step = 1
-    else
-        step = step % #macros + 1
-    end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],

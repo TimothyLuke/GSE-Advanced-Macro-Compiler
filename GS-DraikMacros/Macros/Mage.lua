@@ -9,15 +9,7 @@ Sequences['Arcaneaoe'] = {
   specID = 62,
   author = "Draik",
   helpTxt = "AoE",
-  StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]], 
+StepFunction = GSStaticPriority, 
   PreMacro = [[
 /targetenemy [noharm][dead]
 
@@ -37,15 +29,7 @@ Sequences['Arcanest'] = {
   specID = 62,
   author = "Draik",
   helpTxt = "Single Target",
-  StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]], 
+StepFunction = GSStaticPriority,
   PreMacro = [[
 /targetenemy [noharm][dead]
 

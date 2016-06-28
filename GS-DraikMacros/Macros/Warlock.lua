@@ -24,15 +24,7 @@ Sequences['AFF2'] = {
 	specID = 265,
 	author = "TBA - Fiddle Pacific?",
 	helpTxt = "Single Target - Talents",
-StepFunction = [[
-limit = limit or 1
-if step == limit then
-limit = limit % #macros + 1
-step = 1
-else
-step = step % #macros + 1
-end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack

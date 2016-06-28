@@ -9,15 +9,7 @@ Sequences['DHTEST'] = {
 specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
@@ -43,15 +35,7 @@ Sequences['havocsingle'] = {
 specID = 577,
 author = "lloskka",
 helpTxt = "Talents  2,3,1,2,2,3,1",
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /run sfx=GetCVar("Sound_EnableSFX");

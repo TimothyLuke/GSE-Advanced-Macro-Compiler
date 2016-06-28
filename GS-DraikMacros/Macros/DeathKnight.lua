@@ -8,15 +8,7 @@ Sequences['PTRBlood'] = {
 specID = 250,
 author = "John Mets",
 helpTxt = "As for talents its not an issue but it does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
-StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],
+StepFunction = GSStaticPriority,
     PreMacro = [[
 /Cast [combat] Vampiric Blood
 /Cast [combat] Dancing Rune Weapon
@@ -40,15 +32,7 @@ Sequences['Frost'] = {
 specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
-StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],
+StepFunction = GSStaticPriority,
     PreMacro = [[
 /use [combat] Obliteration
 /use [combat] Pillar Of Frost
@@ -67,15 +51,7 @@ Sequences['FDK2'] = {
 specID = 251,
 author = "Tazkilla",
 helpTxt = "Talents:1111131",
-StepFunction = [[
-limit = limit or 1
-if step == limit then
-limit = limit % #macros + 1
-step = 1
-else
-step = step % #macros + 1
-end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /cast [combat] Pillar of Frost
 /cast [combat] Anti-Magic Shell

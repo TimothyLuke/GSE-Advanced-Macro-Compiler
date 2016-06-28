@@ -14,16 +14,7 @@ Sequences['Prot'] = {
 specID = 66,
 author = "Maurice Greer",
 helpTxt = "Protection single target tanking macro.",
-
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /console Sound_EnableSFX 0
 /targetenemy [noharm][dead]

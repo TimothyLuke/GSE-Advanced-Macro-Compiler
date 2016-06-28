@@ -12,15 +12,7 @@ Sequences['Outlaw'] = {
 specID = 260,
 author = "Suiseiseki - www.wowlazymacros.com",
 helpTxt = "Outlaw - 1223122",
-StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],
+StepFunction = GSStaticPriority,
     PreMacro = [[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth

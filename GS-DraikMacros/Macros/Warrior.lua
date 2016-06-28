@@ -13,15 +13,7 @@ Sequences["Fury1"] = {
 	specID = 72,
 	author = "Firone - wowlazymacros.com",
 	helpTxt = "Single Target -- 2,3,3,2,2,2,3",
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
@@ -47,15 +39,7 @@ Sequences["Fury2"] = {
 specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3",
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],
+StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack

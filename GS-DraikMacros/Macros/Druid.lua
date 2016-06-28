@@ -74,15 +74,7 @@ Sequences['Feral-ST'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
-StepFunction = [[
-	limit = limit or 1
-		if step == limit then
-	limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],   
+StepFunction = GSStaticPriority,   
 PreMacro = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form(Shapeshift)
@@ -103,15 +95,7 @@ Sequences['Feral-AoE'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
-StepFunction = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
-]],  
+StepFunction = GSStaticPriority, 
  PreMacro = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form(Shapeshift)

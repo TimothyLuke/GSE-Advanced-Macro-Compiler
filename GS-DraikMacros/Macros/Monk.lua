@@ -7,15 +7,8 @@ Sequences['WWMonk-ST-Level'] = {
 specID = 269,
 author = "Draik",
 helpTxt = "Single Target",
-StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],   PreMacro = [[
+StepFunction = GSStaticPriority,
+   PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Spinning Crane Kick',
@@ -45,15 +38,8 @@ Sequences['WWMonk-ST'] = {
 	specID = 269,
 	author = "Draik",
 	helpTxt = "Single Target -- All in one - Serenity and Xuen",
-	StepFunction = [[
-		limit = limit or 1
-		if step == limit then
-			limit = limit % #macros + 1
-			step = 1
-		else
-			step = step % #macros + 1
-		end
-	]],   PreMacro = [[
+StepFunction = GSStaticPriority,
+   PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Spinning Crane Kick',
