@@ -4,41 +4,46 @@ local Sequences = GSMasterSequences
 ------------------
 -- Affliction Legion
 -- talents 2111212
-Sequences['aff'] = {
+Sequences['AFF'] = {
 specID = 265,
-author = "Ojoverde",
-helpTxt = "Single Target talents 2111212",
+author = "Jimmy",
+helpTxt = "Talent´s - 3,1,3,1,2,1,2",
 PreMacro = [[
-'/targetenemy [noharm][dead]',
-'/petattack [@target,harm]'
-]],
-'/castsequence [nochanneling] reset=target/38 Agony,Corruption,Unstable Affliction,siphon life, drain life, life tap',
-'/cast [combat] phantom singularity',
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
-}
-
-Sequences['AFF2'] = {
-	specID = 265,
-	author = "TBA - Fiddle Pacific?",
-	helpTxt = "Single Target - Talents",
-StepFunction = GSStaticPriority,
-PreMacro = [[
-/targetenemy [noharm][dead]
+/targetenemy [noharm][dead],
 /startattack
-/console Sound_EnableSFX 0
 ]],
-"/castsequence [nochanneling] reset=target Agony,Corruption,Siphon Life,Unstable Affliction,Drain Soul,Drain Soul,Unstable Affliction,Corruption,Siphon Life,Drain Soul,Drain Soul",
-'/castsequence [nochanneling] reset=target Unending Resolve, Phantom Singularity',
-'/cast [nochanneling, combat] Reap Souls',
+'/cast [nochanneling] Agony',
+'/cast [nochanneling] Corruption',
+'/cast [nochanneling] Unstable Affliction',
+'/castsequence [nochanneling] Siphon Life,Drain Soul,Drain Soul',
+'/cast [nochanneling] Reap Souls',
 PostMacro = [[
 /startattack
 /petattack
 /use [combat]13
 /use [combat]14
-/script UIErrorsFrame:Clear()
-/console Sound_EnableSFX 1
+]],
+}
+
+
+Sequences['AFF2'] = {
+specID = 265,
+author = "Jimmy",
+helpTxt = "Talent´s - 3,1,3,1,2,1,2",
+PreMacro = [[
+/targetenemy [noharm][dead],
+/startattack
+]],
+'/cast [nochanneling] Agony',
+'/cast [nochanneling] Corruption',
+'/cast [nochanneling] Unstable Affliction',
+'/castsequence [nochanneling] Siphon Life,Drain Soul,Drain Soul',
+'/cast [nochanneling] Phantom Singularity',
+'/cast [nochanneling] Reap Souls',
+PostMacro = [[
+/startattack
+/petattack
+/use [combat]13
+/use [combat]14
 ]],
 }
