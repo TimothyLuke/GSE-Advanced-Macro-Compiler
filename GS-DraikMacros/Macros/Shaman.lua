@@ -24,3 +24,31 @@ helpTxt = "Single Target",
 /script UIErrorsFrame:Hide();
     ]],
 }
+
+
+Sequences['enhsingle'] = {
+specID = 263,
+author = "lloskka",
+helpTxt = "Talents  3112112 - Artifact Order: Doom Winds —> Hammer of Storms —> Gathering Storms —> Wind Strikes —> Wind Surge —> Weapons of the elements —> Elemental Healing —> and all the way to Unleash Doom",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/run sfx=GetCVar("Sound_EnableSFX");
+/console Sound_EnableSFX 0
+]],
+	[[/castsequence Boulderfist, Crash Lightning, !Stormstrike;]],
+	[[/castsequence Boulderfist, Stormstrike, Crash Lightning;]],
+	[[/castsequence [nochanneling] Boulderfist, Boulderfist, !Crash Lightning;]],
+	[[/castsequence Boulderfist, Boulderfist;]],
+	[[/cast Lightning Bolt;]],	
+	PostMacro = [[
+/startattack
+/use [combat] 11
+/use [combat] 12
+/cast [combat] Doom Winds
+/cast [combat] 
+/run UIErrorsFrame:Clear()
+/script UIErrorsFrame:Hide();
+/console Sound_EnableSFX 1
+]],
+}
