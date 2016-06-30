@@ -8,7 +8,7 @@ local Sequences = GSMasterSequences
 
 Sequences['PTREnhST'] = {
 specID = 263,
-author = "Suiseiseki",
+author = "Suiseiseki - stan",
 helpTxt = "Single Target",
     PreMacro = [[
 /targetenemy [noharm][dead]

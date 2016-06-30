@@ -86,3 +86,25 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+Sequences['Mmtest'] = {
+specID = 254,
+author = "emanuel",
+helpTxt = "Single Target - Talent: 3312123",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/cast Trueshot
+]],
+'/cast !A Murder of Crows',
+'/cast !Arcane Shot',
+'/cast !Marked Shot',
+'/cast !Aimed Shot',
+'/cast !Bursting Shot',
+'/cast !Black Arrow',
+PostMacro = [[
+/startattack
+/petattack
+/script UIErrorsFrame:Clear()
+]],
+}
