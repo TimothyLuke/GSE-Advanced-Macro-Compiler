@@ -95,10 +95,8 @@ f:RegisterEvent('PLAYER_LOGIN')
 
 local function registerMacro(macroName, icon)
     local macroIndex = GetMacroIndexByName(macroName)
-	print('|cffff0000' .. GNOME .. ':|r macroIndex = ' .. macroindex)
-    if isempty(macroIndex) then
+    if macroIndex > 0 then
         -- Macro exists do nothing
-	print('|cffff0000' .. GNOME .. ':|r isempty')
     else
 	-- Create Macro as a player macro
         macroid = CreateMacro(macroName, icon, '#showtooltip\n/click ' .. macroName, 1)
