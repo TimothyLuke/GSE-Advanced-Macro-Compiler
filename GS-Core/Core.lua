@@ -60,41 +60,45 @@ end
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event)
-    if (event == 'UPDATE_MACROS' or event == 'PLAYER_ENTERING_WORLD') and not IgnoreMacroUpdates then
-        if not InCombatLockdown() then
-	    IgnoreMacroUpdates = true
-                for name, sequence in pairs(Sequences) do
-                    local macroIndex = GetMacroIndexByName(name)
-		    if macroIndex and macroIndex ~= 0 then
-		        if not ModifiedMacros[name] then
-			    ModifiedMacros[name] = true
-			    EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
-		        end
-                        _G[name]:UpdateIcon()
-		    elseif ModifiedMacros[name] then
-		        ModifiedMacros[name] = nil
-		    end
-	        end
-	        IgnoreMacroUpdates = false
-            else
-	        self:RegisterEvent('PLAYER_REGEN_ENABLED')
-            end
+	if (event == 'UPDATE_MACROS' or event == 'PLAYER_LOGIN') and not IgnoreMacroUpdates then
+		if not InCombatLockdown() then
+			IgnoreMacroUpdates = true
+			for name, sequence in pairs(Sequences) do
+				local macroIndex = GetMacroIndexByName(name)
+				if macroIndex and macroIndex ~= 0 then
+					if not ModifiedMacros[name] then
+						ModifiedMacros[name] = true
+						EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+					end
+					_G[name]:UpdateIcon()
+				elseif ModifiedMacros[name] then
+					ModifiedMacros[name] = nil
+				end
+			end
+			IgnoreMacroUpdates = false
+		else
+			self:RegisterEvent('PLAYER_REGEN_ENABLED')
+		end
 	elseif event == 'PLAYER_REGEN_ENABLED' then
 		self:UnregisterEvent('PLAYER_REGEN_ENABLED')
 		self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
 	end
-    end)
+end)
 f:RegisterEvent('UPDATE_MACROS')
-f:RegisterEvent('PLAYER_ENTERING_WORLD')
+f:RegisterEvent('PLAYER_LOGIN')
+
 
 ----------------------------
 -- Draik's Mods
 ----------------------------
 
+
 local function registerMacro(macroName, icon)
-    local macroIndex = GetMacroIndexByName(name)
-    If macroIndex and macroIndex ~= 0 then
+    local macroIndex = GetMacroIndexByName(macroName)
+	print('|cffff0000' .. GNOME .. ':|r macroIndex = ' .. macroindex)
+    if isempty(macroIndex) then
         -- Macro exists do nothing
+	print('|cffff0000' .. GNOME .. ':|r isempty')
     else
 	-- Create Macro as a player macro
         macroid = CreateMacro(macroName, icon, '#showtooltip\n/click ' .. macroName, 1)
@@ -111,7 +115,7 @@ local function ListMacros(txt)
                   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
 		  if sequence.specID == currentSpecID or string.upper(txt) == specclass then
 			print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-			registerMacro(name, (sequence.icon ~= nil and sequence.icon or icon))
+			registerMacro(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
 		  elseif txt == "all" or sequence.specID == 0 then
                         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
                   end
@@ -145,8 +149,6 @@ SlashCmdList["GNOME"] = function (msg, editbox)
             print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname)
 	elseif msg == "help" then
 	    PrintGnomeHelp()
-	elseif msg == "update" then
-            updateMacros()
 	else
 	    ListMacros(GetSpecialization())
 	end
