@@ -31,26 +31,6 @@ local function UpdateIcon(self)
 	if not foundSpell then SetMacroItem(button, notSpell) end
 end
 
-local function updateMacros()
-    if not InCombatLockdown() then
-	IgnoreMacroUpdates = true
-            for name, sequence in pairs(Sequences) do
-                local macroIndex = GetMacroIndexByName(name)
-		if macroIndex and macroIndex ~= 0 then
-		    if not ModifiedMacros[name] then
-			ModifiedMacros[name] = true
-			EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
-		    end
-                    _G[name]:UpdateIcon()
-		elseif ModifiedMacros[name] then
-		    ModifiedMacros[name] = nil
-		end
-	     end
-	     IgnoreMacroUpdates = false
-    else
-	self:RegisterEvent('PLAYER_REGEN_ENABLED')
-    end
-end 
 		
 local OnClick = [=[
 	local step = self:GetAttribute('step')
@@ -80,13 +60,30 @@ end
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event)
-	if (event == 'UPDATE_MACROS' or event == 'PLAYER_ENTERING_WORLD') and not IgnoreMacroUpdates then
-		updateMacros()
+    if (event == 'UPDATE_MACROS' or event == 'PLAYER_ENTERING_WORLD') and not IgnoreMacroUpdates then
+        if not InCombatLockdown() then
+	    IgnoreMacroUpdates = true
+                for name, sequence in pairs(Sequences) do
+                    local macroIndex = GetMacroIndexByName(name)
+		    if macroIndex and macroIndex ~= 0 then
+		        if not ModifiedMacros[name] then
+			    ModifiedMacros[name] = true
+			    EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+		        end
+                        _G[name]:UpdateIcon()
+		    elseif ModifiedMacros[name] then
+		        ModifiedMacros[name] = nil
+		    end
+	        end
+	        IgnoreMacroUpdates = false
+            else
+	        self:RegisterEvent('PLAYER_REGEN_ENABLED')
+            end
 	elseif event == 'PLAYER_REGEN_ENABLED' then
 		self:UnregisterEvent('PLAYER_REGEN_ENABLED')
 		self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
 	end
-end)
+    end)
 f:RegisterEvent('UPDATE_MACROS')
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
 
@@ -94,6 +91,16 @@ f:RegisterEvent('PLAYER_ENTERING_WORLD')
 -- Draik's Mods
 ----------------------------
 
+local function registerMacro(macroName, icon)
+    local macroIndex = GetMacroIndexByName(name)
+    If macroIndex and macroIndex ~= 0 then
+        -- Macro exists do nothing
+    else
+	-- Create Macro as a player macro
+        macroid = CreateMacro(macroName, icon, '#showtooltip\n/click ' .. macroName, 1)
+        ModifiedMacros[macroName] = true
+    end
+end
 
 
 local function ListMacros(txt)
@@ -104,6 +111,7 @@ local function ListMacros(txt)
                   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
 		  if sequence.specID == currentSpecID or string.upper(txt) == specclass then
 			print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+			registerMacro(name, (sequence.icon ~= nil and sequence.icon or icon))
 		  elseif txt == "all" or sequence.specID == 0 then
                         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
                   end
@@ -116,7 +124,8 @@ local function PrintGnomeHelp()
 	print('|cffff0000' .. GNOME .. ':|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button.')
 	print('|cffff0000' .. GNOME .. ":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something.")
 	print('|cffff0000' .. GNOME .. ':|r This version has been modified by Draik of Nagrand to serve as a collection of macros that will be updated over time. ')
-	print('|cffff0000' .. GNOME .. ':|r To get started |cFF00FF00/gnome|r will list any macros available to your class.  |cFF00FF00/gnome listall|r will produce a list of all available macros with some help information.')
+	print('|cffff0000' .. GNOME .. ':|r To get started |cFF00FF00/gnome|r will list any macros available to your class.  This will also add any macros available for your current spec to the macro interface.')
+        orint('|cffff0000' .. GNOME .. ':|r |cFF00FF00/gnome listall|r will produce a list of all available macros with some help information.')
 	print('|cffff0000' .. GNOME .. ':|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar.')
 	print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gnome showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
 
