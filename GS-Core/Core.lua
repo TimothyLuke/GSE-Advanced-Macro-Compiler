@@ -87,11 +87,10 @@ end)
 f:RegisterEvent('UPDATE_MACROS')
 f:RegisterEvent('PLAYER_LOGIN')
 
-
+print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
 ----------------------------
 -- Draik's Mods
 ----------------------------
-
 
 local function registerMacro(macroName, icon)
     local macroIndex = GetMacroIndexByName(macroName)
@@ -126,10 +125,10 @@ local function PrintGnomeHelp()
 	print('|cffff0000' .. GNOME .. ':|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button.')
 	print('|cffff0000' .. GNOME .. ":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something.")
 	print('|cffff0000' .. GNOME .. ':|r This version has been modified by Draik of Nagrand to serve as a collection of macros that will be updated over time. ')
-	print('|cffff0000' .. GNOME .. ':|r To get started |cFF00FF00/gnome|r will list any macros available to your class.  This will also add any macros available for your current spec to the macro interface.')
-        orint('|cffff0000' .. GNOME .. ':|r |cFF00FF00/gnome listall|r will produce a list of all available macros with some help information.')
+	print('|cffff0000' .. GNOME .. ':|r To get started |cFF00FF00/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface.')
+        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00/gs listall|r will produce a list of all available macros with some help information.')
 	print('|cffff0000' .. GNOME .. ':|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar.')
-	print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gnome showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
+	print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
 
 end
 
