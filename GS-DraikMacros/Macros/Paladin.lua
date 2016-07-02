@@ -43,6 +43,7 @@ Sequences['Ret'] = {
 	specID = 70,
 	author = "Draik",
 	helpTxt = "Retribution Single Target macro - 3132233.",
+        icon = "INV_Sword_2H_AshbringerCorrupt",
 	PreMacro = [[
 /targetenemy [noharm][dead]    
 ]],  
