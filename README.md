@@ -118,8 +118,14 @@ macro spec to store the following extra information.
 specID = 259,
 author = "Draik",
 helpTxt = "Rogue Assassination Talents: 331232",
+icon = "INV_Sword_2H_AshbringerCorrupt",
 
-Author and HelpTxt are self explanatory but specID is what spec the macro is written for. The list is as below.
+Author and HelpTxt are self explanatory but specID is what spec the macro is written for.  There is a list of specid values at the end.
+
+The /gs command lists any macros that are present with their help information and adds any that do not exist into your /macros tab.  This will add with an icon if present in the sequence or will default to your spec's icon if its not present.
+
+
+The Icon allows you to specify a texture from the Icons folder to replace the default class icon.  
 
 The theory is that other authors could add in their macros.
 
