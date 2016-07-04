@@ -19,7 +19,6 @@ Sequences['BMsingle'] = {
 /petautocastoff [group] Growl
 /petautocaston [nogroup] Growl
 /cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-/cast [nochanneling] Intimidation
 ]], 
  
 '/cast [nochanneling] Cobra Shot',
@@ -49,7 +48,6 @@ Sequences['BMaoe'] = {
 /petautocastoff [group] Growl
 /petautocaston [nogroup] Growl
 /cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-/cast [nochanneling] Intimidation
 ]], 
  
 '/cast [nochanneling] Multi-Shot',
