@@ -56,6 +56,54 @@ PostMacro = [[
 ]],
 }
 
+
+
+
+Sequences["Fury3"] = {
+specID = 72,
+author = "Firone modified by obst- wowlazymacros.com",
+helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/startattack
+/cast [modifier:alt]Charge
+/cast [combat] Bloodbath
+/cast [combat] Avatar
+]],
+'/cast Execute',
+'/castsequence reset=60 Rampage',
+'/cast Rampage',
+'/cast Bloodthirst',
+'/cast Furious Slash',
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences["Fury4"] = {
+specID = 72,
+author = "Firone mod by Obst- wowlazymacros.com ",
+helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/startattack
+/cast [modifier:alt]Charge
+
+]],
+'/cast !Whirlwind',
+'/cast !Raging blow',
+'/cast !Bloodthirst',
+PostMacro = [[
+/use [combat]13
+/use [combat]14
+]],
+}
+
+
 Sequences['ProtWar'] = {
 specID = 73,
 author = "Suiseiseki - wowlazymacros.com",

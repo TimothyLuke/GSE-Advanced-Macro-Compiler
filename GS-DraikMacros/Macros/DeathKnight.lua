@@ -7,7 +7,7 @@ local Sequences = GSMasterSequences
 Sequences['PTRBlood'] = {
 specID = 250,
 author = "John Mets",
-helpTxt = "As for talents its not an issue but it does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
+helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /Cast [combat] Vampiric Blood
@@ -66,3 +66,46 @@ PostMacro = [[
 ]],
 }
 
+Sequences["DFPTR"] = {
+specID = 251,
+author = "John Mets",
+helpTxt = "Talents 2133121",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/cast [combat] Pillar of Frost
+]],
+"/castsequence reset=combat Obliterate, Frost Strike",
+'/castsequence reset=combat Obliterate, Frost Strike, Frost Strike, Obliterate',
+"/castsequence reset=combat Obliteration",
+"/cast [combat] remorseless winter",
+"/cast [combat] empower rune weapon",
+PostMacro = [[
+/targetenemy [noharm][dead]
+/cast [mod:alt] Howling blast
+/use [combat] 12
+/use [combat] 13
+/use [combat] 14
+/script UIErrorsFrame:Hide();
+]],
+}
+
+Sequences['DKunholy'] = {
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+specID = 252,
+author = "throwryuken",
+helpTxt = "Talents 2221213",
+'/cast [nochanneling] Raise Dead',
+'/cast [nochanneling] Outbreak',
+'/cast [nochanneling] Dark Transformation',
+'/cast [nochanneling] Festering Strike',
+'/cast [nochanneling] Scourge Strike',
+'/cast [nochanneling] Soul Reaper',
+'/cast [nochanneling] Death Strike',
+'/cast [nochanneling] Summon Gargoyle',
+'/cast [nochanneling] Death Coil',
+PostMacro = [[
+/startattack
+]],
+}
