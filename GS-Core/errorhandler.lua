@@ -15,7 +15,7 @@ seterrorhandler(function(message)
 			end
 		end
 		C_Timer.After(2, function()
-			print(format('|cffff0000[%s] syntax error on line %d of Sequences.lua:|r %s', GNOME, line, err, debuglocals(4)))
+			print(format('|cffff0000[GNOME] syntax error on line %d of Sequences.lua:|r %s', line, err, debuglocals(4)))
 		end)
 		wipe(Sequences)
 		--Sequences[GNOME .. 'DEFAULT'] = ''
