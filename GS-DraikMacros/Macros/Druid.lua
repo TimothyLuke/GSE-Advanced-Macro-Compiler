@@ -126,7 +126,6 @@ helpTxt = "2323112",
 '/cast Starsurge',
 PostMacro = [[
 /startattack
-/cast Tiger's Fury
 /use [combat]13
 /use [combat]14
 ]],
