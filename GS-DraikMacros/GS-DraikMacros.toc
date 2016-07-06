@@ -1,5 +1,6 @@
 ## Interface: 70000
 ## Title: GS Draik's Bundled Macros
+## Notes: These bundled in macros have been sourced from wow.lazymacros.com Each author has been given credit for the macro and you will be able to find a thread there to ask questions. These are not intended to be super optimised but are a good starting point.
 ## Author: Draik 
 ## Version: r1
 ## RequiredDeps: GS-Core
