@@ -50,7 +50,7 @@ Sequences['Ret'] = {
 '/cast Judgment',  
 '/cast Crusader Strike',  
 '/cast Blade of Justice',  
-'/cast [combat]!Sanctified Wrath',  
+'/cast [combat]!Crusade',  
 '/cast !Wake of Ashes',  
 "/cast Templar's Verdict",   
 PostMacro = [[
