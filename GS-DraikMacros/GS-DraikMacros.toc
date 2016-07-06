@@ -1,6 +1,5 @@
 ## Interface: 70000
-## Title: GS Draik's Macros
-## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
+## Title: GS Draik's Bundled Macros
 ## Author: Draik 
 ## Version: r1
 ## RequiredDeps: GS-Core
