@@ -17,6 +17,15 @@ This was originally written by semlar and released at http://www.wowinterface.co
 When you first install the addon you will need to create a "Sequences.lua" file and open the file in a text editor to add 
 your own sequences.  Alternatively to this you can load a Macro Pack from another author.
 
+===================================
+Quickstart
+===================================
+Download either version 0.2 (from Additional Files) for 6.2.4 or use the latest version for 7.0.3/PTR/Legion.
+
+/gs will list any macros available for your spec
+/gs help for more information
+
+If you are using 0.2 you will need to manually create the Macro and drag it to a bar like normal GS.
 
 ===================================
 Writing Sequences
