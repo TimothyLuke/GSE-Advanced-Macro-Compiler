@@ -36,7 +36,7 @@ PostMacro = [[
 }
 
 -------------------
--- Retribution - 77
+-- Retribution - 70
 -------------------
 
 Sequences['Ret'] = {
@@ -53,6 +53,32 @@ Sequences['Ret'] = {
 '/cast [combat]!Crusade',  
 '/cast !Wake of Ashes',  
 "/cast Templar's Verdict",   
+PostMacro = [[
+/use [combat]13
+/use [combat]14
+]],
+}
+
+
+-------------------
+-- Holy - 65
+-------------------
+
+Sequences['HolyDeeps'] = {
+	specID = 65,
+	author = "Draik",
+	helpTxt = "Holy DPS levelling macro - 3131123.",
+        icon = "Ability_Paladin_InfusionofLight",
+	PreMacro = [[
+/targetenemy [noharm][dead]    
+]],  
+'/cast Judgment',  
+'/cast Crusader Strike',  
+'/cast Consecration',  
+'/cast [combat]!Avenging Wrath',  
+'/cast !Blinding Light',  
+'/cast Holy Shock',
+'/cast Divine Protection',
 PostMacro = [[
 /use [combat]13
 /use [combat]14
