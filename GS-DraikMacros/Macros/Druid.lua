@@ -130,3 +130,23 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+
+Sequences['RestoBoomer'] = {
+specID = 105,
+author = "Draik",
+helpTxt = "2312232",
+ PreMacro = [[
+/targetenemy [noharm][dead]
+/use [noform]!Moonkin Form
+]],
+'/cast Moonfire',
+'/cast Sunfire',
+'/castsequence [combat] Solar Wrath,Lunar Strike,Solar Wrath,Lunar Strike,Solar Wrath,Solar Wrath',
+'/cast Starsurge',
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
