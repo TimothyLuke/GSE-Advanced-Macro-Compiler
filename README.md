@@ -27,6 +27,8 @@ Download either version 0.2 (from Additional Files) for 6.2.4 or use the latest 
 
 If you are using 0.2 you will need to manually create the Macro and drag it to a bar like normal GS.
 
+Patch Day Intro Video: https://www.youtube.com/watch?v=4m9p-l594tw
+
 ===================================
 Writing Sequences
 ===================================
