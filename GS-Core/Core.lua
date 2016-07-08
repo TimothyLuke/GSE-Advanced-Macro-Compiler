@@ -118,6 +118,9 @@ local function ListMacros(txt)
                   end
                 end
 	end
+        ---------------- Experimental
+        ShowMacroFrame()
+        -----------------------------
 end
 
 local function PrintGnomeHelp()
