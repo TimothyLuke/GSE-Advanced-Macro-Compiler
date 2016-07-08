@@ -52,3 +52,25 @@ PreMacro = [[
 /console Sound_EnableSFX 1
 ]],
 }
+
+
+
+Sequences['RestoDeeps'] = {
+specID = 264,
+author = "Draik",
+helpTxt = "Talents - 3211233",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/cast Chain Lightning',
+'/cast Flame Shock',
+'/cast Eathern Shield Totem',
+'/cast Lava Burst',
+'/cast Lightning Bold',
+'/cast Lightning Surge Totem',
+PostMacro = [[
+/use [combat] 13
+/use [combat] 14
+/script UIErrorsFrame:Hide();
+    ]],
+}
