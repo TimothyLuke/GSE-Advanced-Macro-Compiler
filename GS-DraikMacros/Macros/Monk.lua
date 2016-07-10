@@ -3,7 +3,7 @@ local Sequences = GSMasterSequences
 ------------------
 ----- Monk
 ------------------
--- 268 tank 
+-- 268 tank
 
 
 Sequences['PTRWW'] = {
@@ -18,15 +18,39 @@ PreMacro = [[
 	"/cast Tiger Palm",
 	"/cast Touch of Death",
     PostMacro = [[
-/cast [mod:alt] Serenity
-/cast [mod:ctrl] invoke Xuen The white Tiger
-/cast !Healing Elixir
-/use [combat] 13
-/use [combat] 14
+/cast [combat] Invoke Xuen, the White Tiger
+/cast [combat] Serenity
+/cast [combat] Touch of Death
+/use [combat] 11
+/use [combat] 12
 /script UIErrorsFrame:Hide();
     ]],
 }
 
-
-
-
+Sequences['winsingle'] = {
+  specID = 269,
+  author = "lloskka",
+  helpTxt = "Talents 2 3 2 3 2 2 3",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/cast [combat] Touch of Karma
+/run sfx=GetCVar("Sound_EnableSFX");
+/console Sound_EnableSFX 0
+]],
+	'/castsequence Tiger Palm, Rising Sun Kick, Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm',
+	'/castsequence [nochanneling] Tiger Palm, Fists of Fury, Tiger Palm, Blackout Kick',
+	'/castsequence [nochanneling] Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick, Fists of Fury, Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick',
+	'/castsequence Tiger Palm, Rising Sun Kick, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick',
+	PostMacro = [[
+/startattack
+/cast [combat] Invoke Xuen, the White Tiger
+/cast [combat] Serenity
+/cast [combat] Touch of Death
+/use [combat] 11
+/use [combat] 12
+/run UIErrorsFrame:Clear()
+/script UIErrorsFrame:Hide();
+/console Sound_EnableSFX 1
+    ]],
+}
