@@ -8,7 +8,7 @@ local Sequences = GSMasterSequences
 
 
 ------------------------
-Sequences['ArcaneLegion'] = { 
+Sequences['ArcaneLegion'] = {
 specID = 62,
 author = "Flashgreer - wowlazymacros.com",
 helpTxt = "2122132",
@@ -28,3 +28,20 @@ PostMacro = [[
 ]],
 }
 
+Sequences['PTRfire'] = {
+specID = 63,
+author = "John Mets - wowlazymacros.com",
+helpTxt = "Talents - 2233111",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+"/castsequence reset=combat Fireball, Fireball, Fireball, Fireball, Fire Blast, Pyroblast",
+"/cast Combustion",
+"/cast Living Bomb",
+"/cast Ice flows",
+PostMacro = [[
+/use [combat] 13
+/use [combat] 14
+/script UIErrorsFrame:Hide();
+]],
+}
