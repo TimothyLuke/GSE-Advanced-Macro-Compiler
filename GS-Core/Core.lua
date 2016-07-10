@@ -92,7 +92,19 @@ print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00
 -- Draik's Mods
 ----------------------------
 local function exportMacro (macroName)
-  return Sequences[macroName]
+  if isempty(Sequences[macroName]) then  
+    return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. macroName .. ' is unknown.'
+  else
+
+    local helptext = "helpTxt = '" .. Sequences[macroName].helpTxt .. "',\n"
+    local returnVal = ("Sequences['" .. macroName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[macroName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[macroName].PreMacro .. "]],")
+    if not isempty(Sequences[macroName]) then
+       returnVal = returnVal .. "\nicon='"..Sequences[macroName].icon .."',"
+    end
+    returnVal = returnVal .. "\n\"" .. table.concat(Sequences[macroName],"\",\n\"") .. "\",\n"
+    returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[macroName].PostMacro .. "]],\n}"
+    return returnVal
+  end
 end
 
 
@@ -169,8 +181,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname)
   elseif msg == "help" then
     PrintGnomeHelp()
-  elseif msg == "export" then
-    print(exportMacro("Ret"))
+  elseif string.lower(string.sub(msg,1,6)) == "export" then
+    print(exportMacro(string.sub(msg,8)))
   else
     ListMacros(GetSpecialization())
   end
