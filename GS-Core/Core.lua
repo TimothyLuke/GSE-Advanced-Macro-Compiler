@@ -91,11 +91,11 @@ print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00
 ----------------------------
 -- Draik's Mods
 ----------------------------
+
 local function exportMacro (macroName)
   if isempty(Sequences[macroName]) then  
     return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. macroName .. ' is unknown.'
   else
-
     local helptext = "helpTxt = '" .. Sequences[macroName].helpTxt .. "',\n"
     local returnVal = ("Sequences['" .. macroName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[macroName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[macroName].PreMacro .. "]],")
     if not isempty(Sequences[macroName]) then
@@ -138,20 +138,20 @@ local function ListMacros(txt)
 end
 
 local function updateSequence(name,macros)
-	local button = _G[name]
-	if button==nil then
-    local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
-    button:SetAttribute('type', 'macro')
-    button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
-    button:SetAttribute('step', 1)
-    button:SetAttribute('PreMacro', (sequence.PreMacro or '') .. '\n')
-    button:SetAttribute('PostMacro', '\n' .. (sequence.PostMacro or ''))
-    button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-    button.UpdateIcon = UpdateIcon
-	else
-		button:Execute("name,macros = self:GetName(),newtable([=======["..strjoin("]=======],[=======[",unpack(macros)).."]=======])")
-		button:SetAttribute("step",1)
-	end
+    local button = _G[name]
+    if button==nil then
+        local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
+        button:SetAttribute('type', 'macro')
+        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
+        button:SetAttribute('step', 1)
+        button:SetAttribute('PreMacro', (sequence.PreMacro or '') .. '\n')
+        button:SetAttribute('PostMacro', '\n' .. (sequence.PostMacro or ''))
+        button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+        button.UpdateIcon = UpdateIcon
+    else
+        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
+        button:SetAttribute("step",1)
+    end
 end
 
 
