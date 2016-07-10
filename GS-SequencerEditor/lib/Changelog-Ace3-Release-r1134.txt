@@ -1,0 +1,31 @@
+------------------------------------------------------------------------
+r1134 | nevcairiel | 2015-06-23 13:50:40 +0000 (Tue, 23 Jun 2015) | 1 line
+Changed paths:
+   A /tags/Release-r1134 (from /trunk:1133)
+
+Tag as Release-r1134
+------------------------------------------------------------------------
+r1133 | nevcairiel | 2015-06-23 13:50:21 +0000 (Tue, 23 Jun 2015) | 1 line
+Changed paths:
+   M /trunk/changelog.txt
+
+Update changelog
+------------------------------------------------------------------------
+r1132 | nevcairiel | 2015-06-23 13:48:33 +0000 (Tue, 23 Jun 2015) | 1 line
+Changed paths:
+   M /trunk/Ace3.toc
+
+Update TOC for 6.2
+------------------------------------------------------------------------
+r1131 | nevcairiel | 2015-06-04 07:29:24 +0000 (Thu, 04 Jun 2015) | 1 line
+Changed paths:
+   M /trunk/CallbackHandler-1.0/CallbackHandler-1.0.lua
+
+Update bundled CallbackHandler to the latest version (cosmetic changes only)
+------------------------------------------------------------------------
+r1130 | funkydude | 2015-03-11 14:02:46 +0000 (Wed, 11 Mar 2015) | 1 line
+Changed paths:
+   M /trunk/AceGUI-3.0/widgets/AceGUIContainer-TreeGroup.lua
+
+AceGUIContainer-TreeGroup: Use :SetHeight for preventing word wrap. Same fix different method.
+------------------------------------------------------------------------
