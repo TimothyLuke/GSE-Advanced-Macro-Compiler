@@ -2,7 +2,7 @@ seterrorhandler(_ERRORMESSAGE)
 
 local GNOME, Sequences = ...
 
-local ModifiedMacros = {} -- [macroName] = true if we've already modified this macro
+local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
 local function isempty(s)
   return s == nil or s == ''
@@ -13,13 +13,13 @@ local CastCmds = { use = true, cast = true, spell = true }
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
-  local macro, foundSpell, notSpell = Sequences[button][step], false, ''
-  for cmd, etc in gmatch(macro or '', '/(%w+)%s+([^\n]+)') do
+  local sequence, foundSpell, notSpell = Sequences[button][step], false, ''
+  for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if CastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
       if spell then
         if GetSpellInfo(spell) then
-          SetMacroSpell(button, spell, target)
+          SetSequenceSpell(button, spell, target)
           foundSpell = true
           break
         elseif notSpell == '' then
@@ -28,7 +28,7 @@ local function UpdateIcon(self)
       end
     end
   end
-  if not foundSpell then SetMacroItem(button, notSpell) end
+  if not foundSpell then SetSequenceItem(button, notSpell) end
 end
 
 
@@ -36,7 +36,7 @@ local OnClick = [=[
 local step = self:GetAttribute('step')
 self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
 %s
-if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+if not step or not sequences[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil')
   step = 1
 end
@@ -92,35 +92,35 @@ print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00
 -- Draik's Mods
 ----------------------------
 
-local function exportMacro (macroName)
-  if isempty(Sequences[macroName]) then  
-    return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. macroName .. ' is unknown.'
+function GSExportSequence(sequenceName)
+  if isempty(Sequences[sequenceName]) then  
+    return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
-    local helptext = "helpTxt = '" .. Sequences[macroName].helpTxt .. "',\n"
-    local returnVal = ("Sequences['" .. macroName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[macroName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[macroName].PreMacro .. "]],")
-    if not isempty(Sequences[macroName]) then
-       returnVal = returnVal .. "\nicon='"..Sequences[macroName].icon .."',"
+    local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
+    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. "PreSequence=[[\n" .. Sequences[sequenceName].PreSequence .. "]],")
+    if not isempty(Sequences[sequenceName]) then
+       returnVal = returnVal .. "\nicon='"..Sequences[sequenceName].icon .."',"
     end
-    returnVal = returnVal .. "\n\"" .. table.concat(Sequences[macroName],"\",\n\"") .. "\",\n"
-    returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[macroName].PostMacro .. "]],\n}"
+    returnVal = returnVal .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
+    returnVal = returnVal .. "PostSequence=[[\n" .. Sequences[sequenceName].PostSequence .. "]],\n}"
     return returnVal
   end
 end
 
 
-local function registerMacro(macroName, icon)
-  local macroIndex = GetMacroIndexByName(macroName)
-  if macroIndex > 0 then
-    -- Macro exists do nothing
+local function registerSequence(sequenceName, icon)
+  local sequenceIndex = GetSequenceIndexByName(sequenceName)
+  if sequenceIndex > 0 then
+    -- Sequence exists do nothing
   else
-    -- Create Macro as a player macro
-    macroid = CreateMacro(macroName, icon, '#showtooltip\n/click ' .. macroName, 1)
-    ModifiedMacros[macroName] = true
+    -- Create Sequence as a player sequence
+    sequenceid = CreateSequence(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
+    ModifiedSequences[sequenceName] = true
   end
 end
 
 
-local function ListMacros(txt)
+local function ListSequences(txt)
   local currentSpec = GetSpecialization()
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
@@ -128,7 +128,7 @@ local function ListMacros(txt)
       local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-        registerMacro(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+        registerSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       elseif txt == "all" or sequence.specID == 0 then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
       end
@@ -137,7 +137,8 @@ local function ListMacros(txt)
   ShowMacroFrame()
 end
 
-local function updateSequence(name,macros)
+function GSUpdateSequence(name,sequences)
+    GSMasterSequences[name] = sequences
     local button = _G[name]
     if button==nil then
         local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
@@ -170,10 +171,10 @@ end
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
 SlashCmdList["GNOME"] = function (msg, editbox)
   if msg == "listall" then
-    ListMacros("all")
+    ListSequences("all")
   elseif msg == "class" or msg == UnitClass("player") then
     local _, englishclass = UnitClass("player")
-    ListMacros(englishclass)
+    ListSequences(englishclass)
   elseif msg == "showspec" then
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
@@ -182,8 +183,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif msg == "help" then
     PrintGnomeHelp()
   elseif string.lower(string.sub(msg,1,6)) == "export" then
-    print(exportMacro(string.sub(msg,8)))
+    print(GSExportSequence(string.sub(msg,8)))
   else
-    ListMacros(GetSpecialization())
+    ListSequences(GetSpecialization())
   end
 end
