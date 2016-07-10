@@ -42,7 +42,7 @@ PostMacro = [[
 Sequences['Ret'] = {
 	specID = 70,
 	author = "Draik",
-	helpTxt = "Retribution Single Target macro - 3132233.",
+	helpTxt = "Retribution Single Target macro - 3311112.",
         icon = "INV_Sword_2H_AshbringerCorrupt",
 	PreMacro = [[
 /targetenemy [noharm][dead]    
@@ -50,9 +50,31 @@ Sequences['Ret'] = {
 '/cast Judgment',  
 '/cast Crusader Strike',  
 '/cast Blade of Justice',  
+'/cast [combat]!Consecration',  
 '/cast [combat]!Crusade',  
 '/cast !Wake of Ashes',  
 "/cast Templar's Verdict",   
+PostMacro = [[
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences['RetAoE'] = {
+	specID = 70,
+	author = "Draik",
+	helpTxt = "Retribution AoE macro - 3311112.",
+        icon = "Ability_Paladin_DivineStorm",
+	PreMacro = [[
+/targetenemy [noharm][dead]    
+]],  
+'/cast Judgment',  
+'/cast Crusader Strike',  
+'/cast Blade of Justice',  
+'/cast [combat]!Consecration',  
+'/cast [combat]!Crusade',  
+'/cast !Wake of Ashes',  
+"/cast Divine Storm",   
 PostMacro = [[
 /use [combat]13
 /use [combat]14
