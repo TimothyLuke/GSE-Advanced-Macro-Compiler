@@ -141,7 +141,7 @@ PreMacro = [[
 Sequences['feralsingle'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
-helpTxt = "helpTxt = "Talents 2331223",
+helpTxt = "Talents 2331223",
 PreMacro = [[
 /cast Wild Charge
 /targetenemy [noharm][dead]
