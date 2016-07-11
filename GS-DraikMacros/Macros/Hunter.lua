@@ -106,3 +106,51 @@ PostMacro = [[
 /script UIErrorsFrame:Clear()
 ]],
 }
+
+Sequences['BMTest'] = {
+specID = 253,
+author = "Nano",
+helpTxt = "Single Target Talent 3311313",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/petautocastoff [group] Growl
+/petautocaston [nogroup] growl
+]], 
+"/castsequence Cobra Shot,Kill Command",
+"/cast !Chimaera Shot",
+"/cast !Dire Beast",
+"/cast Cobra Shot",
+"/cast Bestial Wrath",
+"/cast Titan's Thunder",
+"/cast A Murder of Crows",
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences['BMAOETest'] = {
+specID = 253,
+author = "Nano",
+helpTxt = "BMAOE Talent 3311313",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/petautocastoff [group] Growl
+/petautocaston [nogroup] growl
+]], 
+"/castsequence Multi-Shot,Kill Command",
+"/cast !Chimaera Shot",
+"/cast !Dire Beast",
+"/cast Cobra Shot",
+"/cast Bestial Wrath",
+"/cast Titan's Thunder",
+"/cast A Murder of Crows",
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
