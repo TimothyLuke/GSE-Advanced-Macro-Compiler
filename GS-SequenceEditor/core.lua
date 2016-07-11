@@ -1,3 +1,4 @@
+local GNOME,_ = ...
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
@@ -86,6 +87,7 @@ end
 
 function GSSE:OnInitialize()
     frame:Hide()
+    print('|cffff0000' .. GNOME .. ':|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type |cFF00FF00/gsse |r to get started.')
 end
 
 function GSSE:getCurrentTalents()
