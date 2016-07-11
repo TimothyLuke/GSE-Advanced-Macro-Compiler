@@ -118,7 +118,6 @@ function GSSE:updateSequence(SequenceName)
     GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
     GSMasterSequences["LiveTest"].icon = GSSE:getMacroIcon(sequenceIndex)
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
-
     GSSE:loadSequence("LiveTest")
 
    -- show editor
@@ -146,6 +145,11 @@ function GSSE:eupdateSequence(SequenceName)
     for i, v in ipairs(GSMasterSequences["LiveTest"]) do GSMasterSequences["LiveTest"][i] = nil end
     GSSE:lines(GSMasterSequences["LiveTest"], spellbox:GetText())
     -- update sequence
+    if stepvalue == "2" then
+      GSMasterSequences["LiveTest"].StepFunction = GSStaticPriority
+    else
+      GSMasterSequences["LiveTest"].StepFunction = nil
+    end
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
     GSSE:loadSequence("LiveTest")
     editframe:Hide()

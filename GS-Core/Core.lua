@@ -97,7 +97,15 @@ function GSExportSequence(sequenceName)
     return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
     local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
-    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author='".. Sequences[sequenceName].author .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]],")
+    local steps = ""
+    if not isempty(Sequences[sequenceName].StepFunction) then
+      if  Sequences[sequenceName].StepFunction == GSStaticPriority then      
+       steps = "StepFunction = GSStaticPriority,\n"
+      else
+       steps = Sequences[sequenceName].StepFunction .. "',\n"
+      end
+    end
+    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author='".. Sequences[sequenceName].author .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. steps .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]],")
     if not isempty(Sequences[sequenceName].icon) then
        returnVal = returnVal .. "\nicon='"..Sequences[sequenceName].icon .."',"
     end
