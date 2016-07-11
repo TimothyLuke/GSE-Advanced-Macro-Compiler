@@ -45,11 +45,17 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 local function loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
+    editbox:SetText("LiveTest")
 end
 
 local function updateSequence(sequenceText)
-    GSUpdateSequence("LiveTest", sequenceText)
+    
     local sequenceIndex = GetMacroIndexByName(sequenceName)
+    GSUpdateSequence("LiveTest", sequenceText)
+    GSMasterSequences["LiveTest"].specID = getSpecID()
+    GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. getCurrentTalents()
+    GSMasterSequences["LiveTest"].icon = getMacroIcon(sequenceIndex)
+    loadSequence("LiveTest")
     if sequenceIndex > 0 then
       -- Sequence exists do nothing
     else
@@ -71,3 +77,29 @@ function GSSE:OnInitialize()
     frame:Hide()
 end
 
+local function getCurrentTalents()
+  local talents = ""
+  for talentTier = 1, MAX_TALENT_TIERS do
+    local available, selected = GetTalentTierInfo(talentTier, 1)
+    talents = talents .. (available and selected or "0")
+  end
+  return talents
+end
+
+local function getSpecID()
+    local currentSpec = GetSpecialization()
+    return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+end
+
+local function getMacroIcon(sequenceIndex)
+  if isempty(sequenceIndex) then
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(getSpecID())
+    return strsub(specicon, 17)  
+  else
+    return GetMacroIconInfo(sequenceIndex)
+  end
+end
+
+local function isempty(s)
+  return s == nil or s == ''
+end
