@@ -14,7 +14,7 @@ function GSSE:getSequenceNames()
 end
 
 
--- Create Dialog
+-- Create Viewer Dialog
 
 local frame = AceGUI:Create("Frame")
 local curentSequence 
@@ -43,8 +43,62 @@ updbutton:SetText("Edit")
 updbutton:SetWidth(200)
 updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
 frame:AddChild(updbutton)
+-------------end viewer-------------
+-------------begin editor--------------------
+local editframe = AceGUI:Create("Frame")
+local stepvalue
+
+editframe:SetTitle("Sequence Editor")
+editframe:SetStatusText("Gnome Sequencer: Sequence Editor")
+editframe:SetCallback("OnClose", function(widget) GSSE:closeEditor() end)
+editframe:SetLayout("List")
+
+local nameeditbox = AceGUI:Create("EditBox")
+nameeditbox:SetLabel("Sequence Name")
+nameeditbox:SetWidth(250)
+editframe:AddChild(nameeditbox)
+
+local stepdropdown = AceGUI:Create("Dropdown")
+stepdropdown:SetLabel("Step Function")
+stepdropdown:SetWidth(250)
+stepdropdown:SetList({
+  ["1"] = "Sequential (1 2 3 4)",
+  ["2"] = "Priority List (1 12 123 1234)",
+
+})
+stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key end)
+editframe:AddChild(stepdropdown)
+
+local premacrobox = AceGUI:Create("MultiLineEditBox")
+premacrobox:SetLabel("PreMacro")
+premacrobox:SetNumLines(3)
+premacrobox:DisableButton(true)
+premacrobox:SetFullWidth(true)
+editframe:AddChild(premacrobox)
 
 
+local spellbox = AceGUI:Create("MultiLineEditBox")
+spellbox:SetLabel("Sequence")
+spellbox:SetNumLines(9)
+spellbox:DisableButton(true)
+spellbox:SetFullWidth(true)
+editframe:AddChild(spellbox)
+
+local postmacrobox = AceGUI:Create("MultiLineEditBox")
+postmacrobox:SetLabel("PostMacro")
+postmacrobox:SetNumLines(3)
+postmacrobox:DisableButton(true)
+postmacrobox:SetFullWidth(true)
+editframe:AddChild(postmacrobox)
+
+local eupdbutton = AceGUI:Create("Button")
+eupdbutton:SetText("Save")
+eupdbutton:SetWidth(200)
+eupdbutton:SetCallback("OnClick", function() GSSE:eupdateSequence(currentSequence) end)
+editframe:AddChild(eupdbutton)
+
+
+-------------end editor-----------------
 -- Slash Commands
 
 GSSE:RegisterChatCommand("gsse", "GSSlash")
@@ -57,7 +111,7 @@ function GSSE:loadSequence(SequenceName)
 end
 
 function GSSE:updateSequence(SequenceName)
-    
+    frame:Hide()
     GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
     GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
     GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
@@ -66,14 +120,33 @@ function GSSE:updateSequence(SequenceName)
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
 
     GSSE:loadSequence("LiveTest")
-    local sequenceIndex = GetMacroIndexByName("LiveTest")
-        if sequenceIndex > 0 then
-      -- Sequence exists do nothing
-    else
-      -- Create Sequence as a player sequence
-      sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", 0)
-      ModifiedMacros["LiveTest"] = true
-    end
+
+   -- show editor
+   nameeditbox:SetText("LiveTest")
+   if GSSE:isempty(GSMasterSequences["LiveTest"].StepFunction) then
+     stepdropdown:SetValue("1")
+   else
+     stepdropdown:SetValue("2")
+   end
+   if GSSE:isempty(GSMasterSequences["LiveTest"].PreMacro) then
+   else
+     premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
+   end
+   if GSSE:isempty(GSMasterSequences["LiveTest"].PostMacro) then
+   else
+     postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
+   end
+   spellbox:SetText(table.concat(GSMasterSequences["LiveTest"],"\n"))
+
+   editframe:Show()
+end
+
+function GSSE:eupdateSequence(SequenceName)
+    --process Lines
+    
+    -- update sequence
+    --GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+
 end
 
 function GSSE:GSSlash(input)
@@ -86,6 +159,7 @@ end
 
 function GSSE:OnInitialize()
     frame:Hide()
+    editframe:Hide()
     print('|cffff0000' .. GNOME .. ':|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type |cFF00FF00/gsse |r to get started.')
 end
 
@@ -117,13 +191,14 @@ function GSSE:isempty(s)
   return s == nil or s == ''
 end
 
+function GSSE:closeEditor()
+
+end
+
 function GSSE:lines(str)
   local t = {}
   local function helper(line) 
     if string.lower(string.sub(line,1,6)) == "sequen" then
-    elseif string.lower(string.sub(line,1,6)) == "author" then
-    elseif string.lower(string.sub(line,1,6)) == "specid" then
-    elseif string.lower(string.sub(line,1,6)) == "helptx" then
     elseif string.lower(string.sub(line,1,6)) == "\"/cast" then
       --print ("format" .. string.format(string.gsub(line, "\"", "")))
       table.insert(t, string.format(string.gsub(line, "\"", "")))
@@ -137,6 +212,3 @@ function GSSE:lines(str)
   GST = t
   return t
 end
-
-
-

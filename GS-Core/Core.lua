@@ -152,13 +152,15 @@ function GSUpdateSequence(name,sequence)
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
         button:SetAttribute("step",1)
     end
-    local sequenceIndex = GetMacroIndexByName("LiveTest")
+    if name == "LiveTest" then
+     local sequenceIndex = GetMacroIndexByName("LiveTest")
         if sequenceIndex > 0 then
       -- Sequence exists do nothing
-    else
+     else
       -- Create Sequence as a player sequence
-      sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", 0)
-      ModifiedMacros["LiveTest"] = true
+      sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", false)
+      ModifiedSequences["LiveTest"] = true
+     end
     end
 end
 
