@@ -31,28 +31,57 @@ PostMacro = [[
 ]],
 }
 
+
+
+--havoc
 Sequences['havocsingle'] = {
 specID = 577,
 author = "lloskka",
-helpTxt = "Talents  2,3,1,2,2,3,1",
+helpTxt = "Talents 2,3,1,2,2,3,1",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /run sfx=GetCVar("Sound_EnableSFX");
 /console Sound_EnableSFX 0
-]],
-	[[/castsequence [nochanneling] Demon's Bite, Chaos Strike, !Felblade;]],
-	[[/castsequence [nochanneling] Demon's Bite, Chaos Strike, Blade Dance;]],
-	[[/castsequence [nochanneling] Demon's Bite, Demon's Bite, !Eye Beam;]],
-	[[/castsequence [nochanneling] Demon's Bite, Demon's Bite;]],
-	[[/cast [nochanneling] Fel Eruption;]],	
-	PostMacro = [[
+]],	
+"/cast [combat,nochanneling] !Throw Glaive",
+"/cast [combat,nochanneling] !Fury of the Illidari",
+"/castsequence [combat,nochanneling] Demon's Bite, Chaos Strike, !Felblade",
+"/castsequence [combat,nochanneling] Demon's Bite, Chaos Strike, Blade Dance",
+"/cast [combat,nochanneling] !Throw Glaive",
+"/castsequence [combat,nochanneling] Demon's Bite, Demon's Bite, !Eye Beam",
+"/castsequence [combat,nochanneling] Demon's Bite, Demon's Bite",
+"/cast [combat,nochanneling] Fel Eruption",	
+PostMacro = [[
 /startattack
-/use [combat] 13
-/cast [combat] Chaos Blades
-/cast [combat] Fury of the Illidari
+/use [combat,nochanneling] 13
+/use [combat,nochanneling] 14
+/cast [combat,nochanneling] Chaos Nova
+/cast [combat,nochanneling] Chaos Blades
+/cast [combat,nochanneling] Blur
 /run UIErrorsFrame:Clear()
 /script UIErrorsFrame:Hide();
+/console Sound_EnableSFX 1
+]],
+}
+
+
+Sequences['Vengeance'] = {
+specID = 581,
+author = "Tocktris",
+helpTxt = "Talents unknown",
+PreMacro = [[
+/targetenemy [noharm][dead]
+/console Sound_EnableSFX 0
+]],
+"/cast Demon Spikes",
+"/cast Immolation Aura",
+"/cast Soul Cleave",
+"/cast Shear",
+PostMacro = [[
+/use 13
+/use 14
+/run UIErrorsFrame:Hide()
 /console Sound_EnableSFX 1
 ]],
 }
