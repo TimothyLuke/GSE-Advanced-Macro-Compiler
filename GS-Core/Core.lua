@@ -98,7 +98,7 @@ function GSExportSequence(sequenceName)
   else
     local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
     local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]],")
-    if not isempty(Sequences[sequenceName]) then
+    if not isempty(Sequences[sequenceName].icon) then
        returnVal = returnVal .. "\nicon='"..Sequences[sequenceName].icon .."',"
     end
     returnVal = returnVal .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"

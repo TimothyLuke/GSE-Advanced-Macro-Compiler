@@ -1,28 +1,35 @@
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
--- Create Dialog
+function GSSE:getSequenceNames()
+  local keyset={}
+  local n=0
 
-local textstore  -- temporary text box on the dialog used for input.
+  for k,v in pairs(GSMasterSequences) do
+    n=n+1
+    keyset[k]=k
+  end
+  return keyset
+end
+
+
+-- Create Dialog
 
 local frame = AceGUI:Create("Frame")
 frame:SetTitle("Sequence Editor")
 frame:SetStatusText("Gnome Sequencer: Sequence Editor")
-
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
 
-local editbox = AceGUI:Create("EditBox")
-editbox:SetLabel("Load Sequence")
-editbox:SetWidth(200)
-editbox:DisableButton(true)
-frame:AddChild(editbox)
-
-local button = AceGUI:Create("Button")
-button:SetText("Load")
-button:SetWidth(200)
-button:SetCallback("OnClick", function() GSSE:loadSequence(editbox:GetText()) end)
-frame:AddChild(button)
+local names = GSSE:getSequenceNames()
+GSNames = names
+local listbox = AceGUI:Create("Dropdown")
+listbox:SetLabel("Load Sequence")
+listbox:SetWidth(250)
+listbox:SetList(names)
+listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) end)
+--listbox:SetCallback("OnClick", function(obj, event, value) GSSE:loadSequence(value) end)
+frame:AddChild(listbox)
 
 local sequencebox = AceGUI:Create("MultiLineEditBox")
 sequencebox:SetLabel("Sequence")
@@ -47,7 +54,6 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 function GSSE:loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
-    editbox:SetText("LiveTest")
 end
 
 function GSSE:updateSequence(sequenceText)
@@ -79,7 +85,7 @@ function GSSE:GSSlash(input)
 end
 
 function GSSE:OnInitialize()
-    --frame:Hide()
+    frame:Hide()
 end
 
 function GSSE:getCurrentTalents()
@@ -114,5 +120,9 @@ function GSSE:lines(str)
   local t = {}
   local function helper(line) table.insert(t, line) return "" end
   helper((str:gsub("(.-)\r?\n", helper)))
+  table.sort(t)
   return t
 end
+
+
+
