@@ -19,7 +19,7 @@ local function UpdateIcon(self)
       local spell, target = SecureCmdOptionParse(etc)
       if spell then
         if GetSpellInfo(spell) then
-          SetSequenceSpell(button, spell, target)
+          SetMacroSpell(button, spell, target)
           foundSpell = true
           break
         elseif notSpell == '' then
@@ -28,7 +28,7 @@ local function UpdateIcon(self)
       end
     end
   end
-  if not foundSpell then SetSequenceItem(button, notSpell) end
+  if not foundSpell then SetMacroItem(button, notSpell) end
 end
 
 
@@ -66,13 +66,13 @@ f:SetScript('OnEvent', function(self, event)
       for name, sequence in pairs(Sequences) do
         local macroIndex = GetMacroIndexByName(name)
         if macroIndex and macroIndex ~= 0 then
-          if not ModifiedMacros[name] then
-            ModifiedMacros[name] = true
+          if not ModifiedSequences[name] then
+            ModifiedSequences[name] = true
             EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
           end
           _G[name]:UpdateIcon()
-        elseif ModifiedMacros[name] then
-          ModifiedMacros[name] = nil
+        elseif ModifiedSequences[name] then
+          ModifiedSequences[name] = nil
         end
       end
       IgnoreMacroUpdates = false
@@ -115,7 +115,7 @@ local function GSregisterSequence(sequenceName, icon)
   else
     -- Create Sequence as a player sequence
     sequenceid = CreateSequence(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
-    ModifiedMacros[sequenceName] = true
+    ModifiedSequences[sequenceName] = true
   end
 end
 
