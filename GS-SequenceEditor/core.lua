@@ -143,10 +143,13 @@ end
 
 function GSSE:eupdateSequence(SequenceName)
     --process Lines
-    
+    for i, v in ipairs(GSMasterSequences["LiveTest"]) do GSMasterSequences["LiveTest"][i] = nil end
+    GSSE:lines(GSMasterSequences["LiveTest"], spellbox:GetText())
     -- update sequence
-    --GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
-
+    GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+    GSSE:loadSequence("LiveTest")
+    editframe:Hide()
+    frame:Show()
 end
 
 function GSSE:GSSlash(input)
@@ -195,20 +198,11 @@ function GSSE:closeEditor()
 
 end
 
-function GSSE:lines(str)
-  local t = {}
+function GSSE:lines(tab, str)
   local function helper(line) 
-    if string.lower(string.sub(line,1,6)) == "sequen" then
-    elseif string.lower(string.sub(line,1,6)) == "\"/cast" then
-      --print ("format" .. string.format(string.gsub(line, "\"", "")))
-      table.insert(t, string.format(string.gsub(line, "\"", "")))
-    else
-      --print ("Line 1,6 " .. string.lower(string.sub(line,1,5)))
-      table.insert(t, line) 
-    end
+    table.insert(tab, line) 
     return "" 
   end
   helper((str:gsub("(.-)\r?\n", helper)))
   GST = t
-  return t
 end
