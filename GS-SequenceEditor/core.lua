@@ -17,19 +17,18 @@ end
 -- Create Dialog
 
 local frame = AceGUI:Create("Frame")
-frame:SetTitle("Sequence Editor")
-frame:SetStatusText("Gnome Sequencer: Sequence Editor")
+local curentSequence 
+frame:SetTitle("Sequence Viewer")
+frame:SetStatusText("Gnome Sequencer: Sequence Viewer")
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
 
 local names = GSSE:getSequenceNames()
-GSNames = names
 local listbox = AceGUI:Create("Dropdown")
 listbox:SetLabel("Load Sequence")
 listbox:SetWidth(250)
 listbox:SetList(names)
-listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) end)
---listbox:SetCallback("OnClick", function(obj, event, value) GSSE:loadSequence(value) end)
+listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 frame:AddChild(listbox)
 
 local sequencebox = AceGUI:Create("MultiLineEditBox")
@@ -40,9 +39,9 @@ sequencebox:SetFullWidth(true)
 frame:AddChild(sequencebox)
 
 local updbutton = AceGUI:Create("Button")
-updbutton:SetText("Test")
+updbutton:SetText("Edit")
 updbutton:SetWidth(200)
-updbutton:SetCallback("OnClick", function() GSSE:updateSequence(sequencebox:GetText()) end)
+updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
 frame:AddChild(updbutton)
 
 
@@ -57,22 +56,22 @@ function GSSE:loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
 end
 
-function GSSE:updateSequence(sequenceText)
+function GSSE:updateSequence(SequenceName)
     
-    local sequenceIndex = GetMacroIndexByName("LiveTest")
-    GSMasterSequences["LiveTest"] = GSSE:lines(sequenceText)
+    GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
     GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
     GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
     GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
     GSMasterSequences["LiveTest"].icon = GSSE:getMacroIcon(sequenceIndex)
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
 
-    loadSequence("LiveTest")
-    if sequenceIndex > 0 then
+    GSSE:loadSequence("LiveTest")
+    local sequenceIndex = GetMacroIndexByName("LiveTest")
+        if sequenceIndex > 0 then
       -- Sequence exists do nothing
     else
       -- Create Sequence as a player sequence
-      sequenceid = CreateSequence("LiveTest", icon, '#showtooltip\n/click ' .. "LiveTest", 0)
+      sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", 0)
       ModifiedMacros["LiveTest"] = true
     end
 end
@@ -106,7 +105,7 @@ end
 
 function GSSE:getMacroIcon(sequenceIndex)
   if GSSE:isempty(sequenceIndex) then
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(getSpecID())
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
     return strsub(specicon, 17)  
   else
     local _, iconpath, _ =  GetMacroInfo(sequenceIndex)
@@ -120,9 +119,22 @@ end
 
 function GSSE:lines(str)
   local t = {}
-  local function helper(line) table.insert(t, line) return "" end
+  local function helper(line) 
+    if string.lower(string.sub(line,1,6)) == "sequen" then
+    elseif string.lower(string.sub(line,1,6)) == "author" then
+    elseif string.lower(string.sub(line,1,6)) == "specid" then
+    elseif string.lower(string.sub(line,1,6)) == "helptx" then
+    elseif string.lower(string.sub(line,1,6)) == "\"/cast" then
+      --print ("format" .. string.format(string.gsub(line, "\"", "")))
+      table.insert(t, string.format(string.gsub(line, "\"", "")))
+    else
+      --print ("Line 1,6 " .. string.lower(string.sub(line,1,5)))
+      table.insert(t, line) 
+    end
+    return "" 
+  end
   helper((str:gsub("(.-)\r?\n", helper)))
-  table.sort(t)
+  GST = t
   return t
 end
 

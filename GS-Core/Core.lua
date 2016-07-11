@@ -36,7 +36,7 @@ local OnClick = [=[
 local step = self:GetAttribute('step')
 self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
 %s
-if not step or not sequences[step] then -- User attempted to write a step method that doesn't work, reset to 1
+if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil')
   step = 1
 end
@@ -137,8 +137,7 @@ local function ListSequences(txt)
   ShowMacroFrame()
 end
 
-function GSUpdateSequence(name,sequences)
-    GSMasterSequences[name] = sequences
+function GSUpdateSequence(name,sequence)
     local button = _G[name]
     if button==nil then
         local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
@@ -152,6 +151,14 @@ function GSUpdateSequence(name,sequences)
     else
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
         button:SetAttribute("step",1)
+    end
+    local sequenceIndex = GetMacroIndexByName("LiveTest")
+        if sequenceIndex > 0 then
+      -- Sequence exists do nothing
+    else
+      -- Create Sequence as a player sequence
+      sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", 0)
+      ModifiedMacros["LiveTest"] = true
     end
 end
 
