@@ -28,7 +28,10 @@ helpTxt = "Sample GS Macro - this macro is never to be used",
 -- Only load those beginning with GS-
 for i=1,GetNumAddOns() do
     if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
-        LoadAddOn(i);
+        local name, _, _, _, _, _ = GetAddOnInfo(i)
+        if name ~= "GS-SequenceEditor" then
+            LoadAddOn(i);
+        end
     end
 end
 

@@ -16,13 +16,13 @@ frame:SetLayout("Flow")
 local editbox = AceGUI:Create("EditBox")
 editbox:SetLabel("Load Sequence")
 editbox:SetWidth(200)
-editbox:SetCallback("OnEnterPressed", function(widget, event, text) textStore
+editbox:SetCallback("OnEnterPressed", function(widget, event, text) textstore = text end)
 frame:AddChild(editbox)
 
 local button = AceGUI:Create("Button")
 button:SetText("Load")
 button:SetWidth(200)
-button:SetCallback("OnClick", function() loadSequence(textstore) end)
+button:SetCallback("OnClick", function() GSSE:loadSequence(textstore) end)
 frame:AddChild(button)
 
 local sequencebox = AceGUI:Create("MultiLineEditBox")
@@ -32,8 +32,8 @@ frame:AddChild(sequencebox)
 local updbutton = AceGUI:Create("Button")
 updbutton:SetText("Test")
 updbutton:SetWidth(200)
-updbutton:SetCallback("OnClick", function() updateSequence(sequencebox:GetText()) end)
-frame:AddChild(button)
+updbutton:SetCallback("OnClick", function() GSSE:updateSequence(sequencebox:GetText()) end)
+frame:AddChild(updbutton)
 
 
 -- Slash Commands
@@ -43,19 +43,21 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 -- Functions
 
 
-local function loadSequence(SequenceName)
+function GSSE:loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
     editbox:SetText("LiveTest")
 end
 
-local function updateSequence(sequenceText)
+function GSSE:updateSequence(sequenceText)
     
-    local sequenceIndex = GetMacroIndexByName(sequenceName)
-    GSUpdateSequence("LiveTest", sequenceText)
+    local sequenceIndex = GetMacroIndexByName("LiveTest")
+    GSMasterSequences["LiveTest"] = sequenceText
     GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
     GSMasterSequences["LiveTest"].specID = getSpecID()
     GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. getCurrentTalents()
     GSMasterSequences["LiveTest"].icon = getMacroIcon(sequenceIndex)
+    GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+
     loadSequence("LiveTest")
     if sequenceIndex > 0 then
       -- Sequence exists do nothing
@@ -75,7 +77,7 @@ function GSSE:GSSlash(input)
 end
 
 function GSSE:OnInitialize()
-    frame:Hide()
+    --frame:Hide()
 end
 
 local function getCurrentTalents()

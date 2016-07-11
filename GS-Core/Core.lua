@@ -97,12 +97,12 @@ function GSExportSequence(sequenceName)
     return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
     local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
-    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. "PreSequence=[[\n" .. Sequences[sequenceName].PreSequence .. "]],")
+    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."Author='"..GetUnitName("player", true) .."',\n" .."specID='"..Sequences[sequenceName].specID .."',\n" .. helptext .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]],")
     if not isempty(Sequences[sequenceName]) then
        returnVal = returnVal .. "\nicon='"..Sequences[sequenceName].icon .."',"
     end
     returnVal = returnVal .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
-    returnVal = returnVal .. "PostSequence=[[\n" .. Sequences[sequenceName].PostSequence .. "]],\n}"
+    returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[sequenceName].PostMacro .. "]],\n}"
     return returnVal
   end
 end
