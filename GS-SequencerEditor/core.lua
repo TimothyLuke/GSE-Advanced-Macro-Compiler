@@ -52,6 +52,7 @@ local function updateSequence(sequenceText)
     
     local sequenceIndex = GetMacroIndexByName(sequenceName)
     GSUpdateSequence("LiveTest", sequenceText)
+    GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
     GSMasterSequences["LiveTest"].specID = getSpecID()
     GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. getCurrentTalents()
     GSMasterSequences["LiveTest"].icon = getMacroIcon(sequenceIndex)
