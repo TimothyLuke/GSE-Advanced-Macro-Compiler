@@ -112,6 +112,57 @@ PostMacro = [[
 ]],
 }
 
+Sequences['feralaoe'] = {
+specID = 103,
+author = "lloskka www.wowlazymacros.com",
+helpTxt = "Talents 2331223",
+PreMacro = [[
+/targetenemy [noharm][dead]
+/use [noform:2]Cat Form
+/cast [nostealth,nocombat] Prowl
+/run sfx=GetCVar("Sound_EnableSFX");
+/console Sound_EnableSFX 0
+	]],
+	[[/cast [combat] !Incarnation: King of the Jungle]],
+	[[/cast [combat] !Mighty Bash]],
+	[[/castsequence reset=combat Rake,Thrash,Swipe,Swipe,Swipe,Ferocious Bite]],
+	PostMacro = [[
+/cast [combat] !survival Instincts
+/cast [combat] !Tiger's Fury
+/use [combat] 11
+/use [combat] 12
+/startattack
+/run UIErrorsFrame:Clear()
+/script UIErrorsFrame:Hide();
+/console Sound_EnableSFX 1
+]],
+}
+
+Sequences['feralsingle'] = {
+specID = 103,
+author = "lloskka www.wowlazymacros.com",
+helpTxt = "helpTxt = "Talents 2331223",
+PreMacro = [[
+/cast Wild Charge
+/targetenemy [noharm][dead]
+/run sfx=GetCVar("Sound_EnableSFX");
+/console Sound_EnableSFX 0
+	]],
+	'/castsequence reset=combat Rake,shred,shred,shred,!Rip,Rake,shred,shred,shred,ferocious bite,Rake,shred,shred,shred,ferocious bite',
+	'/use [combat] Berserk',
+	'/use [combat] survival instincts',
+	'/cast Incarnation: King of the Jungle',
+	PostMacro = [[
+/startattack
+/cast Tiger's Fury
+/use [combat] 11
+/use [combat] 12
+/run UIErrorsFrame:Clear()
+/script UIErrorsFrame:Hide();
+/console Sound_EnableSFX 1
+]],
+}
+
 Sequences['Boomer'] = {
 specID = 102,
 author = "Draik",
