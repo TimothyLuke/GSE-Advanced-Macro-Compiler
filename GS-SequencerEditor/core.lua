@@ -29,6 +29,13 @@ local sequencebox = AceGUI:Create("MultiLineEditBox")
 sequencebox:SetLabel("Load Sequence")
 frame:AddChild(sequencebox)
 
+local updbutton = AceGUI:Create("Button")
+updbutton:SetText("Test")
+updbutton:SetWidth(200)
+updbutton:SetCallback("OnClick", function() updateSequence(sequencebox:GetText()) end)
+frame:AddChild(button)
+
+
 -- Slash Commands
 
 GSSE:RegisterChatCommand("gsse", "GSSlash")
@@ -38,6 +45,18 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 local function loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
+end
+
+local function updateSequence(sequenceText)
+    GSUpdateSequence("LiveTest", sequenceText)
+    local sequenceIndex = GetMacroIndexByName(sequenceName)
+    if sequenceIndex > 0 then
+      -- Sequence exists do nothing
+    else
+      -- Create Sequence as a player sequence
+      sequenceid = CreateSequence("LiveTest", icon, '#showtooltip\n/click ' .. "LiveTest", 0)
+      ModifiedMacros["LiveTest"] = true
+    end
 end
 
 function GSSE:GSSlash(input)
@@ -51,3 +70,4 @@ end
 function GSSE:OnInitialize()
     frame:Hide()
 end
+

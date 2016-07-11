@@ -108,14 +108,14 @@ function GSExportSequence(sequenceName)
 end
 
 
-local function registerSequence(sequenceName, icon)
-  local sequenceIndex = GetSequenceIndexByName(sequenceName)
+local function GSregisterSequence(sequenceName, icon)
+  local sequenceIndex = GetMacroIndexByName(sequenceName)
   if sequenceIndex > 0 then
     -- Sequence exists do nothing
   else
     -- Create Sequence as a player sequence
     sequenceid = CreateSequence(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
-    ModifiedSequences[sequenceName] = true
+    ModifiedMacros[sequenceName] = true
   end
 end
 
@@ -128,7 +128,7 @@ local function ListSequences(txt)
       local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-        registerSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       elseif txt == "all" or sequence.specID == 0 then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
       end
