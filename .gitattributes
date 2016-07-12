@@ -4,6 +4,7 @@
 #wow Lua
 *.toc eol=crlf
 *.lua eol=crlf
+ReadMe.txt eol=crlf
 
 # Custom for Visual Studio
 *.cs     diff=csharp
