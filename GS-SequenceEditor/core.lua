@@ -150,6 +150,8 @@ function GSSE:eupdateSequence(SequenceName)
     else
       GSMasterSequences["LiveTest"].StepFunction = nil
     end
+    GSMasterSequences["LiveTest"].PreMacro = premacrobox:GetText()
+    GSMasterSequences["LiveTest"].PostMacro = postmacrobox:GetText()
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
     GSSE:loadSequence("LiveTest")
     editframe:Hide()
