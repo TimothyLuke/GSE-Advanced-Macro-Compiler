@@ -8,7 +8,7 @@ local Sequences = GSMasterSequences
 
 
 ------------------------
-Sequences['ArcaneLegion'] = {
+Sequences['DB_ArcaneLegion'] = {
 specID = 62,
 author = "Flashgreer - wowlazymacros.com",
 helpTxt = "2122132",
@@ -26,7 +26,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['PTRfire'] = {
+Sequences['DB_PTRfire'] = {
 specID = 63,
 author = "John Mets - wowlazymacros.com",
 helpTxt = "Talents - 2233111",

@@ -7,7 +7,7 @@ local Sequences = GSMasterSequences
 -- Survival 255
 -- Marksmanship - 254
 
-Sequences['BMsingle'] = {
+Sequences['DB_BMsingle'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
@@ -34,7 +34,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['BMaoe'] = {
+Sequences['DB_BMaoe'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "AoE - Talent: 3111323",
@@ -61,7 +61,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['SurvivelH'] = {
+Sequences['DB_SurvivelH'] = {
 specID = 255,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
@@ -81,7 +81,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Mmtest'] = {
+Sequences['DB_Mmtest'] = {
 specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
@@ -102,7 +102,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['BMTest'] = {
+Sequences['DB_BMTest'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
@@ -126,7 +126,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['BMAOETest'] = {
+Sequences['DB_BMAOETest'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "BMAOE Talent 3311313",

@@ -4,7 +4,7 @@ local Sequences = GSMasterSequences
 ------------------
 -- Affliction Legion
 -- talents 2111212
-Sequences['AFF'] = {
+Sequences['DB_AFF'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
@@ -26,7 +26,7 @@ PostMacro = [[
 }
 
 
-Sequences['AFF2'] = {
+Sequences['DB_AFF2'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
@@ -49,7 +49,7 @@ PostMacro = [[
 }
 
 
-Sequences['Demon'] = {
+Sequences['DB_Demon'] = {
 specID = 266,
 author = "Jimmy",
 helpTxt = "Talents - 3,2,1,2,2,1,3",
@@ -69,7 +69,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Destro'] = {
+Sequences['DB_Destro'] = {
 specID = 267,
 author = "Jimmy",
 helpTxt = "Talents - 1,1,1,2,2,1,3",

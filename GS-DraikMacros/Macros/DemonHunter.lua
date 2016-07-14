@@ -5,7 +5,7 @@ local Sequences = GSMasterSequences
 ------------------
 
 
-Sequences['DHTEST'] = {
+Sequences['DB_DHTEST'] = {
 specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
@@ -30,7 +30,7 @@ PostMacro = [[
 
 
 --havoc
-Sequences['havocsingle'] = {
+Sequences['DB_havocsingle'] = {
 specID = 577,
 author = "lloskka",
 helpTxt = "Talents 2,3,1,2,2,3,1",
@@ -57,7 +57,7 @@ PostMacro = [[
 }
 
 
-Sequences['Vengeance'] = {
+Sequences['DB_Vengeance'] = {
 specID = 581,
 author = "Tocktris",
 helpTxt = "Talents unknown",

@@ -5,7 +5,7 @@ local Sequences = GSMasterSequences
 ------------------
 
 
-Sequences['ShadowPriest'] = {
+Sequences['DB_ShadowPriest'] = {
 specID = 258,
 author = "Jimmy",
 helpTxt = "unknown Talents",
@@ -22,7 +22,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DiscDeeps'] = {
+Sequences['DB_DiscDeeps'] = {
 specID = 256,
 author = "Draik",
 helpTxt = "Talents 3113131",
@@ -48,7 +48,7 @@ PostMacro = [[
 
 
 
-Sequences['HolyPriesty'] = {
+Sequences['DB_HolyPriesty'] = {
 specID = 257,
 author = "Draik",
 helpTxt = "Talents 3121133",
@@ -67,4 +67,3 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
-

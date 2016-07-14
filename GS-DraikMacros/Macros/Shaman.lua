@@ -6,7 +6,7 @@ local Sequences = GSMasterSequences
 -- Elemental 262
 
 
-Sequences['PTREnhST'] = {
+Sequences['DB_PTREnhST'] = {
 specID = 263,
 author = "Suiseiseki - stan",
 helpTxt = "Single Target",
@@ -25,7 +25,7 @@ PostMacro = [[
 }
 
 
-Sequences['enhsingle'] = {
+Sequences['DB_enhsingle'] = {
 specID = 263,
 author = "lloskka",
 helpTxt = "Talents  3112112 - Artifact Order: Doom Winds �> Hammer of Storms �> Gathering Storms �> Wind Strikes �> Wind Surge �> Weapons of the elements �> Elemental Healing �> and all the way to Unleash Doom",
@@ -48,7 +48,7 @@ PostMacro = [[
 
 
 
-Sequences['RestoDeeps'] = {
+Sequences['DB_RestoDeeps'] = {
 specID = 264,
 author = "Draik",
 helpTxt = "Talents - 3211233",

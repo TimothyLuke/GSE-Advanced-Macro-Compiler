@@ -7,7 +7,7 @@ local Sequences = GSMasterSequences
 -------------------
 -- Protection - 66
 -------------------
-Sequences['Prot'] = {
+Sequences['DB_Prot'] = {
 specID = 66,
 author = "Maurice Greer",
 helpTxt = "Protection single target tanking macro.",
@@ -32,7 +32,7 @@ PostMacro = [[
 -- Retribution - 70
 -------------------
 
-Sequences['Ret'] = {
+Sequences['DB_Ret'] = {
 specID = 70,
 author = "Draik",
 helpTxt = "Retribution Single Target macro - 3311112.",
@@ -53,7 +53,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['RetAoE'] = {
+Sequences['DB_RetAoE'] = {
 specID = 70,
 author = "Draik",
 helpTxt = "Retribution AoE macro - 3311112.",
@@ -79,7 +79,7 @@ PostMacro = [[
 -- Holy - 65
 -------------------
 
-Sequences['HolyDeeps'] = {
+Sequences['DB_HolyDeeps'] = {
 specID = 65,
 author = "Draik",
 helpTxt = "Holy DPS levelling macro - 3131123.",

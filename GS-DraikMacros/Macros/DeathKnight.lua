@@ -4,7 +4,7 @@ local Sequences = GSMasterSequences
 ----- Death Knight
 ------------------
 
-Sequences['PTRBlood'] = {
+Sequences['DB_PTRBlood'] = {
 specID = 250,
 author = "John Mets",
 helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
@@ -26,7 +26,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Frost'] = {
+Sequences['DB_DBFrost'] = {
 specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
@@ -44,7 +44,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['FDK2'] = {
+Sequences['DB_FDK2'] = {
 specID = 251,
 author = "Tazkilla",
 helpTxt = "Talents:1111131",
@@ -63,7 +63,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences["DFPTR"] = {
+Sequences['DB_DFPTR'] = {
 specID = 251,
 author = "John Mets",
 helpTxt = "Talents 2133121",
@@ -85,7 +85,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DKunholy'] = {
+Sequences['DB_DKunholy'] = {
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],

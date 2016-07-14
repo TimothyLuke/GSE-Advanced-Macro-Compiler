@@ -8,7 +8,7 @@ local Sequences = GSMasterSequences
 
 
 
-Sequences['Outlaw'] = {
+Sequences['DB_Outlaw'] = {
 specID = 260,
 author = "Suiseiseki - www.wowlazymacros.com",
 helpTxt = "Outlaw - 1223122",

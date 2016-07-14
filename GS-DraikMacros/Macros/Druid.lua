@@ -7,7 +7,7 @@ local Sequences = GSMasterSequences
 --Feral 103
 --Balance 102
 
-Sequences["bear1"] = {
+Sequences['DB_bear1'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
@@ -31,7 +31,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences["bear2"] = {
+Sequences['DB_bear2'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
@@ -59,7 +59,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Feral-ST'] = {
+Sequences['DB_Feral-ST'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
@@ -80,7 +80,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Feral-AoE'] = {
+Sequences['DB_Feral-AoE'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
@@ -101,7 +101,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['feralaoe'] = {
+Sequences['DB_feralaoe'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
@@ -123,7 +123,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['feralsingle'] = {
+Sequences['DB_feralsingle'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
@@ -143,7 +143,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['Boomer'] = {
+Sequences['DB_Boomer'] = {
 specID = 102,
 author = "Draik",
 helpTxt = "2323112",
@@ -163,7 +163,7 @@ PostMacro = [[
 }
 
 
-Sequences['RestoBoomer'] = {
+Sequences['DB_RestoBoomer'] = {
 specID = 105,
 author = "Draik",
 helpTxt = "2312232",
