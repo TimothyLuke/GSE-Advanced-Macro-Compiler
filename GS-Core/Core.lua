@@ -122,7 +122,7 @@ local function GSregisterSequence(sequenceName, icon)
     -- Sequence exists do nothing
   else
     -- Create Sequence as a player sequence
-    sequenceid = CreateSequence(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
+    sequenceid = CreateMacro(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
     ModifiedSequences[sequenceName] = true
   end
 end
