@@ -35,8 +35,6 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 /cast [combat] Touch of Karma
-/run sfx=GetCVar("Sound_EnableSFX");
-/console Sound_EnableSFX 0
 ]],
 '/castsequence Tiger Palm, Rising Sun Kick, Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm',
 '/castsequence [nochanneling] Tiger Palm, Fists of Fury, Tiger Palm, Blackout Kick',
@@ -51,6 +49,5 @@ PostMacro = [[
 /use [combat] 12
 /run UIErrorsFrame:Clear()
 /script UIErrorsFrame:Hide();
-/console Sound_EnableSFX 1
 ]],
 }

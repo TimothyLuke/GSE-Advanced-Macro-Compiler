@@ -7,7 +7,7 @@ local Sequences = GSMasterSequences
 Sequences['AFF'] = {
 specID = 265,
 author = "Jimmy",
-helpTxt = "Talent큦 - 3,1,3,1,2,1,2",
+helpTxt = "Talents - 3,1,3,1,2,1,2",
 PreMacro = [[
 /targetenemy [noharm][dead],
 /startattack
@@ -29,7 +29,7 @@ PostMacro = [[
 Sequences['AFF2'] = {
 specID = 265,
 author = "Jimmy",
-helpTxt = "Talent큦 - 3,1,3,1,2,1,2",
+helpTxt = "Talents - 3,1,3,1,2,1,2",
 PreMacro = [[
 /targetenemy [noharm][dead],
 /startattack
@@ -52,7 +52,7 @@ PostMacro = [[
 Sequences['Demon'] = {
 specID = 266,
 author = "Jimmy",
-helpTxt = "Talent큦 - 3,2,1,2,2,1,3",
+helpTxt = "Talents - 3,2,1,2,2,1,3",
 PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
@@ -72,7 +72,7 @@ PostMacro = [[
 Sequences['Destro'] = {
 specID = 267,
 author = "Jimmy",
-helpTxt = "Talent큦 - 1,1,1,2,2,1,3",
+helpTxt = "Talents - 1,1,1,2,2,1,3",
 PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack

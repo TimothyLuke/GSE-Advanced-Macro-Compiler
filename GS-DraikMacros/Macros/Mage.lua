@@ -24,7 +24,6 @@ PostMacro = [[
 /cast [combat]Arcane Power
 /cast [combat]Presence of Mind
 /script UIErrorsFrame:Hide();
-/console Sound_EnableSFX 1
 ]],
 }
 

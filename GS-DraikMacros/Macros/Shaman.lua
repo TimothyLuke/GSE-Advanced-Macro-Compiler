@@ -29,27 +29,24 @@ PostMacro = [[
 Sequences['enhsingle'] = {
 specID = 263,
 author = "lloskka",
-helpTxt = "Talents  3112112 - Artifact Order: Doom Winds —> Hammer of Storms —> Gathering Storms —> Wind Strikes —> Wind Surge —> Weapons of the elements —> Elemental Healing —> and all the way to Unleash Doom",
+helpTxt = "Talents  3112112 - Artifact Order: Doom Winds ï¿½> Hammer of Storms ï¿½> Gathering Storms ï¿½> Wind Strikes ï¿½> Wind Surge ï¿½> Weapons of the elements ï¿½> Elemental Healing ï¿½> and all the way to Unleash Doom",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
-/run sfx=GetCVar("Sound_EnableSFX");
-/console Sound_EnableSFX 0
 ]],
 [[/castsequence Boulderfist, Crash Lightning, !Stormstrike;]],
 [[/castsequence Boulderfist, Stormstrike, Crash Lightning;]],
 [[/castsequence [nochanneling] Boulderfist, Boulderfist, !Crash Lightning;]],
 [[/castsequence Boulderfist, Boulderfist;]],
-[[/cast Lightning Bolt;]],	
+[[/cast Lightning Bolt;]],
 PostMacro = [[
 /startattack
 /use [combat] 11
 /use [combat] 12
 /cast [combat] Doom Winds
-/cast [combat] 
+/cast [combat]
 /run UIErrorsFrame:Clear()
 /script UIErrorsFrame:Hide();
-/console Sound_EnableSFX 1
 ]],
 }
 

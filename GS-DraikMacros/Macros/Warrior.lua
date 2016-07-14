@@ -35,7 +35,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences["Fury2"] = { 
+Sequences["Fury2"] = {
 specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3",
@@ -48,7 +48,7 @@ PreMacro = [[
 [[/cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar]],
 [[/cast !Whirlwind]],
 [[/cast !Raging blow]],
-[[/cast !Bloodthirst]],	
+[[/cast !Bloodthirst]],
 PostMacro = [[
 /cast [combat]Berserker Rage
 /use [combat]13
@@ -126,5 +126,5 @@ PostMacro = [[
 /use [combat] 13
 /use [combat] 14
 /script UIErrorsFrame:Hide();
-    ]],
+]],
 }

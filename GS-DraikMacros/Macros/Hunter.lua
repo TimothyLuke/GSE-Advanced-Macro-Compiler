@@ -19,14 +19,12 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] Growl
 /cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-]], 
- 
+]],
 '/cast [nochanneling] Cobra Shot',
 '/cast [nochanneling] !Kill Command',
 '/cast [nochanneling] Bestial Wrath',
 '/cast [nochanneling] !Dire Beast',
 '/cast [nochanneling] Barrage',
-
 PostMacro = [[
 /startattack
 /petattack
@@ -48,7 +46,7 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] Growl
 /cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-]], 
+]],
 '/cast [nochanneling] Multi-Shot',
 '/cast [nochanneling] !Kill Command',
 '/cast [nochanneling] Bestial Wrath',
@@ -114,7 +112,7 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
-]], 
+]],
 "/castsequence Cobra Shot,Kill Command",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
@@ -138,7 +136,7 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
-]], 
+]],
 "/castsequence Multi-Shot,Kill Command",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
