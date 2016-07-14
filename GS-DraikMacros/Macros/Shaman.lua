@@ -21,7 +21,6 @@ PostMacro = [[
 /cast Feral Lunge
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -44,9 +43,6 @@ PostMacro = [[
 /use [combat] 11
 /use [combat] 12
 /cast [combat] Doom Winds
-/cast [combat]
-/run UIErrorsFrame:Clear()
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -68,6 +64,5 @@ PreMacro = [[
 PostMacro = [[
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }

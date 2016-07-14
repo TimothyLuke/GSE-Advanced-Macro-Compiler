@@ -23,7 +23,6 @@ PostMacro = [[
 /startattack
 /cast [combat]Arcane Power
 /cast [combat]Presence of Mind
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -41,6 +40,5 @@ PreMacro = [[
 PostMacro = [[
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }

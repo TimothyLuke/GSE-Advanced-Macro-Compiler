@@ -24,7 +24,6 @@ PostMacro = [[
 /petattack [@target,harm]
 /use [combat]13
 /use [combat]14
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -54,8 +53,6 @@ PostMacro = [[
 /cast [combat,nochanneling] Chaos Nova
 /cast [combat,nochanneling] Chaos Blades
 /cast [combat,nochanneling] Blur
-/run UIErrorsFrame:Clear()
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -74,6 +71,5 @@ PreMacro = [[
 PostMacro = [[
 /use 13
 /use 14
-/run UIErrorsFrame:Hide()
 ]],
 }

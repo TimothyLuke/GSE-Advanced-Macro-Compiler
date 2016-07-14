@@ -92,7 +92,6 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [modifier:alt]Charge
-
 ]],
 '/cast !Whirlwind',
 '/cast !Raging blow',
@@ -110,7 +109,7 @@ author = "Suiseiseki - wowlazymacros.com",
 helpTxt = "Talents: 1223212",
 PreMacro = [[
 /targetenemy [noharm][dead]
-    ]],
+]],
 "/castsequence Devastate",
 "/castsequence Shield Slam",
 "/castsequence Revenge",
@@ -125,6 +124,5 @@ PostMacro = [[
 /cast [combat] Battle Cry
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }

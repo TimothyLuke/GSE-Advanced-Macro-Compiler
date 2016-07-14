@@ -28,7 +28,6 @@ PreMacro = [[
 "/castsequence Cenarion ward",
 PostMacro = [[
 /startattack
-/script UIErrorsFrame:Clear()
 ]],
 }
 
@@ -57,7 +56,6 @@ PreMacro = [[
 "/castsequence reset=30 cenarion ward",
 PostMacro = [[
 /startattack
-/script UIErrorsFrame:Clear()
 ]],
 }
 
@@ -122,8 +120,6 @@ PostMacro = [[
 /use [combat] 11
 /use [combat] 12
 /startattack
-/run UIErrorsFrame:Clear()
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -144,8 +140,6 @@ PostMacro = [[
 /cast Tiger's Fury
 /use [combat] 11
 /use [combat] 12
-/run UIErrorsFrame:Clear()
-/script UIErrorsFrame:Hide();
 ]],
 }
 

@@ -4,9 +4,6 @@ local Sequences = GSMasterSequences
 ----- Paladin
 ------------------
 
-
-
-
 -------------------
 -- Protection - 66
 -------------------
@@ -28,7 +25,6 @@ PreMacro = [[
 PostMacro = [[
 /cast Shield of the Righteous
 /startattack
-/script UIErrorsFrame:Hide();
 ]],
 }
 

@@ -23,7 +23,6 @@ PostMacro = [[
 /TargetEnemy [noharm][dead]
 /Use [combat] 13
 /Use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -42,7 +41,6 @@ PreMacro = [[
 '/castsequence Howling Blast, Frostscythe, Howling Blast, Obliterate',
 '/castsequence Howling Blast, Howling Blast, Frostscythe, Howling Blast, Obliterate',
 PostMacro = [[
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -62,7 +60,6 @@ PreMacro = [[
 '/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Howling Blast',
 PostMacro = [[
 /targetenemy [noharm][dead]
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -85,7 +82,6 @@ PostMacro = [[
 /use [combat] 12
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
 ]],
 }}
 

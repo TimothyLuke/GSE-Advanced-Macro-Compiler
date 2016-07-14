@@ -1,6 +1,7 @@
 seterrorhandler(_ERRORMESSAGE)
 
 local GNOME, Sequences = ...
+local GnomeOptions = GSMAsterOptions
 
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
@@ -45,15 +46,19 @@ self:CallMethod('UpdateIcon')
 ]=]
 
 
-for name, sequence in pairs(Sequences) do
+local function createButton(name, sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
   button:SetAttribute('step', 1)
-  button:SetAttribute('PreMacro', (sequence.PreMacro or '') .. '\n')
-  button:SetAttribute('PostMacro', '\n' .. (sequence.PostMacro or ''))
+  button:SetAttribute('PreMacro', preparePreMacro(sequence.PreMacro or '') .. '\n')
+  button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   button.UpdateIcon = UpdateIcon
+end
+
+for name, sequence in pairs(Sequences) do
+  createButton(name, sequence)
 end
 
 
@@ -82,10 +87,16 @@ f:SetScript('OnEvent', function(self, event)
   elseif event == 'PLAYER_REGEN_ENABLED' then
     self:UnregisterEvent('PLAYER_REGEN_ENABLED')
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
+  elseif event == 'PLAYER_LOGOUT' then
+    -- Delete "LiveTest" macro from Macrolist as it is not persisted
+    if GSMAsterOptions.cleanTempMacro then
+      
+    end
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
 f:RegisterEvent('PLAYER_LOGIN')
+f:RegisterEvent('PLAYER_LOGOUT')
 
 print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
 ----------------------------
@@ -145,20 +156,36 @@ local function ListSequences(txt)
   ShowMacroFrame()
 end
 
+local function preparePreMacro(premacro)
+  if GSMAsterOptions.hideSoundErrors then
+    premacro = premacro .. "\n /console Sound_EnableSFX 0"
+  end
+  return premacro  
+end
+
+local function preparePostMacro(postmacro)
+  if GSMAsterOptions.hideSoundErrors then
+    postmacro = postmacro .. "\n /console Sound_EnableSFX 1"
+  end
+  if GSMAsterOptions.hideUIErrors then
+    postmacro = postmacro .. "\n /script UIErrorsFrame:Hide();"
+  end
+  if GSMAsterOptions.clearUIErrors then
+    postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
+  end
+
+end
+
+
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
     if button==nil then
-        local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
-        button:SetAttribute('type', 'macro')
-        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
-        button:SetAttribute('step', 1)
-        button:SetAttribute('PreMacro', (sequence.PreMacro or '') .. '\n')
-        button:SetAttribute('PostMacro', '\n' .. (sequence.PostMacro or ''))
-        button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-        button.UpdateIcon = UpdateIcon
+        createButton(name, sequence)
     else
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
         button:SetAttribute("step",1)
+        button:SetAttribute('PreMacro', preparePreMacro(sequence.PreMacro or '') .. '\n')
+        button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
     end
     if name == "LiveTest" then
      local sequenceIndex = GetMacroIndexByName("LiveTest")
@@ -171,8 +198,6 @@ function GSUpdateSequence(name,sequence)
      end
     end
 end
-
-
 
 local function PrintGnomeHelp()
   print('|cffff0000' .. GNOME .. ':|r GnomeSequencer was originally written by semlar of wowinterface.com.')

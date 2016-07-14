@@ -23,7 +23,6 @@ PostMacro = [[
 /cast [combat] Touch of Death
 /use [combat] 11
 /use [combat] 12
-/script UIErrorsFrame:Hide();
 ]],
 }
 
@@ -47,7 +46,5 @@ PostMacro = [[
 /cast [combat] Touch of Death
 /use [combat] 11
 /use [combat] 12
-/run UIErrorsFrame:Clear()
-/script UIErrorsFrame:Hide();
 ]],
 }

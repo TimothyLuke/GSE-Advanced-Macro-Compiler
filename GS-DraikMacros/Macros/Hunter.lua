@@ -99,7 +99,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/script UIErrorsFrame:Clear()
 ]],
 }
 

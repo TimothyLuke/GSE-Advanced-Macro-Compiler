@@ -25,7 +25,6 @@ PreMacro = [[
 '/cast [@focus] Tricks of the Trade',
 PostMacro = [[
 /use [combat] 13
-/use [combat]14
-/script UIErrorsFrame:Hide();
+/use [combat] 14
 ]],
 }
