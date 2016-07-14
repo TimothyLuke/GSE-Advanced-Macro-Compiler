@@ -41,7 +41,6 @@ helpTxt = "Talents 2,3,1,2,2,3,1",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
-/run sfx=GetCVar("Sound_EnableSFX");
 /console Sound_EnableSFX 0
 ]],	
 "/cast [combat,nochanneling] !Throw Glaive",

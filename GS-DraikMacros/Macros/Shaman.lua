@@ -10,19 +10,19 @@ Sequences['PTREnhST'] = {
 specID = 263,
 author = "Suiseiseki - stan",
 helpTxt = "Single Target",
-    PreMacro = [[
+PreMacro = [[
 /targetenemy [noharm][dead]
-    ]],
-	"/castsequence [combat] Crash Lightning, Lava Lash, Lava Lash",
-	"/cast Stormstrike",
-	"/castsequence Flametongue, Rockbiter, Rockbiter, Rockbiter, Rockbiter, Rockbiter",
-	'/cast Windsong',
-    PostMacro = [[
+]],
+"/castsequence [combat] Crash Lightning, Lava Lash, Lava Lash",
+"/cast Stormstrike",
+"/castsequence Flametongue, Rockbiter, Rockbiter, Rockbiter, Rockbiter, Rockbiter",
+'/cast Windsong',
+PostMacro = [[
 /cast Feral Lunge
 /use [combat] 13
 /use [combat] 14
 /script UIErrorsFrame:Hide();
-    ]],
+]],
 }
 
 
@@ -36,12 +36,12 @@ PreMacro = [[
 /run sfx=GetCVar("Sound_EnableSFX");
 /console Sound_EnableSFX 0
 ]],
-	[[/castsequence Boulderfist, Crash Lightning, !Stormstrike;]],
-	[[/castsequence Boulderfist, Stormstrike, Crash Lightning;]],
-	[[/castsequence [nochanneling] Boulderfist, Boulderfist, !Crash Lightning;]],
-	[[/castsequence Boulderfist, Boulderfist;]],
-	[[/cast Lightning Bolt;]],	
-	PostMacro = [[
+[[/castsequence Boulderfist, Crash Lightning, !Stormstrike;]],
+[[/castsequence Boulderfist, Stormstrike, Crash Lightning;]],
+[[/castsequence [nochanneling] Boulderfist, Boulderfist, !Crash Lightning;]],
+[[/castsequence Boulderfist, Boulderfist;]],
+[[/cast Lightning Bolt;]],	
+PostMacro = [[
 /startattack
 /use [combat] 11
 /use [combat] 12
@@ -72,5 +72,5 @@ PostMacro = [[
 /use [combat] 13
 /use [combat] 14
 /script UIErrorsFrame:Hide();
-    ]],
+]],
 }

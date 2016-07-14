@@ -32,18 +32,18 @@ specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
 StepFunction = GSStaticPriority,
-    PreMacro = [[
+PreMacro = [[
 /use [combat] Obliteration
 /use [combat] Pillar Of Frost
-    ]],
-	'/cast [combat] Glacial Advance',
-	'/cast Frost Strike',
-	"/cast [combat] Remorseless Winter",
-	'/castsequence Howling Blast, Frostscythe, Howling Blast, Obliterate',
-	'/castsequence Howling Blast, Howling Blast, Frostscythe, Howling Blast, Obliterate',
-    PostMacro = [[
+]],
+'/cast [combat] Glacial Advance',
+'/cast Frost Strike',
+"/cast [combat] Remorseless Winter",
+'/castsequence Howling Blast, Frostscythe, Howling Blast, Obliterate',
+'/castsequence Howling Blast, Howling Blast, Frostscythe, Howling Blast, Obliterate',
+PostMacro = [[
 /script UIErrorsFrame:Hide();
-    ]],
+]],
 }
 
 Sequences['FDK2'] = {
@@ -75,19 +75,19 @@ PreMacro = [[
 /cast [combat] Pillar of Frost
 ]],
 "/castsequence reset=combat Obliterate, Frost Strike",
-'/castsequence reset=combat Obliterate, Frost Strike, Frost Strike, Obliterate',
+'/castsequence reset=combat Obliterate, Frost Strike, Frost Strike, Obliterate, howling blast',
 "/castsequence reset=combat Obliteration",
 "/cast [combat] remorseless winter",
 "/cast [combat] empower rune weapon",
 PostMacro = [[
 /targetenemy [noharm][dead]
-/cast [mod:alt] Howling blast
+/cast [combat] Anti-Magic Shell
 /use [combat] 12
 /use [combat] 13
 /use [combat] 14
 /script UIErrorsFrame:Hide();
 ]],
-}
+}}
 
 Sequences['DKunholy'] = {
 PreMacro = [[

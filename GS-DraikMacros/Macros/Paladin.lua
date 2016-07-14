@@ -19,19 +19,17 @@ PreMacro = [[
 /console Sound_EnableSFX 0
 /targetenemy [noharm][dead]
 ]],
-
-     "/cast Avenger's Shield",	
-     '/cast Judgment',
-	'/cast Hammer of the Righteous',	
-	'/cast Holy Wrath',
-	"/cast Avenger's Shield",
-	'/cast Hammer of Wrath',
-	'/cast Consecration',
+"/cast Avenger's Shield",	
+'/cast Judgment',
+'/cast Hammer of the Righteous',	
+'/cast Holy Wrath',
+"/cast Avenger's Shield",
+'/cast Hammer of Wrath',
+'/cast Consecration',
 PostMacro = [[
 /cast Shield of the Righteous
 /startattack
 /script UIErrorsFrame:Hide();
-/console Sound_EnableSFX 1
 ]],
 }
 
@@ -40,11 +38,11 @@ PostMacro = [[
 -------------------
 
 Sequences['Ret'] = {
-	specID = 70,
-	author = "Draik",
-	helpTxt = "Retribution Single Target macro - 3311112.",
-        icon = "INV_Sword_2H_AshbringerCorrupt",
-	PreMacro = [[
+specID = 70,
+author = "Draik",
+helpTxt = "Retribution Single Target macro - 3311112.",
+icon = "INV_Sword_2H_AshbringerCorrupt",
+PreMacro = [[
 /targetenemy [noharm][dead]    
 ]],  
 '/cast Judgment',  
@@ -61,11 +59,11 @@ PostMacro = [[
 }
 
 Sequences['RetAoE'] = {
-	specID = 70,
-	author = "Draik",
-	helpTxt = "Retribution AoE macro - 3311112.",
-        icon = "Ability_Paladin_DivineStorm",
-	PreMacro = [[
+specID = 70,
+author = "Draik",
+helpTxt = "Retribution AoE macro - 3311112.",
+icon = "Ability_Paladin_DivineStorm",
+PreMacro = [[
 /targetenemy [noharm][dead]    
 ]],  
 '/cast Judgment',  
@@ -87,11 +85,11 @@ PostMacro = [[
 -------------------
 
 Sequences['HolyDeeps'] = {
-	specID = 65,
-	author = "Draik",
-	helpTxt = "Holy DPS levelling macro - 3131123.",
-        icon = "Ability_Paladin_InfusionofLight",
-	PreMacro = [[
+specID = 65,
+author = "Draik",
+helpTxt = "Holy DPS levelling macro - 3131123.",
+icon = "Ability_Paladin_InfusionofLight",
+PreMacro = [[
 /targetenemy [noharm][dead]    
 ]],  
 '/cast Judgment',  

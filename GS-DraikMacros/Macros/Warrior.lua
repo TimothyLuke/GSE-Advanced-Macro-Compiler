@@ -10,9 +10,9 @@ local Sequences = GSMasterSequences
 ---Legion Fury Warrior - 2,3,3,2,2,2,3
 
 Sequences["Fury1"] = {
-	specID = 72,
-	author = "Firone - wowlazymacros.com",
-	helpTxt = "Single Target -- 2,3,3,2,2,2,3",
+specID = 72,
+author = "Firone - wowlazymacros.com",
+helpTxt = "Single Target -- 2,3,3,2,2,2,3",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]

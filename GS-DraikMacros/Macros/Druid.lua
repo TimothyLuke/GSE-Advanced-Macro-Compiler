@@ -120,7 +120,6 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 /use [noform:2]Cat Form
 /cast [nostealth,nocombat] Prowl
-/run sfx=GetCVar("Sound_EnableSFX");
 /console Sound_EnableSFX 0
 	]],
 	[[/cast [combat] !Incarnation: King of the Jungle]],
@@ -145,14 +144,12 @@ helpTxt = "Talents 2331223",
 PreMacro = [[
 /cast Wild Charge
 /targetenemy [noharm][dead]
-/run sfx=GetCVar("Sound_EnableSFX");
-/console Sound_EnableSFX 0
-	]],
-	'/castsequence reset=combat Rake,shred,shred,shred,!Rip,Rake,shred,shred,shred,ferocious bite,Rake,shred,shred,shred,ferocious bite',
-	'/use [combat] Berserk',
-	'/use [combat] survival instincts',
-	'/cast Incarnation: King of the Jungle',
-	PostMacro = [[
+/run sfx=GetCVar("Sound_EnableSFX");	]],
+'/castsequence reset=combat Rake,shred,shred,shred,!Rip,Rake,shred,shred,shred,ferocious bite,Rake,shred,shred,shred,ferocious bite',
+'/use [combat] Berserk',
+'/use [combat] survival instincts',
+'/cast Incarnation: King of the Jungle',
+PostMacro = [[
 /startattack
 /cast Tiger's Fury
 /use [combat] 11

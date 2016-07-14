@@ -8,11 +8,11 @@ local Sequences = GSMasterSequences
 -- Marksmanship - 254
 
 Sequences['BMsingle'] = {
-	specID = 253,
-	author = "Jimmy Boy Albrecht",
- 	helpTxt = "Single Target - Talent: 3111323",
-	StepFunction = GSStaticPriority,
-   PreMacro = [[
+specID = 253,
+author = "Jimmy Boy Albrecht",
+helpTxt = "Single Target - Talent: 3111323",
+StepFunction = GSStaticPriority,
+PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -37,11 +37,11 @@ PostMacro = [[
 }
 
 Sequences['BMaoe'] = {
-	specID = 253,
-	author = "Jimmy Boy Albrecht",
-	helpTxt = "AoE - Talent: 3111323",
-	StepFunction = GSStaticPriority,
-   PreMacro = [[
+specID = 253,
+author = "Jimmy Boy Albrecht",
+helpTxt = "AoE - Talent: 3111323",
+StepFunction = GSStaticPriority,
+PreMacro = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -49,13 +49,11 @@ Sequences['BMaoe'] = {
 /petautocaston [nogroup] Growl
 /cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
 ]], 
- 
 '/cast [nochanneling] Multi-Shot',
 '/cast [nochanneling] !Kill Command',
 '/cast [nochanneling] Bestial Wrath',
 '/cast [nochanneling] !Dire Beast',
 '/cast [nochanneling] Barrage',
-
 PostMacro = [[
 /startattack
 /petattack
@@ -66,9 +64,9 @@ PostMacro = [[
 }
 
 Sequences['SurvivelH'] = {
-	specID = 255,
-	author = "Jimmy Boy Albrecht",
- 	helpTxt = "Single Target - Talent: 3111323",
+specID = 255,
+author = "Jimmy Boy Albrecht",
+helpTxt = "Single Target - Talent: 3111323",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
