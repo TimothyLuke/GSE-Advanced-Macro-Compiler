@@ -2,7 +2,7 @@
 ## Title: |cffff0000GS-E:|r Sequence Editor
 ## Notes: This addon allows you to edit GnomeSequenced-Enhanced sequences in game.
 ## Author: Draik
-## Version: v0.61 - Legion Beta
+## Version: v0.7 - Legion Beta
 ## RequiredDeps: GS-Core
 
 embeds.xml

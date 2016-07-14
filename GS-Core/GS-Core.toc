@@ -2,7 +2,7 @@
 ## Title: |cffff0000GS-E:|r Gnome Sequencer - Enhanced Core
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: Draik - Original code by Semlar
-## Version: v0.61 - Legion Beta
+## Version: v0.7 - Legion Beta
 ## SavedVariables: GnomeOptions
 # Startup
 startup.lua
