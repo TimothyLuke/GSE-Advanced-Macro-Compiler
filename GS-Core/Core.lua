@@ -31,6 +31,25 @@ local function UpdateIcon(self)
   if not foundSpell then SetMacroItem(button, notSpell) end
 end
 
+local function preparePreMacro(premacro)
+  if GSMasterOptions.hideSoundErrors then
+    premacro = premacro .. "\n /console Sound_EnableSFX 0"
+  end
+  return premacro
+end
+
+local function preparePostMacro(postmacro)
+  if GSMasterOptions.hideSoundErrors then
+    postmacro = postmacro .. "\n /console Sound_EnableSFX 1"
+  end
+  if GSMasterOptions.hideUIErrors then
+    postmacro = postmacro .. "\n /script UIErrorsFrame:Hide();"
+  end
+  if GSMasterOptions.clearUIErrors then
+    postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
+  end
+  return postmacro
+end
 
 local OnClick = [=[
 local step = self:GetAttribute('step')
@@ -88,13 +107,19 @@ f:SetScript('OnEvent', function(self, event)
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
   elseif event == 'PLAYER_LOGOUT' then
     -- Delete "LiveTest" macro from Macrolist as it is not persisted
-    if GnomeOptions.cleanTempMacro then
+    GnomeOptions = GSMasterOptions
+    if GSMasterOptions.cleanTempMacro then
       DeleteMacro("LiveTest")
+    end
+  elseif event == 'ADDON_LOADED' then
+    if not isempty(GnomeOptions) then
+      GSMasterOptions = GnomeOptions
     end
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
 f:RegisterEvent('PLAYER_LOGIN')
+f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_LOGOUT')
 
 print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
@@ -142,39 +167,16 @@ local function ListSequences(txt)
   local currentSpec = GetSpecialization()
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
-    if sequence.specID ~= 1000 then
-      local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
-      if sequence.specID == currentSpecID or string.upper(txt) == specclass then
-        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
-      elseif txt == "all" or sequence.specID == 0 then
-        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-      end
+    local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
+    if sequence.specID == currentSpecID or string.upper(txt) == specclass then
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+      GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+    elseif txt == "all" or sequence.specID == 0 then
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
     end
   end
   ShowMacroFrame()
 end
-
-local function preparePreMacro(premacro)
-  if GnomeOptions.hideSoundErrors then
-    premacro = premacro .. "\n /console Sound_EnableSFX 0"
-  end
-  return premacro
-end
-
-local function preparePostMacro(postmacro)
-  if GnomeOptions.hideSoundErrors then
-    postmacro = postmacro .. "\n /console Sound_EnableSFX 1"
-  end
-  if GnomeOptions.hideUIErrors then
-    postmacro = postmacro .. "\n /script UIErrorsFrame:Hide();"
-  end
-  if GnomeOptions.clearUIErrors then
-    postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
-  end
-  return postmacro
-end
-
 
 function GSUpdateSequence(name,sequence)
     local button = _G[name]

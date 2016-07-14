@@ -1,4 +1,4 @@
-local Type, Version = "MultiLineEditBox", 27
+local Type, Version = "MultiLineEditBox", 28
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -251,7 +251,11 @@ local methods = {
 			self.frame:SetScript("OnShow", OnShowFocus)
 		end
 	end,
-	
+
+	["HighlightText"] = function(self, from, to)
+		self.editBox:HighlightText(from, to)
+	end,
+
 	["GetCursorPosition"] = function(self)
 		return self.editBox:GetCursorPosition()
 	end,

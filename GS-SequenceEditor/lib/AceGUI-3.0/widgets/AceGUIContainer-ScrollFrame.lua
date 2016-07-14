@@ -2,9 +2,11 @@
 ScrollFrame Container
 Plain container that scrolls its content and doesn't grow in height.
 -------------------------------------------------------------------------------]]
-local Type, Version = "ScrollFrame", 23
+local Type, Version = "ScrollFrame", 24
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
+
+local IsLegion = select(4, GetBuildInfo()) >= 70000
 
 -- Lua APIs
 local pairs, assert, type = pairs, assert, type
@@ -176,7 +178,11 @@ local function Constructor()
 
 	local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND")
 	scrollbg:SetAllPoints(scrollbar)
-	scrollbg:SetTexture(0, 0, 0, 0.4)
+	if IsLegion then
+		scrollbg:SetColorTexture(0, 0, 0, 0.4)
+	else
+		scrollbg:SetTexture(0, 0, 0, 0.4)
+	end
 
 	--Container Support
 	local content = CreateFrame("Frame", nil, scrollframe)

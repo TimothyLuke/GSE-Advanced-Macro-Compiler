@@ -1,5 +1,3 @@
-GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE")
-
 
 local OptionsTable = {
   type = "group",
@@ -40,17 +38,17 @@ local OptionsTable = {
       set = function(info,val) GSMasterOptions.seedInitialMacro = val end,
       get = function(info) return GSMasterOptions.seedInitialMacro end
     },
-    addins={
-      name = "Registered Sequence Addin Packs",
-      desc = "You can create and loadin Sequence Packs.",
-      type = "multiselect",
-      values = GSMasterOptions.AddInPacks
-      set = function(info,val) --[[ do stuff ]]  end,
-      get = function(info) --[[ do stuff ]]  end
+--    addins={
+--      name = "Registered Sequence Addin Packs",
+--      desc = "You can create and loadin Sequence Packs.",
+--      type = "multiselect",
+--      values = GSMasterOptions.AddInPacks,
+--      --set = function(info,val) --[[ do stuff ]]  end,
+--      --get = function(info) --[[ do stuff ]]  end,
+--      arg = GSMasterOptions.AddInPacks
     },
-
   }
 }
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSSE", OptionsTable, {"gse"})
-LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSSE", "G|cffff0000GS-E:|r Gnome Sequencer - Enhanced")
+LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSSE", "|cffff0000GS-E:|r Gnome Sequencer - Enhanced")

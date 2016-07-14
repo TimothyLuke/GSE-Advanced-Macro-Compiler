@@ -83,7 +83,7 @@ PostMacro = [[
 /use [combat] 13
 /use [combat] 14
 ]],
-}}
+}
 
 Sequences['DKunholy'] = {
 PreMacro = [[

@@ -17,7 +17,7 @@ end
 -- Create Viewer Dialog
 
 local frame = AceGUI:Create("Frame")
-local curentSequence 
+local curentSequence
 frame:SetTitle("Sequence Viewer")
 frame:SetStatusText("Gnome Sequencer: Sequence Viewer")
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
@@ -189,7 +189,7 @@ end
 function GSSE:getMacroIcon(sequenceIndex)
   if GSSE:isempty(sequenceIndex) then
     local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
-    return strsub(specicon, 17)  
+    return strsub(specicon, 17)
   else
     local _, iconpath, _ =  GetMacroInfo(sequenceIndex)
     return iconpath
@@ -205,9 +205,9 @@ function GSSE:closeEditor()
 end
 
 function GSSE:lines(tab, str)
-  local function helper(line) 
-    table.insert(tab, line) 
-    return "" 
+  local function helper(line)
+    table.insert(tab, line)
+    return ""
   end
   helper((str:gsub("(.-)\r?\n", helper)))
   GST = t
