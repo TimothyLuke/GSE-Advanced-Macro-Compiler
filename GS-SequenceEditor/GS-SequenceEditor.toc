@@ -5,7 +5,14 @@
 ## Version: v0.61 - Legion Beta
 ## RequiredDeps: GS-Core
 
+## load Libraries
 
 embeds.xml
+
+## Add options Panel to WOW Gui
+
+GSE-options.lua
+
+## load Sequence Editor
 
 core.lua

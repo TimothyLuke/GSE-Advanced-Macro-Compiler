@@ -25,6 +25,7 @@ if not GnomeOptions.initialised then
 	GnomeOptions.clearUIErrors = false
 	GnomeOptions.seedInitialMacro = false
 	GnomeOptions.initialised = true
+	GnomeOptions.AddInPacks
 end
 
 -- Expose Globally to be edited by GS-E Options addon
@@ -32,7 +33,7 @@ GSMasterOptions = GnomeOptions
 
 -- Seed a first instance just to be sure an instance is loaded if we need to.
 if GnomeOptions.seedInitialMacro then
-  GSMasterSequences["draik01"] = {
+  GSMasterSequences["Draik01"] = {
   specID = 0,
   author = "Draik",
   helpTxt = "Sample GS Hellow World Macro.",
@@ -46,7 +47,8 @@ for i=1,GetNumAddOns() do
     if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
         local name, _, _, _, _, _ = GetAddOnInfo(i)
         if name ~= "GS-SequenceEditor" then
-            LoadAddOn(i);
+				  GnomeOptions.AddInPacks[i] = true
+					LoadAddOn(i);
         end
     end
 end
