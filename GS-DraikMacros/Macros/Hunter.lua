@@ -149,3 +149,47 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+Sequences['DB_MMAOE'] = {
+author='Nano',
+specID='254',
+helpTxt = 'Talents: 3113122',
+PreMacro=[[
+/targetenemy [noharm][dead]
+/cast Trueshot
+]],
+icon='Ability_Hunter_FocusedAim',
+'/cast [nochanneling] !Multi-shot',
+'/cast [nochanneling] !Marked Shot',
+'/cast [nochanneling] Windburst',
+'/cast [nochanneling] !Aimed Shot',
+'/cast [nochanneling] Piercing Shot',
+'/cast [nochanneling] !Multi-shot',
+'/cast [nochanneling] !Marked Shot',
+PostMacro=[[
+/startattack
+/petattack
+]],
+}
+
+Sequences['DB_MMS'] = {
+author='Nano',
+specID='254',
+helpTxt = 'Talents: 3113122',
+PreMacro=[[
+/targetenemy [noharm][dead]
+/cast Trueshot
+]],
+icon='Ability_Hunter_FocusedAim',
+'/cast [nochanneling] !Arcane Shot',
+'/cast [nochanneling] !Marked Shot',
+'/cast [nochanneling] Windburst',
+'/cast [nochanneling] !Aimed Shot',
+'/cast [nochanneling] Piercing Shot',
+'/cast [nochanneling] !Arcane Shot',
+'/cast [nochanneling] !Marked Shot',
+PostMacro=[[
+/startattack
+/petattack
+]],
+}
