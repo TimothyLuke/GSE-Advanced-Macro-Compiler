@@ -46,7 +46,7 @@ local OptionsTable = {
 --      --set = function(info,val) --[[ do stuff ]]  end,
 --      --get = function(info) --[[ do stuff ]]  end,
 --      arg = GSMasterOptions.AddInPacks
-    },
+--    },
   }
 }
 

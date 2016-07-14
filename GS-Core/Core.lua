@@ -33,20 +33,20 @@ end
 
 local function preparePreMacro(premacro)
   if GSMasterOptions.hideSoundErrors then
-    premacro = premacro .. "\n /console Sound_EnableSFX 0"
+    premacro = premacro .. "\n/console Sound_EnableSFX 0"
   end
   return premacro
 end
 
 local function preparePostMacro(postmacro)
   if GSMasterOptions.hideSoundErrors then
-    postmacro = postmacro .. "\n /console Sound_EnableSFX 1"
+    postmacro = postmacro .. "\n/console Sound_EnableSFX 1"
   end
   if GSMasterOptions.hideUIErrors then
-    postmacro = postmacro .. "\n /script UIErrorsFrame:Hide();"
+    postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
   end
   if GSMasterOptions.clearUIErrors then
-    postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
+    postmacro = postmacro .. "\n/run UIErrorsFrame:Clear()"
   end
   return postmacro
 end
