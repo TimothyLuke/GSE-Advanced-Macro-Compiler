@@ -1,7 +1,6 @@
 seterrorhandler(_ERRORMESSAGE)
 
 local GNOME, Sequences = ...
-local GnomeOptions = GSMAsterOptions
 
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
@@ -89,8 +88,8 @@ f:SetScript('OnEvent', function(self, event)
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
   elseif event == 'PLAYER_LOGOUT' then
     -- Delete "LiveTest" macro from Macrolist as it is not persisted
-    if GSMAsterOptions.cleanTempMacro then
-      
+    if GnomeOptions.cleanTempMacro then
+      DeleteMacro("LiveTest")
     end
   end
 end)
@@ -104,13 +103,13 @@ print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00
 ----------------------------
 
 function GSExportSequence(sequenceName)
-  if isempty(Sequences[sequenceName]) then  
+  if isempty(Sequences[sequenceName]) then
     return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
     local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
     local steps = ""
     if not isempty(Sequences[sequenceName].StepFunction) then
-      if  Sequences[sequenceName].StepFunction == GSStaticPriority then      
+      if  Sequences[sequenceName].StepFunction == GSStaticPriority then
        steps = "StepFunction = GSStaticPriority,\n"
       else
        steps = Sequences[sequenceName].StepFunction .. "',\n"
@@ -157,20 +156,20 @@ local function ListSequences(txt)
 end
 
 local function preparePreMacro(premacro)
-  if GSMAsterOptions.hideSoundErrors then
+  if GnomeOptions.hideSoundErrors then
     premacro = premacro .. "\n /console Sound_EnableSFX 0"
   end
-  return premacro  
+  return premacro
 end
 
 local function preparePostMacro(postmacro)
-  if GSMAsterOptions.hideSoundErrors then
+  if GnomeOptions.hideSoundErrors then
     postmacro = postmacro .. "\n /console Sound_EnableSFX 1"
   end
-  if GSMAsterOptions.hideUIErrors then
+  if GnomeOptions.hideUIErrors then
     postmacro = postmacro .. "\n /script UIErrorsFrame:Hide();"
   end
-  if GSMAsterOptions.clearUIErrors then
+  if GnomeOptions.clearUIErrors then
     postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
   end
 
