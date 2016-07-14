@@ -75,11 +75,6 @@ local function createButton(name, sequence)
   button.UpdateIcon = UpdateIcon
 end
 
-for name, sequence in pairs(Sequences) do
-  createButton(name, sequence)
-end
-
-
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event)
@@ -114,6 +109,9 @@ f:SetScript('OnEvent', function(self, event)
   elseif event == 'ADDON_LOADED' then
     if not isempty(GnomeOptions) then
       GSMasterOptions = GnomeOptions
+    end
+    for name, sequence in pairs(Sequences) do
+      createButton(name, sequence)
     end
   end
 end)
