@@ -172,7 +172,7 @@ local function preparePostMacro(postmacro)
   if GnomeOptions.clearUIErrors then
     postmacro = postmacro .. "\n /run UIErrorsFrame:Clear()"
   end
-
+  return postmacro
 end
 
 
