@@ -2,13 +2,6 @@ local GNOME,_ = ...
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
-local backdrop = {
-  -- path to the background texture
-  bgFile = [[Interface\AddOns\GS-SequenceEditor\media\Plain]],
-  edgeFile = [[Interface\AddOns\GS-SequenceEditor\media\Plain]],
-  insets = {left = 0, right = 0, top = 0, bottom = 0}
-}
-
 function GSSE:getSequenceNames()
   local keyset={}
   local n=0
@@ -29,7 +22,6 @@ frame:SetTitle("Sequence Viewer")
 frame:SetStatusText("Gnome Sequencer: Sequence Viewer")
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
-frame:SetBackdrop(backdrop)
 
 local names = GSSE:getSequenceNames()
 local listbox = AceGUI:Create("Dropdown")
