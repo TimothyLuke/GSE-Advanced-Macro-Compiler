@@ -1,0 +1,5 @@
+local Sequences = GSMasterSequences
+
+------------------
+----- Mage
+------------------
