@@ -64,6 +64,7 @@ Sequences['HP_lookdead'] = {
 specID = 253,
 author = "John",
 helpTxt = "Look Dead - Talent: 3222321",
+icon = "Ability_Mage_TormentOfTheWeak",
 StepFunction = GSStaticPriority,
 "/cast [nochanneling] Feign Death",
 "/cast [nochanneling] Play Dead",
@@ -73,6 +74,7 @@ Sequences['HP_OShit'] = {
 specID = 253,
 author = "John",
 helpTxt = "Oh Shit - Talent: 3222321",
+icon = "Ability_Hunter_MendPet",
 StepFunction = GSStaticPriority,
 "/cast Aspect of the Turtle",
 "/cast [target=pet, help] Spirit Mend",
@@ -85,6 +87,7 @@ Sequences['HP_BMburst'] = {
 specID = 253,
 author = "John",
 helpTxt = "BMAoE - Talent: 3222321",
+icon = "Ability_Hunter_KillCommand",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
