@@ -81,7 +81,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Mmtest'] = {
+Sequences['DB_Mm'] = {
 specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
@@ -102,7 +102,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BMTest'] = {
+Sequences['DB_BM'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
@@ -126,7 +126,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BMAOETest'] = {
+Sequences['DB_BMAOE'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "BMAOE Talent 3311313",

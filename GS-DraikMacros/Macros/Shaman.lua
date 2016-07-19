@@ -6,7 +6,7 @@ local Sequences = GSMasterSequences
 -- Elemental 262
 
 
-Sequences['DB_PTREnhST'] = {
+Sequences['DB_EnhST'] = {
 specID = 263,
 author = "Suiseiseki - stan",
 helpTxt = "Single Target",

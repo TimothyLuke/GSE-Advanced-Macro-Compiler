@@ -6,7 +6,7 @@ local Sequences = GSMasterSequences
 -- 268 tank
 
 
-Sequences['DB_PTRWW'] = {
+Sequences['DB_WW'] = {
 specID = 269,
 author = "John Mets",
 helpTxt = "Talent are 2 3 2 3 1 2 3",

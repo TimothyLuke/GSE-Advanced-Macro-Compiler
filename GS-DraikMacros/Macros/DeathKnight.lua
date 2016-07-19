@@ -4,7 +4,7 @@ local Sequences = GSMasterSequences
 ----- Death Knight
 ------------------
 
-Sequences['DB_PTRBlood'] = {
+Sequences['DB_Blood'] = {
 specID = 250,
 author = "John Mets",
 helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
@@ -63,7 +63,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DFPTR'] = {
+Sequences['DB_DF'] = {
 specID = 251,
 author = "John Mets",
 helpTxt = "Talents 2133121",

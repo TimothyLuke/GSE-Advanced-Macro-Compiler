@@ -5,7 +5,7 @@ local Sequences = GSMasterSequences
 ------------------
 
 
-Sequences['DB_DHTEST'] = {
+Sequences['DB_DHHavoc'] = {
 specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
