@@ -10,6 +10,12 @@ end
 
 local CastCmds = { use = true, cast = true, spell = true }
 
+function GSReloadSequences()
+  for name, sequence in pairs(Sequences) do
+    createButton(name, sequence)
+  end
+end
+
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
@@ -33,6 +39,7 @@ end
 
 local function preparePreMacro(premacro)
   if GSMasterOptions.hideSoundErrors then
+    -- potentially change this to SetCVar("Sound_EnableSFX", 0)
     premacro = premacro .. "\n/console Sound_EnableSFX 0"
   end
   return premacro
@@ -40,12 +47,15 @@ end
 
 local function preparePostMacro(postmacro)
   if GSMasterOptions.hideSoundErrors then
+    -- potentially change this to SetCVar("Sound_EnableSFX", 1)
     postmacro = postmacro .. "\n/console Sound_EnableSFX 1"
   end
   if GSMasterOptions.hideUIErrors then
     postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
+    -- potentially change this to UIErrorsFrame:Hide()
   end
   if GSMasterOptions.clearUIErrors then
+    -- potentially change this to UIErrorsFrame:Clear()
     postmacro = postmacro .. "\n/run UIErrorsFrame:Clear()"
   end
   return postmacro
@@ -110,9 +120,7 @@ f:SetScript('OnEvent', function(self, event)
     if not isempty(GnomeOptions) then
       GSMasterOptions = GnomeOptions
     end
-    for name, sequence in pairs(Sequences) do
-      createButton(name, sequence)
-    end
+    GSReloadSequences()
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
