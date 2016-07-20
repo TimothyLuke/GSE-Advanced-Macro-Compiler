@@ -90,15 +90,20 @@ local function cleanOrphanSequences()
   for macid = 1, MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS do
     local found = false
     local mname, mtexture, mbody = GetMacroInfo(macid)
-    for name, sequence in pairs(Sequences) do
-      if name == mname then
-        found = true
+    if not isempty(mname) then
+      for name, sequence in pairs(Sequences) do
+        if name == mname then
+          found = true
+        end
       end
-    end
-    if not found then
-      -- check if body is a gs one and delete the orphan
-      if mbody == '#showtooltip\n/click ' .. mname then
-        DeleteMacro(mnane)
+      if not found then
+        -- check if body is a gs one and delete the orphan
+        print ("mname = " .. mname)
+        print ("mbody = \n" .. mbody)
+        print ('#showtooltip\n/click ' .. mname) 
+        if mbody == '#showtooltip\n/click ' .. mname then
+          DeleteMacro(mnane)
+        end
       end
     end
   end
