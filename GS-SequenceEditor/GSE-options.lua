@@ -3,7 +3,7 @@ function GSListAddons()
   local returnVal = "";
   for k,v in pairs(GSMasterOptions.AddInPacks) do
     aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n'
+    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
   end
   return returnVal
 end

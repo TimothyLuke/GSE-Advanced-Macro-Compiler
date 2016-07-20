@@ -103,7 +103,7 @@ PostMacro = [[
 }
 
 
-Sequences['ProtWar'] = {
+Sequences['DB_ProtWar'] = {
 specID = 73,
 author = "Suiseiseki - wowlazymacros.com",
 helpTxt = "Talents: 1223212",

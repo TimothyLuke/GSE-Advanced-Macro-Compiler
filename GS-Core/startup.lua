@@ -54,8 +54,7 @@ for i=1,GetNumAddOns() do
         if name ~= "GS-SequenceEditor" then
 					LoadAddOn(i);
         end
+				GSMasterOptions.AddInPacks[name] = true
     end
-    if IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
-    	GSMasterOptions.AddInPacks[name] = true
-    end
+
 end

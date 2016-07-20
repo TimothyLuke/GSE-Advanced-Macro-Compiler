@@ -140,7 +140,10 @@ f:SetScript('OnEvent', function(self, event)
     end
   elseif event == 'ADDON_LOADED' then
     if not isempty(GnomeOptions) then
+      -- save temporary values the AddinPacks gets wiped from persisited memory
+      local addins = GSMasterOptions.AddInPacks
       GSMasterOptions = GnomeOptions
+      GSMasterOptions.AddInPacks = addins
     end
     for name, sequence in pairs(Sequences) do
       createButton(name, sequence)
