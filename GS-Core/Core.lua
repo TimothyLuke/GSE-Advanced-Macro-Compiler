@@ -230,7 +230,7 @@ function GSUpdateSequence(name,sequence)
     end
     if name == "LiveTest" then
      local sequenceIndex = GetMacroIndexByName("LiveTest")
-        if sequenceIndex > 0 then
+     if sequenceIndex > 0 then
       -- Sequence exists do nothing
      else
       -- Create Sequence as a player sequence
