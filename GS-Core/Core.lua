@@ -87,7 +87,8 @@ end
 
 
 local function cleanOrphanSequences()
-  for macid = 1, MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS do
+  local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+  for macid = 1, maxmacros do
     local found = false
     local mname, mtexture, mbody = GetMacroInfo(macid)
     if not isempty(mname) then
@@ -98,11 +99,12 @@ local function cleanOrphanSequences()
       end
       if not found then
         -- check if body is a gs one and delete the orphan
-        print ("mname = " .. mname)
-        print ("mbody = \n" .. mbody)
-        print ('#showtooltip\n/click ' .. mname) 
-        if mbody == '#showtooltip\n/click ' .. mname then
-          DeleteMacro(mnane)
+        trimmedmbody = mbody:gsub("[^%w ]", "")
+        compar = '#showtooltip\n/click ' .. mname
+        trimmedcompar = compar:gsub("[^%w ]", "")
+        if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
+          print('|cffff0000' .. GNOME .. ':|r Deleted Orphaned Macro ' .. mname)
+          DeleteMacro(macid)
         end
       end
     end
