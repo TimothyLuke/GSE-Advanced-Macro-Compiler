@@ -116,6 +116,9 @@ f:SetScript('OnEvent', function(self, event)
     if GSMasterOptions.cleanTempMacro then
       DeleteMacro("LiveTest")
     end
+    if GSMasterOptions.deleteOrphansOnLogout then
+      cleanOrphanSequences()
+    end
   elseif event == 'ADDON_LOADED' then
     if not isempty(GnomeOptions) then
       GSMasterOptions = GnomeOptions
@@ -215,6 +218,24 @@ local function PrintGnomeHelp()
   print('|cffff0000' .. GNOME .. ':|r |cFF00FF00/gs listall|r will produce a list of all available macros with some help information.')
   print('|cffff0000' .. GNOME .. ':|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar.')
   print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
+  print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them.')
+end
+
+local function cleanOrphanSequences()
+  for macid = 1, MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS do
+    local found = false
+    local mname, mtexture, mbody = GetMacroInfo(macid)
+    for name, sequence in pairs(Sequences) do
+      if name = mname then
+        found = true
+      end
+    end
+    if not found then
+      -- check if body is a gs one and delete the orphan
+      if mbody == '#showtooltip\n/click ' .. mname then
+        DeleteMacro(mnane)
+    end
+  end
 end
 
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
@@ -229,6 +250,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
     print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname)
+  elseif msg == "cleanorphans" then
+    cleanOrphanSequences()
   elseif msg == "help" then
     PrintGnomeHelp()
   elseif string.lower(string.sub(msg,1,6)) == "export" then

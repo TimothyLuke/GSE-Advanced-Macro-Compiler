@@ -10,6 +10,13 @@ local OptionsTable = {
       set = function(info,val) updateOptions(GSMasterOptions.cleanTempMacro, val) end,
       get = function(info) return GSMasterOptions.cleanTempMacro end
     },
+    deleteOrphanLogout = {
+      name = "Delete Orphaned Macros on Logout",
+      desc = "As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans",
+      type = "toggle",
+      set = function(info,val) updateOptions(GSMasterOptions.deleteOrphansOnLogout, val) end,
+      get = function(info) return GSMasterOptions.deleteOrphansOnLogout end
+    },
     hideSoundErrors={
       name = "Prevent Sound Errors",
       desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableSFX lines within a Sequence",
