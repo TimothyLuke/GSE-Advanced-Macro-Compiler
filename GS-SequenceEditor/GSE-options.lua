@@ -1,9 +1,25 @@
 
+function GSListAddons()
+  local returnVal = "";
+  for k,v in pairs(GSMasterOptions.AddInPacks) do
+    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n'
+  end
+  return returnVal
+end
+
+function updateOptions(option, val)
+  option = val
+  GSReloadSequences()
+end
+
+
 local OptionsTable = {
   type = "group",
   name = "|cffff0000GS-E:|r Gnome Sequencer - Enhanced Options",
   args = {
     title1 = {
+      type = "header",
       name = "General Options",
       order = 100
     },
@@ -32,7 +48,8 @@ local OptionsTable = {
       order = 400
     },
     title2 = {
-      name = "General Options",
+      type = "header",
+      name = "Execution Options",
       order = 500
     },
     hideSoundErrors={
@@ -60,6 +77,7 @@ local OptionsTable = {
       order = 800
     },
     title2 = {
+      type = "header",
       name = "Registered Addons",
       order = 900
     },
@@ -73,19 +91,6 @@ local OptionsTable = {
   }
 }
 
-function GSListAddons()
-  local returnVal = "";
-  for k,v in GSMasterOptions.AddInPacks[name] do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n'
-  end
-  return returnVal
-end
-
-function updateOptions(option, val)
-  option = val
-  GSReloadSequences()
-end
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSSE", OptionsTable, {"gse"})
 LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSSE", "|cffff0000GS-E:|r Gnome Sequencer - Enhanced")
