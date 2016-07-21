@@ -54,7 +54,7 @@ local OptionsTable = {
     },
     hideSoundErrors={
       name = "Prevent Sound Errors",
-      desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableSFX lines within a Sequence",
+      desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableSFX lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts.",
       type = "toggle",
       set = function(info,val) updateOptions(GSMasterOptions.hideSoundErrors, val) end,
       get = function(info) return GSMasterOptions.hideSoundErrors end,
@@ -62,7 +62,7 @@ local OptionsTable = {
     },
     hideUIErrors={
       name = "Prevent UI Errors",
-      desc = "This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a PostMacro",
+      desc = "This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts.",
       type = "toggle",
       set = function(info,val) updateOptions(GSMasterOptions.hideUIErrors, val) end,
       get = function(info) return GSMasterOptions.hideUIErrors end,
@@ -70,7 +70,7 @@ local OptionsTable = {
     },
     clearUIErrors={
       name = "Clear Errors",
-      desc = "This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a PostMacro",
+      desc = "This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts.",
       type = "toggle",
       set = function(info,val) updateOptions(GSMasterOptions.clearUIErrors, val) end,
       get = function(info) return GSMasterOptions.clearUIErrors end,
