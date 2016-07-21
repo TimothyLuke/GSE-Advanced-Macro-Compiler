@@ -102,7 +102,6 @@ PostMacro = [[
 ]],
 }
 
-
 Sequences['DB_ProtWar'] = {
 specID = 73,
 author = "Suiseiseki - wowlazymacros.com",
@@ -124,5 +123,52 @@ PostMacro = [[
 /cast [combat] Battle Cry
 /use [combat] 13
 /use [combat] 14
+]],
+}
+
+Sequences['DB_Arms_ST'] = {
+specID= 71,
+author="Hizzi@Nathrezim",
+helpTxt = "Talents: 2133212",
+StepFunction = GSStaticPriority,
+PreMacro=[[
+/targetenemy [noharm][dead]
+/startattack
+/cast [modifier:alt]Charge
+/cast [combat] Bloodbath
+/cast [combat] Avatar
+/cast [combat] Battle Cry
+]],
+"/cast Execute",
+"/cast Rend",
+"/cast Colossus Smash",
+"/cast Overpower",
+"/cast Mortal Strike",
+"/cast Slam",
+PostMacro=[[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences['DB_Arms_AOE'] = {
+specID= 71,
+author="Hizzi@Nathrezim",
+helpTxt = "Talents: 2133212",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/startattack
+/cast [modifier:alt]Charge
+]],
+'/cast !Sweeping Strikes',
+'/cast !Execute',
+'/cast !Cleave',
+'/cast !Whirlwind',
+'/cast !Colossus Smash',
+PostMacro = [[
+/use [combat]13
+/use [combat]14
 ]],
 }
