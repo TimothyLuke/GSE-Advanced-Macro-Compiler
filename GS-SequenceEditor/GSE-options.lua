@@ -49,7 +49,7 @@ local OptionsTable = {
     },
     title2 = {
       type = "header",
-      name = "Execution Options - Enabling these option will trigger the ingame Warning about Custom Scripts.",
+      name = "Enabling these option will trigger the ingame Warning about Custom Scripts.",
       order = 500
     },
     hideSoundErrors={
