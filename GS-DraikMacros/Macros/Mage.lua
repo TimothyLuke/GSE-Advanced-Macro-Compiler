@@ -45,7 +45,7 @@ PostMacro = [[
 
 Sequences['DB_Frosty'] = {
 author='Draik',
-specID='64',
+specID=64,
 helpTxt = 'Talents: 1222112',
 PreMacro=[[
 /targetenemy [noharm][dead]
