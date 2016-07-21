@@ -76,7 +76,7 @@ local OptionsTable = {
       get = function(info) return GSMasterOptions.clearUIErrors end,
       order = 800
     },
-    title2 = {
+    title3 = {
       type = "header",
       name = "Registered Addons",
       order = 900
