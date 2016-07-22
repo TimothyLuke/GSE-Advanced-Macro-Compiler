@@ -44,34 +44,31 @@ PostMacro = [[
 }
 
 Sequences['DB_Frosty'] = {
-author='Draik',
+author='Sceptre',
 specID=64,
-helpTxt = 'Talents: 1222112',
+helpTxt = 'Talents: 1322112',
+icon='Spell_Frost_FrostBolt02',
 PreMacro=[[
 /targetenemy [noharm][dead]
-/cast [nopet,nomod] Summon Water Elemental]],
-icon='Spell_Frost_FrostBolt02',
-"/cast [combat]Rune of Power",
-"/cast [nochanneling]Ray of Frost",
-"/cast [combat]Rune of Power",
-"/cast Frost Bomb",
-"/cast Frozen Orb",
-"/cast Frozen Touch",
-"/cast Ice Lance",
-"/cast Flurry",
-"/cast Water Jet",
-"/cast Frostbolt",
-"/cast Frostbolt",
-"/cast Ice Lance",
-"/cast Glacial Spike",
-"/cast Frostbolt",
+/cast [nopet,nomod] Summon Water Elemental
+]],
+"/cast [nochanneling] Rune of Power",
+"/cast [nochanneling] Ray of Frost",
+"/cast [nochanneling] Frost Bomb",
+"/cast [nochanneling] Frozen Orb",
+"/cast [nochanneling] Frozen Touch",
+"/cast [nochanneling] Ice Lance",
+"/cast [nochanneling] Flurry",
+"/cast [nochanneling] Ice Lance",
+"/cast [nochanneling] Glacial Spike",
+"/cast [nochanneling] Frostbolt",
 PostMacro=[[
 /startattack
 /use [combat]13
 /use [combat]14
-/use [combat]Ice Floes
-/use [combat]Icy Veins
-/use [combat]Mirror Image
-/use [combat]Frozen Orb
+/cast [nochanneling] Ice Barrier
+/cast [nochanneling] Ice Floes
+/cast [nochanneling] Icy Veins
+/cast [nochanneling] Frozen Orb
 ]],
 }
