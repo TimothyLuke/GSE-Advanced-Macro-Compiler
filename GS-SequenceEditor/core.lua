@@ -224,8 +224,8 @@ function GSSE:getCurrentTalents()
 end
 
 function GSSE:getSpecID(forceSpec)
-    print ("Spec = " .. tostring(specradio:GetValue()))
-    print ("Class = " .. tostring(classradio:GetValue()))
+    --print ("Spec = " .. tostring(specradio:GetValue()))
+    --print ("Class = " .. tostring(classradio:GetValue()))
     if specradio:GetValue() or forceSpec then
       local currentSpec = GetSpecialization()
       return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
