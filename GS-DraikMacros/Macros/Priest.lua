@@ -71,7 +71,7 @@ PostMacro = [[
 }
 
 Sequences['DB_KTN_MouseOver'] = {
-specID = 256,
+specID = 5,
 author = "KTN",
 helpTxt = "Talents 3213131",
 '/castsequence [target=mouseover,help,nodead][] Power Word: Shield, Plea, Shadow Mend, Shadow Mend',
