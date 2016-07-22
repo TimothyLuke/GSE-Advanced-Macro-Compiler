@@ -210,15 +210,19 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
-    local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
-    if sequence.specID == currentSpecID or string.upper(txt) == specclass then
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-      GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
-    elseif txt == "all" or sequence.specID == 0 then
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-    elseif sequence.specID == currentclassId then
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
-      GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+    if isempty(sequence.specID) then
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r No Help Information' .. ' |cFFFFFF00' .. ' |cFF0000FFUnknown Author|r ' )
+    else
+      local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
+      if sequence.specID == currentSpecID or string.upper(txt) == specclass then
+        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+      elseif txt == "all" or sequence.specID == 0  then
+        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt or 'No Help Information' .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+      elseif sequence.specID == currentclassId then
+        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+      end
     end
   end
   ShowMacroFrame()
