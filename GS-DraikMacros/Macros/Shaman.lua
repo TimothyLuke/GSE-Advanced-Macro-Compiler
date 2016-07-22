@@ -66,3 +66,75 @@ PostMacro = [[
 /use [combat] 14
 ]],
 }
+
+Sequences['DB_ElemAoE'] = {
+specID = 262,
+author = "Nano",
+helpTxt = 'Talents: 1213132',
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
+'/cast [nochanneling] !Lava Burst',
+PostMacro = [[
+/cast Blood Fury
+/use [combat] 13
+/use [combat] 14
+]],
+}
+
+Sequences['DB_ElemAoE'] = {
+specID = 262,
+author = "Nano",
+helpTxt = 'Talents: 1213112',
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
+'/cast [nochanneling] !Lava Burst',
+PostMacro = [[
+/cast Elemental Mastery
+/cast Blood Fury
+/use [combat] 13
+/use [combat] 14
+]],
+}
+
+Sequences['DB_Elem'] = {
+specID = 262,
+author = "Nano",
+helpTxt = 'Talents: 1213132',
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
+'/castsequence reset=10 !Earth Shock',
+'/cast [nochanneling] !Lava Burst',
+PostMacro = [[
+/cast Blood Fury
+/use [combat] 13
+/use [combat] 14
+]],
+}
+
+Sequences['DB_Elem'] = {
+specID = 262,
+author = "Nano",
+helpTxt = 'Talents: 1213112',
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
+'/castsequence reset=10 !Earth Shock',
+'/cast [nochanneling] !Lava Burst',
+PostMacro = [[
+/cast Elemental Mastery
+/cast Blood Fury
+/use [combat] 13
+/use [combat] 14
+]],
+}
