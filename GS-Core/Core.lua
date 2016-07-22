@@ -254,17 +254,17 @@ end
 
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
 SlashCmdList["GNOME"] = function (msg, editbox)
-  if msg == "listall" then
+  if string.lower(msg) == "listall" then
     ListSequences("all")
-  elseif msg == "class" or msg == UnitClass("player") then
+  elseif string.lower(msg) == "class" or string.lower(msg) == string.lower(UnitClass("player")) then
     local _, englishclass = UnitClass("player")
     ListSequences(englishclass)
-  elseif msg == "showspec" then
+  elseif string.lower(msg) == "showspec" then
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
     print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname)
-  elseif msg == "help" then
+  elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" then
     cleanOrphanSequences()
