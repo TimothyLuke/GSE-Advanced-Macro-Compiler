@@ -3,6 +3,8 @@ seterrorhandler(_ERRORMESSAGE)
 local GNOME, Sequences = ...
 
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
+local _, _, currentclassId = UnitClass("player")
+
 
 local function isempty(s)
   return s == nil or s == ''
@@ -205,6 +207,7 @@ end
 
 local function ListSequences(txt)
   local currentSpec = GetSpecialization()
+
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
@@ -213,6 +216,9 @@ local function ListSequences(txt)
       GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
     elseif txt == "all" or sequence.specID == 0 then
       print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+    elseif sequence.specID == currentclassId then
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+      GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
     end
   end
   ShowMacroFrame()
@@ -263,7 +269,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
-    print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname)
+    print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname, "  The Alternative ClassID is " , currentclassId)
   elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" then

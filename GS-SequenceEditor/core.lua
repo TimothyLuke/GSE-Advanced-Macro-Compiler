@@ -2,6 +2,8 @@ local GNOME,_ = ...
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
+GSSequenceEditorLoaded = false
+
 function GSSE:getSequenceNames()
   local keyset={}
   local n=0
@@ -50,7 +52,7 @@ local stepvalue
 
 editframe:SetTitle("Sequence Editor")
 editframe:SetStatusText("Gnome Sequencer: Sequence Editor")
-editframe:SetCallback("OnClose", function(widget) GSSE:closeEditor() end)
+editframe:SetCallback("OnClose", function() GSSE:eupdateSequence(currentSequence, GSSequenceEditorLoaded) end)
 editframe:SetLayout("List")
 
 local nameeditbox = AceGUI:Create("EditBox")
@@ -66,8 +68,33 @@ stepdropdown:SetList({
   ["2"] = "Priority List (1 12 123 1234)",
 
 })
+
 stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key end)
 editframe:AddChild(stepdropdown)
+
+local specClassGroup = AceGUI:Create("SimpleGroup")
+specClassGroup:SetFullWidth(true)
+specClassGroup:SetLayout("Flow")
+
+local specradio = AceGUI:Create("CheckBox")
+specradio:SetType("radio")
+specradio:SetLabel("Specialization Specific Macro")
+specradio:SetValue(true)
+specradio:SetWidth(250)
+specradio:SetCallback("OnValueChanged", function (obj,event,key) GSSE:toggleClasses("spec")  end)
+
+local classradio = AceGUI:Create("CheckBox")
+classradio:SetType("radio")
+classradio:SetLabel("Classwide Macro")
+classradio:SetValue(false)
+classradio:SetWidth(250)
+classradio:SetCallback("OnValueChanged", function (obj,event,key) GSSE:toggleClasses("class")  end)
+
+
+specClassGroup:AddChild(specradio)
+specClassGroup:AddChild(classradio)
+
+editframe:AddChild(specClassGroup)
 
 local premacrobox = AceGUI:Create("MultiLineEditBox")
 premacrobox:SetLabel("PreMacro")
@@ -91,11 +118,11 @@ postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 editframe:AddChild(postmacrobox)
 
-local eupdbutton = AceGUI:Create("Button")
-eupdbutton:SetText("Save")
-eupdbutton:SetWidth(200)
-eupdbutton:SetCallback("OnClick", function() GSSE:eupdateSequence(currentSequence) end)
-editframe:AddChild(eupdbutton)
+--local eupdbutton = AceGUI:Create("Button")
+--eupdbutton:SetText("Save")
+--eupdbutton:SetWidth(200)
+--eupdbutton:SetCallback("OnClick", function() GSSE:eupdateSequence(currentSequence) end)
+--editframe:AddChild(eupdbutton)
 
 
 -------------end editor-----------------
@@ -108,6 +135,16 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 function GSSE:loadSequence(SequenceName)
     sequencebox:SetText(GSExportSequence(SequenceName))
+end
+
+function GSSE:toggleClasses(buttonname)
+  if buttonname == "class" then
+    classradio:SetValue(true)
+    specradio:SetValue(false)
+  else
+    classradio:SetValue(false)
+    specradio:SetValue(true)
+  end
 end
 
 function GSSE:updateSequence(SequenceName)
@@ -140,22 +177,27 @@ function GSSE:updateSequence(SequenceName)
    editframe:Show()
 end
 
-function GSSE:eupdateSequence(SequenceName)
+function GSSE:eupdateSequence(SequenceName, loaded)
     --process Lines
-    for i, v in ipairs(GSMasterSequences["LiveTest"]) do GSMasterSequences["LiveTest"][i] = nil end
-    GSSE:lines(GSMasterSequences["LiveTest"], spellbox:GetText())
-    -- update sequence
-    if stepvalue == "2" then
-      GSMasterSequences["LiveTest"].StepFunction = GSStaticPriority
+    if loaded then
+      for i, v in ipairs(GSMasterSequences["LiveTest"]) do GSMasterSequences["LiveTest"][i] = nil end
+      GSSE:lines(GSMasterSequences["LiveTest"], spellbox:GetText())
+      -- update sequence
+      if stepvalue == "2" then
+        GSMasterSequences["LiveTest"].StepFunction = GSStaticPriority
+      else
+        GSMasterSequences["LiveTest"].StepFunction = nil
+      end
+      GSMasterSequences["LiveTest"].PreMacro = premacrobox:GetText()
+      GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
+      GSMasterSequences["LiveTest"].PostMacro = postmacrobox:GetText()
+      GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+      GSSE:loadSequence("LiveTest")
+      editframe:Hide()
+      frame:Show()
     else
-      GSMasterSequences["LiveTest"].StepFunction = nil
+      GSSequenceEditorLoaded = true
     end
-    GSMasterSequences["LiveTest"].PreMacro = premacrobox:GetText()
-    GSMasterSequences["LiveTest"].PostMacro = postmacrobox:GetText()
-    GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
-    GSSE:loadSequence("LiveTest")
-    editframe:Hide()
-    frame:Show()
 end
 
 function GSSE:GSSlash(input)
@@ -181,14 +223,21 @@ function GSSE:getCurrentTalents()
   return talents
 end
 
-function GSSE:getSpecID()
-    local currentSpec = GetSpecialization()
-    return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+function GSSE:getSpecID(forceSpec)
+    print ("Spec = " .. tostring(specradio:GetValue()))
+    print ("Class = " .. tostring(classradio:GetValue()))
+    if specradio:GetValue() or forceSpec then
+      local currentSpec = GetSpecialization()
+      return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+    else
+      local _, _, currentclassId = UnitClass("player")
+      return currentclassId
+    end
 end
 
 function GSSE:getMacroIcon(sequenceIndex)
   if GSSE:isempty(sequenceIndex) then
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID(true))
     return strsub(specicon, 17)
   else
     local _, iconpath, _ =  GetMacroInfo(sequenceIndex)
