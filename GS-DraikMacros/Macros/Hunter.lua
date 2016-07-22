@@ -174,7 +174,7 @@ PostMacro=[[
 
 Sequences['DB_MMS'] = {
 author=Nano,
-specID='254',
+specID=254,
 helpTxt = 'Talents: 3113122',
 PreMacro=[[
 /targetenemy [noharm][dead]
@@ -191,5 +191,51 @@ icon='Ability_Hunter_FocusedAim',
 PostMacro=[[
 /startattack
 /petattack
+]],
+}
+
+Sequences['DB_SURVST'] = {
+specID = 255,
+author = "yiffking fleabag",
+helpTxt = "Single Target - Unknown Talents ",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=8 !Raptor Strike, Lacerate',
+'/castsequence Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/cast Raptor Strike',
+'/cast Lacerate',
+'/cast !Mongoose Bite',
+'/cast Throwing Axes',
+'/cast Spitting Cobra',
+'/cast Flanking Strike',
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
+
+Sequences['DB_SURVAOE'] = {
+specID = 255,
+author = "yiffking fleabag",
+helpTxt = "AoE - Unknown Talents ",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/castsequence reset=8 !Raptor Strike, Carve',
+'/castsequence Serpent Sting, Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/cast Raptor Strike',
+'/cast Carve',
+'/cast !Mongoose Bite',
+'/cast Butchery',
+'/cast Spitting Cobra',
+'/cast Throwing Axes',
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
 ]],
 }
