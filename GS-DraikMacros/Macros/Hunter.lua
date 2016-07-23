@@ -173,7 +173,7 @@ PostMacro=[[
 }
 
 Sequences['DB_MMS'] = {
-author=Nano,
+author="Nano",
 specID=254,
 helpTxt = 'Talents: 3113122',
 PreMacro=[[
