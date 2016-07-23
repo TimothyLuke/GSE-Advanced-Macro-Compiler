@@ -81,7 +81,8 @@ local function createButton(name, sequence)
   button.UpdateIcon = UpdateIcon
 end
 
-local function GSReloadSequences()
+function GSReloadSequences()
+  GSPrintDebugMessage("Reloading Sequences")
   for name, sequence in pairs(Sequences) do
     createButton(name, sequence)
   end
@@ -157,6 +158,7 @@ f:SetScript('OnEvent', function(self, event)
     for name, sequence in pairs(Sequences) do
       createButton(name, sequence)
     end
+
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
@@ -164,7 +166,7 @@ f:RegisterEvent('PLAYER_LOGIN')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_LOGOUT')
 
-print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
+
 ----------------------------
 -- Draik's Mods
 ----------------------------
@@ -210,8 +212,8 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
-    if isempty(sequence.specID) then
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r No Help Information' .. ' |cFFFFFF00' .. ' |cFF0000FFUnknown Author|r ' )
+    if isempty(sequence.specID) or isempty(sequence.author) then
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. ' |cFFFFFF00' .. ' |cFF0000FF Unknown Author|r ' )
     else
       local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
@@ -284,3 +286,5 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     ListSequences(GetSpecialization())
   end
 end
+
+print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
