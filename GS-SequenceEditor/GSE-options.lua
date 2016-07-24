@@ -89,15 +89,34 @@ local OptionsTable = {
       order = -1
     },
     debug={
-      name = "Enable Debug Mode",
-      desc = "This option dumps extra trace information to your chat window.",
+      name = "Enable Mod Debug Mode",
+      desc = "This option dumps extra trace information to your chat window to help troubleshoot problems with the mod",
       type = "toggle",
       set = function(info,val) GSMasterOptions.debug = val GSPrintDebugMessage("Debug Mode Enabled", GNOME) end,
       get = function(info) return GSMasterOptions.debug end,
       order = -1
     },
+    debugchat={
+      name = "Display debug messages in Chat Window",
+      desc = "This will display debug messages in the Chat window.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.sendDebugOutputToChat = val end,
+      get = function(info) return GSMasterOptions.sendDebugOutputToChat end,
+      order = -1
+    },
+    debugGSDebugOutput={
+      name = "Store Debug Messages",
+      desc = "Store output of debug messages in a Global Variable that can be referrenced by other mods.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.sendDebugOutputGSDebugOutput = val end,
+      get = function(info) return GSMasterOptions.sendDebugOutputGSDebugOutput end,
+      order = -1
+    },
   }
 }
+
+GSMasterOptions.sendDebugOutputToChat = true
+GSMasterOptions.sendDebugOutputGSDebugOutput = false
 
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSSE", OptionsTable, {"gse"})

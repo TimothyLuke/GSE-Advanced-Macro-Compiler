@@ -36,7 +36,7 @@ local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message
 	end
-	if GSMasterOptions.sendDebugOutputToChat
+	if GSMasterOptions.sendDebugOutputToChat then
     print(message)
 	end
 end
