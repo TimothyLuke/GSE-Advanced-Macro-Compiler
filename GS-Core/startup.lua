@@ -15,7 +15,8 @@ GSMasterOptions.initialised = true
 GSMasterOptions.AddInPacks = {}
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
-
+GSMasterOptions.debugSequence = false
+GSMasterOptions.sendOutputTo = 1
 
 -- Seed a first instance just to be sure an instance is loaded if we need to.
 if GSMasterOptions.seedInitialMacro then

@@ -212,10 +212,17 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
+    local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
+    GSPrintDebugMessage("Sequence Name: " .. name)
+    if isempty(sid) then
+      sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
+      GSPrintDebugMessage("No Specialisation information for sequence " .. name .. ". Overriding with information for current spec " .. specname)
+    else
+      GSPrintDebugMessage("specname: " .. specname .. " specdescription: " ..  specdescription .. " specicon: " .. specicon .. " specrole: " .. specrole .. " specclass: " .. specclass)
+    end
     if isempty(sequence.specID) or isempty(sequence.author) then
       print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. ' |cFFFFFF00' .. ' |cFF0000FF Unknown Author|r ' )
     else
-      local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
         GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
