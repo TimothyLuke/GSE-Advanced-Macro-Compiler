@@ -15,10 +15,12 @@ GSMasterOptions.initialised = true
 GSMasterOptions.AddInPacks = {}
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
-GSMasterOptions.debugSequence = false
+GSMasterOptions.debugSequence = true
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSDebugOutput = ""
+
+GSStaticSequenceDebug = "SEQUENCEDEBUG"
 
 -- Seed a first instance just to be sure an instance is loaded if we need to.
 if GSMasterOptions.seedInitialMacro then

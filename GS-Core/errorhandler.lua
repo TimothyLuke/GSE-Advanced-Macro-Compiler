@@ -26,17 +26,21 @@ seterrorhandler(function(message)
 	end
 end)
 
-function GSPrintDebugMessage(message, module)
-    if GSMasterOptions.debug then
-      determinationOutputDestination('|cffff0000' .. (isempty(module) and GNOME or module) .. ':|r |cFF00FF00 <DEBUG> |r ' .. message .. "\n")
-    end
-end
-
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
-    GSDebugOutput = GSDebugOutput .. message
+    GSDebugOutput = GSDebugOutput .. message .. "\n"
 	end
 	if GSMasterOptions.sendDebugOutputToChat then
     print(message)
 	end
+end
+
+
+function GSPrintDebugMessage(message, module)
+    if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
+      determinationOutputDestination('|cffff0000' .. GNOME .. ':|r |cFF00FF00 <SEQUENCEDEBUG> |r ' .. message )
+		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
+      determinationOutputDestination('|cffff0000' .. (isempty(module) and GNOME or module) .. ':|r |cFF00FF00 <DEBUG> |r ' .. message )
+    end
+
 end
