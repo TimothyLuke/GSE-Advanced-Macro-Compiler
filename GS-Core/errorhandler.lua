@@ -28,6 +28,15 @@ end)
 
 function GSPrintDebugMessage(message, module)
     if GSMasterOptions.debug then
-        print('|cffff0000' .. (isempty(module) and GNOME or module) .. ':|r |cFF00FF00 <DEBUG> |r ' .. message)
+      determinationOutputDestination('|cffff0000' .. (isempty(module) and GNOME or module) .. ':|r |cFF00FF00 <DEBUG> |r ' .. message .. "\n")
     end
+end
+
+local function determinationOutputDestination(message)
+  if GSMasterOptions.sendDebugOutputGSDebugOutput then
+    GSDebugOutput = GSDebugOutput .. message
+	end
+	if GSMasterOptions.sendDebugOutputToChat
+    print(message)
+	end
 end
