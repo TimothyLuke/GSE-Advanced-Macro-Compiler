@@ -184,11 +184,11 @@ function GSExportSequence(sequenceName)
        steps = Sequences[sequenceName].StepFunction .. "',\n"
       end
     end
-    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. Sequences[sequenceName].author .."\",\n" .."specID="..Sequences[sequenceName].specID ..",\n" .. helptext .. steps .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]],")
+    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. Sequences[sequenceName].author .."\",\n" .."specID="..Sequences[sequenceName].specID ..",\n" .. helptext .. steps )
     if not isempty(Sequences[sequenceName].icon) then
-       returnVal = returnVal .. "\nicon='"..Sequences[sequenceName].icon .."',"
+       returnVal = returnVal .. "icon=".. (tonumber(Sequences[sequenceName].icon) and Sequences[sequenceName].icon or "'".. Sequences[sequenceName].icon .. "'") ..",\n"
     end
-    returnVal = returnVal .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
+    returnVal = returnVal .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]]," .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
     returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[sequenceName].PostMacro .. "]],\n}"
     return returnVal
   end

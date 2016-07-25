@@ -108,11 +108,11 @@ headerGroup:AddChild(firstheadercolumn)
 local iconpicker = AceGUI:Create("Icon")
 --iconpicker:SetImage()
 iconpicker:SetLabel("Macro Icon")
-
+--iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 
 headerGroup:AddChild(iconpicker)
-editframe:AddChild(specClassGroup)
 editframe:AddChild(headerGroup)
+editframe:AddChild(specClassGroup)
 
 local premacrobox = AceGUI:Create("MultiLineEditBox")
 premacrobox:SetLabel("PreMacro")
@@ -135,12 +135,6 @@ postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 editframe:AddChild(postmacrobox)
-
---local eupdbutton = AceGUI:Create("Button")
---eupdbutton:SetText("Save")
---eupdbutton:SetWidth(200)
---eupdbutton:SetCallback("OnClick", function() GSSE:eupdateSequence(currentSequence) end)
---editframe:AddChild(eupdbutton)
 
 
 -------------end editor-----------------
@@ -169,11 +163,15 @@ function GSSE:updateSequence(SequenceName)
     frame:Hide()
     GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
     GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
-    GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
-    GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
-    GSMasterSequences["LiveTest"].icon = GSSE:getMacroIcon(SequenceName)
-    GSPrintDebugMessage("returned icon: " .. GSMasterSequences["LiveTest"].icon, GNOME)
+    reticon = GSSE:getMacroIcon(SequenceName)
+    -- if string prefix with "Interface\\Icons\\" if number make it a number
+    if not tonumber(reticon) then
+      -- we have a starting
+      reticon = "Interface\\Icons\\" .. reticon
+    end
+    GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
+    GSMasterSequences["LiveTest"].icon = reticon
     GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
     GSSE:loadSequence("LiveTest")
 
@@ -193,7 +191,7 @@ function GSSE:updateSequence(SequenceName)
      postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
    end
    spellbox:SetText(table.concat(GSMasterSequences["LiveTest"],"\n"))
-   iconpicker:SetImage("Interface\\Icons\\" .. GSMasterSequences["LiveTest"].icon)
+   iconpicker:SetImage(GSMasterSequences["LiveTest"].icon)
    editframe:Show()
 end
 
@@ -210,6 +208,13 @@ function GSSE:eupdateSequence(SequenceName, loaded)
       end
       GSMasterSequences["LiveTest"].PreMacro = premacrobox:GetText()
       GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
+      GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+      if not tonumber(GSMasterSequences["LiveTest"].icon) then
+        GSPrintDebugMessage("String Icon " .. GSMasterSequences["LiveTest"].icon .. " Checking for Interface\\Icons\\   strsub value: " .. strsub(GSMasterSequences["LiveTest"].icon,1 , 9), GNOME)
+        if strsub(GSMasterSequences["LiveTest"].icon,1 , 9) == "Interface" then
+          GSMasterSequences["LiveTest"].icon = strsub(GSMasterSequences["LiveTest"].icon, 17)
+        end
+      end
       GSMasterSequences["LiveTest"].PostMacro = postmacrobox:GetText()
       GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
       GSSE:loadSequence("LiveTest")
@@ -258,20 +263,23 @@ end
 function GSSE:getMacroIcon(sequenceIndex)
   GSPrintDebugMessage("sequenceIndex: " .. (GSSE:isempty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
   GSPrintDebugMessage("Icon: " .. (GSSE:isempty(GSMasterSequences[sequenceIndex].icon) and "none" or GSMasterSequences[sequenceIndex].icon))
-  if GSSE:isempty(GSMasterSequences[sequenceIndex].icon) then
+  local macindex = GetMacroIndexByName(sequenceIndex)
+  local a, iconid, c =  GetMacroInfo(macindex)
+  if not GSSE:isempty(a) then
+    GSPrintDebugMessage("Macro Found " .. a .. " with iconid " .. (GSSE:isempty(iconid) and "of no value" or iconid) .. " " .. (GSSE:isempty(iconid) and "with no body" or c), GNOME)
+  else
+    GSPrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex , GNOME)
+  end
+  if GSSE:isempty(GSMasterSequences[sequenceIndex].icon) and GSSE:isempty(iconid) then
     GSPrintDebugMessage("SequenceSpecID: " .. GSMasterSequences[sequenceIndex].specID, GNOME)
     local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSSE:isempty(GSMasterSequences[sequenceIndex].specID) and GSSE:getSpecID(true) or GSMasterSequences[sequenceIndex].specID))
     GSPrintDebugMessage("No Sequence Icon setting to " .. (GSSE:isempty(strsub(specicon, 17)) and "No value" or strsub(specicon, 17)), GNOME)
     return strsub(specicon, 17)
-  else
-    local macindex = GetMacroIndexByName(sequenceIndex)
-    local a, iconpath, c =  GetMacroInfo(macindex)
-    GSPrintDebugMessage("Macro Found " .. a .. " " .. (GSSE:isempty(iconpath) and "No value" or iconpath) .. " " .. c, GNOME)
---    if GSSE:isempty(iconpath) then
+  elseif GSSE:isempty(iconid) and not GSSE:isempty(GSMasterSequences[sequenceIndex].icon) then
+
       return GSMasterSequences[sequenceIndex].icon
---    else
---      return iconpath
-    end
+  else
+      return iconid
   end
 end
 

@@ -14,12 +14,6 @@ local _G = _G
 -- List them here for Mikk's FindGlobals script
 -- GLOBALS: ACCEPT, ChatFontNormal
 
-local wowMoP
-do
-	local _, _, _, interface = GetBuildInfo()
-	wowMoP = (interface >= 50000)
-end
-
 --[[-----------------------------------------------------------------------------
 Support functions
 -------------------------------------------------------------------------------]]
@@ -289,7 +283,7 @@ local function Constructor()
 	label:SetText(ACCEPT)
 	label:SetHeight(10)
 
-	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, wowMoP and "UIPanelButtonTemplate" or "UIPanelButtonTemplate2")
+	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, "UIPanelButtonTemplate")
 	button:SetPoint("BOTTOMLEFT", 0, 4)
 	button:SetHeight(22)
 	button:SetWidth(label:GetStringWidth() + 24)
