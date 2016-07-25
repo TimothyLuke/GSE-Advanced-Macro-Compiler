@@ -97,3 +97,51 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+Sequences['DB_Disc-THeal'] = {
+specID = 256,
+author = "Zole",
+helpTxt = "Heal Target - Talent: 2113121",
+icon = "Ability_Priest_Atonement",
+PreMacro = [[
+]],
+'/cast [nochanneling] Power Word: Shield',
+'/castsequence [nochanneling] Plea,Shadow Mend,Shadow Mend',
+'/castsequence [target=targettarget] [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/cast [target=targettarget] Penance',
+'/cast [combat][nochanneling] Mindbender',
+'/cast [target=targettarget] [nochanneling] Divine Star',
+}
+
+Sequences['DB_Disc-TDPS'] = {
+specID = 256,
+author = "Zole",
+helpTxt = "Dps Target - Talent: 2113121",
+icon = "Ability_Priest_Atonement",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+'/cast [nochanneling][@targettarget] Power Word: Shield',
+'/castsequence [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/cast Penance',
+'/cast [combat][nochanneling] Mindbender',
+'/cast [nochanneling] Divine Star',
+PostMacro = [[
+/startattack
+]],
+}
+
+Sequences['DB_Disc-THealAoe'] = {
+specID = 256,
+author = "Zole",
+helpTxt = "AoE Heal Target - Talent: 2113121",
+icon = "Ability_Mage_FireStarter",
+PreMacro = [[
+]],
+'/cast [nochanneling] Power Word: Shield',
+'/castsequence reset=/target [nochanneling] Power Word: Radiance,Plea',
+'/castsequence [target=targettarget] [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/cast [target=targettarget] Penance',
+'/cast [combat][nochanneling] Mindbender',
+'/cast [target=targettarget] [nochanneling] Divine Star',
+}

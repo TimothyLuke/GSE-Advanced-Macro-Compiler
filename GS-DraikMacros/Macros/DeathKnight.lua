@@ -105,3 +105,45 @@ PostMacro = [[
 /startattack
 ]],
 }
+
+Sequences['DB_BloodDK'] = {
+StepFunction = GSStaticPriority,
+specID = 250,
+author = "Owns",
+helpTxt = "Talents 2112333",
+PreMacro = [[
+/use [combat] 13
+/use [combat] 14
+]],
+"/cast Marrowrend",
+"/castsequence reset=combat Death's Caress, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike",
+'/castsequence reset=combat Blood Boil, Blood Boil, Marrowrend',
+'/castsequence reset=combat Heart Strike, Heart Strike, Heart Strike, Heart Strike, Marrowrend',
+PostMacro = [[
+/targetenemy [noharm][dead]
+]],
+}
+
+Sequences["DB_SquishyDK"] = {
+StepFunction = GSStaticPriority,
+specID = 250,
+author = "Suiseiseki",
+helpTxt = "Talents 2112333",
+PreMacro = [[
+/cast [combat] Vampiric Blood
+/Cast [combat] Dancing Rune Weapon
+/cancelaura Wraith Walk
+]],
+'/castsequence Marrowrend, Marrowrend, Marrowrend, Marrowrend, Death Strike',
+"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Marrowrend",
+"/cast Death Strike",
+"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Heart Strike",
+"/cast Heart Strike",
+"/cast Death Strike",
+'/cast Marrowrend',
+PostMacro = [[
+/TargetEnemy [noharm][dead]
+/Use [combat] 13
+/Use [combat] 14
+]],
+}

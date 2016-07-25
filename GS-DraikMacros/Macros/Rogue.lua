@@ -78,3 +78,48 @@ PostMacro=[[
 /use [combat] 14
 ]],
 }
+
+Sequences['DB_outlaw'] = {
+StepFunction = GSStaticPriority,
+author="Druccy",
+specID=260,
+helpTxt="Talents - 1232232",
+PreMacro = [[
+/startattack
+/cast [stealth] ambush,cheap shot
+/cast [nostealth,nocombat] Stealth
+/cast Marked for Death
+/cast Adrenaline Rush
+]],
+'/castsequence reset=target Ghostly Strike, Saber Slash, Saber Slash, Pistol Shot, Roll the Bones,feint',
+'/cast [nochanneling] Run Through',
+'/cast [nochanneling] Between the Eyes',
+'/cast [nochanneling] Killing Spree',
+'/cast [nochanneling] Crimson Vial',
+PostMacro = [[
+/cast [combat] Riposte
+/cast [combat]13
+/use [combat] 14
+]],
+}
+
+Sequences['DB_TLAssassin'] = {
+author="Todd Livengood - wowlazymacros.com",
+specID=259,
+helpTxt = 'Talents: 3233332',
+StepFunction = GSStaticPriority,
+PreMacro=[[
+/targetenemy [noharm][dead]
+/cast [nostealth,nocombat]Stealth
+/cast [stealth] Cheap Shot
+]],
+"/cast Mutilate",
+"/cast Garrote",
+"/cast Exsanguinate",
+"/cast Mutilate",
+"/castsequence reset=5 Rupture,Envenom",
+"/cast Hemorrhage",
+PostMacro=[[
+/stopattack [stealth]
+]],
+}
