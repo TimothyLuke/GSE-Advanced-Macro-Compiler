@@ -79,7 +79,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_outlaw'] = {
+Sequences['DB_DRoutlaw'] = {
 StepFunction = GSStaticPriority,
 author="Druccy",
 specID=260,
