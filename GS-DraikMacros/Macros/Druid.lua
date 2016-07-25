@@ -181,3 +181,74 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+Sequences["DB_druid_bala_st"] = {
+specID = 102,
+author="someone",
+helpTxt = "3333132 CTRL Blessing of the Ancients, Shift Celestial Alignment, Alt Solar Beam",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/cast [noform]!Moonkin Form
+/cast [mod:ctrl] Blessing of the Ancients
+/cast [mod:shift] Celestial Alignment
+/cast [mod:alt] Solar Beam
+]],
+"/castsequence reset=target Sunfire,null",
+"/castsequence reset=target Moonfire,null",
+"/castsequence [combat]Starsurge,Solar Wrath,Lunar Strike,Solar Wrath",
+"/castsequence Lunar Strike,Solar Wrath,Starsurge,Solar Wrath,Lunar Strike,Starsurge",
+"/castsequence [combat]Solar Wrath,Lunar Strike,Solar Wrath,Moonfire",
+"/castsequence [combat]Solar Wrath,Starsurge,Lunar Strike,Solar Wrath",
+"/castsequence [combat]Starsurge,Solar Wrath,Solar Wrath,Sunfire",
+"/castsequence [combat]Solar Wrath,Lunar Strike,Starsurge,Moonfire",
+"/castsequence [combat]Lunar Strike,Solar Wrath,Lunar Strike",
+"/cast Starsurge",
+PostMacro = [[
+/startattack
+/use [combat] 13
+/use [combat] 14
+]],
+}
+
+Sequences['DB_KTNDRUHEALS'] = {
+specID = 105,
+author = "KTN",
+helpTxt = "2113112",
+PreMacro = [[
+/cast [@focus,dead] Rebirth
+]],
+'/castsequence [@focus] reset=15/combat Lifebloom, Regrowth, Rejuvenation',
+'/cast [@focus] Cenarion Ward',
+'/castsequence reset=target [@mouseover,exists,help,nodead] Regrowth, Rejuvenation, Healing Touch, Swiftmend',
+PostMacro = [[
+/cast [@focus]Ironbark
+/cast [@player]Barkskin
+]],
+}
+
+Sequences['DB_KTNDRUAOEHEALS'] = {
+specID = 105,
+author = "KTN",
+helpTxt = "2113112",
+'/castsequence [@focus] Wild Growth',
+}
+
+Sequences['DB_KTNRestoBoom'] = {
+specID = 105,
+author = "KTN",
+helpTxt = "Talents-2113112",
+PreMacro = [[
+/cast [@focus,dead] Rebirth
+/assist [@focus,exists,nodead]
+/targetenemy [noharm]
+/use [noform]!Moonkin Form
+]],
+'/castsequence [combat] Moonfire, Sunfire, Solar Wrath, Lunar Strike, Solar Wrath, Lunar Strike, Solar Wrath, Lunar Strike',
+'/cast Starsurge',
+PostMacro = [[
+/startattack
+/use [combat]13
+/use [combat]14
+]],
+}
