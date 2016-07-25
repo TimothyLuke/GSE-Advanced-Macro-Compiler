@@ -1,0 +1,3 @@
+local GNOME, language = ...
+
+GSPrintDebugMessage("Translator Initialised", GNOME)
