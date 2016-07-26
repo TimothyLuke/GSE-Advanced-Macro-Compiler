@@ -59,7 +59,7 @@ end
 for i=1,GetNumAddOns() do
     if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
         local name, _, _, _, _, _ = GetAddOnInfo(i)
-        if name ~= "GS-SequenceEditor" then
+        if name ~= "GS-SequenceEditor" or name ~= "GS-SequenceTranslator" then
 					LoadAddOn(i);
         end
 				GSMasterOptions.AddInPacks[name] = true
