@@ -156,6 +156,9 @@ f:SetScript('OnEvent', function(self, event)
       GSMasterOptions.AddInPacks = addins
     end
     for name, sequence in pairs(Sequences) do
+      if GSMasterOptions.useTranslator and GSTranslatorAvailable then
+        sequence = GSTranslateSequence(sequence)
+      end
       createButton(name, sequence)
     end
 
@@ -239,6 +242,9 @@ end
 
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
+    if GSMasterOptions.useTranslator and GSTranslatorAvailable then
+      sequence = GSTranslateSequence(sequence)
+    end
     if button==nil then
         createButton(name, sequence)
     else

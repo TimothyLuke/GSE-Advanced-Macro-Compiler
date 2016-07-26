@@ -10,7 +10,7 @@ local function isempty(s)
 end
 
 seterrorhandler(function(message)
-	local line, err = message:match('equences%.lua:(%d+): (.+)')
+	local line, err = message:match('GS-%.lua:(%d+): (.+)')
 	if err then
 		for pattern, response in pairs(Errors) do
 			if err:match(pattern) then

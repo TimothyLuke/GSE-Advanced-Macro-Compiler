@@ -1,8 +1,19 @@
 local GNOME, language = ...
 local locale = GetLocale();
 
+function GSTRisempty(s)
+  return s == nil or s == ''
+end
+
+
 function GSTranslateSequence(sequence)
-    return GSTranslateSequenceFromTo(sequence, isempty(sequence.locale) and "enUS" or sequence.locale), locale)
+  if (sequence, GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
+    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ~=" .. locale, GNOME)
+    return GSTranslateSequenceFromTo(sequence, GSTRisempty(sequence.locale) and "enUS" or sequence.locale), locale)
+  else
+    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ==" .. locale, GNOME)
+    return sequence
+  end
 end
 
 function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
@@ -24,12 +35,11 @@ end
 
 function GSTranslateGetLocaleSpellNameTable()
   local spelltable = {}
-  spelltable[locale] = {}
   local checker
   for i = 1, 300000 do
     checker = (GetSpellInfo(i))
     if checker then
-      spelltable[locale][i] = checker
+      spelltable[i] = checker
     end
   end
   return spelltable
@@ -42,4 +52,11 @@ function GSTRlines(tab, str)
   end
   helper((str:gsub("(.-)\r?\n", helper)))
   GST = t
+end
+
+
+if GSTRisempty() then
+  -- Load the current locale into the language SetAttribute
+  GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
+  language[locale] = GSTranslateGetLocaleSpellNameTable()
 end
