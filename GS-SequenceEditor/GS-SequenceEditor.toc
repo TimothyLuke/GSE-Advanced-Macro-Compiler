@@ -4,8 +4,10 @@
 ## Author: Draik
 ## Version: v1.0.6 - Legion
 ## RequiredDeps: GS-Core
+## OptionalDeps: GS-SequenceTranslator
 
 embeds.xml
 
 core.lua
 GSE-options.lua
+GS-TranslatorFrame.lua

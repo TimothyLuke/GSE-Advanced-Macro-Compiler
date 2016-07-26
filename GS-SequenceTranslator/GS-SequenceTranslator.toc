@@ -5,10 +5,12 @@
 ## Version: v1.1 - Legion
 ## RequiredDeps: GS-Core
 
+#setup
 startup.lua
-###### Language Files
+
+# Language Files
 
 
 
-###### Translater
+# Translater
 translator-core.lua
