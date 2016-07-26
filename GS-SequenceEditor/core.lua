@@ -59,7 +59,7 @@ local firstheadercolumn = AceGUI:Create("SimpleGroup")
 firstheadercolumn:SetLayout("List")
 
 editframe:SetTitle("Sequence Editor")
-editframe:SetStatusText("Gnome Sequencer: Sequence Editor")
+editframe:SetStatusText("Gnome Sequencer: Sequence Editor. Press the Close button to Save -->")
 editframe:SetCallback("OnClose", function() GSSE:eupdateSequence(currentSequence, GSSequenceEditorLoaded) end)
 editframe:SetLayout("List")
 
