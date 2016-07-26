@@ -4,6 +4,7 @@
 ## Author: Draik
 ## Version: v1.1 - Legion
 ## RequiredDeps: GS-Core
+## DefaultState: disabled
 
 #setup
 startup.lua
