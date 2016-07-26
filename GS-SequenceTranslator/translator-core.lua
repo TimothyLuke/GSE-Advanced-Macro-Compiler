@@ -52,13 +52,18 @@ end
 
 function GSTranslateGetLocaleSpellNameTable()
   local spelltable = {}
-  local checker
-  for i = 1, 300000 do
-    checker = (GetSpellInfo(i))
-    if checker then
-      spelltable[i] = checker
-    end
+  for k,v in pairs(language["enUS"]) do
+      --print(k)
+      local spellname = GetSpellInfo(k)
+      spelltable[k] = spellname
   end
+  -- local checker
+  -- for i = 1, 300000 do
+  --   checker = (GetSpellInfo(i))
+  --   if checker then
+  --     spelltable[i] = checker
+  --   end
+  -- end
   return spelltable
 end
 

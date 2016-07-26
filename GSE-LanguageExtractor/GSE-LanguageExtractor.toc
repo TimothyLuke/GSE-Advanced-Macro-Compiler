@@ -3,8 +3,8 @@
 ## Notes: This will save your current locale's spell table in your wtf folder.  This is disabled in case someone pulls it from GIT not knowing what it does
 ## Author: Draik
 ## Version: v1.1 - Legion
-## RequiredDeps: GS-Core GS-SequenceTranslator
 ## SavedVariables: langs
 ## DefaultState: disabled
+
 
 core.lua
