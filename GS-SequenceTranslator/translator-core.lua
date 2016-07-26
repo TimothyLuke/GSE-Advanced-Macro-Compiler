@@ -7,28 +7,45 @@ end
 
 
 function GSTranslateSequence(sequence)
-  if (GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
-    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale .. " ~=" .. locale, GNOME)
-    return GSTranslateSequenceFromTo(sequence, (GSTRisempty(sequence.locale) and "enUS" or sequence.locale), locale)
-  else
-    GSPrintDebugMessage((GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ==" .. locale, GNOME)
-    return sequence
+  if not GSTRisempty(sequence) then
+    if (GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
+      --GSPrintDebugMessage((GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ~=" .. locale, GNOME)
+      return GSTranslateSequenceFromTo(sequence, (GSTRisempty(sequence.locale) and "enUS" or sequence.locale), locale)
+    else
+      GSPrintDebugMessage((GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ==" .. locale, GNOME)
+      return sequence
+    end
   end
 end
 
 function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
+  GSPrintDebugMessage("GSTranslateSequenceFromTo  From: " .. fromLocale .. " To: " .. toLocale, GNOME)
+  local lines = table.concat(sequence,"\n")
+  GSPrintDebugMessage("lines: " .. lines, GNOME)
   for sid, term in pairs(language[toLocale]) do
-    -- Translate PreMacro
-    sequence.PreMacro = string.gsub(sequence.PreMacro, language[toLocale][sid], term)
-    -- Translate PostMacro
-    sequence.PostMacro = string.gsub(sequence.PostMacro, language[toLocale][sid], term)
-    -- Translate Sequence Steps
-    local lines = table.concat(sequence,"\n")
-    lines = string.gsub(lines, language[toLocale][sid], term)
-    --clear untranslated lines
-    for i, v in ipairs(sequence) do sequence = nil end
-    GSTRlines(sequence, lines)
+    if not GSTRisempty(sid) then
+      GSPrintDebugMessage("sid: " .. sid, GNOME)
+      if not GSTRisempty(term) then
+        GSPrintDebugMessage(toLocale .. ": " .. term, GNOME)
+        GSPrintDebugMessage(fromLocale .. ": " .. language[fromLocale][sid], GNOME)
+      end
+      -- Translate PreMacro
+      if not GSTRisempty(sequence.PreMacro) then
+        GSPrintDebugMessage("Original PreMacro: " .. sequence.PreMacro, GNOME)
+        sequence.PreMacro = string.gsub(sequence.PreMacro, language[toLocale][sid], term)
+        GSPrintDebugMessage("Translated PreMacro: " .. sequence.PreMacro, GNOME)
+      end
+      if not GSTRisempty(sequence.PostMacro) then
+        -- Translate PostMacro
+        sequence.PostMacro = string.gsub(sequence.PostMacro, language[toLocale][sid], term)
+      end
+      -- Translate Sequence Steps
+      lines = string.gsub(lines, language[toLocale][sid], term)
+      --clear untranslated lines
+    end
   end
+  for i, v in ipairs(sequence) do sequence = nil end
+  GSTRlines(sequence, lines)
   sequence.locale = toLocale
   return sequence
 end

@@ -10,7 +10,8 @@
 startup.lua
 
 # Language Files
-
+enUS.lua
+esMX.lua
 
 
 # Translater
