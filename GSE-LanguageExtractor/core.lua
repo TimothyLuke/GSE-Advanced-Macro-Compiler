@@ -1,0 +1,4 @@
+
+
+langs = {}
+langs[GetLocale()] = GSTranslateGetLocaleSpellNameTable()

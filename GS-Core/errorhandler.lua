@@ -44,3 +44,5 @@ function GSPrintDebugMessage(message, module)
     end
 
 end
+
+GSCore = true

@@ -1,4 +1,6 @@
 local GNOME, language = ...
 GSTranslatorAvailable = true
 
-GSPrintDebugMessage("Translator Initialised and Global GSTranslatorAvailable marked as True", GNOME)
+if GSCore then
+  GSPrintDebugMessage("Translator Initialised and Global GSTranslatorAvailable marked as True", GNOME)
+end

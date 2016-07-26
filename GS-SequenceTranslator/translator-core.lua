@@ -7,11 +7,11 @@ end
 
 
 function GSTranslateSequence(sequence)
-  if (sequence, GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
-    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ~=" .. locale, GNOME)
-    return GSTranslateSequenceFromTo(sequence, GSTRisempty(sequence.locale) and "enUS" or sequence.locale), locale)
+  if (GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
+    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale .. " ~=" .. locale, GNOME)
+    return GSTranslateSequenceFromTo(sequence, (GSTRisempty(sequence.locale) and "enUS" or sequence.locale), locale)
   else
-    GSPrintDebugMessage(GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ==" .. locale, GNOME)
+    GSPrintDebugMessage((GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ==" .. locale, GNOME)
     return sequence
   end
 end
@@ -55,8 +55,10 @@ function GSTRlines(tab, str)
 end
 
 
-if GSTRisempty() then
+if GSTRisempty(language[locale]) then
   -- Load the current locale into the language SetAttribute
-  GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
+  if GSCore then
+    GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
+  end
   language[locale] = GSTranslateGetLocaleSpellNameTable()
 end

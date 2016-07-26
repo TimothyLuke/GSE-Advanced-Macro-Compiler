@@ -10,4 +10,3 @@ embeds.xml
 
 core.lua
 GSE-options.lua
-GS-TranslatorFrame.lua
