@@ -32,7 +32,7 @@ GSSE:RegisterChatCommand("gstr", "GSSlash")
 
 
 function GSTR:GSSlash(input)
-  if GSMasterOptions.useTranslator and GSTranslatorAvailable then
+  if GSTranslatorAvailable then
     outputBox:SetText(table.concat(GSTranslateGetLocaleSpellNameTable(), "\n"))
     if input == "hide" then
         frame:Hide()
