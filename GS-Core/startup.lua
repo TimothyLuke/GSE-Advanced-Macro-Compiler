@@ -18,6 +18,8 @@ GSMasterOptions.debug = false
 GSMasterOptions.debugSequence = true
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
+GSMasterOptions.useTranslator = false
+
 GSDebugOutput = ""
 
 GSStaticSequenceDebug = "SEQUENCEDEBUG"

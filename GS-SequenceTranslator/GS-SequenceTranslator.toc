@@ -11,4 +11,4 @@ startup.lua
 
 
 ###### Translater
-translater-core.lua
+translator-core.lua

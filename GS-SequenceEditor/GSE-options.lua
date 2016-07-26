@@ -26,6 +26,14 @@ local OptionsTable = {
       get = function(info) return GSMasterOptions.cleanTempMacro end,
       order = 200
     },
+    cleanTempMacro = {
+      name = "Use Macro Translator",
+      desc = "The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.useTranslator = val end,
+      get = function(info) return GSMasterOptions.useTranslator end,
+      order = 201
+    },
     deleteOrphanLogout = {
       name = "Delete Orphaned Macros on Logout",
       desc = "As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans",
