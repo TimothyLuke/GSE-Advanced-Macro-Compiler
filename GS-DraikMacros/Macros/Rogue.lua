@@ -123,3 +123,29 @@ PostMacro=[[
 /stopattack [stealth]
 ]],
 }
+
+
+Sequences['DB_CalliynOutlaw'] = {
+author="Ambergreen",
+specID=260,
+helpTxt = 'Talents: 1333131',
+PreMacro=[[
+/targetenemy [noharm][dead]
+/cast [nostealth,nocombat]Stealth
+/cast [combat] Marked for Death
+]],
+icon='INV_Sword_30',
+"/castsequence Ghostly Strike, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Saber Slash",
+"/castsequence [mod:alt] Blade Flurry",
+"/castsequence Saber Slash, Run Through, Saber Slash, Pistol Shot",
+"/castsequence [talent:7/1] Slice and Dice; [talent:7/2][talent:7/3] Roll the Bones, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot, Run Through, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot",
+"/castsequence [mod:alt] Blade Flurry",
+"/castsequence Ghostly Strike, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot",
+"/castsequence [mod:alt] Blade Flurry",
+"/cast [@focus] Tricks of the Trade",
+"/cast Crimson Vial",
+PostMacro=[[
+/use [combat] 13
+/use [combat] 14
+]],
+}

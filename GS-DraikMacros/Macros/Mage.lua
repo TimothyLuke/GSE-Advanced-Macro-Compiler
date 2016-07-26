@@ -72,3 +72,24 @@ PostMacro=[[
 /cast [nochanneling] Frozen Orb
 ]],
 }
+
+Sequences['DB_AaslaanFire'] = {
+author="Ambergreen",
+specID=63,
+helpTxt = 'Talents: 2131111',
+PreMacro=[[
+/targetenemy [noexists][noharm][dead]
+]],
+icon='Spell_Fire_FireBolt02',
+"/cast [nochanneling]Rune of power",
+"/castsequence [nochanneling] reset=combat/target Fireball,Fireball,Fireball",
+"/castsequence [nochanneling,@target] reset=12/target Living Bomb",
+"/castsequence [nochanneling,@target] reset=4/target Blast Wave",
+"/castsequence [nochanneling] reset=combat/target Fire Blast",
+"/castsequence [nochanneling,mod:alt] Combustion",
+"/cast [nochanneling]Ice Barrier",
+PostMacro=[[
+/use [combat] 13
+/use [combat] 14
+]],
+}
