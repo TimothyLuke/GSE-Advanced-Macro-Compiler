@@ -114,21 +114,33 @@ function GSTranslateString(instring, fromLocale, toLocale)
 end
 
 function GSTRSplitMeIntolines(str)
+  GSPrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
   local t = {}
-  local function helper(line) table.insert(t, line) return "" end
-  helper((str:gsub("(.-)r?n", helper)))
+  local function helper(line)
+    table.insert(t, line)
+    GSPrintDebugMessage("Line : " .. line, GNOME)
+    return ""
+  end
+  helper((str:gsub("(.-)\r?\n", helper)))
   return t
 end
 
 function GSTRGetConditionalsFromString(str)
+  GSPrintDebugMessage("Entering GSTRGetConditionalsFromString with : " .. str, GNOME)
   local found = false
   local mods = ""
 
-  local leftstr = string.find("str", "(\\[)")
-  local rightstr = string.find("str", "(\\])")
+  local leftstr = string.find("str", "/\[/g")
+  GSPrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
+  local rightstr = string.find("str", "/\]/g")
+  GSPrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
   if rightstr and leftstr then
+     found = true
+     GSPrintDebugMessage("We have left and right \[stuff\]", GNOME)
      mods = string.sub(str, 1, leftstr)
+     GSPrintDebugMessage("mods changed to: " .. mods, GNOME)
      str = string.sub(str, rightstr)
+     GSPrintDebugMessage("str changed to: " .. str, GNOME)
   end
   return found, mods, str
 end
