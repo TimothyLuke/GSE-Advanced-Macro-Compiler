@@ -60,6 +60,12 @@ function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
   --end
   for i, v in ipairs(sequence) do sequence[i] = nil end
   GSTRlines(sequence, lines)
+  -- check for blanks
+  for i, v in ipairs(sequence) do
+    if v == "" then
+      sequence[i] = nil
+    end
+  end
   sequence.locale = toLocale
   return sequence
 end
@@ -84,7 +90,7 @@ function GSTranslateString(instring, fromLocale, toLocale)
         end
         local foundspell = GSTRFindSpellIDByName(language[fromLocale], etc)
         if foundspell then
-          output = output  .. language[toLocale][foundspell] .. ",\n"
+          output = output  .. language[toLocale][foundspell] .. "\n"
           GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[toLocale][foundspell], GNOME)
         else
           GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
@@ -93,7 +99,7 @@ function GSTranslateString(instring, fromLocale, toLocale)
       end
       -- check for cast Sequences
       if strlower(cmd) == "castsequence" then
-        for _, w in ipars(etc:split(",")) do
+        for _, w in ipairs(GSTRsplit(etc,",")) do
           if string.sub(w, 1, 1) == "!" then
             w = string.sub(w, 2)
             output = output .. "!"
@@ -129,17 +135,27 @@ function GSTRGetConditionalsFromString(str)
   GSPrintDebugMessage("Entering GSTRGetConditionalsFromString with : " .. str, GNOME)
   local found = false
   local mods = ""
-
-  local leftstr = string.find("str", "/\[/g")
+  local leftstr
+  local rightstr
+  local leftfound = false
+  for i = 1, #str do
+    local c = str:sub(i,i)
+    if c == "[" and not leftfound then
+      leftfound = true
+      leftstr = i
+    end
+    if c == "]" then
+      rightstr = i
+    end
+  end
   GSPrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
-  local rightstr = string.find("str", "/\]/g")
   GSPrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
   if rightstr and leftstr then
      found = true
-     GSPrintDebugMessage("We have left and right \[stuff\]", GNOME)
-     mods = string.sub(str, 1, leftstr)
+     GSPrintDebugMessage("We have left and right stuff", GNOME)
+     mods = string.sub(str, leftstr, rightstr)
      GSPrintDebugMessage("mods changed to: " .. mods, GNOME)
-     str = string.sub(str, rightstr)
+     str = string.sub(str, rightstr + 1)
      GSPrintDebugMessage("str changed to: " .. str, GNOME)
   end
   return found, mods, str
@@ -163,10 +179,8 @@ function GSTranslateGetLocaleSpellNameTable()
 end
 
 function GSTRlines(tab, str)
-  local t = {}
-  local function helper(line) table.insert(t, line) return "" end
+  local function helper(line) table.insert(tab, line) return "" end
   helper((str:gsub("(.-)\r?\n", helper)))
-  return t
 end
 
 
@@ -186,4 +200,11 @@ function GSTRFindSpellIDByName (list, spell)
     end
   end
   return spellid
+end
+
+function GSTRsplit(source, delimiters)
+  local elements = {}
+  local pattern = '([^'..delimiters..']+)'
+  string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
+  return elements
 end
