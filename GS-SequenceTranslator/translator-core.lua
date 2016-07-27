@@ -22,32 +22,110 @@ function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
   GSPrintDebugMessage("GSTranslateSequenceFromTo  From: " .. fromLocale .. " To: " .. toLocale, GNOME)
   local lines = table.concat(sequence,"\n")
   GSPrintDebugMessage("lines: " .. lines, GNOME)
-  for sid, term in pairs(language[toLocale]) do
-    if not GSTRisempty(sid) then
-      GSPrintDebugMessage("sid: " .. sid, GNOME)
-      if not GSTRisempty(term) then
-        GSPrintDebugMessage(toLocale .. ": " .. term, GNOME)
-        GSPrintDebugMessage(fromLocale .. ": " .. language[fromLocale][sid], GNOME)
-      end
-      -- Translate PreMacro
-      if not GSTRisempty(sequence.PreMacro) then
-        GSPrintDebugMessage("Original PreMacro: " .. sequence.PreMacro, GNOME)
-        sequence.PreMacro = string.gsub(sequence.PreMacro, language[toLocale][sid], term)
-        GSPrintDebugMessage("Translated PreMacro: " .. sequence.PreMacro, GNOME)
-      end
-      if not GSTRisempty(sequence.PostMacro) then
-        -- Translate PostMacro
-        sequence.PostMacro = string.gsub(sequence.PostMacro, language[toLocale][sid], term)
-      end
-      -- Translate Sequence Steps
-      lines = string.gsub(lines, language[toLocale][sid], term)
-      --clear untranslated lines
-    end
+
+  lines = GSTranslateString(lines, fromLocale, toLocale)
+  if not GSTRisempty(sequence.PostMacro) then
+    -- Translate PostMacro
+    sequence.PostMacro = GSTranslateString(sequence.PostMacro, fromLocale, toLocale)
+  end
+  if not GSTRisempty(sequence.PreMacro) then
+    -- Translate PostMacro
+    sequence.PreMacro = GSTranslateString(sequence.PreMacro, fromLocale, toLocale)
+  end
+
+  -- this approach was too intensive  It started with the list of words and tried a straight regex find replace.
+  -- the new approach to use GSTranslateString instead iterates over the words of the macro instead.
+  --for sid, term in pairs(language[toLocale]) do
+  --  if not GSTRisempty(sid) then
+  --    GSPrintDebugMessage("sid: " .. sid, GNOME)
+  --    if not GSTRisempty(term) then
+  --      GSPrintDebugMessage(toLocale .. ": " .. term, GNOME)
+  --      GSPrintDebugMessage(fromLocale .. ": " .. language[fromLocale][sid], GNOME)
+  --    end
+  --    -- Translate PreMacro
+  --    if not GSTRisempty(sequence.PreMacro) then
+  --      GSPrintDebugMessage("Original PreMacro: " .. sequence.PreMacro, GNOME)
+  --      sequence.PreMacro = string.gsub(sequence.PreMacro, language[toLocale][sid], term)
+  --      GSPrintDebugMessage("Translated PreMacro: " .. sequence.PreMacro, GNOME)
+  --    end
+  --    if not GSTRisempty(sequence.PostMacro) then
+  --      -- Translate PostMacro
+  --      sequence.PostMacro = string.gsub(sequence.PostMacro, language[toLocale][sid], term)
+  --    end
+  --    -- Translate Sequence Steps
+  --    lines = string.gsub(lines, language[toLocale][sid], term)
+  --    --clear untranslated lines
+  --  end
   end
   for i, v in ipairs(sequence) do sequence = nil end
   GSTRlines(sequence, lines)
   sequence.locale = toLocale
   return sequence
+end
+
+function GSTranslateString(instring, fromLocale, toLocale)
+  local output = ""
+  local stringlines = GSTRSplitMeIntolines(instring)
+  for _,v in ipairs(stringlines)
+    for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
+      -- figure out what to do with conditionals eg [mod:alt] etc
+      local conditionals, mods, etc = GSTRGetConditionalsFromString(etc)
+      output = output .. "/" .. cmd .. " "
+      if conditionals then
+        output = output .. mods .. " "
+      end
+      -- handle cast commands
+      if GSStaticCastCmds[strlower(cmd)] then
+        if string.sub(etc, 1, 1) == "!" then
+          etc = string.sub(etc, 2)
+          output = output .. "!"
+        end if
+        local foundspell = GSTRFindSpellIDByName(language[fromlocale], etc)
+        if foundspell then
+          output = output  ..language[tolocate][foundspell] .. "\n"
+        else
+          output = output  .. etc .. "\n"
+        end
+      end
+      -- check for cast Sequences
+      if strlower(cmd) == "castsequence" then
+        for _, w in ipars(etc:split(","))
+          if string.sub(w, 1, 1) == "!" then
+            w = string.sub(w, 2)
+            output = output .. "!"
+          end if
+          local foundspell = GSTRFindSpellIDByName(language[fromlocale], w)
+          if foundspell then
+            output = output ..  language[tolocate][foundspell] ..", "
+          else
+            output = output .. w
+          end
+        end
+        output = output .. "\n"
+      end
+    end
+  end
+  return output
+end
+
+function GSTRSplitMeIntolines(str)
+  local t = {}
+  local function helper(line) table.insert(t, line) return "" end
+  helper((str:gsub("(.-)r?n", helper)))
+  return t
+end
+
+function GSTRGetConditionalsFromString(str)
+  local found = false
+  local mods = ""
+
+  local leftstr = string.find("str", "[")
+  local rightstr = string.find("str", "]")
+  if rightstr and leftstr then
+     mods = string.sub(str, 1, leftstr)
+     str = string.sub(str, rightstr)
+  end
+  return found, mods, str
 end
 
 function GSTranslateGetLocaleSpellNameTable()
@@ -83,4 +161,13 @@ if GSTRisempty(language[locale]) then
     GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
   end
   language[locale] = GSTranslateGetLocaleSpellNameTable()
+end
+
+function GSTRFindSpellIDByName (list, spell)
+  local spellid
+  for k, l in pairs(list) do
+    if l == spell then
+     spellid = k
+  end
+  return spellid
 end

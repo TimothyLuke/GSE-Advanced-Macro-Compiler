@@ -10,14 +10,12 @@ local function isempty(s)
   return s == nil or s == ''
 end
 
-local CastCmds = { use = true, cast = true, spell = true }
-
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
   local sequence, foundSpell, notSpell = Sequences[button][step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
-    if CastCmds[strlower(cmd)] then
+    if GSStaticCastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
       if spell then
         if GetSpellInfo(spell) then
