@@ -52,8 +52,16 @@ local OptionsTable = {
     },
     title2 = {
       type = "header",
-      name = "Enabling these option will trigger the ingame Warning about Custom Scripts.",
+      name = "Enabling these options will trigger the ingame Warning about Custom Scripts.",
       order = 500
+    },
+    requireTarget={
+      name = "Require Target to use",
+      desc = "This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.requireTarget = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.requireTarget end,
+      order = 550
     },
     hideSoundErrors={
       name = "Prevent Sound Errors",

@@ -33,7 +33,11 @@ end
 local function preparePreMacro(premacro)
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 0)
-    premacro = premacro .. "\n/console Sound_EnableSFX 0"
+    premacro = "/console Sound_EnableSFX 0\n" .. premacro
+  end
+  if GSMasterOptions.requireTarget then
+    -- see #20 prevent target hopping
+    premacro = "/stopmacro [@playertarget, noexists]\n" .. premacro
   end
   return premacro
 end
@@ -41,15 +45,19 @@ end
 local function preparePostMacro(postmacro)
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)
-    postmacro = postmacro .. "\n/console Sound_EnableSFX 1"
+    postmacro = "/console Sound_EnableSFX 1\n" .. postmacro
   end
   if GSMasterOptions.hideUIErrors then
-    postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
+    postmacro = "/script UIErrorsFrame:Hide();\n" .. postmacro
     -- potentially change this to UIErrorsFrame:Hide()
   end
   if GSMasterOptions.clearUIErrors then
     -- potentially change this to UIErrorsFrame:Clear()
-    postmacro = postmacro .. "\n/run UIErrorsFrame:Clear()"
+    postmacro = "/run UIErrorsFrame:Clear()\n" .. postmacro
+  end
+  if GSMasterOptions.requireTarget then
+    -- see #20 prevent target hopping
+    postmacro = "/stopmacro [@playertarget, noexists]\n" .. postmacro
   end
   return postmacro
 end

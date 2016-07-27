@@ -20,6 +20,7 @@ GSMasterOptions.debugSequence = true
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
+GSMasterOptions.requireTarget = false
 
 GSDebugOutput = ""
 
