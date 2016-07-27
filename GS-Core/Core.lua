@@ -73,8 +73,10 @@ local function createButton(name, sequence)
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
   button:SetAttribute('step', 1)
-  button:SetAttribute('PreMacro', preparePreMacro(sequence.PreMacro or '') .. '\n')
-  button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
+  button:SetAttribute('PreMacro', preparePreMacro((isempty(sequence.PreMacro) and '' or sequence.PreMacro) .. '\n')
+  GSPrintDebugMessage("PreMacro: " .. button:GetAttribute('PreMacro'))
+  button:SetAttribute('PostMacro', '\n' .. (isempty(sequence.PostMacro) and '' or sequence.PostMacro))
+  GSPrintDebugMessage("PostMacro: " .. button:GetAttribute('PostMacro'))
   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   button.UpdateIcon = UpdateIcon
 end
