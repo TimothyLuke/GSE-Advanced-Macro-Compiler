@@ -5,7 +5,6 @@ local GNOME, Sequences = ...
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 local _, _, currentclassId = UnitClass("player")
 
-
 local function isempty(s)
   return s == nil or s == ''
 end
@@ -67,15 +66,14 @@ self:SetAttribute('step', step)
 self:CallMethod('UpdateIcon')
 ]=]
 
-
 local function createButton(name, sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
   button:SetAttribute('step', 1)
-  button:SetAttribute('PreMacro', preparePreMacro((isempty(sequence.PreMacro) and '' or sequence.PreMacro) .. '\n')
+  button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
   GSPrintDebugMessage("PreMacro: " .. button:GetAttribute('PreMacro'))
-  button:SetAttribute('PostMacro', '\n' .. (isempty(sequence.PostMacro) and '' or sequence.PostMacro))
+  button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
   GSPrintDebugMessage("PostMacro: " .. button:GetAttribute('PostMacro'))
   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   button.UpdateIcon = UpdateIcon
@@ -295,6 +293,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     cleanOrphanSequences()
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     print(GSExportSequence(string.sub(msg,8)))
+  elseif string.lower(msg) == "showdebugoutput" then
+    StaticPopup_Show ("GS-DebugOutput")
   else
     ListSequences(GetSpecialization())
   end

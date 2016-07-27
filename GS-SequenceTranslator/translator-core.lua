@@ -7,6 +7,7 @@ end
 
 
 function GSTranslateSequence(sequence)
+
   if not GSTRisempty(sequence) then
     if (GSTRisempty(sequence.locale) and "enUS" or sequence.locale) ~= locale then
       --GSPrintDebugMessage((GSTRisempty(sequence.locale) and "enUS" or sequence.locale) .. " ~=" .. locale, GNOME)
@@ -56,17 +57,18 @@ function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
   --    lines = string.gsub(lines, language[toLocale][sid], term)
   --    --clear untranslated lines
   --  end
-  end
-  for i, v in ipairs(sequence) do sequence = nil end
+  --end
+  for i, v in ipairs(sequence) do sequence[i] = nil end
   GSTRlines(sequence, lines)
   sequence.locale = toLocale
   return sequence
 end
 
 function GSTranslateString(instring, fromLocale, toLocale)
+  GSPrintDebugMessage("Entering GSTranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
   local output = ""
   local stringlines = GSTRSplitMeIntolines(instring)
-  for _,v in ipairs(stringlines)
+  for _,v in ipairs(stringlines) do
     for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
       -- figure out what to do with conditionals eg [mod:alt] etc
       local conditionals, mods, etc = GSTRGetConditionalsFromString(etc)
@@ -79,24 +81,26 @@ function GSTranslateString(instring, fromLocale, toLocale)
         if string.sub(etc, 1, 1) == "!" then
           etc = string.sub(etc, 2)
           output = output .. "!"
-        end if
-        local foundspell = GSTRFindSpellIDByName(language[fromlocale], etc)
+        end
+        local foundspell = GSTRFindSpellIDByName(language[fromLocale], etc)
         if foundspell then
-          output = output  ..language[tolocate][foundspell] .. "\n"
+          output = output  .. language[toLocale][foundspell] .. ",\n"
+          GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[toLocale][foundspell], GNOME)
         else
+          GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
           output = output  .. etc .. "\n"
         end
       end
       -- check for cast Sequences
       if strlower(cmd) == "castsequence" then
-        for _, w in ipars(etc:split(","))
+        for _, w in ipars(etc:split(",")) do
           if string.sub(w, 1, 1) == "!" then
             w = string.sub(w, 2)
             output = output .. "!"
-          end if
-          local foundspell = GSTRFindSpellIDByName(language[fromlocale], w)
+          end
+          local foundspell = GSTRFindSpellIDByName(language[fromLocale], w)
           if foundspell then
-            output = output ..  language[tolocate][foundspell] ..", "
+            output = output ..  language[toLocale][foundspell] ..", "
           else
             output = output .. w
           end
@@ -105,6 +109,7 @@ function GSTranslateString(instring, fromLocale, toLocale)
       end
     end
   end
+  GSPrintDebugMessage("Exiting GSTranslateString with : \n" .. output, GNOME)
   return output
 end
 
@@ -119,8 +124,8 @@ function GSTRGetConditionalsFromString(str)
   local found = false
   local mods = ""
 
-  local leftstr = string.find("str", "[")
-  local rightstr = string.find("str", "]")
+  local leftstr = string.find("str", "(\\[)")
+  local rightstr = string.find("str", "(\\])")
   if rightstr and leftstr then
      mods = string.sub(str, 1, leftstr)
      str = string.sub(str, rightstr)
@@ -146,12 +151,10 @@ function GSTranslateGetLocaleSpellNameTable()
 end
 
 function GSTRlines(tab, str)
-  local function helper(line)
-    table.insert(tab, line)
-    return ""
-  end
+  local t = {}
+  local function helper(line) table.insert(t, line) return "" end
   helper((str:gsub("(.-)\r?\n", helper)))
-  GST = t
+  return t
 end
 
 
@@ -167,7 +170,8 @@ function GSTRFindSpellIDByName (list, spell)
   local spellid
   for k, l in pairs(list) do
     if l == spell then
-     spellid = k
+      spellid = k
+    end
   end
   return spellid
 end

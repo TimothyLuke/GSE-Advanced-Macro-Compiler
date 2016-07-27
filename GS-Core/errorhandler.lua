@@ -5,9 +5,28 @@ local Errors = {
 	--["[��]"] = 'Invalid quotes detected, replace all quote symbols in the file with normal double or single-quotes.',
 }
 
+
+
 local function isempty(s)
   return s == nil or s == ''
 end
+
+StaticPopupDialogs["GS-DebugOutput"] = {
+  text = "Dump of GS Debug messages",
+  button1 = "Update",
+  button2 = "Close",
+  OnAccept = function(self, data)
+      self.editBox:SetText(GSDebugOutput)
+  end,
+	OnShow = function (self, data)
+    self.editBox:SetText(GSDebugOutput)
+  end,
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+	hasEditBox = true,
+}
 
 seterrorhandler(function(message)
 	local line, err = message:match('GS-%.lua:(%d+): (.+)')
@@ -26,6 +45,7 @@ seterrorhandler(function(message)
 	end
 end)
 
+
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
@@ -36,6 +56,10 @@ local function determinationOutputDestination(message)
 end
 
 
+
+
+
+
 function GSPrintDebugMessage(message, module)
     if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
       determinationOutputDestination('|cffff0000' .. GNOME .. ':|r |cFF00FF00 <SEQUENCEDEBUG> |r ' .. message )
@@ -44,5 +68,6 @@ function GSPrintDebugMessage(message, module)
     end
 
 end
+
 
 GSCore = true

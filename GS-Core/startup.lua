@@ -1,5 +1,6 @@
 local GNOME, ns = ...
 GSMasterSequences = ns
+GSStaticCastCmds = {}
 
 GSStaticCastCmds = { use = true, cast = true, spell = true }
 
@@ -59,7 +60,8 @@ end
 for i=1,GetNumAddOns() do
     if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
         local name, _, _, _, _, _ = GetAddOnInfo(i)
-        if name ~= "GS-SequenceEditor" or name ~= "GS-SequenceTranslator" then
+        if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
+          --print (name)
 					LoadAddOn(i);
         end
 				GSMasterOptions.AddInPacks[name] = true
