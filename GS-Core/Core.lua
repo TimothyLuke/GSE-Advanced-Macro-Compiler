@@ -153,13 +153,12 @@ f:SetScript('OnEvent', function(self, event)
       GSMasterOptions = GnomeOptions
       GSMasterOptions.AddInPacks = addins
     end
-    for name, sequence in pairs(Sequences) do
-      if GSMasterOptions.useTranslator and GSTranslatorAvailable then
-        sequence = GSTranslateSequence(sequence)
+    if IsAddOnLoaded(GNOME) then
+      GSPrintDebugMessage("I am loaded")
+      for name, sequence in pairs(Sequences) do
+        GSUpdateSequence(name,sequence)
       end
-      createButton(name, sequence)
     end
-
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
@@ -188,6 +187,9 @@ function GSExportSequence(sequenceName)
     local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. Sequences[sequenceName].author .."\",\n" .."specID="..Sequences[sequenceName].specID ..",\n" .. helptext .. steps )
     if not isempty(Sequences[sequenceName].icon) then
        returnVal = returnVal .. "icon=".. (tonumber(Sequences[sequenceName].icon) and Sequences[sequenceName].icon or "'".. Sequences[sequenceName].icon .. "'") ..",\n"
+    end
+    if not isempty(Sequences[sequenceName].lang) then
+      returnVal = returnVal .. "lang=\"" ..Sequences[sequenceName].lang .. "\",\n"
     end
     returnVal = returnVal .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]]," .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
     returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[sequenceName].PostMacro .. "]],\n}"
