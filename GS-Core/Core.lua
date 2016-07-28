@@ -3,7 +3,7 @@ seterrorhandler(_ERRORMESSAGE)
 local GNOME, Sequences = ...
 
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
-local _, _, currentclassId = UnitClass("player")
+local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 
 local function isempty(s)
   return s == nil or s == ''
@@ -248,9 +248,21 @@ local function ListSequences(txt)
   ShowMacroFrame()
 end
 
+local function checkCurrentClass(specID)
+  local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
+  if specID > 15 then
+    GSPrintDebugMessage("Checking if specID " .. specID .. " " .. specclass .. " equals " .. currentenglishclass)
+  else
+    GSPrintDebugMessage("Checking if specID " .. specID .. " equals currentclassid " .. currentclassId)
+  end
+  return (specclass==currentenglishclass or specID==currentclassId)
+end
+
+
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
-    if GSMasterOptions.useTranslator and GSTranslatorAvailable then
+    -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
+    if GSMasterOptions.useTranslator and GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence)
     end
     if button==nil then
