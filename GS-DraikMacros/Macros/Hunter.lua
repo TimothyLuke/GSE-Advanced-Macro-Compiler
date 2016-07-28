@@ -81,7 +81,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Mm'] = {
+Sequences['DB_Mm_ST'] = {
 specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
@@ -102,7 +102,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BM'] = {
+Sequences['DB_BM_ST'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
@@ -112,7 +112,7 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
 ]],
-"/castsequence Cobra Shot,Kill Command",
+"/castsequence Cobra Shot,Kill Coand",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
 "/cast Cobra Shot",
@@ -136,7 +136,7 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
 ]],
-"/castsequence Multi-Shot,Kill Command",
+"/castsequence Multi-Shot,Kill Coand",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
 "/cast Cobra Shot",
@@ -150,7 +150,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_MMAOE'] = {
+Sequences['DB_Marks_AOE'] = {
 author='Nano',
 specID=254,
 helpTxt = 'Talents: 3113122',
@@ -172,7 +172,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_MMS'] = {
+Sequences['DB_Single_Marls'] = {
 author="Nano",
 specID=254,
 helpTxt = 'Talents: 3113122',
