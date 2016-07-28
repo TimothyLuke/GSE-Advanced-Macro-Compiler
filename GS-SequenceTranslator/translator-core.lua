@@ -9,8 +9,8 @@ end
 function GSTRListCachedLanguages()
   t = {}
   i = 1
-  for name, _ in pairs(language) do
-    t[1] = name
+  for name, _ in pairs(language[GSTRStaticKey]) do
+    t[i] = name
   end
   return t
 end
@@ -149,12 +149,14 @@ end
 
 function GSTranslateGetLocaleSpellNameTable()
   local spelltable = {}
-  for k,v in pairs(language["enUS"]) do
+  local hashtable = {}
+  for k,v in pairs(language[GSTRStaticKey]["enUS"]) do
       --print(k)
       local spellname = GetSpellInfo(k)
       spelltable[k] = spellname
+      hashtable[spellname] = k
   end
-  return spelltable
+  return spelltable, hashtable
 end
 
 function GSTRlines(tab, str)
@@ -163,12 +165,12 @@ function GSTRlines(tab, str)
 end
 
 
-if GSTRisempty(language[locale]) then
+if GSTRisempty(GSTRListCachedLanguages()[locale]) then
   -- Load the current locale into the language SetAttribute
   if GSCore then
     GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
   end
-  language[locale] = GSTranslateGetLocaleSpellNameTable()
+  language[GSTRStaticKey][locale], language[GSTRStaticHash][locale] = GSTranslateGetLocaleSpellNameTable()
 end
 
 function GSTRsplit(source, delimiters)
