@@ -26,7 +26,7 @@ local OptionsTable = {
       get = function(info) return GSMasterOptions.cleanTempMacro end,
       order = 200
     },
-    cleanTempMacro = {
+    usetranslator = {
       name = "Use Macro Translator",
       desc = "The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.",
       type = "toggle",
