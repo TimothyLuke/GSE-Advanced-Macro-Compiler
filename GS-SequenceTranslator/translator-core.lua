@@ -1,10 +1,19 @@
 local GNOME, language = ...
 local locale = GetLocale();
 
+
 function GSTRisempty(s)
   return s == nil or s == ''
 end
 
+function GSTRListCachedLanguages()
+  t = {}
+  i = 1
+  for name, _ in pairs(language) do
+    t[1] = name
+  end
+  return t
+end
 
 function GSTranslateSequence(sequence)
 
@@ -64,10 +73,10 @@ function GSTranslateString(instring, fromLocale, toLocale)
             etc = string.sub(etc, 2)
             output = output .. "!"
           end
-          local foundspell = GSTRFindSpellIDByName(language[fromLocale], etc)
+          local foundspell = language[GSTRStaticHash][fromLocale][etc]
           if foundspell then
-            output = output  .. language[toLocale][foundspell] .. "\n"
-            GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[toLocale][foundspell], GNOME)
+            output = output  .. language[GSTRStaticKey][toLocale][foundspell] .. "\n"
+            GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
           else
             GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
             output = output  .. etc .. "\n"
@@ -80,9 +89,9 @@ function GSTranslateString(instring, fromLocale, toLocale)
               w = string.sub(w, 2)
               output = output .. "!"
             end
-            local foundspell = GSTRFindSpellIDByName(language[fromLocale], w)
+            local foundspell = language[GSTRStaticHash][fromLocale][w]
             if foundspell then
-              output = output ..  language[toLocale][foundspell] ..", "
+              output = output ..  language[GSTRStaticKey][toLocale][foundspell] ..", "
             else
               output = output .. w
             end
@@ -160,18 +169,6 @@ if GSTRisempty(language[locale]) then
     GSPrintDebugMessage("Loading Spells for language " .. locale, GNOME)
   end
   language[locale] = GSTranslateGetLocaleSpellNameTable()
-end
-
-function GSTRFindSpellIDByName (list, spell)
-  -- I will make this more efficient by creating a hash table ["Red Aura"] = 66602,
-  local spellid
-  spell = string.lower(spell)
-  for k, l in pairs(list) do
-    if string.lower(l) == spell then
-      spellid = k
-    end
-  end
-  return spellid
 end
 
 function GSTRsplit(source, delimiters)

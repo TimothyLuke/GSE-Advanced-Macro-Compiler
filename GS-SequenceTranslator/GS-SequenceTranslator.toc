@@ -11,7 +11,9 @@ startup.lua
 
 # Language Files
 enUS.lua
+enUSHash.lua
 esMX.lua
+esMXHash.lua
 
 
 # Translater

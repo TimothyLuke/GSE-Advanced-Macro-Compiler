@@ -1,6 +1,6 @@
 local GNOME, language = ...
 
-language["esMX"] = {
+language[GSTRStaticKey]["esMX"] = {
 	[179186] = "Togas de la Academia Nar'thalas",
 	[211954] = "Aluneth",
 	[61181] = "Sobrecarga de añublo",

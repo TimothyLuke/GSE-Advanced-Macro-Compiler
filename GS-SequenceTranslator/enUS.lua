@@ -1,7 +1,7 @@
 local GNOME, language = ...
 
-language["enUS"] = {
-	   [195575]="Drowning Smash",
+language[GSTRStaticKey]["enUS"] = {
+     [195575]="Drowning Smash",
 	   [195576]="Whirling Mist",
 	   [1784]="Stealth",
 	   [105982]="Summon Flare",
