@@ -239,3 +239,35 @@ PostMacro = [[
 /use [combat]14
 ]],
 }
+
+Sequences['DB_BMH'] = {
+specID = 253,
+author = "Moonfale",
+helpTxt = "Single Target - Talent: 3322313",
+StepFunction = GSStaticPriority,
+PreMacro = [[
+/targetenemy [noharm][dead]
+/cast [@pet,dead]Heart of the Phoenix
+/startattack
+/petattack [@target,harm]
+/petautocastoff [group] Growl
+/petautocaston [nogroup] Growl
+/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
+/cast Blood Fury
+/cast Intimidation
+/cast Bestial Wrath
+/cast Aspect of the Wild
+]],
+'/cast [nochanneling] !kill command',
+'/cast [nochanneling] !Dire Beast',
+'/cast [nochanneling] Chimaera Shot',
+'/cast [nochanneling] A Murder of Crows',
+'/cast [nochanneling] Cobra Shot',
+PostMacro = [[
+/startattack
+/petattack
+/use [combat]11
+/use [combat]13
+/use [combat]14
+]],
+}
