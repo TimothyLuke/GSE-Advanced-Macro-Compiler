@@ -10,11 +10,12 @@
 startup.lua
 
 # Language Files
-enUS.lua
-enUSHash.lua
-esMX.lua
-esMXHash.lua
-
+langs\enUS.lua
+langs\enUSHash.lua
+langs\esMX.lua
+langs\esMXHash.lua
+langs\ptBR.lua
+langs\ptBRHash.lua
 
 # Translater
 translator-core.lua
