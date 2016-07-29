@@ -30,7 +30,7 @@ local OptionsTable = {
       name = "Use Macro Translator",
       desc = "The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.",
       type = "toggle",
-      set = function(info,val) GSMasterOptions.useTranslator = val end,
+      set = function(info,val) GSTtoggleTranslator(val) end,
       get = function(info) return GSMasterOptions.useTranslator end,
       order = 201
     },
@@ -134,6 +134,15 @@ local OptionsTable = {
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 
+function GSTtoggleTranslator (boole)
+  if GSTranslatorAvailable then
+    GSMasterOptions.useTranslator = boole
+  elseif boole then
+    print('|cffff0000' .. GNOME .. ':|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com')
+  else
+    GSMasterOptions.useTranslator = boole
+  end
+end
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSSE", OptionsTable, {"gse"})
 LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSSE", "|cffff0000GS-E:|r Gnome Sequencer - Enhanced")
