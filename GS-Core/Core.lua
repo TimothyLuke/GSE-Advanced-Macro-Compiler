@@ -183,28 +183,32 @@ function GSExportSequence(sequenceName)
   if isempty(Sequences[sequenceName]) then
     return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
-    local helptext = "helpTxt = '" .. Sequences[sequenceName].helpTxt .. "',\n"
-    local steps = ""
-    if not isempty(Sequences[sequenceName].StepFunction) then
-      if  Sequences[sequenceName].StepFunction == GSStaticPriority then
-       steps = "StepFunction = GSStaticPriority,\n"
-      else
-       steps = Sequences[sequenceName].StepFunction .. "',\n"
-      end
-    end
-    local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. Sequences[sequenceName].author .."\",\n" .."specID="..Sequences[sequenceName].specID ..",\n" .. helptext .. steps )
-    if not isempty(Sequences[sequenceName].icon) then
-       returnVal = returnVal .. "icon=".. (tonumber(Sequences[sequenceName].icon) and Sequences[sequenceName].icon or "'".. Sequences[sequenceName].icon .. "'") ..",\n"
-    end
-    if not isempty(Sequences[sequenceName].lang) then
-      returnVal = returnVal .. "lang=\"" ..Sequences[sequenceName].lang .. "\",\n"
-    end
-    returnVal = returnVal .. "PreMacro=[[\n" .. Sequences[sequenceName].PreMacro .. "]]," .. "\n\"" .. table.concat(Sequences[sequenceName],"\",\n\"") .. "\",\n"
-    returnVal = returnVal .. "PostMacro=[[\n" .. Sequences[sequenceName].PostMacro .. "]],\n}"
-    return returnVal
+    return GSExportSequencebySeq(Sequences[sequenceName], sequenceName)
   end
 end
 
+function GSExportSequencebySeq(sequence, sequenceName)
+  GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
+  local helptext = "helpTxt = '" .. sequence.helpTxt .. "',\n"
+  local steps = ""
+  if not isempty(sequence.StepFunction) then
+    if  sequence.StepFunction == GSStaticPriority then
+     steps = "StepFunction = GSStaticPriority,\n"
+    else
+     steps = sequence.StepFunction .. "',\n"
+    end
+  end
+  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
+  if not isempty(sequence.icon) then
+     returnVal = returnVal .. "icon=".. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") ..",\n"
+  end
+  if not isempty(sequence.lang) then
+    returnVal = returnVal .. "lang=\"" ..sequence.lang .. "\",\n"
+  end
+  returnVal = returnVal .. "PreMacro=[[\n" .. sequence.PreMacro .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
+  returnVal = returnVal .. "PostMacro=[[\n" .. sequence.PostMacro .. "]],\n}"
+  return returnVal
+end
 
 local function GSregisterSequence(sequenceName, icon)
   local sequenceIndex = GetMacroIndexByName(sequenceName)

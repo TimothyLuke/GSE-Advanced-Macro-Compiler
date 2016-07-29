@@ -3,6 +3,8 @@ GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
 GSSequenceEditorLoaded = false
+local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
+local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -14,9 +16,60 @@ function GSSE:getSequenceNames()
   end
   return keyset
 end
+-- Create functions for tabs
+function GSSE:drawstandardwindow(container)
+  local sequencebox = AceGUI:Create("MultiLineEditBox")
+  sequencebox:SetLabel("Sequence")
+  sequencebox:SetNumLines(20)
+  sequencebox:DisableButton(true)
+  sequencebox:SetFullWidth(true)
+  sequencebox:SetText(sequenceboxtext:GetText())
+  container:AddChild(sequencebox)
 
+  local updbutton = AceGUI:Create("Button")
+  updbutton:SetText("Edit")
+  updbutton:SetWidth(200)
+  updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
+  container:AddChild(updbutton)
+  sequenceboxtext = sequencebox
+end
 
--- Create Viewer Dialog
+function GSSE:drawsecondarywindow(container)
+  local languages = GSTRListCachedLanguages()
+  local listbox = AceGUI:Create("Dropdown")
+  listbox:SetLabel("Choose Language")
+  listbox:SetWidth(250)
+  listbox:SetList(languages)
+  listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadTranslatedSequence(GSTRListCachedLanguages()[key]) end)
+  container:AddChild(listbox)
+
+  local remotesequencebox = AceGUI:Create("MultiLineEditBox")
+  remotesequencebox:SetLabel("Translated Sequence")
+  remotesequencebox:SetText(remotesequenceboxtext:GetText())
+  remotesequencebox:SetNumLines(20)
+  remotesequencebox:DisableButton(true)
+  remotesequencebox:SetFullWidth(true)
+  container:AddChild(remotesequencebox)
+  remotesequenceboxtext = remotesequencebox
+
+end
+
+-- Callback function for OnGroupSelected
+function GSSE:SelectGroup(container, event, group)
+   local tremote = remotesequenceboxtext:GetText()
+   local tlocal = sequenceboxtext:GetText()
+   container:ReleaseChildren()
+   GSPrintDebugMessage("Selecting tab: " .. group, GNOME)
+   if group == "localtab" then
+      GSSE:drawstandardwindow(container)
+   elseif group == "remotetab" then
+      GSSE:drawsecondarywindow(container)
+   end
+   remotesequenceboxtext:SetText(tremote)
+   sequenceboxtext:SetText(tlocal)
+end
+-- function that draws the widgets for the first tab
+
 
 local frame = AceGUI:Create("Frame")
 local curentSequence
@@ -33,18 +86,24 @@ listbox:SetList(names)
 listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 frame:AddChild(listbox)
 
-local sequencebox = AceGUI:Create("MultiLineEditBox")
-sequencebox:SetLabel("Sequence")
-sequencebox:SetNumLines(20)
-sequencebox:DisableButton(true)
-sequencebox:SetFullWidth(true)
-frame:AddChild(sequencebox)
 
-local updbutton = AceGUI:Create("Button")
-updbutton:SetText("Edit")
-updbutton:SetWidth(200)
-updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
-frame:AddChild(updbutton)
+
+if GSTranslatorAvailable and GSMasterOptions.useTranslator then
+  local tab =  AceGUI:Create("TabGroup")
+  tab:SetLayout("Flow")
+  -- Setup which tabs to show
+  tab:SetTabs({{text=GetLocale(), value="localtab"}, {text="Translate to", value="remotetab"}})
+  -- Register callback
+  tab:SetCallback("OnGroupSelected",  function (container, event, group) GSSE:SelectGroup(container, event, group) end)
+  -- Set initial Tab (this will fire the OnGroupSelected callback)
+  tab:SelectTab("localtab")
+  tab:SetFullWidth(true)
+  -- add to the frame container
+  frame:AddChild(tab)
+else
+  GSSE:drawstandardwindow(frame)
+end
+
 -------------end viewer-------------
 -------------begin editor--------------------
 local editframe = AceGUI:Create("Frame")
@@ -145,8 +204,14 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 -- Functions
 
 
+
+function GSSE:loadTranslatedSequence(key)
+  GSPrintDebugMessage("GSTranslateSequenceFromTo(GSMasterSequences[" .. currentSequence .."], (GSSE:isempty(GSMasterSequences[" .. currentSequence .. "].lang) and GSMasterSequences[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
+  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSSE:isempty(GSMasterSequences[currentSequence].lang) and GSMasterSequences[currentSequence].lang or GetLocale()), key), currentSequence))
+end
+
 function GSSE:loadSequence(SequenceName)
-    sequencebox:SetText(GSExportSequence(SequenceName))
+    sequenceboxtext:SetText(GSExportSequence(SequenceName))
 end
 
 function GSSE:toggleClasses(buttonname)

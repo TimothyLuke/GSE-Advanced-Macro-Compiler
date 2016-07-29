@@ -14,8 +14,16 @@ langs\enUS.lua
 langs\enUSHash.lua
 langs\esMX.lua
 langs\esMXHash.lua
+langs\esES.lua
+langs\esESHash.lua
 langs\ptBR.lua
 langs\ptBRHash.lua
+langs\itIT.lua
+langs\itITHash.lua
+langs\deDE.lua
+langs\deDEHash.lua
+langs\frFR.lua
+langs\frFRHash.lua
 
 # Translater
 translator-core.lua

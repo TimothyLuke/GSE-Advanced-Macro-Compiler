@@ -11,6 +11,8 @@ function GSTRListCachedLanguages()
   i = 1
   for name, _ in pairs(language[GSTRStaticKey]) do
     t[i] = name
+    GSPrintDebugMessage("found " .. name, GNOME)
+    i = i + 1
   end
   return t
 end
@@ -69,14 +71,15 @@ function GSTranslateString(instring, fromLocale, toLocale)
         end
         -- handle cast commands
         if GSStaticCastCmds[strlower(cmd)] then
+          etc = string.match(etc, "^%s*(.-)%s*$")
           if string.sub(etc, 1, 1) == "!" then
             etc = string.sub(etc, 2)
-            output = output .. "!"
+            --output = output .. "!"
           end
           local foundspell = language[GSTRStaticHash][fromLocale][etc]
           if foundspell then
-            output = output  .. language[GSTRStaticKey][toLocale][foundspell] .. "\n"
             GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
+            output = output  .. language[GSTRStaticKey][toLocale][foundspell] .. "\n"
           else
             GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
             output = output  .. etc .. "\n"
@@ -85,9 +88,10 @@ function GSTranslateString(instring, fromLocale, toLocale)
         -- check for cast Sequences
         if strlower(cmd) == "castsequence" then
           for _, w in ipairs(GSTRsplit(etc,",")) do
+            w = string.match(w, "^%s*(.-)%s*$")
             if string.sub(w, 1, 1) == "!" then
               w = string.sub(w, 2)
-              output = output .. "!"
+              --output = output .. "!"
             end
             local foundspell = language[GSTRStaticHash][fromLocale][w]
             if foundspell then
