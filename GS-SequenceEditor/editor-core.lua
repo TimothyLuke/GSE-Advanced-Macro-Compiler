@@ -212,7 +212,7 @@ end
 
 function GSSE:loadSequence(SequenceName)
   GSPrintDebugMessage("GSSE:loadSequence " .. SequenceName)
-  if GSTranslatorAvailable and GSMasterOptions.GSMasterOptions.useTranslator then
+  if GSTranslatorAvailable and GSMasterOptions.useTranslator then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSSE:isempty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
