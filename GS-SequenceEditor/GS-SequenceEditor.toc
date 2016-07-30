@@ -8,5 +8,5 @@
 
 embeds.xml
 
-core.lua
+editor-core.lua
 GSE-options.lua

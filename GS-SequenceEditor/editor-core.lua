@@ -211,7 +211,12 @@ function GSSE:loadTranslatedSequence(key)
 end
 
 function GSSE:loadSequence(SequenceName)
+  GSPrintDebugMessage("GSSE:loadSequence " .. SequenceName)
+  if GSTranslatorAvailable and GSMasterOptions.GSMasterOptions.useTranslator then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSSE:isempty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
+  else
+    sequenceboxtext:SetText(GSExportSequence(SequenceName))
+  end
 end
 
 function GSSE:toggleClasses(buttonname)
@@ -225,10 +230,10 @@ function GSSE:toggleClasses(buttonname)
 end
 
 function GSSE:updateSequence(SequenceName)
+    GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     frame:Hide()
     GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
     GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
-    GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     reticon = GSSE:getMacroIcon(SequenceName)
     -- if string prefix with "Interface\\Icons\\" if number make it a number
     if not tonumber(reticon) then
