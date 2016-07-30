@@ -205,8 +205,8 @@ function GSExportSequencebySeq(sequence, sequenceName)
   if not isempty(sequence.lang) then
     returnVal = returnVal .. "lang=\"" ..sequence.lang .. "\",\n"
   end
-  returnVal = returnVal .. "PreMacro=[[\n" .. sequence.PreMacro .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
-  returnVal = returnVal .. "PostMacro=[[\n" .. sequence.PostMacro .. "]],\n}"
+  returnVal = returnVal .. "PreMacro=[[\n" .. (isempty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
+  returnVal = returnVal .. "PostMacro=[[\n" .. (isempty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
   return returnVal
 end
 

@@ -207,11 +207,11 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 function GSSE:loadTranslatedSequence(key)
   GSPrintDebugMessage("GSTranslateSequenceFromTo(GSMasterSequences[" .. currentSequence .."], (GSSE:isempty(GSMasterSequences[" .. currentSequence .. "].lang) and GSMasterSequences[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
-  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSSE:isempty(GSMasterSequences[currentSequence].lang) and GSMasterSequences[currentSequence].lang or GetLocale()), key), currentSequence))
+  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSSE:isempty(GSMasterSequences[currentSequence].lang) and GetLocale() or GSMasterSequences[currentSequence].lang ), key), currentSequence))
 end
 
 function GSSE:loadSequence(SequenceName)
-    sequenceboxtext:SetText(GSExportSequence(SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSSE:isempty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
 end
 
 function GSSE:toggleClasses(buttonname)
