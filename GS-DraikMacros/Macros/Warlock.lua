@@ -134,7 +134,5 @@ PostMacro=[[
 /petattack
 /use [combat] 13
 /use [combat] 14
-/script UIErrorsFrame:Hide();
-/console Sound_EnableSFX 1
 ]],
 }

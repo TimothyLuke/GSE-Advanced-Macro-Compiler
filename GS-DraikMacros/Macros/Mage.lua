@@ -33,7 +33,7 @@ helpTxt = "Talents - 2233111",
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-"/castsequence reset=combat Fireball, Fireball, Fireball, Fireball, Fire Blast, Pyroblast",
+"/castsequence [reset=combat] Fireball, Fireball, Fireball, Fireball, Fire Blast, Pyroblast",
 "/cast Combustion",
 "/cast Living Bomb",
 "/cast Ice flows",
@@ -82,10 +82,10 @@ PreMacro=[[
 ]],
 icon='Spell_Fire_FireBolt02',
 "/cast [nochanneling]Rune of power",
-"/castsequence [nochanneling] reset=combat/target Fireball,Fireball,Fireball",
-"/castsequence [nochanneling,@target] reset=12/target Living Bomb",
-"/castsequence [nochanneling,@target] reset=4/target Blast Wave",
-"/castsequence [nochanneling] reset=combat/target Fire Blast",
+"/castsequence [nochanneling] [reset=combat/target] Fireball,Fireball,Fireball",
+"/castsequence [nochanneling,@target] [reset=12/target] Living Bomb",
+"/castsequence [nochanneling,@target] [reset=4/target] Blast Wave",
+"/castsequence [nochanneling] [reset=combat/target] Fire Blast",
 "/castsequence [nochanneling,mod:alt] Combustion",
 "/cast [nochanneling]Ice Barrier",
 PostMacro=[[

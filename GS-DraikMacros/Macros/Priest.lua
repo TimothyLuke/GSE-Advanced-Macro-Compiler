@@ -74,7 +74,7 @@ Sequences['DB_KTN_MouseOver'] = {
 specID = 5,
 author = "KTN",
 helpTxt = "Talents 3213131",
-'/castsequence [target=mouseover,help,nodead][] Power Word: Shield, Plea, Shadow Mend, Shadow Mend',
+'/castsequence [target=mouseover,help,nodead] Power Word: Shield, Plea, Shadow Mend, Shadow Mend',
 }
 
 
@@ -107,10 +107,10 @@ PreMacro = [[
 ]],
 '/cast [nochanneling] Power Word: Shield',
 '/castsequence [nochanneling] Plea,Shadow Mend,Shadow Mend',
-'/castsequence [target=targettarget] [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/castsequence [target=targettarget][nochanneling][reset=/target] Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
 '/cast [target=targettarget] Penance',
 '/cast [combat][nochanneling] Mindbender',
-'/cast [target=targettarget] [nochanneling] Divine Star',
+'/cast [target=targettarget][nochanneling] Divine Star',
 }
 
 Sequences['DB_Disc-TDPS'] = {
@@ -122,7 +122,7 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast [nochanneling][@targettarget] Power Word: Shield',
-'/castsequence [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/castsequence [nochanneling][reset=/target] Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
 '/cast Penance',
 '/cast [combat][nochanneling] Mindbender',
 '/cast [nochanneling] Divine Star',
@@ -139,9 +139,9 @@ icon = "Ability_Mage_FireStarter",
 PreMacro = [[
 ]],
 '/cast [nochanneling] Power Word: Shield',
-'/castsequence reset=/target [nochanneling] Power Word: Radiance,Plea',
-'/castsequence [target=targettarget] [nochanneling] reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+'/castsequence [reset=/target][nochanneling] Power Word: Radiance,Plea',
+'/castsequence [target=targettarget][nochanneling][reset=/target] Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
 '/cast [target=targettarget] Penance',
 '/cast [combat][nochanneling] Mindbender',
-'/cast [target=targettarget] [nochanneling] Divine Star',
+'/cast [target=targettarget][nochanneling] Divine Star',
 }
