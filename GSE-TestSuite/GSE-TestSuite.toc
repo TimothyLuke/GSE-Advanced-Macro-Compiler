@@ -1,9 +1,0 @@
-## Interface: 70000
-## Title: |cffff0000GS-E:|r TestSuite
-## Notes: This contains a bunch of values and tests to use testing for regressions in GS-E and the Translator
-## Author: Draik
-## Version: v1.1 - Legion
-## DefaultState: disabled
-
-
-test-core.lua
