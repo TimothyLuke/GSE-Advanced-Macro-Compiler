@@ -120,7 +120,7 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
 ]],
-"/castsequence Cobra Shot,Kill Coand",
+"/castsequence Cobra Shot,Kill Command",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
 "/cast Cobra Shot",
@@ -144,7 +144,7 @@ PreMacro = [[
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
 ]],
-"/castsequence Multi-Shot,Kill Coand",
+"/castsequence Multi-Shot,Kill Command",
 "/cast !Chimaera Shot",
 "/cast !Dire Beast",
 "/cast Cobra Shot",
