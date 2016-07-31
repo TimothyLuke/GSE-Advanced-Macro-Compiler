@@ -74,7 +74,30 @@ self:SetAttribute('step', step)
 self:CallMethod('UpdateIcon')
 ]=]
 
+function GSSplitMeIntolines(str)
+  GSPrintDebugMessage("Entering GSSplitMeIntolines with : \n" .. str, GNOME)
+  local t = {}
+  local function helper(line)
+    table.insert(t, line)
+    GSPrintDebugMessage("Line : " .. line, GNOME)
+    return ""
+  end
+  helper((str:gsub("(.-)\r?\n", helper)))
+  return t
+end
+
+
+
+local function GSFixSequence(sequence)
+  for k,v in pairs(GSStaticCleanStrings) do
+    GSPrintDebugMessage("Testing String: " .. v, GNOME)
+    if not isempty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
+    if not isempty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
+  end
+end
+
 local function createButton(name, sequence)
+  GSFixSequence(sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')

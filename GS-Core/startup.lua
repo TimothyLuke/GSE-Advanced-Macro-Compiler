@@ -4,6 +4,27 @@ GSStaticCastCmds = {}
 
 GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
 
+GSStaticCleanStrings = {}
+GSStaticCleanStrings = {
+		  [1] = "/console Sound_EnableSFX 0\;\n",
+	    [2] = "/console Sound_EnableSFX 1\;\n",
+	    [3] = "/script UIErrorsFrame:Hide%(%)\;\n",
+	    [4] = "/run UIErrorsFrame:Clear%(%)\;\n",
+			[5] = "/script UIErrorsFrame:Clear%(%)\;\n",
+	    [6] = "/run UIErrorsFrame:Hide%(%)\;\n",
+
+			[11] = "/console Sound_EnableSFX 0\n",
+	    [12] = "/console Sound_EnableSFX 1\n",
+	    [13] = "/script UIErrorsFrame:Hide%(%)\n",
+	    [14] = "/run UIErrorsFrame:Clear%(%)\n",
+			[15] = "/script UIErrorsFrame:Clear%(%)\n",
+			[16] = "/run UIErrorsFrame:Hide%(%)\n",
+
+			[20] = "/stopmacro [@playertarget, noexists]\n",
+
+			[101] = "\n\n"
+}
+
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
 GSMasterOptions = {}
 GSMasterOptions.AddInPacks = {}
