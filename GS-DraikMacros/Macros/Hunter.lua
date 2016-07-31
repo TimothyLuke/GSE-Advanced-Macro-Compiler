@@ -201,9 +201,9 @@ helpTxt = "Single Target - Unknown Talents ",
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=8] !Raptor Strike, Lacerate',
+'/castsequence reset=8 !Raptor Strike, Lacerate',
 '/castsequence Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/castsequence [reset=22] !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
 '/cast Raptor Strike',
 '/cast Lacerate',
 '/cast !Mongoose Bite',
@@ -224,9 +224,9 @@ helpTxt = "AoE - Unknown Talents ",
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=8] !Raptor Strike, Carve',
+'/castsequence reset=8 !Raptor Strike, Carve',
 '/castsequence Serpent Sting, Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/castsequence [reset=22] !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
 '/cast Raptor Strike',
 '/cast Carve',
 '/cast !Mongoose Bite',

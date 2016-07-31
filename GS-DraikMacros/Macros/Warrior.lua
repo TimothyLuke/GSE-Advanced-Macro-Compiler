@@ -22,7 +22,7 @@ PreMacro = [[
 /cast [combat] Avatar
 ]],
 [[/cast Execute]],
-[[/castsequence [reset=60] Rampage,Battle Cry]],
+[[/castsequence reset=60 Rampage,Battle Cry]],
 [[/cast Rampage]],
 [[/cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar]],
 [[/cast Bloodthirst]],
@@ -72,7 +72,7 @@ PreMacro = [[
 /cast [combat] Avatar
 ]],
 '/cast Execute',
-'/castsequence [reset=60] Rampage',
+'/castsequence reset=60 Rampage',
 '/cast Rampage',
 '/cast Bloodthirst',
 '/cast Furious Slash',

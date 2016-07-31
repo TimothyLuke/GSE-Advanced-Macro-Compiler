@@ -15,11 +15,11 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-"/castsequence [reset=combat] Thrash, Moonfire, Maul, Swipe",
-"/castsequence [reset=combat] Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Iron Fur",
+"/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
+"/castsequence reset=combat Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Iron Fur",
 "/cast Survival Instincts",
 "/cast Thrash",
-"/castsequence [reset=combat] Swipe, Moonfire, Maul, Mangle, Iron Fur",
+"/castsequence reset=combat Swipe, Moonfire, Maul, Mangle, Iron Fur",
 "/cast Pulverize",
 "/cast Incapacitating Roar",
 "/cast [combat] Barkskin",
@@ -39,10 +39,10 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence Thrash, Thrash, Thrash, Pulverize",
-"/castsequence [reset=5] Savage Defense, Swipe, Swipe, Frenzied Regeneration",
-"/castsequence [combat] [reset=target] Moonfire, Mass Entanglement",
+"/castsequence reset=5 Savage Defense, Swipe, Swipe, Frenzied Regeneration",
+"/castsequence [combat] reset=target Moonfire, Mass Entanglement",
 "/cast !Mangle",
-"/castsequence [reset=12] Maul",
+"/castsequence reset=12 Maul",
 "/cast Survival Instincts",
 "/cast Thrash",
 "/castsequence Swipe, Moonfire, Maul, Mangle",
@@ -112,7 +112,7 @@ PreMacro = [[
 ]],
 [[/cast [combat] !Incarnation: King of the Jungle]],
 [[/cast [combat] !Mighty Bash]],
-[[/castsequence [reset=combat] Rake,Thrash,Swipe,Swipe,Swipe,Ferocious Bite]],
+[[/castsequence reset=combat Rake,Thrash,Swipe,Swipe,Swipe,Ferocious Bite]],
 PostMacro = [[
 /cast [combat] !survival Instincts
 /cast [combat] !Tiger's Fury
@@ -130,7 +130,7 @@ PreMacro = [[
 /cast Wild Charge
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=combat] Rake,shred,shred,shred,!Rip,Rake,shred,shred,shred,ferocious bite,Rake,shred,shred,shred,ferocious bite',
+'/castsequence reset=combat Rake,shred,shred,shred,!Rip,Rake,shred,shred,shred,ferocious bite,Rake,shred,shred,shred,ferocious bite',
 '/use [combat] Berserk',
 '/use [combat] survival instincts',
 '/cast Incarnation: King of the Jungle',
@@ -193,8 +193,8 @@ PreMacro = [[
 /cast [mod:shift] Celestial Alignment
 /cast [mod:alt] Solar Beam
 ]],
-"/castsequence [reset=target] Sunfire,null",
-"/castsequence [reset=target] Moonfire,null",
+"/castsequence reset=target Sunfire,null",
+"/castsequence reset=target Moonfire,null",
 "/castsequence [combat]Starsurge,Solar Wrath,Lunar Strike,Solar Wrath",
 "/castsequence Lunar Strike,Solar Wrath,Starsurge,Solar Wrath,Lunar Strike,Starsurge",
 "/castsequence [combat]Solar Wrath,Lunar Strike,Solar Wrath,Moonfire",
@@ -219,7 +219,7 @@ PreMacro = [[
 ]],
 '/castsequence [@focus] reset=15/combat Lifebloom, Regrowth, Rejuvenation',
 '/cast [@focus] Cenarion Ward',
-'/castsequence [reset=target] [@mouseover,exists,help,nodead] Regrowth, Rejuvenation, Healing Touch, Swiftmend',
+'/castsequence reset=target [@mouseover,exists,help,nodead] Regrowth, Rejuvenation, Healing Touch, Swiftmend',
 PostMacro = [[
 /cast [@focus]Ironbark
 /cast [@player]Barkskin

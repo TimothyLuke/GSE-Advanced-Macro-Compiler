@@ -14,8 +14,8 @@ PreMacro = [[
 /Cast [combat] Dancing Rune Weapon
 ]],
 '/cast Marrowrend',
-"/castsequence [reset=combat] Death's Caress, Blood Boil, Death Strike, blood Boil, Marrowrend",
-"/castsequence [reset=combat] Death's Caress, Blood Boil, Blood Boil, death strike, soulgorge",
+"/castsequence reset=combat Death's Caress, Blood Boil, Death Strike, blood Boil, Marrowrend",
+"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, death strike, soulgorge",
 "/cast Heart Strike",
 "/cast Death Strike",
 PostMacro = [[
@@ -53,11 +53,11 @@ PreMacro = [[
 /cast [combat] Pillar of Frost
 /cast [combat] Anti-Magic Shell
 ]],
-'/castsequence [reset=combat] Frost Strike',
+'/castsequence reset=combat Frost Strike',
 '/cast Obliterate',
 '/cast Obliteration',
-'/castsequence [reset=combat] Howling Blast, Howling Blast, Howling Blast, Obliterate',
-'/castsequence [reset=combat] Howling Blast, Howling Blast, Howling Blast, Howling Blast',
+'/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Obliterate',
+'/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Howling Blast',
 PostMacro = [[
 /targetenemy [noharm][dead]
 ]],
@@ -71,9 +71,9 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /cast [combat] Pillar of Frost
 ]],
-"/castsequence [reset=combat] Obliterate, Frost Strike",
-'/castsequence [reset=combat] Obliterate, Frost Strike, Frost Strike, Obliterate, howling blast',
-"/castsequence [reset=combat] Obliteration",
+"/castsequence reset=combat Obliterate, Frost Strike",
+'/castsequence reset=combat Obliterate, Frost Strike, Frost Strike, Obliterate, howling blast',
+"/castsequence reset=combat Obliteration",
 "/cast [combat] remorseless winter",
 "/cast [combat] empower rune weapon",
 PostMacro = [[
@@ -116,9 +116,9 @@ PreMacro = [[
 /use [combat] 14
 ]],
 "/cast Marrowrend",
-"/castsequence [reset=combat] Death's Caress, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike",
-'/castsequence [reset=combat] Blood Boil, Blood Boil, Marrowrend',
-'/castsequence [reset=combat] Heart Strike, Heart Strike, Heart Strike, Heart Strike, Marrowrend',
+"/castsequence reset=combat Death's Caress, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike",
+'/castsequence reset=combat Blood Boil, Blood Boil, Marrowrend',
+'/castsequence reset=combat Heart Strike, Heart Strike, Heart Strike, Heart Strike, Marrowrend',
 PostMacro = [[
 /targetenemy [noharm][dead]
 ]],
@@ -135,9 +135,9 @@ PreMacro = [[
 /cancelaura Wraith Walk
 ]],
 '/castsequence Marrowrend, Marrowrend, Marrowrend, Marrowrend, Death Strike',
-"/castsequence [reset=combat] Death's Caress, Blood Boil, Blood Boil, Marrowrend",
+"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Marrowrend",
 "/cast Death Strike",
-"/castsequence [reset=combat] Death's Caress, Blood Boil, Blood Boil, Heart Strike",
+"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Heart Strike",
 "/cast Heart Strike",
 "/cast Death Strike",
 '/cast Marrowrend',

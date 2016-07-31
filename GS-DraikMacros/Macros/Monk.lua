@@ -13,8 +13,8 @@ helpTxt = "Talent are 2 3 2 3 1 2 3",
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-"/castsequence [reset=combat] Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Rising Sun Kick",
-"/castsequence [reset=combat] Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Fists of Fury",
+"/castsequence reset=combat Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Rising Sun Kick",
+"/castsequence reset=combat Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Fists of Fury",
 "/cast Tiger Palm",
 "/cast Touch of Death",
 PostMacro = [[

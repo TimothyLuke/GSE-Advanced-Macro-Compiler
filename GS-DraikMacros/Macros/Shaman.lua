@@ -55,13 +55,13 @@ PreMacro = [[
 /startattack
 ]],
 '/castsequence [nochanneling]!Rockbiter,!Lava Lash,!frostbrand,!Lava Lash,!frostbrand',
-'/castsequence [nochanneling][reset=6/target] !Crash Lightning',
-'/castsequence [nochanneling][reset=8.2/target] Lightning Bolt',
-'/castsequence [nochanneling][reset=11/target] !Flametongue',
-'/castsequence [nochanneling][reset=15/target] !Stormstrike',
-'/castsequence [nochanneling][reset=45/target] !windsong',
-'/castsequence [nochanneling][reset=120/target] !Feral Spirit',
-'/castsequence [nochanneling][reset=300/target] !ascendance',
+'/castsequence [nochanneling]reset=6/target !Crash Lightning',
+'/castsequence [nochanneling]reset=8.2/target Lightning Bolt',
+'/castsequence [nochanneling]reset=11/target !Flametongue',
+'/castsequence [nochanneling]reset=15/target !Stormstrike',
+'/castsequence [nochanneling]reset=45/target !windsong',
+'/castsequence [nochanneling]reset=120/target !Feral Spirit',
+'/castsequence [nochanneling]reset=300/target !ascendance',
 '/cast !stormstrike',
 PostMacro = [[
 /cast [combat] Blood Fury
@@ -98,7 +98,7 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=target/combat] Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
+'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Blood Fury
@@ -115,7 +115,7 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=target/combat] Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
+'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Elemental Mastery
@@ -133,8 +133,8 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=target/combat] Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
-'/castsequence [reset=10] !Earth Shock',
+'/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
+'/castsequence reset=10 !Earth Shock',
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Blood Fury
@@ -151,8 +151,8 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence [reset=target/combat] Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
-'/castsequence [reset=10] !Earth Shock',
+'/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
+'/castsequence reset=10 !Earth Shock',
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Elemental Mastery
@@ -171,8 +171,8 @@ PreMacro=
 /targetenemy [noharm][dead]
 /petattack [@target,harm]
 ]],
-"/castsequence [reset=combat] [nopet:Earth Elemental] Fire Elemental",
-"/castsequence [nochanneling] [reset=combat] Lava Burst, Flame Shock, Lava Burst",
+"/castsequence reset=combat [nopet:Earth Elemental] Fire Elemental",
+"/castsequence [nochanneling] reset=combat Lava Burst, Flame Shock, Lava Burst",
 "/castsequence [nochanneling] Lightning Bolt, Lightning Bolt, Lightning Bolt, Lightning Bolt",
 "/cast Lava Burst",
 PostMacro=[[
@@ -189,8 +189,8 @@ PreMacro=[[
 /targetenemy [noharm][dead]
 /petattack [@target,harm]
 ]],
-"/castsequence [reset=combat] [nopet:Earth Elemental] Fire Elemental",
-"/castsequence [nochanneling] [reset=combat] Lava Burst, Flame Shock, Lava Burst",
+"/castsequence reset=combat [nopet:Earth Elemental] Fire Elemental",
+"/castsequence [nochanneling] reset=combat Lava Burst, Flame Shock, Lava Burst",
 "/castsequence [nochanneling] Chain Lightning, Chain Lightning, Chain Lightning",
 "/cast Lava Burst",
 PostMacro=[[
@@ -205,8 +205,8 @@ specID=264,
 helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
-"/castsequence [nochanneling][reset=30] Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help][reset=5] !Riptide",
+"/castsequence [nochanneling]reset=30 Healing Stream Totem",
+"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
 "/castsequence [nochanneling,target=mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
 "/castsequence [nochanneling,target=mouseover,help]Healing Surge",
 PostMacro=[[
@@ -220,8 +220,8 @@ specID=264,
 helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
-"/castsequence [nochanneling][reset=30] Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help][reset=5] !Riptide",
+"/castsequence [nochanneling]reset=30 Healing Stream Totem",
+"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
 "/castsequence [nochanneling,target=mouseover,help]Healing Wave, Healing Wave, Healing Wave, Healing Wave",
 "/castsequence [nochanneling,target=mouseover,help]Healing Wave",
 PostMacro=[[
@@ -235,8 +235,8 @@ specID=264,
 helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
-"/castsequence [nochanneling][reset=30] Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help][reset=5] !Riptide",
+"/castsequence [nochanneling]reset=30 Healing Stream Totem",
+"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
 "/castsequence [nochanneling,target=mouseover,help]Chain Heal, Chain Heal, Chain Heal, Chain Heal",
 "/castsequence [nochanneling,target=mouseover,help]Healing Surge",
 PostMacro=[[

@@ -91,7 +91,7 @@ PreMacro = [[
 /cast Marked for Death
 /cast Adrenaline Rush
 ]],
-'/castsequence [reset=target] Ghostly Strike, Saber Slash, Saber Slash, Pistol Shot, Roll the Bones,feint',
+'/castsequence reset=target Ghostly Strike, Saber Slash, Saber Slash, Pistol Shot, Roll the Bones,feint',
 '/cast [nochanneling] Run Through',
 '/cast [nochanneling] Between the Eyes',
 '/cast [nochanneling] Killing Spree',
