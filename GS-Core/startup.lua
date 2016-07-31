@@ -2,7 +2,7 @@ local GNOME, ns = ...
 GSMasterSequences = ns
 GSStaticCastCmds = {}
 
-GSStaticCastCmds = { use = true, cast = true, spell = true }
+GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
 
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
 GSMasterOptions = {}

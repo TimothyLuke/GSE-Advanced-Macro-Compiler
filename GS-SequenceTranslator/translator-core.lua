@@ -78,9 +78,8 @@ function GSTranslateString(instring, fromLocale, toLocale)
             GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
             output = output  .. etc .. "\n"
           end
-        end
         -- check for cast Sequences
-        if strlower(cmd) == "castsequence" then
+        elseif strlower(cmd) == "castsequence" then
           for _, w in ipairs(GSTRsplit(etc,",")) do
             w = string.match(w, "^%s*(.-)%s*$")
             if string.sub(w, 1, 1) == "!" then
@@ -90,6 +89,9 @@ function GSTranslateString(instring, fromLocale, toLocale)
             output = output ..  returnval
           end
           output = output .. "\n"
+        else
+          -- pass it through
+          output = output  .. etc .. "\n"
         end
       end
     end
@@ -112,14 +114,15 @@ function GSTRTranslateSpell(str, fromLocale, toLocale)
     if conditionals then
       output = output .. mods .. " "
     end
+    GSPrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
     local foundspell = language[GSTRStaticHash][fromLocale][string.match(etc, "^%s*(.-)%s*$")]
     if foundspell then
       GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
       output = output  .. language[GSTRStaticKey][toLocale][foundspell]
       found = true
     else
-      GSPrintDebugMessage("Did not find : " .. str .. " in " .. fromLocale, GNOME)
-      output = output  .. str
+      GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
+      output = output  .. etc
     end
   end
   return found, output
