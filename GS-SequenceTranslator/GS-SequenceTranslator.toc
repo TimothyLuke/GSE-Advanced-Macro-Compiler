@@ -2,7 +2,7 @@
 ## Title: |cffff0000GS-E:|r Sequence Translator
 ## Notes: This addon allows you to Trnaslate GnomeSequenced-Enhanced Sequences into your local client language
 ## Author: Draik
-## Version: v1.1 - Legion
+## Version: v1.1.4 - Legion
 ## RequiredDeps: GS-Core
 
 #setup
