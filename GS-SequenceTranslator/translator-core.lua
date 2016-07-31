@@ -58,28 +58,22 @@ end
 
 function GSTranslateString(instring, fromLocale, toLocale)
   GSPrintDebugMessage("Entering GSTranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
+
   local output = ""
   local stringlines = GSTRSplitMeIntolines(instring)
   for _,v in ipairs(stringlines) do
     if not GSTRisempty(v) then
       for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
-        -- figure out what to do with conditionals eg [mod:alt] etc
-        local conditionals, mods, etc = GSTRGetConditionalsFromString(etc)
+        GSPrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
         output = output .. "/" .. cmd .. " "
-        if conditionals then
-          output = output .. mods .. " "
-        end
-        -- handle cast commands
         if GSStaticCastCmds[strlower(cmd)] then
           etc = string.match(etc, "^%s*(.-)%s*$")
           if string.sub(etc, 1, 1) == "!" then
             etc = string.sub(etc, 2)
-            --output = output .. "!"
           end
-          local foundspell = language[GSTRStaticHash][fromLocale][etc]
+          local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale)
           if foundspell then
-            GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
-            output = output  .. language[GSTRStaticKey][toLocale][foundspell] .. "\n"
+            output = output  .. returnval .. "\n"
           else
             GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
             output = output  .. etc .. "\n"
@@ -91,14 +85,9 @@ function GSTranslateString(instring, fromLocale, toLocale)
             w = string.match(w, "^%s*(.-)%s*$")
             if string.sub(w, 1, 1) == "!" then
               w = string.sub(w, 2)
-              --output = output .. "!"
             end
-            local foundspell = language[GSTRStaticHash][fromLocale][w]
-            if foundspell then
-              output = output ..  language[GSTRStaticKey][toLocale][foundspell] ..", "
-            else
-              output = output .. w
-            end
+            local foundspell, returnval = GSTRTranslateSpell(w, fromLocale, toLocale)
+            output = output ..  returnval
           end
           output = output .. "\n"
         end
@@ -107,6 +96,33 @@ function GSTranslateString(instring, fromLocale, toLocale)
   end
   GSPrintDebugMessage("Exiting GSTranslateString with : \n" .. output, GNOME)
   return output
+end
+
+function GSTRTranslateSpell(str, fromLocale, toLocale)
+  local output = ""
+  local found = false
+  -- check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
+  if string.match(str, ";") then
+    for _, w in ipairs(GSTRsplit(str,";")) do
+      found, returnval = GSTRTranslateSpell(string.match(w, "^%s*(.-)%s*$"), fromLocale, toLocale)
+      output = output .. returnval .. ";"
+    end
+  else
+    local conditionals, mods, etc = GSTRGetConditionalsFromString(str)
+    if conditionals then
+      output = output .. mods .. " "
+    end
+    local foundspell = language[GSTRStaticHash][fromLocale][string.match(etc, "^%s*(.-)%s*$")]
+    if foundspell then
+      GSPrintDebugMessage("Translating Spell ID : " .. foundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
+      output = output  .. language[GSTRStaticKey][toLocale][foundspell]
+      found = true
+    else
+      GSPrintDebugMessage("Did not find : " .. str .. " in " .. fromLocale, GNOME)
+      output = output  .. str
+    end
+  end
+  return found, output
 end
 
 function GSTRSplitMeIntolines(str)
