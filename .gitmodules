@@ -1,0 +1,6 @@
+[submodule "GS-SequenceTranslator"]
+	path = GS-SequenceTranslator
+	url = https://github.com/TimothyLuke/GS-SequenceTranslator
+[submodule "unittests/wowmock"]
+	path = unittests/wowmock
+	url = https://github.com/Adirelle/wowmock
