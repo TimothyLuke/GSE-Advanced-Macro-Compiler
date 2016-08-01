@@ -1,36 +1,32 @@
 # .travis.yml
 
-sudo: false
+sudo: true
 
 env:
-  - LUA="lua=5.1"
+  - LUA="lua=5.1" LUAC="luac5.1"
 
-
-before_install:
-  - pip install hererocks
-  - hererocks lua_install -r^ --$LUA
-  - export PATH=$PATH:$PWD/lua_install/bin
+addons:
+  apt:
+    packages:
+      - lua5.1
+      - luarocks
+      - liblua5.1-bitop0
 
 install:
+  - eval $(luarocks path --bin)
   - luarocks install --local luaunit 2.1
   - luarocks install --local mockagne 1.0
-  - luarocks install luacheck
-  - luarocks install busted
-  - luarocks install luacov
-  - luarocks install luacov-coveralls
 
 script:
-  - luacheck --std max+busted *.lua spec
-  - busted --verbose --coverage
   - cd unittests
   - $LUA gs-core.lua
-
-
-after_success:
-  - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
-
 
 notifications:
   email:
     on_failure: always
     on_success: change
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.luarocks
