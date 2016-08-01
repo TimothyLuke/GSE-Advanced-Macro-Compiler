@@ -1,19 +1,16 @@
 # .travis.yml
-
+language: python
 sudo: true
 
 env:
   - LUA="lua=5.1" LUAC="luac5.1"
 
-addons:
-  apt:
-    packages:
-      - lua5.1
-      - luarocks
-      - liblua5.1-bitop0
+before_install:
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin
 
 install:
-  - eval $(luarocks path --bin)
   - luarocks install --local luaunit 2.1
   - luarocks install --local mockagne 1.0
   - luarocks install luacheck
