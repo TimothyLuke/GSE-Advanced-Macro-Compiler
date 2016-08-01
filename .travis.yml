@@ -16,10 +16,19 @@ install:
   - eval $(luarocks path --bin)
   - luarocks install --local luaunit 2.1
   - luarocks install --local mockagne 1.0
+  - luarocks install luacheck
+  - luarocks install busted
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
 
 script:
   - cd unittests
+  - luacheck --std max+busted *.lua spec
+  - busted --verbose --coverage
   - $LUA gs-core.lua
+
+after_success:
+  - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
 
 notifications:
   email:
