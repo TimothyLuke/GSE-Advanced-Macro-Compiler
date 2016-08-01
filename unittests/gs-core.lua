@@ -7,11 +7,11 @@ local bit = require('bit')
 local function setup()
 	G = mockagne:getMock()
   startup = wowmock("../GS-Core/startup.lua", G)
-  gs-core = wowmock("../GS-Core/core.lua", G)
+  gscore = wowmock("../GS-Core/Core.lua", G)
 end
 
-testGS-core = { setup = setup}
+testGScore = { setup = setup}
 
-function testGS-core:test_unknown_category()
-	assertEquals(pcall(gs-core.isempty(nil)), true)
+function testGScore:test_unknown_category()
+	assertEquals(pcall(gscore.isempty(nil)), true)
 end
