@@ -1,6 +1,6 @@
 # .travis.yml
 
-sudo: false
+sudo: true
 
 env:
   - LUA="lua=5.1" LUAC="luac5.1"
