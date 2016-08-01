@@ -18,7 +18,7 @@ install:
 
 script:
   - cd unittests
-  - luacheck --std max+busted *.lua spec
+  - luacheck --std max+busted ../GS-Core/*.lua
   - pwd
   - busted --verbose --coverage
 
