@@ -1,7 +1,9 @@
 
 
 describe('gs-core', function()
-  local seterrorhandler = function(message) print(message) end
+  function seterrorhandler (message)
+    print(message)
+  end
   --setup(function()
   --  util = require("util")
   --end)
