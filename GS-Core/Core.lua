@@ -212,16 +212,18 @@ end
 
 function GSExportSequencebySeq(sequence, sequenceName)
   GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
-  local helptext = "helpTxt = '" .. sequence.helpTxt .. "',\n"
+  --local helptext = "helpTxt = '" .. sequence.helpTxt .. "',\n"
+  local helptext = "helpTxt = \"" .. (isempty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. "\",\n"
   local steps = ""
   if not isempty(sequence.StepFunction) then
     if  sequence.StepFunction == GSStaticPriority then
      steps = "StepFunction = GSStaticPriority,\n"
     else
-     steps = sequence.StepFunction .. "',\n"
+     steps = "StepFunction = [[" .. sequence.StepFunction .. "]],\n"
     end
   end
-  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
+  --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
+  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\nauthor=\"" .. (isempty(sequence.author) and "Unknown Author" or sequence.author) .."\",\n" .. (isempty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID="..sequence.specID ..",\n") .. helptext .. steps )
   if not isempty(sequence.icon) then
      returnVal = returnVal .. "icon=".. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") ..",\n"
   end
@@ -250,17 +252,11 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
-    local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
-    GSPrintDebugMessage("Sequence Name: " .. name)
-    if isempty(sid) then
+    if not isempty(sequence.specID) then
+      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
+      GSPrintDebugMessage("Sequence Name: " .. name)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSPrintDebugMessage("No Specialisation information for sequence " .. name .. ". Overriding with information for current spec " .. specname)
-    else
-      GSPrintDebugMessage("specname: " .. specname .. " specdescription: " ..  specdescription .. " specicon: " .. specicon .. " specrole: " .. specrole .. " specclass: " .. specclass)
-    end
-    if isempty(sequence.specID) or isempty(sequence.author) then
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. ' |cFFFFFF00' .. ' |cFF0000FF Unknown Author|r ' )
-    else
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
         GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
@@ -270,6 +266,8 @@ local function ListSequences(txt)
         print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
         GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       end
+    else
+      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. ' |cFFFFFF00' .. ' |cFF0000FF Unknown Author|r ' )
     end
   end
   ShowMacroFrame()
