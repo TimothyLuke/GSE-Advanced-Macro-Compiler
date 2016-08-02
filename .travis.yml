@@ -17,9 +17,11 @@ install:
   - luarocks install luacov-coveralls
 
 script:
-  - cd unittests
-  - luacheck --std max+busted ../GS-Core/*.lua
-  - pwd
+  - luacheck --std max+busted GS-Core/startup.lua
+  - luacheck --std max+busted GS-Core/errorhandler.lua
+  - luacheck --std max+busted GS-Core/Core.lua
+  - luacheck --std max+busted GS-SequenceEditor/editor-core.lua
+  - luacheck --std max+busted GS-DraikMacros/Macros/*.lua
   - busted --verbose --coverage
 
 after_success:
