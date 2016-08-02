@@ -1,0 +1,23 @@
+language: erlang
+
+env:
+  - LUA="lua5.1"
+
+branches:
+  only:
+    - master
+
+install:
+  - sudo apt-get install $LUA luarocks
+  - sudo luarocks install luaunit
+  - sudo luarocks install luabitop
+
+script:
+  - cd tests
+  - $LUA wowmock_tests.lua
+  - $LUA wowlua_tests.lua
+
+notifications:
+  email:
+    on_failure: always
+    on_success: change
