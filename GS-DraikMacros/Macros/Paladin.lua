@@ -37,7 +37,7 @@ PostMacro = [[
 }
 
 
-Sequences['Palla_Prot_ST'] = {
+Sequences['DB_Palla_Prot_ST'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 1332223  This build is based in mastery, hast and crit (food is variable for boss). ',
@@ -65,7 +65,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['Palla_Prot_AOE'] = {
+Sequences['DB_Palla_Prot_AOE'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332233  This build is based in mastery, hast and crit (food is variable for boss).',
@@ -93,7 +93,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['Palla_Sera'] = {
+Sequences['DB_Palla_Sera'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2232222  This build is based in mastery, hast and crit (food is variable for boss).',
