@@ -1,7 +1,9 @@
-local gs-core = require '../GS-Core/startup.lua'
+
 
 describe('gs-core', function()
-  it('CHeck isempty', function()
-    assert.equal(true, gs-core.isempty(nil))
+  it('Check isempty', function()
+    --local startup = require 'GS-Core/startup'
+    local core = require 'GS-Core/Core'
+    assert.equal(true, core._isempty(nil))
   end)
 end)
