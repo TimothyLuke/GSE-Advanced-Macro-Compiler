@@ -36,6 +36,88 @@ PostMacro = [[
 ]],
 }
 
+
+Sequences['Palla_Prot_ST'] = {
+author="LNPV",
+specID=66,
+helpTxt = 'Talents: 1332223  This build is based in mastery, hast and crit (food is variable for boss). ',
+icon=236264,
+PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+"/cast Avenger's Shield",
+"/cast Judgment",
+"/xast Hammer of the Righteous",
+"/cast Shield of the Righteous",
+"/cast Consecration",
+"/cast Light of the Protector",
+"/cast Judgment",
+"/cast Hammer of the Righteous",
+"/cast Shield of the Righteous",
+PostMacro=[[
+/cast Avenging Wrath
+/cast Divine Steed
+/cast Avenger's Shield
+/cast Judgment
+/cast Hammer of the Righteous
+/cast Shield of the Righteous
+/startattack
+]],
+}
+
+Sequences['Palla_Prot_AOE'] = {
+author="LNPV",
+specID=66,
+helpTxt = 'Talents: 2332233  This build is based in mastery, hast and crit (food is variable for boss).',
+icon=236264,
+PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+"/cast Avenger's Shield,",
+"/cast Judgment,",
+"/xast Blessed Hammer,",
+"/cast Shield of the Righteous,",
+"/cast Consecration,",
+"/cast Light of the Protector,",
+"/cast Judgment,",
+"/cast Blessed Hammer,",
+"/cast Shield of the Righteous,",
+PostMacro=[[
+/cast Avenging Wrath
+/cast Divine Steed
+/cast Avenger's Shield
+/cast Judgment
+/cast Blessed Hammer
+/cast Shield of the Righteous
+/startattack
+]],
+}
+
+Sequences['Palla_Sera'] = {
+author="LNPV",
+specID=66,
+helpTxt = 'Talents: 2232222  This build is based in mastery, hast and crit (food is variable for boss).',
+icon=236264,
+PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+"/cast Avenger's Shield",
+"/cast Judgment",
+"/cast Blessed Hammer",
+"/cast Consecration",
+"/cast Light of the Protector",
+"/cast Shield of the Righteous",
+"/cast Judgment",
+"/cast Blessed Hammer",
+PostMacro=[[
+/cast Avenging Wrath
+/cast Bastion of Light
+/cast Seraphim
+/cast Divine Steed
+/startattack
+]],
+}
+
 -------------------
 -- Retribution - 70
 -------------------
