@@ -2,7 +2,7 @@
 describe('gs-core', function()
   local LuaUnit = require('luaunit')
   local mockagne = require('mockagne')
-  local wowmock = require('wowmock')
+  local wowmock = require('/home/travis/build/TimothyLuke/GnomeSequenced-Enhanced/spec/wowmock')
   local when, verify = mockagne.when, mockagne.verify
   -- Mocks
   local globals, addon
