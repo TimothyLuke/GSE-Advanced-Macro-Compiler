@@ -3,8 +3,8 @@ describe('gs-core', function()
 
 
   it('Check isempty', function()
-
-    --dofile("spec/wowmock/wowmock.lua")
+    dofile("spec/wowmock/wow.lua")
+    dofile("spec/wowmock/wowmock.lua")
     dofile("GS-Core/startup.lua")
     dofile("GS-Core/errorhandler.lua")
     --local startup = require 'GS-Core/startup'
