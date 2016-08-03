@@ -13,7 +13,6 @@ before_install:
 install:
   - luarocks install luacheck
   - luarocks install --local mockagne 1.0
-  - luarocks install --local wowmock
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
