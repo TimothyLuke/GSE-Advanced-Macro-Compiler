@@ -5,6 +5,11 @@ sudo: true
 env:
   - LUA="lua=5.1" LUAC="luac5.1"
 
+addons:
+  apt:
+    packages:
+      - liblua5.1-bitop0
+
 before_install:
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
@@ -13,6 +18,8 @@ before_install:
 install:
   - luarocks install luacheck
   - luarocks install --local mockagne 1.0
+  - luarocks install luaunit
+  - luarocks install luabitop
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
