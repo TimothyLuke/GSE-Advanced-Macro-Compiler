@@ -19,8 +19,6 @@ PreMacro = [[
 '/cast Feral Spirit',
 PostMacro = [[
 /startattack
-/use [combat] 11
-/use [combat] 12
 /cast [combat] Doom Winds
 /cast [combat] Astral Shift
 ]],

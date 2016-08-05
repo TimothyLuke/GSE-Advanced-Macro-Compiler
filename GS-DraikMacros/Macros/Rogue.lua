@@ -31,10 +31,6 @@ PreMacro = [[
 '/castsequence [talent:7/1] Slice and Dice; [talent:7/2][talent:7/3] Roll the Bones, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot, Run Through, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot',
 '/castsequence Ghostly Strike, Saber Slash, Saber Slash, Saber Slash, Saber Slash, Pistol Shot',
 '/cast [@focus] Tricks of the Trade',
-PostMacro = [[
-/use [combat] 13
-/use [combat] 14
-]],
 }
 
 Sequences['DB_Assassin'] = {
@@ -55,10 +51,6 @@ icon='Ability_Rogue_DeadlyBrew',
 "/cast Exsanguinate",
 "/cast Envenom",
 "/cast Mutilate",
-PostMacro=[[
-/use [combat] 13
-/use [combat] 14
-]],
 }
 
 Sequences['DB_Subtle'] = {
@@ -81,10 +73,6 @@ icon='Ability_Stealth',
 "/cast Shuriken Storm",
 "/cast Eviscerate",
 "/cast Backstab",
-PostMacro=[[
-/use [combat] 13
-/use [combat] 14
-]],
 }
 
 Sequences['DB_DRoutlaw'] = {
@@ -94,8 +82,9 @@ specID=260,
 helpTxt="Talents - 1232232",
 PreMacro = [[
 /startattack
-/cast [stealth] ambush,cheap shot
 /cast [nostealth,nocombat] Stealth
+/cast [stealth] ambush
+/cast [stealth] cheap shot
 /cast Marked for Death
 /cast Adrenaline Rush
 ]],
@@ -106,8 +95,6 @@ PreMacro = [[
 '/cast [nochanneling] Crimson Vial',
 PostMacro = [[
 /cast [combat] Riposte
-/cast [combat]13
-/use [combat] 14
 ]],
 }
 
@@ -152,8 +139,4 @@ icon='INV_Sword_30',
 "/castsequence [mod:alt] Blade Flurry",
 "/cast [@focus] Tricks of the Trade",
 "/cast Crimson Vial",
-PostMacro=[[
-/use [combat] 13
-/use [combat] 14
-]],
 }

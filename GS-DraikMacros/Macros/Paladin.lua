@@ -137,10 +137,6 @@ PreMacro = [[
 '/cast [combat]!Crusade',
 '/cast !Wake of Ashes',
 "/cast Templar's Verdict",
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
 }
 
 Sequences['DB_RetAoE'] = {
@@ -158,10 +154,6 @@ PreMacro = [[
 '/cast [combat]!Crusade',
 '/cast !Wake of Ashes',
 "/cast Divine Storm",
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
 }
 
 
@@ -184,8 +176,4 @@ PreMacro = [[
 '/cast !Blinding Light',
 '/cast Holy Shock',
 '/cast Divine Protection',
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
 }

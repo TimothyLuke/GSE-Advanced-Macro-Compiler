@@ -44,11 +44,7 @@ PreMacro = [[
 "/castsequence reset=combat Fireball, Fireball, Fireball, Fireball, Fire Blast, Pyroblast",
 "/cast Combustion",
 "/cast Living Bomb",
-"/cast Ice flows",
-PostMacro = [[
-/use [combat] 13
-/use [combat] 14
-]],
+"/cast Ice floes",
 }
 
 Sequences['DB_Frosty'] = {
@@ -72,8 +68,6 @@ PreMacro=[[
 "/cast [nochanneling] Frostbolt",
 PostMacro=[[
 /startattack
-/use [combat]13
-/use [combat]14
 /cast [nochanneling] Ice Barrier
 /cast [nochanneling] Ice Floes
 /cast [nochanneling] Icy Veins
@@ -96,8 +90,4 @@ icon='Spell_Fire_FireBolt02',
 "/castsequence [nochanneling] reset=combat/target Fire Blast",
 "/castsequence [nochanneling,mod:alt] Combustion",
 "/cast [nochanneling]Ice Barrier",
-PostMacro=[[
-/use [combat] 13
-/use [combat] 14
-]],
 }

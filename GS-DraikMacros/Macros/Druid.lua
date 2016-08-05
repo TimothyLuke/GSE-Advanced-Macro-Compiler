@@ -24,10 +24,10 @@ PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
-"/castsequence reset=combat Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Iron Fur",
+"/castsequence reset=combat Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Ironfur",
 "/cast Survival Instincts",
 "/cast Thrash",
-"/castsequence reset=combat Swipe, Moonfire, Maul, Mangle, Iron Fur",
+"/castsequence reset=combat Swipe, Moonfire, Maul, Mangle, Ironfur",
 "/cast Pulverize",
 "/cast Incapacitating Roar",
 "/cast [combat] Barkskin",
@@ -74,7 +74,7 @@ helpTxt = "2231123",
 StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
-/castsequence [@player,nostance:2] Cat Form(Shapeshift)
+/castsequence [@player,nostance:2] Cat Form
 /cast [nostealth,nocombat] Prowl
 /stopattack [stealth]
 ]],
@@ -83,8 +83,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /cast Tiger's Fury
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -95,7 +93,7 @@ helpTxt = "2231123",
 StepFunction = GSStaticPriority,
  PreMacro = [[
 /targetenemy [noharm][dead]
-/castsequence [@player,nostance:2] Cat Form(Shapeshift)
+/castsequence [@player,nostance:2] Cat Form
 /cast [nostealth,nocombat] Prowl
 /stopattack [stealth]
 ]],
@@ -104,8 +102,6 @@ StepFunction = GSStaticPriority,
 PostMacro = [[
 /startattack
 /cast Tiger's Fury
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -124,8 +120,6 @@ PreMacro = [[
 PostMacro = [[
 /cast [combat] !survival Instincts
 /cast [combat] !Tiger's Fury
-/use [combat] 11
-/use [combat] 12
 /startattack
 ]],
 }
@@ -145,8 +139,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /cast Tiger's Fury
-/use [combat] 11
-/use [combat] 12
 ]],
 }
 
@@ -164,8 +156,6 @@ helpTxt = "2323112",
 '/cast Starsurge',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -184,8 +174,6 @@ helpTxt = "2312232",
 '/cast Starsurge',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -213,8 +201,6 @@ PreMacro = [[
 "/cast Starsurge",
 PostMacro = [[
 /startattack
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -255,7 +241,5 @@ PreMacro = [[
 '/cast Starsurge',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }

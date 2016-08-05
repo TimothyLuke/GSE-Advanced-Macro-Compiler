@@ -25,9 +25,6 @@ PreMacro = [[
 "/cast [nochanneling] Bestial Wrath",
 PostMacro = [[
 /cast Aspect of the Wild
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -54,9 +51,6 @@ PreMacro = [[
 "/cast [nochanneling] Bestial Wrath",
 PostMacro = [[
 /cast Aspect of the Wild
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -105,9 +99,6 @@ PreMacro = [[
 "/cast [nochanneling] Titan's Thunder",
 PostMacro = [[
 /cast Aspect of the Wild
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -144,9 +135,6 @@ PreMacro = [[
 "/cast [nochanneling] Bestial Wrath",
 PostMacro = [[
 /cast Aspect of the Wild
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -173,8 +161,5 @@ PreMacro = [[
 "/cast [nochanneling] Bestial Wrath",
 PostMacro = [[
 /cast Aspect of the Wild
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }

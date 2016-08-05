@@ -30,8 +30,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack [@target,harm]
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -56,8 +54,6 @@ PreMacro = [[
 "/cast [combat,nochanneling] Fel Eruption",
 PostMacro = [[
 /startattack
-/use [combat,nochanneling] 13
-/use [combat,nochanneling] 14
 /cast [combat,nochanneling] Chaos Nova
 /cast [combat,nochanneling] Chaos Blades
 /cast [combat,nochanneling] Blur
@@ -77,7 +73,5 @@ PreMacro = [[
 "/cast Soul Cleave",
 "/cast Shear",
 PostMacro = [[
-/use 13
-/use 14
 ]],
 }

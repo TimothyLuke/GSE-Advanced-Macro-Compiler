@@ -52,7 +52,7 @@ local OptionsTable = {
     },
     title2 = {
       type = "header",
-      name = "Enabling these options will trigger the ingame Warning about Custom Scripts.",
+      name = "Gameplay - Enabling these options may trigger the ingame Warning about Custom Scripts.",
       order = 500
     },
     requireTarget={
@@ -61,7 +61,7 @@ local OptionsTable = {
       type = "toggle",
       set = function(info,val) GSMasterOptions.requireTarget = val GSReloadSequences() end,
       get = function(info) return GSMasterOptions.requireTarget end,
-      order = 550
+      order = 510
     },
     hideSoundErrors={
       name = "Prevent Sound Errors",
@@ -69,7 +69,7 @@ local OptionsTable = {
       type = "toggle",
       set = function(info,val) GSMasterOptions.hideSoundErrors = val GSReloadSequences() end,
       get = function(info) return GSMasterOptions.hideSoundErrors end,
-      order = 600
+      order = 520
     },
     hideUIErrors={
       name = "Prevent UI Errors",
@@ -77,7 +77,7 @@ local OptionsTable = {
       type = "toggle",
       set = function(info,val) GSMasterOptions.hideUIErrors = val GSReloadSequences() end,
       get = function(info) return GSMasterOptions.hideUIErrors end,
-      order = 700
+      order = 530
     },
     clearUIErrors={
       name = "Clear Errors",
@@ -85,7 +85,39 @@ local OptionsTable = {
       type = "toggle",
       set = function(info,val) GSMasterOptions.clearUIErrors = val GSReloadSequences() end,
       get = function(info) return GSMasterOptions.clearUIErrors end,
-      order = 800
+      order = 540
+    },
+    use11={
+      name = "Use First Ring in Postmacro",
+      desc = "Incorporate the first ring slot into the PostMacro. This is the equivalent of /use [combat] 11 in a PostMacro.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.use11 = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.use11 end,
+      order = 550
+    },
+    use12={
+      name = "Use Second Ring in Postmacro",
+      desc = "Incorporate the second ring slot into the PostMacro. This is the equivalent of /use [combat] 12 in a PostMacro.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.use12 = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.use12 end,
+      order = 560
+    },
+    use13={
+      name = "Use First Trinket in Postmacro",
+      desc = "Incorporate the first trinket slot into the PostMacro. This is the equivalent of /use [combat] 13 in a PostMacro.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.use13 = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.use13 end,
+      order = 570
+    },
+    use14={
+      name = "Use Second Trinket in Postmacro",
+      desc = "Incorporate the second trinket slot into the PostMacro. This is the equivalent of /use [combat] 14 in a PostMacro.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.use14 = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.use14 end,
+      order = 570
     },
     title3 = {
       type = "header",

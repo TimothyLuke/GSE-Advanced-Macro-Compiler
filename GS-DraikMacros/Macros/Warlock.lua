@@ -28,8 +28,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -51,8 +49,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -72,8 +68,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -90,8 +84,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -115,8 +107,6 @@ PreMacro=[[
 PostMacro=[[
 /startattack
 /petattack
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -140,7 +130,5 @@ PreMacro=[[
 PostMacro=[[
 /startattack
 /petattack
-/use [combat] 13
-/use [combat] 14
 ]],
 }

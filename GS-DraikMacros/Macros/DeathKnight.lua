@@ -29,8 +29,6 @@ PreMacro = [[
 PostMacro = [[
 /cast [mod:alt] Anti-Magic Shell
 /TargetEnemy [noharm][dead]
-/Use [combat] 13
-/Use [combat] 14
 ]],
 }
 
@@ -87,9 +85,6 @@ PreMacro = [[
 PostMacro = [[
 /targetenemy [noharm][dead]
 /cast [combat] Anti-Magic Shell
-/use [combat] 12
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -120,8 +115,6 @@ specID = 250,
 author = "Owns",
 helpTxt = "Talents 2112333",
 PreMacro = [[
-/use [combat] 13
-/use [combat] 14
 ]],
 "/cast Marrowrend",
 "/castsequence reset=combat Death's Caress, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike",
@@ -151,7 +144,5 @@ PreMacro = [[
 '/cast Marrowrend',
 PostMacro = [[
 /TargetEnemy [noharm][dead]
-/Use [combat] 13
-/Use [combat] 14
 ]],
 }

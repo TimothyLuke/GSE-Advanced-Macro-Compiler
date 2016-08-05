@@ -37,8 +37,6 @@ PostMacro = [[
 /startattack
 /petattack
 /cast Aspect of the Wild
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -64,8 +62,6 @@ PostMacro = [[
 /startattack
 /petattack
 /cast Aspect of the Wild
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -84,8 +80,6 @@ PreMacro = [[
 '/cast Raptor Strike',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -129,8 +123,6 @@ PreMacro = [[
 "/cast A Murder of Crows",
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -153,8 +145,6 @@ PreMacro = [[
 "/cast A Murder of Crows",
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -220,8 +210,6 @@ PreMacro = [[
 '/cast Flanking Strike',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -243,8 +231,6 @@ PreMacro = [[
 '/cast Throwing Axes',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -274,8 +260,5 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /petattack
-/use [combat]11
-/use [combat]13
-/use [combat]14
 ]],
 }

@@ -59,6 +59,18 @@ local function preparePostMacro(postmacro)
     -- see #20 prevent target hopping
     postmacro = "/stopmacro [@playertarget, noexists]\n" .. postmacro
   end
+  if GSMasterOptions.use11 then
+    postmacro = "/use [combat] 11\n" .. postmacro
+  end
+  if GSMasterOptions.use12 then
+    postmacro = "/use [combat] 12\n" .. postmacro
+  end
+  if GSMasterOptions.use13 then
+    postmacro = "/use [combat] 13\n" .. postmacro
+  end
+  if GSMasterOptions.use14 then
+    postmacro = "/use [combat] 14\n" .. postmacro
+  end
   return postmacro
 end
 
@@ -295,8 +307,10 @@ function GSUpdateSequence(name,sequence)
     else
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
         button:SetAttribute("step",1)
-        button:SetAttribute('PreMacro', preparePreMacro(sequence.PreMacro or '') .. '\n')
+        button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
+        GSPrintDebugMessage("PreMacro updated to: " .. button:GetAttribute('PreMacro'))
         button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
+        GSPrintDebugMessage("PostMacro updated to: " .. button:GetAttribute('PostMacro'))
     end
     if name == "LiveTest" then
      local sequenceIndex = GetMacroIndexByName("LiveTest")

@@ -25,8 +25,6 @@ PreMacro = [[
 "/cast [nochanneling] Mind Sear",
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -48,8 +46,6 @@ PreMacro = [[
 '/cast Shining Force',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -73,8 +69,6 @@ PreMacro = [[
 PostMacro = [[
 /startattack
 /castsequence [target=mouseover,help,nodead][] Plea, Shadow Mend
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -98,11 +92,9 @@ PreMacro = [[
 '/cast Holy Fire',
 '/cast Halo',
 '/cast Holy Nova',
-'/cast Holy Word:Chastise',
+'/cast Holy Word: Chastise',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 

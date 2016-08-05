@@ -21,6 +21,22 @@ GSStaticCleanStrings = {
   [16] = "/run UIErrorsFrame:Hide%(%)\n",
 
   [20] = "/stopmacro [@playertarget, noexists]\n",
+  [31] = "/use [combat] 11\n",
+  [32] = "/use [combat] 12\n",
+  [33] = "/use [combat] 13\n",
+  [34] = "/use [combat] 14\n",
+  [35] = "/use 11\n",
+  [36] = "/use 12\n",
+  [37] = "/use 13\n",
+  [38] = "/use 14\n",
+  [39] = "/Use [combat] 11\n",
+  [40] = "/Use [combat] 12\n",
+  [41] = "/Use [combat] 13\n",
+  [42] = "/Use [combat] 14\n",
+  [43] = "/use [combat]11\n",
+  [44] = "/use [combat]12\n",
+  [45] = "/use [combat]13\n",
+  [46] = "/use [combat]14\n",
 
   [101] = "\n\n",
 }
@@ -42,6 +58,10 @@ GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
 GSMasterOptions.requireTarget = false
+GSMasterOptions.use11 = false
+GSMasterOptions.use12 = false
+GSMasterOptions.use13 = true
+GSMasterOptions.use14 = true
 
 GSDebugOutput = ""
 

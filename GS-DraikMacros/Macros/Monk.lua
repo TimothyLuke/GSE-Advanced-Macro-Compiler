@@ -29,8 +29,6 @@ PostMacro = [[
 /cast [combat] Invoke Xuen, the White Tiger
 /cast [combat] Serenity
 /cast [combat] Touch of Death
-/use [combat] 11
-/use [combat] 12
 ]],
 }
 
@@ -52,7 +50,5 @@ PostMacro = [[
 /cast [combat] Invoke Xuen, the White Tiger
 /cast [combat] Serenity
 /cast [combat] Touch of Death
-/use [combat] 11
-/use [combat] 12
 ]],
 }

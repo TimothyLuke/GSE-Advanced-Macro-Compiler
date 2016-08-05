@@ -38,8 +38,6 @@ PreMacro = [[
 [[/cast Furious Slash]],
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -59,8 +57,6 @@ PreMacro = [[
 "/cast !Bloodthirst",
 PostMacro = [[
 /cast [combat]Berserker Rage
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -86,8 +82,6 @@ PreMacro = [[
 '/cast Furious Slash',
 PostMacro = [[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -104,10 +98,6 @@ PreMacro = [[
 '/cast !Whirlwind',
 '/cast !Raging blow',
 '/cast !Bloodthirst',
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
 }
 
 Sequences['DB_ProtWar'] = {
@@ -129,8 +119,6 @@ PreMacro = [[
 PostMacro = [[
 /cast [combat] Demoralizing Shout
 /cast [combat] Battle Cry
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -155,8 +143,6 @@ PreMacro=[[
 "/cast Slam",
 PostMacro=[[
 /startattack
-/use [combat]13
-/use [combat]14
 ]],
 }
 
@@ -175,8 +161,4 @@ PreMacro = [[
 '/cast !Cleave',
 '/cast !Whirlwind',
 '/cast !Colossus Smash',
-PostMacro = [[
-/use [combat]13
-/use [combat]14
-]],
 }

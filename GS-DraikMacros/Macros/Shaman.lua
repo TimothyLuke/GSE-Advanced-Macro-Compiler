@@ -27,8 +27,6 @@ PreMacro = [[
 '/cast Windsong',
 PostMacro = [[
 /cast Feral Lunge
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -48,8 +46,6 @@ PreMacro = [[
 "/cast Lightning Bolt",
 PostMacro = [[
 /startattack
-/use [combat] 11
-/use [combat] 12
 /cast [combat] Doom Winds
 ]],
 }
@@ -73,8 +69,6 @@ PreMacro = [[
 '/cast !stormstrike',
 PostMacro = [[
 /cast [combat] Blood Fury
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -88,14 +82,10 @@ PreMacro = [[
 ]],
 '/cast Chain Lightning',
 '/cast Flame Shock',
-'/cast Eathern Shield Totem',
+'/cast Earthen Shield Totem',
 '/cast Lava Burst',
-'/cast Lightning Bold',
+'/cast Lightning Bolt',
 '/cast Lightning Surge Totem',
-PostMacro = [[
-/use [combat] 13
-/use [combat] 14
-]],
 }
 
 Sequences['DB_ElemAoE'] = {
@@ -110,8 +100,6 @@ PreMacro = [[
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Blood Fury
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -128,8 +116,6 @@ PreMacro = [[
 PostMacro = [[
 /cast Elemental Mastery
 /cast Blood Fury
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -146,8 +132,6 @@ PreMacro = [[
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Blood Fury
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -165,8 +149,6 @@ PreMacro = [[
 PostMacro = [[
 /cast Elemental Mastery
 /cast Blood Fury
-/use [combat] 13
-/use [combat] 14
 ]],
 }
 
@@ -184,8 +166,6 @@ PreMacro=
 "/castsequence [nochanneling] Lightning Bolt, Lightning Bolt, Lightning Bolt, Lightning Bolt",
 "/cast Lava Burst",
 PostMacro=[[
-/use [combat] 14
-/use [combat] 13
 ]],
 }
 
@@ -201,10 +181,6 @@ PreMacro=[[
 "/castsequence [nochanneling] reset=combat Lava Burst, Flame Shock, Lava Burst",
 "/castsequence [nochanneling] Chain Lightning, Chain Lightning, Chain Lightning",
 "/cast Lava Burst",
-PostMacro=[[
-/use [combat] 14
-/use [combat] 13
-]],
 }
 
 Sequences['DB_MC_Surge'] = {
