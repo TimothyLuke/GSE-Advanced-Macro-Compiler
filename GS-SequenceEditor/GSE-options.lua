@@ -42,6 +42,14 @@ local OptionsTable = {
       get = function(info) return GSMasterOptions.deleteOrphansOnLogout end,
       order = 300
     },
+    useQuestionMark = {
+      name = "Set Default Icon QuestionMark",
+      desc = "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.setDefaultIconQuestionMark = val end,
+      get = function(info) return GSMasterOptions.setDefaultIconQuestionMark end,
+      order = 310
+    },
     seedInitialMacro={
       name = "Seed Initial Macro",
       desc = "If you load Gnome Sequencer - Enhanced and the Sequence Editor and want to create new macros from scratch, this will enable a first cut sequenced template that you can load into the editor as a starting point.  This enables a Hello World macro called Draik01.  You will need to do a /console reloadui after this for this to take effect.",

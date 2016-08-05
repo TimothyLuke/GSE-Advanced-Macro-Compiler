@@ -253,7 +253,7 @@ local function GSregisterSequence(sequenceName, icon)
     -- Sequence exists do nothing
   else
     -- Create Sequence as a player sequence
-    sequenceid = CreateMacro(sequenceName, icon, '#showtooltip\n/click ' .. sequenceName, 1)
+    sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, 1)
     ModifiedSequences[sequenceName] = true
   end
 end

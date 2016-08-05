@@ -62,6 +62,7 @@ GSMasterOptions.use11 = false
 GSMasterOptions.use12 = false
 GSMasterOptions.use13 = true
 GSMasterOptions.use14 = true
+GSMasterOptions.setDefaultIconQuestionMark = true
 
 GSDebugOutput = ""
 
