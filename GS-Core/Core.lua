@@ -115,9 +115,9 @@ local function createButton(name, sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
   button:SetAttribute('step', 1)
   button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
-  GSPrintDebugMessage("PreMacro: " .. button:GetAttribute('PreMacro'))
+  GSPrintDebugMessage("createButton PreMacro: " .. button:GetAttribute('PreMacro'))
   button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
-  GSPrintDebugMessage("PostMacro: " .. button:GetAttribute('PostMacro'))
+  GSPrintDebugMessage("createButton PostMacro: " .. button:GetAttribute('PostMacro'))
   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   button.UpdateIcon = UpdateIcon
 end
@@ -125,7 +125,7 @@ end
 function GSReloadSequences()
   GSPrintDebugMessage("Reloading Sequences")
   for name, sequence in pairs(Sequences) do
-    createButton(name, sequence)
+    GSUpdateSequence(name, sequence)
   end
 end
 
@@ -302,15 +302,15 @@ function GSUpdateSequence(name,sequence)
     if GSMasterOptions.useTranslator and GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence)
     end
-    if button==nil then
+    if isempty(_G[name]) then
         createButton(name, sequence)
     else
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
         button:SetAttribute("step",1)
         button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
-        GSPrintDebugMessage("PreMacro updated to: " .. button:GetAttribute('PreMacro'))
+        GSPrintDebugMessage("GSUpdateSequence PreMacro updated to: " .. button:GetAttribute('PreMacro'))
         button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
-        GSPrintDebugMessage("PostMacro updated to: " .. button:GetAttribute('PostMacro'))
+        GSPrintDebugMessage("GSUpdateSequence PostMacro updated to: " .. button:GetAttribute('PostMacro'))
     end
     if name == "LiveTest" then
      local sequenceIndex = GetMacroIndexByName("LiveTest")

@@ -57,10 +57,6 @@ PreMacro=[[
 PostMacro=[[
 /cast Avenging Wrath
 /cast Divine Steed
-/cast Avenger's Shield
-/cast Judgment
-/cast Hammer of the Righteous
-/cast Shield of the Righteous
 /startattack
 ]],
 }
@@ -85,10 +81,6 @@ PreMacro=[[
 PostMacro=[[
 /cast Avenging Wrath
 /cast Divine Steed
-/cast Avenger's Shield
-/cast Judgment
-/cast Blessed Hammer
-/cast Shield of the Righteous
 /startattack
 ]],
 }
