@@ -5,7 +5,7 @@
 ## Version: v1.2 - Legion
 ## RequiredDeps: GS-Core
 ## OptionalDeps: GS-SequenceTranslator
-## SavedVariables: GSEditorOptions
+## SavedVariables: GSEditorOpt
 
 embeds.xml
 

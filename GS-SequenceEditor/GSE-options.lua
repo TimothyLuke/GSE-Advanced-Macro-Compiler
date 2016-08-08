@@ -195,11 +195,16 @@ local OptionsTable = {
       type = "group",
       order = 2,
       args = {
+        ctitle1 = {
+          type = "header",
+          name = "General Options",
+          order = 100
+        },
         titleColour = {
     			type = "color",
     			name = "Title Colour",
     			desc = "Picks a Custom Colour for the Mod Names.",
-          order = 100
+          order = 101
     			hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.TitleColour))
@@ -212,7 +217,7 @@ local OptionsTable = {
     			type = "color",
     			name = "Author Colour",
     			desc = "Picks a Custom Colour for the Author.",
-          order = 200
+          order = 110
     			hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.AuthorColour))
@@ -225,7 +230,7 @@ local OptionsTable = {
     			type = "color",
     			name = "Command Colour",
     			desc = "Picks a Custom Colour for the Commands.",
-          order = 300
+          order = 120
     			hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.CommandColour))
@@ -238,7 +243,7 @@ local OptionsTable = {
     			type = "color",
     			name = "Emphasis Colour",
     			desc = "Picks a Custom Colour for emphasis.",
-          order = 100
+          order = 130
     			hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.EmphasisColour))
@@ -251,13 +256,167 @@ local OptionsTable = {
     			type = "color",
     			name = "Normal Colour",
     			desc = "Picks a Custom Colour to be used normally.",
-          order = 100
+          order = 140
     			hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.NormalColour))
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
+    			end,
+    		},
+        ctitle2 = {
+          type = "header",
+          name = "Editor Colours",
+          order = 200
+        },
+        normalColour = {
+    			type = "color",
+    			name = "Normal Colour",
+    			desc = "Picks a Custom Colour to be used normally.",
+          order = 140
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSMasterOptions.NormalColour))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
+    			end,
+    		},
+        ctitle2 = {
+          type = "header",
+          name = "Editor Colours",
+          order = 200
+        },
+
+        keywordColour = {
+    			type = "color",
+    			name = "Normal Colour",
+    			desc = "Picks a Custom Colour to be used for Lua Keywords.",
+          order = 210
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.KEYWORD))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.KEYWORD, r, g, b)
+    			end,
+    		},
+        unknownColour = {
+    			type = "color",
+    			name = "Unknown Colour",
+    			desc = "Picks a Custom Colour to be used for unknown terms.",
+          order = 220
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.UNKNOWN))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.UNKNOWN, r, g, b)
+    			end,
+    		},
+        concatColour = {
+    			type = "color",
+    			name = "String Concatenation",
+    			desc = "Picks a Custom Colour to be used for String Concatenation terms.",
+          order = 230
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.CONCAT))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.CONCAT, r, g, b)
+    			end,
+    		},
+        numberColour = {
+    			type = "color",
+    			name = "Number Colour",
+    			desc = "Picks a Custom Colour to be used for numbers.",
+          order = 240
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.NUMBER))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.NUMBER, r, g, b)
+    			end,
+    		},
+        stringColour = {
+    			type = "color",
+    			name = "String Colour",
+    			desc = "Picks a Custom Colour to be used for strings.",
+          order = 250
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.STRING))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.STRING, r, g, b)
+    			end,
+    		},
+        commentColour = {
+    			type = "color",
+    			name = "Comment Colour",
+    			desc = "Picks a Custom Colour to be used normally.",
+          order = 260
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.COMMENT))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.COMMENT, r, g, b)
+    			end,
+    		},
+        indentColour = {
+    			type = "color",
+    			name = "Normal Colour",
+    			desc = "Picks a Custom Colour to be used for braces and indents.",
+          order = 270
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.INDENT))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.INDENT, r, g, b)
+    			end,
+    		},
+        equalsColour = {
+    			type = "color",
+    			name = "Mathematical and Evaluation Colour",
+    			desc = "Picks a Custom Colour to be used for equations.",
+          order =280
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.EQUALS))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.EQUALS, r, g, b)
+    			end,
+    		},
+        standardfuncsColour = {
+    			type = "color",
+    			name = "Standard Functions Colour",
+    			desc = "Picks a Custom Colour to be used for standard functions.",
+          order = 290
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.STANDARDFUNCS))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.STANDARDFUNCS, r, g, b)
+    			end,
+    		},
+        standardfuncsColour = {
+    			type = "color",
+    			name = "Blizzard Functions Colour",
+    			desc = "Picks a Custom Colour to be used for Blizzard specific functions.",
+          order = 300
+    			hasAlpha = false,
+    			get = function(info)
+            return GSGetColour(GSEditorOptions.WOWSHORTCUTS))
+    			end,
+    			set = function(info, r, g, b)
+    				GSSetColour(GSEditorOptions.WOWSHORTCUTS, r, g, b)
     			end,
     		},
       }

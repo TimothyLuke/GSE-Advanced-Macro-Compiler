@@ -382,3 +382,19 @@ function GSSE:lines(tab, str)
   helper((str:gsub("(.-)\r?\n", helper)))
   GST = t
 end
+
+frame:RegisterEvent('ADDON_LOADED')
+frame:RegisterEvent('PLAYER_LOGOUT')
+
+
+frame:SetScript('OnEvent', function(self, event)
+  if (event == 'ADDON_LOADED')
+    if GSisEmpty(GSEditorOpt) then
+      GSEditorOpt = GSEditorOptions
+    else
+      GSEditorOptions = GSEditorOpt
+    end
+  elseif (event == 'PLAYER_LOGOUT') then
+    GSEditorOpt = GSEditorOptions
+  end
+end)
