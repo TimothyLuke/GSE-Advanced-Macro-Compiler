@@ -23,6 +23,7 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
+  - luarocks install spec/wowmock/wowmock.rockspec
 
 script:
   - luacheck --std max+busted GS-Core/startup.lua
