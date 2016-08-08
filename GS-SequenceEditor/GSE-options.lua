@@ -125,7 +125,15 @@ local OptionsTable = {
       type = "toggle",
       set = function(info,val) GSMasterOptions.use14 = val GSReloadSequences() end,
       get = function(info) return GSMasterOptions.use14 end,
-      order = 570
+      order = 580
+    },
+    use2={
+      name = "Use Neck Item in Postmacro",
+      desc = "Incorporate the neck slot into the PostMacro. This is the equivalent of /use [combat] 2 in a PostMacro.",
+      type = "toggle",
+      set = function(info,val) GSMasterOptions.use2 = val GSReloadSequences() end,
+      get = function(info) return GSMasterOptions.use2 end,
+      order = 590
     },
     title3 = {
       type = "header",

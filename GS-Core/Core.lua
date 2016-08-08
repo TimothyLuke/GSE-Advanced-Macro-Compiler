@@ -71,6 +71,9 @@ local function preparePostMacro(postmacro)
   if GSMasterOptions.use14 then
     postmacro = "/use [combat] 14\n" .. postmacro
   end
+  if GSMasterOptions.use2 then
+    postmacro = "/use [combat] 2\n" .. postmacro
+  end
   return postmacro
 end
 
