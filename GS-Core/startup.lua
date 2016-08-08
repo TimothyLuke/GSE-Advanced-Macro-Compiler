@@ -68,6 +68,11 @@ GSMasterOptions.use12 = false
 GSMasterOptions.use13 = true
 GSMasterOptions.use14 = true
 GSMasterOptions.setDefaultIconQuestionMark = true
+GSMasterOptions.TitleColour = "|cFFFF0000"
+GSMasterOptions.AuthorColour = "|cFF00D1FF"
+GSMasterOptions.CommandColour = "|cFF00FF00"
+GSMasterOptions.NormalColour = "|cFFFFFFFF"
+GSMasterOptions.EmphasisColour = "|cFFFFFF00"
 
 GSDebugOutput = ""
 

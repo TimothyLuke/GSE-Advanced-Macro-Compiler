@@ -1,5 +1,5 @@
 ## Interface: 70000
-## Title: |cffff0000GS-E:|r WLM High Performance Macros
+## Title: |cffff0000GS-E:|r |cFF00D1FFWLM High Performance Macros|r
 ## Notes: These macros have been identified by the wowlazymacros.com community as High Performace Macros
 ## Author: TimothyLuke
 ## Version: v1

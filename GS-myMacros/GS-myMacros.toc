@@ -1,5 +1,5 @@
 ## Interface: 70000
-## Title: |cffff0000GS-E:|r my Macros
+## Title: |cffff0000GS-E:|r |cFF00D1FFmy Macros|r
 ## Notes: This is a blank Sequence Addin Pack Shell that can be used to create a new pack or store your local macros.
 ## Author: TimothyLuke
 ## Version: v1

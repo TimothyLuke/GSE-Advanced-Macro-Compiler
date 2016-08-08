@@ -150,7 +150,7 @@ local function cleanOrphanSequences()
         compar = '#showtooltip\n/click ' .. mname
         trimmedcompar = compar:gsub("[^%w ]", "")
         if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
-          print('|cffff0000' .. GNOME .. ':|r Deleted Orphaned Macro ' .. mname)
+          print(GSMasterOptions.TitleColour .. GNOME .. ':|r Deleted Orphaned Macro ' .. mname)
           DeleteMacro(macid)
         end
       end
@@ -219,7 +219,7 @@ f:RegisterEvent('PLAYER_LOGOUT')
 
 function GSExportSequence(sequenceName)
   if isempty(Sequences[sequenceName]) then
-    return '|cffff0000' .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
+    return GSMasterOptions.TitleColour .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
     return GSExportSequencebySeq(Sequences[sequenceName], sequenceName)
   end
@@ -273,16 +273,16 @@ local function ListSequences(txt)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSPrintDebugMessage("No Specialisation information for sequence " .. name .. ". Overriding with information for current spec " .. specname)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
-        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. specclass .. ' ' .. specname .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt .. ' ' .. GSMasterOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
         GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       elseif txt == "all" or sequence.specID == 0  then
-        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt or 'No Help Information' .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt or 'No Help Information ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
       elseif sequence.specID == currentclassId then
-        print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r ' .. sequence.helpTxt .. ' |cFFFFFF00' .. ' |cFF0000FFContributed by: ' .. sequence.author ..'|r ' )
+        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt .. ' ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
         GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       end
     else
-      print('|cffff0000' .. GNOME .. ':|r |cFF00FF00' .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. ' |cFFFFFF00' .. ' |cFF0000FF Unknown Author|r ' )
+      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. GSMasterOptions.AuthorColour .. 'Unknown Author|r ' )
     end
   end
   ShowMacroFrame()
@@ -328,15 +328,15 @@ function GSUpdateSequence(name,sequence)
 end
 
 local function PrintGnomeHelp()
-  print('|cffff0000' .. GNOME .. ':|r GnomeSequencer was originally written by semlar of wowinterface.com.')
-  print('|cffff0000' .. GNOME .. ':|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button.')
-  print('|cffff0000' .. GNOME .. ":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something.")
-  print('|cffff0000' .. GNOME .. ':|r This version has been modified by Draik of Nagrand to serve as a collection of macros that will be updated over time. ')
-  print('|cffff0000' .. GNOME .. ':|r To get started |cFF00FF00/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface.')
-  print('|cffff0000' .. GNOME .. ':|r |cFF00FF00/gs listall|r will produce a list of all available macros with some help information.')
-  print('|cffff0000' .. GNOME .. ':|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar.')
-  print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
-  print('|cffff0000' .. GNOME .. ':|r The command |cFF00FF00/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r GnomeSequencer was originally written by semlar of wowinterface.com.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something.")
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r This version has been modified by Draik of Nagrand to serve as a collection of macros that will be updated over time. ')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r To get started ' .. GSMasterOptions.CommandColour .. '/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. '/gs listall|r will produce a list of all available macros with some help information.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r The command ' .. GSMasterOptions.CommandColour .. '/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros.')
+  print(GSMasterOptions.TitleColour .. GNOME .. ':|r The command ' .. GSMasterOptions.CommandColour .. '/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them.')
 end
 
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
@@ -350,7 +350,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
-    print('|cffff0000' .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname, "  The Alternative ClassID is " , currentclassId)
+    print(GSMasterOptions.TitleColour .. GNOME .. ':|r Your current Specialisation is ', currentSpecID, ':', specname, "  The Alternative ClassID is " , currentclassId)
   elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" then
@@ -364,4 +364,4 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   end
 end
 
-print('|cffff0000' .. GNOME .. ':|r GnomeSequencer-Enhanced loaded.  type |cFF00FF00/gs help|r to get started.')
+print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'GnomeSequencer-Enhanced loaded.|r  Type ' .. GSMasterOptions.CommandColour .. '/gs help|r to get started.')

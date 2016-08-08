@@ -1,5 +1,5 @@
 ## Interface: 70000
-## Title: |cffff0000GS-E:|r Draik's Bundled Macros
+## Title: |cffff0000GS-E:|r |cFF00D1FFDraik's Bundled Macros|r
 ## Notes: These bundled in macros have been sourced from wow.lazymacros.com Each author has been given credit for the macro and you will be able to find a thread there to ask questions. \nThese are not intended to be super optimised but are a good starting point.
 ## Author: Draik
 ## Version: v1.1.5 Legion 7.0.3

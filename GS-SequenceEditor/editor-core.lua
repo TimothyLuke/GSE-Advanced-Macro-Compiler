@@ -306,7 +306,7 @@ end
 function GSSE:OnInitialize()
     frame:Hide()
     editframe:Hide()
-    print('|cffff0000' .. GNOME .. ':|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type |cFF00FF00/gsse |r to get started.')
+    print(GSMasterOptions.TitleColour .. GNOME .. ':|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type ' .. GSMasterOptions.CommandColour .. '/gsse |r to get started.')
 end
 
 function GSSE:getCurrentTalents()

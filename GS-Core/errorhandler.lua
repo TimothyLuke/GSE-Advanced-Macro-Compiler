@@ -38,7 +38,7 @@ seterrorhandler(function(message)
 			end
 		end
 		C_Timer.After(2, function()
-			print(format('|cffff0000[GNOME] syntax error on line %d of Sequences.lua:|r %s', line, err, debuglocals(4)))
+			print(format(GSMasterOptions.TitleColour..'[GNOME] syntax error on line %d of Sequences.lua:|r %s', line, err, debuglocals(4)))
 		end)
 		wipe(Sequences)
 		--Sequences[GNOME .. 'DEFAULT'] = ''
@@ -62,9 +62,9 @@ end
 
 function GSPrintDebugMessage(message, module)
     if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
-      determinationOutputDestination('|cffff0000' .. GNOME .. ':|r |cFF00FF00 <SEQUENCEDEBUG> |r ' .. message )
+      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. '<SEQUENCEDEBUG> |r ' .. message )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
-      determinationOutputDestination('|cffff0000' .. (isempty(module) and GNOME or module) .. ':|r |cFF00FF00 <DEBUG> |r ' .. message )
+      determinationOutputDestination(GSMasterOptions.TitleColour .. (isempty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. '<DEBUG> |r ' .. message )
     end
 
 end
