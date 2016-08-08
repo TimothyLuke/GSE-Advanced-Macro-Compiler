@@ -5,41 +5,6 @@ local AceGUI = LibStub("AceGUI-3.0")
 local TAB_WIDTH = 2;
 local AUTO_INDENT = true; -- True to enable auto-indentation for Lua scripts
 
-SyntaxColors = {};
---- Assigns a color to multiple tokens at once.
-local function Color ( Code, ... )
-	for Index = 1, select( "#", ... ) do
-		SyntaxColors[ select( Index, ... ) ] = Code;
-	end
-end
-Color( "|cff88bbdd", T.KEYWORD ); -- Reserved words
-Color( "|cffff6666", T.UNKNOWN );
-Color( "|cffcc7777", T.CONCAT, T.VARARG,
-	T.ASSIGNMENT, T.PERIOD, T.COMMA, T.SEMICOLON, T.COLON, T.SIZE );
-Color( "|cffffaa00", T.NUMBER );
-Color( "|cff888888", T.STRING, T.STRING_LONG );
-Color( "|cff55cc55", T.COMMENT_SHORT, T.COMMENT_LONG );
-Color( "|cffccaa88", T.LEFTCURLY, T.RIGHTCURLY,
-	T.LEFTBRACKET, T.RIGHTBRACKET,
-	T.LEFTPAREN, T.RIGHTPAREN,
-	T.ADD, T.SUBTRACT, T.MULTIPLY, T.DIVIDE, T.POWER, T.MODULUS );
-Color( "|cffccddee", T.EQUALITY, T.NOTEQUAL, T.LT, T.LTE, T.GT, T.GTE );
-Color( "|cff55ddcc", -- Minimal standard Lua functions
-	"assert", "error", "ipairs", "next", "pairs", "pcall", "print", "select",
-	"tonumber", "tostring", "type", "unpack",
-	-- Libraries
-	"bit", "coroutine", "math", "string", "table" );
-Color( "|cffddaaff", -- Some of WoW's aliases for standard Lua functions
-	-- math
-	"abs", "ceil", "floor", "max", "min",
-	-- string
-	"format", "gsub", "strbyte", "strchar", "strconcat", "strfind", "strjoin",
-	"strlower", "strmatch", "strrep", "strrev", "strsplit", "strsub", "strtrim",
-	"strupper", "tostringall",
-	-- table
-	"sort", "tinsert", "tremove", "wipe" );
-
-
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
