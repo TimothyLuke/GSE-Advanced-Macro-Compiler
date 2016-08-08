@@ -126,8 +126,7 @@ PreMacro = [[
 '/cast Crusader Strike',
 '/cast Blade of Justice',
 '/cast [combat]!Consecration',
-'/cast [combat]!Crusade',
-'/cast [combat]!Avenging Wrath',
+'/cast [combat] [talent:7/1] Crusade; Avenging Wrath',
 '/cast !Wake of Ashes',
 "/cast Templar's Verdict",
 }

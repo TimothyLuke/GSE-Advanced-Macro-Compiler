@@ -91,21 +91,6 @@ PreMacro = [[
 Sequences['DB_ElemAoE'] = {
 specID = 262,
 author = "Nano",
-helpTxt = 'Talents: 1213132',
-StepFunction = GSStaticPriority,
-PreMacro = [[
-/targetenemy [noharm][dead]
-]],
-'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
-'/cast [nochanneling] !Lava Burst',
-PostMacro = [[
-/cast Blood Fury
-]],
-}
-
-Sequences['DB_ElemAoE'] = {
-specID = 262,
-author = "Nano",
 helpTxt = 'Talents: 1213112',
 StepFunction = GSStaticPriority,
 PreMacro = [[
@@ -119,21 +104,6 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Elem'] = {
-specID = 262,
-author = "Nano",
-helpTxt = 'Talents: 1213132',
-StepFunction = GSStaticPriority,
-PreMacro = [[
-/targetenemy [noharm][dead]
-]],
-'/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
-'/castsequence reset=10 !Earth Shock',
-'/cast [nochanneling] !Lava Burst',
-PostMacro = [[
-/cast Blood Fury
-]],
-}
 
 Sequences['DB_Elem'] = {
 specID = 262,
