@@ -57,6 +57,14 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.deleteOrphansOnLogout end,
           order = 300
         },
+        overflowPersonalMacros = {
+          name = "Use Global Account Macros",
+          desc = "When creating a macro, if there is not a personal character macro space, create an account wide macro.",
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.overflowPersonalMacros = val end,
+          get = function(info) return GSMasterOptions.overflowPersonalMacros end,
+          order = 301
+        },
         useQuestionMark = {
           name = "Set Default Icon QuestionMark",
           desc = "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit.",

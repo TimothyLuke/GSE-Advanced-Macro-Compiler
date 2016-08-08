@@ -248,12 +248,21 @@ end
 
 local function GSregisterSequence(sequenceName, icon)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
     -- Sequence exists do nothing
   else
     -- Create Sequence as a player sequence
-    sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, 1)
-    ModifiedSequences[sequenceName] = true
+    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 then
+      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'Close to Maximum Personal Macros.|r  You can have a maximum of '.. MAX_CHARACTER_MACROS .. ' macros per character.  You currently have ' .. GSMasterOptions.EmphasisColour .. numCharacterMacros .."|r.  As a result this macro was not created.  Please delete some macros and reenter " .. GSMasterOptions.CommandColour .. '/gs|r again.')
+    else
+      if numAccountMacros >= MAX_ACCOUNT_MACROS -1 then
+        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'Close to Maximum Macros.|r  You can have a maximum of '.. MAX_CHARACTER_MACROS .. ' macros per character.  You currently have ' .. GSMasterOptions.EmphasisColour .. numCharacterMacros .."|r.  You can also have a  maximum of ".. MAX_ACCOUNT_MACROS .. ' macros per Account.  You currently have ' .. GSMasterOptions.EmphasisColour .. numAccountMacros .."|r. As a result this macro was not created.  Please delete some macros and reenter " .. GSMasterOptions.CommandColour .. '/gs|r again.')
+      else
+        sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, 1)
+        ModifiedSequences[sequenceName] = true
+      end
+    end
   end
 end
 
