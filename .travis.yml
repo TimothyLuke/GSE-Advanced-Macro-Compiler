@@ -30,6 +30,7 @@ script:
   - luacheck --std max+busted GS-Core/Core.lua
   - luacheck --std max+busted GS-SequenceEditor/editor-core.lua
   - luacheck --std max+busted GS-DraikMacros/Macros/*.lua
+  - pwd
   - busted --verbose --coverage
 
 after_success:
