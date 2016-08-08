@@ -22,6 +22,6 @@ describe('gs-core', function()
 
   it('Check isempty', function()
 
-    assert.equal(true, addon._isempty(nil))
+    assert.equal(true, GSisEmpty(nil))
   end)
 end)
