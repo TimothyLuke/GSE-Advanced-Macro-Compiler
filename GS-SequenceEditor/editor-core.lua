@@ -1,5 +1,5 @@
 local GNOME,_ = ...
-GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0")
+GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
 local TAB_WIDTH = 2;
@@ -28,7 +28,7 @@ function GSSE:drawstandardwindow(container)
   sequencebox:DisableButton(true)
   sequencebox:SetFullWidth(true)
   sequencebox:SetText(sequenceboxtext:GetText())
-  IndentationLib.enable(sequencebox, SyntaxColors, TAB_WIDTH)
+  --IndentationLib:enable(sequencebox, SyntaxColors, TAB_WIDTH)
   container:AddChild(sequencebox)
 
   local updbutton = AceGUI:Create("Button")
@@ -55,7 +55,7 @@ function GSSE:drawsecondarywindow(container)
   remotesequencebox:DisableButton(true)
   remotesequencebox:SetFullWidth(true)
 
-  IndentationLib.enable(remotesequencebox, SyntaxColors, TAB_WIDTH)
+  --IndentationLib:enable(remotesequencebox, SyntaxColors, TAB_WIDTH)
 
   container:AddChild(remotesequencebox)
   remotesequenceboxtext = remotesequencebox
@@ -203,9 +203,9 @@ postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 editframe:AddChild(postmacrobox)
 
-IndentationLib.enable(premacrobox, SyntaxColors, TAB_WIDTH)
-IndentationLib.enable(postmacrobox, SyntaxColors, TAB_WIDTH)
-IndentationLib.enable(spellbox, SyntaxColors, TAB_WIDTH)
+--IndentationLib:enable(premacrobox, SyntaxColors, TAB_WIDTH)
+--IndentationLib:enable(postmacrobox, SyntaxColors, TAB_WIDTH)
+--IndentationLib:enable(spellbox, SyntaxColors, TAB_WIDTH)
 
 
 -------------end editor-----------------
@@ -383,18 +383,18 @@ function GSSE:lines(tab, str)
   GST = t
 end
 
-frame:RegisterEvent('ADDON_LOADED')
-frame:RegisterEvent('PLAYER_LOGOUT')
 
-
-frame:SetScript('OnEvent', function(self, event)
-  if (event == 'ADDON_LOADED')
-    if GSisEmpty(GSEditorOpt) then
-      GSEditorOpt = GSEditorOptions
-    else
-      GSEditorOptions = GSEditorOpt
-    end
-  elseif (event == 'PLAYER_LOGOUT') then
+function GSSE:PLAYER_LOGOUT()
     GSEditorOpt = GSEditorOptions
+end
+
+function GSSE:ADDON_LOADED()
+  if GSisEmpty(GSEditorOpt) then
+    GSEditorOpt = GSEditorOptions
+  else
+    GSEditorOptions = GSEditorOpt
   end
-end)
+end
+
+GSSE:RegisterEvent('ADDON_LOADED')
+GSSE:RegisterEvent('PLAYER_LOGOUT')

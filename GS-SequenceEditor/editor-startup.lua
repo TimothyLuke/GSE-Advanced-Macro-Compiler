@@ -19,17 +19,15 @@ local function Color ( Code, ... )
 		SyntaxColors[ select( Index, ... ) ] = Code;
 	end
 end
+
 Color( GSEditorOptions.KEYWORD, IndentationLib.Tokens.KEYWORD ); -- Reserved words
 Color( GSEditorOptions.UNKNOWN, IndentationLib.Tokens.UNKNOWN );
-Color( GSEditorOptions.CONCAT, IndentationLib.Tokens.CONCAT, IndentationLib.Tokens.VARARG,
-	IndentationLib.Tokens.ASSIGNMENT, IndentationLib.Tokens.PERIOD, IndentationLib.Tokens.COMMA, IndentationLib.Tokens.SEMICOLON, IndentationLib.Tokens.COLON, IndentationLib.Tokens.SIZE );
+Color( GSEditorOptions.CONCAT, IndentationLib.Tokens.ASSIGNMENT, IndentationLib.Tokens.PERIOD, IndentationLib.Tokens.COMMA, IndentationLib.Tokens.SEMICOLON, IndentationLib.Tokens.COLON);
 Color( GSEditorOptions.NUMBER, IndentationLib.Tokens.NUMBER );
-Color( GSEditorOptions.STRING, IndentationLib.Tokens.STRING, IndentationLib.Tokens.STRING_LONG );
+Color( GSEditorOptions.STRING, IndentationLib.Tokens.STRING);
 Color( GSEditorOptions.COMMENT, IndentationLib.Tokens.COMMENT_SHORT, IndentationLib.Tokens.COMMENT_LONG );
-Color( GSEditorOptions.INDENT, IndentationLib.Tokens.LEFTCURLY, IndentationLib.Tokens.RIGHTCURLY,
-	IndentationLib.Tokens.LEFTBRACKET, IndentationLib.Tokens.RIGHTBRACKET,
-	IndentationLib.Tokens.LEFTPAREN, IndentationLib.Tokens.RIGHTPAREN,
-	IndentationLib.Tokens.ADD, IndentationLib.Tokens.SUBTRACT, IndentationLib.Tokens.MULTIPLY, IndentationLib.Tokens.DIVIDE, IndentationLib.Tokens.POWER, IndentationLib.Tokens.MODULUS );
+Color( GSEditorOptions.INDENT, IndentationLib.Tokens.LEFTBRACKET, IndentationLib.Tokens.RIGHTBRACKET,
+	IndentationLib.Tokens.LEFTPAREN, IndentationLib.Tokens.RIGHTPAREN );
 Color( GSEditorOptions.EQUAL, IndentationLib.Tokens.EQUALITY, IndentationLib.Tokens.NOTEQUAL, IndentationLib.Tokens.LT, IndentationLib.Tokens.LTE, IndentationLib.Tokens.GT, IndentationLib.Tokens.GTE );
 Color( GSEditorOptions.STANDARDFUNCS, -- Minimal standard Lua functions
 	"assert", "error", "ipairs", "next", "pairs", "pcall", "print", "select",

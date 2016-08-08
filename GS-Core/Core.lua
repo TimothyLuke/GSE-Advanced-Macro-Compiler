@@ -194,6 +194,13 @@ f:SetScript('OnEvent', function(self, event)
       local addins = GSMasterOptions.AddInPacks
       GSMasterOptions = GnomeOptions
       GSMasterOptions.AddInPacks = addins
+      if GSisEmpty(GSMasterOptions.TitleColour) then
+        GSMasterOptions.TitleColour = "|cFFFF0000"
+        GSMasterOptions.AuthorColour = "|cFF00D1FF"
+        GSMasterOptions.CommandColour = "|cFF00FF00"
+        GSMasterOptions.NormalColour = "|cFFFFFFFF"
+        GSMasterOptions.EmphasisColour = "|cFFFFFF00"
+      end
     end
     if IsAddOnLoaded(GNOME) then
       GSPrintDebugMessage("I am loaded")

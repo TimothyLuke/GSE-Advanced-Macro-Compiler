@@ -6,5 +6,6 @@
     <Include file="lib\AceConsole-3.0\AceConsole-3.0.xml"/>
     <Include file="lib\AceGUI-3.0\AceGUI-3.0.xml"/>
     <Include file="lib\AceConfig-3.0\AceConfig-3.0.xml"/>
-    <Script file="lib\ForAllIndentsAndPurposes\indent.lua/>
+    <Include file="lib\AceEvent-3.0\AceEvent-3.0.xml"/>
+    <Script file="lib\ForAllIndentsAndPurposes\indent.lua"/>
 </Ui>

@@ -15,7 +15,7 @@ end
 
 function GSGetColour(option)
   hex = string.gsub(option, "#","")
-  return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
+  return tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8)), tonumber("0x"..hex:sub(9,10))
 end
 
 local OptionsTable = {
@@ -188,7 +188,7 @@ local OptionsTable = {
           order = -1
         },
       },
-    }
+    },
     colourTab = {
       name = "Colour",
       desc = "Colour and Accessibility Options",
@@ -198,29 +198,25 @@ local OptionsTable = {
         ctitle1 = {
           type = "header",
           name = "General Options",
-          order = 100
+          order = 100,
         },
         titleColour = {
     			type = "color",
     			name = "Title Colour",
     			desc = "Picks a Custom Colour for the Mod Names.",
-          order = 101
+          order = 101,
     			hasAlpha = false,
-    			get = function(info)
-            return GSGetColour(GSMasterOptions.TitleColour))
-    			end,
-    			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.TitleColour, r, g, b)
-    			end,
+    			get = function(info) return GSGetColour(GSMasterOptions.TitleColour) end,
+    			set = function(info, r, g, b) GSSetColour(GSMasterOptions.TitleColour, r, g, b) end,
     		},
         authorColour = {
     			type = "color",
     			name = "Author Colour",
     			desc = "Picks a Custom Colour for the Author.",
-          order = 110
+          order = 110,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSMasterOptions.AuthorColour))
+            return GSGetColour(GSMasterOptions.AuthorColour)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.AuthorColour, r, g, b)
@@ -230,10 +226,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Command Colour",
     			desc = "Picks a Custom Colour for the Commands.",
-          order = 120
+          order = 120,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSMasterOptions.CommandColour))
+            return GSGetColour(GSMasterOptions.CommandColour)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.CommandColour, r, g, b)
@@ -243,10 +239,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Emphasis Colour",
     			desc = "Picks a Custom Colour for emphasis.",
-          order = 130
+          order = 130,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSMasterOptions.EmphasisColour))
+            return GSGetColour(GSMasterOptions.EmphasisColour)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.EmphasisColour, r, g, b)
@@ -256,10 +252,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Normal Colour",
     			desc = "Picks a Custom Colour to be used normally.",
-          order = 140
+          order = 140,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSMasterOptions.NormalColour))
+            return GSGetColour(GSMasterOptions.NormalColour)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
@@ -268,16 +264,16 @@ local OptionsTable = {
         ctitle2 = {
           type = "header",
           name = "Editor Colours",
-          order = 200
+          order = 200,
         },
         normalColour = {
     			type = "color",
     			name = "Normal Colour",
     			desc = "Picks a Custom Colour to be used normally.",
-          order = 140
+          order = 140,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSMasterOptions.NormalColour))
+            return GSGetColour(GSMasterOptions.NormalColour)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
@@ -286,17 +282,17 @@ local OptionsTable = {
         ctitle2 = {
           type = "header",
           name = "Editor Colours",
-          order = 200
+          order = 200,
         },
 
         keywordColour = {
     			type = "color",
     			name = "Normal Colour",
     			desc = "Picks a Custom Colour to be used for Lua Keywords.",
-          order = 210
+          order = 210,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.KEYWORD))
+            return GSGetColour(GSEditorOptions.KEYWORD)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.KEYWORD, r, g, b)
@@ -306,10 +302,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Unknown Colour",
     			desc = "Picks a Custom Colour to be used for unknown terms.",
-          order = 220
+          order = 220,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.UNKNOWN))
+            return GSGetColour(GSEditorOptions.UNKNOWN)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.UNKNOWN, r, g, b)
@@ -319,23 +315,21 @@ local OptionsTable = {
     			type = "color",
     			name = "String Concatenation",
     			desc = "Picks a Custom Colour to be used for String Concatenation terms.",
-          order = 230
+          order = 230,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.CONCAT))
+            return GSGetColour(GSEditorOptions.CONCAT)
     			end,
-    			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.CONCAT, r, g, b)
-    			end,
+    			set = function(info, r, g, b) GSSetColour(GSEditorOptions.CONCAT, r, g, b) end,
     		},
         numberColour = {
     			type = "color",
     			name = "Number Colour",
     			desc = "Picks a Custom Colour to be used for numbers.",
-          order = 240
+          order = 240,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.NUMBER))
+            return GSGetColour(GSEditorOptions.NUMBER)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.NUMBER, r, g, b)
@@ -345,10 +339,10 @@ local OptionsTable = {
     			type = "color",
     			name = "String Colour",
     			desc = "Picks a Custom Colour to be used for strings.",
-          order = 250
+          order = 250,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.STRING))
+            return GSGetColour(GSEditorOptions.STRING)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.STRING, r, g, b)
@@ -358,10 +352,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Comment Colour",
     			desc = "Picks a Custom Colour to be used normally.",
-          order = 260
+          order = 260,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.COMMENT))
+            return GSGetColour(GSEditorOptions.COMMENT)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.COMMENT, r, g, b)
@@ -371,10 +365,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Normal Colour",
     			desc = "Picks a Custom Colour to be used for braces and indents.",
-          order = 270
+          order = 270,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.INDENT))
+            return GSGetColour(GSEditorOptions.INDENT)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.INDENT, r, g, b)
@@ -384,10 +378,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Mathematical and Evaluation Colour",
     			desc = "Picks a Custom Colour to be used for equations.",
-          order =280
+          order =280,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.EQUALS))
+            return GSGetColour(GSEditorOptions.EQUALS)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.EQUALS, r, g, b)
@@ -397,10 +391,10 @@ local OptionsTable = {
     			type = "color",
     			name = "Standard Functions Colour",
     			desc = "Picks a Custom Colour to be used for standard functions.",
-          order = 290
+          order = 290,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.STANDARDFUNCS))
+            return GSGetColour(GSEditorOptions.STANDARDFUNCS)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.STANDARDFUNCS, r, g, b)
@@ -410,16 +404,16 @@ local OptionsTable = {
     			type = "color",
     			name = "Blizzard Functions Colour",
     			desc = "Picks a Custom Colour to be used for Blizzard specific functions.",
-          order = 300
+          order = 300,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.WOWSHORTCUTS))
+            return GSGetColour(GSEditorOptions.WOWSHORTCUTS)
     			end,
     			set = function(info, r, g, b)
     				GSSetColour(GSEditorOptions.WOWSHORTCUTS, r, g, b)
     			end,
     		},
-      }
+      },
     },
     pluginsTab = {
 		  name = "Plugins",
@@ -430,14 +424,14 @@ local OptionsTable = {
         title3 = {
           type = "header",
           name = "Registered Addons",
-          order = 900
+          order = 900,
         },
         addins={
           --name = "Registered Sequence Addin Packs",
           --desc = "You can create and loadin Sequence Packs.",
           type = "description",
           name = GSListAddons(),
-          order = 1000
+          order = 1000,
         },
       },
     },
