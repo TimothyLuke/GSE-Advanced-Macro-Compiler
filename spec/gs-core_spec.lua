@@ -1,4 +1,4 @@
-
+package.path = package.path .. ";./spec/wowmock/?.lua"
 describe('gs-core', function()
   local LuaUnit = require('luaunit')
   local mockagne = require('mockagne')
