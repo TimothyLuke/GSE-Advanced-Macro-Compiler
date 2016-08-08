@@ -309,9 +309,13 @@ end
 
 function GSSE:GSSlash(input)
     if input == "hide" then
-        frame:Hide()
+      frame:Hide()
     else
+      if not InCombatLockdown() then
         frame:Show()
+      else
+        print(GSMasterOptions.TitleColour .. GNOME .. ':|r Please wait till you have left combat before using the Sequence Editor.')
+      end
     end
 end
 
