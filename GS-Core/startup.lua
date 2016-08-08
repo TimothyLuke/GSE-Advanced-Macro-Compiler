@@ -103,9 +103,11 @@ GSStaticPriority = [[
 	end
 ]]
 
-local function isempty(s)
+
+function GSisEmpty(s)
   return s == nil or s == ''
 end
+
 
 
 -- Load any Load on Demand addon packs.

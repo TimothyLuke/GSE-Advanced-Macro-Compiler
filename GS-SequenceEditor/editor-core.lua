@@ -206,14 +206,14 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 
 function GSSE:loadTranslatedSequence(key)
-  GSPrintDebugMessage("GSTranslateSequenceFromTo(GSMasterSequences[" .. currentSequence .."], (GSSE:isempty(GSMasterSequences[" .. currentSequence .. "].lang) and GSMasterSequences[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
-  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSSE:isempty(GSMasterSequences[currentSequence].lang) and GetLocale() or GSMasterSequences[currentSequence].lang ), key), currentSequence))
+  GSPrintDebugMessage("GSTranslateSequenceFromTo(GSMasterSequences[" .. currentSequence .."], (GSisEmpty(GSMasterSequences[" .. currentSequence .. "].lang) and GSMasterSequences[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
+  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSisEmpty(GSMasterSequences[currentSequence].lang) and GetLocale() or GSMasterSequences[currentSequence].lang ), key), currentSequence))
 end
 
 function GSSE:loadSequence(SequenceName)
   GSPrintDebugMessage("GSSE:loadSequence " .. SequenceName)
   if GSTranslatorAvailable and GSMasterOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSSE:isempty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSisEmpty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end
@@ -247,16 +247,16 @@ function GSSE:updateSequence(SequenceName)
 
    -- show editor
    nameeditbox:SetText("LiveTest")
-   if GSSE:isempty(GSMasterSequences["LiveTest"].StepFunction) then
+   if GSisEmpty(GSMasterSequences["LiveTest"].StepFunction) then
      stepdropdown:SetValue("1")
    else
      stepdropdown:SetValue("2")
    end
-   if GSSE:isempty(GSMasterSequences["LiveTest"].PreMacro) then
+   if GSisEmpty(GSMasterSequences["LiveTest"].PreMacro) then
    else
      premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
    end
-   if GSSE:isempty(GSMasterSequences["LiveTest"].PostMacro) then
+   if GSisEmpty(GSMasterSequences["LiveTest"].PostMacro) then
    else
      postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
    end
@@ -331,21 +331,21 @@ function GSSE:getSpecID(forceSpec)
 end
 
 function GSSE:getMacroIcon(sequenceIndex)
-  GSPrintDebugMessage("sequenceIndex: " .. (GSSE:isempty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
-  GSPrintDebugMessage("Icon: " .. (GSSE:isempty(GSMasterSequences[sequenceIndex].icon) and "none" or GSMasterSequences[sequenceIndex].icon))
+  GSPrintDebugMessage("sequenceIndex: " .. (GSisEmpty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
+  GSPrintDebugMessage("Icon: " .. (GSisEmpty(GSMasterSequences[sequenceIndex].icon) and "none" or GSMasterSequences[sequenceIndex].icon))
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
-  if not GSSE:isempty(a) then
-    GSPrintDebugMessage("Macro Found " .. a .. " with iconid " .. (GSSE:isempty(iconid) and "of no value" or iconid) .. " " .. (GSSE:isempty(iconid) and "with no body" or c), GNOME)
+  if not GSisEmpty(a) then
+    GSPrintDebugMessage("Macro Found " .. a .. " with iconid " .. (GSisEmpty(iconid) and "of no value" or iconid) .. " " .. (GSisEmpty(iconid) and "with no body" or c), GNOME)
   else
     GSPrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex , GNOME)
   end
-  if GSSE:isempty(GSMasterSequences[sequenceIndex].icon) and GSSE:isempty(iconid) then
+  if GSisEmpty(GSMasterSequences[sequenceIndex].icon) and GSisEmpty(iconid) then
     GSPrintDebugMessage("SequenceSpecID: " .. GSMasterSequences[sequenceIndex].specID, GNOME)
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSSE:isempty(GSMasterSequences[sequenceIndex].specID) and GSSE:getSpecID(true) or GSMasterSequences[sequenceIndex].specID))
-    GSPrintDebugMessage("No Sequence Icon setting to " .. (GSSE:isempty(strsub(specicon, 17)) and "No value" or strsub(specicon, 17)), GNOME)
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterSequences[sequenceIndex].specID) and GSSE:getSpecID(true) or GSMasterSequences[sequenceIndex].specID))
+    GSPrintDebugMessage("No Sequence Icon setting to " .. (GSisEmpty(strsub(specicon, 17)) and "No value" or strsub(specicon, 17)), GNOME)
     return strsub(specicon, 17)
-  elseif GSSE:isempty(iconid) and not GSSE:isempty(GSMasterSequences[sequenceIndex].icon) then
+  elseif GSisEmpty(iconid) and not GSisEmpty(GSMasterSequences[sequenceIndex].icon) then
 
       return GSMasterSequences[sequenceIndex].icon
   else
@@ -353,9 +353,6 @@ function GSSE:getMacroIcon(sequenceIndex)
   end
 end
 
-function GSSE:isempty(s)
-  return s == nil or s == ''
-end
 
 function GSSE:closeEditor()
 

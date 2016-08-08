@@ -6,11 +6,6 @@ local Errors = {
 }
 
 
-
-local function isempty(s)
-  return s == nil or s == ''
-end
-
 StaticPopupDialogs["GS-DebugOutput"] = {
   text = "Dump of GS Debug messages",
   button1 = "Update",
@@ -64,7 +59,7 @@ function GSPrintDebugMessage(message, module)
     if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
       determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. '<SEQUENCEDEBUG> |r ' .. message )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. (isempty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. '<DEBUG> |r ' .. message )
+      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. '<DEBUG> |r ' .. message )
     end
 
 end

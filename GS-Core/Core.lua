@@ -5,10 +5,6 @@ local GNOME, Sequences = ...
 local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 
-local function isempty(s)
-  return s == nil or s == ''
-end
-
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
@@ -106,8 +102,8 @@ end
 local function GSFixSequence(sequence)
   for k,v in pairs(GSStaticCleanStrings) do
     GSPrintDebugMessage("Testing String: " .. v, GNOME)
-    if not isempty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
-    if not isempty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
+    if not GSisEmpty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
+    if not GSisEmpty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
   end
 end
 
@@ -138,7 +134,7 @@ local function cleanOrphanSequences()
   for macid = 1, maxmacros do
     local found = false
     local mname, mtexture, mbody = GetMacroInfo(macid)
-    if not isempty(mname) then
+    if not GSisEmpty(mname) then
       for name, sequence in pairs(Sequences) do
         if name == mname then
           found = true
@@ -193,7 +189,7 @@ f:SetScript('OnEvent', function(self, event)
       cleanOrphanSequences()
     end
   elseif event == 'ADDON_LOADED' then
-    if not isempty(GnomeOptions) then
+    if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
       local addins = GSMasterOptions.AddInPacks
       GSMasterOptions = GnomeOptions
@@ -218,7 +214,7 @@ f:RegisterEvent('PLAYER_LOGOUT')
 ----------------------------
 
 function GSExportSequence(sequenceName)
-  if isempty(Sequences[sequenceName]) then
+  if GSisEmpty(Sequences[sequenceName]) then
     return GSMasterOptions.TitleColour .. GNOME .. ':|r Sequence named ' .. sequenceName .. ' is unknown.'
   else
     return GSExportSequencebySeq(Sequences[sequenceName], sequenceName)
@@ -228,9 +224,9 @@ end
 function GSExportSequencebySeq(sequence, sequenceName)
   GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
   --local helptext = "helpTxt = '" .. sequence.helpTxt .. "',\n"
-  local helptext = "helpTxt = \"" .. (isempty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. "\",\n"
+  local helptext = "helpTxt = \"" .. (GSisEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. "\",\n"
   local steps = ""
-  if not isempty(sequence.StepFunction) then
+  if not GSisEmpty(sequence.StepFunction) then
     if  sequence.StepFunction == GSStaticPriority then
      steps = "StepFunction = GSStaticPriority,\n"
     else
@@ -238,15 +234,15 @@ function GSExportSequencebySeq(sequence, sequenceName)
     end
   end
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
-  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\nauthor=\"" .. (isempty(sequence.author) and "Unknown Author" or sequence.author) .."\",\n" .. (isempty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID="..sequence.specID ..",\n") .. helptext .. steps )
-  if not isempty(sequence.icon) then
+  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\nauthor=\"" .. (GSisEmpty(sequence.author) and "Unknown Author" or sequence.author) .."\",\n" .. (GSisEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID="..sequence.specID ..",\n") .. helptext .. steps )
+  if not GSisEmpty(sequence.icon) then
      returnVal = returnVal .. "icon=".. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") ..",\n"
   end
-  if not isempty(sequence.lang) then
+  if not GSisEmpty(sequence.lang) then
     returnVal = returnVal .. "lang=\"" ..sequence.lang .. "\",\n"
   end
-  returnVal = returnVal .. "PreMacro=[[\n" .. (isempty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
-  returnVal = returnVal .. "PostMacro=[[\n" .. (isempty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
+  returnVal = returnVal .. "PreMacro=[[\n" .. (GSisEmpty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
+  returnVal = returnVal .. "PostMacro=[[\n" .. (GSisEmpty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
   return returnVal
 end
 
@@ -267,19 +263,19 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(Sequences) do
-    if not isempty(sequence.specID) then
+    if not GSisEmpty(sequence.specID) then
       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence.specID)
       GSPrintDebugMessage("Sequence Name: " .. name)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSPrintDebugMessage("No Specialisation information for sequence " .. name .. ". Overriding with information for current spec " .. specname)
       if sequence.specID == currentSpecID or string.upper(txt) == specclass then
         print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt .. ' ' .. GSMasterOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
-        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+        GSregisterSequence(name, (GSisEmpty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       elseif txt == "all" or sequence.specID == 0  then
         print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt or 'No Help Information ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
       elseif sequence.specID == currentclassId then
         print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. sequence.helpTxt .. ' ' .. GSMasterOptions.AuthorColour .. 'Contributed by: ' .. sequence.author ..'|r ' )
-        GSregisterSequence(name, (isempty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
+        GSregisterSequence(name, (GSisEmpty(sequence.icon) and strsub(specicon, 17) or sequence.icon))
       end
     else
       print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r Incomplete Sequence Definition - This sequence has no further information ' .. GSMasterOptions.AuthorColour .. 'Unknown Author|r ' )
@@ -305,7 +301,7 @@ function GSUpdateSequence(name,sequence)
     if GSMasterOptions.useTranslator and GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence)
     end
-    if isempty(_G[name]) then
+    if GSisEmpty(_G[name]) then
         createButton(name, sequence)
     else
         button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
