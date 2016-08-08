@@ -73,7 +73,7 @@ GSMasterOptions.AuthorColour = "|cFF00D1FF"
 GSMasterOptions.CommandColour = "|cFF00FF00"
 GSMasterOptions.NormalColour = "|cFFFFFFFF"
 GSMasterOptions.EmphasisColour = "|cFFFFFF00"
-GSMasterOptions.overflowPersonalMacros = true
+GSMasterOptions.overflowPersonalMacros = false
 
 GSDebugOutput = ""
 

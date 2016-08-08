@@ -194,12 +194,14 @@ f:SetScript('OnEvent', function(self, event)
       local addins = GSMasterOptions.AddInPacks
       GSMasterOptions = GnomeOptions
       GSMasterOptions.AddInPacks = addins
+      -- added in 1.2
       if GSisEmpty(GSMasterOptions.TitleColour) then
         GSMasterOptions.TitleColour = "|cFFFF0000"
         GSMasterOptions.AuthorColour = "|cFF00D1FF"
         GSMasterOptions.CommandColour = "|cFF00FF00"
         GSMasterOptions.NormalColour = "|cFFFFFFFF"
         GSMasterOptions.EmphasisColour = "|cFFFFFF00"
+        GSMasterOptions.overflowPersonalMacros = false
       end
     end
     if IsAddOnLoaded(GNOME) then
@@ -253,6 +255,15 @@ function GSExportSequencebySeq(sequence, sequenceName)
   return returnVal
 end
 
+local function GSsetMacroLocation()
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
+  local returnval = 1
+  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+   returnval = nil
+  end
+  return returnval
+end
+
 local function GSregisterSequence(sequenceName, icon)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
@@ -260,15 +271,13 @@ local function GSregisterSequence(sequenceName, icon)
     -- Sequence exists do nothing
   else
     -- Create Sequence as a player sequence
-    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 then
+    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
       print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'Close to Maximum Personal Macros.|r  You can have a maximum of '.. MAX_CHARACTER_MACROS .. ' macros per character.  You currently have ' .. GSMasterOptions.EmphasisColour .. numCharacterMacros .."|r.  As a result this macro was not created.  Please delete some macros and reenter " .. GSMasterOptions.CommandColour .. '/gs|r again.')
+    elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'Close to Maximum Macros.|r  You can have a maximum of '.. MAX_CHARACTER_MACROS .. ' macros per character.  You currently have ' .. GSMasterOptions.EmphasisColour .. numCharacterMacros .."|r.  You can also have a  maximum of ".. MAX_ACCOUNT_MACROS .. ' macros per Account.  You currently have ' .. GSMasterOptions.EmphasisColour .. numAccountMacros .."|r. As a result this macro was not created.  Please delete some macros and reenter " .. GSMasterOptions.CommandColour .. '/gs|r again.')
     else
-      if numAccountMacros >= MAX_ACCOUNT_MACROS -1 then
-        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. 'Close to Maximum Macros.|r  You can have a maximum of '.. MAX_CHARACTER_MACROS .. ' macros per character.  You currently have ' .. GSMasterOptions.EmphasisColour .. numCharacterMacros .."|r.  You can also have a  maximum of ".. MAX_ACCOUNT_MACROS .. ' macros per Account.  You currently have ' .. GSMasterOptions.EmphasisColour .. numAccountMacros .."|r. As a result this macro was not created.  Please delete some macros and reenter " .. GSMasterOptions.CommandColour .. '/gs|r again.')
-      else
-        sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, 1)
-        ModifiedSequences[sequenceName] = true
-      end
+      sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
+      ModifiedSequences[sequenceName] = true
     end
   end
 end
