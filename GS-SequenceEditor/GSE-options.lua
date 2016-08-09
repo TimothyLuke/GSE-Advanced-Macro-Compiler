@@ -9,13 +9,9 @@ function GSListAddons()
   return returnVal
 end
 
-function GSSetColour(option, r, g, b)
-  option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
-end
-
 function GSGetColour(option)
   hex = string.gsub(option, "#","")
-  return tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8)), tonumber("0x"..hex:sub(9,10))
+  return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
 end
 
 local OptionsTable = {
@@ -207,7 +203,9 @@ local OptionsTable = {
           order = 101,
     			hasAlpha = false,
     			get = function(info) return GSGetColour(GSMasterOptions.TitleColour) end,
-    			set = function(info, r, g, b) GSSetColour(GSMasterOptions.TitleColour, r, g, b) end,
+    			set = function(info, r, g, b, a)
+            GSMasterOptions.TitleColour = string.format("|c%02x%02x%02x%02x", a*255 , r*255, g * 255, b*255)
+          end,
     		},
         authorColour = {
     			type = "color",
@@ -219,7 +217,7 @@ local OptionsTable = {
             return GSGetColour(GSMasterOptions.AuthorColour)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.AuthorColour, r, g, b)
+    				GSMasterOptions.AuthorColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
     			end,
     		},
         commandColour = {
@@ -232,7 +230,7 @@ local OptionsTable = {
             return GSGetColour(GSMasterOptions.CommandColour)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.CommandColour, r, g, b)
+    				GSMasterOptions.CommandColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
     			end,
     		},
         emphasisColour = {
@@ -245,7 +243,7 @@ local OptionsTable = {
             return GSGetColour(GSMasterOptions.EmphasisColour)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.EmphasisColour, r, g, b)
+    				GSMasterOptions.EmphasisColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
     			end,
     		},
         normalColour = {
@@ -258,7 +256,7 @@ local OptionsTable = {
             return GSGetColour(GSMasterOptions.NormalColour)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
+    				GSMasterOptions.NormalColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
     			end,
     		},
         ctitle2 = {
