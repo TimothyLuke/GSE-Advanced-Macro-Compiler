@@ -9,6 +9,7 @@ local AUTO_INDENT = true; -- True to enable auto-indentation for Lua scripts
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
+local IndentationLib = IndentationLib
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -30,11 +31,11 @@ function GSSE:drawstandardwindow(container)
   sequencebox:SetText(sequenceboxtext:GetText())
 --  sequencebox.editBox:SetMaxBytes(0)
 --  sequencebox.editBox:SetMaxLetters(0)
---  IndentationLib:enable(sequencebox.editBox, SyntaxColors, TAB_WIDTH)
+  --IndentationLib:enable(sequencebox.editBox, SyntaxColors, TAB_WIDTH)
   container:AddChild(sequencebox)
 
   local updbutton = AceGUI:Create("Button")
-  updbutton:SetText("Edit")
+  updbutton:SetText("Create / Edit")
   updbutton:SetWidth(200)
   updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
   container:AddChild(updbutton)
@@ -244,39 +245,52 @@ function GSSE:toggleClasses(buttonname)
 end
 
 function GSSE:updateSequence(SequenceName)
-    GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
-    frame:Hide()
-    GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
-    GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
-    reticon = GSSE:getMacroIcon(SequenceName)
-    -- if string prefix with "Interface\\Icons\\" if number make it a number
-    if not tonumber(reticon) then
-      -- we have a starting
-      reticon = "Interface\\Icons\\" .. reticon
-    end
-    GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
-    GSMasterSequences["LiveTest"].icon = reticon
-    GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+  if GSisEmpty(SequenceName) then
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
+    SequenceName = "LiveTest"
+    GSMasterSequences[SequenceName] = {
+    specID = GSSE:getSpecID(),
+  	author = "Draik",
+    icon = 134400,
+  	helpTxt = "Completely New GS Macro.",
+  	"/cast Auto Attack",
+  	}
     GSSE:loadSequence("LiveTest")
+  end
+  GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
+  frame:Hide()
+  GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
+  GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
+  reticon = GSSE:getMacroIcon(SequenceName)
+  -- if string prefix with "Interface\\Icons\\" if number make it a number
+  if not tonumber(reticon) then
+    -- we have a starting
+    reticon = "Interface\\Icons\\" .. reticon
+  end
+  GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
+  GSMasterSequences["LiveTest"].icon = reticon
+  GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+  GSSE:loadSequence("LiveTest")
 
    -- show editor
-   nameeditbox:SetText("LiveTest")
-   if GSisEmpty(GSMasterSequences["LiveTest"].StepFunction) then
-     stepdropdown:SetValue("1")
-   else
-     stepdropdown:SetValue("2")
-   end
-   if GSisEmpty(GSMasterSequences["LiveTest"].PreMacro) then
-   else
-     premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
-   end
-   if GSisEmpty(GSMasterSequences["LiveTest"].PostMacro) then
-   else
-     postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
-   end
-   spellbox:SetText(table.concat(GSMasterSequences["LiveTest"],"\n"))
-   iconpicker:SetImage(GSMasterSequences["LiveTest"].icon)
-   editframe:Show()
+  nameeditbox:SetText("LiveTest")
+  if GSisEmpty(GSMasterSequences["LiveTest"].StepFunction) then
+   stepdropdown:SetValue("1")
+  else
+   stepdropdown:SetValue("2")
+  end
+  if GSisEmpty(GSMasterSequences["LiveTest"].PreMacro) then
+  else
+   premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
+  end
+  if GSisEmpty(GSMasterSequences["LiveTest"].PostMacro) then
+  else
+   postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
+  end
+  spellbox:SetText(table.concat(GSMasterSequences["LiveTest"],"\n"))
+  iconpicker:SetImage(GSMasterSequences["LiveTest"].icon)
+  editframe:Show()
+
 end
 
 function GSSE:eupdateSequence(SequenceName, loaded)

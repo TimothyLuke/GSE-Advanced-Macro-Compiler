@@ -8,6 +8,8 @@
 ## SavedVariables: GSEditorOpt
 
 embeds.xml
+lib\ForAllIndentsAndPurposes\indent.lua
+
 
 editor-startup.lua
 editor-core.lua
