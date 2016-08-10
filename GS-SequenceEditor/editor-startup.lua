@@ -12,6 +12,7 @@ GSEditorOptions.EQUALS = "|cffccddee"
 GSEditorOptions.STANDARDFUNCS = "|cff55ddcc"
 GSEditorOptions.WOWSHORTCUTS = "|cffddaaff"
 
+
 SyntaxColors = {};
 -- --- Assigns a color to multiple tokens at once.
 -- local function Color ( Code, ... )

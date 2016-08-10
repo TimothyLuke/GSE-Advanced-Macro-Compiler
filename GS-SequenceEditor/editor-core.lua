@@ -206,7 +206,7 @@ postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 editframe:AddChild(postmacrobox)
 
---IndentationLib:enable(premacrobox, SyntaxColors, TAB_WIDTH)
+--IndentationLib:enable(premacrobox.editBox, nil, 2)
 --IndentationLib:enable(postmacrobox, SyntaxColors, TAB_WIDTH)
 --IndentationLib:enable(spellbox, SyntaxColors, TAB_WIDTH)
 
