@@ -7,9 +7,23 @@
 ## OptionalDeps: GS-SequenceTranslator
 ## SavedVariables: GSEditorOpt
 
+#libs
 embeds.xml
 
-
+#startup
 editor-startup.lua
+
+
+# langs
+langs\enUS.lua
+langs\enUSHash.lua
+langs\enUSSHADOW.lua
+
+#Translator
+translator-core.lua
+
+#Editor
 editor-core.lua
+
+#OptionsGUI
 GSE-options.lua
