@@ -8,12 +8,17 @@ describe('gs-core', function()
   -- Mocks
   local globals, addon
 
+  function CreateFrame(name)
+    return name = {}
+  end
+
   setup(function()
     -- Prepare an addon mock
     addon = mockagne:getMock()
 
     -- Prepare a globals mock
     globals = mockagne:getMock()
+
 
     -- Load the file to test
       wowmock("GS-Core/Core.lua", globals, "GS-Core", addon)
