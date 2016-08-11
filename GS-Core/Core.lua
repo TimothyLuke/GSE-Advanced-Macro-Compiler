@@ -269,6 +269,7 @@ local function GSregisterSequence(sequenceName, icon)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
     -- Sequence exists do nothing
+    GSPrintDebugMessage("Moving on - " .. sequenceName .. " already exists.", GNOME)
   else
     -- Create Sequence as a player sequence
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
@@ -340,6 +341,7 @@ function GSUpdateSequence(name,sequence)
      local sequenceIndex = GetMacroIndexByName("LiveTest")
      if sequenceIndex > 0 then
       -- Sequence exists do nothing
+      GSPrintDebugMessage("Moving on - " .. sequenceName .. " already exists.", GNOME)
      else
       -- Create Sequence as a player sequence
       sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", false)

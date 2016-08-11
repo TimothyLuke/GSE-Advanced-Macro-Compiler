@@ -29,7 +29,7 @@ script:
   - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/errorhandler.lua --globals seterrorhandler currentclassDisplayName GSMasterSequences C_Timer format GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty wipe
   - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/Core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
   - luacheck --no-global --no-unused --allow-defined --std max+busted GS-SequenceEditor/editor-core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-DraikMacros/Macros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-DraikMacros/Macros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty GSStaticPriority
   - pwd
   - busted --verbose --coverage
 

@@ -280,10 +280,12 @@ function GSSE:updateSequence(SequenceName)
    stepdropdown:SetValue("2")
   end
   if GSisEmpty(GSMasterSequences["LiveTest"].PreMacro) then
+    GSPrintDebugMessage("Moving on - LiveTest.PreMacro already exists.", GNOME)
   else
    premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
   end
   if GSisEmpty(GSMasterSequences["LiveTest"].PostMacro) then
+    GSPrintDebugMessage("Moving on - LiveTest.PosMacro already exists.", GNOME)
   else
    postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
   end
