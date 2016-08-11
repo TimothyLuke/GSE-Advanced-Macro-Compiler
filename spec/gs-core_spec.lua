@@ -9,7 +9,9 @@ describe('gs-core', function()
   local globals, addon
 
   function CreateFrame(name)
-    return name = {}
+    f = {}
+    f.name = name
+    return f
   end
 
   setup(function()
