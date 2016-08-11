@@ -25,11 +25,11 @@ install:
   - luarocks install luacov-coveralls
 
 script:
-  - luacheck --std max+busted GS-Core/startup.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences
-  - luacheck --no-unused --allow-defined --std max+busted GS-Core/errorhandler.lua --globals seterrorhandler currentclassDisplayName
-  - luacheck --std max+busted GS-Core/Core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences
-  - luacheck --std max+busted GS-SequenceEditor/editor-core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences
-  - luacheck --std max+busted GS-DraikMacros/Macros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences
+  - luacheck --no-unused --allow-defined --std max+busted GS-Core/startup.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GetNumAddOns IsAddOnLoaded GetAddOnInfo LoadAddOn
+  - luacheck --no-unused --allow-defined --std max+busted GS-Core/errorhandler.lua --globals seterrorhandler currentclassDisplayName GSMasterSequences
+  - luacheck --std max+busted GS-Core/Core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences
+  - luacheck --std max+busted GS-SequenceEditor/editor-core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences
+  - luacheck --std max+busted GS-DraikMacros/Macros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences
   - pwd
   - busted --verbose --coverage
 
