@@ -6,12 +6,12 @@ GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
 
 GSStaticCleanStrings = {}
 GSStaticCleanStrings = {
-  [1] = "/console Sound_EnableSFX 0\;\n",
-  [2] = "/console Sound_EnableSFX 1\;\n",
-  [3] = "/script UIErrorsFrame:Hide%(%)\;\n",
-  [4] = "/run UIErrorsFrame:Clear%(%)\;\n",
-  [5] = "/script UIErrorsFrame:Clear%(%)\;\n",
-  [6] = "/run UIErrorsFrame:Hide%(%)\;\n",
+  [1] = "/console Sound_EnableSFX 0%;\n",
+  [2] = "/console Sound_EnableSFX 1%;\n",
+  [3] = "/script UIErrorsFrame:Hide%(%)%;\n",
+  [4] = "/run UIErrorsFrame:Clear%(%)%;\n",
+  [5] = "/script UIErrorsFrame:Clear%(%)%;\n",
+  [6] = "/run UIErrorsFrame:Hide%(%)%;\n",
 
   [11] = "/console Sound_EnableSFX 0\n",
   [12] = "/console Sound_EnableSFX 1\n",
