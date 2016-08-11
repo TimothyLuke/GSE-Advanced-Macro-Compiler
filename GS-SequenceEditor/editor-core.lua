@@ -2,14 +2,10 @@ local GNOME,_ = ...
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
-local TAB_WIDTH = 2;
-local AUTO_INDENT = true; -- True to enable auto-indentation for Lua scripts
-
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
-local IndentationLib = IndentationLib
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -29,9 +25,6 @@ function GSSE:drawstandardwindow(container)
   sequencebox:DisableButton(true)
   sequencebox:SetFullWidth(true)
   sequencebox:SetText(sequenceboxtext:GetText())
---  sequencebox.editBox:SetMaxBytes(0)
---  sequencebox.editBox:SetMaxLetters(0)
-  --IndentationLib:enable(sequencebox.editBox, SyntaxColors, TAB_WIDTH)
   container:AddChild(sequencebox)
 
   local updbutton = AceGUI:Create("Button")
@@ -57,14 +50,16 @@ function GSSE:drawsecondarywindow(container)
   remotesequencebox:SetNumLines(20)
   remotesequencebox:DisableButton(true)
   remotesequencebox:SetFullWidth(true)
-
-  --IndentationLib:enable(remotesequencebox, SyntaxColors, TAB_WIDTH)
-
   container:AddChild(remotesequencebox)
   remotesequenceboxtext = remotesequencebox
 
 end
 
+local function OnTextChanged(self, userinput )
+  if userInput then
+    self:SetText(GSTranslateString(self:GetText(), GetLocale(), GetLocale()))
+  end
+end
 -- Callback function for OnGroupSelected
 function GSSE:SelectGroup(container, event, group)
    local tremote = remotesequenceboxtext:GetText()
@@ -189,6 +184,8 @@ premacrobox:SetLabel("PreMacro")
 premacrobox:SetNumLines(3)
 premacrobox:DisableButton(true)
 premacrobox:SetFullWidth(true)
+premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
+
 editframe:AddChild(premacrobox)
 
 
@@ -205,11 +202,6 @@ postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 editframe:AddChild(postmacrobox)
-
---IndentationLib:enable(premacrobox.editBox, nil, 2)
---IndentationLib:enable(postmacrobox, SyntaxColors, TAB_WIDTH)
---IndentationLib:enable(spellbox, SyntaxColors, TAB_WIDTH)
-
 
 -------------end editor-----------------
 -- Slash Commands

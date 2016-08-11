@@ -45,6 +45,8 @@ GSStaticCleanStrings = {
   [101] = "\n\n",
 }
 
+GSStaticStringRESET = "|r"
+
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
 GSMasterOptions = {}
 GSMasterOptions.AddInPacks = {}

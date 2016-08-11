@@ -264,29 +264,11 @@ local OptionsTable = {
           name = "Editor Colours",
           order = 200,
         },
-        normalColour = {
-    			type = "color",
-    			name = "Normal Colour",
-    			desc = "Picks a Custom Colour to be used normally.",
-          order = 140,
-    			hasAlpha = false,
-    			get = function(info)
-            return GSGetColour(GSMasterOptions.NormalColour)
-    			end,
-    			set = function(info, r, g, b)
-    				GSSetColour(GSMasterOptions.NormalColour, r, g, b)
-    			end,
-    		},
-        ctitle2 = {
-          type = "header",
-          name = "Editor Colours",
-          order = 200,
-        },
 
         keywordColour = {
     			type = "color",
-    			name = "Normal Colour",
-    			desc = "Picks a Custom Colour to be used for Lua Keywords.",
+    			name = "Spell Colour",
+    			desc = "Picks a Custom Colour to be used for Spells and Abilities.",
           order = 210,
     			hasAlpha = false,
     			get = function(info)
@@ -387,8 +369,8 @@ local OptionsTable = {
     		},
         standardfuncsColour = {
     			type = "color",
-    			name = "Standard Functions Colour",
-    			desc = "Picks a Custom Colour to be used for standard functions.",
+    			name = "Conditionals Colour",
+    			desc = "Picks a Custom Colour to be used for macro conditionals eg [mod:shift]",
           order = 290,
     			hasAlpha = false,
     			get = function(info)
@@ -398,10 +380,10 @@ local OptionsTable = {
     				GSSetColour(GSEditorOptions.STANDARDFUNCS, r, g, b)
     			end,
     		},
-        standardfuncsColour = {
+        shortcutsColour = {
     			type = "color",
     			name = "Blizzard Functions Colour",
-    			desc = "Picks a Custom Colour to be used for Blizzard specific functions.",
+    			desc = "Picks a Custom Colour to be used for Macro Keywords like /cast and /target",
           order = 300,
     			hasAlpha = false,
     			get = function(info)
