@@ -1,5 +1,5 @@
 ===================================
-What is GnomeSequencer
+What is GnomeSequencer [![Build Status](https://travis-ci.org/TimothyLuke/GnomeSequenced-Enhanced.svg?branch=master)](https://travis-ci.org/TimothyLuke/GnomeSequenced-Enhanced) 
 ===================================
 
 This is a small addon that allows you create a sequence of macros to be executed at the push of a button.
