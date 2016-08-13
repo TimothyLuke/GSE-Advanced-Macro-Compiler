@@ -11,10 +11,3 @@ GSEditorOptions.INDENT = "|cffccaa88"
 GSEditorOptions.EQUALS = "|cffccddee"
 GSEditorOptions.STANDARDFUNCS = "|cff55ddcc"
 GSEditorOptions.WOWSHORTCUTS = "|cffddaaff"
-
-if not GSAvailableLanguages then
-  GSAvailableLanguages = {}
-  GSAvailableLanguages[GSTRStaticKey] = {}
-  GSAvailableLanguages[GSTRStaticHash] = {}
-  GSAvailableLanguages[GSTRStaticShadow] = {}
-end

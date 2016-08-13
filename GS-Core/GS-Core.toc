@@ -8,6 +8,12 @@
 startup.lua
 errorhandler.lua
 
+# Initial langs
+langs\enUS.lua
+langs\enUSHash.lua
+langs\enUSSHADOW.lua
+
+
 # Add in any contributed sequences to Sequences.lua
 Sequences.lua
 

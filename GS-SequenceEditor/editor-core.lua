@@ -1,11 +1,29 @@
 local GNOME,_ = ...
 GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
-
+local currentSequence = ""
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
+local boxes = {}
+
+function GSSE:parsetext(editbox, char)
+  if char == " " then
+    print("char == space")
+    --Do Nothing!
+  elseif char == string.char(10) or char == string.char(13) then
+    print("char == new line")
+  else
+    print("retranslating")
+    text = GSTRUnEscapeString(editbox:GetText())
+    print("text = " .. text)
+    returntext = GSTranslateString(text .. char, GetLocale(), GetLocale(), true)
+    editbox:SetText(returntext)
+    editbox:SetCursorPosition(string.len(returntext)+2)
+  end
+  --editbox:SetCursorPosition(-1)
+end
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -55,11 +73,6 @@ function GSSE:drawsecondarywindow(container)
 
 end
 
-local function OnTextChanged(self, userinput )
-  if userInput then
-    self:SetText(GSTranslateString(self:GetText(), GetLocale(), GetLocale()))
-  end
-end
 -- Callback function for OnGroupSelected
 function GSSE:SelectGroup(container, event, group)
    local tremote = remotesequenceboxtext:GetText()
@@ -89,7 +102,7 @@ local listbox = AceGUI:Create("Dropdown")
 listbox:SetLabel("Load Sequence")
 listbox:SetWidth(250)
 listbox:SetList(names)
-listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+--listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 frame:AddChild(listbox)
 
 
@@ -184,9 +197,10 @@ premacrobox:SetLabel("PreMacro")
 premacrobox:SetNumLines(3)
 premacrobox:DisableButton(true)
 premacrobox:SetFullWidth(true)
-premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
+--premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
 
 editframe:AddChild(premacrobox)
+premacrobox.editBox:SetScript( "OnChar",  function(self, c) GSSE:parsetext(self, c) end)
 
 
 local spellbox = AceGUI:Create("MultiLineEditBox")

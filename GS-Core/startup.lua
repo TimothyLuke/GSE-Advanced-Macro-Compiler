@@ -81,6 +81,15 @@ GSDebugOutput = ""
 
 GSStaticSequenceDebug = "SEQUENCEDEBUG"
 
+GSTRStaticKey = "KEY"
+GSTRStaticHash = "HASH"
+GSTRStaticShadow = "SHADOW"
+
+GSAvailableLanguages = {}
+GSAvailableLanguages[GSTRStaticKey] = {}
+GSAvailableLanguages[GSTRStaticHash] = {}
+GSAvailableLanguages[GSTRStaticShadow] = {}
+
 -- Seed a first instance just to be sure an instance is loaded if we need to.
 if GSMasterOptions.seedInitialMacro then
 	GSMasterSequences["Draik01"] = {

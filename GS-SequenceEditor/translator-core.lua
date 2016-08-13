@@ -10,7 +10,7 @@ local escapes = {
     ["{.-}"] = "", -- raid target icons
 }
 
-local function unescape(str)
+function GSTRUnEscapeString(str)
     for k, v in pairs(escapes) do
         str = gsub(str, k, v)
     end
@@ -70,23 +70,26 @@ function GSTranslateSequenceFromTo(sequence, fromLocale, toLocale)
   return sequence
 end
 
-function GSTranslateString(instring, fromLocale, toLocale)
-  instring = unescape(instring)
+function GSTranslateString(instring, fromLocale, toLocale, cleanNewLines)
+  instring = GSTRUnEscapeString(instring)
   GSPrintDebugMessage("Entering GSTranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""
   local stringlines = GSTRSplitMeIntolines(instring)
   for _,v in ipairs(stringlines) do
+    print ("v = ".. v)
     if not GSisEmpty(v) then
       for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
         GSPrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
         output = output..GSEditorOptions.WOWSHORTCUTS .. "/" .. cmd .. GSStaticStringRESET .. " "
         if GSStaticCastCmds[strlower(cmd)] then
-          etc = string.match(etc, "^%s*(.-)%s*$")
+          if not cleanNewLines then
+            etc = string.match(etc, "^%s*(.-)%s*$")
+          end
           if string.sub(etc, 1, 1) == "!" then
             etc = string.sub(etc, 2)
           end
-          local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale)
+          local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
           if foundspell then
             output = output ..GSEditorOptions.KEYWORD .. returnval .. GSStaticStringRESET .. "\n"
           else
@@ -102,11 +105,13 @@ function GSTranslateString(instring, fromLocale, toLocale)
             output = output ..GSEditorOptions.STANDARDFUNCS .. mods .. GSStaticStringRESET .. " "
           end
           for _, w in ipairs(GSTRsplit(etc,",")) do
-            w = string.match(w, "^%s*(.-)%s*$")
+            if not cleanNewLines then
+              w = string.match(w, "^%s*(.-)%s*$")
+            end
             if string.sub(w, 1, 1) == "!" then
               w = string.sub(w, 2)
             end
-            local foundspell, returnval = GSTRTranslateSpell(w, fromLocale, toLocale)
+            local foundspell, returnval = GSTRTranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
             output = output ..  GSEditorOptions.KEYWORD .. returnval .. GSStaticStringRESET .. ", "
           end
           local resetleft = string.find(output, ", , ")
@@ -119,17 +124,21 @@ function GSTranslateString(instring, fromLocale, toLocale)
           output = output  .. etc .. "\n"
         end
       end
+    elseif cleanNewLines then
+      output = output .. v
     end
   end
   GSPrintDebugMessage("Exiting GSTranslateString with : \n" .. output, GNOME)
   return output
 end
 
-function GSTRTranslateSpell(str, fromLocale, toLocale)
+function GSTRTranslateSpell(str, fromLocale, toLocale, cleanNewLines)
   local output = ""
   local found = false
   -- check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
-  str = string.match(str, "^%s*(.-)%s*$")
+  if not cleanNewLines then
+    str = string.match(str, "^%s*(.-)%s*$")
+  end
   GSPrintDebugMessage("GSTRTranslateSpell Attempting to translate " .. str, GNOME)
   if string.sub(str, strlen(str)) == "," then
     str = string.sub(str, 1, strlen(str)-1)
@@ -137,7 +146,7 @@ function GSTRTranslateSpell(str, fromLocale, toLocale)
   if string.match(str, ";") then
     GSPrintDebugMessage("GSTRTranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
     for _, w in ipairs(GSTRsplit(str,";")) do
-      found, returnval = GSTRTranslateSpell(string.match(w, "^%s*(.-)%s*$"), fromLocale, toLocale)
+      found, returnval = GSTRTranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
       output = output ..  GSEditorOptions.KEYWORD .. returnval .. GSStaticStringRESET .. "; "
     end
   else
@@ -147,7 +156,9 @@ function GSTRTranslateSpell(str, fromLocale, toLocale)
       GSPrintDebugMessage("GSTRTranslateSpell conditionals found ", GNOME)
     end
     GSPrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
-    etc = string.match(etc, "^%s*(.-)%s*$")
+    if not cleanNewLines then
+      etc = string.match(etc, "^%s*(.-)%s*$")
+    end
     etc = string.gsub (etc, "!", "")
     local foundspell = language[GSTRStaticHash][fromLocale][etc]
     if foundspell then
@@ -213,7 +224,9 @@ function GSTRGetConditionalsFromString(str)
      str = string.sub(str, rightstr + 1)
      GSPrintDebugMessage("str changed to: " .. str, GNOME)
   end
-  str = string.match(str, "^%s*(.-)%s*$")
+  if not cleanNewLines then
+    str = string.match(str, "^%s*(.-)%s*$")
+  end
   -- Check for resets
   GSPrintDebugMessage("checking for reset= in " .. str, GNOME)
   local resetleft = string.find(str, "reset=")
