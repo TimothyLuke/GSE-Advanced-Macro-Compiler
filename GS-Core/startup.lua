@@ -120,7 +120,12 @@ function GSisEmpty(s)
   return s == nil or s == ''
 end
 
-
+function GSLoadWeakauras(str)
+  local WeakAuras = WeakAuras
+  if WeakAuras then
+    WeakAuras.ImportString(str)
+  end
+end
 
 -- Load any Load on Demand addon packs.
 -- Only load those beginning with GS-
@@ -134,4 +139,20 @@ for i=1,GetNumAddOns() do
 				GSMasterOptions.AddInPacks[name] = true
     end
 
+end
+
+
+local escapes = {
+    ["|c%x%x%x%x%x%x%x%x"] = "", -- color start
+    ["|r"] = "", -- color end
+    ["|H.-|h(.-)|h"] = "%1", -- links
+    ["|T.-|t"] = "", -- textures
+    ["{.-}"] = "", -- raid target icons
+}
+
+function GSTRUnEscapeString(str)
+    for k, v in pairs(escapes) do
+        str = gsub(str, k, v)
+    end
+    return str
 end
