@@ -2,21 +2,6 @@ local GNOME, _ = ...
 local locale = GetLocale();
 
 
-local escapes = {
-    ["|c%x%x%x%x%x%x%x%x"] = "", -- color start
-    ["|r"] = "", -- color end
-    ["|H.-|h(.-)|h"] = "%1", -- links
-    ["|T.-|t"] = "", -- textures
-    ["{.-}"] = "", -- raid target icons
-}
-
-function GSTRUnEscapeString(str)
-    for k, v in pairs(escapes) do
-        str = gsub(str, k, v)
-    end
-    return str
-end
-
 local language = GSAvailableLanguages
 
 
@@ -77,7 +62,7 @@ function GSTranslateString(instring, fromLocale, toLocale, cleanNewLines)
   local output = ""
   local stringlines = GSTRSplitMeIntolines(instring)
   for _,v in ipairs(stringlines) do
-    print ("v = ".. v)
+    --print ("v = ".. v)
     if not GSisEmpty(v) then
       for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
         GSPrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)

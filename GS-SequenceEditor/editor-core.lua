@@ -10,14 +10,14 @@ local boxes = {}
 
 function GSSE:parsetext(editbox, char)
   if char == " " then
-    print("char == space")
+    --print("char == space")
     --Do Nothing!
   elseif char == string.char(10) or char == string.char(13) then
-    print("char == new line")
+    --print("char == new line")
   else
-    print("retranslating")
+    --print("retranslating")
     text = GSTRUnEscapeString(editbox:GetText())
-    print("text = " .. text)
+    --print("text = " .. text)
     returntext = GSTranslateString(text .. char, GetLocale(), GetLocale(), true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
@@ -102,7 +102,7 @@ local listbox = AceGUI:Create("Dropdown")
 listbox:SetLabel("Load Sequence")
 listbox:SetWidth(250)
 listbox:SetList(names)
---listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 frame:AddChild(listbox)
 
 
