@@ -76,6 +76,17 @@ GSMasterOptions.CommandColour = "|cFF00FF00"
 GSMasterOptions.NormalColour = "|cFFFFFFFF"
 GSMasterOptions.EmphasisColour = "|cFFFFFF00"
 GSMasterOptions.overflowPersonalMacros = false
+GSMasterOptions.KEYWORD = "|cff88bbdd"
+GSMasterOptions.UNKNOWN = "|cffff6666"
+GSMasterOptions.CONCAT = "|cffcc7777"
+GSMasterOptions.NUMBER = "|cffffaa00"
+GSMasterOptions.STRING = "|cff888888"
+GSMasterOptions.COMMENT = "|cff55cc55"
+GSMasterOptions.INDENT = "|cffccaa88"
+GSMasterOptions.EQUALS = "|cffccddee"
+GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
+GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
+
 
 GSDebugOutput = ""
 

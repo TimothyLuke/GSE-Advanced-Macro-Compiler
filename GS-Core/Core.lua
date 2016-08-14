@@ -194,14 +194,24 @@ f:SetScript('OnEvent', function(self, event)
       local addins = GSMasterOptions.AddInPacks
       GSMasterOptions = GnomeOptions
       GSMasterOptions.AddInPacks = addins
-      -- added in 1.2
-      if GSisEmpty(GSMasterOptions.TitleColour) then
+      -- All these options were added in 1.2
+      if GSisEmpty(GSMasterOptions.KEYWORD) then
         GSMasterOptions.TitleColour = "|cFFFF0000"
         GSMasterOptions.AuthorColour = "|cFF00D1FF"
         GSMasterOptions.CommandColour = "|cFF00FF00"
         GSMasterOptions.NormalColour = "|cFFFFFFFF"
         GSMasterOptions.EmphasisColour = "|cFFFFFF00"
         GSMasterOptions.overflowPersonalMacros = false
+        GSMasterOptions.KEYWORD = "|cff88bbdd"
+        GSMasterOptions.UNKNOWN = "|cffff6666"
+        GSMasterOptions.CONCAT = "|cffcc7777"
+        GSMasterOptions.NUMBER = "|cffffaa00"
+        GSMasterOptions.STRING = "|cff888888"
+        GSMasterOptions.COMMENT = "|cff55cc55"
+        GSMasterOptions.INDENT = "|cffccaa88"
+        GSMasterOptions.EQUALS = "|cffccddee"
+        GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
+        GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
       end
     end
     if IsAddOnLoaded(GNOME) then

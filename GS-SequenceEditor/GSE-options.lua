@@ -285,10 +285,10 @@ local OptionsTable = {
           order = 210,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.KEYWORD)
+            return GSGetColour(GSMasterOptions.KEYWORD)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.KEYWORD, r, g, b)
+    				GSSetColour(GSMasterOptions.KEYWORD, r, g, b)
     			end,
     		},
         unknownColour = {
@@ -298,10 +298,10 @@ local OptionsTable = {
           order = 220,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.UNKNOWN)
+            return GSGetColour(GSMasterOptions.UNKNOWN)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.UNKNOWN, r, g, b)
+    				GSSetColour(GSMasterOptions.UNKNOWN, r, g, b)
     			end,
     		},
         concatColour = {
@@ -311,9 +311,9 @@ local OptionsTable = {
           order = 230,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.CONCAT)
+            return GSGetColour(GSMasterOptions.CONCAT)
     			end,
-    			set = function(info, r, g, b) GSSetColour(GSEditorOptions.CONCAT, r, g, b) end,
+    			set = function(info, r, g, b) GSSetColour(GSMasterOptions.CONCAT, r, g, b) end,
     		},
         numberColour = {
     			type = "color",
@@ -322,10 +322,10 @@ local OptionsTable = {
           order = 240,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.NUMBER)
+            return GSGetColour(GSMasterOptions.NUMBER)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.NUMBER, r, g, b)
+    				GSSetColour(GSMasterOptions.NUMBER, r, g, b)
     			end,
     		},
         stringColour = {
@@ -335,10 +335,10 @@ local OptionsTable = {
           order = 250,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.STRING)
+            return GSGetColour(GSMasterOptions.STRING)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.STRING, r, g, b)
+    				GSSetColour(GSMasterOptions.STRING, r, g, b)
     			end,
     		},
         commentColour = {
@@ -348,10 +348,10 @@ local OptionsTable = {
           order = 260,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.COMMENT)
+            return GSGetColour(GSMasterOptions.COMMENT)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.COMMENT, r, g, b)
+    				GSSetColour(GSMasterOptions.COMMENT, r, g, b)
     			end,
     		},
         indentColour = {
@@ -361,10 +361,10 @@ local OptionsTable = {
           order = 270,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.INDENT)
+            return GSGetColour(GSMasterOptions.INDENT)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.INDENT, r, g, b)
+    				GSSetColour(GSMasterOptions.INDENT, r, g, b)
     			end,
     		},
         equalsColour = {
@@ -374,10 +374,10 @@ local OptionsTable = {
           order =280,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.EQUALS)
+            return GSGetColour(GSMasterOptions.EQUALS)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.EQUALS, r, g, b)
+    				GSSetColour(GSMasterOptions.EQUALS, r, g, b)
     			end,
     		},
         standardfuncsColour = {
@@ -387,10 +387,10 @@ local OptionsTable = {
           order = 290,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.STANDARDFUNCS)
+            return GSGetColour(GSMasterOptions.STANDARDFUNCS)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.STANDARDFUNCS, r, g, b)
+    				GSSetColour(GSMasterOptions.STANDARDFUNCS, r, g, b)
     			end,
     		},
         shortcutsColour = {
@@ -400,10 +400,10 @@ local OptionsTable = {
           order = 300,
     			hasAlpha = false,
     			get = function(info)
-            return GSGetColour(GSEditorOptions.WOWSHORTCUTS)
+            return GSGetColour(GSMasterOptions.WOWSHORTCUTS)
     			end,
     			set = function(info, r, g, b)
-    				GSSetColour(GSEditorOptions.WOWSHORTCUTS, r, g, b)
+    				GSSetColour(GSMasterOptions.WOWSHORTCUTS, r, g, b)
     			end,
     		},
       },
