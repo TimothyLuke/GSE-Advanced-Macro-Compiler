@@ -209,7 +209,7 @@ spellbox:SetLabel("Sequence")
 spellbox:SetNumLines(9)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
-spellbox:editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 editframe:AddChild(spellbox)
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -217,7 +217,7 @@ postmacrobox:SetLabel("PostMacro")
 postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
-postmacrobox:editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 editframe:AddChild(postmacrobox)
 
 -------------end editor-----------------
