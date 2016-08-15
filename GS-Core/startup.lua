@@ -1,6 +1,7 @@
 local GNOME, ns = ...
 GSMasterSequences = ns
 GSStaticCastCmds = {}
+GSTRUnfoundSpells = {}
 
 GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
 

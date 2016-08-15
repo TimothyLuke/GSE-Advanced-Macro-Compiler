@@ -105,7 +105,7 @@ local OptionsTable = {
         },
         hideSoundErrors={
           name = "Prevent Sound Errors",
-          desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableSFX lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts.",
+          desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableErrorSpeech lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts.",
           type = "toggle",
           set = function(info,val) GSMasterOptions.hideSoundErrors = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.hideSoundErrors end,
