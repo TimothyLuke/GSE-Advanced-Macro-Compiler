@@ -133,6 +133,7 @@ end
 
 function GSLoadWeakauras(str)
   local WeakAuras = WeakAuras
+
   if WeakAuras then
     WeakAuras.ImportString(str)
   end

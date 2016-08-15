@@ -304,10 +304,10 @@ local OptionsTable = {
     				GSSetColour(GSMasterOptions.UNKNOWN, r, g, b)
     			end,
     		},
-        concatColour = {
+        iconColour = {
     			type = "color",
-    			name = "String Concatenation",
-    			desc = "Picks a Custom Colour to be used for String Concatenation terms.",
+          name = "Icon Colour",
+    			desc = "Picks a Custom Colour to be used for Icons.",
           order = 230,
     			hasAlpha = false,
     			get = function(info)
@@ -317,7 +317,7 @@ local OptionsTable = {
     		},
         numberColour = {
     			type = "color",
-    			name = "Number Colour",
+    			name = "SpecID/ClassID Colour",
     			desc = "Picks a Custom Colour to be used for numbers.",
           order = 240,
     			hasAlpha = false,
@@ -332,6 +332,7 @@ local OptionsTable = {
     			type = "color",
     			name = "String Colour",
     			desc = "Picks a Custom Colour to be used for strings.",
+          hidden = true,
           order = 250,
     			hasAlpha = false,
     			get = function(info)
@@ -341,10 +342,10 @@ local OptionsTable = {
     				GSSetColour(GSMasterOptions.STRING, r, g, b)
     			end,
     		},
-        commentColour = {
+        conditionalColour = {
     			type = "color",
-    			name = "Comment Colour",
-    			desc = "Picks a Custom Colour to be used normally.",
+    			name = "Conditionals Colour",
+    			desc = "Picks a Custom Colour to be used for macro conditionals eg [mod:shift]",
           order = 260,
     			hasAlpha = false,
     			get = function(info)
@@ -354,9 +355,9 @@ local OptionsTable = {
     				GSSetColour(GSMasterOptions.COMMENT, r, g, b)
     			end,
     		},
-        indentColour = {
+        helpColour = {
     			type = "color",
-    			name = "Normal Colour",
+    			name = "Help Colour",
     			desc = "Picks a Custom Colour to be used for braces and indents.",
           order = 270,
     			hasAlpha = false,
@@ -367,12 +368,12 @@ local OptionsTable = {
     				GSSetColour(GSMasterOptions.INDENT, r, g, b)
     			end,
     		},
-        equalsColour = {
+        stepColour = {
     			type = "color",
-    			name = "Mathematical and Evaluation Colour",
-    			desc = "Picks a Custom Colour to be used for equations.",
+    			name = "Step Functions",
+    			desc = "Picks a Custom Colour to be used for StepFunctions.",
           order =280,
-    			hasAlpha = false,
+          hasAlpha = false,
     			get = function(info)
             return GSGetColour(GSMasterOptions.EQUALS)
     			end,
@@ -380,10 +381,10 @@ local OptionsTable = {
     				GSSetColour(GSMasterOptions.EQUALS, r, g, b)
     			end,
     		},
-        standardfuncsColour = {
+        languageColour = {
     			type = "color",
-    			name = "Conditionals Colour",
-    			desc = "Picks a Custom Colour to be used for macro conditionals eg [mod:shift]",
+    			name = "Language Colour",
+    			desc = "Picks a Custom Colour to be used for language descriptors",
           order = 290,
     			hasAlpha = false,
     			get = function(info)

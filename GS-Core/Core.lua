@@ -243,22 +243,22 @@ end
 function GSExportSequencebySeq(sequence, sequenceName)
   GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
   --local helptext = "helpTxt = '" .. sequence.helpTxt .. "',\n"
-  local helptext = "helpTxt = \"" .. (GSisEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. "\",\n"
+  local helptext = "helpTxt = \"" .. GSMasterOptions.INDENT .. (GSisEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. GSStaticStringRESET .. "\",\n"
   local steps = ""
   if not GSisEmpty(sequence.StepFunction) then
     if  sequence.StepFunction == GSStaticPriority then
-     steps = "StepFunction = GSStaticPriority,\n"
+     steps = "StepFunction = " .. GSMasterOptions.EQUALS .. "GSStaticPriority" .. GSStaticStringRESET .. ",\n"
     else
-     steps = "StepFunction = [[" .. sequence.StepFunction .. "]],\n"
+     steps = "StepFunction = [[" .. GSMasterOptions.EQUALS .. sequence.StepFunction .. GSStaticStringRESET .. "]],\n"
     end
   end
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
-  local returnVal = ("Sequences['" .. sequenceName .. "'] = {\nauthor=\"" .. (GSisEmpty(sequence.author) and "Unknown Author" or sequence.author) .."\",\n" .. (GSisEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID="..sequence.specID ..",\n") .. helptext .. steps )
+  local returnVal = ("Sequences['" .. GSMasterOptions.EmphasisColour .. sequenceName .. GSStaticStringRESET .. "'] = {\nauthor=\"" .. GSMasterOptions.AuthorColour .. (GSisEmpty(sequence.author) and "Unknown Author" or sequence.author) .. GSStaticStringRESET .. "\",\n" .. (GSisEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID=" .. GSMasterOptions.NUMBER  .. sequence.specID .. GSStaticStringRESET ..",\n") .. helptext .. steps )
   if not GSisEmpty(sequence.icon) then
-     returnVal = returnVal .. "icon=".. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") ..",\n"
+     returnVal = returnVal .. "icon=" .. GSMasterOptions.CONCAT .. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") .. GSStaticStringRESET ..",\n"
   end
   if not GSisEmpty(sequence.lang) then
-    returnVal = returnVal .. "lang=\"" ..sequence.lang .. "\",\n"
+    returnVal = returnVal .. "lang=\"" .. GSMasterOptions.STANDARDFUNCS .. sequence.lang .. GSStaticStringRESET .. "\",\n"
   end
   returnVal = returnVal .. "PreMacro=[[\n" .. (GSisEmpty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
   returnVal = returnVal .. "PostMacro=[[\n" .. (GSisEmpty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
@@ -394,6 +394,22 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     StaticPopup_Show ("GS-DebugOutput")
   else
     ListSequences(GetSpecialization())
+  end
+end
+
+if GetLocale() ~= "enUS" then
+  -- We need to load in temporarily the current locale translation tables.
+  -- we should also look at cacheing this
+  local i = 0
+  for k,v in pairs(GSAvailableLanguages[GSTRStaticKey]["enUS"]) do
+    --print(k .. " " ..v)
+    local spellname = GetSpellInfo(k)
+		if spellname then
+      GSAvailableLanguages[GSTRStaticKey][GetLocale()][k] = spellname
+      GSAvailableLanguages[GSTRStaticHash][GetLocale()][spellname] = k
+      GSAvailableLanguages[GSTRStaticShadow][GetLocale()][spellname] = string.lower(k)
+		end
+    i = i + 1
   end
 end
 

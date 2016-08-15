@@ -4,6 +4,8 @@
 ## Author: TimothyLuke - Original GS code by Semlar
 ## Version: v1.2 Legion 7.0.3
 ## SavedVariables: GnomeOptions
+## OptionalDeps: WeakAuras
+
 # Startup
 startup.lua
 errorhandler.lua

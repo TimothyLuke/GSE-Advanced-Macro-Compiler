@@ -8,20 +8,20 @@ local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local boxes = {}
 
-function GSSE:parsetext(editbox, char)
-  if char == " " then
-    --print("char == space")
-    --Do Nothing!
-  elseif char == string.char(10) or char == string.char(13) then
-    --print("char == new line")
-  else
+function GSSE:parsetext(editbox)
+  -- if char == " " then
+  --   --print("char == space")
+  --   --Do Nothing!
+  -- elseif char == string.char(10) or char == string.char(13) then
+  --   --print("char == new line")
+  -- else
     --print("retranslating")
     text = GSTRUnEscapeString(editbox:GetText())
     --print("text = " .. text)
-    returntext = GSTranslateString(text .. char, GetLocale(), GetLocale(), true)
+    returntext = GSTranslateString(text , GetLocale(), GetLocale(), true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
-  end
+  -- end
   --editbox:SetCursorPosition(-1)
 end
 
@@ -43,6 +43,7 @@ function GSSE:drawstandardwindow(container)
   sequencebox:DisableButton(true)
   sequencebox:SetFullWidth(true)
   sequencebox:SetText(sequenceboxtext:GetText())
+  sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(1, string.len(sequencebox:GetText())) end)
   container:AddChild(sequencebox)
 
   local updbutton = AceGUI:Create("Button")
@@ -107,7 +108,7 @@ frame:AddChild(listbox)
 
 
 
-if GSTranslatorAvailable and GSMasterOptions.useTranslator then
+if GSTranslatorAvailable and GSMasterOptions.useTranslator and GSAdditionalLanguagesAvailable then
   local tab =  AceGUI:Create("TabGroup")
   tab:SetLayout("Flow")
   -- Setup which tabs to show
@@ -200,7 +201,7 @@ premacrobox:SetFullWidth(true)
 --premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
 
 editframe:AddChild(premacrobox)
-premacrobox.editBox:SetScript( "OnChar",  function(self, c) GSSE:parsetext(self, c) end)
+premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
@@ -208,6 +209,7 @@ spellbox:SetLabel("Sequence")
 spellbox:SetNumLines(9)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
+spellbox:editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 editframe:AddChild(spellbox)
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -215,6 +217,7 @@ postmacrobox:SetLabel("PostMacro")
 postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
+postmacrobox:editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 editframe:AddChild(postmacrobox)
 
 -------------end editor-----------------
@@ -233,8 +236,10 @@ end
 
 function GSSE:loadSequence(SequenceName)
   GSPrintDebugMessage("GSSE:loadSequence " .. SequenceName)
-  if GSTranslatorAvailable and GSMasterOptions.useTranslator then
+  if GSAdditionalLanguagesAvailable and GSMasterOptions.useTranslator then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSisEmpty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
+  elseif GSTranslatorAvailable then
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], GetLocale(), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end

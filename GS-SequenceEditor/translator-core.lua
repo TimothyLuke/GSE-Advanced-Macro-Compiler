@@ -1,4 +1,4 @@
-local GNOME, _ = ...
+local GNOME = "GS-SequenceTranslator"
 local locale = GetLocale();
 
 
