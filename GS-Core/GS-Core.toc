@@ -6,11 +6,18 @@
 ## SavedVariables: GnomeOptions
 ## OptionalDeps: WeakAuras
 
+# Lib
+embeds.xml
+
+# Mod Language Strings
+langs\GSCore_enUS.lua
+langs\GSCore_ptBR.lua
+
 # Startup
 startup.lua
 errorhandler.lua
 
-# Initial langs
+# Initial SPell DB
 langs\enUS.lua
 langs\enUSHash.lua
 langs\enUSSHADOW.lua

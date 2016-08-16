@@ -1,4 +1,6 @@
 local GNOME, _ = ...
+local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
+
 -- Default error handler seems to be _ERRORMESSAGE defined in BasicControls.xml
 local Errors = {
 	["^attempt to index global 'Sequences'"] = 'Missing mandatory first line in Sequences file: "local _, Sequences = ..."',
@@ -7,9 +9,9 @@ local Errors = {
 
 
 StaticPopupDialogs["GS-DebugOutput"] = {
-  text = "Dump of GS Debug messages",
-  button1 = "Update",
-  button2 = "Close",
+  text = L["Dump of GS Debug messages"],
+  button1 = L["Update"],
+  button2 = L["Close"],
   OnAccept = function(self, data)
       self.editBox:SetText(GSDebugOutput)
   end,
@@ -33,7 +35,7 @@ seterrorhandler(function(message)
 			end
 		end
 		C_Timer.After(2, function()
-			print(format(GSMasterOptions.TitleColour..'[GNOME] syntax error on line %d of Sequences.lua:|r %s', line, err, debuglocals(4)))
+			print(format(GSMasterOptions.TitleColour.. L["[GNOME] syntax error on line %d of Sequences.lua:|r %s"], line, err, debuglocals(4)))
 		end)
 		wipe(Sequences)
 		--Sequences[GNOME .. 'DEFAULT'] = ''
@@ -57,9 +59,9 @@ end
 
 function GSPrintDebugMessage(message, module)
     if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. '<SEQUENCEDEBUG> |r ' .. message )
+      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. '<DEBUG> |r ' .. message )
+      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
 
 end
