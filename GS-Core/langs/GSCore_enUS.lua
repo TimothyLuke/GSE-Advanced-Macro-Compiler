@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("GS-Core", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("GS-E", "enUS", true)
 
 --Debug Strings from Core
 L["createButton PreMacro: "] = true
@@ -8,7 +8,7 @@ L["Entering GSSplitMeIntolines with :"] = true
 L["Line : "] = true
 L["Testing String: "] = true
 L[" Deleted Orphaned Macro "] = true
-L["I am loaded"]) = true
+L["I am loaded"] = true
 L[" Sequence named "] = true
 L[" is unknown."] = true
 L["Moving on - "] = true
@@ -21,6 +21,7 @@ L[" equals "] = true
 L[" equals currentclassid "] = true
 L["GSUpdateSequence PreMacro updated to: "] = true
 L["GSUpdateSequence PostMacro updated to: "] = true
+L["Adding missing Language :"] =  true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true

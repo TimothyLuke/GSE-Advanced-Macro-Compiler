@@ -43,28 +43,5 @@ seterrorhandler(function(message)
 end)
 
 
-local function determinationOutputDestination(message)
-  if GSMasterOptions.sendDebugOutputGSDebugOutput then
-    GSDebugOutput = GSDebugOutput .. message .. "\n"
-	end
-	if GSMasterOptions.sendDebugOutputToChat then
-    print(message)
-	end
-end
-
-
-
-
-
-
-function GSPrintDebugMessage(message, module)
-    if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
-		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
-    end
-
-end
-
 
 GSCore = true

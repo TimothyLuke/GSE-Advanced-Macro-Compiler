@@ -1,5 +1,15 @@
 local GNOME, _ = ...
 
+GSTRStaticKey = "KEY"
+GSTRStaticHash = "HASH"
+GSTRStaticShadow = "SHADOW"
+
+GSAvailableLanguages = {}
+GSAvailableLanguages[GSTRStaticKey] = {}
+GSAvailableLanguages[GSTRStaticHash] = {}
+GSAvailableLanguages[GSTRStaticShadow] = {}
+
+
 GSAvailableLanguages[GSTRStaticKey]["enUS"] = {
 	[17] = "Power Word: Shield",
 	[53] = "Backstab",

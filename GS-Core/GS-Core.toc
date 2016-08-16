@@ -13,15 +13,14 @@ embeds.xml
 langs\GSCore_enUS.lua
 langs\GSCore_ptBR.lua
 
-# Startup
-startup.lua
-errorhandler.lua
-
 # Initial SPell DB
 langs\enUS.lua
 langs\enUSHash.lua
 langs\enUSSHADOW.lua
 
+# Startup
+startup.lua
+errorhandler.lua
 
 # Add in any contributed sequences to Sequences.lua
 Sequences.lua

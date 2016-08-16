@@ -37,7 +37,7 @@ local function preparePreMacro(premacro)
     -- see #20 prevent target hopping
     premacro = "/stopmacro [@playertarget, noexists]\n" .. premacro
   end
-  return premacro
+  return GSTRUnEscapeString(premacro)
 end
 
 local function preparePostMacro(postmacro)
@@ -72,7 +72,7 @@ local function preparePostMacro(postmacro)
   if GSMasterOptions.use2 then
     postmacro = "/use [combat] 2\n" .. postmacro
   end
-  return postmacro
+  return GSTRUnEscapeString(postmacro)
 end
 
 local OnClick = [=[
@@ -113,7 +113,7 @@ local function createButton(name, sequence)
   GSFixSequence(sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
+  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSTRUnEscapeSequence(sequence))) .. ']=======])')
   button:SetAttribute('step', 1)
   button:SetAttribute('PreMacro','\n' .. preparePreMacro(sequence.PreMacro or ''))
   GSPrintDebugMessage(L["createButton PreMacro: "] .. button:GetAttribute('PreMacro'))
@@ -342,7 +342,7 @@ function GSUpdateSequence(name,sequence)
     if GSisEmpty(_G[name]) then
         createButton(name, sequence)
     else
-        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(sequence)) .. ']=======])')
+        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSTRUnEscapeSequence(sequence))) .. ']=======])')
         button:SetAttribute("step",1)
         button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
         GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
@@ -396,22 +396,6 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     StaticPopup_Show ("GS-DebugOutput")
   else
     ListSequences(GetSpecialization())
-  end
-end
-
-if GetLocale() ~= "enUS" then
-  -- We need to load in temporarily the current locale translation tables.
-  -- we should also look at cacheing this
-  local i = 0
-  for k,v in pairs(GSAvailableLanguages[GSTRStaticKey]["enUS"]) do
-    --print(k .. " " ..v)
-    local spellname = GetSpellInfo(k)
-		if spellname then
-      GSAvailableLanguages[GSTRStaticKey][GetLocale()][k] = spellname
-      GSAvailableLanguages[GSTRStaticHash][GetLocale()][spellname] = k
-      GSAvailableLanguages[GSTRStaticShadow][GetLocale()][spellname] = string.lower(k)
-		end
-    i = i + 1
   end
 end
 

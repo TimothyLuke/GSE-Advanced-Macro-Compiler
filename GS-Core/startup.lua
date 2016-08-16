@@ -1,4 +1,6 @@
 local GNOME, ns = ...
+local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
+
 GSMasterSequences = ns
 GSStaticCastCmds = {}
 GSTRUnfoundSpells = {}
@@ -88,19 +90,32 @@ GSMasterOptions.EQUALS = "|cffccddee"
 GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
 GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
 
+local function determinationOutputDestination(message)
+  if GSMasterOptions.sendDebugOutputGSDebugOutput then
+    GSDebugOutput = GSDebugOutput .. message .. "\n"
+	end
+	if GSMasterOptions.sendDebugOutputToChat then
+    print(message)
+	end
+end
+
+function GSPrintDebugMessage(message, module)
+    if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
+      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
+		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
+      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
+    end
+
+end
+
+
+
 
 GSDebugOutput = ""
 
 GSStaticSequenceDebug = "SEQUENCEDEBUG"
 
-GSTRStaticKey = "KEY"
-GSTRStaticHash = "HASH"
-GSTRStaticShadow = "SHADOW"
 
-GSAvailableLanguages = {}
-GSAvailableLanguages[GSTRStaticKey] = {}
-GSAvailableLanguages[GSTRStaticHash] = {}
-GSAvailableLanguages[GSTRStaticShadow] = {}
 
 -- Seed a first instance just to be sure an instance is loaded if we need to.
 if GSMasterOptions.seedInitialMacro then
@@ -163,9 +178,41 @@ local escapes = {
     ["{.-}"] = "", -- raid target icons
 }
 
+function GSTRUnEscapeSequence(sequence)
+  local i = 1
+  for _,v in ipairs(sequence) do
+    --print (i .. " " .. v)
+    sequence[i] = GSTRUnEscapeString(v)
+    i = i + 1
+  end
+  return sequence
+end
+
 function GSTRUnEscapeString(str)
     for k, v in pairs(escapes) do
         str = gsub(str, k, v)
     end
     return str
+end
+
+if GetLocale() ~= "enUS" then
+  -- We need to load in temporarily the current locale translation tables.
+  -- we should also look at cacheing this
+  if GSisEmpty(GSAvailableLanguages[GSTRStaticKey][GetLocale()]) then
+    GSAvailableLanguages[GSTRStaticKey][GetLocale()] = {}
+    GSAvailableLanguages[GSTRStaticHash][GetLocale()] = {}
+    GSAvailableLanguages[GSTRStaticShadow][GetLocale()] = {}
+    GSPrintDebugMessage(L["Adding missing Language :"] .. GetLocale() )
+    local i = 0
+    for k,v in pairs(GSAvailableLanguages[GSTRStaticKey]["enUS"]) do
+      GSPrintDebugMessage(i.. " " .. k .. " " ..v)
+      local spellname = GetSpellInfo(k)
+      if spellname then
+        GSAvailableLanguages[GSTRStaticKey][GetLocale()][k] = spellname
+        GSAvailableLanguages[GSTRStaticHash][GetLocale()][spellname] = k
+        GSAvailableLanguages[GSTRStaticShadow][GetLocale()][spellname] = string.lower(k)
+      end
+      i = i + 1
+    end
+  end
 end
