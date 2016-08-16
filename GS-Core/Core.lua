@@ -388,7 +388,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     print(GSMasterOptions.TitleColour .. GNOME .. L[":|r Your current Specialisation is "] .. currentSpecID, ':', specname, L["  The Alternative ClassID is "] , currentclassId)
   elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
-  elseif string.lower(msg) == "cleanorphans" then
+  elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
     cleanOrphanSequences()
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     print(GSExportSequence(string.sub(msg,8)))
