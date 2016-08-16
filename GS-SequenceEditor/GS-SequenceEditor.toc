@@ -8,6 +8,8 @@
 
 #libs
 embeds.xml
+# languages
+langs\GSSE_enUS.lua
 
 #startup
 editor-startup.lua

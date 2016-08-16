@@ -1,9 +1,10 @@
 local GNOME, _ = ...
+local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 
 StaticPopupDialogs["GSEConfirmReloadUI"] = {
-  text = "You need to reload the User Interface to complete this task.  Would you like to do this now?",
-  button1 = "Yes",
-  button2 = "No",
+  text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],
+  button1 = L["Yes"],
+  button2 = L["No"],
   OnAccept = function()
       ReloadUI();
   end,
@@ -29,62 +30,62 @@ end
 
 local OptionsTable = {
   type = "group",
-  name = "|cffff0000GS-E:|r Gnome Sequencer - Enhanced Options",
+  name = L["|cffff0000GS-E:|r Gnome Sequencer - Enhanced Options"],
   args = {
     generalTab = {
-  		name = "General",
-  		desc = "General Options",
+  		name = L["General"],
+  		desc = L["General Options"],
   		type = "group",
   		order = 1,
   		args = {
         title1 = {
           type = "header",
-          name = "General Options",
+          name = L["General Options"],
           order = 100
         },
         cleanTempMacro = {
-          name = "Clean Temporary Macros",
-          desc = "The Sequence Editor creates a temporary Macro called \"LiveTest\".  The content of this temporary macro is deleted on logout but the game leaves a macro stub behind.  This switch deletes the Macro Stub from your macros on logout.",
+          name = L["Clean Temporary Macros"],
+          desc = L["The Sequence Editor creates a temporary Macro called \"LiveTest\".  The content of this temporary macro is deleted on logout but the game leaves a macro stub behind.  This switch deletes the Macro Stub from your macros on logout."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.cleanTempMacro = val end,
           get = function(info) return GSMasterOptions.cleanTempMacro end,
           order = 200
         },
         usetranslator = {
-          name = "Use Macro Translator",
-          desc = "The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.",
+          name = L["Use Macro Translator"],
+          desc = L["The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.  It is also used for syntax based colour markup of Sequences in the editor."],
           type = "toggle",
           set = function(info,val) GSTtoggleTranslator(val) end,
           get = function(info) return GSMasterOptions.useTranslator end,
           order = 201
         },
         deleteOrphanLogout = {
-          name = "Delete Orphaned Macros on Logout",
-          desc = "As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans",
+          name = L["Delete Orphaned Macros on Logout"],
+          desc = L["As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans"],
           type = "toggle",
           set = function(info,val) GSMasterOptions.deleteOrphansOnLogout = val end,
           get = function(info) return GSMasterOptions.deleteOrphansOnLogout end,
           order = 300
         },
         overflowPersonalMacros = {
-          name = "Use Global Account Macros",
-          desc = "When creating a macro, if there is not a personal character macro space, create an account wide macro.",
+          name = L["Use Global Account Macros"],
+          desc = L["When creating a macro, if there is not a personal character macro space, create an account wide macro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.overflowPersonalMacros = val end,
           get = function(info) return GSMasterOptions.overflowPersonalMacros end,
           order = 301
         },
         useQuestionMark = {
-          name = "Set Default Icon QuestionMark",
-          desc = "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit.",
+          name = L["Set Default Icon QuestionMark"],
+          desc = L["By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.setDefaultIconQuestionMark = val end,
           get = function(info) return GSMasterOptions.setDefaultIconQuestionMark end,
           order = 310
         },
         seedInitialMacro={
-          name = "Seed Initial Macro",
-          desc = "If you load Gnome Sequencer - Enhanced and the Sequence Editor and want to create new macros from scratch, this will enable a first cut sequenced template that you can load into the editor as a starting point.  This enables a Hello World macro called Draik01.  You will need to do a /console reloadui after this for this to take effect.",
+          name = L["Seed Initial Macro"],
+          desc = L["If you load Gnome Sequencer - Enhanced and the Sequence Editor and want to create new macros from scratch, this will enable a first cut sequenced template that you can load into the editor as a starting point.  This enables a Hello World macro called Draik01.  You will need to do a /console reloadui after this for this to take effect."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.seedInitialMacro = val end,
           get = function(info) return GSMasterOptions.seedInitialMacro end,
@@ -92,76 +93,76 @@ local OptionsTable = {
         },
         title2 = {
           type = "header",
-          name = "Gameplay - Enabling these options may trigger the ingame Warning about Custom Scripts.",
+          name = L["Gameplay Options"],
           order = 500
         },
         requireTarget={
-          name = "Require Target to use",
-          desc = "This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies.",
+          name = L["Require Target to use"],
+          desc = L["This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.requireTarget = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.requireTarget end,
          order = 510
         },
         hideSoundErrors={
-          name = "Prevent Sound Errors",
-          desc = "This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableErrorSpeech lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts.",
+          name = L["Prevent Sound Errors"],
+          desc = L["This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableErrorSpeech lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.hideSoundErrors = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.hideSoundErrors end,
           order = 520
         },
         hideUIErrors={
-          name = "Prevent UI Errors",
-          desc = "This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts.",
+          name = L["Prevent UI Errors"],
+          desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.hideUIErrors = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.hideUIErrors end,
           order = 530
         },
         clearUIErrors={
-          name = "Clear Errors",
-          desc = "This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts.",
+          name = L["Clear Errors"],
+          desc = L["This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.clearUIErrors = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.clearUIErrors end,
           order = 540
         },
         use11={
-          name = "Use First Ring in Postmacro",
-          desc = "Incorporate the first ring slot into the PostMacro. This is the equivalent of /use [combat] 11 in a PostMacro.",
+          name = L["Use First Ring in Postmacro"],
+          desc = L["Incorporate the first ring slot into the PostMacro. This is the equivalent of /use [combat] 11 in a PostMacro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.use11 = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.use11 end,
           order = 550
         },
         use12={
-          name = "Use Second Ring in Postmacro",
-          desc = "Incorporate the second ring slot into the PostMacro. This is the equivalent of /use [combat] 12 in a PostMacro.",
+          name = L["Use Second Ring in Postmacro"],
+          desc = L["Incorporate the second ring slot into the PostMacro. This is the equivalent of /use [combat] 12 in a PostMacro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.use12 = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.use12 end,
           order = 560
         },
         use13={
-          name = "Use First Trinket in Postmacro",
-          desc = "Incorporate the first trinket slot into the PostMacro. This is the equivalent of /use [combat] 13 in a PostMacro.",
+          name = L["Use First Trinket in Postmacro"],
+          desc = L["Incorporate the first trinket slot into the PostMacro. This is the equivalent of /use [combat] 13 in a PostMacro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.use13 = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.use13 end,
           order = 570
         },
         use14={
-          name = "Use Second Trinket in Postmacro",
-          desc = "Incorporate the second trinket slot into the PostMacro. This is the equivalent of /use [combat] 14 in a PostMacro.",
+          name = L["Use Second Trinket in Postmacro"],
+          desc = L["Incorporate the second trinket slot into the PostMacro. This is the equivalent of /use [combat] 14 in a PostMacro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.use14 = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.use14 end,
           order = 580
         },
         use2={
-          name = "Use Neck Item in Postmacro",
-          desc = "Incorporate the neck slot into the PostMacro. This is the equivalent of /use [combat] 2 in a PostMacro.",
+          name = L["Use Neck Item in Postmacro"],
+          desc = L["Incorporate the neck slot into the PostMacro. This is the equivalent of /use [combat] 2 in a PostMacro."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.use2 = val GSReloadSequences() end,
           get = function(info) return GSMasterOptions.use2 end,
@@ -169,28 +170,28 @@ local OptionsTable = {
         },
         title4 = {
           type = "header",
-          name = "Debug Mode Options",
+          name = L["Debug Mode Options"],
           order = -1
         },
         debug={
-          name = "Enable Mod Debug Mode",
-          desc = "This option dumps extra trace information to your chat window to help troubleshoot problems with the mod",
+          name = L["Enable Mod Debug Mode"],
+          desc = L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"],
           type = "toggle",
           set = function(info,val) GSMasterOptions.debug = val GSPrintDebugMessage("Debug Mode Enabled", GNOME) end,
           get = function(info) return GSMasterOptions.debug end,
           order = -1
         },
         debugchat={
-          name = "Display debug messages in Chat Window",
-          desc = "This will display debug messages in the Chat window.",
+          name = L["Display debug messages in Chat Window"],
+          desc = L["This will display debug messages in the Chat window."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.sendDebugOutputToChat = val end,
           get = function(info) return GSMasterOptions.sendDebugOutputToChat end,
           order = -1
         },
         debugGSDebugOutput={
-          name = "Store Debug Messages",
-          desc = "Store output of debug messages in a Global Variable that can be referrenced by other mods.",
+          name = L["Store Debug Messages"],
+          desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.sendDebugOutputGSDebugOutput = val end,
           get = function(info) return GSMasterOptions.sendDebugOutputGSDebugOutput end,
@@ -199,20 +200,20 @@ local OptionsTable = {
       },
     },
     colourTab = {
-      name = "Colour",
-      desc = "Colour and Accessibility Options",
+      name = L["Colour"],
+      desc = L["Colour and Accessibility Options"],
       type = "group",
       order = 2,
       args = {
         ctitle1 = {
           type = "header",
-          name = "General Options",
+          name = L["General Options"],
           order = 100,
         },
         titleColour = {
     			type = "color",
-    			name = "Title Colour",
-    			desc = "Picks a Custom Colour for the Mod Names.",
+    			name = L["Title Colour"],
+    			desc = L["Picks a Custom Colour for the Mod Names."],
           order = 101,
     			hasAlpha = false,
     			get = function(info) return GSGetColour(GSMasterOptions.TitleColour) end,
@@ -222,8 +223,8 @@ local OptionsTable = {
     		},
         authorColour = {
     			type = "color",
-    			name = "Author Colour",
-    			desc = "Picks a Custom Colour for the Author.",
+    			name = L["Author Colour"],
+    			desc = L["Picks a Custom Colour for the Author."],
           order = 110,
     			hasAlpha = false,
     			get = function(info)
@@ -235,8 +236,8 @@ local OptionsTable = {
     		},
         commandColour = {
     			type = "color",
-    			name = "Command Colour",
-    			desc = "Picks a Custom Colour for the Commands.",
+    			name = L["Command Colour"],
+    			desc = L["Picks a Custom Colour for the Commands."],
           order = 120,
     			hasAlpha = false,
     			get = function(info)
@@ -248,8 +249,8 @@ local OptionsTable = {
     		},
         emphasisColour = {
     			type = "color",
-    			name = "Emphasis Colour",
-    			desc = "Picks a Custom Colour for emphasis.",
+    			name = L["Emphasis Colour"],
+    			desc = L["Picks a Custom Colour for emphasis."],
           order = 130,
     			hasAlpha = false,
     			get = function(info)
@@ -261,8 +262,8 @@ local OptionsTable = {
     		},
         normalColour = {
     			type = "color",
-    			name = "Normal Colour",
-    			desc = "Picks a Custom Colour to be used normally.",
+    			name = L["Normal Colour"],
+    			desc = L["Picks a Custom Colour to be used normally."],
           order = 140,
     			hasAlpha = false,
     			get = function(info)
@@ -274,14 +275,14 @@ local OptionsTable = {
     		},
         ctitle2 = {
           type = "header",
-          name = "Editor Colours",
+          name = L["Editor Colours"],
           order = 200,
         },
 
         keywordColour = {
     			type = "color",
-    			name = "Spell Colour",
-    			desc = "Picks a Custom Colour to be used for Spells and Abilities.",
+    			name = L["Spell Colour"],
+    			desc = L["Picks a Custom Colour to be used for Spells and Abilities."],
           order = 210,
     			hasAlpha = false,
     			get = function(info)
@@ -293,8 +294,8 @@ local OptionsTable = {
     		},
         unknownColour = {
     			type = "color",
-    			name = "Unknown Colour",
-    			desc = "Picks a Custom Colour to be used for unknown terms.",
+    			name = L["Unknown Colour"],
+    			desc = L["Picks a Custom Colour to be used for unknown terms."],
           order = 220,
     			hasAlpha = false,
     			get = function(info)
@@ -306,8 +307,8 @@ local OptionsTable = {
     		},
         iconColour = {
     			type = "color",
-          name = "Icon Colour",
-    			desc = "Picks a Custom Colour to be used for Icons.",
+          name = L["Icon Colour"],
+    			desc = L["Picks a Custom Colour to be used for Icons."],
           order = 230,
     			hasAlpha = false,
     			get = function(info)
@@ -317,8 +318,8 @@ local OptionsTable = {
     		},
         numberColour = {
     			type = "color",
-    			name = "SpecID/ClassID Colour",
-    			desc = "Picks a Custom Colour to be used for numbers.",
+    			name = L["SpecID/ClassID Colour"],
+    			desc = L["Picks a Custom Colour to be used for numbers."],
           order = 240,
     			hasAlpha = false,
     			get = function(info)
@@ -330,8 +331,8 @@ local OptionsTable = {
     		},
         stringColour = {
     			type = "color",
-    			name = "String Colour",
-    			desc = "Picks a Custom Colour to be used for strings.",
+    			name = L["String Colour"],
+    			desc = L["Picks a Custom Colour to be used for strings."],
           hidden = true,
           order = 250,
     			hasAlpha = false,
@@ -344,8 +345,8 @@ local OptionsTable = {
     		},
         conditionalColour = {
     			type = "color",
-    			name = "Conditionals Colour",
-    			desc = "Picks a Custom Colour to be used for macro conditionals eg [mod:shift]",
+    			name = L["Conditionals Colour"],
+    			desc = L["Picks a Custom Colour to be used for macro conditionals eg [mod:shift]"],
           order = 260,
     			hasAlpha = false,
     			get = function(info)
@@ -357,8 +358,8 @@ local OptionsTable = {
     		},
         helpColour = {
     			type = "color",
-    			name = "Help Colour",
-    			desc = "Picks a Custom Colour to be used for braces and indents.",
+    			name = L["Help Colour"],
+    			desc = L["Picks a Custom Colour to be used for braces and indents."],
           order = 270,
     			hasAlpha = false,
     			get = function(info)
@@ -370,8 +371,8 @@ local OptionsTable = {
     		},
         stepColour = {
     			type = "color",
-    			name = "Step Functions",
-    			desc = "Picks a Custom Colour to be used for StepFunctions.",
+    			name = L["Step Functions"],
+    			desc = L["Picks a Custom Colour to be used for StepFunctions."],
           order =280,
           hasAlpha = false,
     			get = function(info)
@@ -383,8 +384,8 @@ local OptionsTable = {
     		},
         languageColour = {
     			type = "color",
-    			name = "Language Colour",
-    			desc = "Picks a Custom Colour to be used for language descriptors",
+    			name = L["Language Colour"],
+    			desc = L["Picks a Custom Colour to be used for language descriptors"],
           order = 290,
     			hasAlpha = false,
     			get = function(info)
@@ -396,8 +397,8 @@ local OptionsTable = {
     		},
         shortcutsColour = {
     			type = "color",
-    			name = "Blizzard Functions Colour",
-    			desc = "Picks a Custom Colour to be used for Macro Keywords like /cast and /target",
+    			name = L["Blizzard Functions Colour"],
+    			desc = L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"],
           order = 300,
     			hasAlpha = false,
     			get = function(info)
@@ -410,14 +411,14 @@ local OptionsTable = {
       },
     },
     pluginsTab = {
-		  name = "Plugins",
-		  desc = "GS-E Plugins",
+		  name = L["Plugins"],
+		  desc = L["GS-E Plugins"],
 		  type = "group",
 		  order = 3,
 		  args = {
         title3 = {
           type = "header",
-          name = "Registered Addons",
+          name = L["Registered Addons"],
           order = 900,
         },
         addins={
@@ -439,7 +440,7 @@ function GSTtoggleTranslator (boole)
   if GSTranslatorAvailable then
     GSMasterOptions.useTranslator = boole
   elseif boole then
-    print('|cffff0000' .. GNOME .. ':|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com')
+    print('|cffff0000' .. GNOME .. L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"])
   else
     GSMasterOptions.useTranslator = boole
   end
