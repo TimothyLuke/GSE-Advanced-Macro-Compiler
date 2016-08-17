@@ -33,14 +33,14 @@ externals:
         tag: latest
 
 move-folders:
-    GnomeSequencer-Enhanced/GS-Core: GS-Core
-    GnomeSequencer-Enhanced/GS-SequenceEditor: GS-SequenceEditor
-    GnomeSequencer-Enhanced/GS-DraikMacros: GS-DraikMacros
+    GS-Core/GS-SequenceEditor: GS-SequenceEditor
+    GS-Core/GS-DraikMacros: GS-DraikMacros
+    GS-Core/GS-Core: GS-Core
 
 enable-nolib-creation: no
 
 ignore:
-    - GS-MyMacros
+    - GS-myMacros
     - GS-HighPerformanceMacros
     - .travis.yml
     - README.md
