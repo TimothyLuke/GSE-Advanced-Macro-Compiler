@@ -10,20 +10,12 @@ local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local boxes = {}
 
 function GSSE:parsetext(editbox)
-  -- if char == " " then
-  --   --print("char == space")
-  --   --Do Nothing!
-  -- elseif char == string.char(10) or char == string.char(13) then
-  --   --print("char == new line")
-  -- else
-    --print("retranslating")
+  if GSMasterOptions.RealtimeParse then
     text = GSTRUnEscapeString(editbox:GetText())
-    --print("text = " .. text)
     returntext = GSTranslateString(text , GetLocale(), GetLocale(), true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
-  -- end
-  --editbox:SetCursorPosition(-1)
+  end
 end
 
 function GSSE:getSequenceNames()

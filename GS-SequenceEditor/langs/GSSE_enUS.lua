@@ -136,3 +136,5 @@ L["Plugins"] = true
 L["GS-E Plugins"] = true
 L["Registered Addons"] = true
 L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"] = true
+L["Use Realtime Parsing"] = true
+L["The Sequence Editor can attempt to parse the Sequences, PreMacro and PostMacro in realtime.  This is still experimental so can be turned off."] = true

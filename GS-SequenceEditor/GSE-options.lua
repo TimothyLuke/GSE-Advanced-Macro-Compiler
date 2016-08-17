@@ -59,6 +59,14 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.useTranslator end,
           order = 201
         },
+        realtimeparse = {
+          name = L["Use Realtime Parsing"],
+          desc = L["The Sequence Editor can attempt to parse the Sequences, PreMacro and PostMacro in realtime.  This is still experimental so can be turned off."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.RealtimeParse end,
+          get = function(info) return GSMasterOptions.RealtimeParse end,
+          order = 201
+        },
         deleteOrphanLogout = {
           name = L["Delete Orphaned Macros on Logout"],
           desc = L["As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans"],

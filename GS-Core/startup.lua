@@ -89,6 +89,7 @@ GSMasterOptions.INDENT = "|cffccaa88"
 GSMasterOptions.EQUALS = "|cffccddee"
 GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
 GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
+GSMasterOptions.RealtimeParse = true
 
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
