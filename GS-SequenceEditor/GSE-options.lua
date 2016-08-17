@@ -63,7 +63,7 @@ local OptionsTable = {
           name = L["Use Realtime Parsing"],
           desc = L["The Sequence Editor can attempt to parse the Sequences, PreMacro and PostMacro in realtime.  This is still experimental so can be turned off."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.RealtimeParse end,
+          set = function(info,val) GSMasterOptions.RealtimeParse = val end,
           get = function(info) return GSMasterOptions.RealtimeParse end,
           order = 201
         },

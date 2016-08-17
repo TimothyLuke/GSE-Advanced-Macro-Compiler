@@ -6,6 +6,7 @@
 ## SavedVariables: GnomeOptions
 ## OptionalDeps: WeakAuras
 
+## X-WoWI-ID: 23921
 # Lib
 embeds.xml
 
