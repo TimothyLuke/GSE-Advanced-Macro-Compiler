@@ -164,7 +164,7 @@ end
 
 function GSGetActiveSequenceVersion(SequenceName)
   local vers = 1
-  if not GSisEmpty() then
+  if not GSisEmpty(GSMasterOptions.ActiveSequenceVersions[SequenceName]) then
     vers = GSMasterOptions.ActiveSequenceVersions[SequenceName]
   end
   return vers

@@ -127,7 +127,9 @@ function GSReloadSequences()
   GSPrintDebugMessage(L["Reloading Sequences"])
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
     GSPrintDebugMessage(name .. " " .. version )
+    print(name .. " " .. version )
     if not GSisEmpty(GSMasterOptions.SequenceLibrary[name]) then
+      GSPrintDebugMessage(GSGetActiveSequenceVersion(name))
       GSUpdateSequence(name, GSMasterOptions.SequenceLibrary[name][GSGetActiveSequenceVersion(name)])
     end
   end
@@ -224,7 +226,7 @@ f:SetScript('OnEvent', function(self, event)
           GSMasterOptions[k] = v
         end
       end
-      for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) then
+      for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
         if GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
           GSMasterOptions.ActiveSequenceVersions[k] = nil
         end
