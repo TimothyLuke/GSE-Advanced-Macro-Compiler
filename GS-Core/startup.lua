@@ -90,6 +90,8 @@ GSMasterOptions.EQUALS = "|cffccddee"
 GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
 GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
 GSMasterOptions.RealtimeParse = true
+GSMasterOptions.SequenceLibrary = {}
+GSMasterOptions.ActiveSequenceVersions = {}
 
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
@@ -118,15 +120,15 @@ GSStaticSequenceDebug = "SEQUENCEDEBUG"
 
 
 
--- Seed a first instance just to be sure an instance is loaded if we need to.
-if GSMasterOptions.seedInitialMacro then
-	GSMasterSequences["Draik01"] = {
-	specID = 0,
-	author = "Draik",
-	helpTxt = "Sample GS Hellow World Macro.",
-	'/run print("Hellow World!")',
-	}
-end
+-- -- Seed a first instance just to be sure an instance is loaded if we need to.
+-- if GSMasterOptions.seedInitialMacro then
+-- 	GSMasterSequences["Draik01"] = {
+-- 	specID = 0,
+-- 	author = "Draik",
+-- 	helpTxt = "Sample GS Hellow World Macro.",
+-- 	'/run print("Hellow World!")',
+-- 	}
+-- end
 
 -------------------------------------------------------------------------------------
 -- GSStaticPriority is a static step function that goes 1121231234123451234561234567
@@ -156,6 +158,64 @@ function GSLoadWeakauras(str)
   end
 end
 
+function GSGetActiveSequenceVersion(SequenceName)
+  return GSMasterOptions.ActiveSequenceVersions[SequenceName]
+end
+
+function GSGetKnownSequenceVersions(SequenceName)
+  local t = {}
+  for k,_ in pairs(GSMasterOptions.SequenceLibrary[sequenceName])
+    GSMasterOptions.SequenceLibrary[sequenceName]
+    t[k] = true
+  end
+  return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]
+end
+
+
+function GSDeleteSequenceVersion(sequenceName, version)
+  if version == 1 then
+    print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete the only copy of a sequence."])
+  elseif not GSIsEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+    GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
+  end
+end
+
+-- This will need more logic for the moment iuf they are not equal set somethng.
+function GSChooseActiveSequenceVersion(sequenceName, version)
+  GSMasterOptions.ActiveSequenceVersions[sequenceName] = version
+end
+
+function GSAddSequenceToCollection(sequenceName, sequence, version)
+
+
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+    -- Sequence is new
+    GSMasterOptions.SequenceLibrary[sequenceName] = {}
+  end
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+    -- This version is new
+    GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
+  end
+  -- evaluate version
+  if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
+    GSChooseActiveSequenceVersion(sequenceName, version)
+  end
+
+  GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
+
+
+end
+
+function GSImportLegacyMacroCollections()
+  for k,v in pairs(GSMasterSequences) do
+    if GSisEmpty(v.version) then
+      v.version = 1
+    end
+    GSAddSequenceToCollection(k, v, v.version)
+    GSMasterSequences[k] = nil
+  end
+end
+
 -- Load any Load on Demand addon packs.
 -- Only load those beginning with GS-
 for i=1,GetNumAddOns() do
@@ -164,6 +224,7 @@ for i=1,GetNumAddOns() do
         if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
           --print (name)
 					LoadAddOn(i);
+          GSImportLegacyMacroCollections()
         end
 				GSMasterOptions.AddInPacks[name] = true
     end

@@ -272,8 +272,10 @@ function GSTRReportUnfoundSpells()
   GSTRUnfoundSpells = nil
   GSTRUnfoundSpells = {}
 
-  for name,sequence in pairs(GSMasterSequences) do
-    GSTranslateSequenceFromTo(sequence, "enUS", "esMX")
+  for name,version in pairs(GSMasterOptions.SequenceLibrary) do
+    for v, sequence in pairs(version) do
+      GSTranslateSequenceFromTo(sequence, "enUS", "esMX")
+    end
   end
   GSTRUnfoundSpellIds = {}
 

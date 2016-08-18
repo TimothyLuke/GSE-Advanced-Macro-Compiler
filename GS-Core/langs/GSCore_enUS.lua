@@ -60,3 +60,5 @@ L[":|r Your current Specialisation is "] = true
 L["  The Alternative ClassID is "] = true
 L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
 L["/gs help|r to get started."] = true
+L["Version="] = true
+L[":|r You cannot delete the only copy of a sequence."] = true

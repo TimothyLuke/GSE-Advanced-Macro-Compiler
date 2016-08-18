@@ -91,14 +91,14 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.setDefaultIconQuestionMark end,
           order = 310
         },
-        seedInitialMacro={
-          name = L["Seed Initial Macro"],
-          desc = L["If you load Gnome Sequencer - Enhanced and the Sequence Editor and want to create new macros from scratch, this will enable a first cut sequenced template that you can load into the editor as a starting point.  This enables a Hello World macro called Draik01.  You will need to do a /console reloadui after this for this to take effect."],
-          type = "toggle",
-          set = function(info,val) GSMasterOptions.seedInitialMacro = val end,
-          get = function(info) return GSMasterOptions.seedInitialMacro end,
-          order = 400
-        },
+        -- seedInitialMacro={
+        --   name = L["Seed Initial Macro"],
+        --   desc = L["If you load Gnome Sequencer - Enhanced and the Sequence Editor and want to create new macros from scratch, this will enable a first cut sequenced template that you can load into the editor as a starting point.  This enables a Hello World macro called Draik01.  You will need to do a /console reloadui after this for this to take effect."],
+        --   type = "toggle",
+        --   set = function(info,val) GSMasterOptions.seedInitialMacro = val end,
+        --   get = function(info) return GSMasterOptions.seedInitialMacro end,
+        --   order = 400
+        -- },
         title2 = {
           type = "header",
           name = L["Gameplay Options"],
