@@ -15,8 +15,8 @@ GSStaticCleanStrings = {
   [4] = "/run UIErrorsFrame:Clear%(%)%;\n",
   [5] = "/script UIErrorsFrame:Clear%(%)%;\n",
   [6] = "/run UIErrorsFrame:Hide%(%)%;\n",
-  [7] = "/console Sound_EnableErrorSpeech 1\n"
-  [8] = "/console Sound_EnableErrorSpeech 0\n"
+  [7] = "/console Sound_EnableErrorSpeech 1\n",
+  [8] = "/console Sound_EnableErrorSpeech 0\n",
 
   [11] = "/console Sound_EnableSFX 0\n",
   [12] = "/console Sound_EnableSFX 1\n",
@@ -24,8 +24,8 @@ GSStaticCleanStrings = {
   [14] = "/run UIErrorsFrame:Clear%(%)\n",
   [15] = "/script UIErrorsFrame:Clear%(%)\n",
   [16] = "/run UIErrorsFrame:Hide%(%)\n",
-  [17] = "/console Sound_EnableErrorSpeech 1%;\n"
-  [18] = "/console Sound_EnableErrorSpeech 0%;\n"
+  [17] = "/console Sound_EnableErrorSpeech 1%;\n",
+  [18] = "/console Sound_EnableErrorSpeech 0%;\n",
 
   [20] = "/stopmacro [@playertarget, noexists]\n",
 

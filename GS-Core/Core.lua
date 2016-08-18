@@ -203,7 +203,7 @@ f:SetScript('OnEvent', function(self, event)
             for sver, sequence in pairs(sversion) do
               GSAddSequenceToCollection(same, sequence, sver)
             end
-          do
+          end
         elseif k == "ActiveSequenceVersions" then
           -- Merge Active Sequences History if locally set version is greater than the loaded in
           for n,ver in pairs(v) do
@@ -216,7 +216,7 @@ f:SetScript('OnEvent', function(self, event)
         else
           GSMasterOptions[k] = v
         end
-     end
+      end
       GSMasterOptions.AddInPacks = addins
     end
     if IsAddOnLoaded(GNOME) then
