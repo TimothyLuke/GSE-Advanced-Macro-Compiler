@@ -209,7 +209,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
   end
   if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
     -- This version is new
-    GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
+    GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
   end
   -- evaluate version
   if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
