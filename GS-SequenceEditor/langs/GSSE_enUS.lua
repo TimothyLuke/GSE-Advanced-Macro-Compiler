@@ -2,9 +2,9 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GS-SE", "enUS", true)
 
 -- Editor DEBUG
 L["Selecting tab: "] = true
-L["GSTranslateSequenceFromTo(GSMasterSequences["] = true
-L["], (GSisEmpty(GSMasterSequences["] = true
-L["].lang) and GSMasterSequences["] = true
+L["GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary["] = true
+L["], (GSisEmpty(GSMasterOptions.SequenceLibrary["] = true
+L["].lang) and GSMasterOptions.SequenceLibrary["] = true
 L["].lang or GetLocale()), key)"] = true
 L["GSSE:loadSequence "] = true
 L["Moving on - LiveTest.PreMacro already exists."] = true

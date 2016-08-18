@@ -20,10 +20,7 @@ end
 
 function GSSE:getSequenceNames()
   local keyset={}
-  local n=0
-
-  for k,v in pairs(GSMasterSequences) do
-    n=n+1
+  for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
     keyset[k]=k
   end
   return keyset
@@ -223,16 +220,16 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 
 function GSSE:loadTranslatedSequence(key)
-  GSPrintDebugMessage(L["GSTranslateSequenceFromTo(GSMasterSequences["] .. currentSequence .. L["], (GSisEmpty(GSMasterSequences["] .. currentSequence .. L["].lang) and GSMasterSequences["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
-  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[currentSequence], (GSisEmpty(GSMasterSequences[currentSequence].lang) and GetLocale() or GSMasterSequences[currentSequence].lang ), key), currentSequence))
+  GSPrintDebugMessage(L["GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["], (GSisEmpty(GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["].lang) and GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
+  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSisEmpty(GSMasterOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and GetLocale() or GSMasterOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
 function GSSE:loadSequence(SequenceName)
   GSPrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
   if GSAdditionalLanguagesAvailable and GSMasterOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], (GSisEmpty(GSMasterSequences[SequenceName].lang) and "enUS" or GSMasterSequences[SequenceName].lang), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)], (GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)].lang), GetLocale()), SequenceName))
   elseif GSTranslatorAvailable then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterSequences[SequenceName], GetLocale(), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)], GetLocale(), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end
@@ -252,7 +249,8 @@ function GSSE:updateSequence(SequenceName)
   if GSisEmpty(SequenceName) then
     local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
     SequenceName = "LiveTest"
-    GSMasterSequences[SequenceName] = {
+    -- Get next version needed here
+    GSMasterOptions.SequenceLibrary[SequenceName][1] = {
     specID = GSSE:getSpecID(),
   	author = "Draik",
     icon = 134400,
@@ -263,8 +261,9 @@ function GSSE:updateSequence(SequenceName)
   end
   GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
   frame:Hide()
-  GSMasterSequences["LiveTest"] = GSMasterSequences[SequenceName]
-  GSMasterSequences["LiveTest"].author = GetUnitName("player", true) .. '@' .. GetRealmName()
+  local nextseqval = GSGetNextSequenceVersion("LiveTest")
+  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][[GSGetActiveSequenceVersion(SequenceName)]]
+  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].author = GetUnitName("player", true) .. '@' .. GetRealmName()
   reticon = GSSE:getMacroIcon(SequenceName)
   -- if string prefix with "Interface\\Icons\\" if number make it a number
   if not tonumber(reticon) then
@@ -272,55 +271,56 @@ function GSSE:updateSequence(SequenceName)
     reticon = "Interface\\Icons\\" .. reticon
   end
   GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
-  GSMasterSequences["LiveTest"].icon = reticon
-  GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].icon = reticon
+  GSUpdateSequence("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval])
   GSSE:loadSequence("LiveTest")
 
    -- show editor
   nameeditbox:SetText("LiveTest")
-  if GSisEmpty(GSMasterSequences["LiveTest"].StepFunction) then
+  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].StepFunction) then
    stepdropdown:SetValue("1")
   else
    stepdropdown:SetValue("2")
   end
-  if GSisEmpty(GSMasterSequences["LiveTest"].PreMacro) then
+  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PreMacro) then
     GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
   else
-   premacrobox:SetText(GSMasterSequences["LiveTest"].PreMacro)
+   premacrobox:SetText(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PreMacro)
   end
-  if GSisEmpty(GSMasterSequences["LiveTest"].PostMacro) then
+  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PostMacro) then
     GSPrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
   else
-   postmacrobox:SetText(GSMasterSequences["LiveTest"].PostMacro)
+   postmacrobox:SetText(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PostMacro)
   end
-  spellbox:SetText(table.concat(GSMasterSequences["LiveTest"],"\n"))
-  iconpicker:SetImage(GSMasterSequences["LiveTest"].icon)
+  spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval],"\n"))
+  iconpicker:SetImage(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].icon)
   editframe:Show()
-
+  GSMasterOptions.ActiveSequenceVersions["LiveTest"] = nextseqval
+  GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].version = nextseqval
 end
 
 function GSSE:eupdateSequence(SequenceName, loaded)
     --process Lines
     if loaded then
-      for i, v in ipairs(GSMasterSequences["LiveTest"]) do GSMasterSequences["LiveTest"][i] = nil end
-      GSSE:lines(GSMasterSequences["LiveTest"], spellbox:GetText())
+      for i, v in ipairs(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)]) do GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)][i] = nil end
+      GSSE:lines(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)], spellbox:GetText())
       -- update sequence
       if stepvalue == "2" then
-        GSMasterSequences["LiveTest"].StepFunction = GSStaticPriority
+        GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].StepFunction = GSStaticPriority
       else
-        GSMasterSequences["LiveTest"].StepFunction = nil
+        GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].StepFunction = nil
       end
-      GSMasterSequences["LiveTest"].PreMacro = premacrobox:GetText()
-      GSMasterSequences["LiveTest"].specID = GSSE:getSpecID()
-      GSMasterSequences["LiveTest"].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
-      if not tonumber(GSMasterSequences["LiveTest"].icon) then
-        GSPrintDebugMessage(L["String Icon "] .. GSMasterSequences["LiveTest"].icon .. " Checking for Interface\\Icons\\   strsub value: " .. strsub(GSMasterSequences["LiveTest"].icon,1 , 9), GNOME)
-        if strsub(GSMasterSequences["LiveTest"].icon,1 , 9) == "Interface" then
-          GSMasterSequences["LiveTest"].icon = strsub(GSMasterSequences["LiveTest"].icon, 17)
+      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].PreMacro = premacrobox:GetText()
+      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].specID = GSSE:getSpecID()
+      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+      if not tonumber(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon) then
+        GSPrintDebugMessage(L["String Icon "] .. GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon .. " Checking for Interface\\Icons\\   strsub value: " .. strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon,1 , 9), GNOME)
+        if strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon,1 , 9) == "Interface" then
+          GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon = strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon, 17)
         end
       end
-      GSMasterSequences["LiveTest"].PostMacro = postmacrobox:GetText()
-      GSUpdateSequence("LiveTest", GSMasterSequences["LiveTest"])
+      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].PostMacro = postmacrobox:GetText()
+      GSUpdateSequence("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)])
       GSSE:loadSequence("LiveTest")
       editframe:Hide()
       frame:Show()
@@ -370,7 +370,7 @@ end
 
 function GSSE:getMacroIcon(sequenceIndex)
   GSPrintDebugMessage(L["sequenceIndex: "] .. (GSisEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
-  GSPrintDebugMessage(L["Icon: "] .. (GSisEmpty(GSMasterSequences[sequenceIndex].icon) and L["none"] or GSMasterSequences[sequenceIndex].icon))
+  GSPrintDebugMessage(L["Icon: "] .. (GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and L["none"] or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon))
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
   if not GSisEmpty(a) then
@@ -378,14 +378,14 @@ function GSSE:getMacroIcon(sequenceIndex)
   else
     GSPrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
   end
-  if GSisEmpty(GSMasterSequences[sequenceIndex].icon) and GSisEmpty(iconid) then
-    GSPrintDebugMessage("SequenceSpecID: " .. GSMasterSequences[sequenceIndex].specID, GNOME)
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterSequences[sequenceIndex].specID) and GSSE:getSpecID(true) or GSMasterSequences[sequenceIndex].specID))
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSisEmpty(iconid) then
+    GSPrintDebugMessage("SequenceSpecID: " .. GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSSE:getSpecID(true) or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
     GSPrintDebugMessage(L["No Sequence Icon setting to "] .. (GSisEmpty(strsub(specicon, 17)) and L["No value"] or strsub(specicon, 17)), GNOME)
     return strsub(specicon, 17)
-  elseif GSisEmpty(iconid) and not GSisEmpty(GSMasterSequences[sequenceIndex].icon) then
+  elseif GSisEmpty(iconid) and not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
 
-      return GSMasterSequences[sequenceIndex].icon
+      return GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
   else
       return iconid
   end

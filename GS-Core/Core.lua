@@ -187,6 +187,7 @@ f:SetScript('OnEvent', function(self, event)
     GnomeOptions = GSMasterOptions
     if GSMasterOptions.cleanTempMacro then
       DeleteMacro("LiveTest")
+      GSMasterOptions.SequenceLibrary["LiveTest"] = nil
     end
     if GSMasterOptions.deleteOrphansOnLogout then
       cleanOrphanSequences()
@@ -349,17 +350,17 @@ function GSUpdateSequence(name,sequence)
         button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
         GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
     end
-    -- if name == "LiveTest" then
-    --  local sequenceIndex = GetMacroIndexByName("LiveTest")
-    --  if sequenceIndex > 0 then
-    --   -- Sequence exists do nothing
-    --   GSPrintDebugMessage(L["Moving on - "] .. name .. L[" already exists."], GNOME)
-    --  else
-    --   -- Create Sequence as a player sequence
-    --   sequenceid = CreateMacro("LiveTest", GSMasterSequences["LiveTest"].icon, '#showtooltip\n/click ' .. "LiveTest", false)
-    --   ModifiedSequences["LiveTest"] = true
-    --  end
-    -- end
+    if name == "LiveTest" then
+     local sequenceIndex = GetMacroIndexByName("LiveTest")
+     if sequenceIndex > 0 then
+      -- Sequence exists do nothing
+      GSPrintDebugMessage(L["Moving on - "] .. name .. L[" already exists."], GNOME)
+     else
+      -- Create Sequence as a player sequence
+      sequenceid = CreateMacro("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][1].icon, '#showtooltip\n/click ' .. "LiveTest", false)
+      ModifiedSequences["LiveTest"] = true
+     end
+    end
 end
 
 local function PrintGnomeHelp()

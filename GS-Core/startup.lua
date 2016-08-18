@@ -162,11 +162,22 @@ function GSGetActiveSequenceVersion(SequenceName)
   return GSMasterOptions.ActiveSequenceVersions[SequenceName]
 end
 
+function GSGetNextSequenceVersion(SequenceName)
+  local nextv = 0
+  for k,_ in pairs(SequenceLibrary[SequenceName]) do
+    if k>nextv then
+      nextv = k
+    end
+    k = k + 1
+  return k
+end
+
+
 function GSGetKnownSequenceVersions(SequenceName)
   local t = {}
   for k,_ in pairs(GSMasterOptions.SequenceLibrary[sequenceName])
     GSMasterOptions.SequenceLibrary[sequenceName]
-    t[k] = true
+    t[k] = k
   end
   return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]
 end
