@@ -41,36 +41,36 @@ local function preparePreMacro(premacro)
 end
 
 local function preparePostMacro(postmacro)
+  if GSMasterOptions.requireTarget then
+    -- see #20 prevent target hopping
+    postmacro = postmacro .. "\n/stopmacro [@playertarget, noexists]"
+  end
+  if GSMasterOptions.use11 then
+    postmacro = postmacro .. "\n/use [combat] 11"
+  end
+  if GSMasterOptions.use12 then
+    postmacro = postmacro .. "\n/use [combat] 12"
+  end
+  if GSMasterOptions.use13 then
+    postmacro = postmacro .. "\n/use [combat] 13"
+  end
+  if GSMasterOptions.use14 then
+    postmacro = postmacro .. "\n/use [combat] 14"
+  end
+  if GSMasterOptions.use2 then
+    postmacro = postmacro .. "\n/use [combat] 2"
+  end
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)
-    postmacro = "/console Sound_EnableErrorSpeech 1\n" .. postmacro
+    postmacro = postmacro .. "\n/console Sound_EnableErrorSpeech 1"
   end
   if GSMasterOptions.hideUIErrors then
-    postmacro = "/script UIErrorsFrame:Hide();\n" .. postmacro
+    postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
     -- potentially change this to UIErrorsFrame:Hide()
   end
   if GSMasterOptions.clearUIErrors then
     -- potentially change this to UIErrorsFrame:Clear()
-    postmacro = "/run UIErrorsFrame:Clear()\n" .. postmacro
-  end
-  if GSMasterOptions.requireTarget then
-    -- see #20 prevent target hopping
-    postmacro = "/stopmacro [@playertarget, noexists]\n" .. postmacro
-  end
-  if GSMasterOptions.use11 then
-    postmacro = "/use [combat] 11\n" .. postmacro
-  end
-  if GSMasterOptions.use12 then
-    postmacro = "/use [combat] 12\n" .. postmacro
-  end
-  if GSMasterOptions.use13 then
-    postmacro = "/use [combat] 13\n" .. postmacro
-  end
-  if GSMasterOptions.use14 then
-    postmacro = "/use [combat] 14\n" .. postmacro
-  end
-  if GSMasterOptions.use2 then
-    postmacro = "/use [combat] 2\n" .. postmacro
+    postmacro = postmacro .. "\n/run UIErrorsFrame:Clear()"
   end
   return GSTRUnEscapeString(postmacro)
 end
