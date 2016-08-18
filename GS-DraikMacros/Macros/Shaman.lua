@@ -160,11 +160,10 @@ helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
-"/castsequence [nochanneling,target=mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
-"/castsequence [nochanneling,target=mouseover,help]Healing Surge",
+"/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
+"/castsequence [nochanneling,@mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
+"/castsequence [nochanneling,@mouseover,help]Healing Surge",
 PostMacro=[[
-/startattack
 ]],
 }
 
@@ -175,11 +174,10 @@ helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
-"/castsequence [nochanneling,target=mouseover,help]Healing Wave, Healing Wave, Healing Wave, Healing Wave",
-"/castsequence [nochanneling,target=mouseover,help]Healing Wave",
+"/castsequence [nochanneling,@mouseover,help]reset=5 !Riptide",
+"/castsequence [nochanneling,@mouseover,help]Healing Wave, Healing Wave, Healing Wave, Healing Wave",
+"/castsequence [nochanneling,@mouseover,help]Healing Wave",
 PostMacro=[[
-/startattack
 ]],
 }
 
@@ -190,10 +188,9 @@ helpTxt = 'Talents: 3313313',
 PreMacro=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
-"/castsequence [nopet,nodead][nochanneling,target=mouseover,help]reset=5 !Riptide",
-"/castsequence [nochanneling,target=mouseover,help]Chain Heal, Chain Heal, Chain Heal, Chain Heal",
-"/castsequence [nochanneling,target=mouseover,help]Healing Surge",
+"/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
+"/castsequence [nochanneling,@mouseover,help]Chain Heal, Chain Heal, Chain Heal, Chain Heal",
+"/castsequence [nochanneling,@mouseover,help]Healing Surge",
 PostMacro=[[
-/startattack
 ]],
 }
