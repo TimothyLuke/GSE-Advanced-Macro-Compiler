@@ -209,7 +209,7 @@ f:SetScript('OnEvent', function(self, event)
           for n,ver in pairs(v) do
             if  GSIsEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
               GSMasterOptions.ActiveSequenceVersions[n] = ver
-            elseif ver > (GSIsEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
+            elseif ver > GSMasterOptions.ActiveSequenceVersions[n] then
               GSMasterOptions.ActiveSequenceVersions[n] = ver
             end
           end

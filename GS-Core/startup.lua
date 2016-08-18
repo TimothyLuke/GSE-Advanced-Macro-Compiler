@@ -180,7 +180,7 @@ end
 
 function GSGetKnownSequenceVersions(SequenceName)
   local t = {}
-  for k,_ in pairs(GSMasterOptions.SequenceLibrary[sequenceName])
+  for k,_ in pairs(GSMasterOptions.SequenceLibrary[sequenceName]) do
     GSMasterOptions.SequenceLibrary[sequenceName]
     t[k] = k
   end
