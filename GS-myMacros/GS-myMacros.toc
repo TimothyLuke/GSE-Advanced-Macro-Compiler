@@ -6,6 +6,7 @@
 ## RequiredDeps: GS-Core
 ## LoadOnDemand: 1
 
+languageErrata.lua
 Macros\DeathKnight.lua
 Macros\Druid.lua
 Macros\DemonHunter.lua
