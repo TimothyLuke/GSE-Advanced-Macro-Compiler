@@ -55,15 +55,15 @@ GSStaticCleanStrings = {
 GSStaticStringRESET = "|r"
 
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
+GSAddInPacks = {}
+
 GSMasterOptions = {}
-GSMasterOptions.AddInPacks = {}
 GSMasterOptions.cleanTempMacro = true
 GSMasterOptions.hideSoundErrors = false
 GSMasterOptions.hideUIErrors = false
 GSMasterOptions.clearUIErrors = false
 GSMasterOptions.seedInitialMacro = false
 GSMasterOptions.initialised = true
-GSMasterOptions.AddInPacks = {}
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
 GSMasterOptions.debugSequence = true
@@ -163,24 +163,31 @@ function GSLoadWeakauras(str)
 end
 
 function GSGetActiveSequenceVersion(SequenceName)
-  return GSMasterOptions.ActiveSequenceVersions[SequenceName]
+  local vers = 1
+  if not GSisEmpty() then
+    vers = GSMasterOptions.ActiveSequenceVersions[SequenceName]
+  end
+  return vers
 end
 
 function GSGetNextSequenceVersion(SequenceName)
-  local nextv = 0
-  for k,_ in pairs(SequenceLibrary[SequenceName]) do
-    if k>nextv then
-      nextv = k
+  local nextv = 1
+  GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
+  if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
+    for k,_ in ipairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
+      if k>nextv then
+        nextv = k
+      end
+      k = k + 1
     end
-    k = k + 1
   end
-  return k
+  return nextv
 end
 
 
 function GSGetKnownSequenceVersions(SequenceName)
   local t = {}
-  for k,_ in pairs(GSMasterOptions.SequenceLibrary[sequenceName]) do
+  for k,_ in ipairs(GSMasterOptions.SequenceLibrary[sequenceName]) do
     t[k] = k
   end
   return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]
@@ -241,7 +248,7 @@ for i=1,GetNumAddOns() do
 					LoadAddOn(i);
           GSImportLegacyMacroCollections()
         end
-				GSMasterOptions.AddInPacks[name] = true
+				GSAddInPacks[name] = true
     end
 
 end

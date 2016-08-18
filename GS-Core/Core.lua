@@ -6,12 +6,11 @@ local ModifiedSequences = {} -- [sequenceName] = true if we've already modified 
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
-local Sequences = GSMasterOptions.SequenceLibrary
 
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
-  local sequence, foundSpell, notSpell = Sequences[button][GSGetActiveSequenceVersion(button)][step], false, ''
+  local sequence, foundSpell, notSpell = GSMasterOptions.SequenceLibrary[button][GSGetActiveSequenceVersion(button)][step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if GSStaticCastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
@@ -128,7 +127,9 @@ function GSReloadSequences()
   GSPrintDebugMessage(L["Reloading Sequences"])
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
     GSPrintDebugMessage(name .. " " .. version )
-    GSUpdateSequence(name, Sequences[name][GSGetActiveSequenceVersion(name)])
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[name]) then
+      GSUpdateSequence(name, GSMasterOptions.SequenceLibrary[name][GSGetActiveSequenceVersion(name)])
+    end
   end
 end
 
@@ -158,22 +159,26 @@ local function cleanOrphanSequences()
   end
 end
 
+
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event)
   if (event == 'UPDATE_MACROS' or event == 'PLAYER_LOGIN') and not IgnoreMacroUpdates then
     if not InCombatLockdown() then
       IgnoreMacroUpdates = true
-      for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
-        local macroIndex = GetMacroIndexByName(name)
-        if macroIndex and macroIndex ~= 0 then
-          if not ModifiedSequences[name] then
-            ModifiedSequences[name] = true
-            EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+      if not GSisEmpty(GSMasterOptions.SequenceLibrary[2]) then
+        for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
+          local macroIndex = GetMacroIndexByName(name)
+          if macroIndex and macroIndex ~= 0 then
+            if not ModifiedSequences[name] then
+              ModifiedSequences[name] = true
+              EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+            end
+            print (name)
+            _G[name]:UpdateIcon()
+          elseif ModifiedSequences[name] then
+            ModifiedSequences[name] = nil
           end
-          _G[name]:UpdateIcon()
-        elseif ModifiedSequences[name] then
-          ModifiedSequences[name] = nil
         end
       end
       IgnoreMacroUpdates = false
@@ -196,14 +201,11 @@ f:SetScript('OnEvent', function(self, event)
   elseif event == 'ADDON_LOADED' then
     if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
-      local addins = GSMasterOptions.AddInPacks
       for k,v in pairs(GnomeOptions) do
         if k == "SequenceLibrary" then
           -- Merge Sequence Library
           if not GSisEmpty(v) then
             for sname,sverion in ipairs(v) do
-              print (sname )
-              print ( sversion)
               for sver, sequence in pairs(sversion) do
                 GSAddSequenceToCollection(same, sequence, sver)
               end
@@ -222,11 +224,15 @@ f:SetScript('OnEvent', function(self, event)
           GSMasterOptions[k] = v
         end
       end
-      GSMasterOptions.AddInPacks = addins
+      for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) then
+        if GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
+          GSMasterOptions.ActiveSequenceVersions[k] = nil
+        end
+      end
     end
     if IsAddOnLoaded(GNOME) then
       GSPrintDebugMessage(L["I am loaded"])
-        GSReloadSequences()
+      GSReloadSequences()
     end
   end
 end)
@@ -244,7 +250,7 @@ function GSExportSequence(sequenceName)
   if GSisEmpty(GSMasterOptions.ActiveSequenceVersions[sequenceName]) then
     return GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. L[" Sequence named "] .. sequenceName .. L[" is unknown."]
   else
-    return GSExportSequencebySeq(Sequences[sequenceName][GSGetActiveSequenceVersion(sequenceName)], sequenceName)
+    return GSExportSequencebySeq(GSMasterOptions.SequenceLibrary[sequenceName][GSGetActiveSequenceVersion(sequenceName)], sequenceName)
   end
 end
 
@@ -306,7 +312,7 @@ local function ListSequences(txt)
   local currentSpec = GetSpecialization()
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
-  for name, sequence in pairs(Sequences) do
+  for name, sequence in pairs(GSMasterOptions.SequenceLibrary) do
     if not GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].specID) then
       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence[GSGetActiveSequenceVersion(name)].specID)
       GSPrintDebugMessage(L["Sequence Name: "] .. name)
@@ -346,14 +352,14 @@ function GSUpdateSequence(name,sequence)
       sequence = GSTranslateSequence(sequence)
     end
     if GSisEmpty(_G[name]) then
-        createButton(name, sequence)
+      createButton(name, sequence)
     else
-        button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSTRUnEscapeSequence(sequence))) .. ']=======])')
-        button:SetAttribute("step",1)
-        button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
-        GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
-        button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
-        GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
+      button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSTRUnEscapeSequence(sequence))) .. ']=======])')
+      button:SetAttribute("step",1)
+      button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
+      GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
+      button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
+      GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
     end
     if name == "LiveTest" then
      local sequenceIndex = GetMacroIndexByName("LiveTest")

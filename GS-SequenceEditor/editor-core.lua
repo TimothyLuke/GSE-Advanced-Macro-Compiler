@@ -227,9 +227,10 @@ end
 function GSSE:loadSequence(SequenceName)
   GSPrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
   if GSAdditionalLanguagesAvailable and GSMasterOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)], (GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)].lang), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], (GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang), GetLocale()), SequenceName))
   elseif GSTranslatorAvailable then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(currentSequence)], GetLocale(), GetLocale()), SequenceName))
+    print (SequenceName)
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], GetLocale(), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end
@@ -262,7 +263,10 @@ function GSSE:updateSequence(SequenceName)
   GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
   frame:Hide()
   local nextseqval = GSGetNextSequenceVersion("LiveTest")
-  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][[GSGetActiveSequenceVersion(SequenceName)]]
+  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"]) then
+    GSMasterOptions.SequenceLibrary["LiveTest"] = {}
+  end
+  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
   GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].author = GetUnitName("player", true) .. '@' .. GetRealmName()
   reticon = GSSE:getMacroIcon(SequenceName)
   -- if string prefix with "Interface\\Icons\\" if number make it a number
