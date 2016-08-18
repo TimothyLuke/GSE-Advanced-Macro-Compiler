@@ -127,7 +127,8 @@ end
 function GSReloadSequences()
   GSPrintDebugMessage(L["Reloading Sequences"])
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
-    GSUpdateSequence(name, Sequences[name][GSGetActiveSequenceVersion(Name)])
+    GSPrintDebugMessage(name .. " " .. version )
+    GSUpdateSequence(name, Sequences[name][GSGetActiveSequenceVersion(name)])
   end
 end
 
@@ -199,15 +200,19 @@ f:SetScript('OnEvent', function(self, event)
       for k,v in pairs(GnomeOptions) do
         if k == "SequenceLibrary" then
           -- Merge Sequence Library
-          for sname,sverion in pairs(v) do
-            for sver, sequence in pairs(sversion) do
-              GSAddSequenceToCollection(same, sequence, sver)
+          if not GSisEmpty(v) then
+            for sname,sverion in ipairs(v) do
+              print (sname )
+              print ( sversion)
+              for sver, sequence in pairs(sversion) do
+                GSAddSequenceToCollection(same, sequence, sver)
+              end
             end
           end
         elseif k == "ActiveSequenceVersions" then
           -- Merge Active Sequences History if locally set version is greater than the loaded in
           for n,ver in pairs(v) do
-            if  GSIsEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
+            if  GSisEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
               GSMasterOptions.ActiveSequenceVersions[n] = ver
             elseif ver > GSMasterOptions.ActiveSequenceVersions[n] then
               GSMasterOptions.ActiveSequenceVersions[n] = ver
