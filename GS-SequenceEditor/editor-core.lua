@@ -3,6 +3,23 @@ GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0"
 local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local currentSequence = ""
+local importStr = ""
+
+StaticPopupDialogs["GS-Import"] = {
+  text = L["Import Macro from Forums"],
+  button1 = L["Import"],
+  button2 = L["Close"],
+  OnAccept = function(self, data)
+      importStr = data
+  end,
+	timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  hasEditBox = true,
+  hasWideEditBox = true,
+
+}
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -41,6 +58,13 @@ function GSSE:drawstandardwindow(container)
   updbutton:SetWidth(200)
   updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
   container:AddChild(updbutton)
+
+  local impbutton = AceGUI:Create("Button")
+  impbutton:SetText(L["Import"])
+  impbutton:SetWidth(200)
+  impbutton:SetCallback("OnClick", function() GSSE:importSequence() end)
+  container:AddChild(impbutton)
+
   sequenceboxtext = sequencebox
 end
 
@@ -216,7 +240,13 @@ editframe:AddChild(postmacrobox)
 GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 -- Functions
+function GSSE:importSequence()
+  StaticPopup_Show ("GS-Import")
+  local Sequences = {}
+  assert(loadstring(importStr))
+  
 
+end
 
 
 function GSSE:loadTranslatedSequence(key)
@@ -275,7 +305,7 @@ function GSSE:updateSequence(SequenceName)
     reticon = "Interface\\Icons\\" .. reticon
   end
   GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
-  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].icon = reticon
+  GSMasterOptiondds.SequenceLibrary["LiveTest"][nextseqval].icon = reticon
   GSUpdateSequence("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval])
   GSSE:loadSequence("LiveTest")
 
@@ -300,7 +330,7 @@ function GSSE:updateSequence(SequenceName)
   iconpicker:SetImage(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].icon)
   editframe:Show()
   GSMasterOptions.ActiveSequenceVersions["LiveTest"] = nextseqval
-  GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].version = nextseqval
+  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].version = nextseqval
 end
 
 function GSSE:eupdateSequence(SequenceName, loaded)
