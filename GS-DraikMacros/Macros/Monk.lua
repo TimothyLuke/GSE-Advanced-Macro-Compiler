@@ -52,3 +52,40 @@ PostMacro = [[
 /cast [combat] Touch of Death
 ]],
 }
+
+
+Sequences['DB_BrewMaster_ST'] = {
+specID = 268,
+author = "TimothyLuke",
+helpTxt = "Talent are 1122312",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+"/cast Keg Smash",
+"/cast Breath of Fire",
+"/cast Blackout Strike",
+"/cast Rushing Jade Wind",
+"/cast Tiger Palm",
+"/cast Blackout Strike",
+"/cast Blackout Combo",
+PostMacro = [[
+]],
+}
+
+Sequences['DB_BrewMaster_AoE'] = {
+specID = 268,
+author = "TimothyLuke",
+helpTxt = "Talent are 1122312",
+PreMacro = [[
+/targetenemy [noharm][dead]
+]],
+"/cast Keg Smash",
+"/cast Breath of Fire",
+"/cast Blackout Strike",
+"/cast Chi Burst",
+"/cast Rushing Jade Wind",
+"/cast Tiger Palm",
+"/cast Blackout Strike",
+PostMacro = [[
+]],
+}
