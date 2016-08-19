@@ -242,9 +242,22 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 -- Functions
 function GSSE:importSequence()
   StaticPopup_Show ("GS-Import")
-  local Sequences = {}
-  assert(loadstring(importStr))
-  
+  local functiondefinition =  importStr .. "\n  return Sequences "
+  local fake_globals = setmetatable({
+    Sequences = {},
+    }, {__index = _G})
+  local func, err = loadstring (functiondefinition, "GS-SequenceEditor")
+  if func then
+    -- Make the compiled function see this table as its "globals"
+    setfenv (func, fake_globals)
+
+    local TempSequences = assert(func())
+    for k,v in TempSequences do
+      GSAddSequenceToCollection(k, v, v.version)
+    end
+  else
+    GSPrintDebugMessage (err, GNOME)
+  end
 
 end
 

@@ -127,7 +127,6 @@ function GSReloadSequences()
   GSPrintDebugMessage(L["Reloading Sequences"])
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
     GSPrintDebugMessage(name .. " " .. version )
-    print(name .. " " .. version )
     if not GSisEmpty(GSMasterOptions.SequenceLibrary[name]) then
       GSPrintDebugMessage(GSGetActiveSequenceVersion(name))
       GSUpdateSequence(name, GSMasterOptions.SequenceLibrary[name][GSGetActiveSequenceVersion(name)])
@@ -176,7 +175,6 @@ f:SetScript('OnEvent', function(self, event)
               ModifiedSequences[name] = true
               EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
             end
-            print (name)
             _G[name]:UpdateIcon()
           elseif ModifiedSequences[name] then
             ModifiedSequences[name] = nil
