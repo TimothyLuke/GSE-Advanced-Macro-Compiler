@@ -173,15 +173,15 @@ end
 function GSGetNextSequenceVersion(SequenceName)
   local nextv = 1
   GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
+  print("GSGetNextSequenceVersion " .. SequenceName)
   if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
     for k,_ in ipairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
-      if k>nextv then
-        nextv = k
-      end
-      k = k + 1
+    nextv = k
     end
   end
+  nextv = nextv + 1
   return nextv
+
 end
 
 
@@ -208,7 +208,8 @@ function GSChooseActiveSequenceVersion(sequenceName, version)
 end
 
 function GSAddSequenceToCollection(sequenceName, sequence, version)
-
+  -- print (sequenceName)
+  -- print(version)
 
   if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
     -- Sequence is new
@@ -216,6 +217,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
   end
   if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
     -- This version is new
+    -- print(sequenceName .. " " .. version)
     GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
   end
   -- evaluate version

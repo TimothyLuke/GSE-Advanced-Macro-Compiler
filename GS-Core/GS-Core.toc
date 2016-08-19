@@ -23,8 +23,5 @@ langs\enUSSHADOW.lua
 startup.lua
 errorhandler.lua
 
-# Add in any contributed sequences to Sequences.lua
-Sequences.lua
-
 # Core Programming
 Core.lua

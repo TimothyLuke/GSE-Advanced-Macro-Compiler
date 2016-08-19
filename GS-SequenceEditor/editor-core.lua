@@ -277,7 +277,6 @@ function GSSE:loadSequence(SequenceName)
   if GSAdditionalLanguagesAvailable and GSMasterOptions.useTranslator then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], (GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang), GetLocale()), SequenceName))
   elseif GSTranslatorAvailable then
-    print (SequenceName)
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], GetLocale(), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
@@ -310,12 +309,12 @@ function GSSE:updateSequence(SequenceName)
   end
   GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
   frame:Hide()
-  local nextseqval = GSGetNextSequenceVersion("LiveTest")
-  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"]) then
-    GSMasterOptions.SequenceLibrary["LiveTest"] = {}
+  local nextseqval = GSGetActiveSequenceVersion(SequenceName)
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
+    GSMasterOptions.SequenceLibrary[SequenceName] = {}
   end
-  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
-  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].author = GetUnitName("player", true) .. '@' .. GetRealmName()
+  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
+  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].author = GetUnitName("player", true) .. '@' .. GetRealmName()
   reticon = GSSE:getMacroIcon(SequenceName)
   -- if string prefix with "Interface\\Icons\\" if number make it a number
   if not tonumber(reticon) then
@@ -323,57 +322,55 @@ function GSSE:updateSequence(SequenceName)
     reticon = "Interface\\Icons\\" .. reticon
   end
   GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
-  GSMasterOptiondds.SequenceLibrary["LiveTest"][nextseqval].icon = reticon
-  GSUpdateSequence("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval])
-  GSSE:loadSequence("LiveTest")
 
-   -- show editor
-  nameeditbox:SetText("LiveTest")
-  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].StepFunction) then
+  -- show editor
+  nameeditbox:SetText(SequenceName)
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].StepFunction) then
    stepdropdown:SetValue("1")
   else
    stepdropdown:SetValue("2")
   end
-  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PreMacro) then
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PreMacro) then
     GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
   else
-   premacrobox:SetText(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PreMacro)
+   premacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PreMacro)
   end
-  if GSisEmpty(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PostMacro) then
+  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PostMacro) then
     GSPrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
   else
-   postmacrobox:SetText(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].PostMacro)
+   postmacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PostMacro)
   end
-  spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval],"\n"))
-  iconpicker:SetImage(GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].icon)
+  spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval],"\n"))
+  iconpicker:SetImage(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].icon)
   editframe:Show()
-  GSMasterOptions.ActiveSequenceVersions["LiveTest"] = nextseqval
-  GSMasterOptions.SequenceLibrary["LiveTest"][nextseqval].version = nextseqval
+  GSMasterOptions.ActiveSequenceVersions[SequenceName] = nextseqval
+  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].version = nextseqval
 end
 
 function GSSE:eupdateSequence(SequenceName, loaded)
     --process Lines
     if loaded then
-      for i, v in ipairs(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)]) do GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)][i] = nil end
-      GSSE:lines(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)], spellbox:GetText())
+      nextVal = GSGetNextSequenceVersion(currentSequence)
+      local sequence = {}
+      GSSE:lines(sequence, spellbox:GetText())
       -- update sequence
       if stepvalue == "2" then
-        GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].StepFunction = GSStaticPriority
+        sequence.StepFunction = GSStaticPriority
       else
-        GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].StepFunction = nil
+        sequence.StepFunction = nil
       end
-      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].PreMacro = premacrobox:GetText()
-      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].specID = GSSE:getSpecID()
-      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].helpTxt = "Talents: " .. GSSE:getCurrentTalents()
-      if not tonumber(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon) then
-        GSPrintDebugMessage(L["String Icon "] .. GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon .. " Checking for Interface\\Icons\\   strsub value: " .. strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon,1 , 9), GNOME)
-        if strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon,1 , 9) == "Interface" then
-          GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon = strsub(GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].icon, 17)
-        end
+      sequence.PreMacro = premacrobox:GetText()
+      sequence.specID = GSSE:getSpecID()
+      sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+      if not tonumber(sequence.icon) then
+        sequence.icon = "INV_MISC_QUESTIONMARK"
       end
-      GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)].PostMacro = postmacrobox:GetText()
-      GSUpdateSequence("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][GSGetActiveSequenceVersion(currentSequence)])
-      GSSE:loadSequence("LiveTest")
+      sequence.PostMacro = postmacrobox:GetText()
+      sequence.version = nextVal
+      print(nextVal)
+      GSTRUnEscapeSequence(sequence)
+      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+      GSSE:loadSequence(SequenceName)
       editframe:Hide()
       frame:Show()
     else
