@@ -53,17 +53,23 @@ function GSSE:drawstandardwindow(container)
   sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(1, string.len(sequencebox:GetText())) end)
   container:AddChild(sequencebox)
 
+  local buttonGroup = AceGUI:Create("SimpleGroup")
+  headerGroup:SetFullWidth(true)
+  headerGroup:SetLayout("Flow")
+
   local updbutton = AceGUI:Create("Button")
   updbutton:SetText(L["Create / Edit"])
   updbutton:SetWidth(200)
   updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
-  container:AddChild(updbutton)
+  buttonGroup:AddChild(updbutton)
 
   local impbutton = AceGUI:Create("Button")
   impbutton:SetText(L["Import"])
   impbutton:SetWidth(200)
   impbutton:SetCallback("OnClick", function() GSSE:importSequence() end)
-  container:AddChild(impbutton)
+  buttonGroup.AddChild(impbutton)
+
+  container:AddChild(buttonGroup)
 
   sequenceboxtext = sequencebox
 end
