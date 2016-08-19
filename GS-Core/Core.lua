@@ -171,7 +171,7 @@ end
 
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
-f:SetScript('OnEvent', function(self, event)
+f:SetScript('OnEvent', function(self, event, addon)
   if (event == 'UPDATE_MACROS' or event == 'PLAYER_LOGIN') and not IgnoreMacroUpdates then
     if not InCombatLockdown() then
       IgnoreMacroUpdates = true
@@ -206,7 +206,7 @@ f:SetScript('OnEvent', function(self, event)
     if GSMasterOptions.deleteOrphansOnLogout then
       cleanOrphanSequences()
     end
-  elseif event == 'ADDON_LOADED' then
+  elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
     if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
       for k,v in pairs(GnomeOptions) do
@@ -238,10 +238,8 @@ f:SetScript('OnEvent', function(self, event)
         end
       end
     end
-    if IsAddOnLoaded(GNOME) then
-      GSPrintDebugMessage(L["I am loaded"])
-      GSReloadSequences()
-    end
+    GSPrintDebugMessage(L["I am loaded"])
+    GSReloadSequences()
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
