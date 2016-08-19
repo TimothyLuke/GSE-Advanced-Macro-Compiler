@@ -158,6 +158,14 @@ local function cleanOrphanSequences()
       end
     end
   end
+  -- clean out the sequences database except for the current version
+  local tempTable = {}
+  for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
+    tempTable[name] = {}
+    temptable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+  end
+  GSMasterOptions.SequenceLibrary = nil
+  GSMasterOptions.SequenceLibrary = tempTable
 end
 
 
