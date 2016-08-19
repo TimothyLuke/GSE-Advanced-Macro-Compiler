@@ -256,7 +256,7 @@ function GSSE:importSequence()
         GSAddSequenceToCollection(k, v, tver)
         newkey = k
       end
-      local names = GSSE:getSequenceNames()
+      names = GSSE:getSequenceNames()
       listbox:SetList(names)
       listbox:SetValue(newkey)
     end
