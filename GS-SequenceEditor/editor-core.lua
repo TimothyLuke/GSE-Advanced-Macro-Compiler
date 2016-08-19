@@ -5,21 +5,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local currentSequence = ""
 local importStr = ""
 
-StaticPopupDialogs["GS-Import"] = {
-  text = L["Import Macro from Forums"],
-  button1 = L["Import"],
-  button2 = L["Close"],
-  OnAccept = function(self, data)
-      importStr = data
-  end,
-	timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-  hasEditBox = true,
-  hasWideEditBox = true,
-
-}
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -54,8 +39,8 @@ function GSSE:drawstandardwindow(container)
   container:AddChild(sequencebox)
 
   local buttonGroup = AceGUI:Create("SimpleGroup")
-  headerGroup:SetFullWidth(true)
-  headerGroup:SetLayout("Flow")
+  buttonGroup:SetFullWidth(true)
+  buttonGroup:SetLayout("Flow")
 
   local updbutton = AceGUI:Create("Button")
   updbutton:SetText(L["Create / Edit"])
@@ -66,8 +51,8 @@ function GSSE:drawstandardwindow(container)
   local impbutton = AceGUI:Create("Button")
   impbutton:SetText(L["Import"])
   impbutton:SetWidth(200)
-  impbutton:SetCallback("OnClick", function() GSSE:importSequence() end)
-  buttonGroup.AddChild(impbutton)
+  impbutton:SetCallback("OnClick", function() importStr = sequenceboxtext:GetText(); GSSE:importSequence() end)
+  buttonGroup:AddChild(impbutton)
 
   container:AddChild(buttonGroup)
 
@@ -247,8 +232,11 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 -- Functions
 function GSSE:importSequence()
-  StaticPopup_Show ("GS-Import")
-  local functiondefinition =  importStr .. "\n  return Sequences "
+  local functiondefinition =  importStr .. [===[
+
+  return Sequences
+  ]===]
+  GSPrintDebugMessage (functiondefinition, "GS-SequenceEditor")
   local fake_globals = setmetatable({
     Sequences = {},
     }, {__index = _G})
@@ -258,8 +246,19 @@ function GSSE:importSequence()
     setfenv (func, fake_globals)
 
     local TempSequences = assert(func())
-    for k,v in TempSequences do
-      GSAddSequenceToCollection(k, v, v.version)
+    if not GSisEmpty(TempSequences) then
+      local newkey = ""
+      for k,v in pairs(TempSequences) do
+        local tver = v.version
+        if GSisEmpty(tver) then
+          tver = 1
+        end
+        GSAddSequenceToCollection(k, v, tver)
+        newkey = k
+      end
+      local names = GSSE:getSequenceNames()
+      listbox:SetList(names)
+      listbox:SetValue(newkey)
     end
   else
     GSPrintDebugMessage (err, GNOME)
