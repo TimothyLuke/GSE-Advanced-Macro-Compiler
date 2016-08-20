@@ -128,8 +128,14 @@ function GSReloadSequences()
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
     GSPrintDebugMessage(name .. " " .. version )
     if not GSisEmpty(GSMasterOptions.SequenceLibrary[name]) then
-      GSPrintDebugMessage(GSGetActiveSequenceVersion(name))
-      GSUpdateSequence(name, GSMasterOptions.SequenceLibrary[name][GSGetActiveSequenceVersion(name)])
+      vers = GSGetActiveSequenceVersion(name)
+      GSPrintDebugMessage(vers)
+      if not GSisEmpty(GSMasterOptions.SequenceLibrary[name][vers]) then
+        GSUpdateSequence(name, GSMasterOptions.SequenceLibrary[name][vers])
+      else
+        GSMasterOptions.ActiveSequenceVersions[name] = nil
+        GSPrintDebugMessage(L["Removing "] .. name .. L[" From library"])
+      end
     end
   end
 end
@@ -162,7 +168,7 @@ local function cleanOrphanSequences()
   local tempTable = {}
   for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
     tempTable[name] = {}
-    temptable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+    tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
   end
   GSMasterOptions.SequenceLibrary = nil
   GSMasterOptions.SequenceLibrary = tempTable

@@ -249,11 +249,11 @@ function GSSE:importSequence()
     if not GSisEmpty(TempSequences) then
       local newkey = ""
       for k,v in pairs(TempSequences) do
-        local tver = v.version
-        if GSisEmpty(tver) then
-          tver = 1
+
+        if GSisEmpty(v.version) then
+          v.version = GSGetNextSequenceVersion(k)
         end
-        GSAddSequenceToCollection(k, v, tver)
+        GSAddSequenceToCollection(k, v, v.version)
         newkey = k
       end
       names = GSSE:getSequenceNames()

@@ -22,6 +22,8 @@ L[" equals currentclassid "] = true
 L["GSUpdateSequence PreMacro updated to: "] = true
 L["GSUpdateSequence PostMacro updated to: "] = true
 L["Adding missing Language :"] =  true
+L["Removing "] = true
+L[" From library"] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true
