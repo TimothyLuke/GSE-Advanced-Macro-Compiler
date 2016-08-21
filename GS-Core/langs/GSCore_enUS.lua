@@ -45,6 +45,7 @@ L["Contributed by: "] = true
 L["No Help Information "] = true
 L["Unknown Author|r "] = true
 L["|r Incomplete Sequence Definition - This sequence has no further information "] = true
+L["Two sequences with unknown sources found."] = true
 
 -- Setup and Help Output from Core
 L[":|r GnomeSequencer was originally written by semlar of wowinterface.com."] = true
@@ -64,8 +65,8 @@ L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
 L["/gs help|r to get started."] = true
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
-L["|rA sequence collision has occured.  Your local version of "] = true
+L["|rA sequence colision has occured.  Your local version of "] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
-L["|rA sequence collision has occured. "] = true
+L["|rA sequence colision has occured. "] = true
 L[" tried to overwrite the version already loaded from "] = true
 L[". This version was not loaded."] = true

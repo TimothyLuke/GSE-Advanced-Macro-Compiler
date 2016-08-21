@@ -230,7 +230,11 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
         print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."])
         GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
       else
-        print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."])
+        if GSisEmpty(sequence.source) then
+          print(GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName)
+        else
+          print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."])
+        end
       end
     end
   else
@@ -246,7 +250,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
       end
       -- evaluate version
       if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
-        GSChooseActiveSequenceVersion(sequenceName, version)
+        GSSetActiveSequenceVersion(sequenceName, version)
       end
 
       GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
