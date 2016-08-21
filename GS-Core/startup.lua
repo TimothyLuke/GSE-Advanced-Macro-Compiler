@@ -188,11 +188,13 @@ end
 
 
 function GSGetKnownSequenceVersions(SequenceName)
-  local t = {}
-  for k,_ in ipairs(GSMasterOptions.SequenceLibrary[sequenceName]) do
-    t[k] = k
+  if not GSisEmpty(SequenceName) then
+    local t = {}
+    for k,_ in pairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
+      t[k] = k
+    end
+    return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]
   end
-  return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]
 end
 
 
@@ -205,7 +207,7 @@ function GSDeleteSequenceVersion(sequenceName, version)
 end
 
 -- This will need more logic for the moment iuf they are not equal set somethng.
-function GSChooseActiveSequenceVersion(sequenceName, version)
+function GSSetActiveSequenceVersion(sequenceName, version)
   GSMasterOptions.ActiveSequenceVersions[sequenceName] = version
 end
 

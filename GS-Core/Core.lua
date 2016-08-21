@@ -296,7 +296,8 @@ end
 function GSExportSequencebySeq(sequence, sequenceName)
   GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
   local helptext = "helpTxt = \"" .. GSMasterOptions.INDENT .. (GSisEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. GSStaticStringRESET .. "\",\n"
-  local specversion = "Version=" .. GSMasterOptions.NUMBER  ..(GSisEmpty(sequence.version) and "1" or sequence.version ) .. GSStaticStringRESET ..",\n"
+  local specversion = "version=" .. GSMasterOptions.NUMBER  ..(GSisEmpty(sequence.version) and "1" or sequence.version ) .. GSStaticStringRESET ..",\n"
+  local source = "source = \"" .. GSMasterOptions.INDENT .. (GSisEmpty(sequence.source) and "Unknown Source" or sequence.source) .. GSStaticStringRESET .. "\",\n"
   local steps = ""
   if not GSisEmpty(sequence.StepFunction) then
     if  sequence.StepFunction == GSStaticPriority then
@@ -306,7 +307,7 @@ function GSExportSequencebySeq(sequence, sequenceName)
     end
   end
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
-  local returnVal = ("Sequences['" .. GSMasterOptions.EmphasisColour .. sequenceName .. GSStaticStringRESET .. "'] = {\nauthor=\"" .. GSMasterOptions.AuthorColour .. (GSisEmpty(sequence.author) and "Unknown Author" or sequence.author) .. GSStaticStringRESET .. "\",\n" .. (GSisEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID=" .. GSMasterOptions.NUMBER  .. sequence.specID .. GSStaticStringRESET ..",\n") .. specversion .. helptext .. steps )
+  local returnVal = ("Sequences['" .. GSMasterOptions.EmphasisColour .. sequenceName .. GSStaticStringRESET .. "'] = {\nauthor=\"" .. GSMasterOptions.AuthorColour .. (GSisEmpty(sequence.author) and "Unknown Author" or sequence.author) .. GSStaticStringRESET .. "\",\n" .. (GSisEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID=" .. GSMasterOptions.NUMBER  .. sequence.specID .. GSStaticStringRESET ..",\n") .. specversion .. source .. helptext .. steps )
   if not GSisEmpty(sequence.icon) then
      returnVal = returnVal .. "icon=" .. GSMasterOptions.CONCAT .. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") .. GSStaticStringRESET ..",\n"
   end

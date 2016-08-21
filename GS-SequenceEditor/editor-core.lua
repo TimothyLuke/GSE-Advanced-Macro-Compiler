@@ -4,7 +4,7 @@ local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local currentSequence = ""
 local importStr = ""
-
+local otherversionlistboxvalue = ""
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -45,7 +45,7 @@ function GSSE:drawstandardwindow(container)
   local updbutton = AceGUI:Create("Button")
   updbutton:SetText(L["Create / Edit"])
   updbutton:SetWidth(200)
-  updbutton:SetCallback("OnClick", function() GSSE:updateSequence(currentSequence) end)
+  updbutton:SetCallback("OnClick", function() GSSE:LoadEditor(currentSequence) end)
   buttonGroup:AddChild(updbutton)
 
   local impbutton = AceGUI:Create("Button")
@@ -53,6 +53,12 @@ function GSSE:drawstandardwindow(container)
   impbutton:SetWidth(200)
   impbutton:SetCallback("OnClick", function() importStr = sequenceboxtext:GetText(); GSSE:importSequence() end)
   buttonGroup:AddChild(impbutton)
+
+  local versbutton = AceGUI:Create("Button")
+  versbutton:SetText(L["Manage Versions"])
+  versbutton:SetWidth(200)
+  versbutton:SetCallback("OnClick", function() GSSE:ManageSequenceVersion() end)
+  buttonGroup:AddChild(versbutton)
 
   container:AddChild(buttonGroup)
 
@@ -144,7 +150,7 @@ firstheadercolumn:SetLayout("List")
 
 editframe:SetTitle(L["Sequence Editor"])
 editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor. Press the Close button to Save -->"])
-editframe:SetCallback("OnClose", function() GSSE:eupdateSequence(currentSequence, GSSequenceEditorLoaded) end)
+editframe:SetCallback("OnClose", function() GSSE:UpdateSequenceDefinition(currentSequence, GSSequenceEditorLoaded) end)
 editframe:SetLayout("List")
 
 local nameeditbox = AceGUI:Create("EditBox")
@@ -226,11 +232,86 @@ postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) 
 editframe:AddChild(postmacrobox)
 
 -------------end editor-----------------
+
+local versionframe = AceGUI:Create("Frame")
+local curentSequence
+versionframe:SetTitle(L["Manage Versions"])
+versionframe:SetStatusText(L["Gnome Sequencer: Sequence Version Manager"])
+versionframe:SetCallback("OnClose", function(widget)  versionframe:Hide(); frame:Show() end)
+versionframe:SetLayout("List")
+
+local columnGroup = AceGUI:Create("SimpleGroup")
+columnGroup:SetFullWidth(true)
+columnGroup:SetLayout("Flow")
+
+local leftGroup = AceGUI:Create("SimpleGroup")
+leftGroup:SetFullWidth(true)
+leftGroup:SetLayout("List")
+
+local rightGroup = AceGUI:Create("SimpleGroup")
+rightGroup:SetFullWidth(true)
+rightGroup:SetLayout("List")
+
+
+local activesequencebox = AceGUI:Create("MultiLineEditBox")
+activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
+activesequencebox:SetNumLines(11)
+activesequencebox:DisableButton(true)
+activesequencebox:SetFullWidth(true)
+leftGroup:AddChild(activesequencebox)
+
+local otherSequenceVersions = AceGUI:Create("MultiLineEditBox")
+otherSequenceVersions:SetLabel(L["Other Versions"])
+otherSequenceVersions:SetNumLines(11)
+otherSequenceVersions:DisableButton(true)
+otherSequenceVersions:SetFullWidth(true)
+rightGroup:AddChild(otherSequenceVersions)
+
+local otherversionlistbox = AceGUI:Create("Dropdown")
+otherversionlistbox:SetWidth(250)
+otherversionlistbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:ChangeOtherSequence(key) end)
+rightGroup:AddChild(otherversionlistbox)
+
+columnGroup:AddChild(leftGroup)
+columnGroup:AddChild(rightGroup)
+
+versionframe:AddChild(columnGroup)
+
+local othersequencebuttonGroup = AceGUI:Create("SimpleGroup")
+othersequencebuttonGroup:SetFullWidth(true)
+othersequencebuttonGroup:SetLayout("Flow")
+
+local actbutton = AceGUI:Create("Button")
+actbutton:SetText(L["Make Active"])
+actbutton:SetWidth(200)
+actbutton:SetCallback("OnClick", function() GSSE:SetActiveSequence(otherversionlistboxvalue) end)
+othersequencebuttonGroup:AddChild(actbutton)
+
+local delbutton = AceGUI:Create("Button")
+delbutton:SetText(L["Delete Version"])
+delbutton:SetWidth(200)
+delbutton:SetCallback("OnClick", function() GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)  end)
+othersequencebuttonGroup:AddChild(delbutton)
+
+
+
+versionframe:AddChild(othersequencebuttonGroup)
+
 -- Slash Commands
 
 GSSE:RegisterChatCommand("gsse", "GSSlash")
 
 -- Functions
+function GSSE:SetActiveSequence(key)
+  GSSetActiveSequenceVersion(currentSequence, key)
+  GSUpdateSequence(currentSequence, GSMasterOptions.SequenceLibrary[currentSequence][key])
+end
+
+function GSSE:ChangeOtherSequence(key)
+  otherversionlistboxvalue = key
+  otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSequence][key], (GSisEmpty(GSMasterOptions.SequenceLibrary[currentSequence][key].lang) and GetLocale() or GSMasterOptions.SequenceLibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
+end
+
 function GSSE:importSequence()
   local functiondefinition =  importStr .. [===[
 
@@ -267,6 +348,13 @@ function GSSE:importSequence()
 
 end
 
+function GSSE:ManageSequenceVersion()
+  frame:Hide()
+  versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
+  activesequencebox:SetText(sequenceboxtext:GetText())
+  otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
+  versionframe:Show()
+end
 
 function GSSE:loadTranslatedSequence(key)
   GSPrintDebugMessage(L["GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["], (GSisEmpty(GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["].lang) and GSMasterOptions.SequenceLibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
@@ -294,7 +382,7 @@ function GSSE:toggleClasses(buttonname)
   end
 end
 
-function GSSE:updateSequence(SequenceName)
+function GSSE:LoadEditor(SequenceName)
   if GSisEmpty(SequenceName) then
     local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
     SequenceName = "LiveTest"
@@ -348,7 +436,7 @@ function GSSE:updateSequence(SequenceName)
   GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].version = nextseqval
 end
 
-function GSSE:eupdateSequence(SequenceName, loaded)
+function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     --process Lines
     if loaded then
       nextVal = GSGetNextSequenceVersion(currentSequence)
@@ -392,8 +480,9 @@ function GSSE:GSSlash(input)
 end
 
 function GSSE:OnInitialize()
-    frame:Hide()
+    versionframe:Hide()
     editframe:Hide()
+    frame:Hide()
     print(GSMasterOptions.TitleColour .. GNOME .. L[":|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSMasterOptions.CommandColour .. L["/gsse |r to get started."])
 end
 
@@ -439,11 +528,6 @@ function GSSE:getMacroIcon(sequenceIndex)
   else
       return iconid
   end
-end
-
-
-function GSSE:closeEditor()
-
 end
 
 function GSSE:lines(tab, str)
