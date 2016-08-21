@@ -234,7 +234,6 @@ editframe:AddChild(postmacrobox)
 -------------end editor-----------------
 
 local versionframe = AceGUI:Create("Frame")
-local curentSequence
 versionframe:SetTitle(L["Manage Versions"])
 versionframe:SetStatusText(L["Gnome Sequencer: Sequence Version Manager"])
 versionframe:SetCallback("OnClose", function(widget)  versionframe:Hide(); frame:Show() end)
