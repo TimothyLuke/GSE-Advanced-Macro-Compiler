@@ -64,3 +64,8 @@ L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
 L["/gs help|r to get started."] = true
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
+L["|rA sequence collision has occured.  Your local version of "] = true
+L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
+L["|rA sequence collision has occured. "] = true
+L[" tried to overwrite the version already loaded from "] = true
+L[". This version was not loaded."] = true

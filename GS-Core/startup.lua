@@ -97,6 +97,8 @@ GSMasterOptions.RealtimeParse = true
 GSMasterOptions.SequenceLibrary = {}
 GSMasterOptions.ActiveSequenceVersions = {}
 
+GSStaticSourceLocal = "LOCAL"
+
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
@@ -210,31 +212,51 @@ end
 function GSAddSequenceToCollection(sequenceName, sequence, version)
   -- print (sequenceName)
   -- print(version)
-
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
-    -- Sequence is new
-    GSMasterOptions.SequenceLibrary[sequenceName] = {}
+  -- CHeck for colissions
+  local found = false
+  if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+      found = true
+    end
   end
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
-    -- This version is new
-    -- print(sequenceName .. " " .. version)
-    GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
+  if found then
+    -- check if source the same.  If so ignore
+    if sequence.source ~= GSMasterOptions.SequenceLibrary[sequenceName][version].source then
+      -- different source.  if local Ignore
+      if sequence.source == GSStaticSourceLocal then
+        -- local version - add as new version
+        print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."])
+        GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
+      else
+        print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."])
+      end
+    end
+  else
+    -- New Sequence
+      if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+        -- Sequence is new
+        GSMasterOptions.SequenceLibrary[sequenceName] = {}
+      end
+      if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+        -- This version is new
+        -- print(sequenceName .. " " .. version)
+        GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
+      end
+      -- evaluate version
+      if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
+        GSChooseActiveSequenceVersion(sequenceName, version)
+      end
+
+      GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
   end
-  -- evaluate version
-  if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
-    GSChooseActiveSequenceVersion(sequenceName, version)
-  end
-
-  GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
-
-
 end
 
-function GSImportLegacyMacroCollections()
+function GSImportLegacyMacroCollections(str)
   for k,v in pairs(GSMasterSequences) do
     if GSisEmpty(v.version) then
       v.version = 1
     end
+    v.source = str
     GSAddSequenceToCollection(k, v, v.version)
     GSMasterSequences[k] = nil
   end
@@ -248,7 +270,7 @@ for i=1,GetNumAddOns() do
         if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
           --print (name)
 					LoadAddOn(i);
-          GSImportLegacyMacroCollections()
+          GSImportLegacyMacroCollections(name)
         end
 				GSAddInPacks[name] = true
     end

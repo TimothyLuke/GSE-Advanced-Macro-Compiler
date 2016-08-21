@@ -182,7 +182,27 @@ f:SetScript('OnEvent', function(self, event, addon)
     if not InCombatLockdown() then
       IgnoreMacroUpdates = true
       if not GSisEmpty(GSMasterOptions.SequenceLibrary[2]) then
+        local forremoval = {}
+        local toprocess = {}
         for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
+
+          if GSisEmpty(GSMasterOptions.SequenceLibrary[name][version]) then
+            -- This value is missing.
+            -- check if there is a version.
+            ver = GSGetNextSequenceVersion(name)
+            if ver then
+              -- current version is broken but sequence exists.
+              GSMasterOptions.ActiveSequenceVersions[name] = ver
+              toprocess[name] = true
+            else
+              -- WHole Sequence Tree is no longer present.
+              forremoval[name] = true
+            end
+          else
+            toprocess[name] = true
+          end
+        end
+        for name,_ in pairs(toprocess) do
           local macroIndex = GetMacroIndexByName(name)
           if macroIndex and macroIndex ~= 0 then
             if not ModifiedSequences[name] then
@@ -192,6 +212,11 @@ f:SetScript('OnEvent', function(self, event, addon)
             _G[name]:UpdateIcon()
           elseif ModifiedSequences[name] then
             ModifiedSequences[name] = nil
+          end
+        end
+        for name,_ in pairs(forremoval) do
+          if not GSisEmpty(name) then
+            GSMasterOptions.ActiveSequenceVersions[name] = nil
           end
         end
       end
@@ -219,9 +244,11 @@ f:SetScript('OnEvent', function(self, event, addon)
         if k == "SequenceLibrary" then
           -- Merge Sequence Library
           if not GSisEmpty(v) then
-            for sname,sverion in ipairs(v) do
-              for sver, sequence in pairs(sversion) do
-                GSAddSequenceToCollection(same, sequence, sver)
+            for sname,sversion in pairs(v) do
+              if not GSisEmpty(sversion) then
+                for sver, sequence in pairs(sversion) do
+                  GSAddSequenceToCollection(sname, sequence, sver)
+                end
               end
             end
           end

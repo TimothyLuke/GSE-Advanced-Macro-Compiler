@@ -253,6 +253,7 @@ function GSSE:importSequence()
         if GSisEmpty(v.version) then
           v.version = GSGetNextSequenceVersion(k)
         end
+        v.source = GSStaticSourceLocal
         GSAddSequenceToCollection(k, v, v.version)
         newkey = k
       end
