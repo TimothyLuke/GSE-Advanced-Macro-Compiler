@@ -306,7 +306,7 @@ othersequencebuttonGroup:AddChild(actbutton)
 local delbutton = AceGUI:Create("Button")
 delbutton:SetText(L["Delete Version"])
 delbutton:SetWidth(200)
-delbutton:SetCallback("OnClick", function() GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)  end)
+delbutton:SetCallback("OnClick", function() GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue); otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence)); otherSequenceVersions:SetText("")  end)
 othersequencebuttonGroup:AddChild(delbutton)
 
 
@@ -321,6 +321,9 @@ GSSE:RegisterChatCommand("gsse", "GSSlash")
 function GSSE:SetActiveSequence(key)
   GSSetActiveSequenceVersion(currentSequence, key)
   GSUpdateSequence(currentSequence, GSMasterOptions.SequenceLibrary[currentSequence][key])
+  activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
+  activesequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], GetLocale(), GetLocale()), currentSequence))
+  otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
 end
 
 function GSSE:ChangeOtherSequence(key)
