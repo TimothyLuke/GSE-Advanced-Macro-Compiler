@@ -101,6 +101,11 @@ GSMasterOptions.DebugModules = {}
 GSMasterOptions.DebugModules["GS-Core"] = true
 GSMasterOptions.DebugModules["GS-SequenceTranslator"] = false
 GSMasterOptions.DebugModules["GS-SequenceEditor"] = false
+GSMasterOptions.filterList = {}
+GSMasterOptions.filterList["Spec"] = true
+GSMasterOptions.filterList["Class"] = true
+GSMasterOptions.filterList["All"] = false
+
 
 GSStaticSourceLocal = "Local"
 

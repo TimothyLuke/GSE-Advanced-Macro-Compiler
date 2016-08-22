@@ -22,9 +22,27 @@ end
 
 function GSSE:getSequenceNames()
   local keyset={}
-  for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
-    keyset[k]=k
+  local currentSpec = GetSpecialization()
+  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
+  if not GSisEmpty(currentSpecID) then
+    local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
+    for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
+
+      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSMasterOptions.SequenceLibrary[k][v].specID)
+      if not GSMasterOptions.filterList["All"] then
+        if GSMasterOptions.filterList["Class"] then
+          if pspecclass == specclass then
+            keyset[k]=k
+          end
+        elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
+          keyset[k]=k
+        end
+      else
+        keyset[k]=k
+      end
+    end
   end
+  -- Filter Keyset
   return keyset
 end
 -- Create functions for tabs
@@ -109,11 +127,10 @@ frame:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
 
-local names = GSSE:getSequenceNames()
+
 local listbox = AceGUI:Create("Dropdown")
 listbox:SetLabel(L["Load Sequence"])
 listbox:SetWidth(250)
-listbox:SetList(names)
 listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 frame:AddChild(listbox)
 
@@ -471,6 +488,8 @@ function GSSE:GSSlash(input)
       frame:Hide()
     else
       if not InCombatLockdown() then
+        local names = GSSE:getSequenceNames()
+        listbox:SetList(names)
         frame:Show()
       else
         print(GSMasterOptions.TitleColour .. GNOME .. L[":|r Please wait till you have left combat before using the Sequence Editor."])

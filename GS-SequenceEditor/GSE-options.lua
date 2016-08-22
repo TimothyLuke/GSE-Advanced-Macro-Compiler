@@ -14,6 +14,16 @@ StaticPopupDialogs["GSEConfirmReloadUI"] = {
   preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
+function GSListUnloadedAddons()
+  local returnVal = "";
+  for k,v in pairs(GSUnloadedAddInPacks) do
+    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
+  end
+  return returnVal
+end
+
+
 function GSListAddons()
   local returnVal = "";
   for k,v in pairs(GSAddInPacks) do
@@ -407,13 +417,26 @@ local OptionsTable = {
           name = GSListAddons(),
           order = 1000,
         },
+        unloadedtitle3 = {
+          type = "header",
+          name = L["Available Addons"],
+          order = 1100,
+        },
+        unloadedaddins={
+          --name = "Registered Sequence Addin Packs",
+          --desc = "You can create and loadin Sequence Packs.",
+          type = "description",
+          name = GSListUnloadedAddons(),
+          order = 1200,
+        },
+
       },
     },
     debugTab = {
       name = L["Debug"],
 		  desc = L["Debug Mode Options"],
 		  type = "group",
-		  order = 1,
+		  order = -1,
 
       args = {
         title4 = {
