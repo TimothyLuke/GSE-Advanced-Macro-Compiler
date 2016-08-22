@@ -96,8 +96,12 @@ GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
 GSMasterOptions.RealtimeParse = true
 GSMasterOptions.SequenceLibrary = {}
 GSMasterOptions.ActiveSequenceVersions = {}
+GSMasterOptions.DebugModules = {}
+GSMasterOptions.DebugModules["GS-Core"] = true
+GSMasterOptions.DebugModules["GS-SequenceTranslator"] = false
+GSMasterOptions.DebugModules["GS-SequenceEditor"] = false
 
-GSStaticSourceLocal = "LOCAL"
+GSStaticSourceLocal = "Local"
 
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
@@ -109,12 +113,14 @@ local function determinationOutputDestination(message)
 end
 
 function GSPrintDebugMessage(message, module)
+    if GSisEmpty(module) then
+      module = "GS-Core"
+    end
     if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
       determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
-		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug then
+		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug and GSMasterOptions.DebugModules[module] == true then
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
-
 end
 
 
@@ -201,7 +207,7 @@ end
 function GSDeleteSequenceVersion(sequenceName, version)
   if version == 1 then
     print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete the only copy of a sequence."])
-  elseif not GSIsEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+  elseif not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
     GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
   end
 end

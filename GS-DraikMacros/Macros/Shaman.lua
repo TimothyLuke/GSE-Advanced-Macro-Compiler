@@ -96,7 +96,7 @@ StepFunction = GSStaticPriority,
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/castsequence reset=target/combat Flame Shock,Chain Lightning,Chain Lightning,Chain Lightning',
+'/castsequence reset=target/combat Flame Shock, Chain Lightning, Chain Lightning, Chain Lightning',
 '/cast [nochanneling] !Lava Burst',
 PostMacro = [[
 /cast Elemental Mastery

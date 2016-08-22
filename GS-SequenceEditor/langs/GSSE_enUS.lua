@@ -146,3 +146,9 @@ L["The Sequence Editor can attempt to parse the Sequences, PreMacro and PostMacr
 L["Import"] = true
 L["Close"] = true
 L["Import Macro from Forums"] = true
+L["Debug Output Options"] = true
+L["Enable Debug for the following Modules"] = true
+L["This will display debug messages for the GS-E Sequence Editor"] = true
+L["This will display debug messages for the Core of GS-E"] = true
+L["This will display debug messages for the GS-E Translator"] = true
+L["Debug"] = true

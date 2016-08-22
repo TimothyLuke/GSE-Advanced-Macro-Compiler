@@ -141,7 +141,7 @@ function GSReloadSequences()
 end
 
 
-local function cleanOrphanSequences()
+local function cleanOrphanSequences(logout)
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
   for macid = 1, maxmacros do
     local found = false
@@ -166,9 +166,17 @@ local function cleanOrphanSequences()
   end
   -- clean out the sequences database except for the current version
   local tempTable = {}
-  for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
-    tempTable[name] = {}
-    tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+  for name, versiontable in pairs(GSMasterOptions.SequenceLibrary) do
+
+    for version, sequence in ipairs(versiontable) do
+      if GSMasterOptions.SequenceLibrary[name][version].source == GSStaticSourceLocal or (GSMasterOptions.ActiveSequenceVersions[name] == version and not logout ) then
+        -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
+        tempTable[name] = {}
+        tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+      else
+        GSPrintDebugMessage(L["Removing "] .. name .. ":" .. version)
+      end
+    end
   end
   GSMasterOptions.SequenceLibrary = nil
   GSMasterOptions.SequenceLibrary = tempTable
@@ -235,8 +243,9 @@ f:SetScript('OnEvent', function(self, event, addon)
       GSMasterOptions.SequenceLibrary["LiveTest"] = nil
     end
     if GSMasterOptions.deleteOrphansOnLogout then
-      cleanOrphanSequences()
+      cleanOrphanSequences(true)
     end
+    -- clean out the sequences database except for the local version prior to saving
   elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
     if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
@@ -442,6 +451,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
     cleanOrphanSequences()
+  elseif string.lower(msg) == "forceclean" then
+    cleanOrphanSequences(true)
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     print(GSExportSequence(string.sub(msg,8)))
   elseif string.lower(msg) == "showdebugoutput" then

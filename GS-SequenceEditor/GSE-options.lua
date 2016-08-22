@@ -176,35 +176,6 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.use2 end,
           order = 590
         },
-        title4 = {
-          type = "header",
-          name = L["Debug Mode Options"],
-          order = -1
-        },
-        debug={
-          name = L["Enable Mod Debug Mode"],
-          desc = L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"],
-          type = "toggle",
-          set = function(info,val) GSMasterOptions.debug = val GSPrintDebugMessage("Debug Mode Enabled", GNOME) end,
-          get = function(info) return GSMasterOptions.debug end,
-          order = -1
-        },
-        debugchat={
-          name = L["Display debug messages in Chat Window"],
-          desc = L["This will display debug messages in the Chat window."],
-          type = "toggle",
-          set = function(info,val) GSMasterOptions.sendDebugOutputToChat = val end,
-          get = function(info) return GSMasterOptions.sendDebugOutputToChat end,
-          order = -1
-        },
-        debugGSDebugOutput={
-          name = L["Store Debug Messages"],
-          desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
-          type = "toggle",
-          set = function(info,val) GSMasterOptions.sendDebugOutputGSDebugOutput = val end,
-          get = function(info) return GSMasterOptions.sendDebugOutputGSDebugOutput end,
-          order = -1
-        },
       },
     },
     colourTab = {
@@ -438,6 +409,78 @@ local OptionsTable = {
         },
       },
     },
+    debugTab = {
+      name = L["Debug"],
+		  desc = L["Debug Mode Options"],
+		  type = "group",
+		  order = 1,
+
+      args = {
+        title4 = {
+          type = "header",
+          name = L["Debug Mode Options"],
+          order = 1
+        },
+        debug={
+          name = L["Enable Mod Debug Mode"],
+          desc = L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.debug = val GSPrintDebugMessage("Debug Mode Enabled", GNOME) end,
+          get = function(info) return GSMasterOptions.debug end,
+          order = 10
+        },
+        title5= {
+          type = "header",
+          name = L["Debug Output Options"],
+          order = 20
+        },
+        debugchat={
+          name = L["Display debug messages in Chat Window"],
+          desc = L["This will display debug messages in the Chat window."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.sendDebugOutputToChat = val end,
+          get = function(info) return GSMasterOptions.sendDebugOutputToChat end,
+          order = 21
+        },
+        debugGSDebugOutput={
+          name = L["Store Debug Messages"],
+          desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.sendDebugOutputGSDebugOutput = val end,
+          get = function(info) return GSMasterOptions.sendDebugOutputGSDebugOutput end,
+          order = 25
+        },
+        title6= {
+          type = "header",
+          name = L["Enable Debug for the following Modules"],
+          order = 30
+        },
+        debugmodcore={
+          name = "GS-Core",
+          desc = L["This will display debug messages for the Core of GS-E"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.DebugModules["GS-Core"] = val end,
+          get = function(info) return GSMasterOptions.DebugModules["GS-Core"] end,
+          order = 31
+        },
+        debugmodtranslator={
+          name = "GS-SequenceTranslator",
+          desc = L["This will display debug messages for the GS-E Translator"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.DebugModules["GS-SequenceTranslator"] = val end,
+          get = function(info) return GSMasterOptions.DebugModules["GS-SequenceTranslator"] end,
+          order = 31
+        },
+        debugmodeditor={
+          name = "GS-SequenceEditor",
+          desc = L["This will display debug messages for the GS-E Sequence Editor"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.DebugModules["GS-SequenceEditor"] = val end,
+          get = function(info) return GSMasterOptions.DebugModules["GS-SequenceEditor"] end,
+          order = 31
+        },
+      }
+    }
   }
 }
 
