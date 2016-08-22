@@ -153,3 +153,5 @@ L["This will display debug messages for the GS-E Sequence Editor"] = true
 L["This will display debug messages for the Core of GS-E"] = true
 L["This will display debug messages for the GS-E Translator"] = true
 L["Debug"] = true
+L["Filter Macro Selection"] = true
+L["When using the Sequence Editor, limit the entries to the specified pattern."] = true
