@@ -465,6 +465,8 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         sequence.StepFunction = nil
       end
       sequence.PreMacro = premacrobox:GetText()
+      sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+      sequence.source = GSStaticSourceLocal
       sequence.specID = GSSE:getSpecID()
       sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
       if not tonumber(sequence.icon) then
