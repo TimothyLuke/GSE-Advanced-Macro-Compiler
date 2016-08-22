@@ -472,7 +472,6 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
       end
       sequence.PostMacro = postmacrobox:GetText()
       sequence.version = nextVal
-      print(nextVal)
       GSTRUnEscapeSequence(sequence)
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)

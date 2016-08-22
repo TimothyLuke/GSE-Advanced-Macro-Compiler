@@ -187,7 +187,6 @@ end
 function GSGetNextSequenceVersion(SequenceName)
   local nextv = 1
   GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
-  print("GSGetNextSequenceVersion " .. SequenceName)
   if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
     for k,_ in ipairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
     nextv = k
