@@ -56,6 +56,7 @@ GSStaticStringRESET = "|r"
 
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
 GSAddInPacks = {}
+GSUnloadedAddInPacks = {}
 
 GSMasterOptions = {}
 GSMasterOptions.cleanTempMacro = true
@@ -93,7 +94,7 @@ GSMasterOptions.INDENT = "|cffccaa88"
 GSMasterOptions.EQUALS = "|cffccddee"
 GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
 GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
-GSMasterOptions.RealtimeParse = true
+GSMasterOptions.RealtimeParse = false
 GSMasterOptions.SequenceLibrary = {}
 GSMasterOptions.ActiveSequenceVersions = {}
 GSMasterOptions.DebugModules = {}
@@ -281,10 +282,15 @@ for i=1,GetNumAddOns() do
         local name, _, _, _, _, _ = GetAddOnInfo(i)
         if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
           --print (name)
-					LoadAddOn(i);
-          GSImportLegacyMacroCollections(name)
+					local loaded = LoadAddOn(i);
+          if loaded then
+            GSImportLegacyMacroCollections(name)
+            GSAddInPacks[name] = true
+          else
+            GSUnloadedAddInPacks[name] = true
+          end
         end
-				GSAddInPacks[name] = true
+
     end
 
 end

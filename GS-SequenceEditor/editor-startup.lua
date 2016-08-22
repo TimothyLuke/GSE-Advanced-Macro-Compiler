@@ -1,1 +1,2 @@
--- Nothing to see here anymore.
+local GNOME,_ = ...
+GSAddInPacks[GNOME] = true
