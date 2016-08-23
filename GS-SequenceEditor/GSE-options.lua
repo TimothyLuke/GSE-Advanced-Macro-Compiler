@@ -53,12 +53,12 @@ local OptionsTable = {
           name = L["General Options"],
           order = 100
         },
-        cleanTempMacro = {
-          name = L["Clean Temporary Macros"],
-          desc = L["The Sequence Editor creates a temporary Macro called \"LiveTest\".  The content of this temporary macro is deleted on logout but the game leaves a macro stub behind.  This switch deletes the Macro Stub from your macros on logout."],
+        saveAllMacrosLocal = {
+          name = L["Only Save Local Macros"],
+          desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times adn potentially cause colissions."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.cleanTempMacro = val end,
-          get = function(info) return GSMasterOptions.cleanTempMacro end,
+          set = function(info,val) GSMasterOptions.saveAllMacrosLocal = val end,
+          get = function(info) return GSMasterOptions.saveAllMacrosLocal end,
           order = 200
         },
         usetranslator = {

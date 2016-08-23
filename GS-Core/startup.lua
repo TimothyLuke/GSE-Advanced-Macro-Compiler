@@ -59,7 +59,7 @@ GSAddInPacks = {}
 GSUnloadedAddInPacks = {}
 
 GSMasterOptions = {}
-GSMasterOptions.cleanTempMacro = true
+GSMasterOptions.saveAllMacrosLocal = true
 GSMasterOptions.hideSoundErrors = false
 GSMasterOptions.hideUIErrors = false
 GSMasterOptions.clearUIErrors = false

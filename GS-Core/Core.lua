@@ -141,7 +141,7 @@ function GSReloadSequences()
 end
 
 
-local function cleanOrphanSequences(logout)
+local function cleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
   for macid = 1, maxmacros do
     local found = false
@@ -164,6 +164,9 @@ local function cleanOrphanSequences(logout)
       end
     end
   end
+end
+
+local function CleanMacroLibrary(logout)
   -- clean out the sequences database except for the current version
   local tempTable = {}
   for name, versiontable in pairs(GSMasterOptions.SequenceLibrary) do
@@ -181,7 +184,6 @@ local function cleanOrphanSequences(logout)
   GSMasterOptions.SequenceLibrary = nil
   GSMasterOptions.SequenceLibrary = tempTable
 end
-
 
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
@@ -238,12 +240,11 @@ f:SetScript('OnEvent', function(self, event, addon)
   elseif event == 'PLAYER_LOGOUT' then
     -- Delete "LiveTest" macro from Macrolist as it is not persisted
     GnomeOptions = GSMasterOptions
-    if GSMasterOptions.cleanTempMacro then
-      DeleteMacro("LiveTest")
-      GSMasterOptions.SequenceLibrary["LiveTest"] = nil
+    if GSMasterOptions.saveAllMacrosLocal then
+      CleanMacroLibrary(true)
     end
     if GSMasterOptions.deleteOrphansOnLogout then
-      cleanOrphanSequences(true)
+      cleanOrphanSequences()
     end
     -- clean out the sequences database except for the local version prior to saving
   elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
@@ -455,7 +456,8 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
     cleanOrphanSequences()
   elseif string.lower(msg) == "forceclean" then
-    cleanOrphanSequences(true)
+    cleanOrphanSequences()
+    CleanMacroLibrary(true)
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     print(GSExportSequence(string.sub(msg,8)))
   elseif string.lower(msg) == "showdebugoutput" then
