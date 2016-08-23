@@ -1,6 +1,6 @@
 ## Interface: 70000
 ## Title: |cffff0000GS-E:|r |cFF00D1FFDraik's Bundled Macros|r
-## Notes: These bundled in macros have been sourced from wow.lazymacros.com Each author has been given credit for the macro and you will be able to find a thread there to ask questions. These are not intended to be super optimised but are a good starting point.
+## Notes: These bundled in macros have been sourced from http://www.wowlazymacros.com Each author has been given credit for the macro and you will be able to find a thread there to ask questions. These are not intended to be super optimised but are a good starting point.
 ## Author: Draik
 ## Version: v1.3 Legion 7.0.3
 ## RequiredDeps: GS-Core

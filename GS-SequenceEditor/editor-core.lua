@@ -402,57 +402,33 @@ function GSSE:toggleClasses(buttonname)
 end
 
 function GSSE:LoadEditor(SequenceName)
-  if GSisEmpty(SequenceName) then
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(GSSE:getSpecID())
-    SequenceName = "LiveTest"
-    -- Get next version needed here
-    GSMasterOptions.SequenceLibrary[SequenceName][1] = {
-    specID = GSSE:getSpecID(),
-  	author = "Draik",
-    icon = 134400,
-  	helpTxt = L["Completely New GS Macro."],
-  	"/cast Auto Attack",
-  	}
-    GSSE:loadSequence("LiveTest")
+  if not GSisEmpty(SequenceName) then
+    nameeditbox:SetText(SequenceName)
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction) then
+     stepdropdown:SetValue("1")
+    else
+     stepdropdown:SetValue("2")
+    end
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
+      GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
+    else
+     premacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro)
+    end
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro) then
+      GSPrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
+    else
+     postmacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro)
+    end
+    spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)],"\n"))
+    iconpicker:SetImage(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon)
+    GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
+  else
+    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSSE:getSpecID(true) or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+    GSPrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
+    iconpicker:SetImage(strsub(specicon, 17))
   end
-  GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
   frame:Hide()
-  local nextseqval = GSGetActiveSequenceVersion(SequenceName)
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
-    GSMasterOptions.SequenceLibrary[SequenceName] = {}
-  end
-  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval] = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
-  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].author = GetUnitName("player", true) .. '@' .. GetRealmName()
-  reticon = GSSE:getMacroIcon(SequenceName)
-  -- if string prefix with "Interface\\Icons\\" if number make it a number
-  if not tonumber(reticon) then
-    -- we have a starting
-    reticon = "Interface\\Icons\\" .. reticon
-  end
-  GSPrintDebugMessage("returned icon: " .. reticon, GNOME)
-
-  -- show editor
-  nameeditbox:SetText(SequenceName)
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].StepFunction) then
-   stepdropdown:SetValue("1")
-  else
-   stepdropdown:SetValue("2")
-  end
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PreMacro) then
-    GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
-  else
-   premacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PreMacro)
-  end
-  if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PostMacro) then
-    GSPrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
-  else
-   postmacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].PostMacro)
-  end
-  spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval],"\n"))
-  iconpicker:SetImage(GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].icon)
   editframe:Show()
-  GSMasterOptions.ActiveSequenceVersions[SequenceName] = nextseqval
-  GSMasterOptions.SequenceLibrary[SequenceName][nextseqval].version = nextseqval
 end
 
 function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
@@ -512,7 +488,7 @@ function GSSE:getCurrentTalents()
   local talents = ""
   for talentTier = 1, MAX_TALENT_TIERS do
     local available, selected = GetTalentTierInfo(talentTier, 1)
-    talents = talents .. (available and selected or "0")
+    talents = talents .. (available and selected or "?" .. ",")
   end
   return talents
 end
