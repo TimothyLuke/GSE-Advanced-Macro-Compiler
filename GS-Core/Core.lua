@@ -307,6 +307,9 @@ function GSExportSequencebySeq(sequence, sequenceName)
   local helptext = "helpTxt = \"" .. GSMasterOptions.INDENT .. (GSisEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. GSStaticStringRESET .. "\",\n"
   local specversion = "version=" .. GSMasterOptions.NUMBER  ..(GSisEmpty(sequence.version) and "1" or sequence.version ) .. GSStaticStringRESET ..",\n"
   local source = "source = \"" .. GSMasterOptions.INDENT .. (GSisEmpty(sequence.source) and "Unknown Source" or sequence.source) .. GSStaticStringRESET .. "\",\n"
+  if not GSisEmpty(sequence.authorversion) then
+    source = source .. "authorversion = \"" .. GSMasterOptions.INDENT .. sequence.authorversion .. GSStaticStringRESET .. "\",\n"
+  end
   local steps = ""
   if not GSisEmpty(sequence.StepFunction) then
     if  sequence.StepFunction == GSStaticPriority then

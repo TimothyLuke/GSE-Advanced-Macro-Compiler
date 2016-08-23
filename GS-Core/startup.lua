@@ -278,12 +278,16 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
   end
 end
 
-function GSImportLegacyMacroCollections(str)
+function GSImportLegacyMacroCollections(str, authorversion)
   for k,v in pairs(GSMasterSequences) do
     if GSisEmpty(v.version) then
       v.version = 1
     end
+    if GSisEmpty(authorversion)
+      authorversion = 1
+    end
     v.source = str
+    v.authorversion = authorversion
     GSAddSequenceToCollection(k, v, v.version)
     GSMasterSequences[k] = nil
   end
@@ -298,7 +302,8 @@ for i=1,GetNumAddOns() do
           --print (name)
 					local loaded = LoadAddOn(i);
           if loaded then
-            GSImportLegacyMacroCollections(name)
+            local authorversion = GetAddOnMetadata(name, "Version")
+            GSImportLegacyMacroCollections(name, authorversion)
             GSAddInPacks[name] = true
           else
             GSUnloadedAddInPacks[name] = true
