@@ -210,8 +210,12 @@ end
 
 
 function GSDeleteSequenceVersion(sequenceName, version)
-  if version == 1 then
-    print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete the only copy of a sequence."])
+  local knownversions, selectedversion = GSGetKnownSequenceVersions(sequenceName)
+  local count = table.getn(knownversions)
+  local sequence = GSMasterOptions.SequenceLibrary[sequenceName][version]
+
+  if sequence.source ~= GSStaticSourceLocal then
+    print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSMasterOptions.NUMBER .. sequence.source .. GSStaticStringRESET)
   elseif not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
     GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
   end

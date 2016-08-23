@@ -46,6 +46,7 @@ L["No Help Information "] = true
 L["Unknown Author|r "] = true
 L["|r Incomplete Sequence Definition - This sequence has no further information "] = true
 L["Two sequences with unknown sources found."] = true
+L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
 
 -- Setup and Help Output from Core
 L[":|r GnomeSequencer was originally written by semlar of wowinterface.com."] = true
