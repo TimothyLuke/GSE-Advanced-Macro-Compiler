@@ -210,19 +210,21 @@ end
 
 
 function GSDeleteSequenceVersion(sequenceName, version)
-  local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
-
-  if sequence.source ~= GSStaticSourceLocal then
-    print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSMasterOptions.NUMBER .. sequence.source .. GSStaticStringRESET)
-  elseif not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
-    GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
-  end
-  if version == selectedversion then
-    newversion = GSGetNextSequenceVersion(SequenceName) - 1
-    if newversion >0  then
-      GSSetActiveSequenceVersion(sequenceName, newversion)
-    else
-      GSMasterOptions.ActiveSequenceVersions[sequenceName] = nil
+  if not GSisEmpty(sequenceName) then
+    local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
+    local sequence = GSMasterOptions.SequenceLibrary[sequenceName][version]
+    if sequence.source ~= GSStaticSourceLocal then
+      print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSMasterOptions.NUMBER .. sequence.source .. GSStaticStringRESET)
+    elseif not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+      GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
+    end
+    if version == selectedversion then
+      newversion = GSGetNextSequenceVersion(SequenceName) - 1
+      if newversion >0  then
+        GSSetActiveSequenceVersion(sequenceName, newversion)
+      else
+        GSMasterOptions.ActiveSequenceVersions[sequenceName] = nil
+      end
     end
   end
 end

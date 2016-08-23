@@ -173,6 +173,8 @@ editframe:SetLayout("List")
 local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["Sequence Name"])
 nameeditbox:SetWidth(250)
+nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText() end)
+nameeditbox:DisableButton( true)
 firstheadercolumn:AddChild(nameeditbox)
 
 local stepdropdown = AceGUI:Create("Dropdown")
@@ -423,9 +425,8 @@ function GSSE:LoadEditor(SequenceName)
     iconpicker:SetImage(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
   else
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSSE:getSpecID(true) or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
-    GSPrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
-    iconpicker:SetImage(strsub(specicon, 17))
+    GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
+    iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
   end
   frame:Hide()
   editframe:Show()
@@ -434,28 +435,30 @@ end
 function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     --process Lines
     if loaded then
-      nextVal = GSGetNextSequenceVersion(currentSequence)
-      local sequence = {}
-      GSSE:lines(sequence, spellbox:GetText())
-      -- update sequence
-      if stepvalue == "2" then
-        sequence.StepFunction = GSStaticPriority
-      else
-        sequence.StepFunction = nil
+      if not GSisEmpty(SequenceName) then
+        nextVal = GSGetNextSequenceVersion(currentSequence)
+        local sequence = {}
+        GSSE:lines(sequence, spellbox:GetText())
+        -- update sequence
+        if stepvalue == "2" then
+          sequence.StepFunction = GSStaticPriority
+        else
+          sequence.StepFunction = nil
+        end
+        sequence.PreMacro = premacrobox:GetText()
+        sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+        sequence.source = GSStaticSourceLocal
+        sequence.specID = GSSE:getSpecID()
+        sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+        if not tonumber(sequence.icon) then
+          sequence.icon = "INV_MISC_QUESTIONMARK"
+        end
+        sequence.PostMacro = postmacrobox:GetText()
+        sequence.version = nextVal
+        GSTRUnEscapeSequence(sequence)
+        GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+        GSSE:loadSequence(SequenceName)
       end
-      sequence.PreMacro = premacrobox:GetText()
-      sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-      sequence.source = GSStaticSourceLocal
-      sequence.specID = GSSE:getSpecID()
-      sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
-      if not tonumber(sequence.icon) then
-        sequence.icon = "INV_MISC_QUESTIONMARK"
-      end
-      sequence.PostMacro = postmacrobox:GetText()
-      sequence.version = nextVal
-      GSTRUnEscapeSequence(sequence)
-      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-      GSSE:loadSequence(SequenceName)
       editframe:Hide()
       frame:Show()
     else
