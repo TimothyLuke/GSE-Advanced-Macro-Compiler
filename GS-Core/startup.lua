@@ -221,6 +221,8 @@ function GSDeleteSequenceVersion(sequenceName, version)
     newversion = GSGetNextSequenceVersion(SequenceName) - 1
     if newversion >0  then
       GSSetActiveSequenceVersion(sequenceName, newversion)
+    else
+      GSMasterOptions.ActiveSequenceVersions[sequenceName] = nil
     end
   end
 end
