@@ -260,21 +260,21 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
   else
     -- New Sequence
-      if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
-        -- Sequence is new
-        GSMasterOptions.SequenceLibrary[sequenceName] = {}
-      end
-      if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
-        -- This version is new
-        -- print(sequenceName .. " " .. version)
-        GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
-      end
-      -- evaluate version
-      if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
-        GSSetActiveSequenceVersion(sequenceName, version)
-      end
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+      -- Sequence is new
+      GSMasterOptions.SequenceLibrary[sequenceName] = {}
+    end
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+      -- This version is new
+      -- print(sequenceName .. " " .. version)
+      GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
+    end
+    -- evaluate version
+    if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
+      GSSetActiveSequenceVersion(sequenceName, version)
+    end
 
-      GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
+    GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
   end
 end
 
@@ -283,7 +283,7 @@ function GSImportLegacyMacroCollections(str, authorversion)
     if GSisEmpty(v.version) then
       v.version = 1
     end
-    if GSisEmpty(authorversion)
+    if GSisEmpty(authorversion) then
       authorversion = 1
     end
     v.source = str
