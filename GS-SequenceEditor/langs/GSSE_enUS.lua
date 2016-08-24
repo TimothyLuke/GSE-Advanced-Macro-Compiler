@@ -56,6 +56,7 @@ L["Active Version: "] = true
 L["Other Versions"] = true
 L["Make Active"] = true
 L["Delete Version"] = true
+L[":|rNo Sequences present so none displayed in the list."] = true
 -- options Debug
 
 

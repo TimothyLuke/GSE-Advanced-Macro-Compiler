@@ -184,15 +184,22 @@ function GSGetActiveSequenceVersion(SequenceName)
   return vers
 end
 
-function GSGetNextSequenceVersion(SequenceName)
-  local nextv = 1
+function GSGetNextSequenceVersion(SequenceName, last)
+  -- a last value of true means to get the last remaining version
+  local nextv = 0
   GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
   if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
     for k,_ in ipairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
     nextv = k
     end
   end
-  nextv = nextv + 1
+  if not last then
+    nextv = nextv + 1
+  end
+  if nextv == 0 then
+    -- no entries found setting to a key of 1
+    nextv = 1
+  end
   return nextv
 
 end
@@ -219,7 +226,7 @@ function GSDeleteSequenceVersion(sequenceName, version)
       GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
     end
     if version == selectedversion then
-      newversion = GSGetNextSequenceVersion(SequenceName) - 1
+      newversion = GSGetNextSequenceVersion(sequenceName, true)
       if newversion >0  then
         GSSetActiveSequenceVersion(sequenceName, newversion)
       else

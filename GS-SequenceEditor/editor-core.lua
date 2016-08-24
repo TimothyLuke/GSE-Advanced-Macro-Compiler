@@ -11,6 +11,13 @@ local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local boxes = {}
 
+function GSGetDefaultIcon()
+  local currentSpec = GetSpecialization()
+  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
+  local _, _, _, defaulticon, _, _, _ = GetSpecializationInfoByID(currentSpecID)
+  return strsub(defaulticon, 17)
+end
+
 function GSSE:parsetext(editbox)
   if GSMasterOptions.RealtimeParse then
     text = GSTRUnEscapeString(editbox:GetText())
@@ -27,18 +34,22 @@ function GSSE:getSequenceNames()
   if not GSisEmpty(currentSpecID) then
     local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
     for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
-
-      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSMasterOptions.SequenceLibrary[k][v].specID)
-      if not GSMasterOptions.filterList["All"] then
-        if GSMasterOptions.filterList["Class"] then
-          if pspecclass == specclass then
+      --print (table.getn(GSMasterOptions.SequenceLibrary[k]))
+      if not GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
+        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSMasterOptions.SequenceLibrary[k][v].specID)
+        if not GSMasterOptions.filterList["All"] then
+          if GSMasterOptions.filterList["Class"] then
+            if pspecclass == specclass then
+              keyset[k]=k
+            end
+          elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
             keyset[k]=k
           end
-        elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
+        else
           keyset[k]=k
         end
       else
-        keyset[k]=k
+        print(GSMasterOptions.TitleColour .. GNOME .. L[":|rNo Sequences present so none displayed in the list."])
       end
     end
   end
@@ -308,7 +319,13 @@ othersequencebuttonGroup:AddChild(actbutton)
 local delbutton = AceGUI:Create("Button")
 delbutton:SetText(L["Delete Version"])
 delbutton:SetWidth(200)
-delbutton:SetCallback("OnClick", function() GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue); otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence)); otherSequenceVersions:SetText("")  end)
+delbutton:SetCallback("OnClick", function()
+  if not GSisEmpty(otherversionlistboxvalue) then
+    GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)
+    otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
+    otherSequenceVersions:SetText("")
+  end
+end)
 othersequencebuttonGroup:AddChild(delbutton)
 
 
@@ -357,6 +374,12 @@ function GSSE:importSequence()
         end
         v.source = GSStaticSourceLocal
         GSAddSequenceToCollection(k, v, v.version)
+        GSUpdateSequence(k, GSMasterOptions.SequenceLibrary[k][v.version])
+        if GSisEmpty(v.icon) then
+          -- Set a default icon
+          v.icon = GSGetDefaultIcon()
+        end
+        CreateMacro(k, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. k, GSsetMacroLocation() )
         newkey = k
       end
       names = GSSE:getSequenceNames()

@@ -332,7 +332,7 @@ function GSExportSequencebySeq(sequence, sequenceName)
   return returnVal
 end
 
-local function GSsetMacroLocation()
+function GSsetMacroLocation()
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   local returnval = 1
   if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
