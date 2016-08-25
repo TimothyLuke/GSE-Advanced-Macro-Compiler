@@ -243,9 +243,30 @@ function GSSetActiveSequenceVersion(sequenceName, version)
   GSMasterOptions.ActiveSequenceVersions[sequenceName] = version
 end
 
+function GSGetCurrentSpecID()
+  local currentSpec = GetSpecialization()
+  return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "0"
+end
+
 function GSAddSequenceToCollection(sequenceName, sequence, version)
-  -- print (sequenceName)
-  -- print(version)
+  local confirmationtext = ""
+  --Perform some validation checks on the Sequence.
+  if GSisEmpty(sequence.specID) then
+    -- set to currentSpecID
+    sequence.specID = GSGetCurrentSpecID()
+    confirmationtext = " " .. L["Sequence specID set to current spec of "] .. sequence.specID .. "."
+  end
+  if GSisEmpty(sequence.author) then
+    -- set to unknown author
+    sequence.author = "Unknown Author"
+    confirmationtext = " " .. L["Sequence Author set to Unknown"] .. "."
+  end
+  if GSisEmpty(sequence.helpTxt) then
+    -- set to currentSpecID
+    sequence.helpTxt = "No Help Information"
+    confirmationtext = " " .. L["No Help Information Available"] .. "."
+  end
+
   -- CHeck for colissions
   local found = false
   if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
@@ -286,6 +307,9 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
 
     GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
+  end
+  if not GSisEmpty(confirmationtext) then
+    print(GSMasterOptions.TitleColour ..  GNOME .. "|r" .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. confirmationtext)
   end
 end
 

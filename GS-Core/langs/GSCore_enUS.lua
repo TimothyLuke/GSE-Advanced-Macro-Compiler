@@ -71,3 +71,7 @@ L[" has been added as a new version and set to active.  Please review if this is
 L["|rA sequence colision has occured. "] = true
 L[" tried to overwrite the version already loaded from "] = true
 L[". This version was not loaded."] = true
+L["Sequence specID set to current spec of "] = true
+L["Sequence Author set to Unknown"] = true
+L["No Help Information Available"] = true
+L[" was imported with the following errors."] = true
