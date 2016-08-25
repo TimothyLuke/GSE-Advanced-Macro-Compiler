@@ -39,11 +39,13 @@ function GSSE:getSequenceNames()
       if not GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
         local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSMasterOptions.SequenceLibrary[k][v].specID)
         if not GSMasterOptions.filterList["All"] then
-          if GSMasterOptions.filterList["Class"] then
+          if GSMasterOptions.filterList["Class"]  then
             if pspecclass == specclass then
               keyset[k]=k
             end
           elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
+            keyset[k]=k
+          elseif GSMasterOptions.SequenceLibrary[k][v].specID == 0 then
             keyset[k]=k
           end
         else
