@@ -5,6 +5,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
+local dirtyeditor = false
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -196,7 +197,7 @@ editframe:SetLayout("List")
 local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["Sequence Name"])
 nameeditbox:SetWidth(250)
-nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText() end)
+nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText(); dirtyeditor = true end)
 nameeditbox:DisableButton( true)
 firstheadercolumn:AddChild(nameeditbox)
 
@@ -209,7 +210,7 @@ stepdropdown:SetList({
 
 })
 
-stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key end)
+stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; dirtyeditor = true end)
 firstheadercolumn:AddChild(stepdropdown)
 
 GSSE:getSpecNames()
@@ -218,7 +219,7 @@ local speciddropdown = AceGUI:Create("Dropdown")
 speciddropdown:SetLabel(L["Specialisation / Class ID"])
 speciddropdown:SetWidth(250)
 speciddropdown:SetList(GSSE:getSpecNames())
-speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key end)
+speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key; dirtyeditor = true end)
 
 headerGroup:AddChild(firstheadercolumn)
 
@@ -240,7 +241,7 @@ premacrobox:SetFullWidth(true)
 
 editframe:AddChild(premacrobox)
 premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-
+premacrobox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
 spellbox:SetLabel(L["Sequence"])
@@ -248,6 +249,7 @@ spellbox:SetNumLines(9)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
 spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+spellbox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
 editframe:AddChild(spellbox)
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -256,6 +258,8 @@ postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+postmacrobox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
+
 editframe:AddChild(postmacrobox)
 
 -------------end editor-----------------
@@ -449,6 +453,7 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
   end
+  dirtyeditor = false
   frame:Hide()
   editframe:Show()
 end
@@ -456,34 +461,37 @@ end
 function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     --process Lines
     if loaded then
-      if not GSisEmpty(SequenceName) then
-        nextVal = GSGetNextSequenceVersion(currentSequence)
-        local sequence = {}
-        GSSE:lines(sequence, spellbox:GetText())
-        -- update sequence
-        if stepvalue == "2" then
-          sequence.StepFunction = GSStaticPriority
-        else
-          sequence.StepFunction = nil
-        end
-        sequence.PreMacro = premacrobox:GetText()
-        sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-        sequence.source = GSStaticSourceLocal
+      if dirtyeditor then
+        -- Changes have been made so save them
+        if not GSisEmpty(SequenceName) then
+          nextVal = GSGetNextSequenceVersion(currentSequence)
+          local sequence = {}
+          GSSE:lines(sequence, spellbox:GetText())
+          -- update sequence
+          if stepvalue == "2" then
+            sequence.StepFunction = GSStaticPriority
+          else
+            sequence.StepFunction = nil
+          end
+          sequence.PreMacro = premacrobox:GetText()
+          sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+          sequence.source = GSStaticSourceLocal
 
-        sequence.specID = GSSpecIDHashList[specdropdownvalue]
-        sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
-        if not tonumber(sequence.icon) then
-          sequence.icon = "INV_MISC_QUESTIONMARK"
+          sequence.specID = GSSpecIDHashList[specdropdownvalue]
+          sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+          if not tonumber(sequence.icon) then
+            sequence.icon = "INV_MISC_QUESTIONMARK"
+          end
+          sequence.PostMacro = postmacrobox:GetText()
+          sequence.version = nextVal
+          GSTRUnEscapeSequence(sequence)
+          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+          GSSE:loadSequence(SequenceName)
+          GSCheckMacroCreated(SequenceName)
         end
-        sequence.PostMacro = postmacrobox:GetText()
-        sequence.version = nextVal
-        GSTRUnEscapeSequence(sequence)
-        GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-        GSSE:loadSequence(SequenceName)
-        GSCheckMacroCreated(SequenceName)
+        editframe:Hide()
+        frame:Show()
       end
-      editframe:Hide()
-      frame:Show()
     else
       GSSequenceEditorLoaded = true
     end
