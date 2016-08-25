@@ -24,7 +24,7 @@ L["No Macro Found. Possibly different spec for Sequence "] = true
 L["SequenceSpecID: "] = true
 L["No Sequence Icon setting to "] = true
 L["No value"] = true
-
+L["Setting Editor clean "] = true
 
 --sequence editor stuff
 L["Sequence"] = true

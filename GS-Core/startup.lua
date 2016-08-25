@@ -161,7 +161,7 @@ GSSpecIDList = {
 }
 
 GSSpecIDHashList = {}
-for k,v in ipairs(GSSpecIDList) do
+for k,v in pairs(GSSpecIDList) do
   GSSpecIDHashList[v] = k
 end
 
@@ -302,7 +302,7 @@ end
 
 function GSGetCurrentSpecID()
   local currentSpec = GetSpecialization()
-  return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "0"
+  return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
 end
 
 function GSAddSequenceToCollection(sequenceName, sequence, version)
@@ -366,7 +366,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
   end
   if not GSisEmpty(confirmationtext) then
-    print(GSMasterOptions.TitleColour ..  GNOME .. "|r" .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. confirmationtext)
+    print(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext)
   end
 end
 

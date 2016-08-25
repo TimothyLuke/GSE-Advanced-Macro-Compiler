@@ -5,7 +5,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
-local dirtyeditor = false
+dirtyeditor = false
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -39,16 +39,16 @@ function GSSE:getSequenceNames()
       --print (table.getn(GSMasterOptions.SequenceLibrary[k]))
       if not GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
         local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSMasterOptions.SequenceLibrary[k][v].specID)
-        if not GSMasterOptions.filterList["All"] then
-          if GSMasterOptions.filterList["Class"]  then
-            if pspecclass == specclass then
-              keyset[k]=k
-            end
-          elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
-            keyset[k]=k
-          elseif GSMasterOptions.SequenceLibrary[k][v].specID == 0 then
+        if GSMasterOptions.filterList["All"] then
+          keyset[k]=k
+        elseif GSMasterOptions.SequenceLibrary[k][v].specID == 0 then
+          keyset[k]=k
+        elseif GSMasterOptions.filterList["Class"]  then
+          if pspecclass == specclass then
             keyset[k]=k
           end
+        elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
+          keyset[k]=k
         else
           keyset[k]=k
         end
@@ -63,7 +63,7 @@ end
 
 function GSSE:getSpecNames()
   local keyset={}
-  for k,v in ipairs(GSSpecIDList) do
+  for k,v in pairs(GSSpecIDList) do
     keyset[v] = v
   end
   return keyset
@@ -227,10 +227,10 @@ local iconpicker = AceGUI:Create("Icon")
 --iconpicker:SetImage()
 iconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
-
+headerGroup:AddChild(speciddropdown)
 headerGroup:AddChild(iconpicker)
 editframe:AddChild(headerGroup)
-editframe:AddChild(speciddropdown)
+
 
 local premacrobox = AceGUI:Create("MultiLineEditBox")
 premacrobox:SetLabel(L["PreMacro"])
@@ -241,7 +241,7 @@ premacrobox:SetFullWidth(true)
 
 editframe:AddChild(premacrobox)
 premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-premacrobox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
+premacrobox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
 spellbox:SetLabel(L["Sequence"])
@@ -249,7 +249,7 @@ spellbox:SetNumLines(9)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
 spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-spellbox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
+spellbox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
 editframe:AddChild(spellbox)
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -258,7 +258,7 @@ postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-postmacrobox.editBox:SetScript("OnValueChanged", function () dirtyeditor = true end)
+postmacrobox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
 
 editframe:AddChild(postmacrobox)
 
@@ -446,16 +446,25 @@ function GSSE:LoadEditor(SequenceName)
      postmacrobox:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro)
     end
     spellbox:SetText(table.concat(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)],"\n"))
-    iconpicker:SetImage(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon)
+    reticon = GSSE:getMacroIcon(SequenceName)
+    if not tonumber(reticon) then
+      -- we have a starting
+      reticon = "Interface\\Icons\\" .. reticon
+    end
+
+    iconpicker:SetImage(reticon)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
+    specdropdownvalue = GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
   end
-  dirtyeditor = false
   frame:Hide()
   editframe:Show()
+  dirtyeditor = false
+  GSPrintDebugMessage(L["Setting Editor clean "], GNOME )
+
 end
 
 function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
@@ -476,7 +485,6 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
           sequence.PreMacro = premacrobox:GetText()
           sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
           sequence.source = GSStaticSourceLocal
-
           sequence.specID = GSSpecIDHashList[specdropdownvalue]
           sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
           if not tonumber(sequence.icon) then
@@ -489,9 +497,9 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
         end
-        editframe:Hide()
-        frame:Show()
       end
+      editframe:Hide()
+      frame:Show()
     else
       GSSequenceEditorLoaded = true
     end
@@ -539,9 +547,13 @@ function GSSE:getMacroIcon(sequenceIndex)
   end
   if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSisEmpty(iconid) then
     GSPrintDebugMessage("SequenceSpecID: " .. GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
-    local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSGetCurrentSpecID() or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
-    GSPrintDebugMessage(L["No Sequence Icon setting to "] .. (GSisEmpty(strsub(specicon, 17)) and L["No value"] or strsub(specicon, 17)), GNOME)
-    return strsub(specicon, 17)
+    if GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
+      return "INV_MISC_QUESTIONMARK"
+    else
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSGetCurrentSpecID() or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      GSPrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
+      return strsub(specicon, 17)
+    end
   elseif GSisEmpty(iconid) and not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
 
       return GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
