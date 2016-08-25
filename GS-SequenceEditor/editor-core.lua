@@ -62,7 +62,7 @@ end
 
 function GSSE:getSpecNames()
   local keyset={}
-  for k,v in ipairs(GSSpecIDList)
+  for k,v in ipairs(GSSpecIDList) do
     keyset[v] = v
   end
   return keyset

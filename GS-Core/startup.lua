@@ -131,7 +131,7 @@ GSSpecIDList = {
   [71] = "Arms",
   [72] = "Fury",
   [73] = "Protection - Warrior",
-  [102] = "Balance,"
+  [102] = "Balance",
   [103] = "Feral",
   [104] = "Guardian",
   [105] = "Restoration",
@@ -145,7 +145,7 @@ GSSpecIDList = {
   [257] = "Holy - Priest",
   [258] = "Shadow",
   [259] = "Assassination",
-  [260] = "Combat",
+  [260] = "Outlaw",
   [261] = "Subtlety",
   [262] = "Elemental",
   [263] = "Enhancement",
@@ -164,7 +164,7 @@ GSSpecIDHashList = {}
 for k,v in ipairs(GSSpecIDList) do
   GSSpecIDHashList[v] = k
 end
-  
+
 
 GSStaticSourceLocal = "Local"
 
