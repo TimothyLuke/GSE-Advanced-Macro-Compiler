@@ -379,7 +379,7 @@ function GSSE:importSequence()
           -- Set a default icon
           v.icon = GSGetDefaultIcon()
         end
-        CreateMacro(k, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. k, GSsetMacroLocation() )
+        GSCheckMacroCreated(k)
         newkey = k
       end
       names = GSSE:getSequenceNames()
@@ -481,6 +481,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         GSTRUnEscapeSequence(sequence)
         GSAddSequenceToCollection(SequenceName, sequence, nextVal)
         GSSE:loadSequence(SequenceName)
+        GSCheckMacroCreated(SequenceName)
       end
       editframe:Hide()
       frame:Show()

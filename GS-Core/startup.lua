@@ -5,6 +5,8 @@ GSMasterSequences = ns
 GSStaticCastCmds = {}
 GSTRUnfoundSpells = {}
 
+GSModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
+
 GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
 
 GSStaticCleanStrings = {}
@@ -369,4 +371,18 @@ if GetLocale() ~= "enUS" then
       i = i + 1
     end
   end
+end
+
+function GSCheckMacroCreated(SequenceName)
+  local macroIndex = GetMacroIndexByName(SequenceName)
+  if macroIndex and macroIndex ~= 0 then
+    if not GSModifiedSequences[SequenceName] then
+      GSModifiedSequences[SequenceName] = true
+      EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
+    end
+  else
+    CreateMacro(SequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. SequenceName, GSsetMacroLocation() )
+    GSModifiedSequences[SequenceName] = true
+  end
+
 end

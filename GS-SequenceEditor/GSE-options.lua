@@ -101,7 +101,7 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.setDefaultIconQuestionMark end,
           order = 310
         },
-        title1 = {
+        filtertitle1 = {
           type = "header",
           name = L["Filter Macro Selection"],
           order = 400

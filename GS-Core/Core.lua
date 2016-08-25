@@ -2,7 +2,6 @@ seterrorhandler(_ERRORMESSAGE)
 
 local GNOME, _ = ...
 
-local ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
@@ -215,13 +214,13 @@ f:SetScript('OnEvent', function(self, event, addon)
         for name,_ in pairs(toprocess) do
           local macroIndex = GetMacroIndexByName(name)
           if macroIndex and macroIndex ~= 0 then
-            if not ModifiedSequences[name] then
-              ModifiedSequences[name] = true
+            if not GSModifiedSequences[name] then
+              GSModifiedSequences[name] = true
               EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
             end
             _G[name]:UpdateIcon()
-          elseif ModifiedSequences[name] then
-            ModifiedSequences[name] = nil
+          elseif GSModifiedSequences[name] then
+            GSModifiedSequences[name] = nil
           end
         end
         for name,_ in pairs(forremoval) do
@@ -355,7 +354,7 @@ local function GSregisterSequence(sequenceName, icon)
       print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
     else
       sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
-      ModifiedSequences[sequenceName] = true
+      GSModifiedSequences[sequenceName] = true
     end
   end
 end
@@ -422,7 +421,7 @@ function GSUpdateSequence(name,sequence)
      else
       -- Create Sequence as a player sequence
       sequenceid = CreateMacro("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][1].icon, '#showtooltip\n/click ' .. "LiveTest", false)
-      ModifiedSequences["LiveTest"] = true
+      GSModifiedSequences["LiveTest"] = true
      end
     end
 end
