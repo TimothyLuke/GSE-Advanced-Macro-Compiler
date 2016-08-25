@@ -103,6 +103,9 @@ function GSTranslateString(instring, fromLocale, toLocale, cleanNewLines)
           if not GSisEmpty(resetleft) then
             output = string.sub(output, 1, resetleft -1)
           end
+          if string.sub(output, strlen(output)-1) == ", " then
+            output = string.sub(output, 1, strlen(output)-2)
+          end
           output = output .. "\n"
         else
           -- pass it through
@@ -114,6 +117,10 @@ function GSTranslateString(instring, fromLocale, toLocale, cleanNewLines)
     end
   end
   GSPrintDebugMessage("Exiting GSTranslateString with : \n" .. output, GNOME)
+  -- check for random , at the end
+  if string.sub(output, strlen(output)-1) == ", " then
+    output = string.sub(output, 1, strlen(output)-2)
+  end
   return output
 end
 
@@ -133,6 +140,9 @@ function GSTRTranslateSpell(str, fromLocale, toLocale, cleanNewLines)
     for _, w in ipairs(GSTRsplit(str,";")) do
       found, returnval = GSTRTranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
       output = output ..  GSMasterOptions.KEYWORD .. returnval .. GSStaticStringRESET .. "; "
+    end
+    if string.sub(output, strlen(output)-1) == "; " then
+      output = string.sub(output, 1, strlen(output)-2)
     end
   else
     local conditionals, mods, etc = GSTRGetConditionalsFromString(str)
@@ -241,18 +251,6 @@ function GSTRGetConditionalsFromString(str)
   mods = GSMasterOptions.COMMENT .. mods .. GSStaticStringRESET
   return found, mods, str
 end
-
---function GSTranslateGetLocaleSpellNameTable()
---  local spelltable = {}
---  local hashtable = {}
---  for k,v in pairs(language[GSTRStaticKey]["enUS"]) do
---      --print(k)
---      local spellname = GetSpellInfo(k)
---      spelltable[k] = spellname
---      hashtable[spellname] = k
---  end
---  return spelltable, hashtable
---end
 
 function GSTRlines(tab, str)
   local function helper(line) table.insert(tab, line) return "" end

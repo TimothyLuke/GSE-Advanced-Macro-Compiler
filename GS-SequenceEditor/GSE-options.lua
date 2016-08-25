@@ -110,16 +110,16 @@ local OptionsTable = {
           name = L["Show All Macros in Editor"],
           desc = L["By setting this value the Sequence Editor will show every macro for every class."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.GSMasterOptions.filterList["All"] = val end,
-          get = function(info) return GSMasterOptions.GSMasterOptions.filterList["All"] end,
+          set = function(info,val) GSMasterOptions.filterList["All"] = val end,
+          get = function(info) return GSMasterOptions.filterList["All"] end,
           order = 410
         },
         showClassMacros = {
           name = L["Show Class Macros in Editor"],
           desc = L["By setting this value the Sequence Editor will show every macro for your class."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.GSMasterOptions.filterList["Class"] = val end,
-          get = function(info) return GSMasterOptions.GSMasterOptions.filterList["Class"] end,
+          set = function(info,val) GSMasterOptions.filterList["Class"] = val end,
+          get = function(info) return GSMasterOptions.filterList["Class"] end,
           order = 420
         },
         title2 = {
