@@ -459,6 +459,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     --process Lines
     if loaded then
       if not GSisEmpty(SequenceName) then
+        oldsequence = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
         nextVal = GSGetNextSequenceVersion(currentSequence)
         local sequence = {}
         GSSE:lines(sequence, spellbox:GetText())
@@ -471,7 +472,11 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         sequence.PreMacro = premacrobox:GetText()
         sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
         sequence.source = GSStaticSourceLocal
-        sequence.specID = GSSE:getSpecID()
+        if GSisEmpty(oldsequence.specID) then
+          sequence.specID = GSSE:getSpecID()
+        else
+          sequence.specID = oldsequence.specID
+        end
         sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
         if not tonumber(sequence.icon) then
           sequence.icon = "INV_MISC_QUESTIONMARK"
