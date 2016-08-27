@@ -400,7 +400,7 @@ end
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSMasterOptions.useTranslator and GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
+    if GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence)
     end
     if GSisEmpty(_G[name]) then

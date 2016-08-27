@@ -283,3 +283,5 @@ function GSTRReportUnfoundSpells()
 end
 
 GSTranslatorAvailable = true
+-- Reloading Sequences as Translator is now here.
+GSReloadSequences()
