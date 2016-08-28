@@ -173,6 +173,8 @@ local function CleanMacroLibrary(logout)
     for version, sequence in ipairs(versiontable) do
       if GSMasterOptions.SequenceLibrary[name][version].source == GSStaticSourceLocal then
         -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
+        tempTable[name] = {}
+        tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
       elseif GSMasterOptions.ActiveSequenceVersions[name] == version and not logout  then
         tempTable[name] = {}
         tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
