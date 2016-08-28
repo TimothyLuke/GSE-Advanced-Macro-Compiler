@@ -28,7 +28,8 @@ L["Setting Editor clean "] = true
 
 --sequence editor stuff
 L["Sequence"] = true
-L["Create / Edit"] = true
+L["Edit"] = true
+L["New"] = true
 L["Choose Language"] = true
 L["Translated Sequence"] = true
 L["Sequence Viewer"] = true
