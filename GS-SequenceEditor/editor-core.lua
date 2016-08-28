@@ -284,7 +284,7 @@ rightGroup:SetLayout("List")
 
 
 local activesequencebox = AceGUI:Create("MultiLineEditBox")
-activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
+activesequencebox:SetLabel(L["Active Version: "])
 activesequencebox:SetNumLines(11)
 activesequencebox:DisableButton(true)
 activesequencebox:SetFullWidth(true)
@@ -396,6 +396,7 @@ end
 function GSSE:ManageSequenceVersion()
   frame:Hide()
   versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
+  activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
   activesequencebox:SetText(sequenceboxtext:GetText())
   otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
   versionframe:Show()
