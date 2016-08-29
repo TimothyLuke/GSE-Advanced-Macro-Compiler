@@ -147,6 +147,7 @@ local function deleteMacroStub(sequenceName)
       print(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
       DeleteMacro(sequenceName)
     end
+  end
 end
 
 function GSToggleDisabledSequence(SequenceName)
