@@ -29,6 +29,10 @@ function GSSE:parsetext(editbox)
   end
 end
 
+ function GSSE:DisableSequence()
+  GSToggleDisabledSequence(currentSequence)
+ end
+
 function GSSE:getSequenceNames()
   local keyset={}
   local currentSpec = GetSpecialization()
@@ -50,7 +54,8 @@ function GSSE:getSequenceNames()
         elseif GSMasterOptions.SequenceLibrary[k][v].specID == currentSpecID then
           keyset[k]=k
         else
-          keyset[k]=k
+          -- do nothing
+          GSPrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
         end
       else
         print(GSMasterOptions.TitleColour .. GNOME .. L[":|rNo Sequences present so none displayed in the list."])
@@ -107,6 +112,12 @@ function GSSE:drawstandardwindow(container)
   versbutton:SetWidth(150)
   versbutton:SetCallback("OnClick", function() GSSE:ManageSequenceVersion() end)
   buttonGroup:AddChild(versbutton)
+
+  local disableSeqbutton = AceGUI:Create("Button")
+  disableSeqbutton:SetText(L["Disable Sequence"])
+  disableSeqbutton:SetWidth(150)
+  disableSeqbutton:SetCallback("OnClick", function() GSSE:DisableSequence(currentSequence) end)
+  buttonGroup:AddChild(disableSeqbutton)
 
   container:AddChild(buttonGroup)
 
@@ -466,6 +477,9 @@ function GSSE:LoadEditor(SequenceName)
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
+  end
+  if GSMasterOptions.DisabledSequences[SequenceName] then
+    disableSeqbutton:SetText(L["Enable Sequence"])
   end
   frame:Hide()
   editframe:Show()

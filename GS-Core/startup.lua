@@ -99,6 +99,7 @@ GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
 GSMasterOptions.RealtimeParse = false
 GSMasterOptions.SequenceLibrary = {}
 GSMasterOptions.ActiveSequenceVersions = {}
+GSMasterOptions.DisabledSequences = {}
 GSMasterOptions.DebugModules = {}
 GSMasterOptions.DebugModules["GS-Core"] = true
 GSMasterOptions.DebugModules["GS-SequenceTranslator"] = false
@@ -187,9 +188,6 @@ function GSPrintDebugMessage(message, module)
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
 end
-
-
-
 
 GSDebugOutput = ""
 
@@ -364,6 +362,12 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
 
     GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
+
+    if GSMasterOptions.DisabledSequences[sequenceName] == true then
+      deleteMacroStub(SequenceName)
+    else
+      GSCheckMacroCreated(SequenceName)
+    end
   end
   if not GSisEmpty(confirmationtext) then
     print(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext)
@@ -452,6 +456,15 @@ if GetLocale() ~= "enUS" then
       i = i + 1
     end
   end
+end
+
+function GSsetMacroLocation()
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
+  local returnval = 1
+  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+   returnval = nil
+  end
+  return returnval
 end
 
 function GSCheckMacroCreated(SequenceName)

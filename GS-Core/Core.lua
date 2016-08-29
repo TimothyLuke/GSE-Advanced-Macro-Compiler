@@ -139,6 +139,35 @@ function GSReloadSequences()
   end
 end
 
+local function deleteMacroStub(sequenceName)
+  local mname, _, mbody = GetMacroInfo(sequenceName)
+  if mnane == sequenceName then
+    compar = '#showtooltip\n/click ' .. sequenceName
+    if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
+      print(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
+      DeleteMacro(sequenceName)
+    end
+end
+
+function GSToggleDisabledSequence(SequenceName)
+  if GSMasterOptions.DisabledSequences[SequenceName] then
+    -- Sequence has potentially been Disabled
+    if GSMasterOptions.DisabledSequences[SequenceName] == true then
+      -- Definately disabled - enabling
+      GSMasterOptions.DisabledSequences[SequenceName] = nil
+      GSCheckMacroCreated())SequenceName)
+    else
+      -- Disabling
+      GSMasterOptions.DisabledSequences[SequenceName] = true
+      deleteMacroStub(SequenceName)
+    end
+  else
+    -- disabliong
+    GSMasterOptions.DisabledSequences[SequenceName] = true
+    deleteMacroStub(SequenceName)
+  end
+  GSReloadSequences()
+end
 
 local function cleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
@@ -153,13 +182,7 @@ local function cleanOrphanSequences()
       end
       if not found then
         -- check if body is a gs one and delete the orphan
-        trimmedmbody = mbody:gsub("[^%w ]", "")
-        compar = '#showtooltip\n/click ' .. mname
-        trimmedcompar = compar:gsub("[^%w ]", "")
-        if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
-          print(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
-          DeleteMacro(macid)
-        end
+        deleteMacroStub(name)
       end
     end
   end
@@ -332,15 +355,6 @@ function GSExportSequencebySeq(sequence, sequenceName)
   returnVal = returnVal .. "PreMacro=[[\n" .. (GSisEmpty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
   returnVal = returnVal .. "PostMacro=[[\n" .. (GSisEmpty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
   return returnVal
-end
-
-function GSsetMacroLocation()
-  local numAccountMacros, numCharacterMacros = GetNumMacros()
-  local returnval = 1
-  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
-   returnval = nil
-  end
-  return returnval
 end
 
 local function GSregisterSequence(sequenceName, icon)

@@ -25,6 +25,7 @@ L["SequenceSpecID: "] = true
 L["No Sequence Icon setting to "] = true
 L["No value"] = true
 L["Setting Editor clean "] = true
+L[" not added to list."] = true
 
 --sequence editor stuff
 L["Sequence"] = true
@@ -35,6 +36,8 @@ L["Translated Sequence"] = true
 L["Sequence Viewer"] = true
 L["Gnome Sequencer: Sequence Viewer"] = true
 L["Load Sequence"] = true
+L["Disable Sequence"] = true
+L["Enable Sequence"] = true
 L["Translate to"] = true
 L["Sequence Editor"] = true
 L["Gnome Sequencer: Sequence Editor. Press the Close button to Save -->"] = true
