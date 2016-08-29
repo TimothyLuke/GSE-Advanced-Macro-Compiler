@@ -29,9 +29,6 @@ function GSSE:parsetext(editbox)
   end
 end
 
- function GSSE:DisableSequence()
-  GSToggleDisabledSequence(currentSequence)
- end
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -74,6 +71,11 @@ function GSSE:getSpecNames()
   return keyset
 end
 
+function GSSE:DisableSequence()
+ GSToggleDisabledSequence(currentSequence)
+ disableSeqbutton:SetText(L["Enable Sequence"])
+end
+
 -- Create functions for tabs
 function GSSE:drawstandardwindow(container)
   local sequencebox = AceGUI:Create("MultiLineEditBox")
@@ -113,7 +115,7 @@ function GSSE:drawstandardwindow(container)
   versbutton:SetCallback("OnClick", function() GSSE:ManageSequenceVersion() end)
   buttonGroup:AddChild(versbutton)
 
-  local disableSeqbutton = AceGUI:Create("Button")
+  disableSeqbutton = AceGUI:Create("Button")
   disableSeqbutton:SetText(L["Disable Sequence"])
   disableSeqbutton:SetWidth(150)
   disableSeqbutton:SetCallback("OnClick", function() GSSE:DisableSequence(currentSequence) end)

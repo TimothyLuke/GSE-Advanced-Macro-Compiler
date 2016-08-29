@@ -432,6 +432,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
       if GSMasterOptions.DisabledSequences[sequenceName] == true then
         deleteMacroStub(sequenceName)
+        GSPrint(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."])
       else
         GSCheckMacroCreated(sequenceName)
       end
