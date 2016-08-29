@@ -144,7 +144,7 @@ local function deleteMacroStub(sequenceName)
   if mnane == sequenceName then
     compar = '#showtooltip\n/click ' .. sequenceName
     if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
-      print(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
       DeleteMacro(sequenceName)
     end
   end
@@ -272,7 +272,10 @@ f:SetScript('OnEvent', function(self, event, addon)
     if GSMasterOptions.deleteOrphansOnLogout then
       cleanOrphanSequences()
     end
-    -- clean out the sequences database except for the local version prior to saving
+
+  elseif event == 'PLAYER_ENTERING_WORLD' then
+    GSPrintAvailable = true
+    GSPerformPrint()
   elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
     if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
@@ -315,7 +318,7 @@ f:RegisterEvent('UPDATE_MACROS')
 f:RegisterEvent('PLAYER_LOGIN')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_LOGOUT')
-
+f:RegisterEvent('PLAYER_ENTERING_WORLD')
 
 ----------------------------
 -- Draik's Mods
@@ -367,9 +370,9 @@ local function GSregisterSequence(sequenceName, icon)
   else
     -- Create Sequence as a player sequence
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
-      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
     elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
-      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
     else
       sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
       GSModifiedSequences[sequenceName] = true
@@ -389,16 +392,16 @@ local function ListSequences(txt)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSPrintDebugMessage(L["No Specialisation information for sequence "] .. name .. L[". Overriding with information for current spec "] .. specname)
       if sequence[GSGetActiveSequenceVersion(name)].specID == currentSpecID or string.upper(txt) == specclass then
-        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. GSMasterOptions.INDENT .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. GSStaticStringRESET .. ' ' .. GSMasterOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
+        GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. GSMasterOptions.INDENT .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. GSStaticStringRESET .. ' ' .. GSMasterOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
         GSregisterSequence(name, (GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].icon) and strsub(specicon, 17) or sequence[GSGetActiveSequenceVersion(name)].icon))
       elseif txt == "all" or sequence[GSGetActiveSequenceVersion(name)].specID == 0  then
-        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt or L["No Help Information "] .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
+        GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt or L["No Help Information "] .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
       elseif sequence[GSGetActiveSequenceVersion(name)].specID == currentclassId then
-        print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. ' ' .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
+        GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. ' ' .. GSMasterOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ' )
         GSregisterSequence(name, (GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].icon) and strsub(specicon, 17) or sequence[GSGetActiveSequenceVersion(name)].icon))
       end
     else
-      print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name .. L["|r Incomplete Sequence Definition - This sequence has no further information "] .. GSMasterOptions.AuthorColour .. L["Unknown Author|r "] )
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name .. L["|r Incomplete Sequence Definition - This sequence has no further information "] .. GSMasterOptions.AuthorColour .. L["Unknown Author|r "] )
     end
   end
   ShowMacroFrame()
@@ -445,15 +448,15 @@ function GSUpdateSequence(name,sequence)
 end
 
 local function PrintGnomeHelp()
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r GnomeSequencer was originally written by semlar of wowinterface.com."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r To get started "] .. GSMasterOptions.CommandColour .. L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."])
-  print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. L["/gs listall|r will produce a list of all available macros with some help information."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r The command "] .. GSMasterOptions.CommandColour .. L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."])
-  print(GSMasterOptions.TitleColour .. GNOME .. L[":|r The command "] .. GSMasterOptions.CommandColour .. L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r GnomeSequencer was originally written by semlar of wowinterface.com."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r To get started "] .. GSMasterOptions.CommandColour .. L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. L["/gs listall|r will produce a list of all available macros with some help information."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r The command "] .. GSMasterOptions.CommandColour .. L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."])
+  GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r The command "] .. GSMasterOptions.CommandColour .. L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."])
 end
 
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
@@ -467,7 +470,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
-    print(GSMasterOptions.TitleColour .. GNOME .. L[":|r Your current Specialisation is "] .. currentSpecID, ':', specname, L["  The Alternative ClassID is "] , currentclassId)
+    GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r Your current Specialisation is "] .. currentSpecID, ':', specname, L["  The Alternative ClassID is "] , currentclassId)
   elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
@@ -476,7 +479,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     cleanOrphanSequences()
     CleanMacroLibrary(true)
   elseif string.lower(string.sub(msg,1,6)) == "export" then
-    print(GSExportSequence(string.sub(msg,8)))
+    GSPrint(GSExportSequence(string.sub(msg,8)))
   elseif string.lower(msg) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
   else
@@ -484,4 +487,4 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   end
 end
 
-print(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSMasterOptions.CommandColour .. L["/gs help|r to get started."])
+GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSMasterOptions.CommandColour .. L["/gs help|r to get started."])

@@ -109,6 +109,8 @@ GSMasterOptions.filterList["Spec"] = true
 GSMasterOptions.filterList["Class"] = true
 GSMasterOptions.filterList["All"] = false
 
+GSOutput = ""
+
 GSSpecIDList = {
   [0] = "All",
   [1] = "Warrior",
@@ -169,12 +171,26 @@ end
 
 GSStaticSourceLocal = "Local"
 
+function GSPerformPrint()
+  print(GSOutput)
+  GSOutput = ""
+end
+
+function GSPrint(message)
+  -- stroe this for later on.
+  GSOutput = GSOutput  .. message .. "\n"
+  if GSPrintAvailable then
+    GSPerformPrint()
+  end
+end
+
+
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
 	end
 	if GSMasterOptions.sendDebugOutputToChat then
-    print(message)
+    GSPrint(message)
 	end
 end
 
@@ -188,6 +204,7 @@ function GSPrintDebugMessage(message, module)
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
 end
+
 
 GSDebugOutput = ""
 
@@ -278,7 +295,7 @@ function GSDeleteSequenceVersion(sequenceName, version)
     local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
     local sequence = GSMasterOptions.SequenceLibrary[sequenceName][version]
     if sequence.source ~= GSStaticSourceLocal then
-      print(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSMasterOptions.NUMBER .. sequence.source .. GSStaticStringRESET)
+      GSPrint(GSMasterOptions.TitleColour ..  GNOME .. L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSMasterOptions.NUMBER .. sequence.source .. GSStaticStringRESET)
     elseif not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
       GSMasterOptions.SequenceLibrary[sequenceName][version] = nil
     end
@@ -335,13 +352,13 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
       -- different source.  if local Ignore
       if sequence.source == GSStaticSourceLocal then
         -- local version - add as new version
-        print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."])
+        GSPrint (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."])
         GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
       else
         if GSisEmpty(sequence.source) then
-          print(GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName)
+          GSPrint(GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName)
         else
-          print (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."])
+          GSPrint (GSMasterOptions.TitleColour ..  GNOME .. L["|rA sequence colision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."])
         end
       end
     end
@@ -370,7 +387,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
   end
   if not GSisEmpty(confirmationtext) then
-    print(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext)
+    GSPrint(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext)
   end
 end
 
