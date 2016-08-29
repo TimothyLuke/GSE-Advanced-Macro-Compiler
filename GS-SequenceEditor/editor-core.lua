@@ -99,7 +99,7 @@ function GSSE:drawstandardwindow(container)
   local newbutton = AceGUI:Create("Button")
   newbutton:SetText(L["New"])
   newbutton:SetWidth(150)
-  newbutton:SetCallback("OnClick", function() GSSE:LoadEditor() end)
+  newbutton:SetCallback("OnClick", function() GSSE:LoadEditor(nil) end)
   buttonGroup:AddChild(newbutton)
 
   local updbutton = AceGUI:Create("Button")
@@ -484,6 +484,7 @@ function GSSE:LoadEditor(SequenceName)
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
+    currentSequence = ""
   end
   if GSMasterOptions.DisabledSequences[SequenceName] then
     disableSeqbutton:SetText(L["Enable Sequence"])
