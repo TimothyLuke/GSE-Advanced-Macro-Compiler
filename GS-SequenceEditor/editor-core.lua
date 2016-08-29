@@ -89,7 +89,7 @@ function GSSE:drawstandardwindow(container)
   sequencebox:DisableButton(true)
   sequencebox:SetFullWidth(true)
   sequencebox:SetText(sequenceboxtext:GetText())
-  sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(1, string.len(sequencebox:GetText())) end)
+  sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(0, string.len(sequencebox:GetText())) end)
   container:AddChild(sequencebox)
 
   local buttonGroup = AceGUI:Create("SimpleGroup")
