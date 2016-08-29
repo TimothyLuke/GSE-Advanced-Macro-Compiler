@@ -141,8 +141,11 @@ end
 
 local function deleteMacroStub(sequenceName)
   local mname, _, mbody = GetMacroInfo(sequenceName)
-  if mnane == sequenceName then
-    compar = '#showtooltip\n/click ' .. sequenceName
+  if mname == sequenceName then
+    print ("here")
+    trimmedmbody = mbody:gsub("[^%w ]", "")
+    compar = '#showtooltip\n/click ' .. mname
+    trimmedcompar = compar:gsub("[^%w ]", "")
     if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
       GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r' .. L[" Deleted Orphaned Macro "] .. mname)
       DeleteMacro(sequenceName)
@@ -172,6 +175,7 @@ end
 
 local function cleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+  local todelete = {}
   for macid = 1, maxmacros do
     local found = false
     local mname, mtexture, mbody = GetMacroInfo(macid)
@@ -183,9 +187,12 @@ local function cleanOrphanSequences()
       end
       if not found then
         -- check if body is a gs one and delete the orphan
-        deleteMacroStub(name)
+        todelete[mname] = true
       end
     end
+  end
+  for k,_ in pairs(todelete) do
+    deleteMacroStub(k)
   end
 end
 
@@ -360,26 +367,6 @@ function GSExportSequencebySeq(sequence, sequenceName)
   returnVal = returnVal .. "PostMacro=[[\n" .. (GSisEmpty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
   return returnVal
 end
-
-local function GSregisterSequence(sequenceName, icon)
-  local sequenceIndex = GetMacroIndexByName(sequenceName)
-  local numAccountMacros, numCharacterMacros = GetNumMacros()
-  if sequenceIndex > 0 then
-    -- Sequence exists do nothing
-    GSPrintDebugMessage(L["Moving on - "] .. sequenceName .. L[" already exists."], GNOME)
-  else
-    -- Create Sequence as a player sequence
-    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
-      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
-    elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
-      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
-    else
-      sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
-      GSModifiedSequences[sequenceName] = true
-    end
-  end
-end
-
 
 local function ListSequences(txt)
   local currentSpec = GetSpecialization()

@@ -110,7 +110,7 @@ GSMasterOptions.filterList["Class"] = true
 GSMasterOptions.filterList["All"] = false
 
 GSOutput = ""
-
+GSPrintAvailable = false
 GSSpecIDList = {
   [0] = "All",
   [1] = "Warrior",
@@ -320,6 +320,55 @@ function GSGetCurrentSpecID()
   return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
 end
 
+function GSGetCurrentClassID()
+  local _, _, currentclassId = UnitClass("player")
+  return currentclassId
+end
+
+function GSsetMacroLocation()
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
+  local returnval = 1
+  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+   returnval = nil
+  end
+  return returnval
+end
+
+
+function GSregisterSequence(sequenceName, icon)
+  local sequenceIndex = GetMacroIndexByName(sequenceName)
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
+  if sequenceIndex > 0 then
+    -- Sequence exists do nothing
+    GSPrintDebugMessage(L["Moving on - "] .. sequenceName .. L[" already exists."], GNOME)
+  else
+    -- Create Sequence as a player sequence
+    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
+    elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."])
+    else
+      sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
+      GSModifiedSequences[sequenceName] = true
+    end
+  end
+end
+
+
+function GSCheckMacroCreated(SequenceName)
+  local macroIndex = GetMacroIndexByName(SequenceName)
+  if macroIndex and macroIndex ~= 0 then
+    if not GSModifiedSequences[SequenceName] then
+      GSModifiedSequences[SequenceName] = true
+      EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
+    end
+  else
+    GSregisterSequence(SequenceName, icon)
+  end
+
+end
+
+
 function GSAddSequenceToCollection(sequenceName, sequence, version)
   local confirmationtext = ""
   --Perform some validation checks on the Sequence.
@@ -380,10 +429,12 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
 
     GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
 
-    if GSMasterOptions.DisabledSequences[sequenceName] == true then
-      deleteMacroStub(SequenceName)
-    else
-      GSCheckMacroCreated(SequenceName)
+    if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+      if GSMasterOptions.DisabledSequences[sequenceName] == true then
+        deleteMacroStub(sequenceName)
+      else
+        GSCheckMacroCreated(sequenceName)
+      end
     end
   end
   if not GSisEmpty(confirmationtext) then
@@ -473,27 +524,4 @@ if GetLocale() ~= "enUS" then
       i = i + 1
     end
   end
-end
-
-function GSsetMacroLocation()
-  local numAccountMacros, numCharacterMacros = GetNumMacros()
-  local returnval = 1
-  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
-   returnval = nil
-  end
-  return returnval
-end
-
-function GSCheckMacroCreated(SequenceName)
-  local macroIndex = GetMacroIndexByName(SequenceName)
-  if macroIndex and macroIndex ~= 0 then
-    if not GSModifiedSequences[SequenceName] then
-      GSModifiedSequences[SequenceName] = true
-      EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
-    end
-  else
-    CreateMacro(SequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. SequenceName, GSsetMacroLocation() )
-    GSModifiedSequences[SequenceName] = true
-  end
-
 end
