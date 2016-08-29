@@ -28,6 +28,10 @@ L["has been disabled.  The Macro stub for this sequence will be deleted and will
 L["This Sequence is currently Disabled Locally."] = true
 L["is currently disabled from use."] = true
 L["has been enabled.  The Macro stub is now available in your Macro interface."] = true
+L["Testing "]  = true
+L["Source "] = true
+L["Cycle Version "] = true
+L["Active Version "] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true

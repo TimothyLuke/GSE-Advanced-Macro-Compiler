@@ -55,7 +55,7 @@ function GSSE:getSequenceNames()
           GSPrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
         end
       else
-        GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|rNo Sequences present so none displayed in the list."])
+        GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|rNo Sequences present so none displayed in the list."] .. ' ' .. k)
       end
     end
   end

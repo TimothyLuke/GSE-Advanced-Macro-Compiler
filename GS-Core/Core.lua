@@ -202,15 +202,25 @@ local function CleanMacroLibrary(logout)
   -- clean out the sequences database except for the current version
   local tempTable = {}
   for name, versiontable in pairs(GSMasterOptions.SequenceLibrary) do
+    GSPrintDebugMessage(L["Testing "] .. name )
+    GSPrintDebugMessage(L["Active Version "] .. GSMasterOptions.ActiveSequenceVersions[name])
 
     for version, sequence in ipairs(versiontable) do
-      if GSMasterOptions.SequenceLibrary[name][version].source == GSStaticSourceLocal then
+      GSPrintDebugMessage(L["Cycle Version "] .. version )
+      GSPrintDebugMessage(L["Source "] .. sequence.source)
+      if sequence.source == GSStaticSourceLocal then
         -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
-        tempTable[name] = {}
-        tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+        GSPrintDebugMessage("sequence.source == GSStaticSourceLocal")
+        if GSisEmpty(tempTable[name]) then
+          tempTable[name] = {}
+        end
+        tempTable[name][version] = sequence
       elseif GSMasterOptions.ActiveSequenceVersions[name] == version and not logout  then
-        tempTable[name] = {}
-        tempTable[name][version] = GSMasterOptions.SequenceLibrary[name][version]
+        GSPrintDebugMessage("GSMasterOptions.ActiveSequenceVersions[name] == version and not logout")
+        if GSisEmpty(tempTable[name]) then
+          tempTable[name] = {}
+        end
+        tempTable[name][version] = sequence
       else
         GSPrintDebugMessage(L["Removing "] .. name .. ":" .. version)
       end
