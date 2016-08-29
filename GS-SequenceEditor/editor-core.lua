@@ -71,14 +71,19 @@ function GSSE:getSpecNames()
   return keyset
 end
 
-function GSSE:DisableSequence()
- GSToggleDisabledSequence(currentSequence)
- disableSeqbutton:SetText(L["Enable Sequence"])
+function GSSE:DisableSequence(currentSeq)
+  GSToggleDisabledSequence(currentSeq)
+  if GSMasterOptions.DisabledSequences[currentSeq] then
+    disableSeqbutton:SetText(L["Enable Sequence"])
+  else
+    disableSeqbutton:SetText(L["Disable Sequence"])
+  end
+  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSisEmpty(GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
 end
 
 -- Create functions for tabs
 function GSSE:drawstandardwindow(container)
-  local sequencebox = AceGUI:Create("MultiLineEditBox")
+  sequencebox = AceGUI:Create("MultiLineEditBox")
   sequencebox:SetLabel(L["Sequence"])
   sequencebox:SetNumLines(20)
   sequencebox:DisableButton(true)

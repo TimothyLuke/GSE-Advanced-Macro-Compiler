@@ -27,6 +27,7 @@ L[" From library"] = true
 L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."] = true
 L["This Sequence is currently Disabled Locally."] = true
 L["is currently disabled from use."] = true
+L["has been enabled.  The Macro stub is now available in your Macro interface."] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true

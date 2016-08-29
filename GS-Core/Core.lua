@@ -142,7 +142,6 @@ end
 local function deleteMacroStub(sequenceName)
   local mname, _, mbody = GetMacroInfo(sequenceName)
   if mname == sequenceName then
-    print ("here")
     trimmedmbody = mbody:gsub("[^%w ]", "")
     compar = '#showtooltip\n/click ' .. mname
     trimmedcompar = compar:gsub("[^%w ]", "")
@@ -160,15 +159,18 @@ function GSToggleDisabledSequence(SequenceName)
       -- Definately disabled - enabling
       GSMasterOptions.DisabledSequences[SequenceName] = nil
       GSCheckMacroCreated(SequenceName)
+      GSPrint(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been enabled.  The Macro stub is now available in your Macro interface."])
     else
       -- Disabling
       GSMasterOptions.DisabledSequences[SequenceName] = true
       deleteMacroStub(SequenceName)
+      GSPrint(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."])
     end
   else
     -- disabliong
     GSMasterOptions.DisabledSequences[SequenceName] = true
     deleteMacroStub(SequenceName)
+    GSPrint(GSMasterOptions.TitleColour ..  GNOME .. "|r " .. GSMasterOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."])
   end
   GSReloadSequences()
 end
@@ -283,6 +285,17 @@ f:SetScript('OnEvent', function(self, event, addon)
   elseif event == 'PLAYER_ENTERING_WORLD' then
     GSPrintAvailable = true
     GSPerformPrint()
+    -- check macro stubs
+    for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
+      sequence = GSMasterOptions.SequenceLibrary[k][v]
+      if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+        if GSMasterOptions.DisabledSequences[k] == true then
+          deleteMacroStub(k)
+        else
+          GSCheckMacroCreated(k)
+        end
+      end
+    end
   elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
     if not GSisEmpty(GnomeOptions) then
       -- save temporary values the AddinPacks gets wiped from persisited memory
@@ -311,6 +324,7 @@ f:SetScript('OnEvent', function(self, event, addon)
           GSMasterOptions[k] = v
         end
       end
+      -- Add Macro Stubs for all current spec'd macros.
       for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
         if GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
           GSMasterOptions.ActiveSequenceVersions[k] = nil
@@ -378,7 +392,7 @@ local function ListSequences(txt)
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(GSMasterOptions.SequenceLibrary) do
     if GSMasterOptions.DisabledSequences[name] then
-      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["is currently disabled from use."]
+      GSPrint(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.CommandColour .. name ..'|r ' .. L["is currently disabled from use."])
     elseif not GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].specID) then
       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence[GSGetActiveSequenceVersion(name)].specID)
       GSPrintDebugMessage(L["Sequence Name: "] .. name)
