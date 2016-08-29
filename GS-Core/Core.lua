@@ -155,7 +155,7 @@ function GSToggleDisabledSequence(SequenceName)
     if GSMasterOptions.DisabledSequences[SequenceName] == true then
       -- Definately disabled - enabling
       GSMasterOptions.DisabledSequences[SequenceName] = nil
-      GSCheckMacroCreated())SequenceName)
+      GSCheckMacroCreated(SequenceName)
     else
       -- Disabling
       GSMasterOptions.DisabledSequences[SequenceName] = true
