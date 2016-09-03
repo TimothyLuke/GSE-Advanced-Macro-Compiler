@@ -476,7 +476,6 @@ function GSSE:LoadEditor(SequenceName)
       -- we have a starting
       reticon = "Interface\\Icons\\" .. reticon
     end
-
     iconpicker:SetImage(reticon)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
@@ -488,6 +487,8 @@ function GSSE:LoadEditor(SequenceName)
   end
   if GSMasterOptions.DisabledSequences[SequenceName] then
     disableSeqbutton:SetText(L["Enable Sequence"])
+  else
+    disableSeqbutton:SetText(L["Disable Sequence"])
   end
   frame:Hide()
   editframe:Show()
