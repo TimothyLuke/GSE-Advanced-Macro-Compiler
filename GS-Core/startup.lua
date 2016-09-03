@@ -178,7 +178,7 @@ end
 
 function GSPrint(message)
   -- stroe this for later on.
-  GSOutput = GSOutput .. "\n" .. message 
+  GSOutput = GSOutput .. "\n" .. message
   if GSPrintAvailable then
     GSPerformPrint()
   end
@@ -493,6 +493,12 @@ function GSTRUnEscapeSequence(sequence)
     --print (i .. " " .. v)
     sequence[i] = GSTRUnEscapeString(v)
     i = i + 1
+  end
+  if not GSisEmpty(sequence.PreMacro) then
+    sequence.PreMacro = GSTRUnEscapeString(sequence.PreMacro)
+  end
+  if not GSisEmpty(sequence.PostMacro) then
+    sequence.PostMacro = GSTRUnEscapeString(sequence.PostMacro)
   end
   return sequence
 end
