@@ -1,4 +1,0 @@
-local Sequences = GSMasterSequences
-------------------
------ Warlock
-------------------

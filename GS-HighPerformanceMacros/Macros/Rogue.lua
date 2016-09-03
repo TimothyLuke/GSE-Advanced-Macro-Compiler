@@ -1,5 +1,0 @@
-local Sequences = GSMasterSequences
-
-------------------
------ Rogue
-------------------
