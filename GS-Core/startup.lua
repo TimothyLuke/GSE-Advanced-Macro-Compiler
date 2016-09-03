@@ -378,7 +378,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     sequence.specID = GSGetCurrentSpecID()
     confirmationtext = " " .. L["Sequence specID set to current spec of "] .. sequence.specID .. "."
   end
-  sequence.specID = specID + 0 -- force to a number.
+  sequence.specID = sequence.specID + 0 -- force to a number.
   if GSisEmpty(sequence.author) then
     -- set to unknown author
     sequence.author = "Unknown Author"
