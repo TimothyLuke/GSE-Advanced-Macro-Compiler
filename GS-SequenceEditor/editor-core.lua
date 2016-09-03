@@ -440,6 +440,11 @@ function GSSE:loadSequence(SequenceName)
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end
+  if GSMasterOptions.DisabledSequences[SequenceName] then
+    disableSeqbutton:SetText(L["Enable Sequence"])
+  else
+    disableSeqbutton:SetText(L["Disable Sequence"])
+  end
 end
 
 function GSSE:toggleClasses(buttonname)
@@ -484,11 +489,6 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
     currentSequence = ""
-  end
-  if GSMasterOptions.DisabledSequences[SequenceName] then
-    disableSeqbutton:SetText(L["Enable Sequence"])
-  else
-    disableSeqbutton:SetText(L["Disable Sequence"])
   end
   frame:Hide()
   editframe:Show()
