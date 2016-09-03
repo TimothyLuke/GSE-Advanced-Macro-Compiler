@@ -214,13 +214,13 @@ local function CleanMacroLibrary(logout)
         if GSisEmpty(tempTable[name]) then
           tempTable[name] = {}
         end
-        tempTable[name][version] = sequence
+        tempTable[name][version] = GSTRUnEscapeSequence(sequence)
       elseif GSMasterOptions.ActiveSequenceVersions[name] == version and not logout  then
         GSPrintDebugMessage("GSMasterOptions.ActiveSequenceVersions[name] == version and not logout")
         if GSisEmpty(tempTable[name]) then
           tempTable[name] = {}
         end
-        tempTable[name][version] = sequence
+        tempTable[name][version] = GSTRUnEscapeSequence(sequence)
       else
         GSPrintDebugMessage(L["Removing "] .. name .. ":" .. version)
       end
