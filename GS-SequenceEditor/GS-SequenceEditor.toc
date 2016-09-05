@@ -19,6 +19,7 @@ translator-core.lua
 
 #Editor
 editor-core.lua
+GS-Transmission.lua
 
 #OptionsGUI
 GSE-options.lua
