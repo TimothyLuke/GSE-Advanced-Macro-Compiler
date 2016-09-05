@@ -110,7 +110,7 @@ GSMasterOptions.filterList["Spec"] = true
 GSMasterOptions.filterList["Class"] = true
 GSMasterOptions.filterList["All"] = false
 
-GSOutput = ""
+GSOutput = {}
 GSPrintAvailable = false
 GSSpecIDList = {
   [0] = "All",
@@ -175,13 +175,16 @@ GSStaticSourceTransmission = "Transmission"
 
 
 function GSPerformPrint()
-  print(GSOutput)
-  GSOutput = ""
+
+  for k,v in ipairs(GSOutput) do
+    print(v)
+    table.remove(GSOutput, k)
+  end
 end
 
 function GSPrint(message)
   -- stroe this for later on.
-  GSOutput = GSOutput .. "\n" .. message
+  table.insert(GSOutput, message)
   if GSPrintAvailable then
     GSPerformPrint()
   end
