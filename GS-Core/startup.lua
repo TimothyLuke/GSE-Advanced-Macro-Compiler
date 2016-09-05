@@ -178,7 +178,7 @@ function GSPerformPrint()
 
   for k,v in ipairs(GSOutput) do
     print(v)
-    table.remove(GSOutput, k)
+    GSOutput[k] = nil
   end
 end
 
