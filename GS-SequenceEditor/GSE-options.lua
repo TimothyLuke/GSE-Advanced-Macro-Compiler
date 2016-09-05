@@ -515,6 +515,14 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.DebugModules["GS-SequenceEditor"] end,
           order = 31
         },
+        debugmodtransmission={
+          name = "GS-SequenceTransmission",
+          desc = L["This will display debug messages for the GS-E Transmission"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.DebugModules["GS-Transmission"] = val end,
+          get = function(info) return GSMasterOptions.DebugModules["GS-Transmission"] end,
+          order = 31
+        },
       }
     }
   }

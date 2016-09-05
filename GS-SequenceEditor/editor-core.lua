@@ -1,11 +1,15 @@
 local GNOME,_ = ...
-GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0")
+GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
+local libS = LibStub:GetLibrary("AceSerializer-3.0")
+local libC = LibStub:GetLibrary("LibCompress")
+local libCE = libC:GetAddonEncodeTable()
+
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
-dirtyeditor = false
+local currentFingerprint = ""
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -19,6 +23,45 @@ function GSGetDefaultIcon()
   local _, _, _, defaulticon, _, _, _ = GetSpecializationInfoByID(currentSpecID)
   return strsub(defaulticon, 17)
 end
+
+function GSEncodeSequence(Sequence)
+  --clean sequence
+  Sequence = GSTRUnEscapeSequence(Sequence)
+  --remove version and source
+  Sequence.version = nil
+  Sequence.source = GSStaticSourceTransmission
+  Sequence.authorversion = nil
+  Sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+
+
+  local one = libS:Serialize(Sequence)
+  local two = LibSyncC:CompressHuffman(one)
+  local final = LibSyncCE:Encode(two)
+  return final
+end
+
+function GSDecodeSequence(data)
+  -- Decode the compressed data
+  local one = libCE:Decode(data)
+
+  --Decompress the decoded data
+  local two, message = libC:Decompress(one)
+  if(not two) then
+  	GSPrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
+  	return
+  end
+
+  -- Deserialize the decompressed data
+  local success, final = libS:Deserialize(two)
+  if (not success) then
+  	GSPrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
+  	return
+  end
+
+  GSPrintDebugMessage ("final data: " .. final, "GS-Transmission")
+  return final
+end
+
 
 function GSSE:parsetext(editbox)
   if GSMasterOptions.RealtimeParse then
@@ -221,7 +264,7 @@ editframe:SetLayout("List")
 local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["Sequence Name"])
 nameeditbox:SetWidth(250)
-nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText(); dirtyeditor = true end)
+nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText(); end)
 nameeditbox:DisableButton( true)
 firstheadercolumn:AddChild(nameeditbox)
 
@@ -234,7 +277,7 @@ stepdropdown:SetList({
 
 })
 
-stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; dirtyeditor = true end)
+stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key;  end)
 firstheadercolumn:AddChild(stepdropdown)
 
 GSSE:getSpecNames()
@@ -243,7 +286,7 @@ local speciddropdown = AceGUI:Create("Dropdown")
 speciddropdown:SetLabel(L["Specialisation / Class ID"])
 speciddropdown:SetWidth(250)
 speciddropdown:SetList(GSSE:getSpecNames())
-speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key; dirtyeditor = true end)
+speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
 
 headerGroup:AddChild(firstheadercolumn)
 
@@ -265,7 +308,7 @@ premacrobox:SetFullWidth(true)
 
 editframe:AddChild(premacrobox)
 premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-premacrobox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
+premacrobox.editBox:SetScript("OnTextChanged", function () end)
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
 spellbox:SetLabel(L["Sequence"])
@@ -273,7 +316,7 @@ spellbox:SetNumLines(9)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
 spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-spellbox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
+spellbox.editBox:SetScript("OnTextChanged", function () end)
 editframe:AddChild(spellbox)
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -282,7 +325,7 @@ postmacrobox:SetNumLines(3)
 postmacrobox:DisableButton(true)
 postmacrobox:SetFullWidth(true)
 postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-postmacrobox.editBox:SetScript("OnTextChanged", function () dirtyeditor = true end)
+postmacrobox.editBox:SetScript("OnTextChanged", function () end)
 
 editframe:AddChild(postmacrobox)
 
@@ -485,6 +528,7 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
     specdropdownvalue = GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
+    currentFingerprint = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
@@ -492,7 +536,6 @@ function GSSE:LoadEditor(SequenceName)
   end
   frame:Hide()
   editframe:Show()
-  dirtyeditor = false
   GSPrintDebugMessage(L["Setting Editor clean "], GNOME )
 
 end
@@ -500,29 +543,31 @@ end
 function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     --process Lines
     if loaded then
-      if dirtyeditor then
-        -- Changes have been made so save them
-        if not GSisEmpty(SequenceName) then
-          nextVal = GSGetNextSequenceVersion(currentSequence)
-          local sequence = {}
-          GSSE:lines(sequence, spellbox:GetText())
-          -- update sequence
-          if stepvalue == "2" then
-            sequence.StepFunction = GSStaticPriority
-          else
-            sequence.StepFunction = nil
-          end
-          sequence.PreMacro = premacrobox:GetText()
-          sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-          sequence.source = GSStaticSourceLocal
-          sequence.specID = GSSpecIDHashList[specdropdownvalue]
-          sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
-          if not tonumber(sequence.icon) then
-            sequence.icon = "INV_MISC_QUESTIONMARK"
-          end
-          sequence.PostMacro = postmacrobox:GetText()
-          sequence.version = nextVal
-          GSTRUnEscapeSequence(sequence)
+      -- Changes have been made so save them
+      if not GSisEmpty(SequenceName) then
+        nextVal = GSGetNextSequenceVersion(currentSequence)
+        local sequence = {}
+        GSSE:lines(sequence, spellbox:GetText())
+        -- update sequence
+        if stepvalue == "2" then
+          sequence.StepFunction = GSStaticPriority
+        else
+          sequence.StepFunction = nil
+        end
+        sequence.PreMacro = premacrobox:GetText()
+        sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+        sequence.source = GSStaticSourceLocal
+        sequence.specID = GSSpecIDHashList[specdropdownvalue]
+        sequence.helpTxt = "Talents: " .. GSSE:getCurrentTalents()
+        if not tonumber(sequence.icon) then
+          sequence.icon = "INV_MISC_QUESTIONMARK"
+        end
+        sequence.PostMacro = postmacrobox:GetText()
+        sequence.version = nextVal
+        GSTRUnEscapeSequence(sequence)
+
+        newFingerprint = GSEncodeSequence(sequence)
+        if newFingerprint ~= currentFingerprint then
           GSAddSequenceToCollection(SequenceName, sequence, nextVal)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
@@ -548,6 +593,7 @@ function GSSE:GSSlash(input)
       end
     end
 end
+
 
 function GSSE:OnInitialize()
     versionframe:Hide()

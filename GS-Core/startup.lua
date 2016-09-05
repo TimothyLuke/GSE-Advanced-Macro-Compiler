@@ -104,6 +104,7 @@ GSMasterOptions.DebugModules = {}
 GSMasterOptions.DebugModules["GS-Core"] = true
 GSMasterOptions.DebugModules["GS-SequenceTranslator"] = false
 GSMasterOptions.DebugModules["GS-SequenceEditor"] = false
+GSMasterOptions.DebugModules["GS-Transmission"] = false
 GSMasterOptions.filterList = {}
 GSMasterOptions.filterList["Spec"] = true
 GSMasterOptions.filterList["Class"] = true
@@ -170,6 +171,8 @@ end
 
 
 GSStaticSourceLocal = "Local"
+GSStaticSourceTransmission = "Transmission"
+
 
 function GSPerformPrint()
   print(GSOutput)
