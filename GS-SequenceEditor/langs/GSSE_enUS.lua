@@ -161,6 +161,9 @@ L["This will display debug messages for the GS-E Translator"] = true
 L["Debug"] = true
 L["Filter Macro Selection"] = true
 L["Show All Macros in Editor"] = true
- L["By setting this value the Sequence Editor will show every macro for every class."] = true
- L["Show Class Macros in Editor"] = true
- L["By setting this value the Sequence Editor will show every macro for your class."] = true
+L["By setting this value the Sequence Editor will show every macro for every class."] = true
+L["Show Class Macros in Editor"] = true
+L["By setting this value the Sequence Editor will show every macro for your class."] = true
+
+-- Transmission stuff
+L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
