@@ -9,7 +9,7 @@ local libCE = libC:GetAddonEncodeTable()
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
-local currentFingerprint = ""
+
 
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -527,7 +527,6 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
     specdropdownvalue = GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
-    currentFingerprint = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
@@ -565,12 +564,9 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         sequence.version = nextVal
         GSTRUnEscapeSequence(sequence)
 
-        newFingerprint = GSEncodeSequence(sequence)
-        if newFingerprint ~= currentFingerprint then
-          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-          GSSE:loadSequence(SequenceName)
-          GSCheckMacroCreated(SequenceName)
-        end
+        GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+        GSSE:loadSequence(SequenceName)
+        GSCheckMacroCreated(SequenceName)
       end
       editframe:Hide()
       frame:Show()
