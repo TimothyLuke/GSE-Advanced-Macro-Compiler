@@ -8,6 +8,8 @@ GSTRUnfoundSpells = {}
 GSModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
 GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
+GSStaticSourceLocal = "Local"
+GSStaticSourceTransmission = "Transmission"
 
 GSStaticCleanStrings = {}
 GSStaticCleanStrings = {
@@ -173,12 +175,8 @@ for k,v in pairs(GSSpecIDList) do
 end
 
 
-GSStaticSourceLocal = "Local"
-GSStaticSourceTransmission = "Transmission"
-
 
 function GSPerformPrint()
-
   for k,v in ipairs(GSOutput) do
     print(v)
     GSOutput[k] = nil

@@ -62,7 +62,7 @@ function GSDecodeSequence(data)
   return final
 end
 
-
+print("here")
 function GSSE:parsetext(editbox)
   if GSMasterOptions.RealtimeParse then
     text = GSTRUnEscapeString(editbox:GetText())

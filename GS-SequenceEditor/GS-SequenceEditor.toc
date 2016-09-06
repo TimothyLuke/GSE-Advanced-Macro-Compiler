@@ -4,7 +4,7 @@
 ## Author: Draik
 ## Version: 1.3.3
 ## RequiredDeps: GS-Core
-## OptionalDeps: GS-SequenceTranslator
+## OptionalDeps: GS-SequenceTranslator LibCompress
 
 #libs
 embeds.xml
