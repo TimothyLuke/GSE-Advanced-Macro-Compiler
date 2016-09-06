@@ -534,7 +534,6 @@ function GSSE:LoadEditor(SequenceName)
   end
   frame:Hide()
   editframe:Show()
-  GSPrintDebugMessage(L["Setting Editor clean "], GNOME )
 
 end
 
@@ -567,6 +566,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
           GSAddSequenceToCollection(SequenceName, sequence, nextVal)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
+          GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
         end
       end
       editframe:Hide()

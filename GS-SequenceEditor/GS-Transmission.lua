@@ -47,15 +47,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 }
 
 local function performVersionCheck(version)
-	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
-		if not GSold then
-		  GSPrint(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
-		  GSold = true
-		  if((tonumber(message) - tonumber(version)) >= 0.05) then
-			  StaticPopup_Show('GSE_UPDATE_AVAILABLE')
-		  end
-		end
-	end
+/
 
 end
 

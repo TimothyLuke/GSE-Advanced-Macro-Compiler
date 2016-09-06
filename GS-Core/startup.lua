@@ -444,6 +444,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
     -- evaluate version
     if version ~= GSMasterOptions.ActiveSequenceVersions[sequenceName] then
+
       GSSetActiveSequenceVersion(sequenceName, version)
     end
 
