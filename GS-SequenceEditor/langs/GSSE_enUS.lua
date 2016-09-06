@@ -51,8 +51,8 @@ L["Macro Icon"] = true
 L["PreMacro"] = true
 L["PostMacro"] = true
 L["Completely New GS Macro."] = true
-L[":|r Please wait till you have left combat before using the Sequence Editor."] = true
-L[":|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] = true
+L["Please wait till you have left combat before using the Sequence Editor."] = true
+L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] = true
 L["/gsse |r to get started."] = true
 L["Gnome Sequencer: Sequence Version Manager"] = true
 L["Manage Versions"] = true
@@ -60,7 +60,7 @@ L["Active Version: "] = true
 L["Other Versions"] = true
 L["Make Active"] = true
 L["Delete Version"] = true
-L[":|rNo Sequences present so none displayed in the list."] = true
+L["No Sequences present so none displayed in the list."] = true
 L["Specialisation / Class ID"] = true
 -- options Debug
 

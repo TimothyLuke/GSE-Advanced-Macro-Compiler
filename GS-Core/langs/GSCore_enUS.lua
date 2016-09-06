@@ -54,18 +54,18 @@ L["No Help Information "] = true
 L["Unknown Author|r "] = true
 L["|r Incomplete Sequence Definition - This sequence has no further information "] = true
 L["Two sequences with unknown sources found."] = true
-L[":|r You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
+L["FYou cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
 
 -- Setup and Help Output from Core
-L[":|r GnomeSequencer was originally written by semlar of wowinterface.com."] = true
-L[":|r This is a small addon that allows you create a sequence of macros to be executed at the push of a button."] = true
-L[":|r Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."] = true
-L[":|r This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."] = true
+L["GnomeSequencer was originally written by semlar of wowinterface.com."] = true
+L["This is a small addon that allows you create a sequence of macros to be executed at the push of a button."] = true
+L["Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."] = true
+L["This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."] = true
 L[":|r To get started "] = true
 L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."] = true
 L["/gs listall|r will produce a list of all available macros with some help information."] = true
-L[":|r To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."] = true
-L[":|r The command "] = true
+L["To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."] = true
+L["The command "] = true
 L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
 L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."] = true
 L[":|r Your current Specialisation is "] = true
@@ -74,9 +74,9 @@ L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
 L["/gs help|r to get started."] = true
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
-L["|rA sequence colision has occured.  Your local version of "] = true
+L["A sequence colision has occured.  Your local version of "] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
-L["|rA sequence colision has occured. "] = true
+L["A sequence colision has occured. "] = true
 L[" tried to overwrite the version already loaded from "] = true
 L[". This version was not loaded."] = true
 L["Sequence specID set to current spec of "] = true

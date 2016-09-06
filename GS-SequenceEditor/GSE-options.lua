@@ -517,10 +517,10 @@ local OptionsTable = {
         },
         debugmodtransmission={
           name = "GS-SequenceTransmission",
-          desc = L["This will display debug messages for the GS-E Transmission"],
+          desc = L["This will display debug messages for the GS-E Ingame Transmission and transfer"],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.DebugModules["GS-Transmission"] = val end,
-          get = function(info) return GSMasterOptions.DebugModules["GS-Transmission"] end,
+          set = function(info,val) GSMasterOptions.DebugModules[GSStaticSourceTransmission] = val end,
+          get = function(info) return GSMasterOptions.DebugModules[GSStaticSourceTransmission] end,
           order = 31
         },
       }

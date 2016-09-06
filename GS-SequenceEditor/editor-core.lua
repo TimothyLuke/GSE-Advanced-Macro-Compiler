@@ -98,7 +98,7 @@ function GSSE:getSequenceNames()
           GSPrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
         end
       else
-        GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|rNo Sequences present so none displayed in the list."] .. ' ' .. k)
+        GSPrint(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
       end
     end
   end
@@ -589,7 +589,7 @@ function GSSE:GSSlash(input)
         listbox:SetList(names)
         frame:Show()
       else
-        GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r Please wait till you have left combat before using the Sequence Editor."])
+        GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
       end
     end
 end
@@ -599,7 +599,7 @@ function GSSE:OnInitialize()
     versionframe:Hide()
     editframe:Hide()
     frame:Hide()
-    GSPrint(GSMasterOptions.TitleColour .. GNOME .. L[":|r The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSMasterOptions.CommandColour .. L["/gsse |r to get started."])
+    GSPrint(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSMasterOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
 end
 
 function GSSE:getCurrentTalents()

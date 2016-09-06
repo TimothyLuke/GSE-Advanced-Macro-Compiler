@@ -3,6 +3,7 @@ local GSStaticPrefix = "GS-E"
 local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
 
+
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."])
 	hasEditBox = 1,
@@ -46,7 +47,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 local function performVersionCheck(version)
 	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
 		if not GSold then
-		  GSPrint(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], "GS-Transmission")
+		  GSPrint(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
 		  GSold = true
 		  if((tonumber(message) - tonumber(version)) >= 0.05) then
 			  StaticPopup_Show('GSE_UPDATE_AVAILABLE')
@@ -57,7 +58,7 @@ local function performVersionCheck(version)
 end
 
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
-  GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, "GS-Transmission")
+  GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GSStaticSourceTransmission)
   local t = GSSE:Deserialize(message)
   if t.Command == "GS-E_VERSIONCHK" then
     if not GSold then
