@@ -35,8 +35,8 @@ function GSEncodeSequence(Sequence)
 
 
   local one = libS:Serialize(Sequence)
-  local two = LibSyncC:CompressHuffman(one)
-  local final = LibSyncCE:Encode(two)
+  local two = libC:CompressHuffman(one)
+  local final = libCE:Encode(two)
   return final
 end
 
@@ -62,7 +62,6 @@ function GSDecodeSequence(data)
   return final
 end
 
-print("here")
 function GSSE:parsetext(editbox)
   if GSMasterOptions.RealtimeParse then
     text = GSTRUnEscapeString(editbox:GetText())

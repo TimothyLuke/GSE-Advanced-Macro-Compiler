@@ -173,3 +173,4 @@ L["Target language "] = true
 
 -- Transmission stuff
 L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
+L["This will display debug messages for the GS-E Ingame Transmission and transfer"] = true

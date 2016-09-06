@@ -2,10 +2,11 @@ local GSSE = GSSE
 local GSStaticPrefix = "GS-E"
 local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
+local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
-	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."])
+	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
 	hasEditBox = 1,
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
@@ -21,7 +22,6 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	end,
 	hideOnEscape = 1,
 	button1 = OKAY,
-	OnAccept = E.noop,
 	EditBoxOnEnterPressed = function(self)
 		ChatEdit_FocusActiveWindow();
 		self:GetParent():Hide();
@@ -89,10 +89,10 @@ local function sendVersionCheck()
 	end
 end
 
-function DraiksBrokerDB:GROUP_ROSTER_UPDATE(...)
+function GSSE:GROUP_ROSTER_UPDATE(...)
 	sendVersionCheck()
 end
 
 
-GSSE:RegisterComm("GS-E", GSSE:OnCommReceived)
+GSSE:RegisterComm("GS-E")
 GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
