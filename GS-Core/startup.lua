@@ -50,6 +50,8 @@ GSStaticCleanStrings = {
   [46] = "/use [combat]14\n",
   [47] = "/use [combat]2\n",
   [48] = "/use [combat] 2\n",
+  [49] = "/use [combat]5\n",
+  [50] = "/use [combat] 5\n",
 
   [101] = "\n\n",
 }
@@ -75,6 +77,7 @@ GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
 GSMasterOptions.requireTarget = false
 GSMasterOptions.use2 = false
+GSMasterOptions.use5 = false
 GSMasterOptions.use11 = false
 GSMasterOptions.use12 = false
 GSMasterOptions.use13 = true

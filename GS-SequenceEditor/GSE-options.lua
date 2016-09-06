@@ -199,6 +199,14 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.use2 end,
           order = 590
         },
+        use5={
+          name = L["Use Belt Item in Postmacro"],
+          desc = L["Incorporate the belt slot into the PostMacro. This is the equivalent of /use [combat] 5 in a PostMacro."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.use5 = val GSReloadSequences() end,
+          get = function(info) return GSMasterOptions.use5 end,
+          order = 590
+        },
       },
     },
     colourTab = {
