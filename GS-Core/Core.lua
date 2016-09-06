@@ -274,6 +274,7 @@ f:SetScript('OnEvent', function(self, event, addon)
             GSMasterOptions.ActiveSequenceVersions[name] = nil
           end
         end
+        GSReloadSequences()
       end
       IgnoreMacroUpdates = false
     else
