@@ -563,10 +563,11 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         sequence.PostMacro = postmacrobox:GetText()
         sequence.version = nextVal
         GSTRUnEscapeSequence(sequence)
-
-        GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-        GSSE:loadSequence(SequenceName)
-        GSCheckMacroCreated(SequenceName)
+        if not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
+          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+          GSSE:loadSequence(SequenceName)
+          GSCheckMacroCreated(SequenceName)
+        end
       end
       editframe:Hide()
       frame:Show()

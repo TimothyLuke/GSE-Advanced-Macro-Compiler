@@ -174,7 +174,17 @@ for k,v in pairs(GSSpecIDList) do
   GSSpecIDHashList[v] = k
 end
 
+function GSCompareSequence(seq1,seq2)
+  local match = false
+  local steps1 = table.concat(seq1, "")
+  local steps2 = table.concat(seq2, "")
 
+  if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 then
+    -- we have a match
+    match = true
+  end
+  return match
+end
 
 function GSPerformPrint()
   for k,v in ipairs(GSOutput) do
