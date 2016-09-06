@@ -366,6 +366,16 @@ function GSCheckMacroCreated(SequenceName)
 
 end
 
+function GSDisableSequence(SequenceName)
+  GSMasterOptions.DisabledSequences[SequenceName] = true
+  deleteMacroStub(SequenceName)
+end
+
+function GSEnableSequence(SequenceName)
+  GSMasterOptions.DisabledSequences[SequenceName] = nil
+  GSCheckMacroCreated(SequenceName)
+end
+
 
 function GSAddSequenceToCollection(sequenceName, sequence, version)
   local confirmationtext = ""
