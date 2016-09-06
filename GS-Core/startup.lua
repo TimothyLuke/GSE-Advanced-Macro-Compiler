@@ -182,8 +182,11 @@ function GSPerformPrint()
   end
 end
 
-function GSPrint(message)
+function GSPrint(message, title)
   -- stroe this for later on.
+  if not GSisEmpty(title) then
+    message = GSMasterOptions.TitleColour .. title .. GSStaticStringRESET .." " .. message
+  end
   table.insert(GSOutput, message)
   if GSPrintAvailable then
     GSPerformPrint()

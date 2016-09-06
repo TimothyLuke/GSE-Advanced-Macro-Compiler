@@ -1,6 +1,7 @@
 local GSSE = GSSE
 local GSStaticPrefix = "GS-E"
 local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
+local GSold = false
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."])
@@ -42,39 +43,55 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	showAlert = 1,
 }
 
+local function performVersionCheck(version)
+	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
+		if not GSold then
+		  GSPrint(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], "GS-Transmission")
+		  GSold = true
+		  if((tonumber(message) - tonumber(version)) >= 0.05) then
+			  StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+		  end
+		end
+	end
+
+end
+
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
   GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, "GS-Transmission")
   local t = GSSE:Deserialize(message)
   if t.Command == "GS-E_VERSIONCHK" then
-    if(tonumber(t.Version) ~= nil and tonumber(t.Version) > tonumber(GSEVersion)) then
-				GSPrint(GSMasterOptions.TitleColour .. GNOME .. L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."])
-
-				if((tonumber(message) - tonumber(E.version)) >= 0.05) then
-					StaticPopup_Show('GSE_UPDATE_AVAILABLE')
-				end
-			end
+    if not GSold then
+			performVersionCheck(t.Version)
+		end
   end
 end
 
 
 
-function sendVersionCheck()
-  local _, instanceType = IsInInstance()
-  local t = {}
-  t.Command = "GS-E_VERSIONCHK"
-  t.Version = GSEVersion
-  transmission = GSSE:Serialize(t)
-	if IsInRaid() then
-		SendAddonMessage(GSStaticPrefix, transmission, (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID")
-	elseif IsInGroup() then
-		SendAddonMessage(GSStaticPrefix, transmission, (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY")
-	end
+local function sendVersionCheck()
+  if not GSold then
+		local _, instanceType = IsInInstance()
+	  local t = {}
+	  t.Command = "GS-E_VERSIONCHK"
+	  t.Version = GSEVersion
+	  transmission = GSSE:Serialize(t)
+		if IsInRaid() then
+			SendAddonMessage(GSStaticPrefix, transmission, (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID")
+		elseif IsInGroup() then
+			SendAddonMessage(GSStaticPrefix, transmission, (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY")
+		end
 
-	if E.SendMSGTimer then
-		self:CancelTimer(E.SendMSGTimer)
-		E.SendMSGTimer = nil
+		if E.SendMSGTimer then
+			self:CancelTimer(E.SendMSGTimer)
+			E.SendMSGTimer = nil
+		end
 	end
+end
+
+function DraiksBrokerDB:GROUP_ROSTER_UPDATE(...)
+	sendVersionCheck()
 end
 
 
 GSSE:RegisterComm("GS-E", GSSE:OnCommReceived)
+GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
