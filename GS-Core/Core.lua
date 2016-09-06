@@ -439,7 +439,7 @@ function GSUpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
     if GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
-      sequence = GSTranslateSequence(sequence)
+      sequence = GSTranslateSequence(sequence, name)
     end
     if GSisEmpty(_G[name]) then
       createButton(name, sequence)

@@ -164,6 +164,10 @@ L["Show All Macros in Editor"] = true
 L["By setting this value the Sequence Editor will show every macro for every class."] = true
 L["Show Class Macros in Editor"] = true
 L["By setting this value the Sequence Editor will show every macro for your class."] = true
+L["Source Language "] = true
+L[" is not available.  Unable to translate sequence "] = true
+L["Target language "] = true
+
 
 -- Transmission stuff
 L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
