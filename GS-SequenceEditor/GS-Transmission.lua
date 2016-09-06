@@ -1,9 +1,11 @@
 local GSSE = GSSE
+local GNOME = GSStaticSourceTransmission
 local GSStaticPrefix = "GS-E"
 local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 
+GSPrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
@@ -58,7 +60,8 @@ local function performVersionCheck(version)
 end
 
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
-  GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GSStaticSourceTransmission)
+  GSPrintDebugMessage("GSSE:onCommReceived", GNOME)
+  GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
   local t = GSSE:Deserialize(message)
   if t.Command == "GS-E_VERSIONCHK" then
     if not GSold then
@@ -80,11 +83,6 @@ local function sendVersionCheck()
 			SendAddonMessage(GSStaticPrefix, transmission, (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID")
 		elseif IsInGroup() then
 			SendAddonMessage(GSStaticPrefix, transmission, (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY")
-		end
-
-		if E.SendMSGTimer then
-			self:CancelTimer(E.SendMSGTimer)
-			E.SendMSGTimer = nil
 		end
 	end
 end
