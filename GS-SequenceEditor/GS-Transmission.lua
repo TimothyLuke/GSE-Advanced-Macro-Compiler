@@ -62,12 +62,14 @@ end
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
   GSPrintDebugMessage("GSSE:onCommReceived", GNOME)
   GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
-  local t = GSSE:Deserialize(message)
-  if t.Command == "GS-E_VERSIONCHK" then
-    if not GSold then
-			performVersionCheck(t.Version)
-		end
-  end
+  local success, t = GSSE:Deserialize(message)
+  if success then
+		if t.Command == "GS-E_VERSIONCHK" then
+	    if not GSold then
+				performVersionCheck(t.Version)
+			end
+	  end
+	end
 end
 
 
