@@ -59,8 +59,8 @@ local function preparePostMacro(postmacro)
   if GSMasterOptions.use2 then
     postmacro = postmacro .. "\n/use [combat] 2"
   end
-  if GSMasterOptions.use5 then
-    postmacro = postmacro .. "\n/use [combat] 5"
+  if GSMasterOptions.use6 then
+    postmacro = postmacro .. "\n/use [combat] 6"
   end
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)

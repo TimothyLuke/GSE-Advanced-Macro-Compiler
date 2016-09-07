@@ -199,12 +199,12 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.use2 end,
           order = 590
         },
-        use5={
+        use6={
           name = L["Use Belt Item in Postmacro"],
           desc = L["Incorporate the belt slot into the PostMacro. This is the equivalent of /use [combat] 5 in a PostMacro."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.use5 = val GSReloadSequences() end,
-          get = function(info) return GSMasterOptions.use5 end,
+          set = function(info,val) GSMasterOptions.use6 = val GSReloadSequences() end,
+          get = function(info) return GSMasterOptions.use6 end,
           order = 590
         },
       },
