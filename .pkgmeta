@@ -32,7 +32,10 @@ externals:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceSerializer-3.0
         tag: latest
     GS-SequenceEditor/lib/AceComm-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/ AceComm-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
+        tag: latest
+    GS-SequenceEditor/lib/AceGui-3.0:
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGui-3.0
         tag: latest
     GS-SequenceEditor/lib/LibCompress:
         url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
