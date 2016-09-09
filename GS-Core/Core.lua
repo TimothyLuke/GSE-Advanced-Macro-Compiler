@@ -27,10 +27,14 @@ local function UpdateIcon(self)
   if not foundSpell then SetMacroItem(button, notSpell) end
 end
 
+local cvar_Sound_EnableSFX = GetCVar("Sound_EnableSFX")
+local cvar_Sound_EnableErrorSpeech = GetCVar("Sound_EnableErrorSpeech")
+
+
 local function preparePreMacro(premacro)
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 0)
-    premacro = "/console Sound_EnableErrorSpeech 0\n" .. premacro
+    premacro = "/run sfx=GetCVar(\"Sound_EnableSFX\");\n/run ers=GetCVar(\"Sound_EnableErrorSpeech\");\n/console Sound_EnableSFX 0\n/console Sound_EnableErrorSpeech 0\n" .. premacro
   end
   if GSMasterOptions.requireTarget then
     -- see #20 prevent target hopping
@@ -64,7 +68,7 @@ local function preparePostMacro(postmacro)
   end
   if GSMasterOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)
-    postmacro = postmacro .. "\n/console Sound_EnableErrorSpeech 1"
+    postmacro = postmacro .. "\n/run SetCVar(\"Sound_EnableSFX\",sfx);\n/run SetCVar(\"Sound_EnableErrorSpeech\",ers);"
   end
   if GSMasterOptions.hideUIErrors then
     postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
