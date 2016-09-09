@@ -64,20 +64,20 @@ PostMacro=[[
 Sequences['DB_Palla_Prot_AOE'] = {
 author="LNPV",
 specID=66,
-helpTxt = 'Talents: 2332233  This build is based in mastery, hast and crit (food is variable for boss).',
+helpTxt='Talents: 2332233  This build is based in mastery, hast and crit (food is variable for boss).',
 icon=236264,
 PreMacro=[[
 /targetenemy [noharm][dead]
 ]],
-"/cast Avenger's Shield,",
-"/cast Judgment,",
-"/cast Blessed Hammer,",
-"/cast Shield of the Righteous,",
-"/cast Consecration,",
-"/cast Light of the Protector,",
-"/cast Judgment,",
-"/cast Blessed Hammer,",
-"/cast Shield of the Righteous,",
+"/cast Avenger's Shield",
+"/cast Judgment",
+"/cast Blessed Hammer",
+"/cast Shield of the Righteous",
+"/cast Consecration",
+"/cast Light of the Protector",
+"/cast Judgment",
+"/cast Blessed Hammer",
+"/cast Shield of the Righteous",
 PostMacro=[[
 /cast Avenging Wrath
 /cast Divine Steed
