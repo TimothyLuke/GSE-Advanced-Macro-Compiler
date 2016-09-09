@@ -85,6 +85,7 @@ function GSTranslateString(instring, fromLocale, toLocale, cleanNewLines)
           end
           if string.sub(etc, 1, 1) == "!" then
             etc = string.sub(etc, 2)
+            output = output .. "!"
           end
           local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
           if foundspell then
