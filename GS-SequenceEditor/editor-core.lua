@@ -218,11 +218,11 @@ frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
 
 
-local listbox = AceGUI:Create("Dropdown")
-listbox:SetLabel(L["Load Sequence"])
-listbox:SetWidth(250)
-listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
-frame:AddChild(listbox)
+GSSequenceListbox = AceGUI:Create("Dropdown")
+GSSequenceListbox:SetLabel(L["Load Sequence"])
+GSSequenceListbox:SetWidth(250)
+GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+frame:AddChild(GSSequenceListbox)
 
 
 
@@ -356,17 +356,17 @@ activesequencebox:DisableButton(true)
 activesequencebox:SetFullWidth(true)
 leftGroup:AddChild(activesequencebox)
 
+local otherversionlistbox = AceGUI:Create("Dropdown")
+otherversionlistbox:SetLabel(L["Select Other Version"])
+otherversionlistbox:SetWidth(250)
+otherversionlistbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:ChangeOtherSequence(key) end)
+rightGroup:AddChild(otherversionlistbox)
+
 local otherSequenceVersions = AceGUI:Create("MultiLineEditBox")
-otherSequenceVersions:SetLabel(L["Other Versions"])
 otherSequenceVersions:SetNumLines(11)
 otherSequenceVersions:DisableButton(true)
 otherSequenceVersions:SetFullWidth(true)
 rightGroup:AddChild(otherSequenceVersions)
-
-local otherversionlistbox = AceGUI:Create("Dropdown")
-otherversionlistbox:SetWidth(250)
-otherversionlistbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:ChangeOtherSequence(key) end)
-rightGroup:AddChild(otherversionlistbox)
 
 columnGroup:AddChild(leftGroup)
 columnGroup:AddChild(rightGroup)
@@ -417,6 +417,11 @@ function GSSE:ChangeOtherSequence(key)
   otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSequence][key], (GSisEmpty(GSMasterOptions.SequenceLibrary[currentSequence][key].lang) and GetLocale() or GSMasterOptions.SequenceLibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
 end
 
+function GSUpdateSequenceList()
+  local names = GSSE:getSequenceNames()
+  GSSequenceListbox:SetList(names)
+end
+
 function GSSE:importSequence()
   local functiondefinition =  importStr .. [===[
 
@@ -449,9 +454,8 @@ function GSSE:importSequence()
         GSCheckMacroCreated(k)
         newkey = k
       end
-      names = GSSE:getSequenceNames()
-      listbox:SetList(names)
-      listbox:SetValue(newkey)
+      GSUpdateSequenceList()
+      GSSequenceListbox:SetValue(newkey)
     end
   else
     GSPrintDebugMessage (err, GNOME)
@@ -562,7 +566,15 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         sequence.PostMacro = postmacrobox:GetText()
         sequence.version = nextVal
         GSTRUnEscapeSequence(sequence)
-        if not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
+        if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
+          -- this is new
+          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+          GSSE:loadSequence(SequenceName)
+          GSCheckMacroCreated(SequenceName)
+          GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+          GSUpdateSequenceList()
+          GSSequenceListbox:SetValue(SequenceName)
+        elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
           GSAddSequenceToCollection(SequenceName, sequence, nextVal)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
@@ -582,7 +594,7 @@ function GSSE:GSSlash(input)
     else
       if not InCombatLockdown() then
         local names = GSSE:getSequenceNames()
-        listbox:SetList(names)
+        GSSequenceListbox:SetList(names)
         frame:Show()
       else
         GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
