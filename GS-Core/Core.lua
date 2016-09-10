@@ -432,21 +432,10 @@ local function ListSequences(txt)
   ShowMacroFrame()
 end
 
-local function checkCurrentClass(specID)
-  local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
-  if specID > 15 then
-    GSPrintDebugMessage(L["Checking if specID "] .. specID .. " " .. specclass .. L[" equals "] .. currentenglishclass)
-  else
-    GSPrintDebugMessage(L["Checking if specID "] .. specID .. L[" equals currentclassid "] .. currentclassId)
-  end
-  return (specclass==currentenglishclass or specID==currentclassId)
-end
-
-
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSTranslatorAvailable and checkCurrentClass(sequence.specID) then
+    if GSTranslatorAvailable and GSisSpecIDForCUrrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence, name)
     end
     if GSisEmpty(_G[name]) then

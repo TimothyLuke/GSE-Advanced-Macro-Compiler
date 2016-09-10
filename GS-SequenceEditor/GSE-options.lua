@@ -93,6 +93,22 @@ local OptionsTable = {
           get = function(info) return GSMasterOptions.overflowPersonalMacros end,
           order = 301
         },
+        autocreateclassstub = {
+          name = L["Auto Create Class Macro Stubs"],
+          desc = L["When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.autoCreateMacroStubsClass = val end,
+          get = function(info) return GSMasterOptions.autoCreateMacroStubsClass end,
+          order = 302
+        },
+        autocreateglobalstub = {
+          name = L["Auto Create Global Macro Stubs"],
+          desc = L["When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.autoCreateMacroStubsGlobal = val end,
+          get = function(info) return GSMasterOptions.autoCreateMacroStubsGlobal end,
+          order = 303
+        },
         useQuestionMark = {
           name = L["Set Default Icon QuestionMark"],
           desc = L["By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit."],

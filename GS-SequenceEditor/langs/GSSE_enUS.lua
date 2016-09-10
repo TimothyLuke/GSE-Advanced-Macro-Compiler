@@ -169,7 +169,10 @@ L["By setting this value the Sequence Editor will show every macro for your clas
 L["Source Language "] = true
 L[" is not available.  Unable to translate sequence "] = true
 L["Target language "] = true
-
+L["Auto Create Class Macro Stubs"] = true
+L["When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"] = true
+L["Auto Create Global Macro Stubs"] = true
+L["When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"] = true
 
 -- Transmission stuff
 L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true

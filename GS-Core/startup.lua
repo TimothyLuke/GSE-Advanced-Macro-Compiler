@@ -114,7 +114,8 @@ GSMasterOptions.filterList = {}
 GSMasterOptions.filterList["Spec"] = true
 GSMasterOptions.filterList["Class"] = true
 GSMasterOptions.filterList["All"] = false
-
+GSMasterOptions.autoCreateMacroStubsClass = true
+GSMasterOptions.autoCreateMacroStubsGlobal = false
 GSOutput = {}
 GSPrintAvailable = false
 GSSpecIDList = {
@@ -343,7 +344,7 @@ function GSsetMacroLocation()
 end
 
 
-function GSregisterSequence(sequenceName, icon)
+function GSregisterSequence(sequenceName, icon, forceglobalstub)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
@@ -351,19 +352,30 @@ function GSregisterSequence(sequenceName, icon)
     GSPrintDebugMessage(L["Moving on - "] .. sequenceName .. L[" already exists."], GNOME)
   else
     -- Create Sequence as a player sequence
-    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros then
+    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSMasterOptions.overflowPersonalMacros and not forceglobalstub then
       GSPrint(GSMasterOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."], GNOME)
     elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
       GSPrint(L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSMasterOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSMasterOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSMasterOptions.CommandColour .. L["/gs|r again."], GNOME)
     else
-      sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, GSsetMacroLocation() )
+      sequenceid = CreateMacro(sequenceName, (GSMasterOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, (forceglobalstub and false or GSsetMacroLocation()) )
       GSModifiedSequences[sequenceName] = true
     end
   end
 end
 
+function GSisSpecIDForCUrrentClass(specID)
+  local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
+  local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
+  if specID > 15 then
+    GSPrintDebugMessage(L["Checking if specID "] .. specID .. " " .. specclass .. L[" equals "] .. currentenglishclass)
+  else
+    GSPrintDebugMessage(L["Checking if specID "] .. specID .. L[" equals currentclassid "] .. currentclassId)
+  end
+  return (specclass==currentenglishclass or specID==currentclassId)
+end
 
-function GSCheckMacroCreated(SequenceName)
+
+function GSCheckMacroCreated(SequenceName, globalstub)
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
     if not GSModifiedSequences[SequenceName] then
@@ -372,7 +384,7 @@ function GSCheckMacroCreated(SequenceName)
     end
   else
     icon = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
-    GSregisterSequence(SequenceName, icon)
+    GSregisterSequence(SequenceName, icon, globalstub)
   end
 
 end
@@ -449,11 +461,25 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
 
     GSMasterOptions.SequenceLibrary[sequenceName][version] = sequence
+    local makemacrostub = false
+    local globalstub = false
     if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+      makemacrostub = true
+    elseif GSMasterOptions.autoCreateMacroStubsClass then
+      if GSisSpecIDForCUrrentClass(sequence.specID) then
+        makemacrostub = true
+      end
+    elseif GSMasterOptions.autoCreateMacroStubsGlobal then
+      if sequence.specID == 0 then
+        makemacro = true
+        globalstub = true
+      end
+    end
+    if makemacrostub then
       if GSMasterOptions.DisabledSequences[sequenceName] == true then
         deleteMacroStub(sequenceName)
       else
-        GSCheckMacroCreated(sequenceName)
+        GSCheckMacroCreated(sequenceName, globalstub)
       end
     end
   end
