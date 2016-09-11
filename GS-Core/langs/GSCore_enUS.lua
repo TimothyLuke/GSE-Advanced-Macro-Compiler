@@ -33,6 +33,8 @@ L["Testing "]  = true
 L["Source "] = true
 L["Cycle Version "] = true
 L["Active Version "] = true
+L["To get started "] = true
+L["Your current Specialisation is "] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true
