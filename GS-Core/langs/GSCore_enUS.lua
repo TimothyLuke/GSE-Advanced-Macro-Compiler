@@ -12,6 +12,7 @@ L["I am loaded"] = true
 L[" Sequence named "] = true
 L[" is unknown."] = true
 L["Moving on - "] = true
+L["Moving on - macro for "] = true
 L[" already exists."] = true
 L["Sequence Name: "] = true
 L["No Specialisation information for sequence "] = true

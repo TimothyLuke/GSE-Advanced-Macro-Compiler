@@ -212,7 +212,7 @@ local function CleanMacroLibrary(logout)
     GSPrintDebugMessage(L["Testing "] .. name )
     GSPrintDebugMessage(L["Active Version "] .. GSMasterOptions.ActiveSequenceVersions[name])
 
-    for version, sequence in ipairs(versiontable) do
+    for version, sequence in pairs(versiontable) do
       GSPrintDebugMessage(L["Cycle Version "] .. version )
       GSPrintDebugMessage(L["Source "] .. sequence.source)
       if sequence.source == GSStaticSourceLocal then
@@ -291,15 +291,13 @@ f:SetScript('OnEvent', function(self, event, addon)
     self:UnregisterEvent('PLAYER_REGEN_ENABLED')
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
   elseif event == 'PLAYER_LOGOUT' then
-    -- Delete "LiveTest" macro from Macrolist as it is not persisted
-    GnomeOptions = GSMasterOptions
     if GSMasterOptions.saveAllMacrosLocal then
       CleanMacroLibrary(true)
     end
     if GSMasterOptions.deleteOrphansOnLogout then
       cleanOrphanSequences()
     end
-
+    GnomeOptions = GSMasterOptions
   elseif event == 'PLAYER_ENTERING_WORLD' then
     GSPrintAvailable = true
     GSPerformPrint()
