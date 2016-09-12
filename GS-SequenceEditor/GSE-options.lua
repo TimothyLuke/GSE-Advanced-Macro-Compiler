@@ -55,7 +55,7 @@ local OptionsTable = {
         },
         saveAllMacrosLocal = {
           name = L["Only Save Local Macros"],
-          desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times adn potentially cause colissions."],
+          desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times and potentially cause colissions."],
           type = "toggle",
           set = function(info,val) GSMasterOptions.saveAllMacrosLocal = val end,
           get = function(info) return GSMasterOptions.saveAllMacrosLocal end,
