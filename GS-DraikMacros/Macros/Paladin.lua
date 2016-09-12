@@ -117,34 +117,40 @@ PostMacro=[[
 Sequences['DB_Ret'] = {
 specID = 70,
 author = "Draik",
-helpTxt = "Retribution Single Target macro - 3311112.",
+helpTxt = "Retribution Single Target macro - 3311111.",
 icon = "INV_Sword_2H_AshbringerCorrupt",
-PreMacro = [[
+PreMacro=[[
 /targetenemy [noharm][dead]
 ]],
-'/cast Judgment',
-'/cast Crusader Strike',
-'/cast Blade of Justice',
-'/cast [combat]!Consecration',
-'/cast [combat] [talent:7/1] Crusade; Avenging Wrath',
-'/cast !Wake of Ashes',
+"/cast Judgment",
+"/cast Crusader Strike",
+"/cast Blade of Justice",
+"/cast [combat] Consecration",
+"/cast [combat] [talent:7/2] Crusade",
+"/cast !Wake of Ashes",
+"/cast [talent:5/1] Justicar's Vengeance",
+"/cast [combat] Avenging Wrath",
 "/cast Templar's Verdict",
+PostMacro=[[
+]],
 }
 
 Sequences['DB_RetAoE'] = {
 specID = 70,
 author = "Draik",
-helpTxt = "Retribution AoE macro - 3311112.",
+helpTxt = "Retribution AoE macro - 3311111.",
 icon = "Ability_Paladin_DivineStorm",
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
-'/cast Judgment',
-'/cast Crusader Strike',
-'/cast Blade of Justice',
-'/cast [combat]!Consecration',
-'/cast [combat]!Crusade',
-'/cast !Wake of Ashes',
+"/cast Judgment",
+"/cast Crusader Strike",
+"/cast Blade of Justice",
+"/cast [combat] Consecration",
+"/cast [combat] [talent:7/2] Crusade",
+"/cast !Wake of Ashes",
+"/cast [talent:5/1] Justicar's Vengeance",
+"/cast [combat] Avenging Wrath",
 "/cast Divine Storm",
 }
 

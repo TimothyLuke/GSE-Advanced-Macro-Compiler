@@ -75,6 +75,38 @@ PostMacro=[[
 ]],
 }
 
+Sequences['DB_Ichthys_Frosty'] = {
+author="Mageichthys@Kilrogg",
+specID=64,
+version=3,
+source = "Local",
+helpTxt = "Talents: 1322112 -  Works best with a 0.75 to 1.0 second  button spam",
+icon='INV_MISC_QUESTIONMARK',
+lang="enUS",
+PreMacro=[[
+/targetenemy [noharm][dead]
+/cast [nopet,nomod] Summon Water Elemental
+]],
+"/cast [nochanneling] Rune of Power",
+"/cast [nochanneling] Ray of Frost",
+"/cast [nochanneling] Frost Bomb",
+"/cast [nochanneling] Frozen Orb",
+"/cast [nochanneling] Frozen Touch",
+"/cast [nochanneling] Ebonbolt",
+"/cast [nochanneling] Frostbolt",
+"/cast [nochanneling] Ice Lance",
+"/cast [nochanneling] Flurry",
+"/cast [nochanneling] Ice Lance",
+"/cast [nochanneling] Glacial Spike",
+"/cast [nochanneling] Frostbolt",
+PostMacro=[[
+/cast [nochanneling] Ice Barrier
+/cast [nochanneling] Ice Floes
+/cast [nochanneling] Icy Veins
+/cast [nochanneling] Frozen Orb
+]],
+}
+
 Sequences['DB_AaslaanFire'] = {
 author="Ambergreen",
 specID=63,
