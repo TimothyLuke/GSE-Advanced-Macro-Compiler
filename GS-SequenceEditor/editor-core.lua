@@ -24,44 +24,6 @@ function GSGetDefaultIcon()
   return strsub(defaulticon, 17)
 end
 
-function GSEncodeSequence(Sequence)
-  --clean sequence
-  Sequence = GSTRUnEscapeSequence(Sequence)
-  --remove version and source
-  Sequence.version = nil
-  Sequence.source = GSStaticSourceTransmission
-  Sequence.authorversion = nil
-  Sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-
-
-  local one = libS:Serialize(Sequence)
-  local two = libC:CompressHuffman(one)
-  local final = libCE:Encode(two)
-  return final
-end
-
-function GSDecodeSequence(data)
-  -- Decode the compressed data
-  local one = libCE:Decode(data)
-
-  --Decompress the decoded data
-  local two, message = libC:Decompress(one)
-  if(not two) then
-  	GSPrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
-  	return
-  end
-
-  -- Deserialize the decompressed data
-  local success, final = libS:Deserialize(two)
-  if (not success) then
-  	GSPrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
-  	return
-  end
-
-  GSPrintDebugMessage ("final data: " .. final, "GS-Transmission")
-  return final
-end
-
 function GSSE:parsetext(editbox)
   if GSMasterOptions.RealtimeParse then
     text = GSTRUnEscapeString(editbox:GetText())

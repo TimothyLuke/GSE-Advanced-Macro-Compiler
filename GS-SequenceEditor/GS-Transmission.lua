@@ -5,6 +5,9 @@ local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 
+local transauthor = GetUnitName("player", true) .. '@' .. GetRealmName()
+local transauthorlen = string.len(transauthor)
+
 GSPrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
@@ -46,6 +49,21 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	showAlert = 1,
 }
 
+local function sendMessage(tab, channel)
+  local _, instanceType = IsInInstance()
+	local transmission = GSSE:Serialize(tab)
+	if GSisEmpty(channel) then
+		if IsInRaid() then
+			channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
+		elseif
+		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
+		end
+  end
+	SendAddonMessage(GSStaticPrefix, transmission, channel)
+
+end
+
+
 local function performVersionCheck(version)
 	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
 		if not GSold then
@@ -56,8 +74,60 @@ local function performVersionCheck(version)
 		  end
 		end
 	end
-
 end
+
+function GSEncodeSequence(Sequence)
+  --clean sequence
+  eSequence = GSTRUnEscapeSequence(Sequence)
+  --remove version and source
+  eSequence.version = nil
+  eSequence.source = GSStaticSourceTransmission
+  eSequence.authorversion = nil
+
+
+  local one = libS:Serialize(eSequence)
+  local two = libC:CompressHuffman(one)
+  local final = libCE:Encode(two)
+  return final
+end
+
+function GSDecodeSequence(data)
+  -- Decode the compressed data
+  local one = libCE:Decode(data)
+
+  --Decompress the decoded data
+  local two, message = libC:Decompress(one)
+  if(not two) then
+  	GSPrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
+  	return
+  end
+
+  -- Deserialize the decompressed data
+  local success, final = libS:Deserialize(two)
+  if (not success) then
+  	GSPrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
+  	return
+  end
+
+  GSPrintDebugMessage ("final data: " .. final, "GS-Transmission")
+  return final
+end
+
+function GSTransmitSequence(SequenceName, channel)
+  local t = {}
+	t.Command = "GS-E_TRANSMITSEQUENCE"
+	t.SequenceName = SequenceName
+	t.Sequence = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
+	SendMessage(t, channel)
+end
+
+local function ReceiveSequence(SequenceName, Sequence)
+  local sequence = GSDecodeSequence(Sequence)
+  local version = GSGetNextSequenceVersion(SequenceName)
+	sequence.version = version
+	GSAddSequenceToCollection(SequenceName, sequence, version)
+end
+
 
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
   GSPrintDebugMessage("GSSE:onCommReceived", GNOME)
@@ -68,10 +138,15 @@ function GSSE:OnCommReceived(prefix, message, distribution, sender)
 	    if not GSold then
 				performVersionCheck(t.Version)
 			end
-	  end
+	  elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
+      if sender ~= GetUnitName("player", true) then
+        ReceiveSequence(t.SequenceName, t.Sequence)
+			else
+        GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
+			end
+    end
 	end
 end
-
 
 
 local function sendVersionCheck()
@@ -80,12 +155,7 @@ local function sendVersionCheck()
 	  local t = {}
 	  t.Command = "GS-E_VERSIONCHK"
 	  t.Version = GSEVersion
-	  transmission = GSSE:Serialize(t)
-		if IsInRaid() then
-			SendAddonMessage(GSStaticPrefix, transmission, (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID")
-		elseif IsInGroup() then
-			SendAddonMessage(GSStaticPrefix, transmission, (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY")
-		end
+	  SendMessage(t)
 	end
 end
 
