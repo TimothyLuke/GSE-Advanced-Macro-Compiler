@@ -237,13 +237,13 @@ GSStaticSequenceDebug = "SEQUENCEDEBUG"
 -- This overides the sequential behaviour that is standard in GS
 -------------------------------------------------------------------------------------
 GSStaticPriority = [[
-	limit = limit or 1
-	if step == limit then
-		limit = limit % #macros + 1
-		step = 1
-	else
-		step = step % #macros + 1
-	end
+  limit = limit or 1
+  if step == limit then
+    limit = limit % #macros + 1
+    step = 1
+  else
+    step = step % #macros + 1
+  end
 ]]
 
 

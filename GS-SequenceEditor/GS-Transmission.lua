@@ -55,7 +55,7 @@ local function sendMessage(tab, channel)
 	if GSisEmpty(channel) then
 		if IsInRaid() then
 			channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
-		elseif
+		else
 		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
 		end
   end
