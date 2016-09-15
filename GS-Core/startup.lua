@@ -577,3 +577,12 @@ if GetLocale() ~= "enUS" then
     end
   end
 end
+
+
+function GSDebugDumpButton(SequenceName)
+  local dump = string.dump(func)
+  GSPrint("Button name: "  .. SequenceName)
+  GSPrint(dump)
+  GSPrint("PreMacro" .. _G['seqname']:GetAttribute('PreMacro'))
+  GSPrint("PostMacro" .. _G['seqname']:GetAttribute('PostMacro'))
+end
