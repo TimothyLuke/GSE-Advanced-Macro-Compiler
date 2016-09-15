@@ -49,7 +49,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	showAlert = 1,
 }
 
-local function sendMessage(tab, channel)
+local function GSSendMessage(tab, channel)
   local _, instanceType = IsInInstance()
 	local transmission = GSSE:Serialize(tab)
 	if GSisEmpty(channel) then
@@ -118,7 +118,7 @@ function GSTransmitSequence(SequenceName, channel)
 	t.Command = "GS-E_TRANSMITSEQUENCE"
 	t.SequenceName = SequenceName
 	t.Sequence = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
-	SendMessage(t, channel)
+	GSSendMessage(t, channel)
 end
 
 local function ReceiveSequence(SequenceName, Sequence)
@@ -155,7 +155,7 @@ local function sendVersionCheck()
 	  local t = {}
 	  t.Command = "GS-E_VERSIONCHK"
 	  t.Version = GSEVersion
-	  SendMessage(t)
+	  GSSendMessage(t)
 	end
 end
 
