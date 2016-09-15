@@ -580,9 +580,20 @@ end
 
 
 function GSDebugDumpButton(SequenceName)
-  local dump = string.dump(func)
+  local OnClick = [=[
+  local step = self:GetAttribute('step')
+  self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
+  %s
+  if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+    print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil')
+    step = 1
+  end
+  self:SetAttribute('step', step)
+  self:CallMethod('UpdateIcon')
+  ]=]
   GSPrint("Button name: "  .. SequenceName)
-  GSPrint(dump)
-  GSPrint("PreMacro" .. _G['seqname']:GetAttribute('PreMacro'))
-  GSPrint("PostMacro" .. _G['seqname']:GetAttribute('PostMacro'))
+  GSPrint(_G[SequenceName]:GetScript('OnClick'))
+  GSPrint("PreMacro" .. _G[SequenceName]:GetAttribute('PreMacro'))
+  GSPrint("PostMacro" .. _G[SequenceName]:GetAttribute('PostMacro'))
+  GSPrint(format(OnClick, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction or 'step = step % #macros + 1'))
 end
