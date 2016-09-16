@@ -515,13 +515,21 @@ local OptionsTable = {
           name = L["Enable Debug for the following Modules"],
           order = 30
         },
+        debugGSSequenceExecution={
+          name = L["Debug Sequence Execution"],
+          desc = L["Output the action for each button press to verify StepFunction and spell availability."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.debugSequence = val end,
+          get = function(info) return GSMasterOptions.debugSequence end,
+          order = 31
+        },
         debugmodcore={
           name = "GS-Core",
           desc = L["This will display debug messages for the Core of GS-E"],
           type = "toggle",
           set = function(info,val) GSMasterOptions.DebugModules["GS-Core"] = val end,
           get = function(info) return GSMasterOptions.DebugModules["GS-Core"] end,
-          order = 31
+          order = 32
         },
         debugmodtranslator={
           name = "GS-SequenceTranslator",
@@ -529,7 +537,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.DebugModules["GS-SequenceTranslator"] = val end,
           get = function(info) return GSMasterOptions.DebugModules["GS-SequenceTranslator"] end,
-          order = 31
+          order = 33
         },
         debugmodeditor={
           name = "GS-SequenceEditor",
@@ -537,7 +545,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.DebugModules["GS-SequenceEditor"] = val end,
           get = function(info) return GSMasterOptions.DebugModules["GS-SequenceEditor"] end,
-          order = 31
+          order = 34
         },
         debugmodtransmission={
           name = "GS-SequenceTransmission",
@@ -545,7 +553,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.DebugModules[GSStaticSourceTransmission] = val end,
           get = function(info) return GSMasterOptions.DebugModules[GSStaticSourceTransmission] end,
-          order = 31
+          order = 35
         },
       }
     }

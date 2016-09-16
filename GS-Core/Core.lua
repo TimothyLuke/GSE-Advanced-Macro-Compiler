@@ -5,6 +5,24 @@ local GNOME, _ = ...
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
+local function GSTraceSequence(button, step, task)
+  if GSMasterOptions.debugSequence then
+    local isUsable, notEnoughMana = IsUsableSpell(task)
+    if isUsable then
+      isUsable = "Available"
+    else
+      isUsable = "Not Available"
+    end
+    if notEnoughMana then
+      notEnoughMana = "Resource Not Available"
+    else
+      notEnoughMana = "Resource Available"
+    end
+    GSPrintDebugMessage(button .. "," .. step .. "," .. task .. "," .. isUsable .. "," .. notEnoughMana, GSStaticSequenceDebug)
+  end
+end
+
+
 
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
@@ -13,6 +31,7 @@ local function UpdateIcon(self)
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if GSStaticCastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
+      GSTraceSequence(button, step, spell)
       if spell then
         if GetSpellInfo(spell) then
           SetMacroSpell(button, spell, target)
