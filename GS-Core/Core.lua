@@ -459,6 +459,14 @@ function GSUpdateSequence(name,sequence)
     end
 end
 
+function GSDebugDumpButton(SequenceName)
+  GSPrint("Button name: "  .. SequenceName)
+  GSPrint(_G[SequenceName]:GetScript('OnClick'))
+  GSPrint("PreMacro" .. _G[SequenceName]:GetAttribute('PreMacro'))
+  GSPrint("PostMacro" .. _G[SequenceName]:GetAttribute('PostMacro'))
+  GSPrint(format(OnClick, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction or 'step = step % #macros + 1'))
+end
+
 local function PrintGnomeHelp()
   GSPrint(L["GnomeSequencer was originally written by semlar of wowinterface.com."], GNOME)
   GSPrint(L["This is a small addon that allows you create a sequence of macros to be executed at the push of a button."], GNOME)
