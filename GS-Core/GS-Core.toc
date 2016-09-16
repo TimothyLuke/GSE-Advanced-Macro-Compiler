@@ -2,7 +2,7 @@
 ## Title: |cffff0000GS-E:|r |cFF00D1FFGnome Sequencer - Enhanced|r Core
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke - Original GS code by Semlar
-## Version: 137
+## Version: 138
 ## SavedVariables: GnomeOptions
 ## OptionalDeps: WeakAuras
 
@@ -15,9 +15,11 @@ langs\GSCore_enUS.lua
 langs\GSCore_ptBR.lua
 
 # Initial SPell DB
+langs\preinit.lua
 langs\enUS.lua
 langs\enUSHash.lua
 langs\enUSSHADOW.lua
+langs\postlanginit.lua
 
 # Startup
 startup.lua
