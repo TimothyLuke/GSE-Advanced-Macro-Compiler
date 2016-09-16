@@ -86,7 +86,7 @@ local step = self:GetAttribute('step')
 self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
 %s
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
-  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil')
+  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
   step = 1
 end
 self:SetAttribute('step', step)
