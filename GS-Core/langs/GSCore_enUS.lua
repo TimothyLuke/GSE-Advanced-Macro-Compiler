@@ -35,6 +35,17 @@ L["Cycle Version "] = true
 L["Active Version "] = true
 L["To get started "] = true
 L["Your current Specialisation is "] = true
+L["We have a perfect match"] = true
+L["Matching specID"] = true
+L["Different specID"] = true
+L["Matching StepFunction"] = true
+L["Different StepFunction"] = true
+L["Matching PreMacro"] = true
+L["Different PreMacro"] = true
+L["Same Sequence Steps"] = true
+L["Different Sequence Steps"] = true
+L["Matching PostMacro"] = true
+L["Different PostMacro"] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true

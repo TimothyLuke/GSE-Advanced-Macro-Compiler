@@ -175,6 +175,10 @@ for k,v in pairs(GSSpecIDList) do
   GSSpecIDHashList[v] = k
 end
 
+--- Compares two sequences and return a boolean if the match.  If they do not
+--    match then if will print an element by element comparison.  This comparison
+--    ignores version, authorversion, source, helpTxt elements as these are not
+--    needed for the execution of the macro but are more for help and versioning.
 function GSCompareSequence(seq1,seq2)
   local match = false
   local steps1 = table.concat(seq1, "")
@@ -183,10 +187,39 @@ function GSCompareSequence(seq1,seq2)
   if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 then
     -- we have a match
     match = true
+    GSPrintDebugMessage(L["We have a perfect match"], GNOME)
+  else
+    if seq1.specID == seq2.specID then
+      GSPrintDebugMessage(L["Matching specID"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different specID"], GNOME)
+    end
+    if seq1.StepFunction == seq2.StepFunction then
+      GSPrintDebugMessage(L["Matching StepFunction"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different StepFunction"], GNOME)
+    end
+    if seq1.PreMacro == seq2.PreMacro then
+      GSPrintDebugMessage(L["Matching PreMacro"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different PreMacro"], GNOME)
+    end
+    if steps1 == steps2 then
+      GSPrintDebugMessage(L["Same Sequence Steps"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different Sequence Steps"], GNOME)
+    end
+    if seq1.PostMacro == seq2.PostMacro then
+      GSPrintDebugMessage(L["Matching PostMacro"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different PostMacro"], GNOME)
+    end
   end
   return match
 end
 
+--- When the Addon loads, printing is paused until after every other mod has loaded.
+--    This method prints the print queue.
 function GSPerformPrint()
   for k,v in ipairs(GSOutput) do
     print(v)
@@ -194,6 +227,9 @@ function GSPerformPrint()
   end
 end
 
+
+--- Prints <code>filepath</code>to the chat handler.  This accepts an optional
+--    <code>title</code> to be prepended to that message.
 function GSPrint(message, title)
   -- stroe this for later on.
   if not GSisEmpty(title) then
@@ -205,7 +241,11 @@ function GSPrint(message, title)
   end
 end
 
-
+--- Send the message string to an output source.
+--    If <code>GSMasterOptions.sendDebugOutputGSDebugOutput</code> then the output will
+--    be appended to variable <code>GSDebugOutput</code>
+--    If <code>GSMasterOptions.sendDebugOutputToChat</code> then the output will
+--    be sent to variable <code>GSPrint</code>
 local function determinationOutputDestination(message)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
@@ -215,6 +255,9 @@ local function determinationOutputDestination(message)
 	end
 end
 
+--- Prints <code>message</code>to the chat handler.  This accepts an optional
+--    <code>module</code> that is used to identify whether debugging for that module
+--    is currently enabled.
 function GSPrintDebugMessage(message, module)
     if GSisEmpty(module) then
       module = "GS-Core"
@@ -231,11 +274,10 @@ GSDebugOutput = ""
 
 GSStaticSequenceDebug = "SEQUENCEDEBUG"
 
--------------------------------------------------------------------------------------
--- GSStaticPriority is a static step function that goes 1121231234123451234561234567
--- use this like StepFunction = GSStaticPriority, in a macro
--- This overides the sequential behaviour that is standard in GS
--------------------------------------------------------------------------------------
+
+--- <code>GSStaticPriority</code> is a static step function that goes 1121231234123451234561234567
+--    use this like StepFunction = GSStaticPriority, in a macro
+--    This overides the sequential behaviour that is standard in GS
 GSStaticPriority = [[
   limit = limit or 1
   if step == limit then
@@ -246,11 +288,12 @@ GSStaticPriority = [[
   end
 ]]
 
-
+--- Checks for nil or empty.
 function GSisEmpty(s)
   return s == nil or s == ''
 end
 
+--- Experimental attempt to load a WeakAuras string.
 function GSLoadWeakauras(str)
   local WeakAuras = WeakAuras
 
@@ -259,6 +302,7 @@ function GSLoadWeakauras(str)
   end
 end
 
+--- Return the Active Sequence Version for a Sequence.
 function GSGetActiveSequenceVersion(SequenceName)
   local vers = 1
   if not GSisEmpty(GSMasterOptions.ActiveSequenceVersions[SequenceName]) then
@@ -267,8 +311,9 @@ function GSGetActiveSequenceVersion(SequenceName)
   return vers
 end
 
+--- Return the next version value for a sequence.
+--    a <code>last</code> value of true means to get the last remaining version
 function GSGetNextSequenceVersion(SequenceName, last)
-  -- a last value of true means to get the last remaining version
   local nextv = 0
   GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
   if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
@@ -287,7 +332,7 @@ function GSGetNextSequenceVersion(SequenceName, last)
 
 end
 
-
+--- Return a table of Known Sequence Versions
 function GSGetKnownSequenceVersions(SequenceName)
   if not GSisEmpty(SequenceName) then
     local t = {}
@@ -298,7 +343,7 @@ function GSGetKnownSequenceVersions(SequenceName)
   end
 end
 
-
+--- Delete a sequence version
 function GSDeleteSequenceVersion(sequenceName, version)
   if not GSisEmpty(sequenceName) then
     local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
@@ -319,21 +364,25 @@ function GSDeleteSequenceVersion(sequenceName, version)
   end
 end
 
--- This will need more logic for the moment iuf they are not equal set somethng.
+--- Set the Active version of a sequence
 function GSSetActiveSequenceVersion(sequenceName, version)
+  -- This may need more logic but for the moment iuf they are not equal set somethng.
   GSMasterOptions.ActiveSequenceVersions[sequenceName] = version
 end
 
+--- Return the characters current spec id
 function GSGetCurrentSpecID()
   local currentSpec = GetSpecialization()
   return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
 end
 
+--- Return the characters class id
 function GSGetCurrentClassID()
   local _, _, currentclassId = UnitClass("player")
   return currentclassId
 end
 
+--- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSsetMacroLocation()
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   local returnval = 1
@@ -343,7 +392,7 @@ function GSsetMacroLocation()
   return returnval
 end
 
-
+--- Add a macro for a sequence amd register it in the list of known sequences
 function GSregisterSequence(sequenceName, icon, forceglobalstub)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
@@ -363,6 +412,7 @@ function GSregisterSequence(sequenceName, icon, forceglobalstub)
   end
 end
 
+--- Check if the specID provided matches the plauers current class.
 function GSisSpecIDForCUrrentClass(specID)
   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
   local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
@@ -374,7 +424,7 @@ function GSisSpecIDForCUrrentClass(specID)
   return (specclass==currentenglishclass or specID==currentclassId)
 end
 
-
+--- Check if a macro has been created and if not create it.
 function GSCheckMacroCreated(SequenceName, globalstub)
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
@@ -389,17 +439,19 @@ function GSCheckMacroCreated(SequenceName, globalstub)
 
 end
 
+--- Disable all versions of a sequence and delete any macro stubs.
 function GSDisableSequence(SequenceName)
   GSMasterOptions.DisabledSequences[SequenceName] = true
   deleteMacroStub(SequenceName)
 end
 
+--- Enable all versions of a sequence and recreate any macro stubs.
 function GSEnableSequence(SequenceName)
   GSMasterOptions.DisabledSequences[SequenceName] = nil
   GSCheckMacroCreated(SequenceName)
 end
 
-
+--- Add a sequence to the library
 function GSAddSequenceToCollection(sequenceName, sequence, version)
   local confirmationtext = ""
   --Perform some validation checks on the Sequence.
@@ -488,6 +540,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
   end
 end
 
+--- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
 function GSImportLegacyMacroCollections(str, authorversion)
   for k,v in pairs(GSMasterSequences) do
     if GSisEmpty(v.version) then
@@ -533,6 +586,7 @@ local escapes = {
     ["{.-}"] = "", -- raid target icons
 }
 
+--- remove WoW Text Markup from a sequence
 function GSTRUnEscapeSequence(sequence)
   local i = 1
   for _,v in ipairs(sequence) do
@@ -549,6 +603,7 @@ function GSTRUnEscapeSequence(sequence)
   return sequence
 end
 
+--- remove WoW Text Markup from a string
 function GSTRUnEscapeString(str)
     for k, v in pairs(escapes) do
         str = gsub(str, k, v)
