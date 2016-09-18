@@ -1,4 +1,5 @@
 
+local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
 if GetLocale() ~= "enUS" then
   -- We need to load in temporarily the current locale translation tables.
