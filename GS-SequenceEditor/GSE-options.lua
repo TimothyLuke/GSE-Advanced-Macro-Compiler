@@ -519,8 +519,8 @@ local OptionsTable = {
           name = L["Debug Sequence Execution"],
           desc = L["Output the action for each button press to verify StepFunction and spell availability."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.debugSequence = val end,
-          get = function(info) return GSMasterOptions.debugSequence end,
+          set = function(info,val) GSMasterOptions.debugSequenceEx = val end,
+          get = function(info) return GSMasterOptions.debugSequenceEx end,
           order = 31
         },
         debugmodcore={

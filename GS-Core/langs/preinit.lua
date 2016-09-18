@@ -10,7 +10,7 @@ GSMasterOptions.seedInitialMacro = false
 GSMasterOptions.initialised = true
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
-GSMasterOptions.debugSequence = false
+GSMasterOptions.debugSequenceEx = false
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
@@ -105,7 +105,7 @@ function GSPrintDebugMessage(message, module)
     if GSisEmpty(module) then
       module = "GS-Core"
     end
-    if GSMasterOptions.debugSequence == true and module == GSStaticSequenceDebug then
+    if GSMasterOptions.debugSequenceEx == true and module == GSStaticSequenceDebug then
       determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug and GSMasterOptions.DebugModules[module] == true then
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
