@@ -11,6 +11,20 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 
 
+StaticPopupDialogs["GSSEConfirmReloadUI"] = {
+  text = L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"],
+  button1 = L["Yes"],
+  button2 = L["No"],
+  OnAccept = function()
+      ReloadUI();
+  end,
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+
 GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -530,6 +544,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
         GSTRUnEscapeSequence(sequence)
         if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
           -- this is new
+          GSPrintDebugMessage(L["Creating New Sequence."], GNOME)
           GSAddSequenceToCollection(SequenceName, sequence, nextVal)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
@@ -537,10 +552,16 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
           GSUpdateSequenceList()
           GSSequenceListbox:SetValue(SequenceName)
         elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
+          GSPrintDebugMessage(L["Updating due to new version."], GNOME)
+          local compStep = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction
           GSAddSequenceToCollection(SequenceName, sequence, nextVal)
           GSSE:loadSequence(SequenceName)
           GSCheckMacroCreated(SequenceName)
-          GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+          if sequence.StepFunction == compStep then
+            GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+          else
+            StaticPopup_Show ("GSSEConfirmReloadUI")
+          end
         end
       end
       editframe:Hide()

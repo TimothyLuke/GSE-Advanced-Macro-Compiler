@@ -62,6 +62,7 @@ L["Make Active"] = true
 L["Delete Version"] = true
 L["No Sequences present so none displayed in the list."] = true
 L["Specialisation / Class ID"] = true
+L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"] = true
 -- options Debug
 
 
@@ -175,6 +176,8 @@ L["Auto Create Class Macro Stubs"] = true
 L["When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"] = true
 L["Auto Create Global Macro Stubs"] = true
 L["When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"] = true
+L["Updating due to new version."] = true
+L["Creating New Sequence."] = true
 
 -- Transmission stuff
 L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
