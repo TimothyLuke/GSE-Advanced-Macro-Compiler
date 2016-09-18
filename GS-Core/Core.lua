@@ -5,24 +5,28 @@ local GNOME, _ = ...
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
+local GCD, GCD_Update_Timer
+
 local function GSTraceSequence(button, step, task)
   if GSMasterOptions.debugSequence then
     local isUsable, notEnoughMana = IsUsableSpell(task)
     if isUsable then
-      isUsable = "Able To Cast"
+      isUsable = GSMasterOptions.CommandColour .. "Able To Cast" .. GSStaticStringRESET
     else
-      isUsable = "Not Able to Cast"
+      isUsable =  GSMasterOptions.UNKNOWN .. "Not Able to Cast" .. GSStaticStringRESET
     end
     if notEnoughMana then
-      notEnoughMana = "Resources Not Available"
+      notEnoughMana = GSMasterOptions.UNKNOWN .. "Resources Not Available".. GSStaticStringRESET
     else
-      notEnoughMana = "Resources Available"
+      notEnoughMana =  GSMasterOptions.CommandColour .. "Resources Available" .. GSStaticStringRESET
     end
-    GSPrintDebugMessage(button .. "," .. step .. "," .. task .. "," .. isUsable .. "," .. notEnoughMana, GSStaticSequenceDebug)
+    local GCDT =  GSMasterOptions.CommandColour .. "GCD Free" .. GSStaticStringRESET
+    if GCD then
+      GCDT = GSMasterOptions.UNKNOWN .. "GCD In Cooldown" .. GSStaticStringRESET
+    end
+    GSPrintDebugMessage(button .. "," .. step .. "," .. task .. "," .. isUsable .. "," .. notEnoughMana .. "," .. GCDT, GSStaticSequenceDebug)
   end
 end
-
-
 
 local function UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
@@ -368,6 +372,13 @@ f:SetScript('OnEvent', function(self, event, addon)
     end
     GSPrintDebugMessage(L["I am loaded"])
     GSReloadSequences()
+  elseif event == 'UNIT_SPELLCAST_SUCCEEDED' then
+    if addon == "player" then
+      local _, GCD_Timer = GetSpellCooldown(61304)
+      GCD = true
+      GCD_Update_Timer = C_Timer.After(GCD_Timer, function () GCD = nil; GSPrintDebugMessage("GCD OFF") end)
+      GSPrintDebugMessage(L["GCD Delay:"] .. " " .. GCD_Timer)
+    end
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
@@ -375,6 +386,7 @@ f:RegisterEvent('PLAYER_LOGIN')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_LOGOUT')
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
+f:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 
 ----------------------------
 -- Draik's Mods

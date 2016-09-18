@@ -46,6 +46,7 @@ L["Same Sequence Steps"] = true
 L["Different Sequence Steps"] = true
 L["Matching PostMacro"] = true
 L["Different PostMacro"] = true
+L["GCD Delay:"] = true
 
 --Debug Strings from Errorhandler
 L["Dump of GS Debug messages"] = true
