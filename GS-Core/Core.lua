@@ -9,14 +9,14 @@ local function GSTraceSequence(button, step, task)
   if GSMasterOptions.debugSequence then
     local isUsable, notEnoughMana = IsUsableSpell(task)
     if isUsable then
-      isUsable = "Available"
+      isUsable = "Able To Cast"
     else
-      isUsable = "Not Available"
+      isUsable = "Not Able to Cast"
     end
     if notEnoughMana then
-      notEnoughMana = "Resource Not Available"
+      notEnoughMana = "Resources Not Available"
     else
-      notEnoughMana = "Resource Available"
+      notEnoughMana = "Resources Available"
     end
     GSPrintDebugMessage(button .. "," .. step .. "," .. task .. "," .. isUsable .. "," .. notEnoughMana, GSStaticSequenceDebug)
   end
