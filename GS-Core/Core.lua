@@ -24,7 +24,7 @@ local function GSTraceSequence(button, step, task)
     if GCD then
       GCDT = GSMasterOptions.UNKNOWN .. "GCD In Cooldown" .. GSStaticStringRESET
     end
-    GSPrintDebugMessage(button .. "," .. step .. "," .. task .. "," .. isUsable .. "," .. notEnoughMana .. "," .. GCDT, GSStaticSequenceDebug)
+    GSPrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. isUsable .. "," .. notEnoughMana .. "," .. GCDT, GSStaticSequenceDebug)
   end
 end
 

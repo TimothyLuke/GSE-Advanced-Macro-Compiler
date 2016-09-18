@@ -14,6 +14,7 @@ GSMasterOptions.initialised = true
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
 GSMasterOptions.debugSequenceEx = false
+GSMasterOptions.debugSequence = nil
 GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
