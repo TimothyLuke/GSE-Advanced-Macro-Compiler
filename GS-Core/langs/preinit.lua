@@ -1,7 +1,61 @@
+GSMasterOptions = {}
+GSMasterOptions.saveAllMacrosLocal = true
+GSMasterOptions.hideSoundErrors = false
+GSMasterOptions.hideUIErrors = false
+GSMasterOptions.clearUIErrors = false
+GSMasterOptions.seedInitialMacro = false
+GSMasterOptions.initialised = true
+GSMasterOptions.deleteOrphansOnLogout = false
+GSMasterOptions.debug = false
+GSMasterOptions.debugSequence = false
+GSMasterOptions.sendDebugOutputToChat = true
+GSMasterOptions.sendDebugOutputGSDebugOutput = false
+GSMasterOptions.useTranslator = false
+GSMasterOptions.requireTarget = false
+GSMasterOptions.use2 = false
+GSMasterOptions.use6 = false
+GSMasterOptions.use11 = false
+GSMasterOptions.use12 = false
+GSMasterOptions.use13 = true
+GSMasterOptions.use14 = true
+GSMasterOptions.setDefaultIconQuestionMark = true
+GSMasterOptions.TitleColour = "|cFFFF0000"
+GSMasterOptions.AuthorColour = "|cFF00D1FF"
+GSMasterOptions.CommandColour = "|cFF00FF00"
+GSMasterOptions.NormalColour = "|cFFFFFFFF"
+GSMasterOptions.EmphasisColour = "|cFFFFFF00"
+GSMasterOptions.overflowPersonalMacros = false
+GSMasterOptions.KEYWORD = "|cff88bbdd"
+GSMasterOptions.UNKNOWN = "|cffff6666"
+GSMasterOptions.CONCAT = "|cffcc7777"
+GSMasterOptions.NUMBER = "|cffffaa00"
+GSMasterOptions.STRING = "|cff888888"
+GSMasterOptions.COMMENT = "|cff55cc55"
+GSMasterOptions.INDENT = "|cffccaa88"
+GSMasterOptions.EQUALS = "|cffccddee"
+GSMasterOptions.STANDARDFUNCS = "|cff55ddcc"
+GSMasterOptions.WOWSHORTCUTS = "|cffddaaff"
+GSMasterOptions.RealtimeParse = false
+GSMasterOptions.SequenceLibrary = {}
+GSMasterOptions.ActiveSequenceVersions = {}
+GSMasterOptions.DisabledSequences = {}
+GSMasterOptions.DebugModules = {}
+GSMasterOptions.DebugModules["GS-Core"] = true
+GSMasterOptions.DebugModules["GS-SequenceTranslator"] = false
+GSMasterOptions.DebugModules["GS-SequenceEditor"] = false
+GSMasterOptions.DebugModules[GSStaticSourceTransmission] = false
+GSMasterOptions.filterList = {}
+GSMasterOptions.filterList["Spec"] = true
+GSMasterOptions.filterList["Class"] = true
+GSMasterOptions.filterList["All"] = false
+GSMasterOptions.autoCreateMacroStubsClass = true
+GSMasterOptions.autoCreateMacroStubsGlobal = false
+
 --- Checks for nil or empty.
 function GSisEmpty(s)
   return s == nil or s == ''
 end
+
 
 
 --- When the Addon loads, printing is paused until after every other mod has loaded.
