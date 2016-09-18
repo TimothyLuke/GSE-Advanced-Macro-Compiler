@@ -288,11 +288,6 @@ GSStaticPriority = [[
   end
 ]]
 
---- Checks for nil or empty.
-function GSisEmpty(s)
-  return s == nil or s == ''
-end
-
 --- Experimental attempt to load a WeakAuras string.
 function GSLoadWeakauras(str)
   local WeakAuras = WeakAuras
