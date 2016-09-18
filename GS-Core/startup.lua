@@ -8,8 +8,6 @@ GSTRUnfoundSpells = {}
 GSModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
 GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
-GSStaticSourceLocal = "Local"
-GSStaticSourceTransmission = "Transmission"
 
 GSStaticCleanStrings = {}
 GSStaticCleanStrings = {

@@ -1,3 +1,6 @@
+GSStaticSourceLocal = "Local"
+GSStaticSourceTransmission = "Transmission"
+
 GSMasterOptions = {}
 GSMasterOptions.saveAllMacrosLocal = true
 GSMasterOptions.hideSoundErrors = false
