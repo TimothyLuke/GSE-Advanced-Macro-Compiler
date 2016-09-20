@@ -78,8 +78,6 @@ PostMacro=[[
 Sequences['DB_Ichthys_Frosty'] = {
 author="Mageichthys@Kilrogg",
 specID=64,
-version=3,
-source = "Local",
 helpTxt = "Talents: 1322112 -  Works best with a 0.75 to 1.0 second  button spam",
 icon='INV_MISC_QUESTIONMARK',
 lang="enUS",
@@ -106,7 +104,6 @@ PostMacro=[[
 /cast [nochanneling] Frozen Orb
 ]],
 }
-
 Sequences['DB_AaslaanFire'] = {
 author="Ambergreen",
 specID=63,
