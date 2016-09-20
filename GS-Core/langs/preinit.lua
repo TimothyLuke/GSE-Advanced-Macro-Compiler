@@ -19,6 +19,7 @@ GSMasterOptions.sendDebugOutputToChat = true
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
 GSMasterOptions.requireTarget = false
+GSMasterOptions.use1 = false
 GSMasterOptions.use2 = false
 GSMasterOptions.use6 = false
 GSMasterOptions.use11 = false
