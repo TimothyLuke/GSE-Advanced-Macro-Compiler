@@ -52,7 +52,10 @@ GSStaticCleanStrings = {
   [48] = "/use [combat] 2\n",
   [49] = "/use [combat]5\n",
   [50] = "/use [combat] 5\n",
-
+  [51] = "/use [combat]1\n",
+  [52] = "/use [combat] 1\n",
+  [53] = "/use 1\n",
+  [54] = "/use 5\n",
   [101] = "\n\n",
 }
 
