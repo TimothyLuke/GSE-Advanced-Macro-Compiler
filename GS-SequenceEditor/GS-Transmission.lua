@@ -191,8 +191,8 @@ function dataobj:OnClick(self, button)
 	if button == "LeftButton" then
     GSGuiShowViewer()
 	elseif button == "MiddleButton" then
-    
-	elseif button == "RightButton"
+
+	elseif button == "RightButton" then
     GSDebugFrame:Show()
 	end
 end

@@ -196,3 +196,6 @@ L["Pause"] = true
 L["Resume"] = true
 L["Clear"] = true
 L["Options"] = true
+L["Disable"] = true
+L["Enable"] = true
+L["GnomeSequencer-Enhanced"] = true

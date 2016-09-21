@@ -586,7 +586,7 @@ function GSSE:GSSlash(input)
     if input == "hide" then
       frame:Hide()
     elseif input == "debug" then
-      GSDebugFrame:Show()
+      GSShowDebugWindow()
     else
       GSGuiShowViewer()
     end
