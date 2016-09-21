@@ -187,7 +187,7 @@ function dataobj:OnTooltipShow()
 	self:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
 end
 
-function dataobj:OnClick(self, button)
+function dataobj:OnClick(button)
 	if button == "LeftButton" then
     GSGuiShowViewer()
 	elseif button == "MiddleButton" then
