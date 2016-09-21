@@ -20,6 +20,7 @@ translator-core.lua
 #Editor
 editor-core.lua
 GS-Transmission.lua
+DebugWindow.lua
 
 #OptionsGUI
 GSE-options.lua

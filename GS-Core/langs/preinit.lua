@@ -94,12 +94,13 @@ end
 --    be appended to variable <code>GSDebugOutput</code>
 --    If <code>GSMasterOptions.sendDebugOutputToChat</code> then the output will
 --    be sent to variable <code>GSPrint</code>
-local function determinationOutputDestination(message)
+--    The Title is stripped for intermod debug output via GSDebugOutput
+local function determinationOutputDestination(message, title)
   if GSMasterOptions.sendDebugOutputGSDebugOutput then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
 	end
 	if GSMasterOptions.sendDebugOutputToChat then
-    GSPrint(message)
+    GSPrint(message, title)
 	end
 end
 
@@ -111,7 +112,7 @@ function GSPrintDebugMessage(message, module)
       module = "GS-Core"
     end
     if GSMasterOptions.debugSequenceEx == true and module == GSStaticSequenceDebug then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] .. message )
+      determinationOutputDestination(message, GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug and GSMasterOptions.DebugModules[module] == true then
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
