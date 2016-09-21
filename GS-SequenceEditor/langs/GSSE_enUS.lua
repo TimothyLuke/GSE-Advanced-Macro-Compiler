@@ -186,3 +186,13 @@ L["This will display debug messages for the GS-E Ingame Transmission and transfe
 -- New Strings 1.4
 L["Use Head Item in Postmacro"] = true
 L["Incorporate the Head slot into the PostMacro. This is the equivalent of /use [combat] 1 in a PostMacro."] = true
+L["GS-E: Left Click to open the Sequence Editor"] = true
+L["GS-E: Middle Click to open the Transmission Interface"] = true
+L["GS-E: Right Click to open the Sequence Debugger"] = true
+L["Sequence Debugger"] = true
+L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] = true
+L["Output"] = true
+L["Pause"] = true
+L["Resume"] = true
+L["Clear"] = true
+L["Options"] = true

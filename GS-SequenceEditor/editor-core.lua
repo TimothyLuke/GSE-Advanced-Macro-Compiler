@@ -571,19 +571,27 @@ function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
     end
 end
 
+function GSGuiShowViewer()
+  if not InCombatLockdown() then
+    local names = GSSE:getSequenceNames()
+    GSSequenceListbox:SetList(names)
+    frame:Show()
+  else
+    GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
+  end
+
+end
+
 function GSSE:GSSlash(input)
     if input == "hide" then
       frame:Hide()
+    elseif input == "debug" then
+      GSDebugFrame:Show()
     else
-      if not InCombatLockdown() then
-        local names = GSSE:getSequenceNames()
-        GSSequenceListbox:SetList(names)
-        frame:Show()
-      else
-        GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
-      end
+      GSGuiShowViewer()
     end
 end
+
 
 
 function GSSE:OnInitialize()

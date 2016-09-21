@@ -4,6 +4,9 @@ local GSStaticPrefix = "GS-E"
 local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
+local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
+
+local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gsse"})
 
 local transauthor = GetUnitName("player", true) .. '@' .. GetRealmName()
 local transauthorlen = string.len(transauthor)
@@ -166,3 +169,30 @@ end
 
 GSSE:RegisterComm("GS-E")
 GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
+
+
+
+
+
+function dataobj:OnEnter()
+
+end
+
+function dataobj:OnLeave()
+
+end
+
+function dataobj:OnTooltipShow()
+	self:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
+	self:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
+end
+
+function dataobj:OnClick(self, button)
+	if button == "LeftButton" then
+    GSGuiShowViewer()
+	elseif button == "MiddleButton" then
+    
+	elseif button == "RightButton"
+    GSDebugFrame:Show()
+	end
+end

@@ -44,20 +44,19 @@ function GSSE:OptionsGuiDebugView()
 
 end
 
-local frame = AceGUI:Create("Frame")
-local curentSequence
-frame:SetTitle(L["Sequence Debugger"])
-frame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"])
-frame:SetCallback("OnClose", function(widget) frame:Hide();  GSMasterOptions.debugSequenceEx = false; GSSE:EnableGuiDebugView() end)
-frame:SetLayout("List")
-
+GSDebugGSDebugFrame = AceGUI:Create("GSDebugFrame")
+GSDebugFrame:SetTitle(L["Sequence Debugger"])
+GSDebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"])
+GSDebugFrame:SetCallback("OnClose", function(widget) GSDebugFrame:Hide();  GSMasterOptions.debugSequenceEx = false; GSSE:EnableGuiDebugView() end)
+GSDebugFrame:SetLayout("List")
+GSDebugFrame:Hide()
 
 GSDebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSDebugOutputTextbox:SetLabel(L["Output"])
 GSDebugOutputTextbox:SetNumLines(20)
 GSDebugOutputTextbox:DisableButton(true)
 GSDebugOutputTextbox:SetFullWidth(true)
-frame:AddChild(GSDebugOutputTextbox)
+GSDebugFrame:AddChild(GSDebugOutputTextbox)
 
 local buttonGroup = AceGUI:Create("SimpleGroup")
 buttonGroup:SetFullWidth(true)
@@ -93,6 +92,4 @@ GSDebugOptionsViewButton:SetWidth(150)
 GSDebugOptionsViewButton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
 buttonGroup:AddChild(GSDebugOptionsViewButton)
 
-
-
-frame:AddChild(buttonGroup)
+GSDebugFrame:AddChild(buttonGroup)
