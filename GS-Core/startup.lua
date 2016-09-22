@@ -134,7 +134,7 @@ function GSCompareSequence(seq1,seq2)
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
 
-  if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 then
+  if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
     -- we have a match
     match = true
     GSPrintDebugMessage(L["We have a perfect match"], GNOME)
@@ -164,6 +164,12 @@ function GSCompareSequence(seq1,seq2)
     else
       GSPrintDebugMessage(L["Different PostMacro"], GNOME)
     end
+    if seq1.helpTxt == seq2.helpTxt then
+      GSPrintDebugMessage(L["Matching helpTxt"], GNOME)
+    else
+      GSPrintDebugMessage(L["Different helpTxt"], GNOME)
+    end
+
   end
   return match
 end

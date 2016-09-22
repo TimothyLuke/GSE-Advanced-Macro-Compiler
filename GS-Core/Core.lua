@@ -236,8 +236,12 @@ local function CleanMacroLibrary(logout)
   local tempTable = {}
   for name, versiontable in pairs(GSMasterOptions.SequenceLibrary) do
     GSPrintDebugMessage(L["Testing "] .. name )
-    GSPrintDebugMessage(L["Active Version "] .. GSMasterOptions.ActiveSequenceVersions[name])
 
+    if not GSisEmpty(GSMasterOptions.ActiveSequenceVersions[name]) then
+      GSPrintDebugMessage(L["Active Version "] .. GSMasterOptions.ActiveSequenceVersions[name])
+    else
+      GSPrintDebugMessage(L["No Active Version"] .. " " .. name)
+    end
     for version, sequence in pairs(versiontable) do
       GSPrintDebugMessage(L["Cycle Version "] .. version )
       GSPrintDebugMessage(L["Source "] .. sequence.source)
@@ -263,125 +267,143 @@ local function CleanMacroLibrary(logout)
   GSMasterOptions.SequenceLibrary = tempTable
 end
 
+function GSPrepareLogout(deletenonlocalmacros)
+  CleanMacroLibrary(deletenonlocalmacros)
+  if GSMasterOptions.deleteOrphansOnLogout then
+    cleanOrphanSequences()
+  end
+  GnomeOptions = GSMasterOptions
+end
+
+local function prepareLogin()
+  if not InCombatLockdown() then
+    IgnoreMacroUpdates = true
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[2]) then
+      local forremoval = {}
+      local toprocess = {}
+      for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
+
+        if GSisEmpty(GSMasterOptions.SequenceLibrary[name][version]) then
+          -- This value is missing.
+          -- check if there is a version.
+          ver = GSGetNextSequenceVersion(name)
+          if ver then
+            -- current version is broken but sequence exists.
+            GSMasterOptions.ActiveSequenceVersions[name] = ver
+            toprocess[name] = true
+          else
+            -- WHole Sequence Tree is no longer present.
+            forremoval[name] = true
+          end
+        else
+          toprocess[name] = true
+        end
+      end
+      for name,_ in pairs(toprocess) do
+        local macroIndex = GetMacroIndexByName(name)
+        if macroIndex and macroIndex ~= 0 then
+          if not GSModifiedSequences[name] then
+            GSModifiedSequences[name] = true
+            EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+          end
+          _G[name]:UpdateIcon()
+        elseif GSModifiedSequences[name] then
+          GSModifiedSequences[name] = nil
+        end
+      end
+      for name,_ in pairs(forremoval) do
+        if not GSisEmpty(name) then
+          GSMasterOptions.ActiveSequenceVersions[name] = nil
+        end
+      end
+      GSReloadSequences()
+    end
+    IgnoreMacroUpdates = false
+  else
+    self:RegisterEvent('PLAYER_REGEN_ENABLED')
+  end
+end
+
+local function processPlayerEnterWorld()
+  GSPrintAvailable = true
+  GSPerformPrint()
+  -- check macro stubs
+  for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
+    sequence = GSMasterOptions.SequenceLibrary[k][v]
+    if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+      if GSMasterOptions.DisabledSequences[k] == true then
+        deleteMacroStub(k)
+      else
+        GSCheckMacroCreated(k)
+      end
+    end
+  end
+end
+
+local function processAddonLoaded()
+  if not GSisEmpty(GnomeOptions) then
+    -- save temporary values the AddinPacks gets wiped from persisited memory
+    for k,v in pairs(GnomeOptions) do
+      if k == "SequenceLibrary" then
+        -- Merge Sequence Library
+        if not GSisEmpty(v) then
+          for sname,sversion in pairs(v) do
+            if not GSisEmpty(sversion) then
+              for sver, sequence in pairs(sversion) do
+                GSAddSequenceToCollection(sname, sequence, sver)
+              end
+            end
+          end
+        end
+      elseif k == "ActiveSequenceVersions" then
+        -- Merge Active Sequences History if locally set version is greater than the loaded in
+        for n,ver in pairs(v) do
+          if  GSisEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
+            GSMasterOptions.ActiveSequenceVersions[n] = ver
+          elseif ver > GSMasterOptions.ActiveSequenceVersions[n] then
+            GSMasterOptions.ActiveSequenceVersions[n] = ver
+          end
+        end
+      else
+        GSMasterOptions[k] = v
+      end
+    end
+    -- Add Macro Stubs for all current spec'd macros.
+    for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
+      if GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
+        GSMasterOptions.ActiveSequenceVersions[k] = nil
+      end
+    end
+  end
+  GSPrintDebugMessage(L["I am loaded"])
+  GSReloadSequences()
+end
+
+local function processUnitSpellcast(addon)
+  if addon == "player" then
+    local _, GCD_Timer = GetSpellCooldown(61304)
+    GCD = true
+    GCD_Update_Timer = C_Timer.After(GCD_Timer, function () GCD = nil; GSPrintDebugMessage("GCD OFF") end)
+    GSPrintDebugMessage(L["GCD Delay:"] .. " " .. GCD_Timer)
+  end
+end
+
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event, addon)
   if (event == 'UPDATE_MACROS' or event == 'PLAYER_LOGIN') and not IgnoreMacroUpdates then
-    if not InCombatLockdown() then
-      IgnoreMacroUpdates = true
-      if not GSisEmpty(GSMasterOptions.SequenceLibrary[2]) then
-        local forremoval = {}
-        local toprocess = {}
-        for name, version in pairs(GSMasterOptions.ActiveSequenceVersions) do
-
-          if GSisEmpty(GSMasterOptions.SequenceLibrary[name][version]) then
-            -- This value is missing.
-            -- check if there is a version.
-            ver = GSGetNextSequenceVersion(name)
-            if ver then
-              -- current version is broken but sequence exists.
-              GSMasterOptions.ActiveSequenceVersions[name] = ver
-              toprocess[name] = true
-            else
-              -- WHole Sequence Tree is no longer present.
-              forremoval[name] = true
-            end
-          else
-            toprocess[name] = true
-          end
-        end
-        for name,_ in pairs(toprocess) do
-          local macroIndex = GetMacroIndexByName(name)
-          if macroIndex and macroIndex ~= 0 then
-            if not GSModifiedSequences[name] then
-              GSModifiedSequences[name] = true
-              EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
-            end
-            _G[name]:UpdateIcon()
-          elseif GSModifiedSequences[name] then
-            GSModifiedSequences[name] = nil
-          end
-        end
-        for name,_ in pairs(forremoval) do
-          if not GSisEmpty(name) then
-            GSMasterOptions.ActiveSequenceVersions[name] = nil
-          end
-        end
-        GSReloadSequences()
-      end
-      IgnoreMacroUpdates = false
-    else
-      self:RegisterEvent('PLAYER_REGEN_ENABLED')
-    end
+    prepareLogin()
   elseif event == 'PLAYER_REGEN_ENABLED' then
     self:UnregisterEvent('PLAYER_REGEN_ENABLED')
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
   elseif event == 'PLAYER_LOGOUT' then
-    if GSMasterOptions.saveAllMacrosLocal then
-      CleanMacroLibrary(true)
-    end
-    if GSMasterOptions.deleteOrphansOnLogout then
-      cleanOrphanSequences()
-    end
-    GnomeOptions = GSMasterOptions
+    GSPrepareLogout(GSMasterOptions.saveAllMacrosLocal)
   elseif event == 'PLAYER_ENTERING_WORLD' then
-    GSPrintAvailable = true
-    GSPerformPrint()
-    -- check macro stubs
-    for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
-      sequence = GSMasterOptions.SequenceLibrary[k][v]
-      if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
-        if GSMasterOptions.DisabledSequences[k] == true then
-          deleteMacroStub(k)
-        else
-          GSCheckMacroCreated(k)
-        end
-      end
-    end
+    processPlayerEnterWorld()
   elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
-    if not GSisEmpty(GnomeOptions) then
-      -- save temporary values the AddinPacks gets wiped from persisited memory
-      for k,v in pairs(GnomeOptions) do
-        if k == "SequenceLibrary" then
-          -- Merge Sequence Library
-          if not GSisEmpty(v) then
-            for sname,sversion in pairs(v) do
-              if not GSisEmpty(sversion) then
-                for sver, sequence in pairs(sversion) do
-                  GSAddSequenceToCollection(sname, sequence, sver)
-                end
-              end
-            end
-          end
-        elseif k == "ActiveSequenceVersions" then
-          -- Merge Active Sequences History if locally set version is greater than the loaded in
-          for n,ver in pairs(v) do
-            if  GSisEmpty(GSMasterOptions.ActiveSequenceVersions[n]) then
-              GSMasterOptions.ActiveSequenceVersions[n] = ver
-            elseif ver > GSMasterOptions.ActiveSequenceVersions[n] then
-              GSMasterOptions.ActiveSequenceVersions[n] = ver
-            end
-          end
-        else
-          GSMasterOptions[k] = v
-        end
-      end
-      -- Add Macro Stubs for all current spec'd macros.
-      for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
-        if GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
-          GSMasterOptions.ActiveSequenceVersions[k] = nil
-        end
-      end
-    end
-    GSPrintDebugMessage(L["I am loaded"])
-    GSReloadSequences()
+    processAddonLoaded()
   elseif event == 'UNIT_SPELLCAST_SUCCEEDED' then
-    if addon == "player" then
-      local _, GCD_Timer = GetSpellCooldown(61304)
-      GCD = true
-      GCD_Update_Timer = C_Timer.After(GCD_Timer, function () GCD = nil; GSPrintDebugMessage("GCD OFF") end)
-      GSPrintDebugMessage(L["GCD Delay:"] .. " " .. GCD_Timer)
-    end
+    processUnitSpellcast(addon)
   end
 end)
 f:RegisterEvent('UPDATE_MACROS')
@@ -391,11 +413,9 @@ f:RegisterEvent('PLAYER_LOGOUT')
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
 f:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 
-----------------------------
--- Draik's Mods
-----------------------------
-
 function GSExportSequence(sequenceName)
+  --- Creates a string representation of the a Sequence that can be shared as a string.
+  --      Accepts <code>SequenceName</code>
   if GSisEmpty(GSMasterOptions.ActiveSequenceVersions[sequenceName]) then
     return GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. L[" Sequence named "] .. sequenceName .. L[" is unknown."]
   else
@@ -403,6 +423,8 @@ function GSExportSequence(sequenceName)
   end
 end
 
+--- Creates a string representation of the a Sequence that can be shared as a string.
+--      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSExportSequencebySeq(sequence, sequenceName)
   GSPrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
   local disabledseq = ""
@@ -479,17 +501,6 @@ function GSUpdateSequence(name,sequence)
       GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
       button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
       GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
-    end
-    if name == "LiveTest" then
-     local sequenceIndex = GetMacroIndexByName("LiveTest")
-     if sequenceIndex > 0 then
-      -- Sequence exists do nothing
-      GSPrintDebugMessage(L["Moving on - "] .. name .. L[" already exists."], GNOME)
-     else
-      -- Create Sequence as a player sequence
-      sequenceid = CreateMacro("LiveTest", GSMasterOptions.SequenceLibrary["LiveTest"][1].icon, '#showtooltip\n/click ' .. "LiveTest", false)
-      GSModifiedSequences["LiveTest"] = true
-     end
     end
 end
 
