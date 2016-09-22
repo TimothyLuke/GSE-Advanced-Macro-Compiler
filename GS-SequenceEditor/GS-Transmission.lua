@@ -5,6 +5,7 @@ local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
 local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
+local AceGUI = LibStub("AceGUI-3.0")
 
 local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gsse"})
 
@@ -52,7 +53,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	showAlert = 1,
 }
 
-local function GSSendMessage(tab, channel)
+local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
 	local transmission = GSSE:Serialize(tab)
 	if GSisEmpty(channel) then
@@ -62,7 +63,7 @@ local function GSSendMessage(tab, channel)
 		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
 		end
   end
-	SendAddonMessage(GSStaticPrefix, transmission, channel)
+	SendAddonMessage(GSStaticPrefix, transmission, channel, target)
 
 end
 
@@ -116,12 +117,12 @@ function GSDecodeSequence(data)
   return final
 end
 
-function GSTransmitSequence(SequenceName, channel)
+function GSTransmitSequence(SequenceName, channel, target)
   local t = {}
 	t.Command = "GS-E_TRANSMITSEQUENCE"
 	t.SequenceName = SequenceName
 	t.Sequence = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
-	GSSendMessage(t, channel)
+	GSSendMessage(t, channel, target)
 end
 
 local function ReceiveSequence(SequenceName, Sequence)
@@ -171,9 +172,6 @@ GSSE:RegisterComm("GS-E")
 GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 
 
-
-
-
 function dataobj:OnEnter()
 
 end
@@ -191,8 +189,51 @@ function dataobj:OnClick(button)
 	if button == "LeftButton" then
     GSGuiShowViewer()
 	elseif button == "MiddleButton" then
-
+    GSShowTransmissionGui()
 	elseif button == "RightButton" then
     GSDebugFrame:Show()
 	end
+end
+
+local transSequencevalue = ""
+
+local tranmissionFrame = AceGUI:Create("Frame")
+tranmissionFrame:SetTitle(L["Sequence Viewer"])
+tranmissionFrame:SetCallback("OnClose", function(widget) tranmissionFrame:Hide() end)
+tranmissionFrame:SetLayout("List")
+tranmissionFrame:SetWidth(270)
+tranmissionFrame:SetHeight(135)
+tranmissionFrame:Hide()
+
+local SequenceListbox = AceGUI:Create("Dropdown")
+SequenceListbox:SetLabel(L["Load Sequence"])
+SequenceListbox:SetWidth(250)
+SequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) transSequencevalue = key end)
+tranmissionFrame:AddChild(SequenceListbox)
+
+local playereditbox = AceGUI:Create("EditBox")
+playereditbox:SetLabel(L["Send To"])
+playereditbox:SetWidth(250)
+playereditbox:DisableButton(true)
+tranmissionFrame:AddChild(playereditbox)
+
+local sendbutton = AceGUI:Create("Button")
+sendbutton:SetText(L["Send"])
+sendbutton:SetWidth(250)
+sendbutton:SetCallback("OnClick", function() GSSE:GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
+tranmissionFrame:AddChild(sendbutton)
+
+function GSShowTransmissionGui(SequenceName, anch)
+  local parentframe
+	if not GSisEmpty(anch) then
+	  parentframe = anch.GetParent()
+		transmissionFrame:SetPoint("RIGHT" , parentframe, -10,0 )
+	end
+	local names = GSSE:getSequenceNames()
+	SequenceListbox:SetList(names)
+  if not GSisEmpty(SequenceName) then
+		SequenceListbox:SetValue(SequenceName)
+		transSequencevalue = SequenceName
+	end
+	tranmissionFrame:Show()
 end

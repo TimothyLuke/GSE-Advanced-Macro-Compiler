@@ -203,3 +203,5 @@ L["Help Information"] = true
 L["Save"] = true
 L["Sequence Saved as version "] = true
 L["Imported new sequence "] = true
+L["Send To"] = true
+L["Send"] = true

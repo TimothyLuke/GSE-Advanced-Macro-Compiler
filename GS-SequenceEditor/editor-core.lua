@@ -101,8 +101,14 @@ end
 
 local editOptionsbutton = AceGUI:Create("Button")
 editOptionsbutton:SetText(L["Options"])
-editOptionsbutton:SetWidth(200)
+editOptionsbutton:SetWidth(250)
 editOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
+
+local transbutton = AceGUI:Create("Button")
+transbutton:SetText(L["Send"])
+transbutton:SetWidth(150)
+transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence, self) end)
+
 
 -- Create functions for tabs
 function GSSE:drawstandardwindow(container)
@@ -138,6 +144,12 @@ function GSSE:drawstandardwindow(container)
   impbutton:SetCallback("OnClick", function() importStr = sequenceboxtext:GetText(); GSSE:importSequence() end)
   buttonGroup:AddChild(impbutton)
 
+  local tranbutton = AceGUI:Create("Button")
+  tranbutton:SetText(L["Send"])
+  tranbutton:SetWidth(150)
+  tranbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence, self) end)
+  buttonGroup:AddChild(tranbutton)
+
   local versbutton = AceGUI:Create("Button")
   versbutton:SetText(L["Manage Versions"])
   versbutton:SetWidth(150)
@@ -150,8 +162,12 @@ function GSSE:drawstandardwindow(container)
   disableSeqbutton:SetCallback("OnClick", function() GSSE:DisableSequence(currentSequence) end)
   buttonGroup:AddChild(disableSeqbutton)
 
+  local eOptionsbutton = AceGUI:Create("Button")
+  eOptionsbutton:SetText(L["Options"])
+  eOptionsbutton:SetWidth(150)
+  eOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
+  buttonGroup:AddChild(eOptionsbutton)
 
-  buttonGroup:AddChild(editOptionsbutton)
   container:AddChild(buttonGroup)
 
   sequenceboxtext = sequencebox
@@ -161,7 +177,7 @@ function GSSE:drawsecondarywindow(container)
   local languages = GSTRListCachedLanguages()
   local listbox = AceGUI:Create("Dropdown")
   listbox:SetLabel(L["Choose Language"])
-  listbox:SetWidth(250)
+  listbox:SetWidth(150)
   listbox:SetList(languages)
   listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadTranslatedSequence(GSTRListCachedLanguages()[key]) end)
   container:AddChild(listbox)
@@ -337,11 +353,12 @@ editButtonGroup:SetLayout("Flow")
 
 local savebutton = AceGUI:Create("Button")
 savebutton:SetText(L["Save"])
-savebutton:SetWidth(200)
+savebutton:SetWidth(150)
 savebutton:SetCallback("OnClick", function() GSSE:UpdateSequenceDefinition(currentSequence, GSSequenceEditorLoaded) end)
 editButtonGroup:AddChild(savebutton)
 
-editButtonGroup:AddChild(editOptionsbutton)
+editButtonGroup:AddChild(transbutton)
+
 
 
 editframe:AddChild(editButtonGroup)
@@ -374,7 +391,7 @@ leftGroup:AddChild(activesequencebox)
 
 local otherversionlistbox = AceGUI:Create("Dropdown")
 otherversionlistbox:SetLabel(L["Select Other Version"])
-otherversionlistbox:SetWidth(250)
+otherversionlistbox:SetWidth(150)
 otherversionlistbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:ChangeOtherSequence(key) end)
 rightGroup:AddChild(otherversionlistbox)
 
@@ -395,13 +412,13 @@ othersequencebuttonGroup:SetLayout("Flow")
 
 local actbutton = AceGUI:Create("Button")
 actbutton:SetText(L["Make Active"])
-actbutton:SetWidth(200)
+actbutton:SetWidth(150)
 actbutton:SetCallback("OnClick", function() GSSE:SetActiveSequence(otherversionlistboxvalue) end)
 othersequencebuttonGroup:AddChild(actbutton)
 
 local delbutton = AceGUI:Create("Button")
 delbutton:SetText(L["Delete Version"])
-delbutton:SetWidth(200)
+delbutton:SetWidth(150)
 delbutton:SetCallback("OnClick", function()
   if not GSisEmpty(otherversionlistboxvalue) then
     GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)
