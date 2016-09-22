@@ -53,6 +53,9 @@ function GSSE:PauseGuiDebugView()
 end
 
 function GSSE:OptionsGuiDebugView()
+  local config = LibStub:GetLibrary("AceConfigDialog-3.0")
+  config:Open("GSSE")
+  --config:SelectGroup("GSSE", "Debug")
 
 end
 
