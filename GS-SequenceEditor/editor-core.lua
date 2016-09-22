@@ -9,6 +9,8 @@ local libCE = libC:GetAddonEncodeTable()
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
+local frame = AceGUI:Create("Frame")
+local editframe = AceGUI:Create("Frame")
 
 
 StaticPopupDialogs["GSSEConfirmReloadUI"] = {
@@ -107,7 +109,7 @@ editOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() e
 local transbutton = AceGUI:Create("Button")
 transbutton:SetText(L["Send"])
 transbutton:SetWidth(150)
-transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence, self) end)
+transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence) end)
 
 
 -- Create functions for tabs
@@ -147,7 +149,7 @@ function GSSE:drawstandardwindow(container)
   local tranbutton = AceGUI:Create("Button")
   tranbutton:SetText(L["Send"])
   tranbutton:SetWidth(150)
-  tranbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence, self) end)
+  tranbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence) end)
   buttonGroup:AddChild(tranbutton)
 
   local versbutton = AceGUI:Create("Button")
@@ -210,12 +212,13 @@ end
 -- function that draws the widgets for the first tab
 
 
-local frame = AceGUI:Create("Frame")
+
 local curentSequence
 frame:SetTitle(L["Sequence Viewer"])
 frame:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
+GSSE.viewframe = frame
 
 
 GSSequenceListbox = AceGUI:Create("Dropdown")
@@ -244,7 +247,7 @@ end
 
 -------------end viewer-------------
 -------------begin editor--------------------
-local editframe = AceGUI:Create("Frame")
+
 local stepvalue
 
 local headerGroup = AceGUI:Create("SimpleGroup")

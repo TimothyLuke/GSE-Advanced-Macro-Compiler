@@ -198,11 +198,11 @@ end
 local transSequencevalue = ""
 
 local tranmissionFrame = AceGUI:Create("Frame")
-tranmissionFrame:SetTitle(L["Sequence Viewer"])
+tranmissionFrame:SetTitle(L["Send To"])
 tranmissionFrame:SetCallback("OnClose", function(widget) tranmissionFrame:Hide() end)
 tranmissionFrame:SetLayout("List")
-tranmissionFrame:SetWidth(270)
-tranmissionFrame:SetHeight(135)
+tranmissionFrame:SetWidth(290)
+tranmissionFrame:SetHeight(190)
 tranmissionFrame:Hide()
 
 local SequenceListbox = AceGUI:Create("Dropdown")
@@ -223,11 +223,14 @@ sendbutton:SetWidth(250)
 sendbutton:SetCallback("OnClick", function() GSSE:GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
-function GSShowTransmissionGui(SequenceName, anch)
-  local parentframe
-	if not GSisEmpty(anch) then
-	  parentframe = anch.GetParent()
-		transmissionFrame:SetPoint("RIGHT" , parentframe, -10,0 )
+GSSE.transmissionframe = tranmissionFrame
+
+function GSShowTransmissionGui(SequenceName)
+  if GSSE.viewframe:IsVisible() then
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.viewframe:GetPoint()
+	--	GSSE.transmissionframe:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
+
 	end
 	local names = GSSE:getSequenceNames()
 	SequenceListbox:SetList(names)
