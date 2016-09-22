@@ -1730,6 +1730,7 @@ GSAvailableLanguages[GSTRStaticShadow]["enUS"] = {
 	["mark of aluneth"] = 210726,
 	["eye of fate"] = 210984,
 	["chaos blades"] = 211048,
+	["fel barrage"] = 211053,
 	["desiccating stomp"] = 211073,
 	["replenishing roots"] = 211619,
 	["thal'kiel's consumption"] = 211714,

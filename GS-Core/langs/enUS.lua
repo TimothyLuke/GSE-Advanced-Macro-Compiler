@@ -1730,6 +1730,7 @@ GSAvailableLanguages[GSTRStaticKey]["enUS"] = {
 	[210726] = "Mark of Aluneth",
 	[210984] = "Eye of Fate",
 	[211048] = "Chaos Blades",
+	[211053] = "Fel Barrage",
 	[211073] = "Desiccating Stomp",
 	[211619] = "Replenishing Roots",
 	[211714] = "Thal'kiel's Consumption",
