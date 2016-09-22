@@ -6,6 +6,9 @@ local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local AceGUI = LibStub("AceGUI-3.0")
+local libS = LibStub:GetLibrary("AceSerializer-3.0")
+local libC = LibStub:GetLibrary("LibCompress")
+local libCE = libC:GetAddonEncodeTable()
 
 local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gsse"})
 
@@ -220,7 +223,7 @@ tranmissionFrame:AddChild(playereditbox)
 local sendbutton = AceGUI:Create("Button")
 sendbutton:SetText(L["Send"])
 sendbutton:SetWidth(250)
-sendbutton:SetCallback("OnClick", function() GSSE:GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
+sendbutton:SetCallback("OnClick", function() GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
 GSSE.transmissionframe = tranmissionFrame
