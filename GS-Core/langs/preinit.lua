@@ -15,7 +15,8 @@ GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
 GSMasterOptions.debugSequenceEx = false
 GSMasterOptions.debugSequence = nil
-GSMasterOptions.sendDebugOutputToChat = true
+GSMasterOptions.sendDebugOutputToChat = nil
+GSMasterOptions.sendDebugOutputToChatWindow = false
 GSMasterOptions.sendDebugOutputGSDebugOutput = false
 GSMasterOptions.useTranslator = false
 GSMasterOptions.requireTarget = false
@@ -99,7 +100,7 @@ local function determinationOutputDestination(message, title)
   if GSMasterOptions.sendDebugOutputGSDebugOutput or GSMasterOptions.debugSequenceEx  then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
 	end
-	if GSMasterOptions.sendDebugOutputToChat then
+	if GSMasterOptions.sendDebugOutputToChatWindow  then
     GSPrint(message, title)
 	end
 end

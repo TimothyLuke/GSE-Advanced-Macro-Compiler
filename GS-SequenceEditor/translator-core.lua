@@ -2,9 +2,6 @@ local GNOME = "GS-SequenceTranslator"
 local locale = GetLocale();
 
 
-local language = GSAvailableLanguages
-
-
 function GSTRListCachedLanguages()
   t = {}
   i = 1
@@ -169,19 +166,19 @@ function GSTRTranslateSpell(str, fromLocale, toLocale, cleanNewLines)
       etc = string.match(etc, "^%s*(.-)%s*$")
     end
     etc = string.gsub (etc, "!", "")
-    local foundspell = language[GSTRStaticHash][fromLocale][etc]
+    local foundspell = GSAvailableLanguages[GSTRStaticHash][fromLocale][etc]
     if foundspell then
       GSPrintDebugMessage("Translating Spell ID : " .. foundspell , GNOME )
-      GSPrintDebugMessage(" to " .. (GSisEmpty(language[GSTRStaticKey][toLocale][foundspell]) and " but its not in [GSTRStaticKey][" .. toLocale .. "]" or language[GSTRStaticKey][toLocale][foundspell]) , GNOME)
-      output = output .. GSMasterOptions.KEYWORD .. language[GSTRStaticKey][toLocale][foundspell] .. GSStaticStringRESET
+      GSPrintDebugMessage(" to " .. (GSisEmpty(GSAvailableLanguages[GSTRStaticKey][toLocale][foundspell]) and " but its not in [GSTRStaticKey][" .. toLocale .. "]" or GSAvailableLanguages[GSTRStaticKey][toLocale][foundspell]) , GNOME)
+      output = output .. GSMasterOptions.KEYWORD .. GSAvailableLanguages[GSTRStaticKey][toLocale][foundspell] .. GSStaticStringRESET
       found = true
     else
       GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale .. " Hash table checking shadow table", GNOME)
       -- try the shadow table
-      local nfoundspell = language[GSTRStaticShadow][fromLocale][string.lower(etc)]
+      local nfoundspell = GSAvailableLanguages[GSTRStaticShadow][fromLocale][string.lower(etc)]
       if nfoundspell then
-        GSPrintDebugMessage("Translating from the shadow table for  Spell ID : " .. nfoundspell .. " to " .. language[GSTRStaticKey][toLocale][foundspell], GNOME)
-        output = output  .. GSMasterOptions.KEYWORD .. language[GSTRStaticKey][toLocale][nfoundspell] .. GSStaticStringRESET
+        GSPrintDebugMessage("Translating from the shadow table for  Spell ID : " .. nfoundspell .. " to " .. GSAvailableLanguages[GSTRStaticKey][toLocale][nfoundspell], GNOME)
+        output = output  .. GSMasterOptions.KEYWORD .. GSAvailableLanguages[GSTRStaticKey][toLocale][nfoundspell] .. GSStaticStringRESET
         found = true
       else
         GSPrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)

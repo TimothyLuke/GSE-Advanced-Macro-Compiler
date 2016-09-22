@@ -506,8 +506,8 @@ local OptionsTable = {
           name = L["Display debug messages in Chat Window"],
           desc = L["This will display debug messages in the Chat window."],
           type = "toggle",
-          set = function(info,val) GSMasterOptions.sendDebugOutputToChat = val end,
-          get = function(info) return GSMasterOptions.sendDebugOutputToChat end,
+          set = function(info,val) GSMasterOptions.sendDebugOutputToChatWindow  = val end,
+          get = function(info) return GSMasterOptions.sendDebugOutputToChatWindow  end,
           order = 21
         },
         debugGSDebugOutput={
@@ -568,8 +568,8 @@ local OptionsTable = {
   }
 }
 
-GSMasterOptions.sendDebugOutputToChat = true
-GSMasterOptions.sendDebugOutputGSDebugOutput = false
+
+
 
 function GSTtoggleTranslator (boole)
   if GSTranslatorAvailable then
