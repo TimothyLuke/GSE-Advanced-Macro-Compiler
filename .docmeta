@@ -1,0 +1,3 @@
+type: luadoc
+input-files: "**/*.lua"
+output-directory: API
