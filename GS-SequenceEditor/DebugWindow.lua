@@ -26,7 +26,7 @@ function GSSE:EnableGuiDebugView()
   if GSMasterOptions.debugSequenceEx then
     --Disable
     GSMasterOptions.debugSequenceEx = false
-    GSDebugEnableViewButton:SetText(L["Disable"])
+    GSDebugEnableViewButton:SetText(L["Enable"])
     GSDebugPauseViewButton:SetText(L["Pause"])
     GSDebugPauseViewButton:SetDisabled(true)
     self:CancelTimer(self.GUIUpdateTimer)
@@ -34,7 +34,7 @@ function GSSE:EnableGuiDebugView()
   else
     --enable
     GSMasterOptions.debugSequenceEx = true
-    GSDebugEnableViewButton:SetText(L["Enable"])
+    GSDebugEnableViewButton:SetText(L["Disable"])
     self.GUIUpdateTimer = self:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
     GSDebugPauseViewButton:SetDisabled(false)
   end
@@ -59,7 +59,7 @@ end
 
 GSDebugFrame:SetTitle(L["Sequence Debugger"])
 GSDebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"])
-GSDebugFrame:SetCallback("OnClose", function(widget) GSDebugFrame:Hide();  GSMasterOptions.debugSequenceEx = false; GSSE:EnableGuiDebugView() end)
+GSDebugFrame:SetCallback("OnClose", function(widget) GSDebugFrame:Hide()  end)
 GSDebugFrame:SetLayout("List")
 GSDebugFrame:Hide()
 
@@ -95,7 +95,7 @@ end
 local GSDebugClearViewButton = AceGUI:Create("Button")
 GSDebugClearViewButton:SetText(L["Clear"])
 GSDebugClearViewButton:SetWidth(150)
-GSDebugClearViewButton:SetCallback("OnClick", function() GSDebugOutputTextbox:SetText() end)
+GSDebugClearViewButton:SetCallback("OnClick", function() GSDebugOutputTextbox:SetText('') end)
 buttonGroup:AddChild(GSDebugClearViewButton)
 
 local GSDebugOptionsViewButton = AceGUI:Create("Button")

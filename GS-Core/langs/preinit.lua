@@ -97,9 +97,11 @@ end
 --    be sent to variable <code>GSPrint</code>
 --    The Title is stripped for intermod debug output via GSDebugOutput
 local function determinationOutputDestination(message, title)
-  if GSMasterOptions.sendDebugOutputGSDebugOutput or GSMasterOptions.debugSequenceEx  then
+  if GSMasterOptions.sendDebugOutputGSDebugOutput  then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
-	end
+	elseif GSMasterOptions.debugSequenceEx == true then
+    GSDebugOutput = GSDebugOutput .. message .. "\n"
+  end
 	if GSMasterOptions.sendDebugOutputToChatWindow  then
     GSPrint(message, title)
 	end
