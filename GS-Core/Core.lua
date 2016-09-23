@@ -377,6 +377,7 @@ local function processAddonLoaded()
   end
   GSPrintDebugMessage(L["I am loaded"])
   GSReloadSequences()
+  GnomeOptions = GSMasterOptions
 end
 
 local function processUnitSpellcast(addon)
