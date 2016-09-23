@@ -258,7 +258,7 @@ local function CleanMacroLibrary(logout)
           tempTable[name] = {}
         end
         tempTable[name][version] = GSTRUnEscapeSequence(sequence)
-      elseif sequence.source == GSStaticSourceTransmission
+      elseif sequence.source == GSStaticSourceTransmission then
         if GSisEmpty(tempTable[name]) then
           tempTable[name] = {}
         end
