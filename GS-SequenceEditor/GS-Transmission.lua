@@ -58,7 +58,8 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
-	local transmission = GSSE:Serialize(tab)
+	local transmission = GSEncodeMessage(tab)
+	GSPrintDebugMessage(transmission, GNOME)
 	if GSisEmpty(channel) then
 		if IsInRaid() then
 			channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
@@ -66,10 +67,9 @@ local function GSSendMessage(tab, channel, target)
 		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
 		end
   end
-	SendAddonMessage(GSStaticPrefix, transmission, channel, target)
+	GSSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
 
 end
-
 
 local function performVersionCheck(version)
 	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
@@ -83,7 +83,7 @@ local function performVersionCheck(version)
 	end
 end
 
-function GSEncodeSequence(Sequence)
+function GSEncodeMessage(Sequence)
   --clean sequence
   eSequence = GSTRUnEscapeSequence(Sequence)
   --remove version and source
@@ -98,7 +98,7 @@ function GSEncodeSequence(Sequence)
   return final
 end
 
-function GSDecodeSequence(data)
+function GSDecodeMessage(data)
   -- Decode the compressed data
   local one = libCE:Decode(data)
 
@@ -116,41 +116,41 @@ function GSDecodeSequence(data)
   	return
   end
 
-  GSPrintDebugMessage ("final data: " .. final, "GS-Transmission")
-  return final
+  GSPrintDebugMessage ("Data Finalised", "GS-Transmission")
+  return success, final
 end
 
 function GSTransmitSequence(SequenceName, channel, target)
   local t = {}
 	t.Command = "GS-E_TRANSMITSEQUENCE"
 	t.SequenceName = SequenceName
-	t.Sequence = GSEncodeSequence(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)])
+	t.Sequence = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
 	GSSendMessage(t, channel, target)
 end
 
 local function ReceiveSequence(SequenceName, Sequence)
-  local sequence = GSDecodeSequence(Sequence)
   local version = GSGetNextSequenceVersion(SequenceName)
-	sequence.version = version
-	GSAddSequenceToCollection(SequenceName, sequence, version)
+	Sequence.version = version
+	Sequence.source = GSStaticSourceTransmission
+	GSAddSequenceToCollection(SequenceName, Sequence, version)
 end
 
 
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
   GSPrintDebugMessage("GSSE:onCommReceived", GNOME)
   GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
-  local success, t = GSSE:Deserialize(message)
+  local success, t = GSDecodeMessage(message)
   if success then
 		if t.Command == "GS-E_VERSIONCHK" then
 	    if not GSold then
 				performVersionCheck(t.Version)
 			end
 	  elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
-      if sender ~= GetUnitName("player", true) then
+			-- if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.SequenceName, t.Sequence)
-			else
-        GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
-			end
+			-- else
+      --   GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
+			-- end
     end
 	end
 end

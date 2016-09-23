@@ -103,3 +103,4 @@ L[" was imported with the following errors."] = true
 L["No Active Version"] = true
 L["Matching helpTxt"] = true
 L["Different helpTxt"] = true
+L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true

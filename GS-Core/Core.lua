@@ -258,6 +258,11 @@ local function CleanMacroLibrary(logout)
           tempTable[name] = {}
         end
         tempTable[name][version] = GSTRUnEscapeSequence(sequence)
+      elseif sequence.source == GSStaticSourceTransmission
+        if GSisEmpty(tempTable[name]) then
+          tempTable[name] = {}
+        end
+        tempTable[name][version] = GSTRUnEscapeSequence(sequence)
       else
         GSPrintDebugMessage(L["Removing "] .. name .. ":" .. version)
       end
