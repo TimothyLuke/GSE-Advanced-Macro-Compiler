@@ -8,7 +8,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 local GCD, GCD_Update_Timer
 
 local function GSTraceSequence(button, step, task)
-  if GSMasterOptions.debugSequenceEx then
+  if GSDebugSequenceEx then
     local isUsable, notEnoughMana = IsUsableSpell(task)
     if isUsable then
       isUsable = GSMasterOptions.CommandColour .. "Able To Cast" .. GSStaticStringRESET

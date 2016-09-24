@@ -23,9 +23,9 @@ function GSSE:GUIUpdateOutput()
 end
 
 function GSSE:EnableGuiDebugView()
-  if GSMasterOptions.debugSequenceEx then
+  if GSDebugSequenceEx then
     --Disable
-    GSMasterOptions.debugSequenceEx = false
+    GSDebugSequenceEx = false
     GSDebugEnableViewButton:SetText(L["Enable"])
     GSDebugPauseViewButton:SetText(L["Pause"])
     GSDebugPauseViewButton:SetDisabled(true)
@@ -33,7 +33,7 @@ function GSSE:EnableGuiDebugView()
     onpause = false
   else
     --enable
-    GSMasterOptions.debugSequenceEx = true
+    GSDebugSequenceEx = true
     GSDebugEnableViewButton:SetText(L["Disable"])
     self.GUIUpdateTimer = self:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
     GSDebugPauseViewButton:SetDisabled(false)
@@ -87,7 +87,7 @@ GSDebugPauseViewButton:SetWidth(150)
 GSDebugPauseViewButton:SetCallback("OnClick", function() GSSE:PauseGuiDebugView() end)
 buttonGroup:AddChild(GSDebugPauseViewButton)
 
-if GSMasterOptions.debugSequenceEx then
+if GSDebugSequenceEx then
   GSDebugEnableViewButton:SetText(L["Disable"])
   GSDebugPauseViewButton:SetDisabled(false)
 else
