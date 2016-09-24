@@ -13,7 +13,7 @@ GSMasterOptions.seedInitialMacro = false
 GSMasterOptions.initialised = true
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
-GSMasterOptions.debugSequenceEx = false
+GSMasterOptions.debugSequenceEx = nil
 GSMasterOptions.debugSequence = nil
 GSMasterOptions.sendDebugOutputToChat = nil
 GSMasterOptions.sendDebugOutputToChatWindow = false
@@ -60,6 +60,8 @@ GSMasterOptions.filterList["All"] = false
 GSMasterOptions.autoCreateMacroStubsClass = true
 GSMasterOptions.autoCreateMacroStubsGlobal = false
 
+GSDebugSequenceEx = false
+
 --- Checks for nil or empty.
 function GSisEmpty(s)
   return s == nil or s == ''
@@ -97,9 +99,9 @@ end
 --    be sent to variable <code>GSPrint</code>
 --    The Title is stripped for intermod debug output via GSDebugOutput
 local function determinationOutputDestination(message, title)
-  if GSMasterOptions.sendDebugOutputGSDebugOutput  then
+  if GSMasterOptions.debugSequenceEx then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
-	elseif GSMasterOptions.debugSequenceEx == true then
+	elseif GSMasterOptions.sendDebugOutputGSDebugOutput  then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
   end
 	if GSMasterOptions.sendDebugOutputToChatWindow  then
