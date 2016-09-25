@@ -8,6 +8,8 @@
 
 #libs
 embeds.xml
+lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
+
 # languages
 langs\GSSE_enUS.lua
 

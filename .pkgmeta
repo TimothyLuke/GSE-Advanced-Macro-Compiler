@@ -46,7 +46,10 @@ externals:
     GS-SequenceEditor/lib/LibDataBroker-1.1:
         url: git://git.wowace.com/wow/libdatabroker-1-1/mainline.git
         tag: latest
-
+    GS-SequenceEditor/lib/AceGUI-3.0-Completing-EditBox:
+        url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
+        tag: latest
+        
 move-folders:
     GS-Core/GS-SequenceEditor: GS-SequenceEditor
     GS-Core/GS-DraikMacros: GS-DraikMacros

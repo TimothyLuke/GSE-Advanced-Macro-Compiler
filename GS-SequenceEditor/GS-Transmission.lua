@@ -6,6 +6,7 @@ local GSold = false
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local AceGUI = LibStub("AceGUI-3.0")
+local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
@@ -14,6 +15,9 @@ local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data so
 
 local transauthor = GetUnitName("player", true) .. '@' .. GetRealmName()
 local transauthorlen = string.len(transauthor)
+
+Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
+
 
 GSPrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
 
@@ -214,7 +218,7 @@ SequenceListbox:SetWidth(250)
 SequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) transSequencevalue = key end)
 tranmissionFrame:AddChild(SequenceListbox)
 
-local playereditbox = AceGUI:Create("EditBox")
+local playereditbox = AceGUI:Create("EditBoxExampleAll")
 playereditbox:SetLabel(L["Send To"])
 playereditbox:SetWidth(250)
 playereditbox:DisableButton(true)
