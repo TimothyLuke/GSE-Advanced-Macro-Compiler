@@ -13,7 +13,7 @@ GSMasterOptions.seedInitialMacro = false
 GSMasterOptions.initialised = true
 GSMasterOptions.deleteOrphansOnLogout = false
 GSMasterOptions.debug = false
-GSMasterOptions.debugSequenceEx = nil
+GSDebugSequenceEx = nil
 GSMasterOptions.debugSequence = nil
 GSMasterOptions.sendDebugOutputToChat = nil
 GSMasterOptions.sendDebugOutputToChatWindow = false
@@ -99,7 +99,7 @@ end
 --    be sent to variable <code>GSPrint</code>
 --    The Title is stripped for intermod debug output via GSDebugOutput
 local function determinationOutputDestination(message, title)
-  if GSMasterOptions.debugSequenceEx then
+  if GSDebugSequenceEx then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
 	elseif GSMasterOptions.sendDebugOutputGSDebugOutput  then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
@@ -116,7 +116,7 @@ function GSPrintDebugMessage(message, module)
     if GSisEmpty(module) then
       module = "GS-Core"
     end
-    if GSMasterOptions.debugSequenceEx == true and module == GSStaticSequenceDebug then
+    if module == GSStaticSequenceDebug then
       determinationOutputDestination(message, GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] )
 		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug and GSMasterOptions.DebugModules[module] == true then
       determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
