@@ -181,10 +181,12 @@ end
 
 GSSE:RegisterComm("GS-E")
 GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
-
+local baseFont = CreateFont("baseFont")
 
 -- CHeck for ElvUI
-if LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
+if GSisEmpty(ElvUI) then
+	baseFont:SetFont(GameTooltipText:GetFont(), 10)
+elseif LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
   baseFont:SetFont(LibSharedMedia:Fetch('font', ElvUI[1].db.general.font), 10)
 else
 	baseFont:SetFont(GameTooltipText:GetFont(), 10)
@@ -199,7 +201,9 @@ function dataobj:OnEnter()
 	tooltip:Clear()
 	tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
-
+	tooltip:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
+	tooltip:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
+	tooltip:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
 
 	-- Use smart anchoring code to anchor the tooltip to our frame
 	tooltip:SmartAnchorTo(self)
@@ -214,11 +218,9 @@ function dataobj:OnLeave()
 	self.tooltip = nil
 end
 
-function dataobj:OnTooltipShow()
-	self:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
-	self:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
-	self:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
-end
+-- function dataobj:OnTooltipShow()
+--
+-- end
 
 function dataobj:OnClick(button)
 	if button == "LeftButton" then
