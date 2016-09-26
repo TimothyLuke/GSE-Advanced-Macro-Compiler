@@ -11,7 +11,7 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 local frame = AceGUI:Create("Frame")
 local editframe = AceGUI:Create("Frame")
-GSSE:editorframe = editframe
+
 
 StaticPopupDialogs["GSSEConfirmReloadUI"] = {
   text = L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"],
@@ -218,7 +218,7 @@ frame:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
 frame:SetCallback("OnClose", function(widget) frame:Hide() end)
 frame:SetLayout("List")
 GSSE.viewframe = frame
-
+GSSE.editframe = editframe
 
 GSSequenceListbox = AceGUI:Create("Dropdown")
 GSSequenceListbox:SetLabel(L["Load Sequence"])
