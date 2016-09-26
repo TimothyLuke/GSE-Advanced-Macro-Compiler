@@ -11,7 +11,7 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 local frame = AceGUI:Create("Frame")
 local editframe = AceGUI:Create("Frame")
-GSSE:editframe = editframe
+GSSE:editorframe = editframe
 
 StaticPopupDialogs["GSSEConfirmReloadUI"] = {
   text = L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"],

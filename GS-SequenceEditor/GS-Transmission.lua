@@ -267,8 +267,8 @@ function GSShowTransmissionGui(SequenceName)
 		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
 
 	end
-	if GSSE.editframe:IsVisible() then
-		local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.editframe:GetPoint()
+	if GSSE.editorframe:IsVisible() then
+		local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.editorframe:GetPoint()
 	--	GSSE.transmissionframe:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
 		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
 
