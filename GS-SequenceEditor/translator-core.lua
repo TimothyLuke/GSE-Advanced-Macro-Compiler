@@ -1,6 +1,6 @@
 local GNOME = "GS-SequenceTranslator"
 local locale = GetLocale();
-
+local L = GSL
 
 function GSTRListCachedLanguages()
   t = {}

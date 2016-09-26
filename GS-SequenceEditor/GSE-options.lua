@@ -1,5 +1,5 @@
 local GNOME, _ = ...
-local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
+local L = GSL
 
 StaticPopupDialogs["GSEConfirmReloadUI"] = {
   text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],

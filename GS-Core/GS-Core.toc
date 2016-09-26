@@ -13,6 +13,15 @@ embeds.xml
 # Mod Language Strings
 langs\GSCore_enUS.lua
 langs\GSCore_ptBR.lua
+langs\GSCore_frFR.lua
+langs\GSCore_deDE.lua
+langs\GSCore_itIT.lua
+langs\GSCore_koKR.lua
+langs\GSCore_esMX.lua
+langs\GSCore_ruRU.lua
+langs\GSCore_zhCN.lua
+langs\GSCore_esES.lua
+langs\GSCore_zhTW.lua
 
 # Initial SPell DB
 langs\preinit.lua

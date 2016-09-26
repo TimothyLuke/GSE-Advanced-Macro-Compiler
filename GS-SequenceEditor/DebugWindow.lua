@@ -2,7 +2,7 @@ local GSSE = GSSE
 local GNOME, _ = ...
 
 local AceGUI = LibStub("AceGUI-3.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("GS-SE")
+local L = GSL
 
 local onpause = false
 

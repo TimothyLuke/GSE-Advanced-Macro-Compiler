@@ -1,6 +1,8 @@
 local GNOME, ns = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 
+GSL = L
+
 GSMasterSequences = ns
 GSStaticCastCmds = {}
 GSTRUnfoundSpells = {}
