@@ -132,11 +132,12 @@ function GSTransmitSequence(SequenceName, channel, target)
 	GSSendMessage(t, channel, target)
 end
 
-local function ReceiveSequence(SequenceName, Sequence)
+local function ReceiveSequence(SequenceName, Sequence, sender)
   local version = GSGetNextSequenceVersion(SequenceName)
 	Sequence.version = version
 	Sequence.source = GSStaticSourceTransmission
 	GSAddSequenceToCollection(SequenceName, Sequence, version)
+	GSPrint(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
 end
 
 
@@ -150,11 +151,11 @@ function GSSE:OnCommReceived(prefix, message, distribution, sender)
 				performVersionCheck(t.Version)
 			end
 	  elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
-			-- if sender ~= GetUnitName("player", true) then
-        ReceiveSequence(t.SequenceName, t.Sequence)
-			-- else
-      --   GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
-			-- end
+			if sender ~= GetUnitName("player", true) then
+        ReceiveSequence(t.SequenceName, t.Sequence, sender)
+			else
+        GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
+			end
     end
 	end
 end
@@ -239,6 +240,13 @@ function GSShowTransmissionGui(SequenceName)
 		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
 
 	end
+	if GSSE.editframe:IsVisible() then
+		local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.editframe:GetPoint()
+	--	GSSE.transmissionframe:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
+
+	end
+
 	local names = GSSE:getSequenceNames()
 	SequenceListbox:SetList(names)
   if not GSisEmpty(SequenceName) then

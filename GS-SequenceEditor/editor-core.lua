@@ -11,7 +11,7 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 local frame = AceGUI:Create("Frame")
 local editframe = AceGUI:Create("Frame")
-
+GSSE:editframe = editframe
 
 StaticPopupDialogs["GSSEConfirmReloadUI"] = {
   text = L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"],
@@ -27,7 +27,6 @@ StaticPopupDialogs["GSSEConfirmReloadUI"] = {
 }
 
 
-GSSequenceEditorLoaded = false
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local boxes = {}
@@ -357,7 +356,7 @@ editButtonGroup:SetLayout("Flow")
 local savebutton = AceGUI:Create("Button")
 savebutton:SetText(L["Save"])
 savebutton:SetWidth(150)
-savebutton:SetCallback("OnClick", function() GSSE:UpdateSequenceDefinition(currentSequence, GSSequenceEditorLoaded) end)
+savebutton:SetCallback("OnClick", function() GSSE:UpdateSequenceDefinition(currentSequence) end)
 editButtonGroup:AddChild(savebutton)
 
 editButtonGroup:AddChild(transbutton)
@@ -584,60 +583,55 @@ function GSSE:LoadEditor(SequenceName)
 
 end
 
-function GSSE:UpdateSequenceDefinition(SequenceName, loaded)
-    --process Lines
-    if loaded then
-      -- Changes have been made so save them
-      if not GSisEmpty(SequenceName) then
-        nextVal = GSGetNextSequenceVersion(currentSequence)
-        local sequence = {}
-        GSSE:lines(sequence, spellbox:GetText())
-        -- update sequence
-        if stepvalue == "2" then
-          sequence.StepFunction = GSStaticPriority
-        else
-          sequence.StepFunction = nil
-        end
-        sequence.PreMacro = premacrobox:GetText()
-        sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-        sequence.source = GSStaticSourceLocal
-        sequence.specID = GSSpecIDHashList[specdropdownvalue]
-        sequence.helpTxt = helpeditbox:GetText()
-        if not tonumber(sequence.icon) then
-          sequence.icon = "INV_MISC_QUESTIONMARK"
-        end
-        sequence.PostMacro = postmacrobox:GetText()
-        sequence.version = nextVal
-        GSTRUnEscapeSequence(sequence)
-        if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
-          -- this is new
-          GSPrintDebugMessage(L["Creating New Sequence."], GNOME)
-          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-          GSSE:loadSequence(SequenceName)
-          GSCheckMacroCreated(SequenceName)
-          GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
-          GSUpdateSequenceList()
-          GSSequenceListbox:SetValue(SequenceName)
-          GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
-        elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
-          GSPrintDebugMessage(L["Updating due to new version."], GNOME)
-          local compStep = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction
-          GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-          GSSE:loadSequence(SequenceName)
-          GSCheckMacroCreated(SequenceName)
-          if sequence.StepFunction == compStep then
-            GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
-          else
-            GSPrepareLogout(false)
-            StaticPopup_Show ("GSSEConfirmReloadUI")
-          end
-          GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
-        end
-
-      end
+function GSSE:UpdateSequenceDefinition(SequenceName)
+  -- Changes have been made so save them
+  if not GSisEmpty(SequenceName) then
+    nextVal = GSGetNextSequenceVersion(currentSequence)
+    local sequence = {}
+    GSSE:lines(sequence, spellbox:GetText())
+    -- update sequence
+    if stepvalue == "2" then
+      sequence.StepFunction = GSStaticPriority
     else
-      GSSequenceEditorLoaded = true
+      sequence.StepFunction = nil
     end
+    sequence.PreMacro = premacrobox:GetText()
+    sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
+    sequence.source = GSStaticSourceLocal
+    sequence.specID = GSSpecIDHashList[specdropdownvalue]
+    sequence.helpTxt = helpeditbox:GetText()
+    if not tonumber(sequence.icon) then
+      sequence.icon = "INV_MISC_QUESTIONMARK"
+    end
+    sequence.PostMacro = postmacrobox:GetText()
+    sequence.version = nextVal
+    GSTRUnEscapeSequence(sequence)
+    if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName]) then
+      -- this is new
+      GSPrintDebugMessage(L["Creating New Sequence."], GNOME)
+      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+      GSSE:loadSequence(SequenceName)
+      GSCheckMacroCreated(SequenceName)
+      GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+      GSUpdateSequenceList()
+      GSSequenceListbox:SetValue(SequenceName)
+      GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
+    elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
+      GSPrintDebugMessage(L["Updating due to new version."], GNOME)
+      local compStep = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction
+      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
+      GSSE:loadSequence(SequenceName)
+      GSCheckMacroCreated(SequenceName)
+      if sequence.StepFunction == compStep then
+        GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+      else
+        GSPrepareLogout(false)
+        StaticPopup_Show ("GSSEConfirmReloadUI")
+      end
+      GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
+    end
+
+  end
 end
 
 function GSGuiShowViewer()

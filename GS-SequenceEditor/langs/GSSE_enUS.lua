@@ -205,3 +205,6 @@ L["Sequence Saved as version "] = true
 L["Imported new sequence "] = true
 L["Send To"] = true
 L["Send"] = true
+L["Received Sequence "] = true
+L[" from "] = true
+L[" saved as version "] = true
