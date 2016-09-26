@@ -130,6 +130,7 @@ function GSTransmitSequence(SequenceName, channel, target)
 	t.SequenceName = SequenceName
 	t.Sequence = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
 	GSSendMessage(t, channel, target)
+	GSSE.transmissionframe:SetStatusText(SequenceName .. L[" sent"])
 end
 
 local function ReceiveSequence(SequenceName, Sequence, sender)
@@ -254,4 +255,5 @@ function GSShowTransmissionGui(SequenceName)
 		transSequencevalue = SequenceName
 	end
 	tranmissionFrame:Show()
+	GSSE.transmissionframe:SetStatusText(L["Ready to Send"])
 end

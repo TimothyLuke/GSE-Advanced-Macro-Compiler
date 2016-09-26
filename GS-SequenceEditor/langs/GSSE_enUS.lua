@@ -208,3 +208,5 @@ L["Send"] = true
 L["Received Sequence "] = true
 L[" from "] = true
 L[" saved as version "] = true
+L["Ready to Send"] = true
+L[" sent"] = true
