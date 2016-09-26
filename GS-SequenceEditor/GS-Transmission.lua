@@ -10,6 +10,8 @@ local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
+local LibQTip = LibStub('LibQTip-1.0')
+local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
 local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gsse"})
 
@@ -181,16 +183,40 @@ GSSE:RegisterComm("GS-E")
 GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 
 
-function dataobj:OnEnter()
+-- CHeck for ElvUI
+if LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
+  baseFont:SetFont(LibSharedMedia:Fetch('font', ElvUI[1].db.general.font), 10)
+else
+	baseFont:SetFont(GameTooltipText:GetFont(), 10)
+end
 
+function dataobj:OnEnter()
+	-- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
+	--local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
+	local tooltip = LibQTip:Acquire("GSSE", 1,"CENTER")
+	self.tooltip = tooltip
+
+	tooltip:Clear()
+	tooltip:SetFont(baseFont)
+  --tooltip:SetHeaderFont(red17font)
+
+
+	-- Use smart anchoring code to anchor the tooltip to our frame
+	tooltip:SmartAnchorTo(self)
+
+	-- Show it, et voil� !
+	tooltip:Show()
 end
 
 function dataobj:OnLeave()
-
+	-- Release the tooltip
+	LibQTip:Release(self.tooltip)
+	self.tooltip = nil
 end
 
 function dataobj:OnTooltipShow()
 	self:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
+	self:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
 	self:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
 end
 

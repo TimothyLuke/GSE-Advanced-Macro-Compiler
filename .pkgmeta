@@ -49,6 +49,13 @@ externals:
     GS-SequenceEditor/lib/AceGUI-3.0-Completing-EditBox:
         url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
         tag: latest
+    GS-SequenceEditor/lib/LibQTip-1.0:
+        url: svn://svn.wowace.com/wow/libqtip-1-0/mainline/trunk
+        tag: latest
+    GS-SequenceEditor/lib/LibSharedMedia-3.0:
+        url: svn://svn.wowace.com/wow/libsharedmedia-3-0/mainline/trunk
+        tag: latest
+
         
 move-folders:
     GS-Core/GS-SequenceEditor: GS-SequenceEditor
