@@ -8,7 +8,7 @@
 
 #libs
 embeds.xml
-Lib\LibQTip-1.0\LibQTip-1.0.lua
+lib\LibQTip-1.0\LibQTip-1.0.lua
 lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 
 

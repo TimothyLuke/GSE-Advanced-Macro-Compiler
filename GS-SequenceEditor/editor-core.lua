@@ -488,10 +488,11 @@ function GSSE:importSequence()
         end
         GSCheckMacroCreated(k)
         newkey = k
+        GSPrint(L["Imported new sequence "] .. k, GNOME)
       end
       GSUpdateSequenceList()
       GSSequenceListbox:SetValue(newkey)
-      GSPrint(L["Imported new sequence "] .. k, GNOME)
+
     end
   else
     GSPrintDebugMessage (err, GNOME)
