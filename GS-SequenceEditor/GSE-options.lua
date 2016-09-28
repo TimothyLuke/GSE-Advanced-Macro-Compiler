@@ -75,7 +75,15 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.RealtimeParse = val end,
           get = function(info) return GSMasterOptions.RealtimeParse end,
-          order = 201
+          order = 202
+        },
+        resetOOC = {
+          name = L["Reset Macro when out of combat"],
+          desc = L["Resets macros back to the initial state when out of combat."],
+          type = "toggle",
+          set = function(info,val) GSMasterOptions.resetOOC = val end,
+          get = function(info) return GSMasterOptions.resetOOC end,
+          order = 300
         },
         deleteOrphanLogout = {
           name = L["Delete Orphaned Macros on Logout"],
@@ -83,7 +91,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.deleteOrphansOnLogout = val end,
           get = function(info) return GSMasterOptions.deleteOrphansOnLogout end,
-          order = 300
+          order = 301
         },
         overflowPersonalMacros = {
           name = L["Use Global Account Macros"],
@@ -91,7 +99,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.overflowPersonalMacros = val end,
           get = function(info) return GSMasterOptions.overflowPersonalMacros end,
-          order = 301
+          order = 302
         },
         autocreateclassstub = {
           name = L["Auto Create Class Macro Stubs"],
@@ -99,7 +107,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.autoCreateMacroStubsClass = val end,
           get = function(info) return GSMasterOptions.autoCreateMacroStubsClass end,
-          order = 302
+          order = 303
         },
         autocreateglobalstub = {
           name = L["Auto Create Global Macro Stubs"],
@@ -107,7 +115,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSMasterOptions.autoCreateMacroStubsGlobal = val end,
           get = function(info) return GSMasterOptions.autoCreateMacroStubsGlobal end,
-          order = 303
+          order = 304
         },
         useQuestionMark = {
           name = L["Set Default Icon QuestionMark"],

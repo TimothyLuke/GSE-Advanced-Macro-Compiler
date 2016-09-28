@@ -133,6 +133,8 @@ end
 
 
 
+
+
 local function GSFixSequence(sequence)
   for k,v in pairs(GSStaticCleanStrings) do
     GSPrintDebugMessage(L["Testing String: "] .. v, GNOME)
@@ -394,6 +396,16 @@ local function processUnitSpellcast(addon)
   end
 end
 
+local function ResetButtons()
+
+  for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
+    if GSisSpecIDForCurrentClass(GSMasterOptions.SequenceLibrary[k][v].specID) then
+      button = _G[k]
+      button:SetAttribute("step",1)
+    end
+  end
+end
+
 local IgnoreMacroUpdates = false
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event, addon)
@@ -402,6 +414,9 @@ f:SetScript('OnEvent', function(self, event, addon)
   elseif event == 'PLAYER_REGEN_ENABLED' then
     self:UnregisterEvent('PLAYER_REGEN_ENABLED')
     self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
+    if GSMasterOptions.resetOOC then
+      ResetButtons()
+    end
   elseif event == 'PLAYER_LOGOUT' then
     GSPrepareLogout(GSMasterOptions.saveAllMacrosLocal)
   elseif event == 'PLAYER_ENTERING_WORLD' then
@@ -418,6 +433,8 @@ f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_LOGOUT')
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
 f:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+f:RegisterEvent('PLAYER_REGEN_ENABLED')
+
 
 function GSExportSequence(sequenceName)
   --- Creates a string representation of the a Sequence that can be shared as a string.
@@ -495,7 +512,7 @@ end
 function GSUpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSTranslatorAvailable and GSisSpecIDForCUrrentClass(sequence.specID) then
+    if GSTranslatorAvailable and GSisSpecIDForCurrentClass(sequence.specID) then
       sequence = GSTranslateSequence(sequence, name)
     end
     if GSisEmpty(_G[name]) then

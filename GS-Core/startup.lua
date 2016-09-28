@@ -314,7 +314,7 @@ function GSregisterSequence(sequenceName, icon, forceglobalstub)
 end
 
 --- Check if the specID provided matches the plauers current class.
-function GSisSpecIDForCUrrentClass(specID)
+function GSisSpecIDForCurrentClass(specID)
   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
   local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
   if specID > 15 then
@@ -419,7 +419,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
       makemacrostub = true
     elseif GSMasterOptions.autoCreateMacroStubsClass then
-      if GSisSpecIDForCUrrentClass(sequence.specID) then
+      if GSisSpecIDForCurrentClass(sequence.specID) then
         makemacrostub = true
       end
     elseif GSMasterOptions.autoCreateMacroStubsGlobal then

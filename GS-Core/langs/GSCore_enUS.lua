@@ -315,3 +315,5 @@ L[" from "] = true
 L[" saved as version "] = true
 L["Ready to Send"] = true
 L[" sent"] = true
+L["Reset Macro when out of combat"] = true
+L["Resets macros back to the initial state when out of combat."] = true

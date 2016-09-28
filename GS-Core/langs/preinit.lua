@@ -59,6 +59,7 @@ GSMasterOptions.filterList["Class"] = true
 GSMasterOptions.filterList["All"] = false
 GSMasterOptions.autoCreateMacroStubsClass = true
 GSMasterOptions.autoCreateMacroStubsGlobal = false
+GSMasterOptions.resetOOC = true
 
 GSDebugSequenceEx = false
 
