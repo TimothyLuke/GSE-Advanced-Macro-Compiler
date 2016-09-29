@@ -12,21 +12,6 @@ local otherversionlistboxvalue = ""
 local frame = AceGUI:Create("Frame")
 local editframe = AceGUI:Create("Frame")
 
-
-StaticPopupDialogs["GSSEConfirmReloadUI"] = {
-  text = L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"],
-  button1 = L["Yes"],
-  button2 = L["No"],
-  OnAccept = function()
-      ReloadUI();
-  end,
-  timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-}
-
-
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local boxes = {}
@@ -623,12 +608,8 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)
       GSCheckMacroCreated(SequenceName)
-      if sequence.StepFunction == compStep then
-        GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
-      else
-        GSPrepareLogout(false)
-        StaticPopup_Show ("GSSEConfirmReloadUI")
-      end
+      GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
+      GSPrepareLogout(false)
       GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
     end
 

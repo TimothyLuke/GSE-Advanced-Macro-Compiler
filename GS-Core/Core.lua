@@ -131,10 +131,6 @@ function GSSplitMeIntolines(str)
   return t
 end
 
-
-
-
-
 local function GSFixSequence(sequence)
   for k,v in pairs(GSStaticCleanStrings) do
     GSPrintDebugMessage(L["Testing String: "] .. v, GNOME)
@@ -143,15 +139,6 @@ local function GSFixSequence(sequence)
   end
 end
 
-local function SetButttonOnClick(button, sequence)
-  -- if GSisEmpty(sequence.StepFunction) then
-  --   button:SetScript('OnClick', GSStaticSequentialButton:GetScript('OnClick'))
-  -- elseif sequence.StepFunction == GSStaticPriority then
-  --   button:SetScript('OnClick', GSStaticPriorityButton:GetScript('OnClick'))
-  -- else
-    button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-  -- end
-end
 
 local function createButton(name, sequence)
   GSFixSequence(sequence)
@@ -163,7 +150,7 @@ local function createButton(name, sequence)
   GSPrintDebugMessage(L["createButton PreMacro: "] .. button:GetAttribute('PreMacro'))
   button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
   GSPrintDebugMessage(L["createButton PostMacro: "] .. button:GetAttribute('PostMacro'))
-  SetButttonOnClick(button, sequence)
+  button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   button.UpdateIcon = UpdateIcon
 end
 
@@ -534,7 +521,8 @@ function GSUpdateSequence(name,sequence)
       GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
       button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
       GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
-      SetButttonOnClick(button, sequence)
+      button:UnwrapScript(button,'OnClick')
+      button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
     end
 end
 
