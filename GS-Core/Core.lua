@@ -143,6 +143,16 @@ local function GSFixSequence(sequence)
   end
 end
 
+local function SetButttonOnClick(button, sequence)
+  -- if GSisEmpty(sequence.StepFunction) then
+  --   button:SetScript('OnClick', GSStaticSequentialButton:GetScript('OnClick'))
+  -- elseif sequence.StepFunction == GSStaticPriority then
+  --   button:SetScript('OnClick', GSStaticPriorityButton:GetScript('OnClick'))
+  -- else
+    button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+  -- end
+end
+
 local function createButton(name, sequence)
   GSFixSequence(sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
@@ -153,7 +163,7 @@ local function createButton(name, sequence)
   GSPrintDebugMessage(L["createButton PreMacro: "] .. button:GetAttribute('PreMacro'))
   button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
   GSPrintDebugMessage(L["createButton PostMacro: "] .. button:GetAttribute('PostMacro'))
-  button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+  SetButttonOnClick(button, sequence)
   button.UpdateIcon = UpdateIcon
 end
 
@@ -397,7 +407,6 @@ local function processUnitSpellcast(addon)
 end
 
 local function ResetButtons()
-
   for k,v in pairs(GSMasterOptions.ActiveSequenceVersions) do
     if GSisSpecIDForCurrentClass(GSMasterOptions.SequenceLibrary[k][v].specID) then
       button = _G[k]
@@ -417,6 +426,7 @@ f:SetScript('OnEvent', function(self, event, addon)
     if GSMasterOptions.resetOOC then
       ResetButtons()
     end
+    f:RegisterEvent('PLAYER_REGEN_ENABLED')
   elseif event == 'PLAYER_LOGOUT' then
     GSPrepareLogout(GSMasterOptions.saveAllMacrosLocal)
   elseif event == 'PLAYER_ENTERING_WORLD' then
@@ -524,6 +534,7 @@ function GSUpdateSequence(name,sequence)
       GSPrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
       button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
       GSPrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
+      SetButttonOnClick(button, sequence)
     end
 end
 
