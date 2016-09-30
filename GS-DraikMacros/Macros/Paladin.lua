@@ -141,6 +141,7 @@ Sequences['DB_RetAoE'] = {
 specID = 70,
 author = "TimothyLuke",
 helpTxt = "Retribution AoE macro - 1112111.",
+StepFunction = GSStaticPriority,
 icon = "Ability_Paladin_DivineStorm",
 PreMacro=[[
 /targetenemy [noharm][dead]
