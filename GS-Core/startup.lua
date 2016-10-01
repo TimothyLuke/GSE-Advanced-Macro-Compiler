@@ -238,6 +238,7 @@ function GSGetKnownSequenceVersions(SequenceName)
   if not GSisEmpty(SequenceName) then
     local t = {}
     for k,_ in pairs(GSMasterOptions.SequenceLibrary[SequenceName]) do
+      print (k)
       t[k] = k
     end
     return t, GSMasterOptions.ActiveSequenceVersions[SequenceName]

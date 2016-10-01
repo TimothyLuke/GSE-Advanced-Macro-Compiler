@@ -232,7 +232,7 @@ end
 -------------end viewer-------------
 -------------begin editor--------------------
 
-local stepvalue
+local stepvalue = 1
 
 local headerGroup = AceGUI:Create("SimpleGroup")
 headerGroup:SetFullWidth(true)
@@ -530,8 +530,10 @@ function GSSE:LoadEditor(SequenceName)
     nameeditbox:SetText(SequenceName)
     if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction) then
      stepdropdown:SetValue("1")
+     stepvalue = 1
     else
      stepdropdown:SetValue("2")
+     stepvalue = 2
     end
     if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
       GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
@@ -576,7 +578,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
     local sequence = {}
     GSSE:lines(sequence, spellbox:GetText())
     -- update sequence
-    if stepvalue == "2" then
+    if stepvalue == 2 then
       sequence.StepFunction = GSStaticPriority
     else
       sequence.StepFunction = nil
@@ -604,7 +606,6 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
       GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
     elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
       GSPrintDebugMessage(L["Updating due to new version."], GNOME)
-      local compStep = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)
       GSCheckMacroCreated(SequenceName)

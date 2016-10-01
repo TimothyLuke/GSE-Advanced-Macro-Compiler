@@ -89,7 +89,6 @@ L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
 L["/gs help|r to get started."] = true
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
-L["A sequence colision has occured.  Your local version of "] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
 L["A sequence colision has occured. "] = true
 L[" tried to overwrite the version already loaded from "] = true
@@ -317,3 +316,4 @@ L["Ready to Send"] = true
 L[" sent"] = true
 L["Reset Macro when out of combat"] = true
 L["Resets macros back to the initial state when out of combat."] = true
+L["A sequence collision has occured.  Your local version of "] = true
