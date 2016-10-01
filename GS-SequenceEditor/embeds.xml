@@ -1,7 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
     <Script file="lib\libStub\libStub.lua"/>
-    <Script file="lib\libdatabroker-1-1\libDataBroker-1-1.lua"/>
     <Include file="lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
     <Include file="lib\AceAddon-3.0\AceAddon-3.0.xml"/>
     <Include file="lib\AceConsole-3.0\AceConsole-3.0.xml"/>
