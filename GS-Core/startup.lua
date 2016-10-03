@@ -391,9 +391,9 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
         GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
       else
         if GSisEmpty(sequence.source) then
-          GSPrint(L["A sequence colision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName, GNOME)
+          GSPrint(L["A sequence collision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName, GNOME)
         else
-          GSPrint (L["A sequence colision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."], Gnome)
+          GSPrint (L["A sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSMasterOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."], Gnome)
         end
       end
     end

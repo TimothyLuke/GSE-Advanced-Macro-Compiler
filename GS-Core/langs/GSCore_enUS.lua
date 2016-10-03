@@ -90,7 +90,7 @@ L["/gs help|r to get started."] = true
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
-L["A sequence colision has occured. "] = true
+L["A sequence collision has occured. "] = true
 L[" tried to overwrite the version already loaded from "] = true
 L[". This version was not loaded."] = true
 L["Sequence specID set to current spec of "] = true

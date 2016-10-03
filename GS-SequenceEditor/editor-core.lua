@@ -604,13 +604,12 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
       GSUpdateSequenceList()
       GSSequenceListbox:SetValue(SequenceName)
       GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
-    elseif not GSCompareSequence(sequence, GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)] ) then
+    else
       GSPrintDebugMessage(L["Updating due to new version."], GNOME)
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)
       GSCheckMacroCreated(SequenceName)
       GSUpdateSequence(SequenceName, GSMasterOptions.SequenceLibrary[SequenceName][nextVal])
-      GSPrepareLogout(false)
       GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
     end
 
