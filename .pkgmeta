@@ -16,9 +16,6 @@ externals:
     GS-SequenceEditor/lib/AceAddon-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceLocale-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
-        tag: latest
     GS-SequenceEditor/lib/AceConfig-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
         tag: latest
@@ -56,7 +53,7 @@ externals:
         url: svn://svn.wowace.com/wow/libsharedmedia-3-0/mainline/trunk
         tag: latest
 
-        
+
 move-folders:
     GS-Core/GS-SequenceEditor: GS-SequenceEditor
     GS-Core/GS-DraikMacros: GS-DraikMacros
