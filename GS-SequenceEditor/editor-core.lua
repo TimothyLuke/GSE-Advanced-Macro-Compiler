@@ -335,7 +335,7 @@ postmacrobox.editBox:SetScript("OnTextChanged", function () end)
 editframe:AddChild(postmacrobox)
 
 local editButtonGroup = AceGUI:Create("SimpleGroup")
-editButtonGroup:SetFullWidth(true)
+editButtonGroup:SetWidth(302)
 editButtonGroup:SetLayout("Flow")
 
 local savebutton = AceGUI:Create("Button")
