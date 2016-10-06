@@ -61,7 +61,8 @@ end
 
 
 GSDebugFrame:SetTitle(L["Sequence Debugger"])
-GSDebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"])
+local _, GCD_Timer = GetSpellCooldown(61304)
+GSDebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. " GCD:" .. GCD_Timer)
 GSDebugFrame:SetCallback("OnClose", function(widget) GSDebugFrame:Hide()  end)
 GSDebugFrame:SetLayout("List")
 GSDebugFrame:Hide()

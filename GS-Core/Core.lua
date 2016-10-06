@@ -10,21 +10,28 @@ local GCD, GCD_Update_Timer
 local function GSTraceSequence(button, step, task)
   if GSDebugSequenceEx then
     local isUsable, notEnoughMana = IsUsableSpell(task)
+    local usableOutput, manaOutput, GCDOutput, CastingOutput
     if isUsable then
-      isUsable = GSMasterOptions.CommandColour .. "Able To Cast" .. GSStaticStringRESET
+      usableOutput = GSMasterOptions.CommandColour .. "Able To Cast" .. GSStaticStringRESET
     else
-      isUsable =  GSMasterOptions.UNKNOWN .. "Not Able to Cast" .. GSStaticStringRESET
+      usableOutput =  GSMasterOptions.UNKNOWN .. "Not Able to Cast" .. GSStaticStringRESET
     end
     if notEnoughMana then
-      notEnoughMana = GSMasterOptions.UNKNOWN .. "Resources Not Available".. GSStaticStringRESET
+      manaOutput = GSMasterOptions.UNKNOWN .. "Resources Not Available".. GSStaticStringRESET
     else
-      notEnoughMana =  GSMasterOptions.CommandColour .. "Resources Available" .. GSStaticStringRESET
+      manaOutput =  GSMasterOptions.CommandColour .. "Resources Available" .. GSStaticStringRESET
     end
-    local GCDT =  GSMasterOptions.CommandColour .. "GCD Free" .. GSStaticStringRESET
+    local castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+    if not GSieEmpty(castingspell) then
+      CastingOutput = GSMasterOptions.UNKNOWN .. "Casting " .. castingspell .. GSStaticStringRESET
+    else
+      CastingOutput = GSMasterOptions.CommandColour .. "Not actively casting anything else." .. GSStaticStringRESET
+    end
+    local GCDOutput =  GSMasterOptions.CommandColour .. "GCD Free" .. GSStaticStringRESET
     if GCD then
-      GCDT = GSMasterOptions.UNKNOWN .. "GCD In Cooldown" .. GSStaticStringRESET
+      GCDOutput = GSMasterOptions.UNKNOWN .. "GCD In Cooldown" .. GSStaticStringRESET
     end
-    GSPrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. isUsable .. "," .. notEnoughMana .. "," .. GCDT, GSStaticSequenceDebug)
+    GSPrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput, .. "," .. CastingOutput , GSStaticSequenceDebug)
   end
 end
 
