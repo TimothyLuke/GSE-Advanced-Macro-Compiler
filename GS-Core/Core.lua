@@ -27,7 +27,7 @@ local function GSTraceSequence(button, step, task)
     else
       CastingOutput = GSMasterOptions.CommandColour .. "Not actively casting anything else." .. GSStaticStringRESET
     end
-    local GCDOutput =  GSMasterOptions.CommandColour .. "GCD Free" .. GSStaticStringRESET
+    GCDOutput =  GSMasterOptions.CommandColour .. "GCD Free" .. GSStaticStringRESET
     if GCD then
       GCDOutput = GSMasterOptions.UNKNOWN .. "GCD In Cooldown" .. GSStaticStringRESET
     end
