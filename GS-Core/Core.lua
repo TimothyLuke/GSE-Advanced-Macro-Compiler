@@ -22,7 +22,7 @@ local function GSTraceSequence(button, step, task)
       manaOutput =  GSMasterOptions.CommandColour .. "Resources Available" .. GSStaticStringRESET
     end
     local castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
-    if not GSieEmpty(castingspell) then
+    if not GSisEmpty(castingspell) then
       CastingOutput = GSMasterOptions.UNKNOWN .. "Casting " .. castingspell .. GSStaticStringRESET
     else
       CastingOutput = GSMasterOptions.CommandColour .. "Not actively casting anything else." .. GSStaticStringRESET

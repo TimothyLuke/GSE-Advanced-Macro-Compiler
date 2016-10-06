@@ -267,7 +267,7 @@ stepdropdown:SetList({
 
 })
 
-stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key;  end)
+stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSPrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
 firstheadercolumn:AddChild(stepdropdown)
 
 headerGroup:AddChild(firstheadercolumn)
@@ -535,6 +535,7 @@ function GSSE:LoadEditor(SequenceName)
      stepdropdown:SetValue("2")
      stepvalue = 2
     end
+    GSPrintDebugMessage("StepValue: " .. stepvalue, GNOME)
     if GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
       GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
     else
@@ -578,11 +579,13 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
     local sequence = {}
     GSSE:lines(sequence, spellbox:GetText())
     -- update sequence
-    if stepvalue == 2 then
+    if tonumber(stepvalue) == 2 then
       sequence.StepFunction = GSStaticPriority
+      GSPrintDebugMessage("Setting GSStaticPriority.  Inside the Logic Point")
     else
       sequence.StepFunction = nil
     end
+    GSPrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
     sequence.PreMacro = premacrobox:GetText()
     sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
     sequence.source = GSStaticSourceLocal
