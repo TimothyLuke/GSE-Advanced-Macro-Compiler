@@ -4,6 +4,7 @@ local GNOME, _ = ...
 
 local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
 local L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
+local AceEvent = LibStub("AceEvent-3.0")
 
 local GCD, GCD_Update_Timer
 
@@ -389,6 +390,7 @@ local function processAddonLoaded()
   GSPrintDebugMessage(L["I am loaded"])
   GSReloadSequences()
   GnomeOptions = GSMasterOptions
+  AceEvent:SendMessage(GSStaticCoreLoadedMessage)
 end
 
 local function processUnitSpellcast(addon)

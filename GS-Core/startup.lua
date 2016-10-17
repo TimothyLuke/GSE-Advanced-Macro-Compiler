@@ -62,6 +62,7 @@ GSStaticCleanStrings = {
 }
 
 GSStaticStringRESET = "|r"
+GSStaticCoreLoadedMessage = "GS-CoreLoaded"
 
 -- Sety defaults.  THese will be overriden once the addon is marked as loaded.
 GSAddInPacks = {}
