@@ -317,3 +317,6 @@ L[" sent"] = true
 L["Reset Macro when out of combat"] = true
 L["Resets macros back to the initial state when out of combat."] = true
 L["A sequence collision has occured.  Your local version of "] = true
+L["Inner Loop Start"] = true
+L["Inner Loop End"] = true
+L["Inner Loop Limit"] = true

@@ -234,6 +234,16 @@ end
 
 local stepvalue = 1
 
+editscrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+editscrollcontainer:SetFullWidth(true)
+editscrollcontainer:SetFullHeight(true) -- probably?
+editscrollcontainer:SetLayout("Fill") -- important!
+
+editscroll = AceGUI:Create("ScrollFrame")
+editscroll:SetLayout("Flow") -- probably?
+editscrollcontainer:AddChild(editscroll)
+
+
 local headerGroup = AceGUI:Create("SimpleGroup")
 headerGroup:SetFullWidth(true)
 headerGroup:SetLayout("Flow")
@@ -246,7 +256,7 @@ editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self) editframe:Hide();  frame:Show(); end)
 editframe:SetLayout("List")
-
+editframe:AddChild(editscrollcontainer)
 
 local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["Sequence Name"])
@@ -300,7 +310,7 @@ iconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 headerGroup:AddChild(middleColumn)
 headerGroup:AddChild(iconpicker)
-editframe:AddChild(headerGroup)
+editscroll:AddChild(headerGroup)
 
 
 
@@ -311,7 +321,7 @@ premacrobox:DisableButton(true)
 premacrobox:SetFullWidth(true)
 --premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
 
-editframe:AddChild(premacrobox)
+editscroll:AddChild(premacrobox)
 premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 premacrobox.editBox:SetScript("OnTextChanged", function () end)
 
@@ -322,7 +332,35 @@ spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
 spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 spellbox.editBox:SetScript("OnTextChanged", function () end)
-editframe:AddChild(spellbox)
+editscroll:AddChild(spellbox)
+
+local loopGroup = AceGUI:Create("SimpleGroup")
+loopGroup:SetFullWidth(true)
+loopGroup:SetLayout("Flow")
+
+editscroll:AddChild(loopGroup)
+
+local loopstart = AceGUI:Create("MultiLineEditBox")
+loopstart:SetLabel(L["Inner Loop Start"])
+loopstart:DisableButton(true)
+loopstart:SetMaxLetters(3)
+loopstart:SetNumeric()
+loopGroup:AddChild(loopstart)
+
+local loopstop = AceGUI:Create("MultiLineEditBox")
+loopstop:SetLabel(L["Inner Loop End"])
+loopstop:DisableButton(true)
+loopstop:SetMaxLetters(3)
+loopstop:SetNumeric()
+loopGroup:AddChild(loopstop)
+
+local looplimit = AceGUI:Create("MultiLineEditBox")
+looplimit:SetLabel(L["Inner Loop Limit"])
+looplimit:DisableButton(true)
+looplimit:SetMaxLetters(4)
+looplimit:SetNumeric()
+loopGroup:AddChild(looplimit)
+
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
 postmacrobox:SetLabel(L["PostMacro"])
@@ -332,7 +370,7 @@ postmacrobox:SetFullWidth(true)
 postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 postmacrobox.editBox:SetScript("OnTextChanged", function () end)
 
-editframe:AddChild(postmacrobox)
+editscroll:AddChild(postmacrobox)
 
 local editButtonGroup = AceGUI:Create("SimpleGroup")
 editButtonGroup:SetWidth(302)
@@ -348,7 +386,7 @@ editButtonGroup:AddChild(transbutton)
 
 
 
-editframe:AddChild(editButtonGroup)
+editscroll:AddChild(editButtonGroup)
 -------------end editor-----------------
 
 local versionframe = AceGUI:Create("Frame")
@@ -561,6 +599,15 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
     specdropdownvalue = GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
+    if not GSisEmpty(sequence.loopstart) then
+      loopstart.SetText(sequence.loopstart)
+    end
+    if not GSisEmpty(sequence.loopstop) then
+      loopstart.SetText(sequence.loopstop)
+    end
+    if not GSisEmpty(sequence.looplimit) then
+      loopstart.SetText(sequence.looplimit)
+    end
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
@@ -593,6 +640,15 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
     sequence.helpTxt = helpeditbox:GetText()
     if not tonumber(sequence.icon) then
       sequence.icon = "INV_MISC_QUESTIONMARK"
+    end
+    if not GSisEmpty(loopstart:GetText()) then
+      sequence.loopstart = loopstart:GetText()
+    end
+    if not GSisEmpty(loopstop:GetText()) then
+      sequence.loopstop = loopstop:GetText()
+    end
+    if not GSisEmpty(looplimit:GetText()) then
+      sequence.looplimit = looplimit:GetText()
     end
     sequence.PostMacro = postmacrobox:GetText()
     sequence.version = nextVal
