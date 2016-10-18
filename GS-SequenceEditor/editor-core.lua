@@ -595,14 +595,14 @@ function GSSE:LoadEditor(SequenceName)
     GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
     specdropdownvalue = GSSpecIDList[GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
-    if not GSisEmpty(sequence.loopstart) then
-      loopstart.SetText(sequence.loopstart)
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart) then
+      loopstart:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart)
     end
-    if not GSisEmpty(sequence.loopstop) then
-      loopstart.SetText(sequence.loopstop)
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop) then
+      loopstop:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop)
     end
-    if not GSisEmpty(sequence.looplimit) then
-      loopstart.SetText(sequence.looplimit)
+    if not GSisEmpty(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit) then
+      looplimit:SetText(GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit)
     end
   else
     GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)

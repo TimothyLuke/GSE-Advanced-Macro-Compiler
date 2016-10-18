@@ -210,7 +210,7 @@ GSStaticLoopPriority = [[
     if step == limit then
       limit = limit % loopstop + 1
       step = loopstart
-      if limit = looplimit then
+      if limit == looplimit then
         loopiter = loopiter + 1
         self:SetAttribute('loopiter', loopiter)
       end

@@ -596,7 +596,15 @@ function GSUpdateSequence(name,sequence)
       else
         button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
       end
-
+      if not GSisEmpty(sequence.loopstart) then
+        button:SetAttribute('loopstart', sequence.loopstart)
+      end
+      if not GSisEmpty(sequence.loopstop) then
+        button:SetAttribute('loopstop', sequence.loopstop)
+      end
+      if not GSisEmpty(sequence.looplimit) then
+        button:SetAttribute('looplimit', sequence.looplimit)
+      end
     end
 end
 
