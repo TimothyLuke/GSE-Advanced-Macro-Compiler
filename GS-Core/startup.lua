@@ -199,7 +199,7 @@ GSStaticPriority = [[
 --    but it does this within an internal loop.  So more like 123343456
 --    If the macro has loopstart or loopstop defined then it will use this instead of GSStaticPriority
 GSStaticLoopPriority = [[
-  if step == #macros + 1 then
+  if step == #macros then
     step = 1
     self:SetAttribute('loopiter', 1)
   elseif step < loopstart then
@@ -208,10 +208,11 @@ GSStaticLoopPriority = [[
     -- when we get to the end reset to loopstart
     limit = limit or loopstart
     if step == limit then
-      limit = limit % loopend + 1
+      limit = limit % loopstop + 1
       step = loopstart
       if limit = looplimit then
-        self:SetAttribute('loopiter', loopiter + 1)
+        loopiter = loopiter + 1
+        self:SetAttribute('loopiter', loopiter)
       end
     else
       step = step + 1
@@ -223,10 +224,11 @@ GSStaticLoopPriority = [[
   else
     limit = limit or loopstart
     if step == limit then
-      limit = limit % loopend + 1
+      limit = limit % loopstop + 1
       step = loopstart
-      if limit = looplimit then
-        self:SetAttribute('loopiter', loopiter + 1)
+      if limit < looplimit then
+        loopiter = loopiter + 1
+        self:SetAttribute('loopiter', loopiter)
       end
     else
       step = step + 1
@@ -238,32 +240,41 @@ GSStaticLoopPriority = [[
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
 GSStaticLoopSequential = [[
-  if step == #macros + 1 then
+  if step == #macros  then
     -- I am at the very end reset
+    --print(step .. " I am at the very end reset")
     step = 1
     self:SetAttribute('loopiter', 1)
+    print(step .. " I am at the very end reset")
   elseif step < loopstart then
     -- I am before the loop increment to next step.
+    --print(step .. " I am before the loop increment to next step.")
     step = step + 1
   elseif looplimit <= 1 then
     -- when we get to the end reset to loopstart
-    if step == loopend then
+    --print(step .. " When we get to the end reset to loopstart")
+    if step == loopstop then
       step = loopstart
-      self:SetAttribute('loopiter', loopiter + 1)
+      loopiter = loopiter + 1
+      self:SetAttribute('loopiter', loopiter)
     else
       step = step + 1
     end
   elseif step > looplimit then
     -- I am outside the loop
+    --print(step .. " I am outside the loop")
     step = step + 1
   elseif loopiter == looplimit then
     -- I am at the outside bound of the loop
+    --print(step .. " I am at the outside bound of the loop")
     step = step + 1
   else
     -- I am in the middle
+    --print(step .. " I am in the middle")
     if step == loopend then
       step = loopstart
-      self:SetAttribute('loopiter', loopiter + 1)
+      loopiter = loopiter + 1
+      self:SetAttribute('loopiter', loopiter)
     else
       step = step + 1
     end

@@ -13,7 +13,7 @@ local function GSisLoopSequence(sequence)
   if not GSisEmpty(sequence.loopstart) then
     loopcheck = true
   end
-  if not GSisEmpty(sequence.loopend) then
+  if not GSisEmpty(sequence.loopstop) then
     loopcheck = true
   end
   if not GSisEmpty(sequence.looplimit) then
@@ -134,9 +134,14 @@ end
 local OnClick = [=[
 local step = self:GetAttribute('step')
 local loopstart = self:GetAttribute('loopstart') or 1
-local loopend = self:GetAttribute('loopend') or #macros + 1
+local loopstop = self:GetAttribute('loopstop') or #macros + 1
 local loopiter = self:GetAttribute('loopiter') or 1
 local looplimit = self:GetAttribute('looplimit') or 1
+loopstart = tonumber(loopstart)
+loopstop = tonumber(loopstop)
+loopiter = tonumber(loopiter)
+looplimit = tonumber(looplimit)
+step = tonumber(step)
 self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
 %s
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
@@ -183,6 +188,15 @@ local function createButton(name, sequence)
       button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential))
     else
       button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority))
+    end
+    if not GSisEmpty(sequence.loopstart) then
+      button:SetAttribute('loopstart', sequence.loopstart)
+    end
+    if not GSisEmpty(sequence.loopstop) then
+      button:SetAttribute('loopstop', sequence.loopstop)
+    end
+    if not GSisEmpty(sequence.looplimit) then
+      button:SetAttribute('looplimit', sequence.looplimit)
     end
   else
     button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
