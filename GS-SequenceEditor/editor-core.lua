@@ -234,14 +234,10 @@ end
 
 local stepvalue = 1
 
-editscrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-editscrollcontainer:SetFullWidth(true)
-editscrollcontainer:SetFullHeight(true) -- probably?
-editscrollcontainer:SetLayout("Fill") -- important!
-
 editscroll = AceGUI:Create("ScrollFrame")
 editscroll:SetLayout("Flow") -- probably?
-editscrollcontainer:AddChild(editscroll)
+editscroll:SetFullWidth(true)
+editscroll:SetHeight(340)
 
 
 local headerGroup = AceGUI:Create("SimpleGroup")
@@ -256,7 +252,6 @@ editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self) editframe:Hide();  frame:Show(); end)
 editframe:SetLayout("List")
-editframe:AddChild(editscrollcontainer)
 
 local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["Sequence Name"])
@@ -310,7 +305,7 @@ iconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 headerGroup:AddChild(middleColumn)
 headerGroup:AddChild(iconpicker)
-editscroll:AddChild(headerGroup)
+editframe:AddChild(headerGroup)
 
 
 
@@ -332,7 +327,6 @@ spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
 spellbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
 spellbox.editBox:SetScript("OnTextChanged", function () end)
-editscroll:AddChild(spellbox)
 
 local loopGroup = AceGUI:Create("SimpleGroup")
 loopGroup:SetFullWidth(true)
@@ -340,26 +334,27 @@ loopGroup:SetLayout("Flow")
 
 editscroll:AddChild(loopGroup)
 
-local loopstart = AceGUI:Create("MultiLineEditBox")
+local loopstart = AceGUI:Create("EditBox")
 loopstart:SetLabel(L["Inner Loop Start"])
 loopstart:DisableButton(true)
 loopstart:SetMaxLetters(3)
-loopstart:SetNumeric()
+loopstart.editbox:SetNumeric()
 loopGroup:AddChild(loopstart)
 
-local loopstop = AceGUI:Create("MultiLineEditBox")
+local loopstop = AceGUI:Create("EditBox")
 loopstop:SetLabel(L["Inner Loop End"])
 loopstop:DisableButton(true)
 loopstop:SetMaxLetters(3)
-loopstop:SetNumeric()
+loopstop.editbox:SetNumeric()
 loopGroup:AddChild(loopstop)
 
-local looplimit = AceGUI:Create("MultiLineEditBox")
+local looplimit = AceGUI:Create("EditBox")
 looplimit:SetLabel(L["Inner Loop Limit"])
 looplimit:DisableButton(true)
 looplimit:SetMaxLetters(4)
-looplimit:SetNumeric()
+looplimit.editbox:SetNumeric()
 loopGroup:AddChild(looplimit)
+editscroll:AddChild(spellbox)
 
 
 local postmacrobox = AceGUI:Create("MultiLineEditBox")
@@ -371,6 +366,7 @@ postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) 
 postmacrobox.editBox:SetScript("OnTextChanged", function () end)
 
 editscroll:AddChild(postmacrobox)
+editframe:AddChild(editscroll)
 
 local editButtonGroup = AceGUI:Create("SimpleGroup")
 editButtonGroup:SetWidth(302)
@@ -386,7 +382,7 @@ editButtonGroup:AddChild(transbutton)
 
 
 
-editscroll:AddChild(editButtonGroup)
+editframe:AddChild(editButtonGroup)
 -------------end editor-----------------
 
 local versionframe = AceGUI:Create("Frame")
