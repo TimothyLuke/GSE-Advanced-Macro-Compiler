@@ -180,9 +180,9 @@ local function createButton(name, sequence)
   GSPrintDebugMessage(L["createButton PostMacro: "] .. button:GetAttribute('PostMacro'))
   if GSisLoopSequence(sequence) then
     if GSisEmpty(sequence.StepFunction) then
-      button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential)
+      button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential))
     else
-      button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority)
+      button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority))
     end
   else
     button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
@@ -575,9 +575,9 @@ function GSUpdateSequence(name,sequence)
       button:UnwrapScript(button,'OnClick')
       if GSisLoopSequence(sequence) then
         if GSisEmpty(sequence.StepFunction) then
-          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential)
+          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential))
         else
-          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority)
+          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority))
         end
       else
         button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
