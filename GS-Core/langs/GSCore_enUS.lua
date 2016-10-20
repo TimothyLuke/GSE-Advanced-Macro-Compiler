@@ -317,6 +317,15 @@ L[" sent"] = true
 L["Reset Macro when out of combat"] = true
 L["Resets macros back to the initial state when out of combat."] = true
 L["A sequence collision has occured.  Your local version of "] = true
+
+-- 1.4.4
 L["Inner Loop Start"] = true
 L["Inner Loop End"] = true
 L["Inner Loop Limit"] = true
+L["Record Macro"] = true
+L["Gnome Sequencer: Record your rotation to a macro."] = true
+L["Actions"] = true
+L["Record"] = true
+L["Pause"] = true
+L["Create Macro"] = true
+L["Stop"] = true
