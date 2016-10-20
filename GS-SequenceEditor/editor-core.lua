@@ -156,6 +156,12 @@ function GSSE:drawstandardwindow(container)
   eOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
   buttonGroup:AddChild(eOptionsbutton)
 
+  local recordwindowbutton = AceGUI:Create("Button")
+  recordwindowbutton:SetText(L["Record Macro"])
+  recordwindowbutton:SetWidth(150)
+  recordwindowbutton:SetCallback("OnClick", function() frame:Hide(); recordframe:Show() end)
+  buttonGroup:AddChild(recordwindowbutton)
+
   container:AddChild(buttonGroup)
 
   sequenceboxtext = sequencebox
@@ -457,7 +463,7 @@ versionframe:AddChild(othersequencebuttonGroup)
 
 recordframe:SetTitle(L["Record Macro"])
 recordframe:SetStatusText(L["Gnome Sequencer: Record your rotation to a macro."])
-recordframe:SetCallback("OnClose", function(widget)  frame:Hide(); versionframe:Show() end)
+recordframe:SetCallback("OnClose", function(widget)  frame:Hide(); end)
 recordframe:SetLayout("List")
 
 local recordsequencebox = AceGUI:Create("MultiLineEditBox")
@@ -481,6 +487,7 @@ local createmacrobutton = AceGUI:Create("Button")
 createmacrobutton:SetText(L["Create Macro"])
 createmacrobutton:SetWidth(150)
 createmacrobutton:SetCallback("OnClick", function() GSSE:SaveRecordMacro() end)
+createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 
 recordframe:AddChild(recButtonGroup)
@@ -495,20 +502,22 @@ function GSSE:SaveRecordMacro()
   recordframe:Hide()
 
 end
-
+local recbuttontext = L["Record"]
 function GSSE:ManageRecord()
-  if recbutton:GetText() == L["Record"] then
-    GSSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED', monitorSpellActionsCallback)
-    recbutton:SetText(L["Stop"])
+  if recbuttontext == L["Record"] then
+    GSSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+    recbuttontext = L["Stop"]
+    createmacrobutton:SetDisabled(false)
   else
-    recbutton:SetText(L["Record"])
+    recbuttontext = L["Record"]
     GSSE:UnregisterEvent('UNIT_SPELLCAST_SUCCEEDED')
   end
+  recbutton:SetText(recbuttontext)
 end
 
-function GSSE:monitorSpellActionsCallback(event, unit, spell)
+function GSSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
   if unit ~= "player" then  return end
-  recordsequencebox:SetText(recordsequencebox:GetText() .. "/cast " .. spell .. "/n")
+  recordsequencebox:SetText(recordsequencebox:GetText() .. "/cast " .. spell .. "\n")
 end
 
 -- Functions
@@ -756,6 +765,7 @@ end
 
 
 function GSSE:OnInitialize()
+    recordframe:Hide()
     versionframe:Hide()
     editframe:Hide()
     frame:Hide()
