@@ -503,6 +503,7 @@ function GSSE:ManageRecord()
   else
     recbutton:SetText(L["Record"])
     GSSE:UnregisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+  end
 end
 
 function GSSE:monitorSpellActionsCallback(event, unit, spell)
