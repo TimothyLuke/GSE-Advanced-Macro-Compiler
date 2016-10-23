@@ -65,7 +65,7 @@ PreMacro=[[
 "/cast Avenger's Shield",
 "/cast Judgment",
 "/xast Blessed Hammer",
-"/cast Hammer of the Righteous"
+"/cast Hammer of the Righteous",
 "/cast Consecration",
 "/cast Light of the Protector",
 "/cast Shield of the Righteous",
