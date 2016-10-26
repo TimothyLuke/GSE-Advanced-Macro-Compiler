@@ -6,7 +6,7 @@
 -- https://github.com/TimothyLuke/GnomeSequenced-Enhanced/wiki/Creating-Addon-Packs
 ------------------------------------------------------------------------------------------
 
-local Sequences = GSMasterSequences
+local GNOME, Sequences = ...
 
 ------------------
 ----- Warrior
