@@ -68,8 +68,6 @@ move-folders:
 enable-nolib-creation: no
 
 ignore:
-    - GS-myMacros
-    - GS-HighPerformanceMacros
     - .travis.yml
     - README.md
     - spec
