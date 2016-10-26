@@ -10,6 +10,8 @@ GSDBOptions.disableActionComplete = false
 local KnownSequences = {}
 for k,_ in pairs(Sequences) do
   KnownSequences[k] = true
+  Sequences[k].source = GNOME
+  Sequences[k].authorversion = modversion
 end
 
 GSImportLegacyMacroCollections(Sequences)

@@ -2,7 +2,7 @@
 ## Title: |cffff0000GS-E:|r |cFF00D1FFDraik's Bundled Macros|r
 ## Notes: These bundled in macros have been sourced from http://www.wowlazymacros.com Each author has been given credit for the macro and you will be able to find a thread there to ask questions. These are not intended to be super optimised but are a good starting point.
 ## Author: Draik
-## Version: v1.4 Legion 7.1
+## Version: v1.5 Legion 7.1
 ## SavedVariables: GSDBOptions
 ## RequiredDeps: GS-Core
 ## LoadOnDemand: 1
