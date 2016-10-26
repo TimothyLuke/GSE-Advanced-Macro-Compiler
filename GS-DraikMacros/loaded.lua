@@ -1,6 +1,7 @@
 local GNOME, Sequences = ...
 local modversion = GetAddOnMetadata(GNOME, "Version")
 local AceEvent = LibStub("AceEvent-3.0")
+
 GSDBOptions = {}
 GSDBOptions.warnupdate = false
 GSDBOptions.currentversion = modversion
@@ -24,6 +25,7 @@ local function processAddonLoaded()
       end
       GSPrint("The DB_ Macros that you have not edited have been disabled.  This is a one time action.", GNOME)
       GSDBOptions = true
+    end
   end
   if GSDBOptions.loadedcount < 4 then
     GSPrint("Draik Bundled Macros loaded.  This set is an example set to demonstrate the capabilities of GS-E.  The macros are designed for use levelling to 110.  They should not be considered the best or perfect but are examples.", GNOME)
