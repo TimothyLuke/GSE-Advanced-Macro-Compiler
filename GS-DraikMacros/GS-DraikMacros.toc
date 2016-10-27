@@ -4,6 +4,7 @@
 ## Author: Draik
 ## Version: v1.5 Legion 7.1
 ## SavedVariables: GSDBOptions
+## SavedVariablesPerCharacter: GSDBCOptions 
 ## RequiredDeps: GS-Core
 ## LoadOnDemand: 1
 
