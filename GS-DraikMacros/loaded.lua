@@ -19,13 +19,17 @@ GSImportLegacyMacroCollections(Sequences)
 
 local function processAddonLoaded()
   if not GSDBOptions.disableActionComplete then
-    for k,_ in pairs(KnownSequences) do
-      if GSMasterOptions.SequenceLibrary[k][GSGetActiveSequenceVersion(k)].source == GNOME then
-        GSDisableSequence(k)
+    for k,_ in pairs(Sequences) do
+      if not GSisEmpty(GSMasterOptions.SequenceLibrary[k]) then
+        if GSMasterOptions.SequenceLibrary[k][GSGetActiveSequenceVersion(k)].source == GNOME then
+          GSDisableSequence(k)
+        end
+      else
+        GSPrintDebugMessage("No entry for "  .. k, GNOME)
       end
-      GSPrint("The DB_ Macros that you have not edited have been disabled.  This is a one time action.", GNOME)
-      GSDBOptions = true
     end
+    GSPrint("The DB_ Macros that you have not edited have been disabled.  This is a one time action.", GNOME)
+    GSDBOptions.warnupdate = true
   end
   if GSDBOptions.loadedcount < 4 then
     GSPrint("Draik Bundled Macros loaded.  This set is an example set to demonstrate the capabilities of GS-E.  The macros are designed for use levelling to 110.  They should not be considered the best or perfect but are examples.", GNOME)
