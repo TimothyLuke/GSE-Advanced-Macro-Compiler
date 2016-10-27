@@ -4,6 +4,9 @@ externals:
     GS-Core/lib/LibStub:
         url: svn://svn.wowace.com/wow/libstub/mainline/trunk
         tag: latest
+    GS-Core/lib/AceAddon-3.0:
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
+        tag: latest
     GS-Core/lib/AceLocale-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
         tag: latest

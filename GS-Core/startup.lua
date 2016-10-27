@@ -429,10 +429,24 @@ function GSCheckMacroCreated(SequenceName, globalstub)
 
 end
 
+--- This removes a macro Stub.
+function GSdeleteMacroStub(sequenceName)
+  local mname, _, mbody = GetMacroInfo(sequenceName)
+  if mname == sequenceName then
+    trimmedmbody = mbody:gsub("[^%w ]", "")
+    compar = '#showtooltip\n/click ' .. mname
+    trimmedcompar = compar:gsub("[^%w ]", "")
+    if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
+      GSPrint(L[" Deleted Orphaned Macro "] .. mname, GNOME)
+      DeleteMacro(sequenceName)
+    end
+  end
+end
+
 --- Disable all versions of a sequence and delete any macro stubs.
 function GSDisableSequence(SequenceName)
   GSMasterOptions.DisabledSequences[SequenceName] = true
-  deleteMacroStub(SequenceName)
+  GSdeleteMacroStub(SequenceName)
 end
 
 --- Enable all versions of a sequence and recreate any macro stubs.
@@ -519,7 +533,7 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
     if makemacrostub then
       if GSMasterOptions.DisabledSequences[sequenceName] == true then
-        deleteMacroStub(sequenceName)
+        GSdeleteMacroStub(sequenceName)
       else
         GSCheckMacroCreated(sequenceName, globalstub)
       end
@@ -527,6 +541,16 @@ function GSAddSequenceToCollection(sequenceName, sequence, version)
   end
   if not GSisEmpty(confirmationtext) then
     GSPrint(GSMasterOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
+  end
+end
+
+--- Load a collection of Sequences
+function GSImportMacroCollection(Sequences)
+  for k,v in pairs(Sequences) do
+    if GSisEmpty(v.version) then
+      v.version = 1
+    end
+    GSAddSequenceToCollection(k, v, v.version)
   end
 end
 

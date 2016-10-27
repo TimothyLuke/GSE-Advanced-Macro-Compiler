@@ -221,18 +221,7 @@ function GSReloadSequences()
   end
 end
 
-local function deleteMacroStub(sequenceName)
-  local mname, _, mbody = GetMacroInfo(sequenceName)
-  if mname == sequenceName then
-    trimmedmbody = mbody:gsub("[^%w ]", "")
-    compar = '#showtooltip\n/click ' .. mname
-    trimmedcompar = compar:gsub("[^%w ]", "")
-    if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
-      GSPrint(L[" Deleted Orphaned Macro "] .. mname, GNOME)
-      DeleteMacro(sequenceName)
-    end
-  end
-end
+
 
 function GSToggleDisabledSequence(SequenceName)
   if GSMasterOptions.DisabledSequences[SequenceName] then
@@ -245,13 +234,13 @@ function GSToggleDisabledSequence(SequenceName)
     else
       -- Disabling
       GSMasterOptions.DisabledSequences[SequenceName] = true
-      deleteMacroStub(SequenceName)
+      GSdeleteMacroStub(SequenceName)
       GSPrint(GSMasterOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."], GNOME)
     end
   else
     -- disabliong
     GSMasterOptions.DisabledSequences[SequenceName] = true
-    deleteMacroStub(SequenceName)
+    GSdeleteMacroStub(SequenceName)
     GSPrint(GSMasterOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."], GNOME)
   end
   GSReloadSequences()
@@ -276,7 +265,7 @@ local function cleanOrphanSequences()
     end
   end
   for k,_ in pairs(todelete) do
-    deleteMacroStub(k)
+    GSdeleteMacroStub(k)
   end
 end
 
@@ -386,7 +375,7 @@ local function processPlayerEnterWorld()
     sequence = GSMasterOptions.SequenceLibrary[k][v]
     if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
       if GSMasterOptions.DisabledSequences[k] == true then
-        deleteMacroStub(k)
+        GSdeleteMacroStub(k)
       else
         GSCheckMacroCreated(k)
       end
