@@ -6,12 +6,15 @@ local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
+
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
 local frame = AceGUI:Create("Frame")
 local editframe = AceGUI:Create("Frame")
 local recordframe = AceGUI:Create("Frame")
+local defautMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
+--local defautMacroIcon = "Interface\\Icons\\INV_MISC_QUESTIONMARK"
 
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -97,12 +100,34 @@ transbutton:SetText(L["Send"])
 transbutton:SetWidth(150)
 transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence) end)
 
+local iconpicker = AceGUI:Create("Icon")
+iconpicker:SetLabel(L["Macro Icon"])
+--iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
+iconpicker.frame:RegisterForDrag("LeftButton")
+iconpicker.frame:SetScript("OnDragStart", function()
+  if not GSisEmpty(currentSequence) then
+    PickupMacro(currentSequence)
+  end
+end)
+iconpicker:SetImage(defautMacroIcon)
+
+local viewiconpicker = AceGUI:Create("Icon")
+viewiconpicker:SetLabel(L["Macro Icon"])
+--iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
+viewiconpicker.frame:RegisterForDrag("LeftButton")
+viewiconpicker.frame:SetScript("OnDragStart", function()
+  if not GSisEmpty(currentSequence) then
+    PickupMacro(currentSequence)
+  end
+end)
+viewiconpicker:SetImage(defautMacroIcon)
+
 
 -- Create functions for tabs
 function GSSE:drawstandardwindow(container)
   sequencebox = AceGUI:Create("MultiLineEditBox")
   sequencebox:SetLabel(L["Sequence"])
-  sequencebox:SetNumLines(20)
+  sequencebox:SetNumLines(18)
   sequencebox:DisableButton(true)
   sequencebox:SetFullWidth(true)
   sequencebox:SetText(sequenceboxtext:GetText())
@@ -213,11 +238,22 @@ frame:SetLayout("List")
 GSSE.viewframe = frame
 GSSE.editframe = editframe
 
+local viewerheadergroup = AceGUI:Create("SimpleGroup")
+viewerheadergroup:SetFullWidth(true)
+viewerheadergroup:SetLayout("Flow")
+
+
 GSSequenceListbox = AceGUI:Create("Dropdown")
 GSSequenceListbox:SetLabel(L["Load Sequence"])
 GSSequenceListbox:SetWidth(250)
 GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
-frame:AddChild(GSSequenceListbox)
+
+local spacerlabel = AceGUI:Create("Label")
+spacerlabel:SetWidth(300)
+viewerheadergroup:AddChild(GSSequenceListbox)
+viewerheadergroup:AddChild(spacerlabel)
+viewerheadergroup:AddChild(viewiconpicker)
+frame:AddChild(viewerheadergroup)
 
 
 
@@ -306,11 +342,6 @@ helpeditbox:DisableButton( true)
 middleColumn:AddChild(helpeditbox)
 middleColumn:AddChild(speciddropdown)
 
-
-local iconpicker = AceGUI:Create("Icon")
---iconpicker:SetImage()
-iconpicker:SetLabel(L["Macro Icon"])
---iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 headerGroup:AddChild(middleColumn)
 headerGroup:AddChild(iconpicker)
 editframe:AddChild(headerGroup)
@@ -607,9 +638,17 @@ function GSSE:loadSequence(SequenceName)
   end
   if GSMasterOptions.DisabledSequences[SequenceName] then
     disableSeqbutton:SetText(L["Enable Sequence"])
+    viewiconpicker:SetImage(defautMacroIcon)
   else
     disableSeqbutton:SetText(L["Disable Sequence"])
+    reticon = GSSE:getMacroIcon("DB_Ret")
+    if not tonumber(reticon) then
+      -- we have a starting
+      reticon = "Interface\\Icons\\" .. reticon
+    end
+    viewiconpicker:SetImage(reticon)
   end
+
 end
 
 function GSSE:toggleClasses(buttonname)
