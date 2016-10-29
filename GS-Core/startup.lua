@@ -240,13 +240,14 @@ GSStaticLoopPriority = [[
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
 GSStaticLoopSequential = [[
-  if step == #macros  then
-    -- I am at the very end reset
-    --print(step .. " I am at the very end reset")
-    step = 1
-    self:SetAttribute('loopiter', 1)
-    print(step .. " I am at the very end reset")
-  elseif step < loopstart then
+  --print("Step" .. step)
+  --print("Num Mcros " .. #macros)
+  --print("Start " .. loopstart)
+  --print("Stop " .. loopstop)
+  --print("Limit " .. looplimit)
+  --print("iter " .. loopiter)
+
+  if step < loopstart then
     -- I am before the loop increment to next step.
     --print(step .. " I am before the loop increment to next step.")
     step = step + 1
@@ -260,24 +261,33 @@ GSStaticLoopSequential = [[
     else
       step = step + 1
     end
-  elseif step > looplimit then
-    -- I am outside the loop
-    --print(step .. " I am outside the loop")
-    step = step + 1
   elseif loopiter == looplimit then
     -- I am at the outside bound of the loop
     --print(step .. " I am at the outside bound of the loop")
-    step = step + 1
-  else
-    -- I am in the middle
-    --print(step .. " I am in the middle")
-    if step == loopend then
-      step = loopstart
-      loopiter = loopiter + 1
-      self:SetAttribute('loopiter', loopiter)
+    if step == #macros then
+      step = 1
     else
       step = step + 1
     end
+  elseif step > loopstop then
+    -- I am outside the loop
+    --print(step .. " I am outside the loop")
+    step = step + 1
+  elseif step == loopstop then
+    --print("I am at loop stop")
+    step = loopstart
+    loopiter = loopiter + 1
+    self:SetAttribute('loopiter', loopiter)
+  elseif step == #macros  then
+    -- I am at the very end reset
+    step = 1
+    self:SetAttribute('loopiter', 1)
+    --print(step .. " I am at the very end reset")
+  else
+    -- I am in the middle
+    --print(step .. " I am in the middle")
+    step = step + 1
+    --print("Incrementing")
   end
 ]]
 
