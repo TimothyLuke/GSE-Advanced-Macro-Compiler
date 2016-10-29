@@ -822,7 +822,11 @@ end
 
 function GSSE:getMacroIcon(sequenceIndex)
   GSPrintDebugMessage(L["sequenceIndex: "] .. (GSisEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
-  GSPrintDebugMessage(L["Icon: "] .. (GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and L["none"] or GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon))
+  if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+    GSPrintDebugMessage(L["Icon: "] .. GSMasterOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
+  else
+    GSPrintDebugMessage(L["Icon: "] ..L["none"], GNOME)
+  end
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
   if not GSisEmpty(a) then

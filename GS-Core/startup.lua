@@ -269,6 +269,7 @@ GSStaticLoopSequential = [[
     else
       step = step + 1
     end
+    loopiter = 1
   elseif step > loopstop then
     -- I am outside the loop
     --print(step .. " I am outside the loop")
