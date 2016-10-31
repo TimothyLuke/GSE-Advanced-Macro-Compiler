@@ -261,23 +261,23 @@ GSStaticLoopSequential = [[
     else
       step = step + 1
     end
+  elseif step > loopstop then
+    -- I am outside the loop
+    --print(step .. " I am outside the loop")
+    step = step + 1
   elseif loopiter == looplimit then
     -- I am at the outside bound of the loop
     --print(step .. " I am at the outside bound of the loop")
     if step == #macros then
       step = 1
+      loopiter = 1
+      self:SetAttribute('loopiter', 1)
     else
       step = step + 1
     end
-    loopiter = 1
-    self:SetAttribute('loopiter', 1)
-  elseif step > loopstop then
-    -- I am outside the loop
-    --print(step .. " I am outside the loop")
-    step = step + 1
   elseif step == loopstop then
     --print("I am at loop stop")
-    step = loopstart
+    step = loopstart 
     loopiter = loopiter + 1
     self:SetAttribute('loopiter', loopiter)
   elseif step == #macros  then
