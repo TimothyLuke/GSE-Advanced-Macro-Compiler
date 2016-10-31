@@ -1642,7 +1642,6 @@ GSAvailableLanguages[GSTRStaticKey]["enUS"] = {
 	[203720] = "Demon Spikes",
 	[203757] = "Eagle's Bite",
 	[203783] = "Shear",
-	[203798] = "Soul Cleave",
 	[204018] = "Blessing of Spellwarding",
 	[204019] = "Blessed Hammer",
 	[204021] = "Fiery Brand",
@@ -1918,5 +1917,6 @@ GSAvailableLanguages[GSTRStaticKey]["enUS"] = {
 	[227225] = "Soul Barrier",
 	[227847] = "Bladestorm",
 	[228260] = "Void Eruption",
+	[228477] = "Soul Cleave",
 	[228755] = "Cancel Aura",
 }

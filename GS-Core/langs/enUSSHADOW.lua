@@ -1642,7 +1642,6 @@ GSAvailableLanguages[GSTRStaticShadow]["enUS"] = {
 	["demon spikes"] = 203720,
 	["eagle's bite"] = 203757,
 	["shear"] = 203783,
-	["soul cleave"] = 203798,
 	["blessing of spellwarding"] = 204018,
 	["blessed hammer"] = 204019,
 	["fiery brand"] = 204021,
@@ -1918,5 +1917,6 @@ GSAvailableLanguages[GSTRStaticShadow]["enUS"] = {
 	["soul barrier"] = 227225,
 	["bladestorm"] = 227847,
 	["void eruption"] = 228260,
+	["soul cleave"] = 228477,
 	["cancel aura"] = 228755,
 }

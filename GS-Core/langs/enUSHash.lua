@@ -1642,7 +1642,6 @@ GSAvailableLanguages[GSTRStaticHash]["enUS"] = {
 	["Demon Spikes"] = 203720,
 	["Eagle's Bite"] = 203757,
 	["Shear"] = 203783,
-	["Soul Cleave"] = 203798,
 	["Blessing of Spellwarding"] = 204018,
 	["Blessed Hammer"] = 204019,
 	["Fiery Brand"] = 204021,
@@ -1918,5 +1917,6 @@ GSAvailableLanguages[GSTRStaticHash]["enUS"] = {
 	["Soul Barrier"] = 227225,
 	["Bladestorm"] = 227847,
 	["Void Eruption"] = 228260,
+	["Soul Cleave"] = 228477,
 	["Cancel Aura"] = 228755,
 }
