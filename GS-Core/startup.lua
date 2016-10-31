@@ -9,7 +9,7 @@ GSTRUnfoundSpells = {}
 
 GSModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 
-GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true }
+GSStaticCastCmds = { use = true, cast = true, spell = true, cancelaura = true, startattack = true, cancelform = true }
 
 GSStaticCleanStrings = {}
 GSStaticCleanStrings = {
@@ -199,10 +199,7 @@ GSStaticPriority = [[
 --    but it does this within an internal loop.  So more like 123343456
 --    If the macro has loopstart or loopstop defined then it will use this instead of GSStaticPriority
 GSStaticLoopPriority = [[
-  if step == #macros then
-    step = 1
-    self:SetAttribute('loopiter', 1)
-  elseif step < loopstart then
+  if step < loopstart then
     step = step + 1
   elseif looplimit <= 1 then
     -- when we get to the end reset to loopstart
@@ -210,8 +207,8 @@ GSStaticLoopPriority = [[
     if step == limit then
       limit = limit % loopstop + 1
       step = loopstart
-      if limit == loopiter then
-        loopiter = loopiter + 1
+      if looplimit == loopiter then
+        loopiter = 1
         self:SetAttribute('loopiter', loopiter)
       end
     else
@@ -221,6 +218,9 @@ GSStaticLoopPriority = [[
     step = step + 1
   elseif loopiter == looplimit then
     step = loopstop + 1
+  elseif step == #macros then
+    step = 1
+    self:SetAttribute('loopiter', 1)
   else
     limit = limit or loopstart
     if step == limit then
@@ -270,6 +270,7 @@ GSStaticLoopSequential = [[
       step = step + 1
     end
     loopiter = 1
+    self:SetAttribute('loopiter', 1)
   elseif step > loopstop then
     -- I am outside the loop
     --print(step .. " I am outside the loop")
