@@ -80,6 +80,8 @@ function GSSE:getSpecNames()
   return keyset
 end
 
+local viewiconpicker = AceGUI:Create("Icon")
+
 function GSSE:DisableSequence(currentSeq)
   GSToggleDisabledSequence(currentSeq)
   if GSMasterOptions.DisabledSequences[currentSeq] then
@@ -119,7 +121,7 @@ iconpicker.frame:SetScript("OnDragStart", function()
 end)
 iconpicker:SetImage(defautMacroIcon)
 
-local viewiconpicker = AceGUI:Create("Icon")
+
 viewiconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 viewiconpicker.frame:RegisterForDrag("LeftButton")
