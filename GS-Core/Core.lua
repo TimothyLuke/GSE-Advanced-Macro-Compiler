@@ -537,9 +537,7 @@ local function ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(GSMasterOptions.SequenceLibrary) do
-    if GSMasterOptions.DisabledSequences[name] then
-      GSPrint(GSMasterOptions.CommandColour .. name ..'|r ' .. L["is currently disabled from use."], GNOME)
-    elseif not GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].specID) then
+    if not GSisEmpty(sequence[GSGetActiveSequenceVersion(name)].specID) then
       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence[GSGetActiveSequenceVersion(name)].specID)
       GSPrintDebugMessage(L["Sequence Name: "] .. name)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
