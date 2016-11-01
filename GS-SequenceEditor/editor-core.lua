@@ -84,10 +84,18 @@ function GSSE:DisableSequence(currentSeq)
   GSToggleDisabledSequence(currentSeq)
   if GSMasterOptions.DisabledSequences[currentSeq] then
     disableSeqbutton:SetText(L["Enable Sequence"])
+    viewiconpicker:SetImage(defautMacroIcon)
   else
     disableSeqbutton:SetText(L["Disable Sequence"])
+    local reticon = GSSE:getMacroIcon(currentSeq)
+    if not tonumber(reticon) then
+      -- we have a starting
+      reticon = "Interface\\Icons\\" .. reticon
+    end
+    viewiconpicker:SetImage(reticon)
   end
   sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSisEmpty(GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSMasterOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
+
 end
 
 local editOptionsbutton = AceGUI:Create("Button")
