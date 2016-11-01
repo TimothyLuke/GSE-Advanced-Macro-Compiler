@@ -1,13 +1,14 @@
 local GNOME, Sequences = ...
 local modversion = GetAddOnMetadata(GNOME, "Version")
 local GSDB = LibStub("AceAddon-3.0"):NewAddon("GSDB", "AceEvent-3.0")
-
+local localizedClass, englishClass, classIndex = UnitClass("unit");
 GSDBOptions = {}
 GSDBCOptions = {}
 
 GSDBOptions.currentversion = modversion
 GSDBOptions.loadedcount = 1
-GSDBCOptions.disableActionComplete = false
+GSDBOptions.ClassesProcessed = {}
+GSDBOptions.disableActionComplete = false
 
 for k,_ in pairs(Sequences) do
   Sequences[k].source = GNOME
@@ -19,7 +20,7 @@ GSImportMacroCollection(Sequences)
 local f = CreateFrame('Frame')
 
 local function processAddonLoaded()
-  if not GSDBCOptions.disableActionComplete then
+  if not GSDBOptions.ClassesProcessed[classIndex] then
     for k,_ in pairs(Sequences) do
       if GSMasterOptions.SequenceLibrary[k][GSGetActiveSequenceVersion(k)].source == GNOME then
         GSDisableSequence(k)
@@ -27,7 +28,7 @@ local function processAddonLoaded()
         GSPrintDebugMessage("No entry for "  .. k, GNOME)
       end
     end
-    GSDBCOptions.disableActionComplete = true
+    GSDBCOptions.ClassesProcessed[classIndex] = true
   end
   if GSDBOptions.loadedcount < 4 then
     GSPrint("Draik Bundled Macros loaded.  This set is an example set to demonstrate the capabilities of GS-E.  The macros are designed for use levelling to 110.  They should not be considered the best or perfect but are examples.", GNOME)
