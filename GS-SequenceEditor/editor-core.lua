@@ -791,7 +791,7 @@ function GSGuiShowViewer()
     currentSequence = ""
     local names = GSSE:getSequenceNames()
     GSSequenceListbox:SetList(names)
-    sequenceboxtext:SetText()
+    sequenceboxtext:SetText("")
     frame:Show()
   else
     GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
