@@ -26,15 +26,11 @@ install:
   - luarocks install luadoc
 
 script:
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/startup.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GetNumAddOns IsAddOnLoaded GetAddOnInfo LoadAddOn
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/langs/preinit.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/langs/postlanginit.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GetNumAddOns IsAddOnLoaded GetAddOnInfo LoadAddOn
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/errorhandler.lua --globals seterrorhandler currentclassDisplayName GSMasterSequences C_Timer format GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty wipe
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-Core/Core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-SequenceEditor/editor-core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-SequenceEditor/translator-core.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-SequenceEditor/DebugWindow.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GS-DraikMacros/Macros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty GSStaticPriority
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GetNumAddOns IsAddOnLoaded GetAddOnInfo LoadAddOn
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/MacroExecution/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua --globals GSDebugOutput GSMasterOptions GSStaticSequenceDebug GSPrintDebugMessage GSisEmpty format GSCore Sequences GSMasterSequences GSMasterOptions debuglocals Sequences GSPrintDebugMessage GSStaticSequenceDebug GSisEmpty GSStaticPriority
   - luadoc  GS-Core/startup.lua
 
 after_success:
