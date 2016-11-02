@@ -1,4 +1,5 @@
 local GSE = GSE
+local Statics = GSE.Static
 
 --- Disable all versions of a sequence and delete any macro stubs.
 function GSE.DisableSequence(SequenceName)
@@ -313,7 +314,7 @@ function GSE.PrepareLogout(deletenonlocalmacros)
   GnomeOptions = GSEOptions
 end
 
-local function GSE.isLoopSequence(sequence)
+function GSE.isLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.loopstart) then
     loopcheck = true
@@ -385,6 +386,7 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   return returnVal
 end
 
+--- This function performs any actions to clean up common syntax errors
 function GSE.FixSequence(sequence)
   for k,v in pairs(GSStaticCleanStrings) do
     GSE.PrintDebugMessage(L["Testing String: "] .. v, GNOME)
@@ -393,6 +395,7 @@ function GSE.FixSequence(sequence)
   end
 end
 
+--- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
   local todelete = {}
@@ -416,6 +419,7 @@ function GSE.CleanOrphanSequences()
   end
 end
 
+--- This function is used to clean the loacl sequence library
 function GSE.CleanMacroLibrary(logout)
   -- clean out the sequences database except for the current version
   local tempTable = {}
@@ -457,6 +461,7 @@ function GSE.CleanMacroLibrary(logout)
   GSELibrary = tempTable
 end
 
+--- This function resets a button back to its initial setting
 function GSE.ResetButtons()
   for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
     if GSE.isSpecIDForCurrentClass(GSELibrary[k][v].specID) then
@@ -467,6 +472,7 @@ function GSE.ResetButtons()
   end
 end
 
+--- This funciton lists all sequences that are cirrently known
 function GSE.ListSequences(txt)
   local currentSpec = GetSpecialization()
 
@@ -494,11 +500,12 @@ function GSE.ListSequences(txt)
 end
 
 
+--- This function updates the button for an existing sequence3
 function GSE.UpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSE.anslatorAvailable and GSisSpecIDForCurrentClass(sequence.specID) then
-      sequence = GSE.anslateSequence(sequence, name)
+    if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.specID) then
+      sequence = GSE.TranslateSequence(sequence, name)
     end
     if GSE.isEmpty(_G[name]) then
       createButton(name, sequence)
@@ -512,9 +519,9 @@ function GSE.UpdateSequence(name,sequence)
       button:UnwrapScript(button,'OnClick')
       if GSisLoopSequence(sequence) then
         if GSE.isEmpty(sequence.StepFunction) then
-          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopSequential))
+          button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
         else
-          button:WrapScript(button, 'OnClick', format(OnClick, GSStaticLoopPriority))
+          button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
         end
       else
         button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
@@ -531,6 +538,7 @@ function GSE.UpdateSequence(name,sequence)
     end
 end
 
+--- This funciton dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
   GSE.Print("Button name: "  .. SequenceName)
   GSE.Print(_G[SequenceName]:GetScript('OnClick'))
@@ -539,6 +547,7 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print(format(OnClick, GSELibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction or 'step = step % #macros + 1'))
 end
 
+--- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
   if usoptions.DebugSequenceExecution then
     -- Note to self do i care if its a loop sequence?
@@ -564,6 +573,6 @@ function GSE.TraceSequence(button, step, task)
     if GCD then
       GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
     end
-    GSE.PrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, GSStaticSequenceDebug)
+    GSE.PrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
   end
 end
