@@ -651,7 +651,7 @@ function GSSE:loadSequence(SequenceName)
     viewiconpicker:SetImage(defautMacroIcon)
   else
     disableSeqbutton:SetText(L["Disable Sequence"])
-    reticon = GSSE:getMacroIcon("DB_Ret")
+    reticon = GSSE:getMacroIcon(SequenceName)
     if not tonumber(reticon) then
       -- we have a starting
       reticon = "Interface\\Icons\\" .. reticon
