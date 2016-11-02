@@ -1,4 +1,4 @@
-local L = WeakAuras.L
+local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 -- Options translation
 --@localization(locale="enUS", format="lua_additive_table", namespace="GSE", handle-subnamespaces="none")@

@@ -1,6 +1,6 @@
 -- GLOBALS: GSE
 GSE = LibStub("AceAddon-3.0"):NewAddon("GSE", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0")
-GSE.L = {}
+GSE.L = LibStub("AceLocale-3.0"):GetLocale("GS-E")
 GSE.Static = {}
 
 GSE.versionString = GetAddOnMetadata("GSE", "Version");

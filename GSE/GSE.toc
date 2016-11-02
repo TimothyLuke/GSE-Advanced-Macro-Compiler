@@ -14,13 +14,8 @@ lib\LibQTip-1.0\LibQTip-1.0.lua
 lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
-API\Init.lua
-API\Statics.lua
 
-# Mod Language Strings
-Localization\enUS.lua
-Localization\enUSHash.lua
-Localization\enUSSHADOW.lua
+#Setup Localisation
 Localization\ModL_enUS.lua
 Localization\ModL_ptBR.lua
 Localization\ModL_frFR.lua
@@ -32,6 +27,16 @@ Localization\ModL_ruRU.lua
 Localization\ModL_zhCN.lua
 Localization\ModL_esES.lua
 Localization\ModL_zhTW.lua
+
+# Startup
+API\Init.lua
+API\Statics.lua
+
+# Spells Language Strings
+Localization\enUS.lua
+Localization\enUSHash.lua
+Localization\enUSSHADOW.lua
+
 
 #storage and core
 API\StaticPopup.lua
