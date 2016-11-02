@@ -1,37 +1,6 @@
 local GNOME, _ = ...
 local L = GSL
 
-StaticPopupDialogs["GSEConfirmReloadUI"] = {
-  text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],
-  button1 = L["Yes"],
-  button2 = L["No"],
-  OnAccept = function()
-      ReloadUI();
-  end,
-  timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-}
-
-function GSListUnloadedAddons()
-  local returnVal = "";
-  for k,v in pairs(GSUnloadedAddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
-
-
-function GSListAddons()
-  local returnVal = "";
-  for k,v in pairs(GSAddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
 
 function GSGetColour(option)
   hex = string.gsub(option, "#","")

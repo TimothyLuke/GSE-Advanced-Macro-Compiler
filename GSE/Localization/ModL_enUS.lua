@@ -1,4 +1,11 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("GS-E", "enUS", true)
+local L = WeakAuras.L
+
+-- Options translation
+--@localization(locale="enUS", format="lua_additive_table", namespace="GSE", handle-subnamespaces="none")@
+
+
+--@do-not-package@
+
 
 --Debug Strings from Core
 L["createButton PreMacro: "] = true
@@ -329,3 +336,12 @@ L["Record"] = true
 L["Pause"] = true
 L["Create Macro"] = true
 L["Stop"] = true
+
+
+--@end-do-not-package@
+
+-- Make missing translations available
+setmetatable(GSE.L, {__index = function(self, key)
+	self[key] = (key or "")
+	return key
+end})

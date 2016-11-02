@@ -124,25 +124,3 @@ PostMacro = [[
 /targetenemy [noharm][dead]
 ]],
 }
-
-Sequences["DB_SquishyDK"] = {
-StepFunction = GSStaticPriority,
-specID = 250,
-author = "Suiseiseki",
-helpTxt = "Talents 2112333",
-PreMacro = [[
-/cast [combat] Vampiric Blood
-/Cast [combat] Dancing Rune Weapon
-/cancelaura Wraith Walk
-]],
-'/castsequence Marrowrend, Marrowrend, Marrowrend, Marrowrend, Death Strike',
-"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Marrowrend",
-"/cast Death Strike",
-"/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, Heart Strike",
-"/cast Heart Strike",
-"/cast Death Strike",
-'/cast Marrowrend',
-PostMacro = [[
-/TargetEnemy [noharm][dead]
-]],
-}

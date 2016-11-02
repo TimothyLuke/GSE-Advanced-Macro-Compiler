@@ -28,16 +28,6 @@ function GSGetDefaultIcon()
   return strsub(defaulticon, 17)
 end
 
-function GSSE:parsetext(editbox)
-  if GSMasterOptions.RealtimeParse then
-    text = GSTRUnEscapeString(editbox:GetText())
-    returntext = GSTranslateString(text , GetLocale(), GetLocale(), true)
-    editbox:SetText(returntext)
-    editbox:SetCursorPosition(string.len(returntext)+2)
-  end
-end
-
-
 
 function GSSE:getSequenceNames()
   local keyset={}
@@ -580,49 +570,6 @@ function GSUpdateSequenceList()
   GSSequenceListbox:SetList(names)
 end
 
-function GSSE:importSequence()
-  local functiondefinition =  importStr .. [===[
-
-  return Sequences
-  ]===]
-  GSPrintDebugMessage (functiondefinition, "GS-SequenceEditor")
-  local fake_globals = setmetatable({
-    Sequences = {},
-    }, {__index = _G})
-  local func, err = loadstring (functiondefinition, "GS-SequenceEditor")
-  if func then
-    -- Make the compiled function see this table as its "globals"
-    setfenv (func, fake_globals)
-
-    local TempSequences = assert(func())
-    if not GSisEmpty(TempSequences) then
-      local newkey = ""
-      for k,v in pairs(TempSequences) do
-
-        if GSisEmpty(v.version) then
-          v.version = GSGetNextSequenceVersion(k)
-        end
-        v.source = GSStaticSourceLocal
-        GSAddSequenceToCollection(k, v, v.version)
-        GSUpdateSequence(k, GSMasterOptions.SequenceLibrary[k][v.version])
-        if GSisEmpty(v.icon) then
-          -- Set a default icon
-          v.icon = GSGetDefaultIcon()
-        end
-        GSCheckMacroCreated(k)
-        newkey = k
-        GSPrint(L["Imported new sequence "] .. k, GNOME)
-      end
-      GSUpdateSequenceList()
-      GSSequenceListbox:SetValue(newkey)
-
-    end
-  else
-    GSPrintDebugMessage (err, GNOME)
-  end
-
-end
-
 function GSSE:ManageSequenceVersion()
   frame:Hide()
   versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
@@ -863,13 +810,4 @@ function GSSE:getMacroIcon(sequenceIndex)
   else
       return iconid
   end
-end
-
-function GSSE:lines(tab, str)
-  local function helper(line)
-    table.insert(tab, line)
-    return ""
-  end
-  helper((str:gsub("(.-)\r?\n", helper)))
-  GST = t
 end

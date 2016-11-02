@@ -1,72 +1,60 @@
-package-as: GS-Core
+package-as: GSE
 
 externals:
-    GS-Core/lib/LibStub:
+    GSE/Lib/LibStub:
         url: svn://svn.wowace.com/wow/libstub/mainline/trunk
         tag: latest
-    GS-Core/lib/AceAddon-3.0:
+    GSE/Lib/AceAddon-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
         tag: latest
-    GS-Core/lib/AceLocale-3.0:
+    GSE/Lib/AceLocale-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
         tag: latest
-    GS-Core/lib/AceEvent-3.0:
+    GSE/Lib/AceEvent-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceEvent-3.0
         tag: latest
-    GS-Core/lib/CallbackHandler-1.0:
+    GSE/Lib/CallbackHandler-1.0:
         url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
         tag: latest
-    GS-SequenceEditor/lib/LibStub:
-        url: svn://svn.wowace.com/wow/libstub/mainline/trunk
-        tag: latest
-    GS-SequenceEditor/lib/CallbackHandler-1.0:
-        url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
-        tag: latest
-    GS-SequenceEditor/lib/AceAddon-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
-        tag: latest
-    GS-SequenceEditor/lib/AceConfig-3.0:
+    GSE/lib/AceConfig-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceConsole-3.0:
+    GSE/Lib/AceConsole-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConsole-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceEvent-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceEvent-3.0
-        tag: latest
-    GS-SequenceEditor/lib/AceSerializer-3.0:
+    GSE/Lib/AceSerializer-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceSerializer-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceComm-3.0:
+    GSE/Lib/AceComm-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceGUI-3.0:
+    GSE/Lib/AceGUI-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
         tag: latest
-    GS-SequenceEditor/lib/AceTimer-3.0:
+    GSE/Lib/AceTimer-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceTimer-3.0
         tag: latest
-    GS-SequenceEditor/lib/LibCompress:
+    GSE/Lib/LibCompress:
         url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
         tag: latest
-    GS-SequenceEditor/lib/LibDataBroker-1.1:
+    GSE/Lib/LibDataBroker-1.1:
         url: git://git.wowace.com/wow/libdatabroker-1-1/mainline.git
         tag: latest
-    GS-SequenceEditor/lib/AceGUI-3.0-Completing-EditBox:
+    GSE/Lib/AceGUI-3.0-Completing-EditBox:
         url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
         tag: latest
-    GS-SequenceEditor/lib/LibQTip-1.0:
+    GSE/Lib/LibQTip-1.0:
         url: svn://svn.wowace.com/wow/libqtip-1-0/mainline/trunk
         tag: latest
-    GS-SequenceEditor/lib/LibSharedMedia-3.0:
+    GSE/Lib/LibSharedMedia-3.0:
         url: svn://svn.wowace.com/wow/libsharedmedia-3-0/mainline/trunk
         tag: latest
 
 
-move-folders:
-    GS-Core/GS-SequenceEditor: GS-SequenceEditor
-    GS-Core/GS-DraikMacros: GS-DraikMacros
-    GS-Core/GS-Core: GS-Core
+#move-folders:
+#    GS-Core/GS-SequenceEditor: GS-SequenceEditor
+#    GS-Core/GS-DraikMacros: GS-DraikMacros
+#    GS-Core/GS-Core: GS-Core
 
 enable-nolib-creation: no
 
@@ -74,3 +62,5 @@ ignore:
     - .travis.yml
     - README.md
     - spec
+    - PluginShell
+    - docs
