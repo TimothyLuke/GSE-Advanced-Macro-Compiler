@@ -1,8 +1,8 @@
 ## Interface: 70100
-## Title: |cffff0000GS-E:|r |cFF00D1FFGnome Sequencer - Enhanced|r Core
+## Title: |cffff0000GSE:|r |cFF00D1FFGnome Sequencer Enhanced|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke - Original GS code by Semlar
-## Version: 144
+## Version: 200
 ## SavedVariables: GSEOptions GSELibrary
 ## OptionalDeps: WeakAuras
 
@@ -20,7 +20,11 @@ API\StaticPopup.lua
 API\InitialOptions.lua
 API\StringFunctions.lua
 
+
 # Mod Language Strings
+Localization\enUS.lua
+Localization\enUSHash.lua
+Localization\enUSSHADOW.lua
 Localization\ModL_enUS.lua
 Localization\ModL_ptBR.lua
 Localization\ModL_frFR.lua
@@ -32,17 +36,8 @@ Localization\ModL_ruRU.lua
 Localization\ModL_zhCN.lua
 Localization\ModL_esES.lua
 Localization\ModL_zhTW.lua
-
-# Initial SPell DB
-#API\preinit.lua
-#Localization\enUS.lua
-#Localization\enUSHash.lua
-#Localization\enUSSHADOW.lua
-#API\postlanginit.lua
-
-# Startup
-#API\startup.lua
-#API\errorhandler.lua
+API\Translator.lua
+Storage\Storage.lua
 
 # Core Programming
 #MacroExecution\Core.lua

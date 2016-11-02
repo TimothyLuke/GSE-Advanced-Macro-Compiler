@@ -8,23 +8,6 @@ local Errors = {
 }
 
 
-StaticPopupDialogs["GS-DebugOutput"] = {
-  text = L["Dump of GS Debug messages"],
-  button1 = L["Update"],
-  button2 = L["Close"],
-  OnAccept = function(self, data)
-      self.editBox:SetText(GSDebugOutput)
-  end,
-	OnShow = function (self, data)
-    self.editBox:SetText(GSDebugOutput)
-  end,
-  timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-	hasEditBox = true,
-}
-
 seterrorhandler(function(message)
 	local line, err = message:match('GS-%.lua:(%d+): (.+)')
 	if err then
@@ -41,7 +24,3 @@ seterrorhandler(function(message)
 		--Sequences[GNOME .. 'DEFAULT'] = ''
 	end
 end)
-
-
-
-GSCore = true

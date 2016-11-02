@@ -58,12 +58,13 @@ function GSE.SplitMeIntolines(str)
   local t = {}
   local function helper(line)
     table.insert(t, line)
-    GSPrintDebugMessage("Line : " .. line, GNOME)
+    GSEPrintDebugMessage("Line : " .. line, GNOME)
     return ""
   end
   helper((str:gsub("(.-)\r?\n", helper)))
   return t
 end
+
 
 
 --- Split a string into an array based on the deliminter specified.

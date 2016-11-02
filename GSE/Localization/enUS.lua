@@ -1,6 +1,6 @@
 local GNOME, _ = ...
 
-GSAvailableLanguages[GSTRStaticKey]["enUS"] = {
+GSAvailableLanguages[Statics.TranslationKey]["enUS"] = {
 	[17] = "Power Word: Shield",
 	[53] = "Backstab",
 	[66] = "Invisibility",
