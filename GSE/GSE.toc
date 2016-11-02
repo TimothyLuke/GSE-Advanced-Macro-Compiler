@@ -37,25 +37,16 @@ Localization\ModL_zhCN.lua
 Localization\ModL_esES.lua
 Localization\ModL_zhTW.lua
 API\Translator.lua
-Storage\Storage.lua
 
-# Core Programming
-#MacroExecution\Core.lua
+#storage and core
+Storage\Storage.lua
+MacroExecution\Core.lua
 
 
 # GUI
-
-#startup
-#editor-startup.lua
-
-#Translator
-#translator-core.lua
-
-#Editor
-#editor-core.lua
-#DebugWindow.lua
-#GS-Transmission.lua
-
-
-#OptionsGUI
-#GSE-options.lua
+GUI\Editor.lua
+GUI\DebugWindow.lua
+GUI\Transmission.lua
+GUI\VersionManagement.lua
+GUI\Viewer.lua
+GUI\Options.ua
