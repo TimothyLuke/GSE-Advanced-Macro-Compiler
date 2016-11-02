@@ -130,7 +130,7 @@ function GSTransmitSequence(SequenceName, channel, target)
   local t = {}
 	t.Command = "GS-E_TRANSMITSEQUENCE"
 	t.SequenceName = SequenceName
-	t.Sequence = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
+	t.Sequence = GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
 	GSSendMessage(t, channel, target)
 	GSSE.transmissionframe:SetStatusText(SequenceName .. L[" sent"])
 end

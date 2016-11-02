@@ -7,7 +7,9 @@ GSE.versionString = GetAddOnMetadata("GSE", "Version");
 
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 
+GSE.OutputQueue = {}
 
+local Statics = GSE.Static
 
 -- Initialisation Functions
 
@@ -15,9 +17,9 @@ GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 --- When the Addon loads, printing is paused until after every other mod has loaded.
 --    This method prints the print queue.
 function GSE.PerformPrint()
-  for k,v in ipairs(GSOutput) do
+  for k,v in ipairs(GSE.OutputQueue) do
     print(v)
-    GSOutput[k] = nil
+    GSE.OutputQueue[k] = nil
   end
 end
 
@@ -27,27 +29,27 @@ end
 function GSE.Print(message, title)
   -- stroe this for later on.
   if not GSE.isEmpty(title) then
-    message = GSMasterOptions.TitleColour .. title .. GSStaticStringRESET .." " .. message
+    message = GSEOptions.TitleColour .. title .. Statics.StringReset .." " .. message
   end
-  table.insert(GSOutput, message)
+  table.insert(GSE.OutputQueue, message)
   if GSPrintAvailable then
     GSPerformPrint()
   end
 end
 
 --- Send the message string to an output source.
---    If <code>GSMasterOptions.sendDebugOutputGSDebugOutput</code> then the output will
+--    If <code>GSEOptions.sendDebugOutputGSDebugOutput</code> then the output will
 --    be appended to variable <code>GSDebugOutput</code>
---    If <code>GSMasterOptions.sendDebugOutputToChat</code> then the output will
+--    If <code>GSEOptions.sendDebugOutputToChat</code> then the output will
 --    be sent to variable <code>GSPrint</code>
 --    The Title is stripped for intermod debug output via GSDebugOutput
 local function determinationOutputDestination(message, title)
   if GSDebugSequenceEx then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
-	elseif GSMasterOptions.sendDebugOutputGSDebugOutput  then
+	elseif GSEOptions.sendDebugOutputGSDebugOutput  then
     GSDebugOutput = GSDebugOutput .. message .. "\n"
   end
-	if GSMasterOptions.sendDebugOutputToChatWindow  then
+	if GSEOptions.sendDebugOutputToChatWindow  then
     GSPrint(message, title)
 	end
 end
@@ -60,8 +62,8 @@ function GSE.PrintDebugMessage(message, module)
       module = "GS-Core"
     end
     if module == GSStaticSequenceDebug then
-      determinationOutputDestination(message, GSMasterOptions.TitleColour .. GNOME .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] )
-		elseif GSMasterOptions.debug and module ~= GSStaticSequenceDebug and GSMasterOptions.DebugModules[module] == true then
-      determinationOutputDestination(GSMasterOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSMasterOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
+      determinationOutputDestination(message, GSEOptions.TitleColour .. GNOME .. ':|r ' .. GSEOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] )
+		elseif GSEOptions.debug and module ~= GSStaticSequenceDebug and GSEOptions.DebugModules[module] == true then
+      determinationOutputDestination(GSEOptions.TitleColour .. (GSisEmpty(module) and GNOME or module) .. ':|r ' .. GSEOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
 end

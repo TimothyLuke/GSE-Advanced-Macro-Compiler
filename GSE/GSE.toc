@@ -16,10 +16,6 @@ lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
 API\Init.lua
 API\Statics.lua
-API\StaticPopup.lua
-API\InitialOptions.lua
-API\StringFunctions.lua
-
 
 # Mod Language Strings
 Localization\enUS.lua
@@ -36,10 +32,13 @@ Localization\ModL_ruRU.lua
 Localization\ModL_zhCN.lua
 Localization\ModL_esES.lua
 Localization\ModL_zhTW.lua
-API\Translator.lua
 
 #storage and core
+API\StaticPopup.lua
+API\InitialOptions.lua
+API\StringFunctions.lua
 Storage\Storage.lua
+API\Translator.lua
 MacroExecution\Core.lua
 
 

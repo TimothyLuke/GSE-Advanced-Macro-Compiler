@@ -30,7 +30,7 @@ end
 
 --- Format the text against the GSE Sequence Spec.
 function GSE.parsetext(editbox)
-  if GSMasterOptions.RealtimeParse then
+  if GSEOptions.RealtimeParse then
     text = GSE.UnEscapeString(editbox:GetText())
     returntext = GSE.TranslateString(text , GetLocale(), GetLocale(), true)
     editbox:SetText(returntext)

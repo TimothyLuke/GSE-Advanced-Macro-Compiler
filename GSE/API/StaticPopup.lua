@@ -1,3 +1,6 @@
+local GSE = GSE
+local L = GSE.L
+
 
 StaticPopupDialogs["GSEConfirmReloadUI"] = {
   text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],

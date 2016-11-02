@@ -8,19 +8,19 @@ local L = GSE.L
 if GetLocale() ~= "enUS" then
   -- We need to load in temporarily the current locale translation tables.
   -- we should also look at cacheing this
-  if GSisEmpty(GSAvailableLanguages[Statics.TranslationKey][GetLocale()]) then
-    GSAvailableLanguages[Statics.TranslationKey][GetLocale()] = {}
-    GSAvailableLanguages[Statics.TranslationHash][GetLocale()] = {}
-    GSAvailableLanguages[Statics.TranslationShadow][GetLocale()] = {}
+  if GSisEmpty(GSE.TranslatorLanguageTables[Statics.TranslationKey][GetLocale()]) then
+    GSE.TranslatorLanguageTables[Statics.TranslationKey][GetLocale()] = {}
+    GSE.TranslatorLanguageTables[Statics.TranslationHash][GetLocale()] = {}
+    GSE.TranslatorLanguageTables[Statics.TranslationShadow][GetLocale()] = {}
     GSPrintDebugMessage(L["Adding missing Language :"] .. GetLocale() )
     local i = 0
-    for k,v in pairs(GSAvailableLanguages[Statics.TranslationKey]["enUS"]) do
+    for k,v in pairs(GSE.TranslatorLanguageTables[Statics.TranslationKey]["enUS"]) do
       GSPrintDebugMessage(i.. " " .. k .. " " ..v)
       local spellname = GetSpellInfo(k)
       if spellname then
-        GSAvailableLanguages[Statics.TranslationKey][GetLocale()][k] = spellname
-        GSAvailableLanguages[Statics.TranslationHash][GetLocale()][spellname] = k
-        GSAvailableLanguages[Statics.TranslationShadow][GetLocale()][spellname] = string.lower(k)
+        GSE.TranslatorLanguageTables[Statics.TranslationKey][GetLocale()][k] = spellname
+        GSE.TranslatorLanguageTables[Statics.TranslationHash][GetLocale()][spellname] = k
+        GSE.TranslatorLanguageTables[Statics.TranslationShadow][GetLocale()][spellname] = string.lower(k)
       end
       i = i + 1
     end
@@ -54,11 +54,11 @@ end
 function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceName)
   GSE.PrintDebugMessage("GSE.TranslateSequenceFromTo  From: " .. fromLocale .. " To: " .. toLocale, GNOME)
   -- check if fromLocale exists
-  if GSisEmpty(GSAvailableLanguages[Statics.TranslationKey][fromLocale]) then
+  if GSisEmpty(GSE.TranslatorLanguageTables[Statics.TranslationKey][fromLocale]) then
     GSE.Print(L["Source Language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
     return sequence
   end
-  if GSisEmpty(GSAvailableLanguages[Statics.TranslationKey][fromLocale]) then
+  if GSisEmpty(GSE.TranslatorLanguageTables[Statics.TranslationKey][fromLocale]) then
     GSE.Print(L["Target language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
     return sequence
   end
@@ -100,7 +100,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
     if not GSE.isEmpty(v) then
       for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
         GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
-        output = output..GSMasterOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
+        output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
         if GSStaticCastCmds[strlower(cmd)] then
           if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
@@ -111,7 +111,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
           end
           local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
           if foundspell then
-            output = output ..GSMasterOptions.KEYWORD .. returnval .. Statics.StringReset .. "\n"
+            output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "\n"
           else
             GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
             output = output  .. etc .. "\n"
@@ -122,7 +122,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
           --look for conditionals at the startattack
           local conditionals, mods, uetc = GSTRGetConditionalsFromString(etc)
           if conditionals then
-            output = output ..GSMasterOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
+            output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
           end
           for _, w in ipairs(GSTRsplit(uetc,",")) do
             if not cleanNewLines then
@@ -133,7 +133,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
               output = output .. "!"
             end
             local foundspell, returnval = GSTRTranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
-            output = output ..  GSMasterOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
+            output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
           end
           local resetleft = string.find(output, ", , ")
           if not GSisEmpty(resetleft) then
@@ -175,7 +175,7 @@ function GSTRTranslateSpell(str, fromLocale, toLocale, cleanNewLines)
     GSE.PrintDebugMessage("GSTRTranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
     for _, w in ipairs(GSTRsplit(str,";")) do
       found, returnval = GSTRTranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
-      output = output ..  GSMasterOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
+      output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
     end
     if string.sub(output, strlen(output)-1) == "; " then
       output = string.sub(output, 1, strlen(output)-2)
@@ -191,23 +191,23 @@ function GSTRTranslateSpell(str, fromLocale, toLocale, cleanNewLines)
       etc = string.match(etc, "^%s*(.-)%s*$")
     end
     etc = string.gsub (etc, "!", "")
-    local foundspell = GSAvailableLanguages[Statics.TranslationHash][fromLocale][etc]
+    local foundspell = GSE.TranslatorLanguageTables[Statics.TranslationHash][fromLocale][etc]
     if foundspell then
       GSE.PrintDebugMessage("Translating Spell ID : " .. foundspell , GNOME )
-      GSE.PrintDebugMessage(" to " .. (GSisEmpty(GSAvailableLanguages[Statics.TranslationKey][toLocale][foundspell]) and " but its not in [Statics.TranslationKey][" .. toLocale .. "]" or GSAvailableLanguages[Statics.TranslationKey][toLocale][foundspell]) , GNOME)
-      output = output .. GSMasterOptions.KEYWORD .. GSAvailableLanguages[Statics.TranslationKey][toLocale][foundspell] .. Statics.StringReset
+      GSE.PrintDebugMessage(" to " .. (GSisEmpty(GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][foundspell]) and " but its not in [Statics.TranslationKey][" .. toLocale .. "]" or GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][foundspell]) , GNOME)
+      output = output .. GSEOptions.KEYWORD .. GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][foundspell] .. Statics.StringReset
       found = true
     else
       GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale .. " Hash table checking shadow table", GNOME)
       -- try the shadow table
-      local nfoundspell = GSAvailableLanguages[Statics.TranslationShadow][fromLocale][string.lower(etc)]
+      local nfoundspell = GSE.TranslatorLanguageTables[Statics.TranslationShadow][fromLocale][string.lower(etc)]
       if nfoundspell then
-        GSE.PrintDebugMessage("Translating from the shadow table for  Spell ID : " .. nfoundspell .. " to " .. GSAvailableLanguages[Statics.TranslationKey][toLocale][nfoundspell], GNOME)
-        output = output  .. GSMasterOptions.KEYWORD .. GSAvailableLanguages[Statics.TranslationKey][toLocale][nfoundspell] .. Statics.StringReset
+        GSE.PrintDebugMessage("Translating from the shadow table for  Spell ID : " .. nfoundspell .. " to " .. GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][nfoundspell], GNOME)
+        output = output  .. GSEOptions.KEYWORD .. GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][nfoundspell] .. Statics.StringReset
         found = true
       else
         GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
-        output = output  .. GSMasterOptions.UNKNOWN .. etc .. Statics.StringReset
+        output = output  .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
         GSTRUnfoundSpells [#GSTRUnfoundSpells + 1] = etc
       end
     end
@@ -273,7 +273,7 @@ function GSE.GetConditionalsFromString(str)
     found = true
   end
 
-  mods = GSMasterOptions.COMMENT .. mods .. Statics.StringReset
+  mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
   return found, mods, str
 end
 
@@ -283,7 +283,7 @@ function GSE.ReportUnfoundSpells()
   GSTRUnfoundSpells = nil
   GSTRUnfoundSpells = {}
 
-  for name,version in pairs(GSMasterOptions.SequenceLibrary) do
+  for name,version in pairs(GSEOptions.SequenceLibrary) do
     for v, sequence in ipairs(version) do
       GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
     end

@@ -15,7 +15,7 @@ GSAddInPacks = {}
 GSUnloadedAddInPacks = {}
 
 
-GSOutput = {}
+GSE.OutputQueue = {}
 GSPrintAvailable = false
 
 --- Compares two sequences and return a boolean if the match.  If they do not
@@ -96,7 +96,7 @@ end
 function GSsetMacroLocation()
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   local returnval = 1
-  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSMasterOptions.overflowPersonalMacros then
+  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSEOptions.overflowPersonalMacros then
    returnval = nil
   end
   return returnval
@@ -124,7 +124,7 @@ function GSCheckMacroCreated(SequenceName, globalstub)
       EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
     end
   else
-    icon = GSMasterOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
+    icon = GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
     GSregisterSequence(SequenceName, icon, globalstub)
   end
 

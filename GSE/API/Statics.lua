@@ -220,7 +220,7 @@ Statics.StringFormatEscapes = {
 
 Statics.SourceLocal = "Local"
 Statics.SourceTransmission = "Transmission"
-
+Statics.DebugModules = {}
 Statics.DebugModules["Translator"] = "Translator"
 Statics.DebugModules["Storage"] = "Storage"
 Statics.DebugModules["Editor"] ="Editor"

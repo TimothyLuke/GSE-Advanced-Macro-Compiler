@@ -18,7 +18,7 @@ seterrorhandler(function(message)
 			end
 		end
 		C_Timer.After(2, function()
-			print(format(GSMasterOptions.TitleColour.. L["[GNOME] syntax error on line %d of Sequences.lua:|r %s"], line, err, debuglocals(4)))
+			print(format(GSEOptions.TitleColour.. L["[GNOME] syntax error on line %d of Sequences.lua:|r %s"], line, err, debuglocals(4)))
 		end)
 		wipe(Sequences)
 		--Sequences[GNOME .. 'DEFAULT'] = ''
