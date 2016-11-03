@@ -33,58 +33,57 @@ local function UpdateIcon(self)
 end
 
 
-
-local function preparePreMacro(premacro)
+local function prepareKeyPress(KeyPress)
   if GSEOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 0)
-    premacro = "/run sfx=GetCVar(\"Sound_EnableSFX\");\n/run ers=GetCVar(\"Sound_EnableErrorSpeech\");\n/console Sound_EnableSFX 0\n/console Sound_EnableErrorSpeech 0\n" .. premacro
+    KeyPress = "/run sfx=GetCVar(\"Sound_EnableSFX\");\n/run ers=GetCVar(\"Sound_EnableErrorSpeech\");\n/console Sound_EnableSFX 0\n/console Sound_EnableErrorSpeech 0\n" .. KeyPress
   end
   if GSEOptions.requireTarget then
     -- see #20 prevent target hopping
-    premacro = "/stopmacro [@playertarget, noexists]\n" .. premacro
+    KeyPress = "/stopmacro [@playertarget, noexists]\n" .. KeyPress
   end
-  return GSE.UnEscapeString(premacro)
+  return GSE.UnEscapeString(KeyPress)
 end
 
-local function preparePostMacro(postmacro)
+local function prepareKeyRelease(KeyRelease)
   if GSEOptions.requireTarget then
     -- see #20 prevent target hopping
-    postmacro = postmacro .. "\n/stopmacro [@playertarget, noexists]"
+    KeyRelease = KeyRelease .. "\n/stopmacro [@playertarget, noexists]"
   end
   if GSEOptions.use11 then
-    postmacro = postmacro .. "\n/use [combat] 11"
+    KeyRelease = KeyRelease .. "\n/use [combat] 11"
   end
   if GSEOptions.use12 then
-    postmacro = postmacro .. "\n/use [combat] 12"
+    KeyRelease = KeyRelease .. "\n/use [combat] 12"
   end
   if GSEOptions.use13 then
-    postmacro = postmacro .. "\n/use [combat] 13"
+    KeyRelease = KeyRelease .. "\n/use [combat] 13"
   end
   if GSEOptions.use14 then
-    postmacro = postmacro .. "\n/use [combat] 14"
+    KeyRelease = KeyRelease .. "\n/use [combat] 14"
   end
   if GSEOptions.use2 then
-    postmacro = postmacro .. "\n/use [combat] 2"
+    KeyRelease = KeyRelease .. "\n/use [combat] 2"
   end
   if GSEOptions.use1 then
-    postmacro = postmacro .. "\n/use [combat] 1"
+    KeyRelease = KeyRelease .. "\n/use [combat] 1"
   end
   if GSEOptions.use6 then
-    postmacro = postmacro .. "\n/use [combat] 6"
+    KeyRelease = KeyRelease .. "\n/use [combat] 6"
   end
   if GSEOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)
-    postmacro = postmacro .. "\n/run SetCVar(\"Sound_EnableSFX\",sfx);\n/run SetCVar(\"Sound_EnableErrorSpeech\",ers);"
+    KeyRelease = KeyRelease .. "\n/run SetCVar(\"Sound_EnableSFX\",sfx);\n/run SetCVar(\"Sound_EnableErrorSpeech\",ers);"
   end
   if GSEOptions.hideUIErrors then
-    postmacro = postmacro .. "\n/script UIErrorsFrame:Hide();"
+    KeyRelease = KeyRelease .. "\n/script UIErrorsFrame:Hide();"
     -- potentially change this to UIErrorsFrame:Hide()
   end
   if GSEOptions.clearUIErrors then
     -- potentially change this to UIErrorsFrame:Clear()
-    postmacro = postmacro .. "\n/run UIErrorsFrame:Clear()"
+    KeyRelease = KeyRelease .. "\n/run UIErrorsFrame:Clear()"
   end
-  return GSE.UnEscapeString(postmacro)
+  return GSE.UnEscapeString(KeyRelease)
 end
 
 local OnClick = [=[
@@ -98,7 +97,7 @@ loopstop = tonumber(loopstop)
 loopiter = tonumber(loopiter)
 looplimit = tonumber(looplimit)
 step = tonumber(step)
-self:SetAttribute('macrotext', self:GetAttribute('PreMacro') .. macros[step] .. self:GetAttribute('PostMacro'))
+self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. macros[step] .. self:GetAttribute('KeyRelease'))
 %s
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
@@ -116,11 +115,11 @@ local function createButton(name, sequence)
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
   button:SetAttribute('step', 1)
-  button:SetAttribute('PreMacro','\n' .. preparePreMacro(sequence.PreMacro or ''))
-  GSE.PrintDebugMessage(L["createButton PreMacro: "] .. button:GetAttribute('PreMacro'))
-  button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
-  GSE.PrintDebugMessage(L["createButton PostMacro: "] .. button:GetAttribute('PostMacro'))
-  if GSisLoopSequence(sequence) then
+  button:SetAttribute('KeyPress','\n' .. prepareKeyPress(sequence.KeyPress or ''))
+  GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
+  button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
+  GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
+  if GSE.isLoopSequence(sequence) then
     if GSE.isEmpty(sequence.StepFunction) then
       button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
     else

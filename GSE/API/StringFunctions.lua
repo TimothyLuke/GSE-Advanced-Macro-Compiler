@@ -10,11 +10,11 @@ function GSE.UnEscapeSequence(sequence)
     sequence[i] = GSE.UnEscapeString(v)
     i = i + 1
   end
-  if not GSE.isEmpty(sequence.PreMacro) then
-    sequence.PreMacro = GSE.UnEscapeString(sequence.PreMacro)
+  if not GSE.isEmpty(sequence.KeyPress) then
+    sequence.KeyPress = GSE.UnEscapeString(sequence.KeyPress)
   end
-  if not GSE.isEmpty(sequence.PostMacro) then
-    sequence.PostMacro = GSE.UnEscapeString(sequence.PostMacro)
+  if not GSE.isEmpty(sequence.KeyRelease) then
+    sequence.KeyRelease = GSE.UnEscapeString(sequence.KeyRelease)
   end
   return sequence
 end

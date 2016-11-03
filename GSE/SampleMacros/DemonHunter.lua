@@ -18,7 +18,7 @@ specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 [[/cast [nochanneling] Felblade;]],
@@ -27,7 +27,7 @@ PreMacro = [[
 [[/cast [nochanneling] Chaos Strike;]],
 [[/cast [nochanneling] Blade Dance;]],
 [[/cast [nochanneling] Fel Eruption;]],
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack [@target,harm]
 ]],
@@ -41,7 +41,7 @@ specID = 577,
 author = "lloskka",
 helpTxt = "Talents 2,3,1,2,2,3,1",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/cast [combat,nochanneling] !Throw Glaive",
@@ -52,7 +52,7 @@ PreMacro = [[
 "/castsequence [combat,nochanneling] Demon's Bite, Demon's Bite, !Eye Beam",
 "/castsequence [combat,nochanneling] Demon's Bite, Demon's Bite",
 "/cast [combat,nochanneling] Fel Eruption",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast [combat,nochanneling] Chaos Nova
 /cast [combat,nochanneling] Chaos Blades
@@ -65,14 +65,14 @@ Sequences['SAM_Vengeance'] = {
 specID = 581,
 author = "Tocktris",
 helpTxt = "Talents unknown",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/cast Demon Spikes",
 "/cast Immolation Aura",
 "/cast Soul Cleave",
 "/cast Shear",
-PostMacro = [[
+KeyRelease = [[
 ]],
 }
 

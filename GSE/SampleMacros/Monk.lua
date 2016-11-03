@@ -18,14 +18,14 @@ Sequences['SAM_WW'] = {
 specID = 269,
 author = "John Mets",
 helpTxt = "Talent are 2 3 2 3 1 2 3",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence reset=combat Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Rising Sun Kick",
 "/castsequence reset=combat Tiger Palm, Tiger Palm, Blackout Kick, Blackout Kick, Fists of Fury",
 "/cast Tiger Palm",
 "/cast Touch of Death",
-PostMacro = [[
+KeyRelease = [[
 /cast [combat] Invoke Xuen, the White Tiger
 /cast [combat] Serenity
 /cast [combat] Touch of Death
@@ -37,7 +37,7 @@ specID = 269,
 author = "lloskka",
 helpTxt = "Talents 2 3 2 3 2 2 3",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [combat] Touch of Karma
 ]],
@@ -45,7 +45,7 @@ PreMacro = [[
 '/castsequence [nochanneling] Tiger Palm, Fists of Fury, Tiger Palm, Blackout Kick',
 '/castsequence [nochanneling] Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick, Fists of Fury, Tiger Palm, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick',
 '/castsequence Tiger Palm, Rising Sun Kick, Tiger Palm, Tiger Palm, Tiger Palm, Blackout Kick',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast [combat] Invoke Xuen, the White Tiger
 /cast [combat] Serenity
@@ -58,7 +58,7 @@ Sequences['SAM_BrewMaster_ST'] = {
 specID = 268,
 author = "TimothyLuke",
 helpTxt = "Talent are 1122312",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/cast Keg Smash",
@@ -68,7 +68,7 @@ PreMacro = [[
 "/cast Tiger Palm",
 "/cast Blackout Strike",
 "/cast Blackout Combo",
-PostMacro = [[
+KeyRelease = [[
 ]],
 }
 
@@ -76,7 +76,7 @@ Sequences['SAM_BrewMaster_AoE'] = {
 specID = 268,
 author = "TimothyLuke",
 helpTxt = "Talent are 1122312",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/cast Keg Smash",
@@ -86,6 +86,6 @@ PreMacro = [[
 "/cast Rushing Jade Wind",
 "/cast Tiger Palm",
 "/cast Blackout Strike",
-PostMacro = [[
+KeyRelease = [[
 ]],
 }

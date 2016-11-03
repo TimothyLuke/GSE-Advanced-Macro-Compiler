@@ -383,8 +383,8 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   if not GSE.isEmpty(sequence.lang) then
     returnVal = returnVal .. "lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.lang .. Statics.StringReset .. "\",\n"
   end
-  returnVal = returnVal .. "PreMacro=[[\n" .. (GSE.isEmpty(sequence.PreMacro) and "" or sequence.PreMacro) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
-  returnVal = returnVal .. "PostMacro=[[\n" .. (GSE.isEmpty(sequence.PostMacro) and "" or sequence.PostMacro) .. "]],\n}"
+  returnVal = returnVal .. "KeyPress=[[\n" .. (GSE.isEmpty(sequence.KeyPress) and "" or sequence.KeyPress) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
+  returnVal = returnVal .. "KeyRelease=[[\n" .. (GSE.isEmpty(sequence.KeyRelease) and "" or sequence.KeyRelease) .. "]],\n}"
   return returnVal
 end
 
@@ -392,8 +392,8 @@ end
 function GSE.FixSequence(sequence)
   for k,v in pairs(GSStaticCleanStrings) do
     GSE.PrintDebugMessage(L["Testing String: "] .. v, GNOME)
-    if not GSE.isEmpty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
-    if not GSE.isEmpty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
+    if not GSE.isEmpty(sequence.KeyPress) then sequence.KeyPress = string.gsub(sequence.KeyPress, v, "") end
+    if not GSE.isEmpty(sequence.KeyRelease) then sequence.KeyRelease = string.gsub(sequence.KeyRelease, v, "") end
   end
 end
 
@@ -514,10 +514,10 @@ function GSE.UpdateSequence(name,sequence)
     else
       button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
       button:SetAttribute("step",1)
-      button:SetAttribute('PreMacro',preparePreMacro(sequence.PreMacro or '') .. '\n')
-      GSE.PrintDebugMessage(L["GSUpdateSequence PreMacro updated to: "] .. button:GetAttribute('PreMacro'))
-      button:SetAttribute('PostMacro', '\n' .. preparePostMacro(sequence.PostMacro or ''))
-      GSE.PrintDebugMessage(L["GSUpdateSequence PostMacro updated to: "] .. button:GetAttribute('PostMacro'))
+      button:SetAttribute('KeyPress',prepareKeyPress(sequence.KeyPress or '') .. '\n')
+      GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
+      button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
+      GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
       button:UnwrapScript(button,'OnClick')
       if GSisLoopSequence(sequence) then
         if GSE.isEmpty(sequence.StepFunction) then
@@ -544,8 +544,8 @@ end
 function GSE.DebugDumpButton(SequenceName)
   GSE.Print("Button name: "  .. SequenceName)
   GSE.Print(_G[SequenceName]:GetScript('OnClick'))
-  GSE.Print("PreMacro" .. _G[SequenceName]:GetAttribute('PreMacro'))
-  GSE.Print("PostMacro" .. _G[SequenceName]:GetAttribute('PostMacro'))
+  GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
+  GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
   GSE.Print(format(OnClick, GSELibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction or 'step = step % #macros + 1'))
 end
 
@@ -589,7 +589,7 @@ function GSE.CompareSequence(seq1,seq2)
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
 
-  if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
+  if seq1.KeyRelease == seq2.KeyRelease and seq1.KeyPress == seq2.KeyPress and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
     -- we have a match
     match = true
     GSE.PrintDebugMessage(L["We have a perfect match"], GNOME)
@@ -604,20 +604,20 @@ function GSE.CompareSequence(seq1,seq2)
     else
       GSE.PrintDebugMessage(L["Different StepFunction"], GNOME)
     end
-    if seq1.PreMacro == seq2.PreMacro then
-      GSE.PrintDebugMessage(L["Matching PreMacro"], GNOME)
+    if seq1.KeyPress == seq2.KeyPress then
+      GSE.PrintDebugMessage(L["Matching KeyPress"], GNOME)
     else
-      GSE.PrintDebugMessage(L["Different PreMacro"], GNOME)
+      GSE.PrintDebugMessage(L["Different KeyPress"], GNOME)
     end
     if steps1 == steps2 then
       GSE.PrintDebugMessage(L["Same Sequence Steps"], GNOME)
     else
       GSE.PrintDebugMessage(L["Different Sequence Steps"], GNOME)
     end
-    if seq1.PostMacro == seq2.PostMacro then
-      GSE.PrintDebugMessage(L["Matching PostMacro"], GNOME)
+    if seq1.KeyRelease == seq2.KeyRelease then
+      GSE.PrintDebugMessage(L["Matching KeyRelease"], GNOME)
     else
-      GSE.PrintDebugMessage(L["Different PostMacro"], GNOME)
+      GSE.PrintDebugMessage(L["Different KeyRelease"], GNOME)
     end
     if seq1.helpTxt == seq2.helpTxt then
       GSE.PrintDebugMessage(L["Matching helpTxt"], GNOME)

@@ -17,7 +17,7 @@ specID = 250,
 author = "John Mets",
 helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /Cast [combat] Vampiric Blood
 /Cast [combat] Dancing Rune Weapon
 ]],
@@ -26,7 +26,7 @@ PreMacro = [[
 "/castsequence reset=combat Death's Caress, Blood Boil, Blood Boil, death strike, soulgorge",
 "/cast Heart Strike",
 "/cast Death Strike",
-PostMacro = [[
+KeyRelease = [[
 /cast [mod:alt] Anti-Magic Shell
 /TargetEnemy [noharm][dead]
 ]],
@@ -37,7 +37,7 @@ specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /use [combat] Obliteration
 /use [combat] Pillar Of Frost
 ]],
@@ -46,7 +46,7 @@ PreMacro = [[
 "/cast [combat] Remorseless Winter",
 '/castsequence Howling Blast, Frostscythe, Howling Blast, Obliterate',
 '/castsequence Howling Blast, Howling Blast, Frostscythe, Howling Blast, Obliterate',
-PostMacro = [[
+KeyRelease = [[
 ]],
 }
 
@@ -55,7 +55,7 @@ specID = 251,
 author = "Tazkilla",
 helpTxt = "Talents:1111131",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /cast [combat] Pillar of Frost
 /cast [combat] Anti-Magic Shell
 ]],
@@ -64,7 +64,7 @@ PreMacro = [[
 '/cast Obliteration',
 '/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Obliterate',
 '/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Howling Blast',
-PostMacro = [[
+KeyRelease = [[
 /targetenemy [noharm][dead]
 ]],
 }
@@ -74,7 +74,7 @@ specID = 251,
 author = "John Mets",
 helpTxt = "Talents 2133121",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /cast [combat] Pillar of Frost
 ]],
 "/castsequence reset=combat Obliterate, Frost Strike",
@@ -82,14 +82,14 @@ PreMacro = [[
 "/castsequence reset=combat Obliteration",
 "/cast [combat] remorseless winter",
 "/cast [combat] empower rune weapon",
-PostMacro = [[
+KeyRelease = [[
 /targetenemy [noharm][dead]
 /cast [combat] Anti-Magic Shell
 ]],
 }
 
 Sequences['SAM_DKunholy'] = {
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 specID = 252,
@@ -104,7 +104,7 @@ helpTxt = "Talents 2221213",
 '/cast [nochanneling] Death Strike',
 '/cast [nochanneling] Summon Gargoyle',
 '/cast [nochanneling] Death Coil',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -114,13 +114,13 @@ StepFunction = GSStaticPriority,
 specID = 250,
 author = "Owns",
 helpTxt = "Talents 2112333",
-PreMacro = [[
+KeyPress = [[
 ]],
 "/cast Marrowrend",
 "/castsequence reset=combat Death's Caress, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike, Death Strike",
 '/castsequence reset=combat Blood Boil, Blood Boil, Marrowrend',
 '/castsequence reset=combat Heart Strike, Heart Strike, Heart Strike, Heart Strike, Marrowrend',
-PostMacro = [[
+KeyRelease = [[
 /targetenemy [noharm][dead]
 ]],
 }

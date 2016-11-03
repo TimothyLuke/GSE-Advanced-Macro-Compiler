@@ -21,7 +21,7 @@ specID = 260,
 author = "Suiseiseki - www.wowlazymacros.com",
 helpTxt = "Outlaw - 1223122",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
 /cast [combat] Marked for Death
@@ -37,7 +37,7 @@ Sequences['SAM_Assassin'] = {
 author='TimothyLuke',
 specID=259,
 helpTxt = 'Talents: 3113231',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
 ]],
@@ -57,7 +57,7 @@ Sequences['SAM_Subtle'] = {
 author='TimothyLuke',
 specID=261,
 helpTxt = 'Talents: 1233212',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
 /cast [combat] Marked for Death
@@ -80,7 +80,7 @@ StepFunction = GSStaticPriority,
 author="Druccy",
 specID=260,
 helpTxt="Talents - 1232232",
-PreMacro = [[
+KeyPress = [[
 /startattack
 /cast [nostealth,nocombat] Stealth
 /cast [stealth] ambush
@@ -93,7 +93,7 @@ PreMacro = [[
 '/cast [nochanneling] Between the Eyes',
 '/cast [nochanneling] Killing Spree',
 '/cast [nochanneling] Crimson Vial',
-PostMacro = [[
+KeyRelease = [[
 /cast [combat] Riposte
 ]],
 }
@@ -103,7 +103,7 @@ author="Todd Livengood - wowlazymacros.com",
 specID=259,
 helpTxt = 'Talents: 3233332',
 StepFunction = GSStaticPriority,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
 /cast [stealth] Cheap Shot
@@ -114,7 +114,7 @@ PreMacro=[[
 "/cast Mutilate",
 "/castsequence reset=5 Rupture,Envenom",
 "/cast Hemorrhage",
-PostMacro=[[
+KeyRelease=[[
 /stopattack [stealth]
 ]],
 }
@@ -124,7 +124,7 @@ Sequences['SAM_CalliynOutlaw'] = {
 author="Ambergreen",
 specID=260,
 helpTxt = 'Talents: 1333131',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
 /cast [combat] Marked for Death

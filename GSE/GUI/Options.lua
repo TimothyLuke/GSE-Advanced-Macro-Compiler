@@ -40,7 +40,7 @@ local OptionsTable = {
         },
         realtimeparse = {
           name = L["Use Realtime Parsing"],
-          desc = L["The Sequence Editor can attempt to parse the Sequences, PreMacro and PostMacro in realtime.  This is still experimental so can be turned off."],
+          desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
           type = "toggle",
           set = function(info,val) GSEOptions.RealtimeParse = val end,
           get = function(info) return GSEOptions.RealtimeParse end,
@@ -138,7 +138,7 @@ local OptionsTable = {
         },
         hideUIErrors={
           name = L["Prevent UI Errors"],
-          desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts."],
+          desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
           set = function(info,val) GSEOptions.hideUIErrors = val GSReloadSequences() end,
           get = function(info) return GSEOptions.hideUIErrors end,
@@ -146,63 +146,63 @@ local OptionsTable = {
         },
         clearUIErrors={
           name = L["Clear Errors"],
-          desc = L["This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a PostMacro.  Turning this on will trigger a Scam warning about running custom scripts."],
+          desc = L["This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
           set = function(info,val) GSEOptions.clearUIErrors = val GSReloadSequences() end,
           get = function(info) return GSEOptions.clearUIErrors end,
           order = 540
         },
         use11={
-          name = L["Use First Ring in Postmacro"],
-          desc = L["Incorporate the first ring slot into the PostMacro. This is the equivalent of /use [combat] 11 in a PostMacro."],
+          name = L["Use First Ring in KeyRelease"],
+          desc = L["Incorporate the first ring slot into the KeyRelease. This is the equivalent of /use [combat] 11 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use11 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use11 end,
           order = 550
         },
         use12={
-          name = L["Use Second Ring in Postmacro"],
-          desc = L["Incorporate the second ring slot into the PostMacro. This is the equivalent of /use [combat] 12 in a PostMacro."],
+          name = L["Use Second Ring in KeyRelease"],
+          desc = L["Incorporate the second ring slot into the KeyRelease. This is the equivalent of /use [combat] 12 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use12 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use12 end,
           order = 560
         },
         use13={
-          name = L["Use First Trinket in Postmacro"],
-          desc = L["Incorporate the first trinket slot into the PostMacro. This is the equivalent of /use [combat] 13 in a PostMacro."],
+          name = L["Use First Trinket in KeyRelease"],
+          desc = L["Incorporate the first trinket slot into the KeyRelease. This is the equivalent of /use [combat] 13 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use13 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use13 end,
           order = 570
         },
         use14={
-          name = L["Use Second Trinket in Postmacro"],
-          desc = L["Incorporate the second trinket slot into the PostMacro. This is the equivalent of /use [combat] 14 in a PostMacro."],
+          name = L["Use Second Trinket in KeyRelease"],
+          desc = L["Incorporate the second trinket slot into the KeyRelease. This is the equivalent of /use [combat] 14 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use14 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use14 end,
           order = 580
         },
         use2={
-          name = L["Use Neck Item in Postmacro"],
-          desc = L["Incorporate the neck slot into the PostMacro. This is the equivalent of /use [combat] 2 in a PostMacro."],
+          name = L["Use Neck Item in KeyRelease"],
+          desc = L["Incorporate the neck slot into the KeyRelease. This is the equivalent of /use [combat] 2 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use2 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use2 end,
           order = 591
         },
         use6={
-          name = L["Use Belt Item in Postmacro"],
-          desc = L["Incorporate the belt slot into the PostMacro. This is the equivalent of /use [combat] 5 in a PostMacro."],
+          name = L["Use Belt Item in KeyRelease"],
+          desc = L["Incorporate the belt slot into the KeyRelease. This is the equivalent of /use [combat] 5 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use6 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use6 end,
           order = 592
         },
         use1={
-          name = L["Use Head Item in Postmacro"],
-          desc = L["Incorporate the Head slot into the PostMacro. This is the equivalent of /use [combat] 1 in a PostMacro."],
+          name = L["Use Head Item in KeyRelease"],
+          desc = L["Incorporate the Head slot into the KeyRelease. This is the equivalent of /use [combat] 1 in a KeyRelease."],
           type = "toggle",
           set = function(info,val) GSEOptions.use1 = val GSReloadSequences() end,
           get = function(info) return GSEOptions.use1 end,

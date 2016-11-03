@@ -563,15 +563,15 @@ function GSSE:LoadEditor(SequenceName, recordstring)
      stepvalue = 2
     end
     GSE.PrintDebugMessage("StepValue: " .. stepvalue, GNOME)
-    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
-      GSE.PrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyPress) then
+      GSE.PrintDebugMessage(L["Moving on - LiveTest.KeyPress already exists."], GNOME)
     else
-     premacrobox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro)
+     KeyPressbox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyPress)
     end
-    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyRelease) then
       GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
     else
-     postmacrobox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro)
+     KeyReleasebox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyRelease)
     end
     spellbox:SetText(table.concat(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)],"\n"))
     reticon = GSSE:getMacroIcon(SequenceName)
@@ -627,7 +627,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
       sequence.StepFunction = nil
     end
     GSE.PrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
-    sequence.PreMacro = premacrobox:GetText()
+    sequence.KeyPress = KeyPressbox:GetText()
     sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
     sequence.source = GSStaticSourceLocal
     sequence.specID = GSSpecIDHashList[specdropdownvalue]
@@ -644,7 +644,7 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
     if not GSE.isEmpty(looplimit:GetText()) then
       sequence.looplimit = looplimit:GetText()
     end
-    sequence.PostMacro = postmacrobox:GetText()
+    sequence.KeyRelease = KeyReleasebox:GetText()
     sequence.version = nextVal
     GSTRUnEscapeSequence(sequence)
     if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName]) then

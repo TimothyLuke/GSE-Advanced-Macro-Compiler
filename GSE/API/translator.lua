@@ -69,13 +69,13 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
   GSE.PrintDebugMessage("lines: " .. lines, GNOME)
 
   lines = GSE.TranslateString(lines, fromLocale, toLocale)
-  if not GSE.isEmpty(sequence.PostMacro) then
-    -- Translate PostMacro
-    sequence.PostMacro = GSE.TranslateString(sequence.PostMacro, fromLocale, toLocale)
+  if not GSE.isEmpty(sequence.KeyRelease) then
+    -- Translate KeyRelease
+    sequence.KeyRelease = GSE.TranslateString(sequence.KeyRelease, fromLocale, toLocale)
   end
-  if not GSE.isEmpty(sequence.PreMacro) then
-    -- Translate PostMacro
-    sequence.PreMacro = GSE.TranslateString(sequence.PreMacro, fromLocale, toLocale)
+  if not GSE.isEmpty(sequence.KeyPress) then
+    -- Translate KeyRelease
+    sequence.KeyPress = GSE.TranslateString(sequence.KeyPress, fromLocale, toLocale)
   end
   for i, v in ipairs(sequence) do sequence[i] = nil end
   GSE.lines(sequence, lines)

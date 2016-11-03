@@ -20,7 +20,7 @@ author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332223',
 icon=236264,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Avenger's Shield",
@@ -29,7 +29,7 @@ PreMacro=[[
 "/cast Consecration",
 "/cast Light of the Protector",
 "/cast Shield of the Righteous",
-PostMacro=[[
+KeyRelease=[[
 /cast Avenging Wrath
 /startattack
 ]],
@@ -40,7 +40,7 @@ author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332223',
 icon=236264,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Avenger's Shield",
@@ -48,7 +48,7 @@ PreMacro=[[
 "/cast Blessed Hammer",
 "/cast Consecration",
 "/cast Light of the Protector",
-PostMacro=[[
+KeyRelease=[[
 /cast !Avenging Wrath
 /startattack
 ]],
@@ -59,7 +59,7 @@ author="LNPV",
 specID=66,
 helpTxt = 'Talents: 3332123',
 icon=236264,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Avenger's Shield",
@@ -70,7 +70,7 @@ PreMacro=[[
 "/cast Light of the Protector",
 "/cast Shield of the Righteous",
 "/cast Blinding Light",
-PostMacro=[[
+KeyRelease=[[
 /cast Avenging Wrath
 /cast Eye of Tyr
 /startattack
@@ -82,7 +82,7 @@ author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2232222',
 icon=236264,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Avenger's Shield",
@@ -92,7 +92,7 @@ PreMacro=[[
 "/cast Light of the Protector",
 "/cast Shield of the Righteous",
 "/cast Blinding Light",
-PostMacro=[[
+KeyRelease=[[
 /cast Avenging Wrath
 /cast Bastion of Light
 /cast Seraphim
@@ -107,7 +107,7 @@ specID=66,
 helpTxt = 'Talents: 2332121',
 icon=236264,
 lang="enUS",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Avenger's Shield",
@@ -117,7 +117,7 @@ PreMacro=[[
 "/cast Hand of the Protector",
 "/cast Shield of the Righteous",
 "/cast Blinding Light",
-PostMacro=[[
+KeyRelease=[[
 /cast Avenging Wrath
 /cast Eye of Tyr
 ]],
@@ -135,7 +135,7 @@ helpTxt = "Talents: 1132212",
 StepFunction = GSStaticPriority,
 icon='INV_MISC_QUESTIONMARK',
 lang="enUS",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast Avenging Wrath
 /cast Shield of Vengeance
@@ -146,7 +146,7 @@ PreMacro=[[
 "/cast Blade of Justice",
 "/cast Wake of Ashes",
 "/cast Crusader Strike",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }
 
@@ -156,7 +156,7 @@ author = "TimothyLuke",
 helpTxt = "Retribution AoE macro - 1132212.",
 StepFunction = GSStaticPriority,
 icon = "Ability_Paladin_DivineStorm",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast Avenging Wrath
 /cast Shield of Vengeance
@@ -167,7 +167,7 @@ PreMacro=[[
 "/cast Judgment",
 "/cast Crusader Strike",
 "/cast Wake of Ashes",
-PostMacro=[[
+KeyRelease=[[
 /startattack
 ]],
 }
@@ -179,7 +179,7 @@ helpTxt = "Talents: 1132212 - No Avenging Wrath or Shield of Vengeance",
 StepFunction = GSStaticPriority,
 icon='INV_MISC_QUESTIONMARK',
 lang="enUS",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast Avenging Wrath
 /cast Shield of Vengeance
@@ -189,7 +189,7 @@ PreMacro=[[
 "/cast Blade of Justice",
 "/cast Wake of Ashes",
 "/cast Crusader Strike",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }
 
@@ -199,7 +199,7 @@ author = "TimothyLuke",
 helpTxt = "Retribution AoE macro - 1132212. No Avenging Wrath or Shield of Vengeance",
 StepFunction = GSStaticPriority,
 icon = "Ability_Paladin_DivineStorm",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 ]],
 "/cast Divine Storm",
@@ -207,7 +207,7 @@ PreMacro=[[
 "/cast Judgment",
 "/cast Crusader Strike",
 "/cast Wake of Ashes",
-PostMacro=[[
+KeyRelease=[[
 /startattack
 ]],
 }
@@ -222,7 +222,7 @@ specID = 65,
 author = "TimothyLuke",
 helpTxt = "Holy DPS levelling macro - 3131123.",
 icon = "Ability_Paladin_InfusionofLight",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Judgment',

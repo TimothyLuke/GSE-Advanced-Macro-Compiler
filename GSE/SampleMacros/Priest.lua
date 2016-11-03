@@ -17,13 +17,13 @@ Sequences['SAM_ShadowPriest'] = {
 specID = 258,
 author = "Jimmy",
 helpTxt = "unknown Talents",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence [nochanneling] reset=12 Shadow Word: Pain,Vampiric Touch",
 "/castsequence [nochanneling] Mind Spike,Mind Blast,Mind Spike",
 "/cast [nochanneling] Mind Sear",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -33,7 +33,7 @@ specID = 256,
 author = "Draik",
 helpTxt = "Talents 3113131",
 icon = "Ability_Mage_FireStarter",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Smite',
@@ -44,7 +44,7 @@ PreMacro = [[
 '/cast Mindbender',
 '/cast Schism',
 '/cast Shining Force',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -54,7 +54,7 @@ specID = 256,
 author = "KTN",
 helpTxt = "Talents 3213131 - Set yourself as Focus.  ALso use the SAM_KTN_Mouseover macro for some out of combat/dont pull things healing",
 icon = "Ability_Mage_FireStarter",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast [@focus] Power Word: Shield',
@@ -66,7 +66,7 @@ PreMacro = [[
 '/cast Mindbender',
 '/cast Schism',
 '/cast Shining Force',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /castsequence [target=mouseover,help,nodead][] Plea, Shadow Mend
 ]],
@@ -85,7 +85,7 @@ specID = 257,
 author = "Draik",
 helpTxt = "Talents 3121133",
 icon = "Ability_Priest_Archangel",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Smite',
@@ -93,7 +93,7 @@ PreMacro = [[
 '/cast Halo',
 '/cast Holy Nova',
 '/cast Holy Word: Chastise',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -103,7 +103,7 @@ specID = 256,
 author = "Zole",
 helpTxt = "Heal Target - Talent: 2113121",
 icon = "Ability_Priest_Atonement",
-PreMacro = [[
+KeyPress = [[
 ]],
 '/cast [nochanneling] Power Word: Shield',
 '/castsequence [nochanneling] Plea,Shadow Mend,Shadow Mend',
@@ -118,7 +118,7 @@ specID = 256,
 author = "Zole",
 helpTxt = "Dps Target - Talent: 2113121",
 icon = "Ability_Priest_Atonement",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast [nochanneling][@targettarget] Power Word: Shield',
@@ -126,7 +126,7 @@ PreMacro = [[
 '/cast Penance',
 '/cast [combat][nochanneling] Mindbender',
 '/cast [nochanneling] Divine Star',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -136,7 +136,7 @@ specID = 256,
 author = "Zole",
 helpTxt = "AoE Heal Target - Talent: 2113121",
 icon = "Ability_Mage_FireStarter",
-PreMacro = [[
+KeyPress = [[
 ]],
 '/cast [nochanneling] Power Word: Shield',
 '/castsequence reset=/target[nochanneling] Power Word: Radiance,Plea',

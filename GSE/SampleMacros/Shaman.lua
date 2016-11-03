@@ -18,14 +18,14 @@ Sequences['SAM_EnhST'] = {
 specID = 263,
 author = "Suiseiseki - stan",
 helpTxt = "Single Target",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence [combat] Crash Lightning, Lava Lash, Lava Lash",
 "/cast Stormstrike",
 "/castsequence Flametongue, Rockbiter, Rockbiter, Rockbiter, Rockbiter, Rockbiter",
 '/cast Windsong',
-PostMacro = [[
+KeyRelease = [[
 /cast Feral Lunge
 ]],
 }
@@ -36,7 +36,7 @@ specID = 263,
 author = "lloskka",
 helpTxt = "Talents  3112112 - Artifact Order: Doom Winds �> Hammer of Storms �> Gathering Storms �> Wind Strikes �> Wind Surge �> Weapons of the elements �> Elemental Healing �> and all the way to Unleash Doom",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence Boulderfist, Crash Lightning, !Stormstrike;",
@@ -44,7 +44,7 @@ PreMacro = [[
 "/castsequence [nochanneling] Boulderfist, Boulderfist, !Crash Lightning;",
 "/castsequence Boulderfist, Boulderfist;",
 "/cast Lightning Bolt",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast [combat] Doom Winds
 ]],
@@ -54,7 +54,7 @@ Sequences['SAM_ENLegi'] = {
 specID = 263,
 author = "Andy",
 helpTxt = "Talents  1313211",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 ]],
@@ -67,7 +67,7 @@ PreMacro = [[
 '/castsequence [nochanneling]reset=120/target !Feral Spirit',
 '/castsequence [nochanneling]reset=300/target !ascendance',
 '/cast !stormstrike',
-PostMacro = [[
+KeyRelease = [[
 /cast [combat] Blood Fury
 ]],
 }
@@ -77,7 +77,7 @@ Sequences['SAM_RestoDeeps'] = {
 specID = 264,
 author = "Draik",
 helpTxt = "Talents - 3211233",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Chain Lightning',
@@ -93,12 +93,12 @@ specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/castsequence reset=target/combat Flame Shock, Chain Lightning, Chain Lightning, Chain Lightning',
 '/cast [nochanneling] !Lava Burst',
-PostMacro = [[
+KeyRelease = [[
 /cast Elemental Mastery
 /cast Blood Fury
 ]],
@@ -110,13 +110,13 @@ specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/castsequence reset=target/combat Flame Shock,Lightning Bolt,Lightning Bolt,Lightning Bolt',
 '/castsequence reset=10 !Earth Shock',
 '/cast [nochanneling] !Lava Burst',
-PostMacro = [[
+KeyRelease = [[
 /cast Elemental Mastery
 /cast Blood Fury
 ]],
@@ -126,7 +126,7 @@ Sequences['SAM_MC_ElemST'] = {
 author='Maalkomx',
 specID=262,
 helpTxt = 'Talents: 2112211',
-PreMacro=
+KeyPress=
 [[
 /targetenemy [noharm][dead]
 /petattack [@target,harm]
@@ -135,7 +135,7 @@ PreMacro=
 "/castsequence [nochanneling] reset=combat Lava Burst, Flame Shock, Lava Burst",
 "/castsequence [nochanneling] Lightning Bolt, Lightning Bolt, Lightning Bolt, Lightning Bolt",
 "/cast Lava Burst",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }
 
@@ -143,7 +143,7 @@ Sequences['SAM_MC_ElemAoE'] = {
 author='Maalkomx',
 specID=262,
 helpTxt = 'Talents: 2112211',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /petattack [@target,harm]
 ]],
@@ -157,13 +157,13 @@ Sequences['SAM_MC_Surge'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',
-PreMacro=[[
+KeyPress=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
 "/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
 "/castsequence [nochanneling,@mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
 "/castsequence [nochanneling,@mouseover,help]Healing Surge",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }
 
@@ -171,13 +171,13 @@ Sequences['SAM_MC_Wave'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',
-PreMacro=[[
+KeyPress=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
 "/castsequence [nochanneling,@mouseover,help]reset=5 !Riptide",
 "/castsequence [nochanneling,@mouseover,help]Healing Wave, Healing Wave, Healing Wave, Healing Wave",
 "/castsequence [nochanneling,@mouseover,help]Healing Wave",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }
 
@@ -185,12 +185,12 @@ Sequences['SAM_MC_Chain'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',
-PreMacro=[[
+KeyPress=[[
 ]],
 "/castsequence [nochanneling]reset=30 Healing Stream Totem",
 "/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
 "/castsequence [nochanneling,@mouseover,help]Chain Heal, Chain Heal, Chain Heal, Chain Heal",
 "/castsequence [nochanneling,@mouseover,help]Healing Surge",
-PostMacro=[[
+KeyRelease=[[
 ]],
 }

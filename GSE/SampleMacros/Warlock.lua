@@ -16,7 +16,7 @@ Sequences['SAM_AFF'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead],
 /startattack
 ]],
@@ -25,7 +25,7 @@ PreMacro = [[
 '/cast [nochanneling] Unstable Affliction',
 '/castsequence [nochanneling] Siphon Life,Drain Soul,Drain Soul',
 '/cast [nochanneling] Reap Souls',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
@@ -36,7 +36,7 @@ Sequences['SAM_AFF2'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead],
 /startattack
 ]],
@@ -46,7 +46,7 @@ PreMacro = [[
 '/castsequence [nochanneling] Siphon Life,Drain Soul,Drain Soul',
 '/cast [nochanneling] Phantom Singularity',
 '/cast [nochanneling] Reap Souls',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
@@ -57,7 +57,7 @@ Sequences['SAM_Demon'] = {
 specID = 266,
 author = "Jimmy",
 helpTxt = "Talents - 3,2,1,2,2,1,3",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 ]],
@@ -65,7 +65,7 @@ PreMacro = [[
 "/cast [nochanneling] Shadow Bolt",
 "/cast [nochanneling] Shadow Bolt",
 "/cast [nochanneling] Life Tap",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
@@ -75,13 +75,13 @@ Sequences['SAM_Destro'] = {
 specID = 267,
 author = "Jimmy",
 helpTxt = "Talents - 1,1,1,2,2,1,3",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 ]],
 "/cast [nochanneling] Conflagrate",
 "/castsequence [nochanneling] Incinerate,Immolate,Incinerate,Immolate,Drain Life",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
@@ -92,7 +92,7 @@ author='twitch.tv/Seydon',
 specID=266,
 helpTxt = 'Talents: 1111222',
 icon='Spell_Warlock_Demonbolt',
-PreMacro=[[
+KeyPress=[[
 /cast [nopet,group] Summon Felguard
 /cast [nopet,nogroup] Summon Felguard
 /targetenemy [noharm][dead]
@@ -104,7 +104,7 @@ PreMacro=[[
 '/castsequence [combat] Grimoire: Felguard, Demonic Empowerment',
 "/castsequence [nochanneling] Doom, Demonbolt, Demonbolt, Demonbolt, Hand of Gul'dan, Demonic Empowerment, Life Tap",
 '/cast [combat] Command Demon',
-PostMacro=[[
+KeyRelease=[[
 /startattack
 /petattack
 ]],
@@ -115,7 +115,7 @@ author='twitch.tv/Seydon',
 specID=266,
 helpTxt = 'Talents: 1111222',
 icon="Spell_Warlock_HandofGul'dan",
-PreMacro=[[
+KeyPress=[[
 /cast [nopet,group] Summon Felguard
 /cast [nopet,nogroup] Summon Felguard
 /targetenemy [noharm][dead]
@@ -127,7 +127,7 @@ PreMacro=[[
 '/castsequence [combat] Grimoire: Felguard, Demonic Empowerment',
 "/castsequence [nochanneling] Hand of Gul'dan, Demonic Empowerment, Demonwrath, Demonwrath, Demonwrath, Life Tap",
 '/cast [combat] Command Demon',
-PostMacro=[[
+KeyRelease=[[
 /startattack
 /petattack
 ]],

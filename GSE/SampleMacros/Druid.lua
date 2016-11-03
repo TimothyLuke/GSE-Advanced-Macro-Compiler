@@ -20,7 +20,7 @@ specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
@@ -34,7 +34,7 @@ PreMacro = [[
 "/cast [combat] Mighty Bash",
 "/cast [combat] Berserk",
 "/castsequence Cenarion ward",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -43,7 +43,7 @@ Sequences['SAM_bear2'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence Thrash, Thrash, Thrash, Pulverize",
@@ -62,7 +62,7 @@ PreMacro = [[
 "/castsequence [combat] reset=60 Barkskin",
 "/castsequence [combat] reset=180 Berserk",
 "/castsequence reset=30 cenarion ward",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -72,7 +72,7 @@ specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form
 /cast [nostealth,nocombat] Prowl
@@ -80,7 +80,7 @@ PreMacro = [[
 ]],
 '/castsequence [combat,nostealth] Rake,Shred,Shred,Rake,Shred,Rip',
 '/castsequence [combat,nostealth] Shred,Rake,Shred,Shred,Rake,Ferocious Bite',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast Tiger's Fury
 ]],
@@ -91,7 +91,7 @@ specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
 StepFunction = GSStaticPriority,
- PreMacro = [[
+ KeyPress = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form
 /cast [nostealth,nocombat] Prowl
@@ -99,7 +99,7 @@ StepFunction = GSStaticPriority,
 ]],
 '/castsequence [combat,nostealth] Thrash,Swipe,Swipe,Thrash,Swipe,Rip',
 '/castsequence [combat,nostealth] Swipe,Thrash,Swipe,Swipe,Thrash,Ferocious Bite',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast Tiger's Fury
 ]],
@@ -109,7 +109,7 @@ Sequences['SAM_feralaoe'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /use [noform:2]Cat Form
 /cast [nostealth,nocombat] Prowl
@@ -117,7 +117,7 @@ PreMacro = [[
 [[/cast [combat] !Incarnation: King of the Jungle]],
 [[/cast [combat] !Mighty Bash]],
 [[/castsequence reset=combat Rake,Thrash,Swipe,Swipe,Swipe,Ferocious Bite]],
-PostMacro = [[
+KeyRelease = [[
 /cast [combat] !survival Instincts
 /cast [combat] !Tiger's Fury
 /startattack
@@ -128,7 +128,7 @@ Sequences['SAM_feralsingle'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
-PreMacro = [[
+KeyPress = [[
 /cast Wild Charge
 /targetenemy [noharm][dead]
 ]],
@@ -136,7 +136,7 @@ PreMacro = [[
 '/use [combat] Berserk',
 '/use [combat] survival instincts',
 '/cast Incarnation: King of the Jungle',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast Tiger's Fury
 ]],
@@ -146,7 +146,7 @@ Sequences['SAM_Boomer'] = {
 specID = 102,
 author = "Draik",
 helpTxt = "2323112",
- PreMacro = [[
+ KeyPress = [[
 /targetenemy [noharm][dead]
 /use [noform]!Moonkin Form
 ]],
@@ -154,7 +154,7 @@ helpTxt = "2323112",
 '/cast Sunfire',
 '/castsequence [combat] Solar Wrath,Lunar Strike,Solar Wrath,Lunar Strike,Solar Wrath,Solar Wrath',
 '/cast Starsurge',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -164,7 +164,7 @@ Sequences['SAM_RestoBoomer'] = {
 specID = 105,
 author = "Draik",
 helpTxt = "2312232",
- PreMacro = [[
+ KeyPress = [[
 /targetenemy [noharm][dead]
 /use [noform]!Moonkin Form
 ]],
@@ -172,7 +172,7 @@ helpTxt = "2312232",
 '/cast Sunfire',
 '/castsequence [combat] Solar Wrath,Lunar Strike,Solar Wrath,Lunar Strike,Solar Wrath,Solar Wrath',
 '/cast Starsurge',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -182,7 +182,7 @@ specID = 102,
 author="someone",
 helpTxt = "3333132 CTRL Blessing of the Ancients, Shift Celestial Alignment, Alt Solar Beam",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [noform]!Moonkin Form
 /cast [mod:ctrl] Blessing of the Ancients
@@ -199,7 +199,7 @@ PreMacro = [[
 "/castsequence [combat]Solar Wrath,Lunar Strike,Starsurge,Moonfire",
 "/castsequence [combat]Lunar Strike,Solar Wrath,Lunar Strike",
 "/cast Starsurge",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -208,13 +208,13 @@ Sequences['SAM_KTNDRUHEALS'] = {
 specID = 105,
 author = "KTN",
 helpTxt = "2113112",
-PreMacro = [[
+KeyPress = [[
 /cast [@focus,dead] Rebirth
 ]],
 '/castsequence [@focus] reset=15/combat Lifebloom, Regrowth, Rejuvenation',
 '/cast [@focus] Cenarion Ward',
 '/castsequence reset=target [@mouseover,exists,help,nodead] Regrowth, Rejuvenation, Healing Touch, Swiftmend',
-PostMacro = [[
+KeyRelease = [[
 /cast [@focus]Ironbark
 /cast [@player]Barkskin
 ]],
@@ -231,7 +231,7 @@ Sequences['SAM_KTNRestoBoom'] = {
 specID = 105,
 author = "KTN",
 helpTxt = "Talents-2113112",
-PreMacro = [[
+KeyPress = [[
 /cast [@focus,dead] Rebirth
 /assist [@focus,exists,nodead]
 /targetenemy [noharm]
@@ -239,7 +239,7 @@ PreMacro = [[
 ]],
 '/castsequence [combat] Moonfire, Sunfire, Solar Wrath, Lunar Strike, Solar Wrath, Lunar Strike, Solar Wrath, Lunar Strike',
 '/cast Starsurge',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }

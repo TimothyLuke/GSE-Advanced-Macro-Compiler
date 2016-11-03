@@ -20,14 +20,14 @@ Sequences['SAM_Arcane'] = {
 specID = 62,
 author = "Flashgreer - wowlazymacros.com",
 helpTxt = "2122132",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/castsequence [nochanneling]Arcane Blast,Arcane Blast,Arcane Blast,Arcane Blast,Arcane Barrage',
 '/cast [nochanneling]Arcane Missiles',
 '/castsequence [nochanneling]charged up, Arcane Barrage',
 '/cast [nochanneling]Rune of power',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /cast [combat]Arcane Power
 /cast [combat]Presence of Mind
@@ -38,7 +38,7 @@ Sequences['SAM_Fire'] = {
 specID = 63,
 author = "John Mets - wowlazymacros.com",
 helpTxt = "Talents - 2233111",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence reset=combat Fireball, Fireball, Fireball, Fireball, Fire Blast, Pyroblast",
@@ -52,7 +52,7 @@ author='Sceptre',
 specID=64,
 helpTxt = 'Talents: 1322112',
 icon='Spell_Frost_FrostBolt02',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nopet,nomod] Summon Water Elemental
 ]],
@@ -66,7 +66,7 @@ PreMacro=[[
 "/cast [nochanneling] Ice Lance",
 "/cast [nochanneling] Glacial Spike",
 "/cast [nochanneling] Frostbolt",
-PostMacro=[[
+KeyRelease=[[
 /startattack
 /cast [nochanneling] Ice Barrier
 /cast [nochanneling] Ice Floes
@@ -81,7 +81,7 @@ specID=64,
 helpTxt = "Talents: 1322112 -  Works best with a 0.75 to 1.0 second  button spam",
 icon='INV_MISC_QUESTIONMARK',
 lang="enUS",
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nopet,nomod] Summon Water Elemental
 ]],
@@ -97,7 +97,7 @@ PreMacro=[[
 "/cast [nochanneling] Ice Lance",
 "/cast [nochanneling] Glacial Spike",
 "/cast [nochanneling] Frostbolt",
-PostMacro=[[
+KeyRelease=[[
 /cast [nochanneling] Ice Barrier
 /cast [nochanneling] Ice Floes
 /cast [nochanneling] Icy Veins
@@ -108,7 +108,7 @@ Sequences['SAM_AaslaanFire'] = {
 author="Ambergreen",
 specID=63,
 helpTxt = 'Talents: 2131111',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noexists][noharm][dead]
 ]],
 icon='Spell_Fire_FireBolt02',

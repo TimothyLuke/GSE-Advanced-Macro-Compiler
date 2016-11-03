@@ -22,7 +22,7 @@ specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "Single Target -- 2,3,3,2,2,2,3",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [combat] Berserker Rage
@@ -36,7 +36,7 @@ PreMacro = [[
 [[/cast Bloodthirst]],
 [[/cast Raging Blow]],
 [[/cast Furious Slash]],
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -46,7 +46,7 @@ specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [combat] Berserker Rage
@@ -55,7 +55,7 @@ PreMacro = [[
 "/cast !Whirlwind",
 "/cast !Raging blow",
 "/cast !Bloodthirst",
-PostMacro = [[
+KeyRelease = [[
 /cast [combat]Berserker Rage
 ]],
 }
@@ -68,7 +68,7 @@ specID = 72,
 author = "Firone modified by obst- wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [modifier:alt]Charge
@@ -80,7 +80,7 @@ PreMacro = [[
 '/cast Rampage',
 '/cast Bloodthirst',
 '/cast Furious Slash',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -90,7 +90,7 @@ specID = 72,
 author = "Firone mod by Obst- wowlazymacros.com ",
 helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [modifier:alt]Charge
@@ -104,7 +104,7 @@ Sequences['SAM_ProtWar'] = {
 specID = 73,
 author = "Suiseiseki - wowlazymacros.com",
 helpTxt = "Talents: 1223212",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 "/castsequence Devastate",
@@ -116,7 +116,7 @@ PreMacro = [[
 "/castsequence [combat] Shockwave",
 "/castsequence Shield Slam",
 '/cast Victory Rush',
-PostMacro = [[
+KeyRelease = [[
 /cast [combat] Demoralizing Shout
 /cast [combat] Battle Cry
 ]],
@@ -127,7 +127,7 @@ specID= 71,
 author="Hizzi@Nathrezim",
 helpTxt = "Talents: 2133212",
 StepFunction = GSStaticPriority,
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /startattack
 /cast [modifier:alt]Charge
@@ -141,7 +141,7 @@ PreMacro=[[
 "/cast Overpower",
 "/cast Mortal Strike",
 "/cast Slam",
-PostMacro=[[
+KeyRelease=[[
 /startattack
 ]],
 }
@@ -151,7 +151,7 @@ specID= 71,
 author="Hizzi@Nathrezim",
 helpTxt = "Talents: 2133212",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /cast [modifier:alt]Charge

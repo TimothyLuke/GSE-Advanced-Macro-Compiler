@@ -20,7 +20,7 @@ specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -33,7 +33,7 @@ PreMacro = [[
 '/cast [nochanneling] Bestial Wrath',
 '/cast [nochanneling] !Dire Beast',
 '/cast [nochanneling] Barrage',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 /cast Aspect of the Wild
@@ -45,7 +45,7 @@ specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "AoE - Talent: 3111323",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
 /petattack [@target,harm]
@@ -58,7 +58,7 @@ PreMacro = [[
 '/cast [nochanneling] Bestial Wrath',
 '/cast [nochanneling] !Dire Beast',
 '/cast [nochanneling] Barrage',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 /cast Aspect of the Wild
@@ -70,7 +70,7 @@ specID = 255,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/cast Mongoose Bite',
@@ -78,7 +78,7 @@ PreMacro = [[
 '/cast Flanking Strike',
 '/cast A Murder of Crows',
 '/cast Raptor Strike',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -88,7 +88,7 @@ specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /cast Trueshot
 ]],
@@ -98,7 +98,7 @@ PreMacro = [[
 '/cast !Aimed Shot',
 '/cast !Bursting Shot',
 '/cast !Black Arrow',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
@@ -109,7 +109,7 @@ specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
@@ -121,7 +121,7 @@ PreMacro = [[
 "/cast Bestial Wrath",
 "/cast Titan's Thunder",
 "/cast A Murder of Crows",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -131,7 +131,7 @@ specID = 253,
 author = "Nano",
 helpTxt = "BMAOE Talent 3311313",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
 /petautocaston [nogroup] growl
@@ -143,7 +143,7 @@ PreMacro = [[
 "/cast Bestial Wrath",
 "/cast Titan's Thunder",
 "/cast A Murder of Crows",
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -152,7 +152,7 @@ Sequences['SAM_Marks_AOE'] = {
 author='Nano',
 specID=254,
 helpTxt = 'Talents: 3113122',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast Trueshot
 ]],
@@ -164,7 +164,7 @@ icon='Ability_Hunter_FocusedAim',
 '/cast [nochanneling] Piercing Shot',
 '/cast [nochanneling] !Multi-shot',
 '/cast [nochanneling] !Marked Shot',
-PostMacro=[[
+KeyRelease=[[
 /startattack
 /petattack
 ]],
@@ -174,7 +174,7 @@ Sequences['SAM_Single_Marls'] = {
 author="Nano",
 specID=254,
 helpTxt = 'Talents: 3113122',
-PreMacro=[[
+KeyPress=[[
 /targetenemy [noharm][dead]
 /cast Trueshot
 ]],
@@ -186,7 +186,7 @@ icon='Ability_Hunter_FocusedAim',
 '/cast [nochanneling] Piercing Shot',
 '/cast [nochanneling] !Arcane Shot',
 '/cast [nochanneling] !Marked Shot',
-PostMacro=[[
+KeyRelease=[[
 /startattack
 /petattack
 ]],
@@ -196,7 +196,7 @@ Sequences['SAM_SURVST'] = {
 specID = 255,
 author = "yiffking fleabag",
 helpTxt = "Single Target - Unknown Talents ",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/castsequence reset=8 !Raptor Strike, Lacerate',
@@ -208,7 +208,7 @@ PreMacro = [[
 '/cast Throwing Axes',
 '/cast Spitting Cobra',
 '/cast Flanking Strike',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -217,7 +217,7 @@ Sequences['SAM_SURVAOE'] = {
 specID = 255,
 author = "yiffking fleabag",
 helpTxt = "AoE - Unknown Talents ",
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
 '/castsequence reset=8 !Raptor Strike, Carve',
@@ -229,7 +229,7 @@ PreMacro = [[
 '/cast Butchery',
 '/cast Spitting Cobra',
 '/cast Throwing Axes',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 ]],
 }
@@ -239,7 +239,7 @@ specID = 253,
 author = "Moonfale",
 helpTxt = "Single Target - Talent: 3322313",
 StepFunction = GSStaticPriority,
-PreMacro = [[
+KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [@pet,dead]Heart of the Phoenix
 /startattack
@@ -257,7 +257,7 @@ PreMacro = [[
 '/cast [nochanneling] Chimaera Shot',
 '/cast [nochanneling] A Murder of Crows',
 '/cast [nochanneling] Cobra Shot',
-PostMacro = [[
+KeyRelease = [[
 /startattack
 /petattack
 ]],
