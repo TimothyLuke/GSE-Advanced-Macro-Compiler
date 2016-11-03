@@ -16,7 +16,7 @@ local GNOME, Sequences = ...
 
 
 ------------------------
-Sequences['DB_Arcane'] = {
+Sequences['SAM_Arcane'] = {
 specID = 62,
 author = "Flashgreer - wowlazymacros.com",
 helpTxt = "2122132",
@@ -34,7 +34,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Fire'] = {
+Sequences['SAM_Fire'] = {
 specID = 63,
 author = "John Mets - wowlazymacros.com",
 helpTxt = "Talents - 2233111",
@@ -47,7 +47,7 @@ PreMacro = [[
 "/cast Ice floes",
 }
 
-Sequences['DB_Frosty'] = {
+Sequences['SAM_Frosty'] = {
 author='Sceptre',
 specID=64,
 helpTxt = 'Talents: 1322112',
@@ -75,7 +75,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Ichthys_Frosty'] = {
+Sequences['SAM_Ichthys_Frosty'] = {
 author="Mageichthys@Kilrogg",
 specID=64,
 helpTxt = "Talents: 1322112 -  Works best with a 0.75 to 1.0 second  button spam",
@@ -104,7 +104,7 @@ PostMacro=[[
 /cast [nochanneling] Frozen Orb
 ]],
 }
-Sequences['DB_AaslaanFire'] = {
+Sequences['SAM_AaslaanFire'] = {
 author="Ambergreen",
 specID=63,
 helpTxt = 'Talents: 2131111',

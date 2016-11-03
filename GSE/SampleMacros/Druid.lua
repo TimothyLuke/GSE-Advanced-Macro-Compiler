@@ -15,7 +15,7 @@ local GNOME, Sequences = ...
 --Feral 103
 --Balance 102
 
-Sequences['DB_bear1'] = {
+Sequences['SAM_bear1'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
@@ -39,7 +39,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_bear2'] = {
+Sequences['SAM_bear2'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
@@ -67,7 +67,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Feral-ST'] = {
+Sequences['SAM_Feral-ST'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
@@ -86,7 +86,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Feral-AoE'] = {
+Sequences['SAM_Feral-AoE'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
@@ -105,7 +105,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_feralaoe'] = {
+Sequences['SAM_feralaoe'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
@@ -124,7 +124,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_feralsingle'] = {
+Sequences['SAM_feralsingle'] = {
 specID = 103,
 author = "lloskka www.wowlazymacros.com",
 helpTxt = "Talents 2331223",
@@ -142,7 +142,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Boomer'] = {
+Sequences['SAM_Boomer'] = {
 specID = 102,
 author = "Draik",
 helpTxt = "2323112",
@@ -160,7 +160,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_RestoBoomer'] = {
+Sequences['SAM_RestoBoomer'] = {
 specID = 105,
 author = "Draik",
 helpTxt = "2312232",
@@ -177,7 +177,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences["DB_druid_bala_st"] = {
+Sequences["SAM_druid_bala_st"] = {
 specID = 102,
 author="someone",
 helpTxt = "3333132 CTRL Blessing of the Ancients, Shift Celestial Alignment, Alt Solar Beam",
@@ -204,7 +204,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_KTNDRUHEALS'] = {
+Sequences['SAM_KTNDRUHEALS'] = {
 specID = 105,
 author = "KTN",
 helpTxt = "2113112",
@@ -220,14 +220,14 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_KTNDRUAOEHEALS'] = {
+Sequences['SAM_KTNDRUAOEHEALS'] = {
 specID = 105,
 author = "KTN",
 helpTxt = "2113112",
 '/castsequence [@focus] Wild Growth',
 }
 
-Sequences['DB_KTNRestoBoom'] = {
+Sequences['SAM_KTNRestoBoom'] = {
 specID = 105,
 author = "KTN",
 helpTxt = "Talents-2113112",

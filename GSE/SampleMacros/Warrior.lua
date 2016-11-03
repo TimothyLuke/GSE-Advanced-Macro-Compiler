@@ -17,7 +17,7 @@ local GNOME, Sequences = ...
 
 ---Legion Fury Warrior - 2,3,3,2,2,2,3
 
-Sequences['DB_Fury1'] = {
+Sequences['SAM_Fury1'] = {
 specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "Single Target -- 2,3,3,2,2,2,3",
@@ -41,7 +41,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Fury2'] = {
+Sequences['SAM_Fury2'] = {
 specID = 72,
 author = "Firone - wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3",
@@ -63,7 +63,7 @@ PostMacro = [[
 
 
 
-Sequences['DB_Fury3'] = {
+Sequences['SAM_Fury3'] = {
 specID = 72,
 author = "Firone modified by obst- wowlazymacros.com",
 helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
@@ -85,7 +85,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Fury4'] = {
+Sequences['SAM_Fury4'] = {
 specID = 72,
 author = "Firone mod by Obst- wowlazymacros.com ",
 helpTxt = "AOE -- 2,3,3,2,2,2,3 Bladestorm, Dragon Roar, and Battle Cry have also been removed to create better control ass to your bars and use manually",
@@ -100,7 +100,7 @@ PreMacro = [[
 '/cast !Bloodthirst',
 }
 
-Sequences['DB_ProtWar'] = {
+Sequences['SAM_ProtWar'] = {
 specID = 73,
 author = "Suiseiseki - wowlazymacros.com",
 helpTxt = "Talents: 1223212",
@@ -122,7 +122,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Arms_ST'] = {
+Sequences['SAM_Arms_ST'] = {
 specID= 71,
 author="Hizzi@Nathrezim",
 helpTxt = "Talents: 2133212",
@@ -146,7 +146,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Arms_AOE'] = {
+Sequences['SAM_Arms_AOE'] = {
 specID= 71,
 author="Hizzi@Nathrezim",
 helpTxt = "Talents: 2133212",

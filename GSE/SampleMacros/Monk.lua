@@ -14,7 +14,7 @@ local GNOME, Sequences = ...
 -- 268 tank
 
 
-Sequences['DB_WW'] = {
+Sequences['SAM_WW'] = {
 specID = 269,
 author = "John Mets",
 helpTxt = "Talent are 2 3 2 3 1 2 3",
@@ -32,7 +32,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_winsingle'] = {
+Sequences['SAM_winsingle'] = {
 specID = 269,
 author = "lloskka",
 helpTxt = "Talents 2 3 2 3 2 2 3",
@@ -54,7 +54,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_BrewMaster_ST'] = {
+Sequences['SAM_BrewMaster_ST'] = {
 specID = 268,
 author = "TimothyLuke",
 helpTxt = "Talent are 1122312",
@@ -72,7 +72,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BrewMaster_AoE'] = {
+Sequences['SAM_BrewMaster_AoE'] = {
 specID = 268,
 author = "TimothyLuke",
 helpTxt = "Talent are 1122312",

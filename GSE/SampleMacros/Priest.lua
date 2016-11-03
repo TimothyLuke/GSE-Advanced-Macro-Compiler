@@ -13,7 +13,7 @@ local GNOME, Sequences = ...
 ------------------
 
 
-Sequences['DB_ShadowPriest'] = {
+Sequences['SAM_ShadowPriest'] = {
 specID = 258,
 author = "Jimmy",
 helpTxt = "unknown Talents",
@@ -28,7 +28,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DiscDeeps'] = {
+Sequences['SAM_DiscDeeps'] = {
 specID = 256,
 author = "Draik",
 helpTxt = "Talents 3113131",
@@ -49,10 +49,10 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_KTN_DiscDeeps'] = {
+Sequences['SAM_KTN_DiscDeeps'] = {
 specID = 256,
 author = "KTN",
-helpTxt = "Talents 3213131 - Set yourself as Focus.  ALso use the DB_KTN_Mouseover macro for some out of combat/dont pull things healing",
+helpTxt = "Talents 3213131 - Set yourself as Focus.  ALso use the SAM_KTN_Mouseover macro for some out of combat/dont pull things healing",
 icon = "Ability_Mage_FireStarter",
 PreMacro = [[
 /targetenemy [noharm][dead]
@@ -72,7 +72,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_KTN_MouseOver'] = {
+Sequences['SAM_KTN_MouseOver'] = {
 specID = 5,
 author = "KTN",
 helpTxt = "Talents 3213131",
@@ -80,7 +80,7 @@ helpTxt = "Talents 3213131",
 }
 
 
-Sequences['DB_HolyPriesty'] = {
+Sequences['SAM_HolyPriesty'] = {
 specID = 257,
 author = "Draik",
 helpTxt = "Talents 3121133",
@@ -98,7 +98,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Disc-THeal'] = {
+Sequences['SAM_Disc-THeal'] = {
 specID = 256,
 author = "Zole",
 helpTxt = "Heal Target - Talent: 2113121",
@@ -113,7 +113,7 @@ PreMacro = [[
 '/cast [target=targettarget][nochanneling] Divine Star',
 }
 
-Sequences['DB_Disc-TDPS'] = {
+Sequences['SAM_Disc-TDPS'] = {
 specID = 256,
 author = "Zole",
 helpTxt = "Dps Target - Talent: 2113121",
@@ -131,7 +131,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Disc-THealAoe'] = {
+Sequences['SAM_Disc-THealAoe'] = {
 specID = 256,
 author = "Zole",
 helpTxt = "AoE Heal Target - Talent: 2113121",

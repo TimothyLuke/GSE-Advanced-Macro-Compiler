@@ -13,7 +13,7 @@ local GNOME, Sequences = ...
 ------------------
 
 
-Sequences['DB_DHHavoc'] = {
+Sequences['SAM_DHHavoc'] = {
 specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
@@ -36,7 +36,7 @@ PostMacro = [[
 
 
 --havoc
-Sequences['DB_havocsingle'] = {
+Sequences['SAM_havocsingle'] = {
 specID = 577,
 author = "lloskka",
 helpTxt = "Talents 2,3,1,2,2,3,1",
@@ -61,7 +61,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_Vengeance'] = {
+Sequences['SAM_Vengeance'] = {
 specID = 581,
 author = "Tocktris",
 helpTxt = "Talents unknown",

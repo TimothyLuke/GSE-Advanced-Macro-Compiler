@@ -15,7 +15,7 @@ local GNOME, Sequences = ...
 -------------------
 -- Protection - 66
 -------------------
-Sequences['DB_Prot_ST'] = {
+Sequences['SAM_Prot_ST'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332223',
@@ -35,7 +35,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Prot_ST2'] = {
+Sequences['SAM_Prot_ST2'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332223',
@@ -54,7 +54,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Prot_AOE'] = {
+Sequences['SAM_Prot_AOE'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 3332123',
@@ -77,7 +77,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Palla_Sera'] = {
+Sequences['SAM_Palla_Sera'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2232222',
@@ -101,7 +101,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Tank_Heal'] = {
+Sequences['SAM_Tank_Heal'] = {
 author="LNPV",
 specID=66,
 helpTxt = 'Talents: 2332121',
@@ -128,7 +128,7 @@ PostMacro=[[
 -- Retribution - 70
 -------------------
 
-Sequences['DB_Ret'] = {
+Sequences['SAM_Ret'] = {
 author="TimothyLuke",
 specID=70,
 helpTxt = "Talents: 1132212",
@@ -150,7 +150,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_RetAoE'] = {
+Sequences['SAM_RetAoE'] = {
 specID = 70,
 author = "TimothyLuke",
 helpTxt = "Retribution AoE macro - 1132212.",
@@ -172,7 +172,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Ret_Raid'] = {
+Sequences['SAM_Ret_Raid'] = {
 author="TimothyLuke",
 specID=70,
 helpTxt = "Talents: 1132212 - No Avenging Wrath or Shield of Vengeance",
@@ -193,7 +193,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_RetAoE_Raid'] = {
+Sequences['SAM_RetAoE_Raid'] = {
 specID = 70,
 author = "TimothyLuke",
 helpTxt = "Retribution AoE macro - 1132212. No Avenging Wrath or Shield of Vengeance",
@@ -217,7 +217,7 @@ PostMacro=[[
 -- Holy - 65
 -------------------
 
-Sequences['DB_HolyDeeps'] = {
+Sequences['SAM_HolyDeeps'] = {
 specID = 65,
 author = "TimothyLuke",
 helpTxt = "Holy DPS levelling macro - 3131123.",

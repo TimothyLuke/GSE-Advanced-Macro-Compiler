@@ -12,7 +12,7 @@ local GNOME, Sequences = ...
 ------------------
 -- Affliction Legion
 -- talents 2111212
-Sequences['DB_AFF'] = {
+Sequences['SAM_AFF'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
@@ -32,7 +32,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_AFF2'] = {
+Sequences['SAM_AFF2'] = {
 specID = 265,
 author = "Jimmy",
 helpTxt = "Talents - 3,1,3,1,2,1,2",
@@ -53,7 +53,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_Demon'] = {
+Sequences['SAM_Demon'] = {
 specID = 266,
 author = "Jimmy",
 helpTxt = "Talents - 3,2,1,2,2,1,3",
@@ -71,7 +71,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Destro'] = {
+Sequences['SAM_Destro'] = {
 specID = 267,
 author = "Jimmy",
 helpTxt = "Talents - 1,1,1,2,2,1,3",
@@ -87,7 +87,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DemoSingle'] = {
+Sequences['SAM_DemoSingle'] = {
 author='twitch.tv/Seydon',
 specID=266,
 helpTxt = 'Talents: 1111222',
@@ -110,7 +110,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_DemoAoE'] = {
+Sequences['SAM_DemoAoE'] = {
 author='twitch.tv/Seydon',
 specID=266,
 helpTxt = 'Talents: 1111222',

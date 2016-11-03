@@ -14,7 +14,7 @@ local GNOME, Sequences = ...
 -- Elemental 262
 
 
-Sequences['DB_EnhST'] = {
+Sequences['SAM_EnhST'] = {
 specID = 263,
 author = "Suiseiseki - stan",
 helpTxt = "Single Target",
@@ -31,7 +31,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_enhsingle'] = {
+Sequences['SAM_enhsingle'] = {
 specID = 263,
 author = "lloskka",
 helpTxt = "Talents  3112112 - Artifact Order: Doom Winds �> Hammer of Storms �> Gathering Storms �> Wind Strikes �> Wind Surge �> Weapons of the elements �> Elemental Healing �> and all the way to Unleash Doom",
@@ -50,7 +50,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_ENLegi'] = {
+Sequences['SAM_ENLegi'] = {
 specID = 263,
 author = "Andy",
 helpTxt = "Talents  1313211",
@@ -73,7 +73,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_RestoDeeps'] = {
+Sequences['SAM_RestoDeeps'] = {
 specID = 264,
 author = "Draik",
 helpTxt = "Talents - 3211233",
@@ -88,7 +88,7 @@ PreMacro = [[
 '/cast Lightning Surge Totem',
 }
 
-Sequences['DB_ElemAoE'] = {
+Sequences['SAM_ElemAoE'] = {
 specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
@@ -105,7 +105,7 @@ PostMacro = [[
 }
 
 
-Sequences['DB_Elem'] = {
+Sequences['SAM_Elem'] = {
 specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
@@ -122,7 +122,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_MC_ElemST'] = {
+Sequences['SAM_MC_ElemST'] = {
 author='Maalkomx',
 specID=262,
 helpTxt = 'Talents: 2112211',
@@ -139,7 +139,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_MC_ElemAoE'] = {
+Sequences['SAM_MC_ElemAoE'] = {
 author='Maalkomx',
 specID=262,
 helpTxt = 'Talents: 2112211',
@@ -153,7 +153,7 @@ PreMacro=[[
 "/cast Lava Burst",
 }
 
-Sequences['DB_MC_Surge'] = {
+Sequences['SAM_MC_Surge'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',
@@ -167,7 +167,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_MC_Wave'] = {
+Sequences['SAM_MC_Wave'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',
@@ -181,7 +181,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_MC_Chain'] = {
+Sequences['SAM_MC_Chain'] = {
 author='Maalkomx',
 specID=264,
 helpTxt = 'Talents: 3313313',

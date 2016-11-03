@@ -15,7 +15,7 @@ local GNOME, Sequences = ...
 -- Survival 255
 -- Marksmanship - 254
 
-Sequences['DB_BMsingle'] = {
+Sequences['SAM_BMsingle'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
@@ -40,7 +40,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BMaoe'] = {
+Sequences['SAM_BMaoe'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "AoE - Talent: 3111323",
@@ -65,7 +65,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_SurvivelH'] = {
+Sequences['SAM_SurvivelH'] = {
 specID = 255,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
@@ -83,7 +83,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Mm_ST'] = {
+Sequences['SAM_Mm_ST'] = {
 specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
@@ -104,7 +104,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BM_ST'] = {
+Sequences['SAM_BM_ST'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
@@ -126,7 +126,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BMAOE'] = {
+Sequences['SAM_BMAOE'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "BMAOE Talent 3311313",
@@ -148,7 +148,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_Marks_AOE'] = {
+Sequences['SAM_Marks_AOE'] = {
 author='Nano',
 specID=254,
 helpTxt = 'Talents: 3113122',
@@ -170,7 +170,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_Single_Marls'] = {
+Sequences['SAM_Single_Marls'] = {
 author="Nano",
 specID=254,
 helpTxt = 'Talents: 3113122',
@@ -192,7 +192,7 @@ PostMacro=[[
 ]],
 }
 
-Sequences['DB_SURVST'] = {
+Sequences['SAM_SURVST'] = {
 specID = 255,
 author = "yiffking fleabag",
 helpTxt = "Single Target - Unknown Talents ",
@@ -213,7 +213,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_SURVAOE'] = {
+Sequences['SAM_SURVAOE'] = {
 specID = 255,
 author = "yiffking fleabag",
 helpTxt = "AoE - Unknown Talents ",
@@ -234,7 +234,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BMH'] = {
+Sequences['SAM_BMH'] = {
 specID = 253,
 author = "Moonfale",
 helpTxt = "Single Target - Talent: 3322313",

@@ -12,7 +12,7 @@ local GNOME, Sequences = ...
 ----- Death Knight
 ------------------
 
-Sequences['DB_Blood'] = {
+Sequences['SAM_Blood'] = {
 specID = 250,
 author = "John Mets",
 helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
@@ -32,7 +32,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DBFrost'] = {
+Sequences['SAM_DBFrost'] = {
 specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
@@ -50,7 +50,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_FDK2'] = {
+Sequences['SAM_FDK2'] = {
 specID = 251,
 author = "Tazkilla",
 helpTxt = "Talents:1111131",
@@ -69,7 +69,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DF'] = {
+Sequences['SAM_DF'] = {
 specID = 251,
 author = "John Mets",
 helpTxt = "Talents 2133121",
@@ -88,7 +88,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_DKunholy'] = {
+Sequences['SAM_DKunholy'] = {
 PreMacro = [[
 /targetenemy [noharm][dead]
 ]],
@@ -109,7 +109,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_BloodDK'] = {
+Sequences['SAM_BloodDK'] = {
 StepFunction = GSStaticPriority,
 specID = 250,
 author = "Owns",

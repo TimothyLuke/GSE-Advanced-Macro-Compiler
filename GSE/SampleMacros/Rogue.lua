@@ -16,7 +16,7 @@ local GNOME, Sequences = ...
 
 
 
-Sequences['DB_Outlaw'] = {
+Sequences['SAM_Outlaw'] = {
 specID = 260,
 author = "Suiseiseki - www.wowlazymacros.com",
 helpTxt = "Outlaw - 1223122",
@@ -33,7 +33,7 @@ PreMacro = [[
 '/cast [@focus] Tricks of the Trade',
 }
 
-Sequences['DB_Assassin'] = {
+Sequences['SAM_Assassin'] = {
 author='TimothyLuke',
 specID=259,
 helpTxt = 'Talents: 3113231',
@@ -53,7 +53,7 @@ icon='Ability_Rogue_DeadlyBrew',
 "/cast Mutilate",
 }
 
-Sequences['DB_Subtle'] = {
+Sequences['SAM_Subtle'] = {
 author='TimothyLuke',
 specID=261,
 helpTxt = 'Talents: 1233212',
@@ -75,7 +75,7 @@ icon='Ability_Stealth',
 "/cast Backstab",
 }
 
-Sequences['DB_DRoutlaw'] = {
+Sequences['SAM_DRoutlaw'] = {
 StepFunction = GSStaticPriority,
 author="Druccy",
 specID=260,
@@ -98,7 +98,7 @@ PostMacro = [[
 ]],
 }
 
-Sequences['DB_TLAssassin'] = {
+Sequences['SAM_TLAssassin'] = {
 author="Todd Livengood - wowlazymacros.com",
 specID=259,
 helpTxt = 'Talents: 3233332',
@@ -120,7 +120,7 @@ PostMacro=[[
 }
 
 
-Sequences['DB_CalliynOutlaw'] = {
+Sequences['SAM_CalliynOutlaw'] = {
 author="Ambergreen",
 specID=260,
 helpTxt = 'Talents: 1333131',
