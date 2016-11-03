@@ -6,13 +6,13 @@ To use this locally straight from this source you must install https://mods.curs
 
 Current Build Status
 ===================================
-[![Build Status](https://travis-ci.org/TimothyLuke/GnomeSequenced-Enhanced.svg?branch=master)](https://travis-ci.org/TimothyLuke/GnomeSequenced-Enhanced) 
+[![Build Status](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced.svg?branch=master)](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced) 
 
 At the moment this means that there are no lua errors.  It doesnt mean it works ... yet
 
 Project Site
 ===================================
-Check out the project site at http://timothyluke.github.io/GnomeSequenced-Enhanced/ for documentation.
+Check out the project site at http://timothyluke.github.io/GnomeSequencer-Enhanced/ for documentation.
 
 
 
