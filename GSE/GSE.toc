@@ -31,6 +31,7 @@ Localization\ModL_zhTW.lua
 # Startup
 API\Init.lua
 API\Statics.lua
+API\InitialOptions.lua
 
 # Spells Language Strings
 Localization\enUS.lua
@@ -40,11 +41,11 @@ Localization\enUSSHADOW.lua
 
 #storage and core
 API\StaticPopup.lua
-API\InitialOptions.lua
 API\StringFunctions.lua
 API\CharacterFunctions.lua
 API\Storage.lua
 API\Translator.lua
+API\Recorder.lua
 MacroExecution\Core.lua
 
 

@@ -339,9 +339,3 @@ L["Stop"] = true
 
 
 --@end-do-not-package@
-
--- Make missing translations available
-setmetatable(GSE.L, {__index = function(self, key)
-	self[key] = (key or "")
-	return key
-end})

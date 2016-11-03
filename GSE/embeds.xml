@@ -1,15 +1,15 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-    <Script file="lib\libStub\libStub.lua"/>
-    <Include file="lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
-    <Include file="lib\AceAddon-3.0\AceAddon-3.0.xml"/>
-    <Include file="lib\AceConsole-3.0\AceConsole-3.0.xml"/>
-    <Include file="lib\AceGUI-3.0\AceGUI-3.0.xml"/>
-    <Include file="lib\AceConfig-3.0\AceConfig-3.0.xml"/>
-    <Include file="lib\AceEvent-3.0\AceEvent-3.0.xml"/>
-    <Include file="lib\AceLocale-3.0\AceLocale-3.0.xml"/>
-    <Include file="lib\AceSerializer-3.0\AceSerializer-3.0.xml"/>
-    <Include file="lib\AceTimer-3.0\AceTimer-3.0.xml"/>
-    <Include file="lib\AceComm-3.0\AceComm-3.0.xml"/>
-    <Include file="lib\LibCompress\lib.xml"/>
+    <Script file="Lib\LibStub\LibStub.lua"/>
+    <Include file="Lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
+    <Include file="Lib\AceAddon-3.0\AceAddon-3.0.xml"/>
+    <Include file="Lib\AceConsole-3.0\AceConsole-3.0.xml"/>
+    <Include file="Lib\AceGUI-3.0\AceGUI-3.0.xml"/>
+    <Include file="Lib\AceConfig-3.0\AceConfig-3.0.xml"/>
+    <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
+    <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
+    <Include file="Lib\AceSerializer-3.0\AceSerializer-3.0.xml"/>
+    <Include file="Lib\AceTimer-3.0\AceTimer-3.0.xml"/>
+    <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
+    <Include file="Lib\LibCompress\lib.xml"/>
 </Ui>

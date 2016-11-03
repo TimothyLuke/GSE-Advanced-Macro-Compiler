@@ -22,7 +22,7 @@ local specdropdownvalue = 0
 
 
 
-local viewiconpicker = AceGUI:Create("Icon")
+
 
 local editOptionsbutton = AceGUI:Create("Button")
 editOptionsbutton:SetText(L["Options"])
@@ -46,166 +46,19 @@ end)
 iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 
 
-viewiconpicker:SetLabel(L["Macro Icon"])
---iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
-viewiconpicker.frame:RegisterForDrag("LeftButton")
-viewiconpicker.frame:SetScript("OnDragStart", function()
-  if not GSE.isEmpty(currentSequence) then
-    PickupMacro(currentSequence)
-  end
-end)
-viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-
 
 -- Create functions for tabs
-function GSSE:drawstandardwindow(container)
-  sequencebox = AceGUI:Create("MultiLineEditBox")
-  sequencebox:SetLabel(L["Sequence"])
-  sequencebox:SetNumLines(18)
-  sequencebox:DisableButton(true)
-  sequencebox:SetFullWidth(true)
-  sequencebox:SetText(sequenceboxtext:GetText())
-  sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(0, string.len(sequencebox:GetText())) end)
 
-  container:AddChild(sequencebox)
 
-  local buttonGroup = AceGUI:Create("SimpleGroup")
-  buttonGroup:SetFullWidth(true)
-  buttonGroup:SetLayout("Flow")
 
-  local newbutton = AceGUI:Create("Button")
-  newbutton:SetText(L["New"])
-  newbutton:SetWidth(150)
-  newbutton:SetCallback("OnClick", function() GSSE:LoadEditor(nil) end)
-  buttonGroup:AddChild(newbutton)
-
-  local updbutton = AceGUI:Create("Button")
-  updbutton:SetText(L["Edit"])
-  updbutton:SetWidth(150)
-  updbutton:SetCallback("OnClick", function() GSSE:LoadEditor(currentSequence) end)
-  buttonGroup:AddChild(updbutton)
-
-  local impbutton = AceGUI:Create("Button")
-  impbutton:SetText(L["Import"])
-  impbutton:SetWidth(150)
-  impbutton:SetCallback("OnClick", function() importStr = sequenceboxtext:GetText(); GSSE:importSequence() end)
-  buttonGroup:AddChild(impbutton)
-
-  local tranbutton = AceGUI:Create("Button")
-  tranbutton:SetText(L["Send"])
-  tranbutton:SetWidth(150)
-  tranbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence) end)
-  buttonGroup:AddChild(tranbutton)
-
-  local versbutton = AceGUI:Create("Button")
-  versbutton:SetText(L["Manage Versions"])
-  versbutton:SetWidth(150)
-  versbutton:SetCallback("OnClick", function() GSSE:ManageSequenceVersion() end)
-  buttonGroup:AddChild(versbutton)
-
-  disableSeqbutton = AceGUI:Create("Button")
-  disableSeqbutton:SetText(L["Disable Sequence"])
-  disableSeqbutton:SetWidth(150)
-  disableSeqbutton:SetCallback("OnClick", function() GSSE:DisableSequence(currentSequence) end)
-  buttonGroup:AddChild(disableSeqbutton)
-
-  local eOptionsbutton = AceGUI:Create("Button")
-  eOptionsbutton:SetText(L["Options"])
-  eOptionsbutton:SetWidth(150)
-  eOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
-  buttonGroup:AddChild(eOptionsbutton)
-
-  local recordwindowbutton = AceGUI:Create("Button")
-  recordwindowbutton:SetText(L["Record Macro"])
-  recordwindowbutton:SetWidth(150)
-  recordwindowbutton:SetCallback("OnClick", function() frame:Hide(); recordframe:Show() end)
-  buttonGroup:AddChild(recordwindowbutton)
-
-  container:AddChild(buttonGroup)
-
-  sequenceboxtext = sequencebox
-end
-
-function GSSE:drawsecondarywindow(container)
-  local languages = GSTRListCachedLanguages()
-  local listbox = AceGUI:Create("Dropdown")
-  listbox:SetLabel(L["Choose Language"])
-  listbox:SetWidth(150)
-  listbox:SetList(languages)
-  listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadTranslatedSequence(GSTRListCachedLanguages()[key]) end)
-  container:AddChild(listbox)
-
-  local remotesequencebox = AceGUI:Create("MultiLineEditBox")
-  remotesequencebox:SetLabel(L["Translated Sequence"])
-  remotesequencebox:SetText(remotesequenceboxtext:GetText())
-  remotesequencebox:SetNumLines(20)
-  remotesequencebox:DisableButton(true)
-  remotesequencebox:SetFullWidth(true)
-  container:AddChild(remotesequencebox)
-  remotesequenceboxtext = remotesequencebox
-
-end
-
--- Callback function for OnGroupSelected
-function GSSE:SelectGroup(container, event, group)
-   local tremote = remotesequenceboxtext:GetText()
-   local tlocal = sequenceboxtext:GetText()
-   container:ReleaseChildren()
-   GSE.PrintDebugMessage(L["Selecting tab: "] .. group, GNOME)
-   if group == "localtab" then
-      GSSE:drawstandardwindow(container)
-   elseif group == "remotetab" then
-      GSSE:drawsecondarywindow(container)
-   end
-   remotesequenceboxtext:SetText(tremote)
-   sequenceboxtext:SetText(tlocal)
-end
 -- function that draws the widgets for the first tab
 
 
 
-local curentSequence
-frame:SetTitle(L["Sequence Viewer"])
-frame:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
-frame:SetCallback("OnClose", function(widget) frame:Hide() end)
-frame:SetLayout("List")
-GSSE.viewframe = frame
+
+
 GSSE.editframe = editframe
 
-local viewerheadergroup = AceGUI:Create("SimpleGroup")
-viewerheadergroup:SetFullWidth(true)
-viewerheadergroup:SetLayout("Flow")
-
-
-GSSequenceListbox = AceGUI:Create("Dropdown")
-GSSequenceListbox:SetLabel(L["Load Sequence"])
-GSSequenceListbox:SetWidth(250)
-GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
-
-local spacerlabel = AceGUI:Create("Label")
-spacerlabel:SetWidth(300)
-viewerheadergroup:AddChild(GSSequenceListbox)
-viewerheadergroup:AddChild(spacerlabel)
-viewerheadergroup:AddChild(viewiconpicker)
-frame:AddChild(viewerheadergroup)
-
-
-
-if GSTranslatorAvailable and GSEOptions.useTranslator and GSAdditionalLanguagesAvailable then
-  local tab =  AceGUI:Create("TabGroup")
-  tab:SetLayout("Flow")
-  -- Setup which tabs to show
-  tab:SetTabs({{text=GetLocale(), value="localtab"}, {text=L["Translate to"], value="remotetab"}})
-  -- Register callback
-  tab:SetCallback("OnGroupSelected",  function (container, event, group) GSSE:SelectGroup(container, event, group) end)
-  -- Set initial Tab (this will fire the OnGroupSelected callback)
-  tab:SelectTab("localtab")
-  tab:SetFullWidth(true)
-  -- add to the frame container
-  frame:AddChild(tab)
-else
-  GSSE:drawstandardwindow(frame)
-end
 
 -------------end viewer-------------
 -------------begin editor--------------------
@@ -357,106 +210,6 @@ editButtonGroup:AddChild(transbutton)
 
 editframe:AddChild(editButtonGroup)
 -------------end editor-----------------
-
-local versionframe = AceGUI:Create("Frame")
-versionframe:SetTitle(L["Manage Versions"])
-versionframe:SetStatusText(L["Gnome Sequencer: Sequence Version Manager"])
-versionframe:SetCallback("OnClose", function(widget)  versionframe:Hide(); frame:Show() end)
-versionframe:SetLayout("List")
-
-local columnGroup = AceGUI:Create("SimpleGroup")
-columnGroup:SetFullWidth(true)
-columnGroup:SetLayout("Flow")
-
-local leftGroup = AceGUI:Create("SimpleGroup")
-leftGroup:SetFullWidth(true)
-leftGroup:SetLayout("List")
-
-local rightGroup = AceGUI:Create("SimpleGroup")
-rightGroup:SetFullWidth(true)
-rightGroup:SetLayout("List")
-
-local activesequencebox = AceGUI:Create("MultiLineEditBox")
-activesequencebox:SetLabel(L["Active Version: "])
-activesequencebox:SetNumLines(10)
-activesequencebox:DisableButton(true)
-activesequencebox:SetFullWidth(true)
-leftGroup:AddChild(activesequencebox)
-
-local otherversionlistbox = AceGUI:Create("Dropdown")
-otherversionlistbox:SetLabel(L["Select Other Version"])
-otherversionlistbox:SetWidth(150)
-otherversionlistbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:ChangeOtherSequence(key) end)
-rightGroup:AddChild(otherversionlistbox)
-
-local otherSequenceVersions = AceGUI:Create("MultiLineEditBox")
-otherSequenceVersions:SetNumLines(11)
-otherSequenceVersions:DisableButton(true)
-otherSequenceVersions:SetFullWidth(true)
-rightGroup:AddChild(otherSequenceVersions)
-
-columnGroup:AddChild(leftGroup)
-columnGroup:AddChild(rightGroup)
-
-versionframe:AddChild(columnGroup)
-
-local othersequencebuttonGroup = AceGUI:Create("SimpleGroup")
-othersequencebuttonGroup:SetFullWidth(true)
-othersequencebuttonGroup:SetLayout("Flow")
-
-local actbutton = AceGUI:Create("Button")
-actbutton:SetText(L["Make Active"])
-actbutton:SetWidth(150)
-actbutton:SetCallback("OnClick", function() GSSE:SetActiveSequence(otherversionlistboxvalue) end)
-othersequencebuttonGroup:AddChild(actbutton)
-
-local delbutton = AceGUI:Create("Button")
-delbutton:SetText(L["Delete Version"])
-delbutton:SetWidth(150)
-delbutton:SetCallback("OnClick", function()
-  if not GSE.isEmpty(otherversionlistboxvalue) then
-    GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)
-    otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
-    otherSequenceVersions:SetText("")
-  end
-end)
-othersequencebuttonGroup:AddChild(delbutton)
-
-
-versionframe:AddChild(othersequencebuttonGroup)
--- Record Frame
-
-recordframe:SetTitle(L["Record Macro"])
-recordframe:SetStatusText(L["Gnome Sequencer: Record your rotation to a macro."])
-recordframe:SetCallback("OnClose", function(widget)  frame:Hide(); end)
-recordframe:SetLayout("List")
-
-local recordsequencebox = AceGUI:Create("MultiLineEditBox")
-recordsequencebox:SetLabel(L["Actions"])
-recordsequencebox:SetNumLines(20)
-recordsequencebox:DisableButton(true)
-recordsequencebox:SetFullWidth(true)
-recordframe:AddChild(recordsequencebox)
-
-local recButtonGroup = AceGUI:Create("SimpleGroup")
-recButtonGroup:SetLayout("Flow")
-
-
-local recbutton = AceGUI:Create("Button")
-recbutton:SetText(L["Record"])
-recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSSE:ManageRecord() end)
-recButtonGroup:AddChild(recbutton)
-
-local createmacrobutton = AceGUI:Create("Button")
-createmacrobutton:SetText(L["Create Macro"])
-createmacrobutton:SetWidth(150)
-createmacrobutton:SetCallback("OnClick", function() GSSE:SaveRecordMacro() end)
-createmacrobutton:SetDisabled(true)
-recButtonGroup:AddChild(createmacrobutton)
-
-recordframe:AddChild(recButtonGroup)
-
 
 -- Slash Commands
 

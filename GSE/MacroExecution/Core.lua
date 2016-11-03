@@ -304,10 +304,10 @@ end
 SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
 SlashCmdList["GNOME"] = function (msg, editbox)
   if string.lower(msg) == "listall" then
-    ListSequences("all")
+    GSE.ListSequences("all")
   elseif string.lower(msg) == "class" or string.lower(msg) == string.lower(UnitClass("player")) then
     local _, englishclass = UnitClass("player")
-    ListSequences(englishclass)
+    GSE.ListSequences(englishclass)
   elseif string.lower(msg) == "showspec" then
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
@@ -325,7 +325,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif string.lower(msg) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
   else
-    ListSequences(GetSpecialization())
+    GSE.ListSequences(GetSpecialization())
   end
 end
 
