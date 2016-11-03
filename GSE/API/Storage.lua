@@ -21,7 +21,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
   --Perform some validation checks on the Sequence.
   if GSE.isEmpty(sequence.specID) then
     -- set to currentSpecID
-    sequence.specID = GSGetCurrentSpecID()
+    sequence.specID = GSE.GetCurrentSpecID()
     confirmationtext = " " .. L["Sequence specID set to current spec of "] .. sequence.specID .. "."
   end
   sequence.specID = sequence.specID + 0 -- force to a number.
@@ -79,7 +79,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
     GSEOptions.SequenceLibrary[sequenceName][version] = sequence
     local makemacrostub = false
     local globalstub = false
-    if sequence.specID == GSGetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+    if sequence.specID == GSE.GetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
       makemacrostub = true
     elseif GSEOptions.autoCreateMacroStubsClass then
       if GSisSpecIDForCurrentClass(sequence.specID) then
@@ -309,9 +309,9 @@ function GSE.ToggleDisabledSequence(SequenceName)
 end
 
 function GSE.PrepareLogout(deletenonlocalmacros)
-  CleanMacroLibrary(deletenonlocalmacros)
+  GSE.CleanMacroLibrary(deletenonlocalmacros)
   if GSEOptions.deleteOrphansOnLogout then
-    cleanOrphanSequences()
+    GSE.CleanOrphanSequences()
   end
   GnomeOptions = GSEOptions
 end
@@ -668,4 +668,48 @@ function GSE.DeleteMacroStub(sequenceName)
       DeleteMacro(sequenceName)
     end
   end
+end
+
+
+--- Not Used
+function GSE.GetDefaultIcon()
+  local currentSpec = GetSpecialization()
+  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
+  local _, _, _, defaulticon, _, _, _ = GetSpecializationInfoByID(currentSpecID)
+  return strsub(defaulticon, 17)
+end
+
+
+--- This returns a list of Sequence Names for the current spec
+function GSE.getSequenceNames()
+  local keyset={}
+  local currentSpec = GetSpecialization()
+  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
+  if not GSE.isEmpty(currentSpecID) then
+    local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
+    for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
+      --print (table.getn(GSEOptions.SequenceLibrary[k]))
+      if not GSE.isEmpty(GSEOptions.SequenceLibrary[k]) then
+        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSEOptions.SequenceLibrary[k][v].specID)
+        if GSEOptions.filterList["All"] then
+          keyset[k]=k
+        elseif GSEOptions.SequenceLibrary[k][v].specID == 0 then
+          keyset[k]=k
+        elseif GSEOptions.filterList["Class"]  then
+          if pspecclass == specclass then
+            keyset[k]=k
+          end
+        elseif GSEOptions.SequenceLibrary[k][v].specID == currentSpecID then
+          keyset[k]=k
+        else
+          -- do nothing
+          GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
+        end
+      else
+        GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
+      end
+    end
+  end
+  -- Filter Keyset
+  return keyset
 end

@@ -15,9 +15,9 @@ local function UpdateIcon(self)
   local button = self:GetName()
   local sequence, foundSpell, notSpell = GSELibrary[button][GSGetActiveSequenceVersion(button)][step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
-    if GSStaticCastCmds[strlower(cmd)] then
+    if Statics.CastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
-      GSE.aceSequence(button, step, spell)
+      GSE.TraceSequence(button, step, spell)
       if spell then
         if GetSpellInfo(spell) then
           SetMacroSpell(button, spell, target)
@@ -32,8 +32,6 @@ local function UpdateIcon(self)
   if not foundSpell then SetMacroItem(button, notSpell) end
 end
 
-local cvar_Sound_EnableSFX = GetCVar("Sound_EnableSFX")
-local cvar_Sound_EnableErrorSpeech = GetCVar("Sound_EnableErrorSpeech")
 
 
 local function preparePreMacro(premacro)
@@ -113,7 +111,7 @@ self:CallMethod('UpdateIcon')
 
 
 local function createButton(name, sequence)
-  GSFixSequence(sequence)
+  GSE.FixSequence(sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
@@ -221,7 +219,7 @@ local function processAddonLoaded()
           for sname,sversion in pairs(v) do
             if not GSE.isEmpty(sversion) then
               for sver, sequence in pairs(sversion) do
-                GSAddSequenceToCollection(sname, sequence, sver)
+                GSE.AddSequenceToCollection(sname, sequence, sver)
               end
             end
           end
@@ -248,8 +246,7 @@ local function processAddonLoaded()
   end
   GSE.PrintDebugMessage(L["I am loaded"])
   GSE.ReloadSequences()
-  GnomeOptions = GSEOptions
-  GSE:SendMessage(GSStaticCoreLoadedMessage)
+  GSE:SendMessage(Statics.CoreLoadedMessage)
 end
 
 local function processUnitSpellcast(addon)
@@ -320,10 +317,10 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif string.lower(msg) == "help" then
     PrintGnomeHelp()
   elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
-    cleanOrphanSequences()
+    GSE.CleanOrphanSequences()
   elseif string.lower(msg) == "forceclean" then
-    cleanOrphanSequences()
-    CleanMacroLibrary(true)
+    GSE.CleanOrphanSequences()
+    GSE.CleanMacroLibrary(true)
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     GSE.Print(GSExportSequence(string.sub(msg,8)))
   elseif string.lower(msg) == "showdebugoutput" then

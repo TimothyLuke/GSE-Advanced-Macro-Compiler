@@ -1,7 +1,9 @@
 local GNOME,_ = ...
-GSSE = LibStub("AceAddon-3.0"):NewAddon("GSSE", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0")
+
+local GSE = GSE
+
 local AceGUI = LibStub("AceGUI-3.0")
-local L = GSL
+local L = GSE.L
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
@@ -10,85 +12,17 @@ local libCE = libC:GetAddonEncodeTable()
 local currentSequence = ""
 local importStr = ""
 local otherversionlistboxvalue = ""
-local frame = AceGUI:Create("Frame")
+
 local editframe = AceGUI:Create("Frame")
 local recordframe = AceGUI:Create("Frame")
-local defautMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
---local defautMacroIcon = "Interface\\Icons\\INV_MISC_QUESTIONMARK"
 
-local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
-local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
+
 local boxes = {}
 local specdropdownvalue = 0
 
-function GSGetDefaultIcon()
-  local currentSpec = GetSpecialization()
-  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-  local _, _, _, defaulticon, _, _, _ = GetSpecializationInfoByID(currentSpecID)
-  return strsub(defaulticon, 17)
-end
 
-
-function GSSE:getSequenceNames()
-  local keyset={}
-  local currentSpec = GetSpecialization()
-  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-  if not GSE.isEmpty(currentSpecID) then
-    local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
-    for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-      --print (table.getn(GSEOptions.SequenceLibrary[k]))
-      if not GSE.isEmpty(GSEOptions.SequenceLibrary[k]) then
-        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSEOptions.SequenceLibrary[k][v].specID)
-        if GSEOptions.filterList["All"] then
-          keyset[k]=k
-        elseif GSEOptions.SequenceLibrary[k][v].specID == 0 then
-          keyset[k]=k
-        elseif GSEOptions.filterList["Class"]  then
-          if pspecclass == specclass then
-            keyset[k]=k
-          end
-        elseif GSEOptions.SequenceLibrary[k][v].specID == currentSpecID then
-          keyset[k]=k
-        else
-          -- do nothing
-          GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
-        end
-      else
-        GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
-      end
-    end
-  end
-  -- Filter Keyset
-  return keyset
-end
-
-function GSSE:getSpecNames()
-  local keyset={}
-  for k,v in pairs(GSSpecIDList) do
-    keyset[v] = v
-  end
-  return keyset
-end
 
 local viewiconpicker = AceGUI:Create("Icon")
-
-function GSSE:DisableSequence(currentSeq)
-  GSToggleDisabledSequence(currentSeq)
-  if GSEOptions.DisabledSequences[currentSeq] then
-    disableSeqbutton:SetText(L["Enable Sequence"])
-    viewiconpicker:SetImage(defautMacroIcon)
-  else
-    disableSeqbutton:SetText(L["Disable Sequence"])
-    local reticon = GSSE:getMacroIcon(currentSeq)
-    if not tonumber(reticon) then
-      -- we have a starting
-      reticon = "Interface\\Icons\\" .. reticon
-    end
-    viewiconpicker:SetImage(reticon)
-  end
-  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
-
-end
 
 local editOptionsbutton = AceGUI:Create("Button")
 editOptionsbutton:SetText(L["Options"])
@@ -109,7 +43,7 @@ iconpicker.frame:SetScript("OnDragStart", function()
     PickupMacro(currentSequence)
   end
 end)
-iconpicker:SetImage(defautMacroIcon)
+iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 
 
 viewiconpicker:SetLabel(L["Macro Icon"])
@@ -120,7 +54,7 @@ viewiconpicker.frame:SetScript("OnDragStart", function()
     PickupMacro(currentSequence)
   end
 end)
-viewiconpicker:SetImage(defautMacroIcon)
+viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 
 
 -- Create functions for tabs
@@ -348,16 +282,16 @@ editframe:AddChild(headerGroup)
 
 
 
-local premacrobox = AceGUI:Create("MultiLineEditBox")
-premacrobox:SetLabel(L["PreMacro"])
-premacrobox:SetNumLines(2)
-premacrobox:DisableButton(true)
-premacrobox:SetFullWidth(true)
---premacrobox.editBox:SetScript("OnLeave", OnTextChanged)
+local KeyPressbox = AceGUI:Create("MultiLineEditBox")
+KeyPressbox:SetLabel(L["KeyPress"])
+KeyPressbox:SetNumLines(2)
+KeyPressbox:DisableButton(true)
+KeyPressbox:SetFullWidth(true)
+--KeyPressbox.editBox:SetScript("OnLeave", OnTextChanged)
 
-editscroll:AddChild(premacrobox)
-premacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-premacrobox.editBox:SetScript("OnTextChanged", function () end)
+editscroll:AddChild(KeyPressbox)
+KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+KeyPressbox.editBox:SetScript("OnTextChanged", function () end)
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
 spellbox:SetLabel(L["Sequence"])
@@ -396,15 +330,15 @@ loopGroup:AddChild(looplimit)
 editscroll:AddChild(spellbox)
 
 
-local postmacrobox = AceGUI:Create("MultiLineEditBox")
-postmacrobox:SetLabel(L["PostMacro"])
-postmacrobox:SetNumLines(2)
-postmacrobox:DisableButton(true)
-postmacrobox:SetFullWidth(true)
-postmacrobox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
-postmacrobox.editBox:SetScript("OnTextChanged", function () end)
+local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
+KeyReleasebox:SetLabel(L["KeyRelease"])
+KeyReleasebox:SetNumLines(2)
+KeyReleasebox:DisableButton(true)
+KeyReleasebox:SetFullWidth(true)
+KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSSE:parsetext(self) end)
+KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
 
-editscroll:AddChild(postmacrobox)
+editscroll:AddChild(KeyReleasebox)
 editframe:AddChild(editscroll)
 
 local editButtonGroup = AceGUI:Create("SimpleGroup")
@@ -595,7 +529,7 @@ function GSSE:loadSequence(SequenceName)
   end
   if GSEOptions.DisabledSequences[SequenceName] then
     disableSeqbutton:SetText(L["Enable Sequence"])
-    viewiconpicker:SetImage(defautMacroIcon)
+    viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
   else
     disableSeqbutton:SetText(L["Disable Sequence"])
     reticon = GSSE:getMacroIcon(SequenceName)
@@ -800,7 +734,7 @@ function GSSE:getMacroIcon(sequenceIndex)
     if GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
       return "INV_MISC_QUESTIONMARK"
     else
-      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSGetCurrentSpecID() or GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSE.GetCurrentSpecID() or GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
       GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end

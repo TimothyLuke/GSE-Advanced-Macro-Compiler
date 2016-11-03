@@ -60,6 +60,8 @@ GSEOptions.filterList[Statics.All] = false
 GSEOptions.autoCreateMacroStubsClass = true
 GSEOptions.autoCreateMacroStubsGlobal = false
 GSEOptions.resetOOC = true
+GSEOptions.DefaultDisabledMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
+
 
 GSE.UnsavedOptions = {}
 GSE.UnsavedOptions["DebugSequenceExecution"] = false
@@ -74,7 +76,6 @@ Translator[Statics.TranslationShadow] = {}
 GSE.UnfoundSpells = {}
 
 GSE.ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
-GSE.OutputQueue = {}
 GSE.PrintAvailable = false
 GSE.AddInPacks = {}
 GSE.UnloadedAddInPacks = {}
