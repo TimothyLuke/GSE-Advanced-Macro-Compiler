@@ -28,7 +28,6 @@ rm -rf out/**/* || exit 0
 
 # Run our compile script
 luadoc -d out GSE/API/*.lua
-luadoc -d out GSE/Storage/*.lua
 
 # Now let's go have some fun with the cloned repo
 cd out

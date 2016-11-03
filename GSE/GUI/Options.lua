@@ -487,7 +487,7 @@ local OptionsTable = {
           get = function(info) return GSEOptions.sendDebugOutputToChatWindow  end,
           order = 21
         },
-        debugGSE.DebugOutput={
+        debugStoreOutput={
           name = L["Store Debug Messages"],
           desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
           type = "toggle",

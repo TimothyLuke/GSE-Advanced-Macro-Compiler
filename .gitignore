@@ -1,2 +1,5 @@
 GSE/Lib/*
 deploy_key
+deploy_key.pub
+GS-Core/lib
+GS-SequenceEditor

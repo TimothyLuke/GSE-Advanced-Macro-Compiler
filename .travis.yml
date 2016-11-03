@@ -27,7 +27,6 @@ script:
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Storage/*.lua
 - bash ./deploy.sh
 after_success:
 - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
