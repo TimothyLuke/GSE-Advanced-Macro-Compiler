@@ -9,8 +9,6 @@ addons:
 before_install:
 - openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv
   -in deploy_key.enc -out deploy_key -d
-- openssl aes-256-cbc -K $encrypted_5cf4d4ffcc33_key -iv $encrypted_5cf4d4ffcc33_iv
-  -in deploy_key.enc -out deploy_key -d
 - pip install hererocks
 - hererocks lua_install -r^ --$LUA
 - export PATH=$PATH:$PWD/lua_install/bin
