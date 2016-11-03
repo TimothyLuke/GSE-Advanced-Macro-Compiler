@@ -41,4 +41,4 @@ local function processAddonLoaded()
   end
 end
 
-GSDB:RegisterMessage(GSStaticCoreLoadedMessage,  processAddonLoaded)
+GSDB:RegisterMessage(Statics.CoreLoadedMessage,  processAddonLoaded)
