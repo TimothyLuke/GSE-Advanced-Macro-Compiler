@@ -1,48 +1,42 @@
-# .travis.yml
 language: python
 sudo: true
-
 env:
-  - LUA="lua=5.1" LUAC="luac5.1"
-
+- LUA="lua=5.1" LUAC="luac5.1"
 addons:
   apt:
     packages:
-      - liblua5.1-bitop0
-
+    - liblua5.1-bitop0
 before_install:
-  - pip install hererocks
-  - hererocks lua_install -r^ --$LUA
-  - export PATH=$PATH:$PWD/lua_install/bin
-  - openssl aes-256-cbc -K $encrypted_5cf4d4ffcc33_key -iv $encrypted_5cf4d4ffcc33_iv -in deploy_key.enc -out deploy_key -d
+- openssl aes-256-cbc -K $encrypted_5cf4d4ffcc33_key -iv $encrypted_5cf4d4ffcc33_iv
+  -in deploy_key.enc -out deploy_key -d
+- pip install hererocks
+- hererocks lua_install -r^ --$LUA
+- export PATH=$PATH:$PWD/lua_install/bin
+
 install:
-  - luarocks install luacheck
-  - luarocks install mockagne 1.0
-  - luarocks install luaunit
-  - luarocks install luabitop
-  - luarocks install busted
-  - luarocks install luacov
-  - luarocks install luacov-coveralls
-  - luarocks install luadoc
-
+- luarocks install luacheck
+- luarocks install mockagne 1.0
+- luarocks install luaunit
+- luarocks install luabitop
+- luarocks install busted
+- luarocks install luacov
+- luarocks install luacov-coveralls
+- luarocks install luadoc
 script:
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/MacroExecution/*.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Storage/*.lua
-  - bash ./deploy.sh
-
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/MacroExecution/*.lua
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
+- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Storage/*.lua
+- bash ./deploy.sh
 after_success:
-  - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
-
+- luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
 notifications:
   email:
     on_failure: always
     on_success: change
-
 cache:
   apt: true
   directories:
-    - $HOME/.luarocks
+  - "$HOME/.luarocks"
