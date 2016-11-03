@@ -3,10 +3,10 @@ language: python
 sudo: true
 
 env:
-  - LUA="lua=5.1" LUAC="luac5.1"
   global:
     - ENCRYPTION_LABEL: "5cf4d4ffcc33"
     - COMMIT_AUTHOR_EMAIL: "timothy@minahan.net"
+  - LUA="lua=5.1" LUAC="luac5.1"
 
 addons:
   apt:
