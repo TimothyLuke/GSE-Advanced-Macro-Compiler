@@ -256,7 +256,7 @@ viewerheadergroup:SetLayout("Flow")
 GSSequenceListbox = AceGUI:Create("Dropdown")
 GSSequenceListbox:SetLabel(L["Load Sequence"])
 GSSequenceListbox:SetWidth(250)
-GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) currentSequence = key GSSE:loadSequence(key)  end)
 
 local spacerlabel = AceGUI:Create("Label")
 spacerlabel:SetWidth(300)
