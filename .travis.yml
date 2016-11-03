@@ -26,13 +26,14 @@ install:
   - luarocks install luadoc
 
 script:
-  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua 
+  - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
   - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/MacroExecution/*.lua
   - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
   - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
   - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
   - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Storage/*.lua
-  - luadoc  GS-Core/startup.lua
+  - luadoc  GSE/API/*.lua
+  - luadoc  GSE/Storage/*.lua
 
 after_success:
   - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
