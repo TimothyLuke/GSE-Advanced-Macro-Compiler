@@ -14,7 +14,7 @@ GSEOptions.deleteOrphansOnLogout = false
 GSEOptions.debug = false
 GSEOptions.sendDebugOutputToChat = nil
 GSEOptions.sendDebugOutputToChatWindow = false
-GSEOptions.sendDebugOutputGSDebugOutput = false
+GSEOptions.sendDebugOutputGSE.DebugOutput = false
 GSEOptions.useTranslator = false
 GSEOptions.requireTarget = false
 GSEOptions.use1 = false
@@ -63,3 +63,18 @@ GSEOptions.resetOOC = true
 
 GSE.UnsavedOptions = {}
 GSE.UnsavedOptions["DebugSequenceExecution"] = false
+GSE.TranslatorLanguageTables = {}
+
+local Translator = GSE.TranslatorLanguageTables
+
+Translator[Statics.TranslationKey] = {}
+Translator[Statics.TranslationHash] = {}
+Translator[Statics.TranslationShadow] = {}
+
+GSE.UnfoundSpells = {}
+
+GSE.ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
+GSE.OutputQueue = {}
+GSE.PrintAvailable = false
+GSE.AddInPacks = {}
+GSE.UnloadedAddInPacks = {}

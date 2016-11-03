@@ -33,11 +33,11 @@ function GSSE:getSequenceNames()
   local keyset={}
   local currentSpec = GetSpecialization()
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-  if not GSisEmpty(currentSpecID) then
+  if not GSE.isEmpty(currentSpecID) then
     local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
     for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
       --print (table.getn(GSEOptions.SequenceLibrary[k]))
-      if not GSisEmpty(GSEOptions.SequenceLibrary[k]) then
+      if not GSE.isEmpty(GSEOptions.SequenceLibrary[k]) then
         local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSEOptions.SequenceLibrary[k][v].specID)
         if GSEOptions.filterList["All"] then
           keyset[k]=k
@@ -51,10 +51,10 @@ function GSSE:getSequenceNames()
           keyset[k]=k
         else
           -- do nothing
-          GSPrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
+          GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
         end
       else
-        GSPrint(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
+        GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
       end
     end
   end
@@ -86,7 +86,7 @@ function GSSE:DisableSequence(currentSeq)
     end
     viewiconpicker:SetImage(reticon)
   end
-  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSisEmpty(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
+  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSEOptions.SequenceLibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
 
 end
 
@@ -105,7 +105,7 @@ iconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 iconpicker.frame:RegisterForDrag("LeftButton")
 iconpicker.frame:SetScript("OnDragStart", function()
-  if not GSisEmpty(currentSequence) then
+  if not GSE.isEmpty(currentSequence) then
     PickupMacro(currentSequence)
   end
 end)
@@ -116,7 +116,7 @@ viewiconpicker:SetLabel(L["Macro Icon"])
 --iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 viewiconpicker.frame:RegisterForDrag("LeftButton")
 viewiconpicker.frame:SetScript("OnDragStart", function()
-  if not GSisEmpty(currentSequence) then
+  if not GSE.isEmpty(currentSequence) then
     PickupMacro(currentSequence)
   end
 end)
@@ -217,7 +217,7 @@ function GSSE:SelectGroup(container, event, group)
    local tremote = remotesequenceboxtext:GetText()
    local tlocal = sequenceboxtext:GetText()
    container:ReleaseChildren()
-   GSPrintDebugMessage(L["Selecting tab: "] .. group, GNOME)
+   GSE.PrintDebugMessage(L["Selecting tab: "] .. group, GNOME)
    if group == "localtab" then
       GSSE:drawstandardwindow(container)
    elseif group == "remotetab" then
@@ -316,7 +316,7 @@ stepdropdown:SetList({
 
 })
 
-stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSPrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
+stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
 firstheadercolumn:AddChild(stepdropdown)
 
 headerGroup:AddChild(firstheadercolumn)
@@ -480,7 +480,7 @@ local delbutton = AceGUI:Create("Button")
 delbutton:SetText(L["Delete Version"])
 delbutton:SetWidth(150)
 delbutton:SetCallback("OnClick", function()
-  if not GSisEmpty(otherversionlistboxvalue) then
+  if not GSE.isEmpty(otherversionlistboxvalue) then
     GSDeleteSequenceVersion(currentSequence, otherversionlistboxvalue)
     otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
     otherSequenceVersions:SetText("")
@@ -562,7 +562,7 @@ end
 
 function GSSE:ChangeOtherSequence(key)
   otherversionlistboxvalue = key
-  otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSequence][key], (GSisEmpty(GSEOptions.SequenceLibrary[currentSequence][key].lang) and GetLocale() or GSEOptions.SequenceLibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
+  otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSequence][key], (GSE.isEmpty(GSEOptions.SequenceLibrary[currentSequence][key].lang) and GetLocale() or GSEOptions.SequenceLibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
 end
 
 function GSUpdateSequenceList()
@@ -580,14 +580,14 @@ function GSSE:ManageSequenceVersion()
 end
 
 function GSSE:loadTranslatedSequence(key)
-  GSPrintDebugMessage(L["GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary["] .. currentSequence .. L["], (GSisEmpty(GSEOptions.SequenceLibrary["] .. currentSequence .. L["].lang) and GSEOptions.SequenceLibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
-  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSisEmpty(GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
+  GSE.PrintDebugMessage(L["GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary["] .. currentSequence .. L["], (GSE.isEmpty(GSEOptions.SequenceLibrary["] .. currentSequence .. L["].lang) and GSEOptions.SequenceLibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
+  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSEOptions.SequenceLibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
 function GSSE:loadSequence(SequenceName)
-  GSPrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
+  GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
   if GSAdditionalLanguagesAvailable and GSEOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], (GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang) and "enUS" or GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], (GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang) and "enUS" or GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].lang), GetLocale()), SequenceName))
   elseif GSTranslatorAvailable then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)], GetLocale(), GetLocale()), SequenceName))
   else
@@ -619,23 +619,23 @@ function GSSE:toggleClasses(buttonname)
 end
 
 function GSSE:LoadEditor(SequenceName, recordstring)
-  if not GSisEmpty(SequenceName) then
+  if not GSE.isEmpty(SequenceName) then
     nameeditbox:SetText(SequenceName)
-    if GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction) then
      stepdropdown:SetValue("1")
      stepvalue = 1
     else
      stepdropdown:SetValue("2")
      stepvalue = 2
     end
-    GSPrintDebugMessage("StepValue: " .. stepvalue, GNOME)
-    if GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
-      GSPrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
+    GSE.PrintDebugMessage("StepValue: " .. stepvalue, GNOME)
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro) then
+      GSE.PrintDebugMessage(L["Moving on - LiveTest.PreMacro already exists."], GNOME)
     else
      premacrobox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PreMacro)
     end
-    if GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro) then
-      GSPrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro) then
+      GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
     else
      postmacrobox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].PostMacro)
     end
@@ -645,31 +645,31 @@ function GSSE:LoadEditor(SequenceName, recordstring)
       -- we have a starting
       reticon = "Interface\\Icons\\" .. reticon
     end
-    if GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].helpTxt) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].helpTxt) then
       helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
     else
       helpeditbox:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].helpTxt)
     end
     iconpicker:SetImage(reticon)
-    GSPrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
+    GSE.PrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
     speciddropdown:SetValue(GSSpecIDList[GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
     specdropdownvalue = GSSpecIDList[GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
-    if not GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart) then
       loopstart:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart)
     end
-    if not GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop) then
       loopstop:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop)
     end
-    if not GSisEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit) then
       looplimit:SetText(GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit)
     end
-  elseif not GSisEmpty(recordstring) then
+  elseif not GSE.isEmpty(recordstring) then
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
     currentSequence = ""
     helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
     spellbox:SetText(recordstring)
   else
-    GSPrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
+    GSE.PrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
     currentSequence = ""
     helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
@@ -681,18 +681,18 @@ end
 
 function GSSE:UpdateSequenceDefinition(SequenceName)
   -- Changes have been made so save them
-  if not GSisEmpty(SequenceName) then
+  if not GSE.isEmpty(SequenceName) then
     nextVal = GSGetNextSequenceVersion(currentSequence)
     local sequence = {}
     GSSE:lines(sequence, spellbox:GetText())
     -- update sequence
     if tonumber(stepvalue) == 2 then
       sequence.StepFunction = GSStaticPriority
-      GSPrintDebugMessage("Setting GSStaticPriority.  Inside the Logic Point")
+      GSE.PrintDebugMessage("Setting GSStaticPriority.  Inside the Logic Point")
     else
       sequence.StepFunction = nil
     end
-    GSPrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
+    GSE.PrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
     sequence.PreMacro = premacrobox:GetText()
     sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
     sequence.source = GSStaticSourceLocal
@@ -701,35 +701,35 @@ function GSSE:UpdateSequenceDefinition(SequenceName)
     if not tonumber(sequence.icon) then
       sequence.icon = "INV_MISC_QUESTIONMARK"
     end
-    if not GSisEmpty(loopstart:GetText()) then
+    if not GSE.isEmpty(loopstart:GetText()) then
       sequence.loopstart = loopstart:GetText()
     end
-    if not GSisEmpty(loopstop:GetText()) then
+    if not GSE.isEmpty(loopstop:GetText()) then
       sequence.loopstop = loopstop:GetText()
     end
-    if not GSisEmpty(looplimit:GetText()) then
+    if not GSE.isEmpty(looplimit:GetText()) then
       sequence.looplimit = looplimit:GetText()
     end
     sequence.PostMacro = postmacrobox:GetText()
     sequence.version = nextVal
     GSTRUnEscapeSequence(sequence)
-    if GSisEmpty(GSEOptions.SequenceLibrary[SequenceName]) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName]) then
       -- this is new
-      GSPrintDebugMessage(L["Creating New Sequence."], GNOME)
+      GSE.PrintDebugMessage(L["Creating New Sequence."], GNOME)
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)
       GSCheckMacroCreated(SequenceName)
       GSUpdateSequence(SequenceName, GSEOptions.SequenceLibrary[SequenceName][nextVal])
       GSUpdateSequenceList()
       GSSequenceListbox:SetValue(SequenceName)
-      GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
+      GSE.Print(L["Sequence Saved as version "] .. nextVal, GNOME)
     else
-      GSPrintDebugMessage(L["Updating due to new version."], GNOME)
+      GSE.PrintDebugMessage(L["Updating due to new version."], GNOME)
       GSAddSequenceToCollection(SequenceName, sequence, nextVal)
       GSSE:loadSequence(SequenceName)
       GSCheckMacroCreated(SequenceName)
       GSUpdateSequence(SequenceName, GSEOptions.SequenceLibrary[SequenceName][nextVal])
-      GSPrint(L["Sequence Saved as version "] .. nextVal, GNOME)
+      GSE.Print(L["Sequence Saved as version "] .. nextVal, GNOME)
     end
 
   end
@@ -743,7 +743,7 @@ function GSGuiShowViewer()
     sequenceboxtext:SetText("")
     frame:Show()
   else
-    GSPrint(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
+    GSE.Print(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
   end
 
 end
@@ -767,7 +767,7 @@ function GSSE:OnInitialize()
     versionframe:Hide()
     editframe:Hide()
     frame:Hide()
-    GSPrint(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
+    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
 end
 
 function GSSE:getCurrentTalents()
@@ -780,31 +780,31 @@ function GSSE:getCurrentTalents()
 end
 
 function GSSE:getMacroIcon(sequenceIndex)
-  GSPrintDebugMessage(L["sequenceIndex: "] .. (GSisEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
-  if not GSisEmpty(GSGetActiveSequenceVersion(currentSequence)) then
-    if not GSisEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
-      GSPrintDebugMessage(L["Icon: "] .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
+  GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
+  if not GSE.isEmpty(GSGetActiveSequenceVersion(currentSequence)) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+      GSE.PrintDebugMessage(L["Icon: "] .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
     else
-      GSPrintDebugMessage(L["Icon: "] .. L["none"], GNOME)
+      GSE.PrintDebugMessage(L["Icon: "] .. L["none"], GNOME)
     end
   end
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
-  if not GSisEmpty(a) then
-    GSPrintDebugMessage(L["Macro Found "] .. a .. L[" with iconid "] .. (GSisEmpty(iconid) and L["of no value"] or iconid) .. " " .. (GSisEmpty(iconid) and L["with no body"] or c), GNOME)
+  if not GSE.isEmpty(a) then
+    GSE.PrintDebugMessage(L["Macro Found "] .. a .. L[" with iconid "] .. (GSE.isEmpty(iconid) and L["of no value"] or iconid) .. " " .. (GSE.isEmpty(iconid) and L["with no body"] or c), GNOME)
   else
-    GSPrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
+    GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
   end
-  if GSisEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSisEmpty(iconid) then
-    GSPrintDebugMessage("SequenceSpecID: " .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
+  if GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSE.isEmpty(iconid) then
+    GSE.PrintDebugMessage("SequenceSpecID: " .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
     if GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
       return "INV_MISC_QUESTIONMARK"
     else
-      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSisEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSGetCurrentSpecID() or GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
-      GSPrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSGetCurrentSpecID() or GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end
-  elseif GSisEmpty(iconid) and not GSisEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
 
       return GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
   else

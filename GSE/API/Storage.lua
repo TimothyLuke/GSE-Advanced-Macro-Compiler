@@ -19,18 +19,18 @@ end
 function GSE.AddSequenceToCollection(sequenceName, sequence, version)
   local confirmationtext = ""
   --Perform some validation checks on the Sequence.
-  if GSisEmpty(sequence.specID) then
+  if GSE.isEmpty(sequence.specID) then
     -- set to currentSpecID
     sequence.specID = GSGetCurrentSpecID()
     confirmationtext = " " .. L["Sequence specID set to current spec of "] .. sequence.specID .. "."
   end
   sequence.specID = sequence.specID + 0 -- force to a number.
-  if GSisEmpty(sequence.author) then
+  if GSE.isEmpty(sequence.author) then
     -- set to unknown author
     sequence.author = "Unknown Author"
     confirmationtext = " " .. L["Sequence Author set to Unknown"] .. "."
   end
-  if GSisEmpty(sequence.helpTxt) then
+  if GSE.isEmpty(sequence.helpTxt) then
     -- set to currentSpecID
     sequence.helpTxt = "No Help Information"
     confirmationtext = " " .. L["No Help Information Available"] .. "."
@@ -38,8 +38,8 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
 
   -- CHeck for colissions
   local found = false
-  if not GSisEmpty(GSEOptions.SequenceLibrary[sequenceName]) then
-    if not GSisEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
+  if not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceName]) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
       found = true
     end
   end
@@ -49,23 +49,23 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
       -- different source.  if local Ignore
       if sequence.source == GSStaticSourceLocal then
         -- local version - add as new version
-        GSPrint (L["A sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."], GNOME)
+        GSE.Print (L["A sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."], GNOME)
         GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
       else
-        if GSisEmpty(sequence.source) then
-          GSPrint(L["A sequence collision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName, GNOME)
+        if GSE.isEmpty(sequence.source) then
+          GSE.Print(L["A sequence collision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName, GNOME)
         else
-          GSPrint (L["A sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSEOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."], Gnome)
+          GSE.Print (L["A sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSEOptions.SequenceLibrary[sequenceName][version].source .. L[". This version was not loaded."], Gnome)
         end
       end
     end
   else
     -- New Sequence
-    if GSisEmpty(GSEOptions.SequenceLibrary[sequenceName]) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceName]) then
       -- Sequence is new
       GSEOptions.SequenceLibrary[sequenceName] = {}
     end
-    if GSisEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
+    if GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
       -- This version is new
       -- print(sequenceName .. " " .. version)
       GSEOptions.SequenceLibrary[sequenceName][version] = {}
@@ -99,15 +99,15 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
       end
     end
   end
-  if not GSisEmpty(confirmationtext) then
-    GSPrint(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
+  if not GSE.isEmpty(confirmationtext) then
+    GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
   end
 end
 
 --- Load a collection of Sequences
 function GSE.ImportMacroCollection(Sequences)
   for k,v in pairs(Sequences) do
-    if GSisEmpty(v.version) then
+    if GSE.isEmpty(v.version) then
       v.version = 1
     end
     GSAddSequenceToCollection(k, v, v.version)
@@ -117,10 +117,10 @@ end
 -- --- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
 -- function GSImportLegacyMacroCollections(str, authorversion)
 --   for k,v in pairs(GSMasterSequences) do
---     if GSisEmpty(v.version) then
+--     if GSE.isEmpty(v.version) then
 --       v.version = 1
 --     end
---     if GSisEmpty(authorversion) then
+--     if GSE.isEmpty(authorversion) then
 --       authorversion = 1
 --     end
 --     v.source = str
@@ -134,12 +134,12 @@ end
 
 --- Delete a sequence version
 function GSE.DeleteSequenceVersion(sequenceName, version)
-  if not GSisEmpty(sequenceName) then
+  if not GSE.isEmpty(sequenceName) then
     local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
     local sequence = GSEOptions.SequenceLibrary[sequenceName][version]
     if sequence.source ~= GSStaticSourceLocal then
-      GSPrint(L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSEOptions.NUMBER .. sequence.source .. Statics.StringReset, GNOME)
-    elseif not GSisEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
+      GSE.Print(L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSEOptions.NUMBER .. sequence.source .. Statics.StringReset, GNOME)
+    elseif not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceName][version]) then
       GSEOptions.SequenceLibrary[sequenceName][version] = nil
     end
     if version == selectedversion then
@@ -164,8 +164,8 @@ end
 --    a <code>last</code> value of true means to get the last remaining version
 function GSE.GetNextSequenceVersion(SequenceName, last)
   local nextv = 0
-  GSPrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
-  if not GSisEmpty(GSEOptions.SequenceLibrary[SequenceName]) then
+  GSE.PrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
+  if not GSE.isEmpty(GSEOptions.SequenceLibrary[SequenceName]) then
     for k,_ in ipairs(GSEOptions.SequenceLibrary[SequenceName]) do
     nextv = k
     end
@@ -183,7 +183,7 @@ end
 
 --- Return a table of Known Sequence Versions
 function GSE.GetKnownSequenceVersions(SequenceName)
-  if not GSisEmpty(SequenceName) then
+  if not GSE.isEmpty(SequenceName) then
     local t = {}
     for k,_ in pairs(GSEOptions.SequenceLibrary[SequenceName]) do
       --print (k)
@@ -197,7 +197,7 @@ end
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(SequenceName)
   local vers = 1
-  if not GSisEmpty(GSEOptions.ActiveSequenceVersions[SequenceName]) then
+  if not GSE.isEmpty(GSEOptions.ActiveSequenceVersions[SequenceName]) then
     vers = GSEOptions.ActiveSequenceVersions[SequenceName]
   end
   return vers
@@ -210,16 +210,16 @@ function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
     -- Sequence exists do nothing
-    GSPrintDebugMessage(L["Moving on - macro for "] .. sequenceName .. L[" already exists."], GNOME)
+    GSE.PrintDebugMessage(L["Moving on - macro for "] .. sequenceName .. L[" already exists."], GNOME)
   else
     -- Create Sequence as a player sequence
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
-      GSPrint(GSEOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSEOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
+      GSE.Print(GSEOptions.AuthorColour .. L["Close to Maximum Personal Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSEOptions.EmphasisColour .. numCharacterMacros .. L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] .. GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
     elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSEOptions.overflowPersonalMacros then
-      GSPrint(L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSEOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSEOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
+      GSE.Print(L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSEOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSEOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
     else
       sequenceid = CreateMacro(sequenceName, (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, (forceglobalstub and false or GSsetMacroLocation()) )
-      GSModifiedSequences[sequenceName] = true
+      GSE.ModifiedSequences[sequenceName] = true
     end
   end
 end
@@ -230,7 +230,7 @@ function GSE.ImportSequence()
 
   return Sequences
   ]===]
-  GSPrintDebugMessage (functiondefinition, "GS-SequenceEditor")
+  GSE.PrintDebugMessage (functiondefinition, "GS-SequenceEditor")
   local fake_globals = setmetatable({
     Sequences = {},
     }, {__index = _G})
@@ -240,30 +240,30 @@ function GSE.ImportSequence()
     setfenv (func, fake_globals)
 
     local TempSequences = assert(func())
-    if not GSisEmpty(TempSequences) then
+    if not GSE.isEmpty(TempSequences) then
       local newkey = ""
       for k,v in pairs(TempSequences) do
 
-        if GSisEmpty(v.version) then
+        if GSE.isEmpty(v.version) then
           v.version = GSGetNextSequenceVersion(k)
         end
         v.source = GSStaticSourceLocal
         GSAddSequenceToCollection(k, v, v.version)
         GSUpdateSequence(k, GSEOptions.SequenceLibrary[k][v.version])
-        if GSisEmpty(v.icon) then
+        if GSE.isEmpty(v.icon) then
           -- Set a default icon
           v.icon = GSGetDefaultIcon()
         end
         GSCheckMacroCreated(k)
         newkey = k
-        GSPrint(L["Imported new sequence "] .. k, GNOME)
+        GSE.Print(L["Imported new sequence "] .. k, GNOME)
       end
       GSUpdateSequenceList()
       GSSequenceListbox:SetValue(newkey)
 
     end
   else
-    GSPrintDebugMessage (err, GNOME)
+    GSE.PrintDebugMessage (err, GNOME)
   end
 
 end
@@ -576,5 +576,96 @@ function GSE.TraceSequence(button, step, task)
       GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
     end
     GSE.PrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
+  end
+end
+
+
+--- Compares two sequences and return a boolean if the match.  If they do not
+--    match then if will print an element by element comparison.  This comparison
+--    ignores version, authorversion, source, helpTxt elements as these are not
+--    needed for the execution of the macro but are more for help and versioning.
+function GSE.CompareSequence(seq1,seq2)
+  local match = false
+  local steps1 = table.concat(seq1, "")
+  local steps2 = table.concat(seq2, "")
+
+  if seq1.PostMacro == seq2.PostMacro and seq1.PreMacro == seq2.PreMacro and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
+    -- we have a match
+    match = true
+    GSE.PrintDebugMessage(L["We have a perfect match"], GNOME)
+  else
+    if seq1.specID == seq2.specID then
+      GSE.PrintDebugMessage(L["Matching specID"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different specID"], GNOME)
+    end
+    if seq1.StepFunction == seq2.StepFunction then
+      GSE.PrintDebugMessage(L["Matching StepFunction"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different StepFunction"], GNOME)
+    end
+    if seq1.PreMacro == seq2.PreMacro then
+      GSE.PrintDebugMessage(L["Matching PreMacro"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different PreMacro"], GNOME)
+    end
+    if steps1 == steps2 then
+      GSE.PrintDebugMessage(L["Same Sequence Steps"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different Sequence Steps"], GNOME)
+    end
+    if seq1.PostMacro == seq2.PostMacro then
+      GSE.PrintDebugMessage(L["Matching PostMacro"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different PostMacro"], GNOME)
+    end
+    if seq1.helpTxt == seq2.helpTxt then
+      GSE.PrintDebugMessage(L["Matching helpTxt"], GNOME)
+    else
+      GSE.PrintDebugMessage(L["Different helpTxt"], GNOME)
+    end
+
+  end
+  return match
+end
+
+--- Return whether to store the macro in Personal Character Macros or Account Macros
+function GSE.SetMacroLocation()
+  local numAccountMacros, numCharacterMacros = GetNumMacros()
+  local returnval = 1
+  if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSEOptions.overflowPersonalMacros then
+   returnval = nil
+  end
+  return returnval
+end
+
+
+
+--- Check if a macro has been created and if not create it.
+function GSE.CheckMacroCreated(SequenceName, globalstub)
+  local macroIndex = GetMacroIndexByName(SequenceName)
+  if macroIndex and macroIndex ~= 0 then
+    if not GSE.ModifiedSequences[SequenceName] then
+      GSE.ModifiedSequences[SequenceName] = true
+      EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
+    end
+  else
+    icon = GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
+    GSregisterSequence(SequenceName, icon, globalstub)
+  end
+
+end
+
+--- This removes a macro Stub.
+function GSE.DeleteMacroStub(sequenceName)
+  local mname, _, mbody = GetMacroInfo(sequenceName)
+  if mname == sequenceName then
+    trimmedmbody = mbody:gsub("[^%w ]", "")
+    compar = '#showtooltip\n/click ' .. mname
+    trimmedcompar = compar:gsub("[^%w ]", "")
+    if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
+      GSE.Print(L[" Deleted Orphaned Macro "] .. mname, GNOME)
+      DeleteMacro(sequenceName)
+    end
   end
 end

@@ -7,7 +7,7 @@ local L = GSL
 local onpause = false
 
 GSDebugFrame = AceGUI:Create("Frame")
-GSDebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
+GSE.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSDebugEnableViewButton = AceGUI:Create("Button")
 GSDebugPauseViewButton = AceGUI:Create("Button")
 
@@ -18,8 +18,8 @@ end
 
 
 function GSSE:GUIUpdateOutput()
-  GSDebugOutputTextbox:SetText(GSDebugOutputTextbox:GetText() .. GSDebugOutput)
-  GSDebugOutput = ""
+  GSE.DebugOutputTextbox:SetText(GSE.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
+  GSE.DebugOutput = ""
 end
 
 function GSSE:EnableGuiDebugView()
@@ -68,11 +68,11 @@ GSDebugFrame:SetLayout("List")
 GSDebugFrame:Hide()
 
 
-GSDebugOutputTextbox:SetLabel(L["Output"])
-GSDebugOutputTextbox:SetNumLines(25)
-GSDebugOutputTextbox:DisableButton(true)
-GSDebugOutputTextbox:SetFullWidth(true)
-GSDebugFrame:AddChild(GSDebugOutputTextbox)
+GSE.DebugOutputTextbox:SetLabel(L["Output"])
+GSE.DebugOutputTextbox:SetNumLines(25)
+GSE.DebugOutputTextbox:DisableButton(true)
+GSE.DebugOutputTextbox:SetFullWidth(true)
+GSDebugFrame:AddChild(GSE.DebugOutputTextbox)
 
 local buttonGroup = AceGUI:Create("SimpleGroup")
 buttonGroup:SetFullWidth(true)
@@ -99,7 +99,7 @@ end
 local GSDebugClearViewButton = AceGUI:Create("Button")
 GSDebugClearViewButton:SetText(L["Clear"])
 GSDebugClearViewButton:SetWidth(150)
-GSDebugClearViewButton:SetCallback("OnClick", function() GSDebugOutputTextbox:SetText('') end)
+GSDebugClearViewButton:SetCallback("OnClick", function() GSE.DebugOutputTextbox:SetText('') end)
 buttonGroup:AddChild(GSDebugClearViewButton)
 
 local GSDebugOptionsViewButton = AceGUI:Create("Button")

@@ -1,6 +1,7 @@
 local GSE = GSE
 local Statics = GSE.Static
 
+GSELibrary = {}
 
 Statics.CastCmds = { use = true, cast = true, spell = true, cancelaura = true, startattack = true, cancelform = true }
 
@@ -237,11 +238,3 @@ Statics.TranslationShadow = "SHADOW"
 Statics.Spec = "Spec"
 Statics.Class = "Class"
 Statics.All = "All"
-
-GSE.TranslatorLanguageTables = {}
-
-local Translator = GSE.TranslatorLanguageTables
-
-Translator[Statics.TranslationKey] = {}
-Translator[Statics.TranslationHash] = {}
-Translator[Statics.TranslationShadow] = {}

@@ -470,7 +470,7 @@ local OptionsTable = {
           name = L["Enable Mod Debug Mode"],
           desc = L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"],
           type = "toggle",
-          set = function(info,val) GSEOptions.debug = val GSPrintDebugMessage("Debug Mode Enabled", GNOME) end,
+          set = function(info,val) GSEOptions.debug = val GSE.PrintDebugMessage("Debug Mode Enabled", GNOME) end,
           get = function(info) return GSEOptions.debug end,
           order = 10
         },
@@ -487,12 +487,12 @@ local OptionsTable = {
           get = function(info) return GSEOptions.sendDebugOutputToChatWindow  end,
           order = 21
         },
-        debugGSDebugOutput={
+        debugGSE.DebugOutput={
           name = L["Store Debug Messages"],
           desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
           type = "toggle",
-          set = function(info,val) GSEOptions.sendDebugOutputGSDebugOutput = val end,
-          get = function(info) return GSEOptions.sendDebugOutputGSDebugOutput end,
+          set = function(info,val) GSEOptions.sendDebugOutputToDebugOutput = val end,
+          get = function(info) return GSEOptions.sendDebugOutputToDebugOutput end,
           order = 25
         },
         title6= {

@@ -173,13 +173,13 @@ local function prepareLogin()
       for name,_ in pairs(toprocess) do
         local macroIndex = GetMacroIndexByName(name)
         if macroIndex and macroIndex ~= 0 then
-          if not GSModifiedSequences[name] then
-            GSModifiedSequences[name] = true
+          if not GSE.ModifiedSequences[name] then
+            GSE.ModifiedSequences[name] = true
             EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
           end
           _G[name]:UpdateIcon()
-        elseif GSModifiedSequences[name] then
-          GSModifiedSequences[name] = nil
+        elseif GSE.ModifiedSequences[name] then
+          GSE.ModifiedSequences[name] = nil
         end
       end
       for name,_ in pairs(forremoval) do

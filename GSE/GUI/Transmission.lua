@@ -21,7 +21,7 @@ local transauthorlen = string.len(transauthor)
 Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 
 
-GSPrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
+GSE.PrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
@@ -65,8 +65,8 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
 	local transmission = GSEncodeMessage(tab)
-	GSPrintDebugMessage(transmission, GNOME)
-	if GSisEmpty(channel) then
+	GSE.PrintDebugMessage(transmission, GNOME)
+	if GSE.isEmpty(channel) then
 		if IsInRaid() then
 			channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
 		else
@@ -80,7 +80,7 @@ end
 local function performVersionCheck(version)
 	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
 		if not GSold then
-		  GSPrint(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
+		  GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
 		  GSold = true
 		  if((tonumber(message) - tonumber(version)) >= 5) then
 			  StaticPopup_Show('GSE_UPDATE_AVAILABLE')
@@ -111,18 +111,18 @@ function GSDecodeMessage(data)
   --Decompress the decoded data
   local two, message = libC:Decompress(one)
   if(not two) then
-  	GSPrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
+  	GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
   	return
   end
 
   -- Deserialize the decompressed data
   local success, final = libS:Deserialize(two)
   if (not success) then
-  	GSPrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
+  	GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
   	return
   end
 
-  GSPrintDebugMessage ("Data Finalised", "GS-Transmission")
+  GSE.PrintDebugMessage ("Data Finalised", "GS-Transmission")
   return success, final
 end
 
@@ -140,13 +140,13 @@ local function ReceiveSequence(SequenceName, Sequence, sender)
 	Sequence.version = version
 	Sequence.source = GSStaticSourceTransmission
 	GSAddSequenceToCollection(SequenceName, Sequence, version)
-	GSPrint(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
+	GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
 end
 
 
 function GSSE:OnCommReceived(prefix, message, distribution, sender)
-  GSPrintDebugMessage("GSSE:onCommReceived", GNOME)
-  GSPrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
+  GSE.PrintDebugMessage("GSSE:onCommReceived", GNOME)
+  GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
   local success, t = GSDecodeMessage(message)
   if success then
 		if t.Command == "GS-E_VERSIONCHK" then
@@ -157,7 +157,7 @@ function GSSE:OnCommReceived(prefix, message, distribution, sender)
 			if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.SequenceName, t.Sequence, sender)
 			else
-        GSPrintDebugMessage("Ignoring Sequence from me.", GNOME)
+        GSE.PrintDebugMessage("Ignoring Sequence from me.", GNOME)
 			end
     end
 	end
@@ -184,7 +184,7 @@ GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 local baseFont = CreateFont("baseFont")
 
 -- CHeck for ElvUI
-if GSisEmpty(ElvUI) then
+if GSE.isEmpty(ElvUI) then
 	baseFont:SetFont(GameTooltipText:GetFont(), 10)
 elseif LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
   baseFont:SetFont(LibSharedMedia:Fetch('font', ElvUI[1].db.general.font), 10)
@@ -278,7 +278,7 @@ function GSShowTransmissionGui(SequenceName)
 
 	local names = GSSE:getSequenceNames()
 	SequenceListbox:SetList(names)
-  if not GSisEmpty(SequenceName) then
+  if not GSE.isEmpty(SequenceName) then
 		SequenceListbox:SetValue(SequenceName)
 		transSequencevalue = SequenceName
 	end

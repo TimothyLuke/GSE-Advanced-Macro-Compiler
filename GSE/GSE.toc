@@ -42,7 +42,8 @@ Localization\enUSSHADOW.lua
 API\StaticPopup.lua
 API\InitialOptions.lua
 API\StringFunctions.lua
-Storage\Storage.lua
+API\CharacterFunctions.lua
+API\Storage.lua
 API\Translator.lua
 MacroExecution\Core.lua
 

@@ -114,7 +114,7 @@ L["You cannot delete this version of a sequence.  This version will be reloaded 
 -- Editor DEBUG
 L["Selecting tab: "] = true
 L["GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary["] = true
-L["], (GSisEmpty(GSMasterOptions.SequenceLibrary["] = true
+L["], (GSE.isEmpty(GSMasterOptions.SequenceLibrary["] = true
 L["].lang) and GSMasterOptions.SequenceLibrary["] = true
 L["].lang or GetLocale()), key)"] = true
 L["GSSE:loadSequence "] = true

@@ -20,10 +20,10 @@ StaticPopupDialogs["GS-DebugOutput"] = {
   button1 = L["Update"],
   button2 = L["Close"],
   OnAccept = function(self, data)
-      self.editBox:SetText(GSDebugOutput)
+      self.editBox:SetText(GSE.DebugOutput)
   end,
 	OnShow = function (self, data)
-    self.editBox:SetText(GSDebugOutput)
+    self.editBox:SetText(GSE.DebugOutput)
   end,
   timeout = 0,
   whileDead = true,
