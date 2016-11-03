@@ -5,11 +5,10 @@ SOURCE_BRANCH="2.0"
 TARGET_BRANCH="gh-pages"
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
-if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]; then
-    echo "Skipping deploy; just doing a build."
-    doCompile
-    exit 0
-fi
+#if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]; then
+#    echo "Skipping deploy; just doing a build."
+#    exit 0
+#fi
 
 # Save some useful information
 REPO=`git config remote.origin.url`
@@ -46,7 +45,7 @@ git add .
 git commit -m "Deploy to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
-openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv -in deploy_key.enc -out deploy_key -d
+openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv -in ../deploy_key.enc -out deploy_key -d
 chmod 600 deploy_key
 eval `ssh-agent -s`
 ssh-add deploy_key
