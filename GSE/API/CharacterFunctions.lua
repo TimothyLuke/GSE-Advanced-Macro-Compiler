@@ -36,3 +36,13 @@ function GSE.GetSpecNames()
   end
   return keyset
 end
+
+
+function GSE.GetCurrentTalents()
+  local talents = ""
+  for talentTier = 1, MAX_TALENT_TIERS do
+    local available, selected = GetTalentTierInfo(talentTier, 1)
+    talents = talents .. (available and selected or "?" .. ",")
+  end
+  return talents
+end

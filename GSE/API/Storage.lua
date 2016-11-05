@@ -224,7 +224,7 @@ function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
   end
 end
 
-
+--- Load a GSE Sequence Collection from a String
 function GSE.ImportSequence()
   local functiondefinition =  importStr .. [===[
 
@@ -712,4 +712,39 @@ function GSE.getSequenceNames()
   end
   -- Filter Keyset
   return keyset
+end
+
+
+--- Return the Macro Icon for the specified Sequence
+function GSE:GetMacroIcon(sequenceIndex)
+  GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
+  if not GSE.isEmpty(GSGetActiveSequenceVersion(currentSequence)) then
+    if not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+      GSE.PrintDebugMessage(L["Icon: "] .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
+    else
+      GSE.PrintDebugMessage(L["Icon: "] .. L["none"], GNOME)
+    end
+  end
+  local macindex = GetMacroIndexByName(sequenceIndex)
+  local a, iconid, c =  GetMacroInfo(macindex)
+  if not GSE.isEmpty(a) then
+    GSE.PrintDebugMessage(L["Macro Found "] .. a .. L[" with iconid "] .. (GSE.isEmpty(iconid) and L["of no value"] or iconid) .. " " .. (GSE.isEmpty(iconid) and L["with no body"] or c), GNOME)
+  else
+    GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
+  end
+  if GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSE.isEmpty(iconid) then
+    GSE.PrintDebugMessage("SequenceSpecID: " .. GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
+    if GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
+      return "INV_MISC_QUESTIONMARK"
+    else
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSE.GetCurrentSpecID() or GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
+      return strsub(specicon, 17)
+    end
+  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+
+      return GSEOptions.SequenceLibrary[sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
+  else
+      return iconid
+  end
 end

@@ -6,6 +6,9 @@ local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
+
+local recbuttontext = L["Record"]
+
 -- Record Frame
 
 recordframe:SetTitle(L["Record Macro"])
@@ -38,3 +41,22 @@ createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 
 recordframe:AddChild(recButtonGroup)
+
+
+function GSE.GUI.SaveRecordMacro()
+  GSE.GUI.LoadEditor( nil, recordsequencebox:GetText())
+  recordframe:Hide()
+
+end
+
+function GSE.GIU.ManageRecord()
+  if recbuttontext == L["Record"] then
+    GSSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+    recbuttontext = L["Stop"]
+    createmacrobutton:SetDisabled(false)
+  else
+    recbuttontext = L["Record"]
+    GSSE:UnregisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+  end
+  recbutton:SetText(recbuttontext)
+end
