@@ -1,6 +1,9 @@
 local GSE = GSE
 local L = GSE.L
 
+local Statics = GSE.Static
+
+
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
   local currentSpec = GetSpecialization()
@@ -26,9 +29,9 @@ function GSE.isSpecIDForCurrentClass(specID)
 end
 
 
-function GSE.getSpecNames()
+function GSE.GetSpecNames()
   local keyset={}
-  for k,v in pairs(GSSpecIDList) do
+  for k,v in pairs(Statics.SpecIDList) do
     keyset[v] = v
   end
   return keyset

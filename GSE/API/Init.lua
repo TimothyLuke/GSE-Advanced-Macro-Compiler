@@ -10,6 +10,7 @@ GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 GSE.OutputQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
+GSE.GUI = {}
 
 local Statics = GSE.Static
 

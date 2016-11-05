@@ -57,7 +57,7 @@ iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 
 
 
-GSSE.editframe = editframe
+GSE.GUI.editframe = editframe
 
 
 -------------end viewer-------------
@@ -113,12 +113,10 @@ middleColumn:SetWidth(252)
 middleColumn:SetLayout("List")
 
 
-GSSE:getSpecNames()
-
 local speciddropdown = AceGUI:Create("Dropdown")
 speciddropdown:SetLabel(L["Specialisation / Class ID"])
 speciddropdown:SetWidth(250)
-speciddropdown:SetList(GSSE:getSpecNames())
+speciddropdown:SetList(GSE.GetSpecNames())
 speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
 
 local helpeditbox = AceGUI:Create("EditBox")
@@ -213,7 +211,7 @@ editframe:AddChild(editButtonGroup)
 
 -- Slash Commands
 
-GSSE:RegisterChatCommand("gsse", "GSSlash")
+GSE:RegisterChatCommand("gsse", "GSSlash")
 
 function GSSE:SaveRecordMacro()
   GSSE:LoadEditor( nil, recordsequencebox:GetText())
