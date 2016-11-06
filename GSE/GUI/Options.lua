@@ -546,15 +546,12 @@ local OptionsTable = {
 
 
 function GSTtoggleTranslator (boole)
-  if GSTranslatorAvailable then
-    GSEOptions.useTranslator = boole
-  elseif boole then
+  if boole then
     print('|cffff0000' .. GNOME .. L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"])
-  else
-    GSEOptions.useTranslator = boole
   end
+  GSEOptions.useTranslator = boole
   StaticPopup_Show ("GSEConfirmReloadUI")
 end
 
-LibStub("AceConfig-3.0"):RegisterOptionsTable("GSSE", OptionsTable, {"gse"})
-LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSSE", "|cffff0000GS-E:|r Gnome Sequencer - Enhanced")
+LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", OptionsTable, {"gse"})
+LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GS-E:|r Gnome Sequencer - Enhanced")

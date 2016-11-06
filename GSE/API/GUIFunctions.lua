@@ -232,3 +232,12 @@ end
 function  GSE.GUI.SetColour(option, r, g, b)
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
 end
+
+--- This Function enables or disables the Translator Window.
+function GSE.ToggleTranslator (boole)
+  if boole then
+    print('|cffff0000' .. GNOME .. L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"])
+  end
+  GSEOptions.useTranslator = boole
+  StaticPopup_Show ("GSEConfirmReloadUI")
+end
