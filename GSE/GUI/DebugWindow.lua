@@ -1,8 +1,8 @@
-local GSSE = GSSE
+local GSE = GSE
 local GNOME, _ = ...
 
 local AceGUI = LibStub("AceGUI-3.0")
-local L = GSL
+local L = GSE.L
 
 local onpause = false
 
@@ -17,12 +17,12 @@ function GSShowDebugWindow()
 end
 
 
-function GSSE:GUIUpdateOutput()
+function GSE:GUIUpdateOutput()
   GSE.DebugOutputTextbox:SetText(GSE.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
   GSE.DebugOutput = ""
 end
 
-function GSSE:EnableGuiDebugView()
+function GSE:EnableGuiDebugView()
   if GSDebugSequenceEx then
     --Disable
     GSDebugSequenceEx = false
@@ -40,7 +40,7 @@ function GSSE:EnableGuiDebugView()
   end
 end
 
-function GSSE:PauseGuiDebugView()
+function GSE:PauseGuiDebugView()
   if onpause then
     GSDebugPauseViewButton:SetText(L["Pause"])
     self.GUIUpdateTimer = self:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
@@ -52,7 +52,7 @@ function GSSE:PauseGuiDebugView()
   end
 end
 
-function GSSE:OptionsGuiDebugView()
+function GSE:OptionsGuiDebugView()
   local config = LibStub:GetLibrary("AceConfigDialog-3.0")
   config:Open("GSSE")
   --config:SelectGroup("GSSE", "Debug")
