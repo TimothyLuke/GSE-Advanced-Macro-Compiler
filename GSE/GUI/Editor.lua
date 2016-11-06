@@ -36,7 +36,6 @@ transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSeque
 
 local iconpicker = AceGUI:Create("Icon")
 iconpicker:SetLabel(L["Macro Icon"])
---iconpicker:OnClick(MacroPopupButton_SelectTexture(editframe:GetID() + (FauxScrollFrame_GetOffset(MacroPopupScrollFrame) * NUM_ICONS_PER_ROW)))
 iconpicker.frame:RegisterForDrag("LeftButton")
 iconpicker.frame:SetScript("OnDragStart", function()
   if not GSE.isEmpty(currentSequence) then
