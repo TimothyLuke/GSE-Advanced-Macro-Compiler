@@ -26,7 +26,7 @@ Sequences['Ret'] = {
       "/cast Wake of Ashes",
       "/cast Crusader Strike",
       KeyRelease=[[
-      ]]
+      ]],
     },
     [2] = {
       StepFunction = "Priority",
@@ -57,7 +57,7 @@ Sequences['Ret'] = {
       "/cast Crusader Strike",
       KeyRelease=[[
       /cast Hand of Hindrance
-      ]]
+      ]],
     },
     [4] = {
       StepFunction = "Sequential",
@@ -70,7 +70,7 @@ Sequences['Ret'] = {
       PreMacro=[[
       /cast Avenging Wrath
       /cast [talent:5/2]Eye for an Eye
-      ]]
+      ]],
       "/cast [talent:5/1] Justicar's Vengeance",
       "/cast Templar's Verdict",
       "/cast Judgment",
@@ -79,9 +79,9 @@ Sequences['Ret'] = {
       "/cast Crusader Strike",
       PostMacro=[[
       /cast Shield of Vengeance
-      ]]
+      ]],
       KeyRelease=[[
-      ]]
+      ]],
     },
 
   }
