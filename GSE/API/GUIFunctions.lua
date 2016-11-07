@@ -241,3 +241,38 @@ function GSE.ToggleTranslator (boole)
   GSEOptions.useTranslator = boole
   StaticPopup_Show ("GSEConfirmReloadUI")
 end
+
+GSE:RegisterChatCommand("gsse", "GSSlash")
+
+
+
+function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
+  if unit ~= "player" then  return end
+  recordsequencebox:SetText(recordsequencebox:GetText() .. "/cast " .. spell .. "\n")
+end
+
+-- Functions
+
+
+
+function GSE:GSSlash(input)
+    if input == "hide" then
+      frame:Hide()
+    elseif input == "record" then
+      recordframe:Show()
+    elseif input == "debug" then
+      GSE.GUI.ShowDebugWindow()
+    else
+      GSE.GUI.ShowViewer()
+    end
+end
+
+
+
+function GSE:OnInitialize()
+    GSE.GUI.RecordFrame:Hide()
+    GSE.GUI.VersionFrame:Hide()
+    GSE.GUI.EditFrame:Hide()
+    GSE.GUI.Viewframe:Hide()
+    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
+end

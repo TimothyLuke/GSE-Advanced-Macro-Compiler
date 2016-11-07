@@ -55,4 +55,5 @@ GUI\DebugWindow.lua
 GUI\Transmission.lua
 GUI\VersionManagement.lua
 GUI\Viewer.lua
-GUI\Options.ua
+GUI\Options.lua
+API\GUIFuntions.lua

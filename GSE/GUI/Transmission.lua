@@ -1,9 +1,13 @@
-local GSSE = GSSE
+local GSE = GSE
+
+local Statics = GSE.Static
+
+
 local GNOME = GSStaticSourceTransmission
 local GSStaticPrefix = "GS-E"
-local GSEVersion = GetAddOnMetadata("GS-Core", "Version")
+
 local GSold = false
-local L = GSL
+local L = GSE.L
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local AceGUI = LibStub("AceGUI-3.0")
 local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
@@ -13,7 +17,7 @@ local libCE = libC:GetAddonEncodeTable()
 local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
-local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gsse"})
+local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gse"})
 
 local transauthor = GetUnitName("player", true) .. '@' .. GetRealmName()
 local transauthorlen = string.len(transauthor)
@@ -21,46 +25,8 @@ local transauthorlen = string.len(transauthor)
 Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 
 
-GSE.PrintDebugMessage("GS-Core Version " .. GSEVersion, GNOME)
+GSE.PrintDebugMessage("GS-Core Version " .. GSE.VersionString, GNOME)
 
-StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
-	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
-	hasEditBox = 1,
-	OnShow = function(self)
-		self.editBox:SetAutoFocus(false)
-		self.editBox.width = self.editBox:GetWidth()
-		self.editBox:Width(220)
-		self.editBox:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
-		self.editBox:HighlightText()
-		ChatEdit_FocusActiveWindow();
-	end,
-	OnHide = function(self)
-		self.editBox:Width(self.editBox.width or 50)
-		self.editBox.width = nil
-	end,
-	hideOnEscape = 1,
-	button1 = OKAY,
-	EditBoxOnEnterPressed = function(self)
-		ChatEdit_FocusActiveWindow();
-		self:GetParent():Hide();
-	end,
-	EditBoxOnEscapePressed = function(self)
-		ChatEdit_FocusActiveWindow();
-		self:GetParent():Hide();
-	end,
-	EditBoxOnTextChanged = function(self)
-		if(self:GetText() ~= "https://mods.curse.com/addons/wow/gnomesequencer-enhanced") then
-			self:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
-		end
-		self:HighlightText()
-		self:ClearFocus()
-		ChatEdit_FocusActiveWindow();
-	end,
-	OnEditFocusGained = function(self)
-		self:HighlightText()
-	end,
-	showAlert = 1,
-}
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
@@ -73,12 +39,12 @@ local function GSSendMessage(tab, channel, target)
 		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
 		end
   end
-	GSSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
+	GSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
 
 end
 
 local function performVersionCheck(version)
-	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSEVersion)) then
+	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
 		if not GSold then
 		  GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
 		  GSold = true
@@ -89,7 +55,7 @@ local function performVersionCheck(version)
 	end
 end
 
-function GSEncodeMessage(Sequence)
+function GSE.EncodeMessage(Sequence)
   --clean sequence
   eSequence = GSTRUnEscapeSequence(Sequence)
   --remove version and source
@@ -104,7 +70,7 @@ function GSEncodeMessage(Sequence)
   return final
 end
 
-function GSDecodeMessage(data)
+function GSE.DecodeMessage(data)
   -- Decode the compressed data
   local one = libCE:Decode(data)
 
@@ -126,13 +92,13 @@ function GSDecodeMessage(data)
   return success, final
 end
 
-function GSTransmitSequence(SequenceName, channel, target)
+function GSE.TransmitSequence(SequenceName, channel, target)
   local t = {}
 	t.Command = "GS-E_TRANSMITSEQUENCE"
 	t.SequenceName = SequenceName
 	t.Sequence = GSEOptions.SequenceLibrary[SequenceName][GSGetActiveSequenceVersion(SequenceName)]
 	GSSendMessage(t, channel, target)
-	GSSE.transmissionframe:SetStatusText(SequenceName .. L[" sent"])
+	GSE.GUI.TranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
 local function ReceiveSequence(SequenceName, Sequence, sender)
@@ -144,7 +110,7 @@ local function ReceiveSequence(SequenceName, Sequence, sender)
 end
 
 
-function GSSE:OnCommReceived(prefix, message, distribution, sender)
+function GSE:OnCommReceived(prefix, message, distribution, sender)
   GSE.PrintDebugMessage("GSSE:onCommReceived", GNOME)
   GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
   local success, t = GSDecodeMessage(message)
@@ -169,18 +135,18 @@ local function sendVersionCheck()
 		local _, instanceType = IsInInstance()
 	  local t = {}
 	  t.Command = "GS-E_VERSIONCHK"
-	  t.Version = GSEVersion
+	  t.Version = GSE.VersionString
 	  GSSendMessage(t)
 	end
 end
 
-function GSSE:GROUP_ROSTER_UPDATE(...)
+function GSE:GROUP_ROSTER_UPDATE(...)
 	sendVersionCheck()
 end
 
 
-GSSE:RegisterComm("GS-E")
-GSSE:RegisterEvent("GROUP_ROSTER_UPDATE")
+GSE:RegisterComm("GS-E")
+GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 local baseFont = CreateFont("baseFont")
 
 -- CHeck for ElvUI
@@ -241,6 +207,7 @@ tranmissionFrame:SetLayout("List")
 tranmissionFrame:SetWidth(290)
 tranmissionFrame:SetHeight(190)
 tranmissionFrame:Hide()
+GSE.GUI.TranmissionFrame = transmissionframe
 
 local SequenceListbox = AceGUI:Create("Dropdown")
 SequenceListbox:SetLabel(L["Load Sequence"])
@@ -260,28 +227,26 @@ sendbutton:SetWidth(250)
 sendbutton:SetCallback("OnClick", function() GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
-GSSE.transmissionframe = tranmissionFrame
-
 function GSShowTransmissionGui(SequenceName)
-  if GSSE.viewframe:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.viewframe:GetPoint()
-	--	GSSE.transmissionframe:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
+  if GSE.GUI.ViewFrame:IsVisible() then
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.viewframe:GetPoint()
+	--	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+		GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
 	end
-	if GSSE.editframe:IsVisible() then
-		local point, relativeTo, relativePoint, xOfs, yOfs = GSSE.editframe:GetPoint()
-	--	GSSE.transmissionframe:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-		GSSE.transmissionframe:SetPoint(point, xOfs + 500, yOfs + 155)
+	if GSE.GUI.EditFrame:IsVisible() then
+		local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
+	--	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+		GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
 	end
 
-	local names = GSSE:getSequenceNames()
+	local names = GSE.getSequenceNames()
 	SequenceListbox:SetList(names)
   if not GSE.isEmpty(SequenceName) then
 		SequenceListbox:SetValue(SequenceName)
 		transSequencevalue = SequenceName
 	end
 	tranmissionFrame:Show()
-	GSSE.transmissionframe:SetStatusText(L["Ready to Send"])
+	GSE.GUI.TranmissionFrame:SetStatusText(L["Ready to Send"])
 end

@@ -748,3 +748,23 @@ function GSE:GetMacroIcon(sequenceIndex)
       return iconid
   end
 end
+
+
+function GSE.ListUnloadedAddons()
+  local returnVal = "";
+  for k,v in pairs(GSE.UnloadedAddInPacks) do
+    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
+  end
+  return returnVal
+end
+
+
+function GSE.ListAddons()
+  local returnVal = "";
+  for k,v in pairs(GSE.AddInPacks) do
+    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
+  end
+  return returnVal
+end

@@ -10,6 +10,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 
 local viewframe = AceGUI:Create("Frame")
+GSE.GUI.ViewFrame = viewframe
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
@@ -75,7 +76,7 @@ function GSE.GUI.DrawStandardViewerWindow(container)
   local recordwindowbutton = AceGUI:Create("Button")
   recordwindowbutton:SetText(L["Record Macro"])
   recordwindowbutton:SetWidth(150)
-  recordwindowbutton:SetCallback("OnClick", function() frame:Hide(); recordframe:Show() end)
+  recordwindowbutton:SetCallback("OnClick", function() viewframe:Hide(); recordframe:Show() end)
   buttonGroup:AddChild(recordwindowbutton)
 
   container:AddChild(buttonGroup)
@@ -120,7 +121,7 @@ end
 
 viewframe:SetTitle(L["Sequence Viewer"])
 viewframe:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
-viewframe:SetCallback("OnClose", function(widget) frame:Hide() end)
+viewframe:SetCallback("OnClose", function(widget) viewframe:Hide() end)
 viewframe:SetLayout("List")
 
 

@@ -3,7 +3,7 @@ GSE = LibStub("AceAddon-3.0"):NewAddon("GSE", "AceConsole-3.0", "AceEvent-3.0", 
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 
-GSE.versionString = GetAddOnMetadata("GSE", "Version");
+GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 

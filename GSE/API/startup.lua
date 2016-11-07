@@ -40,24 +40,3 @@ for i=1,GetNumAddOns() do
     end
 
 end
-
-
-
-function GSListUnloadedAddons()
-  local returnVal = "";
-  for k,v in pairs(GSE.UnloadedAddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
-
-
-function GSListAddons()
-  local returnVal = "";
-  for k,v in pairs(GSE.AddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end

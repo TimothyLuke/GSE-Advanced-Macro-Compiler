@@ -6,7 +6,8 @@ local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
-
+local recordframe = AceGUI:Create("Frame")
+GSE.GUI.RecordFrame = recordframe
 local recbuttontext = L["Record"]
 
 -- Record Frame

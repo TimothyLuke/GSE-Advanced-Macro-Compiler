@@ -434,7 +434,7 @@ local OptionsTable = {
           --name = "Registered Sequence Addin Packs",
           --desc = "You can create and loadin Sequence Packs.",
           type = "description",
-          name = GSListAddons(),
+          name = GSE.ListAddons(),
           order = 1000,
         },
         unloadedtitle3 = {
@@ -446,7 +446,7 @@ local OptionsTable = {
           --name = "Registered Sequence Addin Packs",
           --desc = "You can create and loadin Sequence Packs.",
           type = "description",
-          name = GSListUnloadedAddons(),
+          name = GSE.ListUnloadedAddons(),
           order = 1200,
         },
 

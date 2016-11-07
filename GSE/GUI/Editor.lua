@@ -14,7 +14,8 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 
 local editframe = AceGUI:Create("Frame")
-local recordframe = AceGUI:Create("Frame")
+GSE.GUI.EditFrame = editframe
+
 
 
 local boxes = {}
@@ -80,7 +81,7 @@ firstheadercolumn:SetLayout("List")
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
-editframe:SetCallback("OnClose", function (self) editframe:Hide();  frame:Show(); end)
+editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUI.ViewFrame:Show(); end)
 editframe:SetLayout("List")
 
 local nameeditbox = AceGUI:Create("EditBox")
@@ -209,38 +210,3 @@ editframe:AddChild(editButtonGroup)
 -------------end editor-----------------
 
 -- Slash Commands
-
-GSE:RegisterChatCommand("gsse", "GSSlash")
-
-
-
-function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
-  if unit ~= "player" then  return end
-  recordsequencebox:SetText(recordsequencebox:GetText() .. "/cast " .. spell .. "\n")
-end
-
--- Functions
-
-
-
-function GSE:GSSlash(input)
-    if input == "hide" then
-      frame:Hide()
-    elseif input == "record" then
-      recordframe:Show()
-    elseif input == "debug" then
-      GSShowDebugWindow()
-    else
-      GSGuiShowViewer()
-    end
-end
-
-
-
-function GSE:OnInitialize()
-    recordframe:Hide()
-    versionframe:Hide()
-    editframe:Hide()
-    frame:Hide()
-    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
-end
