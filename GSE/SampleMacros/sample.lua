@@ -4,7 +4,7 @@ Sequences['Ret'] = {
   icon='INV_MISC_QUESTIONMARK',
   lang="enUS",
   talents="1112111",
-  helplink="https://wowlazymacros.com/forums/topic/tls-ret-macro/"
+  helplink="https://wowlazymacros.com/forums/topic/tls-ret-macro/",
   default=1,
   raid=2,
   pvp=3,
@@ -13,8 +13,8 @@ Sequences['Ret'] = {
     [1] = {
       StepFunction = "Priority",
       SoundErrorPrevention=true,
-      Trinket1=true;
-      Trinket2=true;
+      Trinket1=true,
+      Trinket2=true,
       KeyPress=[[
       /targetenemy [noharm][dead]
       /cast Avenging Wrath
@@ -44,7 +44,7 @@ Sequences['Ret'] = {
     [3] = {
       StepFunction = "Priority",
       reset="target",
-      Head=true;
+      Head=true,
       KeyPress=[[
       /targetenemy [noharm][dead]
       /cast Avenging Wrath
