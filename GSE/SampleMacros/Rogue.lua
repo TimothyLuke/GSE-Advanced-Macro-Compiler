@@ -20,7 +20,7 @@ Sequences['SAM_Outlaw'] = {
 specID = 260,
 author = "Suiseiseki - www.wowlazymacros.com",
 helpTxt = "Outlaw - 1223122",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth
@@ -76,7 +76,7 @@ icon='Ability_Stealth',
 }
 
 Sequences['SAM_DRoutlaw'] = {
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 author="Druccy",
 specID=260,
 helpTxt="Talents - 1232232",
@@ -102,7 +102,7 @@ Sequences['SAM_TLAssassin'] = {
 author="Todd Livengood - wowlazymacros.com",
 specID=259,
 helpTxt = 'Talents: 3233332',
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress=[[
 /targetenemy [noharm][dead]
 /cast [nostealth,nocombat]Stealth

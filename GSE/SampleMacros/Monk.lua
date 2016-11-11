@@ -36,7 +36,7 @@ Sequences['SAM_winsingle'] = {
 specID = 269,
 author = "lloskka",
 helpTxt = "Talents 2 3 2 3 2 2 3",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [combat] Touch of Karma

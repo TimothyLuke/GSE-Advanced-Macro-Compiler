@@ -35,7 +35,7 @@ Sequences['SAM_enhsingle'] = {
 specID = 263,
 author = "lloskka",
 helpTxt = "Talents  3112112 - Artifact Order: Doom Winds �> Hammer of Storms �> Gathering Storms �> Wind Strikes �> Wind Surge �> Weapons of the elements �> Elemental Healing �> and all the way to Unleash Doom",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
@@ -92,7 +92,7 @@ Sequences['SAM_ElemAoE'] = {
 specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
@@ -109,7 +109,7 @@ Sequences['SAM_Elem'] = {
 specID = 262,
 author = "Nano",
 helpTxt = 'Talents: 1213112',
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],

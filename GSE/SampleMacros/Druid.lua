@@ -19,7 +19,7 @@ Sequences['SAM_bear1'] = {
 specID = 104,
 author = "John Mets www.wowlazymacros.com",
 helpTxt = " Talents: 2331111",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
@@ -71,7 +71,7 @@ Sequences['SAM_Feral-ST'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form
@@ -90,7 +90,7 @@ Sequences['SAM_Feral-AoE'] = {
 specID = 103,
 author = "Jimmy www.wowlazymacros.com",
 helpTxt = "2231123",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
  KeyPress = [[
 /targetenemy [noharm][dead]
 /castsequence [@player,nostance:2] Cat Form
@@ -181,7 +181,7 @@ Sequences["SAM_druid_bala_st"] = {
 specID = 102,
 author="someone",
 helpTxt = "3333132 CTRL Blessing of the Ancients, Shift Celestial Alignment, Alt Solar Beam",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [noform]!Moonkin Form

@@ -16,7 +16,7 @@ Sequences['SAM_Blood'] = {
 specID = 250,
 author = "John Mets",
 helpTxt = "As for talents (2212213) but does run real smooth if you have Heartbreaker, Soulgorge and Ossuary.",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /Cast [combat] Vampiric Blood
 /Cast [combat] Dancing Rune Weapon
@@ -36,7 +36,7 @@ Sequences['SAM_DBFrost'] = {
 specID = 251,
 author = "Suiseiseki",
 helpTxt = "Talents: 2132113",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /use [combat] Obliteration
 /use [combat] Pillar Of Frost
@@ -54,7 +54,7 @@ Sequences['SAM_FDK2'] = {
 specID = 251,
 author = "Tazkilla",
 helpTxt = "Talents:1111131",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /cast [combat] Pillar of Frost
 /cast [combat] Anti-Magic Shell
@@ -73,7 +73,7 @@ Sequences['SAM_DF'] = {
 specID = 251,
 author = "John Mets",
 helpTxt = "Talents 2133121",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /cast [combat] Pillar of Frost
 ]],
@@ -110,7 +110,7 @@ KeyRelease = [[
 }
 
 Sequences['SAM_BloodDK'] = {
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 specID = 250,
 author = "Owns",
 helpTxt = "Talents 2112333",

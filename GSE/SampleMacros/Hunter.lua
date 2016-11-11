@@ -19,7 +19,7 @@ Sequences['SAM_BMsingle'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
@@ -44,7 +44,7 @@ Sequences['SAM_BMaoe'] = {
 specID = 253,
 author = "Jimmy Boy Albrecht",
 helpTxt = "AoE - Talent: 3111323",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /startattack
@@ -69,7 +69,7 @@ Sequences['SAM_SurvivelH'] = {
 specID = 255,
 author = "Jimmy Boy Albrecht",
 helpTxt = "Single Target - Talent: 3111323",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
@@ -87,7 +87,7 @@ Sequences['SAM_Mm_ST'] = {
 specID = 254,
 author = "emanuel",
 helpTxt = "Single Target - Talent: 3312123",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /cast Trueshot
@@ -108,7 +108,7 @@ Sequences['SAM_BM_ST'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "Single Target Talent 3311313",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
@@ -130,7 +130,7 @@ Sequences['SAM_BMAOE'] = {
 specID = 253,
 author = "Nano",
 helpTxt = "BMAOE Talent 3311313",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /petautocastoff [group] Growl
@@ -238,7 +238,7 @@ Sequences['SAM_BMH'] = {
 specID = 253,
 author = "Moonfale",
 helpTxt = "Single Target - Talent: 3322313",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 /cast [@pet,dead]Heart of the Phoenix

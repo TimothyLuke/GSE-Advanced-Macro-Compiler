@@ -240,3 +240,5 @@ Statics.TranslationShadow = "SHADOW"
 Statics.Spec = "Spec"
 Statics.Class = "Class"
 Statics.All = "All"
+
+Static.SampleMacros = {}

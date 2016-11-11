@@ -17,7 +17,7 @@ Sequences['SAM_DHHavoc'] = {
 specID = 577,
 author = "Nano",
 helpTxt = "Talents 2,3,2,2,2,3,1,",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
@@ -40,7 +40,7 @@ Sequences['SAM_havocsingle'] = {
 specID = 577,
 author = "lloskka",
 helpTxt = "Talents 2,3,1,2,2,3,1",
-StepFunction = GSStaticPriority,
+StepFunction = "Priority",
 KeyPress = [[
 /targetenemy [noharm][dead]
 ]],
