@@ -778,6 +778,12 @@ function GSE.ConvertLegacySequence(sequence)
   if not GSE.isEmpty(sequence.specID) then
     returnSequence.SpecID = sequence.SpecID
   end
+  if not GSE.isEmpty(sequence.author) then
+    returnSequence.Author = sequence.author
+  end
+  if not GSE.isEmpty(sequence.authorversion) then
+    returnSequence.AuthorVersion = sequence.authorversion
+  end
   if not GSE.isEmpty(sequence.helpTxt) then
     returnSequence.Help = sequence.helpTxt
   end
