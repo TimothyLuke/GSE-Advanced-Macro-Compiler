@@ -1,12 +1,9 @@
-------------------------------------------------------------------------------------------
--- Dont edit this file.  It is regularily update when GS-E is updated and any
--- changes you have made may be lost.  Instead either use the GS-myMacros
--- plugin from http://www.wowinterface.com/downloads/info24062-GS-EmyMacrosAddinPack.html
--- or see the wiki on creating Macro Plugins
--- https://github.com/TimothyLuke/GnomeSequenced-Enhanced/wiki/Creating-Addon-Packs
-------------------------------------------------------------------------------------------
+local GSE = GSE
+local Statics = GSE.Static
 
-local GNOME, Sequences = ...
+Statics.SampleMacros[11] = {}
+
+local Sequences = Statics.SampleMacros[11]
 
 ------------------
 ----- Druid
