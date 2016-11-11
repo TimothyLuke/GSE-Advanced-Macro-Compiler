@@ -112,7 +112,7 @@
 <table class="function_list">
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.AddSequenceToCollection">GSE.AddSequenceToCollection</a>&nbsp;(sequenceName, sequence, version)</td>
+	<td class="name" nowrap><a href="#GSE.AddSequenceToCollection">GSE.AddSequenceToCollection</a>&nbsp;(sequenceName, sequence)</td>
 	<td class="summary">Add a sequence to the library </td>
 	</tr>
 
@@ -207,8 +207,23 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.ListAddons">GSE.ListAddons</a>&nbsp;()</td>
+	<td class="summary">List addons that GSE knows about that have been enabled </td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.ListSequences">GSE.ListSequences</a>&nbsp;(txt)</td>
 	<td class="summary">This funciton lists all sequences that are cirrently known </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.ListUnloadedAddons">GSE.ListUnloadedAddons</a>&nbsp;()</td>
+	<td class="summary">List addons that GSE knows about that have been disabled </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.LoadSampleMacros">GSE.LoadSampleMacros</a>&nbsp;(classID)</td>
+	<td class="summary">Load in the sample macros for the current class.</td>
 	</tr>
 
 	<tr>
@@ -269,7 +284,7 @@
 
 
 
-<dt><a name="GSE.AddSequenceToCollection"></a><strong>GSE.AddSequenceToCollection</strong>&nbsp;(sequenceName, sequence, version)</dt>
+<dt><a name="GSE.AddSequenceToCollection"></a><strong>GSE.AddSequenceToCollection</strong>&nbsp;(sequenceName, sequence)</dt>
 <dd>
 Add a sequence to the library
 
@@ -283,10 +298,6 @@ Add a sequence to the library
 	
 	<li>
 	  sequence: 
-	</li>
-	
-	<li>
-	  version: 
 	</li>
 	
 </ul>
@@ -773,6 +784,23 @@ Load a GSE Sequence Collection from a String
 
 
 
+<dt><a name="GSE.ListAddons"></a><strong>GSE.ListAddons</strong>&nbsp;()</dt>
+<dd>
+List addons that GSE knows about that have been enabled
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.ListSequences"></a><strong>GSE.ListSequences</strong>&nbsp;(txt)</dt>
 <dd>
 This funciton lists all sequences that are cirrently known
@@ -783,6 +811,49 @@ This funciton lists all sequences that are cirrently known
 	
 	<li>
 	  txt: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.ListUnloadedAddons"></a><strong>GSE.ListUnloadedAddons</strong>&nbsp;()</dt>
+<dd>
+List addons that GSE knows about that have been disabled
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.LoadSampleMacros"></a><strong>GSE.LoadSampleMacros</strong>&nbsp;(classID)</dt>
+<dd>
+Load in the sample macros for the current class.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  classID: 
 	</li>
 	
 </ul>
