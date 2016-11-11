@@ -339,4 +339,6 @@ L["Stop"] = true
 
 -- 2.0
 L["The Custom StepFunction Specified is not recognised and has been ignored."] = true
+L["Load"] = true
+L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"]= true
 --@end-do-not-package@

@@ -243,6 +243,9 @@ local function processAddonLoaded()
       end
     end
   end
+  if GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()]) then
+    StaticPopup_Show ("GSE-SampleMacroDialog")
+  end
   GSE.PrintDebugMessage(L["I am loaded"])
   GSE.ReloadSequences()
   GSE:SendMessage(Statics.CoreLoadedMessage)

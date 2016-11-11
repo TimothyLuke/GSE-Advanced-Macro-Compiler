@@ -2,7 +2,7 @@ local GSE = GSE
 local L = GSE.L
 
 
-StaticPopupDialogs["GSEConfirmReloadUI"] = {
+StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
   text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],
   button1 = L["Yes"],
   button2 = L["No"],
@@ -33,7 +33,7 @@ StaticPopupDialogs["GS-DebugOutput"] = {
 }
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
-	text = L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
+	text = L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
 	hasEditBox = 1,
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
@@ -69,4 +69,18 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 		self:HighlightText()
 	end,
 	showAlert = 1,
+}
+
+
+StaticPopupDialogs["GSE-SampleMacroDialog"] = {
+  text = L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"],
+  button1 = L["Load"],
+  button2 = L["Close"],
+  OnAccept = function(self, data)
+      GSE.LoadSampleMacros(GSE.GetCurrentClassID())
+  end,
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
