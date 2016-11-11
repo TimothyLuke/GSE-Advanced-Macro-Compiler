@@ -117,7 +117,7 @@ Sequences['SAM_DemoSingle'] = {
         "/targetenemy [noharm][dead]",
         "/petattack [@target,harm]",
         "/targetenemy [noharm][dead]",
-      ]],
+      },
       '/castsequence [combat] Call Dreadstalkers, Demonic Empowerment',
       '/castsequence [combat] Summon Doomguard, Demonic Empowerment' ,
       '/castsequence [combat] Grimoire: Felguard, Demonic Empowerment',
