@@ -13,31 +13,32 @@ local Sequences = Statics.SampleMacros[11]
 --Balance 102
 
 Sequences['SAM_Bear'] = {
-SpecID = 104,
-Author = "John Mets www.wowlazymacros.com",
-Talents = "2,3,3,1,1,1,1",
-Default=1,
-MacroVersions = {
-  [1] = {
-    KeyPress = {
-      "/targetenemy [noharm][dead]",
+  SpecID = 104,
+  Author = "John Mets www.wowlazymacros.com",
+  Talents = "2,3,3,1,1,1,1",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      StepFunction = "Priority",
+      "/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
+      "/castsequence reset=combat Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Ironfur",
+      "/cast Survival Instincts",
+      "/cast Thrash",
+      "/castsequence reset=combat Swipe, Moonfire, Maul, Mangle, Ironfur",
+      "/cast Pulverize",
+      "/cast Incapacitating Roar",
+      "/cast [combat] Barkskin",
+      "/cast [combat] Mighty Bash",
+      "/cast [combat] Berserk",
+      "/castsequence Cenarion ward",
+      KeyRelease={
+        "/startattack",
+      },
     },
-    StepFunction = "Priority",
-    "/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
-    "/castsequence reset=combat Savage Defense, Swipe, Swipe, Savage Defense ,Frenzied Regeneration, Ironfur",
-    "/cast Survival Instincts",
-    "/cast Thrash",
-    "/castsequence reset=combat Swipe, Moonfire, Maul, Mangle, Ironfur",
-    "/cast Pulverize",
-    "/cast Incapacitating Roar",
-    "/cast [combat] Barkskin",
-    "/cast [combat] Mighty Bash",
-    "/cast [combat] Berserk",
-    "/castsequence Cenarion ward",
-    KeyRelease={
-      "/startattack",
-    },
-  },
+  }
 }
 
 Sequences['SAM_Feral-ST'] = {

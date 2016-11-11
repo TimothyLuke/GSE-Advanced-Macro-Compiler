@@ -82,20 +82,22 @@ Sequences['SAM_Mm_ST'] = {
     [1] = {
       KeyPress = {
         "/targetenemy [noharm][dead]",
+        "/cast Trueshot"
       },
-  /cast Trueshot
-  ]],
-  '/cast !A Murder of Crows',
-  '/cast !Arcane Shot',
-  '/cast !Marked Shot',
-  '/cast !Aimed Shot',
-  '/cast !Bursting Shot',
-  '/cast !Black Arrow',
-  KeyRelease = [[
-  /startattack
-  /petattack
-  ]],
+      '/cast !A Murder of Crows',
+      '/cast !Arcane Shot',
+      '/cast !Marked Shot',
+      '/cast !Aimed Shot',
+      '/cast !Bursting Shot',
+      '/cast !Black Arrow',
+      KeyRelease = {
+        "/startattack",
+        "/petattack",
+      },
+    }
+  }
 }
+
 
 Sequences['SAM_Marks_AOE'] = {
   Author='Nano',
