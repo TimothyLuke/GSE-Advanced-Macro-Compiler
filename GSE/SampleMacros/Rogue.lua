@@ -32,7 +32,6 @@ Sequences['SAM_Assassin'] = {
       "/cast Exsanguinate",
       "/cast Envenom",
       "/cast Mutilate",
-      }
     }
   }
 }

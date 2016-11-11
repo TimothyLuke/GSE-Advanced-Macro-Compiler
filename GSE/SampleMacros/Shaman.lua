@@ -51,7 +51,6 @@ Sequences['SAM_RestoDeeps'] = {
       '/cast Lava Burst',
       '/cast Lightning Bolt',
       '/cast Lightning Surge Totem',
-      }
     }
   }
 }
