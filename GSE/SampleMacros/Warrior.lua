@@ -68,7 +68,7 @@ Sequences['SAM_FuryAOE'] = {
       StepFunction = "Priority",
       KeyPress = {
         "/targetenemy [noharm][dead]",
-        "/startattack"
+        "/startattack",
         "/cast [modifier:alt]Charge",
         "/cast [combat] Bloodbath",
         "/cast [combat] Avatar",

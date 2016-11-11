@@ -44,7 +44,7 @@ Sequences['SAM_RestoDeeps'] = {
     [1] = {
       KeyPress = {
         "/targetenemy [noharm][dead]",
-      ]],
+      },
       '/cast Chain Lightning',
       '/cast Flame Shock',
       '/cast Earthen Shield Totem',

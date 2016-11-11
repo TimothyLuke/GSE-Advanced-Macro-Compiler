@@ -11,134 +11,115 @@ local Sequences = Statics.SampleMacros[5]
 
 
 Sequences['SAM_ShadowPriest'] = {
-specID = 258,
-author = "Jimmy",
-helpTxt = "unknown Talents",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-"/castsequence [nochanneling] reset=12 Shadow Word: Pain,Vampiric Touch",
-"/castsequence [nochanneling] Mind Spike,Mind Blast,Mind Spike",
-"/cast [nochanneling] Mind Sear",
-KeyRelease = [[
-/startattack
-]],
-}
-
-Sequences['SAM_DiscDeeps'] = {
-specID = 256,
-author = "Draik",
-helpTxt = "Talents 3113131",
-icon = "Ability_Mage_FireStarter",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/cast Smite',
-'/cast [nochanneling] Penance',
-'/cast Halo',
-'/cast Holy Nova',
-'/cast Purge the Wicked',
-'/cast Mindbender',
-'/cast Schism',
-'/cast Shining Force',
-KeyRelease = [[
-/startattack
-]],
-}
-
-Sequences['SAM_KTN_DiscDeeps'] = {
-specID = 256,
-author = "KTN",
-helpTxt = "Talents 3213131 - Set yourself as Focus.  ALso use the SAM_KTN_Mouseover macro for some out of combat/dont pull things healing",
-icon = "Ability_Mage_FireStarter",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/cast [@focus] Power Word: Shield',
-'/cast Smite',
-'/cast [nochanneling] Penance',
-'/cast Halo',
-'/cast Holy Nova',
-'/cast Purge the Wicked',
-'/cast Mindbender',
-'/cast Schism',
-'/cast Shining Force',
-KeyRelease = [[
-/startattack
-/castsequence [target=mouseover,help,nodead][] Plea, Shadow Mend
-]],
+  SpecID = 258,
+  Author = "Jimmy",
+  Talents = "1,1,1,1,1,1,2",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      "/castsequence [nochanneling] reset=12 Shadow Word: Pain,Vampiric Touch",
+      "/castsequence [nochanneling] Mind Spike,Mind Blast,Mind Spike",
+      "/cast [nochanneling] Mind Sear",
+      KeyRelease = {
+        "/startattack"
+      },
+    }
+  }
 }
 
 Sequences['SAM_KTN_MouseOver'] = {
-specID = 5,
-author = "KTN",
-helpTxt = "Talents 3213131",
-'/castsequence [target=mouseover,help,nodead] Power Word: Shield, Plea, Shadow Mend, Shadow Mend',
+  SpecID = 5,
+  Author = "KTN",
+  Talents = "3,2,1,3,1,3,1",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      '/castsequence [target=mouseover,help,nodead] Power Word: Shield, Plea, Shadow Mend, Shadow Mend',
+    }
+  }
 }
 
-
 Sequences['SAM_HolyPriesty'] = {
-specID = 257,
-author = "Draik",
-helpTxt = "Talents 3121133",
-icon = "Ability_Priest_Archangel",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/cast Smite',
-'/cast Holy Fire',
-'/cast Halo',
-'/cast Holy Nova',
-'/cast Holy Word: Chastise',
-KeyRelease = [[
-/startattack
-]],
+  SpecID = 257,
+  Author = "Draik",
+  helpTxt = "Talents 3121133",
+  Icon = "Ability_Priest_Archangel",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      '/cast Smite',
+      '/cast Holy Fire',
+      '/cast Halo',
+      '/cast Holy Nova',
+      '/cast Holy Word: Chastise',
+      KeyRelease = {
+        "/startattack",
+      },
+    }
+  }
 }
 
 Sequences['SAM_Disc-THeal'] = {
-specID = 256,
-author = "Zole",
-helpTxt = "Heal Target - Talent: 2113121",
-icon = "Ability_Priest_Atonement",
-KeyPress = [[
-]],
-'/cast [nochanneling] Power Word: Shield',
-'/castsequence [nochanneling] Plea,Shadow Mend,Shadow Mend',
-'/castsequence [target=targettarget][nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
-'/cast [target=targettarget] Penance',
-'/cast [combat][nochanneling] Mindbender',
-'/cast [target=targettarget][nochanneling] Divine Star',
+  SpecID = 256,
+  Author = "Zole",
+  helpTxt = "Heal Target - Talent: 2113121",
+  Icon = "Ability_Priest_Atonement",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      '/cast [nochanneling] Power Word: Shield',
+      '/castsequence [nochanneling] Plea,Shadow Mend,Shadow Mend',
+      '/castsequence [target=targettarget][nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+      '/cast [target=targettarget] Penance',
+      '/cast [combat][nochanneling] Mindbender',
+      '/cast [target=targettarget][nochanneling] Divine Star',
+    }
+  }
 }
 
 Sequences['SAM_Disc-TDPS'] = {
-specID = 256,
-author = "Zole",
-helpTxt = "Dps Target - Talent: 2113121",
-icon = "Ability_Priest_Atonement",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/cast [nochanneling][@targettarget] Power Word: Shield',
-'/castsequence [nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
-'/cast Penance',
-'/cast [combat][nochanneling] Mindbender',
-'/cast [nochanneling] Divine Star',
-KeyRelease = [[
-/startattack
-]],
+  SpecID = 256,
+  Author = "Zole",
+  helpTxt = "Dps Target - Talent: 2113121",
+  Icon = "Ability_Priest_Atonement",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      '/cast [nochanneling][@targettarget] Power Word: Shield',
+      '/castsequence [nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+      '/cast Penance',
+      '/cast [combat][nochanneling] Mindbender',
+      '/cast [nochanneling] Divine Star',
+      KeyRelease = {
+        "/startattack",
+      },
+    }
+  }
 }
 
 Sequences['SAM_Disc-THealAoe'] = {
-specID = 256,
-author = "Zole",
-helpTxt = "AoE Heal Target - Talent: 2113121",
-icon = "Ability_Mage_FireStarter",
-KeyPress = [[
-]],
-'/cast [nochanneling] Power Word: Shield',
-'/castsequence reset=/target[nochanneling] Power Word: Radiance,Plea',
-'/castsequence [target=targettarget][nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
-'/cast [target=targettarget] Penance',
-'/cast [combat][nochanneling] Mindbender',
-'/cast [target=targettarget][nochanneling] Divine Star',
+  SpecID = 256,
+  Author = "Zole",
+  helpTxt = "AoE Heal Target - Talent: 2113121",
+  Icon = "Ability_Mage_FireStarter",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      '/cast [nochanneling] Power Word: Shield',
+      '/castsequence reset=/target[nochanneling] Power Word: Radiance,Plea',
+      '/castsequence [target=targettarget][nochanneling]reset=/target Purge the Wicked,Smite,Smite,Smite,Smite,Smite',
+      '/cast [target=targettarget] Penance',
+      '/cast [combat][nochanneling] Mindbender',
+      '/cast [target=targettarget][nochanneling] Divine Star',
+    }
+  }
 }
