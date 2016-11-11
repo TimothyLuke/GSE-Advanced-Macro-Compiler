@@ -337,5 +337,6 @@ L["Pause"] = true
 L["Create Macro"] = true
 L["Stop"] = true
 
-
+-- 2.0
+L["The Custom StepFunction Specified is not recognised and has been ignored."] = true
 --@end-do-not-package@

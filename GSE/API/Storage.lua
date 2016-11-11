@@ -225,8 +225,8 @@ function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
 end
 
 --- Load a GSE Sequence Collection from a String
-function GSE.ImportSequence()
-  local functiondefinition =  importStr .. [===[
+function GSE.ImportSequence(importStr)
+  local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
 
   return Sequences
   ]===]
@@ -388,12 +388,12 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   return returnVal
 end
 
---- This function performs any actions to clean up common syntax errors
-function GSE.FixSequence(sequence)
-  for k,v in pairs(GSStaticCleanStrings) do
+--- This function performs any actions to clean up common syntax errors in Legacy GSE1 Sequences
+function GSE.FixLegacySequence(sequence)
+  for k,v in pairs(Statics.CleanStrings) do
     GSE.PrintDebugMessage(L["Testing String: "] .. v, GNOME)
-    if not GSE.isEmpty(sequence.KeyPress) then sequence.KeyPress = string.gsub(sequence.KeyPress, v, "") end
-    if not GSE.isEmpty(sequence.KeyRelease) then sequence.KeyRelease = string.gsub(sequence.KeyRelease, v, "") end
+    if not GSE.isEmpty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
+    if not GSE.isEmpty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
   end
 end
 
@@ -767,4 +767,60 @@ function GSE.ListAddons()
     returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
   end
   return returnVal
+end
+
+
+--- This converts a legacy GS/GSE1 sequence to a new GSE2
+function GSE.ConvertLegacySequence(sequence)
+  GSE.FixLegacySequence(sequence)
+  local GSStaticPriority = Statics.PriorityImplementation
+  local returnSequence= {}
+  if not GSE.isEmpty(sequence.specID) then
+    returnSequence.SpecID = sequence.SpecID
+  end
+  if not GSE.isEmpty(sequence.helpTxt) then
+    returnSequence.Help = sequence.helpTxt
+  end
+  if not GSE.isEmpty(sequence.lang) then
+    returnSequence.Lang = sequence.lang
+  end
+  returnSequence.Default = 1
+  returnSequence.MacroVersions = {}
+  returnSeq.MacroVersions[1] = {}
+  if not GSE.isEmpty(sequence.PreMacro) then
+    returnSeq.MacroVersions[1].KeyPress = GSE.SplitMeIntolines(sequence.PreMacro)
+  end
+  if not GSE.isEmpty(sequence.PostMacro) then
+    returnSeq.MacroVersions[1].KeyRelease = GSE.SplitMeIntolines(sequence.PostMacro)
+  end
+  if not GSE.isEmpty(sequence.StepFunction) then
+    if Sequence.StepFunction == GSStaticPriority then
+      returnSeq.MacroVersions[1].StepFunction = Statics.Priority
+    elseif GSE.isEmpty(sequence.StepFunction) then
+      GSE.Print(L["The Custom StepFunction Specified is not recognised and has been ignored."], GNOME)
+      returnSeq.MacroVersions[1].StepFunction = Statics.Sequential
+    end
+  else
+    returnSeq.MacroVersions[1].StepFunction = Statics.Sequential
+  end
+  if not GSE.isEmpty(sequence.icon) then
+    returnSequence.Icon = sequence.icon
+  end
+  for k,v in ipairs(sequence) do
+    local loopstart = sequence.loopstart or 1
+    local loopstop = sequence.loopstop or table.getn(sequence)
+    if loopstart > 1 then
+      returnSeq.MacroVersions[1].PreMacro = {}
+    end
+    if loopstop < table.getn(sequence) then
+      returnSeq.MacroVersions[1].PostMacro = {}
+    end
+    if k < loopstart then
+      table.insert(returnSeq.MacroVersions[1].PreMacro, v)
+    elseif k > loopstop then
+      table.insert(returnSeq.MacroVersions[1].PostMacro, v)
+    else
+      table.insert(returnSeq.MacroVersions[1], v)
+    end
+  end
 end

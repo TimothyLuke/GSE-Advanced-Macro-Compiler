@@ -116,11 +116,13 @@ end
 
 Statics.SequenceDebug = "SEQUENCEDEBUG"
 
+Statics.Priority = "Priority"
+Statics.Sequential = "Sequential"
 
 --- <code>GSStaticPriority</code> is a static step function that goes 1121231234123451234561234567
 --    use this like StepFunction = GSStaticPriority, in a macro
 --    This overides the sequential behaviour that is standard in GS
-Statics.Priority = [[
+Statics.PriorityImplementation = [[
   limit = limit or 1
   if step == limit then
     limit = limit % #macros + 1
@@ -133,7 +135,7 @@ Statics.Priority = [[
 --- <code>GSStaticLoopPriority</code> is a static step function that goes 1121231234123451234561234567
 --    but it does this within an internal loop.  So more like 123343456
 --    If the macro has loopstart or loopstop defined then it will use this instead of GSStaticPriority
-Statics.LoopPriority = [[
+Statics.LoopPriorityImplementation = [[
   if step < loopstart then
     step = step + 1
   elseif looplimit <= 1 then
@@ -174,7 +176,7 @@ Statics.LoopPriority = [[
 --- <code>GSStaticLoopPriority</code> is a static step function that
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
-Statics.LoopSequential = [[
+Statics.LoopSequentialImplementation = [[
   if step < loopstart then
     -- I am before the loop increment to next step.
     step = step + 1

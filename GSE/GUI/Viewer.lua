@@ -46,7 +46,7 @@ function GSE.GUI.DrawStandardViewerWindow(container)
   local impbutton = AceGUI:Create("Button")
   impbutton:SetText(L["Import"])
   impbutton:SetWidth(150)
-  impbutton:SetCallback("OnClick", function() importStr = sequenceboxtext:GetText(); GSSE:importSequence() end)
+  impbutton:SetCallback("OnClick", function() GSE.ImportSequence(sequenceboxtext:GetText()) end)
   buttonGroup:AddChild(impbutton)
 
   local tranbutton = AceGUI:Create("Button")

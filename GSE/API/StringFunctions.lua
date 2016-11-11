@@ -74,3 +74,9 @@ function GSE.split(source, delimiters)
   string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
   return elements
 end
+
+
+function GSE.FixQuotes(source)
+  source = string.gsub(source, "%‘", "'")
+  source = string.gsub(value, "%”", "\"")
+end
