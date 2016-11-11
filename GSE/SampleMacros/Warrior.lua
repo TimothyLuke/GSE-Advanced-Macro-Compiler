@@ -128,7 +128,7 @@ Sequences['SAM_Arms_ST'] = {
         "/cast [combat] Bloodbath",
         "/cast [combat] Avatar",
         "/cast [combat] Battle Cry",
-      ]],
+      },
       "/cast Execute",
       "/cast Rend",
       "/cast Colossus Smash",
