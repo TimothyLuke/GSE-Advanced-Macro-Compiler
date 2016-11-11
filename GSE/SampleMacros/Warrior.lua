@@ -1,9 +1,9 @@
 local GSE = GSE
 local Statics = GSE.Static
 
-Statics.SampleMacros["WARRIOR"] = {}
+Statics.SampleMacros[1] = {}
 
-local Sequences = Statics.SampleMacros["WARRIOR"]
+local Sequences = Statics.SampleMacros[1]
 ------------------
 ----- Warrior
 ------------------
@@ -11,7 +11,7 @@ local Sequences = Statics.SampleMacros["WARRIOR"]
 Sequences['SAM_Fury1'] = {
   SpecID = 72,
   Author = "Firone - wowlazymacros.com",
-  Help = "Single Target"
+  Help = "Single Target",
   Talents = "2,3,3,2,2,2,3",
   Default=1,
   Raid=2,

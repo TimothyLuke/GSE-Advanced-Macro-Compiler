@@ -91,7 +91,7 @@ Sequences['SAM_Destro'] = {
   MacroVersions = {
     [1] = {
       KeyPress = {
-        "/targetenemy [noharm][dead]"
+        "/targetenemy [noharm][dead]",
         "/startattack"
       },
       "/cast [nochanneling] Conflagrate",
