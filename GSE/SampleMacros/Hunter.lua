@@ -13,249 +13,165 @@ local Sequences = Statics.SampleMacros[3]
 -- Marksmanship - 254
 
 Sequences['SAM_BMsingle'] = {
-specID = 253,
-author = "Jimmy Boy Albrecht",
-helpTxt = "Single Target - Talent: 3111323",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/startattack
-/petattack [@target,harm]
-/petautocastoff [group] Growl
-/petautocaston [nogroup] Growl
-/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-]],
-'/cast [nochanneling] Cobra Shot',
-'/cast [nochanneling] !Kill Command',
-'/cast [nochanneling] Bestial Wrath',
-'/cast [nochanneling] !Dire Beast',
-'/cast [nochanneling] Barrage',
-KeyRelease = [[
-/startattack
-/petattack
-/cast Aspect of the Wild
-]],
+  SpecID = 253,
+  Author = "Jimmy Boy Albrecht",
+  Talents = "3,1,1,1,3,2,3",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      StepFunction = "Priority",
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+        "/startattack",
+        "/petattack [@target,harm]",
+        "/petautocastoff [group] Growl",
+        "/petautocaston [nogroup] Growl",
+        "/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection",
+      },
+      '/cast [nochanneling] Cobra Shot',
+      '/cast [nochanneling] !Kill Command',
+      '/cast [nochanneling] Bestial Wrath',
+      '/cast [nochanneling] !Dire Beast',
+      '/cast [nochanneling] Barrage',
+      KeyRelease = {
+        "/startattack",
+        "/petattack",
+        "/cast Aspect of the Wild",
+      },
+    }
+  }
 }
 
 Sequences['SAM_BMaoe'] = {
-specID = 253,
-author = "Jimmy Boy Albrecht",
-helpTxt = "AoE - Talent: 3111323",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/startattack
-/petattack [@target,harm]
-/petautocastoff [group] Growl
-/petautocaston [nogroup] Growl
-/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-]],
-'/cast [nochanneling] Multi-Shot',
-'/cast [nochanneling] !Kill Command',
-'/cast [nochanneling] Bestial Wrath',
-'/cast [nochanneling] !Dire Beast',
-'/cast [nochanneling] Barrage',
-KeyRelease = [[
-/startattack
-/petattack
-/cast Aspect of the Wild
-]],
-}
-
-Sequences['SAM_SurvivelH'] = {
-specID = 255,
-author = "Jimmy Boy Albrecht",
-helpTxt = "Single Target - Talent: 3111323",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/cast Mongoose Bite',
-'/cast Lacerate',
-'/cast Flanking Strike',
-'/cast A Murder of Crows',
-'/cast Raptor Strike',
-KeyRelease = [[
-/startattack
-]],
+  SpecID = 253,
+  Author = "Jimmy Boy Albrecht",
+  Talents = "3,1,1,1,3,2,3",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      StepFunction = "Priority",
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+        "/startattack",
+        "/petattack [@target,harm]",
+        "/petautocastoff [group] Growl",
+        "/petautocaston [nogroup] Growl",
+        "/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection",
+      },
+      '/cast [nochanneling] Multi-Shot',
+      '/cast [nochanneling] !Kill Command',
+      '/cast [nochanneling] Bestial Wrath',
+      '/cast [nochanneling] !Dire Beast',
+      '/cast [nochanneling] Barrage',
+      KeyRelease = {
+        "/startattack",
+        "/petattack",
+        "/cast Aspect of the Wild",
+      },
+    }
+  }
 }
 
 Sequences['SAM_Mm_ST'] = {
-specID = 254,
-author = "emanuel",
-helpTxt = "Single Target - Talent: 3312123",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/cast Trueshot
-]],
-'/cast !A Murder of Crows',
-'/cast !Arcane Shot',
-'/cast !Marked Shot',
-'/cast !Aimed Shot',
-'/cast !Bursting Shot',
-'/cast !Black Arrow',
-KeyRelease = [[
-/startattack
-/petattack
-]],
-}
-
-Sequences['SAM_BM_ST'] = {
-specID = 253,
-author = "Nano",
-helpTxt = "Single Target Talent 3311313",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/petautocastoff [group] Growl
-/petautocaston [nogroup] growl
-]],
-"/castsequence Cobra Shot,Kill Command",
-"/cast !Chimaera Shot",
-"/cast !Dire Beast",
-"/cast Cobra Shot",
-"/cast Bestial Wrath",
-"/cast Titan's Thunder",
-"/cast A Murder of Crows",
-KeyRelease = [[
-/startattack
-]],
-}
-
-Sequences['SAM_BMAOE'] = {
-specID = 253,
-author = "Nano",
-helpTxt = "BMAOE Talent 3311313",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/petautocastoff [group] Growl
-/petautocaston [nogroup] growl
-]],
-"/castsequence Multi-Shot,Kill Command",
-"/cast !Chimaera Shot",
-"/cast !Dire Beast",
-"/cast Cobra Shot",
-"/cast Bestial Wrath",
-"/cast Titan's Thunder",
-"/cast A Murder of Crows",
-KeyRelease = [[
-/startattack
-]],
+  SpecID = 254,
+  Author = "emanuel",
+  Talents = "3,3,1,2,1,2,3",
+  StepFunction = "Priority",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+  /cast Trueshot
+  ]],
+  '/cast !A Murder of Crows',
+  '/cast !Arcane Shot',
+  '/cast !Marked Shot',
+  '/cast !Aimed Shot',
+  '/cast !Bursting Shot',
+  '/cast !Black Arrow',
+  KeyRelease = [[
+  /startattack
+  /petattack
+  ]],
 }
 
 Sequences['SAM_Marks_AOE'] = {
-author='Nano',
-specID=254,
-helpTxt = 'Talents: 3113122',
-KeyPress=[[
-/targetenemy [noharm][dead]
-/cast Trueshot
-]],
-icon='Ability_Hunter_FocusedAim',
-'/cast [nochanneling] !Multi-shot',
-'/cast [nochanneling] !Marked Shot',
-'/cast [nochanneling] Windburst',
-'/cast [nochanneling] !Aimed Shot',
-'/cast [nochanneling] Piercing Shot',
-'/cast [nochanneling] !Multi-shot',
-'/cast [nochanneling] !Marked Shot',
-KeyRelease=[[
-/startattack
-/petattack
-]],
-}
-
-Sequences['SAM_Single_Marls'] = {
-author="Nano",
-specID=254,
-helpTxt = 'Talents: 3113122',
-KeyPress=[[
-/targetenemy [noharm][dead]
-/cast Trueshot
-]],
-icon='Ability_Hunter_FocusedAim',
-'/cast [nochanneling] !Arcane Shot',
-'/cast [nochanneling] !Marked Shot',
-'/cast [nochanneling] Windburst',
-'/cast [nochanneling] !Aimed Shot',
-'/cast [nochanneling] Piercing Shot',
-'/cast [nochanneling] !Arcane Shot',
-'/cast [nochanneling] !Marked Shot',
-KeyRelease=[[
-/startattack
-/petattack
-]],
+  Author='Nano',
+  SpecID=254,
+  Talents = '3,1,1,3,1,2,2',
+  Default=1,
+  Icon='Ability_Hunter_FocusedAim',
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+        "/cast Trueshot",
+      },
+      '/cast [nochanneling] !Multi-shot',
+      '/cast [nochanneling] !Marked Shot',
+      '/cast [nochanneling] Windburst',
+      '/cast [nochanneling] !Aimed Shot',
+      '/cast [nochanneling] Piercing Shot',
+      '/cast [nochanneling] !Multi-shot',
+      '/cast [nochanneling] !Marked Shot',
+      KeyRelease={
+        "/startattack",
+        "/petattack"
+      }
+    }
+  }
 }
 
 Sequences['SAM_SURVST'] = {
-specID = 255,
-author = "yiffking fleabag",
-helpTxt = "Single Target - Unknown Talents ",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/castsequence reset=8 !Raptor Strike, Lacerate',
-'/castsequence Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/cast Raptor Strike',
-'/cast Lacerate',
-'/cast !Mongoose Bite',
-'/cast Throwing Axes',
-'/cast Spitting Cobra',
-'/cast Flanking Strike',
-KeyRelease = [[
-/startattack
-]],
+  SpecID = 255,
+  Author = "yiffking fleabag",
+  Talents = "1,1,1,1,1,1,1",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      '/castsequence reset=8 !Raptor Strike, Lacerate',
+      '/castsequence Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+      '/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+      '/cast Raptor Strike',
+      '/cast Lacerate',
+      '/cast !Mongoose Bite',
+      '/cast Throwing Axes',
+      '/cast Spitting Cobra',
+      '/cast Flanking Strike',
+      KeyRelease = {
+        "/startattack",
+      },
+    }
+  }
 }
 
 Sequences['SAM_SURVAOE'] = {
-specID = 255,
-author = "yiffking fleabag",
-helpTxt = "AoE - Unknown Talents ",
-KeyPress = [[
-/targetenemy [noharm][dead]
-]],
-'/castsequence reset=8 !Raptor Strike, Carve',
-'/castsequence Serpent Sting, Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
-'/cast Raptor Strike',
-'/cast Carve',
-'/cast !Mongoose Bite',
-'/cast Butchery',
-'/cast Spitting Cobra',
-'/cast Throwing Axes',
-KeyRelease = [[
-/startattack
-]],
-}
-
-Sequences['SAM_BMH'] = {
-specID = 253,
-author = "Moonfale",
-helpTxt = "Single Target - Talent: 3322313",
-StepFunction = "Priority",
-KeyPress = [[
-/targetenemy [noharm][dead]
-/cast [@pet,dead]Heart of the Phoenix
-/startattack
-/petattack [@target,harm]
-/petautocastoff [group] Growl
-/petautocaston [nogroup] Growl
-/cast [target=focus, exists, nodead],[target=pet, exists, nodead] Misdirection
-/cast Blood Fury
-/cast Intimidation
-/cast Bestial Wrath
-/cast Aspect of the Wild
-]],
-'/cast [nochanneling] !kill command',
-'/cast [nochanneling] !Dire Beast',
-'/cast [nochanneling] Chimaera Shot',
-'/cast [nochanneling] A Murder of Crows',
-'/cast [nochanneling] Cobra Shot',
-KeyRelease = [[
-/startattack
-/petattack
-]],
+  SpecID = 255,
+  Author = "yiffking fleabag",
+  Talents = "1,1,1,1,1,1,1",
+  Default=1,
+  MacroVersions = {
+    [1] = {
+      KeyPress = {
+        "/targetenemy [noharm][dead]",
+      },
+      '/castsequence reset=8 !Raptor Strike, Carve',
+      '/castsequence Serpent Sting, Throwing Axes, Aspect of the Eagle, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+      '/castsequence reset=22 !Snake Hunter, Mongoose Bite, Mongoose Bite, Mongoose Bite',
+      '/cast Raptor Strike',
+      '/cast Carve',
+      '/cast !Mongoose Bite',
+      '/cast Butchery',
+      '/cast Spitting Cobra',
+      '/cast Throwing Axes',
+      KeyRelease = {
+        "/startattack",
+      },
+    }
+  }
 }
