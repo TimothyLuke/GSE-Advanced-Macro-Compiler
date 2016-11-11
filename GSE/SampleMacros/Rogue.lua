@@ -59,7 +59,6 @@ Sequences['SAM_Subtle'] = {
       "/cast Shuriken Storm",
       "/cast Eviscerate",
       "/cast Backstab",
-      }
     }
   }
 }
@@ -87,7 +86,6 @@ Sequences['SAM_CalliynOutlaw'] = {
       "/castsequence [mod:alt] Blade Flurry",
       "/cast [@focus] Tricks of the Trade",
       "/cast Crimson Vial",
-      }
     }
   }
 }

@@ -119,7 +119,7 @@ Sequences['SAM_Arms_ST'] = {
   Talents = "2,1,3,3,2,1,2",
   Default=1,
   MacroVersions = {
-    [1] = {,
+    [1] = {
       StepFunction = "Priority",
       KeyPress={
         "/targetenemy [noharm][dead]",

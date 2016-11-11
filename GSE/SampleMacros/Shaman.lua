@@ -111,9 +111,6 @@ Sequences['SAM_MC_Surge'] = {
       "/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
       "/castsequence [nochanneling,@mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
       "/castsequence [nochanneling,@mouseover,help]Healing Surge",
-      KeyRelease=[[
-      ]],
-      }
     }
   }
 }
