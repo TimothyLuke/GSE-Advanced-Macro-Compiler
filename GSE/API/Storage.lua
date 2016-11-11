@@ -16,48 +16,36 @@ function GSE.EnableSequence(SequenceName)
 end
 
 --- Add a sequence to the library
-function GSE.AddSequenceToCollection(sequenceName, sequence, version)
+function GSE.AddSequenceToCollection(sequenceName, sequence)
   local confirmationtext = ""
   --Perform some validation checks on the Sequence.
   if GSE.isEmpty(sequence.specID) then
     -- set to currentSpecID
-    sequence.specID = GSE.GetCurrentSpecID()
-    confirmationtext = " " .. L["Sequence specID set to current spec of "] .. sequence.specID .. "."
+    sequence.SpecID = GSE.GetCurrentSpecID()
+    confirmationtext = confirmationtext .. " " .. L["Sequence specID set to current spec of "] .. sequence.SpecID .. "."
   end
-  sequence.specID = sequence.specID + 0 -- force to a number.
-  if GSE.isEmpty(sequence.author) then
+  sequence.SpecID = sequence.SpecID + 0 -- force to a number.
+  if GSE.isEmpty(sequence.Author) then
     -- set to unknown author
-    sequence.author = "Unknown Author"
-    confirmationtext = " " .. L["Sequence Author set to Unknown"] .. "."
+    sequence.Author = "Unknown Author"
+    confirmationtext = confirmationtext .. " " .. L["Sequence Author set to Unknown"] .. "."
   end
-  if GSE.isEmpty(sequence.helpTxt) then
+  if GSE.isEmpty(sequence.Talents) then
     -- set to currentSpecID
-    sequence.helpTxt = "No Help Information"
-    confirmationtext = " " .. L["No Help Information Available"] .. "."
+    sequence.Talents = "?,?,?,?,?,?,?"
+    confirmationtext = confirmationtext .. " " .. L["No Help Information Available"] .. "."
   end
 
   -- CHeck for colissions
   local found = false
   if not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) then
-    if not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version]) then
       found = true
-    end
   end
   if found then
     -- check if source the same.  If so ignore
-    if sequence.source ~= GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version].source then
-      -- different source.  if local Ignore
-      if sequence.source == GSStaticSourceLocal then
-        -- local version - add as new version
-        GSE.Print (L["A sequence collision has occured.  Your local version of "] .. sequenceName .. L[" has been added as a new version and set to active.  Please review if this is as expected."], GNOME)
-        GSAddSequenceToCollection(sequenceName, sequence, GSGetNextSequenceVersion(sequenceName))
-      else
-        if GSE.isEmpty(sequence.source) then
-          GSE.Print(L["A sequence collision has occured. "] .. L["Two sequences with unknown sources found."] .. " " .. sequenceName, GNOME)
-        else
-          GSE.Print (L["A sequence collision has occured. "] .. sequence.source .. L[" tried to overwrite the version already loaded from "] .. GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version].source .. L[". This version was not loaded."], Gnome)
-        end
-      end
+    GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
+    for k,v in ipairs(sequence.MacroVersions) do
+      table.add(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions, v)
     end
   else
     -- New Sequence
@@ -65,18 +53,8 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
       -- Sequence is new
       GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName] = {}
     end
-    if GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version]) then
-      -- This version is new
-      -- print(sequenceName .. " " .. version)
-      GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version] = {}
-    end
-    -- evaluate version
-    if version ~= GSEOptions.ActiveSequenceVersions[sequenceName] then
 
-      GSSetActiveSequenceVersion(sequenceName, version)
-    end
-
-    GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version] = sequence
+    GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
     local makemacrostub = false
     local globalstub = false
     if sequence.specID == GSE.GetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
@@ -93,9 +71,9 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, version)
     end
     if makemacrostub then
       if GSEOptions.DisabledSequences[sequenceName] == true then
-        GSdeleteMacroStub(sequenceName)
+        GSE.DeleteMacroStub(sequenceName)
       else
-        GSCheckMacroCreated(sequenceName, globalstub)
+        GSE.CheckMacroCreated(sequenceName, globalstub)
       end
     end
   end
@@ -107,9 +85,6 @@ end
 --- Load a collection of Sequences
 function GSE.ImportMacroCollection(Sequences)
   for k,v in pairs(Sequences) do
-    if GSE.isEmpty(v.version) then
-      v.version = 1
-    end
     GSAddSequenceToCollection(k, v, v.version)
   end
 end
@@ -749,7 +724,7 @@ function GSE:GetMacroIcon(sequenceIndex)
   end
 end
 
-
+--- List addons that GSE knows about that have been disabled
 function GSE.ListUnloadedAddons()
   local returnVal = "";
   for k,v in pairs(GSE.UnloadedAddInPacks) do
@@ -759,7 +734,7 @@ function GSE.ListUnloadedAddons()
   return returnVal
 end
 
-
+--- List addons that GSE knows about that have been enabled
 function GSE.ListAddons()
   local returnVal = "";
   for k,v in pairs(GSE.AddInPacks) do
@@ -833,7 +808,5 @@ end
 
 --- Load in the sample macros for the current class.
 function GSE.LoadSampleMacros(classID)
-  for k,v in pairs(Statics.SampleMacros[classID]) do
-    GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][k] = v
-  end
+  GSE.LoadMacroCollection(Statics.SampleMacros[classID])
 end
