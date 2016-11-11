@@ -137,6 +137,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.ConvertLegacySequence">GSE.ConvertLegacySequence</a>&nbsp;(sequence)</td>
+	<td class="summary">This converts a legacy GS/GSE1 sequence to a new GSE2 </td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.DebugDumpButton">GSE.DebugDumpButton</a>&nbsp;(SequenceName)</td>
 	<td class="summary">This funciton dumps what is currently running on an existing button.</td>
 	</tr>
@@ -167,8 +172,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.FixSequence">GSE.FixSequence</a>&nbsp;(sequence)</td>
-	<td class="summary">This function performs any actions to clean up common syntax errors </td>
+	<td class="name" nowrap><a href="#GSE.FixLegacySequence">GSE.FixLegacySequence</a>&nbsp;(sequence)</td>
+	<td class="summary">This function performs any actions to clean up common syntax errors in Legacy GSE1 Sequences </td>
 	</tr>
 
 	<tr>
@@ -197,7 +202,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportSequence">GSE.ImportSequence</a>&nbsp;()</td>
+	<td class="name" nowrap><a href="#GSE.ImportSequence">GSE.ImportSequence</a>&nbsp;(importStr)</td>
 	<td class="summary">Load a GSE Sequence Collection from a String </td>
 	</tr>
 
@@ -401,6 +406,32 @@ Compares two sequences and return a boolean if the match.  If they do not match 
 
 
 
+<dt><a name="GSE.ConvertLegacySequence"></a><strong>GSE.ConvertLegacySequence</strong>&nbsp;(sequence)</dt>
+<dd>
+This converts a legacy GS/GSE1 sequence to a new GSE2
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sequence: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.DebugDumpButton"></a><strong>GSE.DebugDumpButton</strong>&nbsp;(SequenceName)</dt>
 <dd>
 This funciton dumps what is currently running on an existing button.
@@ -565,9 +596,9 @@ Creates a string representation of the a Sequence that can be shared as a string
 
 
 
-<dt><a name="GSE.FixSequence"></a><strong>GSE.FixSequence</strong>&nbsp;(sequence)</dt>
+<dt><a name="GSE.FixLegacySequence"></a><strong>GSE.FixLegacySequence</strong>&nbsp;(sequence)</dt>
 <dd>
-This function performs any actions to clean up common syntax errors
+This function performs any actions to clean up common syntax errors in Legacy GSE1 Sequences
 
 
 <h3>Parameters</h3>
@@ -716,10 +747,19 @@ Load a collection of Sequences
 
 
 
-<dt><a name="GSE.ImportSequence"></a><strong>GSE.ImportSequence</strong>&nbsp;()</dt>
+<dt><a name="GSE.ImportSequence"></a><strong>GSE.ImportSequence</strong>&nbsp;(importStr)</dt>
 <dd>
 Load a GSE Sequence Collection from a String
 
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  importStr: 
+	</li>
+	
+</ul>
 
 
 
