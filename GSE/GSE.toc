@@ -45,7 +45,6 @@ API\StringFunctions.lua
 API\CharacterFunctions.lua
 API\Storage.lua
 API\Translator.lua
-API\Recorder.lua
 MacroExecution\Core.lua
 
 
@@ -56,4 +55,5 @@ GUI\Transmission.lua
 GUI\VersionManagement.lua
 GUI\Viewer.lua
 GUI\Options.lua
+GUI\Recorder.lua
 API\GUIFuntions.lua

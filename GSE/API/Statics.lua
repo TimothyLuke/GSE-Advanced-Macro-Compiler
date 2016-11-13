@@ -241,4 +241,4 @@ Statics.Spec = "Spec"
 Statics.Class = "Class"
 Statics.All = "All"
 
-Static.SampleMacros = {}
+Statics.SampleMacros = {}

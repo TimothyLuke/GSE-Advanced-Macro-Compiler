@@ -209,46 +209,57 @@ local function processPlayerEnterWorld()
 end
 
 local function processAddonLoaded()
-  if not GSE.isEmpty(GnomeOptions) then
-    -- save temporary values the AddinPacks gets wiped from persisited memory
-    for k,v in pairs(GnomeOptions) do
-      if k == "SequenceLibrary" then
-        -- Merge Sequence Library
-        if not GSE.isEmpty(v) then
-          for sname,sversion in pairs(v) do
-            if not GSE.isEmpty(sversion) then
-              for sver, sequence in pairs(sversion) do
-                GSE.AddSequenceToCollection(sname, sequence, sver)
-              end
-            end
-          end
-        end
-      elseif k == "ActiveSequenceVersions" then
-        -- Merge Active Sequences History if locally set version is greater than the loaded in
-        for n,ver in pairs(v) do
-          if  GSE.isEmpty(GSEOptions.ActiveSequenceVersions[n]) then
-            GSEOptions.ActiveSequenceVersions[n] = ver
-          elseif ver > GSEOptions.ActiveSequenceVersions[n] then
-            GSEOptions.ActiveSequenceVersions[n] = ver
-          end
-        end
-      else
-        GSEOptions[k] = v
-      end
-    end
-    -- Add Macro Stubs for all current spec'd macros.
-    for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-      if GSE.isEmpty(GSELibrary[k]) then
-        GSEOptions.ActiveSequenceVersions[k] = nil
-      end
-    end
+  -- if not GSE.isEmpty(GnomeOptions) then
+  --   -- save temporary values the AddinPacks gets wiped from persisited memory
+  --   for k,v in pairs(GnomeOptions) do
+  --     if k == "SequenceLibrary" then
+  --       -- Merge Sequence Library
+  --       if not GSE.isEmpty(v) then
+  --         for sname,sversion in pairs(v) do
+  --           if not GSE.isEmpty(sversion) then
+  --             for sver, sequence in pairs(sversion) do
+  --               GSE.AddSequenceToCollection(sname, sequence, sver)
+  --             end
+  --           end
+  --         end
+  --       end
+  --     elseif k == "ActiveSequenceVersions" then
+  --       -- Merge Active Sequences History if locally set version is greater than the loaded in
+  --       for n,ver in pairs(v) do
+  --         if  GSE.isEmpty(GSEOptions.ActiveSequenceVersions[n]) then
+  --           GSEOptions.ActiveSequenceVersions[n] = ver
+  --         elseif ver > GSEOptions.ActiveSequenceVersions[n] then
+  --           GSEOptions.ActiveSequenceVersions[n] = ver
+  --         end
+  --       end
+  --     else
+  --       GSEOptions[k] = v
+  --     end
+  --   end
+  --   -- Add Macro Stubs for all current spec'd macros.
+  --   for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
+  --     if GSE.isEmpty(GSELibrary[k]) then
+  --       GSEOptions.ActiveSequenceVersions[k] = nil
+  --     end
+  --   end
+  -- end
+  if GSE.isEmpty(GSEOptions.SequenceLibrary) then
+    GSEOptions.SequenceLibrary = {}
   end
-  if GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()]) then
+
+  local counter = 0
+  for k,v in pairs(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()]) do
+    counter = counter + 1
+
+  end
+
+  if counter <= 0 then
     StaticPopup_Show ("GSE-SampleMacroDialog")
   end
   GSE.PrintDebugMessage(L["I am loaded"])
   GSE.ReloadSequences()
   GSE:SendMessage(Statics.CoreLoadedMessage)
+
 end
 
 local function processUnitSpellcast(addon)
@@ -277,7 +288,7 @@ f:SetScript('OnEvent', function(self, event, addon)
     GSPrepareLogout(GSEOptions.saveAllMacrosLocal)
   elseif event == 'PLAYER_ENTERING_WORLD' then
     processPlayerEnterWorld()
-  elseif event == 'ADDON_LOADED' and addon == "GS-Core" then
+  elseif event == 'ADDON_LOADED' and addon == GNOME then
     processAddonLoaded()
   elseif event == 'UNIT_SPELLCAST_SUCCEEDED' then
     processUnitSpellcast(addon)

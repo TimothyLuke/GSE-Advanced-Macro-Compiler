@@ -16,6 +16,13 @@ function GSE.GetCurrentClassID()
   return currentclassId
 end
 
+--- Return the characters class id
+function GSE.GetCurrentClassNormalisedName()
+  local _, classnormalisedname, _ = UnitClass("player")
+  return classnormalisedname
+end
+
+
 --- Check if the specID provided matches the plauers current class.
 function GSE.isSpecIDForCurrentClass(specID)
   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)

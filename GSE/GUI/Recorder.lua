@@ -14,7 +14,7 @@ local recbuttontext = L["Record"]
 
 recordframe:SetTitle(L["Record Macro"])
 recordframe:SetStatusText(L["Gnome Sequencer: Record your rotation to a macro."])
-recordframe:SetCallback("OnClose", function(widget)  frame:Hide(); end)
+recordframe:SetCallback("OnClose", function(widget)  recordframe:Hide(); end)
 recordframe:SetLayout("List")
 
 local recordsequencebox = AceGUI:Create("MultiLineEditBox")
@@ -50,7 +50,7 @@ function GSE.GUI.SaveRecordMacro()
 
 end
 
-function GSE.GIU.ManageRecord()
+function GSE.GUI.ManageRecord()
   if recbuttontext == L["Record"] then
     GSSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
     recbuttontext = L["Stop"]

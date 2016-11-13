@@ -3,6 +3,7 @@ local Statics = GSE.Static
 
 local L = GSE.L
 
+
 --- Disable all versions of a sequence and delete any macro stubs.
 function GSE.DisableSequence(SequenceName)
   GSEOptions.DisabledSequences[SequenceName] = true

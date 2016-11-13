@@ -291,7 +291,6 @@ L["Updating due to new version."] = true
 L["Creating New Sequence."] = true
 
 -- Transmission stuff
-L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
 L["This will display debug messages for the GS-E Ingame Transmission and transfer"] = true
 
 -- New Strings 1.4
@@ -342,4 +341,5 @@ L["The Custom StepFunction Specified is not recognised and has been ignored."] =
 L["Load"] = true
 L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"]= true
 L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = true
+L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
 --@end-do-not-package@
