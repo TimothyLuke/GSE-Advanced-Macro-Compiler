@@ -280,7 +280,7 @@ end
 
 
 function GSE.ReportUnfoundSpells()
-  for name,version in pairs(GSEOptions.SequenceLibrary) do
+  for name,version in pairs(GSELibrary) do
     for v, sequence in ipairs(version) do
       GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
     end

@@ -70,3 +70,6 @@ function GSE.PrintDebugMessage(message, module)
       determinationOutputDestination(GSEOptions.TitleColour .. (GSE.isEmpty(module) and GNOME or module) .. ':|r ' .. GSEOptions.AuthorColour .. L["<DEBUG> |r "] .. message )
     end
 end
+
+GSE.CurrentGCD = GetSpellCooldown(61304)
+GSE.RecorderActive = false

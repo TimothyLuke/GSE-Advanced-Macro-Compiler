@@ -6,14 +6,15 @@ local L = GSE.L
 
 local onpause = false
 
-GSDebugFrame = AceGUI:Create("Frame")
+DebugFrame = AceGUI:Create("Frame")
 GSE.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSDebugEnableViewButton = AceGUI:Create("Button")
 GSDebugPauseViewButton = AceGUI:Create("Button")
 
+GSE.GUI.DebugFrame = DebugFrame
 
 function GSE.GUI.ShowDebugWindow()
-  GSDebugFrame:Show()
+  DebugFrame:Show()
 end
 
 
@@ -60,19 +61,19 @@ function GSE:OptionsGuiDebugView()
 end
 
 
-GSDebugFrame:SetTitle(L["Sequence Debugger"])
+DebugFrame:SetTitle(L["Sequence Debugger"])
 local _, GCD_Timer = GetSpellCooldown(61304)
-GSDebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. " GCD:" .. GCD_Timer)
-GSDebugFrame:SetCallback("OnClose", function(widget) GSDebugFrame:Hide()  end)
-GSDebugFrame:SetLayout("List")
-GSDebugFrame:Hide()
+DebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. " GCD:" .. GCD_Timer)
+DebugFrame:SetCallback("OnClose", function(widget) DebugFrame:Hide()  end)
+DebugFrame:SetLayout("List")
+DebugFrame:Hide()
 
 
 GSE.DebugOutputTextbox:SetLabel(L["Output"])
 GSE.DebugOutputTextbox:SetNumLines(25)
 GSE.DebugOutputTextbox:DisableButton(true)
 GSE.DebugOutputTextbox:SetFullWidth(true)
-GSDebugFrame:AddChild(GSE.DebugOutputTextbox)
+DebugFrame:AddChild(GSE.DebugOutputTextbox)
 
 local buttonGroup = AceGUI:Create("SimpleGroup")
 buttonGroup:SetFullWidth(true)
@@ -108,4 +109,4 @@ GSDebugOptionsViewButton:SetWidth(150)
 GSDebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUI.OptionsDebugView() end)
 buttonGroup:AddChild(GSDebugOptionsViewButton)
 
-GSDebugFrame:AddChild(buttonGroup)
+DebugFrame:AddChild(buttonGroup)

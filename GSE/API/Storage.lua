@@ -39,23 +39,23 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
 
   -- CHeck for colissions
   local found = false
-  if not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) then
+  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
       found = true
   end
   if found then
     -- check if source the same.  If so ignore
     GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
-      table.add(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions, v)
+      table.add(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions, v)
     end
   else
     -- New Sequence
-    if GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) then
+    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
       -- Sequence is new
-      GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName] = {}
+      GSELibrary[GSE.GetCurrentClassID()][sequenceName] = {}
     end
 
-    GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
+    GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
     local makemacrostub = false
     local globalstub = false
     if sequence.specID == GSE.GetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
@@ -112,11 +112,11 @@ end
 function GSE.DeleteSequenceVersion(sequenceName, version)
   if not GSE.isEmpty(sequenceName) then
     local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
-    local sequence = GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version]
+    local sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName][version]
     if sequence.source ~= GSStaticSourceLocal then
       GSE.Print(L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSEOptions.NUMBER .. sequence.source .. Statics.StringReset, GNOME)
-    elseif not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version]) then
-      GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][version] = nil
+    elseif not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][version]) then
+      GSELibrary[GSE.GetCurrentClassID()][sequenceName][version] = nil
     end
     if version == selectedversion then
       newversion = GSGetNextSequenceVersion(sequenceName, true)
@@ -141,8 +141,8 @@ end
 function GSE.GetNextSequenceVersion(SequenceName, last)
   local nextv = 0
   GSE.PrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
-  if not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) then
-    for k,_ in ipairs(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) do
+  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
+    for k,_ in ipairs(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) do
     nextv = k
     end
   end
@@ -161,7 +161,7 @@ end
 function GSE.GetKnownSequenceVersions(SequenceName)
   if not GSE.isEmpty(SequenceName) then
     local t = {}
-    for k,_ in pairs(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName]) do
+    for k,_ in pairs(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) do
       --print (k)
       t[k] = k
     end
@@ -225,7 +225,7 @@ function GSE.ImportSequence(importStr)
         end
         v.source = GSStaticSourceLocal
         GSAddSequenceToCollection(k, v, v.version)
-        GSUpdateSequence(k, GSEOptions.SequenceLibrary[k][v.version])
+        GSUpdateSequence(k, GSELibrary[k][v.version])
         if GSE.isEmpty(v.icon) then
           -- Set a default icon
           v.icon = GSGetDefaultIcon()
@@ -626,7 +626,7 @@ function GSE.CheckMacroCreated(SequenceName, globalstub)
       EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
     end
   else
-    icon = GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
+    icon = GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].icon
     GSregisterSequence(SequenceName, icon, globalstub)
   end
 
@@ -664,18 +664,18 @@ function GSE.getSequenceNames()
   if not GSE.isEmpty(currentSpecID) then
     local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
     for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-      --print (table.getn(GSEOptions.SequenceLibrary[k]))
-      if not GSE.isEmpty(GSEOptions.SequenceLibrary[k]) then
-        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSEOptions.SequenceLibrary[k][v].specID)
+      --print (table.getn(GSELibrary[k]))
+      if not GSE.isEmpty(GSELibrary[k]) then
+        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].specID)
         if GSEOptions.filterList["All"] then
           keyset[k]=k
-        elseif GSEOptions.SequenceLibrary[k][v].specID == 0 then
+        elseif GSELibrary[k][v].specID == 0 then
           keyset[k]=k
         elseif GSEOptions.filterList["Class"]  then
           if pspecclass == specclass then
             keyset[k]=k
           end
-        elseif GSEOptions.SequenceLibrary[k][v].specID == currentSpecID then
+        elseif GSELibrary[k][v].specID == currentSpecID then
           keyset[k]=k
         else
           -- do nothing
@@ -695,8 +695,8 @@ end
 function GSE:GetMacroIcon(sequenceIndex)
   GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
   if not GSE.isEmpty(GSGetActiveSequenceVersion(currentSequence)) then
-    if not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
-      GSE.PrintDebugMessage(L["Icon: "] .. GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
+    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+      GSE.PrintDebugMessage(L["Icon: "] .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon, GNOME)
     else
       GSE.PrintDebugMessage(L["Icon: "] .. L["none"], GNOME)
     end
@@ -708,18 +708,18 @@ function GSE:GetMacroIcon(sequenceIndex)
   else
     GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
   end
-  if GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSE.isEmpty(iconid) then
-    GSE.PrintDebugMessage("SequenceSpecID: " .. GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
-    if GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
+  if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSE.isEmpty(iconid) then
+    GSE.PrintDebugMessage("SequenceSpecID: " .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
+    if GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
       return "INV_MISC_QUESTIONMARK"
     else
-      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSE.GetCurrentSpecID() or GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSE.GetCurrentSpecID() or GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
       GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end
-  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
+  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) then
 
-      return GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
+      return GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon
   else
       return iconid
   end
@@ -809,5 +809,5 @@ end
 
 --- Load in the sample macros for the current class.
 function GSE.LoadSampleMacros(classID)
-  GSE.LoadMacroCollection(Statics.SampleMacros[classID])
+  GSE.ImportMacroCollection(Statics.SampleMacros[classID])
 end

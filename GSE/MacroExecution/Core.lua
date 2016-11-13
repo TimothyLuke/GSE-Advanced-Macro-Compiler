@@ -141,52 +141,55 @@ local function createButton(name, sequence)
 end
 
 
+function GSE:PLAYER_LOGIN()
+  GSE:UPDATE_MACROS()
+end
 
 
-local function prepareLogin()
+function GSE:UPDATE_MACROS()
   if not InCombatLockdown() then
-    IgnoreMacroUpdates = true
-    if not GSE.isEmpty(GSELibrary[2]) then
-      local forremoval = {}
-      local toprocess = {}
-      for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
-
-        if GSE.isEmpty(GSELibrary[name][version]) then
-          -- This value is missing.
-          -- check if there is a version.
-          ver = GSGetNextSequenceVersion(name)
-          if ver then
-            -- current version is broken but sequence exists.
-            GSEOptions.ActiveSequenceVersions[name] = ver
-            toprocess[name] = true
-          else
-            -- WHole Sequence Tree is no longer present.
-            forremoval[name] = true
-          end
-        else
-          toprocess[name] = true
-        end
-      end
-      for name,_ in pairs(toprocess) do
-        local macroIndex = GetMacroIndexByName(name)
-        if macroIndex and macroIndex ~= 0 then
-          if not GSE.ModifiedSequences[name] then
-            GSE.ModifiedSequences[name] = true
-            EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
-          end
-          _G[name]:UpdateIcon()
-        elseif GSE.ModifiedSequences[name] then
-          GSE.ModifiedSequences[name] = nil
-        end
-      end
-      for name,_ in pairs(forremoval) do
-        if not GSE.isEmpty(name) then
-          GSEOptions.ActiveSequenceVersions[name] = nil
-        end
-      end
-      GSReloadSequences()
-    end
-    IgnoreMacroUpdates = false
+    -- IgnoreMacroUpdates = true
+    -- if not GSE.isEmpty(GSELibrary[2]) then
+    --   local forremoval = {}
+    --   local toprocess = {}
+    --   for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
+    --
+    --     if GSE.isEmpty(GSELibrary[name][version]) then
+    --       -- This value is missing.
+    --       -- check if there is a version.
+    --       ver = GSGetNextSequenceVersion(name)
+    --       if ver then
+    --         -- current version is broken but sequence exists.
+    --         GSEOptions.ActiveSequenceVersions[name] = ver
+    --         toprocess[name] = true
+    --       else
+    --         -- WHole Sequence Tree is no longer present.
+    --         forremoval[name] = true
+    --       end
+    --     else
+    --       toprocess[name] = true
+    --     end
+    --   end
+    --   for name,_ in pairs(toprocess) do
+    --     local macroIndex = GetMacroIndexByName(name)
+    --     if macroIndex and macroIndex ~= 0 then
+    --       if not GSE.ModifiedSequences[name] then
+    --         GSE.ModifiedSequences[name] = true
+    --         EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
+    --       end
+    --       _G[name]:UpdateIcon()
+    --     elseif GSE.ModifiedSequences[name] then
+    --       GSE.ModifiedSequences[name] = nil
+    --     end
+    --   end
+    --   for name,_ in pairs(forremoval) do
+    --     if not GSE.isEmpty(name) then
+    --       GSEOptions.ActiveSequenceVersions[name] = nil
+    --     end
+    --   end
+    --   GSReloadSequences()
+    -- end
+    -- IgnoreMacroUpdates = false
   else
     self:RegisterEvent('PLAYER_REGEN_ENABLED')
   end
@@ -208,47 +211,13 @@ local function processPlayerEnterWorld()
   end
 end
 
-local function processAddonLoaded()
-  -- if not GSE.isEmpty(GnomeOptions) then
-  --   -- save temporary values the AddinPacks gets wiped from persisited memory
-  --   for k,v in pairs(GnomeOptions) do
-  --     if k == "SequenceLibrary" then
-  --       -- Merge Sequence Library
-  --       if not GSE.isEmpty(v) then
-  --         for sname,sversion in pairs(v) do
-  --           if not GSE.isEmpty(sversion) then
-  --             for sver, sequence in pairs(sversion) do
-  --               GSE.AddSequenceToCollection(sname, sequence, sver)
-  --             end
-  --           end
-  --         end
-  --       end
-  --     elseif k == "ActiveSequenceVersions" then
-  --       -- Merge Active Sequences History if locally set version is greater than the loaded in
-  --       for n,ver in pairs(v) do
-  --         if  GSE.isEmpty(GSEOptions.ActiveSequenceVersions[n]) then
-  --           GSEOptions.ActiveSequenceVersions[n] = ver
-  --         elseif ver > GSEOptions.ActiveSequenceVersions[n] then
-  --           GSEOptions.ActiveSequenceVersions[n] = ver
-  --         end
-  --       end
-  --     else
-  --       GSEOptions[k] = v
-  --     end
-  --   end
-  --   -- Add Macro Stubs for all current spec'd macros.
-  --   for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-  --     if GSE.isEmpty(GSELibrary[k]) then
-  --       GSEOptions.ActiveSequenceVersions[k] = nil
-  --     end
-  --   end
-  -- end
-  if GSE.isEmpty(GSEOptions.SequenceLibrary) then
-    GSEOptions.SequenceLibrary = {}
+function GSE:ADDON_LOADED()
+  if GSE.isEmpty(GSELibrary) then
+    GSELibrary = {}
   end
 
   local counter = 0
-  for k,v in pairs(GSEOptions.SequenceLibrary[GSE.GetCurrentClassID()]) do
+  for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
     counter = counter + 1
 
   end
@@ -262,46 +231,43 @@ local function processAddonLoaded()
 
 end
 
-local function processUnitSpellcast(addon)
-  if addon == "player" then
+function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
+  if unit == "player" then
     local _, GCD_Timer = GetSpellCooldown(61304)
     GCD = true
     GCD_Update_Timer = C_Timer.After(GCD_Timer, function () GCD = nil; GSE.PrintDebugMessage("GCD OFF") end)
     GSE.PrintDebugMessage(L["GCD Delay:"] .. " " .. GCD_Timer)
+    GSE.CurrentGCD = GCD_Timer
+
+    if GSE.RecorderActive then
+      GSE.GUI.RecordFrame.RecordSequenceBox:SetText(GSE.GUI.RecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n")
+    end
   end
 end
 
+function GSE:PLAYER_REGEN_ENABLED(self,event,addon)
+  GSE:UnregisterEvent('PLAYER_REGEN_ENABLED')
+  GSE:GetScript('OnEvent')(self, 'UPDATE_MACROS')
+  if GSEOptions.resetOOC then
+    GSE.ResetButtons()
+  end
+  GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
+end
 
 local IgnoreMacroUpdates = false
-local f = CreateFrame('Frame')
-f:SetScript('OnEvent', function(self, event, addon)
-  if (event == 'UPDATE_MACROS' or event == 'PLAYER_LOGIN') and not IgnoreMacroUpdates then
-    prepareLogin()
-  elseif event == 'PLAYER_REGEN_ENABLED' then
-    self:UnregisterEvent('PLAYER_REGEN_ENABLED')
-    self:GetScript('OnEvent')(self, 'UPDATE_MACROS')
-    if GSEOptions.resetOOC then
-      GSE.ResetButtons()
-    end
-    f:RegisterEvent('PLAYER_REGEN_ENABLED')
-  elseif event == 'PLAYER_LOGOUT' then
-    GSPrepareLogout(GSEOptions.saveAllMacrosLocal)
-  elseif event == 'PLAYER_ENTERING_WORLD' then
-    processPlayerEnterWorld()
-  elseif event == 'ADDON_LOADED' and addon == GNOME then
-    processAddonLoaded()
-  elseif event == 'UNIT_SPELLCAST_SUCCEEDED' then
-    processUnitSpellcast(addon)
-  end
-end)
-f:RegisterEvent('UPDATE_MACROS')
-f:RegisterEvent('PLAYER_LOGIN')
-f:RegisterEvent('ADDON_LOADED')
-f:RegisterEvent('PLAYER_LOGOUT')
-f:RegisterEvent('PLAYER_ENTERING_WORLD')
-f:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
-f:RegisterEvent('PLAYER_REGEN_ENABLED')
 
+function GSE:PLAYER_LOGOUT()
+  GSE.PrepareLogout(GSEOptions.saveAllMacrosLocal)
+end
+
+GSE:RegisterEvent('UPDATE_MACROS')
+GSE:RegisterEvent('PLAYER_LOGIN')
+
+GSE:RegisterEvent('PLAYER_LOGOUT')
+GSE:RegisterEvent('PLAYER_ENTERING_WORLD')
+GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
+GSE:RegisterEvent('ADDON_LOADED')
+GSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 
 local function PrintGnomeHelp()
   GSE.Print(L["GnomeSequencer was originally written by semlar of wowinterface.com."], GNOME)

@@ -14,6 +14,7 @@ local importStr = ""
 local otherversionlistboxvalue = ""
 
 local editframe = AceGUI:Create("Frame")
+editframe:Hide()
 GSE.GUI.EditFrame = editframe
 
 

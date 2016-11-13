@@ -49,11 +49,11 @@ MacroExecution\Core.lua
 
 
 # GUI
-GUI\Editor.lua
+GUI\Options.lua
 GUI\DebugWindow.lua
 GUI\Transmission.lua
 GUI\VersionManagement.lua
-GUI\Viewer.lua
-GUI\Options.lua
 GUI\Recorder.lua
+GUI\Editor.lua
+GUI\Viewer.lua
 API\GUIFuntions.lua

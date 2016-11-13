@@ -7,6 +7,7 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
 local recordframe = AceGUI:Create("Frame")
+recordframe:Hide()
 GSE.GUI.RecordFrame = recordframe
 local recbuttontext = L["Record"]
 
@@ -23,6 +24,7 @@ recordsequencebox:SetNumLines(20)
 recordsequencebox:DisableButton(true)
 recordsequencebox:SetFullWidth(true)
 recordframe:AddChild(recordsequencebox)
+GSE.GUI.RecordFrame.RecordSequenceBox = recordsequencebox
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
@@ -31,13 +33,13 @@ recButtonGroup:SetLayout("Flow")
 local recbutton = AceGUI:Create("Button")
 recbutton:SetText(L["Record"])
 recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSSE:ManageRecord() end)
+recbutton:SetCallback("OnClick", function() GSE.GUI.ManageRecord() end)
 recButtonGroup:AddChild(recbutton)
 
 local createmacrobutton = AceGUI:Create("Button")
 createmacrobutton:SetText(L["Create Macro"])
 createmacrobutton:SetWidth(150)
-createmacrobutton:SetCallback("OnClick", function() GSSE:SaveRecordMacro() end)
+createmacrobutton:SetCallback("OnClick", function() GSE.GUI.SaveRecordMacro() end)
 createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 
@@ -52,12 +54,12 @@ end
 
 function GSE.GUI.ManageRecord()
   if recbuttontext == L["Record"] then
-    GSSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
     recbuttontext = L["Stop"]
     createmacrobutton:SetDisabled(false)
+    GSE.RecorderActive = true
   else
     recbuttontext = L["Record"]
-    GSSE:UnregisterEvent('UNIT_SPELLCAST_SUCCEEDED')
+    GSE.RecorderActive = false
   end
   recbutton:SetText(recbuttontext)
 end

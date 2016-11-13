@@ -11,6 +11,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 local viewframe = AceGUI:Create("Frame")
 GSE.GUI.ViewFrame = viewframe
+viewframe:Hide()
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
