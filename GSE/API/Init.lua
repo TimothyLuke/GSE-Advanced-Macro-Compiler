@@ -36,7 +36,7 @@ function GSE.Print(message, title)
   end
   table.insert(GSE.OutputQueue, message)
   if GSE.PrintAvailable then
-    GSPerformPrint()
+    GSE.PerformPrint()
   end
 end
 

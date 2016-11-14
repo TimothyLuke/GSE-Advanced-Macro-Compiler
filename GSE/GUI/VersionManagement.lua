@@ -12,6 +12,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 local versionframe = AceGUI:Create("Frame")
 GSE.GUI.VersionFrame = versionframe
+versionframe:Hide()
 
 versionframe:SetTitle(L["Manage Versions"])
 versionframe:SetStatusText(L["Gnome Sequencer: Sequence Version Manager"])

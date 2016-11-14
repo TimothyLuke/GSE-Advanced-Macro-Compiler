@@ -4,6 +4,7 @@ local Statics = GSE.Static
 local L = GSE.L
 
 
+
 --- Disable all versions of a sequence and delete any macro stubs.
 function GSE.DisableSequence(SequenceName)
   GSEOptions.DisabledSequences[SequenceName] = true
@@ -19,24 +20,6 @@ end
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence)
   local confirmationtext = ""
-  --Perform some validation checks on the Sequence.
-  if GSE.isEmpty(sequence.specID) then
-    -- set to currentSpecID
-    sequence.SpecID = GSE.GetCurrentSpecID()
-    confirmationtext = confirmationtext .. " " .. L["Sequence specID set to current spec of "] .. sequence.SpecID .. "."
-  end
-  sequence.SpecID = sequence.SpecID + 0 -- force to a number.
-  if GSE.isEmpty(sequence.Author) then
-    -- set to unknown author
-    sequence.Author = "Unknown Author"
-    confirmationtext = confirmationtext .. " " .. L["Sequence Author set to Unknown"] .. "."
-  end
-  if GSE.isEmpty(sequence.Talents) then
-    -- set to currentSpecID
-    sequence.Talents = "?,?,?,?,?,?,?"
-    confirmationtext = confirmationtext .. " " .. L["No Help Information Available"] .. "."
-  end
-
   -- CHeck for colissions
   local found = false
   if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
@@ -50,6 +33,24 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     end
   else
     -- New Sequence
+    --Perform some validation checks on the Sequence.
+    if GSE.isEmpty(sequence.SpecID) then
+      -- set to currentSpecID
+      sequence.SpecID = GSE.GetCurrentSpecID()
+      confirmationtext = confirmationtext .. " " .. L["Sequence specID set to current spec of "] .. sequence.SpecID .. "."
+    end
+    sequence.SpecID = sequence.SpecID + 0 -- force to a number.
+    if GSE.isEmpty(sequence.Author) then
+      -- set to unknown author
+      sequence.Author = "Unknown Author"
+      confirmationtext = confirmationtext .. " " .. L["Sequence Author set to Unknown"] .. "."
+    end
+    if GSE.isEmpty(sequence.Talents) then
+      -- set to currentSpecID
+      sequence.Talents = "?,?,?,?,?,?,?"
+      confirmationtext = confirmationtext .. " " .. L["No Help Information Available"] .. "."
+    end
+
     if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
       -- Sequence is new
       GSELibrary[GSE.GetCurrentClassID()][sequenceName] = {}
@@ -58,14 +59,14 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
     local makemacrostub = false
     local globalstub = false
-    if sequence.specID == GSE.GetCurrentSpecID() or sequence.specID == GSGetCurrentClassID() then
+    if sequence.SpecID == GSE.GetCurrentSpecID() or sequence.SpecID == GSE.GetCurrentClassID() then
       makemacrostub = true
     elseif GSEOptions.autoCreateMacroStubsClass then
-      if GSisSpecIDForCurrentClass(sequence.specID) then
+      if GSisSpecIDForCurrentClass(sequence.SpecID) then
         makemacrostub = true
       end
     elseif GSEOptions.autoCreateMacroStubsGlobal then
-      if sequence.specID == 0 then
+      if sequence.SpecID == 0 then
         makemacro = true
         globalstub = true
       end
@@ -86,7 +87,7 @@ end
 --- Load a collection of Sequences
 function GSE.ImportMacroCollection(Sequences)
   for k,v in pairs(Sequences) do
-    GSAddSequenceToCollection(k, v, v.version)
+    GSE.AddSequenceToCollection(k, v)
   end
 end
 
@@ -229,7 +230,7 @@ function GSE.ImportSequence(importStr)
           v.version = GSGetNextSequenceVersion(k)
         end
         v.source = GSStaticSourceLocal
-        GSAddSequenceToCollection(k, v, v.version)
+        GSE.AddSequenceToCollection(k, v)
         GSUpdateSequence(k, GSELibrary[k][v.version])
         if GSE.isEmpty(v.icon) then
           -- Set a default icon
@@ -357,7 +358,7 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   end
 
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
-  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\nauthor=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.author) and "Unknown Author" or sequence.author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.specID) and "-- Unknown specID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "specID=" .. GSEOptions.NUMBER  .. sequence.specID .. Statics.StringReset ..",\n") .. specversion .. source .. helptext .. steps .. internalloop)
+  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\nauthor=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.author) and "Unknown Author" or sequence.author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") .. specversion .. source .. helptext .. steps .. internalloop)
   if not GSE.isEmpty(sequence.icon) then
      returnVal = returnVal .. "icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.icon) and sequence.icon or "'".. sequence.icon .. "'") .. Statics.StringReset ..",\n"
   end
@@ -461,17 +462,17 @@ function GSE.ListSequences(txt)
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
   for name, sequence in pairs(GSELibrary) do
-    if not GSE.isEmpty(sequence[GSGetActiveSequenceVersion(name)].specID) then
-      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence[GSGetActiveSequenceVersion(name)].specID)
+    if not GSE.isEmpty(sequence[GSGetActiveSequenceVersion(name)].SpecID) then
+      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence[GSGetActiveSequenceVersion(name)].SpecID)
       GSE.PrintDebugMessage(L["Sequence Name: "] .. name)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSE.PrintDebugMessage(L["No Specialisation information for sequence "] .. name .. L[". Overriding with information for current spec "] .. specname)
-      if sequence[GSGetActiveSequenceVersion(name)].specID == currentSpecID or string.upper(txt) == specclass then
+      if sequence[GSGetActiveSequenceVersion(name)].SpecID == currentSpecID or string.upper(txt) == specclass then
         GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. GSEOptions.INDENT .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. Statics.StringReset .. ' ' .. GSEOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ', GNOME)
         GSregisterSequence(name, (GSE.isEmpty(sequence[GSGetActiveSequenceVersion(name)].icon) and strsub(specicon, 17) or sequence[GSGetActiveSequenceVersion(name)].icon))
-      elseif txt == "all" or sequence[GSGetActiveSequenceVersion(name)].specID == 0  then
+      elseif txt == "all" or sequence[GSGetActiveSequenceVersion(name)].SpecID == 0  then
         GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt or L["No Help Information "] .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ', GNOME)
-      elseif sequence[GSGetActiveSequenceVersion(name)].specID == currentclassId then
+      elseif sequence[GSGetActiveSequenceVersion(name)].SpecID == currentclassId then
         GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. sequence[GSGetActiveSequenceVersion(name)].version  .. " " .. sequence[GSGetActiveSequenceVersion(name)].helpTxt .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence[GSGetActiveSequenceVersion(name)].author ..'|r ', GNOME )
         GSregisterSequence(name, (GSE.isEmpty(sequence[GSGetActiveSequenceVersion(name)].icon) and strsub(specicon, 17) or sequence[GSGetActiveSequenceVersion(name)].icon))
       end
@@ -487,7 +488,7 @@ end
 function GSE.UpdateSequence(name,sequence)
     local button = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.specID) then
+    if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.SpecID) then
       sequence = GSE.TranslateSequence(sequence, name)
     end
     if GSE.isEmpty(_G[name]) then
@@ -570,12 +571,12 @@ function GSE.CompareSequence(seq1,seq2)
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
 
-  if seq1.KeyRelease == seq2.KeyRelease and seq1.KeyPress == seq2.KeyPress and seq1.specID == seq2.specID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
+  if seq1.KeyRelease == seq2.KeyRelease and seq1.KeyPress == seq2.KeyPress and seq1.SpecID == seq2.SpecID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
     -- we have a match
     match = true
     GSE.PrintDebugMessage(L["We have a perfect match"], GNOME)
   else
-    if seq1.specID == seq2.specID then
+    if seq1.SpecID == seq2.SpecID then
       GSE.PrintDebugMessage(L["Matching specID"], GNOME)
     else
       GSE.PrintDebugMessage(L["Different specID"], GNOME)
@@ -671,16 +672,16 @@ function GSE.getSequenceNames()
     for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
       --print (table.getn(GSELibrary[k]))
       if not GSE.isEmpty(GSELibrary[k]) then
-        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].specID)
+        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].SpecID)
         if GSEOptions.filterList["All"] then
           keyset[k]=k
-        elseif GSELibrary[k][v].specID == 0 then
+        elseif GSELibrary[k][v].SpecID == 0 then
           keyset[k]=k
         elseif GSEOptions.filterList["Class"]  then
           if pspecclass == specclass then
             keyset[k]=k
           end
-        elseif GSELibrary[k][v].specID == currentSpecID then
+        elseif GSELibrary[k][v].SpecID == currentSpecID then
           keyset[k]=k
         else
           -- do nothing
@@ -714,11 +715,11 @@ function GSE:GetMacroIcon(sequenceIndex)
     GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
   end
   if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].icon) and GSE.isEmpty(iconid) then
-    GSE.PrintDebugMessage("SequenceSpecID: " .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID, GNOME)
-    if GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID == 0 then
+    GSE.PrintDebugMessage("SequenceSpecID: " .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].SpecID, GNOME)
+    if GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].SpecID == 0 then
       return "INV_MISC_QUESTIONMARK"
     else
-      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID) and GSE.GetCurrentSpecID() or GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].specID))
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].SpecID) and GSE.GetCurrentSpecID() or GSELibrary[GSE.GetCurrentClassID()][sequenceIndex][GSGetActiveSequenceVersion(currentSequence)].SpecID))
       GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end

@@ -141,7 +141,7 @@ function GSE:UPDATE_MACROS()
   end
 end
 
-local function processPlayerEnterWorld()
+function GSE:PLAYER_ENTERING_WORLD()
   GSE.PrintAvailable = true
   GSE.PerformPrint()
   -- check macro stubs
@@ -161,13 +161,15 @@ function GSE:ADDON_LOADED()
   if GSE.isEmpty(GSELibrary) then
     GSELibrary = {}
   end
-
-  local counter = 0
-  for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
-    counter = counter + 1
-
+  if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()]) then
+    GSELibrary[GSE.GetCurrentClassID()] = {}
   end
 
+  local counter = 0
+
+  for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
+    counter = counter + 1
+  end
   if counter <= 0 then
     StaticPopup_Show ("GSE-SampleMacroDialog")
   end
