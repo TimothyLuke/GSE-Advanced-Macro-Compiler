@@ -193,7 +193,6 @@ end
 
 function GSE:PLAYER_REGEN_ENABLED(self,event,addon)
   GSE:UnregisterEvent('PLAYER_REGEN_ENABLED')
-  GSE:GetScript('OnEvent')(self, 'UPDATE_MACROS')
   if GSEOptions.resetOOC then
     GSE.ResetButtons()
   end

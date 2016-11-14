@@ -176,9 +176,9 @@ function GSE.GetActiveSequenceVersion(SequenceName)
   local vers = GSELibrary[SequenceName].Default or 1
   if not GSE.isEmpty(GSELibrary[SequenceName].PVP) and GSE.PVPFlag then
     vers = GSE.isEmpty(GSELibrary[SequenceName].PVP
-  elseif not GSE.isEmpty(GSELibrary[SequenceName].Raid) and GSE.inRaid
+  elseif not GSE.isEmpty(GSELibrary[SequenceName].Raid) and GSE.inRaid then
     vers = GSE.isEmpty(GSELibrary[SequenceName].Raid
-  elseif not GSE.isEmpty(GSELibrary[SequenceName].Mythic) and GSE.inMythic
+  elseif not GSE.isEmpty(GSELibrary[SequenceName].Mythic) and GSE.inMythic then
     vers = GSE.isEmpty(GSELibrary[SequenceName].Mythic
   end
   return vers

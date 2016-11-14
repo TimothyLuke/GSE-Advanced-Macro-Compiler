@@ -71,7 +71,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.PVPFlag = false
   end
-  if difficulty = 23 then
+  if difficulty == 23 then
     GSE.inMythic = true
   else
     GSE.inMythic = false
