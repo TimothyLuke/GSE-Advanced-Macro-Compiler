@@ -174,13 +174,13 @@ end
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(SequenceName)
   -- Set to default or 1 if no default
-  local vers = GSELibrary[SequenceName].Default or 1
-  if not GSE.isEmpty(GSELibrary[SequenceName].PVP) and GSE.PVPFlag then
-    vers = GSELibrary[SequenceName].PVP
-  elseif not GSE.isEmpty(GSELibrary[SequenceName].Raid) and GSE.inRaid then
-    vers = GSELibrary[SequenceName].Raid
-  elseif not GSE.isEmpty(GSELibrary[SequenceName].Mythic) and GSE.inMythic then
-    vers = GSELibrary[SequenceName].Mythic
+  local vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Default or 1
+  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].PVP) and GSE.PVPFlag then
+    vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].PVP
+  elseif not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Raid) and GSE.inRaid then
+    vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Raid
+  elseif not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Mythic) and GSE.inMythic then
+    vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Mythic
   end
   return vers
 end
@@ -252,19 +252,22 @@ end
 
 function GSE.ReloadSequences()
   GSE.PrintDebugMessage(L["Reloading Sequences"])
-  for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
-    GSE.PrintDebugMessage(name .. " " .. version )
-    if not GSE.isEmpty(GSELibrary[name]) then
-      vers = GSE.GetActiveSequenceVersion(name)
-      GSE.PrintDebugMessage(vers)
-      if not GSE.isEmpty(GSELibrary[name][vers]) then
-        GSE.UpdateSequence(name, GSELibrary[name][vers])
-      else
-        GSEOptions.ActiveSequenceVersions[name] = nil
-        GSE.PrintDebugMessage(L["Removing "] .. name .. L[" From library"])
-      end
-    end
+  for name, sequence in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
+    GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
+  -- for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
+  --   GSE.PrintDebugMessage(name .. " " .. version )
+  --   if not GSE.isEmpty(GSELibrary[name]) then
+  --     vers = GSE.GetActiveSequenceVersion(name)
+  --     GSE.PrintDebugMessage(vers)
+  --     if not GSE.isEmpty(GSELibrary[name][vers]) then
+  --       GSE.UpdateSequence(name, GSELibrary[name][vers])
+  --     else
+  --       GSEOptions.ActiveSequenceVersions[name] = nil
+  --       GSE.PrintDebugMessage(L["Removing "] .. name .. L[" From library"])
+  --     end
+  --   end
+  -- end
 end
 
 function GSE.ToggleDisabledSequence(SequenceName)
@@ -490,7 +493,7 @@ function GSE.UpdateSequence(name,sequence)
       sequence = GSE.TranslateSequence(sequence, name)
     end
     if GSE.isEmpty(_G[name]) then
-      createButton(name, sequence)
+      GSE.CreateButton(name,sequence)
     else
       button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
       button:SetAttribute("step",1)
@@ -818,33 +821,32 @@ end
 
 
 function GSE.CreateButton(name, sequence)
-  GSE.FixSequence(sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
-  button:SetAttribute('step', 1)
-  button:SetAttribute('KeyPress','\n' .. prepareKeyPress(sequence.KeyPress or ''))
-  GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
-  GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
-  if GSE.isLoopSequence(sequence) then
-    if GSE.isEmpty(sequence.StepFunction) then
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
-    else
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
-    end
-    if not GSE.isEmpty(sequence.loopstart) then
-      button:SetAttribute('loopstart', sequence.loopstart)
-    end
-    if not GSE.isEmpty(sequence.loopstop) then
-      button:SetAttribute('loopstop', sequence.loopstop)
-    end
-    if not GSE.isEmpty(sequence.looplimit) then
-      button:SetAttribute('looplimit', sequence.looplimit)
-    end
-  else
-    button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-  end
+  -- button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
+  -- button:SetAttribute('step', 1)
+  -- button:SetAttribute('KeyPress','\n' .. prepareKeyPress(sequence.KeyPress or ''))
+  -- GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
+  -- button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
+  -- GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
+  -- if GSE.isLoopSequence(sequence) then
+  --   if GSE.isEmpty(sequence.StepFunction) then
+  --     button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
+  --   else
+  --     button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
+  --   end
+  --   if not GSE.isEmpty(sequence.loopstart) then
+  --     button:SetAttribute('loopstart', sequence.loopstart)
+  --   end
+  --   if not GSE.isEmpty(sequence.loopstop) then
+  --     button:SetAttribute('loopstop', sequence.loopstop)
+  --   end
+  --   if not GSE.isEmpty(sequence.looplimit) then
+  --     button:SetAttribute('looplimit', sequence.looplimit)
+  --   end
+  -- else
+  --   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+  -- end
   button.UpdateIcon = UpdateIcon
 end
 

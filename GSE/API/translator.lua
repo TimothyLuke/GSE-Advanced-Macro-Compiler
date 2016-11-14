@@ -293,5 +293,3 @@ function GSE.ReportUnfoundSpells()
 end
 
 GSE.TranslatorAvailable = true
--- Reloading Sequences as Translator is now here.
-GSE.ReloadSequences()
