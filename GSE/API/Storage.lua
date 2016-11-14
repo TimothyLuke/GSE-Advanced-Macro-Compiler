@@ -175,11 +175,11 @@ function GSE.GetActiveSequenceVersion(SequenceName)
   -- Set to default or 1 if no default
   local vers = GSELibrary[SequenceName].Default or 1
   if not GSE.isEmpty(GSELibrary[SequenceName].PVP) and GSE.PVPFlag then
-    vers = GSE.isEmpty(GSELibrary[SequenceName].PVP
+    vers = GSELibrary[SequenceName].PVP
   elseif not GSE.isEmpty(GSELibrary[SequenceName].Raid) and GSE.inRaid then
-    vers = GSE.isEmpty(GSELibrary[SequenceName].Raid
+    vers = GSELibrary[SequenceName].Raid
   elseif not GSE.isEmpty(GSELibrary[SequenceName].Mythic) and GSE.inMythic then
-    vers = GSE.isEmpty(GSELibrary[SequenceName].Mythic
+    vers = GSELibrary[SequenceName].Mythic
   end
   return vers
 end

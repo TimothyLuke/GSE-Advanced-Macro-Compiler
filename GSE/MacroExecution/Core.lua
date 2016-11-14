@@ -191,7 +191,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
   end
 end
 
-function GSE:PLAYER_REGEN_ENABLED(self,event,addon)
+function GSE:PLAYER_REGEN_ENABLED(unit,event,addon)
   GSE:UnregisterEvent('PLAYER_REGEN_ENABLED')
   if GSEOptions.resetOOC then
     GSE.ResetButtons()
