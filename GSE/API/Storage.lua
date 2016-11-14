@@ -399,7 +399,7 @@ function GSE.CleanOrphanSequences()
     end
   end
   for k,_ in pairs(todelete) do
-    GSdeleteMacroStub(k)
+    GSE.DeleteMacroStub(k)
   end
 end
 
@@ -461,23 +461,21 @@ function GSE.ListSequences(txt)
   local currentSpec = GetSpecialization()
 
   local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
-  for name, sequence in pairs(GSELibrary) do
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][name].SpecID) then
-      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[GSE.GetCurrentClassID()][name].SpecID)
+  for name, sequence in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
+    if not GSE.isEmpty(sequence.SpecID) then
+      local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(sequence.SpecID)
       GSE.PrintDebugMessage(L["Sequence Name: "] .. name)
       sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSE.PrintDebugMessage(L["No Specialisation information for sequence "] .. name .. L[". Overriding with information for current spec "] .. specname)
-      if GSELibrary[GSE.GetCurrentClassID()][name].SpecID == currentSpecID or string.upper(txt) == specclass then
-        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. GSELibrary[GSE.GetCurrentClassID()][name].version  .. " " .. GSEOptions.INDENT .. GSELibrary[GSE.GetCurrentClassID()][name].helpTxt .. Statics.StringReset .. ' ' .. GSEOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. GSELibrary[GSE.GetCurrentClassID()][name].author ..'|r ', GNOME)
-        GSE.RegisterSequence(name, (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][name].Icon) and strsub(specicon, 17) or GSELibrary[GSE.GetCurrentClassID()][name].Icon))
-      elseif txt == "all" or GSELibrary[GSE.GetCurrentClassID()][name].SpecID == 0  then
-        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. GSELibrary[GSE.GetCurrentClassID()][name].version  .. " " .. GSELibrary[GSE.GetCurrentClassID()][name].helpTxt or L["No Help Information "] .. GSEOptions.AuthorColour .. L["Contributed by: "] .. GSELibrary[GSE.GetCurrentClassID()][name].author ..'|r ', GNOME)
+      if sequence.SpecID == currentSpecID or string.upper(txt) == specclass then
+        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. " " .. GSEOptions.INDENT .. sequence.Talents .. Statics.StringReset .. ' ' .. GSEOptions.EmphasisColour .. specclass .. '|r ' .. specname .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence.Author ..'|r ', GNOME)
+      elseif txt == "all" or sequence.SpecID == 0  then
+        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' ..  " " .. sequence.Talents or L["No Help Information "] .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence.Author ..'|r ', GNOME)
       elseif GSELibrary[GSE.GetCurrentClassID()][name].SpecID == currentclassId then
-        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' .. L["Version="] .. GSELibrary[GSE.GetCurrentClassID()][name].version  .. " " .. GSELibrary[GSE.GetCurrentClassID()][name].helpTxt .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. GSELibrary[GSE.GetCurrentClassID()][name].author ..'|r ', GNOME )
-        GSE.RegisterSequence(name, (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][name].Icon) and strsub(specicon, 17) or GSELibrary[GSE.GetCurrentClassID()][name].Icon))
+        GSE.Print(GSEOptions.CommandColour .. name ..'|r ' ..  " " .. sequence.Talents .. ' ' .. GSEOptions.AuthorColour .. L["Contributed by: "] .. sequence.Author ..'|r ', GNOME )
       end
     else
-      GSE.Print(GSEOptions.CommandColour .. name .. L["|r Incomplete Sequence Definition - This sequence has no further information "] .. GSEOptions.AuthorColour .. L["Unknown Author|r "], GNOME )
+      GSE.Print(GSEOptionmmms.CommandColour .. name .. L["|r Incomplete Sequence Definition - This sequence has no further information "] .. GSEOptions.AuthorColour .. L["Unknown Author|r "], GNOME )
     end
   end
   ShowMacroFrame()
