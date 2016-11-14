@@ -242,3 +242,4 @@ Statics.Class = "Class"
 Statics.All = "All"
 
 Statics.SampleMacros = {}
+Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
