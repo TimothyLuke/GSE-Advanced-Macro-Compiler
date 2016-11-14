@@ -73,3 +73,8 @@ end
 
 GSE.CurrentGCD = GetSpellCooldown(61304)
 GSE.RecorderActive = false
+
+-- Macro mode Status
+GSE.PVPFlag = false
+GSE.inRaid = false
+GSE.inMythic = false

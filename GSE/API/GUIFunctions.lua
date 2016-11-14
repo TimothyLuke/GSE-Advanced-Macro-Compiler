@@ -16,14 +16,14 @@ function GSE.GUI.DisableSequence(currentSeq, iconWidget)
     end
     iconWidget:SetImage(reticon)
   end
-  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSELibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSELibrary[currentSeq][GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
+  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
 
 end
 
 function GSE.GUI.LoadEditor(SequenceName, recordstring)
   if not GSE.isEmpty(SequenceName) then
     nameeditbox:SetText(SequenceName)
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].StepFunction) then
+    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].StepFunction) then
      stepdropdown:SetValue("1")
      stepvalue = 1
     else
@@ -31,39 +31,39 @@ function GSE.GUI.LoadEditor(SequenceName, recordstring)
      stepvalue = 2
     end
     GSE.PrintDebugMessage("StepValue: " .. stepvalue, GNOME)
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyPress) then
+    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress) then
       GSE.PrintDebugMessage(L["Moving on - LiveTest.KeyPress already exists."], GNOME)
     else
-     KeyPressbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyPress)
+     KeyPressbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress)
     end
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyRelease) then
+    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease) then
       GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
     else
-     KeyReleasebox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].KeyRelease)
+     KeyReleasebox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease)
     end
-    spellbox:SetText(table.concat(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)],"\n"))
+    spellbox:SetText(table.concat(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)],"\n"))
     reticon = GSSE:getMacroIcon(SequenceName)
     if not tonumber(reticon) then
       -- we have a starting
       reticon = "Interface\\Icons\\" .. reticon
     end
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].helpTxt) then
+    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].helpTxt) then
       helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
     else
-      helpeditbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].helpTxt)
+      helpeditbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].helpTxt)
     end
     iconpicker:SetImage(reticon)
     GSE.PrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
-    speciddropdown:SetValue(GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].specID])
-    specdropdownvalue = GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].specID]
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart) then
-      loopstart:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstart)
+    speciddropdown:SetValue(GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].specID])
+    specdropdownvalue = GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].specID]
+    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstart) then
+      loopstart:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstart)
     end
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop) then
-      loopstop:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].loopstop)
+    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstop) then
+      loopstop:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstop)
     end
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit) then
-      looplimit:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].looplimit)
+    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].looplimit) then
+      looplimit:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].looplimit)
     end
   elseif not GSE.isEmpty(recordstring) then
     iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
@@ -119,9 +119,9 @@ end
 function GSE.GUI.loadSequence(SequenceName)
   GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
   if GSAdditionalLanguagesAvailable and GSEOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)].lang), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang), GetLocale()), SequenceName))
   elseif GSTranslatorAvailable then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName][GSGetActiveSequenceVersion(SequenceName)], GetLocale(), GetLocale()), SequenceName))
+    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], GetLocale(), GetLocale()), SequenceName))
   else
     sequenceboxtext:SetText(GSExportSequence(SequenceName))
   end

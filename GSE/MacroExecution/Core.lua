@@ -10,28 +10,6 @@ local GCD, GCD_Update_Timer
 
 local usoptions = GSE.UnsavedOptions
 
-local function UpdateIcon(self)
-  local step = self:GetAttribute('step') or 1
-  local button = self:GetName()
-  local sequence, foundSpell, notSpell = GSELibrary[button][GSGetActiveSequenceVersion(button)][step], false, ''
-  for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
-    if Statics.CastCmds[strlower(cmd)] then
-      local spell, target = SecureCmdOptionParse(etc)
-      GSE.TraceSequence(button, step, spell)
-      if spell then
-        if GetSpellInfo(spell) then
-          SetMacroSpell(button, spell, target)
-          foundSpell = true
-          break
-        elseif notSpell == '' then
-          notSpell = spell
-        end
-      end
-    end
-  end
-  if not foundSpell then SetMacroItem(button, notSpell) end
-end
-
 
 local function prepareKeyPress(KeyPress)
   if GSEOptions.hideSoundErrors then
@@ -108,39 +86,6 @@ self:CallMethod('UpdateIcon')
 ]=]
 
 
-
-local function createButton(name, sequence)
-  GSE.FixSequence(sequence)
-  local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
-  button:SetAttribute('type', 'macro')
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
-  button:SetAttribute('step', 1)
-  button:SetAttribute('KeyPress','\n' .. prepareKeyPress(sequence.KeyPress or ''))
-  GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
-  GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
-  if GSE.isLoopSequence(sequence) then
-    if GSE.isEmpty(sequence.StepFunction) then
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
-    else
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
-    end
-    if not GSE.isEmpty(sequence.loopstart) then
-      button:SetAttribute('loopstart', sequence.loopstart)
-    end
-    if not GSE.isEmpty(sequence.loopstop) then
-      button:SetAttribute('loopstop', sequence.loopstop)
-    end
-    if not GSE.isEmpty(sequence.looplimit) then
-      button:SetAttribute('looplimit', sequence.looplimit)
-    end
-  else
-    button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-  end
-  button.UpdateIcon = UpdateIcon
-end
-
-
 function GSE:PLAYER_LOGIN()
   GSE:UPDATE_MACROS()
 end
@@ -190,8 +135,9 @@ function GSE:UPDATE_MACROS()
     --   GSReloadSequences()
     -- end
     -- IgnoreMacroUpdates = false
+    GSE.PrintDebugMessage("I may not need this", GNOME)
   else
-    self:RegisterEvent('PLAYER_REGEN_ENABLED')
+    GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
   end
 end
 
