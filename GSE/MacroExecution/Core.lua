@@ -11,59 +11,6 @@ local GCD, GCD_Update_Timer
 local usoptions = GSE.UnsavedOptions
 
 
-local function prepareKeyPress(KeyPress)
-  if GSEOptions.hideSoundErrors then
-    -- potentially change this to SetCVar("Sound_EnableSFX", 0)
-    KeyPress = "/run sfx=GetCVar(\"Sound_EnableSFX\");\n/run ers=GetCVar(\"Sound_EnableErrorSpeech\");\n/console Sound_EnableSFX 0\n/console Sound_EnableErrorSpeech 0\n" .. KeyPress
-  end
-  if GSEOptions.requireTarget then
-    -- see #20 prevent target hopping
-    KeyPress = "/stopmacro [@playertarget, noexists]\n" .. KeyPress
-  end
-  return GSE.UnEscapeString(KeyPress)
-end
-
-local function prepareKeyRelease(KeyRelease)
-  if GSEOptions.requireTarget then
-    -- see #20 prevent target hopping
-    KeyRelease = KeyRelease .. "\n/stopmacro [@playertarget, noexists]"
-  end
-  if GSEOptions.use11 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 11"
-  end
-  if GSEOptions.use12 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 12"
-  end
-  if GSEOptions.use13 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 13"
-  end
-  if GSEOptions.use14 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 14"
-  end
-  if GSEOptions.use2 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 2"
-  end
-  if GSEOptions.use1 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 1"
-  end
-  if GSEOptions.use6 then
-    KeyRelease = KeyRelease .. "\n/use [combat] 6"
-  end
-  if GSEOptions.hideSoundErrors then
-    -- potentially change this to SetCVar("Sound_EnableSFX", 1)
-    KeyRelease = KeyRelease .. "\n/run SetCVar(\"Sound_EnableSFX\",sfx);\n/run SetCVar(\"Sound_EnableErrorSpeech\",ers);"
-  end
-  if GSEOptions.hideUIErrors then
-    KeyRelease = KeyRelease .. "\n/script UIErrorsFrame:Hide();"
-    -- potentially change this to UIErrorsFrame:Hide()
-  end
-  if GSEOptions.clearUIErrors then
-    -- potentially change this to UIErrorsFrame:Clear()
-    KeyRelease = KeyRelease .. "\n/run UIErrorsFrame:Clear()"
-  end
-  return GSE.UnEscapeString(KeyRelease)
-end
-
 local OnClick = [=[
 local step = self:GetAttribute('step')
 local loopstart = self:GetAttribute('loopstart') or 1
@@ -157,7 +104,7 @@ function GSE:PLAYER_ENTERING_WORLD()
   end
 end
 
-function GSE:ADDON_LOADED()
+function GSE:ADDON_LOADED(addon)
   if GSE.isEmpty(GSELibrary) then
     GSELibrary = {}
   end

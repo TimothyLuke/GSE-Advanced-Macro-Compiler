@@ -57,27 +57,27 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     end
 
     GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
-    local makemacrostub = false
-    local globalstub = false
-    if sequence.SpecID == GSE.GetCurrentSpecID() or sequence.SpecID == GSE.GetCurrentClassID() then
-      makemacrostub = true
-    elseif GSEOptions.autoCreateMacroStubsClass then
-      if GSisSpecIDForCurrentClass(sequence.SpecID) then
-        makemacrostub = true
-      end
-    elseif GSEOptions.autoCreateMacroStubsGlobal then
-      if sequence.SpecID == 0 then
-        makemacro = true
-        globalstub = true
-      end
-    end
-    if makemacrostub then
-      if GSEOptions.DisabledSequences[sequenceName] == true then
-        GSE.DeleteMacroStub(sequenceName)
-      else
-        GSE.CheckMacroCreated(sequenceName, globalstub)
-      end
-    end
+    -- local makemacrostub = false
+    -- local globalstub = false
+    -- if sequence.SpecID == GSE.GetCurrentSpecID() or sequence.SpecID == GSE.GetCurrentClassID() then
+    --   makemacrostub = true
+    -- elseif GSEOptions.autoCreateMacroStubsClass then
+    --   if GSisSpecIDForCurrentClass(sequence.SpecID) then
+    --     makemacrostub = true
+    --   end
+    -- elseif GSEOptions.autoCreateMacroStubsGlobal then
+    --   if sequence.SpecID == 0 then
+    --     makemacro = true
+    --     globalstub = true
+    --   end
+    -- end
+    -- if makemacrostub then
+    --   if GSEOptions.DisabledSequences[sequenceName] == true then
+    --     GSE.DeleteMacroStub(sequenceName)
+    --   else
+    --     GSE.CheckMacroCreated(sequenceName, globalstub)
+    --   end
+    -- end
   end
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
@@ -172,7 +172,7 @@ end
 
 
 --- Return the Active Sequence Version for a Sequence.
-function GSE.GetActiveSequenceVersion(SequenceName)
+function GSE.GetActiveSequenceVersion(sequenceName)
   -- Set to default or 1 if no default
   local vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Default or 1
   if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].PVP) and GSE.PVPFlag then
@@ -494,33 +494,33 @@ function GSE.UpdateSequence(name,sequence)
     end
     if GSE.isEmpty(_G[name]) then
       GSE.CreateButton(name,sequence)
-    else
-      button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
-      button:SetAttribute("step",1)
-      button:SetAttribute('KeyPress',prepareKeyPress(sequence.KeyPress or '') .. '\n')
-      GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
-      button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
-      GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
-      button:UnwrapScript(button,'OnClick')
-      if GSisLoopSequence(sequence) then
-        if GSE.isEmpty(sequence.StepFunction) then
-          button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
-        else
-          button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
-        end
-      else
-        button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-      end
-      if not GSE.isEmpty(sequence.loopstart) then
-        button:SetAttribute('loopstart', sequence.loopstart)
-      end
-      if not GSE.isEmpty(sequence.loopstop) then
-        button:SetAttribute('loopstop', sequence.loopstop)
-      end
-      if not GSE.isEmpty(sequence.looplimit) then
-        button:SetAttribute('looplimit', sequence.looplimit)
-      end
     end
+    button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
+    button:SetAttribute("step",1)
+    button:SetAttribute('KeyPress',(table.concat(GSE.PrepareKeyPress(sequence.KeyPress), "\n") or '') .. '\n')
+    GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
+    button:SetAttribute('KeyRelease', '\n' .. GSE.PrepareKeyRelease(sequence.KeyRelease or ''))
+    GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
+    button:UnwrapScript(button,'OnClick')
+    if GSisLoopSequence(sequence) then
+      if GSE.isEmpty(sequence.StepFunction) then
+        button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
+      else
+        button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
+      end
+    else
+      button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+    end
+    if not GSE.isEmpty(sequence.loopstart) then
+      button:SetAttribute('loopstart', sequence.loopstart)
+    end
+    if not GSE.isEmpty(sequence.loopstop) then
+      button:SetAttribute('loopstop', sequence.loopstop)
+    end
+    if not GSE.isEmpty(sequence.looplimit) then
+      button:SetAttribute('looplimit', sequence.looplimit)
+    end
+  end
 end
 
 --- This funciton dumps what is currently running on an existing button.
@@ -871,4 +871,65 @@ function GSE.UpdateIcon(self)
     end
   end
   if not foundSpell then SetMacroItem(button, notSpell) end
+end
+
+function GSE.PrepareKeyPress(KeyPress)
+  local tab = {}
+  for k,v in ipairs(KeyPress) do
+    tab[k] = v
+  end
+  if GSEOptions.hideSoundErrors then
+    -- potentially change this to SetCVar("Sound_EnableSFX", 0)
+    table.insert(tab,"/run sfx=GetCVar(\"Sound_EnableSFX\");")
+    table.insert(tab, "/run ers=GetCVar(\"Sound_EnableErrorSpeech\");")
+    table.insert(tab, "/console Sound_EnableSFX 0")
+    table.insert(tab, "/console Sound_EnableErrorSpeech 0")
+  end
+  return GSE.UnEscapeTable(tab)
+end
+
+function GSE.PrepareKeyRelease(KeyRelease)
+  local tab = {}
+  for k,v in ipairs(KeyRelease) do
+    tab[k] = v
+  end
+  if GSEOptions.requireTarget then
+    -- see #20 prevent target hopping
+    table.insert(tab, "/stopmacro [@playertarget, noexists]")
+  end
+  if GSEOptions.use11 then
+    table.insert(tab, "/use [combat] 11")
+  end
+  if GSEOptions.use12 then
+    table.insert(tab, "/use [combat] 12")
+  end
+  if GSEOptions.use13 then
+    table.insert(tab, "/use [combat] 13")
+  end
+  if GSEOptions.use14 then
+    table.insert(tab, "/use [combat] 14")
+  end
+  if GSEOptions.use2 then
+    table.insert(tab, "/use [combat] 2")
+  end
+  if GSEOptions.use1 then
+    table.insert(tab, "/use [combat] 1")
+  end
+  if GSEOptions.use6 then
+    table.insert(tab, "/use [combat] 6")
+  end
+  if GSEOptions.hideSoundErrors then
+    -- potentially change this to SetCVar("Sound_EnableSFX", 1)
+    table.insert(tab, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
+    table.insert(tab, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
+  end
+  if GSEOptions.hideUIErrors then
+    table.insert(tab, "/script UIErrorsFrame:Hide();")
+    -- potentially change this to UIErrorsFrame:Hide()
+  end
+  if GSEOptions.clearUIErrors then
+    -- potentially change this to UIErrorsFrame:Clear()
+    table.insert(tab, "/run UIErrorsFrame:Clear()")
+  end
+  return GSE.UnEscapeTable(tab)
 end

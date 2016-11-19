@@ -4,19 +4,29 @@ local Statics = GSE.Static
 
 --- remove WoW Text Markup from a sequence
 function GSE.UnEscapeSequence(sequence)
-  local i = 1
-  for _,v in ipairs(sequence) do
-    --print (i .. " " .. v)
-    sequence[i] = GSE.UnEscapeString(v)
-    i = i + 1
-  end
+  GSE.UnEscapeTable(sequence)
   if not GSE.isEmpty(sequence.KeyPress) then
-    sequence.KeyPress = GSE.UnEscapeString(sequence.KeyPress)
+    GSE.UnEscapeTable(sequence.KeyPress)
   end
   if not GSE.isEmpty(sequence.KeyRelease) then
-    sequence.KeyRelease = GSE.UnEscapeString(sequence.KeyRelease)
+    GSE.UnEscapeTable(sequence.KeyRelease)
+  end
+  if not GSE.isEmpty(sequence.PreMacro) then
+    GSE.UnEscapeTable(sequence.PreMacro)
+  end
+  if not GSE.isEmpty(sequence.PostMacro) then
+    GSE.UnEscapeTable(sequence.PostMacro)
   end
   return sequence
+end
+
+function GSE.UnEscapeTable(tab)
+  local i = 1
+  for _,v in ipairs(tab) do
+    --print (i .. " " .. v)
+    tab[i] = GSE.UnEscapeString(v)
+    i = i + 1
+  end
 end
 
 --- remove WoW Text Markup from a string
