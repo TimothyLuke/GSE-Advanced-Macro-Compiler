@@ -301,7 +301,7 @@ function GSE.PrepareLogout(deletenonlocalmacros)
   GnomeOptions = GSEOptions
 end
 
-function GSE.isLoopSequence(sequence)
+function GSE.IsLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.loopstart) then
     loopcheck = true
@@ -348,7 +348,7 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
     end
   end
   local internalloop = ""
-  if GSE.isLoopSequence(sequence) then
+  if GSE.IsLoopSequence(sequence) then
     if not GSE.isEmpty(sequence.loopstart) then
       internalloop = internalloop .. "loopstart=" .. GSEOptions.EQUALS .. sequence.loopstart .. Statics.StringReset .. ",\n"
     end
@@ -382,6 +382,12 @@ function GSE.FixLegacySequence(sequence)
   end
 end
 
+function GSE.FixSequence(sequence)
+  if not GSE.isEmpty(sequence.PreMacro) then sequence.PreMacro = {} end
+  if not GSE.isEmpty(sequence.PostMacro) then sequence.PostMacro = {} end
+  if not GSE.isEmpty(sequence.KeyPress) then sequence.KeyPress = {} end
+  if not GSE.isEmpty(sequence.KeyRelease) then sequence.KeyRelease = {} end
+end
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
@@ -487,39 +493,56 @@ end
 
 --- This function updates the button for an existing sequence3
 function GSE.UpdateSequence(name,sequence)
-    local button = _G[name]
-    -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-    if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.SpecID) then
-      sequence = GSE.TranslateSequence(sequence, name)
-    end
-    if GSE.isEmpty(_G[name]) then
-      GSE.CreateButton(name,sequence)
-    end
-    button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
-    button:SetAttribute("step",1)
-    button:SetAttribute('KeyPress',(table.concat(GSE.PrepareKeyPress(sequence.KeyPress), "\n") or '') .. '\n')
-    GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
-    button:SetAttribute('KeyRelease', '\n' .. GSE.PrepareKeyRelease(sequence.KeyRelease or ''))
-    GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
-    button:UnwrapScript(button,'OnClick')
-    if GSisLoopSequence(sequence) then
-      if GSE.isEmpty(sequence.StepFunction) then
-        button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
-      else
-        button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
-      end
+  -- print(name)
+  -- print(sequence)
+  -- print(debugstack())
+  local button = _G[name]
+  -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
+  if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.SpecID) then
+    sequence = GSE.TranslateSequence(sequence, name)
+  end
+  if GSE.isEmpty(_G[name]) then
+    GSE.CreateButton(name,sequence)
+  end
+  GSE.FixSequence(sequence)
+  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
+  button:SetAttribute("step",1)
+  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence.KeyPress) or {}, "\n") or '' .. '\n')
+  GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
+  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyPress(sequence.KeyRelease) or {}, "\n") or '' .. '\n')
+  GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
+  button:UnwrapScript(button,'OnClick')
+  if GSE.IsLoopSequence(sequence) then
+    if GSE.isEmpty(sequence.StepFunction) then
+      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
     else
-      button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
+      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
     end
-    if not GSE.isEmpty(sequence.loopstart) then
-      button:SetAttribute('loopstart', sequence.loopstart)
-    end
-    if not GSE.isEmpty(sequence.loopstop) then
-      button:SetAttribute('loopstop', sequence.loopstop)
-    end
-    if not GSE.isEmpty(sequence.looplimit) then
-      button:SetAttribute('looplimit', sequence.looplimit)
-    end
+  else
+    button:WrapScript(button, 'OnClick', format(OnClick, GSE.PrepareStepFunction(sequence.StepFunction)))
+  end
+  if not GSE.isEmpty(sequence.loopstart) then
+    button:SetAttribute('loopstart', sequence.loopstart)
+  end
+  if not GSE.isEmpty(sequence.loopstop) then
+    button:SetAttribute('loopstop', sequence.loopstop)
+  end
+  if not GSE.isEmpty(sequence.looplimit) then
+    button:SetAttribute('looplimit', sequence.looplimit)
+  end
+
+end
+
+function GSE.PrepareStepFunction(stepper)
+  if GSE.isEmpty(stepper) then
+    stepper = Statics.Sequential
+  end
+  if stepper == Statics.Priority then
+    return Statics.PriorityImplementation
+  elseif stepper == Statics.Sequential then
+    return 'step = step % #macros + 1'
+  else
+    return stepper
   end
 end
 
@@ -829,7 +852,7 @@ function GSE.CreateButton(name, sequence)
   -- GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
   -- button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
   -- GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
-  -- if GSE.isLoopSequence(sequence) then
+  -- if GSE.IsLoopSequence(sequence) then
   --   if GSE.isEmpty(sequence.StepFunction) then
   --     button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
   --   else
