@@ -11,26 +11,6 @@ local GCD, GCD_Update_Timer
 local usoptions = GSE.UnsavedOptions
 
 
-local OnClick = [=[
-local step = self:GetAttribute('step')
-local loopstart = self:GetAttribute('loopstart') or 1
-local loopstop = self:GetAttribute('loopstop') or #macros + 1
-local loopiter = self:GetAttribute('loopiter') or 1
-local looplimit = self:GetAttribute('looplimit') or 1
-loopstart = tonumber(loopstart)
-loopstop = tonumber(loopstop)
-loopiter = tonumber(loopiter)
-looplimit = tonumber(looplimit)
-step = tonumber(step)
-self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. macros[step] .. self:GetAttribute('KeyRelease'))
-%s
-if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
-  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
-  step = 1
-end
-self:SetAttribute('step', step)
-self:CallMethod('UpdateIcon')
-]=]
 
 
 function GSE:PLAYER_LOGIN()
@@ -40,48 +20,6 @@ end
 
 function GSE:UPDATE_MACROS()
   if not InCombatLockdown() then
-    -- IgnoreMacroUpdates = true
-    -- if not GSE.isEmpty(GSELibrary[2]) then
-    --   local forremoval = {}
-    --   local toprocess = {}
-    --   for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
-    --
-    --     if GSE.isEmpty(GSELibrary[name][version]) then
-    --       -- This value is missing.
-    --       -- check if there is a version.
-    --       ver = GSGetNextSequenceVersion(name)
-    --       if ver then
-    --         -- current version is broken but sequence exists.
-    --         GSEOptions.ActiveSequenceVersions[name] = ver
-    --         toprocess[name] = true
-    --       else
-    --         -- WHole Sequence Tree is no longer present.
-    --         forremoval[name] = true
-    --       end
-    --     else
-    --       toprocess[name] = true
-    --     end
-    --   end
-    --   for name,_ in pairs(toprocess) do
-    --     local macroIndex = GetMacroIndexByName(name)
-    --     if macroIndex and macroIndex ~= 0 then
-    --       if not GSE.ModifiedSequences[name] then
-    --         GSE.ModifiedSequences[name] = true
-    --         EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. name)
-    --       end
-    --       _G[name]:UpdateIcon()
-    --     elseif GSE.ModifiedSequences[name] then
-    --       GSE.ModifiedSequences[name] = nil
-    --     end
-    --   end
-    --   for name,_ in pairs(forremoval) do
-    --     if not GSE.isEmpty(name) then
-    --       GSEOptions.ActiveSequenceVersions[name] = nil
-    --     end
-    --   end
-    --   GSReloadSequences()
-    -- end
-    -- IgnoreMacroUpdates = false
     GSE.PrintDebugMessage("I may not need this", GNOME)
   else
     GSE:RegisterEvent('PLAYER_REGEN_ENABLED')

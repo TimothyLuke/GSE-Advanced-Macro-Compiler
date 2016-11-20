@@ -496,13 +496,13 @@ function GSE.UpdateSequence(name,sequence)
   -- print(name)
   -- print(sequence)
   -- print(debugstack())
+  if GSE.isEmpty(_G[name]) then
+    GSE.CreateButton(name,sequence)
+  end
   local button = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
   if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.SpecID) then
     sequence = GSE.TranslateSequence(sequence, name)
-  end
-  if GSE.isEmpty(_G[name]) then
-    GSE.CreateButton(name,sequence)
   end
   GSE.FixSequence(sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
@@ -514,12 +514,12 @@ function GSE.UpdateSequence(name,sequence)
   button:UnwrapScript(button,'OnClick')
   if GSE.IsLoopSequence(sequence) then
     if GSE.isEmpty(sequence.StepFunction) then
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
+      button:WrapScript(button, 'OnClick', format(Statics.OnClick, Statics.LoopSequential))
     else
-      button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
+      button:WrapScript(button, 'OnClick', format(Statics.OnClick, Statics.LoopPriority))
     end
   else
-    button:WrapScript(button, 'OnClick', format(OnClick, GSE.PrepareStepFunction(sequence.StepFunction)))
+    button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction)))
   end
   if not GSE.isEmpty(sequence.loopstart) then
     button:SetAttribute('loopstart', sequence.loopstart)
@@ -552,7 +552,7 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print(_G[SequenceName]:GetScript('OnClick'))
   GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
-  GSE.Print(format(OnClick, GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSGetActiveSequenceVersion(SequenceName)].StepFunction or 'step = step % #macros + 1'))
+  GSE.Print(format(Statics.OnClick, GSE.PrepareStepFunction(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].StepFunction) or 'step = step % #macros + 1'))
 end
 
 --- This function is used to debug a sequence and trace its execution.
@@ -870,14 +870,14 @@ function GSE.CreateButton(name, sequence)
   -- else
   --   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
   -- end
-  button.UpdateIcon = UpdateIcon
+  button.UpdateIcon = GSE.UpdateIcon
 end
 
 
 function GSE.UpdateIcon(self)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
-  local sequence, foundSpell, notSpell = GSELibrary[button][GSE.GetActiveSequenceVersion(button)][step], false, ''
+  local sequence, foundSpell, notSpell = GSELibrary[GSE.GetCurrentClassID()][button].MacroVersions[GSE.GetActiveSequenceVersion(button)][step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if Statics.CastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)

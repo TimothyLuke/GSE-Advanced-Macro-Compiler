@@ -173,6 +173,27 @@ Statics.LoopPriorityImplementation = [[
   end
 ]]
 
+Statics.OnClick = [=[
+local step = self:GetAttribute('step')
+local loopstart = self:GetAttribute('loopstart') or 1
+local loopstop = self:GetAttribute('loopstop') or #macros + 1
+local loopiter = self:GetAttribute('loopiter') or 1
+local looplimit = self:GetAttribute('looplimit') or 1
+loopstart = tonumber(loopstart)
+loopstop = tonumber(loopstop)
+loopiter = tonumber(loopiter)
+looplimit = tonumber(looplimit)
+step = tonumber(step)
+self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. macros[step] .. self:GetAttribute('KeyRelease'))
+%s
+if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
+  step = 1
+end
+self:SetAttribute('step', step)
+self:CallMethod('UpdateIcon')
+]=]
+
 --- <code>GSStaticLoopPriority</code> is a static step function that
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
