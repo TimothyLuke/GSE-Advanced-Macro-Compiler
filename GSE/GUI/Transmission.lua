@@ -33,11 +33,11 @@ local function GSSendMessage(tab, channel, target)
   local transmission = GSEncodeMessage(tab)
   GSE.PrintDebugMessage(transmission, GNOME)
   if GSE.isEmpty(channel) then
-  if IsInRaid() then
-  channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
-  else
-    channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
-  end
+    if IsInRaid() then
+      channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
+    else
+      channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
+    end
   end
   GSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
 
@@ -45,13 +45,13 @@ end
 
 local function performVersionCheck(version)
   if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
-  if not GSold then
-    GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
-    GSold = true
-    if((tonumber(message) - tonumber(version)) >= 5) then
-    StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+    if not GSold then
+      GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
+      GSold = true
+      if((tonumber(message) - tonumber(version)) >= 5) then
+        StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+      end
     end
-  end
   end
 end
 
@@ -77,15 +77,15 @@ function GSE.DecodeMessage(data)
   --Decompress the decoded data
   local two, message = libC:Decompress(one)
   if(not two) then
-  	GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
-  	return
+    GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
+    return
   end
 
   -- Deserialize the decompressed data
   local success, final = libS:Deserialize(two)
   if (not success) then
-  	GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
-  	return
+    GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
+    return
   end
 
   GSE.PrintDebugMessage ("Data Finalised", "GS-Transmission")
@@ -115,16 +115,16 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
   local success, t = GSDecodeMessage(message)
   if success then
-  if t.Command == "GS-E_VERSIONCHK" then
+    if t.Command == "GS-E_VERSIONCHK" then
       if not GSold then
-  performVersionCheck(t.Version)
-  end
+        performVersionCheck(t.Version)
+      end
     elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
-  if sender ~= GetUnitName("player", true) then
+      if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.SequenceName, t.Sequence, sender)
-  else
+      else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", GNOME)
-  end
+      end
     end
   end
 end
@@ -132,7 +132,7 @@ end
 
 local function sendVersionCheck()
   if not GSold then
-  local _, instanceType = IsInInstance()
+    local _, instanceType = IsInInstance()
     local t = {}
     t.Command = "GS-E_VERSIONCHK"
     t.Version = GSE.VersionString
@@ -230,22 +230,22 @@ tranmissionFrame:AddChild(sendbutton)
 function GSShowTransmissionGui(SequenceName)
   if GSE.GUI.ViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.viewframe:GetPoint()
-  --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-  GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+    --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end
   if GSE.GUI.EditFrame:IsVisible() then
-  local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
-  --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-  GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
+    --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end
 
   local names = GSE.getSequenceNames()
   SequenceListbox:SetList(names)
   if not GSE.isEmpty(SequenceName) then
-  SequenceListbox:SetValue(SequenceName)
-  transSequencevalue = SequenceName
+    SequenceListbox:SetValue(SequenceName)
+    transSequencevalue = SequenceName
   end
   tranmissionFrame:Show()
   GSE.GUI.TranmissionFrame:SetStatusText(L["Ready to Send"])

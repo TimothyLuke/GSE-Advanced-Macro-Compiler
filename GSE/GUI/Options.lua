@@ -9,10 +9,10 @@ local OptionsTable = {
   args = {
     generalTab = {
       name = L["General"],
-  		desc = L["General Options"],
-  		type = "group",
-  		order = 1,
-  		args = {
+      desc = L["General Options"],
+      type = "group",
+      order = 1,
+      args = {
         title1 = {
           type = "header",
           name = L["General Options"],
@@ -122,7 +122,7 @@ local OptionsTable = {
           type = "toggle",
           set = function(info,val) GSEOptions.requireTarget = val GSReloadSequences() end,
           get = function(info) return GSEOptions.requireTarget end,
-         order = 510
+          order = 510
         },
         hideSoundErrors={
           name = L["Prevent Sound Errors"],
@@ -218,68 +218,68 @@ local OptionsTable = {
           order = 100,
         },
         titleColour = {
-    			type = "color",
-    			name = L["Title Colour"],
-    			desc = L["Picks a Custom Colour for the Mod Names."],
+          type = "color",
+          name = L["Title Colour"],
+          desc = L["Picks a Custom Colour for the Mod Names."],
           order = 101,
-    			hasAlpha = false,
-    			get = function(info) return GSE.GUI.GetColour(GSEOptions.TitleColour) end,
-    			set = function(info, r, g, b, a)
+          hasAlpha = false,
+          get = function(info) return GSE.GUI.GetColour(GSEOptions.TitleColour) end,
+          set = function(info, r, g, b, a)
             GSEOptions.TitleColour = string.format("|c%02x%02x%02x%02x", a*255 , r*255, g * 255, b*255)
           end,
-    		},
+        },
         authorColour = {
-    			type = "color",
-    			name = L["Author Colour"],
-    			desc = L["Picks a Custom Colour for the Author."],
+          type = "color",
+          name = L["Author Colour"],
+          desc = L["Picks a Custom Colour for the Author."],
           order = 110,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.AuthorColour)
-    			end,
-    			set = function(info, r, g, b)
-    				GSEOptions.AuthorColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSEOptions.AuthorColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
+          end,
+        },
         commandColour = {
-    			type = "color",
-    			name = L["Command Colour"],
-    			desc = L["Picks a Custom Colour for the Commands."],
+          type = "color",
+          name = L["Command Colour"],
+          desc = L["Picks a Custom Colour for the Commands."],
           order = 120,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.CommandColour)
-    			end,
-    			set = function(info, r, g, b)
-    				GSEOptions.CommandColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSEOptions.CommandColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
+          end,
+        },
         emphasisColour = {
-    			type = "color",
-    			name = L["Emphasis Colour"],
-    			desc = L["Picks a Custom Colour for emphasis."],
+          type = "color",
+          name = L["Emphasis Colour"],
+          desc = L["Picks a Custom Colour for emphasis."],
           order = 130,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.EmphasisColour)
-    			end,
-    			set = function(info, r, g, b)
-    				GSEOptions.EmphasisColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSEOptions.EmphasisColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
+          end,
+        },
         normalColour = {
-    			type = "color",
-    			name = L["Normal Colour"],
-    			desc = L["Picks a Custom Colour to be used normally."],
+          type = "color",
+          name = L["Normal Colour"],
+          desc = L["Picks a Custom Colour to be used normally."],
           order = 140,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.NormalColour)
-    			end,
-    			set = function(info, r, g, b)
-    				GSEOptions.NormalColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSEOptions.NormalColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
+          end,
+        },
         ctitle2 = {
           type = "header",
           name = L["Editor Colours"],
@@ -287,144 +287,144 @@ local OptionsTable = {
         },
 
         keywordColour = {
-    			type = "color",
-    			name = L["Spell Colour"],
-    			desc = L["Picks a Custom Colour to be used for Spells and Abilities."],
+          type = "color",
+          name = L["Spell Colour"],
+          desc = L["Picks a Custom Colour to be used for Spells and Abilities."],
           order = 210,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.KEYWORD)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.KEYWORD, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.KEYWORD, r, g, b)
+          end,
+        },
         unknownColour = {
-    			type = "color",
-    			name = L["Unknown Colour"],
-    			desc = L["Picks a Custom Colour to be used for unknown terms."],
+          type = "color",
+          name = L["Unknown Colour"],
+          desc = L["Picks a Custom Colour to be used for unknown terms."],
           order = 220,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.UNKNOWN)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.UNKNOWN, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.UNKNOWN, r, g, b)
+          end,
+        },
         iconColour = {
-    			type = "color",
+          type = "color",
           name = L["Icon Colour"],
-    			desc = L["Picks a Custom Colour to be used for Icons."],
+          desc = L["Picks a Custom Colour to be used for Icons."],
           order = 230,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.CONCAT)
-    			end,
-    			set = function(info, r, g, b)
+          end,
+          set = function(info, r, g, b)
             GSE.GUI.SetColour(GSEOptions.CONCAT, r, g, b)
           end,
-    		},
+        },
         numberColour = {
-    			type = "color",
-    			name = L["SpecID/ClassID Colour"],
-    			desc = L["Picks a Custom Colour to be used for numbers."],
+          type = "color",
+          name = L["SpecID/ClassID Colour"],
+          desc = L["Picks a Custom Colour to be used for numbers."],
           order = 240,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.NUMBER)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.NUMBER, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.NUMBER, r, g, b)
+          end,
+        },
         stringColour = {
-    			type = "color",
-    			name = L["String Colour"],
-    			desc = L["Picks a Custom Colour to be used for strings."],
+          type = "color",
+          name = L["String Colour"],
+          desc = L["Picks a Custom Colour to be used for strings."],
           hidden = true,
           order = 250,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.STRING)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.STRING, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.STRING, r, g, b)
+          end,
+        },
         conditionalColour = {
-    			type = "color",
-    			name = L["Conditionals Colour"],
-    			desc = L["Picks a Custom Colour to be used for macro conditionals eg [mod:shift]"],
+          type = "color",
+          name = L["Conditionals Colour"],
+          desc = L["Picks a Custom Colour to be used for macro conditionals eg [mod:shift]"],
           order = 260,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.COMMENT)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.COMMENT, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.COMMENT, r, g, b)
+          end,
+        },
         helpColour = {
-    			type = "color",
-    			name = L["Help Colour"],
-    			desc = L["Picks a Custom Colour to be used for braces and indents."],
+          type = "color",
+          name = L["Help Colour"],
+          desc = L["Picks a Custom Colour to be used for braces and indents."],
           order = 270,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.INDENT)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.INDENT, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.INDENT, r, g, b)
+          end,
+        },
         stepColour = {
-    			type = "color",
-    			name = L["Step Functions"],
-    			desc = L["Picks a Custom Colour to be used for StepFunctions."],
+          type = "color",
+          name = L["Step Functions"],
+          desc = L["Picks a Custom Colour to be used for StepFunctions."],
           order =280,
           hasAlpha = false,
-    			get = function(info)
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.EQUALS)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.EQUALS, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.EQUALS, r, g, b)
+          end,
+        },
         languageColour = {
-    			type = "color",
-    			name = L["Language Colour"],
-    			desc = L["Picks a Custom Colour to be used for language descriptors"],
+          type = "color",
+          name = L["Language Colour"],
+          desc = L["Picks a Custom Colour to be used for language descriptors"],
           order = 290,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.STANDARDFUNCS)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.STANDARDFUNCS, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.STANDARDFUNCS, r, g, b)
+          end,
+        },
         shortcutsColour = {
-    			type = "color",
-    			name = L["Blizzard Functions Colour"],
-    			desc = L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"],
+          type = "color",
+          name = L["Blizzard Functions Colour"],
+          desc = L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"],
           order = 300,
-    			hasAlpha = false,
-    			get = function(info)
+          hasAlpha = false,
+          get = function(info)
             return GSE.GUI.GetColour(GSEOptions.WOWSHORTCUTS)
-    			end,
-    			set = function(info, r, g, b)
-    				GSE.GUI.SetColour(GSEOptions.WOWSHORTCUTS, r, g, b)
-    			end,
-    		},
+          end,
+          set = function(info, r, g, b)
+            GSE.GUI.SetColour(GSEOptions.WOWSHORTCUTS, r, g, b)
+          end,
+        },
       },
     },
     pluginsTab = {
-    name = L["Plugins"],
-    desc = L["GS-E Plugins"],
-    type = "group",
-    order = 3,
-    args = {
+      name = L["Plugins"],
+      desc = L["GS-E Plugins"],
+      type = "group",
+      order = 3,
+      args = {
         title3 = {
           type = "header",
           name = L["Registered Addons"],
@@ -454,9 +454,9 @@ local OptionsTable = {
     },
     debugTab = {
       name = L["Debug"],
-    desc = L["Debug Mode Options"],
-    type = "group",
-    order = -1,
+      desc = L["Debug Mode Options"],
+      type = "group",
+      order = -1,
       args = {
         title4 = {
           type = "header",
@@ -544,4 +544,4 @@ local OptionsTable = {
 
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", OptionsTable, {"gse"})
-LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer - Enhanced")
+LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
