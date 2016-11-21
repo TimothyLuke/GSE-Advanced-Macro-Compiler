@@ -21,7 +21,6 @@ install:
 - luarocks install luadoc
 script:
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/MacroExecution/*.lua
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
 - luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua

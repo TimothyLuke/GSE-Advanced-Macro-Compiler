@@ -30,29 +30,29 @@ GSE.PrintDebugMessage("GS-Core Version " .. GSE.VersionString, GNOME)
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
-	local transmission = GSEncodeMessage(tab)
-	GSE.PrintDebugMessage(transmission, GNOME)
-	if GSE.isEmpty(channel) then
-		if IsInRaid() then
-			channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
-		else
-		  channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
-		end
+  local transmission = GSEncodeMessage(tab)
+  GSE.PrintDebugMessage(transmission, GNOME)
+  if GSE.isEmpty(channel) then
+  if IsInRaid() then
+  channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
+  else
+    channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
   end
-	GSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
+  end
+  GSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
 
 end
 
 local function performVersionCheck(version)
-	if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
-		if not GSold then
-		  GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
-		  GSold = true
-		  if((tonumber(message) - tonumber(version)) >= 5) then
-			  StaticPopup_Show('GSE_UPDATE_AVAILABLE')
-		  end
-		end
-	end
+  if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
+  if not GSold then
+    GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
+    GSold = true
+    if((tonumber(message) - tonumber(version)) >= 5) then
+    StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+    end
+  end
+  end
 end
 
 function GSE.EncodeMessage(Sequence)
@@ -94,19 +94,19 @@ end
 
 function GSE.TransmitSequence(SequenceName, channel, target)
   local t = {}
-	t.Command = "GS-E_TRANSMITSEQUENCE"
-	t.SequenceName = SequenceName
-	t.Sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)]
-	GSSendMessage(t, channel, target)
-	GSE.GUI.TranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
+  t.Command = "GS-E_TRANSMITSEQUENCE"
+  t.SequenceName = SequenceName
+  t.Sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)]
+  GSSendMessage(t, channel, target)
+  GSE.GUI.TranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
 local function ReceiveSequence(SequenceName, Sequence, sender)
   local version = GSGetNextSequenceVersion(SequenceName)
-	Sequence.version = version
-	Sequence.source = GSStaticSourceTransmission
-	GSAddSequenceToCollection(SequenceName, Sequence, version)
-	GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
+  Sequence.version = version
+  Sequence.source = GSStaticSourceTransmission
+  GSAddSequenceToCollection(SequenceName, Sequence, version)
+  GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
 end
 
 
@@ -115,33 +115,33 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
   local success, t = GSDecodeMessage(message)
   if success then
-		if t.Command == "GS-E_VERSIONCHK" then
-	    if not GSold then
-				performVersionCheck(t.Version)
-			end
-	  elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
-			if sender ~= GetUnitName("player", true) then
+  if t.Command == "GS-E_VERSIONCHK" then
+      if not GSold then
+  performVersionCheck(t.Version)
+  end
+    elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
+  if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.SequenceName, t.Sequence, sender)
-			else
+  else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", GNOME)
-			end
+  end
     end
-	end
+  end
 end
 
 
 local function sendVersionCheck()
   if not GSold then
-		local _, instanceType = IsInInstance()
-	  local t = {}
-	  t.Command = "GS-E_VERSIONCHK"
-	  t.Version = GSE.VersionString
-	  GSSendMessage(t)
-	end
+  local _, instanceType = IsInInstance()
+    local t = {}
+    t.Command = "GS-E_VERSIONCHK"
+    t.Version = GSE.VersionString
+    GSSendMessage(t)
+  end
 end
 
 function GSE:GROUP_ROSTER_UPDATE(...)
-	sendVersionCheck()
+  sendVersionCheck()
 end
 
 
@@ -151,37 +151,37 @@ local baseFont = CreateFont("baseFont")
 
 -- CHeck for ElvUI
 if GSE.isEmpty(ElvUI) then
-	baseFont:SetFont(GameTooltipText:GetFont(), 10)
+  baseFont:SetFont(GameTooltipText:GetFont(), 10)
 elseif LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
   baseFont:SetFont(LibSharedMedia:Fetch('font', ElvUI[1].db.general.font), 10)
 else
-	baseFont:SetFont(GameTooltipText:GetFont(), 10)
+  baseFont:SetFont(GameTooltipText:GetFont(), 10)
 end
 
 function dataobj:OnEnter()
-	-- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
-	--local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
-	local tooltip = LibQTip:Acquire("GSSE", 1,"CENTER")
-	self.tooltip = tooltip
+  -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
+  --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
+  local tooltip = LibQTip:Acquire("GSSE", 1,"CENTER")
+  self.tooltip = tooltip
 
-	tooltip:Clear()
-	tooltip:SetFont(baseFont)
+  tooltip:Clear()
+  tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
-	tooltip:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
-	tooltip:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
-	tooltip:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
+  tooltip:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
+  tooltip:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
+  tooltip:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
 
-	-- Use smart anchoring code to anchor the tooltip to our frame
-	tooltip:SmartAnchorTo(self)
+  -- Use smart anchoring code to anchor the tooltip to our frame
+  tooltip:SmartAnchorTo(self)
 
-	-- Show it, et voil� !
-	tooltip:Show()
+  -- Show it, et voil� !
+  tooltip:Show()
 end
 
 function dataobj:OnLeave()
-	-- Release the tooltip
-	LibQTip:Release(self.tooltip)
-	self.tooltip = nil
+  -- Release the tooltip
+  LibQTip:Release(self.tooltip)
+  self.tooltip = nil
 end
 
 -- function dataobj:OnTooltipShow()
@@ -189,13 +189,13 @@ end
 -- end
 
 function dataobj:OnClick(button)
-	if button == "LeftButton" then
+  if button == "LeftButton" then
     GSGuiShowViewer()
-	elseif button == "MiddleButton" then
+  elseif button == "MiddleButton" then
     GSShowTransmissionGui()
-	elseif button == "RightButton" then
+  elseif button == "RightButton" then
     GSDebugFrame:Show()
-	end
+  end
 end
 
 local transSequencevalue = ""
@@ -230,23 +230,23 @@ tranmissionFrame:AddChild(sendbutton)
 function GSShowTransmissionGui(SequenceName)
   if GSE.GUI.ViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.viewframe:GetPoint()
-	--	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-		GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+  --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+  GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
-	end
-	if GSE.GUI.EditFrame:IsVisible() then
-		local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
-	--	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-		GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+  end
+  if GSE.GUI.EditFrame:IsVisible() then
+  local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
+  --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+  GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
-	end
+  end
 
-	local names = GSE.getSequenceNames()
-	SequenceListbox:SetList(names)
+  local names = GSE.getSequenceNames()
+  SequenceListbox:SetList(names)
   if not GSE.isEmpty(SequenceName) then
-		SequenceListbox:SetValue(SequenceName)
-		transSequencevalue = SequenceName
-	end
-	tranmissionFrame:Show()
-	GSE.GUI.TranmissionFrame:SetStatusText(L["Ready to Send"])
+  SequenceListbox:SetValue(SequenceName)
+  transSequencevalue = SequenceName
+  end
+  tranmissionFrame:Show()
+  GSE.GUI.TranmissionFrame:SetStatusText(L["Ready to Send"])
 end
