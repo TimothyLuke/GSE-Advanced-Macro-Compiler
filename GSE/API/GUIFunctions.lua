@@ -16,7 +16,7 @@ function GSE.GUI.DisableSequence(currentSeq, iconWidget)
     end
     iconWidget:SetImage(reticon)
   end
-  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)].lang), GetLocale()), currentSeq))
+  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][currentSeq].Lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][currentSeq].Lang), GetLocale()), currentSeq))
 
 end
 

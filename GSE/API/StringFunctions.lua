@@ -24,7 +24,7 @@ end
 function GSE.UnEscapeTable(tab)
   local newtab = {}
   for k,v in ipairs(tab) do
-    print (k .. " " .. v)
+    -- print (k .. " " .. v)
     newtab[k] = GSE.UnEscapeString(v)
   end
   return newtab

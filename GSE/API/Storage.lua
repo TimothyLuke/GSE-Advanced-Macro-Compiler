@@ -57,6 +57,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     end
 
     GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
+
     -- local makemacrostub = false
     -- local globalstub = false
     -- if sequence.SpecID == GSE.GetCurrentSpecID() or sequence.SpecID == GSE.GetCurrentClassID() then
@@ -496,7 +497,7 @@ function GSE.UpdateSequence(name,sequence)
   end
   local button = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-  if GSTRanslatorAvailable and GSE.isSpecIDForCurrentClass(sequence.SpecID) then
+  if GSE.isSpecIDForCurrentClass(GSELibrary[GSE.GetCurrentClassID()][name].SpecID) then
     sequence = GSE.TranslateSequence(sequence, name)
   end
   GSE.FixSequence(sequence)
@@ -504,7 +505,7 @@ function GSE.UpdateSequence(name,sequence)
   button:SetAttribute("step",1)
   button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence.KeyPress) or {}, "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyPress(sequence.KeyRelease) or {}, "\n") or '' .. '\n')
+  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence.KeyRelease) or {}, "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
   button:UnwrapScript(button,'OnClick')
   if GSE.IsLoopSequence(sequence) then
@@ -892,10 +893,9 @@ function GSE.UpdateIcon(self)
 end
 
 function GSE.PrepareKeyPress(KeyPress)
-  print ("in preparekp")
+
   local tab = {}
-  for k,v in ipairs(KeyPress) do
-    print ("Stuff in preparekp")
+  for k,v in pairs(KeyPress) do
     tab[k] = v
   end
   if GSEOptions.hideSoundErrors then
@@ -910,7 +910,7 @@ end
 
 function GSE.PrepareKeyRelease(KeyRelease)
   local tab = {}
-  for k,v in ipairs(KeyRelease) do
+  for k,v in pairs(KeyRelease) do
     tab[k] = v
   end
   if GSEOptions.requireTarget then
