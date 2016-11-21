@@ -92,6 +92,10 @@ function GSE:PLAYER_LOGOUT()
   GSE.PrepareLogout(GSEOptions.saveAllMacrosLocal)
 end
 
+function GSE:PLAYER_SPECIALIZATION_CHANGED()
+  GSE.ReloadSequences()
+end
+
 GSE:RegisterEvent('UPDATE_MACROS')
 GSE:RegisterEvent('PLAYER_LOGIN')
 
