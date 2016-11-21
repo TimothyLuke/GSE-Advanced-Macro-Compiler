@@ -31,16 +31,17 @@ function GSE.GUI.LoadEditor(SequenceName, recordstring)
      stepvalue = 2
     end
     GSE.PrintDebugMessage("StepValue: " .. stepvalue, GNOME)
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress) then
-      GSE.PrintDebugMessage(L["Moving on - LiveTest.KeyPress already exists."], GNOME)
-    else
-     KeyPressbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress)
-    end
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease) then
-      GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
-    else
-     KeyReleasebox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease)
-    end
+    --TODO Fix this
+    -- if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress) then
+    --   GSE.PrintDebugMessage(L["Moving on - LiveTest.KeyPress already exists."], GNOME)
+    -- else
+    --  KeyPressbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress)
+    -- end
+    -- if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease) then
+    --   GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
+    -- else
+    --  KeyReleasebox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease)
+    -- end
     spellbox:SetText(table.concat(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)],"\n"))
     reticon = GSSE:getMacroIcon(SequenceName)
     if not tonumber(reticon) then
@@ -166,7 +167,7 @@ function GSE.GUI.UpdateSequenceDefinition(SequenceName)
       sequence.StepFunction = nil
     end
     GSE.PrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
-    sequence.KeyPress = KeyPressbox:GetText()
+    -- sequence.KeyPress = KeyPressbox:GetText()
     sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
     sequence.source = GSStaticSourceLocal
     sequence.specID = GSSpecIDHashList[specdropdownvalue]
@@ -183,7 +184,7 @@ function GSE.GUI.UpdateSequenceDefinition(SequenceName)
     if not GSE.isEmpty(looplimit:GetText()) then
       sequence.looplimit = looplimit:GetText()
     end
-    sequence.KeyRelease = KeyReleasebox:GetText()
+    -- sequence.KeyRelease = KeyReleasebox:GetText()
     sequence.version = nextVal
     GSTRUnEscapeSequence(sequence)
     if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then

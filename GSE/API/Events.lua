@@ -89,7 +89,7 @@ end
 local IgnoreMacroUpdates = false
 
 function GSE:PLAYER_LOGOUT()
-  GSE.PrepareLogout(GSEOptions.saveAllMacrosLocal)
+  GSE.PrepareLogout()
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()

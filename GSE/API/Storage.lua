@@ -413,45 +413,40 @@ function GSE.CleanOrphanSequences()
 end
 
 --- This function is used to clean the loacl sequence library
-function GSE.CleanMacroLibrary(logout)
+--TODO Fix this
+function GSE.CleanMacroLibrary(forcedelete)
   -- clean out the sequences database except for the current version
-  local tempTable = {}
-  for name, versiontable in pairs(GSELibrary) do
-    GSE.PrintDebugMessage(L["Testing "] .. name )
+  if forcedelete then
+    GSELibrary[GSE.GetCurrentClassID()] = nil
+    GSELibrary[GSE.GetCurrentClassID()] = {}
+  else
+    local tempTable = {}
+    for name, versiontable in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
+      GSE.PrintDebugMessage(L["Testing "] .. name )
 
-    if not GSE.isEmpty(GSEOptions.ActiveSequenceVersions[name]) then
-      GSE.PrintDebugMessage(L["Active Version "] .. GSEOptions.ActiveSequenceVersions[name])
-    else
-      GSE.PrintDebugMessage(L["No Active Version"] .. " " .. name)
-    end
-    for version, sequence in pairs(versiontable) do
-      GSE.PrintDebugMessage(L["Cycle Version "] .. version )
-      GSE.PrintDebugMessage(L["Source "] .. sequence.source)
-      if sequence.source == GSStaticSourceLocal then
-        -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
-        GSE.PrintDebugMessage("sequence.source == GSStaticSourceLocal")
-        if GSE.isEmpty(tempTable[name]) then
-          tempTable[name] = {}
+      for version, sequence in pairs(versiontable) do
+        GSE.PrintDebugMessage(L["Cycle Version "] .. version )
+        if sequence.source == Statics.SourceLocal then
+          -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
+          GSE.PrintDebugMessage("sequence.source == Statics.SourceLocal")
+          if GSE.isEmpty(tempTable[name]) then
+            tempTable[name] = {}
+          end
+          -- TODO Fix this to unescape the sequence
+          --tempTable[name][version] = GSE.UnEscapeSequence(sequence)
+        elseif sequence.source == Statics.SourceTransmission then
+          if GSE.isEmpty(tempTable[name]) then
+            tempTable[name] = {}
+          end
+          tempTable[name] = GSE.UnEscapeSequence(sequence)
+        else
+          GSE.PrintDebugMessage(L["Removing "] .. name .. ":" .. version)
         end
-        tempTable[name][version] = GSE.UnEscapeSequence(sequence)
-      elseif GSEOptions.ActiveSequenceVersions[name] == version and not logout  then
-        GSE.PrintDebugMessage("GSEOptions.ActiveSequenceVersions[name] == version and not logout")
-        if GSE.isEmpty(tempTable[name]) then
-          tempTable[name] = {}
-        end
-        tempTable[name][version] = GSE.UnEscapeSequence(sequence)
-      elseif sequence.source == GSStaticSourceTransmission then
-        if GSE.isEmpty(tempTable[name]) then
-          tempTable[name] = {}
-        end
-        tempTable[name][version] = GSE.UnEscapeSequence(sequence)
-      else
-        GSE.PrintDebugMessage(L["Removing "] .. name .. ":" .. version)
       end
     end
+    GSELibrary[GSE.GetCurrentClassID()] = nil
+    GSELibrary[GSE.GetCurrentClassID()] = tempTable
   end
-  GSELibrary = nil
-  GSELibrary = tempTable
 end
 
 --- This function resets a button back to its initial setting
@@ -897,8 +892,10 @@ function GSE.UpdateIcon(self)
 end
 
 function GSE.PrepareKeyPress(KeyPress)
+  print ("in preparekp")
   local tab = {}
   for k,v in ipairs(KeyPress) do
+    print ("Stuff in preparekp")
     tab[k] = v
   end
   if GSEOptions.hideSoundErrors then

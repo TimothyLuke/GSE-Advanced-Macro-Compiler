@@ -70,12 +70,16 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
 
   lines = GSE.TranslateString(lines, fromLocale, toLocale)
   if not GSE.isEmpty(sequence.KeyRelease) then
-    -- Translate KeyRelease
-    sequence.KeyRelease = GSE.TranslateString(sequence.KeyRelease, fromLocale, toLocale)
+    for k,v in ipairs(sequence.KeyRelease) do
+      -- Translate KeyRelease
+      sequence.KeyRelease[k] = GSE.TranslateString(v, fromLocale, toLocale)
+    end
   end
   if not GSE.isEmpty(sequence.KeyPress) then
-    -- Translate KeyRelease
-    sequence.KeyPress = GSE.TranslateString(sequence.KeyPress, fromLocale, toLocale)
+    for k,v in ipairs(sequence.KeyPress) do
+      -- Translate KeyRelease
+      sequence.KeyPress[k] = GSE.TranslateString(v, fromLocale, toLocale)
+    end
   end
   for i, v in ipairs(sequence) do sequence[i] = nil end
   GSE.lines(sequence, lines)
