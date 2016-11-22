@@ -184,7 +184,7 @@ loopstop = tonumber(loopstop)
 loopiter = tonumber(loopiter)
 looplimit = tonumber(looplimit)
 step = tonumber(step)
-self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. macros[step] .. self:GetAttribute('KeyRelease'))
+self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
 %s
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
