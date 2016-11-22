@@ -8,7 +8,7 @@ local Statics = GSE.Static
 
 local GCD, GCD_Update_Timer
 
-local usoptions = GSE.UnsavedOptions
+
 
 
 

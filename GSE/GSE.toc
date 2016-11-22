@@ -61,6 +61,7 @@ API\Events.lua
 
 
 # GUI
+API\GUIFuntions.lua
 GUI\Options.lua
 GUI\DebugWindow.lua
 GUI\Transmission.lua
@@ -68,4 +69,3 @@ GUI\VersionManagement.lua
 GUI\Recorder.lua
 GUI\Editor.lua
 GUI\Viewer.lua
-API\GUIFuntions.lua

@@ -384,10 +384,22 @@ function GSE.FixLegacySequence(sequence)
 end
 
 function GSE.FixSequence(sequence)
-  if not GSE.isEmpty(sequence.PreMacro) then sequence.PreMacro = {} end
-  if not GSE.isEmpty(sequence.PostMacro) then sequence.PostMacro = {} end
-  if not GSE.isEmpty(sequence.KeyPress) then sequence.KeyPress = {} end
-  if not GSE.isEmpty(sequence.KeyRelease) then sequence.KeyRelease = {} end
+  if GSE.isEmpty(sequence.PreMacro) then
+    sequence.PreMacro = {}
+    GSE.PrintDebugMessage("Empty PreMacro", GNOME)
+  end
+  if GSE.isEmpty(sequence.PostMacro) then
+    sequence.PostMacro = {}
+    GSE.PrintDebugMessage("Empty PostMacro", GNOME)
+  end
+  if GSE.isEmpty(sequence.KeyPress) then
+    sequence.KeyPress = {}
+    GSE.PrintDebugMessage("Empty KeyPress", GNOME)
+  end
+  if GSE.isEmpty(sequence.KeyRelease) then
+    sequence.KeyRelease = {}
+    GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
+  end
 end
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
@@ -492,8 +504,10 @@ function GSE.UpdateSequence(name,sequence)
   -- print(name)
   -- print(sequence)
   -- print(debugstack())
+  local existingbutton = true
   if GSE.isEmpty(_G[name]) then
     GSE.CreateButton(name,sequence)
+    existingbutton = false
   end
   local button = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
@@ -503,11 +517,13 @@ function GSE.UpdateSequence(name,sequence)
   GSE.FixSequence(sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
   button:SetAttribute("step",1)
-  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence.KeyPress) or {}, "\n") or '' .. '\n')
+  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence.KeyPress), "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence.KeyRelease) or {}, "\n") or '' .. '\n')
+  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence.KeyRelease), "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
-  button:UnwrapScript(button,'OnClick')
+  if existingbutton then
+    button:UnwrapScript(button,'OnClick')
+  end
   if GSE.IsLoopSequence(sequence) then
     if GSE.isEmpty(sequence.StepFunction) then
       button:WrapScript(button, 'OnClick', format(Statics.OnClick, Statics.LoopSequential))
@@ -553,6 +569,7 @@ end
 
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
+  local usoptions = GSE.UnsavedOptions
   if usoptions.DebugSequenceExecution then
     -- Note to self do i care if its a loop sequence?
     local isUsable, notEnoughMana = IsUsableSpell(task)
@@ -911,7 +928,7 @@ end
 function GSE.PrepareKeyRelease(KeyRelease)
   local tab = {}
   for k,v in pairs(KeyRelease) do
-    tab[k] = v
+    table.insert(tab, v)
   end
   if GSEOptions.requireTarget then
     -- see #20 prevent target hopping

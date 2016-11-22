@@ -13,10 +13,10 @@ function GSE.UnEscapeSequence(sequence)
     sequence.KeyRelease = GSE.UnEscapeTable(sequence.KeyRelease)
   end
   if not GSE.isEmpty(sequence.PreMacro) then
-    sequence.KeyRelease = GSE.UnEscapeTable(sequence.PreMacro)
+    sequence.PreMacro = GSE.UnEscapeTable(sequence.PreMacro)
   end
   if not GSE.isEmpty(sequence.PostMacro) then
-    sequence.KeyRelease = GSE.UnEscapeTable(sequence.PostMacro)
+    sequence.PostMacro = GSE.UnEscapeTable(sequence.PostMacro)
   end
   return sequence
 end

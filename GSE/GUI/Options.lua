@@ -120,7 +120,7 @@ local OptionsTable = {
           name = L["Require Target to use"],
           desc = L["This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies."],
           type = "toggle",
-          set = function(info,val) GSEOptions.requireTarget = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.requireTarget = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.requireTarget end,
           order = 510
         },
@@ -128,7 +128,7 @@ local OptionsTable = {
           name = L["Prevent Sound Errors"],
           desc = L["This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableErrorSpeech lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
-          set = function(info,val) GSEOptions.hideSoundErrors = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.hideSoundErrors = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.hideSoundErrors end,
           order = 520
         },
@@ -136,7 +136,7 @@ local OptionsTable = {
           name = L["Prevent UI Errors"],
           desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
-          set = function(info,val) GSEOptions.hideUIErrors = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.hideUIErrors = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.hideUIErrors end,
           order = 530
         },
@@ -144,7 +144,7 @@ local OptionsTable = {
           name = L["Clear Errors"],
           desc = L["This option clears errors and stack traces ingame.  This is the equivalent of /run UIErrorsFrame:Clear() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],
           type = "toggle",
-          set = function(info,val) GSEOptions.clearUIErrors = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.clearUIErrors = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.clearUIErrors end,
           order = 540
         },
@@ -152,7 +152,7 @@ local OptionsTable = {
           name = L["Use First Ring in KeyRelease"],
           desc = L["Incorporate the first ring slot into the KeyRelease. This is the equivalent of /use [combat] 11 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use11 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use11 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use11 end,
           order = 550
         },
@@ -160,7 +160,7 @@ local OptionsTable = {
           name = L["Use Second Ring in KeyRelease"],
           desc = L["Incorporate the second ring slot into the KeyRelease. This is the equivalent of /use [combat] 12 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use12 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use12 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use12 end,
           order = 560
         },
@@ -168,7 +168,7 @@ local OptionsTable = {
           name = L["Use First Trinket in KeyRelease"],
           desc = L["Incorporate the first trinket slot into the KeyRelease. This is the equivalent of /use [combat] 13 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use13 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use13 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use13 end,
           order = 570
         },
@@ -176,7 +176,7 @@ local OptionsTable = {
           name = L["Use Second Trinket in KeyRelease"],
           desc = L["Incorporate the second trinket slot into the KeyRelease. This is the equivalent of /use [combat] 14 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use14 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use14 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use14 end,
           order = 580
         },
@@ -184,7 +184,7 @@ local OptionsTable = {
           name = L["Use Neck Item in KeyRelease"],
           desc = L["Incorporate the neck slot into the KeyRelease. This is the equivalent of /use [combat] 2 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use2 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use2 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use2 end,
           order = 591
         },
@@ -192,7 +192,7 @@ local OptionsTable = {
           name = L["Use Belt Item in KeyRelease"],
           desc = L["Incorporate the belt slot into the KeyRelease. This is the equivalent of /use [combat] 5 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use6 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use6 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use6 end,
           order = 592
         },
@@ -200,7 +200,7 @@ local OptionsTable = {
           name = L["Use Head Item in KeyRelease"],
           desc = L["Incorporate the Head slot into the KeyRelease. This is the equivalent of /use [combat] 1 in a KeyRelease."],
           type = "toggle",
-          set = function(info,val) GSEOptions.use1 = val GSReloadSequences() end,
+          set = function(info,val) GSEOptions.use1 = val GSE.ReloadSequences() end,
           get = function(info) return GSEOptions.use1 end,
           order = 593
         },

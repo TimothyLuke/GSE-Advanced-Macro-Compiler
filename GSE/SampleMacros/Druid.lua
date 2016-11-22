@@ -21,6 +21,7 @@ Sequences['SAM_Bear'] = {
     [1] = {
       KeyPress = {
         "/targetenemy [noharm][dead]",
+        "/cast [@player,nostance:1] Bear Form",
       },
       StepFunction = "Priority",
       "/castsequence reset=combat Thrash, Moonfire, Maul, Swipe",
