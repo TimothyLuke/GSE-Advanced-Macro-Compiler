@@ -192,7 +192,7 @@ function dataobj:OnClick(button)
   if button == "LeftButton" then
     GSGuiShowViewer()
   elseif button == "MiddleButton" then
-    GSShowTransmissionGui()
+    GSE.GUI.ShowTransmissionGui()
   elseif button == "RightButton" then
     GSDebugFrame:Show()
   end
@@ -227,7 +227,7 @@ sendbutton:SetWidth(250)
 sendbutton:SetCallback("OnClick", function() GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
-function GSShowTransmissionGui(SequenceName)
+function GSE.GUI.ShowTransmissionGui(SequenceName)
   if GSE.GUI.ViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.viewframe:GetPoint()
     --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
