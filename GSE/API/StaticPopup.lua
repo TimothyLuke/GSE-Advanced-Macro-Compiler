@@ -84,3 +84,21 @@ StaticPopupDialogs["GSE-SampleMacroDialog"] = {
   hideOnEscape = true,
   preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
+
+StaticPopupDialogs["GSE-MacroImportSuccess"] = {
+  text = L["Macro Import Successful."],
+  button1 = L["Close"],
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+StaticPopupDialogs["GSE-MacroImportFailure"] = {
+  text = L["Macro unable to be imported."],
+  button1 = L["Close"],
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}

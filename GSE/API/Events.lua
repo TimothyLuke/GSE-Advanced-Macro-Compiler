@@ -141,7 +141,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif string.lower(msg) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
   else
-    GSE.ListSequences(GetSpecialization())
+    GSE.GUI.ViewFrame:Show()
   end
 end
 

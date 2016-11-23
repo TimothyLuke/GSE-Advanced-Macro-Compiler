@@ -208,11 +208,13 @@ function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
 end
 
 --- Load a GSE Sequence Collection from a String
-function GSE.ImportSequence(importStr)
-  local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
+function GSE.ImportSequence(importStr, legacy)
+  local success, returnmessage = false, ""
 
+  local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
   return Sequences
   ]===]
+
   GSE.PrintDebugMessage (functiondefinition, "GS-SequenceEditor")
   local fake_globals = setmetatable({
     Sequences = {},
@@ -226,29 +228,26 @@ function GSE.ImportSequence(importStr)
     if not GSE.isEmpty(TempSequences) then
       local newkey = ""
       for k,v in pairs(TempSequences) do
-
-        if GSE.isEmpty(v.version) then
-          v.version = GSGetNextSequenceVersion(k)
+        if legacy then
+          v = GSE.ConvertLegacySequence(v)
         end
-        v.source = GSStaticSourceLocal
+        v.source = Statics.SourceLocal
         GSE.AddSequenceToCollection(k, v)
-        GSUpdateSequence(k, GSELibrary[k][v.version])
         if GSE.isEmpty(v.Icon) then
           -- Set a default icon
           v.Icon = GSGetDefaultIcon()
         end
         GSCheckMacroCreated(k)
         newkey = k
-        GSE.Print(L["Imported new sequence "] .. k, GNOME)
       end
-      GSUpdateSequenceList()
-      GSSequenceListbox:SetValue(newkey)
-
+      success = true
     end
   else
     GSE.PrintDebugMessage (err, GNOME)
-  end
+    returnmessage = err
 
+  end
+  return success, returnmessage
 end
 
 function GSE.ReloadSequences()

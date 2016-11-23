@@ -34,7 +34,7 @@ editOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() e
 local transbutton = AceGUI:Create("Button")
 transbutton:SetText(L["Send"])
 transbutton:SetWidth(150)
-transbutton:SetCallback("OnClick", function() GSShowTransmissionGui(currentSequence) end)
+transbutton:SetCallback("OnClick", function() GSE.GUI.ShowTransmissionGui(currentSequence) end)
 
 local iconpicker = AceGUI:Create("Icon")
 iconpicker:SetLabel(L["Macro Icon"])
@@ -55,10 +55,6 @@ iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 -- function that draws the widgets for the first tab
 
 
-
-
-
-GSE.GUI.editframe = editframe
 
 
 -------------end viewer-------------
