@@ -321,9 +321,9 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
 
     local steps = "StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
     if not GSE.isEmpty(sequence.StepFunction) then
-      if  sequence.StepFunction == Statics.PriorityImplementation or sequence.StepFunction = "Priority" then
+      if  sequence.StepFunction == Statics.PriorityImplementation or sequence.StepFunction == "Priority" then
        steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-     elseif sequence.StepFunction = "Sequential" then
+     elseif sequence.StepFunction == "Sequential" then
        steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
      else
        steps = "StepFunction = [[" .. GSEOptions.EQUALS .. sequence.StepFunction .. Statics.StringReset .. "]],\n"
@@ -721,15 +721,25 @@ end
 function GSE.GetSequenceNames()
   local keyset={}
   for k,v in pairs(GSELibrary) do
-    local id, name, description, icon, background, role = GetSpecializationInfo(k)
-    keyset[k].value = k
-    keyset[k].text = name
-    keyset[k].icon = icon
-    keyset[k].children = {}
-    for i,j in ipairs(k) do
-      keyset[k].children[1].value = j
-      keyset[k].children[1].text = j
+    local name, _, _ = GetClassInfo(k)
+    local mset = {
+      value = k,
+      text = name,
+      icon = GSE.GetClassIcon(k),
+      children = {}
+
+    }
+
+
+    for i,j in pairs(GSELibrary[k]) do
+      local child = {
+        value = i,
+        text = i
+      }
+      table.insert(mset.children, child)
     end
+    table.insert(keyset, mset)
+
   end
 
   -- local currentSpec = GetSpecialization()

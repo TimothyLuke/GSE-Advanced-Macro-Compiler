@@ -1,6 +1,8 @@
 local GSE = GSE
 
-function GSE.GUIDisableSequence(currentSeq, iconWidget)
+
+
+function GSE.GUI.DisableSequence(currentSeq, iconWidget)
   GSToggleDisabledSequence(currentSeq)
   if GSEOptions.DisabledSequences[currentSeq] then
     disableSeqbutton:SetText(L["Enable Sequence"])
@@ -18,7 +20,7 @@ function GSE.GUIDisableSequence(currentSeq, iconWidget)
 
 end
 
-function GSE.GUILoadEditor(SequenceName, recordstring)
+function GSE.GUI.LoadEditor(SequenceName, recordstring)
   if not GSE.isEmpty(SequenceName) then
     nameeditbox:SetText(SequenceName)
     if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].StepFunction) then
@@ -89,22 +91,18 @@ function GSE.SetActiveSequence(key)
   otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
 end
 
-function GSE.GUIChangeOtherSequence(key)
+function GSE.GUI.ChangeOtherSequence(key)
   otherversionlistboxvalue = key
   otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][key], (GSE.isEmpty(GSELibrary[currentSequence][key].lang) and GetLocale() or GSELibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
 end
 
-function GSE.GUIUpdateSequenceList()
+function GSE.GUI.UpdateSequenceList()
   local names = GSE.GetSequenceNames()
-<<<<<<< HEAD
   GSE.GUI.ViewFrame.SequenceListbox:SetTree(names)
-=======
-  GSE.GUIViewFrame.SequenceListbox:SetTree(names)
->>>>>>> origin/2.0
 end
 
 
-function GSE.GUIManageSequenceVersion()
+function GSE.GUI.ManageSequenceVersion()
   frame:Hide()
   versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
   activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
@@ -114,12 +112,12 @@ function GSE.GUIManageSequenceVersion()
 end
 
 
-function GSE.GUIloadTranslatedSequence(key)
+function GSE.GUI.loadTranslatedSequence(key)
   GSE.PrintDebugMessage(L["GSTranslateSequenceFromTo(GSELibrary["] .. currentSequence .. L["], (GSE.isEmpty(GSELibrary["] .. currentSequence .. L["].lang) and GSELibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
   remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
-function GSE.GUIloadSequence(SequenceName)
+function GSE.GUI.loadSequence(SequenceName)
   GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
   if GSAdditionalLanguagesAvailable and GSEOptions.useTranslator then
     sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang), GetLocale()), SequenceName))
@@ -144,7 +142,7 @@ function GSE.GUIloadSequence(SequenceName)
 end
 
 
-function GSE.GUIToggleClasses(buttonname)
+function GSE.GUI.ToggleClasses(buttonname)
   if buttonname == "class" then
     classradio:SetValue(true)
     specradio:SetValue(false)
@@ -155,7 +153,7 @@ function GSE.GUIToggleClasses(buttonname)
 end
 
 
-function GSE.GUIUpdateSequenceDefinition(SequenceName)
+function GSE.GUI.UpdateSequenceDefinition(SequenceName)
   -- Changes have been made so save them
   if not GSE.isEmpty(SequenceName) then
     nextVal = GSGetNextSequenceVersion(currentSequence)
@@ -212,14 +210,28 @@ function GSE.GUIUpdateSequenceDefinition(SequenceName)
 end
 
 
+function GSE.GUI.ShowViewer()
+  if not InCombatLockdown() then
+    currentSequence = ""
+    local names = GSE.GetSequenceNames()
+    GSE.GUI.ViewFrame.SequenceListbox:SetTree(names)
+    GSE.GUI.ViewFrame.SequenceListbox:SelectByPath(GSE.GetCurrentClassID())
+    sequenceboxtext:SetText("")
+    frame:Show()
+  else
+    GSE.Print(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
+  end
+
+end
 
 
-function GSE.GUIGetColour(option)
+
+function GSE.GUI.GetColour(option)
   hex = string.gsub(option, "#","")
   return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
 end
 
-function  GSE.GUISetColour(option, r, g, b)
+function  GSE.GUI.SetColour(option, r, g, b)
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
 end
 
@@ -247,18 +259,18 @@ function GSE:GSSlash(input)
     elseif input == "record" then
       recordframe:Show()
     elseif input == "debug" then
-      GSE.GUIShowDebugWindow()
+      GSE.GUI.ShowDebugWindow()
     else
-      GSE.GUIShowViewer()
+      GSE.GUI.ShowViewer()
     end
 end
 
 
 
 function GSE:OnInitialize()
-    GSE.GUIRecordFrame:Hide()
-    GSE.GUIVersionFrame:Hide()
-    GSE.GUIEditFrame:Hide()
-    GSE.GUIViewframe:Hide()
+    GSE.GUI.RecordFrame:Hide()
+    GSE.GUI.VersionFrame:Hide()
+    GSE.GUI.EditFrame:Hide()
+    GSE.GUI.Viewframe:Hide()
     GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
 end

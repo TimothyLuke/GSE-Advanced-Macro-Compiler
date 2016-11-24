@@ -11,19 +11,19 @@ GSE.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSDebugEnableViewButton = AceGUI:Create("Button")
 GSDebugPauseViewButton = AceGUI:Create("Button")
 
-GSE.GUI.DebugFrame = DebugFrame
+GSE.GUIDebugFrame = DebugFrame
 
-function GSE.GUI.ShowDebugWindow()
+function GSE.GUIShowDebugWindow()
   DebugFrame:Show()
 end
 
 
-function GSE.GUI.UpdateOutput()
+function GSE.GUIUpdateOutput()
   GSE.DebugOutputTextbox:SetText(GSE.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
   GSE.DebugOutput = ""
 end
 
-function GSE.GUI.EnableDebugView()
+function GSE.GUIEnableDebugView()
   if GSDebugSequenceEx then
     --Disable
     GSDebugSequenceEx = false
@@ -81,12 +81,12 @@ buttonGroup:SetLayout("Flow")
 
 
 GSDebugEnableViewButton:SetWidth(150)
-GSDebugEnableViewButton:SetCallback("OnClick", function() GSE.GUI.EnableDebugView() end)
+GSDebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
 buttonGroup:AddChild(GSDebugEnableViewButton)
 
 GSDebugPauseViewButton:SetText(L["Pause"])
 GSDebugPauseViewButton:SetWidth(150)
-GSDebugPauseViewButton:SetCallback("OnClick", function() GSE.GUI.PauseDebugView() end)
+GSDebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
 buttonGroup:AddChild(GSDebugPauseViewButton)
 
 if GSDebugSequenceEx then
@@ -106,7 +106,7 @@ buttonGroup:AddChild(GSDebugClearViewButton)
 local GSDebugOptionsViewButton = AceGUI:Create("Button")
 GSDebugOptionsViewButton:SetText(L["Options"])
 GSDebugOptionsViewButton:SetWidth(150)
-GSDebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUI.OptionsDebugView() end)
+GSDebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
 buttonGroup:AddChild(GSDebugOptionsViewButton)
 
 DebugFrame:AddChild(buttonGroup)

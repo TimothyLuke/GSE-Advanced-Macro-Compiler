@@ -8,12 +8,9 @@ local libCE = libC:GetAddonEncodeTable()
 
 local importframe = AceGUI:Create("Frame")
 importframe:Hide()
-GSE.GUI.ImportFrame = importframe
-local recbuttontext = L["Import"]
 
--- Record Frame
 
-importframe:SetTitle(L["Import] Macro"])
+importframe:SetTitle(L["Gnome Sequencer: Import a Macro String."])
 importframe:SetStatusText(L["Import Macro from Forums"])
 importframe:SetCallback("OnClose", function(widget)  importframe:Hide(); end)
 importframe:SetLayout("List")
@@ -27,18 +24,18 @@ defaultradio:SetType("radio")
 defaultradio:SetLabel(L["GSE Macro"])
 defaultradio:SetValue(true)
 defaultradio:SetWidth(250)
-defaultradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUI.ToggleImportDefault(0)  end)
+defaultradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(0)  end)
 
 local legacyradio = AceGUI:Create("CheckBox")
 legacyradio:SetType("radio")
 legacyradio:SetLabel(L["Legacy GS/GSE1 Macro"])
 legacyradio:SetValue(false)
 legacyradio:SetWidth(250)
-legacyradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUI.ToggleImportDefault(1)  end)
+legacyradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(1)  end)
 
 
-specClassGroup:AddChild(defaultradio)
-specClassGroup:AddChild(legacyradio)
+headerGroup:AddChild(defaultradio)
+headerGroup:AddChild(legacyradio)
 
 importframe:AddChild(headerGroup)
 
@@ -56,14 +53,14 @@ recButtonGroup:SetLayout("Flow")
 local recbutton = AceGUI:Create("Button")
 recbutton:SetText(L["Import"])
 recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSE.GUI.ImportSequence() end)
+recbutton:SetCallback("OnClick", function() GSE.GUIImportSequence() end)
 recButtonGroup:AddChild(recbutton)
 
 importframe:AddChild(recButtonGroup)
+GSE.GUIImportFrame = importframe
 
-
-function GSE.GUI.ToggleImportDefault(switchstate)
-  if buttonname == 1 then
+function GSE.GUIToggleImportDefault(switchstate)
+  if switchstate == 1 then
       legacyradio:SetValue(true)
       defaultradio:SetValue(false)
     else
@@ -72,12 +69,12 @@ function GSE.GUI.ToggleImportDefault(switchstate)
   end
 end
 
-function GSE.GUI.ImportSequence()
+function GSE.GUIImportSequence()
   local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacyradio:GetValue())
   if success then
     StaticPopup_Show ("GSE-MacroImportSuccess")
-    GSE.GUI.ImportFrame:Hide()
-    GSE.GUI.ViewFrame:Show()
+    GSE.GUIImportFrame:Hide()
+    GSE.GUIViewFrame:Show()
   else
     StaticPopup_Show ("GSE-MacroImportFailure")
   end

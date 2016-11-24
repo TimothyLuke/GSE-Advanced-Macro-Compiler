@@ -11,12 +11,12 @@ local libCE = libC:GetAddonEncodeTable()
 
 
 local versionframe = AceGUI:Create("Frame")
-GSE.GUI.VersionFrame = versionframe
+GSE.GUIVersionFrame = versionframe
 versionframe:Hide()
 
 versionframe:SetTitle(L["Manage Versions"])
 versionframe:SetStatusText(L["Gnome Sequencer: Sequence Version Manager"])
-versionframe:SetCallback("OnClose", function(widget)  versionframe:Hide(); GSE.GUI.ViewFrame:Show() end)
+versionframe:SetCallback("OnClose", function(widget)  versionframe:Hide(); GSE.GUIViewFrame:Show() end)
 versionframe:SetLayout("List")
 
 local columnGroup = AceGUI:Create("SimpleGroup")

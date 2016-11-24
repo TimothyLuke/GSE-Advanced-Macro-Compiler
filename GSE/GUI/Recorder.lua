@@ -8,7 +8,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 local recordframe = AceGUI:Create("Frame")
 recordframe:Hide()
-GSE.GUI.RecordFrame = recordframe
+GSE.GUIRecordFrame = recordframe
 local recbuttontext = L["Record"]
 
 -- Record Frame
@@ -24,7 +24,7 @@ recordsequencebox:SetNumLines(20)
 recordsequencebox:DisableButton(true)
 recordsequencebox:SetFullWidth(true)
 recordframe:AddChild(recordsequencebox)
-GSE.GUI.RecordFrame.RecordSequenceBox = recordsequencebox
+GSE.GUIRecordFrame.RecordSequenceBox = recordsequencebox
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
@@ -33,26 +33,26 @@ recButtonGroup:SetLayout("Flow")
 local recbutton = AceGUI:Create("Button")
 recbutton:SetText(L["Record"])
 recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSE.GUI.ManageRecord() end)
+recbutton:SetCallback("OnClick", function() GSE.GUIManageRecord() end)
 recButtonGroup:AddChild(recbutton)
 
 local createmacrobutton = AceGUI:Create("Button")
 createmacrobutton:SetText(L["Create Macro"])
 createmacrobutton:SetWidth(150)
-createmacrobutton:SetCallback("OnClick", function() GSE.GUI.SaveRecordMacro() end)
+createmacrobutton:SetCallback("OnClick", function() GSE.GUISaveRecordMacro() end)
 createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 
 recordframe:AddChild(recButtonGroup)
 
 
-function GSE.GUI.SaveRecordMacro()
-  GSE.GUI.LoadEditor( nil, recordsequencebox:GetText())
+function GSE.GUISaveRecordMacro()
+  GSE.GUILoadEditor( nil, recordsequencebox:GetText())
   recordframe:Hide()
 
 end
 
-function GSE.GUI.ManageRecord()
+function GSE.GUIManageRecord()
   if recbuttontext == L["Record"] then
     recbuttontext = L["Stop"]
     createmacrobutton:SetDisabled(false)
