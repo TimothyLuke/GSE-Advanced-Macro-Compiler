@@ -98,7 +98,7 @@ function GSE.TransmitSequence(SequenceName, channel, target)
   t.SequenceName = SequenceName
   t.Sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)]
   GSSendMessage(t, channel, target)
-  GSE.GUI.TranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
+  GSE.GUITranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
 local function ReceiveSequence(SequenceName, Sequence, sender)
@@ -192,7 +192,7 @@ function dataobj:OnClick(button)
   if button == "LeftButton" then
     GSGuiShowViewer()
   elseif button == "MiddleButton" then
-    GSE.GUI.ShowTransmissionGui()
+    GSE.GUIShowTransmissionGui()
   elseif button == "RightButton" then
     GSDebugFrame:Show()
   end
@@ -207,10 +207,10 @@ tranmissionFrame:SetLayout("List")
 tranmissionFrame:SetWidth(290)
 tranmissionFrame:SetHeight(190)
 tranmissionFrame:Hide()
-GSE.GUI.TranmissionFrame = transmissionframe
+GSE.GUITranmissionFrame = transmissionframe
 
 local SequenceListbox = AceGUI:Create("TreeGroup")
-SequenceListbox:SetLabel(L["Load Sequence"])
+--SequenceListbox:SetLabel(L["Load Sequence"])
 SequenceListbox:SetWidth(250)
 SequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) transSequencevalue = key end)
 tranmissionFrame:AddChild(SequenceListbox)
@@ -227,17 +227,17 @@ sendbutton:SetWidth(250)
 sendbutton:SetCallback("OnClick", function() GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
-function GSE.GUI.ShowTransmissionGui(SequenceName)
-  if GSE.GUI.ViewFrame:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.viewframe:GetPoint()
-    --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-    GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+function GSE.GUIShowTransmissionGui(SequenceName)
+  if GSE.GUIViewFrame:IsVisible() then
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIviewframe:GetPoint()
+    --	GSE.GUITranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUITranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end
-  if GSE.GUI.EditFrame:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUI.EditFrame:GetPoint()
-    --	GSE.GUI.TranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-    GSE.GUI.TranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
+  if GSE.GUIEditFrame:IsVisible() then
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
+    --	GSE.GUITranmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUITranmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end
 
@@ -248,5 +248,5 @@ function GSE.GUI.ShowTransmissionGui(SequenceName)
     transSequencevalue = SequenceName
   end
   tranmissionFrame:Show()
-  GSE.GUI.TranmissionFrame:SetStatusText(L["Ready to Send"])
+  GSE.GUITranmissionFrame:SetStatusText(L["Ready to Send"])
 end

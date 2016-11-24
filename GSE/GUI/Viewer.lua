@@ -10,14 +10,14 @@ local libCE = libC:GetAddonEncodeTable()
 
 
 local viewframe = AceGUI:Create("Frame")
-GSE.GUI.ViewFrame = viewframe
+GSE.GUIViewFrame = viewframe
 viewframe:Hide()
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
 local curentSequence
 
-function GSE.GUI.DrawStandardViewerWindow(container)
+function GSE.GUIDrawStandardViewerWindow(container)
   sequencebox = AceGUI:Create("MultiLineEditBox")
   sequencebox:SetLabel(L["Sequence"])
   sequencebox:SetNumLines(18)
@@ -47,13 +47,13 @@ function GSE.GUI.DrawStandardViewerWindow(container)
   local impbutton = AceGUI:Create("Button")
   impbutton:SetText(L["Import"])
   impbutton:SetWidth(150)
-  impbutton:SetCallback("OnClick", function() GSE.GUI.ViewFrame:Hide(); GSE.GUI.ImportFrame:Show() end)
+  impbutton:SetCallback("OnClick", function() GSE.GUIViewFrame:Hide(); GSE.GUIImportFrame:Show() end)
   buttonGroup:AddChild(impbutton)
 
   local tranbutton = AceGUI:Create("Button")
   tranbutton:SetText(L["Send"])
   tranbutton:SetWidth(150)
-  tranbutton:SetCallback("OnClick", function() GSE.GUI.ShowTransmissionGui(currentSequence) end)
+  tranbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(currentSequence) end)
   buttonGroup:AddChild(tranbutton)
 
   local versbutton = AceGUI:Create("Button")
@@ -77,7 +77,7 @@ function GSE.GUI.DrawStandardViewerWindow(container)
   local recordwindowbutton = AceGUI:Create("Button")
   recordwindowbutton:SetText(L["Record Macro"])
   recordwindowbutton:SetWidth(150)
-  recordwindowbutton:SetCallback("OnClick", function() GSE.GUI.ViewFrame:Hide(); GSE.GUI.RecordFrame:Show() end)
+  recordwindowbutton:SetCallback("OnClick", function() GSE.GUIViewFrame:Hide(); GSE.GUIRecordFrame:Show() end)
   buttonGroup:AddChild(recordwindowbutton)
 
   container:AddChild(buttonGroup)
@@ -85,7 +85,7 @@ function GSE.GUI.DrawStandardViewerWindow(container)
   sequenceboxtext = sequencebox
 end
 
-function GSE.GUI.DrawSecondaryViewerWindow(container)
+function GSE.GUIDrawSecondaryViewerWindow(container)
   local languages = GSTRListCachedLanguages()
   local listbox = AceGUI:Create("Dropdown")
   listbox:SetLabel(L["Choose Language"])
@@ -106,7 +106,7 @@ function GSE.GUI.DrawSecondaryViewerWindow(container)
 end
 
 -- Callback function for OnGroupSelected
-function GSE.GUI.SelectGroup(container, event, group)
+function GSE.GUISelectGroup(container, event, group)
    local tremote = remotesequenceboxtext:GetText()
    local tlocal = sequenceboxtext:GetText()
    container:ReleaseChildren()
@@ -137,9 +137,9 @@ viewerheadergroup:SetLayout("Flow")
 -- GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
 
 local GSSequenceListbox = AceGUI:Create("TreeGroup")
-GSSequenceListbox:SetLabel(L["Load Sequence"])
-GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUI.LoadSequence(key) currentSequence = key end)
-viewframe:SequenceListbox = GSSequenceListbox
+--GSSequenceListbox:SetLabel(L["Load Sequence"])
+GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUILoadSequence(key) currentSequence = key end)
+viewframe.SequenceListbox = GSSequenceListbox
 local spacerlabel = AceGUI:Create("Label")
 spacerlabel:SetWidth(300)
 
@@ -165,12 +165,12 @@ if GSEOptions.useTranslator and GSAdditionalLanguagesAvailable then
   -- Setup which tabs to show
   tab:SetTabs({{text=GetLocale(), value="localtab"}, {text=L["Translate to"], value="remotetab"}})
   -- Register callback
-  tab:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUI.SelectGroup(container, event, group) end)
+  tab:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectGroup(container, event, group) end)
   -- Set initial Tab (this will fire the OnGroupSelected callback)
   tab:SelectTab("localtab")
   tab:SetFullWidth(true)
   -- add to the frame container
   viewframe:AddChild(tab)
 else
-   GSE.GUI.DrawStandardViewerWindow(viewframe)
+   GSE.GUIDrawStandardViewerWindow(viewframe)
 end

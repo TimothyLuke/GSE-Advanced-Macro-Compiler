@@ -15,7 +15,7 @@ local otherversionlistboxvalue = ""
 
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
-GSE.GUI.EditFrame = editframe
+GSE.GUIEditFrame = editframe
 
 
 
@@ -34,7 +34,7 @@ editOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() e
 local transbutton = AceGUI:Create("Button")
 transbutton:SetText(L["Send"])
 transbutton:SetWidth(150)
-transbutton:SetCallback("OnClick", function() GSE.GUI.ShowTransmissionGui(currentSequence) end)
+transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(currentSequence) end)
 
 local iconpicker = AceGUI:Create("Icon")
 iconpicker:SetLabel(L["Macro Icon"])
@@ -78,7 +78,7 @@ firstheadercolumn:SetLayout("List")
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
-editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUI.ViewFrame:Show(); end)
+editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIViewFrame:Show(); end)
 editframe:SetLayout("List")
 
 local nameeditbox = AceGUI:Create("EditBox")
@@ -138,7 +138,7 @@ KeyPressbox:SetFullWidth(true)
 --KeyPressbox.editBox:SetScript("OnLeave", OnTextChanged)
 
 editscroll:AddChild(KeyPressbox)
-KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUI.parsetext(self) end)
+KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
 KeyPressbox.editBox:SetScript("OnTextChanged", function () end)
 
 local spellbox = AceGUI:Create("MultiLineEditBox")
@@ -146,7 +146,7 @@ spellbox:SetLabel(L["Sequence"])
 spellbox:SetNumLines(10)
 spellbox:DisableButton(true)
 spellbox:SetFullWidth(true)
-spellbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUI.parsetext(self) end)
+spellbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
 spellbox.editBox:SetScript("OnTextChanged", function () end)
 
 local loopGroup = AceGUI:Create("SimpleGroup")
@@ -183,7 +183,7 @@ KeyReleasebox:SetLabel(L["KeyRelease"])
 KeyReleasebox:SetNumLines(2)
 KeyReleasebox:DisableButton(true)
 KeyReleasebox:SetFullWidth(true)
-KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSE.GUI.parsetext(self) end)
+KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
 KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
 
 editscroll:AddChild(KeyReleasebox)
@@ -196,7 +196,7 @@ editButtonGroup:SetLayout("Flow")
 local savebutton = AceGUI:Create("Button")
 savebutton:SetText(L["Save"])
 savebutton:SetWidth(150)
-savebutton:SetCallback("OnClick", function() GSE.GUI.UpdateSequenceDefinition(currentSequence) end)
+savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(currentSequence) end)
 editButtonGroup:AddChild(savebutton)
 
 editButtonGroup:AddChild(transbutton)

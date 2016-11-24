@@ -73,7 +73,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
     GSE.CurrentGCD = GCD_Timer
 
     if GSE.RecorderActive then
-      GSE.GUI.RecordFrame.RecordSequenceBox:SetText(GSE.GUI.RecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n")
+      GSE.GUIRecordFrame.RecordSequenceBox:SetText(GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n")
     end
   end
 end
@@ -141,7 +141,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   elseif string.lower(msg) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
   else
-    GSE.GUI.ViewFrame:Show()
+    GSE.GUIShowViewer()
   end
 end
 

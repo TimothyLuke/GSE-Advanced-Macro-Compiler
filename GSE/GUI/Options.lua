@@ -223,7 +223,7 @@ local OptionsTable = {
           desc = L["Picks a Custom Colour for the Mod Names."],
           order = 101,
           hasAlpha = false,
-          get = function(info) return GSE.GUI.GetColour(GSEOptions.TitleColour) end,
+          get = function(info) return GSE.GUIGetColour(GSEOptions.TitleColour) end,
           set = function(info, r, g, b, a)
             GSEOptions.TitleColour = string.format("|c%02x%02x%02x%02x", a*255 , r*255, g * 255, b*255)
           end,
@@ -235,7 +235,7 @@ local OptionsTable = {
           order = 110,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.AuthorColour)
+            return GSE.GUIGetColour(GSEOptions.AuthorColour)
           end,
           set = function(info, r, g, b)
             GSEOptions.AuthorColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
@@ -248,7 +248,7 @@ local OptionsTable = {
           order = 120,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.CommandColour)
+            return GSE.GUIGetColour(GSEOptions.CommandColour)
           end,
           set = function(info, r, g, b)
             GSEOptions.CommandColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
@@ -261,7 +261,7 @@ local OptionsTable = {
           order = 130,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.EmphasisColour)
+            return GSE.GUIGetColour(GSEOptions.EmphasisColour)
           end,
           set = function(info, r, g, b)
             GSEOptions.EmphasisColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
@@ -274,7 +274,7 @@ local OptionsTable = {
           order = 140,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.NormalColour)
+            return GSE.GUIGetColour(GSEOptions.NormalColour)
           end,
           set = function(info, r, g, b)
             GSEOptions.NormalColour = string.format("|c%02x%02x%02x%02x", 255 , r*255, g * 255, b*255)
@@ -293,10 +293,10 @@ local OptionsTable = {
           order = 210,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.KEYWORD)
+            return GSE.GUIGetColour(GSEOptions.KEYWORD)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.KEYWORD, r, g, b)
+            GSE.GUISetColour(GSEOptions.KEYWORD, r, g, b)
           end,
         },
         unknownColour = {
@@ -306,10 +306,10 @@ local OptionsTable = {
           order = 220,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.UNKNOWN)
+            return GSE.GUIGetColour(GSEOptions.UNKNOWN)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.UNKNOWN, r, g, b)
+            GSE.GUISetColour(GSEOptions.UNKNOWN, r, g, b)
           end,
         },
         iconColour = {
@@ -319,10 +319,10 @@ local OptionsTable = {
           order = 230,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.CONCAT)
+            return GSE.GUIGetColour(GSEOptions.CONCAT)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.CONCAT, r, g, b)
+            GSE.GUISetColour(GSEOptions.CONCAT, r, g, b)
           end,
         },
         numberColour = {
@@ -332,10 +332,10 @@ local OptionsTable = {
           order = 240,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.NUMBER)
+            return GSE.GUIGetColour(GSEOptions.NUMBER)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.NUMBER, r, g, b)
+            GSE.GUISetColour(GSEOptions.NUMBER, r, g, b)
           end,
         },
         stringColour = {
@@ -346,10 +346,10 @@ local OptionsTable = {
           order = 250,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.STRING)
+            return GSE.GUIGetColour(GSEOptions.STRING)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.STRING, r, g, b)
+            GSE.GUISetColour(GSEOptions.STRING, r, g, b)
           end,
         },
         conditionalColour = {
@@ -359,10 +359,10 @@ local OptionsTable = {
           order = 260,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.COMMENT)
+            return GSE.GUIGetColour(GSEOptions.COMMENT)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.COMMENT, r, g, b)
+            GSE.GUISetColour(GSEOptions.COMMENT, r, g, b)
           end,
         },
         helpColour = {
@@ -372,10 +372,10 @@ local OptionsTable = {
           order = 270,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.INDENT)
+            return GSE.GUIGetColour(GSEOptions.INDENT)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.INDENT, r, g, b)
+            GSE.GUISetColour(GSEOptions.INDENT, r, g, b)
           end,
         },
         stepColour = {
@@ -385,10 +385,10 @@ local OptionsTable = {
           order =280,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.EQUALS)
+            return GSE.GUIGetColour(GSEOptions.EQUALS)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.EQUALS, r, g, b)
+            GSE.GUISetColour(GSEOptions.EQUALS, r, g, b)
           end,
         },
         languageColour = {
@@ -398,10 +398,10 @@ local OptionsTable = {
           order = 290,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.STANDARDFUNCS)
+            return GSE.GUIGetColour(GSEOptions.STANDARDFUNCS)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.STANDARDFUNCS, r, g, b)
+            GSE.GUISetColour(GSEOptions.STANDARDFUNCS, r, g, b)
           end,
         },
         shortcutsColour = {
@@ -411,10 +411,10 @@ local OptionsTable = {
           order = 300,
           hasAlpha = false,
           get = function(info)
-            return GSE.GUI.GetColour(GSEOptions.WOWSHORTCUTS)
+            return GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS)
           end,
           set = function(info, r, g, b)
-            GSE.GUI.SetColour(GSEOptions.WOWSHORTCUTS, r, g, b)
+            GSE.GUISetColour(GSEOptions.WOWSHORTCUTS, r, g, b)
           end,
         },
       },

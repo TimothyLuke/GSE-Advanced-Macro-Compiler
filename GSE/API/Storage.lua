@@ -323,7 +323,7 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
     if not GSE.isEmpty(sequence.StepFunction) then
       if  sequence.StepFunction == Statics.PriorityImplementation or sequence.StepFunction == "Priority" then
        steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-     elseif sequence.StepFunction = "Sequential" then
+     elseif sequence.StepFunction == "Sequential" then
        steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
      else
        steps = "StepFunction = [[" .. GSEOptions.EQUALS .. sequence.StepFunction .. Statics.StringReset .. "]],\n"
