@@ -209,7 +209,7 @@ tranmissionFrame:SetHeight(190)
 tranmissionFrame:Hide()
 GSE.GUI.TranmissionFrame = transmissionframe
 
-local SequenceListbox = AceGUI:Create("Dropdown")
+local SequenceListbox = AceGUI:Create("TreeGroup")
 SequenceListbox:SetLabel(L["Load Sequence"])
 SequenceListbox:SetWidth(250)
 SequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) transSequencevalue = key end)
@@ -241,8 +241,8 @@ function GSE.GUI.ShowTransmissionGui(SequenceName)
 
   end
 
-  local names = GSE.getSequenceNames()
-  SequenceListbox:SetList(names)
+  local names = GSE.GetSequenceNames()
+  SequenceListbox:SetTree(names)
   if not GSE.isEmpty(SequenceName) then
     SequenceListbox:SetValue(SequenceName)
     transSequencevalue = SequenceName

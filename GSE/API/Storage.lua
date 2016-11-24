@@ -718,35 +718,47 @@ end
 
 
 --- This returns a list of Sequence Names for the current spec
-function GSE.getSequenceNames()
+function GSE.GetSequenceNames()
   local keyset={}
-  local currentSpec = GetSpecialization()
-  local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-  if not GSE.isEmpty(currentSpecID) then
-    local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
-    for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-      --print (table.getn(GSELibrary[k]))
-      if not GSE.isEmpty(GSELibrary[k]) then
-        local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].SpecID)
-        if GSEOptions.filterList["All"] then
-          keyset[k]=k
-        elseif GSELibrary[k][v].SpecID == 0 then
-          keyset[k]=k
-        elseif GSEOptions.filterList["Class"]  then
-          if pspecclass == specclass then
-            keyset[k]=k
-          end
-        elseif GSELibrary[k][v].SpecID == currentSpecID then
-          keyset[k]=k
-        else
-          -- do nothing
-          GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
-        end
-      else
-        GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
-      end
+  for k,v in pairs(GSELibrary) do
+    local id, name, description, icon, background, role = GetSpecializationInfo(k)
+    keyset[k].value = k
+    keyset[k].text = name
+    keyset[k].icon = icon
+    keyset[k].children = {}
+    for i,j in ipairs(k) do
+      keyset[k].children[1].value = j
+      keyset[k].children[1].text = j
     end
   end
+
+  -- local currentSpec = GetSpecialization()
+  -- local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
+  -- if not GSE.isEmpty(currentSpecID) then
+  --   local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
+  --   for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
+  --     --print (table.getn(GSELibrary[k]))
+  --     if not GSE.isEmpty(GSELibrary[k]) then
+  --       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].SpecID)
+  --       if GSEOptions.filterList["All"] then
+  --         keyset[k]=k
+  --       elseif GSELibrary[k][v].SpecID == 0 then
+  --         keyset[k]=k
+  --       elseif GSEOptions.filterList["Class"]  then
+  --         if pspecclass == specclass then
+  --           keyset[k]=k
+  --         end
+  --       elseif GSELibrary[k][v].SpecID == currentSpecID then
+  --         keyset[k]=k
+  --       else
+  --         -- do nothing
+  --         GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
+  --       end
+  --     else
+  --       GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
+  --     end
+  --   end
+  -- end
   -- Filter Keyset
   return keyset
 end

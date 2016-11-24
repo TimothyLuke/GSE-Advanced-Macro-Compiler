@@ -97,8 +97,8 @@ function GSE.GUI.ChangeOtherSequence(key)
 end
 
 function GSE.GUI.UpdateSequenceList()
-  local names = GSSE:getSequenceNames()
-  GSSequenceListbox:SetList(names)
+  local names = GSE.GetSequenceNames()
+  GSE.GUI.ViewFrame. SequenceListbox:SetTree(names)
 end
 
 
@@ -213,8 +213,9 @@ end
 function GSE.GUI.ShowViewer()
   if not InCombatLockdown() then
     currentSequence = ""
-    local names = GSSE:getSequenceNames()
-    GSSequenceListbox:SetList(names)
+    local names = GSE.GetSequenceNames()
+    GSE.GUI.ViewFrame.SequenceListbox:SetTree(names)
+    GSE.GUI.ViewFrame.SequenceListbox:SelectByPath(GSE.GetCurrentClassID())
     sequenceboxtext:SetText("")
     frame:Show()
   else
