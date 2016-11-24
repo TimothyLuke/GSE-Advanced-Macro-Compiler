@@ -68,4 +68,5 @@ GUI\Transmission.lua
 GUI\VersionManagement.lua
 GUI\Recorder.lua
 GUI\Editor.lua
+GUI\Import.lua
 GUI\Viewer.lua

@@ -342,10 +342,10 @@ L["Load"] = true
 L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"]= true
 L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = true
 L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
-L["Macro unable to be imported."]
-L["Macro Import Successful."]
-L["Gnome Sequencer: Import a Macro String."]
-L["GSE Macro"]
-L["Legacy GS/GSE1 Macro"]
-L["Macro Collection to Import."]
+L["Macro unable to be imported."] = true
+L["Macro Import Successful."]= true
+L["Gnome Sequencer: Import a Macro String."] = true
+L["GSE Macro"] = true
+L["Legacy GS/GSE1 Macro"] = true
+L["Macro Collection to Import."] = true
 --@end-do-not-package@
