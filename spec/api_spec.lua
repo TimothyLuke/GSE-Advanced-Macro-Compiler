@@ -11,7 +11,6 @@ describe('gs-core', function()
 
   it("tests positive assertions", function()
     assert.is_true(true)
-    assert.true(true)
     assert.are.equal(1, 1)
     assert.has.errors(function() error("this should fail") end)
   end)
