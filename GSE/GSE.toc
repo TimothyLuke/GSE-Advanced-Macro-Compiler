@@ -61,7 +61,7 @@ API\Translator.lua
 
 
 # GUI
-API\GUIFuntions.lua
+API\GUIFunctions.lua
 GUI\Options.lua
 GUI\Import.lua
 GUI\DebugWindow.lua
