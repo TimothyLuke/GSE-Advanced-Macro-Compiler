@@ -208,20 +208,6 @@ function GSE.GUIUpdateSequenceDefinition(SequenceName)
 end
 
 
-function GSE.GUIShowViewer()
-  if not InCombatLockdown() then
-    currentSequence = ""
-    local names = GSE.GetSequenceNames()
-    GSE.GUIViewFrame.SequenceListbox:SetTree(names)
-    GSE.GUIViewFrame.SequenceListbox:SelectByPath(GSE.GetCurrentClassID())
-    sequenceboxtext:SetText("")
-    frame:Show()
-  else
-    GSE.Print(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
-  end
-
-end
-
 
 
 function GSE.GUIGetColour(option)

@@ -22,6 +22,23 @@ function GSE.GetCurrentClassNormalisedName()
   return classnormalisedname
 end
 
+function GSE.GetClassIcon(classid)
+  local classicon = {}
+  classicon[1] = "Interface\\Icons\\inv_sword_27" -- Warrior
+  classicon[2] = "Interface\\Icons\\ability_thunderbolt" -- Paladin
+  classicon[3] = "Interface\\Icons\\inv_weapon_bow_07" -- Hunter
+  classicon[4] = "Interface\\Icons\\inv_throwingknife_04" -- Rogue
+  classicon[5] = "Interface\\Icons\\inv_staff_30" -- Priest
+  classicon[6] = "Interface\\Icons\\inv_sword_27" -- Death Knight
+  classicon[7] = "Interface\\Icons\\inv_jewelry_talisman_04" -- SWhaman
+  classicon[8] = "Interface\\Icons\\inv_staff_13" -- Mage
+  classicon[9] = "Interface\\Icons\\spell_nature_drowsy" -- Warlock
+  classicon[10] = "Interface\\Icons\\Spell_Holy_FistOfJustice" -- Monk
+  classicon[11] = "Interface\\Icons\\inv_misc_monsterclaw_04" -- Druid
+  classicon[12] = "Interface\\Icons\\INV_Weapon_Glave_01" -- DEMONHUNTER
+  return classicon[classid]
+
+end
 
 --- Check if the specID provided matches the plauers current class.
 function GSE.isSpecIDForCurrentClass(specID)

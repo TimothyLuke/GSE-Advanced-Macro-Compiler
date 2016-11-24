@@ -139,6 +139,7 @@ viewerheadergroup:SetLayout("Flow")
 local GSSequenceListbox = AceGUI:Create("TreeGroup")
 --GSSequenceListbox:SetLabel(L["Load Sequence"])
 GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUILoadSequence(key) currentSequence = key end)
+GSSequenceListbox:SetWidth(250)
 viewframe.SequenceListbox = GSSequenceListbox
 local spacerlabel = AceGUI:Create("Label")
 spacerlabel:SetWidth(300)
@@ -154,7 +155,7 @@ viewiconpicker.frame:SetScript("OnDragStart", function()
 end)
 viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
 
-viewerheadergroup:AddChild(GSSequenceListbox)
+viewframe:AddChild(GSSequenceListbox)
 viewerheadergroup:AddChild(spacerlabel)
 viewerheadergroup:AddChild(viewiconpicker)
 viewframe:AddChild(viewerheadergroup)
@@ -173,4 +174,18 @@ if GSEOptions.useTranslator and GSAdditionalLanguagesAvailable then
   viewframe:AddChild(tab)
 else
    GSE.GUIDrawStandardViewerWindow(viewframe)
+end
+
+
+function GSE.GUIShowViewer()
+  if not InCombatLockdown() then
+    local names = GSE.GetSequenceNames()
+    GSSequenceListbox:SetTree(names)
+    GSSequenceListbox:SelectByValue(GSE.GetCurrentClassID())
+    sequenceboxtext:SetText("")
+    viewframe:Show()
+  else
+    GSE.Print(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
+  end
+
 end
