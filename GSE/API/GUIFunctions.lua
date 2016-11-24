@@ -98,7 +98,7 @@ end
 
 function GSE.GUI.UpdateSequenceList()
   local names = GSE.GetSequenceNames()
-  GSE.GUI.ViewFrame. SequenceListbox:SetTree(names)
+  GSE.GUI.ViewFrame.SequenceListbox:SetTree(names)
 end
 
 
