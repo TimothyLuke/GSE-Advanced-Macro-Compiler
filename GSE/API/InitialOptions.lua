@@ -79,3 +79,4 @@ GSE.ModifiedSequences = {} -- [sequenceName] = true if we've already modified th
 GSE.PrintAvailable = false
 GSE.AddInPacks = {}
 GSE.UnloadedAddInPacks = {}
+GSE.UsedSequences = {}

@@ -55,30 +55,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
       -- Sequence is new
       GSELibrary[GSE.GetCurrentClassID()][sequenceName] = {}
     end
-
     GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
-
-    -- local makemacrostub = false
-    -- local globalstub = false
-    -- if sequence.SpecID == GSE.GetCurrentSpecID() or sequence.SpecID == GSE.GetCurrentClassID() then
-    --   makemacrostub = true
-    -- elseif GSEOptions.autoCreateMacroStubsClass then
-    --   if GSisSpecIDForCurrentClass(sequence.SpecID) then
-    --     makemacrostub = true
-    --   end
-    -- elseif GSEOptions.autoCreateMacroStubsGlobal then
-    --   if sequence.SpecID == 0 then
-    --     makemacro = true
-    --     globalstub = true
-    --   end
-    -- end
-    -- if makemacrostub then
-    --   if GSEOptions.DisabledSequences[sequenceName] == true then
-    --     GSE.DeleteMacroStub(sequenceName)
-    --   else
-    --     GSE.CheckMacroCreated(sequenceName, globalstub)
-    --   end
-    -- end
   end
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
@@ -255,19 +232,7 @@ function GSE.ReloadSequences()
   for name, sequence in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
     GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
-  -- for name, version in pairs(GSEOptions.ActiveSequenceVersions) do
-  --   GSE.PrintDebugMessage(name .. " " .. version )
-  --   if not GSE.isEmpty(GSELibrary[name]) then
-  --     vers = GSE.GetActiveSequenceVersion(name)
-  --     GSE.PrintDebugMessage(vers)
-  --     if not GSE.isEmpty(GSELibrary[name][vers]) then
-  --       GSE.UpdateSequence(name, GSELibrary[name][vers])
-  --     else
-  --       GSEOptions.ActiveSequenceVersions[name] = nil
-  --       GSE.PrintDebugMessage(L["Removing "] .. name .. L[" From library"])
-  --     end
-  --   end
-  -- end
+
 end
 
 function GSE.ToggleDisabledSequence(SequenceName)
@@ -290,7 +255,7 @@ function GSE.ToggleDisabledSequence(SequenceName)
     GSdeleteMacroStub(SequenceName)
     GSE.Print(GSEOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."], GNOME)
   end
-  GSReloadSequences()
+  GSE.ReloadSequences()
 end
 
 function GSE.PrepareLogout(deletenonlocalmacros)
@@ -333,43 +298,98 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   if GSEOptions.DisabledSequences[sequenceName] then
     disabledseq = GSEOptions.UNKNOWN .. "-- " .. L["This Sequence is currently Disabled Locally."] .. Statics.StringReset .. "\n"
   end
-  local helptext = "helpTxt = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.helpTxt) and "No Help Information" or sequence.helpTxt) .. Statics.StringReset .. "\",\n"
-  local specversion = "version=" .. GSEOptions.NUMBER  ..(GSE.isEmpty(sequence.version) and "1" or sequence.version ) .. Statics.StringReset ..",\n"
-  local source = "source = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.source) and "Unknown Source" or sequence.source) .. Statics.StringReset .. "\",\n"
-  if not GSE.isEmpty(sequence.authorversion) then
-    source = source .. "authorversion = \"" .. GSEOptions.INDENT .. sequence.authorversion .. Statics.StringReset .. "\",\n"
+  local sequencemeta = "Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
+  if not GSE.isEmpty(sequence.Helplink) then
+    sequencemeta = sequencemeta .. "Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
   end
-  local steps = ""
-  if not GSE.isEmpty(sequence.StepFunction) then
-    if  sequence.StepFunction == GSStaticPriority then
-     steps = "StepFunction = " .. GSEOptions.EQUALS .. "GSStaticPriority" .. Statics.StringReset .. ",\n"
-    else
-     steps = "StepFunction = [[" .. GSEOptions.EQUALS .. sequence.StepFunction .. Statics.StringReset .. "]],\n"
-    end
+  if not GSE.isEmpty(sequence.Help) then
+    sequencemeta = sequencemeta .. "Help = \"" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "\",\n"
   end
-  local internalloop = ""
-  if GSE.IsLoopSequence(sequence) then
-    if not GSE.isEmpty(sequence.loopstart) then
-      internalloop = internalloop .. "loopstart=" .. GSEOptions.EQUALS .. sequence.loopstart .. Statics.StringReset .. ",\n"
-    end
-    if not GSE.isEmpty(sequence.loopstop) then
-      internalloop = internalloop .. "loopstop=" .. GSEOptions.EQUALS .. sequence.loopstop .. Statics.StringReset .. ",\n"
-    end
-    if not GSE.isEmpty(sequence.looplimit) then
-      internalloop = internalloop .. "looplimit=" .. GSEOptions.EQUALS .. sequence.looplimit .. Statics.StringReset .. ",\n"
-    end
+  sequencemeta = sequencemeta .. "Default=" ..sequence.Default .. ",\n"
+  if not GSE.isEmpty(sequence.Raid) then
+    sequencemeta = sequencemeta .. "Raid=" ..sequence.Raid .. ",\n"
   end
+  if not GSE.isEmpty(sequence.PVP) then
+    sequencemeta = sequencemeta .. "Raid=" ..sequence.PVP .. ",\n"
+  end
+  if not GSE.isEmpty(sequence.Mythic) then
+    sequencemeta = sequencemeta .. "Raid=" ..sequence.Mythic .. ",\n"
+  end
+  local macroversions = "MacroVersions = {"
+  for k,v in pairs(sequence.MacroVersions) do
+    macroversions = macroversions .. "[" .. k .. "] = {\n"
 
-  --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. helptext .. steps )
-  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\nauthor=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.author) and "Unknown Author" or sequence.author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") .. specversion .. source .. helptext .. steps .. internalloop)
+    local steps = "StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
+    if not GSE.isEmpty(sequence.StepFunction) then
+      if  sequence.StepFunction == Statics.PriorityImplementation or sequence.StepFunction = "Priority" then
+       steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
+     elseif sequence.StepFunction = "Sequential" then
+       steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
+     else
+       steps = "StepFunction = [[" .. GSEOptions.EQUALS .. sequence.StepFunction .. Statics.StringReset .. "]],\n"
+      end
+    end
+    if not GSE.isEmpty(sequence.Trinket1) then
+      macroversions = macroversions .. "Trinket1=" .. tostring(sequence.Trinket1) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Trinket2) then
+      macroversions = macroversions .. "Trinket2=" .. tostring(sequence.Trinket2) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Head) then
+      macroversions = macroversions .. "Head=" .. tostring(sequence.Head) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Neck) then
+      macroversions = macroversions .. "Neck=" .. tostring(sequence.Neck) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Belt) then
+      macroversions = macroversions .. "Belt=" .. tostring(sequence.Belt) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Ring1) then
+      macroversions = macroversions .. "Ring1=" .. tostring(sequence.Ring1) .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Ring2) then
+      macroversions = macroversions .. "Ring2=" .. tostring(sequence.Ring2) .. ",\n"
+    end
+
+    macroversions = macroversions .. steps
+    if not GSE.isEmpty(sequence.looplimit) then
+      macroversions = macroversions .. "looplimit=" .. GSEOptions.EQUALS .. sequence.looplimit .. Statics.StringReset .. ",\n"
+    end
+    macroversions = macroversions .. "KeyPress={\n"
+    for _,p in ipairs(sequence.KeyPress) do
+      macroversions = macroversions .. "\"" .. p .."\",\n"
+    end
+    macroversions = macroversions .. "},\n"
+    if table.getn(sequence.PreMacro) > 0 then
+      macroversions = macroversions .. "PreMacro={\n"
+      macroversions = macroversions .. "\"" .. table.concat(sequence.PreMacro,"\",\n\"")
+      macroversions = macroversions .. "},\n"
+    end
+    macroversions = macroversions .. "\"" .. table.concat(sequence,"\",\n\"")
+    if table.getn(sequence.PostMacro) > 0 then
+      macroversions = macroversions .. "PostMacro={\n"
+      macroversions = macroversions .. "\"" .. table.concat(sequence.PostMacro,"\",\n\"")
+      macroversions = macroversions .. "},\n"
+    end
+    macroversions = macroversions .. "KeyRelease={\n"
+    for _,p in ipairs(sequence.KeyRelease) do
+      macroversions = macroversions .. "\"" .. p .."\",\n"
+    end
+    macroversions = macroversions .. "},\n"
+    macroversions = macroversions .. "},\n"
+  end
+  macroversions = macroversions .. "},\n"
+  --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
+  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\nauthor=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
-  if not GSE.isEmpty(sequence.lang) then
-    returnVal = returnVal .. "lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.lang .. Statics.StringReset .. "\",\n"
+  if not GSE.isEmpty(sequence.Lang) then
+    returnVal = returnVal .. "Lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.lang .. Statics.StringReset .. "\",\n"
   end
-  returnVal = returnVal .. "KeyPress=[[\n" .. (GSE.isEmpty(sequence.KeyPress) and "" or sequence.KeyPress) .. "]]," .. "\n\"" .. table.concat(sequence,"\",\n\"") .. "\",\n"
-  returnVal = returnVal .. "KeyRelease=[[\n" .. (GSE.isEmpty(sequence.KeyRelease) and "" or sequence.KeyRelease) .. "]],\n}"
+  returnVal = returnVal .. macroversions
+  returnVal = returnVal .. "},\n"
+
   return returnVal
 end
 
@@ -463,12 +483,11 @@ end
 
 --- This function resets a button back to its initial setting
 function GSE.ResetButtons()
-  for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-    if GSE.isSpecIDForCurrentClass(GSELibrary[k][v].specID) then
-      button = _G[k]
-      button:SetAttribute("step",1)
-      UpdateIcon(button)
-    end
+  for k,v in pairs(GSE.UsedSequences) do
+    button = _G[k]
+    button:SetAttribute("step",1)
+    GSE.UpdateIcon(button, true)
+    GSE.UsedSequences[k] = nil
   end
 end
 
@@ -886,14 +905,16 @@ function GSE.CreateButton(name, sequence)
 end
 
 
-function GSE.UpdateIcon(self)
+function GSE.UpdateIcon(self, reset)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
   local sequence, foundSpell, notSpell = GSELibrary[GSE.GetCurrentClassID()][button].MacroVersions[GSE.GetActiveSequenceVersion(button)][step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if Statics.CastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
-      GSE.TraceSequence(button, step, spell)
+      if not reset then
+        GSE.TraceSequence(button, step, spell)
+      end
       if spell then
         if GetSpellInfo(spell) then
           SetMacroSpell(button, spell, target)
@@ -906,6 +927,9 @@ function GSE.UpdateIcon(self)
     end
   end
   if not foundSpell then SetMacroItem(button, notSpell) end
+  if not reset then
+    GSE.UsedSequences[button] = true
+  end
 end
 
 function GSE.PrepareKeyPress(KeyPress)

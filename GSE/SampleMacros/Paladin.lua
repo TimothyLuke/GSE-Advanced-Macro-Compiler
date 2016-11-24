@@ -146,7 +146,7 @@ Sequences['SAM_Ret'] = {
     },
     [2] = {
       StepFunction = "Priority",
-      reset="target,combat",
+      Reset="target,combat",
       KeyPress={
         "/targetenemy [noharm][dead]",
       },
@@ -158,7 +158,7 @@ Sequences['SAM_Ret'] = {
     },
     [3] = {
       StepFunction = "Priority",
-      reset="target",
+      Reset="target",
       Head=true,
       KeyPress={
         "/targetenemy [noharm][dead]",
@@ -235,7 +235,7 @@ Sequences['SAM_RetAOE'] = {
     },
     [2] = {
       StepFunction = "Priority",
-      reset="target,combat",
+      Reset="target,combat",
       KeyPress={
         "/targetenemy [noharm][dead]",
       },
@@ -247,7 +247,7 @@ Sequences['SAM_RetAOE'] = {
     },
     [3] = {
       StepFunction = "Priority",
-      reset="target",
+      Reset="target",
       Head=true,
       KeyPress={
         "/targetenemy [noharm][dead]",

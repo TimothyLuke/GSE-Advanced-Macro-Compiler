@@ -176,7 +176,7 @@ Statics.LoopPriorityImplementation = [[
 Statics.OnClick = [=[
 local step = self:GetAttribute('step')
 local loopstart = self:GetAttribute('loopstart') or 1
-local loopstop = self:GetAttribute('loopstop') or #macros + 1
+local loopstop = self:GetAttribute('loopstop') or #macros
 local loopiter = self:GetAttribute('loopiter') or 1
 local looplimit = self:GetAttribute('looplimit') or 1
 loopstart = tonumber(loopstart)
