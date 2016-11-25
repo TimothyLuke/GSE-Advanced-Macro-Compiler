@@ -1,14 +1,12 @@
 describe('gs-core', function()
   setup (function()
 
-    require("../spec/mockLibStub")  
-    require("../GSE/Localization/ModL_enUS")
+    require("../spec/mockGSE")
     require("../GSE/API/Init")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
     require("../GSE/API/StringFunctions")
-    require("../GSE/API/CharacterFunctions")
-    require("../GSE/SampleMacros/Druid")
+
   end)
 
   it("tests positive assertions", function()
