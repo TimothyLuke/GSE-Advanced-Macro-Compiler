@@ -8,7 +8,7 @@ GSE.L = setmetatable({}, {
   __index = assertfalse
 })
 GSE.Static = {}
-GSE.VersionString = GetAddOnMetadata("GSE", "Version");
+GSE.VersionString = 150;
 
 function GSE.Print(message, title)
   print (title .. ": " .. message)
