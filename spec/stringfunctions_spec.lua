@@ -2,7 +2,6 @@ describe('gs-core', function()
   setup (function()
 
     require("../spec/mockGSE")
-    require("../GSE/API/Init")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
     require("../GSE/API/StringFunctions")
