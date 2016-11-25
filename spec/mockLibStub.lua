@@ -3,6 +3,10 @@
 local LIBSTUB_MAJOR, LIBSTUB_MINOR = "LibStub", 1
 local LibStub = _G[LIBSTUB_MAJOR]
 
+function strmatch(string, pattern, initpos)
+  return string.match(string, pattern, initpos)
+end
+
 -- Check to see is this version of the stub is obsolete
 if not LibStub or LibStub.minor < LIBSTUB_MINOR then
 	LibStub = LibStub or {libs = {}, minors = {} }
