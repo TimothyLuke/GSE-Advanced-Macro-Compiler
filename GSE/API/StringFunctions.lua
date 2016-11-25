@@ -70,7 +70,7 @@ function GSE.SplitMeIntolines(str)
   local t = {}
   local function helper(line)
     table.insert(t, line)
-    GSEPrintDebugMessage("Line : " .. line, GNOME)
+    GSE.PrintDebugMessage("Line : " .. line, GNOME)
     return ""
   end
   helper((str:gsub("(.-)\r?\n", helper)))
