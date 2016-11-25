@@ -80,6 +80,7 @@ end
 
 
 --- Split a string into an array based on the deliminter specified.
+-- Not currently used
 function GSE.split(source, delimiters)
   local elements = {}
   local pattern = '([^'..delimiters..']+)'

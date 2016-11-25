@@ -1,4 +1,4 @@
-describe('gs-core', function()
+describe('API StringFunctions', function()
   setup (function()
 
     require("../spec/mockGSE")
@@ -31,7 +31,5 @@ describe('gs-core', function()
     assert.are.same({[1] = "a", [2] = "b"}, tabl)
   end)
 
-  it ("tests GSE.split", function ()
-    assert.are.same({[1] = "a", [2] = "b"}, GSE.SplitMeIntolines("a,b", ","))
-  end)
+
 end)
