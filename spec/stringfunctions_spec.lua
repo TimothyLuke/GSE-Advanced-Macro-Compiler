@@ -21,7 +21,7 @@ describe('gs-core', function()
   end)
 
   it ("tests GSE.SplitMeIntolines(str)", function ()
-     assert.are.same({[1] = "a", [2] = "b"}, GSE.SplitMeIntolines("a\nb"))
+    assert.are.same({[1] = "a", [2] = "b"}, GSE.SplitMeIntolines("a\nb"))
   end)
-  
+
 end)

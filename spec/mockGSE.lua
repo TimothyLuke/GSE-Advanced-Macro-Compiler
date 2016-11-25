@@ -10,6 +10,8 @@ GSE.L = setmetatable({}, {
 GSE.Static = {}
 GSE.VersionString = 150;
 
+GNOME = "UnitTest"
+
 function GSE.Print(message, title)
   print (title .. ": " .. message)
 end
