@@ -7,6 +7,20 @@ function strmatch(string, pattern, initpos)
   return string.match(string, pattern, initpos)
 end
 
+-- Mock AceLocale
+local function newLocale(application, locale, isDefault, silent)
+  local writedefaultproxy = setmetatable({}, {
+    __newindex = function(self, key, value)
+      if not rawget(registering, key) then
+        rawset(registering, key, value == true and key or value)
+      end
+    end,
+    __index = assertfalse
+  })
+  if isDefault then
+    return writedefaultproxy
+  end
+end
 
 
 -- Check to see is this version of the stub is obsolete
@@ -28,6 +42,7 @@ if not LibStub or LibStub.minor < LIBSTUB_MINOR then
 		if self.minors[major] and self.minors[major] >= minor then return nil end
 		local oldminor = self.minors[major]
 		self.minors[major], self.libs[major] = minor, self.libs[major] or {}
+    self.libs[major]:NewLocale = newLocale
 		return self.libs[major], oldminor
 	end
 
@@ -52,20 +67,7 @@ if not LibStub or LibStub.minor < LIBSTUB_MINOR then
 		return pairs(self.libs)
 	end
 
-  -- Mock AceLocale
-  function LibStub:NewLocale(application, locale, isDefault, silent)
-    local writedefaultproxy = setmetatable({}, {
-    	__newindex = function(self, key, value)
-    		if not rawget(registering, key) then
-    			rawset(registering, key, value == true and key or value)
-    		end
-    	end,
-    	__index = assertfalse
-    })
-    if isDefault then
-		  return writedefaultproxy
-    end
 
-  end
+
 	setmetatable(LibStub, { __call = LibStub.GetLibrary })
 end
