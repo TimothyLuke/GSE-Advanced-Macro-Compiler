@@ -8,7 +8,7 @@ function strmatch(string, pattern, initpos)
 end
 
 -- Mock AceLocale
-local function newLocale(application, locale, isDefault, silent)
+function newLocale(application, locale, isDefault, silent)
   local writedefaultproxy = setmetatable({}, {
     __newindex = function(self, key, value)
       if not rawget(registering, key) then
@@ -42,7 +42,7 @@ if not LibStub or LibStub.minor < LIBSTUB_MINOR then
 		if self.minors[major] and self.minors[major] >= minor then return nil end
 		local oldminor = self.minors[major]
 		self.minors[major], self.libs[major] = minor, self.libs[major] or {}
-    self.libs[major]:NewLocale = newLocale
+    self.libs[major].NewLocale = newLocale
 		return self.libs[major], oldminor
 	end
 
