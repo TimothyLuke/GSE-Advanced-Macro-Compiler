@@ -1,7 +1,7 @@
 describe('gs-core', function()
   setup (function()
 
-    require("./mockLibStub")  
+    require("../spec/mockLibStub")  
     require("../GSE/Localization/ModL_enUS")
     require("../GSE/API/Init")
     require("../GSE/API/Statics")

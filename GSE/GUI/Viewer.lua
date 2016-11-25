@@ -131,15 +131,16 @@ viewerheadergroup:SetFullWidth(true)
 viewerheadergroup:SetLayout("Flow")
 
 
--- GSSequenceListbox = AceGUI:Create("Dropdown")
--- GSSequenceListbox:SetLabel(L["Load Sequence"])
--- GSSequenceListbox:SetWidth(250)
--- GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
-
-local GSSequenceListbox = AceGUI:Create("TreeGroup")
---GSSequenceListbox:SetLabel(L["Load Sequence"])
-GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUILoadSequence(key) currentSequence = key end)
+GSSequenceListbox = AceGUI:Create("Dropdown")
+GSSequenceListbox:SetLabel(L["Load Sequence"])
 GSSequenceListbox:SetWidth(250)
+GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+
+-- local GSSequenceListbox = AceGUI:Create("TreeGroup")
+-- --GSSequenceListbox:SetLabel(L["Load Sequence"])
+-- GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUILoadSequence(key) currentSequence = key end)
+-- GSSequenceListbox:SetWidth(250)
+
 viewframe.SequenceListbox = GSSequenceListbox
 local spacerlabel = AceGUI:Create("Label")
 spacerlabel:SetWidth(300)
@@ -180,7 +181,7 @@ end
 function GSE.GUIShowViewer()
   if not InCombatLockdown() then
     local names = GSE.GetSequenceNames()
-    GSSequenceListbox:SetTree(names)
+    GSSequenceListbox:SetList(names)
     GSSequenceListbox:SelectByValue(GSE.GetCurrentClassID())
     sequenceboxtext:SetText("")
     viewframe:Show()

@@ -242,7 +242,7 @@ function GSE.GUIShowTransmissionGui(SequenceName)
   end
 
   local names = GSE.GetSequenceNames()
-  SequenceListbox:SetTree(names)
+  SequenceListbox:SetList(names)
   if not GSE.isEmpty(SequenceName) then
     SequenceListbox:SetValue(SequenceName)
     transSequencevalue = SequenceName
