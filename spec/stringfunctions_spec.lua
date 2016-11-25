@@ -19,4 +19,9 @@ describe('gs-core', function()
     assert.is_true(GSE.isEmpty(''))
     assert.is_false(GSE.isEmpty("String"))
   end)
+
+  it ("tests GSE.SplitMeIntolines(str)", function ()
+     assert.are.same({[1] = "a", [2] = "b"}, GSE.SplitMeIntolines("a\nb"))
+  end)
+  
 end)
