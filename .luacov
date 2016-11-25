@@ -8,25 +8,6 @@ return {
   -- only has effect in 'luacov.defaults.lua'
   ['configfile'] = '.luacov',
 
-  -- filename to store stats collected
-  ['statsfile'] = 'luacov.stats.out',
-
-  -- filename to store report
-  ['reportfile'] = 'luacov.report.out',
-
-  -- Run reporter on completion? (won't work for ticks)
-  runreport = true,
-
-  -- Delete stats file after reporting?
-  deletestats = true,
-
-  -- Patterns for files to include when reporting
-  -- all will be included if nothing is listed
-  -- (exclude overrules include, do not include
-  -- the .lua extension)
-  ['include'] = {
-  },
-
   -- Patterns for files to exclude when reporting
   -- all will be included if nothing is listed
   -- (exclude overrules include, do not include
