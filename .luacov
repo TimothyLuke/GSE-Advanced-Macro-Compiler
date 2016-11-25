@@ -28,7 +28,8 @@ return {
     'mediator$',
     'moonscript.*$',
     'spec$',
-    'lua_install$'
+    'lua_install$',
+    '/home/travis/build/TimothyLuke/GnomeSequencer-Enhanced/lua_install/*'
   },
 
 
