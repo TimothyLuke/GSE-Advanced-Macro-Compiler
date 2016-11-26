@@ -11,6 +11,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 local viewframe = AceGUI:Create("Frame")
 GSE.GUIViewFrame = viewframe
+
 viewframe:Hide()
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
@@ -18,7 +19,7 @@ local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local curentSequence
 
 function GSE.GUIDrawStandardViewerWindow(container)
-  sequencebox = AceGUI:Create("MultiLineEditBox")
+  local sequencebox = AceGUI:Create("MultiLineEditBox")
   sequencebox:SetLabel(L["Sequence"])
   sequencebox:SetNumLines(18)
   sequencebox:DisableButton(true)
@@ -27,6 +28,8 @@ function GSE.GUIDrawStandardViewerWindow(container)
   sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(0, string.len(sequencebox:GetText())) end)
 
   container:AddChild(sequencebox)
+
+  viewframe.SequenceTextbox = sequencebox
 
   local buttonGroup = AceGUI:Create("SimpleGroup")
   buttonGroup:SetFullWidth(true)
@@ -102,7 +105,7 @@ function GSE.GUIDrawSecondaryViewerWindow(container)
   remotesequencebox:SetFullWidth(true)
   container:AddChild(remotesequencebox)
   remotesequenceboxtext = remotesequencebox
-
+  viewframe.SequenceTextbox = remotesequenceboxtext
 end
 
 -- Callback function for OnGroupSelected
@@ -134,7 +137,12 @@ viewerheadergroup:SetLayout("Flow")
 GSSequenceListbox = AceGUI:Create("Dropdown")
 GSSequenceListbox:SetLabel(L["Load Sequence"])
 GSSequenceListbox:SetWidth(250)
-GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadSequence(key) currentSequence = key end)
+GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key)
+  local elements = GSE.split(key, ",")
+  currentSequence = elements[2]
+  GSE.GUILoadSequence(key)
+
+end)
 
 -- local GSSequenceListbox = AceGUI:Create("TreeGroup")
 -- --GSSequenceListbox:SetLabel(L["Load Sequence"])
@@ -155,8 +163,9 @@ viewiconpicker.frame:SetScript("OnDragStart", function()
   end
 end)
 viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+GSE.GUIViewFrame.Icon = viewiconpicker
 
-viewframe:AddChild(GSSequenceListbox)
+viewerheadergroup:AddChild(GSSequenceListbox)
 viewerheadergroup:AddChild(spacerlabel)
 viewerheadergroup:AddChild(viewiconpicker)
 viewframe:AddChild(viewerheadergroup)
@@ -182,7 +191,6 @@ function GSE.GUIShowViewer()
   if not InCombatLockdown() then
     local names = GSE.GetSequenceNames()
     GSSequenceListbox:SetList(names)
-    GSSequenceListbox:SelectByValue(GSE.GetCurrentClassID())
     sequenceboxtext:SetText("")
     viewframe:Show()
   else

@@ -3,6 +3,7 @@ local Statics = GSE.Static
 
 local L = GSE.L
 
+local GNOME = "Storage"
 
 
 --- Disable all versions of a sequence and delete any macro stubs.
@@ -280,14 +281,11 @@ function GSE.IsLoopSequence(sequence)
   return loopcheck
 end
 
+--- Creates a string representation of the a Sequence that can be shared as a string.
+--      Accepts <code>SequenceName</code>
 function GSE.ExportSequence(sequenceName)
-  --- Creates a string representation of the a Sequence that can be shared as a string.
-  --      Accepts <code>SequenceName</code>
-  if GSE.isEmpty(GSEOptions.ActiveSequenceVersions[sequenceName]) then
-    return GSEOptions.TitleColour .. GNOME .. ':|r ' .. L[" Sequence named "] .. sequenceName .. L[" is unknown."]
-  else
-    return GSExportSequencebySeq(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], sequenceName)
-  end
+  --TODO change current classid to be a lookup of sequenceName
+  return GSE.ExportSequencebySeq(GSELibrary[GSE.GetCurrentClassID()][sequenceName], sequenceName)
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
@@ -298,89 +296,90 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
   if GSEOptions.DisabledSequences[sequenceName] then
     disabledseq = GSEOptions.UNKNOWN .. "-- " .. L["This Sequence is currently Disabled Locally."] .. Statics.StringReset .. "\n"
   end
-  local sequencemeta = "Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
+  local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
   if not GSE.isEmpty(sequence.Helplink) then
-    sequencemeta = sequencemeta .. "Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
+    sequencemeta = sequencemeta .. "  Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
   end
   if not GSE.isEmpty(sequence.Help) then
-    sequencemeta = sequencemeta .. "Help = \"" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "\",\n"
+    sequencemeta = sequencemeta .. "  Help = \"" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "\",\n"
   end
-  sequencemeta = sequencemeta .. "Default=" ..sequence.Default .. ",\n"
+  sequencemeta = sequencemeta .. "  Default=" ..sequence.Default .. ",\n"
   if not GSE.isEmpty(sequence.Raid) then
-    sequencemeta = sequencemeta .. "Raid=" ..sequence.Raid .. ",\n"
+    sequencemeta = sequencemeta .. "  Raid=" ..sequence.Raid .. ",\n"
   end
   if not GSE.isEmpty(sequence.PVP) then
-    sequencemeta = sequencemeta .. "Raid=" ..sequence.PVP .. ",\n"
+    sequencemeta = sequencemeta .. "  PVP=" ..sequence.PVP .. ",\n"
   end
   if not GSE.isEmpty(sequence.Mythic) then
-    sequencemeta = sequencemeta .. "Raid=" ..sequence.Mythic .. ",\n"
+    sequencemeta = sequencemeta .. "  Mythic=" ..sequence.Mythic .. ",\n"
   end
-  local macroversions = "MacroVersions = {"
+  local macroversions = "  MacroVersions = {\n"
   for k,v in pairs(sequence.MacroVersions) do
-    macroversions = macroversions .. "[" .. k .. "] = {\n"
+    macroversions = macroversions .. "    [" .. k .. "] = {\n"
 
-    local steps = "StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
+    local steps = "      StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
     if not GSE.isEmpty(sequence.StepFunction) then
-      if  sequence.StepFunction == Statics.PriorityImplementation or sequence.StepFunction == "Priority" then
-       steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-     elseif sequence.StepFunction == "Sequential" then
-       steps = "StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
+      if  v.StepFunction == Statics.PriorityImplementation or v.StepFunction == "Priority" then
+       steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
+     elseif v.StepFunction == "Sequential" then
+       steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
      else
-       steps = "StepFunction = [[" .. GSEOptions.EQUALS .. sequence.StepFunction .. Statics.StringReset .. "]],\n"
+       steps = "      StepFunction = [[" .. GSEOptions.EQUALS .. v.StepFunction .. Statics.StringReset .. "]],\n"
       end
     end
-    if not GSE.isEmpty(sequence.Trinket1) then
-      macroversions = macroversions .. "Trinket1=" .. tostring(sequence.Trinket1) .. ",\n"
+    if not GSE.isEmpty(v.Trinket1) then
+      macroversions = macroversions .. "      Trinket1=" .. tostring(v.Trinket1) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Trinket2) then
-      macroversions = macroversions .. "Trinket2=" .. tostring(sequence.Trinket2) .. ",\n"
+    if not GSE.isEmpty(v.Trinket2) then
+      macroversions = macroversions .. "      Trinket2=" .. tostring(v.Trinket2) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Head) then
-      macroversions = macroversions .. "Head=" .. tostring(sequence.Head) .. ",\n"
+    if not GSE.isEmpty(v.Head) then
+      macroversions = macroversions .. "      Head=" .. tostring(v.Head) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Neck) then
-      macroversions = macroversions .. "Neck=" .. tostring(sequence.Neck) .. ",\n"
+    if not GSE.isEmpty(v.Neck) then
+      macroversions = macroversions .. "      Neck=" .. tostring(v.Neck) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Belt) then
-      macroversions = macroversions .. "Belt=" .. tostring(sequence.Belt) .. ",\n"
+    if not GSE.isEmpty(v.Belt) then
+      macroversions = macroversions .. "      Belt=" .. tostring(v.Belt) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Ring1) then
-      macroversions = macroversions .. "Ring1=" .. tostring(sequence.Ring1) .. ",\n"
+    if not GSE.isEmpty(v.Ring1) then
+      macroversions = macroversions .. "      Ring1=" .. tostring(v.Ring1) .. ",\n"
     end
-    if not GSE.isEmpty(sequence.Ring2) then
-      macroversions = macroversions .. "Ring2=" .. tostring(sequence.Ring2) .. ",\n"
+    if not GSE.isEmpty(v.Ring2) then
+      macroversions = macroversions .. "      Ring2=" .. tostring(v.Ring2) .. ",\n"
     end
 
     macroversions = macroversions .. steps
-    if not GSE.isEmpty(sequence.looplimit) then
-      macroversions = macroversions .. "looplimit=" .. GSEOptions.EQUALS .. sequence.looplimit .. Statics.StringReset .. ",\n"
+    if not GSE.isEmpty(v.looplimit) then
+      macroversions = macroversions .. "      looplimit=" .. GSEOptions.EQUALS .. v.looplimit .. Statics.StringReset .. ",\n"
     end
-    macroversions = macroversions .. "KeyPress={\n"
-    for _,p in ipairs(sequence.KeyPress) do
-      macroversions = macroversions .. "\"" .. p .."\",\n"
+    macroversions = macroversions .. "      KeyPress={\n"
+    for _,p in ipairs(v.KeyPress) do
+      macroversions = macroversions .. "        \"" .. p .."\",\n"
     end
-    macroversions = macroversions .. "},\n"
-    if table.getn(sequence.PreMacro) > 0 then
-      macroversions = macroversions .. "PreMacro={\n"
-      macroversions = macroversions .. "\"" .. table.concat(sequence.PreMacro,"\",\n\"")
-      macroversions = macroversions .. "},\n"
+    macroversions = macroversions .. "      },\n"
+    if table.getn(v.PreMacro) > 0 then
+      macroversions = macroversions .. "      PreMacro={\n"
+      macroversions = macroversions .. "        \"" .. table.concat(v.PreMacro,"\",\n\"")
+      macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "\"" .. table.concat(sequence,"\",\n\"")
-    if table.getn(sequence.PostMacro) > 0 then
-      macroversions = macroversions .. "PostMacro={\n"
-      macroversions = macroversions .. "\"" .. table.concat(sequence.PostMacro,"\",\n\"")
-      macroversions = macroversions .. "},\n"
+    macroversions = macroversions .. "      \"" .. table.concat(v,"\",\n      \"")
+    macroversions = macroversions .. "\",\n"
+    if table.getn(v.PostMacro) > 0 then
+      macroversions = macroversions .. "      PostMacro={\n"
+      macroversions = macroversions .. "        \"" .. table.concat(v.PostMacro,"\",\n\"")
+      macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "KeyRelease={\n"
-    for _,p in ipairs(sequence.KeyRelease) do
-      macroversions = macroversions .. "\"" .. p .."\",\n"
+    macroversions = macroversions .. "      KeyRelease={\n"
+    for _,p in ipairs(v.KeyRelease) do
+      macroversions = macroversions .. "        \"" .. p .."\",\n"
     end
-    macroversions = macroversions .. "},\n"
-    macroversions = macroversions .. "},\n"
+    macroversions = macroversions .. "      },\n"
+    macroversions = macroversions .. "    },\n"
   end
-  macroversions = macroversions .. "},\n"
+  macroversions = macroversions .. "  },\n"
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
-  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\nauthor=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
+  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",  \n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
@@ -722,68 +721,20 @@ function GSE.GetSequenceNames()
   local keyset={}
   for k,v in pairs(GSELibrary) do
     local name, _, _ = GetClassInfo(k)
-    local mset = {
-      value = k,
-      text = name,
-      icon = GSE.GetClassIcon(k),
-      children = {}
-
-    }
-
-
+    --keyset[name] = name
     for i,j in pairs(GSELibrary[k]) do
-      local child = {
-        value = i,
-        text = i
-      }
-      table.insert(mset.children, child)
+      keyset[k .. "," .. i] = i
     end
-    table.insert(keyset, mset)
 
   end
-
-  -- local currentSpec = GetSpecialization()
-  -- local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-  -- if not GSE.isEmpty(currentSpecID) then
-  --   local _, _, _, _, _, _, pspecclass = GetSpecializationInfoByID(currentSpecID)
-  --   for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-  --     --print (table.getn(GSELibrary[k]))
-  --     if not GSE.isEmpty(GSELibrary[k]) then
-  --       local sid, specname, specdescription, specicon, sbackground, specrole, specclass = GetSpecializationInfoByID(GSELibrary[k][v].SpecID)
-  --       if GSEOptions.filterList["All"] then
-  --         keyset[k]=k
-  --       elseif GSELibrary[k][v].SpecID == 0 then
-  --         keyset[k]=k
-  --       elseif GSEOptions.filterList["Class"]  then
-  --         if pspecclass == specclass then
-  --           keyset[k]=k
-  --         end
-  --       elseif GSELibrary[k][v].SpecID == currentSpecID then
-  --         keyset[k]=k
-  --       else
-  --         -- do nothing
-  --         GSE.PrintDebugMessage (k .. L[" not added to list."], "GS-SequenceEditor")
-  --       end
-  --     else
-  --       GSE.Print(L["No Sequences present so none displayed in the list."] .. ' ' .. k, GNOME)
-  --     end
-  --   end
-  -- end
-  -- Filter Keyset
   return keyset
 end
 
 
 --- Return the Macro Icon for the specified Sequence
-function GSE:GetMacroIcon(sequenceIndex)
+function GSE.GetMacroIcon(classid, sequenceIndex)
   GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
-  if not GSE.isEmpty(GSGetActiveSequenceVersion(currentSequence)) then
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].Icon) then
-      GSE.PrintDebugMessage(L["Icon: "] .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].Icon, GNOME)
-    else
-      GSE.PrintDebugMessage(L["Icon: "] .. L["none"], GNOME)
-    end
-  end
+  classid = tonumber(classid)
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
   if not GSE.isEmpty(a) then
@@ -791,18 +742,20 @@ function GSE:GetMacroIcon(sequenceIndex)
   else
     GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
   end
-  if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].Icon) and GSE.isEmpty(iconid) then
-    GSE.PrintDebugMessage("SequenceSpecID: " .. GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].SpecID, GNOME)
-    if GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].SpecID == 0 then
+  local sequence = GSELibrary[classid][sequenceIndex]
+
+  if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
+    GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.SpecID, GNOME)
+    if sequence.SpecID == 0 then
       return "INV_MISC_QUESTIONMARK"
     else
-      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].SpecID) and GSE.GetCurrentSpecID() or GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].SpecID))
+      local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(sequence.SpecID) and GSE.GetCurrentSpecID() or sequence.SpecID))
       GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end
-  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].Icon) then
+  elseif GSE.isEmpty(iconid) and not GSE.isEmpty(sequence.Icon) then
 
-      return GSELibrary[GSE.GetCurrentClassID()][sequenceIndex].Icon
+      return sequence.Icon
   else
       return iconid
   end

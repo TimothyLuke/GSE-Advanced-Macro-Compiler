@@ -1,4 +1,5 @@
 local GSE = GSE
+local L = GSE.L
 
 function GSE.GUIDisableSequence(currentSeq, iconWidget)
   GSToggleDisabledSequence(currentSeq)
@@ -54,7 +55,7 @@ function GSE.GUIManageSequenceVersion()
   frame:Hide()
   versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
   activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
-  activesequencebox:SetText(sequenceboxtext:GetText())
+  activesequencebox:SetText(GSE.GUIViewFrame.SequenceTextbox:GetText())
   otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
   versionframe:Show()
 end
@@ -62,29 +63,34 @@ end
 
 function GSE.GUIloadTranslatedSequence(key)
   GSE.PrintDebugMessage(L["GSTranslateSequenceFromTo(GSELibrary["] .. currentSequence .. L["], (GSE.isEmpty(GSELibrary["] .. currentSequence .. L["].lang) and GSELibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
-  remotesequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
+  GSE.GUIViewFrame.SequenceTextbox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
-function GSE.GUIloadSequence(SequenceName)
-  GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. SequenceName)
-  if GSAdditionalLanguagesAvailable and GSEOptions.useTranslator then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].lang), GetLocale()), SequenceName))
-  elseif GSTranslatorAvailable then
-    sequenceboxtext:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)], GetLocale(), GetLocale()), SequenceName))
+function GSE.GUILoadSequence(key)
+  local elements = GSE.split(key, ",")
+  classid = elements[1]
+  sequenceName = elements[2]
+
+  GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. sequenceName)
+  if GSEOptions.useTranslator then
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
+  --TODO Fix this so the translator works.
+  elseif GSETranslatorAvailable then
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
   else
-    sequenceboxtext:SetText(GSExportSequence(SequenceName))
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(sequenceName))
   end
   if GSEOptions.DisabledSequences[SequenceName] then
     disableSeqbutton:SetText(L["Enable Sequence"])
     viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
   else
     disableSeqbutton:SetText(L["Disable Sequence"])
-    reticon = GSSE:getMacroIcon(SequenceName)
+    reticon = GSE.GetMacroIcon(classid, sequenceName)
     if not tonumber(reticon) then
       -- we have a starting
       reticon = "Interface\\Icons\\" .. reticon
     end
-    viewiconpicker:SetImage(reticon)
+    GSE.GUIViewFrame.Icon:SetImage(reticon)
   end
 
 end
@@ -205,6 +211,6 @@ function GSE:OnInitialize()
     GSE.GUIRecordFrame:Hide()
     GSE.GUIVersionFrame:Hide()
     GSE.GUIEditFrame:Hide()
-    GSE.GUIViewframe:Hide()
+    GSE.GUIViewFrame:Hide()
     GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
 end
