@@ -33,7 +33,7 @@ describe('API StringFunctions', function()
 
   it ("tests GSE.split", function ()
     local testring = "a,b"
-    GSE.lines(testring, ",")
+    GSE.split(testring, ",")
     assert.are.same({[1] = "a", [2] = "b"}, tabl)
   end)
 
