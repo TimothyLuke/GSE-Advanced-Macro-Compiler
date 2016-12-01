@@ -171,6 +171,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequenceName)</td>
+	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.ExportSequencebySeq">GSE.ExportSequencebySeq</a>&nbsp;(sequence, sequenceName)</td>
 	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
 	</tr>
@@ -193,6 +198,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.GetKnownSequenceVersions">GSE.GetKnownSequenceVersions</a>&nbsp;(SequenceName)</td>
 	<td class="summary">Return a table of Known Sequence Versions </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.GetMacroIcon">GSE.GetMacroIcon</a>&nbsp;(classid, sequenceIndex)</td>
+	<td class="summary">Return the Macro Icon for the specified Sequence </td>
 	</tr>
 
 	<tr>
@@ -263,11 +273,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.UpdateSequence">GSE.UpdateSequence</a>&nbsp;(name, sequence)</td>
 	<td class="summary">This function updates the button for an existing sequence3 </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE:GetMacroIcon">GSE:GetMacroIcon</a>&nbsp;(sequenceIndex)</td>
-	<td class="summary">Return the Macro Icon for the specified Sequence </td>
 	</tr>
 
 </table>
@@ -581,6 +586,32 @@ Enable all versions of a sequence and recreate any macro stubs.
 
 
 
+<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequenceName)</dt>
+<dd>
+Creates a string representation of the a Sequence that can be shared as a string. Accepts <code>SequenceName</code>
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sequenceName: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.ExportSequencebySeq"></a><strong>GSE.ExportSequencebySeq</strong>&nbsp;(sequence, sequenceName)</dt>
 <dd>
 Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
@@ -690,6 +721,36 @@ Return a table of Known Sequence Versions
 	
 	<li>
 	  SequenceName: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.GetMacroIcon"></a><strong>GSE.GetMacroIcon</strong>&nbsp;(classid, sequenceIndex)</dt>
+<dd>
+Return the Macro Icon for the specified Sequence
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  classid: 
+	</li>
+	
+	<li>
+	  sequenceIndex: 
 	</li>
 	
 </ul>
@@ -1041,32 +1102,6 @@ This function updates the button for an existing sequence3
 	
 	<li>
 	  sequence: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE:GetMacroIcon"></a><strong>GSE:GetMacroIcon</strong>&nbsp;(sequenceIndex)</dt>
-<dd>
-Return the Macro Icon for the specified Sequence
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequenceIndex: 
 	</li>
 	
 </ul>
