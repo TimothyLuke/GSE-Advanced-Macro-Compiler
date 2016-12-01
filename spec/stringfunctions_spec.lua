@@ -38,4 +38,15 @@ describe('API StringFunctions', function()
     assert.are.equal(tab1[2], "b")
   end)
 
+  it ("Tests GSE.FixQuotes", function()
+    local teststring = [[Sequences[‘Druid_FeralST’] = {
+author=”Aaralak@Nagrand”,
+specID=103,
+helpTxt = ‘Talents: 3331222’,]]
+    local returnstring = [[Sequences['Druid_FeralST'] = {
+author="Aaralak@Nagrand",
+specID=103,
+helpTxt = 'Talents: 3331222',]]
+    assert.are.equal(returnstring, GSE.FixQuotes(teststring))
+  end)
 end)
