@@ -46,15 +46,15 @@ local tabset = {
 }
 
 
-local tab =  AceGUI:Create("TabGroup")
-tab:SetLayout("Flow")
-tab:SetTabs(GSE.GUICreateEditorTabs(tabset))
+local tabgrp =  AceGUI:Create("TabGroup")
+tabgrp:SetLayout("Flow")
+tabgrp:SetTabs(GSE.GUICreateEditorTabs(tabset))
 
 
 
-tab:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
-tab:SetFullWidth(true)
-editframe:AddChild(tab)
+tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
+tabgrp:SetFullWidth(true)
+editframe:AddChild(tabgrp)
 
 function GSE.GUICreateEditorTabs(tab)
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
@@ -75,7 +75,7 @@ function GSE:GUIDrawMetadataEditor(container)
   local nameeditbox = AceGUI:Create("EditBox")
   nameeditbox:SetLabel(L["Sequence Name"])
   nameeditbox:SetWidth(250)
-  nameeditbox:SetCallback("OnTextChanged", function(self) currentSequence = self:GetText(); end)
+  nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
   nameeditbox:DisableButton( true)
   container:AddChild(nameeditbox)
 
@@ -175,14 +175,21 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyPressbox:SetNumLines(2)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetFullWidth(true)
-  KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
+  KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
+
+  local PreMacro = AceGUI:Create("MultiLineEditBox")
+  PreMacro:SetLabel(L["KeyPress"])
+  PreMacro:SetNumLines(2)
+  PreMacro:DisableButton(true)
+  PreMacro:SetFullWidth(true)
+  PreMacro.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(PreMacro) end)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
   spellbox:SetNumLines(10)
   spellbox:DisableButton(true)
   spellbox:SetFullWidth(true)
-  spellbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
+  spellbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
 
   local looplimit = AceGUI:Create("EditBox")
@@ -193,12 +200,19 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   loopGroup:AddChild(looplimit)
   editscroll:AddChild(spellbox)
 
+  local PostMacro = AceGUI:Create("MultiLineEditBox")
+  PostMacro:SetLabel(L["KeyPress"])
+  PostMacro:SetNumLines(2)
+  PostMacro:DisableButton(true)
+  PostMacro:SetFullWidth(true)
+  PostMacro.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(PostMacro) end)
+
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
   KeyReleasebox:SetNumLines(2)
   KeyReleasebox:DisableButton(true)
   KeyReleasebox:SetFullWidth(true)
-  KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(self) end)
+  KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
 
 end
