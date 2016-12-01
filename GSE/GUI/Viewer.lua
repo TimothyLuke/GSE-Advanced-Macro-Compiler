@@ -7,7 +7,7 @@ local L = GSE.L
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
-
+local editkey = ""
 
 local viewframe = AceGUI:Create("Frame")
 GSE.GUIViewFrame = viewframe
@@ -44,7 +44,7 @@ function GSE.GUIDrawStandardViewerWindow(container)
   local updbutton = AceGUI:Create("Button")
   updbutton:SetText(L["Edit"])
   updbutton:SetWidth(150)
-  updbutton:SetCallback("OnClick", function() GSSE:LoadEditor(currentSequence) end)
+  updbutton:SetCallback("OnClick", function() GSE.GUILoadEditor(editkey) end)
   buttonGroup:AddChild(updbutton)
 
   local impbutton = AceGUI:Create("Button")
@@ -140,6 +140,7 @@ GSSequenceListbox:SetWidth(250)
 GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key)
   local elements = GSE.split(key, ",")
   currentSequence = elements[2]
+  editkey = key
   GSE.GUILoadSequence(key)
 
 end)

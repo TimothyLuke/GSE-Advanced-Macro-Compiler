@@ -19,13 +19,19 @@ function GSE.GUIDisableSequence(currentSeq, iconWidget)
 
 end
 
-function GSE.GUILoadEditor(SequenceName, sequence)
-  GSE.GUIEditFrame.SequenceName = SequenceName
+function GSE.GUILoadEditor(key)
+  local elements = GSE.split(key, ",")
+  classid = tonumber(elements[1])
+  sequenceName = elements[2]
+  local sequence = GSELibrary[classid][sequenceName]
+  GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
+  GSE.GUIEditFrame.ClassID = classid
   GSE.GUIEditFrame.Default = sequence.Default
   GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
   GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
   GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
+  GSE.GUIEditFrame:ReleaseChildren()
   GSE:GUIDrawMetadataEditor(GSE.GUIEditFrame)
   GSE.GUIEditFrame:Show()
 

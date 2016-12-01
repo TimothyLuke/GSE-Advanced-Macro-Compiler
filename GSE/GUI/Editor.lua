@@ -15,17 +15,20 @@ local default = 1
 local raid = 1
 local pvp = 1
 local mythic = 1
+local classid = GSE.GetCurrentClassID()
 
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 GSE.GUIEditFrame = editframe
 editframe.Sequence = {}
+editframe.Sequence.MacroVersions = {}
 editframe.SequenceName = ""
 editframe.SpecID = GSE.GetCurrentClassID()
 editframe.Default = 1
 editframe.Raid = 1
 editframe.PVP = 1
 editframe.Mythic = 1
+editframe.ClassID = classid
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
@@ -43,17 +46,6 @@ local tabset = {
   },
 }
 
-
-local tabgrp =  AceGUI:Create("TabGroup")
-tabgrp:SetLayout("Flow")
-tabgrp:SetTabs(GSE.GUICreateEditorTabs(tabset))
-
-
-
-tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
-tabgrp:SetFullWidth(true)
-editframe:AddChild(tabgrp)
-
 function GSE.GUICreateEditorTabs(tabl)
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
     local insline = {}
@@ -69,13 +61,32 @@ function GSE.GUICreateEditorTabs(tabl)
 end
 
 
+local tabgrp =  AceGUI:Create("TabGroup")
+tabgrp:SetLayout("Flow")
+tabgrp:SetTabs(GSE.GUICreateEditorTabs(tabset))
+
+
+
+tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
+tabgrp:SetFullWidth(true)
+editframe:AddChild(tabgrp)
+
+function GSE.GetVersionList()
+  local tabl = {}
+  classid = tonumber(classid)
+  for k,v in ipairs(sequence.MacroVersions) do
+    table.insert(tabl, k)
+  end
+  return tabl
+end
+
 function GSE:GUIDrawMetadataEditor(container)
   local nameeditbox = AceGUI:Create("EditBox")
   nameeditbox:SetLabel(L["Sequence Name"])
   nameeditbox:SetWidth(250)
   nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
   nameeditbox:DisableButton( true)
-  nameeditbox:SetText(currentSequence)
+  nameeditbox:SetText(editframe.SequenceName)
   container:AddChild(nameeditbox)
 
   local iconpicker = AceGUI:Create("Icon")
@@ -88,7 +99,7 @@ function GSE:GUIDrawMetadataEditor(container)
   end)
   iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
   container:AddChild(iconpicker)
-  iconpicker:SetImage(GSE:GetMacroIcon(currentSequence))
+  iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
   local speciddropdown = AceGUI:Create("Dropdown")
   speciddropdown:SetLabel(L["Specialisation / Class ID"])
@@ -96,21 +107,21 @@ function GSE:GUIDrawMetadataEditor(container)
   speciddropdown:SetList(GSE.GetSpecNames())
   speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
   container:AddChild(speciddropdown)
-  speciddropdown:SetValue(editframe.SpecID)
+  speciddropdown:SetValue(editframe.Sequence.SpecID)
 
   local langeditbox = AceGUI:Create("EditBox")
   langeditbox:SetLabel(L["Language"])
   langeditbox:SetWidth(250)
   langeditbox:DisableButton( true)
   container:AddChild(langeditbox)
-  langeditbox:SetText(sequence.Lang)
+  langeditbox:SetText(editframe.Sequence.Lang)
 
   local talentseditbox = AceGUI:Create("EditBox")
-  talentseditbox:SetLabel(L["Talents Information"])
+  talentseditbox:SetLabel(L["Talents"])
   talentseditbox:SetWidth(250)
   talentseditbox:DisableButton( true)
   container:AddChild(talentseditbox)
-  talentseditbox:SetText(sequence.Talents)
+  talentseditbox:SetText(editframe.Sequence.Talents)
 
   local helpeditbox = AceGUI:Create("MultiLineEditBox")
   helpeditbox:SetLabel(L["Help Information"])
@@ -118,42 +129,46 @@ function GSE:GUIDrawMetadataEditor(container)
   helpeditbox:DisableButton( true)
   helpeditbox:SetNumLines(4)
   helpeditbox:SetFullWidth(true)
-  helpeditbox:SetText(sequence.Help)
+  if not GSE.isEmpty(editframe.Sequence.Help) then
+    helpeditbox:SetText(editframe.Sequence.Help)
+  end
   container:AddChild(helpeditbox)
 
   local helplinkeditbox = AceGUI:Create("EditBox")
-  helplinkeditbox:SetLabel(L["Talents Information"])
+  helplinkeditbox:SetLabel(L["Help Link"])
   helplinkeditbox:SetWidth(250)
   helplinkeditbox:DisableButton( true)
-  helplinkeditbox:SetText(sequence.Helplink)
+  if not GSE.isEmpty(editframe.Sequence.Helplink) then
+    helplinkeditbox:SetText(editframe.Sequence.Helplink)
+  end
   container:AddChild(helplinkeditbox)
 
   local defaultdropdown = AceGUI:Create("Dropdown")
   defaultdropdown:SetLabel(L["Default Version"])
   defaultdropdown:SetWidth(250)
   defaultdropdown:SetList(GSE.GetVersionList())
-  defaultdropdown:SetValue(default)
+  defaultdropdown:SetValue(editframe.Sequence.Default)
   container:AddChild(defaultdropdown)
 
   local raiddropdown = AceGUI:Create("Dropdown")
   raiddropdown:SetLabel(L["Raid"])
   raiddropdown:SetWidth(250)
   raiddropdown:SetList(GSE.GetVersionList())
-  raiddropdown:SetValue(raid)
+  raiddropdown:SetValue(editframe.Sequence.Raid)
   container:AddChild(raiddropdown)
 
   local mythicdropdown = AceGUI:Create("Dropdown")
   mythicdropdown:SetLabel(L["Mythic"])
   mythicdropdown:SetWidth(250)
   mythicdropdown:SetList(GSE.GetVersionList())
-  mythicdropdown:SetValue(mythic)
+  mythicdropdown:SetValue(editframe.Sequence.Mythic)
   container:AddChild(mythicdropdown)
 
   local pvpdropdown = AceGUI:Create("Dropdown")
   pvpdropdown:SetLabel(L["PVP"])
   pvpdropdown:SetWidth(250)
   pvpdropdown:SetList(GSE.GetVersionList())
-  pvpdropdown:SetValue(pvp)
+  pvpdropdown:SetValue(editframe.Sequence.PVP)
   container:AddChild(pvpdropdown)
 
 end
@@ -229,6 +244,7 @@ end
 
 
 
+
 local boxes = {}
 
 
@@ -258,90 +274,90 @@ transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(current
 -------------end viewer-------------
 -------------begin editor--------------------
 
-local stepvalue = 1
-
-
-
-local headerGroup = AceGUI:Create("SimpleGroup")
-headerGroup:SetFullWidth(true)
-headerGroup:SetLayout("Flow")
-
-local firstheadercolumn = AceGUI:Create("SimpleGroup")
---firstheadercolumn:SetFullWidth(true)
-firstheadercolumn:SetLayout("List")
-
-
-
-
-
-firstheadercolumn:AddChild(nameeditbox)
-
-firstheadercolumn:AddChild(stepdropdown)
-
-headerGroup:AddChild(firstheadercolumn)
-
-local middleColumn = AceGUI:Create("SimpleGroup")
-middleColumn:SetWidth(252)
-middleColumn:SetLayout("List")
-
-
-
-middleColumn:AddChild(helpeditbox)
-middleColumn:AddChild(speciddropdown)
-
-headerGroup:AddChild(middleColumn)
-headerGroup:AddChild(iconpicker)
-editframe:AddChild(headerGroup)
-
-
-
---KeyPressbox.editBox:SetScript("OnLeave", OnTextChanged)
-
-editscroll:AddChild(KeyPressbox)
-KeyPressbox.editBox:SetScript("OnTextChanged", function () end)
-
-
-local loopGroup = AceGUI:Create("SimpleGroup")
-loopGroup:SetFullWidth(true)
-loopGroup:SetLayout("Flow")
-
-editscroll:AddChild(loopGroup)
-
-local loopstart = AceGUI:Create("EditBox")
-loopstart:SetLabel(L["Inner Loop Start"])
-loopstart:DisableButton(true)
-loopstart:SetMaxLetters(3)
-loopstart.editbox:SetNumeric()
-loopGroup:AddChild(loopstart)
-
-local loopstop = AceGUI:Create("EditBox")
-loopstop:SetLabel(L["Inner Loop End"])
-loopstop:DisableButton(true)
-loopstop:SetMaxLetters(3)
-loopstop.editbox:SetNumeric()
-loopGroup:AddChild(loopstop)
-
-
-
-
-editscroll:AddChild(KeyReleasebox)
-editframe:AddChild(editscroll)
-
-local editButtonGroup = AceGUI:Create("SimpleGroup")
-editButtonGroup:SetWidth(302)
-editButtonGroup:SetLayout("Flow")
-
-local savebutton = AceGUI:Create("Button")
-savebutton:SetText(L["Save"])
-savebutton:SetWidth(150)
-savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(currentSequence) end)
-editButtonGroup:AddChild(savebutton)
-
-editButtonGroup:AddChild(transbutton)
-
-
-
-editframe:AddChild(editButtonGroup)
+-- local stepvalue = 1
+--
+--
+--
+-- local headerGroup = AceGUI:Create("SimpleGroup")
+-- headerGroup:SetFullWidth(true)
+-- headerGroup:SetLayout("Flow")
+--
+-- local firstheadercolumn = AceGUI:Create("SimpleGroup")
+-- --firstheadercolumn:SetFullWidth(true)
+-- firstheadercolumn:SetLayout("List")
+--
+--
+--
+--
+--
+-- firstheadercolumn:AddChild(nameeditbox)
+--
+-- firstheadercolumn:AddChild(stepdropdown)
+--
+-- headerGroup:AddChild(firstheadercolumn)
+--
+-- local middleColumn = AceGUI:Create("SimpleGroup")
+-- middleColumn:SetWidth(252)
+-- middleColumn:SetLayout("List")
+--
+--
+--
+-- middleColumn:AddChild(helpeditbox)
+-- middleColumn:AddChild(speciddropdown)
+--
+-- headerGroup:AddChild(middleColumn)
+-- headerGroup:AddChild(iconpicker)
+-- editframe:AddChild(headerGroup)
+--
+--
+--
+-- --KeyPressbox.editBox:SetScript("OnLeave", OnTextChanged)
+--
+-- editscroll:AddChild(KeyPressbox)
+-- KeyPressbox.editBox:SetScript("OnTextChanged", function () end)
+--
+--
+-- local loopGroup = AceGUI:Create("SimpleGroup")
+-- loopGroup:SetFullWidth(true)
+-- loopGroup:SetLayout("Flow")
+--
+-- editscroll:AddChild(loopGroup)
+--
+-- local loopstart = AceGUI:Create("EditBox")
+-- loopstart:SetLabel(L["Inner Loop Start"])
+-- loopstart:DisableButton(true)
+-- loopstart:SetMaxLetters(3)
+-- loopstart.editbox:SetNumeric()
+-- loopGroup:AddChild(loopstart)
+--
+-- local loopstop = AceGUI:Create("EditBox")
+-- loopstop:SetLabel(L["Inner Loop End"])
+-- loopstop:DisableButton(true)
+-- loopstop:SetMaxLetters(3)
+-- loopstop.editbox:SetNumeric()
+-- loopGroup:AddChild(loopstop)
+--
+--
+--
+--
+-- editscroll:AddChild(KeyReleasebox)
+-- editframe:AddChild(editscroll)
+--
+-- local editButtonGroup = AceGUI:Create("SimpleGroup")
+-- editButtonGroup:SetWidth(302)
+-- editButtonGroup:SetLayout("Flow")
+--
+-- local savebutton = AceGUI:Create("Button")
+-- savebutton:SetText(L["Save"])
+-- savebutton:SetWidth(150)
+-- savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(currentSequence) end)
+-- editButtonGroup:AddChild(savebutton)
+--
+-- editButtonGroup:AddChild(transbutton)
+--
+--
+--
+-- editframe:AddChild(editButtonGroup)
 -------------end editor-----------------
 
 -- Slash Commands

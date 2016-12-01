@@ -348,4 +348,14 @@ L["Gnome Sequencer: Import a Macro String."] = true
 L["GSE Macro"] = true
 L["Legacy GS/GSE1 Macro"] = true
 L["Macro Collection to Import."] = true
+L["Configuration"] = true
+L["Talents"] = true
+L["Help Information"] = true
+L["Help Link"] = true
+L["Default Version"] = true
+L["Raid"] = true
+L["Mythic"] = true
+L["PVP"] = true
+L["Language"] = true
+
 --@end-do-not-package@
