@@ -10,7 +10,6 @@ local libCE = libC:GetAddonEncodeTable()
 
 
 
-local importStr = ""
 local otherversionlistboxvalue = ""
 local default = 1
 local raid = 1
@@ -27,7 +26,6 @@ editframe.Default = 1
 editframe.Raid = 1
 editframe.PVP = 1
 editframe.Mythic = 1
-
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
@@ -56,18 +54,18 @@ tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GU
 tabgrp:SetFullWidth(true)
 editframe:AddChild(tabgrp)
 
-function GSE.GUICreateEditorTabs(tab)
+function GSE.GUICreateEditorTabs(tabl)
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
     local insline = {}
     insline.text = k
     insline.value = "v" .. k
-    table.insert(tab, insline)
+    table.insert(tabl, insline)
   end
-  table.insert(tab,   {
+  table.insert(tabl,   {
       text=L["New"],
       value="new"
     }  )
-  return tab
+  return tabl
 end
 
 
@@ -77,6 +75,7 @@ function GSE:GUIDrawMetadataEditor(container)
   nameeditbox:SetWidth(250)
   nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
   nameeditbox:DisableButton( true)
+  nameeditbox:SetText(currentSequence)
   container:AddChild(nameeditbox)
 
   local iconpicker = AceGUI:Create("Icon")
@@ -89,6 +88,7 @@ function GSE:GUIDrawMetadataEditor(container)
   end)
   iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
   container:AddChild(iconpicker)
+  iconpicker:SetImage(GSE:GetMacroIcon(currentSequence))
 
   local speciddropdown = AceGUI:Create("Dropdown")
   speciddropdown:SetLabel(L["Specialisation / Class ID"])
@@ -96,18 +96,21 @@ function GSE:GUIDrawMetadataEditor(container)
   speciddropdown:SetList(GSE.GetSpecNames())
   speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
   container:AddChild(speciddropdown)
+  speciddropdown:SetValue(editframe.SpecID)
 
   local langeditbox = AceGUI:Create("EditBox")
   langeditbox:SetLabel(L["Language"])
   langeditbox:SetWidth(250)
   langeditbox:DisableButton( true)
   container:AddChild(langeditbox)
+  langeditbox:SetText(sequence.Lang)
 
   local talentseditbox = AceGUI:Create("EditBox")
   talentseditbox:SetLabel(L["Talents Information"])
   talentseditbox:SetWidth(250)
   talentseditbox:DisableButton( true)
   container:AddChild(talentseditbox)
+  talentseditbox:SetText(sequence.Talents)
 
   local helpeditbox = AceGUI:Create("MultiLineEditBox")
   helpeditbox:SetLabel(L["Help Information"])
@@ -115,12 +118,14 @@ function GSE:GUIDrawMetadataEditor(container)
   helpeditbox:DisableButton( true)
   helpeditbox:SetNumLines(4)
   helpeditbox:SetFullWidth(true)
+  helpeditbox:SetText(sequence.Help)
   container:AddChild(helpeditbox)
 
   local helplinkeditbox = AceGUI:Create("EditBox")
   helplinkeditbox:SetLabel(L["Talents Information"])
   helplinkeditbox:SetWidth(250)
   helplinkeditbox:DisableButton( true)
+  helplinkeditbox:SetText(sequence.Helplink)
   container:AddChild(helplinkeditbox)
 
   local defaultdropdown = AceGUI:Create("Dropdown")
@@ -175,21 +180,21 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyPressbox:SetNumLines(2)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetFullWidth(true)
-  KeyPressbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
+  KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
   PreMacro:SetLabel(L["KeyPress"])
   PreMacro:SetNumLines(2)
   PreMacro:DisableButton(true)
   PreMacro:SetFullWidth(true)
-  PreMacro.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(PreMacro) end)
+  PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PreMacro) end)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
   spellbox:SetNumLines(10)
   spellbox:DisableButton(true)
   spellbox:SetFullWidth(true)
-  spellbox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
+  spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
 
   local looplimit = AceGUI:Create("EditBox")
@@ -205,14 +210,14 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PostMacro:SetNumLines(2)
   PostMacro:DisableButton(true)
   PostMacro:SetFullWidth(true)
-  PostMacro.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(PostMacro) end)
+  PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PostMacro) end)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
   KeyReleasebox:SetNumLines(2)
   KeyReleasebox:DisableButton(true)
   KeyReleasebox:SetFullWidth(true)
-  KeyReleasebox.editBox:SetScript( "OnLeave",  function(self) GSE.GUIparsetext(KeyPressbox) end)
+  KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
 
 end

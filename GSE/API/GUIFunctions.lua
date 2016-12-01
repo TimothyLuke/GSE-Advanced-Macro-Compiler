@@ -18,65 +18,15 @@ function GSE.GUIDisableSequence(currentSeq, iconWidget)
 
 end
 
-function GSE.GUILoadEditor(SequenceName, recordstring)
-  if not GSE.isEmpty(SequenceName) then
-    nameeditbox:SetText(SequenceName)
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].StepFunction) then
-     stepdropdown:SetValue("1")
-     stepvalue = 1
-    else
-     stepdropdown:SetValue("2")
-     stepvalue = 2
-    end
-    GSE.PrintDebugMessage("StepValue: " .. stepvalue, GNOME)
-    --TODO Fix this
-    -- if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress) then
-    --   GSE.PrintDebugMessage(L["Moving on - LiveTest.KeyPress already exists."], GNOME)
-    -- else
-    --  KeyPressbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyPress)
-    -- end
-    -- if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease) then
-    --   GSE.PrintDebugMessage(L["Moving on - LiveTest.PosMacro already exists."], GNOME)
-    -- else
-    --  KeyReleasebox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].KeyRelease)
-    -- end
-    spellbox:SetText(table.concat(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)],"\n"))
-    reticon = GSSE:getMacroIcon(SequenceName)
-    if not tonumber(reticon) then
-      -- we have a starting
-      reticon = "Interface\\Icons\\" .. reticon
-    end
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].helpTxt) then
-      helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
-    else
-      helpeditbox:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].helpTxt)
-    end
-    iconpicker:SetImage(reticon)
-    GSE.PrintDebugMessage("SequenceName: " .. SequenceName, GNOME)
-    speciddropdown:SetValue(GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].specID])
-    specdropdownvalue = GSSpecIDList[GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].specID]
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstart) then
-      loopstart:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstart)
-    end
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstop) then
-      loopstop:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].loopstop)
-    end
-    if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].looplimit) then
-      looplimit:SetText(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)].looplimit)
-    end
-  elseif not GSE.isEmpty(recordstring) then
-    iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
-    currentSequence = ""
-    helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
-    spellbox:SetText(recordstring)
-  else
-    GSE.PrintDebugMessage(L["No Sequence Icon setting to "] , GNOME)
-    iconpicker:SetImage("Interface\\Icons\\INV_MISC_QUESTIONMARK")
-    currentSequence = ""
-    helpeditbox:SetText("Talents: " .. GSSE:getCurrentTalents())
-  end
-  frame:Hide()
-  editframe:Show()
+function GSE.GUILoadEditor(SequenceName, sequence)
+  GSE.GUIEditFrame.SequenceName = SequenceName
+  GSE.GUIEditFrame.Sequence = sequence
+  GSE.GUIEditFrame.Default = sequence.Default
+  GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
+  GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
+  GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
+  GSE:GUIDrawMetadataEditor(GSE.GUIEditFrame)
+  GSE.GUIEditFrame:Show()
 
 end
 
