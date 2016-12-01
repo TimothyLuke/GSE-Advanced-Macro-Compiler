@@ -91,6 +91,7 @@ end
 
 function GSE.FixQuotes(source)
   source = string.gsub(source, "%‘", "'")
+  source = string.gsub(source, "%’", "'")
   source = string.gsub(source, "%”", "\"")
   return source
 end
