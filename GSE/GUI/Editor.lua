@@ -230,7 +230,7 @@ end
 
 
 local boxes = {}
-local specdropdownvalue = 0
+
 
 
 local editOptionsbutton = AceGUI:Create("Button")
