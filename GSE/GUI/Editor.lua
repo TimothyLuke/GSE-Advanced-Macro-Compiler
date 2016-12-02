@@ -172,8 +172,19 @@ function GSE:GUIDrawMetadataEditor(container)
   container:AddChild(pvpdropdown)
 
 end
-
 function GSE:GUIDrawMacroEditor(container, macroversion)
+
+  if GSE.isEmpty(macroversion) then
+    local editmacroversion = 0
+    local editmacro = {}
+    editmacro.PreMacro = {}
+    editmacro.PostMacro = {}
+    editmacro.KeyPress = {}
+    editmacro.KeyRelease = {}
+    editmacro.StepFunction = "Sequential"
+    editmacro[1] = "/say Hello"
+  end
+
   local editscroll = AceGUI:Create("ScrollFrame")
   editscroll:SetLayout("Flow") -- probably?
   editscroll:SetFullWidth(true)
@@ -189,6 +200,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
 
   })
   stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
+  editscroll:AddChild(stepdropdown)
 
   local KeyPressbox = AceGUI:Create("MultiLineEditBox")
   KeyPressbox:SetLabel(L["KeyPress"])
@@ -196,6 +208,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetFullWidth(true)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
+  editscroll:AddChild(KeyPressbox)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
   PreMacro:SetLabel(L["KeyPress"])
@@ -203,6 +216,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PreMacro:DisableButton(true)
   PreMacro:SetFullWidth(true)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PreMacro) end)
+  editscroll:AddChild(PreMacro)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
@@ -211,14 +225,14 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
+  editscroll:AddChild(spellbox)
 
   local looplimit = AceGUI:Create("EditBox")
   looplimit:SetLabel(L["Inner Loop Limit"])
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
   looplimit.editbox:SetNumeric()
-  loopGroup:AddChild(looplimit)
-  editscroll:AddChild(spellbox)
+  editscroll:AddChild(looplimit)
 
   local PostMacro = AceGUI:Create("MultiLineEditBox")
   PostMacro:SetLabel(L["KeyPress"])
@@ -226,6 +240,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PostMacro:DisableButton(true)
   PostMacro:SetFullWidth(true)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PostMacro) end)
+  editscroll:AddChild(PostMacro)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
@@ -234,14 +249,20 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyReleasebox:SetFullWidth(true)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-
+  editscroll:AddChild(KeyReleasebox)
+  container:AddChild(editscroll)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)
   container:ReleaseChildren()
-
+  if group == "config" then
+    GSE:GUIDrawMetadataEditor(container)
+  elseif group == new then
+    GSE:GUIDrawMacroEditor(container, nil)
+  else
+    GSE:GUIDrawMacroEditor(container, k)
+  end
 end
-
 
 
 
