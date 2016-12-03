@@ -61,7 +61,12 @@ function GSE.GetSpecNames()
   return keyset
 end
 
+--- Returns the Character Name in the form Player@server
+function GSE.GetCharacterName()
+  return  GetUnitName("player", true) .. '@' .. GetRealmName()
+end
 
+--- Returns the current Talent Selections as a string
 function GSE.GetCurrentTalents()
   local talents = ""
   for talentTier = 1, MAX_TALENT_TIERS do

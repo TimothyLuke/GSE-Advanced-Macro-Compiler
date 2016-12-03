@@ -1,6 +1,6 @@
 local GSE = GSE
 local Statics = GSE.Static
-
+local L = GSE.L
 GSELibrary = {}
 
 Statics.CastCmds = { use = true, cast = true, spell = true, cancelaura = true, startattack = true, cancelform = true }
@@ -264,3 +264,10 @@ Statics.All = "All"
 
 Statics.SampleMacros = {}
 Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
+
+Statics.Tabset = {
+  {
+    text=L["Configuration"],
+    value="config"
+  },
+}

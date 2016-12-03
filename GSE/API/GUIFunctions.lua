@@ -19,11 +19,41 @@ function GSE.GUIDisableSequence(currentSeq, iconWidget)
 
 end
 
-function GSE.GUILoadEditor(key)
-  local elements = GSE.split(key, ",")
-  classid = tonumber(elements[1])
-  sequenceName = elements[2]
-  local sequence = GSELibrary[classid][sequenceName]
+--- Format the text against the GSE Sequence Spec.
+function GSE.GUIParseText(editbox)
+  if GSEOptions.RealtimeParse then
+    text = GSE.UnEscapeString(editbox:GetText())
+    returntext = GSE.TranslateString(text , GetLocale(), GetLocale(), true)
+    editbox:SetText(returntext)
+    editbox:SetCursorPosition(string.len(returntext)+2)
+  end
+end
+
+function GSE.GUILoadEditor(key, incomingframe)
+  local classid
+  local sequenceName
+  local sequence
+  if GSE.isEmpty(key) then
+    classid = GSE.GetCurrentClassID()
+    sequenceName = "New"
+    sequence = {
+      ["Author"] = GSE.GetCharacterName(),
+      ["Talents"] = GSE.GetCurrentTalents(),
+      ["MacroVersions"] = {
+        ["PreMacro"] = {},
+        ["PostMacro"] = {},
+        ["KeyPress"] = {},
+        ["KeyRelease"] = {},
+        ["StepFunction"] = "Sequential",
+        [1] = "/say Hello",
+      },
+    }
+  else
+    elements = GSE.split(key, ",")
+    classid = tonumber(elements[1])
+    sequenceName = elements[2]
+    sequence = GSELibrary[classid][sequenceName]
+  end
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
@@ -31,7 +61,10 @@ function GSE.GUILoadEditor(key)
   GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
   GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
   GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
-  GSE.GUISelectEditorTab(GSE.GUIEditFrame.ContentContainer, nil, "config")
+  GSE.GUIEditFrame:ReleaseChildren()
+  GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+  GSE.GUIEditFrame.ContentContainer:SelectTab("config")
+  incomingframe:Hide()
   GSE.GUIEditFrame:Show()
 
 end

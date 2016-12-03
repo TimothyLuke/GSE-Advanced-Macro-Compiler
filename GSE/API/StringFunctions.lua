@@ -39,17 +39,6 @@ function GSE.UnEscapeString(str)
     return str
 end
 
-
---- Format the text against the GSE Sequence Spec.
-function GSE.parsetext(editbox)
-  if GSEOptions.RealtimeParse then
-    text = GSE.UnEscapeString(editbox:GetText())
-    returntext = GSE.TranslateString(text , GetLocale(), GetLocale(), true)
-    editbox:SetText(returntext)
-    editbox:SetCursorPosition(string.len(returntext)+2)
-  end
-end
-
 --- Add ths lines of a string as individual entries.
 function GSE.lines(tab, str)
   local function helper(line)

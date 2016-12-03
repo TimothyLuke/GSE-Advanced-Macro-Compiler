@@ -357,5 +357,6 @@ L["Raid"] = true
 L["Mythic"] = true
 L["PVP"] = true
 L["Language"] = true
-
+L["PreMacro"] = true
+L["PostMacro"] = true
 --@end-do-not-package@
