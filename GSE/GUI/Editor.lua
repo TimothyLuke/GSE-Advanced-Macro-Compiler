@@ -149,7 +149,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
-  scrollcontainer:SetFullHeight(true) -- probably?
+  scrollcontainer:SetHeight(260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -231,7 +231,8 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
-  scrollcontainer:SetFullHeight(true) -- probably?
+  --scrollcontainer:SetFullHeight(true) -- probably?
+  scrollcontainer:SetHeight(260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -309,7 +310,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
   contentcontainer:AddChild(KeyReleasebox)
-  container:AddChild(contentcontainer)
+  container:AddChild(scrollcontainer)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)
