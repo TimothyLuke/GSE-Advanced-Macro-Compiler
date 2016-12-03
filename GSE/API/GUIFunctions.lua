@@ -31,8 +31,7 @@ function GSE.GUILoadEditor(key)
   GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
   GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
   GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
-  GSE.GUIEditFrame:ReleaseChildren()
-  GSE:GUIDrawMetadataEditor(GSE.GUIEditFrame)
+  GSE.GUISelectEditorTab(GSE.GUIEditFrame.ContentContainer, nil, "config")
   GSE.GUIEditFrame:Show()
 
 end

@@ -733,6 +733,7 @@ end
 
 --- Return the Macro Icon for the specified Sequence
 function GSE.GetMacroIcon(classid, sequenceIndex)
+  classid = tonumber(classid)
   GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
   classid = tonumber(classid)
   local macindex = GetMacroIndexByName(sequenceIndex)
@@ -741,9 +742,10 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
     GSE.PrintDebugMessage(L["Macro Found "] .. a .. L[" with iconid "] .. (GSE.isEmpty(iconid) and L["of no value"] or iconid) .. " " .. (GSE.isEmpty(iconid) and L["with no body"] or c), GNOME)
   else
     GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
+    return GSEOptions.DefaultDisabledMacroIcon
   end
-  local sequence = GSELibrary[classid][sequenceIndex]
 
+  local sequence = GSELibrary[classid][sequenceIndex]
   if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
     GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.SpecID, GNOME)
     if sequence.SpecID == 0 then

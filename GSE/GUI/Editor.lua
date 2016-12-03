@@ -35,6 +35,18 @@ editframe:SetTitle(L["Sequence Editor"])
 editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIViewFrame:Show(); end)
 editframe:SetLayout("List")
 
+local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+scrollcontainer:SetFullWidth(true)
+scrollcontainer:SetFullHeight(true) -- probably?
+scrollcontainer:SetLayout("Fill") -- important!
+
+
+
+local contentcontainer = AceGUI:Create("ScrollFrame")
+scrollcontainer:AddChild(contentcontainer)
+
+editframe.ContentContainer = contentcontainer
+
 local sequence = editframe.Sequence
 local currentSequence = editframe.SequenceName
 local specdropdownvalue = editframe.SpecID
@@ -60,16 +72,31 @@ function GSE.GUICreateEditorTabs(tabl)
   return tabl
 end
 
-
-local tabgrp =  AceGUI:Create("TabGroup")
-tabgrp:SetLayout("Flow")
-tabgrp:SetTabs(GSE.GUICreateEditorTabs(tabset))
-
+local headerGroup = AceGUI:Create("SimpleGroup")
+headerGroup:SetFullWidth(true)
+headerGroup:SetLayout("Flow")
 
 
-tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
-tabgrp:SetFullWidth(true)
-editframe:AddChild(tabgrp)
+local nameeditbox = AceGUI:Create("EditBox")
+nameeditbox:SetLabel(L["Sequence Name"])
+nameeditbox:SetWidth(250)
+nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
+nameeditbox:DisableButton( true)
+nameeditbox:SetText(editframe.SequenceName)
+headerGroup:AddChild(nameeditbox)
+
+local iconpicker = AceGUI:Create("Icon")
+iconpicker:SetLabel(L["Macro Icon"])
+iconpicker.frame:RegisterForDrag("LeftButton")
+iconpicker.frame:SetScript("OnDragStart", function()
+  if not GSE.isEmpty(editframe.SequenceName) then
+    PickupMacro(editframe.SequenceName)
+  end
+end)
+iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+headerGroup:AddChild(iconpicker)
+
+editframe:AddChild(headerGroup)
 
 function GSE.GetVersionList()
   local tabl = {}
@@ -81,24 +108,6 @@ function GSE.GetVersionList()
 end
 
 function GSE:GUIDrawMetadataEditor(container)
-  local nameeditbox = AceGUI:Create("EditBox")
-  nameeditbox:SetLabel(L["Sequence Name"])
-  nameeditbox:SetWidth(250)
-  nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
-  nameeditbox:DisableButton( true)
-  nameeditbox:SetText(editframe.SequenceName)
-  container:AddChild(nameeditbox)
-
-  local iconpicker = AceGUI:Create("Icon")
-  iconpicker:SetLabel(L["Macro Icon"])
-  iconpicker.frame:RegisterForDrag("LeftButton")
-  iconpicker.frame:SetScript("OnDragStart", function()
-    if not GSE.isEmpty(currentSequence) then
-      PickupMacro(currentSequence)
-    end
-  end)
-  iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-  container:AddChild(iconpicker)
   iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
   local speciddropdown = AceGUI:Create("Dropdown")
@@ -185,10 +194,10 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
     editmacro[1] = "/say Hello"
   end
 
-  local editscroll = AceGUI:Create("ScrollFrame")
-  editscroll:SetLayout("Flow") -- probably?
-  editscroll:SetFullWidth(true)
-  editscroll:SetHeight(340)
+  -- local editscroll = AceGUI:Create("ScrollFrame")
+  -- editscroll:SetLayout("Flow") -- probably?
+  -- editscroll:SetFullWidth(true)
+  -- editscroll:SetHeight(340)
 
 
   local stepdropdown = AceGUI:Create("Dropdown")
@@ -200,7 +209,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
 
   })
   stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
-  editscroll:AddChild(stepdropdown)
+  container:AddChild(stepdropdown)
 
   local KeyPressbox = AceGUI:Create("MultiLineEditBox")
   KeyPressbox:SetLabel(L["KeyPress"])
@@ -208,7 +217,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetFullWidth(true)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
-  editscroll:AddChild(KeyPressbox)
+  container:AddChild(KeyPressbox)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
   PreMacro:SetLabel(L["KeyPress"])
@@ -216,7 +225,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PreMacro:DisableButton(true)
   PreMacro:SetFullWidth(true)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PreMacro) end)
-  editscroll:AddChild(PreMacro)
+  container:AddChild(PreMacro)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
@@ -225,14 +234,14 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
-  editscroll:AddChild(spellbox)
+  container:AddChild(spellbox)
 
   local looplimit = AceGUI:Create("EditBox")
   looplimit:SetLabel(L["Inner Loop Limit"])
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
   looplimit.editbox:SetNumeric()
-  editscroll:AddChild(looplimit)
+  container:AddChild(looplimit)
 
   local PostMacro = AceGUI:Create("MultiLineEditBox")
   PostMacro:SetLabel(L["KeyPress"])
@@ -240,7 +249,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PostMacro:DisableButton(true)
   PostMacro:SetFullWidth(true)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(PostMacro) end)
-  editscroll:AddChild(PostMacro)
+  container:AddChild(PostMacro)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
@@ -249,12 +258,14 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyReleasebox:SetFullWidth(true)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIparsetext(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-  editscroll:AddChild(KeyReleasebox)
-  container:AddChild(editscroll)
+  container:AddChild(KeyReleasebox)
+  -- container:AddChild(editscroll)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)
   container:ReleaseChildren()
+  nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
+  iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
   if group == "config" then
     GSE:GUIDrawMetadataEditor(container)
   elseif group == new then
@@ -263,6 +274,18 @@ function GSE.GUISelectEditorTab(container, event, group)
     GSE:GUIDrawMacroEditor(container, k)
   end
 end
+
+local tabgrp =  AceGUI:Create("TabGroup")
+tabgrp:SetLayout("Flow")
+tabgrp:SetTabs(GSE.GUICreateEditorTabs(tabset))
+
+
+
+tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
+tabgrp:SetFullWidth(true)
+tabgrp:SelectTab("config")
+editframe:AddChild(tabgrp)
+editframe:AddChild(scrollcontainer)
 
 
 
