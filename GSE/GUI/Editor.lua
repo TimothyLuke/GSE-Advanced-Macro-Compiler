@@ -23,7 +23,6 @@ GSE.GUIEditFrame = editframe
 editframe.Sequence = {}
 editframe.Sequence.MacroVersions = {}
 editframe.SequenceName = ""
-editframe.SpecID = GSE.GetCurrentClassID()
 editframe.Default = 1
 editframe.Raid = 1
 editframe.PVP = 1
@@ -40,7 +39,13 @@ local currentSequence = editframe.SequenceName
 local specdropdownvalue = editframe.SpecID
 
 
-function GSE.GUICreateEditorTabs(tabl)
+function GSE.GUICreateEditorTabs()
+  local tabl = {
+    {
+      text=L["Configuration"],
+      value="config"
+    },
+  }
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
     local insline = {}
     insline.text = tostring(k)
@@ -55,6 +60,7 @@ function GSE.GUICreateEditorTabs(tabl)
 end
 
 function GSE.GUIEditorPerformLayout(frame)
+  frame:ReleaseChildren()
   local headerGroup = AceGUI:Create("SimpleGroup")
   headerGroup:SetFullWidth(true)
   headerGroup:SetLayout("Flow")
@@ -68,6 +74,10 @@ function GSE.GUIEditorPerformLayout(frame)
   nameeditbox:SetText(editframe.SequenceName)
   editframe.nameeditbox = nameeditbox
   headerGroup:AddChild(nameeditbox)
+
+  local spacerlabel = AceGUI:Create("Label")
+  spacerlabel:SetWidth(300)
+  headerGroup:AddChild(spacerlabel)
 
   local iconpicker = AceGUI:Create("Icon")
   iconpicker:SetLabel(L["Macro Icon"])
@@ -85,13 +95,14 @@ function GSE.GUIEditorPerformLayout(frame)
 
   local tabgrp =  AceGUI:Create("TabGroup")
   tabgrp:SetLayout("Flow")
-  tabgrp:SetTabs(GSE.GUICreateEditorTabs(Statics.Tabset))
+  tabgrp:SetTabs(GSE.GUICreateEditorTabs())
   editframe.ContentContainer = tabgrp
 
 
   tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
   tabgrp:SetFullWidth(true)
   tabgrp:SetFullHeight(true)
+
   tabgrp:SelectTab("config")
   frame:AddChild(tabgrp)
 
@@ -99,7 +110,7 @@ function GSE.GUIEditorPerformLayout(frame)
 
   local editOptionsbutton = AceGUI:Create("Button")
   editOptionsbutton:SetText(L["Options"])
-  editOptionsbutton:SetWidth(250)
+  editOptionsbutton:SetWidth(150)
   editOptionsbutton:SetCallback("OnClick", function() GSSE:OptionsGuiDebugView() end)
 
   local transbutton = AceGUI:Create("Button")
@@ -108,8 +119,9 @@ function GSE.GUIEditorPerformLayout(frame)
   transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(currentSequence) end)
 
   local editButtonGroup = AceGUI:Create("SimpleGroup")
-  editButtonGroup:SetWidth(302)
+  editButtonGroup:SetWidth(452)
   editButtonGroup:SetLayout("Flow")
+  editButtonGroup:SetHeight(15)
 
   local savebutton = AceGUI:Create("Button")
   savebutton:SetText(L["Save"])
@@ -118,6 +130,7 @@ function GSE.GUIEditorPerformLayout(frame)
   editButtonGroup:AddChild(savebutton)
 
   editButtonGroup:AddChild(transbutton)
+  editButtonGroup:AddChild(editOptionsbutton)
   frame:AddChild(editButtonGroup)
 
 end
@@ -125,8 +138,8 @@ end
 function GSE.GetVersionList()
   local tabl = {}
   classid = tonumber(classid)
-  for k,v in ipairs(sequence.MacroVersions) do
-    table.insert(tabl, k)
+  for k,v in ipairs(editframe.Sequence.MacroVersions) do
+    tabl[tostring(k)] = tostring(k)
   end
   return tabl
 end
@@ -189,32 +202,40 @@ function GSE:GUIDrawMetadataEditor(container)
   defaultdropdown:SetLabel(L["Default Version"])
   defaultdropdown:SetWidth(250)
   defaultdropdown:SetList(GSE.GetVersionList())
-  defaultdropdown:SetValue(editframe.Sequence.Default)
+  defaultdropdown:SetValue(tostring(editframe.Default))
   contentcontainer:AddChild(defaultdropdown)
 
   local raiddropdown = AceGUI:Create("Dropdown")
   raiddropdown:SetLabel(L["Raid"])
   raiddropdown:SetWidth(250)
   raiddropdown:SetList(GSE.GetVersionList())
-  raiddropdown:SetValue(editframe.Sequence.Raid)
+  raiddropdown:SetValue(tostring(editframe.Raid))
   contentcontainer:AddChild(raiddropdown)
 
   local mythicdropdown = AceGUI:Create("Dropdown")
   mythicdropdown:SetLabel(L["Mythic"])
   mythicdropdown:SetWidth(250)
   mythicdropdown:SetList(GSE.GetVersionList())
-  mythicdropdown:SetValue(editframe.Sequence.Mythic)
+  mythicdropdown:SetValue(tostring(editframe.Mythic))
   contentcontainer:AddChild(mythicdropdown)
 
   local pvpdropdown = AceGUI:Create("Dropdown")
   pvpdropdown:SetLabel(L["PVP"])
   pvpdropdown:SetWidth(250)
   pvpdropdown:SetList(GSE.GetVersionList())
-  pvpdropdown:SetValue(editframe.Sequence.PVP)
+  pvpdropdown:SetValue(tostring(editframe.PVP))
   contentcontainer:AddChild(pvpdropdown)
   container:AddChild(scrollcontainer)
 end
 function GSE:GUIDrawMacroEditor(container, macroversion)
+
+  local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+  scrollcontainer:SetFullWidth(true)
+  scrollcontainer:SetFullHeight(true) -- probably?
+  scrollcontainer:SetLayout("Fill") -- important!
+
+  local contentcontainer = AceGUI:Create("ScrollFrame")
+  scrollcontainer:AddChild(contentcontainer)
 
   if GSE.isEmpty(macroversion) then
     local editmacroversion = 0
@@ -225,24 +246,20 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
     editmacro.KeyRelease = {}
     editmacro.StepFunction = "Sequential"
     editmacro[1] = "/say Hello"
+    macroversion = editmacro
   end
-
-  -- local editscroll = AceGUI:Create("ScrollFrame")
-  -- editscroll:SetLayout("Flow") -- probably?
-  -- editscroll:SetFullWidth(true)
-  -- editscroll:SetHeight(340)
-
 
   local stepdropdown = AceGUI:Create("Dropdown")
   stepdropdown:SetLabel(L["Step Function"])
   stepdropdown:SetWidth(250)
   stepdropdown:SetList({
-    ["1"] = L["Sequential (1 2 3 4)"],
-    ["2"] = L["Priority List (1 12 123 1234)"],
+    ["Sequential"] = L["Sequential (1 2 3 4)"],
+    ["Priority"] = L["Priority List (1 12 123 1234)"],
 
   })
   stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
-  container:AddChild(stepdropdown)
+  stepdropdown:SetValue(macroversion.StepFunction)
+  contentcontainer:AddChild(stepdropdown)
 
   local KeyPressbox = AceGUI:Create("MultiLineEditBox")
   KeyPressbox:SetLabel(L["KeyPress"])
@@ -250,7 +267,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetFullWidth(true)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
-  container:AddChild(KeyPressbox)
+  contentcontainer:AddChild(KeyPressbox)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
   PreMacro:SetLabel(L["PreMacro"])
@@ -258,7 +275,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PreMacro:DisableButton(true)
   PreMacro:SetFullWidth(true)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PreMacro) end)
-  container:AddChild(PreMacro)
+  contentcontainer:AddChild(PreMacro)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
@@ -267,14 +284,14 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
-  container:AddChild(spellbox)
+  contentcontainer:AddChild(spellbox)
 
   local looplimit = AceGUI:Create("EditBox")
   looplimit:SetLabel(L["Inner Loop Limit"])
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
   looplimit.editbox:SetNumeric()
-  container:AddChild(looplimit)
+  contentcontainer:AddChild(looplimit)
 
   local PostMacro = AceGUI:Create("MultiLineEditBox")
   PostMacro:SetLabel(L["PostMacro"])
@@ -282,7 +299,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   PostMacro:DisableButton(true)
   PostMacro:SetFullWidth(true)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
-  container:AddChild(PostMacro)
+  contentcontainer:AddChild(PostMacro)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
@@ -291,8 +308,8 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   KeyReleasebox:SetFullWidth(true)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-  container:AddChild(KeyReleasebox)
-  -- container:AddChild(editscroll)
+  contentcontainer:AddChild(KeyReleasebox)
+  container:AddChild(contentcontainer)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)
@@ -301,7 +318,7 @@ function GSE.GUISelectEditorTab(container, event, group)
   editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
   if group == "config" then
     GSE:GUIDrawMetadataEditor(container)
-  elseif group == new then
+  elseif group == "new" then
     GSE:GUIDrawMacroEditor(container, nil)
   else
     GSE:GUIDrawMacroEditor(container, k)

@@ -264,10 +264,3 @@ Statics.All = "All"
 
 Statics.SampleMacros = {}
 Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
-
-Statics.Tabset = {
-  {
-    text=L["Configuration"],
-    value="config"
-  },
-}

@@ -39,13 +39,17 @@ function GSE.GUILoadEditor(key, incomingframe)
     sequence = {
       ["Author"] = GSE.GetCharacterName(),
       ["Talents"] = GSE.GetCurrentTalents(),
+      ["Default"] = 1,
+      ["SpecID"] = GSE.GetCurrentSpecID();
       ["MacroVersions"] = {
-        ["PreMacro"] = {},
-        ["PostMacro"] = {},
-        ["KeyPress"] = {},
-        ["KeyRelease"] = {},
-        ["StepFunction"] = "Sequential",
-        [1] = "/say Hello",
+        [1] = {
+          ["PreMacro"] = {},
+          ["PostMacro"] = {},
+          ["KeyPress"] = {},
+          ["KeyRelease"] = {},
+          ["StepFunction"] = "Sequential",
+          [1] = "/say Hello",
+        }
       },
     }
   else
@@ -61,7 +65,6 @@ function GSE.GUILoadEditor(key, incomingframe)
   GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
   GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
   GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
-  GSE.GUIEditFrame:ReleaseChildren()
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   incomingframe:Hide()
