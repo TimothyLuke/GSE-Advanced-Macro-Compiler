@@ -359,4 +359,5 @@ L["PVP"] = true
 L["Language"] = true
 L["PreMacro"] = true
 L["PostMacro"] = true
+L["Author"] = true
 --@end-do-not-package@

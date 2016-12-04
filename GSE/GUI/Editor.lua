@@ -155,27 +155,44 @@ function GSE:GUIDrawMetadataEditor(container)
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
 
+  local metasimplegroup = AceGUI:Create("SimpleGroup")
+  metasimplegroup:SetLayout("Flow")
+  metasimplegroup:SetWidth(606)
 
   local speciddropdown = AceGUI:Create("Dropdown")
   speciddropdown:SetLabel(L["Specialisation / Class ID"])
-  speciddropdown:SetWidth(250)
+  speciddropdown:SetWidth(200)
   speciddropdown:SetList(GSE.GetSpecNames())
   speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
-  contentcontainer:AddChild(speciddropdown)
-  speciddropdown:SetValue(editframe.Sequence.SpecID)
+  metasimplegroup:AddChild(speciddropdown)
+  speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.SpecID])
+
+
+  local spacerlabel1 = AceGUI:Create("Label")
+  spacerlabel1:SetWidth(50)
+  metasimplegroup:AddChild(spacerlabel1)
 
   local langeditbox = AceGUI:Create("EditBox")
   langeditbox:SetLabel(L["Language"])
-  langeditbox:SetWidth(250)
+  langeditbox:SetWidth(100)
   langeditbox:DisableButton( true)
-  contentcontainer:AddChild(langeditbox)
-  langeditbox:SetText(editframe.Sequence.Lang)
+  metasimplegroup:AddChild(langeditbox)
+  local lang = editframe.Sequence.Lang
+  if GSE.isEmpty(lang) then
+    lang = "enUS"
+  end
+  langeditbox:SetText(lang)
+
+  local spacerlabel2 = AceGUI:Create("Label")
+  spacerlabel2:SetWidth(50)
+  metasimplegroup:AddChild(spacerlabel2)
 
   local talentseditbox = AceGUI:Create("EditBox")
   talentseditbox:SetLabel(L["Talents"])
-  talentseditbox:SetWidth(250)
+  talentseditbox:SetWidth(200)
   talentseditbox:DisableButton( true)
-  contentcontainer:AddChild(talentseditbox)
+  metasimplegroup:AddChild(talentseditbox)
+  contentcontainer:AddChild(metasimplegroup)
   talentseditbox:SetText(editframe.Sequence.Talents)
 
   local helpeditbox = AceGUI:Create("MultiLineEditBox")
@@ -189,6 +206,11 @@ function GSE:GUIDrawMetadataEditor(container)
   end
   contentcontainer:AddChild(helpeditbox)
 
+  local helpgroup1 = AceGUI:Create("SimpleGroup")
+  helpgroup1:SetLayout("Flow")
+  helpgroup1:SetWidth(606)
+
+
   local helplinkeditbox = AceGUI:Create("EditBox")
   helplinkeditbox:SetLabel(L["Help Link"])
   helplinkeditbox:SetWidth(250)
@@ -196,39 +218,73 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Helplink) then
     helplinkeditbox:SetText(editframe.Sequence.Helplink)
   end
-  contentcontainer:AddChild(helplinkeditbox)
+  helpgroup1:AddChild(helplinkeditbox)
+
+  local spacerlabel3 = AceGUI:Create("Label")
+  spacerlabel3:SetWidth(100)
+  helpgroup1:AddChild(spacerlabel3)
+
+  local authoreditbox = AceGUI:Create("EditBox")
+  authoreditbox:SetLabel(L["Author"])
+  authoreditbox:SetWidth(250)
+  authoreditbox:DisableButton( true)
+  if not GSE.isEmpty(editframe.Sequence.Author) then
+    authoreditbox:SetText(editframe.Sequence.Author)
+  end
+  helpgroup1:AddChild(authoreditbox)
+
+  contentcontainer:AddChild(helpgroup1)
+
+  local defgroup1 = AceGUI:Create("SimpleGroup")
+  defgroup1:SetLayout("Flow")
+  defgroup1:SetWidth(606)
+
 
   local defaultdropdown = AceGUI:Create("Dropdown")
   defaultdropdown:SetLabel(L["Default Version"])
   defaultdropdown:SetWidth(250)
   defaultdropdown:SetList(GSE.GetVersionList())
   defaultdropdown:SetValue(tostring(editframe.Default))
-  contentcontainer:AddChild(defaultdropdown)
+  defgroup1:AddChild(defaultdropdown)
+
+  local spacerlabel4 = AceGUI:Create("Label")
+  spacerlabel4:SetWidth(100)
+  defgroup1:AddChild(spacerlabel4)
 
   local raiddropdown = AceGUI:Create("Dropdown")
   raiddropdown:SetLabel(L["Raid"])
   raiddropdown:SetWidth(250)
   raiddropdown:SetList(GSE.GetVersionList())
   raiddropdown:SetValue(tostring(editframe.Raid))
-  contentcontainer:AddChild(raiddropdown)
+  defgroup1:AddChild(raiddropdown)
+  contentcontainer:AddChild(defgroup1)
+
+  local defgroup2 = AceGUI:Create("SimpleGroup")
+  defgroup2:SetLayout("Flow")
+  defgroup2:SetWidth(606)
 
   local mythicdropdown = AceGUI:Create("Dropdown")
   mythicdropdown:SetLabel(L["Mythic"])
   mythicdropdown:SetWidth(250)
   mythicdropdown:SetList(GSE.GetVersionList())
   mythicdropdown:SetValue(tostring(editframe.Mythic))
-  contentcontainer:AddChild(mythicdropdown)
+  defgroup2:AddChild(mythicdropdown)
+
+  local spacerlabel5 = AceGUI:Create("Label")
+  spacerlabel5:SetWidth(100)
+  defgroup2:AddChild(spacerlabel5)
 
   local pvpdropdown = AceGUI:Create("Dropdown")
   pvpdropdown:SetLabel(L["PVP"])
   pvpdropdown:SetWidth(250)
   pvpdropdown:SetList(GSE.GetVersionList())
   pvpdropdown:SetValue(tostring(editframe.PVP))
-  contentcontainer:AddChild(pvpdropdown)
+  defgroup2:AddChild(pvpdropdown)
+  contentcontainer:AddChild(defgroup2)
   container:AddChild(scrollcontainer)
 end
-function GSE:GUIDrawMacroEditor(container, macroversion)
-
+function GSE:GUIDrawMacroEditor(container, version)
+  local macroversion = GSE.GUIEditFrame.Sequence.MacroVersions[tonumber(version)]
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- probably?
@@ -238,7 +294,7 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
 
-  if GSE.isEmpty(macroversion) then
+  if GSE.isEmpty(version) then
     local editmacroversion = 0
     local editmacro = {}
     editmacro.PreMacro = {}
@@ -250,6 +306,10 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
     macroversion = editmacro
   end
 
+  local linegroup1 = AceGUI:Create("SimpleGroup")
+  linegroup1:SetLayout("Flow")
+  linegroup1:SetWidth(606)
+
   local stepdropdown = AceGUI:Create("Dropdown")
   stepdropdown:SetLabel(L["Step Function"])
   stepdropdown:SetWidth(250)
@@ -260,23 +320,50 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   })
   stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
   stepdropdown:SetValue(macroversion.StepFunction)
-  contentcontainer:AddChild(stepdropdown)
+  linegroup1:AddChild(stepdropdown)
+
+  local spacerlabel1 = AceGUI:Create("Label")
+  spacerlabel1:SetWidth(120)
+  linegroup1:AddChild(spacerlabel1)
+
+  local looplimit = AceGUI:Create("EditBox")
+  looplimit:SetLabel(L["Inner Loop Limit"])
+  looplimit:DisableButton(true)
+  looplimit:SetMaxLetters(4)
+  looplimit.editbox:SetNumeric()
+  linegroup1:AddChild(looplimit)
+  if not GSE.isEmpty(macroversion.LoopLimit) then
+    looplimit.SetText(macroversion.LoopLimit)
+  end
+  contentcontainer:AddChild(linegroup1)
+
+  local linegroup2 = AceGUI:Create("SimpleGroup")
+  linegroup2:SetLayout("Flow")
+  linegroup2:SetWidth(606)
 
   local KeyPressbox = AceGUI:Create("MultiLineEditBox")
   KeyPressbox:SetLabel(L["KeyPress"])
   KeyPressbox:SetNumLines(2)
   KeyPressbox:DisableButton(true)
-  KeyPressbox:SetFullWidth(true)
+  KeyPressbox:SetWidth(270)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
-  contentcontainer:AddChild(KeyPressbox)
+  KeyPressbox:SetText(table.concat(macroversion.KeyPress, "\n"))
+  linegroup2:AddChild(KeyPressbox)
+
+  local spacerlabel2 = AceGUI:Create("Label")
+  spacerlabel2:SetWidth(60)
+  linegroup2:AddChild(spacerlabel2)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
   PreMacro:SetLabel(L["PreMacro"])
   PreMacro:SetNumLines(2)
   PreMacro:DisableButton(true)
-  PreMacro:SetFullWidth(true)
+  PreMacro:SetWidth(270)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PreMacro) end)
-  contentcontainer:AddChild(PreMacro)
+  PreMacro:SetText(table.concat(macroversion.PreMacro, "\n"))
+  linegroup2:AddChild(PreMacro)
+
+  contentcontainer:AddChild(linegroup2)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
@@ -285,31 +372,36 @@ function GSE:GUIDrawMacroEditor(container, macroversion)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
+  spellbox:SetText(table.concat(macroversion, "\n"))
   contentcontainer:AddChild(spellbox)
 
-  local looplimit = AceGUI:Create("EditBox")
-  looplimit:SetLabel(L["Inner Loop Limit"])
-  looplimit:DisableButton(true)
-  looplimit:SetMaxLetters(4)
-  looplimit.editbox:SetNumeric()
-  contentcontainer:AddChild(looplimit)
-
-  local PostMacro = AceGUI:Create("MultiLineEditBox")
-  PostMacro:SetLabel(L["PostMacro"])
-  PostMacro:SetNumLines(2)
-  PostMacro:DisableButton(true)
-  PostMacro:SetFullWidth(true)
-  PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
-  contentcontainer:AddChild(PostMacro)
+  local linegroup3 = AceGUI:Create("SimpleGroup")
+  linegroup3:SetLayout("Flow")
+  linegroup3:SetWidth(606)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
   KeyReleasebox:SetNumLines(2)
   KeyReleasebox:DisableButton(true)
-  KeyReleasebox:SetFullWidth(true)
+  KeyReleasebox:SetWidth(270)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-  contentcontainer:AddChild(KeyReleasebox)
+  KeyReleasebox:SetText(table.concat(macroversion.KeyRelease, "\n"))
+  linegroup3:AddChild(KeyReleasebox)
+
+  local spacerlabel3 = AceGUI:Create("Label")
+  spacerlabel3:SetWidth(60)
+  linegroup3:AddChild(spacerlabel3)
+
+  local PostMacro = AceGUI:Create("MultiLineEditBox")
+  PostMacro:SetLabel(L["PostMacro"])
+  PostMacro:SetNumLines(2)
+  PostMacro:DisableButton(true)
+  PostMacro:SetWidth(270)
+  PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
+  linegroup3:AddChild(PostMacro)
+  PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
+  contentcontainer:AddChild(linegroup3)
   container:AddChild(scrollcontainer)
 end
 
@@ -322,7 +414,7 @@ function GSE.GUISelectEditorTab(container, event, group)
   elseif group == "new" then
     GSE:GUIDrawMacroEditor(container, nil)
   else
-    GSE:GUIDrawMacroEditor(container, k)
+    GSE:GUIDrawMacroEditor(container, group)
   end
 end
 
