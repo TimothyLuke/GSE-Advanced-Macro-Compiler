@@ -461,6 +461,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   headcheckbox:SetWidth(78)
   headcheckbox:SetTriState(true)
   headcheckbox:SetLabel(L["Head"])
+  headcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+    macroversion.Head = value
+  end)
   toolbarcontainer:AddChild(headcheckbox)
 
   local neckcheckbox = AceGUI:Create("CheckBox")
@@ -468,6 +471,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   neckcheckbox:SetWidth(78)
   neckcheckbox:SetTriState(true)
   neckcheckbox:SetLabel(L["Neck"])
+  neckcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+    macroversion.Neck = value
+  end)
   toolbarcontainer:AddChild(neckcheckbox)
 
   local beltcheckbox = AceGUI:Create("CheckBox")
@@ -475,6 +481,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   beltcheckbox:SetWidth(78)
   beltcheckbox:SetTriState(true)
   beltcheckbox:SetLabel(L["Belt"])
+
   toolbarcontainer:AddChild(beltcheckbox)
 
   local ring1checkbox = AceGUI:Create("CheckBox")
