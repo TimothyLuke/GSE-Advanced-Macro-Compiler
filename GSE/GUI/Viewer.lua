@@ -74,7 +74,7 @@ function GSE.GUIDrawStandardViewerWindow(container)
   local eOptionsbutton = AceGUI:Create("Button")
   eOptionsbutton:SetText(L["Options"])
   eOptionsbutton:SetWidth(150)
-  eOptionsbutton:SetCallback("OnClick", function() GSE.OpenOptionsPanel end)
+  eOptionsbutton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
   buttonGroup:AddChild(eOptionsbutton)
 
   local recordwindowbutton = AceGUI:Create("Button")
