@@ -371,4 +371,5 @@ L["Use"] = true
 L["Target"] = true
 L["Combat"] = true
 L["Resets"] = true
+L["Sequence %s saved."] = true
 --@end-do-not-package@

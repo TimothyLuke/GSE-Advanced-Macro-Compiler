@@ -148,59 +148,17 @@ function GSE.GUIToggleClasses(buttonname)
 end
 
 
-function GSE.GUIUpdateSequenceDefinition(SequenceName)
+function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   -- Changes have been made so save them
   if not GSE.isEmpty(SequenceName) then
-    nextVal = GSGetNextSequenceVersion(currentSequence)
-    local sequence = {}
-    GSSE:lines(sequence, spellbox:GetText())
-    -- update sequence
-    if tonumber(stepvalue) == 2 then
-      sequence.StepFunction = GSStaticPriority
-      GSE.PrintDebugMessage("Setting GSStaticPriority.  Inside the Logic Point")
-    else
-      sequence.StepFunction = nil
+    if GSE.isEmpty(classid) then
+      classid = GSE.GetCurrentClassID()
     end
-    GSE.PrintDebugMessage("StepValue Saved: " .. stepvalue, GNOME)
-    -- sequence.KeyPress = KeyPressbox:GetText()
-    sequence.author = GetUnitName("player", true) .. '@' .. GetRealmName()
-    sequence.source = GSStaticSourceLocal
-    sequence.specID = GSSpecIDHashList[specdropdownvalue]
-    sequence.helpTxt = helpeditbox:GetText()
-    if not tonumber(sequence.icon) then
-      sequence.icon = "INV_MISC_QUESTIONMARK"
+    if not GSE.isEmpty(SequenceName) then
+      GSELibrary[classid][SequenceName] = sequence
+      GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+      GSE.Print(string.format(L["Sequence %s saved."], SequenceName), GNOME)
     end
-    if not GSE.isEmpty(loopstart:GetText()) then
-      sequence.loopstart = loopstart:GetText()
-    end
-    if not GSE.isEmpty(loopstop:GetText()) then
-      sequence.loopstop = loopstop:GetText()
-    end
-    if not GSE.isEmpty(looplimit:GetText()) then
-      sequence.looplimit = looplimit:GetText()
-    end
-    -- sequence.KeyRelease = KeyReleasebox:GetText()
-    sequence.version = nextVal
-    GSTRUnEscapeSequence(sequence)
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
-      -- this is new
-      GSE.PrintDebugMessage(L["Creating New Sequence."], GNOME)
-      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-      GSSE:loadSequence(SequenceName)
-      GSCheckMacroCreated(SequenceName)
-      GSUpdateSequence(SequenceName, GSELibrary[GSE.GetCurrentClassID()][sequenceName][nextVal])
-      GSUpdateSequenceList()
-      GSSequenceListbox:SetValue(SequenceName)
-      GSE.Print(L["Sequence Saved as version "] .. nextVal, GNOME)
-    else
-      GSE.PrintDebugMessage(L["Updating due to new version."], GNOME)
-      GSAddSequenceToCollection(SequenceName, sequence, nextVal)
-      GSSE:loadSequence(SequenceName)
-      GSCheckMacroCreated(SequenceName)
-      GSUpdateSequence(SequenceName, GSELibrary[GSE.GetCurrentClassID()][sequenceName][nextVal])
-      GSE.Print(L["Sequence Saved as version "] .. nextVal, GNOME)
-    end
-
   end
 end
 
@@ -254,4 +212,12 @@ function GSE:OnInitialize()
     GSE.GUIEditFrame:Hide()
     GSE.GUIViewFrame:Hide()
     GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
+end
+
+
+function GSE.OpenOptionsPanel()
+  local config = LibStub:GetLibrary("AceConfigDialog-3.0")
+  config:Open("GSE")
+  --config:SelectGroup("GSSE", "Debug")
+
 end

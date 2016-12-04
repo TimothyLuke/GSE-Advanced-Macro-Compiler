@@ -53,14 +53,6 @@ function GSE:PauseGuiDebugView()
   end
 end
 
-function GSE:OptionsGuiDebugView()
-  local config = LibStub:GetLibrary("AceConfigDialog-3.0")
-  config:Open("GSE")
-  --config:SelectGroup("GSSE", "Debug")
-
-end
-
-
 DebugFrame:SetTitle(L["Sequence Debugger"])
 local _, GCD_Timer = GetSpellCooldown(61304)
 DebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. " GCD:" .. GCD_Timer)
