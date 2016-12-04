@@ -285,9 +285,15 @@ function GSE:GUIDrawMetadataEditor(container)
 end
 function GSE:GUIDrawMacroEditor(container, version)
   local macroversion = GSE.GUIEditFrame.Sequence.MacroVersions[tonumber(version)]
+  local layoutcontainer = AceGUI:Create("SimpleGroup")
+  layoutcontainer:SetFullWidth(true)
+  layoutcontainer:SetHeight(260)
+  layoutcontainer:SetLayout("Flow") -- important!
+
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-  scrollcontainer:SetFullWidth(true)
+  --scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- probably?
+  scrollcontainer:SetWidth(546)
   scrollcontainer:SetHeight(260)
   scrollcontainer:SetLayout("Fill") -- important!
 
@@ -323,7 +329,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   linegroup1:AddChild(stepdropdown)
 
   local spacerlabel1 = AceGUI:Create("Label")
-  spacerlabel1:SetWidth(120)
+  spacerlabel1:SetWidth(50)
   linegroup1:AddChild(spacerlabel1)
 
   local looplimit = AceGUI:Create("EditBox")
@@ -351,7 +357,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   linegroup2:AddChild(KeyPressbox)
 
   local spacerlabel2 = AceGUI:Create("Label")
-  spacerlabel2:SetWidth(60)
+  spacerlabel2:SetWidth(6)
   linegroup2:AddChild(spacerlabel2)
 
   local PreMacro = AceGUI:Create("MultiLineEditBox")
@@ -390,7 +396,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   linegroup3:AddChild(KeyReleasebox)
 
   local spacerlabel3 = AceGUI:Create("Label")
-  spacerlabel3:SetWidth(60)
+  spacerlabel3:SetWidth(6)
   linegroup3:AddChild(spacerlabel3)
 
   local PostMacro = AceGUI:Create("MultiLineEditBox")
@@ -402,7 +408,72 @@ function GSE:GUIDrawMacroEditor(container, version)
   linegroup3:AddChild(PostMacro)
   PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
   contentcontainer:AddChild(linegroup3)
-  container:AddChild(scrollcontainer)
+
+  local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+  toolbarcontainer:SetWidth(85)
+
+
+  layoutcontainer:AddChild(scrollcontainer)
+
+  -- Note for Tristate - true = gold tick
+  --                     nil = grey tick
+  --                     false = no tick
+
+  local headcheckbox = AceGUI:Create("CheckBox")
+  headcheckbox:SetType("checkbox")
+  headcheckbox:SetWidth(78)
+  headcheckbox:SetTriState(true)
+  headcheckbox:SetLabel(L["Head"])
+  toolbarcontainer:AddChild(headcheckbox)
+
+  local neckcheckbox = AceGUI:Create("CheckBox")
+  neckcheckbox:SetType("checkbox")
+  neckcheckbox:SetWidth(78)
+  neckcheckbox:SetTriState(true)
+  neckcheckbox:SetLabel(L["Neck"])
+  toolbarcontainer:AddChild(neckcheckbox)
+
+  local beltcheckbox = AceGUI:Create("CheckBox")
+  beltcheckbox:SetType("checkbox")
+  beltcheckbox:SetWidth(78)
+  beltcheckbox:SetTriState(true)
+  beltcheckbox:SetLabel(L["Belt"])
+  toolbarcontainer:AddChild(beltcheckbox)
+
+  local ring1checkbox = AceGUI:Create("CheckBox")
+  ring1checkbox:SetType("checkbox")
+  ring1checkbox:SetWidth(68)
+  ring1checkbox:SetTriState(true)
+  ring1checkbox:SetLabel(L["Ring 1"])
+  toolbarcontainer:AddChild(ring1checkbox)
+
+  local ring2checkbox = AceGUI:Create("CheckBox")
+  ring2checkbox:SetType("checkbox")
+  ring2checkbox:SetWidth(68)
+  ring2checkbox:SetTriState(true)
+  ring2checkbox:SetLabel(L["Ring 2"])
+  toolbarcontainer:AddChild(ring2checkbox)
+
+  local trinket1checkbox = AceGUI:Create("CheckBox")
+  trinket1checkbox:SetType("checkbox")
+  trinket1checkbox:SetWidth(78)
+  trinket1checkbox:SetTriState(true)
+  trinket1checkbox:SetLabel(L["Trinket 1"])
+  toolbarcontainer:AddChild(trinket1checkbox)
+
+  local trinket2checkbox = AceGUI:Create("CheckBox")
+  trinket2checkbox:SetType("checkbox")
+  trinket2checkbox:SetWidth(83)
+  trinket2checkbox:SetTriState(true)
+  trinket2checkbox:SetLabel(L["Trinket 2"])
+  trinket2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
+    print(object)
+    print(value)
+  end)
+  toolbarcontainer:AddChild(trinket2checkbox)
+
+  layoutcontainer:AddChild(toolbarcontainer)
+  container:AddChild(layoutcontainer)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)

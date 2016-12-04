@@ -360,4 +360,11 @@ L["Language"] = true
 L["PreMacro"] = true
 L["PostMacro"] = true
 L["Author"] = true
+L["Head"] = true
+L["Neck"] = true
+L["Belt"] = true
+L["Ring 1"] = true
+L["Ring 2"] = true
+L["Trinket 1"] = true
+L["Trinket 2"] = true
 --@end-do-not-package@
