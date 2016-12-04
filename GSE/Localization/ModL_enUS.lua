@@ -367,4 +367,8 @@ L["Ring 1"] = true
 L["Ring 2"] = true
 L["Trinket 1"] = true
 L["Trinket 2"] = true
+L["Use"] = true
+L["Target"] = true
+L["Combat"] = true
+L["Resets"] = true
 --@end-do-not-package@

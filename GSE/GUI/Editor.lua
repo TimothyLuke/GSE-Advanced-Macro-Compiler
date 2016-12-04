@@ -409,15 +409,52 @@ function GSE:GUIDrawMacroEditor(container, version)
   PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
   contentcontainer:AddChild(linegroup3)
 
+  layoutcontainer:AddChild(scrollcontainer)
+
   local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   toolbarcontainer:SetWidth(85)
-
-
-  layoutcontainer:AddChild(scrollcontainer)
 
   -- Note for Tristate - true = gold tick
   --                     nil = grey tick
   --                     false = no tick
+
+
+
+  local heading2 = AceGUI:Create("Label")
+  heading2:SetText(L["Resets"])
+  toolbarcontainer:AddChild(heading2)
+
+  local targetresetcheckbox = AceGUI:Create("CheckBox")
+  targetresetcheckbox:SetType("checkbox")
+  targetresetcheckbox:SetWidth(78)
+  targetresetcheckbox:SetTriState(false)
+  targetresetcheckbox:SetLabel(L["Target"])
+  toolbarcontainer:AddChild(targetresetcheckbox)
+  if macroversion.Target then
+    targetresetcheckbox:SetValue(true)
+  end
+  targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+    macroversion.Target = value
+  end)
+
+  local combatresetcheckbox = AceGUI:Create("CheckBox")
+  combatresetcheckbox:SetType("checkbox")
+  combatresetcheckbox:SetWidth(78)
+  combatresetcheckbox:SetTriState(true)
+  combatresetcheckbox:SetLabel(L["Combat"])
+  toolbarcontainer:AddChild(combatresetcheckbox)
+  combatresetcheckbox:SetValue(macroversion.Combat)
+  combatresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+    macroversion.Combat = value
+  end)
+
+  local headingspace1 = AceGUI:Create("Label")
+  headingspace1:SetText(" ")
+  toolbarcontainer:AddChild(headingspace1)
+
+  local heading1 = AceGUI:Create("Label")
+  heading1:SetText(L["Use"])
+  toolbarcontainer:AddChild(heading1)
 
   local headcheckbox = AceGUI:Create("CheckBox")
   headcheckbox:SetType("checkbox")
