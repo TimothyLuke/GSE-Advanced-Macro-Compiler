@@ -854,30 +854,6 @@ end
 function GSE.CreateButton(name, sequence)
   local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
   button:SetAttribute('type', 'macro')
-  -- button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
-  -- button:SetAttribute('step', 1)
-  -- button:SetAttribute('KeyPress','\n' .. prepareKeyPress(sequence.KeyPress or ''))
-  -- GSE.PrintDebugMessage(L["createButton KeyPress: "] .. button:GetAttribute('KeyPress'))
-  -- button:SetAttribute('KeyRelease', '\n' .. prepareKeyRelease(sequence.KeyRelease or ''))
-  -- GSE.PrintDebugMessage(L["createButton KeyRelease: "] .. button:GetAttribute('KeyRelease'))
-  -- if GSE.IsLoopSequence(sequence) then
-  --   if GSE.isEmpty(sequence.StepFunction) then
-  --     button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopSequential))
-  --   else
-  --     button:WrapScript(button, 'OnClick', format(OnClick, Statics.LoopPriority))
-  --   end
-  --   if not GSE.isEmpty(sequence.loopstart) then
-  --     button:SetAttribute('loopstart', sequence.loopstart)
-  --   end
-  --   if not GSE.isEmpty(sequence.loopstop) then
-  --     button:SetAttribute('loopstop', sequence.loopstop)
-  --   end
-  --   if not GSE.isEmpty(sequence.looplimit) then
-  --     button:SetAttribute('looplimit', sequence.looplimit)
-  --   end
-  -- else
-  --   button:WrapScript(button, 'OnClick', format(OnClick, sequence.StepFunction or 'step = step % #macros + 1'))
-  -- end
   button.UpdateIcon = GSE.UpdateIcon
 end
 
@@ -925,7 +901,7 @@ function GSE.PrepareKeyPress(KeyPress)
   return GSE.UnEscapeTable(tab)
 end
 
-function GSE.PrepareKeyRelease(KeyRelease)
+function GSE.PrepareKeyRelease(KeyRelease, sequence)
   local tab = {}
   for k,v in pairs(KeyRelease) do
     table.insert(tab, v)
@@ -934,25 +910,25 @@ function GSE.PrepareKeyRelease(KeyRelease)
     -- see #20 prevent target hopping
     table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
-  if GSEOptions.use11 then
+  if sequence.Ring1 or (sequence.Ring1 == nil and GSEOptions.use11) then
     table.insert(tab, "/use [combat] 11")
   end
-  if GSEOptions.use12 then
+  if sequence.Ring2 or (sequence.Ring2 == nil and GSEOptions.use12) then
     table.insert(tab, "/use [combat] 12")
   end
-  if GSEOptions.use13 then
+  if sequence.Trinket1 or (sequence.Trinket1 == nil and GSEOptions.use13) then
     table.insert(tab, "/use [combat] 13")
   end
-  if GSEOptions.use14 then
+  if sequence.Trinket2 or (sequence.Trinket2 == nil and GSEOptions.use14) then
     table.insert(tab, "/use [combat] 14")
   end
-  if GSEOptions.use2 then
+  if sequence.Neck or (sequence.Neck == nil and GSEOptions.use2) then
     table.insert(tab, "/use [combat] 2")
   end
-  if GSEOptions.use1 then
+  if sequence.Head or (sequence.Head == nil and GSEOptions.use1) then
     table.insert(tab, "/use [combat] 1")
   end
-  if GSEOptions.use6 then
+  if sequence.Belt or (sequence.Belt == nil and GSEOptions.use6) then
     table.insert(tab, "/use [combat] 6")
   end
   if GSEOptions.hideSoundErrors then
