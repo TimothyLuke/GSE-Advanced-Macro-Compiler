@@ -34,7 +34,7 @@ editframe:SetTitle(L["Sequence Editor"])
 editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIViewFrame:Show(); end)
 editframe:SetLayout("List")
 
-local sequence = editframe.Sequence
+
 local currentSequence = editframe.SequenceName
 local specdropdownvalue = editframe.SpecID
 
