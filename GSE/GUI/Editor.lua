@@ -340,17 +340,20 @@ function GSE:GUIDrawMacroEditor(container, version)
   looplimit:SetLabel(L["Inner Loop Limit"])
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
-  looplimit:SetWidth(10)
+  looplimit:SetWidth(100)
   looplimit.editbox:SetNumeric()
   linegroup1:AddChild(looplimit)
   if not GSE.isEmpty(macroversion.LoopLimit) then
     looplimit.SetText(macroversion.LoopLimit)
   end
   looplimit:SetCallback("OnValueChanged", function (sel, object, value)
-      macroversion.LoopLimit = value
-      GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
-    end)
+    macroversion.LoopLimit = value
+    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+  end)
 
+  local spacerlabel7 = AceGUI:Create("Label")
+  spacerlabel7:SetWidth(5)
+  linegroup1:AddChild(spacerlabel7)
 
   local delversionbutton = AceGUI:Create("Button")
   delversionbutton:SetText(L["Delete Version"])
@@ -497,6 +500,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     macroversion.Head = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  headcheckbox:SetValue(macroversion.Head)
+
   toolbarcontainer:AddChild(headcheckbox)
 
   local neckcheckbox = AceGUI:Create("CheckBox")
@@ -508,6 +513,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     macroversion.Neck = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  neckcheckbox:SetValue(macroversion.Neck)
   toolbarcontainer:AddChild(neckcheckbox)
 
   local beltcheckbox = AceGUI:Create("CheckBox")
@@ -519,6 +525,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     macroversion.Belt = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  beltcheckbox:SetValue(macroversion.Belt)
   toolbarcontainer:AddChild(beltcheckbox)
 
   local ring1checkbox = AceGUI:Create("CheckBox")
@@ -526,10 +533,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   ring1checkbox:SetWidth(68)
   ring1checkbox:SetTriState(true)
   ring1checkbox:SetLabel(L["Ring 1"])
-  beltcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  ring1checkbox:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.Ring1 = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  ring1checkbox:SetValue(macroversion.Ring1)
   toolbarcontainer:AddChild(ring1checkbox)
 
   local ring2checkbox = AceGUI:Create("CheckBox")
@@ -537,10 +545,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   ring2checkbox:SetWidth(68)
   ring2checkbox:SetTriState(true)
   ring2checkbox:SetLabel(L["Ring 2"])
-  beltcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  ring2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.Ring2 = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  ring2checkbox:SetValue(macroversion.Ring2)
   toolbarcontainer:AddChild(ring2checkbox)
 
   local trinket1checkbox = AceGUI:Create("CheckBox")
@@ -548,10 +557,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   trinket1checkbox:SetWidth(78)
   trinket1checkbox:SetTriState(true)
   trinket1checkbox:SetLabel(L["Trinket 1"])
-  beltcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  trinket1checkbox:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.Trinket1 = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  trinket1checkbox:SetValue(macroversion.Trinket1)
   toolbarcontainer:AddChild(trinket1checkbox)
 
   local trinket2checkbox = AceGUI:Create("CheckBox")
@@ -563,6 +573,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     macroversion.Trinket2 = value
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
   end)
+  trinket2checkbox:SetValue(macroversion.Trinket2)
   toolbarcontainer:AddChild(trinket2checkbox)
 
   layoutcontainer:AddChild(toolbarcontainer)
@@ -577,9 +588,9 @@ function GSE.GUISelectEditorTab(container, event, group)
     GSE:GUIDrawMetadataEditor(container)
   elseif group == "new" then
     -- Copy the Default to a new version
-    table.insert(editframe.Sequence.Macroversions, editframe.Sequence.Macroversions[editframe.Sequence.Default])
+    table.insert(editframe.Sequence.MacroVersions, editframe.Sequence.MacroVersions[editframe.Sequence.Default])
     GSE.GUIEditorPerformLayout(editframe)
-    GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macroversions))
+    GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
   else
     GSE:GUIDrawMacroEditor(container, group)
   end
@@ -594,6 +605,7 @@ function GSE.GUISaveTemporaryMacroVersionChanges(version, macro)
 end
 
 function GSE.GUIDeleteVersion(version)
+  version = tonumber(version)
   local sequence = editframe.Sequence
   if table.getn(sequence.MacroVersions) <= 1 then
     GSE.Print(L["This is the only version of this macro.  Delete the entire macro to delete this version."])
@@ -603,7 +615,7 @@ function GSE.GUIDeleteVersion(version)
     GSE.Print(L["You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."])
     return
   end
-  local printtext = L["Macro Version %n deleted."]
+  local printtext = L["Macro Version %d deleted."]
   if sequence.PVP == version then
     sequence.PVP = sequence.Default
     printtext = printtext .. " " .. L["PVP setting changed to Default."]
@@ -620,18 +632,18 @@ function GSE.GUIDeleteVersion(version)
   if sequence.Default > version then
     sequence.Default = tonumber(sequence.Default) - 1
   end
-  if sequence.PVP > version then
+  if not GSE.isEmpty(sequence.PVP) and sequence.PVP > version then
     sequence.PVP = tonumber(sequence.PVP) - 1
   end
-  if sequence.Raid > version then
+  if not GSE.isEmpty(sequence.Raid) and sequence.Raid > version then
     sequence.Raid = tonumber(sequence.Raid) - 1
   end
-  if sequence.Mythic > version then
+  if not GSE.isEmpty(sequence.Mythic) and sequence.Mythic > version then
     sequence.Mythic = tonumber(sequence.Mythic) - 1
   end
   table.remove(sequence.MacroVersions, version)
   printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
   GSE.Print(string.format(printtext, version) )
   GSE.GUIEditorPerformLayout(editframe)
-  GSE.GUISelectEditorTab(container, nil, "config")
+  GSE.GUIEditFrame.ContentContainer:SelectTab("config")
 end
