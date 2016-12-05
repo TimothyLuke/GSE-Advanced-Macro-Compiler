@@ -534,9 +534,9 @@ function GSE.UpdateSequence(name,sequence)
   GSE.FixSequence(sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
   button:SetAttribute("step",1)
-  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence.KeyPress), "\n") or '' .. '\n')
+  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence), "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence.KeyRelease), "\n") or '' .. '\n')
+  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence), "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
@@ -885,10 +885,10 @@ function GSE.UpdateIcon(self, reset)
   end
 end
 
-function GSE.PrepareKeyPress(KeyPress)
+function GSE.PrepareKeyPress(sequence)
 
   local tab = {}
-  for k,v in pairs(KeyPress) do
+  for k,v in pairs(sequence.KeyPress) do
     tab[k] = v
   end
   if GSEOptions.hideSoundErrors then
@@ -901,9 +901,9 @@ function GSE.PrepareKeyPress(KeyPress)
   return GSE.UnEscapeTable(tab)
 end
 
-function GSE.PrepareKeyRelease(KeyRelease, sequence)
+function GSE.PrepareKeyRelease(sequence)
   local tab = {}
-  for k,v in pairs(KeyRelease) do
+  for k,v in pairs(sequence.KeyRelease) do
     table.insert(tab, v)
   end
   if GSEOptions.requireTarget then
