@@ -333,13 +333,14 @@ function GSE:GUIDrawMacroEditor(container, version)
   linegroup1:AddChild(stepdropdown)
 
   local spacerlabel1 = AceGUI:Create("Label")
-  spacerlabel1:SetWidth(50)
+  spacerlabel1:SetWidth(5)
   linegroup1:AddChild(spacerlabel1)
 
   local looplimit = AceGUI:Create("EditBox")
   looplimit:SetLabel(L["Inner Loop Limit"])
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
+  looplimit:SetWidth(10)
   looplimit.editbox:SetNumeric()
   linegroup1:AddChild(looplimit)
   if not GSE.isEmpty(macroversion.LoopLimit) then
@@ -349,8 +350,15 @@ function GSE:GUIDrawMacroEditor(container, version)
       macroversion.LoopLimit = value
       GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
     end)
-  contentcontainer:AddChild(linegroup1)
 
+
+  local delversionbutton = AceGUI:Create("Button")
+  delversionbutton:SetText(L["Delete Version"])
+  delversionbutton:SetWidth(150)
+  delversionbutton:SetCallback("OnClick", function() GSE.GUIDeleteVersion(version) end)
+  linegroup1:AddChild(delversionbutton)
+
+  contentcontainer:AddChild(linegroup1)
   local linegroup2 = AceGUI:Create("SimpleGroup")
   linegroup2:SetLayout("Flow")
   linegroup2:SetWidth(606)
@@ -389,7 +397,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local spellbox = AceGUI:Create("MultiLineEditBox")
   spellbox:SetLabel(L["Sequence"])
-  spellbox:SetNumLines(10)
+  spellbox:SetNumLines(8)
   spellbox:DisableButton(true)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
@@ -441,12 +449,6 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   toolbarcontainer:SetWidth(85)
-
-  -- Note for Tristate - true = gold tick
-  --                     nil = grey tick
-  --                     false = no tick
-
-
 
   local heading2 = AceGUI:Create("Label")
   heading2:SetText(L["Resets"])
@@ -589,4 +591,47 @@ function GSE.GUISaveTemporaryMacroVersionChanges(version, macro)
   else
     editframe.Sequence.MacroVersions[version] = macro
   end
+end
+
+function GSE.GUIDeleteVersion(version)
+  local sequence = editframe.Sequence
+  if table.getn(sequence.MacroVersions) <= 1 then
+    GSE.Print(L["This is the only version of this macro.  Delete the entire macro to delete this version."])
+    return
+  end
+  if sequence.Default == version then
+    GSE.Print(L["You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."])
+    return
+  end
+  local printtext = L["Macro Version %n deleted."]
+  if sequence.PVP == version then
+    sequence.PVP = sequence.Default
+    printtext = printtext .. " " .. L["PVP setting changed to Default."]
+  end
+  if sequence.Raid == version then
+    sequence.Raid = sequence.Default
+    printtext = printtext .. " " .. L["Raid setting changed to Default."]
+  end
+  if sequence.Mythic == version then
+    sequence.Mythic = sequence.Default
+    printtext = printtext .. " " .. L["Mythic setting changed to Default."]
+  end
+
+  if sequence.Default > version then
+    sequence.Default = tonumber(sequence.Default) - 1
+  end
+  if sequence.PVP > version then
+    sequence.PVP = tonumber(sequence.PVP) - 1
+  end
+  if sequence.Raid > version then
+    sequence.Raid = tonumber(sequence.Raid) - 1
+  end
+  if sequence.Mythic > version then
+    sequence.Mythic = tonumber(sequence.Mythic) - 1
+  end
+  table.remove(sequence.MacroVersions, version)
+  printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
+  GSE.Print(string.format(printtext, version) )
+  GSE.GUIEditorPerformLayout(editframe)
+  GSE.GUISelectEditorTab(container, nil, "config")
 end

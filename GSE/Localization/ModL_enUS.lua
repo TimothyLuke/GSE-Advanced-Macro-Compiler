@@ -372,4 +372,10 @@ L["Target"] = true
 L["Combat"] = true
 L["Resets"] = true
 L["Sequence %s saved."] = true
+L["This is the only version of this macro.  Delete the entire macro to delete this version."] = true
+L["You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."] = true
+L["Macro Version %n deleted."] = true
+L["This change will not come into effect until you save this macro."] = true
+L["PVP setting changed to Default."] = true
+
 --@end-do-not-package@
