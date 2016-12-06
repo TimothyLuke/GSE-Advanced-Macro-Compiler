@@ -163,7 +163,11 @@ function GSE:GUIDrawMetadataEditor(container)
   speciddropdown:SetLabel(L["Specialisation / Class ID"])
   speciddropdown:SetWidth(200)
   speciddropdown:SetList(GSE.GetSpecNames())
-  speciddropdown:SetCallback("OnValueChanged", function (obj,event,key) specdropdownvalue = key;  end)
+  speciddropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    specdropdownvalue = key;
+    editframe.SpecID = key
+    editframe.Sequence.SpecID = key
+  end)
   metasimplegroup:AddChild(speciddropdown)
   speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.SpecID])
 
@@ -182,6 +186,9 @@ function GSE:GUIDrawMetadataEditor(container)
     lang = "enUS"
   end
   langeditbox:SetText(lang)
+  langeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Lang = key
+  end)
 
   local spacerlabel2 = AceGUI:Create("Label")
   spacerlabel2:SetWidth(50)
@@ -194,7 +201,9 @@ function GSE:GUIDrawMetadataEditor(container)
   metasimplegroup:AddChild(talentseditbox)
   contentcontainer:AddChild(metasimplegroup)
   talentseditbox:SetText(editframe.Sequence.Talents)
-
+  talentseditbox:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Talents = key
+  end)
   local helpeditbox = AceGUI:Create("MultiLineEditBox")
   helpeditbox:SetLabel(L["Help Information"])
   helpeditbox:SetWidth(250)
@@ -204,6 +213,9 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Help) then
     helpeditbox:SetText(editframe.Sequence.Help)
   end
+  helpeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Help = key
+  end)
   contentcontainer:AddChild(helpeditbox)
 
   local helpgroup1 = AceGUI:Create("SimpleGroup")
@@ -218,6 +230,9 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Helplink) then
     helplinkeditbox:SetText(editframe.Sequence.Helplink)
   end
+  helplinkeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Helplink = key
+  end)
   helpgroup1:AddChild(helplinkeditbox)
 
   local spacerlabel3 = AceGUI:Create("Label")
@@ -231,6 +246,9 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Author) then
     authoreditbox:SetText(editframe.Sequence.Author)
   end
+  authoreditbox:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Author = key
+  end)
   helpgroup1:AddChild(authoreditbox)
 
   contentcontainer:AddChild(helpgroup1)
@@ -246,6 +264,10 @@ function GSE:GUIDrawMetadataEditor(container)
   defaultdropdown:SetList(GSE.GetVersionList())
   defaultdropdown:SetValue(tostring(editframe.Default))
   defgroup1:AddChild(defaultdropdown)
+  defaultdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    editframe.Sequence.Default = tonumber(key)
+    editframe.Default = tonumber(key)
+  end)
 
   local spacerlabel4 = AceGUI:Create("Label")
   spacerlabel4:SetWidth(100)
@@ -257,6 +279,15 @@ function GSE:GUIDrawMetadataEditor(container)
   raiddropdown:SetList(GSE.GetVersionList())
   raiddropdown:SetValue(tostring(editframe.Raid))
   defgroup1:AddChild(raiddropdown)
+  raiddropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Raid = nil
+    else
+      editframe.Sequence.Raid = tonumber(key)
+      editframe.Raid = tonumber(key)
+    end
+  end)
+
   contentcontainer:AddChild(defgroup1)
 
   local defgroup2 = AceGUI:Create("SimpleGroup")
@@ -268,6 +299,14 @@ function GSE:GUIDrawMetadataEditor(container)
   mythicdropdown:SetWidth(250)
   mythicdropdown:SetList(GSE.GetVersionList())
   mythicdropdown:SetValue(tostring(editframe.Mythic))
+  mythicdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Mythic = nil
+    else
+      editframe.Sequence.Mythic = tonumber(key)
+      editframe.Mythic = tonumber(key)
+    end
+  end)
   defgroup2:AddChild(mythicdropdown)
 
   local spacerlabel5 = AceGUI:Create("Label")
@@ -282,7 +321,16 @@ function GSE:GUIDrawMetadataEditor(container)
   defgroup2:AddChild(pvpdropdown)
   contentcontainer:AddChild(defgroup2)
   container:AddChild(scrollcontainer)
+  pvpdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.PVP = nil
+    else
+      editframe.Sequence.PVP = tonumber(key)
+      editframe.PVP = tonumber(key)
+    end
+  end)
 end
+
 function GSE:GUIDrawMacroEditor(container, version)
   local macroversion = GSE.GUIEditFrame.Sequence.MacroVersions[tonumber(version)]
   local layoutcontainer = AceGUI:Create("SimpleGroup")
