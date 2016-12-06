@@ -121,8 +121,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.CheckMacroCreated">GSE.CheckMacroCreated</a>&nbsp;(SequenceName, globalstub)</td>
-	<td class="summary">Check if a macro has been created and if not create it.</td>
+	<td class="name" nowrap><a href="#GSE.CheckMacroCreated">GSE.CheckMacroCreated</a>&nbsp;(SequenceName, create)</td>
+	<td class="summary">Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.</td>
 	</tr>
 
 	<tr>
@@ -146,6 +146,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.CreateMacroIcon">GSE.CreateMacroIcon</a>&nbsp;(sequenceName, icon, forceglobalstub)</td>
+	<td class="summary">Add a macro for a sequence amd register it in the list of known sequences </td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.DebugDumpButton">GSE.DebugDumpButton</a>&nbsp;(SequenceName)</td>
 	<td class="summary">This funciton dumps what is currently running on an existing button.</td>
 	</tr>
@@ -156,18 +161,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.DeleteSequenceVersion">GSE.DeleteSequenceVersion</a>&nbsp;(sequenceName, version)</td>
-	<td class="summary">Delete a sequence version </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.DisableSequence">GSE.DisableSequence</a>&nbsp;(SequenceName)</td>
-	<td class="summary">Disable all versions of a sequence and delete any macro stubs.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.EnableSequence">GSE.EnableSequence</a>&nbsp;(SequenceName)</td>
-	<td class="summary">Enable all versions of a sequence and recreate any macro stubs.</td>
+	<td class="name" nowrap><a href="#GSE.DeleteSequence">GSE.DeleteSequence</a>&nbsp;(classid, sequenceName)</td>
+	<td class="summary">Delete a sequence starting with the macro and then the sequence from the library </td>
 	</tr>
 
 	<tr>
@@ -196,18 +191,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.GetKnownSequenceVersions">GSE.GetKnownSequenceVersions</a>&nbsp;(SequenceName)</td>
-	<td class="summary">Return a table of Known Sequence Versions </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.GetMacroIcon">GSE.GetMacroIcon</a>&nbsp;(classid, sequenceIndex)</td>
 	<td class="summary">Return the Macro Icon for the specified Sequence </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.GetNextSequenceVersion">GSE.GetNextSequenceVersion</a>&nbsp;(SequenceName, last)</td>
-	<td class="summary">Return the next version value for a sequence.</td>
 	</tr>
 
 	<tr>
@@ -246,18 +231,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.RegisterSequence">GSE.RegisterSequence</a>&nbsp;(sequenceName, icon, forceglobalstub)</td>
-	<td class="summary">Add a macro for a sequence amd register it in the list of known sequences </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.ResetButtons">GSE.ResetButtons</a>&nbsp;()</td>
 	<td class="summary">This function resets a button back to its initial setting </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.SetActiveSequenceVersion">GSE.SetActiveSequenceVersion</a>&nbsp;(sequenceName, version)</td>
-	<td class="summary">Set the Active version of a sequence </td>
 	</tr>
 
 	<tr>
@@ -323,9 +298,9 @@ Add a sequence to the library
 
 
 
-<dt><a name="GSE.CheckMacroCreated"></a><strong>GSE.CheckMacroCreated</strong>&nbsp;(SequenceName, globalstub)</dt>
+<dt><a name="GSE.CheckMacroCreated"></a><strong>GSE.CheckMacroCreated</strong>&nbsp;(SequenceName, create)</dt>
 <dd>
-Check if a macro has been created and if not create it.
+Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
 
 
 <h3>Parameters</h3>
@@ -336,7 +311,7 @@ Check if a macro has been created and if not create it.
 	</li>
 	
 	<li>
-	  globalstub: 
+	  create: 
 	</li>
 	
 </ul>
@@ -452,6 +427,40 @@ This converts a legacy GS/GSE1 sequence to a new GSE2
 
 
 
+<dt><a name="GSE.CreateMacroIcon"></a><strong>GSE.CreateMacroIcon</strong>&nbsp;(sequenceName, icon, forceglobalstub)</dt>
+<dd>
+Add a macro for a sequence amd register it in the list of known sequences
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sequenceName: 
+	</li>
+	
+	<li>
+	  icon: 
+	</li>
+	
+	<li>
+	  forceglobalstub: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.DebugDumpButton"></a><strong>GSE.DebugDumpButton</strong>&nbsp;(SequenceName)</dt>
 <dd>
 This funciton dumps what is currently running on an existing button.
@@ -504,72 +513,20 @@ This removes a macro Stub.
 
 
 
-<dt><a name="GSE.DeleteSequenceVersion"></a><strong>GSE.DeleteSequenceVersion</strong>&nbsp;(sequenceName, version)</dt>
+<dt><a name="GSE.DeleteSequence"></a><strong>GSE.DeleteSequence</strong>&nbsp;(classid, sequenceName)</dt>
 <dd>
-Delete a sequence version
+Delete a sequence starting with the macro and then the sequence from the library
 
 
 <h3>Parameters</h3>
 <ul>
+	
+	<li>
+	  classid: 
+	</li>
 	
 	<li>
 	  sequenceName: 
-	</li>
-	
-	<li>
-	  version: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.DisableSequence"></a><strong>GSE.DisableSequence</strong>&nbsp;(SequenceName)</dt>
-<dd>
-Disable all versions of a sequence and delete any macro stubs.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  SequenceName: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.EnableSequence"></a><strong>GSE.EnableSequence</strong>&nbsp;(SequenceName)</dt>
-<dd>
-Enable all versions of a sequence and recreate any macro stubs.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  SequenceName: 
 	</li>
 	
 </ul>
@@ -711,32 +668,6 @@ Not Used
 
 
 
-<dt><a name="GSE.GetKnownSequenceVersions"></a><strong>GSE.GetKnownSequenceVersions</strong>&nbsp;(SequenceName)</dt>
-<dd>
-Return a table of Known Sequence Versions
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  SequenceName: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.GetMacroIcon"></a><strong>GSE.GetMacroIcon</strong>&nbsp;(classid, sequenceIndex)</dt>
 <dd>
 Return the Macro Icon for the specified Sequence
@@ -751,36 +682,6 @@ Return the Macro Icon for the specified Sequence
 	
 	<li>
 	  sequenceIndex: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.GetNextSequenceVersion"></a><strong>GSE.GetNextSequenceVersion</strong>&nbsp;(SequenceName, last)</dt>
-<dd>
-Return the next version value for a sequence. a <code>last</code> value of true means to get the last remaining version
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  SequenceName: 
-	</li>
-	
-	<li>
-	  last: 
 	</li>
 	
 </ul>
@@ -956,74 +857,10 @@ Load in the sample macros for the current class.
 
 
 
-<dt><a name="GSE.RegisterSequence"></a><strong>GSE.RegisterSequence</strong>&nbsp;(sequenceName, icon, forceglobalstub)</dt>
-<dd>
-Add a macro for a sequence amd register it in the list of known sequences
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  icon: 
-	</li>
-	
-	<li>
-	  forceglobalstub: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.ResetButtons"></a><strong>GSE.ResetButtons</strong>&nbsp;()</dt>
 <dd>
 This function resets a button back to its initial setting
 
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.SetActiveSequenceVersion"></a><strong>GSE.SetActiveSequenceVersion</strong>&nbsp;(sequenceName, version)</dt>
-<dd>
-Set the Active version of a sequence
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  version: 
-	</li>
-	
-</ul>
 
 
 
