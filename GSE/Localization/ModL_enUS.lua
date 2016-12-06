@@ -377,5 +377,7 @@ L["You cannot delete the Default version of this macro.  Please choose another v
 L["Macro Version %d deleted."] = true
 L["This change will not come into effect until you save this macro."] = true
 L["PVP setting changed to Default."] = true
-
+L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] = true
+L["Delete"] = true
+L["Cancel"] = true
 --@end-do-not-package@

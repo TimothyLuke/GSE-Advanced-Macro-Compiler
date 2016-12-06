@@ -119,7 +119,7 @@ function GSE.GUIEditorPerformLayout(frame)
   transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(currentSequence) end)
 
   local editButtonGroup = AceGUI:Create("SimpleGroup")
-  editButtonGroup:SetWidth(452)
+  editButtonGroup:SetWidth(602)
   editButtonGroup:SetLayout("Flow")
   editButtonGroup:SetHeight(15)
 
@@ -128,6 +128,12 @@ function GSE.GUIEditorPerformLayout(frame)
   savebutton:SetWidth(150)
   savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence) end)
   editButtonGroup:AddChild(savebutton)
+
+  local delbutton = AceGUI:Create("Button")
+  delbutton:SetText(L["Delete"])
+  delbutton:SetWidth(150)
+  delbutton:SetCallback("OnClick", function() GSE.GUIDeleteSequence(editframe.ClassID, editframe.SequenceName) end)
+  editButtonGroup:AddChild(delbutton)
 
   editButtonGroup:AddChild(transbutton)
   editButtonGroup:AddChild(editOptionsbutton)

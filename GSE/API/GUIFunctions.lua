@@ -1,23 +1,24 @@
 local GSE = GSE
 local L = GSE.L
 
-function GSE.GUIDisableSequence(currentSeq, iconWidget)
-  GSToggleDisabledSequence(currentSeq)
-  if GSEOptions.DisabledSequences[currentSeq] then
-    disableSeqbutton:SetText(L["Enable Sequence"])
-    viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-  else
-    disableSeqbutton:SetText(L["Disable Sequence"])
-    local reticon = GSSE:getMacroIcon(currentSeq)
-    if not tonumber(reticon) then
-      -- we have a starting
-      reticon = "Interface\\Icons\\" .. reticon
-    end
-    iconWidget:SetImage(reticon)
+--- This function pops up a confirmation dialog.
+function GSE.GUIDeleteSequence(currentSeq, iconWidget)
+  StaticPopupDialogs["GSE-DeleteMacroDialog"].text = string.format(L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."], GSE.GUIEditFrame.SequenceName)
+  StaticPopupDialogs["GSE-DeleteMacroDialog"].OnAccept = function(self, data)
+      GSE.GUIConfirmDeleteSequence(GSE.GUIEditFrame.ClassID, GSE.GUIEditFrame.SequenceName)
   end
-  sequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[GSE.GetCurrentClassID()][currentSeq].MacroVersions[GSGetActiveSequenceVersion(currentSeq)], (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][currentSeq].Lang) and "enUS" or GSELibrary[GSE.GetCurrentClassID()][currentSeq].Lang), GetLocale()), currentSeq))
 
+
+  StaticPopup_Show ("GSE-DeleteMacroDialog")
 end
+
+--- This function then deletes the macro
+function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
+  GSE.DeleteSequence(classid, sequenceName)
+  GSE.GUIEditFrame:Hide()
+  GSE.GUIShowViewer()
+end
+
 
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
@@ -73,14 +74,6 @@ function GSE.GUILoadEditor(key, incomingframe)
 end
 
 
-function GSE.SetActiveSequence(key)
-  GSSetActiveSequenceVersion(currentSequence, key)
-  GSUpdateSequence(currentSequence, GSELibrary[currentSequence][key])
-  activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
-  activesequencebox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], GetLocale(), GetLocale()), currentSequence))
-  otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
-end
-
 function GSE.GUIChangeOtherSequence(key)
   otherversionlistboxvalue = key
   otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][key], (GSE.isEmpty(GSELibrary[currentSequence][key].lang) and GetLocale() or GSELibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
@@ -90,17 +83,6 @@ function GSE.GUIUpdateSequenceList()
   local names = GSE.GetSequenceNames()
   GSE.GUIViewFrame.SequenceListbox:SetList(names)
 end
-
-
-function GSE.GUIManageSequenceVersion()
-  frame:Hide()
-  versionframe:SetTitle(L["Manage Versions"] .. ": " .. currentSequence )
-  activesequencebox:SetLabel(L["Active Version: "] .. GSGetActiveSequenceVersion(currentSequence) )
-  activesequencebox:SetText(GSE.GUIViewFrame.SequenceTextbox:GetText())
-  otherversionlistbox:SetList(GSGetKnownSequenceVersions(currentSequence))
-  versionframe:Show()
-end
-
 
 function GSE.GUIloadTranslatedSequence(key)
   GSE.PrintDebugMessage(L["GSTranslateSequenceFromTo(GSELibrary["] .. currentSequence .. L["], (GSE.isEmpty(GSELibrary["] .. currentSequence .. L["].lang) and GSELibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)

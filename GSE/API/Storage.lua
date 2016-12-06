@@ -5,6 +5,12 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
+--- Delete a sequence starting with the macro and then the sequence from the library
+function GSE.DeleteSequence(classid, sequenceName)
+  GSE.DeleteMacroStub(sequenceName)
+  GSELibrary[classid][sequenceName] = nil
+end
+
 
 --- Disable all versions of a sequence and delete any macro stubs.
 function GSE.DisableSequence(SequenceName)
