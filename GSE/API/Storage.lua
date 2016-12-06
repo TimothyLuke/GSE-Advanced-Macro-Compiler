@@ -16,24 +16,22 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
   local confirmationtext = ""
   -- CHeck for colissions
   local found = false
-  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
+  if GSE.isEmpty(sequence.SpecID) then
+    sequence.SpecID = GSE.GetCurrentClassID()
+  end
+  local classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
+
+  if not GSE.isEmpty(GSELibrary[classid][sequenceName]) then
       found = true
   end
   if found then
     -- check if source the same.  If so ignore
     GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
-      table.add(GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions, v)
+      table.add(GSELibrary[classid][sequenceName].MacroVersions, v)
     end
   else
     -- New Sequence
-    --Perform some validation checks on the Sequence.
-    if GSE.isEmpty(sequence.SpecID) then
-      -- set to currentSpecID
-      sequence.SpecID = GSE.GetCurrentSpecID()
-      confirmationtext = confirmationtext .. " " .. L["Sequence specID set to current spec of "] .. sequence.SpecID .. "."
-    end
-    sequence.SpecID = sequence.SpecID + 0 -- force to a number.
     if GSE.isEmpty(sequence.Author) then
       -- set to unknown author
       sequence.Author = "Unknown Author"
@@ -45,11 +43,8 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
       confirmationtext = confirmationtext .. " " .. L["No Help Information Available"] .. "."
     end
 
-    if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
-      -- Sequence is new
-      GSELibrary[GSE.GetCurrentClassID()][sequenceName] = {}
-    end
-    GSELibrary[GSE.GetCurrentClassID()][sequenceName] = sequence
+    GSELibrary[classid][sequenceName] = {}
+    GSELibrary[classid][sequenceName] = sequence
   end
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
@@ -101,6 +96,7 @@ end
 --- Load a GSE Sequence Collection from a String
 function GSE.ImportSequence(importStr, legacy)
   local success, returnmessage = false, ""
+  print (legacy)
 
   local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
   return Sequences
@@ -122,13 +118,11 @@ function GSE.ImportSequence(importStr, legacy)
         if legacy then
           v = GSE.ConvertLegacySequence(v)
         end
-        v.source = Statics.SourceLocal
         GSE.AddSequenceToCollection(k, v)
         if GSE.isEmpty(v.Icon) then
           -- Set a default icon
-          v.Icon = GSGetDefaultIcon()
+          v.Icon = GSE.GetDefaultIcon()
         end
-        GSCheckMacroCreated(k)
         newkey = k
       end
       success = true
@@ -243,52 +237,51 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
     if not GSE.isEmpty(v.looplimit) then
       macroversions = macroversions .. "      looplimit=" .. GSEOptions.EQUALS .. v.looplimit .. Statics.StringReset .. ",\n"
     end
-    macroversions = macroversions .. "      KeyPress={\n"
-    for _,p in ipairs(v.KeyPress) do
-      macroversions = macroversions .. "        \"" .. p .."\",\n"
+    if not GSE.isEmpty(v.KeyPress) then
+      macroversions = macroversions .. "      KeyPress={\n"
+      for _,p in ipairs(v.KeyPress) do
+        macroversions = macroversions .. "        \"" .. p .."\",\n"
+      end
+      macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "      },\n"
-    if table.getn(v.PreMacro) > 0 then
+    if not GSE.isEmpty(v.PreMacro) then
       macroversions = macroversions .. "      PreMacro={\n"
-      macroversions = macroversions .. "        \"" .. table.concat(v.PreMacro,"\",\n\"")
+      for _,p in ipairs(v.PreMacro) do
+        macroversions = macroversions .. "        \"" .. p .."\",\n\""
+      end
       macroversions = macroversions .. "      },\n"
     end
     macroversions = macroversions .. "      \"" .. table.concat(v,"\",\n      \"")
     macroversions = macroversions .. "\",\n"
-    if table.getn(v.PostMacro) > 0 then
+    if not GSE.isEmpty(v.PostMacro) then
       macroversions = macroversions .. "      PostMacro={\n"
-      macroversions = macroversions .. "        \"" .. table.concat(v.PostMacro,"\",\n\"")
+      for _,p in ipairs(v.PostMacro) do
+        macroversions = macroversions .. "        \"" .. p .. "\",\n\""
+      end
       macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "      KeyRelease={\n"
-    for _,p in ipairs(v.KeyRelease) do
-      macroversions = macroversions .. "        \"" .. p .."\",\n"
+    if not GSE.isEmpty(v.KeyRelease) then
+      macroversions = macroversions .. "      KeyRelease={\n"
+      for _,p in ipairs(v.KeyRelease) do
+        macroversions = macroversions .. "        \"" .. p .."\",\n"
+      end
+      macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "      },\n"
     macroversions = macroversions .. "    },\n"
   end
   macroversions = macroversions .. "  },\n"
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
   local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",  \n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
   if not GSE.isEmpty(sequence.Icon) then
-     returnVal = returnVal .. "Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
+     returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
   if not GSE.isEmpty(sequence.Lang) then
-    returnVal = returnVal .. "Lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.lang .. Statics.StringReset .. "\",\n"
+    returnVal = returnVal .. "  Lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.Lang .. Statics.StringReset .. "\",\n"
   end
   returnVal = returnVal .. macroversions
   returnVal = returnVal .. "},\n"
 
   return returnVal
-end
-
---- This function performs any actions to clean up common syntax errors in Legacy GSE1 Sequences
-function GSE.FixLegacySequence(sequence)
-  for k,v in pairs(Statics.CleanStrings) do
-    GSE.PrintDebugMessage(L["Testing String: "] .. v, GNOME)
-    if not GSE.isEmpty(sequence.PreMacro) then sequence.PreMacro = string.gsub(sequence.PreMacro, v, "") end
-    if not GSE.isEmpty(sequence.PostMacro) then sequence.PostMacro = string.gsub(sequence.PostMacro, v, "") end
-  end
 end
 
 function GSE.FixSequence(sequence)
@@ -679,63 +672,61 @@ end
 
 --- This converts a legacy GS/GSE1 sequence to a new GSE2
 function GSE.ConvertLegacySequence(sequence)
-  GSE.FixLegacySequence(sequence)
   local GSStaticPriority = Statics.PriorityImplementation
-  local returnSequence= {}
+  local returnSequence = {}
   if not GSE.isEmpty(sequence.specID) then
-    returnSequence.SpecID = sequence.SpecID
+    returnSequence.SpecID = sequence.specID
   end
   if not GSE.isEmpty(sequence.author) then
     returnSequence.Author = sequence.author
   end
-  if not GSE.isEmpty(sequence.authorversion) then
-    returnSequence.AuthorVersion = sequence.authorversion
-  end
   if not GSE.isEmpty(sequence.helpTxt) then
-    returnSequence.Help = sequence.helpTxt
+    returnSequence.Talents = sequence.helpTxt
   end
   if not GSE.isEmpty(sequence.lang) then
     returnSequence.Lang = sequence.lang
   end
   returnSequence.Default = 1
   returnSequence.MacroVersions = {}
-  returnSeq.MacroVersions[1] = {}
+  returnSequence.MacroVersions[1] = {}
   if not GSE.isEmpty(sequence.PreMacro) then
-    returnSeq.MacroVersions[1].KeyPress = GSE.SplitMeIntolines(sequence.PreMacro)
+    returnSequence.MacroVersions[1].KeyPress = GSE.SplitMeIntolines(sequence.PreMacro)
   end
   if not GSE.isEmpty(sequence.PostMacro) then
-    returnSeq.MacroVersions[1].KeyRelease = GSE.SplitMeIntolines(sequence.PostMacro)
+    returnSequence.MacroVersions[1].KeyRelease = GSE.SplitMeIntolines(sequence.PostMacro)
   end
   if not GSE.isEmpty(sequence.StepFunction) then
     if Sequence.StepFunction == GSStaticPriority then
-      returnSeq.MacroVersions[1].StepFunction = Statics.Priority
+      returnSequence.MacroVersions[1].StepFunction = Statics.Priority
     elseif GSE.isEmpty(sequence.StepFunction) then
       GSE.Print(L["The Custom StepFunction Specified is not recognised and has been ignored."], GNOME)
-      returnSeq.MacroVersions[1].StepFunction = Statics.Sequential
+      returnSequence.MacroVersions[1].StepFunction = Statics.Sequential
     end
   else
-    returnSeq.MacroVersions[1].StepFunction = Statics.Sequential
+    returnSequence.MacroVersions[1].StepFunction = Statics.Sequential
   end
   if not GSE.isEmpty(sequence.icon) then
     returnSequence.Icon = sequence.icon
   end
+  local macroversion = returnSequence.MacroVersions[1]
   for k,v in ipairs(sequence) do
     local loopstart = sequence.loopstart or 1
     local loopstop = sequence.loopstop or table.getn(sequence)
     if loopstart > 1 then
-      returnSeq.MacroVersions[1].PreMacro = {}
+      macroversion.PreMacro = {}
     end
     if loopstop < table.getn(sequence) then
-      returnSeq.MacroVersions[1].PostMacro = {}
+      macroversion.PostMacro = {}
     end
     if k < loopstart then
-      table.insert(returnSeq.MacroVersions[1].PreMacro, v)
+      table.insert(macroversion.PreMacro, v)
     elseif k > loopstop then
-      table.insert(returnSeq.MacroVersions[1].PostMacro, v)
+      table.insert(macroversion.PostMacro, v)
     else
-      table.insert(returnSeq.MacroVersions[1], v)
+      table.insert(macroversion, v)
     end
   end
+  return returnSequence
 end
 
 --- Load in the sample macros for the current class.

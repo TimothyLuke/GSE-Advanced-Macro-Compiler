@@ -74,7 +74,7 @@ function GSE.GUIImportSequence()
   if success then
     StaticPopup_Show ("GSE-MacroImportSuccess")
     GSE.GUIImportFrame:Hide()
-    GSE.GUIViewFrame:Show()
+    GSE.GUIShowViewer()
   else
     StaticPopup_Show ("GSE-MacroImportFailure")
   end

@@ -22,6 +22,18 @@ function GSE.GetCurrentClassNormalisedName()
   return classnormalisedname
 end
 
+function GSE.GetClassIDforSpec(specid)
+  local id, name, description, icon, background, role, class = GetSpecializationInfoByID(specid)
+  local classid = 0
+  for i=1, 12, 1 do
+    local cdn, st, cid = GetClassInfo(i)
+    if class == st then
+      classid = i
+    end
+  end
+  return classid
+end
+
 function GSE.GetClassIcon(classid)
   local classicon = {}
   classicon[1] = "Interface\\Icons\\inv_sword_27" -- Warrior
