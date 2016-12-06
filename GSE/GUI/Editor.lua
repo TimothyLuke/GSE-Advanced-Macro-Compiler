@@ -691,7 +691,7 @@ function GSE.GUIDeleteVersion(version)
   end
   table.remove(sequence.MacroVersions, version)
   printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
-  GSE.Print(string.format(printtext, version) )
   GSE.GUIEditorPerformLayout(editframe)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
+  GSE.GUIEditFrame:SetStatusText(string.format(printtext, version))
 end

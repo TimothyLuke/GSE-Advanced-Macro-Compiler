@@ -157,7 +157,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
     if not GSE.isEmpty(SequenceName) then
       GSELibrary[classid][SequenceName] = sequence
       GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
-      GSE.Print(string.format(L["Sequence %s saved."], SequenceName), GNOME)
+      GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence %s saved."], SequenceName))
     end
   end
 end
