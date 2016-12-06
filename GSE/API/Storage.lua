@@ -11,19 +11,6 @@ function GSE.DeleteSequence(classid, sequenceName)
   GSELibrary[classid][sequenceName] = nil
 end
 
-
---- Disable all versions of a sequence and delete any macro stubs.
-function GSE.DisableSequence(SequenceName)
-  GSEOptions.DisabledSequences[SequenceName] = true
-  GSdeleteMacroStub(SequenceName)
-end
-
---- Enable all versions of a sequence and recreate any macro stubs.
-function GSE.EnableSequence(SequenceName)
-  GSEOptions.DisabledSequences[SequenceName] = nil
-  GSCheckMacroCreated(SequenceName)
-end
-
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence)
   local confirmationtext = ""
@@ -76,85 +63,6 @@ function GSE.ImportMacroCollection(Sequences)
   end
 end
 
--- --- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
--- function GSImportLegacyMacroCollections(str, authorversion)
---   for k,v in pairs(GSMasterSequences) do
---     if GSE.isEmpty(v.version) then
---       v.version = 1
---     end
---     if GSE.isEmpty(authorversion) then
---       authorversion = 1
---     end
---     v.source = str
---     v.authorversion = authorversion
---     GSAddSequenceToCollection(k, v, v.version)
---     GSMasterSequences[k] = nil
---   end
--- end
-
-
-
---- Delete a sequence version
-function GSE.DeleteSequenceVersion(sequenceName, version)
-  if not GSE.isEmpty(sequenceName) then
-    local _, selectedversion = GSGetKnownSequenceVersions(sequenceName)
-    local sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName][version]
-    if sequence.source ~= GSStaticSourceLocal then
-      GSE.Print(L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] .. GSEOptions.NUMBER .. sequence.source .. Statics.StringReset, GNOME)
-    elseif not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName][version]) then
-      GSELibrary[GSE.GetCurrentClassID()][sequenceName][version] = nil
-    end
-    if version == selectedversion then
-      newversion = GSGetNextSequenceVersion(sequenceName, true)
-      if newversion >0  then
-        GSSetActiveSequenceVersion(sequenceName, newversion)
-      else
-        GSEOptions.ActiveSequenceVersions[sequenceName] = nil
-      end
-    end
-  end
-end
-
---- Set the Active version of a sequence
-function GSE.SetActiveSequenceVersion(sequenceName, version)
-  -- This may need more logic but for the moment iuf they are not equal set somethng.
-  GSEOptions.ActiveSequenceVersions[sequenceName] = version
-end
-
-
---- Return the next version value for a sequence.
---    a <code>last</code> value of true means to get the last remaining version
-function GSE.GetNextSequenceVersion(SequenceName, last)
-  local nextv = 0
-  GSE.PrintDebugMessage("GSGetNextSequenceVersion " .. SequenceName, "GSGetNextSequenceVersion")
-  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
-    for k,_ in ipairs(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) do
-    nextv = k
-    end
-  end
-  if not last then
-    nextv = nextv + 1
-  end
-  if nextv == 0 then
-    -- no entries found setting to a key of 1
-    nextv = 1
-  end
-  return nextv
-
-end
-
---- Return a table of Known Sequence Versions
-function GSE.GetKnownSequenceVersions(SequenceName)
-  if not GSE.isEmpty(SequenceName) then
-    local t = {}
-    for k,_ in pairs(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) do
-      --print (k)
-      t[k] = k
-    end
-    return t, GSEOptions.ActiveSequenceVersions[SequenceName]
-  end
-end
-
 
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
@@ -172,7 +80,7 @@ end
 
 
 --- Add a macro for a sequence amd register it in the list of known sequences
-function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
+function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
@@ -185,8 +93,7 @@ function GSE.RegisterSequence(sequenceName, icon, forceglobalstub)
     elseif numAccountMacros >= MAX_ACCOUNT_MACROS - 1 and GSEOptions.overflowPersonalMacros then
       GSE.Print(L["Close to Maximum Macros.|r  You can have a maximum of "].. MAX_CHARACTER_MACROS .. L[" macros per character.  You currently have "] .. GSEOptions.EmphasisColour .. numCharacterMacros .. L["|r.  You can also have a  maximum of "] .. MAX_ACCOUNT_MACROS .. L[" macros per Account.  You currently have "] .. GSEOptions.EmphasisColour .. numAccountMacros .. L["|r. As a result this macro was not created.  Please delete some macros and reenter "] .. GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
     else
-      sequenceid = CreateMacro(sequenceName, (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, (forceglobalstub and false or GSsetMacroLocation()) )
-      GSE.ModifiedSequences[sequenceName] = true
+      sequenceid = CreateMacro(sequenceName, (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, (forceglobalstub and false or GSE.SetMacroLocation()) )
     end
   end
 end
@@ -240,29 +147,6 @@ function GSE.ReloadSequences()
     GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
 
-end
-
-function GSE.ToggleDisabledSequence(SequenceName)
-  if GSEOptions.DisabledSequences[SequenceName] then
-    -- Sequence has potentially been Disabled
-    if GSEOptions.DisabledSequences[SequenceName] == true then
-      -- Definately disabled - enabling
-      GSEOptions.DisabledSequences[SequenceName] = nil
-      GSCheckMacroCreated(SequenceName)
-      GSE.Print(GSEOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been enabled.  The Macro stub is now available in your Macro interface."], GNOME)
-    else
-      -- Disabling
-      GSEOptions.DisabledSequences[SequenceName] = true
-      GSdeleteMacroStub(SequenceName)
-      GSE.Print(GSEOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."], GNOME)
-    end
-  else
-    -- disabliong
-    GSEOptions.DisabledSequences[SequenceName] = true
-    GSdeleteMacroStub(SequenceName)
-    GSE.Print(GSEOptions.EmphasisColour .. SequenceName .. "|r " .. L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."], GNOME)
-  end
-  GSE.ReloadSequences()
 end
 
 function GSE.PrepareLogout(deletenonlocalmacros)
@@ -683,19 +567,22 @@ end
 
 
 
---- Check if a macro has been created and if not create it.
-function GSE.CheckMacroCreated(SequenceName, globalstub)
+
+--- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+function GSE.CheckMacroCreated(SequenceName, create)
+  local found = false
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
-    if not GSE.ModifiedSequences[SequenceName] then
-      GSE.ModifiedSequences[SequenceName] = true
-      EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
-    end
+    found = true
+    EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
   else
-    icon = (GSE.isempty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon) and Statics.QuestionMark or GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon)
-    GSE.RegisterSequence(SequenceName, icon, globalstub)
+    if create then
+      local icon = (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon) and Statics.QuestionMark or GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon)
+      GSE.CreateMacroIcon(SequenceName, icon)
+      found = true
+    end
   end
-
+  return found
 end
 
 --- This removes a macro Stub.

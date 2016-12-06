@@ -89,36 +89,6 @@ function GSE.GUIloadTranslatedSequence(key)
   GSE.GUIViewFrame.SequenceTextbox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
-function GSE.GUILoadSequence(key)
-  local elements = GSE.split(key, ",")
-  classid = elements[1]
-  sequenceName = elements[2]
-
-  GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. sequenceName)
-  if GSEOptions.useTranslator then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
-  --TODO Fix this so the translator works.
-  elseif GSETranslatorAvailable then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
-  else
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(sequenceName))
-  end
-  if GSEOptions.DisabledSequences[SequenceName] then
-    disableSeqbutton:SetText(L["Enable Sequence"])
-    viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-  else
-    disableSeqbutton:SetText(L["Disable Sequence"])
-    reticon = GSE.GetMacroIcon(classid, sequenceName)
-    if not tonumber(reticon) then
-      -- we have a starting
-      reticon = "Interface\\Icons\\" .. reticon
-    end
-    GSE.GUIViewFrame.Icon:SetImage(reticon)
-  end
-
-end
-
-
 function GSE.GUIToggleClasses(buttonname)
   if buttonname == "class" then
     classradio:SetValue(true)

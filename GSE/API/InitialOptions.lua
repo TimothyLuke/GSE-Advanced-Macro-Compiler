@@ -75,7 +75,6 @@ Translator[Statics.TranslationShadow] = {}
 
 GSE.UnfoundSpells = {}
 
-GSE.ModifiedSequences = {} -- [sequenceName] = true if we've already modified this sequence
 GSE.PrintAvailable = false
 GSE.AddInPacks = {}
 GSE.UnloadedAddInPacks = {}

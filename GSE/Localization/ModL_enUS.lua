@@ -380,4 +380,6 @@ L["PVP setting changed to Default."] = true
 L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] = true
 L["Delete"] = true
 L["Cancel"] = true
+L["Delete Icon"] = true
+L["Create Icon"] = true
 --@end-do-not-package@

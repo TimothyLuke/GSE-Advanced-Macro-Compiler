@@ -29,17 +29,6 @@ end
 function GSE:PLAYER_ENTERING_WORLD()
   GSE.PrintAvailable = true
   GSE.PerformPrint()
-  -- check macro stubs
-  for k,v in pairs(GSEOptions.ActiveSequenceVersions) do
-    sequence = GSELibrary[k][v]
-    if sequence.specID == GSE.GetCurrentSpecID() or sequence.specID == GSE.GetCurrentClassID() then
-      if GSEOptions.DisabledSequences[k] == true then
-        GSE.DeleteMacroStub(k)
-      else
-        GSE.CheckMacroCreated(k)
-      end
-    end
-  end
 end
 
 function GSE:ADDON_LOADED(addon)
