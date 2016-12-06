@@ -57,7 +57,7 @@ SampleMacros\Warlock.lua
 SampleMacros\Warrior.lua
 API\Storage.lua
 API\Translator.lua
-
+API\Plugins.lua
 
 
 # GUI

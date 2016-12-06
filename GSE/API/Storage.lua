@@ -148,7 +148,6 @@ function GSE.PrepareLogout(deletenonlocalmacros)
   if GSEOptions.deleteOrphansOnLogout then
     GSE.CleanOrphanSequences()
   end
-  GnomeOptions = GSEOptions
 end
 
 function GSE.IsLoopSequence(sequence)
@@ -166,15 +165,8 @@ function GSE.IsLoopSequence(sequence)
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
---      Accepts <code>SequenceName</code>
-function GSE.ExportSequence(sequenceName)
-  --TODO change current classid to be a lookup of sequenceName
-  return GSE.ExportSequencebySeq(GSELibrary[GSE.GetCurrentClassID()][sequenceName], sequenceName)
-end
-
---- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequencebySeq(sequence, sequenceName)
+function GSE.ExportSequence(sequence, sequenceName)
   GSE.PrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
   local disabledseq = ""
   if GSEOptions.DisabledSequences[sequenceName] then
@@ -240,30 +232,31 @@ function GSE.ExportSequencebySeq(sequence, sequenceName)
     if not GSE.isEmpty(v.KeyPress) then
       macroversions = macroversions .. "      KeyPress={\n"
       for _,p in ipairs(v.KeyPress) do
-        macroversions = macroversions .. "        \"" .. p .."\",\n"
+        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
     if not GSE.isEmpty(v.PreMacro) then
       macroversions = macroversions .. "      PreMacro={\n"
       for _,p in ipairs(v.PreMacro) do
-        macroversions = macroversions .. "        \"" .. p .."\",\n\""
+        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n\""
       end
       macroversions = macroversions .. "      },\n"
     end
-    macroversions = macroversions .. "      \"" .. table.concat(v,"\",\n      \"")
-    macroversions = macroversions .. "\",\n"
+    for _,p in ipairs(v) do
+      macroversions = macroversions .. "      \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n\""
+    end
     if not GSE.isEmpty(v.PostMacro) then
       macroversions = macroversions .. "      PostMacro={\n"
       for _,p in ipairs(v.PostMacro) do
-        macroversions = macroversions .. "        \"" .. p .. "\",\n\""
+        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .. "\",\n\""
       end
       macroversions = macroversions .. "      },\n"
     end
     if not GSE.isEmpty(v.KeyRelease) then
       macroversions = macroversions .. "      KeyRelease={\n"
       for _,p in ipairs(v.KeyRelease) do
-        macroversions = macroversions .. "        \"" .. p .."\",\n"
+        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
@@ -327,39 +320,11 @@ function GSE.CleanOrphanSequences()
 end
 
 --- This function is used to clean the loacl sequence library
---TODO Fix this
 function GSE.CleanMacroLibrary(forcedelete)
   -- clean out the sequences database except for the current version
   if forcedelete then
     GSELibrary[GSE.GetCurrentClassID()] = nil
     GSELibrary[GSE.GetCurrentClassID()] = {}
-  else
-    local tempTable = {}
-    for name, versiontable in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
-      GSE.PrintDebugMessage(L["Testing "] .. name )
-
-      for version, sequence in pairs(versiontable) do
-        GSE.PrintDebugMessage(L["Cycle Version "] .. version )
-        if sequence.source == Statics.SourceLocal then
-          -- Save user created entries.  If they are in a mod dont save them as they will be reloaded next load.
-          GSE.PrintDebugMessage("sequence.source == Statics.SourceLocal")
-          if GSE.isEmpty(tempTable[name]) then
-            tempTable[name] = {}
-          end
-          -- TODO Fix this to unescape the sequence
-          --tempTable[name][version] = GSE.UnEscapeSequence(sequence)
-        elseif sequence.source == Statics.SourceTransmission then
-          if GSE.isEmpty(tempTable[name]) then
-            tempTable[name] = {}
-          end
-          tempTable[name] = GSE.UnEscapeSequence(sequence)
-        else
-          GSE.PrintDebugMessage(L["Removing "] .. name .. ":" .. version)
-        end
-      end
-    end
-    GSELibrary[GSE.GetCurrentClassID()] = nil
-    GSELibrary[GSE.GetCurrentClassID()] = tempTable
   end
 end
 
@@ -649,25 +614,6 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
   end
 end
 
---- List addons that GSE knows about that have been disabled
-function GSE.ListUnloadedAddons()
-  local returnVal = "";
-  for k,v in pairs(GSE.UnloadedAddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
-
---- List addons that GSE knows about that have been enabled
-function GSE.ListAddons()
-  local returnVal = "";
-  for k,v in pairs(GSE.AddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
 
 
 --- This converts a legacy GS/GSE1 sequence to a new GSE2

@@ -233,12 +233,12 @@ function GSE.GUILoadSequence(key)
 
   GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. sequenceName)
   if GSEOptions.useTranslator then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
   --TODO Fix this so the translator works.
   elseif GSETranslatorAvailable then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequencebySeq(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
   else
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(sequenceName))
+    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName]),sequenceName)
   end
   GSE.GUIConfigureMacroButton(viewframe.MacroIconButton)
   GSE.GUIViewFrame.Icon:SetImage(GSE.GetMacroIcon(classid, sequenceName))

@@ -100,8 +100,8 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
 end
 
 function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
-  instring = GSTRUnEscapeString(instring)
-  GSE.PrintDebugMessage("Entering GSTranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
+  instring = GSE.UnEscapeString(instring)
+  GSE.PrintDebugMessage("Entering GSE.anslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""
   local stringlines = GSE.SplitMeIntolines(instring)
@@ -119,7 +119,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
             etc = string.sub(etc, 2)
             output = output .. "!"
           end
-          local foundspell, returnval = GSTRTranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+          local foundspell, returnval = GSE.TranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
           if foundspell then
             output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "\n"
           else
@@ -130,11 +130,11 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         elseif strlower(cmd) == "castsequence" then
           GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
           --look for conditionals at the startattack
-          local conditionals, mods, uetc = GSTRGetConditionalsFromString(etc)
+          local conditionals, mods, uetc = GSE.GetConditionalsFromString(etc)
           if conditionals then
             output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
           end
-          for _, w in ipairs(GSTRsplit(uetc,",")) do
+          for _, w in ipairs(GSE.split(uetc,",")) do
             if not cleanNewLines then
               w = string.match(w, "^%s*(.-)%s*$")
             end
@@ -142,7 +142,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
               w = string.sub(w, 2)
               output = output .. "!"
             end
-            local foundspell, returnval = GSTRTranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+            local foundspell, returnval = GSE.TranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
             output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
           end
           local resetleft = string.find(output, ", , ")
@@ -162,7 +162,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
       output = output .. v
     end
   end
-  GSE.PrintDebugMessage("Exiting GSTranslateString with : \n" .. output, GNOME)
+  GSE.PrintDebugMessage("Exiting GSE.anslateString with : \n" .. output, GNOME)
   -- check for random , at the end
   if string.sub(output, strlen(output)-1) == ", " then
     output = string.sub(output, 1, strlen(output)-2)
@@ -177,24 +177,24 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
   if not cleanNewLines then
     str = string.match(str, "^%s*(.-)%s*$")
   end
-  GSE.PrintDebugMessage("GSTRTranslateSpell Attempting to translate " .. str, GNOME)
+  GSE.PrintDebugMessage("GSE.TranslateSpell Attempting to translate " .. str, GNOME)
   if string.sub(str, strlen(str)) == "," then
     str = string.sub(str, 1, strlen(str)-1)
   end
   if string.match(str, ";") then
-    GSE.PrintDebugMessage("GSTRTranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
-    for _, w in ipairs(GSTRsplit(str,";")) do
-      found, returnval = GSTRTranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+    GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
+    for _, w in ipairs(GSE.split(str,";")) do
+      found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
       output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
     end
     if string.sub(output, strlen(output)-1) == "; " then
       output = string.sub(output, 1, strlen(output)-2)
     end
   else
-    local conditionals, mods, etc = GSTRGetConditionalsFromString(str)
+    local conditionals, mods, etc = GSE.GetConditionalsFromString(str)
     if conditionals then
       output = output .. mods .. " "
-      GSE.PrintDebugMessage("GSTRTranslateSpell conditionals found ", GNOME)
+      GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
     end
     GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
     if not cleanNewLines then
@@ -227,7 +227,7 @@ end
 
 
 function GSE.GetConditionalsFromString(str)
-  GSE.PrintDebugMessage("Entering GSTRGetConditionalsFromString with : " .. str, GNOME)
+  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
   --check for conditionals
   local found = false
   local mods = ""
