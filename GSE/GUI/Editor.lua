@@ -426,7 +426,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetWidth(270)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
-  KeyPressbox:SetText(table.concat(macroversion.KeyPress, "\n"))
+  if not GSE.isEmpty(macroversion.KeyPress) then
+    KeyPressbox:SetText(table.concat(macroversion.KeyPress, "\n"))
+  end
   KeyPressbox:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.KeyPress = GSE.SplitMeIntolines(value)
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
@@ -443,7 +445,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   PreMacro:DisableButton(true)
   PreMacro:SetWidth(270)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PreMacro) end)
-  PreMacro:SetText(table.concat(macroversion.PreMacro, "\n"))
+  if not GSE.isEmpty(macroversion.PreMacro) then
+    PreMacro:SetText(table.concat(macroversion.PreMacro, "\n"))
+  end
   PreMacro:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.PreMacro = GSE.SplitMeIntolines(value)
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
@@ -477,7 +481,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   KeyReleasebox:SetWidth(270)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-  KeyReleasebox:SetText(table.concat(macroversion.KeyRelease, "\n"))
+  if not GSE.isEmpty(macroversion.KeyRelease) then
+    KeyReleasebox:SetText(table.concat(macroversion.KeyRelease, "\n"))
+  end
   KeyReleasebox:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.KeyRelease = GSE.SplitMeIntolines(value)
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
@@ -495,7 +501,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   PostMacro:SetWidth(270)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
   linegroup3:AddChild(PostMacro)
-  PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
+  if not GSE.isEmpty(macroversion.PostMacro) then
+    PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
+  end
   PostMacro:SetCallback("OnValueChanged", function (sel, object, value)
     macroversion.PostMacro = GSE.SplitMeIntolines(value)
     GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)

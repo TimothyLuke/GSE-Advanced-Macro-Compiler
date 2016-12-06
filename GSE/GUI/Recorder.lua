@@ -39,18 +39,13 @@ recButtonGroup:AddChild(recbutton)
 local createmacrobutton = AceGUI:Create("Button")
 createmacrobutton:SetText(L["Create Macro"])
 createmacrobutton:SetWidth(150)
-createmacrobutton:SetCallback("OnClick", function() GSE.GUISaveRecordMacro() end)
+createmacrobutton:SetCallback("OnClick", function()
+  GSE.GUILoadEditor( nil, GSE.GUIRecordFrame, recordsequencebox:GetText())
+end)
 createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 
 recordframe:AddChild(recButtonGroup)
-
-
-function GSE.GUISaveRecordMacro()
-  GSE.GUILoadEditor( nil, recordsequencebox:GetText())
-  recordframe:Hide()
-
-end
 
 function GSE.GUIManageRecord()
   if recbuttontext == L["Record"] then

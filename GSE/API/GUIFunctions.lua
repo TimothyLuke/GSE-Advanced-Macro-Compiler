@@ -30,7 +30,7 @@ function GSE.GUIParseText(editbox)
   end
 end
 
-function GSE.GUILoadEditor(key, incomingframe)
+function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   local classid
   local sequenceName
   local sequence
@@ -53,6 +53,10 @@ function GSE.GUILoadEditor(key, incomingframe)
         }
       },
     }
+    if not GSE.isEmpty(recordedstring) then
+      sequence.MacroVersions[1][1] = nil
+      sequence.MacroVersions[1] = GSE.SplitMeIntolines(recordedstring)
+    end
   else
     elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
