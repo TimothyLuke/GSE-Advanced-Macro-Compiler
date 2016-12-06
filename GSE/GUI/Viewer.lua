@@ -127,10 +127,10 @@ end
 
 viewframe:SetTitle(L["Sequence Viewer"])
 
-function GSE.GUIViewerLayout(container)
-  container:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
-  container:SetCallback("OnClose", function(widget) viewframe:Hide() end)
-  container:SetLayout("List")
+function GSE.GUIViewerLayout(mcontainer)
+  mcontainer:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
+  mcontainer:SetCallback("OnClose", function(widget) viewframe:Hide() end)
+  mcontainer:SetLayout("List")
 
 
   local viewerheadergroup = AceGUI:Create("SimpleGroup")
@@ -169,7 +169,7 @@ function GSE.GUIViewerLayout(container)
   viewerheadergroup:AddChild(GSSequenceListbox)
   viewerheadergroup:AddChild(spacerlabel)
   viewerheadergroup:AddChild(viewiconpicker)
-  container:AddChild(viewerheadergroup)
+  mcontainer:AddChild(viewerheadergroup)
 
   if GSEOptions.useTranslator and GSAdditionalLanguagesAvailable then
     local tab =  AceGUI:Create("TabGroup")
@@ -182,9 +182,9 @@ function GSE.GUIViewerLayout(container)
     tab:SelectTab("localtab")
     tab:SetFullWidth(true)
     -- add to the frame container
-    container:AddChild(tab)
+    mcontainer:AddChild(tab)
   else
-     GSE.GUIDrawStandardViewerWindow(container)
+     GSE.GUIDrawStandardViewerWindow(mcontainer)
   end
 end
 
