@@ -30,7 +30,7 @@ GSE.PrintDebugMessage("GS-Core Version " .. GSE.VersionString, GNOME)
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
-  local transmission = GSEncodeMessage(tab)
+  local transmission = GSE.EncodeMessage(tab)
   GSE.PrintDebugMessage(transmission, GNOME)
   if GSE.isEmpty(channel) then
     if IsInRaid() then
@@ -57,7 +57,7 @@ end
 
 function GSE.EncodeMessage(Sequence)
   --clean sequence
-  eSequence = GSTRUnEscapeSequence(Sequence)
+  eSequence = GSE.UnEscapeSequence(Sequence)
   --remove version and source
   eSequence.version = nil
   eSequence.source = GSStaticSourceTransmission
@@ -113,7 +113,7 @@ end
 function GSE:OnCommReceived(prefix, message, distribution, sender)
   GSE.PrintDebugMessage("GSSE:onCommReceived", GNOME)
   GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
-  local success, t = GSDecodeMessage(message)
+  local success, t = GSE.DecodeMessage(message)
   if success then
     if t.Command == "GS-E_VERSIONCHK" then
       if not GSold then
@@ -190,7 +190,7 @@ end
 
 function dataobj:OnClick(button)
   if button == "LeftButton" then
-    GSGuiShowViewer()
+    GSE.GUIShowViewer()
   elseif button == "MiddleButton" then
     GSE.GUIShowTransmissionGui()
   elseif button == "RightButton" then
