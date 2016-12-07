@@ -171,6 +171,7 @@ function GSE.GUIViewerLayout(mcontainer)
   viewerheadergroup:AddChild(viewiconpicker)
   mcontainer:AddChild(viewerheadergroup)
 
+  -- TODO Enable langyuages Tabs.
   if GSEOptions.useTranslator and GSAdditionalLanguagesAvailable then
     local tab =  AceGUI:Create("TabGroup")
     tab:SetLayout("Flow")

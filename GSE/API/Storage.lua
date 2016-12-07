@@ -598,12 +598,11 @@ end
 function GSE.GetSequenceNames()
   local keyset={}
   for k,v in pairs(GSELibrary) do
-    local name, _, _ = GetClassInfo(k)
-    --keyset[name] = name
-    for i,j in pairs(GSELibrary[k]) do
-      keyset[k .. "," .. i] = i
+    if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID() then
+      for i,j in pairs(GSELibrary[k]) do
+        keyset[k .. "," .. i] = i
+      end
     end
-
   end
   return keyset
 end
