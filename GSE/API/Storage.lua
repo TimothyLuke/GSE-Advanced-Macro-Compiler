@@ -407,7 +407,11 @@ function GSE.UpdateSequence(name,sequence)
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
   end
-  button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+  local targetreset = ""
+  if sequence.Target then
+    targetreset = Statics.TargetResetImplementation
+  end
+  button:WrapScript(button, 'OnClick', format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
   if not GSE.isEmpty(sequence.looplimit) then
     button:SetAttribute('looplimit', sequence.looplimit)
   end
