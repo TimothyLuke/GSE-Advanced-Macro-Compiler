@@ -64,7 +64,7 @@ Library['EG_Feral-ST'] = {
 }
 
 --- We make this a funciton as then we can register for the reload event within GSE
-local function loadSequences(arg)
+local function loadSequences(event, arg)
   if arg == ModName then
     GSE.ImportMacroCollection(Library)
   end
@@ -73,6 +73,12 @@ end
 GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, loadSequences, arg)
 
 -- If not loaded or an updated version then these sequences.
+-- GSE.RegisterAddon will keep track of the current version and then if the version is different to the last one it
+-- return true to indicate that it wants you to send through update versions.  The super simple way is below
+-- You could do specific things via the GSE API like adding an updated version and then setting it to be the default
+-- or pvp version.
 if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
-  loadSequences(ModName)
+  loadSequences("Load", ModName)
 end
+
+-- As a mod author you could put some come here to update specific Sequences
