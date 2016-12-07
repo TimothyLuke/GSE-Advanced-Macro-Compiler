@@ -80,5 +80,3 @@ GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, loadSequences, arg)
 if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
   loadSequences("Load", ModName)
 end
-
--- As a mod author you could put some come here to update specific Sequences
