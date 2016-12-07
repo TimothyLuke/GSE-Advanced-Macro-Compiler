@@ -776,3 +776,12 @@ function GSE.PrepareKeyRelease(sequence)
   end
   return GSE.UnEscapeTable(tab)
 end
+
+--- Takes a collection of Sequences and returns a list of names
+function GSE.GetSequenceNamesFromLibrary(library)
+  local sequenceNames = {}
+  for k,_ in pairs(library) do
+    table.insert(sequenceNames, k)
+  end
+  return sequenceNames
+end
