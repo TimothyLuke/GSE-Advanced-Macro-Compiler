@@ -110,14 +110,14 @@ f:SetScript('OnEvent', function(self, event, addon)
     local loadseqs = GSE.RegisterAddon(name, authorversion, sequencenames)
 
     if loadseqs then
-      processReload("GS-Core")
+      GSELegacyAdaptor:processReload("Reload", "GS-Core")
     end
     -- Check loaded in GSE
 
   end
 end
 
-local function processReload(arg)
+function GSELegacyAdaptor:processReload(event, arg)
   if arg == "GS-Core" then
     for k,v in pairs(GSMasterOptions.SequenceLibrary) do
       for i,j in ipairs(v) do

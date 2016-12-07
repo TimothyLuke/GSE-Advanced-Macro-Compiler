@@ -1,6 +1,7 @@
 local GNOME, _ = ...
 local GSE = GSE
 local L = GSE.L
+local Statics = GSE.Static
 
 function GSE.GetOptionsTable()
   local OptionsTable = {
@@ -430,26 +431,10 @@ function GSE.GetOptionsTable()
             name = L["Registered Addons"],
             order = 900,
           },
-          -- addins={
-          --   --name = "Registered Sequence Addin Packs",
-          --   --desc = "You can create and loadin Sequence Packs.",
-          --   type = "description",
-          --   name = GSE.ListAddons(),
-          --   order = 1000,
-          -- },
-          -- unloadedtitle3 = {
-          --   type = "header",
-          --   name = L["Available Addons"],
-          --   order = 1100,
-          -- },
-          -- unloadedaddins={
-          --   --name = "Registered Sequence Addin Packs",
-          --   --desc = "You can create and loadin Sequence Packs.",
-          --   type = "description",
-          --   name = GSE.ListUnloadedAddons(),
-          --   order = 1200,
-          -- },
-
+          plugindesc = {
+            type = "description",
+            name = L["GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."]
+          }
         },
       },
       debugTab = {
@@ -543,20 +528,18 @@ function GSE.GetOptionsTable()
   }
   -- Add Dynamic contentcontainer
 
-
+  local ord = 900
   for k,v in pairs(GSE.AddInPacks) do
+    ord = ord + 1
     OptionsTable.args.pluginsTab.args[v.Name] = {
       name = v.Name,
-      desc = string.format(L["Addin Version %s contained versions for the following macros %s"], v.Name, GSE.FormatSequenceNames(v.SequenceNames))
-
-    }
-    OptionsTable.args.pluginsTab.args[v.Name.."act"] = {
-      name = v.Name.."act",
-      type = "toggle",
-      set = function(info, val)
+      desc = string.format(L["Addin Version %s contained versions for the following macros: \n%s"], v.Name, GSE.FormatSequenceNames(v.SequenceNames)),
+      type = "execute",
+      func = function(info, val)
         GSE:SendMessage(Statics.ReloadMessage, v.Name)
       end,
-      get = function(info) return false end,
+      order = ord
+
     }
   end
   return OptionsTable

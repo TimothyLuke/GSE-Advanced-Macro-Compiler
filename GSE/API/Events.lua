@@ -58,8 +58,6 @@ function GSE:ADDON_LOADED(event, addon)
 
   GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
-  print(addon)
-
   LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gse"})
   if addon == GNOME then
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
@@ -148,9 +146,10 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   end
 end
 
-function GSE:processReload(arg)
-  if arg == "Sample" then
+function GSE:processReload(action, arg)
+  if arg == "Samples" then
     GSE.LoadSampleMacros(GSE.GetCurrentClassID())
+    GSE.Print(L["The Sample Macros have been reloaded."])
   end
 end
 

@@ -76,17 +76,36 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
       sequence.KeyRelease[k] = GSE.TranslateString(v, fromLocale, toLocale)
     end
   else
-    print("empty Keyrelease in translate")
+    GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
   end
   if not GSE.isEmpty(sequence.KeyPress) then
-    print("Keypress has stuff in translate")
+    GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
     for k,v in pairs(sequence.KeyPress) do
       -- Translate KeyRelease
       sequence.KeyPress[k] = GSE.TranslateString(v, fromLocale, toLocale)
     end
   else
-    print("empty Keypress in translate")
+    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
   end
+  if not GSE.isEmpty(sequence.PreMacro) then
+      GSE.PrintDebugMessage(("Keypress has stuff in translate", Statics.Translate)
+    for k,v in pairs(sequence.PreMacro) do
+      -- Translate KeyRelease
+      sequence.PreMacro[k] = GSE.TranslateString(v, fromLocale, toLocale)
+    end
+  else
+    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+  end
+  if not GSE.isEmpty(sequence.PostMacro) then
+    GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
+    for k,v in pairs(sequence.PostMacro) do
+      -- Translate KeyRelease
+      sequence.PostMacro[k] = GSE.TranslateString(v, fromLocale, toLocale)
+    end
+  else
+    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+  end
+
   for i, v in ipairs(sequence) do sequence[i] = nil end
   GSE.lines(sequence, lines)
   -- check for blanks

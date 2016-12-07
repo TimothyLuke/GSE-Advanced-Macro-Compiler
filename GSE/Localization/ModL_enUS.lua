@@ -382,5 +382,7 @@ L["Delete"] = true
 L["Cancel"] = true
 L["Delete Icon"] = true
 L["Create Icon"] = true
-L["Addin Version %s contained versions for the following macros %s"] = true
+L["Addin Version %s contained versions for the following macros: \n%s"] = true
+L["GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."] = true
+L["The Sample Macros have been reloaded."] = true
 --@end-do-not-package@
