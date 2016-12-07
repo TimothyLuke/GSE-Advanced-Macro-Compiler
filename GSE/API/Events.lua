@@ -9,10 +9,6 @@ local Statics = GSE.Static
 local GCD, GCD_Update_Timer
 
 
-
-
-
-
 function GSE:PLAYER_LOGIN()
   GSE:UPDATE_MACROS()
 end
@@ -31,7 +27,7 @@ function GSE:PLAYER_ENTERING_WORLD()
   GSE.PerformPrint()
 end
 
-function GSE:ADDON_LOADED(addon)
+function GSE:ADDON_LOADED(event, addon)
   if GSE.isEmpty(GSELibrary) then
     GSELibrary = {}
   end
@@ -60,11 +56,14 @@ function GSE:ADDON_LOADED(addon)
   end
   GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
 
-  GSE:RegisterMessage(Statics.ReloadMessage, processReload, arg)
+  GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
+  print(addon)
 
   LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gse"})
-  LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
+  if addon == GNOME then
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
+  end
 
 end
 
@@ -149,7 +148,7 @@ SlashCmdList["GNOME"] = function (msg, editbox)
   end
 end
 
-local function processReload(arg)
+function GSE:processReload(arg)
   if arg == "Sample" then
     GSE.LoadSampleMacros(GSE.GetCurrentClassID())
   end

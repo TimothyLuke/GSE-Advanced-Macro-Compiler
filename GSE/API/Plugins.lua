@@ -28,18 +28,18 @@ function GSE.RegisterAddon(name, version, sequencenames)
     GSE.AddInPacks[name] = {}
     GSE.AddInPacks[name].Name = name
   end
-  if  GSE.AddinPacks[name].Version ~= version then
+  if GSE.isEmpty(GSE.AddInPacks[name].Version) or GSE.AddInPacks[name].Version ~= version then
     updateflag = true
-    GSE.AddinPacks[name].Version = version
+    GSE.AddInPacks[name].Version = version
   end
-  GSE.AddinPacks[name].SequenceNames = sequencenames
+  GSE.AddInPacks[name].SequenceNames = sequencenames
   return updateflag
 end
 
 function GSE.FormatSequenceNames(names)
   local returnstring = ""
   for k,_ in pairs(names) do
-    returnstring = returnstring .. K .. ","
+    returnstring = returnstring .. k .. ","
   end
   returnstring = returnstring:sub(1, -2)
   return returnstring

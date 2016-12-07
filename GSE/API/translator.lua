@@ -111,7 +111,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
       for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
         GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
         output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
-        if GSStaticCastCmds[strlower(cmd)] then
+        if Statics.CastCmds[strlower(cmd)] then
           if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
           end

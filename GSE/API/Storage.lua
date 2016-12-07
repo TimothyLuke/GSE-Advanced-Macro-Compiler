@@ -232,31 +232,31 @@ function GSE.ExportSequence(sequence, sequenceName)
     if not GSE.isEmpty(v.KeyPress) then
       macroversions = macroversions .. "      KeyPress={\n"
       for _,p in ipairs(v.KeyPress) do
-        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n"
+        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
     if not GSE.isEmpty(v.PreMacro) then
       macroversions = macroversions .. "      PreMacro={\n"
       for _,p in ipairs(v.PreMacro) do
-        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n\""
+        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
     for _,p in ipairs(v) do
-      macroversions = macroversions .. "      \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n\""
+      macroversions = macroversions .. "      \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
     end
     if not GSE.isEmpty(v.PostMacro) then
       macroversions = macroversions .. "      PostMacro={\n"
       for _,p in ipairs(v.PostMacro) do
-        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .. "\",\n\""
+        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .. "\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
     if not GSE.isEmpty(v.KeyRelease) then
       macroversions = macroversions .. "      KeyRelease={\n"
       for _,p in ipairs(v.KeyRelease) do
-        macroversions = macroversions .. "        \"" .. GSE.TranslateString(p, GetLocale(), GetLocale(), true) .."\",\n"
+        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
       end
       macroversions = macroversions .. "      },\n"
     end
@@ -428,10 +428,10 @@ end
 function GSE.PrepareStepFunction(stepper, looper)
   retvalue = ""
   if looper then
-    if GSE.isEmpty(sequence.StepFunction) or stepper == Statics.Sequential then
-      retvalue = Statics.LoopSequential
+    if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
+      retvalue = Statics.LoopSequentialImplementation
     else
-      retvalue = Statics.LoopPriority
+      retvalue = Statics.LoopPriorityImplementation
     end
   else
     if GSE.isEmpty(stepper) or stepper == Statics.Sequential then

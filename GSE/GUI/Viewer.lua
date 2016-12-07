@@ -228,14 +228,14 @@ end
 
 function GSE.GUILoadSequence(key)
   local elements = GSE.split(key, ",")
-  classid = elements[1]
+  classid = tonumber(elements[1])
   sequenceName = elements[2]
 
   GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. sequenceName)
   if GSEOptions.useTranslator then
     GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
   --TODO Fix this so the translator works.
-  elseif GSETranslatorAvailable then
+elseif GSE.TranslatorAvailable then
     GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
   else
     GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName]),sequenceName)

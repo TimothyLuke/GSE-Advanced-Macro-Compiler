@@ -382,4 +382,5 @@ L["Delete"] = true
 L["Cancel"] = true
 L["Delete Icon"] = true
 L["Create Icon"] = true
+L["Addin Version %s contained versions for the following macros %s"] = true
 --@end-do-not-package@
