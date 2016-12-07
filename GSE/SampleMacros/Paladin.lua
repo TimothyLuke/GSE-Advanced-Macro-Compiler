@@ -87,24 +87,26 @@ Sequences['SAM_Palla_Sera'] = {
   SpecID=66,
   Talents = '2,2,3,2,2,2,2',
   Icon=236264,
-  [1] = {
-    KeyPress={
-      "/targetenemy [noharm][dead]"
-    },
-    "/cast Avenger's Shield",
-    "/cast Judgment",
-    "/cast Blessed Hammer",
-    "/cast Consecration",
-    "/cast Light of the Protector",
-    "/cast Shield of the Righteous",
-    "/cast Blinding Light",
-    KeyRelease={
-      "/cast Avenging Wrath",
-      "/cast Bastion of Light",
-      "/cast Seraphim",
-      "/cast Eye of Tyr",
-      "/startattack",
-    },
+  MacroVersions = {
+    [1] = {
+      KeyPress={
+        "/targetenemy [noharm][dead]"
+      },
+      "/cast Avenger's Shield",
+      "/cast Judgment",
+      "/cast Blessed Hammer",
+      "/cast Consecration",
+      "/cast Light of the Protector",
+      "/cast Shield of the Righteous",
+      "/cast Blinding Light",
+      KeyRelease={
+        "/cast Avenging Wrath",
+        "/cast Bastion of Light",
+        "/cast Seraphim",
+        "/cast Eye of Tyr",
+        "/startattack",
+      },
+    }
   }
 }
 

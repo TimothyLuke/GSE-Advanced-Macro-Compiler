@@ -107,10 +107,11 @@ f:SetScript('OnEvent', function(self, event, addon)
       table.insert(sequenceNames, k)
     end
 
-    local loadseqs = GSE.RegisterAddon(name, authorversion, sequenceNames)
+    local loadseqs = GSE.RegisterAddon("Legacy GSE 1", authorversion, sequenceNames)
 
     if loadseqs then
-      GSELegacyAdaptor:processReload("Reload", "GS-Core")
+      GSELegacyAdaptor:processReload("Load", "GS-Core")
+      GnomeOptions.imported = true
     end
     -- Check loaded in GSE
 
@@ -118,15 +119,29 @@ f:SetScript('OnEvent', function(self, event, addon)
 end)
 
 function GSELegacyAdaptor:processReload(event, arg)
-  if arg == "GS-Core" then
-    for k,v in pairs(GSMasterOptions.SequenceLibrary) do
-      for i,j in ipairs(v) do
-        local seq = GSE.ConvertLegacySequence(j)
-        GSE.AddSequenceToCollection(k, seq)
+  print (event)
+  print(arg)
+  print (GnomeOptions.imported)
+  if event == "Load" then
+    if not GnomeOptions.imported then
+      for k,v in pairs(GSMasterOptions.SequenceLibrary) do
+        for i,j in ipairs(v) do
+          local seq = GSE.ConvertLegacySequence(j)
+          GSE.AddSequenceToCollection(k, seq)
+        end
+      end
+    end
+    GnomeOptions.imported = true
+  else
+    if arg == "Legacy GSE 1" then
+      for k,v in pairs(GSMasterOptions.SequenceLibrary) do
+        for i,j in ipairs(v) do
+          local seq = GSE.ConvertLegacySequence(j)
+          GSE.AddSequenceToCollection(k, seq)
+        end
       end
     end
   end
-
 end
 
 GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, "processReload")
