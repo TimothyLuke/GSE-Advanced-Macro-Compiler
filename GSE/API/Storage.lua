@@ -376,11 +376,29 @@ function GSE.UpdateSequence(name,sequence)
   end
   local button = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-  if GSE.isSpecIDForCurrentClass(GSELibrary[GSE.GetCurrentClassID()][name].SpecID) then
+  if GSEOptions.useTranslator then
     sequence = GSE.TranslateSequence(sequence, name)
   end
+  local tempseq = {}
+  if not GSE.isEmpty(sequence.PreMaco) then
+    for k,v in ipairs(sequence.PreMacro) do
+      table.insert(tempseq, v)
+    end
+    button:SetAttribute('loopstart', table.getn(tempseq) + 1)
+  end
+  for k,v in ipairs(sequence) do
+    table.insert(tempseq, v)
+  end
+  if not GSE.isEmpty(sequence.PostMaco) then
+    button:SetAttribute('loopstop', table.getn(tempseq) + 1)
+    for k,v in ipairs(sequence.PostMacro) do
+      table.insert(tempseq, v)
+    end
+  end
+
+
   GSE.FixSequence(sequence)
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(sequence))) .. ']=======])')
+  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(tempseq))) .. ']=======])')
   button:SetAttribute("step",1)
   button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence), "\n") or '' .. '\n')
   GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
@@ -389,38 +407,34 @@ function GSE.UpdateSequence(name,sequence)
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
   end
-  if GSE.IsLoopSequence(sequence) then
-    if GSE.isEmpty(sequence.StepFunction) then
-      button:WrapScript(button, 'OnClick', format(Statics.OnClick, Statics.LoopSequential))
-    else
-      button:WrapScript(button, 'OnClick', format(Statics.OnClick, Statics.LoopPriority))
-    end
-  else
-    button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction)))
-  end
-  if not GSE.isEmpty(sequence.loopstart) then
-    button:SetAttribute('loopstart', sequence.loopstart)
-  end
-  if not GSE.isEmpty(sequence.loopstop) then
-    button:SetAttribute('loopstop', sequence.loopstop)
-  end
+  button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
   if not GSE.isEmpty(sequence.looplimit) then
     button:SetAttribute('looplimit', sequence.looplimit)
   end
 
 end
 
-function GSE.PrepareStepFunction(stepper)
-  if GSE.isEmpty(stepper) then
-    stepper = Statics.Sequential
-  end
-  if stepper == Statics.Priority then
-    return Statics.PriorityImplementation
-  elseif stepper == Statics.Sequential then
-    return 'step = step % #macros + 1'
+function GSE.PrepareStepFunction(stepper, looper)
+  retvalue = ""
+  if looper then
+    if GSE.isEmpty(sequence.StepFunction) or stepper == Statics.Sequential then
+      retvalue = Statics.LoopSequential
+    else
+      retvalue = Statics.LoopPriority
+    end
   else
-    return stepper
+    if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
+      retvalue = Statics.Sequential
+    end
+    if stepper == Statics.Priority then
+      retvalue = Statics.PriorityImplementation
+    elseif stepper == Statics.Sequential then
+      retvalue = 'step = step % #macros + 1'
+    else
+      retvalue = stepper
+    end
   end
+  return retvalue
 end
 
 --- This funciton dumps what is currently running on an existing button.
