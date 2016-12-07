@@ -1,6 +1,6 @@
 ## Interface: 70100
-## Title: |cffff0000GS-E:|r |cFF00D1FFOld GS-E Adaptor|r
-## Notes: Transfers settings to the new GSE from GS-E 1.x series
+## Title: |cffff0000GSE2:|r |cFF00D1FFGSE1 Legacy Adaptor|r
+## Notes: Transfers macros to the new GSE from GS-E 1.x series
 ## Author: TimothyLuke
 ## Version: 200
 ## SavedVariables: GnomeOptions
