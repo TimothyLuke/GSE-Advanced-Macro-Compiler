@@ -1,11 +1,12 @@
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
+local GSELegacyAdaptor = LibStub("AceAddon-3.0"):NewAddon("GSELegacyAdaptor", "AceEvent-3.0")
 
 local GSMasterOptions = {}
 local GSMasterOptions.SequenceLibrary = {}
 
-local GSStaticSourceLocal = "Local"
+local GSStaticSourceLocal = Statics.SourceLocal
 
 --- Return the next version value for a sequence.
 --    a <code>last</code> value of true means to get the last remaining version
@@ -108,17 +109,26 @@ f:SetScript('OnEvent', function(self, event, addon)
 
     local loadseqs = GSE.RegisterAddon(name, authorversion, sequencenames)
 
-     if loadseqs then
-      for k,v in pairs(GSMasterOptions.SequenceLibrary) do
-        for i,j in ipairs(v) do
-          local seq = GSE.ConvertLegacySequence(v)
-          GSE.AddSequenceToCollection(k, seq)
-        end
-      end
+    if loadseqs then
+      processReload("GS-Core")
     end
     -- Check loaded in GSE
 
   end
 end
+
+local function processReload(arg)
+  if arg == "GS-Core" then
+    for k,v in pairs(GSMasterOptions.SequenceLibrary) do
+      for i,j in ipairs(v) do
+        local seq = GSE.ConvertLegacySequence(v)
+        GSE.AddSequenceToCollection(k, seq)
+      end
+    end
+  end
+
+end
+
+GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, processReload, arg)
 
 f:RegisterEvent('ADDON_LOADED')

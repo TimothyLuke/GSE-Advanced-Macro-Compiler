@@ -12,15 +12,15 @@ function GSE.ListUnloadedAddons()
   return returnVal
 end
 
---- List addons that GSE knows about that have been enabled
-function GSE.ListAddons()
-  local returnVal = "";
-  for k,v in pairs(GSE.AddInPacks) do
-    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
-    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
-  end
-  return returnVal
-end
+-- --- List addons that GSE knows about that have been enabled
+-- function GSE.ListAddons()
+--   local returnVal = "";
+--   for k,v in pairs(GSE.AddInPacks) do
+--     aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+--     returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
+--   end
+--   return returnVal
+-- end
 
 function GSE.RegisterAddon(name, version, sequencenames)
   local updateflag = false
@@ -32,5 +32,15 @@ function GSE.RegisterAddon(name, version, sequencenames)
     updateflag = true
     GSE.AddinPacks[name].Version = version
   end
+  GSE.AddinPacks[name].SequenceNames = sequencenames
   return updateflag
+end
+
+function GSE.FormatSequenceNames(names)
+  local returnstring = ""
+  for k,_ in pairs(names) do
+    returnstring = returnstring .. K .. ","
+  end
+  returnstring = returnstring:sub(1, -2)
+  return returnstring
 end

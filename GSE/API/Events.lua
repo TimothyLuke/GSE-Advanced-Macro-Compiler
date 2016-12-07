@@ -51,6 +51,21 @@ function GSE:ADDON_LOADED(addon)
   GSE.ReloadSequences()
   GSE:SendMessage(Statics.CoreLoadedMessage)
 
+  -- Register the Sample Macros
+  local seqnames = {}
+  for i=1, 12, 1 do
+    for k,_ in pairs(Statics.SampleMacros[i]) do
+      table.insert(seqnames, k)
+    end
+  end
+  GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
+
+  GSE:RegisterMessage(Statics.ReloadMessage, processReload, arg)
+
+
+  LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gse"})
+  LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
+
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
@@ -133,5 +148,12 @@ SlashCmdList["GNOME"] = function (msg, editbox)
     GSE.GUIShowViewer()
   end
 end
+
+local function processReload(arg)
+  if arg == "Sample" then
+    function GSE.LoadSampleMacros(GSE.GetCurrentClassID)
+  end
+end
+
 
 GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)
