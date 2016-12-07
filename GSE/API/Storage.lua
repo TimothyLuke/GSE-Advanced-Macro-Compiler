@@ -332,7 +332,7 @@ end
 function GSE.ResetButtons()
   for k,v in pairs(GSE.UsedSequences) do
     button = _G[k]
-    if button:GetAttribute("combatreset") = true then
+    if button:GetAttribute("combatreset") == true then
       button:SetAttribute("step",1)
       GSE.UpdateIcon(button, true)
       GSE.UsedSequences[k] = nil
