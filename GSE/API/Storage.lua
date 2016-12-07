@@ -152,13 +152,13 @@ end
 
 function GSE.IsLoopSequence(sequence)
   local loopcheck = false
-  if not GSE.isEmpty(sequence.loopstart) then
+  if not GSE.isEmpty(sequence.PreMacro) then
     loopcheck = true
   end
-  if not GSE.isEmpty(sequence.loopstop) then
+  if not GSE.isEmpty(sequence.PostMacro) then
     loopcheck = true
   end
-  if not GSE.isEmpty(sequence.looplimit) then
+  if not GSE.isEmpty(sequence.LoopLimit) then
     loopcheck = true
   end
   return loopcheck
@@ -332,9 +332,11 @@ end
 function GSE.ResetButtons()
   for k,v in pairs(GSE.UsedSequences) do
     button = _G[k]
-    button:SetAttribute("step",1)
-    GSE.UpdateIcon(button, true)
-    GSE.UsedSequences[k] = nil
+    if button:GetAttribute("combatreset") = true then
+      button:SetAttribute("step",1)
+      GSE.UpdateIcon(button, true)
+      GSE.UsedSequences[k] = nil
+    end
   end
 end
 
@@ -410,6 +412,11 @@ function GSE.UpdateSequence(name,sequence)
   local targetreset = ""
   if sequence.Target then
     targetreset = Statics.TargetResetImplementation
+  end
+  if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
+    button:SetAttribute("combatreset", true)
+  else
+    button:SetAttribute("combatreset", true)
   end
   button:WrapScript(button, 'OnClick', format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
   if not GSE.isEmpty(sequence.looplimit) then
