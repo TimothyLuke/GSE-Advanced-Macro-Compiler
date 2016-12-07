@@ -74,5 +74,5 @@ GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, loadSequences, arg)
 
 -- If not loaded or an updated version then these sequences.
 if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
-  loadSequecnes(ModName)
+  loadSequences(ModName)
 end

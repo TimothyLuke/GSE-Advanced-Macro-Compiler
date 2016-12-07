@@ -1,6 +1,6 @@
 ## Interface: 70100
 ## Title: |cffff0000GSE|r |cFF00D1FFPlugin Shell|r
-## Notes: Sample of a plugin framework for GSE2
+## Notes: Sample of a plugin for GSE2
 ## Author: TimothyLuke
 ## Version: v2
 ## RequiredDeps: GSE
