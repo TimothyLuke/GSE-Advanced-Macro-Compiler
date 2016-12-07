@@ -113,13 +113,14 @@ Sequences['SAM_Palla_Sera'] = {
 -- Retribution - 70
 -------------------
 
-Sequences['SAM_Ret'] = {
+Sequences['SAM_RetRef'] = {
   Author="TimothyLuke",
   SpecID=70,
   Icon='INV_MISC_QUESTIONMARK',
   Lang="enUS",
   Talents="1112111",
   Helplink="https://wowlazymacros.com/forums/topic/tls-ret-macro/",
+  Help="This is a sample macro that just has every option enabled.  Dont use this is a real sense."
   Default=1,
   Raid=2,
   PVP=3,
@@ -146,7 +147,8 @@ Sequences['SAM_Ret'] = {
     },
     [2] = {
       StepFunction = "Priority",
-      Reset="target,combat",
+      Target=true,
+      Combat=true,
       KeyPress={
         "/targetenemy [noharm][dead]",
       },
@@ -158,7 +160,7 @@ Sequences['SAM_Ret'] = {
     },
     [3] = {
       StepFunction = "Priority",
-      Reset="target",
+      Target=true,
       Head=true,
       KeyPress={
         "/targetenemy [noharm][dead]",
@@ -202,6 +204,77 @@ Sequences['SAM_Ret'] = {
   }
 }
 
+Sequences['SAM_Ret'] = {
+  Author="TimothyLuke",
+  SpecID=70,
+  Icon='INV_MISC_QUESTIONMARK',
+  Lang="enUS",
+  Talents="1112111",
+  Helplink="https://wowlazymacros.com/forums/topic/tls-ret-macro/",
+  Help="TimothyLukes Ret Mcros.  The Raid and Mythic versions do not have the cooldowns enabled.  The PVP version adds Hand of Hinderance to slow playes after they have taken a few hits."
+  Default=1,
+  Raid=2,
+  PVP=3,
+  Mythic=2,
+  MacroVersions = {
+    [1] = {
+      StepFunction = "Priority",
+      SoundErrorPrevention=true,
+      Trinket1=true,
+      Trinket2=true,
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+        "/cast Avenging Wrath",
+        "/cast Shield of Vengeance",
+      },
+      "/cast [talent:5/1] Justicar's Vengeance; [talent:5/2]Eye for an Eye",
+      "/cast Templar's Verdict",
+      "/cast Judgment",
+      "/cast Blade of Justice",
+      "/cast Wake of Ashes",
+      "/cast Crusader Strike",
+      KeyRelease={
+      },
+    },
+    [2] = {
+      StepFunction = "Priority",
+      Target=true,
+      Combat=true,
+      Trinket1=false,
+      Trinket2=false,
+      Ring1=false,
+      Ring2=false,
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      "/cast [talent:5/1] Justicar's Vengeance; [talent:5/2]Eye for an Eye",
+      "/cast Templar's Verdict",
+      "/cast Judgment",
+      "/cast Blade of Justice",
+      "/cast Crusader Strike",
+    },
+    [3] = {
+      StepFunction = "Priority",
+      Target=true,
+      Head=true,
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+        "/cast Avenging Wrath",
+        "/cast Shield of Vengeance",
+      },
+      "/cast [talent:5/1] Justicar's Vengeance; [talent:5/2]Eye for an Eye",
+      "/cast Templar's Verdict",
+      "/cast Judgment",
+      "/cast Blade of Justice",
+      "/cast Hand of Hindrance",
+      "/cast Wake of Ashes",
+      "/cast Crusader Strike",
+      KeyRelease={
+      },
+    },
+  }
+}
+
 Sequences['SAM_RetAOE'] = {
   Author="TimothyLuke",
   SpecID=70,
@@ -212,7 +285,7 @@ Sequences['SAM_RetAOE'] = {
   Default=1,
   Raid=2,
   PVP=3,
-  Mythic=4,
+  Mythic=2,
   MacroVersions = {
     [1] = {
       StepFunction = "Priority",
@@ -235,7 +308,12 @@ Sequences['SAM_RetAOE'] = {
     },
     [2] = {
       StepFunction = "Priority",
-      Reset="target,combat",
+      Target=true,
+      Combat=true,
+      Trinket1=false,
+      Trinket2=false,
+      Ring1=false,
+      Ring2=false,
       KeyPress={
         "/targetenemy [noharm][dead]",
       },
@@ -247,7 +325,7 @@ Sequences['SAM_RetAOE'] = {
     },
     [3] = {
       StepFunction = "Priority",
-      Reset="target",
+      Target=true,
       Head=true,
       KeyPress={
         "/targetenemy [noharm][dead]",
@@ -258,33 +336,9 @@ Sequences['SAM_RetAOE'] = {
       "/cast Divine Storm",
       "/cast Judgment",
       "/cast Blade of Justice",
+      "/cast Hand of Hindrance",
       "/cast Wake of Ashes",
       "/cast Crusader Strike",
-      KeyRelease={
-        "/cast Hand of Hindrance",
-      },
-    },
-    [4] = {
-      StepFunction = "Sequential",
-      LoopLimit=5,
-      Trinket1=true,
-      Ring1=true,
-      KeyPress={
-        "/targetenemy [noharm][dead]",
-      },
-      PreMacro={
-        "/cast Avenging Wrath",
-        "/cast [talent:5/2]Eye for an Eye",
-      },
-      "/cast [talent:5/1] Justicar's Vengeance",
-      "/cast Divine Storm",
-      "/cast Judgment",
-      "/cast Blade of Justice",
-      "/cast Wake of Ashes",
-      "/cast Crusader Strike",
-      PostMacro={
-        "/cast Shield of Vengeance",
-      },
       KeyRelease={
       },
     },
