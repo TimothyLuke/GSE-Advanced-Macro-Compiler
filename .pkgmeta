@@ -51,10 +51,9 @@ externals:
         tag: latest
 
 
-#move-folders:
-#    GS-Core/GS-SequenceEditor: GS-SequenceEditor
-#    GS-Core/GS-DraikMacros: GS-DraikMacros
-#    GS-Core/GS-Core: GS-Core
+move-folders:
+    GSE/GS-Core: GS-Core
+    GSE/GSE: GSE
 
 enable-nolib-creation: no
 
