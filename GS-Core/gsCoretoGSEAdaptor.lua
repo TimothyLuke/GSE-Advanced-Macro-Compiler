@@ -3,8 +3,8 @@ local L = GSE.L
 local Statics = GSE.Static
 local GSELegacyAdaptor = LibStub("AceAddon-3.0"):NewAddon("GSELegacyAdaptor", "AceEvent-3.0")
 
-local GSMasterOptions = {}
-local GSMasterOptions.SequenceLibrary = {}
+GSMasterOptions = {}
+GSMasterOptions.SequenceLibrary = {}
 
 local GSStaticSourceLocal = Statics.SourceLocal
 
@@ -16,38 +16,21 @@ local function GSGetNextSequenceVersion(SequenceName, last)
 
 end
 
-
---- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
-local function GSImportLegacyMacroCollections(str, authorversion)
-  for k,v in pairs(GSMasterSequences) do
-    if GSisEmpty(v.version) then
-      v.version = 1
-    end
-    if GSisEmpty(authorversion) then
-      authorversion = 1
-    end
-    v.source = str
-    v.authorversion = authorversion
-    GSAddSequenceToCollection(k, v, v.version)
-    GSMasterSequences[k] = nil
-  end
-end
-
 --- Add a sequence to the library
 local function GSAddSequenceToCollection(sequenceName, sequence, version)
   --Perform some validation checks on the Sequence.
-  if GSisEmpty(sequence.specID) then
+  if GSE.isEmpty(sequence.specID) then
     -- set to currentSpecID
     sequence.specID = tonumber(GSE.GetCurrentSpecID())
   end
-  if GSisEmpty(sequence.author) then
+  if GSE.isEmpty(sequence.author) then
     -- set to unknown author
     sequence.author = "Unknown Author"
   end
   -- CHeck for colissions
   local found = false
-  if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
-    if not GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+  if not GSE.isEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+    if not GSE.isEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
       found = true
     end
   end
@@ -62,11 +45,11 @@ local function GSAddSequenceToCollection(sequenceName, sequence, version)
     end
   else
     -- New Sequence
-    if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
+    if GSE.isEmpty(GSMasterOptions.SequenceLibrary[sequenceName]) then
       -- Sequence is new
       GSMasterOptions.SequenceLibrary[sequenceName] = {}
     end
-    if GSisEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
+    if GSE.isEmpty(GSMasterOptions.SequenceLibrary[sequenceName][version]) then
       GSMasterOptions.SequenceLibrary[sequenceName][version] = {}
     end
 
@@ -75,9 +58,26 @@ local function GSAddSequenceToCollection(sequenceName, sequence, version)
 end
 
 
+--- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
+local function GSImportLegacyMacroCollections(str, authorversion)
+  for k,v in pairs(GSMasterSequences) do
+    if GSE.isEmpty(v.version) then
+      v.version = 1
+    end
+    if GSE.isEmpty(authorversion) then
+      authorversion = 1
+    end
+    v.source = str
+    v.authorversion = authorversion
+    GSAddSequenceToCollection(k, v, v.version)
+    GSMasterSequences[k] = nil
+  end
+end
+
+
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event, addon)
-  if event == 'ADDON_LOADED' then
+  if event == 'ADDON_LOADED' and addon == "GS-Core" then
 
     local name = "GS-Core"
     local authorversion = "Legacy 2.0 Adaptor"
@@ -92,12 +92,12 @@ f:SetScript('OnEvent', function(self, event, addon)
       if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
         name, _, _, _, _, _ = GetAddOnInfo(i)
         if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
-          --print (name)
 					local loaded = LoadAddOn(i);
           if loaded then
             authorversion = GetAddOnMetadata(name, "Version")
             GSImportLegacyMacroCollections(name, authorversion)
           end
+
         end
       end
     end
@@ -107,7 +107,7 @@ f:SetScript('OnEvent', function(self, event, addon)
       table.insert(sequenceNames, k)
     end
 
-    local loadseqs = GSE.RegisterAddon(name, authorversion, sequencenames)
+    local loadseqs = GSE.RegisterAddon(name, authorversion, sequenceNames)
 
     if loadseqs then
       GSELegacyAdaptor:processReload("Reload", "GS-Core")
@@ -115,13 +115,13 @@ f:SetScript('OnEvent', function(self, event, addon)
     -- Check loaded in GSE
 
   end
-end
+end)
 
 function GSELegacyAdaptor:processReload(event, arg)
   if arg == "GS-Core" then
     for k,v in pairs(GSMasterOptions.SequenceLibrary) do
       for i,j in ipairs(v) do
-        local seq = GSE.ConvertLegacySequence(v)
+        local seq = GSE.ConvertLegacySequence(j)
         GSE.AddSequenceToCollection(k, seq)
       end
     end
@@ -129,6 +129,6 @@ function GSELegacyAdaptor:processReload(event, arg)
 
 end
 
-GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, processReload, arg)
-
+GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, "processReload")
+--GSELegacyAdaptor:RegisterMessage(Statics.CoreLoadedMessage,  "processReload")
 f:RegisterEvent('ADDON_LOADED')

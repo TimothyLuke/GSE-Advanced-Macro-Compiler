@@ -38,7 +38,7 @@ end
 
 function GSE.FormatSequenceNames(names)
   local returnstring = ""
-  for k,v in pairs(names) do
+  for k,v in ipairs(names) do
     returnstring = returnstring .. " - ".. v .. ",\n"
   end
   returnstring = returnstring:sub(1, -3)

@@ -62,7 +62,6 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     GSE.Print(L["Target language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
     return sequence
   end
-  print("asdf")
   local lines = table.concat(sequence,"\n")
   GSE.PrintDebugMessage("lines: " .. lines, GNOME)
 
@@ -88,7 +87,7 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
   end
   if not GSE.isEmpty(sequence.PreMacro) then
-      GSE.PrintDebugMessage(("Keypress has stuff in translate", Statics.Translate)
+      GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
     for k,v in pairs(sequence.PreMacro) do
       -- Translate KeyRelease
       sequence.PreMacro[k] = GSE.TranslateString(v, fromLocale, toLocale)

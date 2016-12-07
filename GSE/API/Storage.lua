@@ -20,7 +20,9 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     sequence.SpecID = GSE.GetCurrentClassID()
   end
   local classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
-
+  if GSE.isEmpty(GSELibrary[classid]) then
+    GSELibrary[classid] = {}
+  end
   if not GSE.isEmpty(GSELibrary[classid][sequenceName]) then
       found = true
   end
@@ -28,7 +30,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence)
     -- check if source the same.  If so ignore
     GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
-      table.add(GSELibrary[classid][sequenceName].MacroVersions, v)
+      table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
     end
   else
     -- New Sequence
