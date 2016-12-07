@@ -151,7 +151,7 @@ end
 
 local function processReload(arg)
   if arg == "Sample" then
-    function GSE.LoadSampleMacros(GSE.GetCurrentClassID)
+    GSE.LoadSampleMacros(GSE.GetCurrentClassID())
   end
 end
 

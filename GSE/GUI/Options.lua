@@ -544,7 +544,7 @@ function GSE.GetOptionsTable()
   -- Add Dynamic contentcontainer
 
 
-  for for k,v in pairs(GSE.AddInPacks) do
+  for k,v in pairs(GSE.AddInPacks) do
     OptionsTable.args.pluginsTab.args[v.Name] = {
       name = v.Name,
       desc = string.format(L["Addin Version %s contained versions for the following macros %s"], v.Name, GSE.FormatSequenceNames(v.SequenceNames))
