@@ -12,14 +12,17 @@ function GSE.DeleteSequence(classid, sequenceName)
 end
 
 --- Add a sequence to the library
-function GSE.AddSequenceToCollection(sequenceName, sequence)
+function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
   local confirmationtext = ""
   -- CHeck for colissions
   local found = false
+  if GSE.isEmpty(classid) then
+    classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
+  end
   if GSE.isEmpty(sequence.SpecID) then
     sequence.SpecID = GSE.GetCurrentClassID()
   end
-  local classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
+
   if GSE.isEmpty(GSELibrary[classid]) then
     GSELibrary[classid] = {}
   end

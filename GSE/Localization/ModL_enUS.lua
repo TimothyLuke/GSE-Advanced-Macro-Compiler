@@ -385,4 +385,6 @@ L["Create Icon"] = true
 L["Addin Version %s contained versions for the following macros: \n%s"] = true
 L["GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."] = true
 L["The Sample Macros have been reloaded."] = true
+L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
+L["GSE"] = true
 --@end-do-not-package@

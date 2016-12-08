@@ -3,7 +3,7 @@ local GSE = GSE
 local Statics = GSE.Static
 
 
-local GNOME = GSStaticSourceTransmission
+local GNOME = Statics.SourceTransmission
 local GSStaticPrefix = "GS-E"
 
 local GSold = false
@@ -17,7 +17,7 @@ local libCE = libC:GetAddonEncodeTable()
 local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
-local dataobj = ldb:NewDataObject(L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gse"})
+local dataobj = ldb:NewDataObject(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gse"})
 
 local transauthor = GetUnitName("player", true) .. '@' .. GetRealmName()
 local transauthorlen = string.len(transauthor)
@@ -25,7 +25,7 @@ local transauthorlen = string.len(transauthor)
 Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 
 
-GSE.PrintDebugMessage("GS-Core Version " .. GSE.VersionString, GNOME)
+GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, GNOME)
 
 
 local function GSSendMessage(tab, channel, target)
@@ -46,7 +46,7 @@ end
 local function performVersionCheck(version)
   if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
     if not GSold then
-      GSE.Print(L["GS-E is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], GSStaticSourceTransmission)
+      GSE.Print(L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], Statics.SourceTransmission)
       GSold = true
       if((tonumber(message) - tonumber(version)) >= 5) then
         StaticPopup_Show('GSE_UPDATE_AVAILABLE')
@@ -60,7 +60,7 @@ function GSE.EncodeMessage(Sequence)
   eSequence = GSE.UnEscapeSequence(Sequence)
   --remove version and source
   eSequence.version = nil
-  eSequence.source = GSStaticSourceTransmission
+  eSequence.source = GSE.StaticSourceTransmission
   eSequence.authorversion = nil
 
 
@@ -92,21 +92,23 @@ function GSE.DecodeMessage(data)
   return success, final
 end
 
-function GSE.TransmitSequence(SequenceName, channel, target)
+function GSE.TransmitSequence(key, channel, target)
   local t = {}
   t.Command = "GS-E_TRANSMITSEQUENCE"
+  local elements = GSE.split(key, ",")
+  local classid = tonumber(elements[1])
+  local SequenceName = elements[2]
+  t.ClassID = classid
   t.SequenceName = SequenceName
-  t.Sequence = GSELibrary[GSE.GetCurrentClassID()][sequenceName].MacroVersions[GSGetActiveSequenceVersion(sequenceName)]
+  t.Sequence = GSELibrary[classid][sequenceName]
   GSSendMessage(t, channel, target)
   GSE.GUITranmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
-local function ReceiveSequence(SequenceName, Sequence, sender)
+local function ReceiveSequence(classid, SequenceName, Sequence, sender)
   local version = GSGetNextSequenceVersion(SequenceName)
-  Sequence.version = version
-  Sequence.source = GSStaticSourceTransmission
-  GSAddSequenceToCollection(SequenceName, Sequence, version)
-  GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender ..  L[" saved as version "] .. version)
+  GSE.AddSequenceToCollection(SequenceName, Sequence, classid)
+  GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender )
 end
 
 
@@ -121,7 +123,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
       end
     elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
       if sender ~= GetUnitName("player", true) then
-        ReceiveSequence(t.SequenceName, t.Sequence, sender)
+        ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
       else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", GNOME)
       end
@@ -224,7 +226,7 @@ tranmissionFrame:AddChild(playereditbox)
 local sendbutton = AceGUI:Create("Button")
 sendbutton:SetText(L["Send"])
 sendbutton:SetWidth(250)
-sendbutton:SetCallback("OnClick", function() GSTransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
+sendbutton:SetCallback("OnClick", function() GSE.TransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 tranmissionFrame:AddChild(sendbutton)
 
 function GSE.GUIShowTransmissionGui(SequenceName)
