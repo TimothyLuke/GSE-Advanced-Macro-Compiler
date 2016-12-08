@@ -91,13 +91,13 @@ else
   GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
 end
 
-local GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
 GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
 GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.DebugOutputTextbox:SetText('') end)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 
-local GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
 GSE.GUIDebugFrame.OptionsViewButton:SetWidth(150)
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
