@@ -70,7 +70,7 @@ local function loadSequences(event, arg)
   end
 end
 
-GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, loadSequences, arg)
+GSEPlugin:RegisterMessage(Statics.ReloadMessage, "loadSequences")
 
 -- If not loaded or an updated version then these sequences.
 -- GSE.RegisterAddon will keep track of the current version and then if the version is different to the last one it
