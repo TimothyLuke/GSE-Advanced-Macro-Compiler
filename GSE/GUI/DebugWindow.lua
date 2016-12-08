@@ -8,8 +8,8 @@ local onpause = false
 
 DebugFrame = AceGUI:Create("Frame")
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
-local GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
-local GSE.GUIDebugFrame.DebugPauseViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugPauseViewButton = AceGUI:Create("Button")
 DebugFrame.DebugEnableViewButton = GSE.GUIDebugFrame.DebugEnableViewButton
 DebugFrame.DebugPauseViewButton = GSE.GUIDebugFrame.DebugPauseViewButton
 
