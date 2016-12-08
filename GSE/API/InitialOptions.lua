@@ -66,6 +66,7 @@ GSEOptions.DefaultDisabledMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
 GSE.UnsavedOptions = {}
 GSE.UnsavedOptions["DebugSequenceExecution"] = false
 GSE.TranslatorLanguageTables = {}
+GSE.AdditionalLanguagesAvailable = false
 
 local Translator = GSE.TranslatorLanguageTables
 
@@ -77,5 +78,5 @@ GSE.UnfoundSpells = {}
 
 GSE.PrintAvailable = false
 GSE.AddInPacks = {}
-GSE.UnloadedAddInPacks = {}
+GSE.StandardAddInPacks = {}
 GSE.UsedSequences = {}

@@ -24,13 +24,14 @@ if GetLocale() ~= "enUS" then
       end
       i = i + 1
     end
+    GSE.AdditionalLanguagesAvailable = true
   end
 end
 
 function GSE.ListCachedLanguages()
   t = {}
   i = 1
-  for name, _ in pairs(language[Statics.TranslationKey]) do
+  for name, _ in pairs(GSE.TranslatorLanguageTables[Statics.TranslationKey]) do
     t[i] = name
     GSE.PrintDebugMessage("found " .. name, GNOME)
     i = i + 1
@@ -41,11 +42,11 @@ end
 function GSE.TranslateSequence(sequence, sequenceName)
 
   if not GSE.isEmpty(sequence) then
-    if (GSE.isEmpty(sequence.lang) and "enUS" or sequence.lang) ~= locale then
-      --GSE.PrintDebugMessage((GSE.isEmpty(sequence.lang) and "enUS" or sequence.lang) .. " ~=" .. locale, GNOME)
-      return GSE.TranslateSequenceFromTo(sequence, (GSE.isEmpty(sequence.lang) and "enUS" or sequence.lang), locale, sequenceName)
+    if (GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) ~= locale then
+      --GSE.PrintDebugMessage((GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) .. " ~=" .. locale, GNOME)
+      return GSE.TranslateSequenceFromTo(sequence, (GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang), locale, sequenceName)
     else
-      GSE.PrintDebugMessage((GSE.isEmpty(sequence.lang) and "enUS" or sequence.lang) .. " ==" .. locale, GNOME)
+      GSE.PrintDebugMessage((GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) .. " ==" .. locale, GNOME)
       return sequence
     end
   end
@@ -59,7 +60,7 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     return sequence
   end
   if GSE.isEmpty(GSE.TranslatorLanguageTables[Statics.TranslationKey][fromLocale]) then
-    GSE.Print(L["Target language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
+    GSE.Print(L["Target Language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
     return sequence
   end
   local lines = table.concat(sequence,"\n")
@@ -113,7 +114,7 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
       sequence[i] = nil
     end
   end
-  sequence.lang = toLocale
+  sequence.Lang = toLocale
   return sequence
 end
 

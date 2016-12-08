@@ -1,3 +1,4 @@
+local GSE = GSE
 local Statics = GSE.Static
 
 GSE.TranslatorLanguageTables[Statics.TranslationShadow]["enUS"] = {

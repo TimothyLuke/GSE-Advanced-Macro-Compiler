@@ -1,4 +1,6 @@
+local GSE = GSE
 local Statics = GSE.Static
+
 
 GSE.TranslatorLanguageTables[Statics.TranslationHash]["enUS"] = {
 	["Power Word: Shield"] = 17,
