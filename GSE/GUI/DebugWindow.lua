@@ -7,13 +7,12 @@ local L = GSE.L
 local onpause = false
 
 DebugFrame = AceGUI:Create("Frame")
+GSE.GUIDebugFrame = DebugFrame
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugPauseViewButton = AceGUI:Create("Button")
-DebugFrame.DebugEnableViewButton = GSE.GUIDebugFrame.DebugEnableViewButton
-DebugFrame.DebugPauseViewButton = GSE.GUIDebugFrame.DebugPauseViewButton
 
-GSE.GUIDebugFrame = DebugFrame
+
 
 function GSE.GUIShowDebugWindow()
   DebugFrame:Show()
@@ -29,10 +28,10 @@ function GSE.GUIEnableDebugView()
   if GSE.UnsavedOptions["DebugSequenceExecution"] then
     --Disable
     GSE.UnsavedOptions["DebugSequenceExecution"] = false
-    GSE.GUIDebugFrame.GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
+    GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
     GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
     GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
-    GSE:CancelTimer(self.GUIUpdateTimer)
+    GSE:CancelTimer(GSE.GUIUpdateTimer)
     onpause = false
   else
     --enable
@@ -63,11 +62,11 @@ DebugFrame:SetLayout("List")
 DebugFrame:Hide()
 
 
-GSE.DebugOutputTextbox:SetLabel(L["Output"])
-GSE.DebugOutputTextbox:SetNumLines(25)
-GSE.DebugOutputTextbox:DisableButton(true)
-GSE.DebugOutputTextbox:SetFullWidth(true)
-DebugFrame:AddChild(GSE.DebugOutputTextbox)
+GSE.GUIDebugFrame.DebugOutputTextbox:SetLabel(L["Output"])
+GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(25)
+GSE.GUIDebugFrame.DebugOutputTextbox:DisableButton(true)
+GSE.GUIDebugFrame.DebugOutputTextbox:SetFullWidth(true)
+DebugFrame:AddChild(GSE.GUIDebugFrame.DebugOutputTextbox)
 
 local buttonGroup = AceGUI:Create("SimpleGroup")
 buttonGroup:SetFullWidth(true)
@@ -99,7 +98,7 @@ buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 
 GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
-GSE.GUIDebugFrame.OptionsViewButton:SetWidth(150)
+GSE.GUIDebugFrame.DebugOptionsViewButton:SetWidth(150)
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
 
