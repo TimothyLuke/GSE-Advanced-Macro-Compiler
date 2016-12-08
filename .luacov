@@ -1,0 +1,36 @@
+--- Global configuration file. Copy, customize and store in your
+-- project folder as '.luacov' for project specific configuration
+-- @class module
+-- @name luacov.defaults
+return {
+
+  -- default filename to load for config options if not provided
+  -- only has effect in 'luacov.defaults.lua'
+  ['configfile'] = '.luacov',
+
+  -- Patterns for files to exclude when reporting
+  -- all will be included if nothing is listed
+  -- (exclude overrules include, do not include
+  -- the .lua extension)
+  ['exclude'] = {
+    'luacov$',
+    'luacov.reporter$',
+    'luacov.defaults$',
+    'luacov.runner$',
+    'luacov.stats$',
+    'luacov.tick$',
+    'term$',
+    'term.colors$',
+    'term.cursor$',
+    'term.init$',
+    'copas$',
+    'coxpcall$',
+    'mediator$',
+    'moonscript.*$',
+    'spec$',
+    'lua_install$',
+    '/home/travis/build/TimothyLuke/GnomeSequencer-Enhanced/lua_install/*'
+  },
+
+
+}

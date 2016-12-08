@@ -1,0 +1,74 @@
+## Interface: 70100
+## Title: |cffff0000GSE2:|r |cFF00D1FFGnome Sequencer Enhanced|r
+## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
+## Author: TimothyLuke
+## Version: 200
+## SavedVariables: GSEOptions GSELibrary
+## OptionalDeps: WeakAuras
+
+## X-WoWI-ID: 23921
+# Lib
+embeds.xml
+lib\LibDataBroker-1.1\LibDataBroker-1.1.lua
+lib\LibQTip-1.0\LibQTip-1.0.lua
+lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
+lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+
+
+#Setup Localisation
+Localization\ModL_enUS.lua
+Localization\ModL_ptBR.lua
+Localization\ModL_frFR.lua
+Localization\ModL_deDE.lua
+Localization\ModL_itIT.lua
+Localization\ModL_koKR.lua
+Localization\ModL_esMX.lua
+Localization\ModL_ruRU.lua
+Localization\ModL_zhCN.lua
+Localization\ModL_esES.lua
+Localization\ModL_zhTW.lua
+
+# Startup
+API\Init.lua
+API\Statics.lua
+API\InitialOptions.lua
+
+# Spells Language Strings
+Localization\enUS.lua
+Localization\enUSHash.lua
+Localization\enUSSHADOW.lua
+
+
+#storage and core
+API\StaticPopup.lua
+API\StringFunctions.lua
+API\CharacterFunctions.lua
+SampleMacros\DeathKnight.lua
+SampleMacros\Druid.lua
+SampleMacros\DemonHunter.lua
+SampleMacros\Hunter.lua
+SampleMacros\Mage.lua
+SampleMacros\Monk.lua
+SampleMacros\Paladin.lua
+SampleMacros\Priest.lua
+SampleMacros\Rogue.lua
+SampleMacros\Shaman.lua
+SampleMacros\Warlock.lua
+SampleMacros\Warrior.lua
+API\Storage.lua
+API\Translator.lua
+API\Plugins.lua
+
+
+# GUI
+API\GUIFunctions.lua
+GUI\Options.lua
+GUI\Import.lua
+GUI\DebugWindow.lua
+GUI\Transmission.lua
+GUI\VersionManagement.lua
+GUI\Recorder.lua
+GUI\Editor.lua
+GUI\Viewer.lua
+
+API\Events.lua

@@ -1,38 +1,10 @@
 ## Interface: 70100
-## Title: |cffff0000GS-E:|r |cFF00D1FFGnome Sequencer - Enhanced|r Core
-## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
-## Author: TimothyLuke - Original GS code by Semlar
-## Version: 152
+## Title: |cffff0000GSE2:|r |cFF00D1FFGSE1 Legacy Adaptor|r
+## Notes: Transfers macros to the new GSE from GS-E 1.x series
+## Author: TimothyLuke
+## Version: 200
 ## SavedVariables: GnomeOptions
-## OptionalDeps: WeakAuras
+## RequiredDeps: GSE
 
-## X-WoWI-ID: 23921
-# Lib
-embeds.xml
 
-# Mod Language Strings
-langs\GSCore_enUS.lua
-langs\GSCore_ptBR.lua
-langs\GSCore_frFR.lua
-langs\GSCore_deDE.lua
-langs\GSCore_itIT.lua
-langs\GSCore_koKR.lua
-langs\GSCore_esMX.lua
-langs\GSCore_ruRU.lua
-langs\GSCore_zhCN.lua
-langs\GSCore_esES.lua
-langs\GSCore_zhTW.lua
-
-# Initial SPell DB
-langs\preinit.lua
-langs\enUS.lua
-langs\enUSHash.lua
-langs\enUSSHADOW.lua
-langs\postlanginit.lua
-
-# Startup
-startup.lua
-errorhandler.lua
-
-# Core Programming
-Core.lua
+gsCoretoGSEAdaptor.lua
