@@ -7,9 +7,11 @@ local L = GSE.L
 local onpause = false
 
 DebugFrame = AceGUI:Create("Frame")
-GSE.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
-GSDebugEnableViewButton = AceGUI:Create("Button")
-GSDebugPauseViewButton = AceGUI:Create("Button")
+DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
+local GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
+local GSE.GUIDebugFrame.DebugPauseViewButton = AceGUI:Create("Button")
+DebugFrame.DebugEnableViewButton = GSE.GUIDebugFrame.DebugEnableViewButton
+DebugFrame.DebugPauseViewButton = GSE.GUIDebugFrame.DebugPauseViewButton
 
 GSE.GUIDebugFrame = DebugFrame
 
@@ -19,36 +21,36 @@ end
 
 
 function GSE.GUIUpdateOutput()
-  GSE.DebugOutputTextbox:SetText(GSE.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
+  GSE.GUIDebugFrame.DebugOutputTextbox:SetText(GSE.GUIDebugFrame.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
   GSE.DebugOutput = ""
 end
 
 function GSE.GUIEnableDebugView()
-  if GSDebugSequenceEx then
+  if GSE.UnsavedOptions["DebugSequenceExecution"] then
     --Disable
-    GSDebugSequenceEx = false
-    GSDebugEnableViewButton:SetText(L["Enable"])
-    GSDebugPauseViewButton:SetText(L["Pause"])
-    GSDebugPauseViewButton:SetDisabled(true)
-    self:CancelTimer(self.GUIUpdateTimer)
+    GSE.UnsavedOptions["DebugSequenceExecution"] = false
+    GSE.GUIDebugFrame.GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
+    GSE:CancelTimer(self.GUIUpdateTimer)
     onpause = false
   else
     --enable
-    GSDebugSequenceEx = true
-    GSDebugEnableViewButton:SetText(L["Disable"])
-    self.GUIUpdateTimer = self:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
-    GSDebugPauseViewButton:SetDisabled(false)
+    GSE.UnsavedOptions["DebugSequenceExecution"] = true
+    GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Disable"])
+    GSE.GUIUpdateTimer = GSE:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(false)
   end
 end
 
 function GSE:PauseGuiDebugView()
   if onpause then
-    GSDebugPauseViewButton:SetText(L["Pause"])
-    self.GUIUpdateTimer = self:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
+    GSE.GUIUpdateTimer = GSE:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
     onpause = false
   else
-    GSDebugPauseViewButton:SetText(L["Resume"])
-    self:CancelTimer(self.GUIUpdateTimer)
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Resume"])
+    GSE:CancelTimer(GSE.GUIUpdateTimer)
     onpause = true
   end
 end
@@ -72,33 +74,33 @@ buttonGroup:SetFullWidth(true)
 buttonGroup:SetLayout("Flow")
 
 
-GSDebugEnableViewButton:SetWidth(150)
-GSDebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
-buttonGroup:AddChild(GSDebugEnableViewButton)
+GSE.GUIDebugFrame.DebugEnableViewButton:SetWidth(150)
+GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
+buttonGroup:AddChild(GSE.GUIDebugFrame.DebugEnableViewButton)
 
-GSDebugPauseViewButton:SetText(L["Pause"])
-GSDebugPauseViewButton:SetWidth(150)
-GSDebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
-buttonGroup:AddChild(GSDebugPauseViewButton)
+GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
+GSE.GUIDebugFrame.DebugPauseViewButton:SetWidth(150)
+GSE.GUIDebugFrame.DebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
+buttonGroup:AddChild(GSE.GUIDebugFrame.DebugPauseViewButton)
 
-if GSDebugSequenceEx then
-  GSDebugEnableViewButton:SetText(L["Disable"])
-  GSDebugPauseViewButton:SetDisabled(false)
+if GSE.UnsavedOptions["DebugSequenceExecution"] then
+  GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Disable"])
+  GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(false)
 else
-  GSDebugEnableViewButton:SetText(L["Enable"])
-  GSDebugPauseViewButton:SetDisabled(true)
+  GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
+  GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
 end
 
-local GSDebugClearViewButton = AceGUI:Create("Button")
-GSDebugClearViewButton:SetText(L["Clear"])
-GSDebugClearViewButton:SetWidth(150)
-GSDebugClearViewButton:SetCallback("OnClick", function() GSE.DebugOutputTextbox:SetText('') end)
-buttonGroup:AddChild(GSDebugClearViewButton)
+local GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
+GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
+GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.DebugOutputTextbox:SetText('') end)
+buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 
-local GSDebugOptionsViewButton = AceGUI:Create("Button")
-GSDebugOptionsViewButton:SetText(L["Options"])
-GSDebugOptionsViewButton:SetWidth(150)
-GSDebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
-buttonGroup:AddChild(GSDebugOptionsViewButton)
+local GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
+GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
+GSE.GUIDebugFrame.OptionsViewButton:SetWidth(150)
+GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
+buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
 
 DebugFrame:AddChild(buttonGroup)
