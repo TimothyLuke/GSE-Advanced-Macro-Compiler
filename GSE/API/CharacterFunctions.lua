@@ -87,36 +87,3 @@ function GSE.GetCurrentTalents()
   end
   return talents
 end
-
-function GSE:UNIT_FACTION()
-  --local pvpType, ffa, _ = GetZonePVPInfo()
-  if UnitIsPVP("player") then
-    GSE.PVPFlag = true
-  else
-    GSE.PVPFlag = false
-  end
-  GSE.PrintDebugMessage("PVP Flag toggled to " .. tostring(GSE.PVPFlag), Statics.DebugModules["API"])
-end
-
-function GSE:ZONE_CHANGED_NEW_AREA()
-  local name, type, difficulty, difficultyName, maxPlayers, playerDifficulty, isDynamicInstance, mapID, instanceGroupSize = GetInstanceInfo()
-  if type == "arena" or type == "pvp" then
-    GSE.PVPFlag = true
-  else
-    GSE.PVPFlag = false
-  end
-  if difficulty == 23 then
-    GSE.inMythic = true
-  else
-    GSE.inMythic = false
-  end
-  if type == "raid" then
-    GSE.inRaid = true
-  else
-    GSE.inRaid = false
-  end
-  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(inRaid), Statics.DebugModules["API"])
-end
-
-GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-GSE:RegisterEvent("UNIT_FACTION")
