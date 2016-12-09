@@ -91,7 +91,7 @@ f:SetScript('OnEvent', function(self, event, addon)
     for i=1,GetNumAddOns() do
       if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
         name, _, _, _, _, _ = GetAddOnInfo(i)
-        if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" then
+        if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" and name ~= "GS-HighPerformanceMacros"then
 					local loaded = LoadAddOn(i);
           if loaded then
             authorversion = GetAddOnMetadata(name, "Version")
