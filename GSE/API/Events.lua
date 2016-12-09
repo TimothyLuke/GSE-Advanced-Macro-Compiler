@@ -30,7 +30,7 @@ function GSE:UNIT_FACTION()
     GSE.PVPFlag = false
   end
   GSE.PrintDebugMessage("PVP Flag toggled to " .. tostring(GSE.PVPFlag), Statics.DebugModules["API"])
-  
+  GSE.ReloadSequences()
 end
 
 function GSE:ZONE_CHANGED_NEW_AREA()
@@ -51,6 +51,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.inRaid = false
   end
   GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(inRaid), Statics.DebugModules["API"])
+  GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_ENTERING_WORLD()
