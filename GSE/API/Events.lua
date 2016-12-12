@@ -14,14 +14,6 @@ function GSE:PLAYER_LOGIN()
 end
 
 
-function GSE:UPDATE_MACROS()
-  if not InCombatLockdown() then
-    GSE.PrintDebugMessage("I may not need this", GNOME)
-  else
-    GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
-  end
-end
-
 function GSE:UNIT_FACTION()
   --local pvpType, ffa, _ = GetZonePVPInfo()
   if UnitIsPVP("player") then
@@ -129,7 +121,6 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
   GSE.ReloadSequences()
 end
 
-GSE:RegisterEvent('UPDATE_MACROS')
 GSE:RegisterEvent('PLAYER_LOGIN')
 
 GSE:RegisterEvent('PLAYER_LOGOUT')
@@ -187,5 +178,28 @@ function GSE:processReload(action, arg)
   end
 end
 
+function GSE:OnEnable()
+  GSE.OOCQueue = {}
+  GSE.OOCTimer = GSE:ScheduleRepeatingTimer("TimerFeedback", 5)
+end
+
+
+function GSE:OOCQueue()
+  if not InCombatLockdown() then
+    for k,v in ipairs(GSE.OOCQueue) do
+      if v.action == "UpdateSequence" then
+        GSE.OOCUpdateSequence(v.name, v.macroversion)
+      elseif v.action == "Save" then
+        GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+      elseif v.action == "Replace" then
+        GSELibrary[v.classid][v.sequencename] = v.sequence
+        GSE.OOCUpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
+      elseif v.action == "OpenGUI" then
+        GSE.OOCGuiShowViewer()
+      end
+      GSE.OOCQueue[k] = nil
+    end
+  end
+end
 
 GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)

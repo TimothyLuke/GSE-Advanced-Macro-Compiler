@@ -111,8 +111,12 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       classid = GSE.GetCurrentClassID()
     end
     if not GSE.isEmpty(SequenceName) then
-      GSELibrary[classid][SequenceName] = sequence
-      GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
+      local vals = {}
+      vals.action = "Replace"
+      vals.squencename = SequenceName
+      vals.sequence = sequence
+      vals.classid = classid
+      table.insert(GSE.OOCQueue, vals)
       GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence %s saved."], SequenceName))
     end
   end

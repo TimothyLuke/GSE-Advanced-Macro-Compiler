@@ -190,17 +190,19 @@ function GSE.GUIViewerLayout(mcontainer)
 end
 
 function GSE.GUIShowViewer()
-  if not InCombatLockdown() then
-    local names = GSE.GetSequenceNames()
-    sequenceboxtext:SetText("")
-    viewframe:ReleaseChildren()
-    GSE.GUIViewerLayout(viewframe)
-    viewframe.SequenceListbox:SetList(names)
-    viewframe:Show()
-  else
-    GSE.Print(L["Please wait till you have left combat before using the Sequence Editor."], GNOME)
-  end
+    local vals = {}
+    vals.action = "OpenGUI"
+    table.insert(GSE.OOCQueue, vals)
+end
 
+
+function GSE.OOCGuiShowViewer()
+  local names = GSE.GetSequenceNames()
+  sequenceboxtext:SetText("")
+  viewframe:ReleaseChildren()
+  GSE.GUIViewerLayout(viewframe)
+  viewframe.SequenceListbox:SetList(names)
+  viewframe:Show()
 end
 
 function GSE.GUIConfigureMacroButton(button)

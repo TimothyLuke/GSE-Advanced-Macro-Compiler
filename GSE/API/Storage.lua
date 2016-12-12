@@ -11,8 +11,18 @@ function GSE.DeleteSequence(classid, sequenceName)
   GSELibrary[classid][sequenceName] = nil
 end
 
+
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
+  local vals = {}
+  vals.action = "Save"
+  vals.squencename = sequenceName
+  vals.sequence = sequence
+  vals.classid = classid
+  table.insert(GSE.OOCQueue, vals)
+end
+--- Add a sequence to the library
+function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   local confirmationtext = ""
   -- CHeck for colissions
   local found = false
@@ -54,6 +64,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
   end
+  GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
 end
 
 --- Load a collection of Sequences
@@ -370,9 +381,17 @@ function GSE.ListSequences(txt)
   ShowMacroFrame()
 end
 
+--- This functions schedules an update to a sequence in the OOCQueue.
+function GSE.UpdateSequence(name, sequence)
+  local vals = {}
+  vals.action = "UpdateSequence"
+  vals.name = name
+  vals.macroversion = sequence
+  table.insert(GSE.OOCQueue, vals)
+end
 
---- This function updates the button for an existing sequence3
-function GSE.UpdateSequence(name,sequence)
+--- This function updates the button for an existing sequence.  It is called from the OOC queue
+function GSE.OOCUpdateSequence(name,sequence)
   -- print(name)
   -- print(sequence)
   -- print(debugstack())
