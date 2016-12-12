@@ -220,6 +220,16 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.OOCAddSequenceToCollection">GSE.OOCAddSequenceToCollection</a>&nbsp;(sequenceName, sequence, classid)</td>
+	<td class="summary">Add a sequence to the library </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.OOCUpdateSequence">GSE.OOCUpdateSequence</a>&nbsp;(name, sequence)</td>
+	<td class="summary">This function updates the button for an existing sequence.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.ResetButtons">GSE.ResetButtons</a>&nbsp;()</td>
 	<td class="summary">This function resets a button back to its initial setting </td>
 	</tr>
@@ -236,7 +246,7 @@
 
 	<tr>
 	<td class="name" nowrap><a href="#GSE.UpdateSequence">GSE.UpdateSequence</a>&nbsp;(name, sequence)</td>
-	<td class="summary">This function updates the button for an existing sequence3 </td>
+	<td class="summary">This functions schedules an update to a sequence in the OOCQueue.</td>
 	</tr>
 
 </table>
@@ -790,6 +800,70 @@ Load in the sample macros for the current class.
 
 
 
+<dt><a name="GSE.OOCAddSequenceToCollection"></a><strong>GSE.OOCAddSequenceToCollection</strong>&nbsp;(sequenceName, sequence, classid)</dt>
+<dd>
+Add a sequence to the library
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sequenceName: 
+	</li>
+	
+	<li>
+	  sequence: 
+	</li>
+	
+	<li>
+	  classid: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.OOCUpdateSequence"></a><strong>GSE.OOCUpdateSequence</strong>&nbsp;(name, sequence)</dt>
+<dd>
+This function updates the button for an existing sequence.  It is called from the OOC queue
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  name: 
+	</li>
+	
+	<li>
+	  sequence: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.ResetButtons"></a><strong>GSE.ResetButtons</strong>&nbsp;()</dt>
 <dd>
 This function resets a button back to its initial setting
@@ -860,7 +934,7 @@ This function is used to debug a sequence and trace its execution.
 
 <dt><a name="GSE.UpdateSequence"></a><strong>GSE.UpdateSequence</strong>&nbsp;(name, sequence)</dt>
 <dd>
-This function updates the button for an existing sequence3
+This functions schedules an update to a sequence in the OOCQueue.
 
 
 <h3>Parameters</h3>
