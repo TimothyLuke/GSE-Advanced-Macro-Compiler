@@ -173,7 +173,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         output = output .. "\n"
       else
         -- pass it through
-        output = output ..cmd.. " " .. etc .. "\n"
+        output = output .. " " .. etc .. "\n"
       end
     end
     -- If nothing was found pass throught

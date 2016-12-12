@@ -12,7 +12,7 @@ importframe:Hide()
 
 importframe:SetTitle(L["Gnome Sequencer: Import a Macro String."])
 importframe:SetStatusText(L["Import Macro from Forums"])
-importframe:SetCallback("OnClose", function(widget)  importframe:Hide(); end)
+importframe:SetCallback("OnClose", function(widget)  importframe:Hide(); GSE.GUIShowViewer() end)
 importframe:SetLayout("List")
 
 local headerGroup = AceGUI:Create("SimpleGroup")
