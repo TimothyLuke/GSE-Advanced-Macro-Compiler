@@ -1,12 +1,5 @@
 GSE = {}
-GSE.L = setmetatable({}, {
-  __newindex = function(self, key, value)
-    if not rawget(registering, key) then
-      rawset(registering, key, value == true and key or value)
-    end
-  end,
-  __index = assertfalse
-})
+GSE.L = {}
 GSE.Static = {}
 GSE.VersionString = 150;
 

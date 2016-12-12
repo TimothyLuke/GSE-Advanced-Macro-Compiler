@@ -15,8 +15,8 @@ describe('API Translator', function()
   it("Adds a sequence to the Library", function()
 
     L = GSE.L
-    L["No Help Information Available"] = true
-    L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = true
+    L["No Help Information Available"] = "No Help Information Available"
+    L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = "A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "
 
     local Sequences = {}
     Sequences["Test1"] = {
