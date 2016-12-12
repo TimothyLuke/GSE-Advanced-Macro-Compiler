@@ -63,11 +63,14 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     GSE.Print(L["Target Language "] .. fromLocale .. L[" is not available.  Unable to translate sequence "] ..  sequenceName)
     return sequence
   end
-  local lines = table.concat(sequence,"\n")
-  GSE.PrintDebugMessage("lines: " .. lines, GNOME)
 
+  GSE.PrintDebugMessage("lines: " .. lines, GNOME)
+  for k,v in pairs(sequence) do
+    -- Translate sequence
+    sequence[k] = GSE.TranslateString(v, fromLocale, toLocale)
+  end
   lines = GSE.TranslateString(lines, fromLocale, toLocale)
-  --TODO add PreMacro and PostMacro
+
   if not GSE.isEmpty(sequence.KeyRelease) then
     print("Keyrelease has stuff in translate")
     for k,v in pairs(sequence.KeyRelease) do
@@ -106,8 +109,6 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
   end
 
-  for i, v in ipairs(sequence) do sequence[i] = nil end
-  GSE.lines(sequence, lines)
   -- check for blanks
   for i, v in ipairs(sequence) do
     if v == "" then
@@ -123,65 +124,61 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   GSE.PrintDebugMessage("Entering GSE.anslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""
-  local stringlines = GSE.SplitMeIntolines(instring)
-  for _,v in ipairs(stringlines) do
-    --print ("v = ".. v)
-    if not GSE.isEmpty(v) then
-      for cmd, etc in gmatch(v or '', '/(%w+)%s+([^\n]+)') do
-        GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
-        output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
-        if Statics.CastCmds[strlower(cmd)] then
-          if not cleanNewLines then
-            etc = string.match(etc, "^%s*(.-)%s*$")
-          end
-          if string.sub(etc, 1, 1) == "!" then
-            etc = string.sub(etc, 2)
-            output = output .. "!"
-          end
-          local foundspell, returnval = GSE.TranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
-          if foundspell then
-            output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "\n"
-          else
-            GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
-            output = output  .. etc .. "\n"
-          end
-        -- check for cast Sequences
-        elseif strlower(cmd) == "castsequence" then
-          GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
-          --look for conditionals at the startattack
-          local conditionals, mods, uetc = GSE.GetConditionalsFromString(etc)
-          if conditionals then
-            output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
-          end
-          for _, w in ipairs(GSE.split(uetc,",")) do
-            if not cleanNewLines then
-              w = string.match(w, "^%s*(.-)%s*$")
-            end
-            if string.sub(w, 1, 1) == "!" then
-              w = string.sub(w, 2)
-              output = output .. "!"
-            end
-            local foundspell, returnval = GSE.TranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
-            output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
-          end
-          local resetleft = string.find(output, ", , ")
-          if not GSE.isEmpty(resetleft) then
-            output = string.sub(output, 1, resetleft -1)
-          end
-          if string.sub(output, strlen(output)-1) == ", " then
-            output = string.sub(output, 1, strlen(output)-2)
-          end
-          output = output .. "\n"
+  if not GSE.isEmpty(instring) then
+    for cmd, etc in gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
+      GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
+      output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
+      if Statics.CastCmds[strlower(cmd)] then
+        if not cleanNewLines then
+          etc = string.match(etc, "^%s*(.-)%s*$")
+        end
+        if string.sub(etc, 1, 1) == "!" then
+          etc = string.sub(etc, 2)
+          output = output .. "!"
+        end
+        local foundspell, returnval = GSE.TranslateSpell(etc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+        if foundspell then
+          output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "\n"
         else
-          -- pass it through
+          GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
           output = output  .. etc .. "\n"
         end
+      -- check for cast Sequences
+      elseif strlower(cmd) == "castsequence" then
+        GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
+        --look for conditionals at the startattack
+        local conditionals, mods, uetc = GSE.GetConditionalsFromString(etc)
+        if conditionals then
+          output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
+        end
+        for _, w in ipairs(GSE.split(uetc,",")) do
+          if not cleanNewLines then
+            w = string.match(w, "^%s*(.-)%s*$")
+          end
+          if string.sub(w, 1, 1) == "!" then
+            w = string.sub(w, 2)
+            output = output .. "!"
+          end
+          local foundspell, returnval = GSE.TranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+          output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
+        end
+        local resetleft = string.find(output, ", , ")
+        if not GSE.isEmpty(resetleft) then
+          output = string.sub(output, 1, resetleft -1)
+        end
+        if string.sub(output, strlen(output)-1) == ", " then
+          output = string.sub(output, 1, strlen(output)-2)
+        end
+        output = output .. "\n"
+      else
+        -- pass it through
+        output = output  .. etc .. "\n"
       end
-    elseif cleanNewLines then
-      output = output .. v
     end
+  elseif cleanNewLines then
+    output = output .. instring
   end
-  GSE.PrintDebugMessage("Exiting GSE.anslateString with : \n" .. output, GNOME)
+  GSE.PrintDebugMessage("Exiting GSE.TranslateString with : \n" .. output, GNOME)
   -- check for random , at the end
   if string.sub(output, strlen(output)-1) == ", " then
     output = string.sub(output, 1, strlen(output)-2)
