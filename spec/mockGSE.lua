@@ -24,7 +24,7 @@ function GetSpecialization()
 end
 
 function GetClassInfo(i)
-  if i = 11 then
+  if i == 11 then
     return "Druid", "DRUID", 11
   else
     return "Paladin", "PALADIN", 2
