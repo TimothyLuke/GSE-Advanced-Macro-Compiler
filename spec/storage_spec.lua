@@ -17,7 +17,7 @@ describe('API Translator', function()
     L = GSE.L
     L["No Help Information Available"] = "No Help Information Available"
     L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = "A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "
-
+    L[" was imported with the following errors."] = " was imported with the following errors."
     local Sequences = {}
     Sequences["Test1"] = {
       SpecID = 11,
