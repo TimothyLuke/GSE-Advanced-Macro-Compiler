@@ -41,3 +41,7 @@ function newLocale(application, locale, isDefault, silent)
     return writedefaultproxy
   end
 end
+
+function Getlocale()
+  return "enUS"
+end
