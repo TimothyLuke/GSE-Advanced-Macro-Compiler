@@ -78,43 +78,43 @@ end
 local f = CreateFrame('Frame')
 f:SetScript('OnEvent', function(self, event, addon)
   if event == 'ADDON_LOADED' and addon == "GS-Core" then
+    if not GSE.isEmpty(GnomeOptions) then
+      local name = "GS-Core"
+      local authorversion = "Legacy 2.0 Adaptor"
 
-    local name = "GS-Core"
-    local authorversion = "Legacy 2.0 Adaptor"
-
-    GSMasterSequences = GnomeOptions.SequenceLibrary
-    GSImportLegacyMacroCollections(name, authorversion)
+      GSMasterSequences = GnomeOptions.SequenceLibrary
+      GSImportLegacyMacroCollections(name, authorversion)
 
 
-    -- Load any Load on Demand addon packs.
-    -- Only load those beginning with GS-
-    for i=1,GetNumAddOns() do
-      if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
-        name, _, _, _, _, _ = GetAddOnInfo(i)
-        if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" and name ~= "GS-HighPerformanceMacros"then
-					local loaded = LoadAddOn(i);
-          if loaded then
-            authorversion = GetAddOnMetadata(name, "Version")
-            GSImportLegacyMacroCollections(name, authorversion)
+      -- Load any Load on Demand addon packs.
+      -- Only load those beginning with GS-
+      for i=1,GetNumAddOns() do
+        if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
+          name, _, _, _, _, _ = GetAddOnInfo(i)
+          if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" and name ~= "GS-HighPerformanceMacros"then
+  					local loaded = LoadAddOn(i);
+            if loaded then
+              authorversion = GetAddOnMetadata(name, "Version")
+              GSImportLegacyMacroCollections(name, authorversion)
+            end
+
           end
-
         end
       end
+
+      local sequenceNames = {}
+      for k,_ in pairs(GSMasterOptions.SequenceLibrary) do
+        table.insert(sequenceNames, k)
+      end
+
+      local loadseqs = GSE.RegisterAddon("Legacy GSE 1", authorversion, sequenceNames)
+
+      if loadseqs then
+        GSELegacyAdaptor:processReload("Load", "GS-Core")
+        GnomeOptions.imported = true
+      end
+      -- Check loaded in GSE
     end
-
-    local sequenceNames = {}
-    for k,_ in pairs(GSMasterOptions.SequenceLibrary) do
-      table.insert(sequenceNames, k)
-    end
-
-    local loadseqs = GSE.RegisterAddon("Legacy GSE 1", authorversion, sequenceNames)
-
-    if loadseqs then
-      GSELegacyAdaptor:processReload("Load", "GS-Core")
-      GnomeOptions.imported = true
-    end
-    -- Check loaded in GSE
-
   end
 end)
 
