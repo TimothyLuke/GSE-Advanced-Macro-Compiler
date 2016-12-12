@@ -1,6 +1,6 @@
 describe('API StringFunctions', function()
   setup (function()
-    require("wowmock/wowmock")
+    require("../spec/wowmock/wowmock")
     require("../spec/mockGSE")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
