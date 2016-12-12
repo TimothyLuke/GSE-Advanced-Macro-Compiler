@@ -34,7 +34,7 @@ end
 function GSE.UnEscapeString(str)
 
     for k, v in pairs(Statics.StringFormatEscapes) do
-        str = gsub(str, k, v)
+        str = string.gsub(str, k, v)
     end
     return str
 end
