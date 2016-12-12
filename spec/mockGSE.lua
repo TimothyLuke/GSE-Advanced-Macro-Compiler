@@ -12,6 +12,34 @@ GSE.VersionString = 150;
 
 GNOME = "UnitTest"
 
+GSELibrary = {}
+
+-- Mock Character FUncitons
+function GetTalentTierInfo(tier, 1)
+  return 1
+end
+
+function GetSpecialization()
+  return 11
+end
+
+function GetClassInfo(i)
+  if i = 11 then
+    return "Druid", "DRUID", 11
+  else
+    return "Paladin", "PALADIN", 2
+  end
+end
+
+function GetSpecializationInfoByID(id)
+  return id, "SPecName", "SPecDescription", 1234567, "file.blp", 1, "DRUID"
+end
+
+function UnitClass(str)
+  return "Druid", "DRUID", 11
+end
+
+-- Mock standard functions
 function GSE.Print(message, title)
   print (title .. ": " .. message)
 end
@@ -19,6 +47,8 @@ end
 function GSE.PrintDebugMessage(message, title)
   GSE.Print(message, title)
 end
+
+
 
 GSE.PVPFlag = false
 GSE.inRaid = false
