@@ -133,39 +133,44 @@ GSE:RegisterEvent("UNIT_FACTION")
 
 local function PrintGnomeHelp()
   GSE.Print(L["GnomeSequencer was originally written by semlar of wowinterface.com."], GNOME)
-  GSE.Print(L["This is a small addon that allows you create a sequence of macros to be executed at the push of a button."], GNOME)
+  GSE.Print(L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."], GNOME)
   GSE.Print(L["Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."], GNOME)
   GSE.Print(L["This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."], GNOME)
   GSE.Print(L["To get started "] .. GSEOptions.CommandColour .. L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."], GNOME)
-  GSE.Print(GSEOptions.CommandColour .. L["/gs listall|r will produce a list of all available macros with some help information."], GNOME)
-  GSE.Print(L["To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."], GNOME)
   GSE.Print(L["The command "] .. GSEOptions.CommandColour .. L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."], GNOME)
   GSE.Print(L["The command "] .. GSEOptions.CommandColour .. L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."], GNOME)
 end
 
-SLASH_GNOME1, SLASH_GNOME2, SLASH_GNOME3 = "/gnome", "/gs", "/gnomesequencer"
-SlashCmdList["GNOME"] = function (msg, editbox)
-  if string.lower(msg) == "listall" then
-    GSE.ListSequences("all")
-  elseif string.lower(msg) == "class" or string.lower(msg) == string.lower(UnitClass("player")) then
-    local _, englishclass = UnitClass("player")
-    GSE.ListSequences(englishclass)
-  elseif string.lower(msg) == "showspec" then
+GSE:RegisterChatCommand("gsse", "GSSlash")
+GSE:RegisterChatCommand("gs", "GSSlash")
+
+
+
+
+-- Functions
+--- Handle slash commands
+function GSE:GSSlash(input)
+  input = string.lower(input)
+  if input == "showspec" then
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
     GSE.Print(L["Your current Specialisation is "] .. currentSpecID .. ':' .. specname .. L["  The Alternative ClassID is "] .. currentclassId, GNOME)
-  elseif string.lower(msg) == "help" then
+  elseif input == "help" then
     PrintGnomeHelp()
-  elseif string.lower(msg) == "cleanorphans" or string.lower(msg) == "clean" then
+  elseif input == "cleanorphans" or input == "clean" then
     GSE.CleanOrphanSequences()
-  elseif string.lower(msg) == "forceclean" then
+  elseif input == "forceclean" then
     GSE.CleanOrphanSequences()
     GSE.CleanMacroLibrary(true)
   elseif string.lower(string.sub(msg,1,6)) == "export" then
     GSE.Print(GSExportSequence(string.sub(msg,8)))
-  elseif string.lower(msg) == "showdebugoutput" then
+  elseif input == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
+  elseif input == "record" then
+      GSE.GUIRecordFrame:Show()
+  elseif input == "debug" then
+      GSE.GUIShowDebugWindow()
   else
     GSE.GUIShowViewer()
   end
@@ -175,6 +180,7 @@ function GSE:processReload(action, arg)
   if arg == "Samples" then
     GSE.LoadSampleMacros(GSE.GetCurrentClassID())
     GSE.Print(L["The Sample Macros have been reloaded."])
+    
   end
 end
 

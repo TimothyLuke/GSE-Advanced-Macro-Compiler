@@ -143,35 +143,13 @@ function GSE.ToggleTranslator (boole)
   StaticPopup_Show ("GSEConfirmReloadUI")
 end
 
-GSE:RegisterChatCommand("gsse", "GSSlash")
-
-
-
-
--- Functions
-
-
-
-function GSE:GSSlash(input)
-    if input == "hide" then
-      frame:Hide()
-    elseif input == "record" then
-      recordframe:Show()
-    elseif input == "debug" then
-      GSE.GUIShowDebugWindow()
-    else
-      GSE.GUIShowViewer()
-    end
-end
-
-
 
 function GSE:OnInitialize()
     GSE.GUIRecordFrame:Hide()
     GSE.GUIVersionFrame:Hide()
     GSE.GUIEditFrame:Hide()
     GSE.GUIViewFrame:Hide()
-    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gsse |r to get started."], GNOME)
+    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gs |r to get started."], "GSE")
 end
 
 
