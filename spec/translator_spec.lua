@@ -1,4 +1,4 @@
-describe('API StringFunctions', function()
+describe('API Translator', function()
   setup (function()
     require("../spec/mockGSE")
     require("../GSE/API/Statics")
