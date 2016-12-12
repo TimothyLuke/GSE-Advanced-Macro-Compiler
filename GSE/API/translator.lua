@@ -125,7 +125,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
 
   local output = ""
   if not GSE.isEmpty(instring) then
-    for cmd, etc in gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
+    for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
       GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
       output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
       if Statics.CastCmds[strlower(cmd)] then
