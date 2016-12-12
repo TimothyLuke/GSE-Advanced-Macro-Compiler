@@ -121,7 +121,7 @@ end
 
 function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   instring = GSE.UnEscapeString(instring)
-  GSE.PrintDebugMessage("Entering GSE.anslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
+  GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""
   if not GSE.isEmpty(instring) then
@@ -174,6 +174,10 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         -- pass it through
         output = output  .. etc .. "\n"
       end
+    end
+    -- If nothing was found pass throught
+    if output == "" then
+      output = instring
     end
   elseif cleanNewLines then
     output = output .. instring
