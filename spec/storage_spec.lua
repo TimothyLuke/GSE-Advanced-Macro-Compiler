@@ -1,6 +1,7 @@
 describe('API Translator', function()
   setup (function()
     require("../spec/mockGSE")
+    require("../GSE/Localization/ModL_enUS")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
     require("../GSE/Localization/enUS")
