@@ -11,8 +11,9 @@ describe('API Translator', function()
   end)
 
   it("Passes through non spell commands ", function()
-    assert.are.equal("/targetenemy", GSE.TranslateString("/targetenemy", "enUS", "enUS"))
-    assert.are.equal("/startattack", GSE.TranslateString("/startattack", "enUS", "enUS"))
+    assert.are.equal([[/targetenemy
+]], GSE.TranslateString("/targetenemy", "enUS", "enUS"))
+
   end)
 
 end)
