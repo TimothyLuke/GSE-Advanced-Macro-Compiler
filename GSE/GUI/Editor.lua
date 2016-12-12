@@ -35,7 +35,6 @@ editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIViewF
 editframe:SetLayout("List")
 
 
-local currentSequence = editframe.SequenceName
 local specdropdownvalue = editframe.SpecID
 
 
@@ -69,7 +68,7 @@ function GSE.GUIEditorPerformLayout(frame)
   local nameeditbox = AceGUI:Create("EditBox")
   nameeditbox:SetLabel(L["Sequence Name"])
   nameeditbox:SetWidth(250)
-  nameeditbox:SetCallback("OnTextChanged", function() currentSequence = nameeditbox:GetText(); end)
+  nameeditbox:SetCallback("OnTextChanged", function() editframe.SequenceName = nameeditbox:GetText(); end)
   nameeditbox:DisableButton( true)
   nameeditbox:SetText(editframe.SequenceName)
   editframe.nameeditbox = nameeditbox
@@ -116,7 +115,7 @@ function GSE.GUIEditorPerformLayout(frame)
   local transbutton = AceGUI:Create("Button")
   transbutton:SetText(L["Send"])
   transbutton:SetWidth(150)
-  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(currentSequence) end)
+  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(editframe.classid.. "," ..editframe.SequenceName) end)
 
   local editButtonGroup = AceGUI:Create("SimpleGroup")
   editButtonGroup:SetWidth(602)
