@@ -180,8 +180,8 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   end
   GSE.PrintDebugMessage("Exiting GSE.TranslateString with : \n" .. output, GNOME)
   -- check for random , at the end
-  if string.sub(output, strlen(output)-1) == ", " then
-    output = string.sub(output, 1, strlen(output)-2)
+  if string.sub(output, string.len(output)-1) == ", " then
+    output = string.sub(output, 1, string.len(output)-2)
   end
   return output
 end
@@ -194,8 +194,8 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
     str = string.match(str, "^%s*(.-)%s*$")
   end
   GSE.PrintDebugMessage("GSE.TranslateSpell Attempting to translate " .. str, GNOME)
-  if string.sub(str, strlen(str)) == "," then
-    str = string.sub(str, 1, strlen(str)-1)
+  if string.sub(str, string.len(str)) == "," then
+    str = string.sub(str, 1, string.len(str)-1)
   end
   if string.match(str, ";") then
     GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
