@@ -42,6 +42,6 @@ function newLocale(application, locale, isDefault, silent)
   end
 end
 
-function Getlocale()
+function GetLocale()
   return "enUS"
 end
