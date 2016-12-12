@@ -12,9 +12,27 @@ describe('API Translator', function()
     require("../GSE/API/translator")
   end)
 
-  it("Passes through non spell commands ", function()
-    assert.are.equal([[/targetenemy
-]], GSE.TranslateString("/targetenemy", "enUS", "enUS"))
+  it("Adds a sequence to the Library", function()
+    local Sequences = {}
+    Sequences["Test1"] = {
+      SpecID = 11,
+      Author="UnitTest",
+      MacroVersions = {
+        {
+          StepFunction = "Sequential",
+          "/cast Spell1",
+          "/cast Spell2",
+        },
+        {
+          StepFunction = "Priority",
+          "/cast Spell1",
+          "/cast Spell2",
+        }
+
+      }
+    }
+    GSE.OOCAddSequenceToCollection("Test1", Sequences["Test1"], 11)
+    assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
 
   end)
 
