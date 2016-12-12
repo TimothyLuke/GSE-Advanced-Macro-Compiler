@@ -1,7 +1,6 @@
 describe('API Translator', function()
   setup (function()
     require("../spec/mockGSE")
-    require("../GSE/Localization/ModL_enUS")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
     require("../GSE/Localization/enUS")
@@ -14,6 +13,10 @@ describe('API Translator', function()
   end)
 
   it("Adds a sequence to the Library", function()
+
+    L["No Help Information Available"] = true
+    L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = true
+
     local Sequences = {}
     Sequences["Test1"] = {
       SpecID = 11,
