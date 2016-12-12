@@ -121,9 +121,7 @@ end
 
 function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   instring = GSE.UnEscapeString(instring)
-
   GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
-
   local output = ""
   if not GSE.isEmpty(instring) then
     for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
