@@ -15,7 +15,7 @@ GNOME = "UnitTest"
 GSELibrary = {}
 
 -- Mock Character FUncitons
-function GetTalentTierInfo(tier, 1)
+function GetTalentTierInfo(tier, ...)
   return 1
 end
 
