@@ -3,7 +3,7 @@ local Statics = GSE.Static
 local L = GSE.L
 GSELibrary = {}
 
-Statics.CastCmds = { use = true, cast = true, spell = true, cancelaura = true, startattack = true, cancelform = true }
+Statics.CastCmds = { use = true, cast = true, spell = true, cancelaura = true, cancelform = true }
 
 Statics.CleanStrings = {
   [1] = "/console Sound_EnableSFX 0%;",

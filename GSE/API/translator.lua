@@ -121,7 +121,7 @@ end
 
 function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   instring = GSE.UnEscapeString(instring)
-  
+
   GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""
@@ -173,12 +173,12 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         output = output .. "\n"
       else
         -- pass it through
-        output = output  .. etc .. "\n"
+        output = output ..cmd.. " " .. etc .. "\n"
       end
     end
     -- If nothing was found pass throught
     if output == "" then
-      output = instring
+      output = instring .. "\n"
     end
   elseif cleanNewLines then
     output = output .. instring
