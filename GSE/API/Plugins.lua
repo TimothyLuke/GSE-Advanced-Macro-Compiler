@@ -15,7 +15,7 @@ end
 -- --- List addons that GSE knows about that have been enabled
 -- function GSE.ListAddons()
 --   local returnVal = "";
---   for k,v in pairs(GSE.AddInPacks) do
+--   for k,v in pairs(GSEOptions.AddInPacks) do
 --     aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
 --     returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
 --   end
@@ -24,15 +24,18 @@ end
 
 function GSE.RegisterAddon(name, version, sequencenames)
   local updateflag = false
-  if GSE.isEmpty(GSE.AddInPacks[name]) then
-    GSE.AddInPacks[name] = {}
-    GSE.AddInPacks[name].Name = name
+  if GSE.isEmpty(GSEOptions.AddInPacks) then
+    GSEOptions.AddInPacks = {}
   end
-  if GSE.isEmpty(GSE.AddInPacks[name].Version) or GSE.AddInPacks[name].Version ~= version then
+  if GSE.isEmpty(GSEOptions.AddInPacks[name]) then
+    GSEOptions.AddInPacks[name] = {}
+    GSEOptions.AddInPacks[name].Name = name
+  end
+  if GSE.isEmpty(GSEOptions.AddInPacks[name].Version) or GSEOptions.AddInPacks[name].Version ~= version then
     updateflag = true
-    GSE.AddInPacks[name].Version = version
+    GSEOptions.AddInPacks[name].Version = version
   end
-  GSE.AddInPacks[name].SequenceNames = sequencenames
+  GSEOptions.AddInPacks[name].SequenceNames = sequencenames
   return updateflag
 end
 

@@ -84,3 +84,37 @@ function GSE.FixQuotes(source)
   source = string.gsub(source, "%”", "\"")
   return source
 end
+
+function GSE.CleanStrings(source)
+  for k,v in pairs(Statics.CleanStrings) do
+
+    if source == v then
+      source = ""
+    else
+      source = string.gsub(source, v, "")
+    end
+  end
+  return source
+end
+
+function GSE.CleanMacroVersion(macroversion)
+  if not GSE.isEmpty(macroversion.KeyPress) then
+    macroversion.KeyPress = GSE.CleanStringsArray(macroversion.KeyPress)
+  end
+  if not GSE.isEmpty(macroversion.KeyRelease) then
+    macroversion.KeyRelease = GSE.CleanStringsArray(macroversion.KeyRelease)
+  end
+  return macroversion
+end
+
+function GSE.CleanStringsArray(tabl)
+  for k,v in ipairs(tabl) do
+    local tempval = GSE.CleanStrings(v)
+    if tempval == [[""]] then
+      tabl[k] = nil
+    else
+      tabl[k] = tempval
+    end
+  end
+  return tabl
+end

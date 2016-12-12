@@ -16,7 +16,7 @@ end
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
   local vals = {}
   vals.action = "Save"
-  vals.squencename = sequenceName
+  vals.sequencename = sequenceName
   vals.sequence = sequence
   vals.classid = classid
   table.insert(GSE.OOCQueue, vals)
@@ -64,7 +64,9 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
   end
-  GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
+  -- if classid == GSE.GetCurrentClassID() then
+  --   GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
+  -- end
 end
 
 --- Load a collection of Sequences
@@ -112,7 +114,6 @@ end
 --- Load a GSE Sequence Collection from a String
 function GSE.ImportSequence(importStr, legacy)
   local success, returnmessage = false, ""
-  print (legacy)
 
   local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
   return Sequences
@@ -207,72 +208,88 @@ function GSE.ExportSequence(sequence, sequenceName)
   end
   local macroversions = "  MacroVersions = {\n"
   for k,v in pairs(sequence.MacroVersions) do
+    local outputversion =  GSE.CleanMacroVersion(v)
     macroversions = macroversions .. "    [" .. k .. "] = {\n"
 
     local steps = "      StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
     if not GSE.isEmpty(sequence.StepFunction) then
-      if  v.StepFunction == Statics.PriorityImplementation or v.StepFunction == "Priority" then
+      if  outputversion.StepFunction == Statics.PriorityImplementation or outputversion.StepFunction == "Priority" then
        steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-     elseif v.StepFunction == "Sequential" then
+     elseif outputversion.StepFunction == "Sequential" then
        steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
      else
-       steps = "      StepFunction = [[" .. GSEOptions.EQUALS .. v.StepFunction .. Statics.StringReset .. "]],\n"
+       steps = "      StepFunction = [[" .. GSEOptions.EQUALS .. outputversion.StepFunction .. Statics.StringReset .. "]],\n"
       end
     end
-    if not GSE.isEmpty(v.Trinket1) then
-      macroversions = macroversions .. "      Trinket1=" .. tostring(v.Trinket1) .. ",\n"
+    if not GSE.isEmpty(outputversion.Trinket1) then
+      macroversions = macroversions .. "      Trinket1=" .. tostring(outputversion.Trinket1) .. ",\n"
     end
-    if not GSE.isEmpty(v.Trinket2) then
-      macroversions = macroversions .. "      Trinket2=" .. tostring(v.Trinket2) .. ",\n"
+    if not GSE.isEmpty(outputversion.Trinket2) then
+      macroversions = macroversions .. "      Trinket2=" .. tostring(outputversion.Trinket2) .. ",\n"
     end
-    if not GSE.isEmpty(v.Head) then
-      macroversions = macroversions .. "      Head=" .. tostring(v.Head) .. ",\n"
+    if not GSE.isEmpty(outputversion.Head) then
+      macroversions = macroversions .. "      Head=" .. tostring(outputversion.Head) .. ",\n"
     end
-    if not GSE.isEmpty(v.Neck) then
-      macroversions = macroversions .. "      Neck=" .. tostring(v.Neck) .. ",\n"
+    if not GSE.isEmpty(outputversion.Neck) then
+      macroversions = macroversions .. "      Neck=" .. tostring(outputversion.Neck) .. ",\n"
     end
-    if not GSE.isEmpty(v.Belt) then
-      macroversions = macroversions .. "      Belt=" .. tostring(v.Belt) .. ",\n"
+    if not GSE.isEmpty(outputversion.Belt) then
+      macroversions = macroversions .. "      Belt=" .. tostring(outputversion.Belt) .. ",\n"
     end
-    if not GSE.isEmpty(v.Ring1) then
-      macroversions = macroversions .. "      Ring1=" .. tostring(v.Ring1) .. ",\n"
+    if not GSE.isEmpty(outputversion.Ring1) then
+      macroversions = macroversions .. "      Ring1=" .. tostring(outputversion.Ring1) .. ",\n"
     end
-    if not GSE.isEmpty(v.Ring2) then
-      macroversions = macroversions .. "      Ring2=" .. tostring(v.Ring2) .. ",\n"
+    if not GSE.isEmpty(outputversion.Ring2) then
+      macroversions = macroversions .. "      Ring2=" .. tostring(outputversion.Ring2) .. ",\n"
     end
 
     macroversions = macroversions .. steps
-    if not GSE.isEmpty(v.looplimit) then
-      macroversions = macroversions .. "      looplimit=" .. GSEOptions.EQUALS .. v.looplimit .. Statics.StringReset .. ",\n"
+    if not GSE.isEmpty(outputversion.looplimit) then
+      macroversions = macroversions .. "      looplimit=" .. GSEOptions.EQUALS .. outputversion.looplimit .. Statics.StringReset .. ",\n"
     end
-    if not GSE.isEmpty(v.KeyPress) then
+    if not GSE.isEmpty(outputversion.KeyPress) then
       macroversions = macroversions .. "      KeyPress={\n"
-      for _,p in ipairs(v.KeyPress) do
-        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
+      for _,p in ipairs(outputversion.KeyPress) do
+        local results = string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2)
+        if not GSE.isEmpty(results)then
+          macroversions = macroversions .. "        \"" .. results .."\",\n"
+        end
       end
       macroversions = macroversions .. "      },\n"
     end
-    if not GSE.isEmpty(v.PreMacro) then
+    if not GSE.isEmpty(outputversion.PreMacro) then
       macroversions = macroversions .. "      PreMacro={\n"
-      for _,p in ipairs(v.PreMacro) do
-        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
+      for _,p in ipairs(outputversion.PreMacro) do
+        local results = string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2)
+        if not GSE.isEmpty(results)then
+          macroversions = macroversions .. "        \"" .. results .."\",\n"
+        end
       end
       macroversions = macroversions .. "      },\n"
     end
     for _,p in ipairs(v) do
-      macroversions = macroversions .. "      \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
+      local results = string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2)
+      if not GSE.isEmpty(results)then
+        macroversions = macroversions .. "        \"" .. results .."\",\n"
+      end
     end
-    if not GSE.isEmpty(v.PostMacro) then
+    if not GSE.isEmpty(outputversion.PostMacro) then
       macroversions = macroversions .. "      PostMacro={\n"
-      for _,p in ipairs(v.PostMacro) do
-        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .. "\",\n"
+      for _,p in ipairs(outputversion.PostMacro) do
+        local results = string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2)
+        if not GSE.isEmpty(results)then
+          macroversions = macroversions .. "        \"" .. results .."\",\n"
+        end
       end
       macroversions = macroversions .. "      },\n"
     end
-    if not GSE.isEmpty(v.KeyRelease) then
+    if not GSE.isEmpty(outputversion.KeyRelease) then
       macroversions = macroversions .. "      KeyRelease={\n"
-      for _,p in ipairs(v.KeyRelease) do
-        macroversions = macroversions .. "        \"" .. string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2) .."\",\n"
+      for _,p in ipairs(outputversion.KeyRelease) do
+        local results = string.sub(GSE.TranslateString(p, GetLocale(), GetLocale(), true),1,-2)
+        if not GSE.isEmpty(results)then
+          macroversions = macroversions .. "        \"" .. results .."\",\n"
+        end
       end
       macroversions = macroversions .. "      },\n"
     end
@@ -370,6 +387,8 @@ function GSE.OOCUpdateSequence(name,sequence)
   -- print(name)
   -- print(sequence)
   -- print(debugstack())
+  sequence = GSE.CleanMacroVersion(sequence)
+
   local existingbutton = true
   if GSE.isEmpty(_G[name]) then
     GSE.CreateButton(name,sequence)

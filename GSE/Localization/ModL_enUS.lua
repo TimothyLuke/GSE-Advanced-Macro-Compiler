@@ -164,7 +164,7 @@ L["KeyRelease"] = true
 L["Completely New GS Macro."] = true
 L["Please wait till you have left combat before using the Sequence Editor."] = true
 L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] = true
-L["/gsse |r to get started."] = true
+L["/gs |r to get started."] = true
 L["Gnome Sequencer: Sequence Version Manager"] = true
 L["Manage Versions"] = true
 L["Active Version: "] = true
@@ -387,4 +387,5 @@ L["GSE allows plugins to load Macro Collections as plugins.  You can reload a co
 L["The Sample Macros have been reloaded."] = true
 L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
 L["GSE"] = true
+L["/gs |r to get started."] = true
 --@end-do-not-package@

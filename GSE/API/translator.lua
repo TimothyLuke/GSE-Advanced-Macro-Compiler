@@ -64,12 +64,12 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
     return sequence
   end
 
-  GSE.PrintDebugMessage("lines: " .. lines, GNOME)
-  for k,v in pairs(sequence) do
+
+  for k,v in ipairs(sequence) do
     -- Translate sequence
     sequence[k] = GSE.TranslateString(v, fromLocale, toLocale)
   end
-  lines = GSE.TranslateString(lines, fromLocale, toLocale)
+
 
   if not GSE.isEmpty(sequence.KeyRelease) then
     print("Keyrelease has stuff in translate")
@@ -121,6 +121,7 @@ end
 
 function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   instring = GSE.UnEscapeString(instring)
+  
   GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
 
   local output = ""

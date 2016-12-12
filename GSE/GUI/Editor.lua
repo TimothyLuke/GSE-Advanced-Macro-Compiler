@@ -31,7 +31,7 @@ editframe.ClassID = classid
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
-editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIViewFrame:Show(); end)
+editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIShowViewer(); end)
 editframe:SetLayout("List")
 
 

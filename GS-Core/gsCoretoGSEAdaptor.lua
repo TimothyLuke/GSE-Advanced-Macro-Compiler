@@ -119,9 +119,7 @@ f:SetScript('OnEvent', function(self, event, addon)
 end)
 
 function GSELegacyAdaptor:processReload(event, arg)
-  print (event)
-  print(arg)
-  print (GnomeOptions.imported)
+
   if event == "Load" then
     if not GnomeOptions.imported then
       for k,v in pairs(GSMasterOptions.SequenceLibrary) do

@@ -190,13 +190,6 @@ function GSE.GUIViewerLayout(mcontainer)
 end
 
 function GSE.GUIShowViewer()
-    local vals = {}
-    vals.action = "OpenGUI"
-    table.insert(GSE.OOCQueue, vals)
-end
-
-
-function GSE.OOCGuiShowViewer()
   local names = GSE.GetSequenceNames()
   sequenceboxtext:SetText("")
   viewframe:ReleaseChildren()

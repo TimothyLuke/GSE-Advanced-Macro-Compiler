@@ -61,8 +61,9 @@ GSEOptions.autoCreateMacroStubsClass = true
 GSEOptions.autoCreateMacroStubsGlobal = false
 GSEOptions.resetOOC = true
 GSEOptions.DefaultDisabledMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
+GSEOptions.AddInPacks = {}
 
-
+GSE.OOCQueue = {}
 GSE.UnsavedOptions = {}
 GSE.UnsavedOptions["DebugSequenceExecution"] = false
 GSE.TranslatorLanguageTables = {}
@@ -77,6 +78,5 @@ Translator[Statics.TranslationShadow] = {}
 GSE.UnfoundSpells = {}
 
 GSE.PrintAvailable = false
-GSE.AddInPacks = {}
 GSE.StandardAddInPacks = {}
 GSE.UsedSequences = {}

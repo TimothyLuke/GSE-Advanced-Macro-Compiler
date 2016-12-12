@@ -113,7 +113,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
     if not GSE.isEmpty(SequenceName) then
       local vals = {}
       vals.action = "Replace"
-      vals.squencename = SequenceName
+      vals.sequencename = SequenceName
       vals.sequence = sequence
       vals.classid = classid
       table.insert(GSE.OOCQueue, vals)

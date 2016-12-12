@@ -31,7 +31,7 @@ for i=1,GetNumAddOns() do
           if loaded then
             local authorversion = GetAddOnMetadata(name, "Version")
             GSImportLegacyMacroCollections(name, authorversion)
-            GSE.AddInPacks[name] = true
+            GSEOptions.AddInPacks[name] = true
           else
             GSE.UnloadedAddInPacks[name] = true
           end

@@ -9,11 +9,6 @@ local Statics = GSE.Static
 local GCD, GCD_Update_Timer
 
 
-function GSE:PLAYER_LOGIN()
-  GSE:UPDATE_MACROS()
-end
-
-
 function GSE:UNIT_FACTION()
   --local pvpType, ffa, _ = GetZonePVPInfo()
   if UnitIsPVP("player") then
@@ -121,8 +116,6 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
   GSE.ReloadSequences()
 end
 
-GSE:RegisterEvent('PLAYER_LOGIN')
-
 GSE:RegisterEvent('PLAYER_LOGOUT')
 GSE:RegisterEvent('PLAYER_ENTERING_WORLD')
 GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
@@ -150,26 +143,25 @@ GSE:RegisterChatCommand("gs", "GSSlash")
 -- Functions
 --- Handle slash commands
 function GSE:GSSlash(input)
-  input = string.lower(input)
-  if input == "showspec" then
+  if string.lower(input) == "showspec" then
     local currentSpec = GetSpecialization()
     local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
     local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
     GSE.Print(L["Your current Specialisation is "] .. currentSpecID .. ':' .. specname .. L["  The Alternative ClassID is "] .. currentclassId, GNOME)
-  elseif input == "help" then
+  elseif string.lower(input) == "help" then
     PrintGnomeHelp()
-  elseif input == "cleanorphans" or input == "clean" then
+  elseif string.lower(input) == "cleanorphans" or string.lower(input) == "clean" then
     GSE.CleanOrphanSequences()
-  elseif input == "forceclean" then
+  elseif string.lower(input) == "forceclean" then
     GSE.CleanOrphanSequences()
     GSE.CleanMacroLibrary(true)
-  elseif string.lower(string.sub(msg,1,6)) == "export" then
-    GSE.Print(GSExportSequence(string.sub(msg,8)))
-  elseif input == "showdebugoutput" then
+  elseif string.lower(string.sub(string.lower(input),1,6)) == "export" then
+    GSE.Print(GSE.ExportSequence(string.sub(string.lower(input),8)))
+  elseif string.lower(input) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
-  elseif input == "record" then
+  elseif string.lower(input) == "record" then
       GSE.GUIRecordFrame:Show()
-  elseif input == "debug" then
+  elseif string.lower(input) == "debug" then
       GSE.GUIShowDebugWindow()
   else
     GSE.GUIShowViewer()
@@ -184,12 +176,11 @@ function GSE:processReload(action, arg)
 end
 
 function GSE:OnEnable()
-  GSE.OOCQueue = {}
-  GSE.OOCTimer = GSE:ScheduleRepeatingTimer("TimerFeedback", 5)
+  GSE.OOCTimer = GSE:ScheduleRepeatingTimer("ProcessOOCQueue", 2)
 end
 
 
-function GSE:OOCQueue()
+function GSE:ProcessOOCQueue()
   if not InCombatLockdown() then
     for k,v in ipairs(GSE.OOCQueue) do
       if v.action == "UpdateSequence" then
@@ -197,10 +188,12 @@ function GSE:OOCQueue()
       elseif v.action == "Save" then
         GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
       elseif v.action == "Replace" then
-        GSELibrary[v.classid][v.sequencename] = v.sequence
+        if GSE.isEmpty(GSELibrary[v.classid][v.sequencename]) then
+          GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+        else
+          GSELibrary[v.classid][v.sequencename] = v.sequence
+        end
         GSE.OOCUpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
-      elseif v.action == "OpenGUI" then
-        GSE.OOCGuiShowViewer()
       end
       GSE.OOCQueue[k] = nil
     end
