@@ -114,4 +114,65 @@ describe('API Translator', function()
     assert.falsy(GSELibrary[11]['DB_Prot_ST'].helpTxt)
   end)
 
+  it("Test importing from the old GSE1", function()
+    local GSMasterOptions = {}
+    GSMasterOptions.SequenceLibrary = {}
+    GSMasterOptions.SequenceLibrary["DB_Prot_ST"] = {}
+    GSMasterOptions.SequenceLibrary["DB_Prot_ST"][1] = {
+      author="LNPV",
+      specID=66,
+      helpTxt = 'Talents: 2332223',
+      icon=236264,
+      PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+      "/cast Avenger's Shield",
+      "/cast Judgment",
+      "/cast Blessed Hammer",
+      "/cast Consecration",
+      "/cast Light of the Protector",
+      "/cast Shield of the Righteous",
+      PostMacro=[[
+/cast Avenging Wrath
+/startattack
+      ]],
+    }
+    GSMasterOptions.SequenceLibrary["DB_Prot_ST"][2] = {
+      author="LNPV",
+      specID=66,
+      helpTxt = 'Talents: 2332223',
+      icon=236264,
+      PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+      "/cast Avenger's Shield",
+      "/cast Judgment",
+      "/cast Blessed Hammer",
+      "/cast Consecration",
+      "/cast Light of the Protector",
+      "/cast Shield of the Righteous",
+      PostMacro=[[
+/cast Avenging Wrath
+/startattack
+      ]],
+    }
+
+    print ("Initial import tests")
+    GSE.OOCAddSequenceToCollection('DB_Prot_ST',  GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["DB_Prot_ST"][1]), 11)
+    GSE.OOCAddSequenceToCollection('DB_Prot_ST',  GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["DB_Prot_ST"][2]), 11)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST'].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].PreMacro)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].PreMacro)
+    assert.are.equal("Sequential", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].StepFunction)
+    assert.are.equal("/targetenemy [noharm][dead]", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2]["KeyPress"][1])
+    assert.are.equal("Talents: 2332223", GSELibrary[11]['DB_Prot_ST'].Talents)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST'].helpTxt)
+    print("Check for Regression")
+    assert.are.equal("LPNV", GSMasterOptions.SequenceLibrary["DB_Prot_ST"][1].author)
+    assert.are.equal("LPNV", GSMasterOptions.SequenceLibrary["DB_Prot_ST"][2].author)
+    assert.are.equal("/cast Avenger's Shield", GSMasterOptions.SequenceLibrary["DB_Prot_ST"][1][1])
+    assert.are.equal("/cast Avenger's Shield", GSMasterOptions.SequenceLibrary["DB_Prot_ST"][2][1])
+  end)
 end)
