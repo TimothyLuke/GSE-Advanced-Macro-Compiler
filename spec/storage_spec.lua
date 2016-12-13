@@ -99,14 +99,15 @@ describe('API Translator', function()
 
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
-
+    print("about to start asserts.")
     assert.are.equal(66, newmacro.SpecID)
+    print("about to start GSELibrary asserts.")
     assert.falsy(GSELibrary[11]['DB_Prot_ST'].specID)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].specID)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].PreMacro)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].specID)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].PreMacro)
-    assert.are.equal("Sequential", GSELibrary[11]['DB_Prot_ST'].SpecID)
+    assert.are.equal("Sequential", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].StepFunction)
     assert.are.equal([[/targetenemy [noharm][dead]
 ]], GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2]["KeyPress"][1])
     assert.are.equal("Talents: 2332223", GSELibrary[11]['DB_Prot_ST'].Talents)
