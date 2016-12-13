@@ -44,7 +44,7 @@ describe('API Translator', function()
 
   end)
 
-  it("Tests that old macros are converted to new macros", function ()
+  it("Tests that old macros are converted to new macro format", function ()
     local Sequences = {}
 
     Sequences['DB_Prot_ST'] = {
@@ -69,5 +69,7 @@ describe('API Translator', function()
     local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
     assert.are.equal(66, newmacro.SpecID)
     assert.falsy(newmacro.specID)
+    assert.falsy(newmacro["MacroVersions"][1].specID)
+    assert.falsy(newmacro["MacroVersions"][1].PreMacro)
   end)
 end)
