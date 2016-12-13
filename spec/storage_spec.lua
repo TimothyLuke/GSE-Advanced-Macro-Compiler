@@ -72,4 +72,45 @@ describe('API Translator', function()
     assert.falsy(newmacro["MacroVersions"][1].specID)
     assert.falsy(newmacro["MacroVersions"][1].PreMacro)
   end)
+
+  it("Tests that collisions work properly and that a macro imported twice is added as two MacroVersions", function ()
+    local Sequences = {}
+
+    Sequences['DB_Prot_ST'] = {
+      author="LNPV",
+      specID=66,
+      helpTxt = 'Talents: 2332223',
+      icon=236264,
+      PreMacro=[[
+/targetenemy [noharm][dead]
+]],
+      "/cast Avenger's Shield",
+      "/cast Judgment",
+      "/cast Blessed Hammer",
+      "/cast Consecration",
+      "/cast Light of the Protector",
+      "/cast Shield of the Righteous",
+      PostMacro=[[
+/cast Avenging Wrath
+/startattack
+      ]],
+      }
+    local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+
+    GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
+    GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
+
+    assert.are.equal(66, newmacro.SpecID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST'].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].PreMacro)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].specID)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].PreMacro)
+    assert.are.equal("Sequential", GSELibrary[11]['DB_Prot_ST'].SpecID)
+    assert.are.equal([[/targetenemy [noharm][dead]
+]], GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2]["KeyPress"][1])
+    assert.are.equal("Talents: 2332223", GSELibrary[11]['DB_Prot_ST'].Talents)
+    assert.falsy(GSELibrary[11]['DB_Prot_ST'].helpTxt)
+  end)
+
 end)
