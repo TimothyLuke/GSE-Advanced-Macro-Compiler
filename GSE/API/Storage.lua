@@ -43,8 +43,10 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- check if source the same.  If so ignore
     GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
+      GSE.PrintDebugMessage("adding ".. k, "Storage")
       table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
     end
+    GSE.PrintDebugMessage("Finished colliding entry entry")
   else
     -- New Sequence
     if GSE.isEmpty(sequence.Author) then

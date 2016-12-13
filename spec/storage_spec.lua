@@ -96,9 +96,10 @@ describe('API Translator', function()
       ]],
       }
     local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+    local newmacro2 =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
 
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
-    GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
+    GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro2, 11)
     print("about to start asserts.")
     assert.are.equal(66, newmacro.SpecID)
     print("about to start GSELibrary asserts.")
