@@ -46,7 +46,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
       GSE.PrintDebugMessage("adding ".. k, "Storage")
       table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
     end
-    GSE.PrintDebugMessage("Finished colliding entry entry")
+    GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
   else
     -- New Sequence
     if GSE.isEmpty(sequence.Author) then
