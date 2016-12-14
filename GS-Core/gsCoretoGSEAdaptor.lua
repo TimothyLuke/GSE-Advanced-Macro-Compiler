@@ -5,6 +5,7 @@ local GSELegacyAdaptor = LibStub("AceAddon-3.0"):NewAddon("GSELegacyAdaptor", "A
 
 GSMasterOptions = {}
 GSMasterOptions.SequenceLibrary = {}
+GSMasterOptions.AlreadyLoaded = {}
 
 local GSStaticSourceLocal = Statics.SourceLocal
 
@@ -61,16 +62,18 @@ end
 --- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
 local function GSImportLegacyMacroCollections(str, authorversion)
   for k,v in pairs(GSMasterSequences) do
-    if GSE.isEmpty(v.version) then
-      v.version = 1
+    if not GSMasterOptions.AlreadyLoaded[k] then
+      if GSE.isEmpty(v.version) then
+        v.version = 1
+      end
+      if GSE.isEmpty(authorversion) then
+        authorversion = 1
+      end
+      v.source = str
+      v.authorversion = authorversion
+      GSAddSequenceToCollection(k, v, v.version)
+      GSMasterOptions.AlreadyLoaded[k] = true
     end
-    if GSE.isEmpty(authorversion) then
-      authorversion = 1
-    end
-    v.source = str
-    v.authorversion = authorversion
-    GSAddSequenceToCollection(k, v, v.version)
-    GSMasterSequences[k] = nil
   end
 end
 
