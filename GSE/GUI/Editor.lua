@@ -28,6 +28,7 @@ editframe.Raid = 1
 editframe.PVP = 1
 editframe.Mythic = 1
 editframe.ClassID = classid
+editframe.tempEdits = {}
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
@@ -60,6 +61,7 @@ end
 
 function GSE.GUIEditorPerformLayout(frame)
   frame:ReleaseChildren()
+  editframe.tempEdits = {}
   local headerGroup = AceGUI:Create("SimpleGroup")
   headerGroup:SetFullWidth(true)
   headerGroup:SetLayout("Flow")
@@ -115,7 +117,7 @@ function GSE.GUIEditorPerformLayout(frame)
   local transbutton = AceGUI:Create("Button")
   transbutton:SetText(L["Send"])
   transbutton:SetWidth(150)
-  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(editframe.classid.. "," ..editframe.SequenceName) end)
+  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(editframe.ClassID.. "," ..editframe.SequenceName) end)
 
   local editButtonGroup = AceGUI:Create("SimpleGroup")
   editButtonGroup:SetWidth(602)
@@ -125,7 +127,10 @@ function GSE.GUIEditorPerformLayout(frame)
   local savebutton = AceGUI:Create("Button")
   savebutton:SetText(L["Save"])
   savebutton:SetWidth(150)
-  savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence) end)
+  savebutton:SetCallback("OnClick", function()
+    editframe.Sequence.MacroVersions = editframe.tempEdits
+    GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
+  end)
   editButtonGroup:AddChild(savebutton)
 
   local delbutton = AceGUI:Create("Button")
@@ -142,7 +147,6 @@ end
 
 function GSE.GetVersionList()
   local tabl = {}
-  classid = tonumber(classid)
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
     tabl[tostring(k)] = tostring(k)
   end
@@ -172,6 +176,7 @@ function GSE:GUIDrawMetadataEditor(container)
     specdropdownvalue = key;
     editframe.SpecID = key
     editframe.Sequence.SpecID = key
+    editFrame.ClassID = GSE.GetClassIDforSpec(key)
   end)
   metasimplegroup:AddChild(speciddropdown)
   speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.SpecID])
@@ -337,7 +342,21 @@ function GSE:GUIDrawMetadataEditor(container)
 end
 
 function GSE:GUIDrawMacroEditor(container, version)
-  local macroversion = GSE.GUIEditFrame.Sequence.MacroVersions[tonumber(version)]
+  if GSE.isEmpty(version) then
+    version = 1
+    local editmacro = {}
+    editmacro.PreMacro = {}
+    editmacro.PostMacro = {}
+    editmacro.KeyPress = {}
+    editmacro.KeyRelease = {}
+    editmacro.StepFunction = "Sequential"
+    editmacro[1] = "/say Hello"
+    editframe.tempEdits[version] = editmacro
+  else
+    editframe.tempEdits[version] = GSE.GUIEditFrame.Sequence.MacroVersions[tonumber(version)]
+  end
+
+
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
   layoutcontainer:SetHeight(260)
@@ -353,17 +372,6 @@ function GSE:GUIDrawMacroEditor(container, version)
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
 
-  if GSE.isEmpty(version) then
-    local editmacroversion = 0
-    local editmacro = {}
-    editmacro.PreMacro = {}
-    editmacro.PostMacro = {}
-    editmacro.KeyPress = {}
-    editmacro.KeyRelease = {}
-    editmacro.StepFunction = "Sequential"
-    editmacro[1] = "/say Hello"
-    macroversion = editmacro
-  end
 
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
@@ -377,12 +385,11 @@ function GSE:GUIDrawMacroEditor(container, version)
     ["Priority"] = L["Priority List (1 12 123 1234)"],
 
   })
-  stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
-  stepdropdown:SetValue(macroversion.StepFunction)
   stepdropdown:SetCallback("OnValueChanged", function (sel, object, value)
-      macroversion.StepFunction = value
-      GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
-    end)
+    editframe.tempEdits[version].StepFunction = value
+    GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME)
+  end)
+  stepdropdown:SetValue(editframe.tempEdits[version].StepFunction)
   linegroup1:AddChild(stepdropdown)
 
   local spacerlabel1 = AceGUI:Create("Label")
@@ -396,12 +403,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   looplimit:SetWidth(100)
   looplimit.editbox:SetNumeric()
   linegroup1:AddChild(looplimit)
-  if not GSE.isEmpty(macroversion.LoopLimit) then
-    looplimit.SetText(macroversion.LoopLimit)
+  if not GSE.isEmpty(editframe.tempEdits[version].LoopLimit) then
+    looplimit.SetText(editframe.tempEdits[version].LoopLimit)
   end
   looplimit:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.LoopLimit = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].LoopLimit = value
   end)
 
   local spacerlabel7 = AceGUI:Create("Label")
@@ -425,12 +431,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   KeyPressbox:DisableButton(true)
   KeyPressbox:SetWidth(270)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
-  if not GSE.isEmpty(macroversion.KeyPress) then
-    KeyPressbox:SetText(table.concat(macroversion.KeyPress, "\n"))
+  if not GSE.isEmpty(editframe.tempEdits[version].KeyPress) then
+    KeyPressbox:SetText(table.concat(editframe.tempEdits[version].KeyPress, "\n"))
   end
   KeyPressbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.KeyPress = GSE.SplitMeIntolines(value)
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].KeyPress = GSE.SplitMeIntolines(value)
   end)
   linegroup2:AddChild(KeyPressbox)
 
@@ -444,12 +449,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   PreMacro:DisableButton(true)
   PreMacro:SetWidth(270)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PreMacro) end)
-  if not GSE.isEmpty(macroversion.PreMacro) then
-    PreMacro:SetText(table.concat(macroversion.PreMacro, "\n"))
+  if not GSE.isEmpty(editframe.tempEdits[version].PreMacro) then
+    PreMacro:SetText(table.concat(editframe.tempEdits[version].PreMacro, "\n"))
   end
   PreMacro:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.PreMacro = GSE.SplitMeIntolines(value)
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].PreMacro = GSE.SplitMeIntolines(value)
   end)
   linegroup2:AddChild(PreMacro)
 
@@ -462,10 +466,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   spellbox.editBox:SetScript("OnTextChanged", function () end)
-  spellbox:SetText(table.concat(macroversion, "\n"))
+  spellbox:SetText(table.concat(editframe.tempEdits[version], "\n"))
   spellbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion = GSE.SplitMeIntolines(value)
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version] = GSE.SplitMeIntolines(value)
   end)
   contentcontainer:AddChild(spellbox)
 
@@ -480,12 +483,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   KeyReleasebox:SetWidth(270)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   KeyReleasebox.editBox:SetScript("OnTextChanged", function () end)
-  if not GSE.isEmpty(macroversion.KeyRelease) then
-    KeyReleasebox:SetText(table.concat(macroversion.KeyRelease, "\n"))
+  if not GSE.isEmpty(editframe.tempEdits[version].KeyRelease) then
+    KeyReleasebox:SetText(table.concat(editframe.tempEdits[version].KeyRelease, "\n"))
   end
   KeyReleasebox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.KeyRelease = GSE.SplitMeIntolines(value)
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].KeyRelease = GSE.SplitMeIntolines(value)
   end)
   linegroup3:AddChild(KeyReleasebox)
 
@@ -500,12 +502,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   PostMacro:SetWidth(270)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
   linegroup3:AddChild(PostMacro)
-  if not GSE.isEmpty(macroversion.PostMacro) then
-    PostMacro:SetText(table.concat(macroversion.PostMacro, "\n"))
+  if not GSE.isEmpty(editframe.tempEdits[version].PostMacro) then
+    PostMacro:SetText(table.concat(editframe.tempEdits[version].PostMacro, "\n"))
   end
   PostMacro:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.PostMacro = GSE.SplitMeIntolines(value)
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].PostMacro = GSE.SplitMeIntolines(value)
   end)
   contentcontainer:AddChild(linegroup3)
 
@@ -524,12 +525,11 @@ function GSE:GUIDrawMacroEditor(container, version)
   targetresetcheckbox:SetTriState(false)
   targetresetcheckbox:SetLabel(L["Target"])
   toolbarcontainer:AddChild(targetresetcheckbox)
-  if macroversion.Target then
+  if editframe.tempEdits[version].Target then
     targetresetcheckbox:SetValue(true)
   end
   targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Target = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Target = value
   end)
 
   local combatresetcheckbox = AceGUI:Create("CheckBox")
@@ -538,10 +538,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   combatresetcheckbox:SetTriState(true)
   combatresetcheckbox:SetLabel(L["Combat"])
   toolbarcontainer:AddChild(combatresetcheckbox)
-  combatresetcheckbox:SetValue(macroversion.Combat)
+  combatresetcheckbox:SetValue(editframe.tempEdits[version].Combat)
   combatresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Combat = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Combat = value
   end)
 
   local headingspace1 = AceGUI:Create("Label")
@@ -558,10 +557,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   headcheckbox:SetTriState(true)
   headcheckbox:SetLabel(L["Head"])
   headcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Head = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Head = value
   end)
-  headcheckbox:SetValue(macroversion.Head)
+  headcheckbox:SetValue(editframe.tempEdits[version].Head)
 
   toolbarcontainer:AddChild(headcheckbox)
 
@@ -571,10 +569,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   neckcheckbox:SetTriState(true)
   neckcheckbox:SetLabel(L["Neck"])
   neckcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Neck = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Neck = value
   end)
-  neckcheckbox:SetValue(macroversion.Neck)
+  neckcheckbox:SetValue(editframe.tempEdits[version].Neck)
   toolbarcontainer:AddChild(neckcheckbox)
 
   local beltcheckbox = AceGUI:Create("CheckBox")
@@ -583,10 +580,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   beltcheckbox:SetTriState(true)
   beltcheckbox:SetLabel(L["Belt"])
   beltcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Belt = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Belt = value
   end)
-  beltcheckbox:SetValue(macroversion.Belt)
+  beltcheckbox:SetValue(editframe.tempEdits[version].Belt)
   toolbarcontainer:AddChild(beltcheckbox)
 
   local ring1checkbox = AceGUI:Create("CheckBox")
@@ -595,10 +591,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   ring1checkbox:SetTriState(true)
   ring1checkbox:SetLabel(L["Ring 1"])
   ring1checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Ring1 = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Ring1 = value
   end)
-  ring1checkbox:SetValue(macroversion.Ring1)
+  ring1checkbox:SetValue(editframe.tempEdits[version].Ring1)
   toolbarcontainer:AddChild(ring1checkbox)
 
   local ring2checkbox = AceGUI:Create("CheckBox")
@@ -607,10 +602,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   ring2checkbox:SetTriState(true)
   ring2checkbox:SetLabel(L["Ring 2"])
   ring2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Ring2 = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Ring2 = value
   end)
-  ring2checkbox:SetValue(macroversion.Ring2)
+  ring2checkbox:SetValue(editframe.tempEdits[version].Ring2)
   toolbarcontainer:AddChild(ring2checkbox)
 
   local trinket1checkbox = AceGUI:Create("CheckBox")
@@ -619,10 +613,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   trinket1checkbox:SetTriState(true)
   trinket1checkbox:SetLabel(L["Trinket 1"])
   trinket1checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Trinket1 = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Trinket1 = value
   end)
-  trinket1checkbox:SetValue(macroversion.Trinket1)
+  trinket1checkbox:SetValue(editframe.tempEdits[version].Trinket1)
   toolbarcontainer:AddChild(trinket1checkbox)
 
   local trinket2checkbox = AceGUI:Create("CheckBox")
@@ -631,10 +624,9 @@ function GSE:GUIDrawMacroEditor(container, version)
   trinket2checkbox:SetTriState(true)
   trinket2checkbox:SetLabel(L["Trinket 2"])
   trinket2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    macroversion.Trinket2 = value
-    GSE.GUISaveTemporaryMacroVersionChanges(version, macroversion)
+    editframe.tempEdits[version].Trinket2 = value
   end)
-  trinket2checkbox:SetValue(macroversion.Trinket2)
+  trinket2checkbox:SetValue(editframe.tempEdits[version].Trinket2)
   toolbarcontainer:AddChild(trinket2checkbox)
 
   layoutcontainer:AddChild(toolbarcontainer)
@@ -654,14 +646,6 @@ function GSE.GUISelectEditorTab(container, event, group)
     GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
   else
     GSE:GUIDrawMacroEditor(container, group)
-  end
-end
-
-function GSE.GUISaveTemporaryMacroVersionChanges(version, macro)
-  if version == "new" or GSE.isEmpty(version) then
-    table.insert(editframe.Sequence.MacroVersions, macro)
-  else
-    editframe.Sequence.MacroVersions[version] = macro
   end
 end
 
