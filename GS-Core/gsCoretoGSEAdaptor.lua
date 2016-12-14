@@ -119,7 +119,6 @@ f:SetScript('OnEvent', function(self, event, addon)
 end)
 
 function GSELegacyAdaptor:processReload(event, arg)
-
   if event == "Load" or arg == "Legacy GSE 1"  then
     if not GnomeOptions.imported then
       for k,v in pairs(GSMasterOptions.SequenceLibrary) do
@@ -132,6 +131,7 @@ function GSELegacyAdaptor:processReload(event, arg)
     if event == "Load" then
       GnomeOptions.imported = true
     end
+  end
 end
 
 GSELegacyAdaptor:RegisterMessage(Statics.ReloadMessage, "processReload")
