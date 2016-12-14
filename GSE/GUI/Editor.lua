@@ -469,7 +469,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     for k,v in ipairs(newpairs) do
       editframe.Sequence.MacroVersions[version][k] = v
     end
-    
   end)
   contentcontainer:AddChild(spellbox)
 
