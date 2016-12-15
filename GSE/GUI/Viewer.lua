@@ -18,6 +18,7 @@ local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
 
 viewframe.SequenceName = ""
+viewframe.ClassID = 0
 
 function GSE.GUIDrawStandardViewerWindow(container)
   local sequencebox = AceGUI:Create("MultiLineEditBox")
@@ -56,17 +57,20 @@ function GSE.GUIDrawStandardViewerWindow(container)
   impbutton:SetCallback("OnClick", function() GSE.GUIViewFrame:Hide(); GSE.GUIImportFrame:Show() end)
   buttonGroup:AddChild(impbutton)
 
+  local expbutton = AceGUI:Create("Button")
+  expbutton:SetText(L["Export"])
+  expbutton:SetWidth(150)
+  expbutton:SetCallback("OnClick", function()
+    GSE.GUIExportSequence(viewframe.Classid, viewframe.SequenceName) 
+  end)
+  expbutton:AddChild(impbutton)
+  viewframe.ExportButton = expbutton
+
   local tranbutton = AceGUI:Create("Button")
   tranbutton:SetText(L["Send"])
   tranbutton:SetWidth(150)
   tranbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(viewframe.SequenceName) end)
   buttonGroup:AddChild(tranbutton)
-
-  -- local versbutton = AceGUI:Create("Button")
-  -- versbutton:SetText(L["Manage Versions"])
-  -- versbutton:SetWidth(150)
-  -- versbutton:SetCallback("OnClick", function() GSSE:ManageSequenceVersion() end)
-  -- buttonGroup:AddChild(versbutton)
 
   disableSeqbutton = AceGUI:Create("Button")
   GSE.GUIConfigureMacroButton(disableSeqbutton)
@@ -144,6 +148,7 @@ function GSE.GUIViewerLayout(mcontainer)
   GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key)
     local elements = GSE.split(key, ",")
     viewframe.SequenceName = elements[2]
+    viewframe.Classid = tonumber(elements[1])
     editkey = key
     GSE.GUILoadSequence(key)
     viewframe.EditButton:SetDisabled(false)

@@ -64,6 +64,7 @@ API\Plugins.lua
 API\GUIFunctions.lua
 GUI\Options.lua
 GUI\Import.lua
+GUI\Export.lua
 GUI\DebugWindow.lua
 GUI\Transmission.lua
 GUI\VersionManagement.lua
