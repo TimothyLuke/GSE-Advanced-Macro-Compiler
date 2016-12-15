@@ -89,7 +89,7 @@ function GSE.GUIUpdateSequenceList()
 end
 
 function GSE.GUIloadTranslatedSequence(key)
-  GSE.PrintDebugMessage(L["GSTranslateSequenceFromTo(GSELibrary["] .. currentSequence .. L["], (GSE.isEmpty(GSELibrary["] .. currentSequence .. L["].lang) and GSELibrary["] .. currentSequence .. L["].lang or GetLocale()), key)"] , GNOME)
+  GSE.PrintDebugMessage("GSTranslateSequenceFromTo(GSELibrary[" .. currentSequence .. "], (GSE.isEmpty(GSELibrary[" .. currentSequence .. "].lang) and GSELibrary[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
   GSE.GUIViewFrame.SequenceTextbox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 

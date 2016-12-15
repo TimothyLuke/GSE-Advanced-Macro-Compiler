@@ -61,7 +61,7 @@ function GSE.GUIDrawStandardViewerWindow(container)
   expbutton:SetText(L["Export"])
   expbutton:SetWidth(150)
   expbutton:SetCallback("OnClick", function()
-    GSE.GUIExportSequence(viewframe.Classid, viewframe.SequenceName) 
+    GSE.GUIExportSequence(viewframe.Classid, viewframe.SequenceName)
   end)
   expbutton:AddChild(impbutton)
   viewframe.ExportButton = expbutton
@@ -119,7 +119,7 @@ function GSE.GUISelectGroup(container, event, group)
    local tremote = remotesequenceboxtext:GetText()
    local tlocal = sequenceboxtext:GetText()
    container:ReleaseChildren()
-   GSE.PrintDebugMessage(L["Selecting tab: "] .. group, GNOME)
+   GSE.PrintDebugMessage("Selecting tab: " .. group, GNOME)
    if group == "localtab" then
       GSSE:drawstandardwindow(container)
    elseif group == "remotetab" then
@@ -232,7 +232,7 @@ function GSE.GUILoadSequence(key)
   classid = tonumber(elements[1])
   sequenceName = elements[2]
 
-  GSE.PrintDebugMessage(L["GSSE:loadSequence "] .. sequenceName)
+  GSE.PrintDebugMessage("GSSE:loadSequence " .. sequenceName)
   if GSEOptions.useTranslator then
     GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
   --TODO Fix this so the translator works.

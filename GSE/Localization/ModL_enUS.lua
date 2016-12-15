@@ -6,60 +6,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 --@do-not-package@
 
-
---Debug Strings from Core
-L["createButton KeyPress: "] = true
-L["createButton KeyRelease: "] = true
-L["Reloading Sequences"] = true
-L["Entering GSSplitMeIntolines with :"] = true
-L["Line : "] = true
-L["Testing String: "] = true
-L[" Deleted Orphaned Macro "] = true
-L["I am loaded"] = true
-L[" Sequence named "] = true
-L[" is unknown."] = true
-L["Moving on - "] = true
-L["Moving on - macro for "] = true
-L[" already exists."] = true
-L["Sequence Name: "] = true
-L["No Specialisation information for sequence "] = true
-L[". Overriding with information for current spec "] = true
-L["Checking if specID "] = true
-L[" equals "] = true
-L[" equals currentclassid "] = true
-L["GSUpdateSequence KeyPress updated to: "] = true
-L["GSUpdateSequence KeyRelease updated to: "] = true
-L["Adding missing Language :"] =  true
-L["Removing "] = true
-L[" From library"] = true
-L["has been disabled.  The Macro stub for this sequence will be deleted and will not be recreated until you re-enable this sequence.  It will also not appear in the /gs list until it is recreated."] = true
-L["This Sequence is currently Disabled Locally."] = true
-L["is currently disabled from use."] = true
-L["has been enabled.  The Macro stub is now available in your Macro interface."] = true
-L["Testing "]  = true
-L["Source "] = true
-L["Cycle Version "] = true
-L["Active Version "] = true
-L["To get started "] = true
-L["Your current Specialisation is "] = true
-L["We have a perfect match"] = true
-L["Matching specID"] = true
-L["Different specID"] = true
-L["Matching StepFunction"] = true
-L["Different StepFunction"] = true
-L["Matching KeyPress"] = true
-L["Different KeyPress"] = true
-L["Same Sequence Steps"] = true
-L["Different Sequence Steps"] = true
-L["Matching KeyRelease"] = true
-L["Different KeyRelease"] = true
-L["GCD Delay:"] = true
-
---Debug Strings from Errorhandler
-L["Dump of GS Debug messages"] = true
 L["Update"] = true
-L["Close"] = true
-L["[GNOME] syntax error on line %d of Sequences.lua:|r %s"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
 
@@ -110,33 +57,6 @@ L["No Active Version"] = true
 L["Matching helpTxt"] = true
 L["Different helpTxt"] = true
 L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
-
--- Editor DEBUG
-L["Selecting tab: "] = true
-L["GSTranslateSequenceFromTo(GSMasterOptions.SequenceLibrary["] = true
-L["], (GSE.isEmpty(GSMasterOptions.SequenceLibrary["] = true
-L["].lang) and GSMasterOptions.SequenceLibrary["] = true
-L["].lang or GetLocale()), key)"] = true
-L["GSSE:loadSequence "] = true
-L["Moving on - LiveTest.KeyPress already exists."] = true
-L["Moving on - LiveTest.PosMacro already exists."] = true
-L["String Icon "] = true
-L["Spec = "] = true
-L["Class = "] = true
-L["sequenceIndex: "] = true
-L["No value"] = true
-L["Icon: "] = true
-L["none"] = true
-L["Macro Found "] = true
-L[" with iconid "] = true
-L["of no value"] = true
-L["with no body"] = true
-L["No Macro Found. Possibly different spec for Sequence "] = true
-L["SequenceSpecID: "] = true
-L["No Sequence Icon setting to "] = true
-L["No value"] = true
-L["Setting Editor clean "] = true
-L[" not added to list."] = true
 
 --sequence editor stuff
 L["Sequence"] = true

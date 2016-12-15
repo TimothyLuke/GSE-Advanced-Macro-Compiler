@@ -12,7 +12,7 @@ if GetLocale() ~= "enUS" then
     GSE.TranslatorLanguageTables[Statics.TranslationKey][GetLocale()] = {}
     GSE.TranslatorLanguageTables[Statics.TranslationHash][GetLocale()] = {}
     GSE.TranslatorLanguageTables[Statics.TranslationShadow][GetLocale()] = {}
-    GSE.PrintDebugMessage(L["Adding missing Language :"] .. GetLocale(), GNOME )
+    GSE.PrintDebugMessage("Adding missing Language :" .. GetLocale(), GNOME )
     local i = 0
     for k,v in pairs(GSE.TranslatorLanguageTables[Statics.TranslationKey]["enUS"]) do
       GSE.PrintDebugMessage(i.. " " .. k .. " " ..v)

@@ -100,7 +100,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
     -- Sequence exists do nothing
-    GSE.PrintDebugMessage(L["Moving on - macro for "] .. sequenceName .. L[" already exists."], GNOME)
+    GSE.PrintDebugMessage("Moving on - macro for " .. sequenceName .. " already exists.", GNOME)
   else
     -- Create Sequence as a player sequence
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
@@ -155,7 +155,7 @@ function GSE.ImportSequence(importStr, legacy)
 end
 
 function GSE.ReloadSequences()
-  GSE.PrintDebugMessage(L["Reloading Sequences"])
+  GSE.PrintDebugMessage("Reloading Sequences")
   for name, sequence in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
     GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
@@ -423,9 +423,9 @@ function GSE.OOCUpdateSequence(name,sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(tempseq))) .. ']=======])')
   button:SetAttribute("step",1)
   button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage(L["GSUpdateSequence KeyPress updated to: "] .. button:GetAttribute('KeyPress'))
+  GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. button:GetAttribute('KeyPress'))
   button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage(L["GSUpdateSequence KeyRelease updated to: "] .. button:GetAttribute('KeyRelease'))
+  GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. button:GetAttribute('KeyRelease'))
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
   end
@@ -521,37 +521,37 @@ function GSE.CompareSequence(seq1,seq2)
   if seq1.KeyRelease == seq2.KeyRelease and seq1.KeyPress == seq2.KeyPress and seq1.SpecID == seq2.SpecID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
     -- we have a match
     match = true
-    GSE.PrintDebugMessage(L["We have a perfect match"], GNOME)
+    GSE.PrintDebugMessage("We have a perfect match", GNOME)
   else
     if seq1.SpecID == seq2.SpecID then
-      GSE.PrintDebugMessage(L["Matching specID"], GNOME)
+      GSE.PrintDebugMessage("Matching specID", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different specID"], GNOME)
+      GSE.PrintDebugMessage("Different specID", GNOME)
     end
     if seq1.StepFunction == seq2.StepFunction then
-      GSE.PrintDebugMessage(L["Matching StepFunction"], GNOME)
+      GSE.PrintDebugMessage("Matching StepFunction", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different StepFunction"], GNOME)
+      GSE.PrintDebugMessage("Different StepFunction", GNOME)
     end
     if seq1.KeyPress == seq2.KeyPress then
-      GSE.PrintDebugMessage(L["Matching KeyPress"], GNOME)
+      GSE.PrintDebugMessage("Matching KeyPress", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different KeyPress"], GNOME)
+      GSE.PrintDebugMessage("Different KeyPress", GNOME)
     end
     if steps1 == steps2 then
-      GSE.PrintDebugMessage(L["Same Sequence Steps"], GNOME)
+      GSE.PrintDebugMessage("Same Sequence Steps", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different Sequence Steps"], GNOME)
+      GSE.PrintDebugMessage("Different Sequence Steps", GNOME)
     end
     if seq1.KeyRelease == seq2.KeyRelease then
-      GSE.PrintDebugMessage(L["Matching KeyRelease"], GNOME)
+      GSE.PrintDebugMessage("Matching KeyRelease", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different KeyRelease"], GNOME)
+      GSE.PrintDebugMessage("Different KeyRelease", GNOME)
     end
     if seq1.helpTxt == seq2.helpTxt then
-      GSE.PrintDebugMessage(L["Matching helpTxt"], GNOME)
+      GSE.PrintDebugMessage("Matching helpTxt", GNOME)
     else
-      GSE.PrintDebugMessage(L["Different helpTxt"], GNOME)
+      GSE.PrintDebugMessage("Different helpTxt", GNOME)
     end
 
   end
@@ -629,14 +629,14 @@ end
 --- Return the Macro Icon for the specified Sequence
 function GSE.GetMacroIcon(classid, sequenceIndex)
   classid = tonumber(classid)
-  GSE.PrintDebugMessage(L["sequenceIndex: "] .. (GSE.isEmpty(sequenceIndex) and L["No value"] or sequenceIndex), GNOME)
+  GSE.PrintDebugMessage("sequenceIndex: " .. (GSE.isEmpty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
   classid = tonumber(classid)
   local macindex = GetMacroIndexByName(sequenceIndex)
   local a, iconid, c =  GetMacroInfo(macindex)
   if not GSE.isEmpty(a) then
-    GSE.PrintDebugMessage(L["Macro Found "] .. a .. L[" with iconid "] .. (GSE.isEmpty(iconid) and L["of no value"] or iconid) .. " " .. (GSE.isEmpty(iconid) and L["with no body"] or c), GNOME)
+    GSE.PrintDebugMessage("Macro Found " .. a .. " with iconid " .. (GSE.isEmpty(iconid) and "of no value" or iconid) .. " " .. (GSE.isEmpty(iconid) and L["with no body"] or c), GNOME)
   else
-    GSE.PrintDebugMessage(L["No Macro Found. Possibly different spec for Sequence "] .. sequenceIndex , GNOME)
+    GSE.PrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex , GNOME)
     return GSEOptions.DefaultDisabledMacroIcon
   end
 
@@ -647,7 +647,7 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
       return "INV_MISC_QUESTIONMARK"
     else
       local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID((GSE.isEmpty(sequence.SpecID) and GSE.GetCurrentSpecID() or sequence.SpecID))
-      GSE.PrintDebugMessage(L["No Sequence Icon setting to "] .. strsub(specicon, 17), GNOME)
+      GSE.PrintDebugMessage("No Sequence Icon setting to " .. strsub(specicon, 17), GNOME)
       return strsub(specicon, 17)
     end
   elseif GSE.isEmpty(iconid) and not GSE.isEmpty(sequence.Icon) then

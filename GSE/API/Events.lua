@@ -62,7 +62,7 @@ function GSE:ADDON_LOADED(event, addon)
   if counter <= 0 then
     StaticPopup_Show ("GSE-SampleMacroDialog")
   end
-  GSE.PrintDebugMessage(L["I am loaded"])
+  GSE.PrintDebugMessage("I am loaded")
   GSE.ReloadSequences()
   GSE:SendMessage(Statics.CoreLoadedMessage)
 
@@ -89,7 +89,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
     local _, GCD_Timer = GetSpellCooldown(61304)
     GCD = true
     GCD_Update_Timer = C_Timer.After(GCD_Timer, function () GCD = nil; GSE.PrintDebugMessage("GCD OFF") end)
-    GSE.PrintDebugMessage(L["GCD Delay:"] .. " " .. GCD_Timer)
+    GSE.PrintDebugMessage("GCD Delay:" .. " " .. GCD_Timer)
     GSE.CurrentGCD = GCD_Timer
 
     if GSE.RecorderActive then

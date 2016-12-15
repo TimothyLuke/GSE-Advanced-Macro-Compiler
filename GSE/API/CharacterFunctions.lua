@@ -57,9 +57,9 @@ function GSE.isSpecIDForCurrentClass(specID)
   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
   local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
   if specID > 15 then
-    GSE.PrintDebugMessage(L["Checking if specID "] .. specID .. " " .. specclass .. L[" equals "] .. currentenglishclass)
+    GSE.PrintDebugMessage("Checking if specID " .. specID .. " " .. specclass .. " equals " .. currentenglishclass)
   else
-    GSE.PrintDebugMessage(L["Checking if specID "] .. specID .. L[" equals currentclassid "] .. currentclassId)
+    GSE.PrintDebugMessage("Checking if specID " .. specID .. " equals currentclassid " .. currentclassId)
   end
   return (specclass==currentenglishclass or specID==currentclassId)
 end
