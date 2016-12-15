@@ -87,3 +87,13 @@ function GSE.GetCurrentTalents()
   end
   return talents
 end
+
+
+--- Experimental attempt to load a WeakAuras string.
+function GSE.LoadWeakauras(str)
+  local WeakAuras = WeakAuras
+
+  if WeakAuras then
+    WeakAuras.ImportString(str)
+  end
+end
