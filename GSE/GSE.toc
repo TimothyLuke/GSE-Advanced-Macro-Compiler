@@ -13,6 +13,7 @@ lib\LibDataBroker-1.1\LibDataBroker-1.1.lua
 lib\LibQTip-1.0\LibQTip-1.0.lua
 lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+GUI\PanelWidget.lua
 
 
 #Setup Localisation
