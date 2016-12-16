@@ -308,5 +308,6 @@ L["The Sample Macros have been reloaded."] = true
 L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
 L["GSE"] = true
 L["/gs |r to get started."] = true
-L["Gnome Sequencer: Export a Macro String."] = true
+L["Gnome Sequencer: Export a Sequence String."] = true
+L["Export a Sequence"] = true
 --@end-do-not-package@

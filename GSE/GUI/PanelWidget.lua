@@ -1,4 +1,9 @@
-local AceGUI = LibStub("AceGUI-3.0")
+local Type = "SelectablePanel"
+local Version = 1
+
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
+if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
+
 
 
 -------------
@@ -33,117 +38,125 @@ local AceGUI = LibStub("AceGUI-3.0")
   It expects that a Key is set to identify it.
 ]]
 
-do
-	local Type = "SelectablePanel"
-	local Version = 1
 
-
-	local function OnAcquire(self)
-		self:SetWidth(300)
-		self:SetHeight(100)
-	end
-
-	local function OnRelease(self)
-		self.frame:ClearAllPoints()
-		self.frame:Hide()
-	end
-
-  local function OnEnter(self, motion)
-    if not self.clicked then
-      self.red, self.green, self.blue, self.alpha = self.frame:GetBackdropColor()
-      self.frame:SetBackdropColor(self.red+0.1, self.green + 0.1, self.blue + 0.1, self.alpha)
-    end
-  end
-
-  local function OnLeave(self, motion)
-    if not self.clicked then
-      self.frame:SetBackdropColor(self.red, self.green, self.blue , self.alpha)
-    end
-  end
-
-  local function OnClick(self, button, down)
-    if button == "LeftButton" then
-      if self.clicked then
-        self.clicked = false
-        self.frame:SetBackdropColor(self.red+0.1, self.green + 0.1, self.blue + 0.1, self.alpha)
-      else
-        self.frame:SetBackdropColor(self.red + 0.2, self.green + 0.2, self.blue + 0.2, self.alpha)
-      end
-    end
-    print(self.Key)
-  end
-
-
-	local function LayoutFinished(self, width, height)
-		if self.noAutoHeight then return end
-		self:SetHeight(height or 0)
-	end
-
-	local function OnWidthSet(self, width)
-		local content = self.content
-		content:SetWidth(width)
-		content.width = width
-	end
-
-	local function OnHeightSet(self, height)
-		local content = self.content
-		content:SetHeight(height)
-		content.height = height
-	end
-
-
-
-  local function SetKey(self, key)
-    self.Key = key
-  end
-
-  local function getKey(self)
-    return self.Key
-  end
-
-
-	local function Constructor()
-		local frame = CreateFrame("Frame",nil,UIParent)
-		local self = {}
-		self.type = Type
-
-		self.OnRelease = OnRelease
-		self.OnAcquire = OnAcquire
-		self.frame = frame
-		self.LayoutFinished = LayoutFinished
-		self.OnWidthSet = OnWidthSet
-		self.OnHeightSet = OnHeightSet
-
-
-    self.clicked = false
-    self.OnLeave = OnLeave
-    self.OnEnter = OnEnter
-    self.OnClick = OnClick
-
-    self.Key = ""
-
-		frame.obj = self
-
-		frame:SetHeight(100)
-		frame:SetWidth(100)
-		frame:SetFrameStrata("FULLSCREEN_DIALOG")
-
-
-
-		--Container Support
-		local content = CreateFrame("Frame",nil,frame)
-		self.content = content
-		content.obj = self
-		content:SetPoint("TOPLEFT",frame,"TOPLEFT",0,0)
-		content:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",0,0)
-
-
-
-		AceGUI:RegisterAsContainer(self)
-		return self
-	end
-
-
-
-	AceGUI:RegisterWidgetType(Type,Constructor,Version)
+local function OnAcquire(self)
+	self:SetWidth(300)
+	self:SetHeight(100)
 end
+
+local function OnRelease(self)
+	self.frame:ClearAllPoints()
+	self.frame:Hide()
+	self.Clicked = false
+end
+
+local function SelectablePanel_OnClick(self, button)
+  if button == "LeftButton" then
+    if self.Clicked then
+      self.Clicked = false
+			self.obj.border:SetAlpha(0) -- half-alpha light grey
+		else
+			self.obj.border:SetAlpha(0.6) -- half-alpha light grey
+			self.Clicked = true
+    end
+  end
+	self.obj:Fire("OnClick", self.Clicked)
+end
+
+
+local function LayoutFinished(self, width, height)
+	if self.noAutoHeight then return end
+	self:SetHeight(height or 0)
+end
+
+local function OnWidthSet(self, width)
+	local content = self.content
+	content:SetWidth(width)
+	content.width = width
+end
+
+local function OnHeightSet(self, height)
+	local content = self.content
+	content:SetHeight(height)
+	content.height = height
+end
+
+local function SetClicked(self, boole)
+  print("self - SetClicked " .. self:GetKey())
+  print (boole)
+	if boole then
+		self.border:SetAlpha(0.6) -- half-alpha light grey
+		self.Clicked = true
+	else
+		self.Clicked = false
+		self.border:SetAlpha(0) -- half-alpha light grey
+	end
+end
+
+local function SetKey(self, key)
+  self.Key = key
+end
+
+local function GetKey(self)
+  return self.Key
+end
+
+
+local function Constructor()
+	local frame = CreateFrame("Frame",nil,UIParent)
+
+	local self = {}
+	self.type = Type
+
+	self.OnRelease = OnRelease
+	self.OnAcquire = OnAcquire
+	self.frame = frame
+	self.LayoutFinished = LayoutFinished
+	self.OnWidthSet = OnWidthSet
+	self.OnHeightSet = OnHeightSet
+
+
+  self.Clicked = false
+	self.Key = ""
+  self.SetKey = SetKey
+	self.GetKey = GetKey
+  self.SetClicked = SetClicked
+
+	frame.obj = self
+
+	frame:SetHeight(100)
+	frame:SetWidth(100)
+	-- frame:SetFrameStrata("FULLSCREEN_DIALOG")
+  -- frame:SetScript("OnLeave", OnLeave)
+  -- frame:SetScript("OnEnter", OnEnter)
+	frame:SetScript("OnMouseUp", SelectablePanel_OnClick)
+  local highlightTexture = frame:CreateTexture(nil, "HIGHLIGHT")
+  highlightTexture:SetAllPoints(true)
+  highlightTexture:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
+	highlightTexture:SetAlpha(1)
+  frame:EnableMouse(true)
+
+  local border=frame:CreateTexture(nil, "BACKGROUND")
+	border:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+	border:SetPoint("TOPLEFT",-2,2)
+  border:SetPoint("BOTTOMRIGHT",2,-2)
+	border:SetVertexColor(1.0, 0.96, 0.41, 0) -- half-alpha light grey
+
+
+  self.border = border
+
+	--Container Support
+	local content = CreateFrame("Frame",nil,frame)
+	self.content = content
+	content.obj = self
+	content:SetPoint("TOPLEFT",frame,"TOPLEFT",0,0)
+	content:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",0,0)
+
+
+	AceGUI:RegisterAsContainer(self)
+	return self
+end
+
+
+
+AceGUI:RegisterWidgetType(Type,Constructor,Version)

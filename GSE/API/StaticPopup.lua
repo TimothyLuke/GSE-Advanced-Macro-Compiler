@@ -17,7 +17,7 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
 }
 
 StaticPopupDialogs["GS-DebugOutput"] = {
-  text = L["Dump of GS Debug messages"],
+  text = "Dump of GS Debug messages",
   button1 = L["Update"],
   button2 = L["Close"],
   OnAccept = function(self, data)
