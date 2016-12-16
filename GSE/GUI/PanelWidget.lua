@@ -66,19 +66,27 @@ end
 
 local function LayoutFinished(self, width, height)
 	if self.noAutoHeight then return end
-	self:SetHeight(height or 0)
+	self:SetHeight((height or 0) + 40)
 end
 
 local function OnWidthSet(self, width)
 	local content = self.content
-	content:SetWidth(width)
-	content.width = width
+	local contentwidth = width - 20
+	if contentwidth < 0 then
+		contentwidth = 0
+	end
+	content:SetWidth(contentwidth)
+	content.width = contentwidth
 end
 
 local function OnHeightSet(self, height)
 	local content = self.content
-	content:SetHeight(height)
-	content.height = height
+	local contentheight = height - 20
+	if contentheight < 0 then
+		contentheight = 0
+	end
+	content:SetHeight(contentheight)
+	content.height = contentheight
 end
 
 local function SetClicked(self, boole)
@@ -126,10 +134,8 @@ local function Constructor()
 
 	frame:SetHeight(100)
 	frame:SetWidth(100)
-	-- frame:SetFrameStrata("FULLSCREEN_DIALOG")
-  -- frame:SetScript("OnLeave", OnLeave)
-  -- frame:SetScript("OnEnter", OnEnter)
-	frame:SetScript("OnMouseUp", SelectablePanel_OnClick)
+	frame:SetFrameStrata("FULLSCREEN_DIALOG")
+  frame:SetScript("OnMouseUp", SelectablePanel_OnClick)
   local highlightTexture = frame:CreateTexture(nil, "HIGHLIGHT")
   highlightTexture:SetAllPoints(true)
   highlightTexture:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")

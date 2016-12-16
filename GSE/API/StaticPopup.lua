@@ -39,7 +39,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
 		self.editBox.width = self.editBox:GetWidth()
-		self.editBox:Width(220)
+		self.editBox:SetWidth(220)
 		self.editBox:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
 		self.editBox:HighlightText()
 		ChatEdit_FocusActiveWindow();
@@ -72,6 +72,45 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	showAlert = 1,
 }
 
+StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
+	text = L["Copy this link and open it in a Browser."],
+	hasEditBox = 1,
+  url = "http://www.wowlazymacros.com",
+	OnShow = function(self)
+		self.editBox:SetAutoFocus(false)
+		self.editBox.width = self.editBox:GetWidth()
+		self.editBox:SetWidth(220)
+		self.editBox:SetText(StaticPopupDialogs['GSE_SEQUENCEHELP'].url)
+		self.editBox:HighlightText()
+		ChatEdit_FocusActiveWindow();
+	end,
+	OnHide = function(self)
+		self.editBox:Width(self.editBox.width or 50)
+		self.editBox.width = nil
+	end,
+	hideOnEscape = 1,
+	button1 = OKAY,
+	EditBoxOnEnterPressed = function(self)
+		ChatEdit_FocusActiveWindow();
+		self:GetParent():Hide();
+	end,
+	EditBoxOnEscapePressed = function(self)
+		ChatEdit_FocusActiveWindow();
+		self:GetParent():Hide();
+	end,
+	EditBoxOnTextChanged = function(self)
+		if(self:GetText() ~= StaticPopupDialogs['GSE_SEQUENCEHELP'].url) then
+			self:SetText(StaticPopupDialogs['GSE_SEQUENCEHELP'].url)
+		end
+		self:HighlightText()
+		self:ClearFocus()
+		ChatEdit_FocusActiveWindow();
+	end,
+	OnEditFocusGained = function(self)
+		self:HighlightText()
+	end,
+	showAlert = 1,
+}
 
 StaticPopupDialogs["GSE-SampleMacroDialog"] = {
   text = L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"],

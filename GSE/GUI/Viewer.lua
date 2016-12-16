@@ -63,7 +63,7 @@ function GSE.GUIDrawStandardViewerWindow(container)
   expbutton:SetCallback("OnClick", function()
     GSE.GUIExportSequence(viewframe.Classid, viewframe.SequenceName)
   end)
-  expbutton:AddChild(impbutton)
+  buttonGroup:AddChild(expbutton)
   viewframe.ExportButton = expbutton
 
   local tranbutton = AceGUI:Create("Button")

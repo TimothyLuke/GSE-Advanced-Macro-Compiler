@@ -310,4 +310,7 @@ L["GSE"] = true
 L["/gs |r to get started."] = true
 L["Gnome Sequencer: Export a Sequence String."] = true
 L["Export a Sequence"] = true
+L["Export"] = true
+L["Help URL"] = true
+L["Copy this link and open it in a Browser."] = true
 --@end-do-not-package@
