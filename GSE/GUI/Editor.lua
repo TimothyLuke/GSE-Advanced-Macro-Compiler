@@ -191,7 +191,7 @@ function GSE:GUIDrawMetadataEditor(container)
     lang = "enUS"
   end
   langeditbox:SetText(lang)
-  langeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+  langeditbox:SetCallback("OnTextChanged", function (obj,event,key)
     editframe.Sequence.Lang = key
   end)
 
@@ -206,7 +206,7 @@ function GSE:GUIDrawMetadataEditor(container)
   metasimplegroup:AddChild(talentseditbox)
   contentcontainer:AddChild(metasimplegroup)
   talentseditbox:SetText(editframe.Sequence.Talents)
-  talentseditbox:SetCallback("OnValueChanged", function (obj,event,key)
+  talentseditbox:SetCallback("OnTextChanged", function (obj,event,key)
     editframe.Sequence.Talents = key
   end)
   local helpeditbox = AceGUI:Create("MultiLineEditBox")
@@ -218,7 +218,7 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Help) then
     helpeditbox:SetText(editframe.Sequence.Help)
   end
-  helpeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+  helpeditbox:SetCallback("OnTextChanged", function (obj,event,key)
     editframe.Sequence.Help = key
   end)
   contentcontainer:AddChild(helpeditbox)
@@ -235,7 +235,7 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Helplink) then
     helplinkeditbox:SetText(editframe.Sequence.Helplink)
   end
-  helplinkeditbox:SetCallback("OnValueChanged", function (obj,event,key)
+  helplinkeditbox:SetCallback("OnTextChanged", function (obj,event,key)
     editframe.Sequence.Helplink = key
   end)
   helpgroup1:AddChild(helplinkeditbox)
@@ -251,7 +251,7 @@ function GSE:GUIDrawMetadataEditor(container)
   if not GSE.isEmpty(editframe.Sequence.Author) then
     authoreditbox:SetText(editframe.Sequence.Author)
   end
-  authoreditbox:SetCallback("OnValueChanged", function (obj,event,key)
+  authoreditbox:SetCallback("OnTextChanged", function (obj,event,key)
     editframe.Sequence.Author = key
   end)
   helpgroup1:AddChild(authoreditbox)
