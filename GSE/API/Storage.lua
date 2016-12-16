@@ -671,7 +671,7 @@ function GSE.ConvertLegacySequence(sequence)
     returnSequence.Author = sequence.author
   end
   if not GSE.isEmpty(sequence.helpTxt) then
-    returnSequence.Talents = sequence.helpTxt
+    returnSequence.Help = sequence.Help
   end
   if not GSE.isEmpty(sequence.lang) then
     returnSequence.Lang = sequence.lang
