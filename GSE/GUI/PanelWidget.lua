@@ -49,14 +49,6 @@ do
 	end
 
   local function OnEnter(self, motion)
-    local red, green, blue, alpha = self.frame:GetBackdropColor()
-    red = red + 0.1
-    green = green + 0.1
-    blue = blue + 0.1
-    self.frame:SetBackdropColor(red, green, blue, alpha)
-  end
-
-  local function OnEnter(self, motion)
     if not self.clicked then
       self.red, self.green, self.blue, self.alpha = self.frame:GetBackdropColor()
       self.frame:SetBackdropColor(self.red+0.1, self.green + 0.1, self.blue + 0.1, self.alpha)
