@@ -60,13 +60,13 @@ local function SelectablePanel_OnClick(self, button)
 			self.Clicked = true
     end
   end
-	self.obj:Fire("OnClick", self.Clicked)
+	self.obj:Fire("OnClick", self.Clicked, button)
 end
 
 
 local function LayoutFinished(self, width, height)
 	if self.noAutoHeight then return end
-	self:SetHeight((height or 0) + 40)
+	self:SetHeight((height or 0) + 10)
 end
 
 local function OnWidthSet(self, width)
@@ -90,9 +90,7 @@ local function OnHeightSet(self, height)
 end
 
 local function SetClicked(self, boole)
-  print("self - SetClicked " .. self:GetKey())
-  print (boole)
-	if boole then
+  if boole then
 		self.border:SetAlpha(0.6) -- half-alpha light grey
 		self.Clicked = true
 	else

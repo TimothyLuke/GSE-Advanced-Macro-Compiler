@@ -9,29 +9,172 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 local editkey = ""
 
+
 local viewframe = AceGUI:Create("Frame")
+viewframe:SetTitle(L["Sequence Viewer"])
+
+
 GSE.GUIViewFrame = viewframe
 
 viewframe:Hide()
 local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
 local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
-
+viewframe.panels = {}
 viewframe.SequenceName = ""
 viewframe.ClassID = 0
 
-function GSE.GUIDrawStandardViewerWindow(container)
-  local sequencebox = AceGUI:Create("MultiLineEditBox")
-  sequencebox:SetLabel(L["Sequence"])
-  sequencebox:SetNumLines(18)
-  sequencebox:DisableButton(true)
-  sequencebox:SetFullWidth(true)
-  sequencebox:SetText(sequenceboxtext:GetText())
-  sequencebox:SetCallback("OnEnter", function() sequencebox:HighlightText(0, string.len(sequencebox:GetText())) end)
+function viewframe:clearpanels(widget, selected)
+  GSE.PrintDebugMessage("widget = " .. widget:GetKey(), "GUI")
+  for k,v in pairs(viewframe.panels) do
+    GSE.PrintDebugMessage("k " .. k, "GUI")
+    if k == widget:GetKey() then
+      GSE.PrintDebugMessage ("matching key", "GUI")
+      local elements = GSE.split(widget:GetKey(), ",")
+      if selected then
+        viewframe.ClassID = elements[1]
+        viewframe.SequenceName = elements[2]
+        viewframe.EditButton:SetDisabled(false)
+        editkey = k
+      else
+        viewframe.ClassID = nil
+        viewframe.SequenceName = nil
+        viewframe.EditButton:SetDisabled(true)
+        editkey = ""
+      end
 
-  container:AddChild(sequencebox)
+      viewframe.panels[k]:SetClicked(true)
+    else
+      GSE.PrintDebugMessage ("other widget key", "GUI")
+      GSE.PrintDebugMessage("reprinting k " .. k, "GUI")
+      local wid = viewframe.panels[k]
+      wid:SetClicked(false)
+    end
+  end
 
-  viewframe.SequenceTextbox = sequencebox
+  GSE.GUIConfigureMacroButton(viewframe.MacroIconButton)
+
+end
+
+function GSE.GUICreateSequencePanels(frame, container, key)
+  local elements = GSE.split(key, ",")
+  local classid = tonumber(elements[1])
+  local sequencename = elements[2]
+  local fontName, fontHeight, fontFlags = GameFontHighlightSmall:GetFont()
+  local font = GameFontHighlightSmall:GetFontObject()
+  font:SetJustifyV("BOTTOM")
+
+  local selpanel = AceGUI:Create("SelectablePanel")
+  selpanel:SetKey(key)
+  selpanel:SetFullWidth(true)
+  selpanel:SetHeight(300)
+  viewframe.panels[key] = selpanel
+  selpanel:SetCallback("OnClick", function(widget, _, selected, button)
+    viewframe:clearpanels(widget, selected)
+    if button == "RightButton" then
+      GSE.GUILoadEditor(widget:GetKey(), viewframe)
+    end
+  end)
+
+  local label = AceGUI:Create("Label")
+  label:SetText(sequencename)
+  label:SetFont(fontName, fontHeight + 4 , fontFlags)
+  label:SetColor(GSE.GUIGetColour(GSEOptions.EmphasisColour))
+  selpanel:AddChild(label)
+
+  local columngroup = AceGUI:Create("SimpleGroup")
+  columngroup:SetFullWidth(true)
+  columngroup:SetLayout("Flow")
+
+  local column1 = AceGUI:Create("SimpleGroup")
+  column1:SetWidth(560)
+  column1:SetLayout("List")
+
+
+  columngroup:AddChild(column1)
+
+
+
+  local helplabel = AceGUI:Create("Label")
+  local helptext = L["No Help Information Available"]
+  if not GSE.isEmpty(GSELibrary[classid][sequencename].Help) then
+    helptext = GSELibrary[classid][sequencename].Help
+  end
+  helplabel:SetFullWidth(true)
+  helplabel:SetFontObject(font)
+  helplabel:SetText(helptext )
+  column1:AddChild(helplabel)
+
+  local row2 = AceGUI:Create("SimpleGroup")
+  row2:SetLayout("Flow")
+  row2:SetFullWidth(true)
+
+  local talentsHead = AceGUI:Create("Label")
+  talentsHead:SetFont(fontName, fontHeight + 2 , fontFlags)
+  talentsHead:SetText(L["Talents"] ..":")
+  talentsHead:SetWidth(60)
+  row2:AddChild(talentsHead)
+
+  local talentslabel = AceGUI:Create("Label")
+  if not GSE.isEmpty(GSELibrary[classid][sequencename].Talents) then
+    talentslabel:SetText(GSELibrary[classid][sequencename].Talents)
+  end
+  talentslabel:SetWidth(80)
+  talentslabel:SetFontObject(font)
+  talentslabel:SetColor(GSE.GUIGetColour(GSEOptions.INDENT))
+  row2:AddChild(talentslabel)
+
+  local spacerlabel1 = AceGUI:Create("Label")
+  spacerlabel1:SetText("")
+  spacerlabel1:SetWidth(5)
+  row2:AddChild(spacerlabel1)
+
+  local urlHead = AceGUI:Create("Label")
+  urlHead:SetFont(fontName, fontHeight + 2 , fontFlags)
+  urlHead:SetText(L["Help URL"] ..":")
+  urlHead:SetWidth(70)
+  row2:AddChild(urlHead)
+
+  local urlval = "http://www.wowlazymacros.com"
+  local urllabel = AceGUI:Create("InteractiveLabel")
+  if not GSE.isEmpty(GSELibrary[classid][sequencename].Helplink) then
+   urllabel = GSELibrary[classid][sequencename].HelpLink
+  end
+  urllabel:SetFontObject(font)
+  urllabel:SetText(urlval)
+  urllabel:SetCallback("OnClick", function()
+    StaticPopupDialogs['GSE_SEQUENCEHELP'].url = urlval
+    StaticPopup_Show('GSE_SEQUENCEHELP')
+  end)
+  urllabel:SetWidth(280)
+  row2:AddChild(urllabel)
+
+
+  local column2 = AceGUI:Create("SimpleGroup")
+  column2:SetWidth(60)
+  column2:SetLayout("List")
+  columngroup:AddChild(column2)
+
+
+  local viewiconpicker = AceGUI:Create("Icon")
+
+  viewiconpicker.frame:RegisterForDrag("LeftButton")
+  viewiconpicker.frame:SetScript("OnDragStart", function()
+    PickupMacro(sequencename)
+  end)
+  selpanel.Icon = viewiconpicker
+  viewiconpicker:SetImage(GSE.GetMacroIcon(classid, sequencename))
+  viewiconpicker:SetImageSize(50,50)
+  column2:AddChild(viewiconpicker)
+
+  selpanel:AddChild(columngroup)
+  selpanel:AddChild(row2)
+
+  container:AddChild(selpanel)
+end
+
+function GSE.GUIViewerToolbar(container)
+
 
   local buttonGroup = AceGUI:Create("SimpleGroup")
   buttonGroup:SetFullWidth(true)
@@ -73,8 +216,11 @@ function GSE.GUIDrawStandardViewerWindow(container)
   buttonGroup:AddChild(tranbutton)
 
   disableSeqbutton = AceGUI:Create("Button")
-  GSE.GUIConfigureMacroButton(disableSeqbutton)
+  disableSeqbutton:SetDisabled(true)
+  disableSeqbutton:SetText(L["Create Icon"])
   disableSeqbutton:SetWidth(150)
+
+
   buttonGroup:AddChild(disableSeqbutton)
   viewframe.MacroIconButton = disableSeqbutton
   local eOptionsbutton = AceGUI:Create("Button")
@@ -94,42 +240,7 @@ function GSE.GUIDrawStandardViewerWindow(container)
   sequenceboxtext = sequencebox
 end
 
-function GSE.GUIDrawSecondaryViewerWindow(container)
-  local languages = GSTRListCachedLanguages()
-  local listbox = AceGUI:Create("Dropdown")
-  listbox:SetLabel(L["Choose Language"])
-  listbox:SetWidth(150)
-  listbox:SetList(languages)
-  listbox:SetCallback("OnValueChanged", function (obj,event,key) GSSE:loadTranslatedSequence(GSTRListCachedLanguages()[key]) end)
-  container:AddChild(listbox)
 
-  local remotesequencebox = AceGUI:Create("MultiLineEditBox")
-  remotesequencebox:SetLabel(L["Translated Sequence"])
-  remotesequencebox:SetText(remotesequenceboxtext:GetText())
-  remotesequencebox:SetNumLines(20)
-  remotesequencebox:DisableButton(true)
-  remotesequencebox:SetFullWidth(true)
-  container:AddChild(remotesequencebox)
-  remotesequenceboxtext = remotesequencebox
-  viewframe.SequenceTextbox = remotesequenceboxtext
-end
-
--- Callback function for OnGroupSelected
-function GSE.GUISelectGroup(container, event, group)
-   local tremote = remotesequenceboxtext:GetText()
-   local tlocal = sequenceboxtext:GetText()
-   container:ReleaseChildren()
-   GSE.PrintDebugMessage("Selecting tab: " .. group, GNOME)
-   if group == "localtab" then
-      GSSE:drawstandardwindow(container)
-   elseif group == "remotetab" then
-      GSSE:drawsecondarywindow(container)
-   end
-   remotesequenceboxtext:SetText(tremote)
-   sequenceboxtext:SetText(tlocal)
-end
-
-viewframe:SetTitle(L["Sequence Viewer"])
 
 function GSE.GUIViewerLayout(mcontainer)
   mcontainer:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
@@ -137,69 +248,29 @@ function GSE.GUIViewerLayout(mcontainer)
   mcontainer:SetLayout("List")
 
 
-  local viewerheadergroup = AceGUI:Create("SimpleGroup")
-  viewerheadergroup:SetFullWidth(true)
-  viewerheadergroup:SetLayout("Flow")
+  local scrollcontainer = AceGUI:Create("SimpleGroup")
+  scrollcontainer:SetFullWidth(true)
+  scrollcontainer:SetHeight(370)
+  scrollcontainer:SetLayout("Fill")
 
 
-  local GSSequenceListbox = AceGUI:Create("Dropdown")
-  GSSequenceListbox:SetLabel(L["Load Sequence"])
-  GSSequenceListbox:SetWidth(250)
-  GSSequenceListbox:SetCallback("OnValueChanged", function (obj,event,key)
-    local elements = GSE.split(key, ",")
-    viewframe.SequenceName = elements[2]
-    viewframe.Classid = tonumber(elements[1])
-    editkey = key
-    GSE.GUILoadSequence(key)
-    viewframe.EditButton:SetDisabled(false)
+  mcontainer:AddChild(scrollcontainer)
+  local contentcontainer = AceGUI:Create("ScrollFrame")
+  contentcontainer:SetLayout("list")
+  scrollcontainer:AddChild(contentcontainer)
+  viewframe.ScrollContainer = contentcontainer
 
-  end)
+  GSE.GUIViewerToolbar(mcontainer)
 
-  viewframe.SequenceListbox = GSSequenceListbox
-  local spacerlabel = AceGUI:Create("Label")
-  spacerlabel:SetWidth(300)
-
-
-  local viewiconpicker = AceGUI:Create("Icon")
-  viewiconpicker:SetLabel(L["Macro Icon"])
-  viewiconpicker.frame:RegisterForDrag("LeftButton")
-  viewiconpicker.frame:SetScript("OnDragStart", function()
-    if not GSE.isEmpty(viewframe.SequenceName) then
-      PickupMacro(viewframe.SequenceName)
-    end
-  end)
-  viewiconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-  GSE.GUIViewFrame.Icon = viewiconpicker
-
-  viewerheadergroup:AddChild(GSSequenceListbox)
-  viewerheadergroup:AddChild(spacerlabel)
-  viewerheadergroup:AddChild(viewiconpicker)
-  mcontainer:AddChild(viewerheadergroup)
-
-  -- TODO Enable langyuages Tabs.
-  if GSEOptions.useTranslator and GSE.AdditionalLanguagesAvailable then
-    local tab =  AceGUI:Create("TabGroup")
-    tab:SetLayout("Flow")
-    -- Setup which tabs to show
-    tab:SetTabs({{text=GetLocale(), value="localtab"}, {text=L["Translate to"], value="remotetab"}})
-    -- Register callback
-    tab:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectGroup(container, event, group) end)
-    -- Set initial Tab (this will fire the OnGroupSelected callback)
-    tab:SelectTab("localtab")
-    tab:SetFullWidth(true)
-    -- add to the frame container
-    mcontainer:AddChild(tab)
-  else
-     GSE.GUIDrawStandardViewerWindow(mcontainer)
-  end
 end
 
 function GSE.GUIShowViewer()
   local names = GSE.GetSequenceNames()
-  sequenceboxtext:SetText("")
   viewframe:ReleaseChildren()
   GSE.GUIViewerLayout(viewframe)
-  viewframe.SequenceListbox:SetList(names)
+  for k,v in pairs(names) do
+    GSE.GUICreateSequencePanels(viewframe,viewframe.ScrollContainer, k)
+  end
   viewframe:Show()
 end
 
@@ -209,14 +280,12 @@ function GSE.GUIConfigureMacroButton(button)
     button:SetCallback("OnClick", function()
       GSE.DeleteMacroStub(viewframe.SequenceName)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.Icon:SetImage(GSE.GetMacroIcon(classid, sequenceName))
     end)
   else
-    disableSeqbutton:SetText(L["Create Icon"])
-    disableSeqbutton:SetCallback("OnClick", function()
+    button:SetText(L["Create Icon"])
+    button:SetCallback("OnClick", function()
       GSE.CheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.Icon:SetImage(GSE.GetMacroIcon(classid, sequenceName))
     end)
   end
   if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
@@ -224,23 +293,5 @@ function GSE.GUIConfigureMacroButton(button)
   else
     button:SetDisabled(false)
   end
-
-end
-
-function GSE.GUILoadSequence(key)
-  local elements = GSE.split(key, ",")
-  classid = tonumber(elements[1])
-  sequenceName = elements[2]
-
-  GSE.PrintDebugMessage("GSSE:loadSequence " .. sequenceName)
-  if GSEOptions.useTranslator then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], (GSE.isEmpty(GSELibrary[classid][sequenceName].Lang) and "enUS" or GSELibrary[classid][sequenceName].Lang), GetLocale()), sequenceName))
-  --TODO Fix this so the translator works.
-elseif GSE.TranslatorAvailable then
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSE.TranslateSequenceFromTo(GSELibrary[classid][sequenceName], GetLocale(), GetLocale()), sequenceName))
-  else
-    GSE.GUIViewFrame.SequenceTextbox:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName]),sequenceName)
-  end
-  GSE.GUIConfigureMacroButton(viewframe.MacroIconButton)
-  GSE.GUIViewFrame.Icon:SetImage(GSE.GetMacroIcon(classid, sequenceName))
+  GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
 end

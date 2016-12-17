@@ -580,7 +580,7 @@ function GSE.CheckMacroCreated(SequenceName, create)
     EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
   else
     if create then
-      local icon = (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon) and Statics.QuestionMark or GSELibrary[GSE.GetCurrentClassID()][sequenceName].Icon)
+      local icon = (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[GSE.GetCurrentClassID()][SequenceName].Icon)
       GSE.CreateMacroIcon(SequenceName, icon)
       found = true
     end

@@ -74,5 +74,3 @@ GUI\Editor.lua
 GUI\Viewer.lua
 
 API\Events.lua
-
-GUI\ExperimentFrame.lua
