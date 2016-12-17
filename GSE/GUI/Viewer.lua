@@ -35,11 +35,13 @@ function viewframe:clearpanels(widget, selected)
         viewframe.ClassID = elements[1]
         viewframe.SequenceName = elements[2]
         viewframe.EditButton:SetDisabled(false)
+        viewframe.ExportButton:SetDisabled(false)
         editkey = k
       else
-        viewframe.ClassID = nil
-        viewframe.SequenceName = nil
+        viewframe.ClassID = 0
+        viewframe.SequenceName = ""
         viewframe.EditButton:SetDisabled(true)
+        viewframe.ExportButton:SetDisabled(true)
         editkey = ""
       end
 
@@ -204,9 +206,10 @@ function GSE.GUIViewerToolbar(container)
   expbutton:SetText(L["Export"])
   expbutton:SetWidth(150)
   expbutton:SetCallback("OnClick", function()
-    GSE.GUIExportSequence(viewframe.Classid, viewframe.SequenceName)
+    GSE.GUIExportSequence(viewframe.ClassID, viewframe.SequenceName)
   end)
   buttonGroup:AddChild(expbutton)
+  expbutton:SetDisabled(true)
   viewframe.ExportButton = expbutton
 
   local tranbutton = AceGUI:Create("Button")
@@ -280,12 +283,14 @@ function GSE.GUIConfigureMacroButton(button)
     button:SetCallback("OnClick", function()
       GSE.DeleteMacroStub(viewframe.SequenceName)
       GSE.GUIConfigureMacroButton(button)
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
     end)
   else
     button:SetText(L["Create Icon"])
     button:SetCallback("OnClick", function()
       GSE.CheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
       GSE.GUIConfigureMacroButton(button)
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
     end)
   end
   if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
@@ -293,5 +298,4 @@ function GSE.GUIConfigureMacroButton(button)
   else
     button:SetDisabled(false)
   end
-  GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
 end

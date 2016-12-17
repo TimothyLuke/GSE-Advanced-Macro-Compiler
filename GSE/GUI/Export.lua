@@ -17,7 +17,7 @@ exportframe:SetLayout("List")
 
 local exportsequencebox = AceGUI:Create("MultiLineEditBox")
 exportsequencebox:SetLabel(L["Sequence"])
-exportsequencebox:SetNumLines(20)
+exportsequencebox:SetNumLines(29)
 exportsequencebox:DisableButton(true)
 exportsequencebox:SetFullWidth(true)
 exportframe:AddChild(exportsequencebox)
@@ -27,6 +27,6 @@ GSE.GUIExportframe = exportframe
 exportframe.ExportSequenceBox = exportsequencebox
 
 function GSE.GUIExportSequence(classid, sequencename)
-  GSE.GUIExportframe.GUIExportSequence:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename))
-  GSE.GUIExportframe.GUIExportSequence:Show()
+  GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename))
+  GSE.GUIExportframe:Show()
 end
