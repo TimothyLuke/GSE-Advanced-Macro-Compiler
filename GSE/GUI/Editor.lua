@@ -178,26 +178,8 @@ function GSE:GUIDrawMetadataEditor(container)
 
 
   local spacerlabel1 = AceGUI:Create("Label")
-  spacerlabel1:SetWidth(50)
+  spacerlabel1:SetWidth(80)
   metasimplegroup:AddChild(spacerlabel1)
-
-  local langeditbox = AceGUI:Create("EditBox")
-  langeditbox:SetLabel(L["Language"])
-  langeditbox:SetWidth(100)
-  langeditbox:DisableButton( true)
-  metasimplegroup:AddChild(langeditbox)
-  local lang = editframe.Sequence.Lang
-  if GSE.isEmpty(lang) then
-    lang = "enUS"
-  end
-  langeditbox:SetText(lang)
-  langeditbox:SetCallback("OnTextChanged", function (obj,event,key)
-    editframe.Sequence.Lang = key
-  end)
-
-  local spacerlabel2 = AceGUI:Create("Label")
-  spacerlabel2:SetWidth(50)
-  metasimplegroup:AddChild(spacerlabel2)
 
   local talentseditbox = AceGUI:Create("EditBox")
   talentseditbox:SetLabel(L["Talents"])

@@ -78,19 +78,9 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
 end
 
 
-function GSE.GUIChangeOtherSequence(key)
-  otherversionlistboxvalue = key
-  otherSequenceVersions:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][key], (GSE.isEmpty(GSELibrary[currentSequence][key].lang) and GetLocale() or GSELibrary[currentSequence][key].lang ), GetLocale()), currentSequence))
-end
-
 function GSE.GUIUpdateSequenceList()
   local names = GSE.GetSequenceNames()
   GSE.GUIViewFrame.SequenceListbox:SetList(names)
-end
-
-function GSE.GUIloadTranslatedSequence(key)
-  GSE.PrintDebugMessage("GSTranslateSequenceFromTo(GSELibrary[" .. currentSequence .. "], (GSE.isEmpty(GSELibrary[" .. currentSequence .. "].lang) and GSELibrary[" .. currentSequence .. "].lang or GetLocale()), key)" , GNOME)
-  GSE.GUIViewFrame.SequenceTextbox:SetText(GSExportSequencebySeq(GSTranslateSequenceFromTo(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)], (GSE.isEmpty(GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang) and "enUS" or GSELibrary[currentSequence][GSGetActiveSequenceVersion(currentSequence)].lang ), key), currentSequence))
 end
 
 function GSE.GUIToggleClasses(buttonname)
@@ -123,8 +113,6 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
 end
 
 
-
-
 function GSE.GUIGetColour(option)
   hex = string.gsub(option, "#","")
   return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
@@ -132,15 +120,6 @@ end
 
 function  GSE.GUISetColour(option, r, g, b)
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
-end
-
---- This Function enables or disables the Translator Window.
-function GSE.ToggleTranslator (boole)
-  if boole then
-    print('|cffff0000' .. GNOME .. L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"])
-  end
-  GSEOptions.useTranslator = boole
-  StaticPopup_Show ("GSEConfirmReloadUI")
 end
 
 

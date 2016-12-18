@@ -303,9 +303,6 @@ function GSE.ExportSequence(sequence, sequenceName)
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
-  if not GSE.isEmpty(sequence.Lang) then
-    returnVal = returnVal .. "  Lang=\"" .. GSEOptions.STANDARDFUNCS .. sequence.Lang .. Statics.StringReset .. "\",\n"
-  end
   returnVal = returnVal .. macroversions
   returnVal = returnVal .. "},\n"
 
@@ -384,47 +381,70 @@ function GSE.UpdateSequence(name, sequence)
   table.insert(GSE.OOCQueue, vals)
 end
 
+function GSE.CreateTemporaryVersion(sequence)
+  local returnseq = {}
+  if not GSE.isEmpty(sequence.KeyPress) then
+    returnseq.KeyPress = {}
+    for k,v in ipairs(sequence.KeyPress) do
+      table.insert(returnseq.KeyPress, v)
+    end
+  end
+  if not GSE.isEmpty(sequence.KeyRelease)  then
+    sequence.KeyRelease = {}
+    for k,v in ipairs(sequence.KeyRelease) do
+      table.insert(sequence.KeyRelease, v)
+    end
+  end
+
+  if not GSE.isEmpty(sequence.PreMaco) then
+    for k,v in ipairs(sequence.PreMacro) do
+      table.insert(returnseq, v)
+    end
+  end
+  for k,v in ipairs(sequence) do
+    table.insert(returnseq, v)
+  end
+  if not GSE.isEmpty(sequence.PostMaco) then
+    for k,v in ipairs(sequence.PostMacro) do
+      table.insert(returnseq, v)
+    end
+  end
+  return returnseq
+end
+
+
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
 function GSE.OOCUpdateSequence(name,sequence)
-  -- print(name)
-  -- print(sequence)
-  -- print(debugstack())
   sequence = GSE.CleanMacroVersion(sequence)
+  GSE.FixSequence(sequence)
+  tempseq = GSE.CreateTemporaryVersion(sequence)
 
   local existingbutton = true
   if GSE.isEmpty(_G[name]) then
-    GSE.CreateButton(name,sequence)
+    GSE.CreateButton(name,tempseq)
     existingbutton = false
   end
   local button = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-  if GSEOptions.useTranslator then
-    sequence = GSE.TranslateSequence(sequence, name)
+  if GetLocale() ~= "enUS" then
+    tempseq = GSE.TranslateSequence(tempseq, name)
+    tempseq = GSE.UnEscapeSequence(tempseq)
   end
-  local tempseq = {}
+
+
   if not GSE.isEmpty(sequence.PreMaco) then
-    for k,v in ipairs(sequence.PreMacro) do
-      table.insert(tempseq, v)
-    end
-    button:SetAttribute('loopstart', table.getn(tempseq) + 1)
+    button:SetAttribute('loopstart', table.getn(sequence) + 1)
   end
-  for k,v in ipairs(sequence) do
-    table.insert(tempseq, v)
-  end
+
   if not GSE.isEmpty(sequence.PostMaco) then
-    button:SetAttribute('loopstop', table.getn(tempseq) + 1)
-    for k,v in ipairs(sequence.PostMacro) do
-      table.insert(tempseq, v)
-    end
+    button:SetAttribute('loopstop', table.getn(sequence) + 1)
   end
 
-
-  GSE.FixSequence(sequence)
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(tempseq))) .. ']=======])')
   button:SetAttribute("step",1)
-  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(sequence), "\n") or '' .. '\n')
+  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
   GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(sequence), "\n") or '' .. '\n')
+  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
   GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. button:GetAttribute('KeyRelease'))
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
@@ -672,9 +692,6 @@ function GSE.ConvertLegacySequence(sequence)
   end
   if not GSE.isEmpty(sequence.helpTxt) then
     returnSequence.Help = sequence.helpTxt
-  end
-  if not GSE.isEmpty(sequence.lang) then
-    returnSequence.Lang = sequence.lang
   end
   returnSequence.Default = 1
   returnSequence.MacroVersions = {}

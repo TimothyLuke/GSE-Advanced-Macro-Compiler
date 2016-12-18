@@ -40,13 +40,12 @@ function GSE.ListCachedLanguages()
 end
 
 function GSE.TranslateSequence(sequence, sequenceName)
-
+  local locale = GetLocale()
   if not GSE.isEmpty(sequence) then
-    if (GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) ~= locale then
-      --GSE.PrintDebugMessage((GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) .. " ~=" .. locale, GNOME)
-      return GSE.TranslateSequenceFromTo(sequence, (GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang), locale, sequenceName)
+    if "enUS" ~= locale then
+      return GSE.TranslateSequenceFromTo(sequence, "enUS", locale, sequenceName)
     else
-      GSE.PrintDebugMessage((GSE.isEmpty(sequence.Lang) and "enUS" or sequence.Lang) .. " ==" .. locale, GNOME)
+      GSE.PrintDebugMessage("enUS" ) .. " ==" .. locale, GNOME)
       return sequence
     end
   end
@@ -115,7 +114,6 @@ function GSE.TranslateSequenceFromTo(sequence, fromLocale, toLocale, sequenceNam
       sequence[i] = nil
     end
   end
-  sequence.Lang = toLocale
   return sequence
 end
 
