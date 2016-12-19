@@ -96,6 +96,11 @@ end
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   -- Changes have been made so save them
+  for k,v in ipairs(sequence.MacroVersions) do
+    sequence.MacroVersions[k] = GSE.TranslateSequenceFromTo(v, GetLocale(), "enUS", SequenceName)
+    sequence.MacroVersions[k] = GSE.UnEscapeSequence(sequence.MacroVersions[k])
+  end
+
   if not GSE.isEmpty(SequenceName) then
     if GSE.isEmpty(classid) then
       classid = GSE.GetCurrentClassID()

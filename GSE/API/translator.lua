@@ -42,11 +42,9 @@ end
 function GSE.TranslateSequence(sequence, sequenceName)
   local locale = GetLocale()
   if not GSE.isEmpty(sequence) then
-    if "enUS" ~= locale then
-      return GSE.TranslateSequenceFromTo(sequence, "enUS", locale, sequenceName)
-    else
-      return sequence
-    end
+    return GSE.TranslateSequenceFromTo(sequence, "enUS", locale, sequenceName)
+  else
+    return sequence
   end
 end
 
