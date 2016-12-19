@@ -441,11 +441,10 @@ function GSE:GUIDrawMacroEditor(container, version)
   spellbox:DisableButton(true)
   spellbox:SetFullWidth(true)
   spellbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
-  spellbox:SetText(table.concat(editframe.Sequence.MacroVersions[version], "\n"))
+  if not GSE.isEmpty(editframe.Sequence.MacroVersions[version]) then
+    spellbox:SetText(table.concat(editframe.Sequence.MacroVersions[version], "\n"))
+  end
   spellbox:SetCallback("OnTextChanged", function (sel, object, value)
-    -- TODO FIX THIS
-    -- print (value)
-    -- editframe.Sequence.MacroVersions[version] = GSE.SplitMeIntolines(value)
     for k,v in ipairs(editframe.Sequence.MacroVersions[version]) do
       editframe.Sequence.MacroVersions[version][k] = nil
     end

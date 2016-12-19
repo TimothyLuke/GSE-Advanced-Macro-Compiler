@@ -7,19 +7,15 @@ function GSE.UnEscapeSequence(sequence)
   retseq = GSE.UnEscapeTable(sequence)
   if not GSE.isEmpty(sequence.KeyPress) then
     retseq.KeyPress = GSE.UnEscapeTable(sequence.KeyPress)
-    GSE.RemoveBlankLines(retseq.KeyPress)
   end
   if not GSE.isEmpty(sequence.KeyRelease) then
     retseq.KeyRelease = GSE.UnEscapeTable(sequence.KeyRelease)
-    GSE.RemoveBlankLines(sequence.KeyRelease)
   end
   if not GSE.isEmpty(sequence.PreMacro) then
     retseq.PreMacro = GSE.UnEscapeTable(sequence.PreMacro)
-    GSE.RemoveBlankLines(sequence.PreMacro)
   end
   if not GSE.isEmpty(sequence.PostMacro) then
     retseq.PostMacro = GSE.UnEscapeTable(sequence.PostMacro)
-    GSE.RemoveBlankLines(sequence.PostMacro)
   end
   return retseq
 end
