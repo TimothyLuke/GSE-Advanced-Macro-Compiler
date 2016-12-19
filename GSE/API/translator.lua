@@ -40,9 +40,8 @@ function GSE.ListCachedLanguages()
 end
 
 function GSE.TranslateSequence(sequence, sequenceName)
-  local locale = GetLocale()
   if not GSE.isEmpty(sequence) then
-    return GSE.TranslateSequenceFromTo(sequence, "enUS", locale, sequenceName)
+    return GSE.TranslateSequenceFromTo(sequence, "enUS", GetLocale(), sequenceName)
   else
     return sequence
   end
