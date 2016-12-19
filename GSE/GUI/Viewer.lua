@@ -140,7 +140,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local urlval = "http://www.wowlazymacros.com"
   local urllabel = AceGUI:Create("InteractiveLabel")
   if not GSE.isEmpty(GSELibrary[classid][sequencename].Helplink) then
-   urllabel = GSELibrary[classid][sequencename].HelpLink
+   urlval = GSELibrary[classid][sequencename].HelpLink
   end
   urllabel:SetFontObject(font)
   urllabel:SetText(urlval)
