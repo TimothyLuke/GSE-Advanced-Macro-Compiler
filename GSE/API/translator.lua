@@ -45,7 +45,6 @@ function GSE.TranslateSequence(sequence, sequenceName)
     if "enUS" ~= locale then
       return GSE.TranslateSequenceFromTo(sequence, "enUS", locale, sequenceName)
     else
-      GSE.PrintDebugMessage("enUS" ) .. " ==" .. locale, GNOME)
       return sequence
     end
   end
