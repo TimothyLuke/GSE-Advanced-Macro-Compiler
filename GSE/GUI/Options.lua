@@ -504,7 +504,7 @@ function GSE.GetOptionsTable()
   end
 
   ord = 30
-  for k,v in pairs(GSEOptions.DebugModules)
+  for k,v in pairs(GSEOptions.DebugModules) do
     ord = ord + 1
     OptionsTable.args.debugTab.args[k] = {
       name = k,
@@ -514,5 +514,6 @@ function GSE.GetOptionsTable()
       get = function(info) return GSEOptions.DebugModules[k] end,
       order = ord
     }
+  end
   return OptionsTable
 end
