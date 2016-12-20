@@ -482,46 +482,6 @@ function GSE.GetOptionsTable()
             name = L["Enable Debug for the following Modules"],
             order = 30
           },
-          debugGSSequenceExecution={
-            name = L["Debug Sequence Execution"],
-            desc = L["Output the action for each button press to verify StepFunction and spell availability."],
-            type = "toggle",
-            set = function(info,val) GSDebugSequenceEx = val end,
-            get = function(info) return GSDebugSequenceEx end,
-            order = 31
-          },
-          debugmodcore={
-            name = "GS-Core",
-            desc = L["This will display debug messages for the Core of GS-E"],
-            type = "toggle",
-            set = function(info,val) GSEOptions.DebugModules["GS-Core"] = val end,
-            get = function(info) return GSEOptions.DebugModules["GS-Core"] end,
-            order = 32
-          },
-          debugmodtranslator={
-            name = "GS-SequenceTranslator",
-            desc = L["This will display debug messages for the GS-E Translator"],
-            type = "toggle",
-            set = function(info,val) GSEOptions.DebugModules["GS-SequenceTranslator"] = val end,
-            get = function(info) return GSEOptions.DebugModules["GS-SequenceTranslator"] end,
-            order = 33
-          },
-          debugmodeditor={
-            name = "GS-SequenceEditor",
-            desc = L["This will display debug messages for the GS-E Sequence Editor"],
-            type = "toggle",
-            set = function(info,val) GSEOptions.DebugModules["GS-SequenceEditor"] = val end,
-            get = function(info) return GSEOptions.DebugModules["GS-SequenceEditor"] end,
-            order = 34
-          },
-          debugmodtransmission={
-            name = "GS-SequenceTransmission",
-            desc = L["This will display debug messages for the GS-E Ingame Transmission and transfer"],
-            type = "toggle",
-            set = function(info,val) GSEOptions.DebugModules[GSStaticSourceTransmission] = val end,
-            get = function(info) return GSEOptions.DebugModules[GSStaticSourceTransmission] end,
-            order = 35
-          },
         }
       }
     }
@@ -542,5 +502,17 @@ function GSE.GetOptionsTable()
 
     }
   end
+
+  ord = 30
+  for k,v in pairs(GSEOptions.DebugModules)
+    ord = ord + 1
+    OptionsTable.args.debugTab.args[k] = {
+      name = k,
+      desc = L["This will display debug messages for the "] .. name,
+      type = toggle,
+      set = function(info,val) GSEOptions.DebugModules[k] = val end,
+      get = function(info) return GSEOptions.DebugModules[k] end,
+      order = ord
+    }
   return OptionsTable
 end

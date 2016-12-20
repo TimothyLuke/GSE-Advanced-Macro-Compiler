@@ -52,6 +52,7 @@ GSEOptions.DebugModules[Statics.DebugModules["Viewer"]] = false
 GSEOptions.DebugModules[Statics.DebugModules["Versions"] ]= false
 GSEOptions.DebugModules[Statics.DebugModules[Statics.SourceTransmission]] = false
 GSEOptions.DebugModules[Statics.DebugModules["API"]] = false
+GSEOptions.DebugModules[Statics.DebugModules["GUI"]] = false
 
 GSEOptions.filterList = {}
 GSEOptions.filterList[Statics.Spec] = true

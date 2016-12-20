@@ -191,9 +191,6 @@ L["Close"] = true
 L["Import Macro from Forums"] = true
 L["Debug Output Options"] = true
 L["Enable Debug for the following Modules"] = true
-L["This will display debug messages for the GS-E Sequence Editor"] = true
-L["This will display debug messages for the Core of GS-E"] = true
-L["This will display debug messages for the GS-E Translator"] = true
 L["Debug"] = true
 L["Filter Macro Selection"] = true
 L["Show All Macros in Editor"] = true
@@ -313,4 +310,5 @@ L["Export a Sequence"] = true
 L["Export"] = true
 L["Help URL"] = true
 L["Copy this link and open it in a Browser."] = true
+L["This will display debug messages for the "] = true
 --@end-do-not-package@
