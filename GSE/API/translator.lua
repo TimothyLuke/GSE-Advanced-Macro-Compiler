@@ -166,7 +166,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
     end
     -- If nothing was found pass throught
     if output == "" then
-      output = instring 
+      output = instring
     end
   elseif cleanNewLines then
     output = output .. instring
