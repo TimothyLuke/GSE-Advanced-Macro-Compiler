@@ -508,8 +508,8 @@ function GSE.GetOptionsTable()
     ord = ord + 1
     OptionsTable.args.debugTab.args[k] = {
       name = k,
-      desc = L["This will display debug messages for the "] .. name,
-      type = toggle,
+      desc = L["This will display debug messages for the "] .. k,
+      type = "toggle",
       set = function(info,val) GSEOptions.DebugModules[k] = val end,
       get = function(info) return GSEOptions.DebugModules[k] end,
       order = ord
