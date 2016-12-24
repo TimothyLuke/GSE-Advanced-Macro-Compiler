@@ -38,15 +38,13 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 	hasEditBox = 1,
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
-		self.editBox.width = self.editBox:GetWidth()
 		self.editBox:SetWidth(220)
 		self.editBox:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
 		self.editBox:HighlightText()
 		ChatEdit_FocusActiveWindow();
 	end,
 	OnHide = function(self)
-		self.editBox:Width(self.editBox.width or 50)
-		self.editBox.width = nil
+		self.editBox:SetWidth(self.editBox.width or 50)
 	end,
 	hideOnEscape = 1,
 	button1 = OKAY,
@@ -85,7 +83,7 @@ StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
 		ChatEdit_FocusActiveWindow();
 	end,
 	OnHide = function(self)
-		self.editBox:Width(self.editBox.width or 50)
+		self.editBox:SetWidth(self.editBox.width or 50)
 		self.editBox.width = nil
 	end,
 	hideOnEscape = 1,
