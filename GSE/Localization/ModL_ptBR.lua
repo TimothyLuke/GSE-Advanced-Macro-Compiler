@@ -6,7 +6,7 @@ end
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "ptBR", true)
 
 -- Options translation
---@localization(locale="prBR", format="lua_additive_table")@
+--@localization(locale="ptBR", format="lua_additive_table")@
 
 
 --@do-not-package@
