@@ -63,3 +63,5 @@ ignore:
     - spec
     - PluginShell
     - docs
+    - deploy.sh
+    - deploy_key.enc
