@@ -12,6 +12,8 @@ GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}
 
+local L = GSE.L
+
 local Statics = GSE.Static
 
 -- Initialisation Functions
