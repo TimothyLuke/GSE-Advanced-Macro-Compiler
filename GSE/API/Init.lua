@@ -11,7 +11,6 @@ GSE.OutputQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}
-L = GSE.L
 
 local Statics = GSE.Static
 

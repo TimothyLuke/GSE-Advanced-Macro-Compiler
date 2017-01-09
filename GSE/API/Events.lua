@@ -188,11 +188,9 @@ function GSE:ProcessOOCQueue()
       elseif v.action == "Save" then
         GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
       elseif v.action == "Replace" then
-        print("Got Here")
         if GSE.isEmpty(GSELibrary[v.classid][v.sequencename]) then
           GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
         else
-          print(GSE.isEmpty(v.sequence.MacroVersions[1].KeyRelease))
           GSELibrary[v.classid][v.sequencename] = v.sequence
         end
         GSE.OOCUpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
