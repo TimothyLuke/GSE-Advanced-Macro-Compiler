@@ -390,9 +390,9 @@ function GSE.CreateTemporaryVersion(sequence)
     end
   end
   if not GSE.isEmpty(sequence.KeyRelease)  then
-    sequence.KeyRelease = {}
+    returnseq.KeyRelease = {}
     for k,v in ipairs(sequence.KeyRelease) do
-      table.insert(sequence.KeyRelease, v)
+      table.insert(returnseq.KeyRelease, v)
     end
   end
 

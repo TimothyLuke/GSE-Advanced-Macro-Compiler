@@ -49,10 +49,11 @@ GSEOptions.DebugModules = {}
 GSEOptions.DebugModules[Statics.DebugModules["Translator"]] = false
 GSEOptions.DebugModules[Statics.DebugModules["Editor"]] = false
 GSEOptions.DebugModules[Statics.DebugModules["Viewer"]] = false
-GSEOptions.DebugModules[Statics.DebugModules["Versions"] ]= false
+GSEOptions.DebugModules[Statics.DebugModules["Storage"]] = false
 GSEOptions.DebugModules[Statics.DebugModules[Statics.SourceTransmission]] = false
 GSEOptions.DebugModules[Statics.DebugModules["API"]] = false
 GSEOptions.DebugModules[Statics.DebugModules["GUI"]] = false
+GSEOptions.DebugModules[Statics.DebugModules["Versions"]] = false
 
 GSEOptions.filterList = {}
 GSEOptions.filterList[Statics.Spec] = true
