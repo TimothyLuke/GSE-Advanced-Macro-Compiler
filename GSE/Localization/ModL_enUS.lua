@@ -4,7 +4,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 --@localization(locale="enUS", format="lua_additive_table")@
 
 
-
+--@do-not-package@
 
 L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
@@ -311,3 +311,4 @@ L["Export"] = true
 L["Help URL"] = true
 L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
+--@end-do-not-package@
