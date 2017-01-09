@@ -9,6 +9,38 @@ local Statics = GSE.Static
 local GCD, GCD_Update_Timer
 
 
+--- This function is used to debug a sequence and trace its execution.
+function GSE.TraceSequence(button, step, task)
+  if GSE.UnsavedOptions.DebugSequenceExecution then
+    -- Note to self do i care if its a loop sequence?
+    local isUsable, notEnoughMana = IsUsableSpell(task)
+    local usableOutput, manaOutput, GCDOutput, CastingOutput
+    if isUsable then
+      usableOutput = GSEOptions.CommandColour .. "Able To Cast" .. Statics.StringReset
+    else
+      usableOutput =  GSEOptions.UNKNOWN .. "Not Able to Cast" .. Statics.StringReset
+    end
+    if notEnoughMana then
+      manaOutput = GSEOptions.UNKNOWN .. "Resources Not Available".. Statics.StringReset
+    else
+      manaOutput =  GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
+    end
+    local castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+    if not GSE.isEmpty(castingspell) then
+      CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
+    else
+      CastingOutput = GSEOptions.CommandColour .. "Not actively casting anything else." .. Statics.StringReset
+    end
+    GCDOutput =  GSEOptions.CommandColour .. "GCD Free" .. Statics.StringReset
+    if GCD then
+      GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
+    end
+    GSE.PrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
+  end
+end
+
+
+
 function GSE:UNIT_FACTION()
   --local pvpType, ffa, _ = GetZonePVPInfo()
   if UnitIsPVP("player") then

@@ -11,10 +11,9 @@ GSE.OutputQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}
-
 local L = GSE.L
-
 local Statics = GSE.Static
+local GNOME = "GSE"
 
 -- Initialisation Functions
 
@@ -49,7 +48,7 @@ end
 --    be sent to variable <code>GSE.Print</code>
 --    The Title is stripped for intermod debug output via GSE.DebugOutput
 local function determinationOutputDestination(message, title)
-  if GSDebugSequenceEx then
+  if GSE.UnsavedOptions.DebugSequenceExecution then
     GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
 	elseif GSEOptions.sendDebugOutputToDebugOutput   then
     GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
@@ -66,7 +65,7 @@ function GSE.PrintDebugMessage(message, module)
     if GSE.isEmpty(module) then
       module = "GS-Core"
     end
-    if module == GSStaticSequenceDebug then
+    if module == Statics.SequenceDebug then
       determinationOutputDestination(message, GSEOptions.TitleColour .. GNOME .. ':|r ' .. GSEOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "] )
 		elseif GSEOptions.debug and module ~= GSStaticSequenceDebug and GSEOptions.DebugModules[module] == true then
       determinationOutputDestination(GSEOptions.TitleColour .. (GSE.isEmpty(module) and GNOME or module) .. ':|r ' .. GSEOptions.AuthorColour .. L["<DEBUG> |r "] .. message )

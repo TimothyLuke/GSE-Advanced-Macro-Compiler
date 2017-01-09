@@ -497,37 +497,6 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print(format(Statics.OnClick, GSE.PrepareStepFunction(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].StepFunction) or 'step = step % #macros + 1'))
 end
 
---- This function is used to debug a sequence and trace its execution.
-function GSE.TraceSequence(button, step, task)
-  local usoptions = GSE.UnsavedOptions
-  if usoptions.DebugSequenceExecution then
-    -- Note to self do i care if its a loop sequence?
-    local isUsable, notEnoughMana = IsUsableSpell(task)
-    local usableOutput, manaOutput, GCDOutput, CastingOutput
-    if isUsable then
-      usableOutput = GSEOptions.CommandColour .. "Able To Cast" .. Statics.StringReset
-    else
-      usableOutput =  GSEOptions.UNKNOWN .. "Not Able to Cast" .. Statics.StringReset
-    end
-    if notEnoughMana then
-      manaOutput = GSEOptions.UNKNOWN .. "Resources Not Available".. Statics.StringReset
-    else
-      manaOutput =  GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
-    end
-    local castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
-    if not GSE.isEmpty(castingspell) then
-      CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
-    else
-      CastingOutput = GSEOptions.CommandColour .. "Not actively casting anything else." .. Statics.StringReset
-    end
-    GCDOutput =  GSEOptions.CommandColour .. "GCD Free" .. Statics.StringReset
-    if GCD then
-      GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
-    end
-    GSE.PrintDebugMessage(button .. "," .. step .. "," .. (task and task or "nil")  .. "," .. usableOutput .. "," .. manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
-  end
-end
-
 
 --- Compares two sequences and return a boolean if the match.  If they do not
 --    match then if will print an element by element comparison.  This comparison
