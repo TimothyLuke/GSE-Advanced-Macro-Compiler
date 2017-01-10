@@ -74,11 +74,12 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
   -- CHeck for colissions
   local found = false
-  if GSE.isEmpty(classid) then
+  if GSE.isEmpty(classid) or classid == 0 then
     classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
   end
   if GSE.isEmpty(sequence.SpecID) then
     sequence.SpecID = GSE.GetCurrentClassID()
+    classid = GSE.GetCurrentClassID()
   end
 
   if GSE.isEmpty(GSELibrary[classid]) then
@@ -130,7 +131,10 @@ end
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
   -- Set to default or 1 if no default
-  local vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Default or 1
+  local vers = 1
+  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Default) then
+    vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].Default
+  end
   if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].PVP) and GSE.PVPFlag then
     vers = GSELibrary[GSE.GetCurrentClassID()][sequenceName].PVP
   elseif not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName].Raid) and GSE.inRaid then
@@ -611,13 +615,17 @@ end
 --- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
 function GSE.CheckMacroCreated(SequenceName, create)
   local found = false
+  local classid = GSE.GetCurrentClassID()
+  if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][SequenceName]) then
+    classid = 0
+  end
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
     found = true
     EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
   else
     if create then
-      local icon = (GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[GSE.GetCurrentClassID()][SequenceName].Icon)
+      local icon = (GSE.isEmpty(GSELibrary[classid][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[classid][SequenceName].Icon)
       GSE.CreateMacroIcon(SequenceName, icon)
       found = true
     end
@@ -659,6 +667,7 @@ function GSE.GetSequenceNames()
       end
     end
   end
+  table.sort(keyset)
   return keyset
 end
 

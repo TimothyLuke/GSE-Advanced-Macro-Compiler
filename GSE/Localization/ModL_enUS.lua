@@ -311,3 +311,4 @@ L["Export"] = true
 L["Help URL"] = true
 L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
+L[" Deleted Orphaned Macro "] = true
