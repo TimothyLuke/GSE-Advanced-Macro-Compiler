@@ -224,6 +224,6 @@ describe('API Translator', function()
     assert.are.equal("Priority",   MacroVersions[2].StepFunction)
     assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
 
-    assert.are.same(MacroVersions[1][1], MacroVersions[1][2])
+    assert.are.same(MacroVersions[1][1], MacroVersions[2][1])
   end)
 end)
