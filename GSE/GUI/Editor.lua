@@ -172,6 +172,12 @@ function GSE:GUIDrawMetadataEditor(container)
     specdropdownvalue = key;
     editframe.SpecID = key
     editframe.Sequence.SpecID = key
+    local sid = Statics.SpecIDHashList[key]
+    if tonumber(sid) > 12 then
+      editframe.ClassID = GSE.GetClassIDforSpec(tonumber(sid))
+    else
+      editframe.ClassID = tonumber(sid)
+    end
   end)
   metasimplegroup:AddChild(speciddropdown)
   speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.SpecID])

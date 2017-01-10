@@ -71,7 +71,6 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
   -- Remove Spaces from SequenceNames and replace with _'s
   sequenceName = string.gsub(sequenceName, " ", "_")
-
   -- CHeck for colissions
   local found = false
   if GSE.isEmpty(classid) or classid == 0 then
@@ -81,7 +80,6 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     sequence.SpecID = GSE.GetCurrentClassID()
     classid = GSE.GetCurrentClassID()
   end
-
   if GSE.isEmpty(GSELibrary[classid]) then
     GSELibrary[classid] = {}
   end

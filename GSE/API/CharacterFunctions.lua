@@ -23,7 +23,7 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
-  local id, name, description, icon, background, role, class = GetSpecializationInfoByID(specid)
+  local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
   local classid = 0
   for i=1, 12, 1 do
     local cdn, st, cid = GetClassInfo(i)
