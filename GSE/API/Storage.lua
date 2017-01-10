@@ -24,6 +24,10 @@ end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   local confirmationtext = ""
+
+  -- Remove Spaces from SequenceNames and replace with _'s
+  sequenceName = string.gsub(sequenceName, " ", "_")
+
   -- CHeck for colissions
   local found = false
   if GSE.isEmpty(classid) then
