@@ -177,4 +177,30 @@ describe('API Translator', function()
     assert.are.equal("/startattack", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2]["KeyRelease"][2])
     assert.are.equal(236264, GSELibrary[11]['DB_Prot_ST'].Icon)
   end)
+
+
+  it("Test it handles spaces in the sequence name", function()
+    local Sequences = {}
+    Sequences["Test 1"] = {
+      SpecID = 11,
+      Author="UnitTest",
+      MacroVersions = {
+        {
+          StepFunction = "Sequential",
+          "/cast Spell1",
+          "/cast Spell2",
+        },
+        {
+          StepFunction = "Priority",
+          "/cast Spell1",
+          "/cast Spell2",
+        }
+
+      }
+    }
+    GSE.OOCAddSequenceToCollection("Test 1", Sequences["Test 1"], 11)
+    assert.are.equal(11, GSELibrary[11]["Test_1"].SpecID)
+
+  end)
+
 end)
