@@ -203,4 +203,27 @@ describe('API Translator', function()
 
   end)
 
+
+  it("Tests that cloned sequences are possible", function()
+    local MacroVersions = {}
+    MacroVersions = {
+      {
+        StepFunction = "Sequential",
+        "/cast Spell1",
+        "/cast Spell2",
+      },
+    }
+
+
+    MacroVersions[2] = GSE.CloneSequence(MacroVersions[1])
+
+    assert.are.equal("Sequential",   MacroVersions[2].StepFunction)
+    assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
+
+    Macroversions[2].StepFunction = "Priority"
+    assert.are.equal("Priority",   MacroVersions[2].StepFunction)
+    assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
+
+    assert.are.same(MacroVersions[1][1], MacroVersions[1][2])
+  end)
 end)

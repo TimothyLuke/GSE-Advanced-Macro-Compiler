@@ -623,7 +623,8 @@ function GSE.GUISelectEditorTab(container, event, group)
     GSE:GUIDrawMetadataEditor(container)
   elseif group == "new" then
     -- Copy the Default to a new version
-    table.insert(editframe.Sequence.MacroVersions, editframe.Sequence.MacroVersions[editframe.Sequence.Default])
+    table.insert(editframe.Sequence.MacroVersions, GSE.CloneSequence(editframe.Sequence.MacroVersions[editframe.Sequence.Default]))
+
     GSE.GUIEditorPerformLayout(editframe)
     GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
   else

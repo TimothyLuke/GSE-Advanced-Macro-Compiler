@@ -11,6 +11,50 @@ function GSE.DeleteSequence(classid, sequenceName)
   GSELibrary[classid][sequenceName] = nil
 end
 
+--- This function clones the Macro Version part of a sequence.
+function GSE.CloneSequence(sequence)
+  local retseq = {}
+  for k,v in ipairs(sequence) do
+    table.insert(retseq, v)
+  end
+
+  for k,v in pairs(sequence) do
+    retseq[k] = v
+  end
+
+  if not GSE.isEmpty(sequence.PreMacro) then
+    retseq.PreMacro = {}
+    for k,v in ipairs(sequence.PreMacro) do
+      table.insert(retseq.PreMacro, v)
+    end
+  end
+
+  if not GSE.isEmpty(sequence.PostMacro) then
+    retseq.PostMacro = {}
+    for k,v in ipairs(sequence.PostMacro)do
+      table.insert(retseq.PostMacro, v)
+    end
+  end
+
+  if not GSE.isEmpty(sequence.KeyRelease) then
+    retseq.KeyRelease = {}
+    for k,v in ipairs(sequence.KeyRelease) do
+      table.insert(retseq.KeyRelease, v)
+    end
+  end
+
+  if not GSE.isEmpty(sequence.KeyPress) then
+    retseq.KeyPress = {}
+    for k,v in ipairs(sequence.KeyPress) do
+      table.insert(retseq.KeyPress, v)
+    end
+  end
+
+
+
+  return retseq
+
+end
 
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
