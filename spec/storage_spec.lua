@@ -220,7 +220,7 @@ describe('API Translator', function()
     assert.are.equal("Sequential",   MacroVersions[2].StepFunction)
     assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
 
-    Macroversions[2].StepFunction = "Priority"
+    MacroVersions[2].StepFunction = "Priority"
     assert.are.equal("Priority",   MacroVersions[2].StepFunction)
     assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
 
