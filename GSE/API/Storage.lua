@@ -197,7 +197,7 @@ function GSE.ImportSequence(importStr, legacy)
       success = true
     end
   else
-    GSE.PrintDebugMessage (err, GNOME)
+    GSE.Print (err, GNOME)
     returnmessage = err
 
   end
