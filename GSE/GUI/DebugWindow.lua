@@ -93,7 +93,7 @@ end
 GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
 GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.DebugOutputTextbox:SetText('') end)
+GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.GUIDebugFrame.DebugOutputTextbox:SetText('') end)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 
 GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
