@@ -202,12 +202,10 @@ describe('API Translator', function()
       }, -- [1]
     }
 
-    local retseq = GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["Rogue_SubST"][1]), 11)
-    assert.falsy(GSELibrary[11]['Rogue_SubST'].specID)
-    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].PreMacro)
-    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].specID)
-    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].PreMacro)
-    assert.are.equal(11, GSMasterOptions.SequenceLibrary["Rogue_SubST"].SpecID)
+    local retseq = GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["Rogue_SubST"][1])
+    assert.falsy(retseq.specID)
+    assert.falsy(retseq.PreMacro)
+    assert.are.equal(retseq.SpecID, GSMasterOptions.SequenceLibrary["Rogue_SubST"].specID)
 
 
   end)
