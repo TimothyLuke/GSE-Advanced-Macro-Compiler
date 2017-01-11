@@ -365,7 +365,9 @@ function GSE:GUIDrawMacroEditor(container, version)
     ["Priority"] = L["Priority List (1 12 123 1234)"],
 
   })
-  stepdropdown:SetCallback("OnValueChanged", function (obj,event,key) stepvalue = key; GSE.PrintDebugMessage("StepValue Set: " .. stepvalue, GNOME) end)
+  if GSE.isEmpty(editframe.Sequence.MacroVersions[version].StepFunction) then
+    editframe.Sequence.MacroVersions[version].StepFunction = "Sequential"
+  end
   stepdropdown:SetValue(editframe.Sequence.MacroVersions[version].StepFunction)
   stepdropdown:SetCallback("OnValueChanged", function (sel, object, value)
       editframe.Sequence.MacroVersions[version].StepFunction = value
