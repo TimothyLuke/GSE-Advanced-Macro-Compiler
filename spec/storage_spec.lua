@@ -178,6 +178,40 @@ describe('API Translator', function()
     assert.are.equal(236264, GSELibrary[11]['DB_Prot_ST'].Icon)
   end)
 
+  it("Test a troublesome import from the old GSE1", function()
+
+    local GSMasterOptions = {}
+    GSMasterOptions.SequenceLibrary = {}
+    GSMasterOptions.SequenceLibrary["Rogue_SubST"] = {
+      {
+        "/cast [combat] Shadow Blades", -- [1]
+        "/cast [combat] Symbols of Death", -- [2]
+        "/cast [combat] Shadowstrike", -- [3]
+        "/cast [combat] Shadowstrike", -- [4]
+        "/castsequence  reset=combat  Backstab, Nightblade, Shadow Dance, Backstab, Eviscerate, Backstab, Backstab, Backstab, Nightblade, Backstab, Backstab", -- [5]
+        "/castsequence [mod:shift] Vanish, Symbols of Death, Shadowstrike", -- [6]
+        ["source"] = "Local",
+        ["author"] = "Aaralak@Nagrand",
+        ["icon"] = "Ability_Stealth",
+        ["version"] = 1,
+        ["PreMacro"] = "/cast [@focus, exists, nodead] Tricks of the Trade\n/cast [noform:1, nocombat] Stealth\n/castsequence [form:1, nocombat] reset=combat  Symbols of Death, Shadowstrike\n",
+        ["helpTxt"] = "Talents: 1233111",
+        ["specID"] = 261,
+        ["lang"] = "enUS",
+        ["PostMacro"] = "",
+      }, -- [1]
+    }
+
+    local retseq = GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["Rogue_SubST"][1]), 11)
+    assert.falsy(GSELibrary[11]['Rogue_SubST'].specID)
+    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].PreMacro)
+    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].specID)
+    assert.falsy(GSELibrary[11]['Rogue_SubST']["MacroVersions"][1].PreMacro)
+    assert.are.equal(11, GSMasterOptions.SequenceLibrary["Rogue_SubST"].SpecID)
+
+
+  end)
+
 
   it("Test it handles spaces in the sequence name", function()
     local Sequences = {}
@@ -202,7 +236,6 @@ describe('API Translator', function()
     assert.are.equal(11, GSELibrary[11]["Test_1"].SpecID)
 
   end)
-
 
   it("Tests that cloned sequences are possible", function()
     local MacroVersions = {}

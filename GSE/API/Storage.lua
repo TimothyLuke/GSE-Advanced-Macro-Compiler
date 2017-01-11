@@ -729,7 +729,7 @@ function GSE.ConvertLegacySequence(sequence)
   if not GSE.isEmpty(sequence.StepFunction) then
     if Sequence.StepFunction == GSStaticPriority then
       returnSequence.MacroVersions[1].StepFunction = Statics.Priority
-    elseif GSE.isEmpty(sequence.StepFunction) then
+    else
       GSE.Print(L["The Custom StepFunction Specified is not recognised and has been ignored."], GNOME)
       returnSequence.MacroVersions[1].StepFunction = Statics.Sequential
     end
@@ -740,15 +740,15 @@ function GSE.ConvertLegacySequence(sequence)
     returnSequence.Icon = sequence.icon
   end
   local macroversion = returnSequence.MacroVersions[1]
+  local loopstart = sequence.loopstart or 1
+  local loopstop = sequence.loopstop or table.getn(sequence)
+  if loopstart > 1 then
+    macroversion.PreMacro = {}
+  end
+  if loopstop < table.getn(sequence) then
+    macroversion.PostMacro = {}
+  end
   for k,v in ipairs(sequence) do
-    local loopstart = sequence.loopstart or 1
-    local loopstop = sequence.loopstop or table.getn(sequence)
-    if loopstart > 1 then
-      macroversion.PreMacro = {}
-    end
-    if loopstop < table.getn(sequence) then
-      macroversion.PostMacro = {}
-    end
     if k < loopstart then
       table.insert(macroversion.PreMacro, v)
     elseif k > loopstop then
