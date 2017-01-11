@@ -263,14 +263,14 @@ function GSE.ExportSequence(sequence, sequenceName)
     local outputversion =  GSE.CleanMacroVersion(v)
     macroversions = macroversions .. "    [" .. k .. "] = {\n"
 
-    local steps = "      StepFunction = \"Sequential\"\n" -- Set to this as the default if its blank.
+    local steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset .. ",\n" -- Set to this as the default if its blank.
     if not GSE.isEmpty(sequence.StepFunction) then
       if  outputversion.StepFunction == Statics.PriorityImplementation or outputversion.StepFunction == "Priority" then
-       steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Priority\"" .. Statics.StringReset .. ",\n"
+       steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
      elseif outputversion.StepFunction == "Sequential" then
-       steps = "      StepFunction = " .. GSEOptions.EQUALS .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
+       steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset .. ",\n"
      else
-       steps = "      StepFunction = [[" .. GSEOptions.EQUALS .. outputversion.StepFunction .. Statics.StringReset .. "]],\n"
+       steps = "      StepFunction = [[" .. GSEOptions.INDENT .. outputversion.StepFunction .. Statics.StringReset .. "]],\n"
       end
     end
     if not GSE.isEmpty(outputversion.Trinket1) then
@@ -349,12 +349,12 @@ function GSE.ExportSequence(sequence, sequenceName)
   end
   macroversions = macroversions .. "  },\n"
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
-  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",  \n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
+  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",  \n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
   returnVal = returnVal .. macroversions
-  returnVal = returnVal .. "},\n"
+  returnVal = returnVal .. "}\n"
 
   return returnVal
 end
