@@ -7,6 +7,8 @@ GSMasterOptions = {}
 GSMasterOptions.SequenceLibrary = {}
 GSMasterOptions.AlreadyLoaded = {}
 
+GSMasterSequences = {}
+
 local GSStaticSourceLocal = Statics.SourceLocal
 
 --- Return the next version value for a sequence.
@@ -61,13 +63,13 @@ end
 
 --- Load sequences found in addon Mods.  authorversion is the version of hte mod where the collection was loaded from.
 local function GSImportLegacyMacroCollections(str, authorversion)
+  if GSE.isEmpty(authorversion) then
+    authorversion = 1
+  end
   for k,v in pairs(GSMasterSequences) do
     if not GSMasterOptions.AlreadyLoaded[k] then
       if GSE.isEmpty(v.version) then
         v.version = 1
-      end
-      if GSE.isEmpty(authorversion) then
-        authorversion = 1
       end
       v.source = str
       v.authorversion = authorversion
@@ -85,8 +87,10 @@ f:SetScript('OnEvent', function(self, event, addon)
       local name = "GS-Core"
       local authorversion = "Legacy 2.0 Adaptor"
 
-      GSMasterSequences = GnomeOptions.SequenceLibrary
-      GSImportLegacyMacroCollections(name, authorversion)
+
+
+
+
 
 
       -- Load any Load on Demand addon packs.
@@ -94,7 +98,7 @@ f:SetScript('OnEvent', function(self, event, addon)
       for i=1,GetNumAddOns() do
         if not IsAddOnLoaded(i) and GetAddOnInfo(i):find("^GS%-") then
           name, _, _, _, _, _ = GetAddOnInfo(i)
-          if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" and name ~= "GS-HighPerformanceMacros"then
+          if name ~= "GS-SequenceEditor" and name ~= "GS-SequenceTranslator" and name ~= "GS-HighPerformanceMacros" then
   					local loaded = LoadAddOn(i);
             if loaded then
               authorversion = GetAddOnMetadata(name, "Version")
@@ -131,6 +135,13 @@ function GSELegacyAdaptor:processReload(event, arg)
         end
       end
     end
+    for k,v in pairs(GnomeOptions.SequenceLibrary) do
+      for i,j in ipairs(v) do
+        local seq = GSE.ConvertLegacySequence(j)
+        GSE.AddSequenceToCollection(k, seq)
+      end
+    end
+
     if event == "Load" then
       GnomeOptions.imported = true
     end

@@ -727,7 +727,7 @@ function GSE.ConvertLegacySequence(sequence)
     returnSequence.MacroVersions[1].KeyRelease = GSE.SplitMeIntolines(sequence.PostMacro)
   end
   if not GSE.isEmpty(sequence.StepFunction) then
-    if Sequence.StepFunction == GSStaticPriority then
+    if sequence.StepFunction == GSStaticPriority then
       returnSequence.MacroVersions[1].StepFunction = Statics.Priority
     else
       GSE.Print(L["The Custom StepFunction Specified is not recognised and has been ignored."], GNOME)
@@ -740,8 +740,8 @@ function GSE.ConvertLegacySequence(sequence)
     returnSequence.Icon = sequence.icon
   end
   local macroversion = returnSequence.MacroVersions[1]
-  local loopstart = sequence.loopstart or 1
-  local loopstop = sequence.loopstop or table.getn(sequence)
+  local loopstart = tonumber(sequence.loopstart) or 1
+  local loopstop = tonumber(sequence.loopstop) or table.getn(sequence)
   if loopstart > 1 then
     macroversion.PreMacro = {}
   end
