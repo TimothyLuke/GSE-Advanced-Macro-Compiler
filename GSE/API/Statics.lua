@@ -271,6 +271,7 @@ Statics.TranslationShadow = "SHADOW"
 Statics.Spec = "Spec"
 Statics.Class = "Class"
 Statics.All = "All"
+Statics.Global = "Global"
 
 Statics.SampleMacros = {}
 Statics.QuestionMark = "INV_MISC_QUESTIONMARK"

@@ -59,11 +59,13 @@ GSEOptions.filterList = {}
 GSEOptions.filterList[Statics.Spec] = true
 GSEOptions.filterList[Statics.Class] = true
 GSEOptions.filterList[Statics.All] = false
+GSEOptions.filterList[Statics.Global] = true
 GSEOptions.autoCreateMacroStubsClass = true
 GSEOptions.autoCreateMacroStubsGlobal = false
 GSEOptions.resetOOC = true
 GSEOptions.DefaultDisabledMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
 GSEOptions.AddInPacks = {}
+GSEOptions.CreateGlobalButtons = false
 
 GSE.OOCQueue = {}
 GSE.UnsavedOptions = {}

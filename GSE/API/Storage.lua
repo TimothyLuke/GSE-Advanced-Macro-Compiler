@@ -209,7 +209,11 @@ function GSE.ReloadSequences()
   for name, sequence in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
     GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
-
+  if GSEOptions.CreateGlobalButtons then
+    for name, sequence in pairs(GSELibrary[0]) do
+      GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+    end
+  end
 end
 
 function GSE.PrepareLogout(deletenonlocalmacros)
@@ -659,9 +663,15 @@ end
 function GSE.GetSequenceNames()
   local keyset={}
   for k,v in pairs(GSELibrary) do
-    if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID() then
+    if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID()  then
       for i,j in pairs(GSELibrary[k]) do
         keyset[k .. "," .. i] = i
+      end
+    else
+      if k == 0 and GSEOptions.filterList[Statics.Global] then
+        for i,j in pairs(GSELibrary[k]) do
+          keyset[k .. "," .. i] = i
+        end
       end
     end
   end
