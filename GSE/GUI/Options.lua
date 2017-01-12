@@ -118,17 +118,15 @@ function GSE.GetOptionsTable()
             type = "toggle",
             set = function(info,val) GSEOptions.filterList["Global"] = val end,
             get = function(info) return GSEOptions.filterList["Global"] end,
-            order = 420
+            order = 430
           },
           createGlobalMacroButtons = {
-            GSEOptions.CreateGlobalBussons
             name = L["Create buttons for Global Macros"],
             desc = L["Global Macros are those that are valid for all classes.  GSE2 also imports unknown macros as Global.  This option will create a button for these macros so they can be called for any class.  Having all macros in this space is a performance loss hence having them saved with a the right specialisation is important."],
             type = "toggle",
-            set = function(info,val) GSEOptions.CreateGlobalBussons = val end,
-            get = function(info) return GSEOptions.CreateGlobalBussons end,
-            order = 420
-
+            set = function(info,val) GSEOptions.CreateGlobalButtons = val end,
+            get = function(info) return GSEOptions.CreateGlobalButtons end,
+            order = 440
           }
           title2 = {
             type = "header",
