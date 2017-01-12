@@ -327,7 +327,7 @@ function GSE.ReportUnfoundSpells()
 
   GSEOptions.ErroneousSpellID = {}
   for k,v in pairs(GSE.TranslatorLanguageTables[Statics.TranslationHash]["enUS"]) do
-    local name, rank, icon, castingTime, minRange, maxRange, spellID = GetSpellInfo(k)
+    local name, rank, icon, castingTime, minRange, maxRange, spellID = GetSpellInfo(v)
     if GSE.isEmpty(spellID) then
       table.insert(GSEOptions.ErroneousSpellID, v)
     end
