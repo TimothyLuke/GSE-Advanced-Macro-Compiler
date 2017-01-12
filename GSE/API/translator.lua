@@ -313,7 +313,7 @@ end
 function GSE.ReportUnfoundSpells()
   GSEOptions.UnfoundSpells = {}
   for classid, macroset in ipairs(GSELibrary) do
-    for name,version in ipairs(macroset.MacroVersions) do
+    for name, version in pairs(macroset) do
       for v, sequence in ipairs(version) do
         GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
       end
