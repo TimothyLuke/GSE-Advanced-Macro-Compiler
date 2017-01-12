@@ -127,7 +127,7 @@ function GSE.GetOptionsTable()
             set = function(info,val) GSEOptions.CreateGlobalButtons = val end,
             get = function(info) return GSEOptions.CreateGlobalButtons end,
             order = 440
-          }
+          },
           title2 = {
             type = "header",
             name = L["Gameplay Options"],
