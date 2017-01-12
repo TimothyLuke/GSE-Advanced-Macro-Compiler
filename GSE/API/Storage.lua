@@ -389,11 +389,13 @@ function GSE.CleanOrphanSequences()
     local found = false
     local mname, mtexture, mbody = GetMacroInfo(macid)
     if not GSE.isEmpty(mname) then
-      for name, _ in pairs(GSEOptions.ActiveSequenceVersions) do
-        if name == mname then
-          found = true
-        end
+      if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][mname]) then
+        found = true
       end
+      if not GSE.isEmpty(GSELibrary[0][mname]) then
+        found = true
+      end
+
       if not found then
         -- check if body is a gs one and delete the orphan
         todelete[mname] = true
