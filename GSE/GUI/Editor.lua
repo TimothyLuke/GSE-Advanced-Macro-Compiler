@@ -169,10 +169,11 @@ function GSE:GUIDrawMetadataEditor(container)
   speciddropdown:SetWidth(200)
   speciddropdown:SetList(GSE.GetSpecNames())
   speciddropdown:SetCallback("OnValueChanged", function (obj,event,key)
-    specdropdownvalue = key;
-    editframe.SpecID = key
-    editframe.Sequence.SpecID = key
     local sid = Statics.SpecIDHashList[key]
+    specdropdownvalue = key;
+    editframe.SpecID = sid
+    editframe.Sequence.SpecID = sid
+
     if tonumber(sid) > 12 then
       editframe.ClassID = GSE.GetClassIDforSpec(tonumber(sid))
     else
