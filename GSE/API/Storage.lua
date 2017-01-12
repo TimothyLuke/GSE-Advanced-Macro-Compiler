@@ -171,11 +171,11 @@ function GSE.ImportSequence(importStr, legacy)
   return Sequences
   ]===]
 
-  GSE.PrintDebugMessage (functiondefinition, "GS-SequenceEditor")
+  GSE.PrintDebugMessage (functiondefinition, "Storage")
   local fake_globals = setmetatable({
     Sequences = {},
     }, {__index = _G})
-  local func, err = loadstring (functiondefinition, "GS-SequenceEditor")
+  local func, err = loadstring (functiondefinition, "Storage")
   if func then
     -- Make the compiled function see this table as its "globals"
     setfenv (func, fake_globals)
