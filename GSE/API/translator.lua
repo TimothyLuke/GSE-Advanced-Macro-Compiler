@@ -233,6 +233,9 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
       else
         GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
         output = output  .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
+        if GSE.isEmpty(GSEOptions.UnfoundSpells) then
+          GSEOptions.UnfoundSpells = {}
+        end
         GSEOptions.UnfoundSpells [#GSEOptions.UnfoundSpells + 1] = etc
       end
     end
