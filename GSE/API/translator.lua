@@ -233,7 +233,7 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
       else
         GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
         output = output  .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
-        GSE.UnfoundSpells [#GSE.UnfoundSpells + 1] = etc
+        GSEOptions.UnfoundSpells [#GSEOptions.UnfoundSpells + 1] = etc
       end
     end
   end
@@ -303,17 +303,32 @@ function GSE.GetConditionalsFromString(str)
 end
 
 
-
+--- This option reports on language table errors and ommissions.  It is accessible
+-- via the command line /gs compilemissingspells and saves this informationm into
+-- GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID
+-- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
 function GSE.ReportUnfoundSpells()
-  for name,version in pairs(GSELibrary) do
-    for v, sequence in ipairs(version) do
-      GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
+  GSEOptions.UnfoundSpells = {}
+  for classid, macroset in ipairs(GSELibrary) do
+    for name,version in ipairs(macroset.MacroVersions) do
+      for v, sequence in ipairs(version) do
+        GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
+      end
     end
   end
-  GSE.UnfoundSpellIds = {}
+  GSEOptions.UnfoundSpellIDs = {}
 
-  for _,spell in pairs(GSE.UnfoundSpells) do
-    GSE.UnfoundSpellIds[spell] = GetSpellInfo(spell)
+  for _,spell in pairs(GSEOptions.UnfoundSpells) do
+    GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
+  end
+
+  GSEOptions.ErroneousSpellID = {}
+  for k,v in pairs(GSE.TranslatorLanguageTables[Statics.TranslationHash]["enUS"]) do
+    local name, rank, icon, castingTime, minRange, maxRange, spellID = GetSpellInfo(k)
+    if GSE.isEmpty(spellID) then
+      table.insert(GSEOptions.ErroneousSpellID, v)
+    end
+
   end
 end
 

@@ -77,7 +77,6 @@ Translator[Statics.TranslationKey] = {}
 Translator[Statics.TranslationHash] = {}
 Translator[Statics.TranslationShadow] = {}
 
-GSE.UnfoundSpells = {}
 
 GSE.PrintAvailable = false
 GSE.StandardAddInPacks = {}

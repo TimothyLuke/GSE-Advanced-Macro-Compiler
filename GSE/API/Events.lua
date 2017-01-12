@@ -195,6 +195,10 @@ function GSE:GSSlash(input)
       GSE.GUIRecordFrame:Show()
   elseif string.lower(input) == "debug" then
       GSE.GUIShowDebugWindow()
+  elseif string.lower(input) == "compilemissingspells" then
+      GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
+      GSE.ReportUnfoundSpells()
+      GSE.Print("Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
   else
     GSE.GUIShowViewer()
   end
