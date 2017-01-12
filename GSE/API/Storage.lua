@@ -665,8 +665,8 @@ function GSE.GetSequenceNames()
       end
     end
   end
-  table.sort(keyset)
-  return keyset
+
+  return GSE.pairsByKeys(keyset)
 end
 
 
