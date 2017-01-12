@@ -105,8 +105,8 @@ Sequences['SAM_MC_Surge'] = {
   Default=1,
   MacroVersions = {
     [1] = {
-      KeyPress=[[
-      ]],
+      KeyPress={
+      },
       "/castsequence [nochanneling]reset=30 Healing Stream Totem",
       "/castsequence [nochanneling,@mouseover,help,nodead]reset=5 !Riptide",
       "/castsequence [nochanneling,@mouseover,help]Healing Surge, Healing Surge, Healing Surge, Healing Surge",
