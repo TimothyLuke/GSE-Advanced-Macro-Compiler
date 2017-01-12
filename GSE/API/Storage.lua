@@ -676,7 +676,7 @@ function GSE.GetSequenceNames()
     end
   end
 
-  return GSE.pairsByKeys(keyset)
+  return keyset
 end
 
 

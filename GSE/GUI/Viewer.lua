@@ -271,9 +271,10 @@ end
 
 function GSE.GUIShowViewer()
   local names = GSE.GetSequenceNames()
+
   viewframe:ReleaseChildren()
   GSE.GUIViewerLayout(viewframe)
-  for k,v in pairs(names) do
+  for k,v in GSE.pairsByKeys(names) do
     GSE.GUICreateSequencePanels(viewframe,viewframe.ScrollContainer, k)
   end
   viewframe:Show()
