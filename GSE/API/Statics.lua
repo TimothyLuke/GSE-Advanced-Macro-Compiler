@@ -58,7 +58,7 @@ Statics.StringReset =  "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 
 Statics.SpecIDList = {
-  [0] = "All",
+  [0] = "Global",
   [1] = "Warrior",
   [2] = "Paladin",
   [3] = "Hunter",

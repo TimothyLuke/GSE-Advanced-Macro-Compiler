@@ -1,6 +1,7 @@
 local GNOME,_ = ...
 
 local GSE = GSE
+local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
@@ -274,7 +275,19 @@ function GSE.GUIShowViewer()
 
   viewframe:ReleaseChildren()
   GSE.GUIViewerLayout(viewframe)
+  local cclassid = -1
   for k,v in GSE.pairsByKeys(names) do
+    local elements = GSE.split(k, ",")
+    local tclassid = tonumber(elements[1])
+    if tclassid ~= cclassid then
+      cclassid = tclassid
+      local fontName, fontHeight, fontFlags = GameFontHighlightSmall:GetFont()
+      local sectionheader = AceGUI:Create("Label")
+      sectionheader:SetText(Statics.SpecIDList[cclassid])
+      sectionheader:SetFont(fontName, fontHeight + 6 , fontFlags)
+      sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
+      viewframe.ScrollContainer:AddChild(sectionheader)
+    end
     GSE.GUICreateSequencePanels(viewframe,viewframe.ScrollContainer, k)
   end
   viewframe:Show()
