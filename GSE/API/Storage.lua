@@ -892,15 +892,17 @@ function GSE.GetSequenceNamesFromLibrary(library)
 end
 
 --- Moves Macros hidden in Global Macros to their appropriate class.
-function GSE.MoveMacroToClassFromGLobal()
-  for k,v in ipairs(GSELibrary[0]) do
+function GSE.MoveMacroToClassFromGlobal()
+  for k,v in pairs(GSELibrary[0]) do
     if not GSE.isEmpty(v.SpecID) and tonumber(v.SpecID) > 0 then
       if v.SpecID < 12 then
         GSELibrary[v.SpecID][k] = v
         GSE.Print(string.format(L["Moved %s to class %s."], k, Statics.SpecIDList[v.SpecID]))
+        GSELibrary[0][k] = nil
       else
         GSELibrary[GSE.GetClassIDforSpec(v.SpecID)][k] = v
         GSE.Print(string.format(L["Moved %s to class %s."], k, Statics.SpecIDList[GSE.GetClassIDforSpec(v.SpecID)]))
+        GSELibrary[0][k] = nil
       end
     end
   end

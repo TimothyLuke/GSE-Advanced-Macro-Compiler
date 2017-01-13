@@ -319,3 +319,4 @@ L["Global Macros are those that are valid for all classes.  GSE2 also imports un
 L["Show Global Macros in Editor"] = true
 L["This shows the Global Macros available as well as those for your class."] = true
 L["Moved %s to class %s."] = true
+L["Your current Specialisation is "] = true
