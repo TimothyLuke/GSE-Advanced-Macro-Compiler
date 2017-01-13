@@ -199,6 +199,8 @@ function GSE:GSSlash(input)
       GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
       GSE.ReportUnfoundSpells()
       GSE.Print("Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
+  elseif string.lower(input) == "movelostmacros" then
+      GSE.MoveMacroToClassFromGlobal()
   else
     GSE.GUIShowViewer()
   end

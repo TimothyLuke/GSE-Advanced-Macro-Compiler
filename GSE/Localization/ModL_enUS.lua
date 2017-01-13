@@ -313,8 +313,9 @@ L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
 L[" Deleted Orphaned Macro "] = true
 
---- GSE2.0.1
+--- GSE2.0.1-2.0.4
 L["Create buttons for Global Macros"] = true
 L["Global Macros are those that are valid for all classes.  GSE2 also imports unknown macros as Global.  This option will create a button for these macros so they can be called for any class.  Having all macros in this space is a performance loss hence having them saved with a the right specialisation is important."] = true
 L["Show Global Macros in Editor"] = true
 L["This shows the Global Macros available as well as those for your class."] = true
+L["Moved %s to class %s."] = true
