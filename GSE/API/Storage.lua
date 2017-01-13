@@ -141,7 +141,7 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].PVP
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Raid) and GSE.inRaid then
     vers = GSELibrary[classid][sequenceName].Raid
-  elseif not GSE.isEmpty(classid][sequenceName].Mythic) and GSE.inMythic then
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Mythic) and GSE.inMythic then
     vers = GSELibrary[classid][sequenceName].Mythic
   end
   return vers
