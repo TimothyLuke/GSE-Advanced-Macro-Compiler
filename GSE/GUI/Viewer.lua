@@ -139,7 +139,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   urlHead:SetWidth(70)
   row2:AddChild(urlHead)
 
-  local urlval = "http://www.wowlazymacros.com"
+  local urlval = "https://wowlazymacros.com"
   local urllabel = AceGUI:Create("InteractiveLabel")
   if not GSE.isEmpty(GSELibrary[classid][sequencename].Helplink) then
    urlval = GSELibrary[classid][sequencename].Helplink
