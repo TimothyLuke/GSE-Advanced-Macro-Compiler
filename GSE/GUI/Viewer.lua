@@ -282,11 +282,19 @@ function GSE.GUIShowViewer()
     if tclassid ~= cclassid then
       cclassid = tclassid
       local fontName, fontHeight, fontFlags = GameFontHighlightSmall:GetFont()
+      local sectionspacer1 = AceGUI:Create("Label")
+      sectionspacer1:SetText(" ")
+      sectionspacer1:SetFont(fontName, 4 , fontFlags)
+      viewframe.ScrollContainer:AddChild(sectionspacer1)
       local sectionheader = AceGUI:Create("Label")
       sectionheader:SetText(Statics.SpecIDList[cclassid])
       sectionheader:SetFont(fontName, fontHeight + 6 , fontFlags)
       sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
       viewframe.ScrollContainer:AddChild(sectionheader)
+      local sectionspacer2 = AceGUI:Create("Label")
+      sectionspacer2:SetText(" ")
+      sectionspacer2:SetFont(fontName, 2 , fontFlags)
+      viewframe.ScrollContainer:AddChild(sectionspacer2)
     end
     GSE.GUICreateSequencePanels(viewframe,viewframe.ScrollContainer, k)
   end
