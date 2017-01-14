@@ -6,8 +6,6 @@ local Statics = GSE.Static
 function GSE.UnEscapeSequence(sequence)
 
   local retseq = GSE.UnEscapeTable(sequence)
-  print (sequence.StepFunction)
-  --retseq.StepFunction = sequence.StepFunction
   for k,v in pairs(sequence) do
     if type (k) == "string" then
       retseq[k] = v
