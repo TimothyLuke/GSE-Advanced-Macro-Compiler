@@ -101,7 +101,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   end
   if found then
     -- check if source the same.  If so ignore
-    GSE.Print (L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
+    GSE.Print (sequenceName .. " -- " ..L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
       GSE.PrintDebugMessage("adding ".. k, "Storage")
       table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
@@ -126,9 +126,9 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   if not GSE.isEmpty(confirmationtext) then
     GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
   end
-  -- if classid == GSE.GetCurrentClassID() then
-  --   GSE.UpdateSequence(SequenceName, sequence.MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
-  -- end
+  if classid == GSE.GetCurrentClassID() or classid == 0 then
+     GSE.UpdateSequence(sequenceName, sequence.MacroVersions[sequence.Default])
+  end
 end
 
 --- Load a collection of Sequences
