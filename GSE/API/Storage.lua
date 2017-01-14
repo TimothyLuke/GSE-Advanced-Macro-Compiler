@@ -214,8 +214,10 @@ function GSE.ReloadSequences()
     GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
   end
   if GSEOptions.CreateGlobalButtons then
-    for name, sequence in pairs(GSELibrary[0]) do
-      GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+    if not GSE.isEmpty(GSELibrary[0]) then
+      for name, sequence in pairs(GSELibrary[0]) do
+        GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+      end
     end
   end
 end
