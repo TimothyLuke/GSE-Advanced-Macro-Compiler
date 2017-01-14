@@ -99,7 +99,7 @@ buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.GUIOptionsDebugView() end)
+GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
 
 DebugFrame:AddChild(buttonGroup)

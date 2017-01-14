@@ -19,22 +19,22 @@ function GSE.GetOptionsTable()
             name = L["General Options"],
             order = 100
           },
-          saveAllMacrosLocal = {
-            name = L["Only Save Local Macros"],
-            desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times and potentially cause colissions."],
-            type = "toggle",
-            set = function(info,val) GSEOptions.saveAllMacrosLocal = val end,
-            get = function(info) return GSEOptions.saveAllMacrosLocal end,
-            order = 200
-          },
-          usetranslator = {
-            name = L["Use Macro Translator"],
-            desc = L["The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.  It is also used for syntax based colour markup of Sequences in the editor."],
-            type = "toggle",
-            set = function(info,val) GSE.ToggleTranslator(val) end,
-            get = function(info) return GSEOptions.useTranslator end,
-            order = 201
-          },
+          -- saveAllMacrosLocal = {
+          --   name = L["Only Save Local Macros"],
+          --   desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times and potentially cause colissions."],
+          --   type = "toggle",
+          --   set = function(info,val) GSEOptions.saveAllMacrosLocal = val end,
+          --   get = function(info) return GSEOptions.saveAllMacrosLocal end,
+          --   order = 200
+          -- },
+          -- usetranslator = {
+          --   name = L["Use Macro Translator"],
+          --   desc = L["The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.  It is also used for syntax based colour markup of Sequences in the editor."],
+          --   type = "toggle",
+          --   set = function(info,val) GSE.ToggleTranslator(val) end,
+          --   get = function(info) return GSEOptions.useTranslator end,
+          --   order = 201
+          -- },
           realtimeparse = {
             name = L["Use Realtime Parsing"],
             desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
