@@ -50,8 +50,6 @@ function GSE.CloneSequence(sequence)
     end
   end
 
-
-
   return retseq
 
 end
@@ -443,43 +441,13 @@ function GSE.UpdateSequence(name, sequence)
   table.insert(GSE.OOCQueue, vals)
 end
 
-function GSE.CreateTemporaryVersion(sequence)
-  local returnseq = {}
-  if not GSE.isEmpty(sequence.KeyPress) then
-    returnseq.KeyPress = {}
-    for k,v in ipairs(sequence.KeyPress) do
-      table.insert(returnseq.KeyPress, v)
-    end
-  end
-  if not GSE.isEmpty(sequence.KeyRelease)  then
-    returnseq.KeyRelease = {}
-    for k,v in ipairs(sequence.KeyRelease) do
-      table.insert(returnseq.KeyRelease, v)
-    end
-  end
-
-  if not GSE.isEmpty(sequence.PreMaco) then
-    for k,v in ipairs(sequence.PreMacro) do
-      table.insert(returnseq, v)
-    end
-  end
-  for k,v in ipairs(sequence) do
-    table.insert(returnseq, v)
-  end
-  if not GSE.isEmpty(sequence.PostMaco) then
-    for k,v in ipairs(sequence.PostMacro) do
-      table.insert(returnseq, v)
-    end
-  end
-  return returnseq
-end
 
 
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
 function GSE.OOCUpdateSequence(name,sequence)
   sequence = GSE.CleanMacroVersion(sequence)
   GSE.FixSequence(sequence)
-  tempseq = GSE.CreateTemporaryVersion(sequence)
+  tempseq = GSE.CloneSequence(sequence)
 
   local existingbutton = true
   if GSE.isEmpty(_G[name]) then
@@ -490,9 +458,8 @@ function GSE.OOCUpdateSequence(name,sequence)
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
   if GetLocale() ~= "enUS" then
     tempseq = GSE.TranslateSequence(tempseq, name)
-    tempseq = GSE.UnEscapeSequence(tempseq)
   end
-
+  tempseq = GSE.UnEscapeSequence(tempseq)
 
   if not GSE.isEmpty(sequence.PreMaco) then
     button:SetAttribute('loopstart', table.getn(sequence) + 1)
@@ -502,7 +469,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     button:SetAttribute('loopstop', table.getn(sequence) + 1)
   end
 
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(GSE.UnEscapeSequence(tempseq))) .. ']=======])')
+  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(tempseq)) .. ']=======])')
   button:SetAttribute("step",1)
   button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
   GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. button:GetAttribute('KeyPress'))

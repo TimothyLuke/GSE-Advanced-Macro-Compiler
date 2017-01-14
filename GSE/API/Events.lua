@@ -90,11 +90,23 @@ function GSE:ADDON_LOADED(event, addon)
 
   for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
     counter = counter + 1
+    for i,j in ipairs(v.MacroVersions) do
+      GSELibrary[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+    end
+  end
+  for k,v in pairs(GSELibrary[0]) do
+    counter = counter + 1
+    for i,j in ipairs(v.MacroVersions) do
+      GSELibrary[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+    end
   end
   if counter <= 0 then
     StaticPopup_Show ("GSE-SampleMacroDialog")
   end
   GSE.PrintDebugMessage("I am loaded")
+  GSEOptions.UnfoundSpells = {}
+  GSEOptions.ErroneousSpellID = {}
+  GSEOptions.UnfoundSpellIDs = {}
   GSE.ReloadSequences()
   GSE:SendMessage(Statics.CoreLoadedMessage)
 
@@ -113,9 +125,7 @@ function GSE:ADDON_LOADED(event, addon)
   if addon == GNOME then
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
   end
-  GSEOptions.UnfoundSpells = {}
-  GSEOptions.ErroneousSpellID = {}
-  GSEOptions.UnfoundSpellIDs = {}
+
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
