@@ -113,7 +113,9 @@ function GSE:ADDON_LOADED(event, addon)
   if addon == GNOME then
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
   end
-
+  GSEOptions.UnfoundSpells = {}
+  GSEOptions.ErroneousSpellID = {}
+  GSEOptions.UnfoundSpellIDs = {}
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)

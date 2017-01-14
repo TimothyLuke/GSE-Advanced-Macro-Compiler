@@ -236,7 +236,7 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
         if GSE.isEmpty(GSEOptions.UnfoundSpells) then
           GSEOptions.UnfoundSpells = {}
         end
-        GSEOptions.UnfoundSpells [#GSEOptions.UnfoundSpells + 1] = etc
+        GSEOptions.UnfoundSpells [etc] = true
       end
     end
   end
@@ -329,7 +329,7 @@ function GSE.ReportUnfoundSpells()
   for k,v in pairs(GSE.TranslatorLanguageTables[Statics.TranslationHash]["enUS"]) do
     local name, rank, icon, castingTime, minRange, maxRange, spellID = GetSpellInfo(v)
     if GSE.isEmpty(spellID) then
-      table.insert(GSEOptions.ErroneousSpellID, v)
+      GSEOptions.ErroneousSpellID[v] = true
     end
 
   end
