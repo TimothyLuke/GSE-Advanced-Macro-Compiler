@@ -11,41 +11,56 @@ function GSE.DeleteSequence(classid, sequenceName)
   GSELibrary[classid][sequenceName] = nil
 end
 
---- This function clones the Macro Version part of a sequence.
 function GSE.CloneSequence(sequence)
+  local newsequence = {}
+
+  for k,v in pairs(sequence) do
+    newsequence[k] = v
+  end
+
+  newsequence.MacroVersions = {}
+  for k,v in ipairs(sequence.MacroVersions) do
+    newsequence.MacroVersions[tonumber(k)] = GSE.CloneMacroVersion(v)
+  end
+
+  return newsequence
+end
+
+--- This function clones the Macro Version part of a sequence.
+function GSE.CloneMacroVersion(macroversion)
   local retseq = {}
-  for k,v in ipairs(sequence) do
+  for k,v in ipairs(macroversion) do
     table.insert(retseq, v)
   end
 
-  for k,v in pairs(sequence) do
+  for k,v in pairs(macroversion) do
     retseq[k] = v
   end
 
-  if not GSE.isEmpty(sequence.PreMacro) then
+  if not GSE.isEmpty(macroversion.PreMacro) then
     retseq.PreMacro = {}
-    for k,v in ipairs(sequence.PreMacro) do
+    for k,v in ipairs(macroversion.PreMacro) do
       table.insert(retseq.PreMacro, v)
     end
   end
 
-  if not GSE.isEmpty(sequence.PostMacro) then
+  if not GSE.isEmpty(macroversion.PostMacro) then
     retseq.PostMacro = {}
-    for k,v in ipairs(sequence.PostMacro)do
+    for k,v in ipairs(macroversion.PostMacro)do
       table.insert(retseq.PostMacro, v)
     end
   end
 
-  if not GSE.isEmpty(sequence.KeyRelease) then
+  if not GSE.isEmpty(macroversion.KeyRelease) then
     retseq.KeyRelease = {}
-    for k,v in ipairs(sequence.KeyRelease) do
+    for k,v in ipairs(macroversion.KeyRelease) do
       table.insert(retseq.KeyRelease, v)
     end
   end
 
-  if not GSE.isEmpty(sequence.KeyPress) then
+  if not GSE.isEmpty(macroversion.KeyPress) then
     retseq.KeyPress = {}
-    for k,v in ipairs(sequence.KeyPress) do
+    for k,v in ipairs(macroversion.KeyPress) do
       table.insert(retseq.KeyPress, v)
     end
   end
@@ -447,7 +462,7 @@ end
 function GSE.OOCUpdateSequence(name,sequence)
   sequence = GSE.CleanMacroVersion(sequence)
   GSE.FixSequence(sequence)
-  tempseq = GSE.CloneSequence(sequence)
+  tempseq = GSE.CloneMacroVersion(sequence)
 
   local existingbutton = true
   if GSE.isEmpty(_G[name]) then

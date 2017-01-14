@@ -246,7 +246,7 @@ describe('API Translator', function()
     }
 
 
-    MacroVersions[2] = GSE.CloneSequence(MacroVersions[1])
+    MacroVersions[2] = GSE.CloneMacroVersion(MacroVersions[1])
 
     assert.are.equal("Sequential",   MacroVersions[2].StepFunction)
     assert.are.equal("Sequential",   MacroVersions[1].StepFunction)
