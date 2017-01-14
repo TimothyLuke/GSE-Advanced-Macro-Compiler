@@ -4,16 +4,15 @@ local Statics = GSE.Static
 
 --- remove WoW Text Markup from a sequence
 function GSE.UnEscapeSequence(sequence)
-  local retseq = GSE.UnEscapeTable(sequence)
 
+  local retseq = GSE.UnEscapeTable(sequence)
+  print (sequence.StepFunction)
   --retseq.StepFunction = sequence.StepFunction
   for k,v in pairs(sequence) do
-    if type (k) == string then
+    if type (k) == "string" then
       retseq[k] = v
     end
   end
-
-
   if not GSE.isEmpty(sequence.KeyPress) then
     retseq.KeyPress = GSE.UnEscapeTable(sequence.KeyPress)
   end
