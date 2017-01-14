@@ -94,10 +94,13 @@ function GSE:ADDON_LOADED(event, addon)
       GSELibrary[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
     end
   end
-  for k,v in pairs(GSELibrary[0]) do
-    counter = counter + 1
-    for i,j in ipairs(v.MacroVersions) do
-      GSELibrary[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+  if not GSE.isEmpty(GSELibrary[0]) then
+
+    for k,v in pairs(GSELibrary[0]) do
+      counter = counter + 1
+      for i,j in ipairs(v.MacroVersions) do
+        GSELibrary[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+      end
     end
   end
   if counter <= 0 then
