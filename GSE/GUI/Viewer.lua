@@ -320,8 +320,8 @@ function GSE.GUIConfigureMacroButton(button)
     end)
   end
   if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
-  else
     button:SetDisabled(true)
+  else
     button:SetDisabled(false)
   end
   if GSE.GUIViewFrame.ClassID ~= 0 or GSE.GUIViewFrame.ClassID ~= GSE.GetCurrentClassID then
