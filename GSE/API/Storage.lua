@@ -476,15 +476,34 @@ function GSE.OOCUpdateSequence(name,sequence)
   end
   tempseq = GSE.UnEscapeSequence(tempseq)
 
-  if not GSE.isEmpty(sequence.PreMaco) then
-    button:SetAttribute('loopstart', table.getn(sequence) + 1)
+  local executionseq = {}
+  local pmcount = 0
+  if not GSE.isEmpty(tempseq.PreMacro) then
+    pmcount = table.getn(tempseq.PreMacro) + 1
+    button:SetAttribute('loopstart', pmcount)
+    for k,v in ipairs(tempseq.PreMacro) do
+      table.insert(executionseq, v)
+    end
+
   end
 
-  if not GSE.isEmpty(sequence.PostMaco) then
-    button:SetAttribute('loopstop', table.getn(sequence) + 1)
+  for k,v in ipairs(tempseq) do
+    table.insert(executionseq, v)
   end
 
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(tempseq)) .. ']=======])')
+  button:SetAttribute('loopstop', table.getn(executionseq))
+
+  if not GSE.isEmpty(tempseq.PostMacro) then
+    for k,v in ipairs(tempseq.PostMacro) do
+      table.insert(executionseq, v)
+    end
+
+  end
+
+  button:SetAttribute("exseq", executionseq)
+
+
+  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
   button:SetAttribute("step",1)
   button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
   GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. button:GetAttribute('KeyPress'))
@@ -776,7 +795,8 @@ end
 function GSE.UpdateIcon(self, reset)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
-  local sequence, foundSpell, notSpell = GSELibrary[GSE.GetCurrentClassID()][button].MacroVersions[GSE.GetActiveSequenceVersion(button)][step], false, ''
+  local executionseq = self:GetAttribute("exseq")
+  local sequence, foundSpell, notSpell = executionseq[step], false, ''
   for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if Statics.CastCmds[strlower(cmd)] then
       local spell, target = SecureCmdOptionParse(etc)
