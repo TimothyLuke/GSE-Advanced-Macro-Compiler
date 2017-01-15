@@ -823,11 +823,16 @@ end
 function GSE.PrepareKeyPress(sequence)
 
   local tab = {}
+  if GSEOptions.requireTarget then
+    -- see #20 prevent target hopping
+    table.insert(tab, "/stopmacro [@playertarget, noexists]")
+  end
   if not GSE.isEmpty(sequence.KeyPress) then
     for k,v in pairs(sequence.KeyPress) do
       tab[k] = v
     end
   end
+
   if GSEOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 0)
     table.insert(tab,"/run sfx=GetCVar(\"Sound_EnableSFX\");")
@@ -844,10 +849,6 @@ function GSE.PrepareKeyRelease(sequence)
     for k,v in pairs(sequence.KeyRelease) do
       table.insert(tab, v)
     end
-  end
-  if GSEOptions.requireTarget then
-    -- see #20 prevent target hopping
-    table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
   if sequence.Ring1 or (sequence.Ring1 == nil and GSEOptions.use11) then
     table.insert(tab, "/use [combat] 11")
