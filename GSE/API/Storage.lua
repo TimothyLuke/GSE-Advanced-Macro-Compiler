@@ -289,11 +289,9 @@ function GSE.ExportSequence(sequence, sequenceName)
     local steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset .. ",\n" -- Set to this as the default if its blank.
 
     if not GSE.isEmpty(v.StepFunction) then
-      print("here")
       if  v.StepFunction == Statics.PriorityImplementation then
         steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
       elseif v.StepFunction == "Priority" then
-        print("here")
        steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
      else
        steps = "      StepFunction = [[" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "]],\n"
