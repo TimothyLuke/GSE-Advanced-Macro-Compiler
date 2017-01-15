@@ -384,12 +384,13 @@ function GSE:GUIDrawMacroEditor(container, version)
   looplimit:DisableButton(true)
   looplimit:SetMaxLetters(4)
   looplimit:SetWidth(100)
-  looplimit.editbox:SetNumeric()
+
   linegroup1:AddChild(looplimit)
   if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then
-    looplimit.SetText(editframe.Sequence.MacroVersions[version].LoopLimit)
+    looplimit:SetText(tonumber(editframe.Sequence.MacroVersions[version].LoopLimit))
   end
-  looplimit:SetCallback("OnValueChanged", function (sel, object, value)
+  looplimit.editbox:SetNumeric()
+  looplimit:SetCallback("OnTextChanged", function (sel, object, value)
     editframe.Sequence.MacroVersions[version].LoopLimit = value
   end)
 

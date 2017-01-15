@@ -5,6 +5,6 @@
 ## Version: 200
 ## SavedVariables: GnomeOptions
 ## RequiredDeps: GSE
-
+## DefaultState: disabled
 
 gsCoretoGSEAdaptor.lua
