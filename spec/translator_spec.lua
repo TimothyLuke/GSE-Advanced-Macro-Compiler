@@ -15,4 +15,13 @@ describe('API Translator', function()
 
   end)
 
+  it("checks that mods are retained", function()
+    local originalstring = '/castsequence reset=combat [talent:7/3] Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    print(newstring)
+    local finalstring = GSE.UnEscapeString(newstring)
+
+    assert.are.equal(originalstring, finalstring)
+  end)
+
 end)
