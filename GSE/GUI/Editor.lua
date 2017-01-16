@@ -33,6 +33,7 @@ editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIShowViewer(); end)
 editframe:SetLayout("List")
+editframe:SetScript("OnSizeChanged", editframe:DoLayout())
 
 
 local specdropdownvalue = editframe.SpecID
@@ -98,7 +99,10 @@ function GSE.GUIEditorPerformLayout(frame)
   editframe.ContentContainer = tabgrp
 
 
-  tabgrp:SetCallback("OnGroupSelected",  function (container, event, group) GSE.GUISelectEditorTab(container, event, group) end)
+  tabgrp:SetCallback("OnGroupSelected",  function (container, event, group)
+    GSE.GUISelectEditorTab(container, event, group)
+    editframe.SelectedTab = group
+  end)
   tabgrp:SetFullWidth(true)
   tabgrp:SetFullHeight(true)
 
@@ -150,7 +154,10 @@ function GSE.GetVersionList()
 end
 
 function GSE:GUIDrawMetadataEditor(container)
+  -- Default frame size = 700 w x 500 h
+
   editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
+
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
@@ -339,16 +346,18 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   editframe.Sequence.MacroVersions[version] = GSE.TranslateSequence(editframe.Sequence.MacroVersions[version], "From Editor")
 
+  local fleft, fbottom, fwidth, fheight = editframe:GetBoundsRect()
+
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
-  layoutcontainer:SetHeight(260)
+  layoutcontainer:SetHeight(fheight - 240 )
   layoutcontainer:SetLayout("Flow") -- important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   --scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- probably?
   scrollcontainer:SetWidth(546)
-  scrollcontainer:SetHeight(260)
+  scrollcontainer:SetHeight(fheight - 240)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
