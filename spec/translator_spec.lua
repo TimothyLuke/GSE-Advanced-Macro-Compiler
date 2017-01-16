@@ -16,7 +16,7 @@ describe('API Translator', function()
   end)
 
   it("checks that mods are retained", function()
-    local originalstring = '/castsequence reset=combat [talent:7/3] Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
+    local originalstring = '/castsequence [talent:7/3] reset=combat Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
@@ -36,11 +36,5 @@ describe('API Translator', function()
     assert.are.equal(originalstring, finalstring)
   end)
 
-  it("checks that ctrl:mods are retained and reset=target is kept before the mod", function()
-    local originalstring = '/castsequence reset=target [mod:ctrl] !Rip,Ferocious Bite,Ferocious Bite,Ferocious Bite; reset=target [nomod] Rake, shred, shred, shred, shred'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
-    local finalstring = GSE.UnEscapeString(newstring)
-    assert.are.equal(originalstring, finalstring)
-  end)
 
 end)
