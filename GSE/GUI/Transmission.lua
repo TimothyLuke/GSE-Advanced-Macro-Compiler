@@ -214,11 +214,11 @@ transmissionFrame:SetHeight(190)
 transmissionFrame:Hide()
 
 
-local SequenceListbox = AceGUI:Create("TreeGroup")
+local SequenceListbox = AceGUI:Create("Dropdown")
 --SequenceListbox:SetLabel(L["Load Sequence"])
 SequenceListbox:SetWidth(250)
 SequenceListbox:SetCallback("OnValueChanged", function (obj,event,key) transSequencevalue = key end)
-transmissionFrame.SequenceList = SequenceListbox
+transmissionFrame.SequenceListbox = SequenceListbox
 transmissionFrame:AddChild(SequenceListbox)
 
 local playereditbox = AceGUI:Create("EditBoxExampleAll")
@@ -248,9 +248,9 @@ function GSE.GUIShowTransmissionGui(inckey)
   end
 
   local names = GSE.GetSequenceNames()
-  GSE.GUITransmissionFrame.SequenceList:SetList(names)
+  GSE.GUITransmissionFrame.SequenceListbox:SetList(names)
   if not GSE.isEmpty(inckey) then
-    GSE.GUITransmissionFrame.SequenceList:SetValue(inckey)
+    GSE.GUITransmissionFrame.SequenceListbox:SetValue(inckey)
     transSequencevalue = inckey
   end
   transmissionFrame:Show()
