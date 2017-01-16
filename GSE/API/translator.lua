@@ -245,7 +245,14 @@ end
 
 
 function GSE.GetConditionalsFromString(str)
-  -- Check for resets
+  --check for conditionals
+  local found = false
+  local mods = ""
+  local leftstr
+  local rightstr
+  local leftfound = false
+
+    -- Check for resets
   GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
   local resetleft = string.find(str, "reset=")
   if not GSE.isEmpty(resetleft) then
@@ -272,12 +279,7 @@ function GSE.GetConditionalsFromString(str)
   end
 
   GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
-  --check for conditionals
-  local found = false
-  local mods = ""
-  local leftstr
-  local rightstr
-  local leftfound = false
+
   for i = 1, #str do
     local c = str:sub(i,i)
     if c == "[" and not leftfound then
