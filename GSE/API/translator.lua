@@ -295,7 +295,7 @@ function GSE.GetConditionalsFromString(str)
   if rightstr and leftstr then
      found = true
      GSE.PrintDebugMessage("We have left and right stuff", GNOME)
-     mods = string.sub(str, leftstr, rightstr)
+     mods = mods .. string.sub(str, leftstr, rightstr)
      GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
      str = string.sub(str, rightstr + 1)
      GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
