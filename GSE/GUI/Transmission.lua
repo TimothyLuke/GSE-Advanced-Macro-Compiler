@@ -233,7 +233,7 @@ sendbutton:SetWidth(250)
 sendbutton:SetCallback("OnClick", function() GSE.TransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText()) end)
 transmissionFrame:AddChild(sendbutton)
 
-function GSE.GUIShowTransmissionGui(SequenceName)
+function GSE.GUIShowTransmissionGui(inckey)
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
     --	GSE.GUITransmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
@@ -249,9 +249,9 @@ function GSE.GUIShowTransmissionGui(SequenceName)
 
   local names = GSE.GetSequenceNames()
   GSE.GUITransmissionFrame.SequenceList:SetList(names)
-  if not GSE.isEmpty(SequenceName) then
-    GSE.GUITransmissionFrame.SequenceList:SetValue(SequenceName)
-    transSequencevalue = SequenceName
+  if not GSE.isEmpty(inckey) then
+    GSE.GUITransmissionFrame.SequenceList:SetValue(inckey)
+    transSequencevalue = inckey
   end
   transmissionFrame:Show()
   GSE.GUITransmissionFrame:SetStatusText(L["Ready to Send"])

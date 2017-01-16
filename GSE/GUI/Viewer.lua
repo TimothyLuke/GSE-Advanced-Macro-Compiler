@@ -220,7 +220,7 @@ function GSE.GUIViewerToolbar(container)
   local tranbutton = AceGUI:Create("Button")
   tranbutton:SetText(L["Send"])
   tranbutton:SetWidth(150)
-  tranbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(viewframe.SequenceName) end)
+  tranbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(viewframe.ClassID .. "," .. viewframe.SequenceName) end)
   buttonGroup:AddChild(tranbutton)
 
   disableSeqbutton = AceGUI:Create("Button")
