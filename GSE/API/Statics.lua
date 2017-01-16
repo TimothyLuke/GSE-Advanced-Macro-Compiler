@@ -192,6 +192,7 @@ if not step or not macros[step] then -- User attempted to write a step method th
   step = 1
 end
 self:SetAttribute('step', step)
+self:SetAttribute('loopiter', loopiter)
 self:CallMethod('UpdateIcon')
 ]=]
 
@@ -199,38 +200,36 @@ self:CallMethod('UpdateIcon')
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
 Statics.LoopSequentialImplementation = [[
-  if step < loopstart then
-    -- I am before the loop increment to next step.
-    step = step + 1
-  elseif looplimit <= 1 then
-    -- when we get to the end reset to loopstart
-    if step == loopstop then
+if step < loopstart then
+  -- I am before the loop increment to next step.
+  step = step + 1
+elseif step > loopstop then
+  step = step + 1
+elseif step == loopstop then
+  if looplimit > 0 then
+    if loopiter >= looplimit then
+      if loopstop >= #macros then
+        step = 1
+      else
+        step = step + 1
+      end
+      loopiter = 1
+    else
       step = loopstart
       loopiter = loopiter + 1
-      self:SetAttribute('loopiter', loopiter)
-    else
-      step = step + 1
     end
-  elseif step > loopstop then
-    step = step + 1
-  elseif loopiter == looplimit then
-    if step == #macros then
-      step = 1
-      loopiter = 1
-      self:SetAttribute('loopiter', 1)
-    else
-      step = step + 1
-    end
-  elseif step == loopstop then
-    step = loopstart
-    loopiter = loopiter + 1
-    self:SetAttribute('loopiter', loopiter)
-  elseif step == #macros  then
-    step = 1
-    self:SetAttribute('loopiter', 1)
   else
-    step = step + 1
+    step = loopstart
   end
+elseif step >= #macros then
+  loopiter = 1
+  step = loopstart
+  if looplimit > 0 then
+    step = 1
+  end
+else
+  step = step + 1
+end
 ]]
 
 Statics.TargetResetImplementation = [[
