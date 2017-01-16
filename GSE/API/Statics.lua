@@ -136,41 +136,53 @@ Statics.PriorityImplementation = [[
 --    but it does this within an internal loop.  So more like 123343456
 --    If the macro has loopstart or loopstop defined then it will use this instead of GSStaticPriority
 Statics.LoopPriorityImplementation = [[
-  if step < loopstart then
-    step = step + 1
-  elseif looplimit <= 1 then
-    -- when we get to the end reset to loopstart
-    limit = limit or loopstart
-    if step == limit then
-      limit = limit % loopstop + 1
-      step = loopstart
-      if looplimit == loopiter then
-        loopiter = 1
-        self:SetAttribute('loopiter', loopiter)
-      end
-    else
-      step = step + 1
+if step < loopstart then
+  step = step + 1
+
+elseif step > loopstop then
+  if step >= #macros then
+    loopiter = 1
+    step = loopstart
+    if looplimit > 0 then
+      step = 1
     end
-  elseif step > looplimit then
-    step = step + 1
-  elseif loopiter == looplimit then
-    step = loopstop + 1
-  elseif step == #macros then
-    step = 1
-    self:SetAttribute('loopiter', 1)
   else
-    limit = limit or loopstart
-    if step == limit then
-      limit = limit % loopstop + 1
-      step = loopstart
-      if limit == loopiter then
-        loopiter = loopiter + 1
-        self:SetAttribute('loopiter', loopiter)
-      end
-    else
-      step = step + 1
-    end
+    step = step + 1
   end
+elseif step == loopstop then
+  if looplimit > 0 then
+    if loopiter >= looplimit then
+      if loopstop >= #macros then
+        step = 1
+      else
+        step = step + 1
+      end
+      loopiter = 1
+    else
+      step = loopstart
+      loopiter = loopiter + 1
+    end
+  else
+    step = loopstart
+  end
+elseif step >= #macros then
+  loopiter = 1
+  step = loopstart
+  if looplimit > 0 then
+    step = 1
+  end
+else
+  limit = limit or loopstart
+  if step == limit then
+    limit = limit % loopstop + 1
+    step = loopstart
+    if limit == loopiter then
+      loopiter = loopiter + 1
+    end
+  else
+    step = step + 1
+  end
+end
 ]]
 
 Statics.OnClick = [=[
@@ -204,15 +216,15 @@ if step < loopstart then
   -- I am before the loop increment to next step.
   step = step + 1
 elseif step > loopstop then
-    if step >= #macros then
-      loopiter = 1
-      step = loopstart
-      if looplimit > 0 then
-        step = 1
-      end
-    else
-      step = step + 1
+  if step >= #macros then
+    loopiter = 1
+    step = loopstart
+    if looplimit > 0 then
+      step = 1
     end
+  else
+    step = step + 1
+  end
 elseif step == loopstop then
   if looplimit > 0 then
     if loopiter >= looplimit then
