@@ -831,6 +831,7 @@ function GSE.PrepareKeyPress(sequence)
 
   local tab = {}
   if GSEOptions.requireTarget then
+
     -- see #20 prevent target hopping
     table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
@@ -844,11 +845,11 @@ function GSE.PrepareKeyPress(sequence)
   end
   if not GSE.isEmpty(sequence.KeyPress) then
     for k,v in pairs(sequence.KeyPress) do
-      tab[k] = v
+      table.insert(tab, v)
     end
   end
 
-  return GSE.UnEscapeTable(tab)
+  return tab
 end
 
 function GSE.PrepareKeyRelease(sequence)
@@ -896,7 +897,7 @@ function GSE.PrepareKeyRelease(sequence)
     -- potentially change this to UIErrorsFrame:Clear()
     table.insert(tab, "/run UIErrorsFrame:Clear()")
   end
-  return GSE.UnEscapeTable(tab)
+  return tab
 end
 
 --- Takes a collection of Sequences and returns a list of names
