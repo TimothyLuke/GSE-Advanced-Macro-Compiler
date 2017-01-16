@@ -43,7 +43,7 @@ editframe:SetCallback("OnClose", function (self)
   end
 end)
 editframe:SetLayout("List")
-editframe:SetScript("OnSizeChanged", editframe:DoLayout())
+editframe.frame:SetScript("OnSizeChanged", function () editframe:DoLayout() end)
 
 
 local specdropdownvalue = editframe.SpecID
@@ -359,7 +359,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   editframe.Sequence.MacroVersions[version] = GSE.TranslateSequence(editframe.Sequence.MacroVersions[version], "From Editor")
 
-  local fleft, fbottom, fwidth, fheight = editframe:GetBoundsRect()
+  local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
 
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
