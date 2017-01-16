@@ -255,7 +255,7 @@ end
 Statics.TargetResetImplementation = [[
 local target = self:GetAttribute('target') or "none"
 local _, commandtarget = SecureCmdOptionParse(macros[step])
-if target ~= target then
+if target ~= commandtarget then
   self:SetAttribute('step', 0)
   self:SetAttribute('target', commandtarget)
   self:SetAttribute('loopiter', 0)
