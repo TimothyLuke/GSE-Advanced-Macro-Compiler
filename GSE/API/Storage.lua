@@ -320,8 +320,8 @@ function GSE.ExportSequence(sequence, sequenceName)
     end
 
     macroversions = macroversions .. steps
-    if not GSE.isEmpty(outputversion.looplimit) then
-      macroversions = macroversions .. "      looplimit=" .. GSEOptions.EQUALS .. outputversion.looplimit .. Statics.StringReset .. ",\n"
+    if not GSE.isEmpty(outputversion.LoopLimit) then
+      macroversions = macroversions .. "      LoopLimit=" .. GSEOptions.EQUALS .. outputversion.LoopLimit .. Statics.StringReset .. ",\n"
     end
     if not GSE.isEmpty(outputversion.KeyPress) then
       macroversions = macroversions .. "      KeyPress={\n"
@@ -523,8 +523,8 @@ function GSE.OOCUpdateSequence(name,sequence)
     button:SetAttribute("combatreset", true)
   end
   button:WrapScript(button, 'OnClick', format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
-  if not GSE.isEmpty(sequence.looplimit) then
-    button:SetAttribute('looplimit', sequence.looplimit)
+  if not GSE.isEmpty(sequence.LoopLimit) then
+    button:SetAttribute('looplimit', sequence.LoopLimit)
   end
 
 end
@@ -554,11 +554,17 @@ end
 
 --- This funciton dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
+  local targetreset = ""
+  local looper = GSE.IsLoopSequence(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
+  if GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].Target then
+    targetreset = Statics.TargetResetImplementation
+  end
   GSE.Print("Button name: "  .. SequenceName)
   GSE.Print(_G[SequenceName]:GetScript('OnClick'))
   GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
-  GSE.Print(format(Statics.OnClick, GSE.PrepareStepFunction(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].StepFunction) or 'step = step % #macros + 1'))
+  GSE.Print("LoopMacro?" .. tostring(looper))
+  GSE.Print(format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].StepFunction, looper)))
 end
 
 
