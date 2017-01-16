@@ -118,7 +118,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
     for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
       GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
       output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
-      if Statics.CastCmds[strlower(cmd)] then
+      if Statics.CastCmds[string.lower(cmd)] then
         if not cleanNewLines then
           etc = string.match(etc, "^%s*(.-)%s*$")
         end
@@ -134,7 +134,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
           output = output  .. etc
         end
       -- check for cast Sequences
-      elseif strlower(cmd) == "castsequence" then
+      elseif string.lower(cmd) == "castsequence" then
         GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
         --look for conditionals at the startattack
         local conditionals, mods, uetc = GSE.GetConditionalsFromString(etc)
