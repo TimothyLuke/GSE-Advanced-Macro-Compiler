@@ -689,16 +689,19 @@ function GSE.GUIDeleteVersion(version)
     printtext = printtext .. " " .. L["Mythic setting changed to Default."]
   end
 
-  if sequence.Default > version then
+  if sequence.Default > 1 then
     sequence.Default = tonumber(sequence.Default) - 1
+  else
+    sequence.Default = 1
   end
-  if not GSE.isEmpty(sequence.PVP) and sequence.PVP > version then
+
+  if not GSE.isEmpty(sequence.PVP) then
     sequence.PVP = tonumber(sequence.PVP) - 1
   end
-  if not GSE.isEmpty(sequence.Raid) and sequence.Raid > version then
+  if not GSE.isEmpty(sequence.Raid) then
     sequence.Raid = tonumber(sequence.Raid) - 1
   end
-  if not GSE.isEmpty(sequence.Mythic) and sequence.Mythic > version then
+  if not GSE.isEmpty(sequence.Mythic) then
     sequence.Mythic = tonumber(sequence.Mythic) - 1
   end
   table.remove(sequence.MacroVersions, version)
