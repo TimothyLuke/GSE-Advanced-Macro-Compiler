@@ -176,7 +176,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   if string.sub(output, string.len(output)-1) == ", " then
     output = string.sub(output, 1, string.len(output)-2)
   end
-  return string.gsub("\\s+", " ", output)
+  return string.gsub(output, "  ", " " )
 end
 
 function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
