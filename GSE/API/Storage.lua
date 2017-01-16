@@ -852,6 +852,10 @@ end
 
 function GSE.PrepareKeyRelease(sequence)
   local tab = {}
+  if GSEOptions.requireTarget then
+    -- see #20 prevent target hopping
+    table.insert(tab, "/stopmacro [@playertarget, noexists]")
+  end
   if not GSE.isEmpty(sequence.KeyRelease) then
     for k,v in pairs(sequence.KeyRelease) do
       table.insert(tab, v)
