@@ -320,3 +320,5 @@ L["Show Global Macros in Editor"] = true
 L["This shows the Global Macros available as well as those for your class."] = true
 L["Moved %s to class %s."] = true
 L["Options have been reset to defaults."] = true
+L["Hide Login Message"] = true
+L["Hides the message that GSE is loaded."] = true

@@ -127,6 +127,9 @@ function GSE:ADDON_LOADED(event, addon)
   LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gse"})
   if addon == GNOME then
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
+    if not GSEOptions.HideLoginMessage then
+      GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)
+    end
   end
 
 end
@@ -258,5 +261,3 @@ function GSE:ProcessOOCQueue()
     end
   end
 end
-
-GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)

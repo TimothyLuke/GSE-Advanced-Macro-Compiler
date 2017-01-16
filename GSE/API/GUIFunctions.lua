@@ -133,7 +133,6 @@ function GSE:OnInitialize()
     GSE.GUIVersionFrame:Hide()
     GSE.GUIEditFrame:Hide()
     GSE.GUIViewFrame:Hide()
-    GSE.Print(L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] .. GSEOptions.CommandColour .. L["/gs |r to get started."], "GSE")
 end
 
 

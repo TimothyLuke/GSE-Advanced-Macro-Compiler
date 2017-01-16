@@ -67,6 +67,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.DefaultDisabledMacroIcon = "Interface\\Icons\\INV_MISC_BOOK_08"
   GSEOptions.AddInPacks = {}
   GSEOptions.CreateGlobalButtons = false
+  GSEOptions.HideLoginMessage = false
 
 end
 

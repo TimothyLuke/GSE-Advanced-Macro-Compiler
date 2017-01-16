@@ -834,11 +834,6 @@ function GSE.PrepareKeyPress(sequence)
     -- see #20 prevent target hopping
     table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
-  if not GSE.isEmpty(sequence.KeyPress) then
-    for k,v in pairs(sequence.KeyPress) do
-      tab[k] = v
-    end
-  end
 
   if GSEOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 0)
@@ -847,6 +842,12 @@ function GSE.PrepareKeyPress(sequence)
     table.insert(tab, "/console Sound_EnableSFX 0")
     table.insert(tab, "/console Sound_EnableErrorSpeech 0")
   end
+  if not GSE.isEmpty(sequence.KeyPress) then
+    for k,v in pairs(sequence.KeyPress) do
+      tab[k] = v
+    end
+  end
+
   return GSE.UnEscapeTable(tab)
 end
 

@@ -27,14 +27,14 @@ function GSE.GetOptionsTable()
           --   get = function(info) return GSEOptions.saveAllMacrosLocal end,
           --   order = 200
           -- },
-          -- usetranslator = {
-          --   name = L["Use Macro Translator"],
-          --   desc = L["The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.  It is also used for syntax based colour markup of Sequences in the editor."],
-          --   type = "toggle",
-          --   set = function(info,val) GSE.ToggleTranslator(val) end,
-          --   get = function(info) return GSEOptions.useTranslator end,
-          --   order = 201
-          -- },
+         hideLogin = {
+            name = L["Hide Login Message"],
+            desc = L["Hides the message that GSE is loaded."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.HideLoginMessage = val end,
+            get = function(info) return GSEOptions.HideLoginMessage end,
+            order = 201
+          },
           realtimeparse = {
             name = L["Use Realtime Parsing"],
             desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
