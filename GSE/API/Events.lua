@@ -233,13 +233,13 @@ function GSE:processReload(action, arg)
 end
 
 function GSE:OnEnable()
-  GSE.OOCTimer = GSE:ScheduleRepeatingTimer("ProcessOOCQueue", 2)
+  GSE.OOCTimer = GSE:ScheduleRepeatingTimer("ProcessOOCQueue", 1)
 end
 
 
 function GSE:ProcessOOCQueue()
-  if not InCombatLockdown() then
-    for k,v in ipairs(GSE.OOCQueue) do
+  for k,v in ipairs(GSE.OOCQueue) do
+    if not InCombatLockdown() then
       if v.action == "UpdateSequence" then
         GSE.OOCUpdateSequence(v.name, v.macroversion)
       elseif v.action == "Save" then
@@ -251,6 +251,8 @@ function GSE:ProcessOOCQueue()
           GSELibrary[v.classid][v.sequencename] = v.sequence
         end
         GSE.OOCUpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
+      elseif v.action == "openviewer" then
+        GSE.GUIShowViewer()
       end
       GSE.OOCQueue[k] = nil
     end

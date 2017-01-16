@@ -28,10 +28,19 @@ editframe.Raid = 1
 editframe.PVP = 1
 editframe.Mythic = 1
 editframe.ClassID = classid
+editframe.save = false
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
-editframe:SetCallback("OnClose", function (self) editframe:Hide();  GSE.GUIShowViewer(); end)
+editframe:SetCallback("OnClose", function (self)
+  editframe:Hide();
+  if editframe.save then
+    local event = {}
+    event.action "openviewer"
+    table.insert(GSE.OOCQueue, event)
+  else
+    GSE.GUIShowViewer(); end)
+  end
 editframe:SetLayout("List")
 editframe:SetScript("OnSizeChanged", editframe:DoLayout())
 
@@ -129,7 +138,10 @@ function GSE.GUIEditorPerformLayout(frame)
   local savebutton = AceGUI:Create("Button")
   savebutton:SetText(L["Save"])
   savebutton:SetWidth(150)
-  savebutton:SetCallback("OnClick", function() GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence) end)
+  savebutton:SetCallback("OnClick", function()
+    GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
+    editframe.save = true
+  end)
   editButtonGroup:AddChild(savebutton)
 
   local delbutton = AceGUI:Create("Button")

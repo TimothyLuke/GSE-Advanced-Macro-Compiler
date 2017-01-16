@@ -15,29 +15,29 @@ importframe:SetStatusText(L["Import Macro from Forums"])
 importframe:SetCallback("OnClose", function(widget)  importframe:Hide(); GSE.GUIShowViewer() end)
 importframe:SetLayout("List")
 
-local headerGroup = AceGUI:Create("SimpleGroup")
-headerGroup:SetFullWidth(true)
-headerGroup:SetLayout("Flow")
-
-local defaultradio = AceGUI:Create("CheckBox")
-defaultradio:SetType("radio")
-defaultradio:SetLabel(L["GSE Macro"])
-defaultradio:SetValue(true)
-defaultradio:SetWidth(250)
-defaultradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(0)  end)
-
-local legacyradio = AceGUI:Create("CheckBox")
-legacyradio:SetType("radio")
-legacyradio:SetLabel(L["Legacy GS/GSE1 Macro"])
-legacyradio:SetValue(false)
-legacyradio:SetWidth(250)
-legacyradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(1)  end)
-
-
-headerGroup:AddChild(defaultradio)
-headerGroup:AddChild(legacyradio)
-
-importframe:AddChild(headerGroup)
+-- local headerGroup = AceGUI:Create("SimpleGroup")
+-- headerGroup:SetFullWidth(true)
+-- headerGroup:SetLayout("Flow")
+--
+-- local defaultradio = AceGUI:Create("CheckBox")
+-- defaultradio:SetType("radio")
+-- defaultradio:SetLabel(L["GSE Macro"])
+-- defaultradio:SetValue(true)
+-- defaultradio:SetWidth(250)
+-- defaultradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(0)  end)
+--
+-- local legacyradio = AceGUI:Create("CheckBox")
+-- legacyradio:SetType("radio")
+-- legacyradio:SetLabel(L["Legacy GS/GSE1 Macro"])
+-- legacyradio:SetValue(false)
+-- legacyradio:SetWidth(250)
+-- legacyradio:SetCallback("OnValueChanged", function (obj,event,key) GSE.GUIToggleImportDefault(1)  end)
+--
+--
+-- headerGroup:AddChild(defaultradio)
+-- headerGroup:AddChild(legacyradio)
+--
+-- importframe:AddChild(headerGroup)
 
 local importsequencebox = AceGUI:Create("MultiLineEditBox")
 importsequencebox:SetLabel(L["Macro Collection to Import."])
@@ -70,11 +70,17 @@ function GSE.GUIToggleImportDefault(switchstate)
 end
 
 function GSE.GUIImportSequence()
-  local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacyradio:GetValue())
+  local legacy = false
+  if not GSE.isEmpty(string.find(importsequencebox:GetText(), "MacroVersions") then
+    legacy = true
+  end
+  local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacy)
   if success then
     StaticPopup_Show ("GSE-MacroImportSuccess")
     GSE.GUIImportFrame:Hide()
-    GSE.GUIShowViewer()
+    local event = {}
+    event.action "openviewer"
+    table.insert(GSE.OOCQueue, event)
   else
     StaticPopup_Show ("GSE-MacroImportFailure")
   end
