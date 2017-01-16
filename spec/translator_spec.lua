@@ -30,7 +30,7 @@ describe('API Translator', function()
   end)
 
   it("checks that ctrl:mods are retained and reset=target is kept after the mod", function()
-    local originalstring = '/castsequence [mod:ctrl] reset=target !Rip,Ferocious Bite,Ferocious Bite,Ferocious Bite; [nomod] reset=target Rake, shred, shred, shred, shred'
+    local originalstring = '/castsequence [mod:ctrl] reset=target !Rip,Ferocious Bite'
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
