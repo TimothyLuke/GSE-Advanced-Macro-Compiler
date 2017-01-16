@@ -271,7 +271,7 @@ function GSE.GetConditionalsFromString(str)
         end
       end
     end
-    mods = mods .. " " .. string.sub(str, resetleft, resetright)
+    mods = string.sub(str, resetleft, resetright)
     GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
     str = string.sub(str, resetright + 1)
     GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
