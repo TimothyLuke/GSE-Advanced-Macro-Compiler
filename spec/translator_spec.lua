@@ -29,4 +29,18 @@ describe('API Translator', function()
     assert.are.equal(originalstring, finalstring)
   end)
 
+  it("checks that ctrl:mods are retained and reset=target is kept after the mod", function()
+    local originalstring = '/castsequence [mod:ctrl] reset=target !Rip,Ferocious Bite,Ferocious Bite,Ferocious Bite; [nomod] reset=target Rake, shred, shred, shred, shred'
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local finalstring = GSE.UnEscapeString(newstring)
+    assert.are.equal(originalstring, finalstring)
+  end)
+
+  it("checks that ctrl:mods are retained and reset=target is kept before the mod", function()
+    local originalstring = '/castsequence reset=target [mod:ctrl] !Rip,Ferocious Bite,Ferocious Bite,Ferocious Bite; reset=target [nomod] Rake, shred, shred, shred, shred'
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local finalstring = GSE.UnEscapeString(newstring)
+    assert.are.equal(originalstring, finalstring)
+  end)
+
 end)
