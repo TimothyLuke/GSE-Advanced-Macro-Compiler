@@ -245,6 +245,32 @@ end
 
 
 function GSE.GetConditionalsFromString(str)
+  -- Check for resets
+  GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
+  local resetleft = string.find(str, "reset=")
+  if not GSE.isEmpty(resetleft) then
+    GSE.PrintDebugMessage("found reset= at" .. resetleft, GNOME)
+  end
+
+  local rightfound = false
+  local resetright = 0
+  if resetleft then
+    for i = 1, #str do
+      local c = str:sub(i,i)
+      if c == " " then
+        if not rightfound then
+          resetright = i
+          rightfound = true
+        end
+      end
+    end
+    mods = mods .. " " .. string.sub(str, resetleft, resetright)
+    GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
+    str = string.sub(str, resetright + 1)
+    GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
+    found = true
+  end
+
   GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
   --check for conditionals
   local found = false
@@ -274,31 +300,6 @@ function GSE.GetConditionalsFromString(str)
   end
   if not cleanNewLines then
     str = string.match(str, "^%s*(.-)%s*$")
-  end
-  -- Check for resets
-  GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
-  local resetleft = string.find(str, "reset=")
-  if not GSE.isEmpty(resetleft) then
-    GSE.PrintDebugMessage("found reset= at" .. resetleft, GNOME)
-  end
-
-  local rightfound = false
-  local resetright = 0
-  if resetleft then
-    for i = 1, #str do
-      local c = str:sub(i,i)
-      if c == " " then
-        if not rightfound then
-          resetright = i
-          rightfound = true
-        end
-      end
-    end
-    mods = mods .. " " .. string.sub(str, resetleft, resetright)
-    GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
-    str = string.sub(str, resetright + 1)
-    GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
-    found = true
   end
 
   mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
