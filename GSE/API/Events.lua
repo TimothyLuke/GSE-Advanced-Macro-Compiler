@@ -217,6 +217,7 @@ function GSE:GSSlash(input)
   elseif string.lower(input) == "resetoptions" then
     GSE.SetDefaultOptions()
     GSE.Print(L["Options have been reset to defaults."])
+    StaticPopup_Show ("GSE_ConfirmReloadUIDialog")
   elseif string.lower(input) == "movelostmacros" then
     GSE.MoveMacroToClassFromGlobal()
   else
