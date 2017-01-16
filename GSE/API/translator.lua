@@ -156,8 +156,8 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         if not GSE.isEmpty(resetleft) then
           output = string.sub(output, 1, resetleft -1)
         end
-        if string.sub(output, strlen(output)-1) == ", " then
-          output = string.sub(output, 1, strlen(output)-2)
+        if string.sub(output, string.len(output)-1) == ", " then
+          output = string.sub(output, 1, string.len(output)-2)
         end
       else
         -- pass it through
@@ -196,8 +196,8 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
       found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
       output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
     end
-    if string.sub(output, strlen(output)-1) == "; " then
-      output = string.sub(output, 1, strlen(output)-2)
+    if string.sub(output, string.len(output)-1) == "; " then
+      output = string.sub(output, 1, string.len(output)-2)
     end
   else
     local conditionals, mods, etc = GSE.GetConditionalsFromString(str)
