@@ -248,6 +248,32 @@ function GSE.GetConditionalsFromString(str)
   --check for conditionals
   local found = false
   local mods = ""
+  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
+
+  for i = 1, #str do
+    local c = str:sub(i,i)
+    if c == "[" and not leftfound then
+      leftfound = true
+      leftstr = i
+    end
+    if c == "]" then
+      rightstr = i
+    end
+  end
+  GSE.PrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
+  GSE.PrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
+  if rightstr and leftstr then
+     found = true
+     GSE.PrintDebugMessage("We have left and right stuff", GNOME)
+     mods = string.sub(str, leftstr, rightstr)
+     GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
+     str = string.sub(str, rightstr + 1)
+     GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
+  end
+  if not cleanNewLines then
+    str = string.match(str, "^%s*(.-)%s*$")
+  end
+
   local leftstr
   local rightstr
   local leftfound = false
@@ -278,31 +304,6 @@ function GSE.GetConditionalsFromString(str)
     found = true
   end
 
-  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
-
-  for i = 1, #str do
-    local c = str:sub(i,i)
-    if c == "[" and not leftfound then
-      leftfound = true
-      leftstr = i
-    end
-    if c == "]" then
-      rightstr = i
-    end
-  end
-  GSE.PrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
-  GSE.PrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
-  if rightstr and leftstr then
-     found = true
-     GSE.PrintDebugMessage("We have left and right stuff", GNOME)
-     mods = string.sub(str, leftstr, rightstr)
-     GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
-     str = string.sub(str, rightstr + 1)
-     GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
-  end
-  if not cleanNewLines then
-    str = string.match(str, "^%s*(.-)%s*$")
-  end
 
   mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
   return found, mods, str
