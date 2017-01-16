@@ -204,7 +204,15 @@ if step < loopstart then
   -- I am before the loop increment to next step.
   step = step + 1
 elseif step > loopstop then
-  step = step + 1
+    if step >= #macros then
+      loopiter = 1
+      step = loopstart
+      if looplimit > 0 then
+        step = 1
+      end
+    else
+      step = step + 1
+    end
 elseif step == loopstop then
   if looplimit > 0 then
     if loopiter >= looplimit then
