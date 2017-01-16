@@ -63,8 +63,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local elements = GSE.split(key, ",")
   local classid = tonumber(elements[1])
   local sequencename = elements[2]
-  local fontName, fontHeight, fontFlags = GameFontHighlightSmall:GetFont()
-  local font = GameFontHighlightSmall:GetFontObject()
+  local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+  local font = GameFontNormal:GetFontObject()
   local origjustifyV = font:GetJustifyV()
   font:SetJustifyV("BOTTOM")
 
@@ -283,7 +283,7 @@ function GSE.GUIShowViewer()
     local tclassid = tonumber(elements[1])
     if tclassid ~= cclassid then
       cclassid = tclassid
-      local fontName, fontHeight, fontFlags = GameFontHighlightSmall:GetFont()
+      local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
       local sectionspacer1 = AceGUI:Create("Label")
       sectionspacer1:SetText(" ")
       sectionspacer1:SetFont(fontName, 4 , fontFlags)
