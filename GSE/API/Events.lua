@@ -207,15 +207,18 @@ function GSE:GSSlash(input)
   elseif string.lower(input) == "showdebugoutput" then
     StaticPopup_Show ("GS-DebugOutput")
   elseif string.lower(input) == "record" then
-      GSE.GUIRecordFrame:Show()
+    GSE.GUIRecordFrame:Show()
   elseif string.lower(input) == "debug" then
-      GSE.GUIShowDebugWindow()
+    GSE.GUIShowDebugWindow()
   elseif string.lower(input) == "compilemissingspells" then
-      GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
-      GSE.ReportUnfoundSpells()
-      GSE.Print("Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
+    GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
+    GSE.ReportUnfoundSpells()
+    GSE.Print("Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
+  elseif string.lower(input) == "resetoptions" then
+    GSE.SetDefaultOptions()
+    GSE.Print(L["Options have been reset to defaults."])
   elseif string.lower(input) == "movelostmacros" then
-      GSE.MoveMacroToClassFromGlobal()
+    GSE.MoveMacroToClassFromGlobal()
   else
     GSE.GUIShowViewer()
   end
