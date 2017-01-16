@@ -71,7 +71,7 @@ end
 
 function GSE.GUIImportSequence()
   local legacy = false
-  if not GSE.isEmpty(string.find(importsequencebox:GetText(), "MacroVersions") then
+  if not GSE.isEmpty(string.find(importsequencebox:GetText(), "MacroVersions")) then
     legacy = true
   end
   local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacy)

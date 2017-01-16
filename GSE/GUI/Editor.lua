@@ -39,8 +39,9 @@ editframe:SetCallback("OnClose", function (self)
     event.action "openviewer"
     table.insert(GSE.OOCQueue, event)
   else
-    GSE.GUIShowViewer(); end)
+    GSE.GUIShowViewer()
   end
+end)
 editframe:SetLayout("List")
 editframe:SetScript("OnSizeChanged", editframe:DoLayout())
 
