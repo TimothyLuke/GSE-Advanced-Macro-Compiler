@@ -243,13 +243,14 @@ function GSE.TranslateSpell(str, fromLocale, toLocale, cleanNewLines)
   return found, output
 end
 
-
 function GSE.GetConditionalsFromString(str)
+  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
   --check for conditionals
   local found = false
   local mods = ""
-  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
-
+  local leftstr
+  local rightstr
+  local leftfound = false
   for i = 1, #str do
     local c = str:sub(i,i)
     if c == "[" and not leftfound then
@@ -273,12 +274,7 @@ function GSE.GetConditionalsFromString(str)
   if not cleanNewLines then
     str = string.match(str, "^%s*(.-)%s*$")
   end
-
-  local leftstr
-  local rightstr
-  local leftfound = false
-
-    -- Check for resets
+  -- Check for resets
   GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
   local resetleft = string.find(str, "reset=")
   if not GSE.isEmpty(resetleft) then
@@ -297,13 +293,12 @@ function GSE.GetConditionalsFromString(str)
         end
       end
     end
-    mods = string.sub(str, resetleft, resetright)
+    mods = mods .. " " .. string.sub(str, resetleft, resetright)
     GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
     str = string.sub(str, resetright + 1)
     GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
     found = true
   end
-
 
   mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
   return found, mods, str
