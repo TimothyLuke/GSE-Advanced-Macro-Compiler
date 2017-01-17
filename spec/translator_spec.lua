@@ -43,7 +43,7 @@ describe('API Translator', function()
   end)
 
   it ("checks that pet stuff is not weird", function()
-    local originalstring = '/petautocaston [nogroup]Growl;[@focus,noexists]Growl'
+    local originalstring = '/petautocaston [nogroup] Growl; [@focus,noexists] Growl'
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
