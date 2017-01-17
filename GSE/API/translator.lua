@@ -156,7 +156,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
           end
           output = output .. ";"
         end
-        output = string.sub(output, 1, string.len(output) -1) .. ";"
+
         local resetleft = string.find(output, ", , ")
         if not GSE.isEmpty(resetleft) then
           output = string.sub(output, 1, resetleft -1)
