@@ -136,21 +136,21 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
       -- check for cast Sequences
       elseif string.lower(cmd) == "castsequence" then
         GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
-        for _, w in ipairs(GSE.split(uetc,",")) do
+        for _, w in ipairs(GSE.split(etc,",")) do
           --look for conditionals at the startattack
-          local conditionals, mods, uetc = GSE.GetConditionalsFromString(etc)
+          local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
           if conditionals then
             output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
           end
 
           if not cleanNewLines then
-            w = string.match(w, "^%s*(.-)%s*$")
+            w = string.match(uetc, "^%s*(.-)%s*$")
           end
-          if string.sub(w, 1, 1) == "!" then
-            w = string.sub(w, 2)
+          if string.sub(uetc, 1, 1) == "!" then
+            uetc = string.sub(uetc, 2)
             output = output .. "!"
           end
-          local foundspell, returnval = GSE.TranslateSpell(w, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
+          local foundspell, returnval = GSE.TranslateSpell(uetc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
           output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
         end
         local resetleft = string.find(output, ", , ")
