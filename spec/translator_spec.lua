@@ -35,6 +35,11 @@ describe('API Translator', function()
   --   local finalstring = GSE.UnEscapeString(newstring)
   --   assert.are.equal(originalstring, finalstring)
   -- end)
-
+  it("checks that [talent:123] choices are kept within a cast sequence]", function()
+    local originalstring = '/castsequence reset=combat Frost Strike, Obliterate, [talent:6/1] Frostscythe'
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local finalstring = GSE.UnEscapeString(newstring)
+    assert.are.equal(originalstring, finalstring)
+  end)
 
 end)
