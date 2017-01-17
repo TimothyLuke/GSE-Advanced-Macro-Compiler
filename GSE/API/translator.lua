@@ -164,6 +164,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         if string.sub(output, string.len(output)-1) == ", " then
           output = string.sub(output, 1, string.len(output)-2)
         end
+
       else
         -- pass it through
         output = output .. " " .. etc
@@ -181,6 +182,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   if string.sub(output, string.len(output)-1) == ", " then
     output = string.sub(output, 1, string.len(output)-2)
   end
+  output = string.gsub(output, ", ;", "; ")
   output = string.gsub(output, "\\s+", " ")
   return output
 end
