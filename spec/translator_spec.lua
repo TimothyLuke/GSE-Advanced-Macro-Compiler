@@ -23,7 +23,7 @@ describe('API Translator', function()
   end)
 
   it("checks that ctrl:mods are retained", function()
-    local originalstring = '/castsequence [mod:ctrl] !Rip,Ferocious Bite,Ferocious Bite,Ferocious Bite; [nomod] Rake, shred, shred, shred, shred'
+    local originalstring = '/castsequence [mod:ctrl] !Rip, Ferocious Bite, Ferocious Bite, Ferocious Bite; [nomod] Rake, shred, shred, shred, shred'
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
