@@ -154,7 +154,9 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
             local foundspell, returnval = GSE.TranslateSpell(uetc, fromLocale, toLocale, (cleanNewLines and cleanNewLines or false))
             output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
           end
+          output = string.sub(output, 1, resetleft -1) .. ";"
         end
+        output = string.sub(output, 1, resetleft -1) 
         local resetleft = string.find(output, ", , ")
         if not GSE.isEmpty(resetleft) then
           output = string.sub(output, 1, resetleft -1)
