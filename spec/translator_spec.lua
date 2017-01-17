@@ -29,12 +29,6 @@ describe('API Translator', function()
     assert.are.equal(originalstring, finalstring)
   end)
 
-  -- it("checks that ctrl:mods are retained and reset=target is kept after the mod", function()
-  --   local originalstring = '/castsequence [mod:ctrl] reset=target !Rip,Ferocious Bite'
-  --   local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
-  --   local finalstring = GSE.UnEscapeString(newstring)
-  --   assert.are.equal(originalstring, finalstring)
-  -- end)
   it("checks that [talent:123] choices are kept within a cast sequence]", function()
     local originalstring = '/castsequence reset=combat Frost Strike, Obliterate, [talent:6/1] Frostscythe'
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
