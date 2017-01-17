@@ -15,12 +15,12 @@ describe('API Translator', function()
 
   end)
 
-  it("checks that mods are retained", function()
-    local originalstring = '/castsequence [talent:7/3] reset=combat Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
-    local finalstring = GSE.UnEscapeString(newstring)
-    assert.are.equal(originalstring, finalstring)
-  end)
+  -- it("checks that mods are retained", function()
+  --   local originalstring = '/castsequence [talent:7/3] reset=combat Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
+  --   local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+  --   local finalstring = GSE.UnEscapeString(newstring)
+  --   assert.are.equal(originalstring, finalstring)
+  -- end)
 
   it("checks that ctrl:mods are retained", function()
     local originalstring = '/castsequence [mod:ctrl] !Rip, Ferocious Bite, Ferocious Bite, Ferocious Bite; [nomod] Rake, shred, shred, shred, shred'
@@ -29,12 +29,12 @@ describe('API Translator', function()
     assert.are.equal(originalstring, finalstring)
   end)
 
-  it("checks that [talent:123] choices are kept within a cast sequence]", function()
-    local originalstring = '/castsequence reset=combat Frost Strike, Obliterate, [talent:6/1] Frostscythe'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
-    local finalstring = GSE.UnEscapeString(newstring)
-    assert.are.equal(originalstring, finalstring)
-  end)
+  -- it("checks that [talent:123] choices are kept within a cast sequence]", function()
+  --   local originalstring = '/castsequence reset=combat Frost Strike, Obliterate, [talent:6/1] Frostscythe'
+  --   local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+  --   local finalstring = GSE.UnEscapeString(newstring)
+  --   assert.are.equal(originalstring, finalstring)
+  -- end)
 
   it ("checks that pet stuff is not weird", function()
     local originalstring = '/petautocaston [nogroup] Growl; [@focus,noexists] Growl'

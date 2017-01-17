@@ -183,8 +183,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
     output = string.sub(output, 1, string.len(output)-2)
   end
   output = string.gsub(output, ", ;", "; ")
-  output = string.gsub(output, "  reset=combat", " reset=combat")
-  output = string.gsub(output, "reset=combat  ", "reset=combat ")
+
   output = string.gsub(output, "  ", " ")
   return output
 end
