@@ -89,3 +89,4 @@ Translator[Statics.TranslationShadow] = {}
 GSE.PrintAvailable = false
 GSE.StandardAddInPacks = {}
 GSE.UsedSequences = {}
+GSE.SequencesExec = {}

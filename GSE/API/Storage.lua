@@ -501,8 +501,7 @@ function GSE.OOCUpdateSequence(name,sequence)
 
   end
 
-  button:SetAttribute("exseq", executionseq)
-
+  GSE.SequencesExec[name] = executionseq
 
   button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
   button:SetAttribute("step",1)
@@ -802,10 +801,10 @@ end
 function GSE.UpdateIcon(self, reset)
   local step = self:GetAttribute('step') or 1
   local button = self:GetName()
-  local executionseq = self:GetAttribute("exseq")
-  local sequence, foundSpell, notSpell = executionseq[step], false, ''
-  for cmd, etc in gmatch(sequence or '', '/(%w+)%s+([^\n]+)') do
     if Statics.CastCmds[strlower(cmd)] then
+  local executionseq = GSE.SequencesExec[button]
+  local commandline, foundSpell, notSpell = executionseq[step], false, ''
+  for cmd, etc in gmatch(commandline or '', '/(%w+)%s+([^\n]+)') do
       local spell, target = SecureCmdOptionParse(etc)
       if not reset then
         GSE.TraceSequence(button, step, spell)
