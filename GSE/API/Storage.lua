@@ -804,7 +804,7 @@ function GSE.UpdateIcon(self, reset)
   local executionseq = GSE.SequencesExec[button]
   local commandline, foundSpell, notSpell = executionseq[step], false, ''
   for cmd, etc in gmatch(commandline or '', '/(%w+)%s+([^\n]+)') do
-    if Statics.CastCmds[strlower(cmd)] or strlower(cmd) = "castsequence" then
+    if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
       local spell, target = SecureCmdOptionParse(etc)
       if not reset then
         GSE.TraceSequence(button, step, spell)
