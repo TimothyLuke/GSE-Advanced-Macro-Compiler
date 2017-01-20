@@ -82,8 +82,10 @@ end
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   local confirmationtext = ""
 
-  -- Remove Spaces from SequenceNames and replace with _'s
+  -- Remove Spaces or commas from SequenceNames and replace with _'s
   sequenceName = string.gsub(sequenceName, " ", "_")
+  sequenceName = string.gsub(sequenceName, ",", "_")
+
   -- CHeck for colissions
   local found = false
   if GSE.isEmpty(classid) or classid == 0 then
