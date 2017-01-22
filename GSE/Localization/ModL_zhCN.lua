@@ -51,7 +51,7 @@ L["A sequence collision has occured.  Your local version of "] = "发生了一�
 L["Actions"] = "动作"
 L["Active Version "] = "活动版本 "
 L["Active Version: "] = "活动版本: "
-L[ [=[Addin Version %s contained versions for the following macros: 
+L[ [=[Addin Version %s contained versions for the following macros:
 %s]=] ] = [=[添加版本 %s 包含版本于下列宏: 
 %s]=]
 L["Adding missing Language :"] = "添加缺少的语言 :"
