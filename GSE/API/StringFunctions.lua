@@ -75,6 +75,30 @@ function GSE.SplitMeIntolines(str)
   return t
 end
 
+--- This function splits a castsequence into its parts where a split() cant.
+function GSE.SplitCastSequence(str)
+  local tab = {}
+  local slen = string.len(str)
+  local modblock = false
+  local start = 1
+  GSE.PrintDebugMessage (slen, "Storage")
+  for i=1,slen,1 do
+    if string.sub(str, i, i) == "[" then
+      modblock = true
+      GSE.PrintDebugMessage("in mod at " .. i, "Storage")
+    elseif string.sub(str, i, i) == "]" then
+      modblock = false
+      GSE.PrintDebugMessage ("leaving mod at " .. i, "Storage")
+    elseif string.sub(str, i, i) == "," and not modblock then
+      table.insert(tab, string.sub(str, start, i-1))
+      start = i+1
+      GSE.PrintDebugMessage("found terminator at " .. i, "Storage")
+    end
+
+  end
+  table.insert(tab, string.sub(str, start))
+  return tab
+end
 
 
 --- Split a string into an array based on the deliminter specified.
