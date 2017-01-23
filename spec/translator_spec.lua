@@ -52,7 +52,7 @@ describe('API Translator', function()
   end)
 
   it ("tests other unusual modifier cases", function ()
-    local originalstring = "/castsequence [@mouseover,help,nodead][@player] Void Torrent, Power Infusion"
+    local originalstring = "/castsequence [@mouseover,help,nodead] [@player] Void Torrent, Power Infusion"
     local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
