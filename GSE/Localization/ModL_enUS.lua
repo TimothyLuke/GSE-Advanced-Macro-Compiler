@@ -322,3 +322,4 @@ L["Moved %s to class %s."] = true
 L["Options have been reset to defaults."] = true
 L["Hide Login Message"] = true
 L["Hides the message that GSE is loaded."] = true
+L["Your current Specialisation is "] = true

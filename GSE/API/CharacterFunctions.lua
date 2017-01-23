@@ -25,8 +25,8 @@ end
 function GSE.GetClassIDforSpec(specid)
   local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
   local classid = 0
-  if specid >= 12 then
-    vlassid = specid
+  if specid <= 12 then
+    classid = specid
   else
     for i=1, 12, 1 do
       local cdn, st, cid = GetClassInfo(i)
