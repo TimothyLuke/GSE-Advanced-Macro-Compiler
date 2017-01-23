@@ -42,4 +42,20 @@ describe('API Translator', function()
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
   end)
+
+  it("checks for weird macro translations that break things", function ()
+    local originalstring = "/cast [mod:alt, talent:6/1, talent:7/1, nochanneling:Void Torrent] [mod:alt, talent:6/1, talent:7/2, nochanneling:Void Torrent] Power Infusion"
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local finalstring = GSE.UnEscapeString(newstring)
+    assert.are.equal(originalstring, finalstring)
+
+  end)
+
+  it ("tests other unusual modifier cases", function ()
+    local originalstring = "/castsequence [@mouseover,help,nodead][@player] Void Torrent, Power Infusion"
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local finalstring = GSE.UnEscapeString(newstring)
+    assert.are.equal(originalstring, finalstring)
+
+  end)
 end)
