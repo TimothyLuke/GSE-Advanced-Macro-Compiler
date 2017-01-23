@@ -52,7 +52,7 @@ L["Actions"] = "动作"
 L["Active Version "] = "活动版本 "
 L["Active Version: "] = "活动版本: "
 L[ [=[Addin Version %s contained versions for the following macros:
-%s]=] ] = [=[添加版本 %s 包含版本于下列宏: 
+%s]=] ] = [=[添加版本 %s 包含版本于下列宏:
 %s]=]
 L["Adding missing Language :"] = "添加缺少的语言 :"
 L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] = "你确定要删除 %s?  这将删除改宏和所有版本.  本操作无法撤销."
