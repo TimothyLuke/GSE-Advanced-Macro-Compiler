@@ -126,13 +126,11 @@ f:SetScript('OnEvent', function(self, event, addon)
 end)
 
 function GSELegacyAdaptor:processReload(event, arg)
-  if event == "Load" or arg == "Legacy GSE 1"  then
-    if not GnomeOptions.imported then
-      for k,v in pairs(GSMasterOptions.SequenceLibrary) do
-        for i,j in ipairs(v) do
-          local seq = GSE.ConvertLegacySequence(j)
-          GSE.AddSequenceToCollection(k, seq)
-        end
+  if (event == "Load" and not GnomeOptions.imported) or arg == "Legacy GSE 1"  then
+    for k,v in pairs(GSMasterOptions.SequenceLibrary) do
+      for i,j in ipairs(v) do
+        local seq = GSE.ConvertLegacySequence(j)
+        GSE.AddSequenceToCollection(k, seq)
       end
     end
     for k,v in pairs(GnomeOptions.SequenceLibrary) do
@@ -141,10 +139,7 @@ function GSELegacyAdaptor:processReload(event, arg)
         GSE.AddSequenceToCollection(k, seq)
       end
     end
-
-    if event == "Load" then
-      GnomeOptions.imported = true
-    end
+    GnomeOptions.imported = true
   end
 end
 

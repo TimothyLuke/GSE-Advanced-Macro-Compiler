@@ -31,7 +31,10 @@ function GSE.RegisterAddon(name, version, sequencenames)
     GSEOptions.AddInPacks[name] = {}
     GSEOptions.AddInPacks[name].Name = name
   end
-  if GSE.isEmpty(GSEOptions.AddInPacks[name].Version) or GSEOptions.AddInPacks[name].Version ~= version then
+  if GSE.isEmpty(GSEOptions.AddInPacks[name].Version)  then
+    updateflag = true
+    GSEOptions.AddInPacks[name].Version = version
+  elseif  GSEOptions.AddInPacks[name].Version ~= version then
     updateflag = true
     GSEOptions.AddInPacks[name].Version = version
   end
