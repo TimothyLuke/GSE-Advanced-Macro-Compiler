@@ -281,4 +281,12 @@ describe('API Translator', function()
 
     assert.are.same(MacroVersions[1][1], MacroVersions[2][1])
   end)
+
+  it("Tests that StepFunctions are correctly returned", function()
+    assert.are.equal(Statics.Priority, GSE.PrepareStepFunction("Priority", false))
+    assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction("Sequential", false))
+    assert.are.equal(Statics.LoopPriorityImplementation, GSE.PrepareStepFunction("Priority", true))
+    assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction("Sequential", true))
+  end)
+
 end)
