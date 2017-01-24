@@ -285,10 +285,10 @@ describe('API Translator', function()
   it("Tests that StepFunctions are correctly returned", function()
     local Statics = GSE.Static
 
-    assert.are.equal(Statics.Priority, GSE.PrepareStepFunction("Priority", false))
-    assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction("Sequential", false))
-    assert.are.equal(Statics.LoopPriorityImplementation, GSE.PrepareStepFunction("Priority", true))
-    assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction("Sequential", true))
+    assert.are.equal(Statics.PriorityImplementation, GSE.PrepareStepFunction(Statics.Priority, false))
+    assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction(Statics.Sequential, false))
+    assert.are.equal(Statics.LoopPriorityImplementation, GSE.PrepareStepFunction(Statics.Priority, true))
+    assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(Statics.Sequential, true))
   end)
 
 end)
