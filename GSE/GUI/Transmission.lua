@@ -3,7 +3,6 @@ local GSE = GSE
 local Statics = GSE.Static
 
 
-local GNOME = Statics.SourceTransmission
 local GSStaticPrefix = "GS-E"
 
 local GSold = false
@@ -29,13 +28,13 @@ GSE.GUITransmissionFrame = transmissionFrame
 Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 
 
-GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, GNOME)
+GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmission)
 
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
   local transmission = GSE.EncodeMessage(tab)
-  GSE.PrintDebugMessage(transmission, GNOME)
+  GSE.PrintDebugMessage(transmission, Statics.SourceTransmission)
   if GSE.isEmpty(channel) then
     if IsInRaid() then
       channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
@@ -52,7 +51,7 @@ local function performVersionCheck(version)
     if not GSold then
       GSE.Print(L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], Statics.SourceTransmission)
       GSold = true
-      if((tonumber(message) - tonumber(version)) >= 5) then
+      if((tonumber(version) - tonumber(GSE.VersionString)) >= 5) then
         StaticPopup_Show('GSE_UPDATE_AVAILABLE')
       end
     end
@@ -117,8 +116,8 @@ end
 
 
 function GSE:OnCommReceived(prefix, message, distribution, sender)
-  GSE.PrintDebugMessage("GSSE:onCommReceived", GNOME)
-  GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, GNOME)
+  GSE.PrintDebugMessage("GSSE:onCommReceived", Statics.SourceTransmission)
+  GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, Statics.SourceTransmission)
   local success, t = GSE.DecodeMessage(message)
   if success then
     if t.Command == "GS-E_VERSIONCHK" then
@@ -129,7 +128,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
       if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
       else
-        GSE.PrintDebugMessage("Ignoring Sequence from me.", GNOME)
+        GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
       end
     end
   end
