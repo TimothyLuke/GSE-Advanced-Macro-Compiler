@@ -517,4 +517,148 @@ self:CallMethod('UpdateIcon')
 
   end)
 
+  it("Tests that LoopPriority StepFunctions via PreMacro and Target", function()
+
+    local sequence1 = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          Target = true,
+          StepFunction = "Priority",
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local sequence = GSE.CloneMacroVersion(sequence1.MacroVersions[1])
+    tempseq = GSE.CloneMacroVersion(sequence)
+    local executionseq = {}
+
+    if not GSE.isEmpty(tempseq.PreMacro) then
+      pmcount = table.getn(tempseq.PreMacro) + 1
+      for k,v in ipairs(tempseq.PreMacro) do
+        table.insert(executionseq, v)
+      end
+
+    end
+
+    for k,v in ipairs(tempseq) do
+      table.insert(executionseq, v)
+    end
+
+
+    if not GSE.isEmpty(tempseq.PostMacro) then
+      for k,v in ipairs(tempseq.PostMacro) do
+        table.insert(executionseq, v)
+      end
+
+    end
+
+    local targetreset = ""
+    if sequence.Target then
+      targetreset = Statics.TargetResetImplementation
+    end
+
+    assert.are.equal([[local step = self:GetAttribute('step')
+local loopstart = self:GetAttribute('loopstart') or 1
+local loopstop = self:GetAttribute('loopstop') or #macros
+local loopiter = self:GetAttribute('loopiter') or 1
+local looplimit = self:GetAttribute('looplimit') or 0
+loopstart = tonumber(loopstart)
+loopstop = tonumber(loopstop)
+loopiter = tonumber(loopiter)
+looplimit = tonumber(looplimit)
+step = tonumber(step)
+local target = self:GetAttribute('target') or "none"
+local _, commandtarget = SecureCmdOptionParse(macros[step])
+if target ~= commandtarget then
+  self:SetAttribute('step', 0)
+  self:SetAttribute('target', commandtarget)
+  self:SetAttribute('loopiter', 0)
+end
+
+self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
+if step < loopstart then
+  step = step + 1
+
+elseif step > loopstop then
+  if step >= #macros then
+    loopiter = 1
+    step = loopstart
+    if looplimit > 0 then
+      step = 1
+    end
+  else
+    step = step + 1
+  end
+elseif step == loopstop then
+  if looplimit > 0 then
+    if loopiter >= looplimit then
+      if loopstop >= #macros then
+        step = 1
+      else
+        step = step + 1
+      end
+      loopiter = 1
+    else
+      step = loopstart
+      loopiter = loopiter + 1
+    end
+  else
+    step = loopstart
+  end
+elseif step >= #macros then
+  loopiter = 1
+  step = loopstart
+  if looplimit > 0 then
+    step = 1
+  end
+else
+  limit = limit or loopstart
+  if step == limit then
+    limit = limit % loopstop + 1
+    step = loopstart
+    if limit == loopiter then
+      loopiter = loopiter + 1
+    end
+  else
+    step = step + 1
+  end
+end
+
+if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
+  step = 1
+end
+self:SetAttribute('step', step)
+self:SetAttribute('loopiter', loopiter)
+self:CallMethod('UpdateIcon')
+]], string.format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+
+
+  end)
+
+
 end)
