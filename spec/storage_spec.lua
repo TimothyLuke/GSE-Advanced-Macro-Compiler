@@ -16,6 +16,7 @@ describe('API Translator', function()
     L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = "A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "
     L[" was imported with the following errors."] = " was imported with the following errors."
 
+    Statics = GSE.Static
   end)
 
   it("Adds a sequence to the Library", function()
@@ -283,7 +284,6 @@ describe('API Translator', function()
   end)
 
   it("Tests that StepFunctions are correctly returned", function()
-    local Statics = GSE.Static
 
     assert.are.equal(Statics.PriorityImplementation, GSE.PrepareStepFunction(Statics.Priority, false))
     assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction(Statics.Sequential, false))
