@@ -289,6 +289,68 @@ describe('API Translator', function()
     assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction(Statics.Sequential, false))
     assert.are.equal(Statics.LoopPriorityImplementation, GSE.PrepareStepFunction(Statics.Priority, true))
     assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(Statics.Sequential, true))
+
+    local sequence1 = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local sequence = GSE.CloneMacroVersion(sequence1.MacroVersions[1])
+    tempseq = GSE.CloneMacroVersion(sequence)
+
+    if not GSE.isEmpty(tempseq.PreMacro) then
+      pmcount = table.getn(tempseq.PreMacro) + 1
+      for k,v in ipairs(tempseq.PreMacro) do
+        table.insert(executionseq, v)
+      end
+
+    end
+
+    for k,v in ipairs(tempseq) do
+      table.insert(executionseq, v)
+    end
+
+
+    if not GSE.isEmpty(tempseq.PostMacro) then
+      for k,v in ipairs(tempseq.PostMacro) do
+        table.insert(executionseq, v)
+      end
+
+    end
+
+    local targetreset = ""
+    if sequence.Target then
+      targetreset = Statics.TargetResetImplementation
+    end
+
+    print  (format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+     assert.are.equal(false, format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+
   end)
+
 
 end)
