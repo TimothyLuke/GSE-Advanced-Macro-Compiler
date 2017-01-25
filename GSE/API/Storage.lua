@@ -525,9 +525,9 @@ function GSE.OOCUpdateSequence(name,sequence)
     button:UnwrapScript(button,'OnClick')
   end
   local targetreset = ""
-  if sequence.Target then
-    targetreset = Statics.TargetResetImplementation
-  end
+  -- if sequence.Target then
+  --   targetreset = Statics.TargetResetImplementation
+  -- end
   if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
     button:SetAttribute("combatreset", true)
   else

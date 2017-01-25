@@ -533,18 +533,18 @@ function GSE:GUIDrawMacroEditor(container, version)
   heading2:SetText(L["Resets"])
   toolbarcontainer:AddChild(heading2)
 
-  local targetresetcheckbox = AceGUI:Create("CheckBox")
-  targetresetcheckbox:SetType("checkbox")
-  targetresetcheckbox:SetWidth(78)
-  targetresetcheckbox:SetTriState(false)
-  targetresetcheckbox:SetLabel(L["Target"])
-  toolbarcontainer:AddChild(targetresetcheckbox)
-  if editframe.Sequence.MacroVersions[version].Target then
-    targetresetcheckbox:SetValue(true)
-  end
-  targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    editframe.Sequence.MacroVersions[version].Target = value
-  end)
+  -- local targetresetcheckbox = AceGUI:Create("CheckBox")
+  -- targetresetcheckbox:SetType("checkbox")
+  -- targetresetcheckbox:SetWidth(78)
+  -- targetresetcheckbox:SetTriState(false)
+  -- targetresetcheckbox:SetLabel(L["Target"])
+  -- toolbarcontainer:AddChild(targetresetcheckbox)
+  -- if editframe.Sequence.MacroVersions[version].Target then
+  --   targetresetcheckbox:SetValue(true)
+  -- end
+  -- targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  --   editframe.Sequence.MacroVersions[version].Target = value
+  -- end)
 
   local combatresetcheckbox = AceGUI:Create("CheckBox")
   combatresetcheckbox:SetType("checkbox")
