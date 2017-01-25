@@ -247,10 +247,14 @@ end
 function GSE.IsLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.PreMacro) then
-    loopcheck = true
+    if table.getn(sequence.PreMacro) >= 1 then
+      loopcheck = true
+    end
   end
   if not GSE.isEmpty(sequence.PostMacro) then
-    loopcheck = true
+    if table.getn(sequence.PostMacro) >= 1 then
+      loopcheck = true
+    end
   end
   if not GSE.isEmpty(sequence.LoopLimit) then
     loopcheck = true
@@ -402,7 +406,13 @@ function GSE.FixSequence(sequence)
     sequence.KeyRelease = {}
     GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
   end
+  if GSE.isEmpty(sequence.StepFunction) then
+    sequence.StepFunction = "Sequential"
+    GSE.PrintDebugMessage("No StepFunciton", GNOME)
+  end
+
 end
+
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
