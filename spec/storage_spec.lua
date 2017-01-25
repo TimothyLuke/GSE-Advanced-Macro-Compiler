@@ -321,7 +321,8 @@ describe('API Translator', function()
 
     local sequence = GSE.CloneMacroVersion(sequence1.MacroVersions[1])
     tempseq = GSE.CloneMacroVersion(sequence)
-
+    local executionseq = {}
+    
     if not GSE.isEmpty(tempseq.PreMacro) then
       pmcount = table.getn(tempseq.PreMacro) + 1
       for k,v in ipairs(tempseq.PreMacro) do
@@ -348,7 +349,8 @@ describe('API Translator', function()
     end
 
     print  (format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
-     assert.are.equal(false, format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+
+    assert.are.equal(false, format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
 
   end)
 
