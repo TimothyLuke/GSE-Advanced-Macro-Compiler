@@ -594,9 +594,11 @@ step = tonumber(step)
 local target = self:GetAttribute('target') or "none"
 local _, commandtarget = SecureCmdOptionParse(macros[step])
 if target ~= commandtarget then
-  self:SetAttribute('step', 0)
+  self:SetAttribute('step', 1)
   self:SetAttribute('target', commandtarget)
-  self:SetAttribute('loopiter', 0)
+  self:SetAttribute('loopiter', 1)
+  step = 1
+  loopiter = 1
 end
 
 self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
