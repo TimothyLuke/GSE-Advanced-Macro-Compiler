@@ -505,6 +505,63 @@ self:CallMethod('UpdateIcon')
 
   end)
 
+  it ("tests that Compare Sequence works", function()
+    local seqa  = {
+      Author="EnixLHQ",
+      SpecID=252,
+      Help="Run at 80ms",
+      Talents="2,2,1,?,?,3,3",
+      Helplinlk="https://wowlazymacros.com/forums/topic/unholy-soul-reaper/",
+      Icon='INV_MISC_QUESTIONMARK',
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+            "/use [mod:alt] Death Strike",
+            "/castsequence  reset=combat  Outbreak, Festering Strike, Festering Strike, null",
+          },
+          "/cast Scourge Strike",
+          "/castsequence Dark Transformation, Outbreak",
+          "/castsequence  reset=target  Festering Strike, Festering Strike",
+          "/castsequence  reset=target  Festering Strike, Festering Strike, Apocalypse",
+          "/castsequence  reset=target  Festering Strike, Festering Strike, Soul Reaper, Outbreak",
+          "/cast Summon Gargoyle",
+          "/cast Death Coil",
+          "/cast Scourge Strike",
+        }
+      }
+    }
 
+  seq2 = {
+      Author="EnixLHQ",
+      SpecID=252,
+      Help="Run at 80ms",
+      Talents="2,2,1,?,?,3,3",
+      Helplinlk="https://wowlazymacros.com/forums/topic/unholy-soul-reaper/",
+      Icon='INV_MISC_QUESTIONMARK',
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+            "/cast [nopet,nomod] Raise Dead",
+            "/use [mod:alt] Death Strike",
+            "/castsequence  reset=combat  Outbreak, Festering Strike, Festering Strike, null",
+          },
+          "/cast Scourge Strike",
+          "/castsequence Dark Transformation, Outbreak",
+          "/castsequence  reset=target  Festering Strike, Festering Strike",
+          "/castsequence  reset=target  Festering Strike, Festering Strike, Apocalypse",
+          "/castsequence  reset=target  Festering Strike, Festering Strike, Soul Reaper, Outbreak",
+          "/cast Summon Gargoyle",
+          "/cast Death Coil",
+          "/cast Scourge Strike",
+        }
+      }
+    }
+
+    assert.are.equal(false, GSE.CompareSequence(seqa.MacroVersions[1], seqb.MacroVersions[1]))
+  end)
 
 end)

@@ -323,3 +323,5 @@ L["Options have been reset to defaults."] = true
 L["Hide Login Message"] = true
 L["Hides the message that GSE is loaded."] = true
 L["Your current Specialisation is "] = true
+-- GSE 2.0.14
+L["A new version of %s has been added."] = true

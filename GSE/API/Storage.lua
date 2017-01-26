@@ -103,12 +103,19 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   end
   if found then
     -- check if source the same.  If so ignore
-    GSE.Print (sequenceName .. " -- " ..L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "], GNOME)
     for k,v in ipairs(sequence.MacroVersions) do
-      GSE.PrintDebugMessage("adding ".. k, "Storage")
-      table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
+      for i, j in ipairs(GSELibrary[classid][sequenceName].MacroVersions) do
+        if GSE.CompareSequence(v,j) then
+          GSE.PrintDebugMessage("Macro Version already exists", "Storage")
+        else
+          GSE.Print (string.format(L["A new version of %s has been added."], sequenceName), GNOME)
+          GSE.PrintDebugMessage("adding ".. k, "Storage")
+          table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
+
+          GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
+        end
+      end
     end
-    GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
   else
     -- New Sequence
     if GSE.isEmpty(sequence.Author) then
@@ -571,49 +578,110 @@ end
 --    ignores version, authorversion, source, helpTxt elements as these are not
 --    needed for the execution of the macro but are more for help and versioning.
 function GSE.CompareSequence(seq1,seq2)
-  local match = false
+  seq1 = GSE.FixSequence(seq1)
+  seq1 = GSE.FixSequence(seq2)
+  local match = true
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
 
-  if seq1.KeyRelease == seq2.KeyRelease and seq1.KeyPress == seq2.KeyPress and seq1.SpecID == seq2.SpecID and seq1.StepFunction == seq2.StepFunction and steps1 == steps2 and seq1.helpTxt == seq2.helpTxt then
-    -- we have a match
-    match = true
-    GSE.PrintDebugMessage("We have a perfect match", GNOME)
+  if seq1.SpecID == seq2.SpecID then
+    GSE.PrintDebugMessage("Matching specID", GNOME)
   else
-    if seq1.SpecID == seq2.SpecID then
-      GSE.PrintDebugMessage("Matching specID", GNOME)
-    else
-      GSE.PrintDebugMessage("Different specID", GNOME)
-    end
-    if seq1.StepFunction == seq2.StepFunction then
-      GSE.PrintDebugMessage("Matching StepFunction", GNOME)
-    else
-      GSE.PrintDebugMessage("Different StepFunction", GNOME)
-    end
-    if seq1.KeyPress == seq2.KeyPress then
-      GSE.PrintDebugMessage("Matching KeyPress", GNOME)
-    else
-      GSE.PrintDebugMessage("Different KeyPress", GNOME)
-    end
-    if steps1 == steps2 then
-      GSE.PrintDebugMessage("Same Sequence Steps", GNOME)
-    else
-      GSE.PrintDebugMessage("Different Sequence Steps", GNOME)
-    end
-    if seq1.KeyRelease == seq2.KeyRelease then
-      GSE.PrintDebugMessage("Matching KeyRelease", GNOME)
-    else
-      GSE.PrintDebugMessage("Different KeyRelease", GNOME)
-    end
-    if seq1.helpTxt == seq2.helpTxt then
-      GSE.PrintDebugMessage("Matching helpTxt", GNOME)
-    else
-      GSE.PrintDebugMessage("Different helpTxt", GNOME)
-    end
+    GSE.PrintDebugMessage("Different specID", GNOME)
+    match = false
+  end
+  if seq1.StepFunction == seq2.StepFunction then
+    GSE.PrintDebugMessage("Matching StepFunction", GNOME)
+  else
+    GSE.PrintDebugMessage("Different StepFunction", GNOME)
+    match = false
+  end
+  if table.concat(seq1.KeyPress, "") ==  table.concat(seq2.KeyPress, "") then
+    GSE.PrintDebugMessage("Matching KeyPress", GNOME)
+  else
+    GSE.PrintDebugMessage("Different KeyPress", GNOME)
+    match = false
+  end
+  if steps1 == steps2 then
+    GSE.PrintDebugMessage("Same Sequence Steps", GNOME)
+  else
+    GSE.PrintDebugMessage("Different Sequence Steps", GNOME)
+    match = false
+  end
+  if table.concat(seq1.KeyRelease) == table.concat(seq2.KeyRelease) then
+    GSE.PrintDebugMessage("Matching KeyRelease", GNOME)
+  else
+    GSE.PrintDebugMessage("Different KeyRelease", GNOME)
+    match = false
+  end
+  if table.concat(seq1.PreMacro) == table.concat(seq2.PreMacro) then
+    GSE.PrintDebugMessage("Matching PreMacro", GNOME)
+  else
+    GSE.PrintDebugMessage("Different PreMacro", GNOME)
+    match = false
+  end
+  if table.concat(seq1.PostMacro) == table.concat(seq2.PostMacro) then
+    GSE.PrintDebugMessage("Matching PostMacro", GNOME)
+  else
+    GSE.PrintDebugMessage("Different PostMacro", GNOME)
+    match = false
+  end
 
+  if not GSE.compareValues(seq1.Head, seq2.Head, "Head") then
+    match = false
+  end
+
+  if not GSE.compareValues(seq1.Trinket1, seq2.Trinket1, "Trinket1") then
+    match = false
+  end
+
+  if not GSE.compareValues(seq1.Trinket2, seq2.Trinket2, "Trinket2") then
+    match = false
+  end
+  if not GSE.compareValues(seq1.Ring1, seq2.Ring1, "Ring1") then
+    match = false
+  end
+  if not GSE.compareValues(seq1.Ring2, seq2.Ring2, "Ring2") then
+    match = false
+  end
+  if not GSE.compareValues(seq1.Neck, seq2.Neck, "Neck") then
+    match = false
+  end
+  if not GSE.compareValues(seq1.Belt, seq2.Belt, "Belt") then
+    match = false
+  end
+  if not GSE.compareValues(seq1.LoopLimit, seq2.LoopLimit, "LoopLimit") then
+    match = false
+  end
+
+  return match
+end
+
+
+--- Compares the values of a sequence used in GSE.CompareSequence
+function GSE.compareValues(a, b, description)
+  local match = true
+  if not GSE.isEmpty(a) then
+    if GSE.isEmpty(b) then
+      GSE.PrintDebugMessage(description .." in Sequence 1 but not in Sequence 2", GNOME)
+      match = false
+    else
+      if a == b then
+        GSE.PrintDebugMessage("Matching " .. description, GNOME)
+      else
+        GSE.PrintDebugMessage("Different  ".. description .. " Values", GNOME)
+        match = false
+      end
+    end
+  else
+    if not GSE.isEmpty(a) then
+      GSE.PrintDebugMessage(description .. " in Sequence 2 but not in Sequence 1", GNOME)
+      match = false
+    end
   end
   return match
 end
+
 
 --- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSE.SetMacroLocation()
