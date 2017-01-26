@@ -533,7 +533,7 @@ self:CallMethod('UpdateIcon')
       }
     }
 
-  seq2 = {
+  seqb = {
       Author="EnixLHQ",
       SpecID=252,
       Help="Run at 80ms",
