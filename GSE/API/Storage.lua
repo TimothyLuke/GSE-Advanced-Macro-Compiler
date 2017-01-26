@@ -247,14 +247,10 @@ end
 function GSE.IsLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.PreMacro) then
-    if table.getn(sequence.PreMacro) >= 1 then
-      loopcheck = true
-    end
+    loopcheck = true
   end
   if not GSE.isEmpty(sequence.PostMacro) then
-    if table.getn(sequence.PostMacro) >= 1 then
-      loopcheck = true
-    end
+    loopcheck = true
   end
   if not GSE.isEmpty(sequence.LoopLimit) then
     loopcheck = true
@@ -379,7 +375,7 @@ function GSE.ExportSequence(sequence, sequenceName)
   end
   macroversions = macroversions .. "  },\n"
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
-  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",  \n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
+  local returnVal = (disabledseq .. "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta)
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
   end
@@ -406,13 +402,7 @@ function GSE.FixSequence(sequence)
     sequence.KeyRelease = {}
     GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
   end
-  if GSE.isEmpty(sequence.StepFunction) then
-    sequence.StepFunction = "Sequential"
-    GSE.PrintDebugMessage("No StepFunciton", GNOME)
-  end
-
 end
-
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
   local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
@@ -525,9 +515,9 @@ function GSE.OOCUpdateSequence(name,sequence)
     button:UnwrapScript(button,'OnClick')
   end
   local targetreset = ""
-  -- if sequence.Target then
-  --   targetreset = Statics.TargetResetImplementation
-  -- end
+  if sequence.Target then
+    targetreset = Statics.TargetResetImplementation
+  end
   if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
     button:SetAttribute("combatreset", true)
   else
