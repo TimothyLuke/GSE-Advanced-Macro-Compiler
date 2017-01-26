@@ -514,16 +514,13 @@ function GSE.OOCUpdateSequence(name,sequence)
   if existingbutton then
     button:UnwrapScript(button,'OnClick')
   end
-  local targetreset = ""
-  if sequence.Target then
-    targetreset = Statics.TargetResetImplementation
-  end
+
   if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
     button:SetAttribute("combatreset", true)
   else
     button:SetAttribute("combatreset", true)
   end
-  button:WrapScript(button, 'OnClick', format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+  button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
   if not GSE.isEmpty(sequence.LoopLimit) then
     button:SetAttribute('looplimit', sequence.LoopLimit)
   end
