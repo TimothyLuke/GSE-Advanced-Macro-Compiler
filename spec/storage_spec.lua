@@ -372,7 +372,7 @@ end
 self:SetAttribute('step', step)
 self:SetAttribute('loopiter', loopiter)
 self:CallMethod('UpdateIcon')
-]], string.format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+]], string.format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
 
   end)
 
