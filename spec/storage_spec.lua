@@ -646,10 +646,11 @@ self:CallMethod('UpdateIcon')
           },
         }
       }
+    }
 
-      returnval = GSE.ExportSequence(sequence1, "prot")
-      print(returnval)
-      assert.are.equal(false, returnval)
+    returnval = GSE.ExportSequence(sequence1, "prot")
+    print(returnval)
+    assert.are.equal(false, returnval)
 
   end)
 end)
