@@ -268,7 +268,7 @@ end
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSE.ExportSequence(sequence, sequenceName)
-  GSE.PrintDebugMessage("GSExportSequencebySeq Sequence Name: " .. sequenceName)
+  GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceNam, "Storage")
   local disabledseq = ""
   local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
   if not GSE.isEmpty(sequence.Helplink) then
