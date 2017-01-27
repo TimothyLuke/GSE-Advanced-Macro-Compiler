@@ -166,3 +166,10 @@ function GSE.pairsByKeys (t, f)
   end
   return iter
 end
+
+
+function GSE.formatModVersion(vers)
+  vers = to_string(vers)
+  vers = string.sub(vers, 1, 1) .. "." .. string.sub(vers, 2, 2) .. "." .. string.sub(vers, 3)
+  return vers
+end

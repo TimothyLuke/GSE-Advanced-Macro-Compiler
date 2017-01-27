@@ -383,7 +383,7 @@ function GSE.ExportSequence(sequence, sequenceName)
   macroversions = macroversions .. "  },\n"
   --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
   local returnVal = "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n"
-  returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. Statics.StringReset .. "\n"
+  returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. Statics.StringReset .. "\n"
   returnVal = returnVal .. "  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta
   if not GSE.isEmpty(sequence.Icon) then
      returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"

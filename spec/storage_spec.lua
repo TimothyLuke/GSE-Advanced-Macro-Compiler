@@ -614,4 +614,42 @@ self:CallMethod('UpdateIcon')
     assert.are.equal(false, GSE.CompareSequence(seqa.MacroVersions[1], seqb.MacroVersions[1]))
   end)
 
+
+  it ("tests that macros are exported correctly", function()
+    local sequence1 = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+
+      returnval = GSE.ExportSequence(sequence1, "prot")
+      print(returnval)
+      assert.are.equal(false, returnval)
+
+  end)
 end)
