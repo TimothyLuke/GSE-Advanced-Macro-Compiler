@@ -17,6 +17,10 @@ describe('API Translator', function()
     L[" was imported with the following errors."] = " was imported with the following errors."
 
     Statics = GSE.Static
+
+    function GetAddOnMetadata(name, ver)
+      return "2000"
+    end
   end)
 
   it("Adds a sequence to the Library", function()
