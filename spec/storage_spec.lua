@@ -141,8 +141,10 @@ describe('API Translator', function()
       ]],
       }
     local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+    local newmacro2 =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
 
-        local newmacro2 =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+    print("Testing that the same macro isnt inserted twice")
+    assert.true(GSE.CompareSequence(newmacro,newmacro2))
 
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro2, 11)
