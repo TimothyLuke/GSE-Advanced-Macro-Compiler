@@ -97,6 +97,9 @@ describe('API Translator', function()
       ]],
       }
     local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+
+    Sequences['DB_Prot_ST'][7] = "/say Hello"
+
     local newmacro2 =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
 
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
