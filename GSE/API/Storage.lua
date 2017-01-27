@@ -579,7 +579,7 @@ end
 --    needed for the execution of the macro but are more for help and versioning.
 function GSE.CompareSequence(seq1,seq2)
   seq1 = GSE.FixSequence(seq1)
-  seq1 = GSE.FixSequence(seq2)
+  seq2 = GSE.FixSequence(seq2)
   local match = true
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
