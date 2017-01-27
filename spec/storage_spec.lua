@@ -18,9 +18,7 @@ describe('API Translator', function()
 
     Statics = GSE.Static
 
-    function GetAddOnMetadata(name, ver)
-      return "2000"
-    end
+    GSE.VersionString = "2000"
   end)
 
   it("Adds a sequence to the Library", function()
