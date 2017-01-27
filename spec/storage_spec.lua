@@ -13,7 +13,7 @@ describe('API Translator', function()
 
     L = GSE.L
     L["No Help Information Available"] = "No Help Information Available"
-    L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = "A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "
+    L["A new version of %s has been added."] = "A new version of %s has been added."
     L[" was imported with the following errors."] = " was imported with the following errors."
 
     Statics = GSE.Static
@@ -166,9 +166,9 @@ describe('API Translator', function()
     GSE.OOCAddSequenceToCollection('DB_Prot_ST',  GSE.ConvertLegacySequence(GSMasterOptions.SequenceLibrary["DB_Prot_ST"][2]), 11)
     assert.falsy(GSELibrary[11]['DB_Prot_ST'].specID)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].specID)
-    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].PreMacro)
+    assert.are.same({}, GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].PreMacro)
     assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].specID)
-    assert.falsy(GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].PreMacro)
+    assert.are.same({}, GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2].PreMacro)
     assert.are.equal("Sequential", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][1].StepFunction)
     assert.are.equal("/targetenemy [noharm][dead]", GSELibrary[11]['DB_Prot_ST']["MacroVersions"][2]["KeyPress"][1])
     assert.are.equal("Talents: 2332223", GSELibrary[11]['DB_Prot_ST'].Help)
