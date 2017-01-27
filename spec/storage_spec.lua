@@ -121,7 +121,7 @@ describe('API Translator', function()
   it("Tests that the same macro is not imported twice", function ()
     local Sequences = {}
 
-    Sequences['DB_Prot_ST'] = {
+    Sequence = {
       author="LNPV",
       specID=66,
       helpTxt = 'Talents: 2332223',
@@ -140,15 +140,16 @@ describe('API Translator', function()
 /startattack
       ]],
       }
-    local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
-    local newmacro2 =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+    local newmacro =   GSE.ConvertLegacySequence(Sequence)
+    local newmacro2 =   GSE.ConvertLegacySequence(Sequence)
 
     print("Testing that the same macro isnt inserted twice")
     assert.True(GSE.CompareSequence(newmacro,newmacro2))
 
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro, 11)
+    print ("added first")
     GSE.OOCAddSequenceToCollection('DB_Prot_ST', newmacro2, 11)
-    print("about to start asserts.")
+    print("added second - about to start asserts.")
     assert.are.equal(66, newmacro.SpecID)
     print("about to start GSELibrary asserts.")
     assert.falsy(GSELibrary[11]['DB_Prot_ST'].specID)
