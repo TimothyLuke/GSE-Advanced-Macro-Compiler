@@ -15,10 +15,13 @@ describe('API Translator', function()
     L["No Help Information Available"] = "No Help Information Available"
     L["A new version of %s has been added."] = "A new version of %s has been added."
     L[" was imported with the following errors."] = " was imported with the following errors."
+    L["This Sequence was exported from GSE %s."] = "This Sequence was exported from GSE %s."
 
     Statics = GSE.Static
 
-    GSE.VersionString = "2000"
+    function GetAddOnMetadata(name, ver)
+      return "2000"
+    end
   end)
 
   it("Adds a sequence to the Library", function()
