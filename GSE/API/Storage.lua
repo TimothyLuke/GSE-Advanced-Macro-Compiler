@@ -409,6 +409,11 @@ function GSE.FixSequence(sequence)
     sequence.KeyRelease = {}
     GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
   end
+  if GSE.isEmpty(sequence.StepFunction) then
+    sequence.StepFunciton = Statics.Sequential
+    GSE.PrintDebugMessage("Empty StepFunction", GNOME)
+  end
+
 end
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
@@ -578,8 +583,8 @@ end
 --    ignores version, authorversion, source, helpTxt elements as these are not
 --    needed for the execution of the macro but are more for help and versioning.
 function GSE.CompareSequence(seq1,seq2)
-  seq1 = GSE.FixSequence(seq1)
-  seq2 = GSE.FixSequence(seq2)
+  GSE.FixSequence(seq1)
+  GSE.FixSequence(seq2)
   local match = true
   local steps1 = table.concat(seq1, "")
   local steps2 = table.concat(seq2, "")
