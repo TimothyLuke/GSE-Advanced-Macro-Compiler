@@ -413,6 +413,9 @@ function GSE.FixSequence(sequence)
     sequence.StepFunciton = Statics.Sequential
     GSE.PrintDebugMessage("Empty StepFunction", GNOME)
   end
+  if not GSE.isEmpty(sequence.Target) then
+    sequence.Target = nil
+  end
 
 end
 --- This function removes any macro stubs that do not relate to a GSE macro
