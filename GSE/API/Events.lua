@@ -64,12 +64,22 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inMythic = false
   end
+  if difficulty == 1 then
+    GSE.inDungeon = true
+  else
+    GSE.inDungeon = false
+  end
+  if difficulty == 2 or difficult == 24 then
+    GSE.inHeroic = true
+  else
+    GSE.inHeroic = false
+  end
   if type == "raid" then
     GSE.inRaid = true
   else
     GSE.inRaid = false
   end
-  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(inRaid), Statics.DebugModules["API"])
+  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic), Statics.DebugModules["API"])
   GSE.ReloadSequences()
 end
 

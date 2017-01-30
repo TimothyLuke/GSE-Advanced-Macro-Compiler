@@ -165,6 +165,10 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].Raid
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Mythic) and GSE.inMythic then
     vers = GSELibrary[classid][sequenceName].Mythic
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Dungeon) and GSE.inDungeon then
+    vers = GSELibrary[classid][sequenceName].Dungeon
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Heroic) and GSE.inHeroic then
+    vers = GSELibrary[classid][sequenceName].Heroic
   end
   return vers
 end
@@ -283,6 +287,12 @@ function GSE.ExportSequence(sequence, sequenceName)
   end
   if not GSE.isEmpty(sequence.PVP) then
     sequencemeta = sequencemeta .. "  PVP=" ..sequence.PVP .. ",\n"
+  end
+  if not GSE.isEmpty(sequence.Dungeon) then
+    sequencemeta = sequencemeta .. "  Dungeon=" ..sequence.Dungeon .. ",\n"
+  end
+  if not GSE.isEmpty(sequence.Heroic) then
+    sequencemeta = sequencemeta .. "  Heroic=" ..sequence.Heroic .. ",\n"
   end
   if not GSE.isEmpty(sequence.Mythic) then
     sequencemeta = sequencemeta .. "  Mythic=" ..sequence.Mythic .. ",\n"

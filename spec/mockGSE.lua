@@ -42,10 +42,11 @@ function GSE.PrintDebugMessage(message, title)
 end
 
 
-
 GSE.PVPFlag = false
 GSE.inRaid = false
 GSE.inMythic = false
+GSE.inDungeon = false
+GSE.inHeroic = false
 
 function strmatch(string, pattern, initpos)
   return string.match(string, pattern, initpos)

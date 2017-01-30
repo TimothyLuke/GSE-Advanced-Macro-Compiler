@@ -79,3 +79,5 @@ GSE.RecorderActive = false
 GSE.PVPFlag = false
 GSE.inRaid = false
 GSE.inMythic = false
+GSE.inDungeon = false
+GSE.inHeroic = false

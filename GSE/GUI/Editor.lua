@@ -27,6 +27,8 @@ editframe.Default = 1
 editframe.Raid = 1
 editframe.PVP = 1
 editframe.Mythic = 1
+editframe.Dungeon = 1
+editframe.Heroic = 1
 editframe.ClassID = classid
 editframe.save = false
 
@@ -334,7 +336,7 @@ function GSE:GUIDrawMetadataEditor(container)
   pvpdropdown:SetValue(tostring(editframe.PVP))
   defgroup2:AddChild(pvpdropdown)
   contentcontainer:AddChild(defgroup2)
-  container:AddChild(scrollcontainer)
+
   pvpdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.PVP = nil
@@ -343,6 +345,48 @@ function GSE:GUIDrawMetadataEditor(container)
       editframe.PVP = tonumber(key)
     end
   end)
+
+  local defgroup3 = AceGUI:Create("SimpleGroup")
+  defgroup3:SetLayout("Flow")
+  defgroup3:SetWidth(606)
+
+
+  local dungeondropdown = AceGUI:Create("Dropdown")
+  dropdown:SetLabel(L["Dungeon"])
+  dungeondropdown:SetWidth(250)
+  dungeondropdown:SetList(GSE.GetVersionList())
+  dungeondropdown:SetValue(tostring(editframe.Dungeon))
+  defgroup3:AddChild(dungeondropdown)
+  dungeondropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Dungeon = nil
+    else
+      editframe.Sequence.Dungeon = tonumber(key)
+      editframe.Dungeon = tonumber(key)
+    end
+  end)
+
+  local spacerlabel5 = AceGUI:Create("Label")
+  spacerlabel5:SetWidth(100)
+  defgroup3:AddChild(spacerlabel4)
+
+  local heroicdropdown = AceGUI:Create("Dropdown")
+  heroicdropdown:SetLabel(L["Heroic"])
+  heroicdropdown:SetWidth(250)
+  heroicdropdown:SetList(GSE.GetVersionList())
+  heroicdropdown:SetValue(tostring(editframe.Heroic))
+  defgroup3:AddChild(raiddropdown)
+  raiddropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Heroic = nil
+    else
+      editframe.Sequence.Heroic = tonumber(key)
+      editframe.Heroic = tonumber(key)
+    end
+  end)
+
+  contentcontainer:AddChild(defgroup3)
+  container:AddChild(scrollcontainer)
 end
 
 function GSE:GUIDrawMacroEditor(container, version)
