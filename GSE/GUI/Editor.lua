@@ -366,9 +366,9 @@ function GSE:GUIDrawMetadataEditor(container)
     end
   end)
 
-  local spacerlabel5 = AceGUI:Create("Label")
-  spacerlabel5:SetWidth(100)
-  defgroup3:AddChild(spacerlabel4)
+  local spacerlabel6 = AceGUI:Create("Label")
+  spacerlabel6:SetWidth(100)
+  defgroup3:AddChild(spacerlabel6)
 
   local heroicdropdown = AceGUI:Create("Dropdown")
   heroicdropdown:SetLabel(L["Heroic"])
