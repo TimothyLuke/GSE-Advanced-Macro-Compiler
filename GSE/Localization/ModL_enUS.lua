@@ -326,3 +326,8 @@ L["Your current Specialisation is "] = true
 -- GSE 2.0.14
 L["A new version of %s has been added."] = true
 L["This Sequence was exported from GSE %s."] = true
+
+--GSE 2.1.0
+L["Dungeon"] = true
+L["Heroic"] = true
+L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."] = true
