@@ -331,3 +331,5 @@ L["This Sequence was exported from GSE %s."] = true
 L["Dungeon"] = true
 L["Heroic"] = true
 L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."] = true
+L["Print KeyPress Modifiers on Click"] = true
+L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."] = true
