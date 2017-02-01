@@ -714,7 +714,27 @@ function GSE.SetMacroLocation()
 end
 
 
+function GSE.CreateMacroString(macroname)
+  return string.format("/click [button:2] %s RightButton ; [button:3] %s MiddleButton; [button:4] %s Button4;[button:5] %s Button5; %s", macroname, macroname, macroname, macroname, macroname)
+end
 
+function GSE.UpdateMacroString()
+  local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+  for macid = 1, maxmacros do
+    local mname, mtexture, mbody = GetMacroInfo(macid)
+    if not GSE.isEmpty(mname) then
+      if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][mname]) then
+        EditMacro(macid, nil, nil,  GSE.CreateMacroString(mname))
+        GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
+      end
+      if not GSE.isEmpty(GSELibrary[0][mname]) then
+        EditMacro(macid, nil, nil,  GSE.CreateMacroString(mname))
+        GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
+      end
+    end
+
+  end
+end
 
 --- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
 function GSE.CheckMacroCreated(SequenceName, create)
@@ -726,7 +746,7 @@ function GSE.CheckMacroCreated(SequenceName, create)
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
     found = true
-    EditMacro(macroIndex, nil, nil, '#showtooltip\n/click ' .. SequenceName)
+    EditMacro(macroIndex, nil, nil,  GSE.CreateMacroString(SequenceName))
   else
     if create then
       local icon = (GSE.isEmpty(GSELibrary[classid][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[classid][SequenceName].Icon)
@@ -742,7 +762,7 @@ function GSE.DeleteMacroStub(sequenceName)
   local mname, _, mbody = GetMacroInfo(sequenceName)
   if mname == sequenceName then
     trimmedmbody = mbody:gsub("[^%w ]", "")
-    compar = '#showtooltip\n/click ' .. mname
+    compar = GSE.CreateMacroString(mname)
     trimmedcompar = compar:gsub("[^%w ]", "")
     if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
       GSE.Print(L[" Deleted Orphaned Macro "] .. mname, GNOME)

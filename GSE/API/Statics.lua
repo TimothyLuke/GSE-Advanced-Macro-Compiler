@@ -185,19 +185,19 @@ else
 end
 ]]
 
-Statics.PrintKeyModifiers = [[---------
+Statics.PrintKeyModifiers = [[
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
-print("leftt alt key " .. tostring(IsLeftAltKeyDown()))
-print("any alt key " .. tostring(IsAltKeyDown()))
+print("Left alt key " .. tostring(IsLeftAltKeyDown()))
+print("Any alt key " .. tostring(IsAltKeyDown()))
 print("Right ctrl key " .. tostring(IsRightControlKeyDown()))
-print("leftt ctrl key " .. tostring(IsLeftControlKeyDown()))
-print("any ctrl key " .. tostring(IsControlKeyDown()))
+print("Left ctrl key " .. tostring(IsLeftControlKeyDown()))
+print("Any ctrl key " .. tostring(IsControlKeyDown()))
 print("Right shft key " .. tostring(IsRightShiftKeyDown()))
-print("leftt shft key " .. tostring(IsLeftShiftKeyDown()))
-print("any shft key " .. tostring(IsShiftKeyDown()))
-print("any mod key " .. tostring(IsModifierKeyDown()))
+print("Left shft key " .. tostring(IsLeftShiftKeyDown()))
+print("Any shft key " .. tostring(IsShiftKeyDown()))
+print("Any mod key " .. tostring(IsModifierKeyDown()))
 print("GetMouseButtonClicked() " .. GetMouseButtonClicked() )
----------]]
+]]
 
 Statics.OnClick = [=[
 local step = self:GetAttribute('step')
