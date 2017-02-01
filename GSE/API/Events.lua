@@ -95,7 +95,6 @@ function GSE:ADDON_LOADED(event, addon)
   if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()]) then
     GSELibrary[GSE.GetCurrentClassID()] = {}
   end
-
   local counter = 0
 
   for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
@@ -140,6 +139,12 @@ function GSE:ADDON_LOADED(event, addon)
     if not GSEOptions.HideLoginMessage then
       GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] .. GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)
     end
+  end
+
+  -- Convert macros to new format in a one off run.
+  if not GSEOptions.MacroStringsUpdated then
+    GSE.UpdateMacroString()
+    GSEOptions.MacroStringsUpdated = true
   end
 
 end
