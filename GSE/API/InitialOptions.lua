@@ -68,6 +68,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.AddInPacks = {}
   GSEOptions.CreateGlobalButtons = false
   GSEOptions.HideLoginMessage = false
+  GSEOptions.DebugPrintModConditionsOnKeyPress = false
 
 end
 

@@ -547,7 +547,7 @@ function GSE.OOCUpdateSequence(name,sequence)
   else
     button:SetAttribute("combatreset", true)
   end
-  button:WrapScript(button, 'OnClick', format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+  button:WrapScript(button, 'OnClick', (GSEOptions.DebugPrintModConditionsOnKeyPress and statics.PrintKeyModifiers or "" ) .. format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
   if not GSE.isEmpty(sequence.LoopLimit) then
     button:SetAttribute('looplimit', sequence.LoopLimit)
   end

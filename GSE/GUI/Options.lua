@@ -493,6 +493,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.sendDebugOutputToDebugOutput end,
             order = 25
           },
+          printKeyPressModifiers={
+            name = L["Print KeyPress Modifiers on Click"],
+            desc = L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.DebugPrintModConditionsOnKeyPress = val end,
+            get = function(info) return GSEOptions.DebugPrintModConditionsOnKeyPress end,
+            order = 26
+          },
           title6= {
             type = "header",
             name = L["Enable Debug for the following Modules"],
