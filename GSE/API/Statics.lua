@@ -185,7 +185,7 @@ else
 end
 ]]
 
-statics.PrintKeyModifiers = [[---------
+Statics.PrintKeyModifiers = [[---------
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
 print("leftt alt key " .. tostring(IsLeftAltKeyDown()))
 print("any alt key " .. tostring(IsAltKeyDown()))
