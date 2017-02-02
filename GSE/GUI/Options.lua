@@ -221,6 +221,18 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.use1 end,
             order = 593
           },
+          resettitle = {
+            type = "header",
+            name = L["Reset Macro Keybind"],
+            order = 600
+          },
+          keypressKeyBing = {
+            type = "multiselect",
+            values = GSEOptions.MacroResetModifiers,
+            get = function(key, value) return GSEOptions.MacroResetModifiers[key] end,
+            set = function(key, value) GSEOptions.MacroResetModifiers[key] = value end,
+            order = 601
+          },
         },
       },
       colourTab = {

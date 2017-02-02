@@ -547,7 +547,7 @@ function GSE.OOCUpdateSequence(name,sequence)
   else
     button:SetAttribute("combatreset", true)
   end
-  button:WrapScript(button, 'OnClick', (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "" ) .. format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence))))
+  button:WrapScript(button, 'OnClick', GSE.PrepareOnClickImpementation())
   if not GSE.isEmpty(sequence.LoopLimit) then
     button:SetAttribute('looplimit', sequence.LoopLimit)
   end
@@ -584,12 +584,14 @@ function GSE.DebugDumpButton(SequenceName)
   if GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].Target then
     targetreset = Statics.TargetResetImplementation
   end
+  GSE.Print("====================================\nStart GSE Button Dump\n===================================="))
   GSE.Print("Button name: "  .. SequenceName)
-  GSE.Print(_G[SequenceName]:GetScript('OnClick'))
   GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
   GSE.Print("LoopMacro?" .. tostring(looper))
-  GSE.Print(format(Statics.OnClick, targetreset, GSE.PrepareStepFunction(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].StepFunction, looper)))
+  GSE.Print("====================================\nStepFunction\n====================================")
+  GSE.Print(GSE.PrepareOnClickImpementation())
+  GSE.Print("====================================\nEnd GSE Button Dump\n===================================="))
 end
 
 
@@ -1031,4 +1033,32 @@ function GSE.MoveMacroToClassFromGlobal()
     end
   end
   GSE.ReloadSequences()
+end
+
+--- This function returns addition to the stepfunction for the KeyBind to Reset a sequence
+function GSE.GetMacroResetImplementation()
+  local activemods = {}
+  local returnstring = ""
+
+  for k,v in pairs(GSEOptions.MacroResetModifiers) do
+    if v == true then
+      if string.find(k, "Button") then
+        table.insert(activemods, "GetMouseButtonClicked() == \"".. k .. "\"")
+      else
+        table.insert (activemods, "Is" .. k .. "KeyDown() == true" )
+      end
+  end
+  if not GSE.isEmpty(activemods) then
+    returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " AND "))
+  end
+  return returnstring
+
+end
+
+--- This funcion returns the actual onclick implementation
+function GSE.PrepareOnClickImpementation()
+  local returnstring = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "" )
+  returnstring = returnstring .. GSE.GetMacroResetImplementation()
+  returnstring = returnstring  .. format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence)))
+  return returnstring
 end

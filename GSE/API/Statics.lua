@@ -273,6 +273,15 @@ Statics.StringFormatEscapes = {
     ["{.-}"] = "", -- raid target icons
 }
 
+Statics.MacroResetSkeleton = [[
+if %s then
+  step = 1
+  loopiter = 1
+  self:SetAttribute('step', step)
+  self:SetAttribute('loopiter', loopiter)
+end
+]]
+
 Statics.SourceLocal = "Local"
 Statics.SourceTransmission = "Transmission"
 Statics.DebugModules = {}
