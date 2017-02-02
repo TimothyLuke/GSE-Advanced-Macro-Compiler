@@ -584,14 +584,14 @@ function GSE.DebugDumpButton(SequenceName)
   if GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)].Target then
     targetreset = Statics.TargetResetImplementation
   end
-  GSE.Print("====================================\nStart GSE Button Dump\n===================================="))
+  GSE.Print("====================================\nStart GSE Button Dump\n====================================")
   GSE.Print("Button name: "  .. SequenceName)
   GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
   GSE.Print("LoopMacro?" .. tostring(looper))
   GSE.Print("====================================\nStepFunction\n====================================")
   GSE.Print(GSE.PrepareOnClickImpementation())
-  GSE.Print("====================================\nEnd GSE Button Dump\n===================================="))
+  GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
 
