@@ -1047,6 +1047,7 @@ function GSE.GetMacroResetImplementation()
       else
         table.insert (activemods, "Is" .. k .. "KeyDown() == true" )
       end
+    end
   end
   if not GSE.isEmpty(activemods) then
     returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " AND "))
