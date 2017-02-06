@@ -468,13 +468,13 @@ function GSE.CleanMacroLibrary(forcedelete)
   end
 end
 
---- This function resets a button back to its initial setting
+--- This function resets a gsebutton back to its initial setting
 function GSE.ResetButtons()
   for k,v in pairs(GSE.UsedSequences) do
-    button = _G[k]
-    if button:GetAttribute("combatreset") == true then
-      button:SetAttribute("step",1)
-      GSE.UpdateIcon(button, true)
+    local gsebutton = _G[k]
+    if gsebutton:GetAttribute("combatreset") == true then
+      gsebutton:SetAttribute("step",1)
+      GSE.UpdateIcon(gsebutton, true)
       GSE.UsedSequences[k] = nil
     end
   end
@@ -502,7 +502,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     GSE.CreateButton(name,tempseq)
     existingbutton = false
   end
-  local button = _G[name]
+  local gsebutton = _G[name]
   -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
   if GetLocale() ~= "enUS" then
     tempseq = GSE.TranslateSequence(tempseq, name)
@@ -513,7 +513,7 @@ function GSE.OOCUpdateSequence(name,sequence)
   local pmcount = 0
   if not GSE.isEmpty(tempseq.PreMacro) then
     pmcount = table.getn(tempseq.PreMacro) + 1
-    button:SetAttribute('loopstart', pmcount)
+    gsebutton:SetAttribute('loopstart', pmcount)
     for k,v in ipairs(tempseq.PreMacro) do
       table.insert(executionseq, v)
     end
@@ -524,7 +524,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     table.insert(executionseq, v)
   end
 
-  button:SetAttribute('loopstop', table.getn(executionseq))
+  gsebutton:SetAttribute('loopstop', table.getn(executionseq))
 
   if not GSE.isEmpty(tempseq.PostMacro) then
     for k,v in ipairs(tempseq.PostMacro) do
@@ -535,24 +535,24 @@ function GSE.OOCUpdateSequence(name,sequence)
 
   GSE.SequencesExec[name] = executionseq
 
-  button:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
-  button:SetAttribute("step",1)
-  button:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. button:GetAttribute('KeyPress'))
-  button:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. button:GetAttribute('KeyRelease'))
+  gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
+  gsebutton:SetAttribute("step",1)
+  gsebutton:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
+  GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. gsebutton:GetAttribute('KeyPress'))
+  gsebutton:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
+  GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. gsebutton:GetAttribute('KeyRelease'))
   if existingbutton then
-    button:UnwrapScript(button,'OnClick')
+    gsebutton:UnwrapScript(gsebutton,'OnClick')
   end
 
   if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
-    button:SetAttribute("combatreset", true)
+    gsebutton:SetAttribute("combatreset", true)
   else
-    button:SetAttribute("combatreset", true)
+    gsebutton:SetAttribute("combatreset", true)
   end
-  button:WrapScript(button, 'OnClick', GSE.PrepareOnClickImpementation())
+  gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImpementation())
   if not GSE.isEmpty(sequence.LoopLimit) then
-    button:SetAttribute('looplimit', sequence.LoopLimit)
+    gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
   end
 
 end
@@ -913,26 +913,26 @@ end
 
 
 function GSE.CreateButton(name, sequence)
-  local button = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
-  button:SetAttribute('type', 'macro')
-  button.UpdateIcon = GSE.UpdateIcon
+  local gsebutton = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
+  gsebutton:SetAttribute('type', 'macro')
+  gsebutton.UpdateIcon = GSE.UpdateIcon
 end
 
 
 function GSE.UpdateIcon(self, reset)
   local step = self:GetAttribute('step') or 1
-  local button = self:GetName()
-  local executionseq = GSE.SequencesExec[button]
+  local gsebutton = self:GetName()
+  local executionseq = GSE.SequencesExec[gsebutton]
   local commandline, foundSpell, notSpell = executionseq[step], false, ''
   for cmd, etc in gmatch(commandline or '', '/(%w+)%s+([^\n]+)') do
     if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
       local spell, target = SecureCmdOptionParse(etc)
       if not reset then
-        GSE.TraceSequence(button, step, spell)
+        GSE.TraceSequence(gsebutton, step, spell)
       end
       if spell then
         if GetSpellInfo(spell) then
-          SetMacroSpell(button, spell, target)
+          SetMacroSpell(gsebutton, spell, target)
           foundSpell = true
           break
         elseif notSpell == '' then
@@ -941,9 +941,9 @@ function GSE.UpdateIcon(self, reset)
       end
     end
   end
-  if not foundSpell then SetMacroItem(button, notSpell) end
+  if not foundSpell then SetMacroItem(gsebutton, notSpell) end
   if not reset then
-    GSE.UsedSequences[button] = true
+    GSE.UsedSequences[gsebutton] = true
   end
 end
 
