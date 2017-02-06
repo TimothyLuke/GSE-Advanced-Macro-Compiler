@@ -142,13 +142,7 @@ function GSE:ADDON_LOADED(event, addon)
   end
 
   -- Convert macros to new format in a one off run.
-  if GSE.isEmpty(GSEOptions.MacroStringsUpdated)  then
-    GSEOptions.MacroStringsUpdated = {}
-  end
-  if not GSEOptions.MacroStringsUpdated[GSE.GetCurrentClassID()] then
-    GSE.UpdateMacroString()
-    GSEOptions.MacroStringsUpdated[GSE.GetCurrentClassID()] = true
-  end
+  GSE.UpdateMacroString()
 
   -- added in 2.1.0
   if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
