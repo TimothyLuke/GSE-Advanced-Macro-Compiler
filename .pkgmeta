@@ -52,7 +52,6 @@ externals:
 
 
 move-folders:
-    GSE/GS-Core: GS-Core
     GSE/GSE: GSE
 
 enable-nolib-creation: no
@@ -65,3 +64,4 @@ ignore:
     - docs
     - deploy.sh
     - deploy_key.enc
+    - GS-Core
