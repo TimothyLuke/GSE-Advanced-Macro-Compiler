@@ -172,11 +172,11 @@ function GSE:GUIDrawMetadataEditor(container)
   -- Default frame size = 700 w x 500 h
 
   editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
-
+  local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
-  scrollcontainer:SetHeight(260)
+  scrollcontainer:SetHeight(fheight - 260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -407,14 +407,14 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
-  layoutcontainer:SetHeight(fheight - 240 )
+  layoutcontainer:SetHeight(fheight - 260 )
   layoutcontainer:SetLayout("Flow") -- important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   --scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- probably?
   scrollcontainer:SetWidth(546)
-  scrollcontainer:SetHeight(fheight - 240)
+  scrollcontainer:SetHeight(fheight - 260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
