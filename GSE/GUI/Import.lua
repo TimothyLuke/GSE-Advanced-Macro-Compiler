@@ -24,15 +24,15 @@ importsequencebox:DisableButton(true)
 importsequencebox:SetFullWidth(true)
 importframe:AddChild(importsequencebox)
 
-local createicondropdown = AceGUI:Create("Dropdown")
+local createicondropdown = AceGUI:Create("CheckBox")
 createicondropdown:SetLabel(L["Automatically Create Macro Icon"])
 createicondropdown:SetWidth(250)
-createicondropdown:SetList(GSE.GetVersionList())
+createicondropdown:SetType("checkbox")
 createicondropdown:SetValue(true)
 createicondropdown:SetCallback("OnValueChanged", function (obj,event,key)
   importframe.AutoCreateIcon = key
 end)
-importframe:AddChild(pvpdropdown)
+importframe:AddChild(createicondropdown)
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
