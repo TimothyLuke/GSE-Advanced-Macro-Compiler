@@ -225,7 +225,7 @@ function GSE.ImportSequence(importStr, legacy, createicon)
         newkey = k
       end
       if createicon then
-        GSE.CheckMacroCreated(k, true)
+        GSE.CheckMacroCreated(newkey, true)
       end
       success = true
     end
