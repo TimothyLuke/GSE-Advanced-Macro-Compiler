@@ -1062,7 +1062,7 @@ function GSE.GetMacroResetImplementation()
     end
   end
   if not GSE.isEmpty(activemods) then
-    returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " AND "))
+    returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " and "))
   end
   return returnstring
 
