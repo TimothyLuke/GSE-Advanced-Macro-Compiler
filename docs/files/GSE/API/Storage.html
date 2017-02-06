@@ -118,7 +118,7 @@
 
 	<tr>
 	<td class="name" nowrap><a href="#GSE.CheckMacroCreated">GSE.CheckMacroCreated</a>&nbsp;(SequenceName, create)</td>
-	<td class="summary">Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.</td>
+	<td class="summary">Add a Create Macro to the Out of Combat Queue </td>
 	</tr>
 
 	<tr>
@@ -207,7 +207,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportSequence">GSE.ImportSequence</a>&nbsp;(importStr, legacy)</td>
+	<td class="name" nowrap><a href="#GSE.ImportSequence">GSE.ImportSequence</a>&nbsp;(importStr, legacy, createicon)</td>
 	<td class="summary">Load a GSE Sequence Collection from a String </td>
 	</tr>
 
@@ -224,6 +224,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.OOCAddSequenceToCollection">GSE.OOCAddSequenceToCollection</a>&nbsp;(sequenceName, sequence, classid)</td>
 	<td class="summary">Add a sequence to the library </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.OOCCheckMacroCreated">GSE.OOCCheckMacroCreated</a>&nbsp;(SequenceName, create)</td>
+	<td class="summary">Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.</td>
 	</tr>
 
 	<tr>
@@ -310,7 +315,7 @@ Add a sequence to the library
 
 <dt><a name="GSE.CheckMacroCreated"></a><strong>GSE.CheckMacroCreated</strong>&nbsp;(SequenceName, create)</dt>
 <dd>
-Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+Add a Create Macro to the Out of Combat Queue
 
 
 <h3>Parameters</h3>
@@ -768,7 +773,7 @@ Load a collection of Sequences
 
 
 
-<dt><a name="GSE.ImportSequence"></a><strong>GSE.ImportSequence</strong>&nbsp;(importStr, legacy)</dt>
+<dt><a name="GSE.ImportSequence"></a><strong>GSE.ImportSequence</strong>&nbsp;(importStr, legacy, createicon)</dt>
 <dd>
 Load a GSE Sequence Collection from a String
 
@@ -782,6 +787,10 @@ Load a GSE Sequence Collection from a String
 	
 	<li>
 	  legacy: 
+	</li>
+	
+	<li>
+	  createicon: 
 	</li>
 	
 </ul>
@@ -859,6 +868,36 @@ Add a sequence to the library
 	
 	<li>
 	  classid: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.OOCCheckMacroCreated"></a><strong>GSE.OOCCheckMacroCreated</strong>&nbsp;(SequenceName, create)</dt>
+<dd>
+Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  SequenceName: 
+	</li>
+	
+	<li>
+	  create: 
 	</li>
 	
 </ul>
