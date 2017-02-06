@@ -7,6 +7,8 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
 local importframe = AceGUI:Create("Frame")
+importframe.AutoCreateIcon = true
+
 importframe:Hide()
 
 
@@ -21,6 +23,16 @@ importsequencebox:SetNumLines(20)
 importsequencebox:DisableButton(true)
 importsequencebox:SetFullWidth(true)
 importframe:AddChild(importsequencebox)
+
+local createicondropdown = AceGUI:Create("Dropdown")
+createicondropdown:SetLabel(L["PVP"])
+createicondropdown:SetWidth(250)
+createicondropdown:SetList(GSE.GetVersionList())
+createicondropdown:SetValue(true)
+createicondropdown:SetCallback("OnValueChanged", function (obj,event,key)
+  importframe.AutoCreateIcon = key
+end)
+importframe:AddChild(pvpdropdown)
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
@@ -51,7 +63,7 @@ function GSE.GUIImportSequence()
   if GSE.isEmpty(string.find(importsequencebox:GetText(), "MacroVersions")) then
     legacy = true
   end
-  local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacy)
+  local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacy, importframe.AutoCreateIcon)
   if success then
     StaticPopup_Show ("GSE-MacroImportSuccess")
     GSE.GUIImportFrame:Hide()

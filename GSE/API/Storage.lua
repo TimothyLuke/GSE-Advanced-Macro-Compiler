@@ -194,7 +194,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
 end
 
 --- Load a GSE Sequence Collection from a String
-function GSE.ImportSequence(importStr, legacy)
+function GSE.ImportSequence(importStr, legacy, createicon)
   local success, returnmessage = false, ""
 
   local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
@@ -223,6 +223,9 @@ function GSE.ImportSequence(importStr, legacy)
           v.Icon = GSE.GetDefaultIcon()
         end
         newkey = k
+      end
+      if createicon then
+        GSE.CheckMacroCreated(k, true)
       end
       success = true
     end
@@ -738,8 +741,17 @@ function GSE.UpdateMacroString()
   end
 end
 
---- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+--- Add a Create Macro to the Out of Combat Queue
 function GSE.CheckMacroCreated(SequenceName, create)
+  local vals = {}
+  vals.action = "CheckMacroCreated"
+  vals.sequencename = SequenceName
+  vals.create = create
+  table.insert(GSE.OOCQueue, vals)
+end
+
+--- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+function GSE.OOCCheckMacroCreated(SequenceName, create)
   local found = false
   local classid = GSE.GetCurrentClassID()
   if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][SequenceName]) then
