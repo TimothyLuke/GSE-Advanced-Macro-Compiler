@@ -352,7 +352,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
 
   local dungeondropdown = AceGUI:Create("Dropdown")
-  dropdown:SetLabel(L["Dungeon"])
+  dungeondropdown:SetLabel(L["Dungeon"])
   dungeondropdown:SetWidth(250)
   dungeondropdown:SetList(GSE.GetVersionList())
   dungeondropdown:SetValue(tostring(editframe.Dungeon))
