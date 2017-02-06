@@ -354,3 +354,4 @@ L["Any Control Key"] = true
 L["Alt Keys."] = true
 L["Control Keys."] = true
 L["Shift Keys."] = true
+L["To get started "] = true
