@@ -275,10 +275,8 @@ Statics.StringFormatEscapes = {
 
 Statics.MacroResetSkeleton = [[
 if %s then
-  step = 1
-  loopiter = 1
-  self:SetAttribute('step', step)
-  self:SetAttribute('loopiter', loopiter)
+  self:SetAttribute('step', 1)
+  self:SetAttribute('loopiter', 1)
 end
 ]]
 

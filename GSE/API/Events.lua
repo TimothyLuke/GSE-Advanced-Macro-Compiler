@@ -142,9 +142,34 @@ function GSE:ADDON_LOADED(event, addon)
   end
 
   -- Convert macros to new format in a one off run.
-  if not GSEOptions.MacroStringsUpdated then
+  if GSE.isEmpty(GSEOptions.MacroStringsUpdated)  then
+    GSEOptions.MacroStringsUpdated = {}
+  end
+  if not GSEOptions.MacroStringsUpdated[GSE.GetCurrentClassID()] then
     GSE.UpdateMacroString()
-    GSEOptions.MacroStringsUpdated = true
+    GSEOptions.MacroStringsUpdated[GSE.GetCurrentClassID()] = true
+  end
+
+  -- added in 2.1.0
+  if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
+    GSEOptions.MacroResetModifiers = {}
+    GSEOptions.MacroResetModifiers["LeftButton"] = false
+    GSEOptions.MacroResetModifiers["RighttButton"] = false
+    GSEOptions.MacroResetModifiers["MiddleButton"] = false
+    GSEOptions.MacroResetModifiers["Button4"] = false
+    GSEOptions.MacroResetModifiers["Button5"] = false
+    GSEOptions.MacroResetModifiers["LeftAlt"] = false
+    GSEOptions.MacroResetModifiers["RightAlt"] = false
+    GSEOptions.MacroResetModifiers["AnyAlt"] = false
+    GSEOptions.MacroResetModifiers["LeftControl"] = false
+    GSEOptions.MacroResetModifiers["RightControl"] = false
+    GSEOptions.MacroResetModifiers["AnyControl"] = false
+    GSEOptions.MacroResetModifiers["LeftShift"] = false
+    GSEOptions.MacroResetModifiers["RightShift"] = false
+    GSEOptions.MacroResetModifiers["AnyShift"] = false
+    GSEOptions.MacroResetModifiers["LeftAlt"] = false
+    GSEOptions.MacroResetModifiers["RightAlt"] = false
+    GSEOptions.MacroResetModifiers["AnyMod"] = false
   end
 
 end

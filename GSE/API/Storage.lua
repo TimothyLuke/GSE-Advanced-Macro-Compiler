@@ -550,7 +550,7 @@ function GSE.OOCUpdateSequence(name,sequence)
   else
     gsebutton:SetAttribute("combatreset", true)
   end
-  gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImpementation())
+  gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImplementation(sequence))
   if not GSE.isEmpty(sequence.LoopLimit) then
     gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
   end
@@ -593,7 +593,7 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
   GSE.Print("LoopMacro?" .. tostring(looper))
   GSE.Print("====================================\nStepFunction\n====================================")
-  GSE.Print(GSE.PrepareOnClickImpementation())
+  GSE.Print(GSE.PrepareOnClickImplementation(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)]))
   GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
@@ -1069,7 +1069,7 @@ function GSE.GetMacroResetImplementation()
 end
 
 --- This funcion returns the actual onclick implementation
-function GSE.PrepareOnClickImpementation()
+function GSE.PrepareOnClickImplementation(sequence)
   local returnstring = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "" )
   returnstring = returnstring .. GSE.GetMacroResetImplementation()
   returnstring = returnstring  .. format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence)))
