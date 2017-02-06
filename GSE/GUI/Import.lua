@@ -25,7 +25,7 @@ importsequencebox:SetFullWidth(true)
 importframe:AddChild(importsequencebox)
 
 local createicondropdown = AceGUI:Create("Dropdown")
-createicondropdown:SetLabel(L["PVP"])
+createicondropdown:SetLabel(L["Automatically Create Macro Icon"])
 createicondropdown:SetWidth(250)
 createicondropdown:SetList(GSE.GetVersionList())
 createicondropdown:SetValue(true)
