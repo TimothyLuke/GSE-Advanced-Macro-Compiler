@@ -732,9 +732,11 @@ function GSE.UpdateMacroString()
         EditMacro(macid, nil, nil,  GSE.CreateMacroString(mname))
         GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
       end
-      if not GSE.isEmpty(GSELibrary[0][mname]) then
-        EditMacro(macid, nil, nil,  GSE.CreateMacroString(mname))
-        GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
+      if not GSE.isEmpty(GSELibrary[0]) then
+        if not GSE.isEmpty(GSELibrary[0][mname]) then
+          EditMacro(macid, nil, nil,  GSE.CreateMacroString(mname))
+          GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
+        end
       end
     end
 
