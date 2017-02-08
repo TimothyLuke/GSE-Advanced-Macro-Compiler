@@ -8,8 +8,6 @@ local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
-
-
 local otherversionlistboxvalue = ""
 local default = 1
 local raid = 1
@@ -31,6 +29,13 @@ editframe.Dungeon = 1
 editframe.Heroic = 1
 editframe.ClassID = classid
 editframe.save = false
+editframe.SelectedTab = "group"
+
+local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
+editframe.Left = fleft
+editframe.Bottom = fbottom
+editframe.Width = fwidth
+editframe.Height = fheight
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
@@ -45,7 +50,14 @@ editframe:SetCallback("OnClose", function (self)
   end
 end)
 editframe:SetLayout("List")
-editframe.frame:SetScript("OnSizeChanged", function () editframe:DoLayout() end)
+editframe.frame:SetScript("OnSizeChanged", function ()
+  editframe.Left, editframe.Bottom, editframe.Width, editframe.Height = editframe.frame:GetBoundsRect()
+  if editframe.Height > GetScreenHeight() then
+    editframe.Height = GetScreenHeight() - 10
+  end
+  GSE.GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
+  editframe:DoLayout()
+end)
 
 
 local specdropdownvalue = editframe.SpecID
@@ -113,7 +125,6 @@ function GSE.GUIEditorPerformLayout(frame)
 
   tabgrp:SetCallback("OnGroupSelected",  function (container, event, group)
     GSE.GUISelectEditorTab(container, event, group)
-    editframe.SelectedTab = group
   end)
   tabgrp:SetFullWidth(true)
   tabgrp:SetFullHeight(true)
@@ -172,11 +183,11 @@ function GSE:GUIDrawMetadataEditor(container)
   -- Default frame size = 700 w x 500 h
 
   editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
-  local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
+
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
-  scrollcontainer:SetHeight(fheight - 260)
+  scrollcontainer:SetHeight(editframe.Height - 260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -184,7 +195,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local metasimplegroup = AceGUI:Create("SimpleGroup")
   metasimplegroup:SetLayout("Flow")
-  metasimplegroup:SetWidth(606)
+  metasimplegroup:SetWidth(editframe.Width - 100)
 
   local speciddropdown = AceGUI:Create("Dropdown")
   speciddropdown:SetLabel(L["Specialisation / Class ID"])
@@ -236,7 +247,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local helpgroup1 = AceGUI:Create("SimpleGroup")
   helpgroup1:SetLayout("Flow")
-  helpgroup1:SetWidth(606)
+  helpgroup1:SetWidth(editframe.Width - 100)
 
 
   local helplinkeditbox = AceGUI:Create("EditBox")
@@ -271,7 +282,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local defgroup1 = AceGUI:Create("SimpleGroup")
   defgroup1:SetLayout("Flow")
-  defgroup1:SetWidth(606)
+  defgroup1:SetWidth(editframe.Width - 100)
 
 
   local defaultdropdown = AceGUI:Create("Dropdown")
@@ -308,7 +319,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local defgroup2 = AceGUI:Create("SimpleGroup")
   defgroup2:SetLayout("Flow")
-  defgroup2:SetWidth(606)
+  defgroup2:SetWidth(editframe.Width - 100)
 
   local mythicdropdown = AceGUI:Create("Dropdown")
   mythicdropdown:SetLabel(L["Mythic"])
@@ -348,7 +359,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local defgroup3 = AceGUI:Create("SimpleGroup")
   defgroup3:SetLayout("Flow")
-  defgroup3:SetWidth(606)
+  defgroup3:SetWidth(editframe.Width - 100)
 
 
   local dungeondropdown = AceGUI:Create("Dropdown")
@@ -403,18 +414,16 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   editframe.Sequence.MacroVersions[version] = GSE.TranslateSequence(editframe.Sequence.MacroVersions[version], "From Editor")
 
-  local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
-
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
-  layoutcontainer:SetHeight(fheight - 260 )
+  layoutcontainer:SetHeight(editframe.Height - 260 )
   layoutcontainer:SetLayout("Flow") -- important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   --scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- probably?
-  scrollcontainer:SetWidth(546)
-  scrollcontainer:SetHeight(fheight - 260)
+  scrollcontainer:SetWidth(editframe.Width - 200)
+  scrollcontainer:SetHeight(editframe.Height - 260)
   scrollcontainer:SetLayout("Fill") -- important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -422,11 +431,11 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
-  linegroup1:SetWidth(606)
+  linegroup1:SetWidth(editframe.Width - 100)
 
   local stepdropdown = AceGUI:Create("Dropdown")
   stepdropdown:SetLabel(L["Step Function"])
-  stepdropdown:SetWidth(250)
+  stepdropdown:SetWidth((editframe.Width - 210) * 0.48)
   stepdropdown:SetList({
     ["Sequential"] = L["Sequential (1 2 3 4)"],
     ["Priority"] = L["Priority List (1 12 123 1234)"],
@@ -475,13 +484,13 @@ function GSE:GUIDrawMacroEditor(container, version)
   contentcontainer:AddChild(linegroup1)
   local linegroup2 = AceGUI:Create("SimpleGroup")
   linegroup2:SetLayout("Flow")
-  linegroup2:SetWidth(606)
+  linegroup2:SetWidth(editframe.Width - 100)
 
   local KeyPressbox = AceGUI:Create("MultiLineEditBox")
   KeyPressbox:SetLabel(L["KeyPress"])
   KeyPressbox:SetNumLines(2)
   KeyPressbox:DisableButton(true)
-  KeyPressbox:SetWidth(270)
+  KeyPressbox:SetWidth((editframe.Width - 210) * 0.48)
   KeyPressbox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].KeyPress) then
     KeyPressbox:SetText(table.concat(editframe.Sequence.MacroVersions[version].KeyPress, "\n"))
@@ -499,7 +508,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   PreMacro:SetLabel(L["PreMacro"])
   PreMacro:SetNumLines(2)
   PreMacro:DisableButton(true)
-  PreMacro:SetWidth(270)
+  PreMacro:SetWidth((editframe.Width - 210) * 0.48)
   PreMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PreMacro) end)
   if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].PreMacro) then
     PreMacro:SetText(table.concat(editframe.Sequence.MacroVersions[version].PreMacro, "\n"))
@@ -533,13 +542,13 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local linegroup3 = AceGUI:Create("SimpleGroup")
   linegroup3:SetLayout("Flow")
-  linegroup3:SetWidth(606)
+  linegroup3:SetWidth(editframe.Width - 100)
 
   local KeyReleasebox = AceGUI:Create("MultiLineEditBox")
   KeyReleasebox:SetLabel(L["KeyRelease"])
   KeyReleasebox:SetNumLines(2)
   KeyReleasebox:DisableButton(true)
-  KeyReleasebox:SetWidth(270)
+  KeyReleasebox:SetWidth((editframe.Width - 210) * 0.48)
   KeyReleasebox.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(KeyPressbox) end)
   if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].KeyRelease) then
     KeyReleasebox:SetText(table.concat(editframe.Sequence.MacroVersions[version].KeyRelease, "\n"))
@@ -557,7 +566,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   PostMacro:SetLabel(L["PostMacro"])
   PostMacro:SetNumLines(2)
   PostMacro:DisableButton(true)
-  PostMacro:SetWidth(270)
+  PostMacro:SetWidth((editframe.Width - 210) * 0.48)
   PostMacro.editBox:SetScript( "OnLeave",  function() GSE.GUIParseText(PostMacro) end)
   linegroup3:AddChild(PostMacro)
   if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].PostMacro) then
@@ -693,6 +702,7 @@ end
 
 function GSE.GUISelectEditorTab(container, event, group)
   container:ReleaseChildren()
+  editframe.SelectedTab = group
   editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
   editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
   if group == "config" then
@@ -706,6 +716,7 @@ function GSE.GUISelectEditorTab(container, event, group)
   else
     GSE:GUIDrawMacroEditor(container, group)
   end
+
 end
 
 function GSE.GUIDeleteVersion(version)
