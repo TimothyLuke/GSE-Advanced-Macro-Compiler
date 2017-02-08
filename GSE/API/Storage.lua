@@ -1053,9 +1053,11 @@ end
 function GSE.GetMacroResetImplementation()
   local activemods = {}
   local returnstring = ""
+  local flagactive = false
 
   for k,v in pairs(GSEOptions.MacroResetModifiers) do
     if v == true then
+      flagactive = true
       if string.find(k, "Button") then
         table.insert(activemods, "GetMouseButtonClicked() == \"".. k .. "\"")
       else
@@ -1063,7 +1065,7 @@ function GSE.GetMacroResetImplementation()
       end
     end
   end
-  if not GSE.isEmpty(activemods) then
+  if flagactive then
     returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " and "))
   end
   return returnstring
