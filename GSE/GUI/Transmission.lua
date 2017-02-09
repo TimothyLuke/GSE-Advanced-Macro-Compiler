@@ -3,7 +3,7 @@ local GSE = GSE
 local Statics = GSE.Static
 
 
-local GSStaticPrefix = "GS-E"
+
 
 local GSold = false
 local L = GSE.L
@@ -33,8 +33,14 @@ GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmi
 
 local function GSSendMessage(tab, channel, target)
   local _, instanceType = IsInInstance()
+  GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
+  if tab.Command == "GS-E_TRANSMITSEQUENCE" then
+    GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
+    GSE.PrintDebugMessage(GSE.isEmpty(tab.Sequence))
+    GSE.PrintDebugMessage(GSE.ExportSequence(tab.Sequence,tab.SequenceName), Statics.SourceTransmission)
+  end
   local transmission = GSE.EncodeMessage(tab)
-  GSE.PrintDebugMessage(transmission, Statics.SourceTransmission)
+  GSE.PrintDebugMessage("Transmission: \n" .. transmission, Statics.SourceTransmission)
   if GSE.isEmpty(channel) then
     if IsInRaid() then
       channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
@@ -42,7 +48,7 @@ local function GSSendMessage(tab, channel, target)
       channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
     end
   end
-  GSE:SendCommMessage(GSStaticPrefix, transmission, channel, target)
+  GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
 
 end
 
@@ -59,17 +65,13 @@ local function performVersionCheck(version)
 end
 
 function GSE.EncodeMessage(Sequence)
-  --clean sequence
-  eSequence = GSE.UnEscapeSequence(Sequence)
-  --remove version and source
-  eSequence.version = nil
-  eSequence.source = GSE.StaticSourceTransmission
-  eSequence.authorversion = nil
 
-
-  local one = libS:Serialize(eSequence)
-  local two = libC:CompressHuffman(one)
+  local one = libS:Serialize(Sequence)
+  GSE.PrintDebugMessage ("Compress Stage 1: " .. one, Statics.SourceTransmission)
+  local two = libC:Compress(one)
+  GSE.PrintDebugMessage ("Compress Stage 2: " .. two, Statics.SourceTransmission)
   local final = libCE:Encode(two)
+  GSE.PrintDebugMessage ("Compress Stage Result: " .. final, Statics.SourceTransmission)
   return final
 end
 
@@ -80,18 +82,18 @@ function GSE.DecodeMessage(data)
   --Decompress the decoded data
   local two, message = libC:Decompress(one)
   if(not two) then
-    GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, "GS-Transmission")
+    GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, Statics.SourceTransmission)
     return
   end
 
   -- Deserialize the decompressed data
   local success, final = libS:Deserialize(two)
   if (not success) then
-    GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, "GS-Transmission")
+    GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, Statics.SourceTransmission)
     return
   end
 
-  GSE.PrintDebugMessage ("Data Finalised", "GS-Transmission")
+  GSE.PrintDebugMessage ("Data Finalised", Statics.SourceTransmission)
   return success, final
 end
 
@@ -101,9 +103,10 @@ function GSE.TransmitSequence(key, channel, target)
   local elements = GSE.split(key, ",")
   local classid = tonumber(elements[1])
   local SequenceName = elements[2]
+  GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission )
   t.ClassID = classid
   t.SequenceName = SequenceName
-  t.Sequence = GSELibrary[classid][sequenceName]
+  t.Sequence = GSELibrary[classid][SequenceName]
   GSSendMessage(t, channel, target)
   GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
@@ -116,7 +119,7 @@ end
 
 
 function GSE:OnCommReceived(prefix, message, distribution, sender)
-  GSE.PrintDebugMessage("GSSE:onCommReceived", Statics.SourceTransmission)
+  GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
   GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, Statics.SourceTransmission)
   local success, t = GSE.DecodeMessage(message)
   if success then
@@ -129,6 +132,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
         ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
       else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
+        GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName), Statics.SourceTransmission)
       end
     end
   end
@@ -150,7 +154,7 @@ function GSE:GROUP_ROSTER_UPDATE(...)
 end
 
 
-GSE:RegisterComm("GS-E")
+GSE:RegisterComm("GSE")
 GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 local baseFont = CreateFont("baseFont")
 

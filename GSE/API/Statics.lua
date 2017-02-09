@@ -306,3 +306,4 @@ Statics.SampleMacros = {}
 Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
 
 Statics.ReloadMessage = "Reload"
+Statics.CommPrefix = "GSE"
