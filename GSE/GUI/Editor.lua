@@ -387,7 +387,7 @@ function GSE:GUIDrawMetadataEditor(container)
   heroicdropdown:SetList(GSE.GetVersionList())
   heroicdropdown:SetValue(tostring(editframe.Heroic))
   defgroup3:AddChild(heroicdropdown)
-  raiddropdown:SetCallback("OnValueChanged", function (obj,event,key)
+  heroicdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Heroic = nil
     else
