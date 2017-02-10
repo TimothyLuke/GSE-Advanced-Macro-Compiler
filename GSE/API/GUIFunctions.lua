@@ -70,6 +70,8 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
   GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
   GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
+  GSE.GUIEditFrame.Dungeon = sequence.Dungeon or sequence.Default
+  GSE.GUIEditFrame.Heroic = sequence.Heroic or sequence.Default
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   incomingframe:Hide()
