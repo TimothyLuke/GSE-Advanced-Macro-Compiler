@@ -282,7 +282,7 @@ function GSE.ExportSequence(sequence, sequenceName)
     sequencemeta = sequencemeta .. "  Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
   end
   if not GSE.isEmpty(sequence.Help) then
-    sequencemeta = sequencemeta .. "  Help = \"" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "\",\n"
+    sequencemeta = sequencemeta .. "  Help = [[" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "]],\n"
   end
   sequencemeta = sequencemeta .. "  Default=" ..sequence.Default .. ",\n"
   if not GSE.isEmpty(sequence.Raid) then
@@ -313,7 +313,7 @@ function GSE.ExportSequence(sequence, sequenceName)
       elseif v.StepFunction == "Priority" then
        steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
      else
-       steps = "      StepFunction = [[" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "]],\n"
+       steps = "      StepFunction = \"" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "\",\n"
       end
     end
     if not GSE.isEmpty(outputversion.Combat) then
