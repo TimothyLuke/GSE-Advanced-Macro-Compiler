@@ -342,6 +342,7 @@ describe('API Translator', function()
     assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(Statics.Sequential, true))
     assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(nil, true))
     assert.are.equal('step = step % #macros + 1', GSE.PrepareStepFunction(nil,  false))
+    assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(nil, true))
 
   end)
 

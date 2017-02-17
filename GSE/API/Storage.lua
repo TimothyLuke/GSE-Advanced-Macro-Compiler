@@ -567,12 +567,9 @@ function GSE.PrepareStepFunction(stepper, looper)
     end
   else
     if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
-      retvalue = Statics.Sequential
-    end
-    if stepper == Statics.Priority then
-      retvalue = Statics.PriorityImplementation
-    elseif stepper == Statics.Sequential then
       retvalue = 'step = step % #macros + 1'
+    elseif stepper == Statics.Priority then
+      retvalue = Statics.PriorityImplementation
     else
       retvalue = stepper
     end
