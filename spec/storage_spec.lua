@@ -340,6 +340,8 @@ describe('API Translator', function()
     assert.are.equal("step = step % #macros + 1", GSE.PrepareStepFunction(Statics.Sequential, false))
     assert.are.equal(Statics.LoopPriorityImplementation, GSE.PrepareStepFunction(Statics.Priority, true))
     assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(Statics.Sequential, true))
+    assert.are.equal(Statics.LoopSequentialImplementation, GSE.PrepareStepFunction(nil, true))
+    assert.are.equal('step = step % #macros + 1', GSE.PrepareStepFunction(nil,  false))
 
   end)
 
@@ -686,4 +688,5 @@ self:CallMethod('UpdateIcon')
     assert.are.equal(expectedval, returnval)
 
   end)
+
 end)
