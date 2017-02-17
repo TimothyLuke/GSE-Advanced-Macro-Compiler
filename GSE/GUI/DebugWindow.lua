@@ -42,7 +42,7 @@ function GSE.GUIEnableDebugView()
   end
 end
 
-function GSE:PauseGuiDebugView()
+function GSE.GUIPauseDebugView()
   if onpause then
     GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
     GSE.GUIUpdateTimer = GSE:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
