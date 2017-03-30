@@ -141,9 +141,6 @@ function GSE:ADDON_LOADED(event, addon)
     end
   end
 
-  -- Convert macros to new format in a one off run.
-  GSE.UpdateMacroString()
-
   -- added in 2.1.0
   if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
     GSEOptions.MacroResetModifiers = {}
@@ -255,6 +252,9 @@ function GSE:GSSlash(input)
     GSE.SetDefaultOptions()
     GSE.Print(L["Options have been reset to defaults."])
     StaticPopup_Show ("GSE_ConfirmReloadUIDialog")
+  elseif string.lower(input) == "updatemacrostrings" then
+    -- Convert macros to new format in a one off run.
+    GSE.UpdateMacroString()
   elseif string.lower(input) == "movelostmacros" then
     GSE.MoveMacroToClassFromGlobal()
   else
