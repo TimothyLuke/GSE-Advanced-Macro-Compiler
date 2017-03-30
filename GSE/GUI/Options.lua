@@ -234,7 +234,7 @@ function GSE.GetOptionsTable()
             name = L["Update Macro Stubs."],
             order = 500
           },
-          updatemacrobuttonstubs = {{
+          updatemacrobuttonstubs = {
             name = L["Update Macro Stubs"],
             desc = L["This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."],
             type = "execute",
