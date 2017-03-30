@@ -20,14 +20,14 @@ install:
 - luarocks install luacov-coveralls
 - luarocks install luadoc
 script:
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
-- luacheck --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
 - bash ./deploy.sh
 - busted --verbose --coverage
 after_success:
-- luacov-coveralls 
+- luacov-coveralls
 notifications:
   email:
     on_failure: always
