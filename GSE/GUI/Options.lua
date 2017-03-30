@@ -229,6 +229,20 @@ function GSE.GetOptionsTable()
         order = 2,
         type = "group",
         args = {
+          enablemacrostubupdatetitle = {
+            type = "header",
+            name = L["Update Macro Stubs."],
+            order = 500
+          },
+          updatemacrobuttonstubs = {{
+            name = L["Update Macro Stubs"],
+            desc = L["This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."],
+            type = "execute",
+            func = function(info, val)
+              GSE.UpdateMacroString()
+            end,
+            order = 501
+          },
           resetbuttontitle = {
             type = "header",
             name = L["Mouse Buttons."],
