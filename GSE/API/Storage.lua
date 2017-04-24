@@ -1091,7 +1091,7 @@ function GSE.CheckSequence(sequence)
 
   for k,v in ipairs(sequence) do
     if type(v) == "table" then
-      GSE.PrintDebugMessage("Macro corrupt at ".. k .. " with value " .. v, "Storage")
+      GSE.PrintDebugMessage("Macro corrupt at ".. k, "Storage")
       error("Corrupt MacroVersion")
     end
   end
