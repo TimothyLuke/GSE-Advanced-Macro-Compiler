@@ -692,8 +692,8 @@ self:CallMethod('UpdateIcon')
 
   it ("handles malformed GSE macros without breaking the mod.", function()
     local GSELibrary = {}
-    local GSELibrary[0] = {}
-    local GSELibrary[0]["911ST"] = {
+    GSELibrary[0] = {}
+    GSELibrary[0]["911ST"] = {
       ["Talents"] = "?,?,?,?,?,?,?",
       ["Default"] = 1,
       ["Author"] = "Unknown Author",
