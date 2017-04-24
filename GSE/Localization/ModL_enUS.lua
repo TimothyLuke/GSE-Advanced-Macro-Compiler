@@ -358,3 +358,5 @@ L["To get started "] = true
 L["Update Macro Stubs."] = true
 L["Update Macro Stubs"] = true
 L["This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."] = true
+-- GSE 2.1.1
+L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."] = true

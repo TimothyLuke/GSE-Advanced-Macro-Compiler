@@ -493,66 +493,70 @@ end
 
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
 function GSE.OOCUpdateSequence(name,sequence)
-  sequence = GSE.CleanMacroVersion(sequence)
-  GSE.FixSequence(sequence)
-  tempseq = GSE.CloneMacroVersion(sequence)
+  if pcall(GSE.CheckSequence, sequence) then
+    sequence = GSE.CleanMacroVersion(sequence)
+    GSE.FixSequence(sequence)
+    tempseq = GSE.CloneMacroVersion(sequence)
 
-  local existingbutton = true
-  if GSE.isEmpty(_G[name]) then
-    GSE.CreateButton(name,tempseq)
-    existingbutton = false
-  end
-  local gsebutton = _G[name]
-  -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-  if GetLocale() ~= "enUS" then
-    tempseq = GSE.TranslateSequence(tempseq, name)
-  end
-  tempseq = GSE.UnEscapeSequence(tempseq)
+    local existingbutton = true
+    if GSE.isEmpty(_G[name]) then
+      GSE.CreateButton(name,tempseq)
+      existingbutton = false
+    end
+    local gsebutton = _G[name]
+    -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
+    if GetLocale() ~= "enUS" then
+      tempseq = GSE.TranslateSequence(tempseq, name)
+    end
+    tempseq = GSE.UnEscapeSequence(tempseq)
 
-  local executionseq = {}
-  local pmcount = 0
-  if not GSE.isEmpty(tempseq.PreMacro) then
-    pmcount = table.getn(tempseq.PreMacro) + 1
-    gsebutton:SetAttribute('loopstart', pmcount)
-    for k,v in ipairs(tempseq.PreMacro) do
+    local executionseq = {}
+    local pmcount = 0
+    if not GSE.isEmpty(tempseq.PreMacro) then
+      pmcount = table.getn(tempseq.PreMacro) + 1
+      gsebutton:SetAttribute('loopstart', pmcount)
+      for k,v in ipairs(tempseq.PreMacro) do
+        table.insert(executionseq, v)
+      end
+
+    end
+
+    for k,v in ipairs(tempseq) do
       table.insert(executionseq, v)
     end
 
-  end
+    gsebutton:SetAttribute('loopstop', table.getn(executionseq))
 
-  for k,v in ipairs(tempseq) do
-    table.insert(executionseq, v)
-  end
+    if not GSE.isEmpty(tempseq.PostMacro) then
+      for k,v in ipairs(tempseq.PostMacro) do
+        table.insert(executionseq, v)
+      end
 
-  gsebutton:SetAttribute('loopstop', table.getn(executionseq))
-
-  if not GSE.isEmpty(tempseq.PostMacro) then
-    for k,v in ipairs(tempseq.PostMacro) do
-      table.insert(executionseq, v)
     end
 
-  end
+    GSE.SequencesExec[name] = executionseq
 
-  GSE.SequencesExec[name] = executionseq
+    gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
+    gsebutton:SetAttribute("step",1)
+    gsebutton:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
+    GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. gsebutton:GetAttribute('KeyPress'))
+    gsebutton:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
+    GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. gsebutton:GetAttribute('KeyRelease'))
+    if existingbutton then
+      gsebutton:UnwrapScript(gsebutton,'OnClick')
+    end
 
-  gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
-  gsebutton:SetAttribute("step",1)
-  gsebutton:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. gsebutton:GetAttribute('KeyPress'))
-  gsebutton:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
-  GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. gsebutton:GetAttribute('KeyRelease'))
-  if existingbutton then
-    gsebutton:UnwrapScript(gsebutton,'OnClick')
-  end
-
-  if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
-    gsebutton:SetAttribute("combatreset", true)
+    if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC ) or sequence.Combat then
+      gsebutton:SetAttribute("combatreset", true)
+    else
+      gsebutton:SetAttribute("combatreset", true)
+    end
+    gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImplementation(sequence))
+    if not GSE.isEmpty(sequence.LoopLimit) then
+      gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
+    end
   else
-    gsebutton:SetAttribute("combatreset", true)
-  end
-  gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImplementation(sequence))
-  if not GSE.isEmpty(sequence.LoopLimit) then
-    gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
+    GSE.Print(string.format(L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."], name))
   end
 
 end
@@ -1052,6 +1056,11 @@ function GSE.GetMacroResetImplementation()
   local returnstring = ""
   local flagactive = false
 
+  -- extra null check just in case.
+  if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
+    GSE.resetMacroResetModifiers()
+  end
+
   for k,v in pairs(GSEOptions.MacroResetModifiers) do
     if v == true then
       flagactive = true
@@ -1075,4 +1084,9 @@ function GSE.PrepareOnClickImplementation(sequence)
   returnstring = returnstring .. GSE.GetMacroResetImplementation()
   returnstring = returnstring  .. format(Statics.OnClick, GSE.PrepareStepFunction(sequence.StepFunction,  GSE.IsLoopSequence(sequence)))
   return returnstring
+end
+
+--- This function checks a sequence for mod breaking errors.  Use this with a pcall
+function GSE.CheckSequence(sequence)
+  dumpseq = GSE.UnEscapeSequence(sequence)
 end

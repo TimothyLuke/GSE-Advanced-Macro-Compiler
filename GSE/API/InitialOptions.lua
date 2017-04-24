@@ -5,6 +5,27 @@ local Statics = GSE.Static
 -- These are overridden when the saved variables are loaded in
 GSEOptions = {}
 
+function GSE.resetMacroResetModifiers()
+  GSEOptions.MacroResetModifiers = {}
+  GSEOptions.MacroResetModifiers["LeftButton"] = false
+  GSEOptions.MacroResetModifiers["RighttButton"] = false
+  GSEOptions.MacroResetModifiers["MiddleButton"] = false
+  GSEOptions.MacroResetModifiers["Button4"] = false
+  GSEOptions.MacroResetModifiers["Button5"] = false
+  GSEOptions.MacroResetModifiers["LeftAlt"] = false
+  GSEOptions.MacroResetModifiers["RightAlt"] = false
+  GSEOptions.MacroResetModifiers["AnyAlt"] = false
+  GSEOptions.MacroResetModifiers["LeftControl"] = false
+  GSEOptions.MacroResetModifiers["RightControl"] = false
+  GSEOptions.MacroResetModifiers["AnyControl"] = false
+  GSEOptions.MacroResetModifiers["LeftShift"] = false
+  GSEOptions.MacroResetModifiers["RightShift"] = false
+  GSEOptions.MacroResetModifiers["AnyShift"] = false
+  GSEOptions.MacroResetModifiers["LeftAlt"] = false
+  GSEOptions.MacroResetModifiers["RightAlt"] = false
+  GSEOptions.MacroResetModifiers["AnyMod"] = false
+end
+
 function GSE.SetDefaultOptions()
   GSEOptions.saveAllMacrosLocal = true
   GSEOptions.hideSoundErrors = false
@@ -69,25 +90,8 @@ function GSE.SetDefaultOptions()
   GSEOptions.CreateGlobalButtons = false
   GSEOptions.HideLoginMessage = false
   GSEOptions.DebugPrintModConditionsOnKeyPress = false
-  GSEOptions.MacroResetModifiers = {}
-  GSEOptions.MacroResetModifiers["LeftButton"] = false
-  GSEOptions.MacroResetModifiers["RighttButton"] = false
-  GSEOptions.MacroResetModifiers["MiddleButton"] = false
-  GSEOptions.MacroResetModifiers["Button4"] = false
-  GSEOptions.MacroResetModifiers["Button5"] = false
-  GSEOptions.MacroResetModifiers["LeftAlt"] = false
-  GSEOptions.MacroResetModifiers["RightAlt"] = false
-  GSEOptions.MacroResetModifiers["AnyAlt"] = false
-  GSEOptions.MacroResetModifiers["LeftControl"] = false
-  GSEOptions.MacroResetModifiers["RightControl"] = false
-  GSEOptions.MacroResetModifiers["AnyControl"] = false
-  GSEOptions.MacroResetModifiers["LeftShift"] = false
-  GSEOptions.MacroResetModifiers["RightShift"] = false
-  GSEOptions.MacroResetModifiers["AnyShift"] = false
-  GSEOptions.MacroResetModifiers["LeftAlt"] = false
-  GSEOptions.MacroResetModifiers["RightAlt"] = false
-  GSEOptions.MacroResetModifiers["AnyMod"] = false
 
+  GSE.resetMacroResetModifiers()
 end
 
 

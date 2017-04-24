@@ -587,7 +587,7 @@ self:CallMethod('UpdateIcon')
       }
     }
 
-  seqb = {
+  local seqb = {
       Author="EnixLHQ",
       SpecID=252,
       Help="Run at 80ms",
@@ -690,4 +690,37 @@ self:CallMethod('UpdateIcon')
 
   end)
 
+  it ("handles malformed GSE macros without breaking the mod.", function()
+    local GSELibrary = {}
+    local GSELibrary[0] = {}
+    local GSELibrary[0]["911ST"] = {
+      ["Talents"] = "?,?,?,?,?,?,?",
+      ["Default"] = 1,
+      ["Author"] = "Unknown Author",
+      ["MacroVersions"] = {
+        {
+          {
+            "/cast [@mouseover,help,nodead] Ironbark", -- [1]
+            "/cast [@mouseover,help,nodead] Swiftmend", -- [2]
+            "/cast [@mouseover,help,nodead] Rejuvenation", -- [3]
+            "/cast [@mouseover,help,nodead] Regrowth", -- [4]
+            "/cast [@mouseover,dead] Rebirth", -- [5]
+            ["source"] = "Local",
+            ["author"] = "XXXXXX",
+            ["PostMacro"] = "/cast [@mouseover] Rejuvenation\n/cast [@player,combat] Barkskin\n",
+            ["version"] = 3,
+            ["lang"] = "enUS",
+            ["helpTxt"] = "Talents: 1321233",
+            ["specID"] = 105,
+            ["PreMacro"] = "",
+            ["icon"] = "INV_MISC_QUESTIONMARK",
+          }, -- [1]
+          ["StepFunction"] = "Sequential",
+        }, -- [1]
+      },
+      ["SpecID"] = 0,
+    }
+
+    assert.falsy(pcall(function GSE.CheckSequence(GSELibrary[0]["911ST"]["MacroVersions"][1])))
+  end)
 end)
