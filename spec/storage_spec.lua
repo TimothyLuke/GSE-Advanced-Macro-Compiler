@@ -721,6 +721,6 @@ self:CallMethod('UpdateIcon')
       ["SpecID"] = 0,
     }
 
-    assert.falsy(pcall(function GSE.CheckSequence(GSELibrary[0]["911ST"]["MacroVersions"][1])))
+    assert.falsy(pcall(GSE.CheckSequence(GSELibrary[0]["911ST"]["MacroVersions"][1])))
   end)
 end)
