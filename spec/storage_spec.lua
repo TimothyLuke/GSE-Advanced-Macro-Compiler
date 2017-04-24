@@ -720,7 +720,7 @@ self:CallMethod('UpdateIcon')
       },
       ["SpecID"] = 0,
     }
-    local result, err = pcall(GSE.CheckSequence(GSELibrary[0]["911ST"]["MacroVersions"][1]))
+    local result, err = pcall(GSE.CheckSequence,GSELibrary[0]["911ST"]["MacroVersions"][1]))
     print(err)
     assert.falsy(result)
   end)
