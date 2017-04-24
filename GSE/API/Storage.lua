@@ -1088,5 +1088,5 @@ end
 
 --- This function checks a sequence for mod breaking errors.  Use this with a pcall
 function GSE.CheckSequence(sequence)
-  dumpseq = GSE.UnEscapeSequence(sequence)
+  local dumpseq = GSE.UnEscapeSequence(sequence)
 end
