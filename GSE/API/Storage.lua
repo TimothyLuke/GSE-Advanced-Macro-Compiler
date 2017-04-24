@@ -1088,5 +1088,11 @@ end
 
 --- This function checks a sequence for mod breaking errors.  Use this with a pcall
 function GSE.CheckSequence(sequence)
-  local dumpseq = GSE.UnEscapeSequence(sequence)
+
+  for k,v in ipairs(sequence) do
+    if type(v) == "table" then
+      GSE.PrintDebugMessage("Macro corrupt at ".. k .. " with value " .. v, "Storage")
+      error("Corrupt MacroVersion")
+    end
+  end
 end

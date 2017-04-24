@@ -43,12 +43,7 @@ end
 function GSE.UnEscapeString(str)
 
     for k, v in pairs(Statics.StringFormatEscapes) do
-        local success, returnval = pcall(string.gsub(str, k, v))
-        if success then
-          str = returnval
-        else
-          str = ""
-        end
+        str = string.gsub(str, k, v)
     end
     return str
 end
