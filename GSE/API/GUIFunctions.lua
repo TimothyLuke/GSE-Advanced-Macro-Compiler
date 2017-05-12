@@ -104,7 +104,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   end
 
   if not GSE.isEmpty(SequenceName) then
-    if GSE.isEmpty(classid) or classid == 0 then
+    if GSE.isEmpty(classid) then
       classid = GSE.GetCurrentClassID()
     end
     if not GSE.isEmpty(SequenceName) then
