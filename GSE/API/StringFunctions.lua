@@ -173,3 +173,22 @@ function GSE.formatModVersion(vers)
   vers = string.sub(vers, 1, 1) .. "." .. string.sub(vers, 2, 2) .. "." .. string.sub(vers, 3)
   return vers
 end
+
+--- This function removes any hidden characters from a string.
+function GSE.Strip_Control_and_Extended_Codes( str )
+  local s = ""
+  for i = 1, str:len() do
+	  if str:byte(i) >= 32 and str:byte(i) <= 126 then -- space through to normal en character
+      s = s .. str:sub(i,i)
+    elseif str:byte(i) >= 128 then -- extended characters including accented characters for intenational languages
+      s = s .. str:sub(i,i)
+    elseif str:byte(i) = 10 then -- leave line breaks unix style
+      s = s .. str:sub(i,i)
+    elseif str:byte(i) = 13 then -- leave line breaks windows style
+      s = s .. str:sub(i,i)
+    else -- convert everything else to whitespace
+      s = s .. " "
+	  end
+  end
+  return s
+end
