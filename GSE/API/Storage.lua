@@ -804,7 +804,15 @@ function GSE.GetSequenceNames()
   for k,v in pairs(GSELibrary) do
     if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID()  then
       for i,j in pairs(GSELibrary[k]) do
-        keyset[k .. "," .. i] = i
+        if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
+          keyset[k .. "," .. i] = i
+        elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
+          if j.SpecID == GSE.GetCurrentSpecID() or j.SpecID == GSE.GetCurrentClassID() then
+            keyset[k .. "," .. i] = i
+          end
+        else
+          keyset[k .. "," .. i] = i
+        end
       end
     else
       if k == 0 and GSEOptions.filterList[Statics.Global] then

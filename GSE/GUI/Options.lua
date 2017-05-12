@@ -106,7 +106,7 @@ function GSE.GetOptionsTable()
           },
           showClassMacros = {
             name = L["Show Class Macros in Editor"],
-            desc = L["By setting this value the Sequence Editor will show every macro for your class."],
+            desc = L["By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."],
             type = "toggle",
             set = function(info,val) GSEOptions.filterList["Class"] = val end,
             get = function(info) return GSEOptions.filterList["Class"] end,

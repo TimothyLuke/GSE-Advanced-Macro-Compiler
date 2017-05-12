@@ -196,7 +196,6 @@ L["Filter Macro Selection"] = true
 L["Show All Macros in Editor"] = true
 L["By setting this value the Sequence Editor will show every macro for every class."] = true
 L["Show Class Macros in Editor"] = true
-L["By setting this value the Sequence Editor will show every macro for your class."] = true
 L["Source Language "] = true
 L[" is not available.  Unable to translate sequence "] = true
 L["Target language "] = true
@@ -364,3 +363,4 @@ L["There is an issue with sequence %s.  It has not been loaded to prevent the mo
 L["Error found in version %i of %s."] = true
 L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"] = true
 L["/gs checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
+L["By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."] = true
