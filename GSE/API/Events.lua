@@ -119,7 +119,7 @@ function GSE:ADDON_LOADED(event, addon)
   GSEOptions.UnfoundSpells = {}
   GSEOptions.ErroneousSpellID = {}
   GSEOptions.UnfoundSpellIDs = {}
-  GSE.ReloadSequences()
+  GSE:ZONE_CHANGED_NEW_AREA()
   GSE:SendMessage(Statics.CoreLoadedMessage)
 
   -- Register the Sample Macros
