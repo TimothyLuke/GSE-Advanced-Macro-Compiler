@@ -44,6 +44,23 @@ recbutton:SetWidth(150)
 recbutton:SetCallback("OnClick", function() GSE.GUIImportSequence() end)
 recButtonGroup:AddChild(recbutton)
 
+-- local testbutton = AceGUI:Create("Button")
+-- testbutton:SetText("Test")
+-- testbutton:SetWidth(150)
+-- testbutton:SetCallback("OnClick", function()
+--   GSE.Print(GSE.StripControlandExtendedCodes(importsequencebox:GetText()))
+--   for i=69,85 do
+--     GSE.Print(string.byte(importsequencebox:GetText(), i))
+--   end
+--   GSE.Print("Next")
+--   for i=69,85 do
+--     GSE.Print(string.byte(GSE.StripControlandExtendedCodes(importsequencebox:GetText()), i))
+--   end
+--
+-- end)
+-- recButtonGroup:AddChild(testbutton)
+
+
 importframe:AddChild(recButtonGroup)
 GSE.GUIImportFrame = importframe
 

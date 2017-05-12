@@ -196,7 +196,7 @@ end
 --- Load a GSE Sequence Collection from a String
 function GSE.ImportSequence(importStr, legacy, createicon)
   local success, returnmessage = false, ""
-  importStr = GSE.Strip_Control_and_Extended_Codes(importStr)
+  importStr = GSE.StripControlandExtendedCodes(importStr)
   local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
   return Sequences
   ]===]
