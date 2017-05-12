@@ -182,9 +182,9 @@ function GSE.Strip_Control_and_Extended_Codes( str )
       s = s .. str:sub(i,i)
     elseif str:byte(i) >= 128 then -- extended characters including accented characters for intenational languages
       s = s .. str:sub(i,i)
-    elseif str:byte(i) = 10 then -- leave line breaks unix style
+    elseif str:byte(i) == 10 then -- leave line breaks unix style
       s = s .. str:sub(i,i)
-    elseif str:byte(i) = 13 then -- leave line breaks windows style
+    elseif str:byte(i) == 13 then -- leave line breaks windows style
       s = s .. str:sub(i,i)
     else -- convert everything else to whitespace
       s = s .. " "
