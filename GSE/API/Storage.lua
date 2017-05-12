@@ -1096,3 +1096,18 @@ function GSE.CheckSequence(sequence)
     end
   end
 end
+
+--- This function scans all macros in the library and reports on corrupt macros.
+function GSE.ScanMacrosForErrors()
+  for classlibid,classlib in ipairs(GSELibrary) do
+    for seqname, seq in pairs(classlib) do
+      for macroversionid, macroversion in ipairs(seq) do
+        local status, error = pcall(GSE.CheckSequence, macroversion)
+        if !status then
+          GSE.Print(string.format(L["Error found in version %i of %s."], macroversionid, seqname), "Error")
+          GSE.Print(string.format(L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"], GSEOptions.CommandColour, classlibid, seqname, Statics.StringReset))
+        end
+      end
+    end
+  end
+end

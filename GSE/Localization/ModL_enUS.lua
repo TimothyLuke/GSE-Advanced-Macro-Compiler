@@ -358,5 +358,8 @@ L["To get started "] = true
 L["Update Macro Stubs."] = true
 L["Update Macro Stubs"] = true
 L["This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."] = true
--- GSE 2.1.1
+-- GSE 2.1.01
 L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."] = true
+L["Error found in version %i of %s."] = true
+L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"] = true
+L["/gs checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
