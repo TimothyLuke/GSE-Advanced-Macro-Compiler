@@ -1,10 +1,5 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
--- Options translation
---@localization(locale="enUS", format="lua_additive_table")@
-
-
-
 
 L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
