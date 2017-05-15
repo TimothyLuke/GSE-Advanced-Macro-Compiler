@@ -658,7 +658,7 @@ function GSE.GetOptionsTable()
     ord = ord + 1
     OptionsTable.args.pluginsTab.args[v.Name] = {
       name = v.Name,
-      desc = string.format(L["Addin Version %s contained versions for the following macros:"], v.Name) .. string.format(["\n%s"], GSE.FormatSequenceNames(v.SequenceNames)),
+      desc = string.format(L["Addin Version %s contained versions for the following macros:"], v.Name) .. string.format("\n%s", GSE.FormatSequenceNames(v.SequenceNames)),
       type = "execute",
       func = function(info, val)
         GSE:SendMessage(Statics.ReloadMessage, v.Name)
