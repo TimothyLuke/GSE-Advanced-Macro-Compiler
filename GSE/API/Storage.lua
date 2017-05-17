@@ -802,6 +802,13 @@ end
 function GSE.GetSequenceNames()
   local keyset={}
   for k,v in pairs(GSELibrary) do
+    if GSE.isEmpty(GSEOptions.filterList) then
+      GSEOptions.filterList = {}
+      GSEOptions.filterList[Statics.Spec] = true
+      GSEOptions.filterList[Statics.Class] = true
+      GSEOptions.filterList[Statics.All] = false
+      GSEOptions.filterList[Statics.Global] = true
+    end
     if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID()  then
       for i,j in pairs(GSELibrary[k]) do
         if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
