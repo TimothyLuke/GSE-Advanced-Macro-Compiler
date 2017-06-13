@@ -1,8 +1,8 @@
-## Interface: 70200
+## Interface: 70250
 ## Title: |cffff0000GSE2:|r |cFF00D1FFGnome Sequencer Enhanced|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke
-## Version: 2101
+## Version: 2102
 ## SavedVariables: GSEOptions GSELibrary
 ## OptionalDeps: WeakAuras
 
