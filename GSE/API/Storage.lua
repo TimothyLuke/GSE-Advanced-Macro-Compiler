@@ -260,13 +260,13 @@ end
 
 function GSE.IsLoopSequence(sequence)
   local loopcheck = false
-  if not GSE.isEmpty(sequence.PreMacro) then
+  if not GSE.isEmpty(sequence.PreMacro) or (table.getn(sequence.PreMacro) > 0 then
     loopcheck = true
   end
-  if not GSE.isEmpty(sequence.PostMacro) then
+  if not GSE.isEmpty(sequence.PostMacro) or (table.getn(sequence.PostMacro) > 0 then
     loopcheck = true
   end
-  if not GSE.isEmpty(sequence.LoopLimit) then
+  if not GSE.isEmpty(sequence.LoopLimit) or sequence.LoopLimit > 0 then
     loopcheck = true
   end
   return loopcheck

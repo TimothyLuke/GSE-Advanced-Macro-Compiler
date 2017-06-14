@@ -727,4 +727,58 @@ self:CallMethod('UpdateIcon')
     print(err)
     assert.falsy(result)
   end)
+
+  it ("tests that isloopsequence is returning the correct value", function ()
+    local normalprioritysequence = {
+      Trinket1=false,
+      Trinket2=false,
+      Head=false,
+      Neck=false,
+      Belt=false,
+      Ring1=false,
+      Ring2=false,
+      StepFunction = "Priority",
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro={
+      },
+      "/cast [nochanneling] Elemental Blast",
+      "/cast [nochanneling] Lava Burst",
+      "/cast [nochanneling] Stormkeeper",
+      "/cast [nochanneling] Lightning Bolt",
+      PostMacro={
+      },
+      KeyRelease={
+      },
+    }
+
+    local loopprioritysequence = {
+      Trinket1=false,
+      Trinket2=false,
+      Head=false,
+      Neck=false,
+      Belt=false,
+      Ring1=false,
+      Ring2=false,
+      StepFunction = "Priority",
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro={
+        "/cast [nochanneling] Elemental Blast",
+      },
+      "/cast [nochanneling] Lava Burst",
+      "/cast [nochanneling] Stormkeeper",
+      "/cast [nochanneling] Lightning Bolt",
+      PostMacro={
+      },
+      KeyRelease={
+      },
+    }
+
+    assert.falsy(GSE.IsLoopSequence(normalprioritysequence))
+    assert.true(GSE.IsLoopSequence(loopprioritysequence))
+
+  end)
 end)
