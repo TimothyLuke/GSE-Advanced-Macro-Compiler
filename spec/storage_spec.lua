@@ -778,7 +778,7 @@ self:CallMethod('UpdateIcon')
     }
 
     assert.falsy(GSE.IsLoopSequence(normalprioritysequence))
-    assert.true(GSE.IsLoopSequence(loopprioritysequence))
+    assert.True(GSE.IsLoopSequence(loopprioritysequence))
 
   end)
 end)
