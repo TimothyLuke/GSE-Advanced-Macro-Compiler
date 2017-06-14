@@ -502,12 +502,13 @@ self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[s
 if step < loopstart then
   step = step + 1
 
-elseif step > loopstop then
+elseif step > loopstop and loopstop == #macros then
   if step >= #macros then
     loopiter = 1
     step = loopstart
     if looplimit > 0 then
       step = 1
+      limit = loopstart
     end
   else
     step = step + 1
@@ -517,10 +518,11 @@ elseif step == loopstop then
     if loopiter >= looplimit then
       if loopstop >= #macros then
         step = 1
+        limit = loopstart
       else
         step = step + 1
+        loopiter = 1
       end
-      loopiter = 1
     else
       step = loopstart
       loopiter = loopiter + 1
@@ -533,6 +535,7 @@ elseif step >= #macros then
   step = loopstart
   if looplimit > 0 then
     step = 1
+    limit = loopstart
   end
 else
   limit = limit or loopstart
