@@ -262,12 +262,15 @@ function GSE.IsLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.PreMacro) then
     loopcheck = true
+    GSE.PrintDebugMessage("Setting Loop Check True due to PreMacro")
   end
   if not GSE.isEmpty(sequence.PostMacro) then
     loopcheck = true
+    GSE.PrintDebugMessage("Setting Loop Check True due to PostMacro")
   end
   if not GSE.isEmpty(sequence.LoopLimit) then
     loopcheck = true
+    GSE.PrintDebugMessage("Setting Loop Check True due to LoopLimit")
   end
   return loopcheck
 end

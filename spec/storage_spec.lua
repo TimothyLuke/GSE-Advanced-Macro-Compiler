@@ -1,4 +1,4 @@
-describe('API Translator', function()
+describe('API Storage', function()
   setup (function()
     require("../spec/mockGSE")
     require("../GSE/API/Statics")
