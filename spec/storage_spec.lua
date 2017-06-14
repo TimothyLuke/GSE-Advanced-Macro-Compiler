@@ -499,11 +499,38 @@ loopiter = tonumber(loopiter)
 looplimit = tonumber(looplimit)
 step = tonumber(step)
 self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
-if step < loopstart then
-  step = step + 1
+  if step < loopstart then
+    step = step + 1
 
-elseif step > loopstop and loopstop == #macros then
-  if step >= #macros then
+  elseif step > loopstop and loopstop == #macros then
+    if step >= #macros then
+      loopiter = 1
+      step = loopstart
+      if looplimit > 0 then
+        step = 1
+        limit = loopstart
+      end
+    else
+      step = step + 1
+    end
+  elseif step == loopstop then
+    if looplimit > 0 then
+      if loopiter >= looplimit then
+        if loopstop >= #macros then
+          step = 1
+          limit = loopstart
+        else
+          step = step + 1
+          loopiter = 1
+        end
+      else
+        step = loopstart
+        loopiter = loopiter + 1
+      end
+    else
+      step = loopstart
+    end
+  elseif step >= #macros then
     loopiter = 1
     step = loopstart
     if looplimit > 0 then
@@ -511,44 +538,17 @@ elseif step > loopstop and loopstop == #macros then
       limit = loopstart
     end
   else
-    step = step + 1
-  end
-elseif step == loopstop then
-  if looplimit > 0 then
-    if loopiter >= looplimit then
-      if loopstop >= #macros then
-        step = 1
-        limit = loopstart
-      else
-        step = step + 1
-        loopiter = 1
+    limit = limit or loopstart
+    if step == limit then
+      limit = limit % loopstop + 1
+      step = loopstart
+      if limit == loopiter then
+        loopiter = loopiter + 1
       end
     else
-      step = loopstart
-      loopiter = loopiter + 1
+      step = step + 1
     end
-  else
-    step = loopstart
   end
-elseif step >= #macros then
-  loopiter = 1
-  step = loopstart
-  if looplimit > 0 then
-    step = 1
-    limit = loopstart
-  end
-else
-  limit = limit or loopstart
-  if step == limit then
-    limit = limit % loopstop + 1
-    step = loopstart
-    if limit == loopiter then
-      loopiter = loopiter + 1
-    end
-  else
-    step = step + 1
-  end
-end
 
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
