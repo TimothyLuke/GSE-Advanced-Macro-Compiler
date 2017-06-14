@@ -262,7 +262,7 @@ function GSE.IsLoopSequence(sequence)
   local loopcheck = false
   if not GSE.isEmpty(sequence.PreMacro) then
     if type(sequence.PreMacro) == "table" then
-      if table.getn(sequence.PreMacro) > o then
+      if table.getn(sequence.PreMacro) > 0 then
         loopcheck = true
         GSE.PrintDebugMessage("Setting Loop Check True due to PreMacro", "Storage")
       end
@@ -270,7 +270,7 @@ function GSE.IsLoopSequence(sequence)
   end
   if not GSE.isEmpty(sequence.PostMacro) then
     if type(sequence.Postmacro) == "table" then
-      if table.getn(sequence.PostMacro) > o then
+      if table.getn(sequence.PostMacro) > 0 then
         loopcheck = true
         GSE.PrintDebugMessage("Setting Loop Check True due to PreMacro", "Storage")
       end
