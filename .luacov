@@ -30,6 +30,7 @@ return {
     'spec$',
     'lua_install$',
     '/home/travis/build/TimothyLuke/GnomeSequencer-Enhanced/lua_install/*'
+    '^/home/travis/build/TimothyLuke/GnomeSequencer-Enhanced/lua_install'
   },
 
 
