@@ -6,9 +6,9 @@ To use this locally straight from this source you must install https://mods.curs
 
 Current Build Status
 ===================================
-[![Build Status](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced.svg?branch=master)](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced) 
+[![Build Status](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced.svg?branch=master)](https://travis-ci.org/TimothyLuke/GnomeSequencer-Enhanced) [![Coverage Status](https://coveralls.io/repos/github/TimothyLuke/GnomeSequencer-Enhanced/badge.svg?branch=master)](https://coveralls.io/github/TimothyLuke/GnomeSequencer-Enhanced?branch=master)
 
-At the moment this means that there are no lua errors.  It doesnt mean it works ... yet
+If the Build stat is green it means that the code compiles.  The Coverage status metric shows how much of the mod is unit tested and which paths through the API are not currently being tested each compile.
 
 Project Site
 ===================================
