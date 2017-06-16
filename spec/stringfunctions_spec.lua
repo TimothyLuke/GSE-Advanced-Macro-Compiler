@@ -79,6 +79,7 @@ helpTxt = 'Talents: 3331222',]]
       "/cast [nochanneling] Stormkeeper",
       "/cast [nochanneling] Lightning Bolt",
       PostMacro={
+        "/use 14",
       },
       KeyRelease={
       },
@@ -88,5 +89,10 @@ helpTxt = 'Talents: 3331222',]]
 
     assert.are.same(expectedresultsequence, resultsequence )
 
+  end)
+
+  if ("tests GSE.CleanStrings() removes noted values", function()
+    assert.are.same("/cast Judgement", GSE.CleanStrings("/cast Judgement"))
+    assert.are.same("", GSE.CleanStrings("/use 14"))
   end)
 end)
