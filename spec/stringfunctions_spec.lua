@@ -91,7 +91,7 @@ helpTxt = 'Talents: 3331222',]]
 
   end)
 
-  if ("tests GSE.CleanStrings() removes noted values", function()
+  it ("tests GSE.CleanStrings() removes noted values", function()
     assert.are.same("/cast Judgement", GSE.CleanStrings("/cast Judgement"))
     assert.are.same("", GSE.CleanStrings("/use 14"))
   end)
