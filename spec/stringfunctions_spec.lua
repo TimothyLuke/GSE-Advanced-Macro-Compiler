@@ -50,7 +50,7 @@ helpTxt = 'Talents: 3331222',]]
     assert.are.equal(returnstring, GSE.FixQuotes(teststring))
   end)
 
-  it ("Tests GSE.UnEscapeSequence, GSE.UnEscapeString and GSE.UnescapeTable"), function()
+  it ("Tests GSE.UnEscapeSequence, GSE.UnEscapeString and GSE.UnescapeTable", function()
     local testsequence = {
       KeyPress={
         "/targetenemy [noharm][dead]",
