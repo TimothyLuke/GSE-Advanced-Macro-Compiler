@@ -49,4 +49,44 @@ specID=103,
 helpTxt = 'Talents: 3331222',]]
     assert.are.equal(returnstring, GSE.FixQuotes(teststring))
   end)
+
+  it ("Tests GSE.UnEscapeSequence, GSE.UnEscapeString and GSE.UnescapeTable"), function()
+    local testsequence = {
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro={
+        "/cast [nochanneling] Elemental Blast",
+      },
+      "|cff88bbdd/cast|r [nochanneling] Lava Burst",
+      "/cast [nochanneling] Stormkeeper",
+      "/cast [nochanneling] Lightning Bolt",
+      PostMacro={
+        "/use 14",
+      },
+      KeyRelease={
+      },
+    }
+
+    local expectedresultsequence = {
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro={
+        "/cast [nochanneling] Elemental Blast",
+      },
+      "/cast [nochanneling] Lava Burst",
+      "/cast [nochanneling] Stormkeeper",
+      "/cast [nochanneling] Lightning Bolt",
+      PostMacro={
+      },
+      KeyRelease={
+      },
+    }
+
+    local resultsequence = GSE.UnEscapeSequence(testsequence)
+
+    assert.are.same(expectedresultsequence, resultsequence )
+
+  end)
 end)
