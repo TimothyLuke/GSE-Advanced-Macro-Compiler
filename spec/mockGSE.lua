@@ -32,6 +32,14 @@ function UnitClass(str)
   return "Druid", "DRUID", 11
 end
 
+function GetUnitName(str)
+  local retval = "Unknown"
+  if str == "player" then
+    retval = "Draik"
+  end
+  return retval
+end
+
 -- Mock standard functions
 function GSE.Print(message, title)
   print (title .. ": " .. message)
