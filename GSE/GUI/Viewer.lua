@@ -304,7 +304,7 @@ function GSE.GUIShowViewer()
 end
 
 function GSE.GUIConfigureMacroButton(button)
-  if GSE.CheckMacroCreated(GSE.GUIViewFrame.SequenceName) then
+  if GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName) then
     button:SetText(L["Delete Icon"])
     button:SetCallback("OnClick", function()
       GSE.DeleteMacroStub(viewframe.SequenceName)

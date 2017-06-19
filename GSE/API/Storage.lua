@@ -774,7 +774,9 @@ function GSE.OOCCheckMacroCreated(SequenceName, create)
   local macroIndex = GetMacroIndexByName(SequenceName)
   if macroIndex and macroIndex ~= 0 then
     found = true
-    EditMacro(macroIndex, nil, nil,  GSE.CreateMacroString(SequenceName))
+    if create then
+      EditMacro(macroIndex, nil, nil,  GSE.CreateMacroString(SequenceName))
+    end
   else
     if create then
       local icon = (GSE.isEmpty(GSELibrary[classid][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[classid][SequenceName].Icon)
