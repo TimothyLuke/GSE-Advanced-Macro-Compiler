@@ -142,7 +142,7 @@ function GSE.GUIEditorPerformLayout(frame)
   local transbutton = AceGUI:Create("Button")
   transbutton:SetText(L["Send"])
   transbutton:SetWidth(150)
-  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(editframe.classid.. "," ..editframe.SequenceName) end)
+  transbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(editframe.ClassId.. "," ..editframe.SequenceName) end)
 
   local editButtonGroup = AceGUI:Create("SimpleGroup")
   editButtonGroup:SetWidth(602)
