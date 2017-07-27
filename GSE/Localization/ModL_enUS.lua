@@ -359,3 +359,15 @@ L["Error found in version %i of %s."] = true
 L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"] = true
 L["/gs checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
 L["By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."] = true
+
+-- GSE 2.1.04
+L["Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."] = true
+
+-- GSE 2.1.05
+L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."] = true
+L["Show GSE Users in LDB"] = true
+L["Show OOC Queue in LDB"] = true
+L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] = true
+L["GSE Users"] = true
+L["There are no events in out of combat queue"] = true
+L["There are %i events in out of combat queue"] = true

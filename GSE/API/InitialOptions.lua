@@ -90,6 +90,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.CreateGlobalButtons = false
   GSEOptions.HideLoginMessage = false
   GSEOptions.DebugPrintModConditionsOnKeyPress = false
+  GSEOptions.showGSEUsers = false
 
   GSE.resetMacroResetModifiers()
 end

@@ -127,6 +127,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
       if not GSold then
         performVersionCheck(t.Version)
       end
+      storeSender(sender, t.Version)
     elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
       if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
@@ -138,6 +139,12 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   end
 end
 
+local function storeSender(sender, t.Version)
+  if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
+    GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) = {}
+  end
+  GSE.UnsavedOptions["PartyUsers"][sender] = t.Version
+end
 
 local function sendVersionCheck()
   if not GSold then
@@ -151,6 +158,13 @@ end
 
 function GSE:GROUP_ROSTER_UPDATE(...)
   sendVersionCheck()
+  for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
+    if not (UnitInParty(k) or UnitInRaid(k)) then
+      -- Take them out of the list
+      GSE.UnsavedOptions["PartyUsers"][k] = nil
+    end
+
+  end
 end
 
 
@@ -180,8 +194,17 @@ function dataobj:OnEnter()
   tooltip:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
   tooltip:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
 
+  -- If in party add other users and their versions
+  if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
+    tooltip:AddSeparator()
+    tooltip:AddLine(L["GSE Users"])
+    for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
+      tooltip:AddLine(k .. " " .. v)
+  end
+
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
+
 
   -- Show it, et voil� !
   tooltip:Show()
@@ -203,7 +226,7 @@ function dataobj:OnClick(button)
   elseif button == "MiddleButton" then
     GSE.GUIShowTransmissionGui()
   elseif button == "RightButton" then
-    GSDebugFrame:Show()
+    GSE.GUIShowDebugWindow()
   end
 end
 

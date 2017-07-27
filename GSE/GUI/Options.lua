@@ -19,15 +19,15 @@ function GSE.GetOptionsTable()
             name = L["General Options"],
             order = 100
           },
-          -- saveAllMacrosLocal = {
-          --   name = L["Only Save Local Macros"],
-          --   desc = L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times and potentially cause colissions."],
-          --   type = "toggle",
-          --   set = function(info,val) GSEOptions.saveAllMacrosLocal = val end,
-          --   get = function(info) return GSEOptions.saveAllMacrosLocal end,
-          --   order = 200
-          -- },
-         hideLogin = {
+          showothergseusersintooltip = {
+            name = L["Show GSE Users in LDB"],
+            desc = L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.showGSEUsers = val end,
+            get = function(info) return GSEOptions.showGSEUsers end,
+            order = 200
+          },
+          hideLogin = {
             name = L["Hide Login Message"],
             desc = L["Hides the message that GSE is loaded."],
             type = "toggle",
@@ -35,14 +35,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.HideLoginMessage end,
             order = 201
           },
-          realtimeparse = {
-            name = L["Use Realtime Parsing"],
-            desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
-            type = "toggle",
-            set = function(info,val) GSEOptions.RealtimeParse = val end,
-            get = function(info) return GSEOptions.RealtimeParse end,
-            order = 202
-          },
+--          realtimeparse = {
+--            name = L["Use Realtime Parsing"],
+--            desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
+--            type = "toggle",
+--            set = function(info,val) GSEOptions.RealtimeParse = val end,
+--            get = function(info) return GSEOptions.RealtimeParse end,
+--            order = 202
+--          },
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],
