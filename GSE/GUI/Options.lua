@@ -291,8 +291,8 @@ function GSE.GetOptionsTable()
           resetAnyAltKey = {
             name = L["Any Alt Key"],
             type = "toggle",
-            get = function() return   GSEOptions.MacroResetModifiers["AnyAlt"] end,
-            set = function(key, value)   GSEOptions.MacroResetModifiers["AnyAlt"] = value end,
+            get = function() return   GSEOptions.MacroResetModifiers["Alt"] end,
+            set = function(key, value)   GSEOptions.MacroResetModifiers["Alt"] = value end,
             order = 611
           },
           resetLeftAltKey = {
@@ -317,8 +317,8 @@ function GSE.GetOptionsTable()
           resetAnyControlKey = {
             name = L["Any Control Key"],
             type = "toggle",
-            get = function() return   GSEOptions.MacroResetModifiers["AnyControl"] end,
-            set = function(key, value)   GSEOptions.MacroResetModifiers["AnyControl"] = value end,
+            get = function() return   GSEOptions.MacroResetModifiers["Control"] end,
+            set = function(key, value)   GSEOptions.MacroResetModifiers["Control"] = value end,
             order = 621
           },
           resetLeftControlKey = {
@@ -343,8 +343,8 @@ function GSE.GetOptionsTable()
           resetAnyShiftKey = {
             name = L["Any Shift Key"],
             type = "toggle",
-            get = function() return   GSEOptions.MacroResetModifiers["AnyShift"] end,
-            set = function(key, value)   GSEOptions.MacroResetModifiers["AnyShift"] = value end,
+            get = function() return   GSEOptions.MacroResetModifiers["Shift"] end,
+            set = function(key, value)   GSEOptions.MacroResetModifiers["Shift"] = value end,
             order = 631
           },
           resetLeftShiftKey = {

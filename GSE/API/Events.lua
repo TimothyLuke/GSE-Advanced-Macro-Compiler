@@ -151,17 +151,32 @@ function GSE:ADDON_LOADED(event, addon)
     GSEOptions.MacroResetModifiers["Button5"] = false
     GSEOptions.MacroResetModifiers["LeftAlt"] = false
     GSEOptions.MacroResetModifiers["RightAlt"] = false
-    GSEOptions.MacroResetModifiers["AnyAlt"] = false
+    GSEOptions.MacroResetModifiers["Alt"] = false
     GSEOptions.MacroResetModifiers["LeftControl"] = false
     GSEOptions.MacroResetModifiers["RightControl"] = false
-    GSEOptions.MacroResetModifiers["AnyControl"] = false
+    GSEOptions.MacroResetModifiers["Control"] = false
     GSEOptions.MacroResetModifiers["LeftShift"] = false
     GSEOptions.MacroResetModifiers["RightShift"] = false
-    GSEOptions.MacroResetModifiers["AnyShift"] = false
+    GSEOptions.MacroResetModifiers["Shift"] = false
     GSEOptions.MacroResetModifiers["LeftAlt"] = false
     GSEOptions.MacroResetModifiers["RightAlt"] = false
     GSEOptions.MacroResetModifiers["AnyMod"] = false
   end
+
+  -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
+  if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
+    GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
+    GSEOptions.MacroResetModifiers["AnyShift"] = nil
+  end
+  if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
+    GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
+    GSEOptions.MacroResetModifiers["AnyControl"] = nil
+  end
+  if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
+    GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
+    GSEOptions.MacroResetModifiers["AnyAlt"] = nil
+  end
+
 
 end
 

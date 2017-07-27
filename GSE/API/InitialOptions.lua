@@ -14,13 +14,13 @@ function GSE.resetMacroResetModifiers()
   GSEOptions.MacroResetModifiers["Button5"] = false
   GSEOptions.MacroResetModifiers["LeftAlt"] = false
   GSEOptions.MacroResetModifiers["RightAlt"] = false
-  GSEOptions.MacroResetModifiers["AnyAlt"] = false
+  GSEOptions.MacroResetModifiers["Alt"] = false
   GSEOptions.MacroResetModifiers["LeftControl"] = false
   GSEOptions.MacroResetModifiers["RightControl"] = false
-  GSEOptions.MacroResetModifiers["AnyControl"] = false
+  GSEOptions.MacroResetModifiers["Control"] = false
   GSEOptions.MacroResetModifiers["LeftShift"] = false
   GSEOptions.MacroResetModifiers["RightShift"] = false
-  GSEOptions.MacroResetModifiers["AnyShift"] = false
+  GSEOptions.MacroResetModifiers["Shift"] = false
   GSEOptions.MacroResetModifiers["LeftAlt"] = false
   GSEOptions.MacroResetModifiers["RightAlt"] = false
   GSEOptions.MacroResetModifiers["AnyMod"] = false
