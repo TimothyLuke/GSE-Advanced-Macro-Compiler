@@ -27,6 +27,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.showGSEUsers end,
             order = 200
           },
+          showoocqueueintooltip = {
+            name = L["Show OOC Queue in LDB"],
+            desc = L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.showGSEoocqueue = val end,
+            get = function(info) return GSEOptions.showGSEoocqueue end,
+            order = 200
+          },
           hideLogin = {
             name = L["Hide Login Message"],
             desc = L["Hides the message that GSE is loaded."],

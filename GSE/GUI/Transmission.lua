@@ -202,6 +202,17 @@ function dataobj:OnEnter()
       tooltip:AddLine(k .. " " .. v)
   end
 
+  -- Show GSE OOCQueue Information
+  if GSEOptions.showGSEoocqueue then
+    tooltip:AddSeparator()
+    if table.getn(GSE.OOCQueue) > 0 then
+      tooltip:AddLine(string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)))
+
+    else
+      -- No Items
+      tooltip:AddLine(string.format(L["There are no events in out of combat queue"]))
+    end
+  end
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
 

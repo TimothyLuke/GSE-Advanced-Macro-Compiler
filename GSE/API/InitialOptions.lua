@@ -91,6 +91,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.HideLoginMessage = false
   GSEOptions.DebugPrintModConditionsOnKeyPress = false
   GSEOptions.showGSEUsers = false
+  GSEOptions.showGSEoocqueue = true
 
   GSE.resetMacroResetModifiers()
 end
