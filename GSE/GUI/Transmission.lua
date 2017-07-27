@@ -139,11 +139,11 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   end
 end
 
-local function storeSender(sender, t.Version)
-  if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"])) then
-    GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"])) = {}
+local function storeSender(sender, senderversion)
+  if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
+    GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) = {}
   end
-  GSE.UnsavedOptions["PartyUsers"][sender] = t.Version
+  GSE.UnsavedOptions["PartyUsers"][sender] = senderversion
 end
 
 local function sendVersionCheck()
