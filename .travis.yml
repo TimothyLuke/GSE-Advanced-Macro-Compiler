@@ -1,5 +1,5 @@
 language: python
-sudo: true
+sudo: false
 env:
 - LUA="lua=5.1" LUAC="luac5.1"
 addons:
