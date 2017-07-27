@@ -141,7 +141,7 @@ end
 
 local function storeSender(sender, senderversion)
   if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
-    GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) = {}
+    GSE.UnsavedOptions["PartyUsers"] = {}
   end
   GSE.UnsavedOptions["PartyUsers"][sender] = senderversion
 end
