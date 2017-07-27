@@ -1136,6 +1136,12 @@ function GSE.ScanMacrosForErrors()
           GSE.Print(string.format(L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"], GSEOptions.CommandColour, classlibid, seqname, Statics.StringReset))
         end
       end
+      if seqname == "WW" then
+        GSE.Print(string.format(L["Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."], GSEOptions.CommandColour, Statics.StringReset), "Error")
+      end
     end
   end
 end
+
+
+--- This function
