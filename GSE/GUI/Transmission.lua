@@ -182,34 +182,38 @@ end
 function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
-  local tooltip = LibQTip:Acquire("GSSE", 1,"CENTER")
+  local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
   self.tooltip = tooltip
 
   tooltip:Clear()
   tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
-  tooltip:AddLine(L["GS-E: Left Click to open the Sequence Editor"])
-  tooltip:AddLine(L["GS-E: Middle Click to open the Transmission Interface"])
-  tooltip:AddLine(L["GS-E: Right Click to open the Sequence Debugger"])
+  local y,x = tooltip:AddLine()
+  tooltip:SetCell(y, 1, L["GS-E: Left Click to open the Sequence Editor"],"CENTER", 3)
+  local y,x = tooltip:AddLine()
+  tooltip:SetCell(y, 1, L["GS-E: Middle Click to open the Transmission Interface"],"CENTER", 3)
+  local y,x = tooltip:AddLine()
+  tooltip:SetCell(y, 1, L["GS-E: Right Click to open the Sequence Debugger"],"CENTER", 3)
 
   -- If in party add other users and their versions
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
     tooltip:AddSeparator()
-    tooltip:AddLine(L["GSE Users"])
+    local y,x = tooltip:AddLine()
+    tooltip:SetCell(L["GSE Users"],"CENTER", 3)
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
-      tooltip:AddLine(k .. " " .. v)
+      tooltip:AddLine(k, nil, v)
     end
   end
 
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
+    local y,x = tooltip:AddLine()
     if table.getn(GSE.OOCQueue) > 0 then
-      tooltip:AddLine(string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)))
-
+      tooltip:SetCell(y, 1, string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)),"CENTER", 3)
     else
       -- No Items
-      tooltip:AddLine(string.format(L["There are no events in out of combat queue"]))
+      tooltip:SetCell(y, 1, string.format(L["There are no events in out of combat queue"]),"CENTER", 3)
     end
   end
   -- Use smart anchoring code to anchor the tooltip to our frame
