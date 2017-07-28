@@ -147,13 +147,11 @@ local function storeSender(sender, senderversion)
 end
 
 local function sendVersionCheck()
-  if not GSold then
-    local _, instanceType = IsInInstance()
-    local t = {}
-    t.Command = "GS-E_VERSIONCHK"
-    t.Version = GSE.VersionString
-    GSSendMessage(t)
-  end
+  local _, instanceType = IsInInstance()
+  local t = {}
+  t.Command = "GS-E_VERSIONCHK"
+  t.Version = GSE.VersionString
+  GSSendMessage(t)
 end
 
 function GSE:GROUP_ROSTER_UPDATE(...)
