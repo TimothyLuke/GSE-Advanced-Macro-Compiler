@@ -207,9 +207,6 @@ L["This will display debug messages for the GS-E Ingame Transmission and transfe
 -- New Strings 1.4
 L["Use Head Item in KeyRelease"] = true
 L["Incorporate the Head slot into the KeyRelease. This is the equivalent of /use [combat] 1 in a KeyRelease."] = true
-L["GS-E: Left Click to open the Sequence Editor"] = true
-L["GS-E: Middle Click to open the Transmission Interface"] = true
-L["GS-E: Right Click to open the Sequence Debugger"] = true
 L["Sequence Debugger"] = true
 L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] = true
 L["Output"] = true
@@ -371,3 +368,8 @@ L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out 
 L["GSE Users"] = true
 L["There are no events in out of combat queue"] = true
 L["There are %i events in out of combat queue"] = true
+L["GSE Version: %s"] = true
+L["GSE: Left Click to open the Sequence Editor"] = true
+L["GSE: Middle Click to open the Transmission Interface"] = true
+L["GSE: Right Click to open the Sequence Debugger"] = true
+L["Finished scanning for errors.  If no other messages then no errors were found."] = true

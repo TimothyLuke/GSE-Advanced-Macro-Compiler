@@ -189,11 +189,11 @@ function dataobj:OnEnter()
   tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
   local y,x = tooltip:AddLine()
-  tooltip:SetCell(y, 1, L["GS-E: Left Click to open the Sequence Editor"],"CENTER", 3)
+  tooltip:SetCell(y, 1, L["GSE: Left Click to open the Sequence Editor"],"CENTER", 3)
   y,x = tooltip:AddLine()
-  tooltip:SetCell(y, 1, L["GS-E: Middle Click to open the Transmission Interface"],"CENTER", 3)
+  tooltip:SetCell(y, 1, L["GSE: Middle Click to open the Transmission Interface"],"CENTER", 3)
   y,x = tooltip:AddLine()
-  tooltip:SetCell(y, 1, L["GS-E: Right Click to open the Sequence Debugger"],"CENTER", 3)
+  tooltip:SetCell(y, 1, L["GSE: Right Click to open the Sequence Debugger"],"CENTER", 3)
 
   -- If in party add other users and their versions
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
@@ -216,6 +216,10 @@ function dataobj:OnEnter()
       tooltip:SetCell(y, 1, string.format(L["There are no events in out of combat queue"]),"CENTER", 3)
     end
   end
+
+  tooltip:AddSeparator()
+  y,x = tooltip:AddLine()
+  tooltip:SetCell(y, 1, string.format(L["GSE Version: %s"], GSE.formatModVersion(GSE.VersionString)),"CENTER", 3)
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
 

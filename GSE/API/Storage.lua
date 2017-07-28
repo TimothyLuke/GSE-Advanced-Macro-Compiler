@@ -1141,6 +1141,7 @@ function GSE.ScanMacrosForErrors()
       end
     end
   end
+  GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
 end
 
 
