@@ -190,15 +190,15 @@ function dataobj:OnEnter()
   --tooltip:SetHeaderFont(red17font)
   local y,x = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GS-E: Left Click to open the Sequence Editor"],"CENTER", 3)
-  local y,x = tooltip:AddLine()
+  y,x = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GS-E: Middle Click to open the Transmission Interface"],"CENTER", 3)
-  local y,x = tooltip:AddLine()
+  y,x = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GS-E: Right Click to open the Sequence Debugger"],"CENTER", 3)
 
   -- If in party add other users and their versions
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
     tooltip:AddSeparator()
-    local y,x = tooltip:AddLine()
+    y,x = tooltip:AddLine()
     tooltip:SetCell(L["GSE Users"],"CENTER", 3)
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
       tooltip:AddLine(k, nil, v)
@@ -208,7 +208,7 @@ function dataobj:OnEnter()
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
-    local y,x = tooltip:AddLine()
+    y,x = tooltip:AddLine()
     if table.getn(GSE.OOCQueue) > 0 then
       tooltip:SetCell(y, 1, string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)),"CENTER", 3)
     else
