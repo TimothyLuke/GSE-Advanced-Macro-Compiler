@@ -200,6 +200,7 @@ function dataobj:OnEnter()
     tooltip:AddLine(L["GSE Users"])
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
       tooltip:AddLine(k .. " " .. v)
+    end
   end
 
   -- Show GSE OOCQueue Information
