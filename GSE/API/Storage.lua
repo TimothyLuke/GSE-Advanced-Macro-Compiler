@@ -38,7 +38,7 @@ function GSE.CloneMacroVersion(macroversion)
   end
 
   for k,v in pairs(macroversion) do
-    if type(k) == "string"  then
+    if type(k) == "string" and type(v) == "string" then
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         retseq[k] = v
       else
