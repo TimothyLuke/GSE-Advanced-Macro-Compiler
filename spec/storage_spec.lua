@@ -693,6 +693,47 @@ self:CallMethod('UpdateIcon')
 
   end)
 
+  it ("tests that comments are removed from CloneMacroVersion", function()
+    local TestMacro = {
+      StepFunction = "Priority",
+      KeyPress={
+        "-- KeyPress Comment",
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro = {
+        "-- Pre Macro Comment",
+        "/say hello"
+      },
+      "-- Sequence Comment",
+      "/cast Avenger's Shield",
+      "/cast Judgment",
+      "/cast Blessed Hammer",
+      "/cast Hammer of the Righteous",
+      "/cast Consecration",
+      "/cast Light of the Protector",
+      "/cast Shield of the Righteous",
+      "/cast Blinding Light",
+      KeyRelease={
+        "-- KeyRelease Comment",
+        "/cast Avenging Wrath",
+        "/cast Eye of Tyr",
+        "/startattack",
+      },
+      PostMacro = {
+        "-- Post Macro Comment",
+        "/say hello"
+      },
+
+    }
+
+    local returnmacro = GSE.CloneMacroVersion(TestMacro)
+    assert.assert.are_not.equals(table.getn(TestMacro), table.getn(returnmacro))
+    assert.assert.are_not.equals(table.getn(TestMacro.PreMacro), table.getn(returnmacro.PreMacro))
+    assert.assert.are_not.equals(table.getn(TestMacro.PostMacro), table.getn(returnmacro.PostMacro))
+    assert.assert.are_not.equals(table.getn(TestMacro.KeyPress), table.getn(returnmacro.KeyPress))
+    assert.assert.are_not.equals(table.getn(TestMacro.KeyRelease), table.getn(returnmacro.KeyRelease))
+  end)
+
   it ("handles malformed GSE macros without breaking the mod.", function()
     local GSELibrary = {}
     GSELibrary[0] = {}

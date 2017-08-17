@@ -30,7 +30,9 @@ end
 function GSE.CloneMacroVersion(macroversion)
   local retseq = {}
   for k,v in ipairs(macroversion) do
-    table.insert(retseq, v)
+    if GSE.isEmpty(string.find(v, '--', 1, true)) then
+      table.insert(retseq, v)
+    end
   end
 
   for k,v in pairs(macroversion) do
@@ -40,28 +42,36 @@ function GSE.CloneMacroVersion(macroversion)
   if not GSE.isEmpty(macroversion.PreMacro) then
     retseq.PreMacro = {}
     for k,v in ipairs(macroversion.PreMacro) do
-      table.insert(retseq.PreMacro, v)
+      if GSE.isEmpty(string.find(v, '--', 1, true)) then
+        table.insert(retseq.PreMacro, v)
+      end
     end
   end
 
   if not GSE.isEmpty(macroversion.PostMacro) then
     retseq.PostMacro = {}
     for k,v in ipairs(macroversion.PostMacro)do
-      table.insert(retseq.PostMacro, v)
+      if GSE.isEmpty(string.find(v, '--', 1, true)) then
+        table.insert(retseq.PostMacro, v)
+      end
     end
   end
 
   if not GSE.isEmpty(macroversion.KeyRelease) then
     retseq.KeyRelease = {}
     for k,v in ipairs(macroversion.KeyRelease) do
-      table.insert(retseq.KeyRelease, v)
+      if GSE.isEmpty(string.find(v, '--', 1, true)) then
+        table.insert(retseq.KeyRelease, v)
+      end
     end
   end
 
   if not GSE.isEmpty(macroversion.KeyPress) then
     retseq.KeyPress = {}
     for k,v in ipairs(macroversion.KeyPress) do
-      table.insert(retseq.KeyPress, v)
+      if GSE.isEmpty(string.find(v, '--', 1, true)) then
+        table.insert(retseq.KeyPress, v)
+      end
     end
   end
 
@@ -527,26 +537,20 @@ function GSE.OOCUpdateSequence(name,sequence)
       pmcount = table.getn(tempseq.PreMacro) + 1
       gsebutton:SetAttribute('loopstart', pmcount)
       for k,v in ipairs(tempseq.PreMacro) do
-        if GSE.isEmpty(string.find(v, '--', 1, true)) then
-          table.insert(executionseq, v)
-        end
+        table.insert(executionseq, v)
       end
 
     end
 
     for k,v in ipairs(tempseq) do
-      if GSE.isEmpty(string.find(v, '--', 1, true)) then
-        table.insert(executionseq, v)
-      end
+      table.insert(executionseq, v)
     end
 
     gsebutton:SetAttribute('loopstop', table.getn(executionseq))
 
     if not GSE.isEmpty(tempseq.PostMacro) then
       for k,v in ipairs(tempseq.PostMacro) do
-        if GSE.isEmpty(string.find(v, '--', 1, true)) then
-          table.insert(executionseq, v)
-        end
+        table.insert(executionseq, v)
       end
 
     end
