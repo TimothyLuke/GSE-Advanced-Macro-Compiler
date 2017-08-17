@@ -57,7 +57,7 @@ function dataobj:OnEnter()
     y,x = tooltip:AddLine()
     tooltip:SetCell(y, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
     local OOCStatusline = y
-    tooltip:SetLineScript(y, "OnMouseDown", function(self, button)
+    tooltip:SetLineScript(y, "OnMouseDown", function(obj, button)
       GSE.ToggleOOCQueue()
       tooltip:SetCell(OOCStatusline, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
     end)
