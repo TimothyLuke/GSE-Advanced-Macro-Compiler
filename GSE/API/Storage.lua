@@ -535,7 +535,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     end
 
     for k,v in ipairs(tempseq) do
-      if GSE.isEmpty(string.find(v, '--',)) then
+      if GSE.isEmpty(string.find(v, '--')) then
         table.insert(executionseq, v)
       end
     end
@@ -544,7 +544,7 @@ function GSE.OOCUpdateSequence(name,sequence)
 
     if not GSE.isEmpty(tempseq.PostMacro) then
       for k,v in ipairs(tempseq.PostMacro) do
-        if GSE.isEmpty(string.find(v, '--',)) then
+        if GSE.isEmpty(string.find(v, '--')) then
           table.insert(executionseq, v)
         end
       end
