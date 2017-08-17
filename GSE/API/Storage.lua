@@ -32,11 +32,17 @@ function GSE.CloneMacroVersion(macroversion)
   for k,v in ipairs(macroversion) do
     if GSE.isEmpty(string.find(v, '--', 1, true)) then
       table.insert(retseq, v)
+    else
+      GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
     end
   end
 
   for k,v in pairs(macroversion) do
-    retseq[k] = v
+    if GSE.isEmpty(string.find(v, '--', 1, true)) then
+      retseq[k] = v
+    else
+      GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
+    end
   end
 
   if not GSE.isEmpty(macroversion.PreMacro) then
@@ -44,6 +50,8 @@ function GSE.CloneMacroVersion(macroversion)
     for k,v in ipairs(macroversion.PreMacro) do
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         table.insert(retseq.PreMacro, v)
+      else
+        GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
       end
     end
   end
@@ -53,6 +61,8 @@ function GSE.CloneMacroVersion(macroversion)
     for k,v in ipairs(macroversion.PostMacro)do
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         table.insert(retseq.PostMacro, v)
+      else
+        GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
       end
     end
   end
@@ -62,6 +72,8 @@ function GSE.CloneMacroVersion(macroversion)
     for k,v in ipairs(macroversion.KeyRelease) do
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         table.insert(retseq.KeyRelease, v)
+      else
+        GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
       end
     end
   end
@@ -71,6 +83,8 @@ function GSE.CloneMacroVersion(macroversion)
     for k,v in ipairs(macroversion.KeyPress) do
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         table.insert(retseq.KeyPress, v)
+      else
+        GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
       end
     end
   end
