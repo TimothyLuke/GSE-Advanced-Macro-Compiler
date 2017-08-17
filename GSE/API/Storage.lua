@@ -527,7 +527,7 @@ function GSE.OOCUpdateSequence(name,sequence)
       pmcount = table.getn(tempseq.PreMacro) + 1
       gsebutton:SetAttribute('loopstart', pmcount)
       for k,v in ipairs(tempseq.PreMacro) do
-        if GSE.isEmpty(string.find(v, '--',)) then
+        if GSE.isEmpty(string.find(v, '--')) then
           table.insert(executionseq, v)
         end
       end
