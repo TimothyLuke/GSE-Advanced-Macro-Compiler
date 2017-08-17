@@ -68,6 +68,7 @@ GUI\Import.lua
 GUI\Export.lua
 GUI\DebugWindow.lua
 GUI\Transmission.lua
+GUI\LDBProvider.lua
 GUI\VersionManagement.lua
 GUI\Recorder.lua
 GUI\Editor.lua
