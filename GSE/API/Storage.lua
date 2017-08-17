@@ -38,7 +38,13 @@ function GSE.CloneMacroVersion(macroversion)
   end
 
   for k,v in pairs(macroversion) do
-      retseq[k] = v
+    if type(k) == "string"  then
+      if GSE.isEmpty(string.find(v, '--', 1, true)) then
+        retseq[k] = v
+      else
+        GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
+      end
+    end
   end
 
   if not GSE.isEmpty(macroversion.PreMacro) then
