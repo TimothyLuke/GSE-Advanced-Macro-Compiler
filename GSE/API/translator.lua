@@ -115,7 +115,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
   GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
   local output = ""
   if not GSE.isEmpty(instring) then
-    if GSE.isEmpty(string.find(instring, '--')) then
+    if GSE.isEmpty(string.find(instring, '--', 1, true)) then
       for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
         GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
         output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
@@ -172,7 +172,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         end
       end
     else
-      GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--'), GNOME)
+      GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--', 1, true), GNOME)
       output = output ..  GSEOptions.CONCAT .. instring .. Statics.StringReset
     end
     -- If nothing was found pass throught
