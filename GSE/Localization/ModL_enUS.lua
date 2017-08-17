@@ -379,3 +379,4 @@ L["openviewer"] = "Open Viewer"
 L["CheckMacroCreated"] = "Check Macro Created"
 L["Paused"] = true
 L["Running"] = true
+L["Paused - In Combat"]  = true
