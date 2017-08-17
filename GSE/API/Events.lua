@@ -346,9 +346,13 @@ end
 function GSE.CheckOOCQueueStatus()
   local output = ""
   if GSE.isEmpty(GSE.OOCTimer) then
-    output = GSEOptions.TitleColour .. L["Paused"] .. Statics.StringReset
+    output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
   else
-    output = GSEOptions.TitleColour .. L["Running"] .. Statics.StringReset
+    if InCombatLockdown() then
+      output = GSEOptions.TitleColour .. L["Paused - In Combat"] .. Statics.StringReset
+    else
+      output = GSEOptions.CommandColour .. L["Running"] .. Statics.StringReset
+    end
   end
   return output
 end
