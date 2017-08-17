@@ -727,11 +727,15 @@ self:CallMethod('UpdateIcon')
     }
 
     local returnmacro = GSE.CloneMacroVersion(TestMacro)
-    assert.are_not.equals(table.getn(TestMacro), table.getn(returnmacro))
     assert.are_not.equals(table.getn(TestMacro.PreMacro), table.getn(returnmacro.PreMacro))
     assert.are_not.equals(table.getn(TestMacro.PostMacro), table.getn(returnmacro.PostMacro))
     assert.are_not.equals(table.getn(TestMacro.KeyPress), table.getn(returnmacro.KeyPress))
     assert.are_not.equals(table.getn(TestMacro.KeyRelease), table.getn(returnmacro.KeyRelease))
+    for k,v in ipairs(returnmacro) do
+      GSE.PrintDebugMessage(string.format("%s", v), "Test CloneMacroVersion")
+    end
+    assert.are_not.equals(table.getn(TestMacro), table.getn(returnmacro))
+
   end)
 
   it ("handles malformed GSE macros without breaking the mod.", function()
