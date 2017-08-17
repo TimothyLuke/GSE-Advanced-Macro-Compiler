@@ -172,6 +172,7 @@ function GSE.TranslateString(instring, fromLocale, toLocale, cleanNewLines)
         end
       end
     else
+      GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--'), GNOME)
       output = output ..  GSEOptions.CONCAT .. instring .. Statics.StringReset
     end
     -- If nothing was found pass throught

@@ -15,12 +15,15 @@ describe('API Translator', function()
 
   end)
 
-  -- it("checks that mods are retained", function()
-  --   local originalstring = '/castsequence [talent:7/3] reset=combat Glacial Advance, [talent:6/1] Frostscythe, Frost Strike, Frost Strike, [talent:6/1] Frostscythe, [talent:6/1] Frostscythe'
-  --   local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
-  --   local finalstring = GSE.UnEscapeString(newstring)
-  --   assert.are.equal(originalstring, finalstring)
-  -- end)
+  it("checks that comments are processed", function()
+    local originalstring = '-- This is a comment'
+    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    assert.are.equal("|cffcc7777-- This is a comment|r",newstring)
+
+    originalstring = "/cast Eye of Tyr"
+    newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    assert.are_not.equals("|cffcc7777/cast Eye of Tyr|r", newstring)
+  end)
 
   it("checks that ctrl:mods are retained", function()
     local originalstring = '/castsequence [mod:ctrl] !Rip, Ferocious Bite, Ferocious Bite, Ferocious Bite; [nomod] Rake, shred, shred, shred, shred'
