@@ -288,7 +288,18 @@ function GSE:processReload(action, arg)
 end
 
 function GSE:OnEnable()
+  GSE.StartOOCTimer()
+end
+
+--- Start the OOC Queue Timer
+function GSE.StartOOCTimer()
   GSE.OOCTimer = GSE:ScheduleRepeatingTimer("ProcessOOCQueue", 1)
+end
+
+--- Stop the OOC Queue Timer
+function GSE.StopOOCTimer()
+  GSE:CancelTimer(GSE.OOCTimer)
+  GSE.OOCTimer = nil
 end
 
 
@@ -313,5 +324,39 @@ function GSE:ProcessOOCQueue()
       end
       GSE.OOCQueue[k] = nil
     end
+  end
+end
+
+function GSE.prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
+  tooltip:SetCell(row, 1, L[OOCEvent.action], "LEFT", 1)
+  if OOCEvent.action == "UpdateSequence" then
+    tooltip:SetCell(row, 3, OOCEvent.name, "RIGHT", 1)
+  elseif OOCEvent.action == "Save" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  elseif OOCEvent.action == "Replace" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  elseif OOCEvent.action == "CheckMacroCreated" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  end
+  tooltip:SetLineScript(row, "OnMouseUp", function ()
+    GSE.OOCQueue[oockey] = nil
+  end)
+end
+
+function GSE.CheckOOCQueueStatus()
+  local output = ""
+  if GSE.isEmpty(GSE.OOCTimer) then
+    output = GSEOptions.TitleColour .. L["Paused"] .. Statics.StringReset
+  else
+    output = GSEOptions.TitleColour .. L["Running"] .. Statics.StringReset
+  end
+  return output
+end
+
+function GSE.ToggleOOCQueue()
+  if GSE.isEmpty(GSE.OOCTimer) then
+    GSE.StartOOCTimer()
+  else
+    GSE.StopOOCTimer()
   end
 end

@@ -22,6 +22,7 @@ function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
   local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
+  tooltip:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
   self.tooltip = tooltip
 
   tooltip:Clear()
@@ -44,12 +45,21 @@ function dataobj:OnEnter()
     end
   end
 
+
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
     y,x = tooltip:AddLine()
+    tooltip:SetCell(y, 1, string.format(L["There GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
+    tooltip:SetLineScript(y, "OnMouseUp", GSE.ToggleOOCQueue())
+    tooltip:AddSeparator()
+    y,x = tooltip:AddLine()
     if table.getn(GSE.OOCQueue) > 0 then
       tooltip:SetCell(y, 1, string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)),"CENTER", 3)
+      for k,v in ipairs(GSE.OOCQueue) do
+        y,x = tooltip:AddLine()
+        GSE.prepareTooltipOOCLine(tooltip, v, y, k)
+      end
     else
       -- No Items
       tooltip:SetCell(y, 1, string.format(L["There are no events in out of combat queue"]),"CENTER", 3)
