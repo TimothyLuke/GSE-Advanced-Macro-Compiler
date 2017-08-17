@@ -527,20 +527,26 @@ function GSE.OOCUpdateSequence(name,sequence)
       pmcount = table.getn(tempseq.PreMacro) + 1
       gsebutton:SetAttribute('loopstart', pmcount)
       for k,v in ipairs(tempseq.PreMacro) do
-        table.insert(executionseq, v)
+        if GSE.isEmpty(string.find(v, '--',)) then
+          table.insert(executionseq, v)
+        end
       end
 
     end
 
     for k,v in ipairs(tempseq) do
-      table.insert(executionseq, v)
+      if GSE.isEmpty(string.find(v, '--',)) then
+        table.insert(executionseq, v)
+      end
     end
 
     gsebutton:SetAttribute('loopstop', table.getn(executionseq))
 
     if not GSE.isEmpty(tempseq.PostMacro) then
       for k,v in ipairs(tempseq.PostMacro) do
-        table.insert(executionseq, v)
+        if GSE.isEmpty(string.find(v, '--',)) then
+          table.insert(executionseq, v)
+        end
       end
 
     end
