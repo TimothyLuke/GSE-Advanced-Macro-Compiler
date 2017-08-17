@@ -380,3 +380,4 @@ L["CheckMacroCreated"] = "Check Macro Created"
 L["Paused"] = true
 L["Running"] = true
 L["Paused - In Combat"]  = true
+L["The GSE Out of Combat queue is %s"] = true

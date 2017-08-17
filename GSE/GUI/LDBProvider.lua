@@ -1,9 +1,14 @@
 local GSE = GSE
 
 local Statics = GSE.Static
+local L = GSE.L
 
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
-local dataobj = ldb:NewDataObject(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], {type = "data source", text = "/gse"})
+local dataobj = ldb:NewDataObject(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], {
+  type = "data source",
+  text = "GSE",
+  OnLeave = dataObject_OnLeave
+})
 local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
@@ -22,8 +27,8 @@ function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
   local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
-  tooltip:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
   self.tooltip = tooltip
+  tooltip:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
 
   tooltip:Clear()
   tooltip:SetFont(baseFont)
@@ -50,8 +55,12 @@ function dataobj:OnEnter()
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
     y,x = tooltip:AddLine()
-    tooltip:SetCell(y, 1, string.format(L["There GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
-    tooltip:SetLineScript(y, "OnMouseUp", GSE.ToggleOOCQueue())
+    tooltip:SetCell(y, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
+    local OOCStatusline = y
+    tooltip:SetLineScript(y, "OnMouseDown", function(self, button)
+      GSE.ToggleOOCQueue()
+      tooltip:SetCell(OOCStatusline, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
+    end)
     tooltip:AddSeparator()
     y,x = tooltip:AddLine()
     if table.getn(GSE.OOCQueue) > 0 then
@@ -77,15 +86,19 @@ function dataobj:OnEnter()
   tooltip:Show()
 end
 
-function dataobj:OnLeave()
-  -- Release the tooltip
-  LibQTip:Release(self.tooltip)
-  self.tooltip = nil
+local function dataObject_OnLeave(self)
+  -- Dont close the tooltip if mouseover
+  if not MouseIsOver(self.tooltip) then
+    -- Release the tooltip
+    LibQTip:Release(self.tooltip)
+    self.tooltip = nil
+  end
 end
 
--- function dataobj:OnTooltipShow()
---
--- end
+
+function dataobj:OnLeave()
+  dataObject_OnLeave(self)
+end
 
 function dataobj:OnClick(button)
   if button == "LeftButton" then
