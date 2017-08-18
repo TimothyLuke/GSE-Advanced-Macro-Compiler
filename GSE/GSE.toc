@@ -13,7 +13,7 @@ lib\LibDataBroker-1.1\LibDataBroker-1.1.lua
 lib\LibQTip-1.0\LibQTip-1.0.lua
 lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
-GUI\PanelWidget.lua
+Lib\AceGUI-3.0-Selectable-Panel\AceGUI-3.0-Selectable-Panel.lua
 
 
 #Setup Localisation
@@ -59,19 +59,6 @@ SampleMacros\Warrior.lua
 API\Storage.lua
 API\Translator.lua
 API\Plugins.lua
-
-
-# GUI
-API\GUIFunctions.lua
-GUI\Options.lua
-GUI\Import.lua
-GUI\Export.lua
-GUI\DebugWindow.lua
-GUI\Transmission.lua
-GUI\LDBProvider.lua
-GUI\VersionManagement.lua
-GUI\Recorder.lua
-GUI\Editor.lua
-GUI\Viewer.lua
+API\Serialisation.lua
 
 API\Events.lua

@@ -1,0 +1,18 @@
+## Interface: 70300
+## Title: |cffff0000GSE2:|r |cFF00D1FFGUI|r
+## Notes: GSE GUI
+## Author: TimothyLuke
+## Version: 2200
+## Dependencies: GSE
+
+
+Options.lua
+Import.lua
+Export.lua
+DebugWindow.lua
+Transmission.lua
+VersionManagement.lua
+Recorder.lua
+Editor.lua
+Viewer.lua
+GUIFunctions.lua

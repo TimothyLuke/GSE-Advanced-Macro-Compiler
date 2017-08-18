@@ -22,7 +22,8 @@ install:
 script:
 - luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/API/*.lua
 - luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/Localization/*.lua
-- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/GUI/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE_GUI/*.lua
+- luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE_LDB/*.lua
 - luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros/*.lua
 - bash ./deploy.sh
 - busted --verbose --coverage

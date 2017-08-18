@@ -1,0 +1,9 @@
+## Interface: 70300
+## Title: |cffff0000GSE2:|r |cFF00D1FFLDB|r
+## Notes: LibDataBroker Plugin for GSE2
+## Author: TimothyLuke
+## Version: 2200
+## Dependencies: GSE
+
+
+LDBProvider.lua
