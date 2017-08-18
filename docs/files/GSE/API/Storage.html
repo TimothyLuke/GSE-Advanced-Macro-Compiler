@@ -147,6 +147,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.CompressSequenceFromString">GSE.CompressSequenceFromString</a>&nbsp;(importstring)</td>
+	<td class="summary">This function takes a text string and compresses it without loading it to the library </td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.ConvertLegacySequence">GSE.ConvertLegacySequence</a>&nbsp;(sequence)</td>
 	<td class="summary">This converts a legacy GS/GSE1 sequence to a new GSE2 </td>
 	</tr>
@@ -172,7 +177,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName)</td>
+	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, compact)</td>
 	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
 	</tr>
 
@@ -204,6 +209,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.GetSequenceNamesFromLibrary">GSE.GetSequenceNamesFromLibrary</a>&nbsp;(library)</td>
 	<td class="summary">Takes a collection of Sequences and returns a list of names </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.ImportCompressedMacroCollection">GSE.ImportCompressedMacroCollection</a>&nbsp;(Sequences)</td>
+	<td class="summary">Load a collection of Sequences </td>
 	</tr>
 
 	<tr>
@@ -483,6 +493,32 @@ Compares two sequences and return a boolean if the match.  If they do not match 
 
 
 
+<dt><a name="GSE.CompressSequenceFromString"></a><strong>GSE.CompressSequenceFromString</strong>&nbsp;(importstring)</dt>
+<dd>
+This function takes a text string and compresses it without loading it to the library
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  importstring: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.ConvertLegacySequence"></a><strong>GSE.ConvertLegacySequence</strong>&nbsp;(sequence)</dt>
 <dd>
 This converts a legacy GS/GSE1 sequence to a new GSE2
@@ -625,7 +661,7 @@ Delete a sequence starting with the macro and then the sequence from the library
 
 
 
-<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName)</dt>
+<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, compact)</dt>
 <dd>
 Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 
@@ -639,6 +675,10 @@ Creates a string representation of the a Sequence that can be shared as a string
 	
 	<li>
 	  sequenceName: 
+	</li>
+	
+	<li>
+	  compact: 
 	</li>
 	
 </ul>
@@ -772,6 +812,32 @@ Takes a collection of Sequences and returns a list of names
 	
 	<li>
 	  library: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.ImportCompressedMacroCollection"></a><strong>GSE.ImportCompressedMacroCollection</strong>&nbsp;(Sequences)</dt>
+<dd>
+Load a collection of Sequences
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  Sequences: 
 	</li>
 	
 </ul>
