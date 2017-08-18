@@ -172,7 +172,12 @@ function GSE.ImportMacroCollection(Sequences)
   end
 end
 
-
+--- Load a collection of Sequences
+function GSE.ImportCompressedMacroCollection(Sequences)
+  for k,v in ipairs(Sequences) do
+    GSE.ImportSerialisedSequence(v)
+  end
+end
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
   local classid = GSE.GetCurrentClassID()
@@ -985,7 +990,7 @@ end
 
 --- Load in the sample macros for the current class.
 function GSE.LoadSampleMacros(classID)
-  GSE.ImportMacroCollection(Statics.SampleMacros[classID])
+  GSE.ImportCompressedMacroCollection(Statics.SampleMacros[classID])
 end
 
 
