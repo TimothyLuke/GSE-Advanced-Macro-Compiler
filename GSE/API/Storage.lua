@@ -114,7 +114,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
   -- CHeck for colissions
   local found = false
-  if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID)) then
+  if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
     classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
   elseif GSE.isEmpty(sequence.SpecID) then
     sequence.SpecID = GSE.GetCurrentClassID()

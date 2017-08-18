@@ -93,7 +93,6 @@ function GSE.SetDefaultOptions()
   GSEOptions.showGSEUsers = false
   GSEOptions.showGSEoocqueue = true
   GSEOptions.UseVerboseFormat = true
-  
   GSE.resetMacroResetModifiers()
 end
 
