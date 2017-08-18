@@ -622,7 +622,8 @@ self:CallMethod('UpdateIcon')
   end)
 
 
-  it ("tests that macros are exported correctly", function()
+  it ("tests that verbose macros are exported correctly", function()
+    GSEOptions.UseVerboseFormat = true
     local sequence1 = {
       Author="LNPV",
       SpecID=66,
