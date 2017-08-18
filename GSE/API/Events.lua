@@ -278,6 +278,8 @@ function GSE:GSSlash(input)
     GSE.MoveMacroToClassFromGlobal()
   elseif string.lower(input) == "checkmacrosforerrors" then
     GSE.ScanMacrosForErrors()
+  elseif string.lower(input) == "compressstring" then
+    GSE.GUICompressFrame:Show()
   else
     GSE.GUIShowViewer()
   end

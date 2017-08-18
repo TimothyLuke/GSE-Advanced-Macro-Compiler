@@ -8,6 +8,11 @@ local Sequences = Statics.SampleMacros[6]
 ----- Death Knight
 ------------------
 
+Statics.SampleMacros[6][1] = [[]]
+Statics.SampleMacros[6][2] = [[]]
+Statics.SampleMacros[6][3] = [[]]
+
+
 Sequences['SAM_FDK2'] = {
   SpecID = 251,
   Author = "Tazkilla",

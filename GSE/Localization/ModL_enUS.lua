@@ -386,3 +386,7 @@ L["The GSE Out of Combat queue is %s"] = true
 L["Unable to interpret sequence."] = true
 L["Use Verbose Export Sequence Format"] = true
 L["When exporting a sequence use a human readable verbose form."] = true
+L["Gnome Sequencer: Compress a Sequence String."] = true
+L["Compress Sequence from Forums"] = true
+L["Sequence to Compress."] = true
+L["Compress"] = true

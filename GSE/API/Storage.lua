@@ -326,9 +326,9 @@ end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName)
+function GSE.ExportSequence(sequence, sequenceName, compact)
   local returnVal = ""
-  if GSEOptions.UseVerboseFormat then
+  if GSEOptions.UseVerboseFormat or compact then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
     local disabledseq = ""
     local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
@@ -1191,4 +1191,28 @@ function GSE.ScanMacrosForErrors()
 end
 
 
---- This function
+--- This function takes a text string and compresses it without loading it to the library
+function GSE.CompressSequenceFromString(importstring)
+  importStr = GSE.StripControlandExtendedCodes(importStr)
+  local returnstr = ""
+  local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
+  return Sequences
+  ]===]
+
+  local fake_globals = setmetatable({
+    Sequences = {},
+    }, {__index = _G})
+  local func, err = loadstring (functiondefinition, "Storage")
+  if func then
+    -- Make the compiled function see this table as its "globals"
+    setfenv (func, fake_globals)
+
+    local TempSequences = assert(func())
+    if not GSE.isEmpty(TempSequences) then
+      for k,v in pairs(TempSequences) do
+        returnstr = GSE.ExportSequence(k, v, true)
+      end
+    end
+  end
+  return returnstr
+end

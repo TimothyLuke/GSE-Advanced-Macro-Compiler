@@ -16,3 +16,4 @@ Recorder.lua
 Editor.lua
 Viewer.lua
 GUIFunctions.lua
+CompressSequence.lua

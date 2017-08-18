@@ -2,6 +2,10 @@ local GSE = GSE
 local Statics = GSE.Static
 
 Statics.SampleMacros[4] = {}
+Statics.SampleMacros[4][1] = [[]]
+Statics.SampleMacros[4][2] = [[]]
+Statics.SampleMacros[4][3] = [[]]
+
 
 local Sequences = Statics.SampleMacros[4]
 
