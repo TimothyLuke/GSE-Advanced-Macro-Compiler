@@ -33,7 +33,7 @@ function GSE.GetOptionsTable()
             type = "toggle",
             set = function(info,val) GSEOptions.showGSEoocqueue = val end,
             get = function(info) return GSEOptions.showGSEoocqueue end,
-            order = 200
+            order = 201
           },
           hideLogin = {
             name = L["Hide Login Message"],
@@ -41,7 +41,7 @@ function GSE.GetOptionsTable()
             type = "toggle",
             set = function(info,val) GSEOptions.HideLoginMessage = val end,
             get = function(info) return GSEOptions.HideLoginMessage end,
-            order = 201
+            order = 202
           },
 --          realtimeparse = {
 --            name = L["Use Realtime Parsing"],
@@ -51,6 +51,14 @@ function GSE.GetOptionsTable()
 --            get = function(info) return GSEOptions.RealtimeParse end,
 --            order = 202
 --          },
+          UseVerboseExportFormat = {
+            name = L["Use Verbose Export Sequence Format"],
+            desc = L["When exporting a sequence use a human readable verbose form."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.UseVerboseFormat = val end,
+            get = function(info) return GSEOptions.UseVerboseFormat end,
+            order = 300
+          },
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],

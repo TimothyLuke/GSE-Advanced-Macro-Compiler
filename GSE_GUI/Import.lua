@@ -75,19 +75,34 @@ function GSE.GUIToggleImportDefault(switchstate)
 end
 
 function GSE.GUIImportSequence()
-  local legacy = false
+  local importstring = importsequencebox:GetText()
+  if string.sub(importstring,1,9) == "Sequences"
+    local legacy = false
 
-  if GSE.isEmpty(string.find(importsequencebox:GetText(), "MacroVersions")) then
-    legacy = true
-  end
-  local success, message = GSE.ImportSequence(importsequencebox:GetText(), legacy, importframe.AutoCreateIcon)
-  if success then
-    StaticPopup_Show ("GSE-MacroImportSuccess")
-    GSE.GUIImportFrame:Hide()
-    local event = {}
-    event.action = "openviewer"
-    table.insert(GSE.OOCQueue, event)
+    if GSE.isEmpty(string.find(importstring, "MacroVersions")) then
+      legacy = true
+    end
+    local success, message = GSE.ImportSequence(importstring, legacy, importframe.AutoCreateIcon)
+    if success then
+      StaticPopup_Show ("GSE-MacroImportSuccess")
+      GSE.GUIImportFrame:Hide()
+      local event = {}
+      event.action = "openviewer"
+      table.insert(GSE.OOCQueue, event)
+    else
+      StaticPopup_Show ("GSE-MacroImportFailure")
+    end
   else
-    StaticPopup_Show ("GSE-MacroImportFailure")
+    -- either a compressed import or a failed copy
+    local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
+    if success then
+      StaticPopup_Show ("GSE-MacroImportSuccess")
+      GSE.GUIImportFrame:Hide()
+      local event = {}
+      event.action = "openviewer"
+      table.insert(GSE.OOCQueue, event)
+    else
+      StaticPopup_Show ("GSE-MacroImportFailure")
+    end
   end
 end
