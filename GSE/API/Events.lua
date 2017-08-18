@@ -124,11 +124,7 @@ function GSE:ADDON_LOADED(event, addon)
 
   -- Register the Sample Macros
   local seqnames = {}
-  for i=1, 12, 1 do
-    for k,_ in pairs(Statics.SampleMacros[i]) do
-      table.insert(seqnames, k)
-    end
-  end
+  table.insert(seqnames, "Assorted Sample Macros")
   GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
 
   GSE:RegisterMessage(Statics.ReloadMessage, "processReload")

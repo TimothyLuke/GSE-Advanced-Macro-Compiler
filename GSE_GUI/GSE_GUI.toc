@@ -6,7 +6,7 @@
 ## Dependencies: GSE
 
 
-Options.lua
+
 Import.lua
 Export.lua
 DebugWindow.lua

@@ -57,7 +57,7 @@ function GSE.GetOptionsTable()
             type = "toggle",
             set = function(info,val) GSEOptions.UseVerboseFormat = val end,
             get = function(info) return GSEOptions.UseVerboseFormat end,
-            order = 300
+            order = 203
           },
           resetOOC = {
             name = L["Reset Macro when out of combat"],

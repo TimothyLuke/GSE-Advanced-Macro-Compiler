@@ -333,7 +333,9 @@ end
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSE.ExportSequence(sequence, sequenceName, compact)
   local returnVal = ""
-  if GSEOptions.UseVerboseFormat or compact then
+  print(compact)
+  print(GSEOptions.UseVerboseFormat)
+  if GSEOptions.UseVerboseFormat and GSE.isEmpty(compact) then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
     local disabledseq = ""
     local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
@@ -1198,7 +1200,7 @@ end
 
 --- This function takes a text string and compresses it without loading it to the library
 function GSE.CompressSequenceFromString(importstring)
-  importStr = GSE.StripControlandExtendedCodes(importStr)
+  importStr = GSE.StripControlandExtendedCodes(importstring)
   local returnstr = ""
   local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
   return Sequences
@@ -1215,7 +1217,7 @@ function GSE.CompressSequenceFromString(importstring)
     local TempSequences = assert(func())
     if not GSE.isEmpty(TempSequences) then
       for k,v in pairs(TempSequences) do
-        returnstr = GSE.ExportSequence(k, v, true)
+        returnstr = GSE.ExportSequence(v, k, true)
       end
     end
   end
