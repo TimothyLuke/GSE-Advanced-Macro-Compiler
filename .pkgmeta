@@ -69,5 +69,4 @@ ignore:
     - docs
     - deploy.sh
     - deploy_key.enc
-    - GS-Core
-    - OldSampleMacros
+    - Deprecated
