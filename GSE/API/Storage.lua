@@ -226,7 +226,8 @@ end
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, createicon)
   local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
-  if table.getn(actiontable) == 2 and decompresssuccess and type(actiontable[1]) == "string" and type(actiontable[1]) == "table" then
+  GSE.PrintDebugMessage (string.format("Decomsuccess: %s  tablerows: %s   type cell1 %s cell2 %s" , tostring(decompresssuccess), table.getn(actiontable), type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
+  if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and (type(actiontable[2]) == "table") then
     GSE.AddSequenceToCollection(actiontable[1], actiontable[2])
     if createicon then
       GSE.CheckMacroCreated(actiontable[1], true)
@@ -333,8 +334,6 @@ end
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSE.ExportSequence(sequence, sequenceName, compact)
   local returnVal = ""
-  print(compact)
-  print(GSEOptions.UseVerboseFormat)
   if GSEOptions.UseVerboseFormat and GSE.isEmpty(compact) then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
     local disabledseq = ""

@@ -70,3 +70,4 @@ ignore:
     - deploy.sh
     - deploy_key.enc
     - GS-Core
+    - OldSampleMacros

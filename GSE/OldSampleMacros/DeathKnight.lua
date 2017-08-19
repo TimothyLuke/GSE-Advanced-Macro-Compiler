@@ -1,42 +1,13 @@
 local GSE = GSE
 local Statics = GSE.Static
 
-Statics.SampleMacros[6] = {}
+
 
 local Sequences = Statics.SampleMacros[6]
 ------------------
 ----- Death Knight
 ------------------
 
-Statics.SampleMacros[6][1] = [[]]
-Statics.SampleMacros[6][2] = [[]]
-Statics.SampleMacros[6][3] = [[]]
-
-
-Sequences['SAM_FDK2'] = {
-  SpecID = 251,
-  Author = "Tazkilla",
-  Talents = "1,1,1,1,1,3,1",
-  Default=1,
-  MacroVersions = {
-    [1] = {
-      KeyPress = {
-        "/targetenemy [noharm][dead]",
-        "/cast [combat] Pillar of Frost",
-        "/cast [combat] Anti-Magic Shell"
-      },
-      StepFunction = "Priority",
-      '/castsequence reset=combat Frost Strike',
-      '/cast Obliterate',
-      '/cast Obliteration',
-      '/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Obliterate',
-      '/castsequence reset=combat Howling Blast, Howling Blast, Howling Blast, Howling Blast',
-      KeyRelease = {
-        "/startattack",
-      },
-    },
-  }
-}
 
 
 Sequences['SAM_DKunholy'] = {
