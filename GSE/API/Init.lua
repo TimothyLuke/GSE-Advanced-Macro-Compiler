@@ -81,3 +81,4 @@ GSE.inRaid = false
 GSE.inMythic = false
 GSE.inDungeon = false
 GSE.inHeroic = false
+GSE.inParty = false

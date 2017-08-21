@@ -26,44 +26,6 @@ Completing:Register ("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmission)
 
 
-local function GSSendMessage(tab, channel, target)
-  local _, instanceType = IsInInstance()
-  GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
-  if tab.Command == "GS-E_TRANSMITSEQUENCE" then
-    GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
-    GSE.PrintDebugMessage(GSE.isEmpty(tab.Sequence))
-    GSE.PrintDebugMessage(GSE.ExportSequence(tab.Sequence,tab.SequenceName), Statics.SourceTransmission)
-  end
-  local transmission = GSE.EncodeMessage(tab)
-  GSE.PrintDebugMessage("Transmission: \n" .. transmission, Statics.SourceTransmission)
-  if GSE.isEmpty(channel) then
-    if IsInRaid() then
-      channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
-    else
-      channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
-    end
-  end
-  GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
-
-end
-
-local function performVersionCheck(version)
-  if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
-    if not GSold then
-      GSE.Print(L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], Statics.SourceTransmission)
-      GSold = true
-      if((tonumber(version) - tonumber(GSE.VersionString)) >= 5) then
-        StaticPopup_Show('GSE_UPDATE_AVAILABLE')
-      end
-    end
-  end
-end
-
-local function ReceiveSequence(classid, SequenceName, Sequence, sender)
-  local version = GSGetNextSequenceVersion(SequenceName)
-  GSE.AddSequenceToCollection(SequenceName, Sequence, classid)
-  GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender )
-end
 
 
 function GSE:OnCommReceived(prefix, message, distribution, sender)
@@ -73,12 +35,12 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   if success then
     if t.Command == "GS-E_VERSIONCHK" then
       if not GSold then
-        performVersionCheck(t.Version)
+        GSE.performVersionCheck(t.Version)
       end
-      storeSender(sender, t.Version)
+      GSE.storeSender(sender, t.Version)
     elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
       if sender ~= GetUnitName("player", true) then
-        ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
+        GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
       else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
         GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName), Statics.SourceTransmission)
@@ -87,35 +49,10 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   end
 end
 
-local function storeSender(sender, senderversion)
-  if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
-    GSE.UnsavedOptions["PartyUsers"] = {}
-  end
-  GSE.UnsavedOptions["PartyUsers"][sender] = senderversion
-end
-
-local function sendVersionCheck()
-  local _, instanceType = IsInInstance()
-  local t = {}
-  t.Command = "GS-E_VERSIONCHK"
-  t.Version = GSE.VersionString
-  GSSendMessage(t)
-end
-
-function GSE:GROUP_ROSTER_UPDATE(...)
-  sendVersionCheck()
-  for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
-    if not (UnitInParty(k) or UnitInRaid(k)) then
-      -- Take them out of the list
-      GSE.UnsavedOptions["PartyUsers"][k] = nil
-    end
-
-  end
-end
 
 
 GSE:RegisterComm("GSE")
-GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
+
 
 local transSequencevalue = ""
 

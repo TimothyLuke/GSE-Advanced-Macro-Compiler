@@ -133,3 +133,57 @@ function GSE.TransmitSequence(key, channel, target)
   GSSendMessage(t, channel, target)
   GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
+
+function GSE.sendMessage(tab, channel, target)
+  local _, instanceType = IsInInstance()
+  GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
+  if tab.Command == "GS-E_TRANSMITSEQUENCE" then
+    GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
+    GSE.PrintDebugMessage(GSE.isEmpty(tab.Sequence))
+    GSE.PrintDebugMessage(GSE.ExportSequence(tab.Sequence,tab.SequenceName), Statics.SourceTransmission)
+  end
+  local transmission = GSE.EncodeMessage(tab)
+  GSE.PrintDebugMessage("Transmission: \n" .. transmission, Statics.SourceTransmission)
+  if GSE.isEmpty(channel) then
+    if IsInRaid() then
+      channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "RAID"
+    else
+      channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or "PARTY"
+    end
+  end
+  GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
+
+end
+
+function GSE.performVersionCheck(version)
+  if(tonumber(version) ~= nil and tonumber(version) > tonumber(GSE.VersionString)) then
+    if not GSold then
+      GSE.Print(L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."], Statics.SourceTransmission)
+      GSold = true
+      if((tonumber(version) - tonumber(GSE.VersionString)) >= 5) then
+        StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+      end
+    end
+  end
+end
+
+function GSE.ReceiveSequence(classid, SequenceName, Sequence, sender)
+  GSE.AddSequenceToCollection(SequenceName, Sequence, classid)
+  GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender )
+end
+
+
+function GSE.storeSender(sender, senderversion)
+  if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
+    GSE.UnsavedOptions["PartyUsers"] = {}
+  end
+  GSE.UnsavedOptions["PartyUsers"][sender] = senderversion
+end
+
+function GSE.sendVersionCheck()
+  local _, instanceType = IsInInstance()
+  local t = {}
+  t.Command = "GS-E_VERSIONCHK"
+  t.Version = GSE.VersionString
+  GSE.sendMessage(t)
+end

@@ -199,6 +199,8 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].Dungeon
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Heroic) and GSE.inHeroic then
     vers = GSELibrary[classid][sequenceName].Heroic
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Party) and GSE.inParty then
+    vers = GSELibrary[classid][sequenceName].Party
   end
   return vers
 end

@@ -390,3 +390,7 @@ L["Gnome Sequencer: Compress a Sequence String."] = true
 L["Compress Sequence from Forums"] = true
 L["Sequence to Compress."] = true
 L["Compress"] = true
+L["Party"] = true
+L["Heroic setting changed to Default."] = true
+L["Dungeon setting changed to Default."] = true
+L["Party setting changed to Default."] = true
