@@ -124,7 +124,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
       if not GSold then
         performVersionCheck(t.Version)
       end
-      storeSender(sender, t.Version)
+      GSE.storeSender(sender, t.Version)
     elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
       if sender ~= GetUnitName("player", true) then
         ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
@@ -136,7 +136,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
   end
 end
 
-local function storeSender(sender, senderversion)
+function GSE.storeSender(sender, senderversion)
   if GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) then
     GSE.UnsavedOptions["PartyUsers"] = {}
   end
