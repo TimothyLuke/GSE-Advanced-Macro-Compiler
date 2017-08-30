@@ -826,4 +826,35 @@ self:CallMethod('UpdateIcon')
     assert.True(GSE.IsLoopSequence(loopprioritysequence))
 
   end)
+
+  it ("tests that clonesequence works", function ()
+    local normalprioritysequence = {
+      Trinket1=true,
+      Trinket2=false,
+      Head=false,
+      Neck=false,
+      Belt=false,
+      Ring1=false,
+      Ring2=false,
+      StepFunction = "Priority",
+      KeyPress={
+        "/targetenemy [noharm][dead]",
+      },
+      PreMacro={
+      },
+      "/cast [nochanneling] Elemental Blast",
+      "/cast [nochanneling] Lava Burst",
+      "/cast [nochanneling] Stormkeeper",
+      "/cast [nochanneling] Lightning Bolt",
+      PostMacro={
+      },
+      KeyRelease={
+      },
+    }
+
+    local clonedsequence = GSE.CloneSequence(normalprioritysequence)
+    assert.falsy(clonedsequence.Trinket2)
+    assert.True(clonedsequence.Trinket1)
+
+  end)
 end)
