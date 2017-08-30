@@ -65,7 +65,7 @@ function GSE.CloneMacroVersion(macroversion, keepcomments)
           if not GSE.isEmpty(keepcomments) then
             table.insert(retseq[k], x)
           else
-            GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
+            GSE.PrintDebugMessage(string.format("comment found %s", x), "Storage")
           end
         end
       end
