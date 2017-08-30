@@ -627,7 +627,7 @@ function GSE.OOCUpdateSequence(name,sequence)
 end
 
 function GSE.PrepareStepFunction(stepper, looper)
-  retvalue = ""
+  local retvalue = ""
   if looper then
     if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
       retvalue = Statics.LoopSequentialImplementation
