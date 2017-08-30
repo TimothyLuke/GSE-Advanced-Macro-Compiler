@@ -828,31 +828,41 @@ self:CallMethod('UpdateIcon')
   end)
 
   it ("tests that clonesequence works", function ()
-    local normalprioritysequence = {
-      Trinket1=true,
-      Trinket2=false,
-      Head=false,
-      Neck=false,
-      Belt=false,
-      Ring1=false,
-      Ring2=false,
-      StepFunction = "Priority",
-      KeyPress={
-        "/targetenemy [noharm][dead]",
-      },
-      PreMacro={
-      },
-      "/cast [nochanneling] Elemental Blast",
-      "/cast [nochanneling] Lava Burst",
-      "/cast [nochanneling] Stormkeeper",
-      "/cast [nochanneling] Lightning Bolt",
-      PostMacro={
-      },
-      KeyRelease={
-      },
+    local sequence1 = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
     }
 
-    local clonedsequence = GSE.CloneSequence(normalprioritysequence)
+    local clonedsequence = GSE.CloneSequence(sequence1)
     assert.falsy(clonedsequence.Trinket2)
     assert.True(clonedsequence.Trinket1)
 
