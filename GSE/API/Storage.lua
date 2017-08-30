@@ -44,6 +44,8 @@ function GSE.CloneMacroVersion(macroversion)
       else
         GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
       end
+    else
+      GSE.PrintDebugMessage(string.format("Key: %s KeyType: %s valuetype: %s", k, type(k), type(v)), "Storage")
     end
   end
 
