@@ -61,7 +61,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
     sequenceName = elements[2]
-    sequence = GSE.CloneSequence(GSELibrary[classid][sequenceName])
+    sequence = GSE.CloneSequence(GSELibrary[classid][sequenceName], true)
   end
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence

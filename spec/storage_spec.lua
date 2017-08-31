@@ -827,4 +827,47 @@ self:CallMethod('UpdateIcon')
     assert.True(GSE.IsLoopSequence(loopprioritysequence))
 
   end)
+
+  it ("tests that clonesequence works", function ()
+    local sequence1 = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local clonedsequence = GSE.CloneSequence(sequence1)
+
+
+    assert.falsy(clonedsequence.MacroVersions[1].Trinket2)
+    assert.True(clonedsequence.MacroVersions[1].Trinket1)
+
+  end)
 end)
