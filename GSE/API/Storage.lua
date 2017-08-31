@@ -42,6 +42,7 @@ function GSE.CloneMacroVersion(macroversion, keepcomments)
   end
 
   for k,v in pairs(macroversion) do
+    GSE.PrintDebugMessage(string.format("Processing Key: %s KeyType: %s valuetype: %s", k, type(k), type(v)), "Storage")
     if type(k) == "string" and type(v) == "string" then
       if GSE.isEmpty(string.find(v, '--', 1, true)) then
         retseq[k] = v
@@ -69,9 +70,6 @@ function GSE.CloneMacroVersion(macroversion, keepcomments)
           end
         end
       end
-
-    else
-      GSE.PrintDebugMessage(string.format("Key: %s KeyType: %s valuetype: %s", k, type(k), type(v)), "Storage")
     end
   end
 
