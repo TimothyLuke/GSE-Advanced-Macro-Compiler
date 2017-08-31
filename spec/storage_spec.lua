@@ -863,8 +863,10 @@ self:CallMethod('UpdateIcon')
     }
 
     local clonedsequence = GSE.CloneSequence(sequence1)
-    assert.falsy(clonedsequence.Trinket2)
-    assert.True(clonedsequence.Trinket1)
+
+
+    assert.falsy(clonedsequence.MacroVersions[1].Trinket2)
+    assert.True(clonedsequence.MacroVersions[1].Trinket1)
 
   end)
 end)
