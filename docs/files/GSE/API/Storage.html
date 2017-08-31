@@ -56,6 +56,10 @@
 	</li>
 
 	<li>
+		<a href="../../../files/GSE/API/GUIFunctions.html">GSE/API/GUIFunctions.lua</a>
+	</li>
+
+	<li>
 		<a href="../../../files/GSE/API/Init.html">GSE/API/Init.lua</a>
 	</li>
 
@@ -64,15 +68,7 @@
 	</li>
 
 	<li>
-		<a href="../../../files/GSE/API/Options.html">GSE/API/Options.lua</a>
-	</li>
-
-	<li>
 		<a href="../../../files/GSE/API/Plugins.html">GSE/API/Plugins.lua</a>
-	</li>
-
-	<li>
-		<a href="../../../files/GSE/API/Serialisation.html">GSE/API/Serialisation.lua</a>
 	</li>
 
 	<li>
@@ -151,11 +147,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.CompressSequenceFromString">GSE.CompressSequenceFromString</a>&nbsp;(importstring)</td>
-	<td class="summary">This function takes a text string and compresses it without loading it to the library </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.ConvertLegacySequence">GSE.ConvertLegacySequence</a>&nbsp;(sequence)</td>
 	<td class="summary">This converts a legacy GS/GSE1 sequence to a new GSE2 </td>
 	</tr>
@@ -181,7 +172,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, compact)</td>
+	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName)</td>
 	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
 	</tr>
 
@@ -216,11 +207,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportCompressedMacroCollection">GSE.ImportCompressedMacroCollection</a>&nbsp;(Sequences)</td>
-	<td class="summary">Load a collection of Sequences </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.ImportMacroCollection">GSE.ImportMacroCollection</a>&nbsp;(Sequences)</td>
 	<td class="summary">Load a collection of Sequences </td>
 	</tr>
@@ -228,11 +214,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.ImportSequence">GSE.ImportSequence</a>&nbsp;(importStr, legacy, createicon)</td>
 	<td class="summary">Load a GSE Sequence Collection from a String </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportSerialisedSequence">GSE.ImportSerialisedSequence</a>&nbsp;(importstring, createicon)</td>
-	<td class="summary">Load a serialised Sequence </td>
 	</tr>
 
 	<tr>
@@ -501,32 +482,6 @@ Compares two sequences and return a boolean if the match.  If they do not match 
 
 
 
-<dt><a name="GSE.CompressSequenceFromString"></a><strong>GSE.CompressSequenceFromString</strong>&nbsp;(importstring)</dt>
-<dd>
-This function takes a text string and compresses it without loading it to the library
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  importstring: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.ConvertLegacySequence"></a><strong>GSE.ConvertLegacySequence</strong>&nbsp;(sequence)</dt>
 <dd>
 This converts a legacy GS/GSE1 sequence to a new GSE2
@@ -669,7 +624,7 @@ Delete a sequence starting with the macro and then the sequence from the library
 
 
 
-<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, compact)</dt>
+<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName)</dt>
 <dd>
 Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 
@@ -683,10 +638,6 @@ Creates a string representation of the a Sequence that can be shared as a string
 	
 	<li>
 	  sequenceName: 
-	</li>
-	
-	<li>
-	  compact: 
 	</li>
 	
 </ul>
@@ -836,32 +787,6 @@ Takes a collection of Sequences and returns a list of names
 
 
 
-<dt><a name="GSE.ImportCompressedMacroCollection"></a><strong>GSE.ImportCompressedMacroCollection</strong>&nbsp;(Sequences)</dt>
-<dd>
-Load a collection of Sequences
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  Sequences: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.ImportMacroCollection"></a><strong>GSE.ImportMacroCollection</strong>&nbsp;(Sequences)</dt>
 <dd>
 Load a collection of Sequences
@@ -902,36 +827,6 @@ Load a GSE Sequence Collection from a String
 	
 	<li>
 	  legacy: 
-	</li>
-	
-	<li>
-	  createicon: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ImportSerialisedSequence"></a><strong>GSE.ImportSerialisedSequence</strong>&nbsp;(importstring, createicon)</dt>
-<dd>
-Load a serialised Sequence
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  importstring: 
 	</li>
 	
 	<li>
