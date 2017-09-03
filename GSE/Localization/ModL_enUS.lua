@@ -381,3 +381,16 @@ L["Paused"] = true
 L["Running"] = true
 L["Paused - In Combat"]  = true
 L["The GSE Out of Combat queue is %s"] = true
+
+-- GSE 2.2.00
+L["Unable to interpret sequence."] = true
+L["Use Verbose Export Sequence Format"] = true
+L["When exporting a sequence use a human readable verbose form."] = true
+L["Gnome Sequencer: Compress a Sequence String."] = true
+L["Compress Sequence from Forums"] = true
+L["Sequence to Compress."] = true
+L["Compress"] = true
+L["Party"] = true
+L["Heroic setting changed to Default."] = true
+L["Dungeon setting changed to Default."] = true
+L["Party setting changed to Default."] = true

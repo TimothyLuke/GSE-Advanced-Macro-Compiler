@@ -79,6 +79,11 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inRaid = false
   end
+  if IsInGroup() then
+    GSE.inParty = true
+  else
+    GSE.inParty = false
+  end
   GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic), Statics.DebugModules["API"])
   GSE.ReloadSequences()
 end
@@ -124,11 +129,7 @@ function GSE:ADDON_LOADED(event, addon)
 
   -- Register the Sample Macros
   local seqnames = {}
-  for i=1, 12, 1 do
-    for k,_ in pairs(Statics.SampleMacros[i]) do
-      table.insert(seqnames, k)
-    end
-  end
+  table.insert(seqnames, "Assorted Sample Macros")
   GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
 
   GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
@@ -177,7 +178,10 @@ function GSE:ADDON_LOADED(event, addon)
     GSEOptions.MacroResetModifiers["AnyAlt"] = nil
   end
 
-
+  -- Added in 2.2
+  if GSE.isEmpty(GSEOptions.UseVerboseFormat) then
+    GSEOptions.UseVerboseFormat = true
+  end
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
@@ -212,6 +216,22 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
   GSE.ReloadSequences()
 end
 
+function GSE:GROUP_ROSTER_UPDATE(...)
+  -- Serialisation stuff
+  GSE.sendVersionCheck()
+  for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
+    if not (UnitInParty(k) or UnitInRaid(k)) then
+      -- Take them out of the list
+      GSE.UnsavedOptions["PartyUsers"][k] = nil
+    end
+
+  end
+  -- Group Team stuff
+  GSE:ZONE_CHANGED_NEW_AREA()
+end
+
+
+GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 GSE:RegisterEvent('PLAYER_LOGOUT')
 GSE:RegisterEvent('PLAYER_ENTERING_WORLD')
 GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
@@ -275,6 +295,8 @@ function GSE:GSSlash(input)
     GSE.MoveMacroToClassFromGlobal()
   elseif string.lower(input) == "checkmacrosforerrors" then
     GSE.ScanMacrosForErrors()
+  elseif string.lower(input) == "compressstring" then
+    GSE.GUICompressFrame:Show()
   else
     GSE.GUIShowViewer()
   end

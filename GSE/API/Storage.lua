@@ -96,10 +96,9 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
   -- CHeck for colissions
   local found = false
-  if GSE.isEmpty(classid) or classid == 0 then
+  if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
     classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
-  end
-  if GSE.isEmpty(sequence.SpecID) then
+  elseif GSE.isEmpty(sequence.SpecID) then
     sequence.SpecID = GSE.GetCurrentClassID()
     classid = GSE.GetCurrentClassID()
   end
@@ -155,7 +154,12 @@ function GSE.ImportMacroCollection(Sequences)
   end
 end
 
-
+--- Load a collection of Sequences
+function GSE.ImportCompressedMacroCollection(Sequences)
+  for k,v in ipairs(Sequences) do
+    GSE.ImportSerialisedSequence(v)
+  end
+end
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
   local classid = GSE.GetCurrentClassID()
@@ -177,6 +181,8 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].Dungeon
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Heroic) and GSE.inHeroic then
     vers = GSELibrary[classid][sequenceName].Heroic
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Party) and GSE.inParty then
+    vers = GSELibrary[classid][sequenceName].Party
   end
   return vers
 end
@@ -199,6 +205,23 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
       sequenceid = CreateMacro(sequenceName, (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon), '#showtooltip\n/click ' .. sequenceName, (forceglobalstub and false or GSE.SetMacroLocation()) )
     end
   end
+end
+
+--- Load a serialised Sequence
+function GSE.ImportSerialisedSequence(importstring, createicon)
+  local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
+  GSE.PrintDebugMessage (string.format("Decomsuccess: %s  tablerows: %s   type cell1 %s cell2 %s" , tostring(decompresssuccess), table.getn(actiontable), type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
+  if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and (type(actiontable[2]) == "table") then
+    GSE.AddSequenceToCollection(actiontable[1], actiontable[2])
+    if createicon then
+      GSE.CheckMacroCreated(actiontable[1], true)
+    end
+  else
+    GSE.Print(L["Unable to interpret sequence."] , GNOME)
+    decompresssuccess = false
+  end
+
+  return decompresssuccess
 end
 
 --- Load a GSE Sequence Collection from a String
@@ -293,135 +316,140 @@ end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName)
-  GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
-  local disabledseq = ""
-  local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
-  if not GSE.isEmpty(sequence.Helplink) then
-    sequencemeta = sequencemeta .. "  Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
-  end
-  if not GSE.isEmpty(sequence.Help) then
-    sequencemeta = sequencemeta .. "  Help = [[" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "]],\n"
-  end
-  sequencemeta = sequencemeta .. "  Default=" ..sequence.Default .. ",\n"
-  if not GSE.isEmpty(sequence.Raid) then
-    sequencemeta = sequencemeta .. "  Raid=" ..sequence.Raid .. ",\n"
-  end
-  if not GSE.isEmpty(sequence.PVP) then
-    sequencemeta = sequencemeta .. "  PVP=" ..sequence.PVP .. ",\n"
-  end
-  if not GSE.isEmpty(sequence.Dungeon) then
-    sequencemeta = sequencemeta .. "  Dungeon=" ..sequence.Dungeon .. ",\n"
-  end
-  if not GSE.isEmpty(sequence.Heroic) then
-    sequencemeta = sequencemeta .. "  Heroic=" ..sequence.Heroic .. ",\n"
-  end
-  if not GSE.isEmpty(sequence.Mythic) then
-    sequencemeta = sequencemeta .. "  Mythic=" ..sequence.Mythic .. ",\n"
-  end
-  local macroversions = "  MacroVersions = {\n"
-  for k,v in pairs(sequence.MacroVersions) do
-    local outputversion =  GSE.CleanMacroVersion(v)
-    macroversions = macroversions .. "    [" .. k .. "] = {\n"
+function GSE.ExportSequence(sequence, sequenceName, compact)
+  local returnVal = ""
+  if GSEOptions.UseVerboseFormat and GSE.isEmpty(compact) then
+    GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
+    local disabledseq = ""
+    local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
+    if not GSE.isEmpty(sequence.Helplink) then
+      sequencemeta = sequencemeta .. "  Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink .. Statics.StringReset .. "\",\n"
+    end
+    if not GSE.isEmpty(sequence.Help) then
+      sequencemeta = sequencemeta .. "  Help = [[" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset .. "]],\n"
+    end
+    sequencemeta = sequencemeta .. "  Default=" ..sequence.Default .. ",\n"
+    if not GSE.isEmpty(sequence.Raid) then
+      sequencemeta = sequencemeta .. "  Raid=" ..sequence.Raid .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.PVP) then
+      sequencemeta = sequencemeta .. "  PVP=" ..sequence.PVP .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Dungeon) then
+      sequencemeta = sequencemeta .. "  Dungeon=" ..sequence.Dungeon .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Heroic) then
+      sequencemeta = sequencemeta .. "  Heroic=" ..sequence.Heroic .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Mythic) then
+      sequencemeta = sequencemeta .. "  Mythic=" ..sequence.Mythic .. ",\n"
+    end
+    local macroversions = "  MacroVersions = {\n"
+    for k,v in pairs(sequence.MacroVersions) do
+      local outputversion =  GSE.CleanMacroVersion(v)
+      macroversions = macroversions .. "    [" .. k .. "] = {\n"
 
-    local steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset .. ",\n" -- Set to this as the default if its blank.
+      local steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset .. ",\n" -- Set to this as the default if its blank.
 
-    if not GSE.isEmpty(v.StepFunction) then
-      if  v.StepFunction == Statics.PriorityImplementation then
-        steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-      elseif v.StepFunction == "Priority" then
-       steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-     else
-       steps = "      StepFunction = \"" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "\",\n"
+      if not GSE.isEmpty(v.StepFunction) then
+        if  v.StepFunction == Statics.PriorityImplementation then
+          steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
+        elseif v.StepFunction == "Priority" then
+         steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
+       else
+         steps = "      StepFunction = \"" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "\",\n"
+        end
       end
-    end
-    if not GSE.isEmpty(outputversion.Combat) then
-      macroversions = macroversions .. "     Combat=" .. tostring(outputversion.Combat) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Trinket1) then
-      macroversions = macroversions .. "      Trinket1=" .. tostring(outputversion.Trinket1) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Trinket2) then
-      macroversions = macroversions .. "      Trinket2=" .. tostring(outputversion.Trinket2) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Head) then
-      macroversions = macroversions .. "      Head=" .. tostring(outputversion.Head) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Neck) then
-      macroversions = macroversions .. "      Neck=" .. tostring(outputversion.Neck) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Belt) then
-      macroversions = macroversions .. "      Belt=" .. tostring(outputversion.Belt) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Ring1) then
-      macroversions = macroversions .. "      Ring1=" .. tostring(outputversion.Ring1) .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.Ring2) then
-      macroversions = macroversions .. "      Ring2=" .. tostring(outputversion.Ring2) .. ",\n"
-    end
+      if not GSE.isEmpty(outputversion.Combat) then
+        macroversions = macroversions .. "     Combat=" .. tostring(outputversion.Combat) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Trinket1) then
+        macroversions = macroversions .. "      Trinket1=" .. tostring(outputversion.Trinket1) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Trinket2) then
+        macroversions = macroversions .. "      Trinket2=" .. tostring(outputversion.Trinket2) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Head) then
+        macroversions = macroversions .. "      Head=" .. tostring(outputversion.Head) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Neck) then
+        macroversions = macroversions .. "      Neck=" .. tostring(outputversion.Neck) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Belt) then
+        macroversions = macroversions .. "      Belt=" .. tostring(outputversion.Belt) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Ring1) then
+        macroversions = macroversions .. "      Ring1=" .. tostring(outputversion.Ring1) .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.Ring2) then
+        macroversions = macroversions .. "      Ring2=" .. tostring(outputversion.Ring2) .. ",\n"
+      end
 
-    macroversions = macroversions .. steps
-    if not GSE.isEmpty(outputversion.LoopLimit) then
-      macroversions = macroversions .. "      LoopLimit=" .. GSEOptions.EQUALS .. outputversion.LoopLimit .. Statics.StringReset .. ",\n"
-    end
-    if not GSE.isEmpty(outputversion.KeyPress) then
-      macroversions = macroversions .. "      KeyPress={\n"
-      for _,p in ipairs(outputversion.KeyPress) do
+      macroversions = macroversions .. steps
+      if not GSE.isEmpty(outputversion.LoopLimit) then
+        macroversions = macroversions .. "      LoopLimit=" .. GSEOptions.EQUALS .. outputversion.LoopLimit .. Statics.StringReset .. ",\n"
+      end
+      if not GSE.isEmpty(outputversion.KeyPress) then
+        macroversions = macroversions .. "      KeyPress={\n"
+        for _,p in ipairs(outputversion.KeyPress) do
+          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          if not GSE.isEmpty(results)then
+            macroversions = macroversions .. "        \"" .. results .."\",\n"
+          end
+        end
+        macroversions = macroversions .. "      },\n"
+      end
+      if not GSE.isEmpty(outputversion.PreMacro) then
+        macroversions = macroversions .. "      PreMacro={\n"
+        for _,p in ipairs(outputversion.PreMacro) do
+          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          if not GSE.isEmpty(results)then
+            macroversions = macroversions .. "        \"" .. results .."\",\n"
+          end
+        end
+        macroversions = macroversions .. "      },\n"
+      end
+      for _,p in ipairs(v) do
         local results = GSE.TranslateString(p, "enUS", "enUS", true)
         if not GSE.isEmpty(results)then
           macroversions = macroversions .. "        \"" .. results .."\",\n"
         end
       end
-      macroversions = macroversions .. "      },\n"
-    end
-    if not GSE.isEmpty(outputversion.PreMacro) then
-      macroversions = macroversions .. "      PreMacro={\n"
-      for _,p in ipairs(outputversion.PreMacro) do
-        local results = GSE.TranslateString(p, "enUS", "enUS", true)
-        if not GSE.isEmpty(results)then
-          macroversions = macroversions .. "        \"" .. results .."\",\n"
+      if not GSE.isEmpty(outputversion.PostMacro) then
+        macroversions = macroversions .. "      PostMacro={\n"
+        for _,p in ipairs(outputversion.PostMacro) do
+          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          if not GSE.isEmpty(results)then
+            macroversions = macroversions .. "        \"" .. results .."\",\n"
+          end
         end
+        macroversions = macroversions .. "      },\n"
       end
-      macroversions = macroversions .. "      },\n"
-    end
-    for _,p in ipairs(v) do
-      local results = GSE.TranslateString(p, "enUS", "enUS", true)
-      if not GSE.isEmpty(results)then
-        macroversions = macroversions .. "        \"" .. results .."\",\n"
-      end
-    end
-    if not GSE.isEmpty(outputversion.PostMacro) then
-      macroversions = macroversions .. "      PostMacro={\n"
-      for _,p in ipairs(outputversion.PostMacro) do
-        local results = GSE.TranslateString(p, "enUS", "enUS", true)
-        if not GSE.isEmpty(results)then
-          macroversions = macroversions .. "        \"" .. results .."\",\n"
+      if not GSE.isEmpty(outputversion.KeyRelease) then
+        macroversions = macroversions .. "      KeyRelease={\n"
+        for _,p in ipairs(outputversion.KeyRelease) do
+          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          if not GSE.isEmpty(results)then
+            macroversions = macroversions .. "        \"" .. results .."\",\n"
+          end
         end
+        macroversions = macroversions .. "      },\n"
       end
-      macroversions = macroversions .. "      },\n"
+      macroversions = macroversions .. "    },\n"
     end
-    if not GSE.isEmpty(outputversion.KeyRelease) then
-      macroversions = macroversions .. "      KeyRelease={\n"
-      for _,p in ipairs(outputversion.KeyRelease) do
-        local results = GSE.TranslateString(p, "enUS", "enUS", true)
-        if not GSE.isEmpty(results)then
-          macroversions = macroversions .. "        \"" .. results .."\",\n"
-        end
-      end
-      macroversions = macroversions .. "      },\n"
+    macroversions = macroversions .. "  },\n"
+    --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
+    returnVal = "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n"
+    returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. Statics.StringReset .. "\n"
+    returnVal = returnVal .. "  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta
+    if not GSE.isEmpty(sequence.Icon) then
+       returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
     end
-    macroversions = macroversions .. "    },\n"
+    returnVal = returnVal .. macroversions
+    returnVal = returnVal .. "}\n"
+  else
+    returnVal = returnVal .. GSE.EncodeMessage({sequenceName, sequence})
   end
-  macroversions = macroversions .. "  },\n"
-  --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
-  local returnVal = "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n"
-  returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. Statics.StringReset .. "\n"
-  returnVal = returnVal .. "  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta
-  if not GSE.isEmpty(sequence.Icon) then
-     returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
-  end
-  returnVal = returnVal .. macroversions
-  returnVal = returnVal .. "}\n"
 
   return returnVal
 end
@@ -947,7 +975,7 @@ end
 
 --- Load in the sample macros for the current class.
 function GSE.LoadSampleMacros(classID)
-  GSE.ImportMacroCollection(Statics.SampleMacros[classID])
+  GSE.ImportCompressedMacroCollection(Statics.SampleMacros[classID])
 end
 
 
@@ -1153,4 +1181,28 @@ function GSE.ScanMacrosForErrors()
 end
 
 
---- This function
+--- This function takes a text string and compresses it without loading it to the library
+function GSE.CompressSequenceFromString(importstring)
+  importStr = GSE.StripControlandExtendedCodes(importstring)
+  local returnstr = ""
+  local functiondefinition =  GSE.FixQuotes(importStr) .. [===[
+  return Sequences
+  ]===]
+
+  local fake_globals = setmetatable({
+    Sequences = {},
+    }, {__index = _G})
+  local func, err = loadstring (functiondefinition, "Storage")
+  if func then
+    -- Make the compiled function see this table as its "globals"
+    setfenv (func, fake_globals)
+
+    local TempSequences = assert(func())
+    if not GSE.isEmpty(TempSequences) then
+      for k,v in pairs(TempSequences) do
+        returnstr = GSE.ExportSequence(v, k, true)
+      end
+    end
+  end
+  return returnstr
+end

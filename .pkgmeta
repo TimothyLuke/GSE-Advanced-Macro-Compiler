@@ -49,10 +49,15 @@ externals:
     GSE/Lib/LibSharedMedia-3.0:
         url: svn://svn.wowace.com/wow/libsharedmedia-3-0/mainline/trunk
         tag: latest
-
+    GSE/Lib/AceGUI-3.0-Selectable-Panel:
+        url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
+        tag: latest
 
 move-folders:
     GSE/GSE: GSE
+    GSE/GSE_GUI: GSE_GUI
+    GSE/GSE_LDB: GSE_LDB
+
 
 enable-nolib-creation: no
 
@@ -64,4 +69,4 @@ ignore:
     - docs
     - deploy.sh
     - deploy_key.enc
-    - GS-Core
+    - Deprecated

@@ -27,6 +27,7 @@ editframe.PVP = 1
 editframe.Mythic = 1
 editframe.Dungeon = 1
 editframe.Heroic = 1
+editframe.Party = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
@@ -396,7 +397,30 @@ function GSE:GUIDrawMetadataEditor(container)
     end
   end)
 
-  contentcontainer:AddChild(defgroup3)
+  local defgroup4 = AceGUI:Create("SimpleGroup")
+  defgroup4:SetLayout("Flow")
+  defgroup4:SetWidth(editframe.Width - 100)
+
+  local partydropdown = AceGUI:Create("Dropdown")
+  partydropdown:SetLabel(L["Party"])
+  partydropdown:SetWidth(250)
+  partydropdown:SetList(GSE.GetVersionList())
+  partydropdown:SetValue(tostring(editframe.Party))
+  defgroup4:AddChild(partydropdown)
+  partydropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Party = nil
+    else
+      editframe.Sequence.Party = tonumber(key)
+      editframe.Party = tonumber(key)
+    end
+  end)
+
+  local spacerlabel7 = AceGUI:Create("Label")
+  spacerlabel7:SetWidth(100)
+  defgroup4:AddChild(spacerlabel7)
+
+  contentcontainer:AddChild(defgroup4)
   container:AddChild(scrollcontainer)
 end
 
@@ -742,6 +766,18 @@ function GSE.GUIDeleteVersion(version)
   if sequence.Mythic == version then
     sequence.Mythic = sequence.Default
     printtext = printtext .. " " .. L["Mythic setting changed to Default."]
+  end
+  if sequence.Heroic == version then
+    sequence.Heroic = sequence.Default
+    printtext = printtext .. " " .. L["Heroic setting changed to Default."]
+  end
+  if sequence.Dungeon == version then
+    sequence.Dungeon = sequence.Default
+    printtext = printtext .. " " .. L["Dungeon setting changed to Default."]
+  end
+  if sequence.Party == version then
+    sequence.Party = sequence.Default
+    printtext = printtext .. " " .. L["Party setting changed to Default."]
   end
 
   if sequence.Default > 1 then

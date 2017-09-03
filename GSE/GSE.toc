@@ -2,7 +2,7 @@
 ## Title: |cffff0000GSE2:|r |cFF00D1FFGnome Sequencer Enhanced|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke
-## Version: 2107
+## Version: 2200
 ## SavedVariables: GSEOptions GSELibrary
 ## OptionalDeps: WeakAuras
 
@@ -13,7 +13,7 @@ lib\LibDataBroker-1.1\LibDataBroker-1.1.lua
 lib\LibQTip-1.0\LibQTip-1.0.lua
 lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
-GUI\PanelWidget.lua
+Lib\AceGUI-3.0-Selectable-Panel\AceGUI-3.0-Selectable-Panel.lua
 
 
 #Setup Localisation
@@ -44,34 +44,10 @@ Localization\enUSSHADOW.lua
 API\StaticPopup.lua
 API\StringFunctions.lua
 API\CharacterFunctions.lua
-SampleMacros\DeathKnight.lua
-SampleMacros\Druid.lua
-SampleMacros\DemonHunter.lua
-SampleMacros\Hunter.lua
-SampleMacros\Mage.lua
-SampleMacros\Monk.lua
-SampleMacros\Paladin.lua
-SampleMacros\Priest.lua
-SampleMacros\Rogue.lua
-SampleMacros\Shaman.lua
-SampleMacros\Warlock.lua
-SampleMacros\Warrior.lua
+SampleMacros.lua
 API\Storage.lua
 API\Translator.lua
 API\Plugins.lua
-
-
-# GUI
-API\GUIFunctions.lua
-GUI\Options.lua
-GUI\Import.lua
-GUI\Export.lua
-GUI\DebugWindow.lua
-GUI\Transmission.lua
-GUI\LDBProvider.lua
-GUI\VersionManagement.lua
-GUI\Recorder.lua
-GUI\Editor.lua
-GUI\Viewer.lua
-
+API\Serialisation.lua
+API\Options.lua
 API\Events.lua
