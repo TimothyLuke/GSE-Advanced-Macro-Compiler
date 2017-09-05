@@ -394,3 +394,4 @@ L["Party"] = true
 L["Heroic setting changed to Default."] = true
 L["Dungeon setting changed to Default."] = true
 L["Party setting changed to Default."] = true
+L["Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."] = true

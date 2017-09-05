@@ -1174,6 +1174,8 @@ function GSE.ScanMacrosForErrors()
       end
       if seqname == "WW" then
         GSE.Print(string.format(L["Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."], GSEOptions.CommandColour, Statics.StringReset), "Error")
+      elseif seqname == "PVP" then
+        GSE.Print(string.format(L["Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."], GSEOptions.CommandColour, Statics.StringReset), "Error")
       end
     end
   end
