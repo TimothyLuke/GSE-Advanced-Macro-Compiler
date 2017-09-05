@@ -44,7 +44,7 @@ function dataobj:OnEnter()
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
     tooltip:AddSeparator()
     y,x = tooltip:AddLine()
-    tooltip:SetCell(L["GSE Users"],"CENTER", 3)
+    tooltip:SetCell(y,1,L["GSE Users"],"CENTER", 3)
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
       tooltip:AddLine(k, nil, v)
     end

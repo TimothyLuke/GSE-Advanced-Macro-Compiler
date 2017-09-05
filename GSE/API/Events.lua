@@ -100,6 +100,10 @@ function GSE:ADDON_LOADED(event, addon)
   if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()]) then
     GSELibrary[GSE.GetCurrentClassID()] = {}
   end
+  if GSE.isEmpty(GSELibrary[0]) then
+    GSELibrary[0] = {}
+  end
+
   local counter = 0
 
   for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
