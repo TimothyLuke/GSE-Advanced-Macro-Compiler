@@ -1,4 +1,5 @@
 local GSE = GSE
+local L = GSE.L
 local Statics = GSE.Static
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
 local libC = LibStub:GetLibrary("LibCompress")
@@ -105,14 +106,14 @@ function GSE.DecodeMessage(data)
   --Decompress the decoded data
   local two, message = libC:Decompress(one)
   if(not two) then
-    GSE.PrintDebugMessage ("YourAddon: error decompressing: " .. message, Statics.SourceTransmission)
+    GSE.PrintDebugMessage ("Error decompressing: " .. message, Statics.SourceTransmission)
     return
   end
 
   -- Deserialize the decompressed data
   local success, final = libS:Deserialize(two)
   if (not success) then
-    GSE.PrintDebugMessage ("YourAddon: error deserializing " .. final, Statics.SourceTransmission)
+    GSE.PrintDebugMessage ("Error deserializing " .. final, Statics.SourceTransmission)
     return
   end
 
