@@ -419,7 +419,8 @@ function GSE:GUIDrawMetadataEditor(container)
   local spacerlabel7 = AceGUI:Create("Label")
   spacerlabel7:SetWidth(100)
   defgroup4:AddChild(spacerlabel7)
-
+  
+  contentcontainer:AddChild(defgroup3)
   contentcontainer:AddChild(defgroup4)
   container:AddChild(scrollcontainer)
 end
