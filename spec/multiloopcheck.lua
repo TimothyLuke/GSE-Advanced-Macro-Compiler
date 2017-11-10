@@ -1,4 +1,5 @@
 -- use this to test sequential loop on https://www.lua.org/cgi-bin/demo
+-- To make this fit in Chrome inspect the input box and set maxlength to 4000 or something useful
 sequence = {
   PreMacro = {
     "Pre1",
