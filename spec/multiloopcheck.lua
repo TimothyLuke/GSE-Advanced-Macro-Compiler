@@ -34,37 +34,47 @@ local currentphase = phase
 for k,v in ipairs(sequence.PostMacro) do
   table.insert(macros, v)
 end
-print ("LoopStart: " .. loopstart)
-print ("LoopStop: " .. loopstop)
 local phasestart = 1
 local phaseend = 1
 local currentphase = phase
 local phasecount = 1
 local phaselooplimit = 1
+local previousphase
+
+local function returnphaselimits(iphase)
+  local iphasestart, iphaseend, iphaselooplimit, ipreviousphase
+  if iphase == "normal" then
+    iphasestart = loopstart
+    iphaseend = loopstop - 1
+    iphaselooplimit = RepeatMacro
+    ipreviousphase = "pre"
+  elseif iphase == "post" then
+    iphasestart = loopstop
+    iphaseend = #macros
+    iphaselooplimit = RepeatPostMacro
+    ipreviousphase = "normal"
+  else
+    iphasestart = 1
+    iphaseend = loopstart - 1
+    iphaselooplimit = RepeatPreMacro
+    ipreviousphase = "post"
+  end
+  return iphasestart, iphaseend, iphaselooplimit, ipreviousphase
+end
 local function click(step)
   -- determine phase and loop macro parameters
   if step >= loopstop then
     currentphase = "post"
-    phasestart = loopstop
-    phaseend = #macros
-    phaselooplimit = RepeatPostMacro
   elseif step >= loopstart then
     currentphase = "normal"
-    phasestart = loopstart
-    phaseend = loopstop - 1
-    phaselooplimit = RepeatMacro
   else
     currentphase = "pre"
-    phasestart = 1
-    phaseend = loopstart - 1
-    phaselooplimit = RepeatPreMacro
   end
-  if phase == currentphase then
-    -- same phase
-    step = step + 1
-  else
+  phasestart, phaseend, phaselooplimit, previousphase = returnphaselimits(currentphase)
+  if phase ~= currentphase then
     -- restart or same phase
     print(phasecount .. " " .. phaselooplimit .. " " .. step)
+    phasestart, _, phaselooplimit, _ = returnphaselimits(previousphase)
     if phasecount >= phaselooplimit then
       -- next phase
       phasecount = 1
@@ -72,14 +82,11 @@ local function click(step)
     else
       -- repeat phase
       phasecount = phasecount + 1
-      if phase == "normal" then
-        step = loopstart - 1
-      elseif phase == "post" then
-        step = loopstop
-      else
-        step = 1
-      end
+      step = phasestart
     end
+  else
+    -- same phase
+    step = step + 1
   end
   if step > #macros then
     step = 1
@@ -89,6 +96,6 @@ local function click(step)
 end
 print ("starting")
 for i=1, 50 do
-  print(step .. " " .. macros[step])
+  print(step .. " " .. macros[step] .. " " .. phase)
   step = click(step)
 end
