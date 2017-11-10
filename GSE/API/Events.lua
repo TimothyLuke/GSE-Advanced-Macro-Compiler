@@ -138,7 +138,7 @@ function GSE:ADDON_LOADED(event, addon)
 
   GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
-  LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gse"})
+  LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
   if addon == GNOME then
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
     if not GSEOptions.HideLoginMessage then
@@ -257,7 +257,7 @@ end
 
 GSE:RegisterChatCommand("gsse", "GSSlash")
 GSE:RegisterChatCommand("gs", "GSSlash")
-
+GSE:RegisterChatCommand("gse", "GSSlash")
 
 
 
