@@ -96,7 +96,7 @@ helpTxt = 'Talents: 3331222',]]
     assert.are.same("", GSE.CleanStrings("/use 14"))
   end)
 
-  it ("tests that GSE.TrimWhiteSpace(str) removes preceeding whitespace")
+  it ("tests that GSE.TrimWhiteSpace(str) removes preceeding whitespace", function()
     local teststr = [[
 
      test   ]]
