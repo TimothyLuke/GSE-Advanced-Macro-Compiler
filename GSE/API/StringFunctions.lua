@@ -196,3 +196,7 @@ function GSE.StripControlandExtendedCodes( str )
   end
   return s
 end
+
+function GSE.TrimWhiteSpace(str)
+  return (str:gsub("^%s*(.-)%s*$", "%1"))
+end

@@ -76,6 +76,7 @@ end
 
 function GSE.GUIImportSequence()
   local importstring = importsequencebox:GetText()
+  importstring = GSE.TrimWhiteSpace(importstring)
   if string.sub(importstring,1,9) == "Sequences" then
     local legacy = false
 

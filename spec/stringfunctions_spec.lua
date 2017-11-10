@@ -95,4 +95,13 @@ helpTxt = 'Talents: 3331222',]]
     assert.are.same("/cast Judgement", GSE.CleanStrings("/cast Judgement"))
     assert.are.same("", GSE.CleanStrings("/use 14"))
   end)
+
+  it ("tests that GSE.TrimWhiteSpace(str) removes preceeding whitespace")
+    local teststr = [[
+
+     test   ]]
+     local expectedstr = [[test]]
+
+     assert.are.same(expectedstr, GSE.TrimWhiteSpace(str))
+  end)
 end)
