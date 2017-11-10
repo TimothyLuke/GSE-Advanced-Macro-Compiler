@@ -102,6 +102,6 @@ helpTxt = 'Talents: 3331222',]]
      test   ]]
      local expectedstr = [[test]]
 
-     assert.are.same(expectedstr, GSE.TrimWhiteSpace(str))
+     assert.are.same(expectedstr, GSE.TrimWhiteSpace(teststr))
   end)
 end)
