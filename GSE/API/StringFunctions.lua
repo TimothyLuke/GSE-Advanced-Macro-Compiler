@@ -198,5 +198,5 @@ function GSE.StripControlandExtendedCodes( str )
 end
 
 function GSE.TrimWhiteSpace(str)
-  return (str:gsub("^%s*(.-)%s*$", "%1"))
+  return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
 end
