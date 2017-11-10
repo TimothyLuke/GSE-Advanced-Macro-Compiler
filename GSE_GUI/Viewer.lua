@@ -307,16 +307,16 @@ function GSE.GUIConfigureMacroButton(button)
   if GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName) then
     button:SetText(L["Delete Icon"])
     button:SetCallback("OnClick", function()
-      GSE.DeleteMacroStub(viewframe.SequenceName)
+      GSE.DeleteMacroStub(GSE.GUIViewFrame.SequenceName)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
     end)
   else
     button:SetText(L["Create Icon"])
     button:SetCallback("OnClick", function()
-      GSE.CheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
+      GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. viewframe.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), viewframe.SequenceName))
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
     end)
   end
   if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
