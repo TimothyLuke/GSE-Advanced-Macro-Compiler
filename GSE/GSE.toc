@@ -2,7 +2,7 @@
 ## Title: |cffff0000GSE2:|r |cFF00D1FFGnome Sequencer Enhanced|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke
-## Version: 2203
+## Version: 2204
 ## SavedVariables: GSEOptions GSELibrary
 ## OptionalDeps: WeakAuras
 
@@ -46,7 +46,7 @@ API\StringFunctions.lua
 API\CharacterFunctions.lua
 SampleMacros.lua
 API\Storage.lua
-API\Translator.lua
+API\translator.lua
 API\Plugins.lua
 API\Serialisation.lua
 API\Options.lua
