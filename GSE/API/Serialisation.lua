@@ -131,7 +131,7 @@ function GSE.TransmitSequence(key, channel, target)
   t.ClassID = classid
   t.SequenceName = SequenceName
   t.Sequence = GSELibrary[classid][SequenceName]
-  GSSendMessage(t, channel, target)
+  GSE.sendMessage(t, channel, target)
   GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
