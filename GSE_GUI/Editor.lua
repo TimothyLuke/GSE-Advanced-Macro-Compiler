@@ -725,22 +725,23 @@ function GSE:GUIDrawMacroEditor(container, version)
 end
 
 function GSE.GUISelectEditorTab(container, event, group)
-  container:ReleaseChildren()
-  editframe.SelectedTab = group
-  editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
-  editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
-  if group == "config" then
-    GSE:GUIDrawMetadataEditor(container)
-  elseif group == "new" then
-    -- Copy the Default to a new version
-    table.insert(editframe.Sequence.MacroVersions, GSE.CloneMacroVersion(editframe.Sequence.MacroVersions[editframe.Sequence.Default]))
+  if not  GSE.isEmpty(container) then
+    container:ReleaseChildren()
+    editframe.SelectedTab = group
+    editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
+    editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
+    if group == "config" then
+      GSE:GUIDrawMetadataEditor(container)
+    elseif group == "new" then
+      -- Copy the Default to a new version
+      table.insert(editframe.Sequence.MacroVersions, GSE.CloneMacroVersion(editframe.Sequence.MacroVersions[editframe.Sequence.Default]))
 
-    GSE.GUIEditorPerformLayout(editframe)
-    GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
-  else
-    GSE:GUIDrawMacroEditor(container, group)
+      GSE.GUIEditorPerformLayout(editframe)
+      GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
+    else
+      GSE:GUIDrawMacroEditor(container, group)
+    end
   end
-
 end
 
 function GSE.GUIDeleteVersion(version)
