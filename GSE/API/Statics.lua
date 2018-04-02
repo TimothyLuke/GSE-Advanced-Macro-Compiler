@@ -118,6 +118,16 @@ Statics.SequenceDebug = "SEQUENCEDEBUG"
 
 Statics.Priority = "Priority"
 Statics.Sequential = "Sequential"
+Statics.Random = "Random"
+
+Statics.RandomImplementation = [[
+  step = math.random(#macros)
+]]
+
+Statics.LoopRandomImplementation = [[
+  step = math.random(#macros)
+]]
+
 
 --- <code>GSStaticPriority</code> is a static step function that goes 1121231234123451234561234567
 --    use this like StepFunction = GSStaticPriority, in a macro

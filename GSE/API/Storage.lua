@@ -354,7 +354,9 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(v.StepFunction) then
         if  v.StepFunction == Statics.PriorityImplementation then
           steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
-        elseif v.StepFunction == "Priority" then
+        elseif  v.StepFunction == Statics.Random then
+          steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Random\"" .. Statics.StringReset .. ",\n"
+        elseif v.StepFunction == Statics.Priority then
          steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset .. ",\n"
        else
          steps = "      StepFunction = \"" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset .. "\",\n"
@@ -613,6 +615,8 @@ function GSE.PrepareStepFunction(stepper, looper)
   if looper then
     if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
       retvalue = Statics.LoopSequentialImplementation
+    elseif stepper == Statics.Random then
+      retvalue = Statics.LoopRandomImplementation
     else
       retvalue = Statics.LoopPriorityImplementation
     end
@@ -621,6 +625,8 @@ function GSE.PrepareStepFunction(stepper, looper)
       retvalue = 'step = step % #macros + 1'
     elseif stepper == Statics.Priority then
       retvalue = Statics.PriorityImplementation
+    elseif stepper == Statics.Random then
+      retvalue = Statics.RandomImplementation
     else
       retvalue = stepper
     end

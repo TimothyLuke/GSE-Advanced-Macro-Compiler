@@ -463,7 +463,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   stepdropdown:SetList({
     ["Sequential"] = L["Sequential (1 2 3 4)"],
     ["Priority"] = L["Priority List (1 12 123 1234)"],
-
+    ["Random"] = L["Random - It will select .... a spell, any spell"]
   })
   if GSE.isEmpty(editframe.Sequence.MacroVersions[version].StepFunction) then
     editframe.Sequence.MacroVersions[version].StepFunction = "Sequential"
