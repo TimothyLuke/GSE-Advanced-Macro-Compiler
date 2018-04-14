@@ -43,14 +43,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.HideLoginMessage end,
             order = 202
           },
---          realtimeparse = {
---            name = L["Use Realtime Parsing"],
---            desc = L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."],
---            type = "toggle",
---            set = function(info,val) GSEOptions.RealtimeParse = val end,
---            get = function(info) return GSEOptions.RealtimeParse end,
---            order = 202
---          },
+         realtimetranslateparse = {
+           name = L["Don't Translate Sequences"],
+           desc = L["Enable this option to stop automatically translating sequences from enUS to local language."],
+           type = "toggle",
+           set = function(info,val) GSEOptions.RealtimeTranslateParse = val end,
+           get = function(info) return GSEOptions.RealtimeTranslateParse end,
+           order = 202
+         },
           UseVerboseExportFormat = {
             name = L["Use Verbose Export Sequence Format"],
             desc = L["When exporting a sequence use a human readable verbose form."],
