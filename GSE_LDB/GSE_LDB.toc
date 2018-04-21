@@ -1,8 +1,8 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: |cffff0000GSE2:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE2
 ## Author: TimothyLuke
-## Version: 2208
+## Version: 2300
 ## Dependencies: GSE
 
 
