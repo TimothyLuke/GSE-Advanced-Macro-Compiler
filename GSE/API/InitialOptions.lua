@@ -117,3 +117,4 @@ GSE.StandardAddInPacks = {}
 GSE.UsedSequences = {}
 GSE.SequencesExec = {}
 GSE.UnsavedOptions["PartyUsers"]={}
+GSE.UnsavedOptions["GUI"] = false

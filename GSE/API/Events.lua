@@ -279,11 +279,20 @@ function GSE:GSSlash(input)
   elseif string.lower(string.sub(string.lower(input),1,6)) == "export" then
     GSE.Print(GSE.ExportSequence(string.sub(string.lower(input),8)))
   elseif string.lower(input) == "showdebugoutput" then
-    StaticPopup_Show ("GS-DebugOutput")
+      StaticPopup_Show ("GS-DebugOutput")
   elseif string.lower(input) == "record" then
-    GSE.GUIRecordFrame:Show()
+    if GSE.UnsavedOptions["GUI"] then
+      GSE.GUIRecordFrame:Show()
+    else
+      GSE.printNoGui()
+    end
   elseif string.lower(input) == "debug" then
-    GSE.GUIShowDebugWindow()
+    if GSE.UnsavedOptions["GUI"] then
+      GSE.GUIShowDebugWindow()
+    else
+      GSE.printNoGui()
+    end
+
   elseif string.lower(input) == "compilemissingspells" then
     GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
     GSE.ReportUnfoundSpells()
@@ -300,9 +309,19 @@ function GSE:GSSlash(input)
   elseif string.lower(input) == "checkmacrosforerrors" then
     GSE.ScanMacrosForErrors()
   elseif string.lower(input) == "compressstring" then
-    GSE.GUICompressFrame:Show()
+    if GSE.UnsavedOptions["GUI"] then
+      GSE.GUICompressFrame:Show()
+    else
+      GSE.printNoGui()
+    end
+
   else
-    GSE.GUIShowViewer()
+    if GSE.UnsavedOptions["GUI"] then
+      GSE.GUIShowViewer()
+    else
+      GSE.printNoGui()
+    end
+
   end
 end
 

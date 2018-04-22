@@ -402,3 +402,6 @@ L["Random - It will select .... a spell, any spell"] = true
 -- GSE 2.2.08
 L["Don't Translate Sequences"] = true
 L["Enable this option to stop automatically translating sequences from enUS to local language."] = true
+
+-- GSE 2.3.00
+L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the Sequence Debugger."] = true

@@ -72,6 +72,11 @@ function GSE.PrintDebugMessage(message, module)
     end
 end
 
+--- Prints that no GUI is available and needs to be loaded in the plugin window.
+function GSE.printNoGui()
+  GSE.Print(L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the Sequence Debugger."], "GSE GUI")
+end
+
 GSE.CurrentGCD = GetSpellCooldown(61304)
 GSE.RecorderActive = false
 
