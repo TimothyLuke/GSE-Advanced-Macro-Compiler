@@ -583,6 +583,13 @@ function GSE.OOCUpdateSequence(name,sequence)
 
     end
 
+    -- override trinkets to have an id instead of a string
+    for k,v in ipairs(executionseq) do
+      if string.lower(string.sub(v, 1, 4)) == "/use" then
+        v = GSE.DecodeTrinket(v, "ID")
+      end
+    end
+
     GSE.SequencesExec[name] = executionseq
 
     gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')

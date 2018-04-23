@@ -651,7 +651,7 @@ function GSE.GetOptionsTable()
             order = 26
           },
           UseVerboseExportFormat = {
-            name = L["Use Verbose Export Sequen ce Format"],
+            name = L["Use Verbose Export Sequence Format"],
             desc = L["When exporting a sequence use a human readable verbose form."],
             type = "toggle",
             set = function(info,val) GSEOptions.UseVerboseExportFormat = val end,

@@ -72,7 +72,21 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
       for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
         GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
         output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
-        if Statics.CastCmds[string.lower(cmd)] then
+        if string.lower(cmd) == "use" then
+          local conditionals, mods, trinketstuff = GSE.GetConditionalsFromString(etc)
+          if conditionals then
+            output = output .. mods .. " "
+            GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
+          end
+          GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
+
+          local trinketfound, trinketval = GSE.DecodeTrinket(trinketstuff, mode)
+          if trinketfound then
+            output = output ..  GSEOptions.KEYWORD .. trinketval .. Statics.StringReset
+          else
+            output = output  .. GSEOptions.UNKNOWN .. trinketstuff .. Statics.StringReset
+          end
+        elseif Statics.CastCmds[string.lower(cmd)] then
           if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
           end
@@ -275,6 +289,44 @@ function GSE.ReportUnfoundSpells()
     GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
   end
 
+end
+
+
+function GSE.DecodeTrinket(slot, mode)
+  print(mode)
+  print(slot)
+  local found = false
+  local returnval
+  if mode == "STRING" then
+    for k,v in ipairs(Statics.CharacterDollSlot) do
+      if tonumber(slot) == k then
+        returnval = v
+        found = true
+      end
+    end
+  else
+    for k,v in pairs(Statics.CharacterDollSlotReverse) do
+      if string.lower(slot) == k then
+        returnval = v
+        found = true
+      end
+    end
+  end
+  return found, returnval
+end
+
+--- Converts a string spell name to an id and back again.
+function GSE.GetSpellId(spellstring, mode, trinketmode)
+  local returnval
+  local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellstring)
+  if mode == "STRING" then
+
+    returnval = name
+  else
+    returnval = spellId
+  end
+  GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
+  return returnval
 end
 
 GSE.TranslatorAvailable = true

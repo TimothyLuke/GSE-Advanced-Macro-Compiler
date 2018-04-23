@@ -24,7 +24,7 @@ end
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
     text = GSE.UnEscapeString(editbox:GetText())
-    returntext = GSE.TranslateString(text , GetLocale(), GetLocale(), true)
+    returntext = GSE.TranslateString(text , "STRING", true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
   end
