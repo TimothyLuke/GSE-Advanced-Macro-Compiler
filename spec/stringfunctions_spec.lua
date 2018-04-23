@@ -93,7 +93,7 @@ helpTxt = 'Talents: 3331222',]]
 
   it ("tests GSE.CleanStrings() removes noted values", function()
     assert.are.same("/cast Judgement", GSE.CleanStrings("/cast Judgement"))
-    assert.are.same("", GSE.CleanStrings("/use 14"))
+    
   end)
 
   it ("tests that GSE.TrimWhiteSpace(str) removes preceeding whitespace", function()
