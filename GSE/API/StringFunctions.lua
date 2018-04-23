@@ -210,4 +210,6 @@ function GSE.GetSpellId(spellstring, mode)
   else
     returnval = spellId
   end
+  GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
+  return returnval
 end
