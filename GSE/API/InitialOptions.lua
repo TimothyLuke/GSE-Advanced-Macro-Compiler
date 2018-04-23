@@ -92,7 +92,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.DebugPrintModConditionsOnKeyPress = false
   GSEOptions.showGSEUsers = false
   GSEOptions.showGSEoocqueue = true
-  GSEOptions.UseVerboseFormat = true
+  GSEOptions.UseVerboseExportFormat = true
   GSE.resetMacroResetModifiers()
 end
 

@@ -51,14 +51,6 @@ function GSE.GetOptionsTable()
            get = function(info) return GSEOptions.RealtimeTranslateParse end,
            order = 202
          },
-          UseVerboseExportFormat = {
-            name = L["Use Verbose Export Sequence Format"],
-            desc = L["When exporting a sequence use a human readable verbose form."],
-            type = "toggle",
-            set = function(info,val) GSEOptions.UseVerboseFormat = val end,
-            get = function(info) return GSEOptions.UseVerboseFormat end,
-            order = 203
-          },
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],
@@ -657,6 +649,14 @@ function GSE.GetOptionsTable()
             set = function(info,val) GSEOptions.DebugPrintModConditionsOnKeyPress = val end,
             get = function(info) return GSEOptions.DebugPrintModConditionsOnKeyPress end,
             order = 26
+          },
+          UseVerboseExportFormat = {
+            name = L["Use Verbose Export Sequen ce Format"],
+            desc = L["When exporting a sequence use a human readable verbose form."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.UseVerboseExportFormat = val end,
+            get = function(info) return GSEOptions.UseVerboseExportFormat end,
+            order = 27
           },
           title6= {
             type = "header",

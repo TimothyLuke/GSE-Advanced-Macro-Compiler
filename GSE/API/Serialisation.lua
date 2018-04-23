@@ -91,7 +91,7 @@ function GSE.EncodeMessage(tab)
 
   local one = libS:Serialize(tab)
   GSE.PrintDebugMessage ("Compress Stage 1: " .. one, Statics.SourceTransmission)
-  local two = libC:CompressHuffman(one)
+  local two = libC:Compress(one)
   GSE.PrintDebugMessage ("Compress Stage 2: " .. two, Statics.SourceTransmission)
   local final = GSE.encodeB64(two)
   GSE.PrintDebugMessage ("Compress Stage Result: " .. final, Statics.SourceTransmission)
