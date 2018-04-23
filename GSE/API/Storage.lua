@@ -394,7 +394,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.KeyPress) then
         macroversions = macroversions .. "      KeyPress={\n"
         for _,p in ipairs(outputversion.KeyPress) do
-          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          local results = GSE.TranslateString(p, "ID", true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -404,7 +404,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.PreMacro) then
         macroversions = macroversions .. "      PreMacro={\n"
         for _,p in ipairs(outputversion.PreMacro) do
-          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          local results = GSE.TranslateString(p, "ID", true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -412,7 +412,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
         macroversions = macroversions .. "      },\n"
       end
       for _,p in ipairs(v) do
-        local results = GSE.TranslateString(p, "enUS", "enUS", true)
+        local results = GSE.TranslateString(p, "ID", true)
         if not GSE.isEmpty(results)then
           macroversions = macroversions .. "        \"" .. results .."\",\n"
         end
@@ -420,7 +420,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.PostMacro) then
         macroversions = macroversions .. "      PostMacro={\n"
         for _,p in ipairs(outputversion.PostMacro) do
-          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          local results = GSE.TranslateString(p, "ID", true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -430,7 +430,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.KeyRelease) then
         macroversions = macroversions .. "      KeyRelease={\n"
         for _,p in ipairs(outputversion.KeyRelease) do
-          local results = GSE.TranslateString(p, "enUS", "enUS", true)
+          local results = GSE.TranslateString(p, "ID", true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
