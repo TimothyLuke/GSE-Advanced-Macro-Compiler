@@ -116,8 +116,18 @@
 <table class="function_list">
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.GetSpellId">GSE.GetSpellId</a>&nbsp;(spellstring, mode, trinketmode)</td>
+	<td class="summary">Converts a string spell name to an id and back again.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.ReportUnfoundSpells">GSE.ReportUnfoundSpells</a>&nbsp;()</td>
 	<td class="summary">This option reports on language table errors and ommissions.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.TranslateSequence">GSE.TranslateSequence</a>&nbsp;(sequence, sequenceName, mode)</td>
+	<td class="summary">GSE.TranslateSequence will translate from local spell name to spell id and back again.\ mode of "STRING" will return local names where mode "ID" will return id's </td>
 	</tr>
 
 </table>
@@ -138,10 +148,78 @@
 
 
 
+<dt><a name="GSE.GetSpellId"></a><strong>GSE.GetSpellId</strong>&nbsp;(spellstring, mode, trinketmode)</dt>
+<dd>
+Converts a string spell name to an id and back again.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spellstring: 
+	</li>
+	
+	<li>
+	  mode: 
+	</li>
+	
+	<li>
+	  trinketmode: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="GSE.ReportUnfoundSpells"></a><strong>GSE.ReportUnfoundSpells</strong>&nbsp;()</dt>
 <dd>
 This option reports on language table errors and ommissions.  It is accessible via the command line /gs compilemissingspells and saves this informationm into GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
 
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.TranslateSequence"></a><strong>GSE.TranslateSequence</strong>&nbsp;(sequence, sequenceName, mode)</dt>
+<dd>
+GSE.TranslateSequence will translate from local spell name to spell id and back again.\ mode of "STRING" will return local names where mode "ID" will return id's
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sequence: 
+	</li>
+	
+	<li>
+	  sequenceName: 
+	</li>
+	
+	<li>
+	  mode: 
+	</li>
+	
+</ul>
 
 
 
