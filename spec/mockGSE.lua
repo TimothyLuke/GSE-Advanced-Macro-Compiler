@@ -41,6 +41,7 @@ function GetUnitName(str)
 end
 
 function GetSpellInfo(spellstring)
+  print( "GetSpellInfo -- " .. spellstring)
   local name, rank, icon, castTime, minRange, maxRange, spellId
   if type(spellstring) == "string" then
     name = spellstring
@@ -49,6 +50,7 @@ function GetSpellInfo(spellstring)
     name = "Eye of Tyr"
     spellId = spellstring
   end
+  print( "GetSpellInfo " .. name .. spellId)
   return name, rank, icon, castTime, minRange, maxRange, spellId
 end
 
