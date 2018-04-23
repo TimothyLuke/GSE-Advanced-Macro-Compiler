@@ -40,6 +40,18 @@ function GetUnitName(str)
   return retval
 end
 
+function GetSpellInfo(spellstring)
+  local name, rank, icon, castTime, minRange, maxRange, spellId
+  if type(spellstring) == "string" then
+    name = spellstring
+    spellId = 1010101
+  else
+    name = "Eye of Tyr"
+    spellId = spellstring
+  end
+  return name, rank, icon, castTime, minRange, maxRange, spellId
+end
+
 -- Mock standard functions
 function GSE.Print(message, title)
   print (title .. ": " .. message)

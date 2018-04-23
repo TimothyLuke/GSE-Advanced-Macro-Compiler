@@ -555,7 +555,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     local gsebutton = _G[name]
     -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
     if GetLocale() ~= "enUS" then
-      tempseq = GSE.TranslateSequence(tempseq, name)
+      tempseq = GSE.TranslateSequence(tempseq, name, "STRING")
     end
     tempseq = GSE.UnEscapeSequence(tempseq)
 

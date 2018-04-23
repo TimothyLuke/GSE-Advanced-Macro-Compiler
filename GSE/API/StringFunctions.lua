@@ -200,3 +200,14 @@ end
 function GSE.TrimWhiteSpace(str)
   return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
 end
+
+--- Converts a string spell name to an id and back again.
+function GSE.GetSpellId(spellstring, mode)
+  local returnval
+  local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellstring)
+  if mode == "STRING" then
+    returnval = name
+  else
+    returnval = spellId
+  end
+end

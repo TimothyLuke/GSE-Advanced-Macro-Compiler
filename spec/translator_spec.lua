@@ -11,23 +11,23 @@ describe('API Translator', function()
   end)
 
   it("Passes through non spell commands ", function()
-    assert.are.equal("/targetenemy", GSE.TranslateString("/targetenemy", "enUS", "enUS"))
+    assert.are.equal("/targetenemy", GSE.TranslateString("/targetenemy", "STRING"))
 
   end)
 
   it("checks that comments are processed", function()
     local originalstring = '-- This is a comment'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local newstring = GSE.TranslateString(originalstring, "STRING")
     assert.are.equal("|cffcc7777-- This is a comment|r",newstring)
 
     originalstring = "/cast Eye of Tyr"
-    newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    newstring = GSE.TranslateString(originalstring, "STRING")
     assert.are_not.equals("|cffcc7777/cast Eye of Tyr|r", newstring)
   end)
 
   it("checks that ctrl:mods are retained", function()
     local originalstring = '/castsequence [mod:ctrl] !Rip, Ferocious Bite, Ferocious Bite, Ferocious Bite; [nomod] Rake, shred, shred, shred, shred'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local newstring = GSE.TranslateString(originalstring, "STRING")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
   end)
@@ -41,14 +41,14 @@ describe('API Translator', function()
 
   it ("checks that pet stuff is not weird", function()
     local originalstring = '/petautocaston [nogroup] Growl; [@focus,noexists] Growl'
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local newstring = GSE.TranslateString(originalstring, "STRING")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
   end)
 
   it("checks for weird macro translations that break things", function ()
     local originalstring = "/cast [mod:alt, talent:6/1, talent:7/1, nochanneling:Void Torrent] [mod:alt, talent:6/1, talent:7/2, nochanneling:Void Torrent] Power Infusion"
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local newstring = GSE.TranslateString(originalstring, "STRING")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
 
@@ -56,7 +56,7 @@ describe('API Translator', function()
 
   it ("tests other unusual modifier cases", function ()
     local originalstring = "/castsequence [@mouseover,help,nodead] [@player] Void Torrent, Power Infusion"
-    local newstring = GSE.TranslateString(originalstring, "enUS", "enUS")
+    local newstring = GSE.TranslateString(originalstring, "STRING")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
 

@@ -31,13 +31,9 @@ Localization\ModL_zhTW.lua
 
 # Startup
 API\Init.lua
+API\WOWConvenienceMethods.lua
 API\Statics.lua
 API\InitialOptions.lua
-
-# Spells Language Strings
-Localization\enUS.lua
-Localization\enUSHash.lua
-Localization\enUSSHADOW.lua
 
 
 #storage and core
@@ -46,7 +42,7 @@ API\StringFunctions.lua
 API\CharacterFunctions.lua
 SampleMacros.lua
 API\Storage.lua
-API\translator.lua
+API\Translator.lua
 API\Plugins.lua
 API\Serialisation.lua
 API\Options.lua
