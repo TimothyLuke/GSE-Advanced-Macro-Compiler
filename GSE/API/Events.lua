@@ -182,10 +182,6 @@ function GSE:ADDON_LOADED(event, addon)
     GSEOptions.MacroResetModifiers["AnyAlt"] = nil
   end
 
-  -- Added in 2.2
-  if GSE.isEmpty(GSEOptions.UseVerboseFormat) then
-    GSEOptions.UseVerboseFormat = true
-  end
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)

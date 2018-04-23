@@ -318,7 +318,7 @@ end
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSE.ExportSequence(sequence, sequenceName, compact)
   local returnVal = ""
-  if GSEOptions.UseVerboseFormat and GSE.isEmpty(compact) then
+  if GSEOptions.UseVerboseExportFormat and GSE.isEmpty(compact) then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
     local disabledseq = ""
     local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
