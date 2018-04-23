@@ -52,7 +52,7 @@ function dataobj:OnEnter()
 
   tooltip:AddSeparator()
   y,x = tooltip:AddLine()
-  tooltip:SetCell(y,1, string.format(GSE.ReportTargetProtection(), "CENTER", 3)
+  tooltip:SetCell(y,1, GSE.ReportTargetProtection(), "CENTER", 3)
   local RequireTargetStatusline = y
   tooltip:SetLineScript(y, "OnMouseDown", function(obj, button)
     GSE.ToggleTargetProtection()
