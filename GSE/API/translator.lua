@@ -318,12 +318,15 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   local returnval
   local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellstring)
   if mode == "STRING" then
-
     returnval = name
   else
     returnval = spellId
   end
-  GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
+  if not GSE.isEmpty(returnval) then
+    GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
+  else
+    GSE.PrintDebugMessage(spellstring .. " was not found" , "Translator")
+  end
   return returnval
 end
 
