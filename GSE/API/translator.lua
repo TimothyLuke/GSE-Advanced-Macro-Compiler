@@ -2,7 +2,7 @@ local GSE = GSE
 local Statics = GSE.Static
 
 local GNOME = Statics.DebugModules["Translator"]
-local locale = GetLocale();
+
 local L = GSE.L
 
 
@@ -65,7 +65,7 @@ end
 
 function GSE.TranslateString(instring, mode, cleanNewLines)
   instring = GSE.UnEscapeString(instring)
-  GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. fromLocale .. " " .. toLocale, GNOME)
+  GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
   local output = ""
   if not GSE.isEmpty(instring) then
     if GSE.isEmpty(string.find(instring, '--', 1, true)) then
@@ -84,7 +84,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
           if foundspell then
             output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset
           else
-            GSE.PrintDebugMessage("Did not find : " .. etc .. " in " .. fromLocale, GNOME)
+            GSE.PrintDebugMessage("Did not find : " .. etc , GNOME)
             output = output  .. etc
           end
         -- check for cast Sequences
@@ -180,7 +180,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines)
     local foundspell = GSE.GetSpellId(spellstring, mode)
     if foundspell then
       GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell , GNOME )
-      output = output .. GSEOptions.KEYWORD .. GSE.TranslatorLanguageTables[Statics.TranslationKey][toLocale][foundspell] .. Statics.StringReset
+      output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
       found = true
     else
       GSE.PrintDebugMessage("Did not find : " .. etc .. ".  Spell may no longer exist", GNOME)
