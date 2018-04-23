@@ -177,7 +177,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines)
       etc = string.match(etc, "^%s*(.-)%s*$")
     end
     etc = string.gsub (etc, "!", "")
-    local foundspell = GSE.GetSpellId(spellstring, mode)
+    local foundspell = GSE.GetSpellId(etc, mode)
     if foundspell then
       GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell , GNOME )
       output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
