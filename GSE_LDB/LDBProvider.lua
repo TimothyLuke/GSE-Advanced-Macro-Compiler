@@ -50,6 +50,15 @@ function dataobj:OnEnter()
     end
   end
 
+  tooltip:AddSeparator()
+  y,x = tooltip:AddLine()
+  tooltip:SetCell(y,1, string.format(GSE.ReportTargetProtection(), "CENTER", 3)
+  local RequireTargetStatusline = y
+  tooltip:SetLineScript(y, "OnMouseDown", function(obj, button)
+    GSE.ToggleTargetProtection()
+    tooltip:SetCell(RequireTargetStatusline, 1, GSE.CheckOOCQueueStatus(),"CENTER", 3)
+  end)
+
 
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then

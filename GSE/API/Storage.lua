@@ -1214,3 +1214,13 @@ function GSE.CompressSequenceFromString(importstring)
   end
   return returnstr
 end
+
+--- This function allows the player to toggle Target Proction from the LDB Plugin.
+function GSE.ToggleTargetProtection()
+  if GSE.isEmpty(GSEOptions.requireTarget) then
+    GSEOptions.requireTarget = true
+  else
+    GSEOptions.requireTarget = false
+  end
+  GSE.ReloadSequences()
+end
