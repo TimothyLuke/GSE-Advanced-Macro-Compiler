@@ -293,8 +293,6 @@ end
 
 
 function GSE.DecodeTrinket(slot, mode)
-  print(mode)
-  print(slot)
   local found = false
   local returnval
   if mode == "STRING" then
