@@ -619,77 +619,77 @@ self:CallMethod('UpdateIcon')
   end)
 
 
-  it ("tests that verbose macros are exported correctly", function()
-    GSEOptions.UseVerboseFormat = true
-    local sequence1 = {
-      Author="LNPV",
-      SpecID=66,
-      Talents = 'Talents: 3332123',
-      Icon=236264,
-      Default=1,
-      MacroVersions = {
-        [1] = {
-          StepFunction = "Priority",
-          KeyPress={
-            "/targetenemy [noharm][dead]",
-          },
-          PreMacro = {
-            "/say hello"
-          },
-          "/cast Avenger's Shield",
-          "/cast Judgment",
-          "/cast Blessed Hammer",
-          "/cast Hammer of the Righteous",
-          "/cast Consecration",
-          "/cast Light of the Protector",
-          "/cast Shield of the Righteous",
-          "/cast Blinding Light",
-          KeyRelease={
-            "/cast Avenging Wrath",
-            "/cast Eye of Tyr",
-            "/startattack",
-          },
-        }
-      }
-    }
-    local expectedval = [[Sequences['|cFFFFFF00prot|r'] = {
-|cffcc7777-- This Sequence was exported from GSE 2.0.00.|r
-  Author="|cFF00D1FFLNPV|r",
-  SpecID=|cffffaa0066|r,
-  Talents = "|cffccaa88Talents: 3332123|r",
-  Default=1,
-  Icon=|cffcc7777236264|r,
-  MacroVersions = {
-    [1] = {
-      StepFunction = |cffccaa88"Priority"|r,
-      KeyPress={
-        "|cffddaaff/targetenemy|r [noharm][dead]",
-      },
-      PreMacro={
-        "|cffddaaff/say|r hello",
-      },
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddAvenger's Shield|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddJudgment|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddBlessed Hammer|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddHammer of the Righteous|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddConsecration|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddLight of the Protector|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddShield of the Righteous|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddBlinding Light|r|r",
-      KeyRelease={
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddAvenging Wrath|r|r",
-        "|cffddaaff/cast|r |cff88bbdd|cff88bbddEye of Tyr|r|r",
-        "/startattack",
-      },
-    },
-  },
-}
-]]
-    returnval = GSE.ExportSequence(sequence1, "prot")
-    print(returnval)
-    assert.are.equal(expectedval, returnval)
-
-  end)
+--   it ("tests that verbose macros are exported correctly", function()
+--     GSEOptions.UseVerboseFormat = true
+--     local sequence1 = {
+--       Author="LNPV",
+--       SpecID=66,
+--       Talents = 'Talents: 3332123',
+--       Icon=236264,
+--       Default=1,
+--       MacroVersions = {
+--         [1] = {
+--           StepFunction = "Priority",
+--           KeyPress={
+--             "/targetenemy [noharm][dead]",
+--           },
+--           PreMacro = {
+--             "/say hello"
+--           },
+--           "/cast Avenger's Shield",
+--           "/cast Judgment",
+--           "/cast Blessed Hammer",
+--           "/cast Hammer of the Righteous",
+--           "/cast Consecration",
+--           "/cast Light of the Protector",
+--           "/cast Shield of the Righteous",
+--           "/cast Blinding Light",
+--           KeyRelease={
+--             "/cast Avenging Wrath",
+--             "/cast Eye of Tyr",
+--             "/startattack",
+--           },
+--         }
+--       }
+--     }
+--     local expectedval = [[Sequences['|cFFFFFF00prot|r'] = {
+-- |cffcc7777-- This Sequence was exported from GSE 2.0.00.|r
+--   Author="|cFF00D1FFLNPV|r",
+--   SpecID=|cffffaa0066|r,
+--   Talents = "|cffccaa88Talents: 3332123|r",
+--   Default=1,
+--   Icon=|cffcc7777236264|r,
+--   MacroVersions = {
+--     [1] = {
+--       StepFunction = |cffccaa88"Priority"|r,
+--       KeyPress={
+--         "|cffddaaff/targetenemy|r [noharm][dead]",
+--       },
+--       PreMacro={
+--         "|cffddaaff/say|r hello",
+--       },
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddAvenger's Shield|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddJudgment|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddBlessed Hammer|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddHammer of the Righteous|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddConsecration|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddLight of the Protector|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddShield of the Righteous|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddBlinding Light|r|r",
+--       KeyRelease={
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddAvenging Wrath|r|r",
+--         "|cffddaaff/cast|r |cff88bbdd|cff88bbddEye of Tyr|r|r",
+--         "/startattack",
+--       },
+--     },
+--   },
+-- }
+-- ]]
+--     returnval = GSE.ExportSequence(sequence1, "prot")
+--     print(returnval)
+--     assert.are.equal(expectedval, returnval)
+--
+--   end)
 
   it ("tests that comments are removed from CloneMacroVersion", function()
     local TestMacro = {
