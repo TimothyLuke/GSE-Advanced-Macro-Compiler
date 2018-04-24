@@ -54,7 +54,7 @@ end
 
 function GSE:ZONE_CHANGED_NEW_AREA()
   local name, type, difficulty, difficultyName, maxPlayers, playerDifficulty, isDynamicInstance, mapID, instanceGroupSize = GetInstanceInfo()
-  if type == "arena" or type == "pvp" then
+  if type == "pvp" then
     GSE.PVPFlag = true
   else
     GSE.PVPFlag = false
@@ -84,7 +84,12 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inParty = false
   end
-  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic), Statics.DebugModules["API"])
+  if type == "arena" then
+    GSE.inArena = true
+  else
+    GSE.inArena = false
+  end
+  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena), Statics.DebugModules["API"])
   GSE.ReloadSequences()
 end
 

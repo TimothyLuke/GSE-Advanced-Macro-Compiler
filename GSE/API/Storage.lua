@@ -171,7 +171,11 @@ function GSE.GetActiveSequenceVersion(sequenceName)
   if not GSE.isEmpty(GSELibrary[classid][sequenceName].Default) then
     vers = GSELibrary[classid][sequenceName].Default
   end
-  if not GSE.isEmpty(GSELibrary[classid][sequenceName].PVP) and GSE.PVPFlag then
+  if not GSE.isEmpty(GSELibrary[classid][sequenceName].Arena) and GSE.inArena then
+    vers = GSELibrary[classid][sequenceName].Arena
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].PVP) and GSE.inArena then
+    vers = GSELibrary[classid][sequenceName].Arena
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].PVP) and GSE.PVPFlag then
     vers = GSELibrary[classid][sequenceName].PVP
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Raid) and GSE.inRaid then
     vers = GSELibrary[classid][sequenceName].Raid

@@ -406,3 +406,5 @@ L["Enable this option to stop automatically translating sequences from enUS to l
 -- GSE 2.3.00
 L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the GSE GUI."] = true
 L["Target protection is currently %s"] = true
+L["Arena setting changed to Default."] = true
+L["Arena"] = true

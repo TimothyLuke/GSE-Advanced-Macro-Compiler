@@ -12,6 +12,7 @@ local otherversionlistboxvalue = ""
 local default = 1
 local raid = 1
 local pvp = 1
+local arena = 1
 local mythic = 1
 local classid = GSE.GetCurrentClassID()
 
@@ -28,6 +29,7 @@ editframe.Mythic = 1
 editframe.Dungeon = 1
 editframe.Heroic = 1
 editframe.Party = 1
+editframe.Arena = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
@@ -347,7 +349,6 @@ function GSE:GUIDrawMetadataEditor(container)
   pvpdropdown:SetList(GSE.GetVersionList())
   pvpdropdown:SetValue(tostring(editframe.PVP))
   defgroup2:AddChild(pvpdropdown)
-  contentcontainer:AddChild(defgroup2)
 
   pvpdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
@@ -355,6 +356,25 @@ function GSE:GUIDrawMetadataEditor(container)
     else
       editframe.Sequence.PVP = tonumber(key)
       editframe.PVP = tonumber(key)
+    end
+  end)
+
+  local arenadropdown = AceGUI:Create("Dropdown")
+  arenadropdown:SetLabel(L["Arena"])
+  arenadropdown:SetWidth(250)
+  arenadropdown:SetList(GSE.GetVersionList())
+  arenadropdown:SetValue(tostring(editframe.Arena))
+  defgroup2:AddChild(arenadropdown)
+
+
+  contentcontainer:AddChild(defgroup2)
+
+  arenadropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Arena = nil
+    else
+      editframe.Sequence.Arena = tonumber(key)
+      editframe.Arena = tonumber(key)
     end
   end)
 
@@ -760,6 +780,10 @@ function GSE.GUIDeleteVersion(version)
     sequence.PVP = sequence.Default
     printtext = printtext .. " " .. L["PVP setting changed to Default."]
   end
+  if sequence.Arena == version then
+    sequence.Arena = sequence.Default
+    printtext = printtext .. " " .. L["Arena setting changed to Default."]
+  end
   if sequence.Raid == version then
     sequence.Raid = sequence.Default
     printtext = printtext .. " " .. L["Raid setting changed to Default."]
@@ -789,6 +813,9 @@ function GSE.GUIDeleteVersion(version)
 
   if not GSE.isEmpty(sequence.PVP) then
     sequence.PVP = tonumber(sequence.PVP) - 1
+  end
+  if not GSE.isEmpty(sequence.Arena) then
+    sequence.Arena = tonumber(sequence.Arena) - 1
   end
   if not GSE.isEmpty(sequence.Raid) then
     sequence.Raid = tonumber(sequence.Raid) - 1
