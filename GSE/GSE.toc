@@ -31,7 +31,6 @@ Localization\ModL_zhTW.lua
 
 # Startup
 API\Init.lua
-API\WOWConvenienceMethods.lua
 API\Statics.lua
 API\InitialOptions.lua
 
