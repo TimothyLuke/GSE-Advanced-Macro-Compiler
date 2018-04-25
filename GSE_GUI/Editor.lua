@@ -324,6 +324,14 @@ function GSE:GUIDrawMetadataEditor(container)
   defgroup2:SetLayout("Flow")
   defgroup2:SetWidth(editframe.Width - 100)
 
+  local arenadropdown = AceGUI:Create("Dropdown")
+  arenadropdown:SetLabel(L["Arena"])
+  arenadropdown:SetWidth(250)
+  arenadropdown:SetList(GSE.GetVersionList())
+  arenadropdown:SetValue(tostring(editframe.Arena))
+
+
+
   local mythicdropdown = AceGUI:Create("Dropdown")
   mythicdropdown:SetLabel(L["Mythic"])
   mythicdropdown:SetWidth(250)
@@ -337,7 +345,16 @@ function GSE:GUIDrawMetadataEditor(container)
       editframe.Mythic = tonumber(key)
     end
   end)
-  defgroup2:AddChild(mythicdropdown)
+  defgroup2:AddChild(arenadropdown)
+  arenadropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Arena = nil
+    else
+      editframe.Sequence.Arena = tonumber(key)
+      editframe.Arena = tonumber(key)
+    end
+  end)
+
 
   local spacerlabel5 = AceGUI:Create("Label")
   spacerlabel5:SetWidth(100)
@@ -359,24 +376,9 @@ function GSE:GUIDrawMetadataEditor(container)
     end
   end)
 
-  local arenadropdown = AceGUI:Create("Dropdown")
-  arenadropdown:SetLabel(L["Arena"])
-  arenadropdown:SetWidth(250)
-  arenadropdown:SetList(GSE.GetVersionList())
-  arenadropdown:SetValue(tostring(editframe.Arena))
-  defgroup2:AddChild(arenadropdown)
-
 
   contentcontainer:AddChild(defgroup2)
 
-  arenadropdown:SetCallback("OnValueChanged", function (obj,event,key)
-    if editframe.Sequence.Default == tonumber(key) then
-      editframe.Sequence.Arena = nil
-    else
-      editframe.Sequence.Arena = tonumber(key)
-      editframe.Arena = tonumber(key)
-    end
-  end)
 
   local defgroup3 = AceGUI:Create("SimpleGroup")
   defgroup3:SetLayout("Flow")
@@ -388,7 +390,9 @@ function GSE:GUIDrawMetadataEditor(container)
   dungeondropdown:SetWidth(250)
   dungeondropdown:SetList(GSE.GetVersionList())
   dungeondropdown:SetValue(tostring(editframe.Dungeon))
-  defgroup3:AddChild(dungeondropdown)
+
+  defgroup3:AddChild(mythicdropdown)
+
   dungeondropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Dungeon = nil
@@ -439,6 +443,8 @@ function GSE:GUIDrawMetadataEditor(container)
   local spacerlabel7 = AceGUI:Create("Label")
   spacerlabel7:SetWidth(100)
   defgroup4:AddChild(spacerlabel7)
+  defgroup4:AddChild(dungeondropdown)
+
   contentcontainer:AddChild(defgroup3)
   contentcontainer:AddChild(defgroup4)
   container:AddChild(scrollcontainer)
