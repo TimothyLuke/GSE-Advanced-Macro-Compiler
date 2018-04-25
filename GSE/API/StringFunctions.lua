@@ -200,3 +200,16 @@ end
 function GSE.TrimWhiteSpace(str)
   return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
 end
+
+function GSE.Dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. GSE.Dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
