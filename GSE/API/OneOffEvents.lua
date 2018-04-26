@@ -16,7 +16,7 @@ function GSE.UpdateFrom735to801()
          for i,j in pairs(v) do
            --i = string.upper(i)
            GSELibrary[k][string.upper(i)] = j
-           if (v == GSE.GetCurrentClassID() || v == 0) then
+           if (v == GSE.GetCurrentClassID() or v == 0) then
              GSE.CheckMacroCreated(string.upper(i), true)
            end
            GSELibrary[k][i] = nil
