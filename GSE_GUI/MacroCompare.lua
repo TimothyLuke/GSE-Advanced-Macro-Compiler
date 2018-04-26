@@ -34,35 +34,25 @@ local headerGroup = AceGUI:Create("SimpleGroup")
 headerGroup:SetFullWidth(true)
 headerGroup:SetLayout("Flow")
 
-origscrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-origscrollcontainer:SetFullWidth(true)
-origscrollcontainer:SetFullHeight(true) -- probably?
-origscrollcontainer:SetLayout("Fill") -- important!
 
-origlabel = AceGUI:Create("Label")
-origlabel:SetText(L["Local Macro"])
-origscrollcontainer:AddChild(origlabel)
+leftColumn = AceGUI:Create("MultiLineEditBox")
+compareframe.OrigText = leftColumn
+leftColumn:SetRelativeWidth(0.5)
+leftColumn:SetFullHeight(true)
+leftColumn:SetNumLines(25)
+leftColumn:DisableButton(true)
+leftColumn:SetLabel(L["Local Macro"])
 
-origSequenceText = AceGUI:Create("Label")
-compareframe.OrigText = origSequenceText
-origscrollcontainer:AddChild(origSequenceText)
+rightColumn = AceGUI:Create("MultiLineEditBox")
+compareframe.NewText = rightColumn
+rightColumn:SetRelativeWidth(0.5)
+rightColumn:SetFullHeight(true)
+rightColumn:SetNumLines(25)
+rightColumn:DisableButton(true)
+rightColumn:SetLabel(L["Updated Macro"])
 
-newscrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-newscrollcontainer:SetFullWidth(true)
-newscrollcontainer:SetFullHeight(true) -- probably?
-newscrollcontainer:SetLayout("Fill") -- important!
-
-newlabel = AceGUI:Create("Label")
-newlabel:SetText(L["Updated Macro"])
-newscrollcontainer:AddChild(newlabel)
-
-
-newSequenceText = AceGUI:Create("Label")
-compareframe.NewText = newSequenceText
-newscrollcontainer:AddChild(newSequenceText)
-
-headerGroup:AddChild(origscrollcontainer)
-headerGroup:AddChild(newscrollcontainer)
+headerGroup:AddChild(leftColumn)
+headerGroup:AddChild(rightColumn)
 
 compareframe:AddChild (headerGroup)
 
@@ -80,6 +70,7 @@ if GSE.isEmpty(GSEOptions.DefaultImportAction) then
   GSEOptions.DefaultImportAction = "MERGE"
 end
 
+local actionChoiceRadio = AceGUI:Create("Dropdown")
 actionChoiceRadio:SetList({
   ["MERGE"] = L["Merge"],
   ["REPLACE"] = L["Replace"],
@@ -90,6 +81,8 @@ actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
     compareframe.ChosenAction = key
 end)
 
+actionButtonGroup:AddChild(actionChoiceRadio)
+
 local actionbutton = AceGUI:Create("Button")
 actionbutton:SetText(L["Continue"])
 actionbutton:SetWidth(150)
@@ -97,9 +90,14 @@ actionbutton:SetCallback("OnClick", function()
   GSE.PerformMergeAction(compareframe.ChosenAction, compareframe.classid, compareframe.sequenceName, newSequence)
 end)
 
+actionButtonGroup:AddChild(actionbutton)
+compareframe:AddChild (actionButtonGroup)
+
+
+
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
-  GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName], sequenceName, false, "STRING"))
-  GSE.GUICompareFrame.NewText:SetText(newsequence, sequenceName, false, "STRING")
+  GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName], sequenceName, true, "STRING"))
+  GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true, "STRING"))
   GSE.GUICompareFrame:Show()
   GSE.GUICompareFrame.classid = classid
   GSE.GUICompareFrame.sequenceName = sequenceName

@@ -27,6 +27,6 @@ GSE.GUIExportframe = exportframe
 exportframe.ExportSequenceBox = exportsequencebox
 
 function GSE.GUIExportSequence(classid, sequencename)
-  GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename))
+  GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename, GSEOptions.UseVerboseExportFormat, "ID"))
   GSE.GUIExportframe:Show()
 end

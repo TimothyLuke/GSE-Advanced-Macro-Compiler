@@ -339,15 +339,11 @@ function GSE.IsLoopSequence(sequence)
   return loopcheck
 end
 
-function GSE.ExportSequence(sequence, sequenceName, compact)
-  return GSE.ExportSequence(sequence, sequenceName, compact, "ID")
-end
-
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName, compact, mode)
+function GSE.ExportSequence(sequence, sequenceName, verbose, mode)
   local returnVal = ""
-  if GSEOptions.UseVerboseExportFormat and GSE.isEmpty(compact) then
+  if verbose then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
     local disabledseq = ""
     local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. Statics.StringReset .. "\",\n"
@@ -484,6 +480,10 @@ function GSE.ExportSequence(sequence, sequenceName, compact, mode)
 
   return returnVal
 end
+
+
+
+
 
 function GSE.FixSequence(sequence)
   if GSE.isEmpty(sequence.PreMacro) then
