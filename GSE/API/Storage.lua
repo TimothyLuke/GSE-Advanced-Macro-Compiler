@@ -168,6 +168,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     GSE.Print(L["No changes were made to "].. sequenceName, GNOME)
   end
   GSELibrary[classid][sequenceName].ManualIntervention = false
+  GSE.PrintDebugMessage("Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
 end
 
 

@@ -41,7 +41,7 @@ describe('API Storage', function()
 
   it("Adds a sequence to the Library", function()
     print("XXXXXX Begin - Adds a sequence to the Library")
-    GSELibrary = {}
+    -- GSELibrary = {}
     GSELibrary[11] = {}
 
     testseq = {
@@ -135,7 +135,7 @@ describe('API Storage', function()
 
 
   it("Test it handles spaces in the sequence name", function()
-    GSELibrary = {}
+    -- GSELibrary = {}
     GSELibrary[11] = {}
 
     local Sequences = {}
@@ -162,7 +162,7 @@ describe('API Storage', function()
   end)
 
   it("Test it handles spaces in the sequence name", function()
-    GSELibrary = {}
+    -- GSELibrary = {}
     GSELibrary[11] = {}
     local Sequences = {}
     Sequences["Test,1"] = {
@@ -616,7 +616,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it ("handles malformed GSE macros without breaking the mod.", function()
-    GSELibrary = {}
+    -- GSELibrary = {}
 
     GSELibrary[0] = {}
     GSELibrary[0]["911ST"] = {
@@ -749,7 +749,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are merging ", function ()
-    GSELibrary = {}
+    -- GSELibrary = {}
 
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
@@ -825,7 +825,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are replacing ", function ()
-    GSELibrary = {}
+    -- GSELibrary = {}
 
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
@@ -901,7 +901,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-    GSELibrary = {}
+    -- GSELibrary = {}
 
     GSELibrary[2] = {}
 
@@ -944,7 +944,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are ignoring ", function ()
-    GSELibrary = {}
+    -- GSELibrary = {}
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
       Author="LNPV",
@@ -1021,7 +1021,7 @@ self:CallMethod('UpdateIcon')
 end)
 
 it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-  GSELibrary = {}
+  -- GSELibrary = {}
 
   GSELibrary[2] = {}
 
