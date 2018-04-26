@@ -31,6 +31,8 @@ describe('API Storage', function()
     function GetAddOnMetadata(name, ver)
       return "2000"
     end
+
+    GSELibrary = {}
   end)
 
   it("Adds a sequence to the Library", function()
@@ -600,7 +602,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it ("handles malformed GSE macros without breaking the mod.", function()
-    local GSELibrary = {}
+
     GSELibrary[0] = {}
     GSELibrary[0]["911ST"] = {
       ["Talents"] = "?,?,?,?,?,?,?",
@@ -732,7 +734,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are merging ", function ()
-    local GSELibrary = {}
+
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
       Author="LNPV",
@@ -807,7 +809,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are replacing ", function ()
-    local GSELibrary = {}
+
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
       Author="LNPV",
@@ -882,7 +884,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-    local GSELibrary = {}
+
     GSELibrary[2] = {}
 
     local TestMacro = {
@@ -924,7 +926,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are ignoring ", function ()
-    local GSELibrary = {}
+
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
       Author="LNPV",
@@ -1001,7 +1003,7 @@ self:CallMethod('UpdateIcon')
 end)
 
 it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-  local GSELibrary = {}
+  
   GSELibrary[2] = {}
 
   local TestMacro = {
