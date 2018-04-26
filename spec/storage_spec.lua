@@ -13,6 +13,9 @@ describe('API Storage', function()
     L["A new version of %s has been added."] = "A new version of %s has been added."
     L[" was imported with the following errors."] = " was imported with the following errors."
     L["This Sequence was exported from GSE %s."] = "This Sequence was exported from GSE %s."
+    L["Extra Macro Versions of %s has been added."] = "Extra Macro Versions of %s has been added."
+    L["No changes were made to "] = "No changes were made to "
+    L[" was updated to new version."] = " was updated to new version."
 
     Statics = GSE.Static
 
