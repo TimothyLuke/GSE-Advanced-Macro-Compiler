@@ -19,11 +19,14 @@ describe('API Storage', function()
 
     Statics = GSE.Static
 
-
+    -- OOC Queue overrides
     function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
       return GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     end
 
+    function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
+      return GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+    end
 
     function GetAddOnMetadata(name, ver)
       return "2000"
@@ -51,7 +54,7 @@ describe('API Storage', function()
 
       }
     }
-    GSE.OOCAddSequenceToCollection("Test1", Sequences["Test1"], 11)
+    GSE.AddSequenceToCollection("Test1", Sequences["Test1"], 11)
     assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
 
   end)
@@ -727,4 +730,313 @@ self:CallMethod('UpdateIcon')
     assert.True(clonedsequence.MacroVersions[1].Trinket1)
 
   end)
+
+  it("tests that sequences are merging ", function ()
+    local GSELibrary = {}
+    GSELibrary[2] = {}
+    GSELibrary[2]["Sample"] = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local TestMacro = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    GSE.PerformMergeAction("MERGE", 2, "Sample", TestMacro)
+    assert.are.equal("Priority", GSELibrary[2]["Sample"].MacroVersions[2].StepFunction))
+  end)
+
+  it("tests that sequences are replacing ", function ()
+    local GSELibrary = {}
+    GSELibrary[2] = {}
+    GSELibrary[2]["Sample"] = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local TestMacro = {
+      Author="REPLACED",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+  end)
+
+  it("tests that sequences are being inserted if they dont exist via a replace ", function ()
+    local GSELibrary = {}
+    GSELibrary[2] = {}
+
+    local TestMacro = {
+      Author="REPLACED",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+  end)
+
+  it("tests that sequences are ignoring ", function ()
+    local GSELibrary = {}
+    GSELibrary[2] = {}
+    GSELibrary[2]["Sample"] = {
+      Author="LNPV",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    local TestMacro = {
+      Author="REPLACED",
+      SpecID=66,
+      Talents = 'Talents: 3332123',
+      Icon=236264,
+      Default=1,
+      MacroVersions = {
+        [1] = {
+          StepFunction = "Priority",
+          Trinket1 = true,
+          Trinket2 = false,
+          KeyPress={
+            "/targetenemy [noharm][dead]",
+          },
+          PreMacro = {
+            "/say hello"
+          },
+          "/cast Avenger's Shield",
+          "/cast Judgment",
+          "/cast Blessed Hammer",
+          "/cast Hammer of the Righteous",
+          "/cast Consecration",
+          "/cast Light of the Protector",
+          "/cast Shield of the Righteous",
+          "/cast Blinding Light",
+          KeyRelease={
+            "/cast Avenging Wrath",
+            "/cast Eye of Tyr",
+            "/startattack",
+          },
+        }
+      }
+    }
+
+    GSE.AddSequenceToCollection("Sample", TestMacro, 2)
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+  end)
+end)
+
+it("tests that sequences are being inserted if they dont exist via a replace ", function ()
+  local GSELibrary = {}
+  GSELibrary[2] = {}
+
+  local TestMacro = {
+    Author="REPLACED",
+    SpecID=66,
+    Talents = 'Talents: 3332123',
+    Icon=236264,
+    Default=1,
+    MacroVersions = {
+      [1] = {
+        StepFunction = "Priority",
+        Trinket1 = true,
+        Trinket2 = false,
+        KeyPress={
+          "/targetenemy [noharm][dead]",
+        },
+        PreMacro = {
+          "/say hello"
+        },
+        "/cast Avenger's Shield",
+        "/cast Judgment",
+        "/cast Blessed Hammer",
+        "/cast Hammer of the Righteous",
+        "/cast Consecration",
+        "/cast Light of the Protector",
+        "/cast Shield of the Righteous",
+        "/cast Blinding Light",
+        KeyRelease={
+          "/cast Avenging Wrath",
+          "/cast Eye of Tyr",
+          "/startattack",
+        },
+      }
+    }
+  }
+
+  GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
+  assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
 end)
