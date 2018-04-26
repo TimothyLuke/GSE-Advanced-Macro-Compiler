@@ -343,7 +343,7 @@ function GSE.IsLoopSequence(sequence)
 end
 
 function GSE.ExportSequence(sequence, sequenceName, compact)
-  return function GSE.ExportSequence(sequence, sequenceName, compact, "ID")
+  return GSE.ExportSequence(sequence, sequenceName, compact, "ID")
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.

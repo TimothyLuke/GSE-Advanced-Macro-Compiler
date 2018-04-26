@@ -99,7 +99,7 @@ end)
 
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName], sequenceName, false, "STRING"))
-  GSE.GUICompareFrame.NewText:SetText(newsequence, sequenceName, false, "STRING"))
+  GSE.GUICompareFrame.NewText:SetText(newsequence, sequenceName, false, "STRING")
   GSE.GUICompareFrame:Show()
   GSE.GUICompareFrame.classid = classid
   GSE.GUICompareFrame.sequenceName = sequenceName
