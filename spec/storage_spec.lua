@@ -32,11 +32,12 @@ describe('API Storage', function()
       return "2000"
     end
 
-    GSELibrary = {}
+
   end)
 
   it("Adds a sequence to the Library", function()
 
+    local GSELibrary = {}
 
     local Sequences = {}
     Sequences["Test1"] = {
@@ -126,6 +127,8 @@ describe('API Storage', function()
 
 
   it("Test it handles spaces in the sequence name", function()
+    local GSELibrary = {}
+
     local Sequences = {}
     Sequences["Test 1"] = {
       SpecID = 11,
@@ -150,6 +153,7 @@ describe('API Storage', function()
   end)
 
   it("Test it handles spaces in the sequence name", function()
+    local GSELibrary = {}
     local Sequences = {}
     Sequences["Test,1"] = {
       SpecID = 11,
@@ -602,6 +606,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it ("handles malformed GSE macros without breaking the mod.", function()
+    local GSELibrary = {}
 
     GSELibrary[0] = {}
     GSELibrary[0]["911ST"] = {
@@ -734,6 +739,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are merging ", function ()
+    local GSELibrary = {}
 
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
@@ -809,6 +815,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are replacing ", function ()
+    local GSELibrary = {}
 
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
@@ -884,6 +891,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are being inserted if they dont exist via a replace ", function ()
+    local GSELibrary = {}
 
     GSELibrary[2] = {}
 
@@ -926,7 +934,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are ignoring ", function ()
-
+    local GSELibrary = {}
     GSELibrary[2] = {}
     GSELibrary[2]["Sample"] = {
       Author="LNPV",
@@ -1003,6 +1011,7 @@ self:CallMethod('UpdateIcon')
 end)
 
 it("tests that sequences are being inserted if they dont exist via a replace ", function ()
+  local GSELibrary = {}
 
   GSELibrary[2] = {}
 
