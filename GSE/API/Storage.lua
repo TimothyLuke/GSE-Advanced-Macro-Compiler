@@ -156,11 +156,11 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
   elseif action == "REPLACE" then
     if GSE.isEmpty(newSequence.Author) then
       -- set to unknown author
-      sequence.Author = "Unknown Author"
+      newSequence.Author = "Unknown Author"
     end
     if GSE.isEmpty(newSequence.Talents) then
       -- set to currentSpecID
-      sequence.Talents = "?,?,?,?,?,?,?"
+      newSequence.Talents = "?,?,?,?,?,?,?"
     end
 
     GSELibrary[classid][sequenceName] = {}
