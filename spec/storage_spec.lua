@@ -21,11 +21,11 @@ describe('API Storage', function()
 
     -- OOC Queue overrides
     function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
-      return GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+      GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     end
 
     function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
-      return GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+      GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
 
     function GetAddOnMetadata(name, ver)
@@ -1003,7 +1003,7 @@ self:CallMethod('UpdateIcon')
 end)
 
 it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-  
+
   GSELibrary[2] = {}
 
   local TestMacro = {
