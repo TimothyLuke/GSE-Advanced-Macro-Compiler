@@ -38,6 +38,7 @@ describe('API Storage', function()
   it("Adds a sequence to the Library", function()
 
     local GSELibrary = {}
+    GSELibrary[11] = {}
 
     local Sequences = {}
     Sequences["Test1"] = {
@@ -59,6 +60,7 @@ describe('API Storage', function()
     }
     GSE.AddSequenceToCollection("Test1", Sequences["Test1"], 11)
     assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
+
 
   end)
 
@@ -128,6 +130,7 @@ describe('API Storage', function()
 
   it("Test it handles spaces in the sequence name", function()
     local GSELibrary = {}
+    GSELibrary[11] = {}
 
     local Sequences = {}
     Sequences["Test 1"] = {
@@ -154,6 +157,7 @@ describe('API Storage', function()
 
   it("Test it handles spaces in the sequence name", function()
     local GSELibrary = {}
+    GSELibrary[11] = {}
     local Sequences = {}
     Sequences["Test,1"] = {
       SpecID = 11,
