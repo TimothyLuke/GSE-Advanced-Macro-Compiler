@@ -16,6 +16,12 @@ describe('API Storage', function()
 
     Statics = GSE.Static
 
+
+    function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
+      return GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+    end
+
+
     function GetAddOnMetadata(name, ver)
       return "2000"
     end
