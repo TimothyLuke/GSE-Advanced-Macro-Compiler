@@ -88,10 +88,12 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
 end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
-
+  GSE.PrintDebugMessage("Attempting to import " .. sequenceName, "Storage" )
+  GSE.PrintDebugMessage("Classid not supplied - " .. tostring(GSE.isEmpty(classid)), "Storage" )
   -- Remove Spaces or commas from SequenceNames and replace with _'s
   sequenceName = string.gsub(sequenceName, " ", "_")
   sequenceName = string.gsub(sequenceName, ",", "_")
+  sequenceName = string.upper(sequenceName)
 
   -- CHeck for colissions
   local found = false
@@ -101,11 +103,13 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     sequence.SpecID = GSE.GetCurrentClassID()
     classid = GSE.GetCurrentClassID()
   end
+  GSE.PrintDebugMessage("Classid now - " .. classid, "Storage" )
   if GSE.isEmpty(GSELibrary[classid]) then
     GSELibrary[classid] = {}
   end
   if not GSE.isEmpty(GSELibrary[classid][sequenceName]) then
       found = true
+      GSE.PrintDebugMessage("Macro Exists", "Storage" )
   end
   if found then
     -- check if modified
@@ -123,10 +127,12 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
       end
     end
   else
+    GSE.PrintDebugMessage("Creating New Macro", "Storage" )
     -- New Sequence
     GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
   end
   if classid == GSE.GetCurrentClassID() or classid == 0 then
+     GSE.PrintDebugMessage("As its the current class updating buttons", "Storage" )
      GSE.UpdateSequence(sequenceName, sequence.MacroVersions[sequence.Default])
   end
 end

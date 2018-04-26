@@ -99,6 +99,7 @@ function GSE:PLAYER_ENTERING_WORLD()
 end
 
 function GSE:ADDON_LOADED(event, addon)
+  GSE.PerformOneOffEvents()
   if GSE.isEmpty(GSELibrary) then
     GSELibrary = {}
   end

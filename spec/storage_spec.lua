@@ -41,7 +41,7 @@ describe('API Storage', function()
 
   it("Adds a sequence to the Library", function()
     print("XXXXXX Begin - Adds a sequence to the Library")
-    -- GSELibrary = {}
+
     GSELibrary[11] = {}
 
     testseq = {
@@ -62,9 +62,9 @@ describe('API Storage', function()
       }
     }
 
-    GSE.AddSequenceToCollection("Test1", testseq, 11)
+    GSE.AddSequenceToCollection("TEST1", testseq, 11)
     print (GSE.Dump(GSELibrary))
-    assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
+    assert.are.equal(11, GSELibrary[11]["TEST1"].SpecID)
 
     print("XXXXXX END - Adds a sequence to the Library")
 
@@ -73,7 +73,7 @@ describe('API Storage', function()
   it("Tests that old macros are converted to new macro format", function ()
     local Sequences = {}
 
-    Sequences['DB_Prot_ST'] = {
+    Sequences['DB_PROT_ST'] = {
       author="LNPV",
       specID=66,
       helpTxt = 'Talents: 2332223',
@@ -92,7 +92,7 @@ describe('API Storage', function()
 /startattack
       ]],
       }
-    local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_Prot_ST'])
+    local newmacro =   GSE.ConvertLegacySequence(Sequences['DB_PROT_ST'])
     assert.are.equal(66, newmacro.SpecID)
     assert.falsy(newmacro.specID)
     assert.falsy(newmacro["MacroVersions"][1].specID)
@@ -135,7 +135,7 @@ describe('API Storage', function()
 
 
   it("Test it handles spaces in the sequence name", function()
-    -- GSELibrary = {}
+
     GSELibrary[11] = {}
 
     local Sequences = {}
@@ -157,12 +157,12 @@ describe('API Storage', function()
       }
     }
     GSE.OOCAddSequenceToCollection("Test 1", Sequences["Test 1"], 11)
-    assert.are.equal(11, GSELibrary[11]["Test_1"].SpecID)
+    assert.are.equal(11, GSELibrary[11]["TEST_1"].SpecID)
 
   end)
 
-  it("Test it handles spaces in the sequence name", function()
-    -- GSELibrary = {}
+  it("Test it handles commas in the sequence name", function()
+
     GSELibrary[11] = {}
     local Sequences = {}
     Sequences["Test,1"] = {
@@ -183,7 +183,7 @@ describe('API Storage', function()
       }
     }
     GSE.OOCAddSequenceToCollection("Test,1", Sequences["Test,1"], 11)
-    assert.are.equal(11, GSELibrary[11]["Test_1"].SpecID)
+    assert.are.equal(11, GSELibrary[11]["TEST_1"].SpecID)
 
   end)
 
@@ -616,7 +616,7 @@ self:CallMethod('UpdateIcon')
   end)
 
   it ("handles malformed GSE macros without breaking the mod.", function()
-    -- GSELibrary = {}
+
 
     GSELibrary[0] = {}
     GSELibrary[0]["911ST"] = {
@@ -749,10 +749,10 @@ self:CallMethod('UpdateIcon')
   end)
 
   it("tests that sequences are merging ", function ()
-    -- GSELibrary = {}
+
 
     GSELibrary[2] = {}
-    GSELibrary[2]["Sample"] = {
+    GSELibrary[2]["SAMPLE"] = {
       Author="LNPV",
       SpecID=66,
       Talents = 'Talents: 3332123',
@@ -820,15 +820,15 @@ self:CallMethod('UpdateIcon')
       }
     }
 
-    GSE.PerformMergeAction("MERGE", 2, "Sample", TestMacro)
-    assert.are.equal("Priority", GSELibrary[2]["Sample"].MacroVersions[2].StepFunction)
+    GSE.PerformMergeAction("MERGE", 2, "SAMPLE", TestMacro)
+    assert.are.equal("Priority", GSELibrary[2]["SAMPLE"].MacroVersions[2].StepFunction)
   end)
 
   it("tests that sequences are replacing ", function ()
-    -- GSELibrary = {}
+
 
     GSELibrary[2] = {}
-    GSELibrary[2]["Sample"] = {
+    GSELibrary[2]["SAMPLE"] = {
       Author="LNPV",
       SpecID=66,
       Talents = 'Talents: 3332123',
@@ -896,12 +896,12 @@ self:CallMethod('UpdateIcon')
       }
     }
 
-    GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
-    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
+    GSE.PerformMergeAction("REPLACE", 2, "SAMPLE", TestMacro)
+    assert.are.equal("REPLACED", GSELibrary[2]["SAMPLE"].Author)
   end)
 
   it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-    -- GSELibrary = {}
+
 
     GSELibrary[2] = {}
 
@@ -939,14 +939,14 @@ self:CallMethod('UpdateIcon')
       }
     }
 
-    GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
-    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
+    GSE.PerformMergeAction("REPLACE", 2, "SAMPLE", TestMacro)
+    assert.are.equal("REPLACED", GSELibrary[2]["SAMPLE"].Author)
   end)
 
   it("tests that sequences are ignoring ", function ()
-    -- GSELibrary = {}
+
     GSELibrary[2] = {}
-    GSELibrary[2]["Sample"] = {
+    GSELibrary[2]["SAMPLE"] = {
       Author="LNPV",
       SpecID=66,
       Talents = 'Talents: 3332123',
@@ -1015,13 +1015,13 @@ self:CallMethod('UpdateIcon')
     }
 
 
-    GSE.PerformMergeAction("IGNORE", 2, "Sample", TestMacro)
-    assert.are.equal("LNPV", GSELibrary[2]["Sample"].Author)
+    GSE.PerformMergeAction("IGNORE", 2, "SAMPLE", TestMacro)
+    assert.are.equal("LNPV", GSELibrary[2]["SAMPLE"].Author)
   end)
 end)
 
 it("tests that sequences are being inserted if they dont exist via a replace ", function ()
-  -- GSELibrary = {}
+
 
   GSELibrary[2] = {}
 
@@ -1059,6 +1059,6 @@ it("tests that sequences are being inserted if they dont exist via a replace ", 
     }
   }
 
-  GSE.AddSequenceToCollection("Sample", TestMacro, 2)
-  assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
+  GSE.AddSequenceToCollection("SAMPLE", TestMacro, 2)
+  assert.are.equal("REPLACED", GSELibrary[2]["SAMPLE"].Author)
 end)
