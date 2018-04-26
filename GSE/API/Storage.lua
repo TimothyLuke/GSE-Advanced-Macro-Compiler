@@ -154,11 +154,11 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
       end
       GSE.Print (string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
   elseif action == "REPLACE" then
-    if GSE.isEmpty(sequence.Author) then
+    if GSE.isEmpty(newSequence.Author) then
       -- set to unknown author
       sequence.Author = "Unknown Author"
     end
-    if GSE.isEmpty(sequence.Talents) then
+    if GSE.isEmpty(newSequence.Talents) then
       -- set to currentSpecID
       sequence.Talents = "?,?,?,?,?,?,?"
     end
