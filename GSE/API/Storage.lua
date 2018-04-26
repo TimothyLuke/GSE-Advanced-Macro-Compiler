@@ -145,13 +145,11 @@ end
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
   if action == "MERGE" then
     for k,v in ipairs(newSequence.MacroVersions) do
-      for i, j in ipairs(GSELibrary[classid][sequenceName].MacroVersions) do
-          GSE.PrintDebugMessage("adding ".. k, "Storage")
-          table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
-          GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
-        end
-      end
-      GSE.Print (string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
+      GSE.PrintDebugMessage("adding ".. k, "Storage")
+      table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
+      GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
+    end
+    GSE.Print (string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
   elseif action == "REPLACE" then
     if GSE.isEmpty(newSequence.Author) then
       -- set to unknown author
