@@ -43,7 +43,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
         GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
       else
         GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
-        GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName), Statics.SourceTransmission)
+        GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false, "ID", false), Statics.SourceTransmission)
       end
     end
   end

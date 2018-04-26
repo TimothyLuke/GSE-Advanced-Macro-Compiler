@@ -341,7 +341,7 @@ end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName, verbose, mode)
+function GSE.ExportSequence(sequence, sequenceName, verbose, mode, hideversion)
   local returnVal = ""
   if verbose then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
@@ -467,7 +467,9 @@ function GSE.ExportSequence(sequence, sequenceName, verbose, mode)
     macroversions = macroversions .. "  },\n"
     --local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
     returnVal = "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n"
-    returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. Statics.StringReset .. "\n"
+    if not hideversion then
+      returnVal = returnVal .. GSEOptions.CONCAT .. "-- " .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. Statics.StringReset .. "\n"
+    end
     returnVal = returnVal .. "  Author=\"" .. GSEOptions.AuthorColour .. (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset .. "\",\n" .. (GSE.isEmpty(sequence.SpecID) and "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or "  SpecID=" .. GSEOptions.NUMBER  .. sequence.SpecID .. Statics.StringReset ..",\n") ..  sequencemeta
     if not GSE.isEmpty(sequence.Icon) then
        returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT .. (tonumber(sequence.Icon) and sequence.Icon or "'".. sequence.Icon .. "'") .. Statics.StringReset ..",\n"
@@ -1241,7 +1243,7 @@ function GSE.CompressSequenceFromString(importstring)
     local TempSequences = assert(func())
     if not GSE.isEmpty(TempSequences) then
       for k,v in pairs(TempSequences) do
-        returnstr = GSE.ExportSequence(v, k, true)
+        returnstr = GSE.ExportSequence(v, k, false, "ID", false)
       end
     end
   end
