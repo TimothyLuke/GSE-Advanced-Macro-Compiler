@@ -803,7 +803,7 @@ self:CallMethod('UpdateIcon')
     }
 
     GSE.PerformMergeAction("MERGE", 2, "Sample", TestMacro)
-    assert.are.equal("Priority", GSELibrary[2]["Sample"].MacroVersions[2].StepFunction))
+    assert.are.equal("Priority", GSELibrary[2]["Sample"].MacroVersions[2].StepFunction)
   end)
 
   it("tests that sequences are replacing ", function ()
