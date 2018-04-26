@@ -26,8 +26,9 @@ describe('API Storage', function()
 
     function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
       print("SequenceName: " .. sequenceName)
-      print("Sequence: ".. sequence)
       print("classid: " .. classid)
+      print("Sequence: ".. GSE.Dump(sequence))
+
       GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
 
@@ -43,8 +44,7 @@ describe('API Storage', function()
     local GSELibrary = {}
     GSELibrary[11] = {}
 
-    local Sequences = {}
-    Sequences["Test1"] = {
+    testseq = {
       SpecID = 11,
       Author="UnitTest",
       MacroVersions = {
@@ -61,7 +61,8 @@ describe('API Storage', function()
 
       }
     }
-    GSE.AddSequenceToCollection("Test1", Sequences["Test1"], 11)
+    
+    GSE.AddSequenceToCollection("Test1", testseq, 11)
     assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
 
     print("XXXXXX END - Adds a sequence to the Library")
