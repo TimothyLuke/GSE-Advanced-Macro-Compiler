@@ -61,8 +61,9 @@ describe('API Storage', function()
 
       }
     }
-    
+
     GSE.AddSequenceToCollection("Test1", testseq, 11)
+    print (GSE.Dump(GSELibrary))
     assert.are.equal(11, GSELibrary[11]["Test1"].SpecID)
 
     print("XXXXXX END - Adds a sequence to the Library")
