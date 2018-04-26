@@ -76,7 +76,7 @@ actionLabel:SetText(L["Choose import action:"] .. "   ")
 
 actionButtonGroup:AddChild(actionLabel)
 
-if GSE.isEmpty(GSEOptions.DefaultImportAction)
+if GSE.isEmpty(GSEOptions.DefaultImportAction) then
   GSEOptions.DefaultImportAction = "MERGE"
 end
 

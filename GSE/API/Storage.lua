@@ -120,6 +120,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
       else
         GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
+      end
     end
   else
     -- New Sequence
