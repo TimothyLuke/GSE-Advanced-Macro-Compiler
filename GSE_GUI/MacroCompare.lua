@@ -87,6 +87,7 @@ local actionbutton = AceGUI:Create("Button")
 actionbutton:SetText(L["Continue"])
 actionbutton:SetWidth(150)
 actionbutton:SetCallback("OnClick", function()
+  compareframe:Hide()
   GSE.PerformMergeAction(compareframe.ChosenAction, compareframe.classid, compareframe.sequenceName, newSequence)
 end)
 

@@ -175,6 +175,11 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
   end
   GSELibrary[classid][sequenceName].ManualIntervention = false
   GSE.PrintDebugMessage("Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
+  if GSE.GUI then
+    local event = {}
+    event.action = "openviewer"
+    table.insert(GSE.OOCQueue, event)
+  end
 end
 
 
