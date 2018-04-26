@@ -11,18 +11,19 @@ function GSE.UpdateFrom735to801()
   if GSE.isEmpty(GSEOptions.Updated801) then
 
      -- Update Sequence Names to UPPERCASE
-       local tempLibary = {}
+    -- if next(GSELibrary) == nil then
        for k,v in ipairs(GSELibrary) do
-         tempLibary[k] = {}
          for i,j in pairs(v) do
            --i = string.upper(i)
-           tempLibary[k][string.upper(i)] = j
+           GSELibrary[k][string.upper(i)] = j
+           GSE.CheckMacroCreated(string.upper(i), true)
+           GSELibrary[k][i] = nil
          end
        end
-       GSELibrary = tempLibrary
      --end
      GSE.CleanOrphanSequences()
      GSE.Print(L["All macros are now stored as upper case names.  You may need to re-add your old macros to your action bars."])
+     GSE.ReloadSequences()
   end
   GSEOptions.Updated801 = true
 end

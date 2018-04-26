@@ -94,12 +94,13 @@ function GSE:ZONE_CHANGED_NEW_AREA()
 end
 
 function GSE:PLAYER_ENTERING_WORLD()
+  GSE.PerformOneOffEvents()
   GSE.PrintAvailable = true
   GSE.PerformPrint()
 end
 
 function GSE:ADDON_LOADED(event, addon)
-  GSE.PerformOneOffEvents()
+
   if GSE.isEmpty(GSELibrary) then
     GSELibrary = {}
   end

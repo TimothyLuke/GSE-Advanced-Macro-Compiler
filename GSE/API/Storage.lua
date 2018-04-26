@@ -866,8 +866,7 @@ function GSE.OOCCheckMacroCreated(SequenceName, create)
     end
   else
     if create then
-      local icon = (GSE.isEmpty(GSELibrary[classid][SequenceName].Icon) and Statics.QuestionMark or GSELibrary[classid][SequenceName].Icon)
-      GSE.CreateMacroIcon(SequenceName, icon)
+      GSE.CreateMacroIcon(SequenceName, Statics.QuestionMark)
       found = true
     end
   end
