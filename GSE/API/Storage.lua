@@ -124,7 +124,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
   else
     -- New Sequence
-    GSE.PerformMergeAction("REPLACE", classid, sequence)
+    GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
   end
   if classid == GSE.GetCurrentClassID() or classid == 0 then
      GSE.UpdateSequence(sequenceName, sequence.MacroVersions[sequence.Default])
