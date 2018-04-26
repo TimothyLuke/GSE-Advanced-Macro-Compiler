@@ -163,11 +163,14 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     GSELibrary[classid][sequenceName] = {}
     GSELibrary[classid][sequenceName] = newSequence
     GSE.Print(sequenceName.. L[" was updated to new version."] , GNOME)
+    GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
   else
     GSE.Print(L["No changes were made to "].. sequenceName, GNOME)
   end
   GSELibrary[classid][sequenceName].ManualIntervention = false
 end
+
+
 --- Load a collection of Sequences
 function GSE.ImportMacroCollection(Sequences)
   for k,v in pairs(Sequences) do
