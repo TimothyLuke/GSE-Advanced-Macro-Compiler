@@ -148,7 +148,6 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
       for i, j in ipairs(GSELibrary[classid][sequenceName].MacroVersions) do
           GSE.PrintDebugMessage("adding ".. k, "Storage")
           table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
-
           GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         end
       end
