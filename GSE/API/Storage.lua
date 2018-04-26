@@ -88,7 +88,6 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
 end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
-  local confirmationtext = ""
 
   -- Remove Spaces or commas from SequenceNames and replace with _'s
   sequenceName = string.gsub(sequenceName, " ", "_")
@@ -109,44 +108,68 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
       found = true
   end
   if found then
-    -- check if source the same.  If so ignore
-    for k,v in ipairs(sequence.MacroVersions) do
-      for i, j in ipairs(GSELibrary[classid][sequenceName].MacroVersions) do
-        if GSE.CompareSequence(v,j) then
-          GSE.PrintDebugMessage("Macro Version already exists", "Storage")
-        else
-          GSE.Print (string.format(L["A new version of %s has been added."], sequenceName), GNOME)
-          GSE.PrintDebugMessage("adding ".. k, "Storage")
-          table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
-
-          GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
-        end
-      end
+    -- check if modified
+    if GSE.isEmpty(GSELibrary[classid][sequenceName].ManualIntervention) then
+      -- Macro hasnt been touched.
+      GSE.PrintDebugMessage(L["No changes were made to "].. sequenceName, "Storage")
+    else
+      -- Perform choice.
+      -- first check if GUI.
+      if GSE.GUI then
+        -- show dialog.
+        GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
+      else
+        GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
     end
   else
     -- New Sequence
-    if GSE.isEmpty(sequence.Author) then
-      -- set to unknown author
-      sequence.Author = "Unknown Author"
-      confirmationtext = confirmationtext .. " " .. L["Sequence Author set to Unknown"] .. "."
-    end
-    if GSE.isEmpty(sequence.Talents) then
-      -- set to currentSpecID
-      sequence.Talents = "?,?,?,?,?,?,?"
-      confirmationtext = confirmationtext .. " " .. L["No Help Information Available"] .. "."
-    end
-
-    GSELibrary[classid][sequenceName] = {}
-    GSELibrary[classid][sequenceName] = sequence
-  end
-  if not GSE.isEmpty(confirmationtext) then
-    GSE.Print(GSEOptions.EmphasisColour .. sequenceName .. "|r" .. L[" was imported with the following errors."] .. " " .. confirmationtext, GNOME)
+    GSE.PerformMergeAction("REPLACE", classid, sequence)
   end
   if classid == GSE.GetCurrentClassID() or classid == 0 then
      GSE.UpdateSequence(sequenceName, sequence.MacroVersions[sequence.Default])
   end
 end
 
+
+function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
+  local vals = {}
+  vals.action = "MergeSequence"
+  vals.sequencename = sequenceName
+  vals.newSequence = newSequence
+  vals.classid = classid
+  vals.mergeaction = action
+  table.insert(GSE.OOCQueue, vals)
+end
+
+function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+  if action == "MERGE" then
+    for k,v in ipairs(newSequence.MacroVersions) do
+      for i, j in ipairs(GSELibrary[classid][sequenceName].MacroVersions) do
+          GSE.PrintDebugMessage("adding ".. k, "Storage")
+          table.insert(GSELibrary[classid][sequenceName].MacroVersions, v)
+
+          GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
+        end
+      end
+      GSE.Print (string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
+  elseif action == "REPLACE" then
+    if GSE.isEmpty(sequence.Author) then
+      -- set to unknown author
+      sequence.Author = "Unknown Author"
+    end
+    if GSE.isEmpty(sequence.Talents) then
+      -- set to currentSpecID
+      sequence.Talents = "?,?,?,?,?,?,?"
+    end
+
+    GSELibrary[classid][sequenceName] = {}
+    GSELibrary[classid][sequenceName] = newSequence
+    GSE.Print(sequenceName.. L[" was updated to new version."] , GNOME)
+  else
+    GSE.Print(L["No changes were made to "].. sequenceName, GNOME)
+  end
+  GSELibrary[classid][sequenceName].ManualIntervention = false
+end
 --- Load a collection of Sequences
 function GSE.ImportMacroCollection(Sequences)
   for k,v in pairs(Sequences) do
@@ -318,9 +341,13 @@ function GSE.IsLoopSequence(sequence)
   return loopcheck
 end
 
+function GSE.ExportSequence(sequence, sequenceName, compact)
+  return function GSE.ExportSequence(sequence, sequenceName, compact, "ID")
+end
+
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName, compact)
+function GSE.ExportSequence(sequence, sequenceName, compact, mode)
   local returnVal = ""
   if GSEOptions.UseVerboseExportFormat and GSE.isEmpty(compact) then
     GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
@@ -398,7 +425,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.KeyPress) then
         macroversions = macroversions .. "      KeyPress={\n"
         for _,p in ipairs(outputversion.KeyPress) do
-          local results = GSE.TranslateString(p, "ID", true)
+          local results = GSE.TranslateString(p, mode, true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -408,7 +435,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.PreMacro) then
         macroversions = macroversions .. "      PreMacro={\n"
         for _,p in ipairs(outputversion.PreMacro) do
-          local results = GSE.TranslateString(p, "ID", true)
+          local results = GSE.TranslateString(p, mode, true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -416,7 +443,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
         macroversions = macroversions .. "      },\n"
       end
       for _,p in ipairs(v) do
-        local results = GSE.TranslateString(p, "ID", true)
+        local results = GSE.TranslateString(p, mode, true)
         if not GSE.isEmpty(results)then
           macroversions = macroversions .. "        \"" .. results .."\",\n"
         end
@@ -424,7 +451,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.PostMacro) then
         macroversions = macroversions .. "      PostMacro={\n"
         for _,p in ipairs(outputversion.PostMacro) do
-          local results = GSE.TranslateString(p, "ID", true)
+          local results = GSE.TranslateString(p, mode, true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end
@@ -434,7 +461,7 @@ function GSE.ExportSequence(sequence, sequenceName, compact)
       if not GSE.isEmpty(outputversion.KeyRelease) then
         macroversions = macroversions .. "      KeyRelease={\n"
         for _,p in ipairs(outputversion.KeyRelease) do
-          local results = GSE.TranslateString(p, "ID", true)
+          local results = GSE.TranslateString(p, mode, true)
           if not GSE.isEmpty(results)then
             macroversions = macroversions .. "        \"" .. results .."\",\n"
           end

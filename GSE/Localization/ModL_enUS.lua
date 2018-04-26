@@ -315,7 +315,6 @@ L["Hide Login Message"] = true
 L["Hides the message that GSE is loaded."] = true
 L["Your current Specialisation is "] = true
 -- GSE 2.0.14
-L["A new version of %s has been added."] = true
 L["This Sequence was exported from GSE %s."] = true
 
 --GSE 2.1.0
@@ -408,3 +407,15 @@ L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addon
 L["Target protection is currently %s"] = true
 L["Arena setting changed to Default."] = true
 L["Arena"] = true
+L["Local Macro"] = true
+L["Updated Macro"] = true
+L["Sequence Compare"] = true
+L["Default Import Action"] = true
+L["When GSE imports a macro and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Macro.  Replace - Replace the existing macro with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."] = true
+L["Merge"] = true
+L["Ignore"] = true
+L["Choose import action:"] = true
+L["Continue"] = true
+L["Extra Macro Versions of %s has been added."] = true
+L["No changes were made to "] = true
+L[" was updated to new version."] = true

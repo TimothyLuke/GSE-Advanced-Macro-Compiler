@@ -136,6 +136,20 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.CreateGlobalButtons end,
             order = 440
           },
+          createGlobalMacroButtons = {
+            name = L["Default Import Action"],
+            desc = L["When GSE imports a macro and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Macro.  Replace - Replace the existing macro with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."],
+            type = "select",
+            style = "radio",
+            values = {
+              ["MERGE"] = L["Merge"],
+              ["REPLACE"] = L["Replace"],
+              ["IGNORE"] = L["Ignore"]
+            },
+            set = function(info,val) GSEOptions.DefaultImportAction = val end,
+            get = function(info) return GSEOptions.DefaultImportAction end,
+            order = 450
+          },
           title2 = {
             type = "header",
             name = L["Gameplay Options"],

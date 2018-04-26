@@ -17,4 +17,5 @@ Editor.lua
 Viewer.lua
 GUIFunctions.lua
 CompressSequence.lua
+MacroCompare.lua
 Init.lua

@@ -367,6 +367,8 @@ function GSE:ProcessOOCQueue()
         GSE.GUIShowViewer()
       elseif v.action == "CheckMacroCreated" then
         GSE.OOCCheckMacroCreated(v.sequencename, v.create)
+      elseif v.action == "MergeSequence"then
+        GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.sequenceName, v.newSequence)
       end
       GSE.OOCQueue[k] = nil
     end

@@ -93,6 +93,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.showGSEUsers = false
   GSEOptions.showGSEoocqueue = true
   GSEOptions.UseVerboseExportFormat = true
+  GSEOptions.DefaultImportAction = "MERGE"
   GSE.resetMacroResetModifiers()
 end
 
