@@ -878,7 +878,7 @@ self:CallMethod('UpdateIcon')
     }
 
     GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
-    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
   end)
 
   it("tests that sequences are being inserted if they dont exist via a replace ", function ()
@@ -920,7 +920,7 @@ self:CallMethod('UpdateIcon')
     }
 
     GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
-    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
   end)
 
   it("tests that sequences are ignoring ", function ()
@@ -995,7 +995,7 @@ self:CallMethod('UpdateIcon')
     }
 
     GSE.AddSequenceToCollection("Sample", TestMacro, 2)
-    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+    assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
   end)
 end)
 
@@ -1038,5 +1038,5 @@ it("tests that sequences are being inserted if they dont exist via a replace ", 
   }
 
   GSE.PerformMergeAction("REPLACE", 2, "Sample", TestMacro)
-  assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author))
+  assert.are.equal("REPLACED", GSELibrary[2]["Sample"].Author)
 end)
