@@ -57,6 +57,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       sequence.MacroVersions[1][1] = nil
       sequence.MacroVersions[1] = GSE.SplitMeIntolines(recordedstring)
     end
+    GSE.GUIEditFrame.NewSequence = true
   else
     elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
@@ -115,6 +116,10 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       vals.sequence = sequence
       vals.classid = classid
       table.insert(GSE.OOCQueue, vals)
+      if GSE.GUIEditFrame.NewSequence then
+        GSE.CheckMacroCreated(SequenceName, true)
+        GSE.GUIEditFrame.NewSequence = false
+      end
       GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence %s saved."], SequenceName))
     end
   end
