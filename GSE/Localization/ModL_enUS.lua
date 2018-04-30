@@ -421,3 +421,4 @@ L["No changes were made to "] = true
 L[" was updated to new version."] = true
 L["All macros are now stored as upper case names.  You may need to re-add your old macros to your action bars."] = true
 L["MergeSequence"] = true
+L["Sequence Name %s is in Use. Please choose a different name."] = true

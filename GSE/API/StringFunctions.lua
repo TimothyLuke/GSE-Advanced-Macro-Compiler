@@ -213,3 +213,19 @@ function GSE.Dump(o)
       return tostring(o)
    end
 end
+
+function GSE.FindGlobalObject(name)
+    local a = _G
+    for key in string.gmatch(name, "([^%.]+)(%.?)") do
+        if a[key] then
+            a = a[key]
+        else
+            return nil
+        end
+    end
+    return a
+end
+
+function GSE.ObjectExists(name)
+    return type(GSE.FindGlobalObject(name)) ~= 'nil'
+end

@@ -168,7 +168,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
 
     GSELibrary[classid][sequenceName] = {}
     GSELibrary[classid][sequenceName] = newSequence
-    GSE.Print(sequenceName.. L[" was updated to new version."] , GNOME)
+    GSE.Print(sequenceName.. L[" was updated to new version."] , "GSE Storage")
     GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
   else
     GSE.Print(L["No changes were made to "].. sequenceName, GNOME)

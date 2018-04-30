@@ -64,6 +64,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     classid = tonumber(elements[1])
     sequenceName = elements[2]
     sequence = GSE.CloneSequence(GSELibrary[classid][sequenceName], true)
+    GSE.GUIEditFrame.NewSequence = false
   end
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
@@ -116,11 +117,17 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       vals.sequencename = SequenceName
       vals.sequence = sequence
       vals.classid = classid
-      table.insert(GSE.OOCQueue, vals)
       if GSE.GUIEditFrame.NewSequence then
-        GSE.CheckMacroCreated(SequenceName, true)
+        if GSE.ObjectExists(SequenceName) then
+          GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName))
+          GSE.GUIEditFrame.nameeditbox:SetText(GSEOptions.UNKNOWN .. GSE.GUIEditFrame.nameeditbox:GetText() .. Statics.StringReset)
+          GSE.GUIEditFrame.nameeditbox:SetFocus()
+          return
+        end
+        vals.checkmacro = true
         GSE.GUIEditFrame.NewSequence = false
       end
+      table.insert(GSE.OOCQueue, vals)
       GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence %s saved."], SequenceName))
     end
   end
