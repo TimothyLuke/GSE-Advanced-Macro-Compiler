@@ -164,6 +164,8 @@ function GSE.GUIEditorPerformLayout(frame)
   savebutton:SetWidth(150)
   savebutton:SetCallback("OnClick", function()
     editframe.Sequence.ManualIntervention = true
+    nameeditbox:SetText(string.upper(nameeditbox:GetText()))
+    editframe.SequenceName = nameeditbox:GetText()
     GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
     editframe.save = true
   end)
