@@ -360,11 +360,14 @@ function GSE:ProcessOOCQueue()
         GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
       elseif v.action == "Replace" then
         if GSE.isEmpty(GSELibrary[v.classid][v.sequencename]) then
-          GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+          GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
         else
           GSELibrary[v.classid][v.sequencename] = v.sequence
         end
-        GSE.OOCUpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
+        if v.checkmacro then
+          GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
+        end
+        GSE.UpdateSequence(v.sequencename, v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
       elseif v.action == "openviewer" then
         GSE.GUIShowViewer()
       elseif v.action == "CheckMacroCreated" then

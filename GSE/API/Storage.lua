@@ -204,6 +204,9 @@ function GSE.GetActiveSequenceVersion(sequenceName)
   end
   -- Set to default or 1 if no default
   local vers = 1
+  if GSE.isEmpty(GSELibrary[classid][sequenceName]) then
+    return
+  end
   if not GSE.isEmpty(GSELibrary[classid][sequenceName].Default) then
     vers = GSELibrary[classid][sequenceName].Default
   end
@@ -588,6 +591,12 @@ end
 
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
 function GSE.OOCUpdateSequence(name,sequence)
+  if GSE.isEmpty(sequence) then
+    return
+  end
+  if GSE.isEmpty(name) then
+    return
+  end
   if pcall(GSE.CheckSequence, sequence) then
     sequence = GSE.CleanMacroVersion(sequence)
     GSE.FixSequence(sequence)
@@ -953,6 +962,10 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
   end
 
   local sequence = GSELibrary[classid][sequenceIndex]
+  if GSE.isEmpty(sequence) then
+    GSE.PrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex , GNOME)
+    return GSEOptions.DefaultDisabledMacroIcon
+  end
   if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
     GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.SpecID, GNOME)
     if sequence.SpecID == 0 then

@@ -1,5 +1,6 @@
 local GSE = GSE
 local L = GSE.L
+local Statics = GSE.Static
 
 --- This function pops up a confirmation dialog.
 function GSE.GUIDeleteSequence(currentSeq, iconWidget)
@@ -36,7 +37,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   local sequence
   if GSE.isEmpty(key) then
     classid = GSE.GetCurrentClassID()
-    sequenceName = "New"
+    sequenceName = "NEW_SEQUENCE"
     sequence = {
       ["Author"] = GSE.GetCharacterName(),
       ["Talents"] = GSE.GetCurrentTalents(),
