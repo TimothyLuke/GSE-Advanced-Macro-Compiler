@@ -255,9 +255,10 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
   local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
   GSE.PrintDebugMessage (string.format("Decomsuccess: %s  tablerows: %s   type cell1 %s cell2 %s" , tostring(decompresssuccess), table.getn(actiontable), type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
   if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and (type(actiontable[2]) == "table") then
-    GSE.AddSequenceToCollection(actiontable[1], actiontable[2])
+    local seqName = string.upper(actiontable[1])
+    GSE.AddSequenceToCollection(seqName, actiontable[2])
     if createicon then
-      GSE.CheckMacroCreated(actiontable[1], true)
+      GSE.CheckMacroCreated(seqName, true)
     end
   else
     GSE.Print(L["Unable to interpret sequence."] , GNOME)
@@ -291,7 +292,7 @@ function GSE.ImportSequence(importStr, legacy, createicon)
         if legacy then
           v = GSE.ConvertLegacySequence(v)
         end
-        GSE.AddSequenceToCollection(k, v)
+        GSE.AddSequenceToCollection(string.upper(k), v)
         if GSE.isEmpty(v.Icon) then
           -- Set a default icon
           v.Icon = GSE.GetDefaultIcon()
@@ -299,7 +300,7 @@ function GSE.ImportSequence(importStr, legacy, createicon)
         newkey = k
       end
       if createicon then
-        GSE.CheckMacroCreated(newkey, true)
+        GSE.CheckMacroCreated(string.upper(newkey), true)
       end
       success = true
     end
