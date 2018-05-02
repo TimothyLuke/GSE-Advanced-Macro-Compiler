@@ -64,6 +64,10 @@
 	</li>
 
 	<li>
+		<a href="../../../files/GSE/API/OneOffEvents.html">GSE/API/OneOffEvents.lua</a>
+	</li>
+
+	<li>
 		<a href="../../../files/GSE/API/Options.html">GSE/API/Options.lua</a>
 	</li>
 
@@ -181,7 +185,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, compact)</td>
+	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, verbose, mode, hideversion)</td>
 	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
 	</tr>
 
@@ -278,6 +282,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.SetMacroLocation">GSE.SetMacroLocation</a>&nbsp;()</td>
 	<td class="summary">Return whether to store the macro in Personal Character Macros or Account Macros </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.ToggleTargetProtection">GSE.ToggleTargetProtection</a>&nbsp;()</td>
+	<td class="summary">This function allows the player to toggle Target Proction from the LDB Plugin.</td>
 	</tr>
 
 	<tr>
@@ -669,7 +678,7 @@ Delete a sequence starting with the macro and then the sequence from the library
 
 
 
-<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, compact)</dt>
+<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, verbose, mode, hideversion)</dt>
 <dd>
 Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 
@@ -686,7 +695,15 @@ Creates a string representation of the a Sequence that can be shared as a string
 	</li>
 	
 	<li>
-	  compact: 
+	  verbose: 
+	</li>
+	
+	<li>
+	  mode: 
+	</li>
+	
+	<li>
+	  hideversion: 
 	</li>
 	
 </ul>
@@ -1152,6 +1169,23 @@ This function scans all macros in the library and reports on corrupt macros.
 <dt><a name="GSE.SetMacroLocation"></a><strong>GSE.SetMacroLocation</strong>&nbsp;()</dt>
 <dd>
 Return whether to store the macro in Personal Character Macros or Account Macros
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.ToggleTargetProtection"></a><strong>GSE.ToggleTargetProtection</strong>&nbsp;()</dt>
+<dd>
+This function allows the player to toggle Target Proction from the LDB Plugin.
 
 
 
