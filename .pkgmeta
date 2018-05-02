@@ -27,7 +27,7 @@ externals:
         tag: latest
     GSE/Lib/AceComm-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
-        tag: latest
+        tag: r1173-alpha
     GSE/Lib/AceGUI-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
         tag: latest
