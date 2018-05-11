@@ -365,3 +365,64 @@ Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
 
 Statics.ReloadMessage = "Reload"
 Statics.CommPrefix = "GSE"
+
+Statics.BaseSpellTable = {}
+
+-- Paladin
+Statics.BaseSpellTable[231895] = 31884 -- Crusade to Avenging Wrath
+Statics.BaseSpellTable[216331] = 31884 -- Avenging Crusader to Avenging Wrath
+Statics.BaseSpellTable[200025] = 53563 -- Beacon of Virtue to Beacon of Light
+Statics.BaseSpellTable[204019] = 53595 -- Blessed Hammer -> Hammer of the Righteous
+Statics.BaseSpellTable[204018] = 1022 -- Blessing of Spellwarding -> Blessing of Protection
+Statics.BaseSpellTable[213652] = 184092 -- Hand of the Protector -> Light of the Protector
+
+-- Warrior
+Statics.BaseSpellTable[202168] = 34428 -- Impending Victory -> Victory Rush
+Statics.BaseSpellTable[262161] = 167105 -- Warbreaker -> Colossus Smash
+Statics.BaseSpellTable[152277] = 227847 -- Ravager -> Bladestorm
+Statics.BaseSpellTable[236279] = 20243 -- Devastator -> Devastate
+
+-- Rogue
+Statics.BaseSpellTable[200758] = 53 -- Gloomblade -> Backstab
+Statics.BaseSpellTable[5171] = 193316 -- Slice and Dice -> Roll the Bones
+
+-- Priest
+Statics.BaseSpellTable[123040] = 34433 -- Mindbender -> Shadow Fiend
+Statics.BaseSpellTable[200174] = 34433 -- Mindbender -> Shadow Fiend
+Statics.BaseSpellTable[205369] = 8122 -- Mind Bomb -> Physic Scream
+Statics.BaseSpellTable[205351] = 8092 -- Shadow Word: Void -> Mind Blast
+Statics.BaseSpellTable[204197] = 589 -- Purge the Wicked -> Shadow Word: Pain
+Statics.BaseSpellTable[271466] = 62618 -- Luminous Barrier -> Power Word: Barrier
+
+-- Hunter
+Statics.BaseSpellTable[259387] = 186270 -- Mongoose Bite -> Raptor Strike
+
+-- Warlock
+
+-- Shaman
+Statics.BaseSpellTable[192249] = 198067 -- Storm Elemental -> Fire Elemental
+Statics.BaseSpellTable[157153] = 5394 -- Cloudburst Totem -> Healing Stream Totem
+
+-- Mage
+Statics.BaseSpellTable[205024] = 31687 -- Lonely Winter -> Summon Water Elemental
+Statics.BaseSpellTable[212653] = 1953 -- Shimmer -> Blink
+
+-- Monk
+Statics.BaseSpellTable[115008] = 109132 -- Chi Torpedo -> Roll
+Statics.BaseSpellTable[152173] = 137639 -- Serenity -> Storm, Earth and Fire
+
+-- Druid
+Statics.BaseSpellTable[252216] = 1850 -- Tiger Dash -> Dash
+Statics.BaseSpellTable[102560] = 194223 -- Incarnation: Chosen of Elune -> Celestial Alignment
+Statics.BaseSpellTable[102543] = 106951 -- Incarnation: King of the Jungle -> Beserk
+Statics.BaseSpellTable[202028] = 213764 -- Brutal Slash -> Swipe
+Statics.BaseSpellTable[236748] = 99 -- Intimidating Roar -> Incapacitating Roar
+
+-- Demon Hunter
+Statics.BaseSpellTable[203555] = 162243 -- Demon Blades -> Demon’s Bite
+Statics.BaseSpellTable[263642] = 203782 -- Fracture -> Shear
+
+-- Death Knight
+Statics.BaseSpellTable[207311] = 55090 -- Clawing Shadows -> Scourge Strike
+Statics.BaseSpellTable[152280] = 43265 -- Defile -> Death and Decay
+Statics.BaseSpellTable[207127] = 47568 -- Hungering Rune Weapon -> Empower Rune Weapon

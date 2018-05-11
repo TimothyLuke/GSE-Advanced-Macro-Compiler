@@ -321,6 +321,10 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
     returnval = name
   else
     returnval = spellId
+    -- Check for overides like Crusade and Avenging Wrath
+    if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+      returnval = Statics.BaseSpellTable[returnval]
+    end
   end
   if not GSE.isEmpty(returnval) then
     GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
