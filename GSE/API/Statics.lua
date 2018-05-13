@@ -393,6 +393,8 @@ Statics.BaseSpellTable[205369] = 8122 -- Mind Bomb -> Physic Scream
 Statics.BaseSpellTable[205351] = 8092 -- Shadow Word: Void -> Mind Blast
 Statics.BaseSpellTable[204197] = 589 -- Purge the Wicked -> Shadow Word: Pain
 Statics.BaseSpellTable[271466] = 62618 -- Luminous Barrier -> Power Word: Barrier
+Statics.BaseSpellTable[228266] = 228260 -- Void Bolt -> Void Eruption
+Statics.BaseSpellTable[205448] = 228260 -- Void Bolt -> Void Eruption
 
 -- Hunter
 Statics.BaseSpellTable[259387] = 186270 -- Mongoose Bite -> Raptor Strike
