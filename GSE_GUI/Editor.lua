@@ -464,7 +464,7 @@ function GSE:GUIDrawMetadataEditor(container)
   defgroup5:SetWidth(editframe.Width - 100)
 
   local Timewalkingdropdown = AceGUI:Create("Dropdown")
-  Timewalkingdropdown:SetLabel(L["Party"])
+  Timewalkingdropdown:SetLabel(L["Timewalking"])
   Timewalkingdropdown:SetWidth(250)
   Timewalkingdropdown:SetList(GSE.GetVersionList())
   Timewalkingdropdown:SetValue(tostring(editframe.Timewalking))
