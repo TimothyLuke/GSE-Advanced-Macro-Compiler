@@ -30,6 +30,7 @@ editframe.Dungeon = 1
 editframe.Heroic = 1
 editframe.Party = 1
 editframe.Arena = 1
+editframe.Timewalking = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
@@ -457,6 +458,32 @@ function GSE:GUIDrawMetadataEditor(container)
 
   contentcontainer:AddChild(defgroup3)
   contentcontainer:AddChild(defgroup4)
+
+  local defgroup5 = AceGUI:Create("SimpleGroup")
+  defgroup5:SetLayout("Flow")
+  defgroup5:SetWidth(editframe.Width - 100)
+
+  local Timewalkingdropdown = AceGUI:Create("Dropdown")
+  Timewalkingdropdown:SetLabel(L["Party"])
+  Timewalkingdropdown:SetWidth(250)
+  Timewalkingdropdown:SetList(GSE.GetVersionList())
+  Timewalkingdropdown:SetValue(tostring(editframe.Timewalking))
+  defgroup5:AddChild(Timewalkingdropdown)
+  Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Timewalking = nil
+    else
+      editframe.Sequence.Timewalking = tonumber(key)
+      editframe.Timewalking = tonumber(key)
+    end
+  end)
+
+  local spacerlabel8 = AceGUI:Create("Label")
+  spacerlabel8:SetWidth(100)
+  defgroup4:AddChild(spacerlabel8)
+  ----- Next Tab
+  contentcontainer:AddChild(defgroup5)
+
   container:AddChild(scrollcontainer)
 end
 

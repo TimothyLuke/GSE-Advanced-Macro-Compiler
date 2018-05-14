@@ -226,6 +226,8 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].Heroic
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Party) and GSE.inParty then
     vers = GSELibrary[classid][sequenceName].Party
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Timewalking) and GSE.inTimeWalking then
+    vers = GSELibrary[classid][sequenceName].Timewalking
   end
   return vers
 end
