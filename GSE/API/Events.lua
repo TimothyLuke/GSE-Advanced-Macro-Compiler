@@ -74,6 +74,12 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inHeroic = false
   end
+  if difficulty == 8 then -- Mythic+
+    GSE.inMythicPlus = true
+  else
+    GSE.inMythicPlus = false
+  end
+
   if difficulty == 24 or difficulty == 33 then -- Timewalking  24 Dungeon, 33 raid
     GSE.inTimeWalking = true
   else
@@ -94,7 +100,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inArena = false
   end
-  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena) .. " inTimeWalking " .. tostring(GSE.inTimeWalking), Statics.DebugModules["API"], Statics.DebugModules["API"])
+  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena) .. " inTimeWalking " .. tostring(GSE.inTimeWalking) .. " inMythicPlus " .. tostring(GSE.inMythicPlus),  Statics.DebugModules["API"])
   GSE.ReloadSequences()
 end
 

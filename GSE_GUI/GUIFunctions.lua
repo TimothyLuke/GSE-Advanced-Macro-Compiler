@@ -77,6 +77,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.Heroic = sequence.Heroic or sequence.Default
   GSE.GUIEditFrame.Party = sequence.Party or sequence.Default
   GSE.GUIEditFrame.Timewalking = sequence.Timewalking or sequence.Default
+  GSE.GUIEditFrame.MythicPlus = sequence.MythicPlus or sequence.Default
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   incomingframe:Hide()

@@ -304,7 +304,6 @@ function GSE:GUIDrawMetadataEditor(container)
   defaultdropdown:SetWidth(250)
   defaultdropdown:SetList(GSE.GetVersionList())
   defaultdropdown:SetValue(tostring(editframe.Default))
-  defgroup1:AddChild(defaultdropdown)
   defaultdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     editframe.Sequence.Default = tonumber(key)
     editframe.Default = tonumber(key)
@@ -312,14 +311,12 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local spacerlabel4 = AceGUI:Create("Label")
   spacerlabel4:SetWidth(100)
-  defgroup1:AddChild(spacerlabel4)
 
   local raiddropdown = AceGUI:Create("Dropdown")
   raiddropdown:SetLabel(L["Raid"])
   raiddropdown:SetWidth(250)
   raiddropdown:SetList(GSE.GetVersionList())
   raiddropdown:SetValue(tostring(editframe.Raid))
-  defgroup1:AddChild(raiddropdown)
   raiddropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Raid = nil
@@ -356,7 +353,6 @@ function GSE:GUIDrawMetadataEditor(container)
       editframe.Mythic = tonumber(key)
     end
   end)
-  defgroup2:AddChild(arenadropdown)
   arenadropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Arena = nil
@@ -369,14 +365,12 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local spacerlabel5 = AceGUI:Create("Label")
   spacerlabel5:SetWidth(100)
-  defgroup2:AddChild(spacerlabel5)
 
   local pvpdropdown = AceGUI:Create("Dropdown")
   pvpdropdown:SetLabel(L["PVP"])
   pvpdropdown:SetWidth(250)
   pvpdropdown:SetList(GSE.GetVersionList())
   pvpdropdown:SetValue(tostring(editframe.PVP))
-  defgroup2:AddChild(pvpdropdown)
 
   pvpdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
@@ -402,8 +396,6 @@ function GSE:GUIDrawMetadataEditor(container)
   dungeondropdown:SetList(GSE.GetVersionList())
   dungeondropdown:SetValue(tostring(editframe.Dungeon))
 
-  defgroup3:AddChild(mythicdropdown)
-
   dungeondropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Dungeon = nil
@@ -415,14 +407,12 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local spacerlabel6 = AceGUI:Create("Label")
   spacerlabel6:SetWidth(100)
-  defgroup3:AddChild(spacerlabel6)
 
   local heroicdropdown = AceGUI:Create("Dropdown")
   heroicdropdown:SetLabel(L["Heroic"])
   heroicdropdown:SetWidth(250)
   heroicdropdown:SetList(GSE.GetVersionList())
   heroicdropdown:SetValue(tostring(editframe.Heroic))
-  defgroup3:AddChild(heroicdropdown)
   heroicdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Heroic = nil
@@ -441,7 +431,6 @@ function GSE:GUIDrawMetadataEditor(container)
   partydropdown:SetWidth(250)
   partydropdown:SetList(GSE.GetVersionList())
   partydropdown:SetValue(tostring(editframe.Party))
-  defgroup4:AddChild(partydropdown)
   partydropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Party = nil
@@ -453,8 +442,6 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local spacerlabel7 = AceGUI:Create("Label")
   spacerlabel7:SetWidth(100)
-  defgroup4:AddChild(spacerlabel7)
-  defgroup4:AddChild(dungeondropdown)
 
   contentcontainer:AddChild(defgroup3)
   contentcontainer:AddChild(defgroup4)
@@ -468,7 +455,6 @@ function GSE:GUIDrawMetadataEditor(container)
   Timewalkingdropdown:SetWidth(250)
   Timewalkingdropdown:SetList(GSE.GetVersionList())
   Timewalkingdropdown:SetValue(tostring(editframe.Timewalking))
-  defgroup5:AddChild(Timewalkingdropdown)
   Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Timewalking = nil
@@ -480,8 +466,37 @@ function GSE:GUIDrawMetadataEditor(container)
 
   local spacerlabel8 = AceGUI:Create("Label")
   spacerlabel8:SetWidth(100)
-  defgroup4:AddChild(spacerlabel8)
-  ----- Next Tab
+
+  local mythicplusdropdown = AceGUI:Create("Dropdown")
+  mythicplusdropdown:SetLabel(L["Mythic+"])
+  mythicplusdropdown:SetWidth(250)
+  mythicplusdropdown:SetList(GSE.GetVersionList())
+  mythicplusdropdown:SetValue(tostring(editframe.MythicPlus))
+  Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.MythicPlus = nil
+    else
+      editframe.Sequence.MythicPlus = tonumber(key)
+      editframe.MythicPlus = tonumber(key)
+    end
+  end)
+
+  defgroup1:AddChild(defaultdropdown)
+  defgroup1:AddChild(spacerlabel4)
+  defgroup1:AddChild(raiddropdown)
+  defgroup2:AddChild(arenadropdown)
+  defgroup2:AddChild(spacerlabel5)
+  defgroup2:AddChild(pvpdropdown)
+  defgroup3:AddChild(mythicdropdown)
+  defgroup3:AddChild(spacerlabel6)
+  defgroup3:AddChild(mythicplusdropdown)
+  defgroup4:AddChild(heroicdropdown)
+  defgroup4:AddChild(spacerlabel7)
+  defgroup4:AddChild(dungeondropdown)
+  defgroup5:AddChild(Timewalkingdropdown)
+  defgroup5:AddChild(spacerlabel8)
+  defgroup5:AddChild(partydropdown)
+
   contentcontainer:AddChild(defgroup5)
 
   container:AddChild(scrollcontainer)
