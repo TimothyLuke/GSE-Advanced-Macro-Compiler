@@ -83,7 +83,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   if difficulty == 24 or difficulty == 33 then -- Timewalking  24 Dungeon, 33 raid
     GSE.inTimeWalking = true
   else
-    GSE.ininTimeWalking = false
+    GSE.inTimeWalking = false
   end
   if type == "raid" then
     GSE.inRaid = true
