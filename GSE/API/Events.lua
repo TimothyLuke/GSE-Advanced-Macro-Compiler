@@ -291,7 +291,7 @@ function GSE:GSSlash(input)
     GSE.CleanOrphanSequences()
     GSE.CleanMacroLibrary(true)
   elseif string.lower(string.sub(string.lower(input),1,6)) == "export" then
-    GSE.Print(GSE.ExportSequence(string.sub(string.lower(input),8)))
+    GSE.Print(GSE.ExportSequence(string.sub(string.lower(input),8, true, "STRING", true)))
   elseif string.lower(input) == "showdebugoutput" then
       StaticPopup_Show ("GS-DebugOutput")
   elseif string.lower(input) == "record" then
