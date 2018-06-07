@@ -392,6 +392,18 @@ function GSE.ExportSequence(sequence, sequenceName, verbose, mode, hideversion)
     if not GSE.isEmpty(sequence.Mythic) then
       sequencemeta = sequencemeta .. "  Mythic=" ..sequence.Mythic .. ",\n"
     end
+    if not GSE.isEmpty(sequence.Arena) then
+      sequencemeta = sequencemeta .. "  Arena=" ..sequence.Arena .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Timewalking) then
+      sequencemeta = sequencemeta .. "  Timewalking=" ..sequence.Timewalking .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.MythicPlus) then
+      sequencemeta = sequencemeta .. "  MythicPlus=" ..sequence.MythicPlus .. ",\n"
+    end
+    if not GSE.isEmpty(sequence.Party) then
+      sequencemeta = sequencemeta .. "  Party=" ..sequence.Party .. ",\n"
+    end
     local macroversions = "  MacroVersions = {\n"
     for k,v in pairs(sequence.MacroVersions) do
       local outputversion =  GSE.CleanMacroVersion(v)

@@ -334,4 +334,19 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   return returnval
 end
 
+--- takes a section of a sequence and returns the spells used.
+function GSE.IdentifySpells(tab)
+  local foundspells = {}
+  local returnval = ""
+  for _,p in ipairs(tab) do
+    -- run a regex to find all spell id's from the table and add them to the table foundspells
+
+  end
+
+  for k,v in ipairs(foundspells) do
+    returnval = returnval .. GSE.GetSpellId(v, "STRING", false) .. ", "
+  end
+  return string.sub(returnval, 1, string.len(returnval - 2))
+end
+
 GSE.TranslatorAvailable = true

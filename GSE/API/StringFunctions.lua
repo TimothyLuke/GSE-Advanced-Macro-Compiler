@@ -229,3 +229,66 @@ end
 function GSE.ObjectExists(name)
     return type(GSE.FindGlobalObject(name)) ~= 'nil'
 end
+
+function GSE.ExportSequenceWLMFormat(sequence, sequencename)
+    local returnstring = "<h1>sequencename</h1><h3>Talents>h3><p>" .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "</p>\n"
+    if not GSE.isEmpty(sequence.Help) then
+      returnstring = "<h3>Usage Information</h3><p>" .. sequence.Help .. "</p>\n"
+    end
+    returnstring = returnstring .. "<p>This macro contains " .. (table.getn(sequence.MacroVersions) > 1) and table.getn(sequence.MacroVersions) .. "macro versions." or "1 macro version.") .. "\n"
+    if (table.getn(sequence.MacroVersions) > 1) then
+      returnstring = returnstring .. "<ul>"
+
+      if not GSE.isEmpty(sequence.Default) then
+        returnstring = returnstring .. "<li>The Default macro is " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Raid) then
+        returnstring = returnstring .. "<li>Raids use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.PVP) then
+        returnstring = returnstring .. "<li>PVP uses version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Dungeon) then
+        returnstring = returnstring .. "<li>Normal Dungeons use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Heroic) then
+        returnstring = returnstring .. "<li>Heroic Dungeons use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Mythic) then
+        returnstring = returnstring .. "<li>Mythic Dungeons use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Arena) then
+        returnstring = returnstring .. "<li>Arenas use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Timewalking) then
+        returnstring = returnstring .. "<li>Timewalking Dungeons use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.MythicPlus) then
+        returnstring = returnstring .. "<li>Mythic+ Dungeons use version " .. k .. "</li>\n"
+      end
+      if not GSE.isEmpty(sequence.Party) then
+        returnstring = returnstring .. "<li>Open World Parties use version " .. k .. "</li>\n"
+      end
+
+      returnstring = returnstring .. "</p>\n"
+    end
+    for k,v in pairs(sequence.MacroVersions) do
+      returnstring = returnstring .. "<h4>Macro Version ".. k .. "</h4>\n"
+      returnstring = returnstring .. "<p><strong>Step Function: </strong>" .. sequence.StepFunction .. "<br/>\n"
+      if not GSE.isEmpty(outputversion.PreMacro) then
+        returnstring = returnstring .. "<strong>Pre Macro: " .. GSE.IdentifySpells(sequence.PreMacro) .. "<br/>\n"
+      end
+      if not GSE.isEmpty(outputversion.KeyPress) then
+        returnstring = returnstring .. "<strong>KeyPress: " .. GSE.IdentifySpells(sequence.KeyPress) .. "<br/>\n"
+      end
+      returnstring = returnstring .. "<strong>Main Sequence: " .. GSE.IdentifySpells(v) .. "<br/>\n"
+      if not GSE.isEmpty(outputversion.KeyRelease) then
+        returnstring = returnstring .. "<strong>KeyPress: " .. GSE.IdentifySpells(sequence.KeyPress) .. "<br/>\n"
+      end
+      if not GSE.isEmpty(outputversion.PostMacro) then
+        returnstring = returnstring .. "<strong>Post Macro: " .. GSE.IdentifySpells(sequence.PostMacro) .. "<br/>\n"
+      end
+
+    end
+    return returnstring
+end
