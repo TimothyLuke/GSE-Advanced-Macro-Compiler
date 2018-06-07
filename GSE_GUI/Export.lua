@@ -18,7 +18,7 @@ exportframe:SetLayout("List")
 
 local exportsequencebox = AceGUI:Create("MultiLineEditBox")
 exportsequencebox:SetLabel(L["Sequence"])
-exportsequencebox:SetNumLines(29)
+exportsequencebox:SetNumLines(26)
 exportsequencebox:DisableButton(true)
 exportsequencebox:SetFullWidth(true)
 exportframe:AddChild(exportsequencebox)
@@ -33,7 +33,7 @@ wlmforumexportcheckbox:SetCallback("OnValueChanged", function (sel, object, valu
     exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename)
     GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
   else
-    GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
+    GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
   end
 end)
 

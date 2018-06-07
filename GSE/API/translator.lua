@@ -340,13 +340,13 @@ function GSE.IdentifySpells(tab)
   local returnval = ""
   for _,p in ipairs(tab) do
     -- run a regex to find all spell id's from the table and add them to the table foundspells
-
+    for m in string.gmatch( p, "%d+" ) do
+      returnval = returnval .. GSE.GetSpellId(m, "STRING", false) .. ", "
+    end
   end
 
-  for k,v in ipairs(foundspells) do
-    returnval = returnval .. GSE.GetSpellId(v, "STRING", false) .. ", "
-  end
-  return string.sub(returnval, 1, string.len(returnval - 2))
+
+  return string.sub(returnval, 1, string.len(returnval) - 2)
 end
 
 GSE.TranslatorAvailable = true
