@@ -1306,11 +1306,11 @@ end
 
 --- This creates a pretty export for WLM Forums
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
-    local returnstring = "<h1>sequencename</h1><h3>Talents</h3><p>" .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "</p>\n"
+    local returnstring = "<strong>".. sequencename .."</strong>\n<em>Talents</em> " .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "\n\n"
     if not GSE.isEmpty(sequence.Help) then
-      returnstring = "<h3>Usage Information</h3><p>" .. sequence.Help .. "</p>\n"
+      returnstring = "<em>Usage Information</em>\n" .. sequence.Help .. "\n\n"
     end
-    returnstring = returnstring .. "<p>This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions. " or "1 macro version. ") .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. "\n"
+    returnstring = returnstring .. "This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions. " or "1 macro version. ") .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. "\n\n"
     if (table.getn(sequence.MacroVersions) > 1) then
       returnstring = returnstring .. "<ul>"
       for k,v in pairs(sequence.MacroVersions) do
@@ -1369,30 +1369,41 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
       returnstring = returnstring .. "</UL></p>\n"
     end
     for k,v in pairs(sequence.MacroVersions) do
-      returnstring = returnstring .. "<h4>Macro Version ".. k .. "</h4>\n"
-      returnstring = returnstring .. "<p><strong>Step Function: </strong>" .. v.StepFunction .. "<br/>\n"
+      returnstring = returnstring .. "<strong>Macro Version ".. k .. "</strong>\n"
+      returnstring = returnstring .. "<blockquote><strong>Step Function: </strong>" .. v.StepFunction .. "\n\n"
       if not GSE.isEmpty(v.PreMacro) then
         if table.getn(v.PreMacro) > 0 then
-          returnstring = returnstring .. "<strong>Pre Macro: </strong>" .. GSE.IdentifySpells(v.PreMacro) .. "<br/>\n"
+          returnstring = returnstring .. "<strong>Pre Macro: </strong>" .. GSE.IdentifySpells(v.PreMacro) .. "\n\n"
         end
       end
       if not GSE.isEmpty(v.KeyPress) then
         if table.getn(v.KeyPress) > 0 then
-          returnstring = returnstring .. "<strong>KeyPress: </strong>" .. GSE.IdentifySpells(v.KeyPress) .. "<br/>\n"
+          spells, _ = GSE.IdentifySpells(v.KeyPress)
+          if not GSE.isEmpty(spells) then
+            returnstring = returnstring .. "<strong>KeyPress: </strong>" .. GSE.IdentifySpells(v.KeyPress) .. "\n\n"
+          else
+            returnstring = returnstring .. "<strong>KeyPress: </strong> Contains various utility functions.\n\n"
+          end
         end
       end
-      returnstring = returnstring .. "<strong>Main Sequence: </strong>" .. GSE.IdentifySpells(v) .. "<br/>\n"
+      returnstring = returnstring .. "<strong>Main Sequence: </strong>" .. GSE.IdentifySpells(v) .. "\n\n"
       if not GSE.isEmpty(v.KeyRelease) then
         if table.getn(v.KeyRelease) > 0 then
-          returnstring = returnstring .. "<strong>KeyPress: </strong>" .. GSE.IdentifySpells(v.KeyPress) .. "<br/>\n"
+          spells, _ = GSE.IdentifySpells(v.KeyRelease)
+          if not GSE.isEmpty(spells) then
+              returnstring = returnstring .. "<strong>KeyRelease: </strong>" .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
+          else
+            returnstring = returnstring .. "<strong>KeyRelease: </strong> Contains various utility functions.\n\n"
+          end
         end
       end
       if not GSE.isEmpty(v.PostMacro) then
         if table.getn(v.PostMacro) > 0 then
-          returnstring = returnstring .. "<strong>Post Macro: </strong>" .. GSE.IdentifySpells(v.PostMacro) .. "<br/>\n"
+          returnstring = returnstring .. "<strong>Post Macro: </strong>" .. GSE.IdentifySpells(v.PostMacro) .. "\n\n"
         end
       end
+      returnstring = returnstring .. "</blockquote>"
     end
-    returnstring = returnstring .. "</p>"
+
     return returnstring
 end
