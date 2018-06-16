@@ -315,7 +315,7 @@ end
 
 --- Converts a string spell name to an id and back again.
 function GSE.GetSpellId(spellstring, mode, trinketmode)
-  local returnval
+  local returnval = ""
   local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellstring)
   if mode == "STRING" then
     returnval = name
@@ -329,7 +329,11 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   if not GSE.isEmpty(returnval) then
     GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
   else
-    GSE.PrintDebugMessage(spellstring .. " was not found" , "Translator")
+    if not GSE.isEmpty(spellstring) then
+      GSE.PrintDebugMessage(spellstring .. " was not found" , "Translator")
+    else
+      GSE.PrintDebugMessage("Nothing was there to be found" , "Translator")
+    end
   end
   return returnval
 end
@@ -340,13 +344,19 @@ function GSE.IdentifySpells(tab)
   local returnval = ""
   for _,p in ipairs(tab) do
     -- run a regex to find all spell id's from the table and add them to the table foundspells
-    for m in string.gmatch( p, "%d+" ) do
-      returnval = returnval .. GSE.GetSpellId(m, "STRING", false) .. ", "
+    for m in string.gmatch( p, "%w%d+" ) do
+
+      foundspells[m] = 1
     end
   end
 
+  for k,v in pairs(foundspells) do
+   if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
+     returnval = returnval .. '<a href="http://www.wowdb.com/spells/' .. k .. '">' .. GSE.GetSpellId(k, "STRING", false) .. '</a>, '
+   end
+  end
 
-  return string.sub(returnval, 1, string.len(returnval) - 2)
+  return string.sub(returnval, 1, string.len(returnval) - 2), foundspells
 end
 
 GSE.TranslatorAvailable = true

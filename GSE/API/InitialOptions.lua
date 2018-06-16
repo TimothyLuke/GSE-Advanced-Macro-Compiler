@@ -92,7 +92,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.DebugPrintModConditionsOnKeyPress = false
   GSEOptions.showGSEUsers = false
   GSEOptions.showGSEoocqueue = true
-  GSEOptions.UseVerboseExportFormat = true
+  GSEOptions.UseVerboseExportFormat = false
   GSEOptions.DefaultImportAction = "MERGE"
   GSE.resetMacroResetModifiers()
 end

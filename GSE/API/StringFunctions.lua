@@ -231,11 +231,11 @@ function GSE.ObjectExists(name)
 end
 
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
-    local returnstring = "<h1>sequencename</h1><h3>Talents>h3><p>" .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "</p>\n"
+    local returnstring = "<h1>sequencename</h1><h3>Talents</h3><p>" .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "</p>\n"
     if not GSE.isEmpty(sequence.Help) then
       returnstring = "<h3>Usage Information</h3><p>" .. sequence.Help .. "</p>\n"
     end
-    returnstring = returnstring .. "<p>This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions." or "1 macro version.") .. "\n"
+    returnstring = returnstring .. "<p>This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions." or "1 macro version.") .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. "\n"
     if (table.getn(sequence.MacroVersions) > 1) then
       returnstring = returnstring .. "<ul>"
       for k,v in pairs(sequence.MacroVersions) do
@@ -290,7 +290,8 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
           end
         end
       end
-      returnstring = returnstring .. "</p>\n"
+
+      returnstring = returnstring .. "</UL></p>\n"
     end
     for k,v in pairs(sequence.MacroVersions) do
       returnstring = returnstring .. "<h4>Macro Version ".. k .. "</h4>\n"
