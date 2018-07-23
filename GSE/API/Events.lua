@@ -202,7 +202,7 @@ function GSE:ADDON_LOADED(event, addon)
 
 end
 
-function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
+function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
   if unit == "player" then
     local _, GCD_Timer = GetSpellCooldown(61304)
     GCD = true
@@ -210,8 +210,13 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, spell)
     GSE.PrintDebugMessage("GCD Delay:" .. " " .. GCD_Timer)
     GSE.CurrentGCD = GCD_Timer
 
-    if GSE.RecorderActive then
-      GSE.GUIRecordFrame.RecordSequenceBox:SetText(GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n")
+    local elements = GSE.split(action, "-")
+    local spell,_,_,_,_,_=GetSpellInfo(elements[6])
+    local fskilltype, fspellid = GetSpellBookItemInfo(spell)
+    if not GSE.isEmpty(fskilltype) then
+      if GSE.RecorderActive then
+        GSE.GUIRecordFrame.RecordSequenceBox:SetText(GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n")
+      end
     end
   end
 end
