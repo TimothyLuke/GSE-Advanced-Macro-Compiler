@@ -74,7 +74,7 @@ local actionChoiceRadio = AceGUI:Create("Dropdown")
 actionChoiceRadio:SetList({
   ["MERGE"] = L["Merge"],
   ["REPLACE"] = L["Replace"],
-  ["IGNORE"] = L["Ignore"]
+  ["IGNORE"] = L["Ignore"],
   ["RENAME"] = L["Rename New Macro"]
 })
 actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
@@ -102,7 +102,7 @@ end)
 -- end)
 nameeditbox:SetDisabled(true)
 nameeditbox:DisableButton( true)
-nameeditbox:SetText(editframe.SequenceName)
+nameeditbox:SetText(compareframe.sequenceName)
 
 actionButtonGroup:AddChild(nameeditbox)
 

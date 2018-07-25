@@ -65,6 +65,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local sequencename = elements[2]
   local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
   local font = GameFontNormal:GetFontObject()
+  local fontlarge = GameFontNormalLarge:GetFontObject()
   local origjustifyV = font:GetJustifyV()
   font:SetJustifyV("BOTTOM")
 
@@ -80,11 +81,17 @@ function GSE.GUICreateSequencePanels(frame, container, key)
     end
   end)
 
+  -- workaround for vanishing label ace3 bug
   local label = AceGUI:Create("Label")
-  label:SetText(sequencename)
-  label:SetFont(fontName, fontHeight + 4 , fontFlags)
-  label:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+  label:SetFontObject(fontlarge)
   selpanel:AddChild(label)
+
+  local hlabel = AceGUI:Create("Label")
+  hlabel:SetText(sequencename)
+  --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
+  hlabel:SetFontObject(fontlarge)
+  hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+  selpanel:AddChild(hlabel)
 
   local columngroup = AceGUI:Create("SimpleGroup")
   columngroup:SetFullWidth(true)
