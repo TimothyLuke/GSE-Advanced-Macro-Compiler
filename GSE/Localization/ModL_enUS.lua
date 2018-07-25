@@ -425,3 +425,8 @@ L["Sequence Name %s is in Use. Please choose a different name."] = true
 L["Timewalking"] = true
 L["Mythic+"] = true
 L["Format export for WLM Forums"] = true
+
+-- GSE 2.3.02
+L["Rename New Macro"] = true
+L[" was imported as a new macro."] = true
+L["New Sequence Name"] = true

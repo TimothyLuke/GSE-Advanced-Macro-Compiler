@@ -170,6 +170,20 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     GSELibrary[classid][sequenceName] = newSequence
     GSE.Print(sequenceName.. L[" was updated to new version."] , "GSE Storage")
     GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
+  elseif action == "RENAME" then
+    if GSE.isEmpty(newSequence.Author) then
+      -- set to unknown author
+      newSequence.Author = "Unknown Author"
+    end
+    if GSE.isEmpty(newSequence.Talents) then
+      -- set to currentSpecID
+      newSequence.Talents = "?,?,?,?,?,?,?"
+    end
+
+    GSELibrary[classid][sequenceName] = {}
+    GSELibrary[classid][sequenceName] = newSequence
+    GSE.Print(sequenceName.. L[" was imported as a new macro."] , "GSE Storage")
+    GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
   else
     GSE.Print(L["No changes were made to "].. sequenceName, GNOME)
   end

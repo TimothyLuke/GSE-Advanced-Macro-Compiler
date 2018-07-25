@@ -75,13 +75,37 @@ actionChoiceRadio:SetList({
   ["MERGE"] = L["Merge"],
   ["REPLACE"] = L["Replace"],
   ["IGNORE"] = L["Ignore"]
+  ["RENAME"] = L["Rename New Macro"]
 })
 actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
 actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
     compareframe.ChosenAction = key
+    if key == "RENAME" then
+      nameeditbox:SetDisabled(false)
+      nameeditbox:SetText(compareframe.sequenceName)
+    else
+      nameeditbox:SetDisabled(true)
+    end
 end)
 
 actionButtonGroup:AddChild(actionChoiceRadio)
+
+local nameeditbox = AceGUI:Create("EditBox")
+nameeditbox:SetLabel(L["New Sequence Name"])
+nameeditbox:SetWidth(250)
+nameeditbox:SetCallback("OnTextChanged", function()
+  compareframe.sequenceName = nameeditbox:GetText()
+end)
+-- nameeditbox:SetScript("OnEditFocusLost", function()
+--   editframe:SetText(string.upper(editframe:GetText()))
+--   editframe.SequenceName = nameeditbox:GetText()
+-- end)
+nameeditbox:SetDisabled(true)
+nameeditbox:DisableButton( true)
+nameeditbox:SetText(editframe.SequenceName)
+
+actionButtonGroup:AddChild(nameeditbox)
+
 
 local actionbutton = AceGUI:Create("Button")
 actionbutton:SetText(L["Continue"])
