@@ -423,8 +423,8 @@ Statics.BaseSpellTable[236748] = 99 -- Intimidating Roar -> Incapacitating Roar
 -- Demon Hunter
 Statics.BaseSpellTable[203555] = 162243 -- Demon Blades -> Demon’s Bite
 Statics.BaseSpellTable[263642] = 203782 -- Fracture -> Shear
-Statics.BaseSpellTable[162794] = 201427 -- Chaos Strike -> Annihilation
-Statics.BaseSpellTable[188499] = 210152 -- Blade Dance -> Death Sweep
+Statics.BaseSpellTable[201427] = 162794 -- Annihilation -> Chaos Strike
+Statics.BaseSpellTable[210152] = 188499 -- Death Sweep -> Blade Dance 
 
 
 -- Death Knight
