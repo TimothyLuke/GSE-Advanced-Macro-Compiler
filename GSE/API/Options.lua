@@ -113,6 +113,15 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.DefaultImportAction end,
             order = 320
           },
+          UseVerboseExportFormat = {
+            name = L["Use WLM Export Sequence Format"],
+            desc = L["When exporting a sequence create a stub entry to import for WLM's Website."],
+--            guiHidden = true,
+            type = "toggle",
+            set = function(info,val) GSEOptions.UseWLMExportFormat = val end,
+            get = function(info) return GSEOptions.UseWLMExportFormat end,
+            order = 300
+          },
           filtertitle1 = {
             type = "header",
             name = L["Filter Macro Selection"],
@@ -150,6 +159,7 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.CreateGlobalButtons end,
             order = 440
           },
+
           title2 = {
             type = "header",
             name = L["Gameplay Options"],
@@ -664,15 +674,6 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.DebugPrintModConditionsOnKeyPress end,
             order = 26
           },
-          -- UseVerboseExportFormat = {
-          --   name = L["Use Verbose Export Sequence Format"],
-          --   desc = L["When exporting a sequence use a human readable verbose form."],
-          --   guiHidden = true,
-          --   type = "toggle",
-          --   set = function(info,val) GSEOptions.UseVerboseExportFormat = val end,
-          --   get = function(info) return GSEOptions.UseVerboseExportFormat end,
-          --   order = 27
-          -- },
           title6= {
             type = "header",
             name = L["Enable Debug for the following Modules"],

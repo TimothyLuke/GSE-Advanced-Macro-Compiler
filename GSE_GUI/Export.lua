@@ -25,6 +25,7 @@ exportframe:AddChild(exportsequencebox)
 
 local wlmforumexportcheckbox = AceGUI:Create("CheckBox")
 wlmforumexportcheckbox:SetType("checkbox")
+
 wlmforumexportcheckbox:SetLabel(L["Format export for WLM Forums"])
 exportframe:AddChild(wlmforumexportcheckbox)
 wlmforumexportcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
@@ -36,14 +37,20 @@ wlmforumexportcheckbox:SetCallback("OnValueChanged", function (sel, object, valu
     GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
   end
 end)
-
+wlmforumexportcheckbox:SetValue( GSEOptions.UseWLMExportFormat)
 
 GSE.GUIExportframe = exportframe
 
 exportframe.ExportSequenceBox = exportsequencebox
 
 function GSE.GUIExportSequence(classid, sequencename)
-  GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(classid)][sequencename], sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
+  if GSEOptions.UseWLMExportFormat then
+    local exporttext = "`" .. GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
+    exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename)
+    GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
+  else
+    GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
+  end
   GSE.GUIExportframe.classid = classid
   GSE.GUIExportframe.sequencename = sequencename
   GSE.GUIExportframe:Show()

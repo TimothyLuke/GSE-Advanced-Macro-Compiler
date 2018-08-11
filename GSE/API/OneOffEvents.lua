@@ -5,6 +5,7 @@ local L = GSE.L
 
 function GSE.PerformOneOffEvents()
   GSE.UpdateFrom735to801()
+  GSE.Update2305()
 end
 
 function GSE.UpdateFrom735to801()
@@ -28,4 +29,11 @@ function GSE.UpdateFrom735to801()
      GSE.ReloadSequences()
   end
   GSEOptions.Updated801 = true
+end
+
+function GSE.Update2305()
+  if GSE.isEmpty(GSEOptions.Update2305) then
+     GSEOptions.UseWLMExportFormat = true
+  end
+  GSEOptions.Update2305 = true
 end

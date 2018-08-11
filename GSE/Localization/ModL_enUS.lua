@@ -430,3 +430,7 @@ L["Format export for WLM Forums"] = true
 L["Rename New Macro"] = true
 L[" was imported as a new macro."] = true
 L["New Sequence Name"] = true
+
+-- GSE 2.3.04
+L["Use WLM Export Sequence Format"] = true
+L["When exporting a sequence create a stub entry to import for WLM's Website."] = true
