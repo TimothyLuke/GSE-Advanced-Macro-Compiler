@@ -1380,7 +1380,7 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
         end
       end
 
-      returnstring = returnstring .. "</UL></p>\n"
+      returnstring = returnstring .. "</ul>\n"
     end
     for k,v in pairs(sequence.MacroVersions) do
       returnstring = returnstring .. "<strong>Macro Version ".. k .. "</strong>\n"
