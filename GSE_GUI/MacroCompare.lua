@@ -78,6 +78,11 @@ actionChoiceRadio:SetList({
   ["RENAME"] = L["Rename New Macro"]
 })
 actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
+
+actionButtonGroup:AddChild(actionChoiceRadio)
+
+local nameeditbox = AceGUI:Create("EditBox")
+
 actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
     compareframe.ChosenAction = key
     if key == "RENAME" then
@@ -88,9 +93,7 @@ actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
     end
 end)
 
-actionButtonGroup:AddChild(actionChoiceRadio)
 
-local nameeditbox = AceGUI:Create("EditBox")
 nameeditbox:SetLabel(L["New Sequence Name"])
 nameeditbox:SetWidth(250)
 nameeditbox:SetCallback("OnTextChanged", function()
