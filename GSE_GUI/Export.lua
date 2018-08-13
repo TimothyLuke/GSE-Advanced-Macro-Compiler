@@ -44,6 +44,8 @@ GSE.GUIExportframe = exportframe
 exportframe.ExportSequenceBox = exportsequencebox
 
 function GSE.GUIExportSequence(classid, sequencename)
+  GSE.GUIExportframe.classid = classid
+  GSE.GUIExportframe.sequencename = sequencename
   if GSEOptions.UseWLMExportFormat then
     local exporttext = "`" .. GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
     exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename)
@@ -51,7 +53,5 @@ function GSE.GUIExportSequence(classid, sequencename)
   else
     GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
   end
-  GSE.GUIExportframe.classid = classid
-  GSE.GUIExportframe.sequencename = sequencename
   GSE.GUIExportframe:Show()
 end
