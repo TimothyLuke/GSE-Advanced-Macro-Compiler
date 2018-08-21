@@ -54,51 +54,6 @@ Statics.CleanStrings = {
   [101] = "\n\n",
 }
 
-Statics.CharacterDollSlot = {}
-
-Statics.CharacterDollSlot[INVSLOT_HEAD] = "HeadSlot"
-Statics.CharacterDollSlot[INVSLOT_NECK] = "NeckSlot"
-Statics.CharacterDollSlot[INVSLOT_SHOULDER] = "ShoulderSlot"
-Statics.CharacterDollSlot[INVSLOT_BACK] = "BackSlot"
-Statics.CharacterDollSlot[INVSLOT_CHEST] = "ChestSlot"
-Statics.CharacterDollSlot[INVSLOT_BODY] = "ShirtSlot"
-Statics.CharacterDollSlot[INVSLOT_TABARD] = "TabardSlot"
-Statics.CharacterDollSlot[INVSLOT_WRIST] = "WristSlot"
-Statics.CharacterDollSlot[INVSLOT_HAND] = "HandsSlot"
-Statics.CharacterDollSlot[INVSLOT_WAIST] = "WaistSlot"
-Statics.CharacterDollSlot[INVSLOT_LEGS] = "LegsSlot"
-Statics.CharacterDollSlot[INVSLOT_FEET] = "FeetSlot"
-Statics.CharacterDollSlot[INVSLOT_FINGER1] = "Finger0Slot"
-Statics.CharacterDollSlot[INVSLOT_FINGER2] = "Finger1Slot"
-Statics.CharacterDollSlot[INVSLOT_TRINKET1] = "Trinket0Slot"
-Statics.CharacterDollSlot[INVSLOT_TRINKET2] = "Trinket1Slot"
-Statics.CharacterDollSlot[INVSLOT_MAINHAND] = "MainHandSlot"
-Statics.CharacterDollSlot[INVSLOT_OFFHAND] = "OffHandSlot"
-Statics.CharacterDollSlot[INVSLOT_AMMO] = "AmmoSlot"
-
-Statics.CharacterDollSlotReverse = {}
-
-Statics.CharacterDollSlotReverse["headslot"] = INVSLOT_HEAD
-Statics.CharacterDollSlotReverse["neckslot"] = INVSLOT_NECK
-Statics.CharacterDollSlotReverse["shoulderslot"] = INVSLOT_SHOULDER
-Statics.CharacterDollSlotReverse["backslot"] = INVSLOT_BACK
-Statics.CharacterDollSlotReverse["chestslot"] = INVSLOT_CHEST
-Statics.CharacterDollSlotReverse["shirtslot"] = INVSLOT_BODY
-Statics.CharacterDollSlotReverse["tabardslot"] = INVSLOT_TABARD
-Statics.CharacterDollSlotReverse["wristslot"] = INVSLOT_WRIST
-Statics.CharacterDollSlotReverse["handsslot"] = INVSLOT_HAND
-Statics.CharacterDollSlotReverse["waistslot"] = INVSLOT_WAIST
-Statics.CharacterDollSlotReverse["legsslot"] = INVSLOT_LEGS
-Statics.CharacterDollSlotReverse["feetslot"] = INVSLOT_FEET
-Statics.CharacterDollSlotReverse["finger0slot"] = INVSLOT_FINGER1
-Statics.CharacterDollSlotReverse["finger1slot"] = INVSLOT_FINGER2
-Statics.CharacterDollSlotReverse["trinket0slot"] = INVSLOT_TRINKET1
-Statics.CharacterDollSlotReverse["trinket1slot"] = INVSLOT_TRINKET2
-Statics.CharacterDollSlotReverse["mainhandslot"] = INVSLOT_MAINHAND
-Statics.CharacterDollSlotReverse["offhandslot"] = INVSLOT_OFFHAND
-Statics.CharacterDollSlotReverse["ammoslot"] = INVSLOT_AMMO
-
-
 Statics.StringReset =  "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 

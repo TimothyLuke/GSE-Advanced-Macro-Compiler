@@ -81,11 +81,8 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
           GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
 
           local trinketfound, trinketval = GSE.DecodeTrinket(trinketstuff, mode)
-          if trinketfound then
-            output = output ..  GSEOptions.KEYWORD .. trinketval .. Statics.StringReset
-          else
-            output = output  .. GSEOptions.UNKNOWN .. trinketstuff .. Statics.StringReset
-          end
+          output = output ..  GSEOptions.KEYWORD .. trinketval .. Statics.StringReset
+
         elseif Statics.CastCmds[string.lower(cmd)] then
           if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
@@ -289,28 +286,6 @@ function GSE.ReportUnfoundSpells()
     GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
   end
 
-end
-
-
-function GSE.DecodeTrinket(slot, mode)
-  local found = false
-  local returnval
-  if mode == "STRING" then
-    for k,v in ipairs(Statics.CharacterDollSlot) do
-      if tonumber(slot) == k then
-        returnval = v
-        found = true
-      end
-    end
-  else
-    for k,v in pairs(Statics.CharacterDollSlotReverse) do
-      if string.lower(slot) == k then
-        returnval = v
-        found = true
-      end
-    end
-  end
-  return found, returnval
 end
 
 --- Converts a string spell name to an id and back again.
