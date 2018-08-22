@@ -80,8 +80,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
           end
           GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
 
-          local trinketfound, trinketval = GSE.DecodeTrinket(trinketstuff, mode)
-          output = output ..  GSEOptions.KEYWORD .. trinketval .. Statics.StringReset
+          output = output ..  GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
 
         elseif Statics.CastCmds[string.lower(cmd)] then
           if not cleanNewLines then
