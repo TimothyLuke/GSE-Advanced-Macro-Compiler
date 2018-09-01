@@ -353,6 +353,7 @@ Statics.BaseSpellTable[205448] = 228260 -- Void Bolt -> Void Eruption
 
 -- Hunter
 Statics.BaseSpellTable[259387] = 186270 -- Mongoose Bite -> Raptor Strike
+Statics.BaseSpellTable[136] = 982 -- Mend Pet -> Revive Pet
 
 -- Warlock
 
