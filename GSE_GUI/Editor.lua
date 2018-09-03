@@ -458,7 +458,9 @@ function GSE:GUIDrawMetadataEditor(container)
   Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Timewalking = nil
+      print("GotTHere")
     else
+      print("GotHere")
       editframe.Sequence.Timewalking = tonumber(key)
       editframe.Timewalking = tonumber(key)
     end
@@ -472,7 +474,7 @@ function GSE:GUIDrawMetadataEditor(container)
   mythicplusdropdown:SetWidth(250)
   mythicplusdropdown:SetList(GSE.GetVersionList())
   mythicplusdropdown:SetValue(tostring(editframe.MythicPlus))
-  Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
+  mythicplusdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.MythicPlus = nil
     else
@@ -862,6 +864,15 @@ function GSE.GUIDeleteVersion(version)
     sequence.Party = sequence.Default
     printtext = printtext .. " " .. L["Party setting changed to Default."]
   end
+  if sequence.MythicPlus == version then
+    sequence.MythicPlus = sequence.Default
+    printtext = printtext .. " " .. L["Mythic+ setting changed to Default."]
+  end
+  if sequence.Timewalking == version then
+    sequence.Timewalking = sequence.Default
+    printtext = printtext .. " " .. L["Timewalking setting changed to Default."]
+  end
+
 
   if sequence.Default > 1 then
     sequence.Default = tonumber(sequence.Default) - 1
@@ -881,6 +892,22 @@ function GSE.GUIDeleteVersion(version)
   if not GSE.isEmpty(sequence.Mythic) then
     sequence.Mythic = tonumber(sequence.Mythic) - 1
   end
+  if not GSE.isEmpty(sequence.MythicPlus) then
+    sequence.MythicPlus = tonumber(sequence.MythicPlus) - 1
+  end
+  if not GSE.isEmpty(sequence.Timewalking) then
+    sequence.Timewalking = tonumber(sequence.Timewalking) - 1
+  end
+  if not GSE.isEmpty(sequence.Heroic) then
+    sequence.Heroic = tonumber(sequence.Heroic) - 1
+  end
+  if not GSE.isEmpty(sequence.Dungeon) then
+    sequence.Dungeon = tonumber(sequence.Dungeon) - 1
+  end
+  if not GSE.isEmpty(sequence.Party) then
+    sequence.Party = tonumber(sequence.Party) - 1
+  end
+
   table.remove(sequence.MacroVersions, version)
   printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
   GSE.GUIEditorPerformLayout(editframe)

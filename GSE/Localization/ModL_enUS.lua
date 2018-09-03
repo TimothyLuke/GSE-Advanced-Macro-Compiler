@@ -434,3 +434,8 @@ L["New Sequence Name"] = true
 -- GSE 2.3.04
 L["Use WLM Export Sequence Format"] = true
 L["When exporting a sequence create a stub entry to import for WLM's Website."] = true
+
+
+-- GSE 2.3.09
+L["Mythic+ setting changed to Default."] = true
+L["Timewalking setting changed to Default."] = true
