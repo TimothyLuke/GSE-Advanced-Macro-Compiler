@@ -458,9 +458,7 @@ function GSE:GUIDrawMetadataEditor(container)
   Timewalkingdropdown:SetCallback("OnValueChanged", function (obj,event,key)
     if editframe.Sequence.Default == tonumber(key) then
       editframe.Sequence.Timewalking = nil
-      print("GotTHere")
     else
-      print("GotHere")
       editframe.Sequence.Timewalking = tonumber(key)
       editframe.Timewalking = tonumber(key)
     end
