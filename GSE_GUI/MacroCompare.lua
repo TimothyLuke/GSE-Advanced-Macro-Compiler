@@ -115,7 +115,7 @@ actionbutton:SetText(L["Continue"])
 actionbutton:SetWidth(150)
 actionbutton:SetCallback("OnClick", function()
   compareframe:Hide()
-  GSE.PerformMergeAction(compareframe.ChosenAction, compareframe.classid, compareframe.sequenceName, newSequence)
+  GSE.PerformMergeAction(compareframe.ChosenAction, compareframe.classid, compareframe.sequenceName, GSE.GUICompareFrame.NewSequence)
 end)
 
 actionButtonGroup:AddChild(actionbutton)
@@ -124,6 +124,7 @@ compareframe:AddChild (actionButtonGroup)
 
 
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
+  GSE.GUICompareFrame.NewSequence = newsequence
   GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSELibrary[classid][sequenceName], sequenceName, true, "STRING", true))
   GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true, "STRING", true))
   GSE.GUICompareFrame:Show()
