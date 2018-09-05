@@ -85,7 +85,7 @@ function GSE.GUIImportSequence()
     end
     local success, message = GSE.ImportSequence(importstring, legacy, importframe.AutoCreateIcon)
     if success then
-
+      importsequencebox:SetText('')
       GSE.GUIImportFrame:Hide()
     else
       StaticPopup_Show ("GSE-MacroImportFailure")
@@ -94,9 +94,11 @@ function GSE.GUIImportSequence()
     -- either a compressed import or a failed copy
     local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
     if success then
+      importsequencebox:SetText('')
        GSE.GUIImportFrame:Hide()
     else
       StaticPopup_Show ("GSE-MacroImportFailure")
     end
   end
+
 end
