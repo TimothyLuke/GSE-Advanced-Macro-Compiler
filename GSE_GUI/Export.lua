@@ -39,19 +39,37 @@ wlmforumexportcheckbox:SetCallback("OnValueChanged", function (sel, object, valu
 end)
 wlmforumexportcheckbox:SetValue( GSEOptions.UseWLMExportFormat)
 
+local enforceCompatabilityCheckbox = AceGUI:Create("CheckBox")
+enforceCompatabilityCheckbox:SetType("checkbox")
+
+enforceCompatabilityCheckbox:SetLabel(L["Enforce GSE minimum version for this macro"])
+exportframe:AddChild(enforceCompatabilityCheckbox)
+enforceCompatabilityCheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  if value then
+    exportframe.sequence.EnforceCompatability = true
+    exportframe.sequence.GSEVersion = GSE.VersionString
+  else
+    exportframe.sequence.EnforceCompatability = false
+  end
+end)
+
+
 GSE.GUIExportframe = exportframe
 
 exportframe.ExportSequenceBox = exportsequencebox
 
+
+
 function GSE.GUIExportSequence(classid, sequencename)
   GSE.GUIExportframe.classid = classid
   GSE.GUIExportframe.sequencename = sequencename
+  GSE.GUIExportframe.sequence = GSE.CloneSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename])
   if GSEOptions.UseWLMExportFormat then
-    local exporttext = "`" .. GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
-    exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename)
+    local exporttext = "`" .. GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
+    exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
     GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
   else
-    GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
+    GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
   end
   GSE.GUIExportframe:Show()
 end

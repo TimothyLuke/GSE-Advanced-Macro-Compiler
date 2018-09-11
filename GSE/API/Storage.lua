@@ -88,6 +88,15 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
 end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+  -- check for version flags.
+  if sequence.EnforceCompatability then
+    if tonumber(sequence.GSEVersion) > tonumber(GSE.VersionString) then
+      GSE.Print(string.format(L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."], GSE.VersionString))
+      GSE.PrintDebugMessage("Macro Version " .. sequence.GSEVersion .. " Required Version: " .. GSE.VersionString , "Storage" )  
+      return
+    end
+  end
+
   GSE.PrintDebugMessage("Attempting to import " .. sequenceName, "Storage" )
   GSE.PrintDebugMessage("Classid not supplied - " .. tostring(GSE.isEmpty(classid)), "Storage" )
   -- Remove Spaces or commas from SequenceNames and replace with _'s
