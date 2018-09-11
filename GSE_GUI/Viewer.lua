@@ -38,7 +38,7 @@ function viewframe:clearpanels(widget, selected)
         viewframe.EditButton:SetDisabled(false)
         viewframe.ExportButton:SetDisabled(false)
         editkey = k
-        if elements[3] = 1 then
+        if elements[3] == 1 then
           viewframe.EditButton:SetText(L["Delete"])
           viewframe.editbuttonaction = 1
         else
