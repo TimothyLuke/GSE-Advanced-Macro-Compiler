@@ -211,7 +211,7 @@ function GSE.GUIViewerToolbar(container)
   updbutton:SetText(L["Edit"])
   updbutton:SetWidth(150)
   updbutton:SetCallback("OnClick", function()
-    if viewframe.editbuttonaction = 1 then
+    if viewframe.editbuttonaction == 1 then
       GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
     else
       GSE.GUILoadEditor(editkey, viewframe)
