@@ -445,3 +445,4 @@ L["Enforce GSE minimum version for this macro"] = true
 L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."] = true
 L["Export Macro Read Only"] = true
 L["This sequence is Read Only and unable to be edited."] = true
+L["Disable Editor"] = true

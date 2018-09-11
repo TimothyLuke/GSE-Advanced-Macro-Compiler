@@ -974,12 +974,12 @@ function GSE.GetSequenceNames()
       end
     else
       if k == 0 and GSEOptions.filterList[Statics.Global] then
-        local disable = 0
-        if j.DisableEditor then
-          disable = 1
-        end
-        local keyLabel = k .. "," .. i .. "," .. disable
         for i,j in pairs(GSELibrary[k]) do
+          local disable = 0
+          if j.DisableEditor then
+            disable = 1
+          end
+          local keyLabel = k .. "," .. i .. "," .. disable
           keyset[keyLabel] = i
         end
       end
