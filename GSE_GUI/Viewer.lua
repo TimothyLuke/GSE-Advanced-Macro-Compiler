@@ -38,6 +38,13 @@ function viewframe:clearpanels(widget, selected)
         viewframe.EditButton:SetDisabled(false)
         viewframe.ExportButton:SetDisabled(false)
         editkey = k
+        if elements[3] = 1 then
+          viewframe.EditButton:SetText(L["Delete"])
+          viewframe.editbuttonaction = 1
+        else
+          viewframe.EditButton:SetText(L["Edit"])
+          viewframe.editbuttonaction = 0
+        end
       else
         viewframe.ClassID = 0
         viewframe.SequenceName = ""
@@ -203,7 +210,13 @@ function GSE.GUIViewerToolbar(container)
   local updbutton = AceGUI:Create("Button")
   updbutton:SetText(L["Edit"])
   updbutton:SetWidth(150)
-  updbutton:SetCallback("OnClick", function() GSE.GUILoadEditor(editkey, viewframe) end)
+  updbutton:SetCallback("OnClick", function()
+    if viewframe.editbuttonaction = 1 then
+      GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
+    else
+      GSE.GUILoadEditor(editkey, viewframe)
+    end
+  end)
   updbutton:SetDisabled(true)
   buttonGroup:AddChild(updbutton)
   viewframe.EditButton = updbutton

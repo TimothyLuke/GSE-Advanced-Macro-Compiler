@@ -53,6 +53,35 @@ enforceCompatabilityCheckbox:SetCallback("OnValueChanged", function (sel, object
   end
 end)
 
+local readOnlyCheckBox = AceGUI:Create("CheckBox")
+readOnlyCheckBox:SetType("checkbox")
+readOnlyCheckBox:SetLabel(L["Export Macro Read Only"])
+exportframe:AddChild(readOnlyCheckBox)
+
+
+local disableEditorCheckBox = AceGUI:Create("CheckBox")
+disableEditorCheckBox:SetType("checkbox")
+disableEditorCheckBox:SetLabel(L["Disable Editor"])
+exportframe:AddChild(disableEditorCheckBox)
+
+readOnlyCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
+  if value then
+    exportframe.sequence.ReadOnly = true
+    disableEditorCheckBox:SetVisible(true)
+  else
+    exportframe.sequence.ReadOnly = false
+    exportframe.sequence.DisableEditor = nil
+    disableEditorCheckBox:SetVisible(false)
+  end
+end)
+
+disableEditorCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
+  if value then
+    exportframe.sequence.DisableEditor = true
+  else
+    exportframe.sequence.DisableEditor = false
+  end
+end)
 
 GSE.GUIExportframe = exportframe
 

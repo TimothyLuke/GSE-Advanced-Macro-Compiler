@@ -15,8 +15,9 @@ end
 
 --- This function then deletes the macro
 function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
-  GSE.DeleteSequence(classid, sequenceName)
+  GSE.GUIViewFrame:Hide()
   GSE.GUIEditFrame:Hide()
+  GSE.DeleteSequence(classid, sequenceName)
   GSE.GUIShowViewer()
 end
 
@@ -81,6 +82,10 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   incomingframe:Hide()
+  if sequence.ReadOnly then
+    GSE.GUIEditFrame.savebutton:SetDisabled(true)
+    GSE.GUIEditFrame:SetStatusText(L["This sequence is Read Only and unable to be edited."])
+  end
   GSE.GUIEditFrame:Show()
 
 end

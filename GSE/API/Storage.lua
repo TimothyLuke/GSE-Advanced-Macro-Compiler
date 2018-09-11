@@ -957,20 +957,30 @@ function GSE.GetSequenceNames()
     end
     if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID()  then
       for i,j in pairs(GSELibrary[k]) do
+        local disable = 0
+        if j.DisableEditor then
+          disable = 1
+        end
+        local keyLabel = k .. "," .. i .. "," .. disable
         if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
-          keyset[k .. "," .. i] = i
+          keyset[keyLabel] = i
         elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
           if j.SpecID == GSE.GetCurrentSpecID() or j.SpecID == GSE.GetCurrentClassID() then
-            keyset[k .. "," .. i] = i
+            keyset[keyLabel] = i
           end
         else
-          keyset[k .. "," .. i] = i
+          keyset[keyLabel] = i
         end
       end
     else
       if k == 0 and GSEOptions.filterList[Statics.Global] then
+        local disable = 0
+        if j.DisableEditor then
+          disable = 1
+        end
+        local keyLabel = k .. "," .. i .. "," .. disable
         for i,j in pairs(GSELibrary[k]) do
-          keyset[k .. "," .. i] = i
+          keyset[keyLabel] = i
         end
       end
     end
