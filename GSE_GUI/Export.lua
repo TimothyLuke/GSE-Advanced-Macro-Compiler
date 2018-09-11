@@ -18,7 +18,7 @@ exportframe:SetLayout("List")
 
 local exportsequencebox = AceGUI:Create("MultiLineEditBox")
 exportsequencebox:SetLabel(L["Sequence"])
-exportsequencebox:SetNumLines(26)
+exportsequencebox:SetNumLines(22)
 exportsequencebox:DisableButton(true)
 exportsequencebox:SetFullWidth(true)
 exportframe:AddChild(exportsequencebox)
@@ -63,16 +63,17 @@ exportframe:AddChild(readOnlyCheckBox)
 local disableEditorCheckBox = AceGUI:Create("CheckBox")
 disableEditorCheckBox:SetType("checkbox")
 disableEditorCheckBox:SetLabel(L["Disable Editor"])
+disableEditorCheckBox:SetDisabled(true)
 exportframe:AddChild(disableEditorCheckBox)
 
 readOnlyCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
   if value then
     exportframe.sequence.ReadOnly = true
-    disableEditorCheckBox:SetVisible(true)
+    disableEditorCheckBox:SetDisabled(false)
   else
     exportframe.sequence.ReadOnly = false
     exportframe.sequence.DisableEditor = nil
-    disableEditorCheckBox:SetVisible(false)
+    disableEditorCheckBox:SetDisabled(true)
   end
   GSE.GUIUpdateExportBox()
 end)
