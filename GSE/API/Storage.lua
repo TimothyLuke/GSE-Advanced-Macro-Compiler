@@ -8,7 +8,7 @@ local GNOME = "Storage"
 --- Delete a sequence starting with the macro and then the sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
   GSE.DeleteMacroStub(sequenceName)
-  GSELibrary[classid][sequenceName] = nil
+  GSELibrary[tonumber(classid)][sequenceName] = nil
 end
 
 function GSE.CloneSequence(sequence, keepcomments)

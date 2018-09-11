@@ -3,10 +3,10 @@ local L = GSE.L
 local Statics = GSE.Static
 
 --- This function pops up a confirmation dialog.
-function GSE.GUIDeleteSequence(currentSeq, iconWidget)
-  StaticPopupDialogs["GSE-DeleteMacroDialog"].text = string.format(L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."], GSE.GUIEditFrame.SequenceName)
+function GSE.GUIDeleteSequence(classid, sequenceName)
+  StaticPopupDialogs["GSE-DeleteMacroDialog"].text = string.format(L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."], sequenceName)
   StaticPopupDialogs["GSE-DeleteMacroDialog"].OnAccept = function(self, data)
-      GSE.GUIConfirmDeleteSequence(GSE.GUIEditFrame.ClassID, GSE.GUIEditFrame.SequenceName)
+    GSE.GUIConfirmDeleteSequence(classid, sequenceName)
   end
 
 
@@ -83,7 +83,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   incomingframe:Hide()
   if sequence.ReadOnly then
-    GSE.GUIEditFrame.savebutton:SetDisabled(true)
+    GSE.GUIEditFrame.SaveButton:SetDisabled(true)
     GSE.GUIEditFrame:SetStatusText(L["This sequence is Read Only and unable to be edited."])
   end
   GSE.GUIEditFrame:Show()
