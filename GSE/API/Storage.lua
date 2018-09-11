@@ -92,7 +92,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   if sequence.EnforceCompatability then
     if tonumber(sequence.GSEVersion) > tonumber(GSE.VersionString) then
       GSE.Print(string.format(L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."], GSE.VersionString))
-      GSE.PrintDebugMessage("Macro Version " .. sequence.GSEVersion .. " Required Version: " .. GSE.VersionString , "Storage" )  
+      GSE.PrintDebugMessage("Macro Version " .. sequence.GSEVersion .. " Required Version: " .. GSE.VersionString , "Storage" )
       return
     end
   end
