@@ -51,6 +51,7 @@ enforceCompatabilityCheckbox:SetCallback("OnValueChanged", function (sel, object
   else
     exportframe.sequence.EnforceCompatability = false
   end
+  GSE.GUIUpdateExportBox()
 end)
 
 local readOnlyCheckBox = AceGUI:Create("CheckBox")
@@ -73,6 +74,7 @@ readOnlyCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
     exportframe.sequence.DisableEditor = nil
     disableEditorCheckBox:SetVisible(false)
   end
+  GSE.GUIUpdateExportBox()
 end)
 
 disableEditorCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
@@ -81,18 +83,14 @@ disableEditorCheckBox:SetCallback("OnValueChanged", function (sel, object, value
   else
     exportframe.sequence.DisableEditor = false
   end
+  GSE.GUIUpdateExportBox()
 end)
 
 GSE.GUIExportframe = exportframe
 
 exportframe.ExportSequenceBox = exportsequencebox
 
-
-
-function GSE.GUIExportSequence(classid, sequencename)
-  GSE.GUIExportframe.classid = classid
-  GSE.GUIExportframe.sequencename = sequencename
-  GSE.GUIExportframe.sequence = GSE.CloneSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename])
+function GSE.GUIUpdateExportBox()
   if GSEOptions.UseWLMExportFormat then
     local exporttext = "`" .. GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
     exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
@@ -100,5 +98,12 @@ function GSE.GUIExportSequence(classid, sequencename)
   else
     GSE.GUIExportframe.ExportSequenceBox:SetText(GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false))
   end
+end
+
+function GSE.GUIExportSequence(classid, sequencename)
+  GSE.GUIExportframe.classid = classid
+  GSE.GUIExportframe.sequencename = sequencename
+  GSE.GUIExportframe.sequence = GSE.CloneSequence(GSELibrary[tonumber(exportframe.classid)][exportframe.sequencename])
+  GSE.GUIUpdateExportBox()
   GSE.GUIExportframe:Show()
 end
