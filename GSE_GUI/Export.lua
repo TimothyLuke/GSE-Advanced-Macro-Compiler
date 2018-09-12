@@ -30,7 +30,7 @@ wlmforumexportcheckbox:SetLabel(L["Format export for WLM Forums"])
 exportframe:AddChild(wlmforumexportcheckbox)
 wlmforumexportcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
   if value then
-    local exporttext = "`" .. GSE.ExportSequence(GSE.GUIExportframe.sequence], exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
+    local exporttext = "`" .. GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
     exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
     GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
   else
