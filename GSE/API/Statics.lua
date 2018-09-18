@@ -354,6 +354,9 @@ Statics.BaseSpellTable[205448] = 228260 -- Void Bolt -> Void Eruption
 -- Hunter
 Statics.BaseSpellTable[259387] = 186270 -- Mongoose Bite -> Raptor Strike
 Statics.BaseSpellTable[136] = 982 -- Mend Pet -> Revive Pet
+Statics.BaseSpellTable[270335] = 259495 -- Shrapnel Bomb -> Wildfire Bomb
+Statics.BaseSpellTable[270323] = 259495 -- Pheromone Bomb -> Wildfire Bomb
+Statics.BaseSpellTable[271045] = 259495 -- Volatile Bomb -> Wildfire Bomb
 
 -- Warlock
 
