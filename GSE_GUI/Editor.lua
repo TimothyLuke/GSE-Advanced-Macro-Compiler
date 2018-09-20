@@ -31,6 +31,7 @@ editframe.Heroic = 1
 editframe.Party = 1
 editframe.Arena = 1
 editframe.Timewalking = 1
+editframe.MythicPlus = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
