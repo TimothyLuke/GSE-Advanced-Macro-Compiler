@@ -8,7 +8,7 @@ local GNOME = "Storage"
 --- Delete a sequence starting with the macro and then the sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
   GSE.DeleteMacroStub(sequenceName)
-  GSELibrary[classid][sequenceName] = nil
+  GSELibrary[tonumber(classid)][sequenceName] = nil
 end
 
 function GSE.CloneSequence(sequence, keepcomments)
@@ -88,6 +88,15 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
 end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+  -- check for version flags.
+  if sequence.EnforceCompatability then
+    if tonumber(sequence.GSEVersion) > tonumber(GSE.VersionString) then
+      GSE.Print(string.format(L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."], GSE.VersionString))
+      GSE.PrintDebugMessage("Macro Version " .. sequence.GSEVersion .. " Required Version: " .. GSE.VersionString , "Storage" )
+      return
+    end
+  end
+
   GSE.PrintDebugMessage("Attempting to import " .. sequenceName, "Storage" )
   GSE.PrintDebugMessage("Classid not supplied - " .. tostring(GSE.isEmpty(classid)), "Storage" )
   -- Remove Spaces or commas from SequenceNames and replace with _'s
@@ -948,20 +957,30 @@ function GSE.GetSequenceNames()
     end
     if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID()  then
       for i,j in pairs(GSELibrary[k]) do
+        local disable = 0
+        if j.DisableEditor then
+          disable = 1
+        end
+        local keyLabel = k .. "," .. i .. "," .. disable
         if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
-          keyset[k .. "," .. i] = i
+          keyset[keyLabel] = i
         elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
           if j.SpecID == GSE.GetCurrentSpecID() or j.SpecID == GSE.GetCurrentClassID() then
-            keyset[k .. "," .. i] = i
+            keyset[keyLabel] = i
           end
         else
-          keyset[k .. "," .. i] = i
+          keyset[keyLabel] = i
         end
       end
     else
       if k == 0 and GSEOptions.filterList[Statics.Global] then
         for i,j in pairs(GSELibrary[k]) do
-          keyset[k .. "," .. i] = i
+          local disable = 0
+          if j.DisableEditor then
+            disable = 1
+          end
+          local keyLabel = k .. "," .. i .. "," .. disable
+          keyset[keyLabel] = i
         end
       end
     end

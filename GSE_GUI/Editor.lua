@@ -172,6 +172,7 @@ function GSE.GUIEditorPerformLayout(frame)
     editframe.save = true
   end)
   editButtonGroup:AddChild(savebutton)
+  editframe.SaveButton = savebutton
 
   local delbutton = AceGUI:Create("Button")
   delbutton:SetText(L["Delete"])
