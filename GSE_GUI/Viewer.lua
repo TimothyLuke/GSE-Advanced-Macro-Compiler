@@ -329,14 +329,14 @@ function GSE.GUIConfigureMacroButton(button)
     button:SetCallback("OnClick", function()
       GSE.DeleteMacroStub(GSE.GUIViewFrame.SequenceName)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName .. ",0"].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
     end)
   else
     button:SetText(L["Create Icon"])
     button:SetCallback("OnClick", function()
       GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
       GSE.GUIConfigureMacroButton(button)
-      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
+      GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName .. ",0"].Icon:SetImage(GSE.GetMacroIcon(tonumber(viewframe.ClassID), GSE.GUIViewFrame.SequenceName))
     end)
   end
   if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
