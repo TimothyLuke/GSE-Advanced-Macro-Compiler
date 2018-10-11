@@ -43,14 +43,6 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.HideLoginMessage end,
             order = 202
           },
-         realtimetranslateparse = {
-           name = L["Don't Translate Sequences"],
-           desc = L["Enable this option to stop automatically translating sequences from enUS to local language."],
-           type = "toggle",
-           set = function(info,val) GSEOptions.RealtimeTranslateParse = val end,
-           get = function(info) return GSEOptions.RealtimeTranslateParse end,
-           order = 202
-         },
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],
