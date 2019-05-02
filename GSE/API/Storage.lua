@@ -1162,25 +1162,25 @@ function GSE.PrepareKeyRelease(sequence)
     end
   end
   if sequence.Ring1 or (sequence.Ring1 == nil and GSEOptions.use11) then
-    table.insert(tab, "/use [combat] 11")
+    table.insert(tab, "/use [combat,nochanneling] 11")
   end
   if sequence.Ring2 or (sequence.Ring2 == nil and GSEOptions.use12) then
-    table.insert(tab, "/use [combat] 12")
+    table.insert(tab, "/use [combat,nochanneling] 12")
   end
   if sequence.Trinket1 or (sequence.Trinket1 == nil and GSEOptions.use13) then
-    table.insert(tab, "/use [combat] 13")
+    table.insert(tab, "/use [combat,nochanneling] 13")
   end
   if sequence.Trinket2 or (sequence.Trinket2 == nil and GSEOptions.use14) then
-    table.insert(tab, "/use [combat] 14")
+    table.insert(tab, "/use [combat,nochanneling] 14")
   end
   if sequence.Neck or (sequence.Neck == nil and GSEOptions.use2) then
-    table.insert(tab, "/use [combat] 2")
+    table.insert(tab, "/use [combat,nochanneling] 2")
   end
   if sequence.Head or (sequence.Head == nil and GSEOptions.use1) then
-    table.insert(tab, "/use [combat] 1")
+    table.insert(tab, "/use [combat,nochanneling] 1")
   end
   if sequence.Belt or (sequence.Belt == nil and GSEOptions.use6) then
-    table.insert(tab, "/use [combat] 6")
+    table.insert(tab, "/use [combat,nochanneling] 6")
   end
   if GSEOptions.hideSoundErrors then
     -- potentially change this to SetCVar("Sound_EnableSFX", 1)
