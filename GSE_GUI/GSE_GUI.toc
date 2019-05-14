@@ -1,5 +1,5 @@
 ## Interface: 80100
-## Title: |cffff0000GSE2:|r |cFF00D1FFGUI|r
+## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
 ## Version: 2405
