@@ -26,9 +26,8 @@ function GSE.GetClassIDforSpec(specid)
   -- check for Classic WoW
   local version, build, date, tocversion = GetBuildInfo()
   local majorVersion = GSE.split(version, '.')
-  
   local classid = 0
-  
+
   if tonumber(majorVersion[1]) == 1 then
     -- classic wow
     classid = Statics.SpecIDClassList[specid]
