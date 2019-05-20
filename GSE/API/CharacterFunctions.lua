@@ -23,15 +23,25 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
-  local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
+  -- check for Classic WoW
+  local version, build, date, tocversion = GetBuildInfo()
+  local majorVersion = GSE.split(version, '.')
+  
   local classid = 0
-  if specid <= 12 then
-    classid = specid
+  
+  if tonumber(majorVersion[1]) == 1 then
+    -- classic wow
+    classid = Statics.SpecIDClassList[specid]
   else
-    for i=1, 12, 1 do
-      local cdn, st, cid = GetClassInfo(i)
-      if class == st then
-        classid = i
+    local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
+    if specid <= 12 then
+      classid = specid
+    else
+      for i=1, 12, 1 do
+        local cdn, st, cid = GetClassInfo(i)
+        if class == st then
+          classid = i
+        end
       end
     end
   end
