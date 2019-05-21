@@ -446,3 +446,6 @@ L["This macro uses features that are not available in this version. You need to 
 L["Export Macro Read Only"] = true
 L["This sequence is Read Only and unable to be edited."] = true
 L["Disable Editor"] = true
+
+-- GSE 2.4.06
+L["Your ClassID is "] = true

@@ -284,10 +284,16 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 --- Handle slash commands
 function GSE:GSSlash(input)
   if string.lower(input) == "showspec" then
-    local currentSpec = GetSpecialization()
-    local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
-    local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
-    GSE.Print(L["Your current Specialisation is "] .. currentSpecID .. ':' .. specname .. L["  The Alternative ClassID is "] .. currentclassId, GNOME)
+    local version, build, date, tocversion = GetBuildInfo()
+    local majorVersion = GSE.split(version, '.')
+    if tonumber(majorVersion[1]) == 1 then
+      GSE.Print(L["Your ClassID is "] .. currentclassId .. ' ' .. Statics.SpecIDList[currentclassId], GNOME)
+    else
+      local currentSpec = GetSpecialization()
+      local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+      local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
+      GSE.Print(L["Your current Specialisation is "] .. currentSpecID .. ':' .. specname .. L["  The Alternative ClassID is "] .. currentclassId, GNOME)
+    end
   elseif string.lower(input) == "help" then
     PrintGnomeHelp()
   elseif string.lower(input) == "cleanorphans" or string.lower(input) == "clean" then
