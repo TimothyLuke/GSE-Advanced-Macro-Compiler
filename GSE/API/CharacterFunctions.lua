@@ -109,7 +109,7 @@ function GSE.GetCurrentTalents()
       local available, selected = GetTalentTierInfo(talentTier, 1)
       talents = talents .. (available and selected or "?" .. ",")
     end
-   end 
+  end
   return talents
 end
 
