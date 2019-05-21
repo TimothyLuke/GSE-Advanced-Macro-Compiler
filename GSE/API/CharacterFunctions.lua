@@ -6,8 +6,14 @@ local Statics = GSE.Static
 
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
-  local currentSpec = GetSpecialization()
-  return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
+  local version, build, date, tocversion = GetBuildInfo()
+  local majorVersion = GSE.split(version, '.')
+  if tonumber(majorVersion[1]) == 1 then
+    return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
+  else
+    local currentSpec = GetSpecialization()
+    return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
+  end
 end
 
 --- Return the characters class id
@@ -27,7 +33,6 @@ function GSE.GetClassIDforSpec(specid)
   local version, build, date, tocversion = GetBuildInfo()
   local majorVersion = GSE.split(version, '.')
   local classid = 0
-
   if tonumber(majorVersion[1]) == 1 then
     -- classic wow
     classid = Statics.SpecIDClassList[specid]
@@ -94,10 +99,17 @@ end
 --- Returns the current Talent Selections as a string
 function GSE.GetCurrentTalents()
   local talents = ""
-  for talentTier = 1, MAX_TALENT_TIERS do
-    local available, selected = GetTalentTierInfo(talentTier, 1)
-    talents = talents .. (available and selected or "?" .. ",")
-  end
+  local version, build, date, tocversion = GetBuildInfo()
+  local majorVersion = GSE.split(version, '.')
+  -- Need to change this later on to something meaningful
+  if tonumber(majorVersion[1]) == 1 then
+    talents = "CLASSIC"
+  else
+    for talentTier = 1, MAX_TALENT_TIERS do
+      local available, selected = GetTalentTierInfo(talentTier, 1)
+      talents = talents .. (available and selected or "?" .. ",")
+    end
+   end 
   return talents
 end
 
