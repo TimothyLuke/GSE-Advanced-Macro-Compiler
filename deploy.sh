@@ -15,7 +15,7 @@ TARGET_BRANCH="gh-pages"
 #SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 #SHA=`git rev-parse --verify HEAD`
 
-REPO="https:\/\/github.com\/timothy@minahan.net\/GnomeSequencer-Enhanced.git"
+REPO="https://github.com/timothy@minahan.net/GnomeSequencer-Enhanced.git"
 
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
@@ -46,12 +46,6 @@ fi
 # The delta will show diffs between new and old versions.
 git add -A .
 git commit -m "Deploy to GitHub Pages: ${SHA}"
-
-# Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
-#openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv -in ../deploy_key.enc -out deploy_key -d
-#chmod 600 deploy_key
-#eval `ssh-agent -s`
-#ssh-add deploy_key
 
 # Now that we're all set up, we can push.
 git push $REPO $TARGET_BRANCH
