@@ -11,10 +11,13 @@ TARGET_BRANCH="gh-pages"
 #fi
 
 # Save some useful information
-REPO=`git config remote.origin.url`
-SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
-SHA=`git rev-parse --verify HEAD`
+#REPO=`git config remote.origin.url`
+#SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
+#SHA=`git rev-parse --verify HEAD`
 
+REPO=`https:\/\/github.com\/timothy@minahan.net\/GnomeSequencer-Enhanced.git`
+
+echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
 git clone $REPO out
@@ -51,4 +54,4 @@ git commit -m "Deploy to GitHub Pages: ${SHA}"
 #ssh-add deploy_key
 
 # Now that we're all set up, we can push.
-git push $SSH_REPO $TARGET_BRANCH
+git push $REPO $TARGET_BRANCH
