@@ -16,7 +16,7 @@ USERNAME="timothy@minahan.net"
 #SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 #SHA=`git rev-parse --verify HEAD`
 
-REPO="https://github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
+REPO="https://timothy@minahan.net:$GitHubPagesToken/github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
 
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
@@ -25,8 +25,6 @@ echo "Using REPO $REPO"
 git config --global user.name "Travis CI"
 git config --global user.email $USERNAME
 #git config user.password $GitHubPagesToken
-
-curl -u "$USERNAME:$GitHubPagesToken" $REPO
 
 git clone $REPO out
 cd out
@@ -46,6 +44,9 @@ if [ -z "$(git diff --exit-code)" ]; then
     echo "No changes to the output on this push; exiting."
     exit 0
 fi
+
+git remote rm origin
+git remote add origin $REPO
 
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
