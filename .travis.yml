@@ -29,7 +29,7 @@ script:
 - bash ./deploy.sh
 - busted --verbose --coverage
 after_success:
-- luacov-coveralls
+- luacov-coveralls -r ./
 notifications:
   email:
     on_failure: always
