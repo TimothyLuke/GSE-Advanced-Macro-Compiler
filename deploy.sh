@@ -21,8 +21,9 @@ REPO="https://github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
-git clone $REPO out
 curl -u "$USERNAME:$GitHubPagesToken" $REPO
+
+git clone $REPO out
 cd out
 git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
 cd ..
