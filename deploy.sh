@@ -16,7 +16,7 @@ USERNAME="timothy@minahan.net"
 #SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 #SHA=`git rev-parse --verify HEAD`
 
-REPO="https://timothy@minahan.net:$GitHubPagesToken/github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
+REPO="https://TimothyLuke:$GitHubPagesToken@github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
 
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
