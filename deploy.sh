@@ -32,7 +32,7 @@ luadoc -d out/docs GSE/API/*.lua
 cd out
 git config user.name "Travis CI"
 git config user.email "timothy@minahan.net"
-
+git config user.password $GitHubPagesToken
 # If there are no changes to the compiled out (e.g. this is a README update) then just bail.
 if [ -z "$(git diff --exit-code)" ]; then
     echo "No changes to the output on this push; exiting."
@@ -45,10 +45,10 @@ git add -A .
 git commit -m "Deploy to GitHub Pages: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
-openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv -in ../deploy_key.enc -out deploy_key -d
+#openssl aes-256-cbc -K $encrypted_24b665701dd0_key -iv $encrypted_24b665701dd0_iv -in ../deploy_key.enc -out deploy_key -d
 chmod 600 deploy_key
-eval `ssh-agent -s`
-ssh-add deploy_key
+#eval `ssh-agent -s`
+#ssh-add deploy_key
 
 # Now that we're all set up, we can push.
 git push $SSH_REPO $TARGET_BRANCH
