@@ -59,4 +59,12 @@ describe('API Translator', function()
     assert.are.equal(originalstring, finalstring)
 
   end)
+
+ it ("tests that statics are sane", function ()
+    assert.are.equal("Global", GSE.Static.SpecIDList[0])
+    assert.are.equal("Outlaw", GSE.Static.SpecIDList[260])
+    assert.are.equal(193316, GSE.Static.BaseSpellTable[5171])
+    assert.are.equal("|r", GSE.Static.StringReset)
+  end)
+
 end)
