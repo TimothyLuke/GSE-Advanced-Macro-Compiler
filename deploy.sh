@@ -15,7 +15,7 @@ TARGET_BRANCH="gh-pages"
 #SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 #SHA=`git rev-parse --verify HEAD`
 
-REPO="https://github.com/timothy@minahan.net/GnomeSequencer-Enhanced.git"
+REPO="https://github.com/TimothyLuke/GnomeSequencer-Enhanced.git"
 
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
