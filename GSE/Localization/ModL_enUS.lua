@@ -449,3 +449,6 @@ L["Disable Editor"] = true
 
 -- GSE 2.4.06
 L["Your ClassID is "] = true
+
+-- GSE 2.4.08
+L["The name of your macro.  This name has to be unique and can only be used for one object."] = true

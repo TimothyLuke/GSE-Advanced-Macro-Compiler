@@ -1,6 +1,8 @@
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
+local LibQTip = LibStub('LibQTip-1.0')
+
 
 --- This function pops up a confirmation dialog.
 function GSE.GUIDeleteSequence(classid, sequenceName)
@@ -165,4 +167,19 @@ function GSE.OpenOptionsPanel()
   config:Open("GSE")
   --config:SelectGroup("GSSE", "Debug")
 
+end
+
+function GSE.CreateToolTip(title, tip, GSEFrame)
+  local tooltip = LibQTip:Acquire("GSE", 1, "CENTER")
+  GSEFrame.tooltip = tooltip
+  tooltip:AddHeader(GSEOptions.TitleColour .. title .. Statics.StringReset)
+  tooltip:AddLine(tip)
+  tooltip:SmartAnchorTo(GSEFrame.frame)
+
+  tooltip:Show()
+end
+
+function GSE.ClearTooltip(GSEFrame)
+  LibQTip:Release(GSEFrame.tooltip)
+  GSEFrame.tooltip = nil
 end
