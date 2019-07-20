@@ -170,7 +170,9 @@ function GSE.OpenOptionsPanel()
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
+  GSE.ClearTooltip(GSEFrame)
   local tooltip = LibQTip:Acquire("GSE", 1, "CENTER")
+
   GSEFrame.tooltip = tooltip
   tooltip:AddHeader(GSEOptions.TitleColour .. title .. Statics.StringReset)
   tooltip:AddLine(tip)
