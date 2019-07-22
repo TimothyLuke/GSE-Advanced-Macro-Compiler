@@ -37,7 +37,7 @@ decbutton:SetWidth(150)
 decbutton:SetCallback("OnClick", function()
     local seq, seqName, success =  GSE.DecompressSequenceFromString(importsequencebox:GetText())
     if success then
-		importsequencebox:SetText("SeqName: " .. seqName .. "\n\n" .. seq) 
+		importsequencebox:SetText("SeqName: " .. seqName .. "\n\n" .. seq)
 	end
 end)
 recButtonGroup:AddChild(recbutton)
