@@ -1320,6 +1320,18 @@ function GSE.CompressSequenceFromString(importstring)
   return returnstr
 end
 
+--- This function takes a text string and decompresses it without loading it to the library
+function GSE.DecompressSequenceFromString(importstring)
+  local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
+  local returnstr = ""
+  local seqName = ""
+  if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and (type(actiontable[2]) == "table") then
+    seqName = string.upper(actiontable[1])
+    returnstr = GSE.Dump(actiontable[2])
+  end
+  return returnstr, seqName, decompresssuccess
+end
+
 --- This function allows the player to toggle Target Proction from the LDB Plugin.
 function GSE.ToggleTargetProtection()
   if GSE.isEmpty(GSEOptions.requireTarget) then

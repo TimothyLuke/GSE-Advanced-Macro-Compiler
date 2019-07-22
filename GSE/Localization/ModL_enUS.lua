@@ -487,3 +487,4 @@ L["Edit this macro.  To delete a macro, choose this edit option and then from in
 L["Export this Macro."] = true
 L["Create or remove a Macro stub in /macro that can be dragged to your action bar so that you can use this macro.\nGSE can store an unlimited number of macros however WOW's /macro interface can only store a limited number of macros."] = true
 L["Record the spells and items you use into a new macro."] = true
+L["Decompress"] = true
