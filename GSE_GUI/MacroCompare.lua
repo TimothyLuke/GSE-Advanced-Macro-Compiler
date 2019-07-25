@@ -19,7 +19,7 @@ compareframe:SetTitle(L["Sequence Compare"])
 compareframe:SetCallback("OnClose", function (self)
   compareframe:Hide();
   if compareframe.action then
-    -- SOme action was taken so wait for the OOC Queue to process.
+    -- Some action was taken, so wait for the OOC Queue to process.
     local event = {}
     event.action = "openviewer"
     table.insert(GSE.OOCQueue, event)
@@ -99,10 +99,10 @@ nameeditbox:SetWidth(250)
 nameeditbox:SetCallback("OnTextChanged", function()
   compareframe.sequenceName = nameeditbox:GetText()
 end)
--- nameeditbox:SetScript("OnEditFocusLost", function()
---   editframe:SetText(string.upper(editframe:GetText()))
---   editframe.SequenceName = nameeditbox:GetText()
--- end)
+--nameeditbox:SetScript("OnEditFocusLost", function()
+--  editframe:SetText(string.upper(editframe:GetText()))
+--  editframe.SequenceName = nameeditbox:GetText()
+--end)
 nameeditbox:SetDisabled(true)
 nameeditbox:DisableButton( true)
 nameeditbox:SetText(compareframe.sequenceName)
