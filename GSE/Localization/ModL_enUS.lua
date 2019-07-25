@@ -5,7 +5,7 @@ L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
 
---Output Strings from Core
+-- Output Strings from Core
 L["Close to Maximum Personal Macros.|r  You can have a maximum of "] = true
 L[" macros per character.  You currently have "] = true
 L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] = true
@@ -53,7 +53,7 @@ L["Matching helpTxt"] = true
 L["Different helpTxt"] = true
 L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
 
---sequence editor stuff
+-- Sequence Editor Stuff
 L["Sequence"] = true
 L["Edit"] = true
 L["New"] = true
@@ -89,10 +89,11 @@ L["Delete Version"] = true
 L["No Sequences present so none displayed in the list."] = true
 L["Specialisation / Class ID"] = true
 L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"] = true
--- options Debug
+
+-- Options Debug
 
 
--- options stuff
+-- Options Stuff
 L["You need to reload the User Interface to complete this task.  Would you like to do this now?"] = true
 L["Yes"] = true
 L["No"] = true
@@ -201,7 +202,7 @@ L["When loading or creating a sequence, if it is a global or the macro has an un
 L["Updating due to new version."] = true
 L["Creating New Sequence."] = true
 
--- Transmission stuff
+-- Transmission Stuff
 L["This will display debug messages for the GS-E Ingame Transmission and transfer"] = true
 
 -- New Strings 1.4
@@ -317,7 +318,7 @@ L["Your current Specialisation is "] = true
 -- GSE 2.0.14
 L["This Sequence was exported from GSE %s."] = true
 
---GSE 2.1.0
+-- GSE 2.1.0
 L["Dungeon"] = true
 L["Heroic"] = true
 L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."] = true
