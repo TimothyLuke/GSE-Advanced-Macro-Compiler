@@ -2,7 +2,7 @@ local GSE = GSE
 local Statics = GSE.Static
 
 
---- remove WoW Text Markup from a sequence
+--- Remove WoW Text Markup from a sequence.
 function GSE.UnEscapeSequence(sequence)
 
   local retseq = GSE.UnEscapeTable(sequence)
@@ -30,7 +30,7 @@ end
 function GSE.UnEscapeTable(tab)
   local newtab = {}
   for k,v in ipairs(tab) do
-    -- print (k .. " " .. v)
+    --print (k .. " " .. v)
     local cleanstring = GSE.UnEscapeString(v)
     if not GSE.isEmpty(cleanstring) then
       newtab[k] = cleanstring
@@ -39,7 +39,7 @@ function GSE.UnEscapeTable(tab)
   return newtab
 end
 
---- remove WoW Text Markup from a string
+--- Remove WoW Text Markup from a string.
 function GSE.UnEscapeString(str)
 
     for k, v in pairs(Statics.StringFormatEscapes) do
@@ -48,7 +48,7 @@ function GSE.UnEscapeString(str)
     return str
 end
 
---- Add ths lines of a string as individual entries.
+--- Add the lines of a string as individual entries.
 function GSE.lines(tab, str)
   local function helper(line)
     table.insert(tab, line)
@@ -62,7 +62,7 @@ function GSE.isEmpty(s)
   return s == nil or s == ''
 end
 
---- Convert a string to an array of lines
+--- Convert a string to an array of lines.
 function GSE.SplitMeIntolines(str)
   GSE.PrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
   local t = {}
@@ -75,7 +75,7 @@ function GSE.SplitMeIntolines(str)
   return t
 end
 
---- This function splits a castsequence into its parts where a split() cant.
+--- This function splits a castsequence into its parts where a split() can't.
 function GSE.SplitCastSequence(str)
   local tab = {}
   local slen = string.len(str)
@@ -101,7 +101,7 @@ function GSE.SplitCastSequence(str)
 end
 
 
---- Split a string into an array based on the deliminter specified.
+--- Split a string into an array based on the delimiter specified.
 function GSE.split(source, delimiters)
   local elements = {}
   local pattern = '([^'..delimiters..']+)'
@@ -156,8 +156,8 @@ function GSE.pairsByKeys (t, f)
   local a = {}
   for n in pairs(t) do table.insert(a, n) end
   table.sort(a, f)
-  local i = 0      -- iterator variable
-  local iter = function ()   -- iterator function
+  local i = 0      -- Iterator variable
+  local iter = function ()   -- Iterator function
     i = i + 1
     if a[i] == nil then return nil
     else return a[i], t[a[i]]
@@ -177,19 +177,19 @@ end
 function GSE.StripControlandExtendedCodes( str )
   local s = ""
   for i = 1, str:len() do
-	  if str:byte(i) >= 32 and str:byte(i) <= 126 then -- space through to normal en character
+	  if str:byte(i) >= 32 and str:byte(i) <= 126 then -- Space through to normal EN character
       s = s .. str:sub(i,i)
     elseif str:byte(i) == 194 and str:byte(i+1) == 160 then -- Fix for IE/Edge
       s = s .. " "
     elseif str:byte(i) == 160 and str:byte(i-1) == 194 then -- Fix for IE/Edge
       s = s .. " "
-    elseif str:byte(i) == 10 then -- leave line breaks unix style
+    elseif str:byte(i) == 10 then -- Leave line breaks Unix style
       s = s .. str:sub(i,i)
-    elseif str:byte(i) == 13 then -- leave line breaks windows style
+    elseif str:byte(i) == 13 then -- Leave line breaks Windows style
       s = s .. str:sub(i, str:byte(10))
-    elseif str:byte(i) >= 128 then -- extended characters including accented characters for intenational languages
+    elseif str:byte(i) >= 128 then -- Extended characters including accented characters for international languages
       s = s .. str:sub(i,i)
-    else -- convert everything else to whitespace
+    else -- Convert everything else to whitespace
       s = s .. " "
 	  end
   end
