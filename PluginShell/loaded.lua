@@ -1,4 +1,4 @@
-local ModName, Library = ... -- Library will hold some stuff if there are other files.if not it wont.
+local ModName, Library = ... -- Library will hold some stuff if there are other files, if not it won't.
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
@@ -38,7 +38,7 @@ Sequences['EG_Bear'] = {
   }
 }
 
--- This will also add a macro to the same pleace
+-- This will also add a macro to the same place
 Library['EG_Feral-ST'] = {
   SpecID = 103,
   Author = "Jimmy www.wowlazymacros.com",
@@ -63,7 +63,7 @@ Library['EG_Feral-ST'] = {
   },
 }
 
---- We make this a funciton as then we can register for the reload event within GSE
+--- We make this a function as then we can register for the reload event within GSE
 local function loadSequences(event, arg)
   if arg == ModName then
     GSE.ImportMacroCollection(Library)
@@ -72,9 +72,9 @@ end
 
 GSEPlugin:RegisterMessage(Statics.ReloadMessage, "loadSequences")
 
--- If not loaded or an updated version then these sequences.
+-- If not loaded or an updated version, then these sequences.
 -- GSE.RegisterAddon will keep track of the current version and then if the version is different to the last one it
--- return true to indicate that it wants you to send through update versions.  The super simple way is below
+-- returns true to indicate that it wants you to send through update versions.  The super simple way is below.
 -- You could do specific things via the GSE API like adding an updated version and then setting it to be the default
 -- or pvp version.
 if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
