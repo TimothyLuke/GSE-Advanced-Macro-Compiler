@@ -29,12 +29,12 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
-  -- check for Classic WoW
+  -- Check for Classic WoW
   local version, build, date, tocversion = GetBuildInfo()
   local majorVersion = GSE.split(version, '.')
   local classid = 0
   if tonumber(majorVersion[1]) == 1 then
-    -- classic wow
+    -- Classic WoW
     classid = Statics.SpecIDClassList[specid]
   else
     local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
@@ -70,7 +70,7 @@ function GSE.GetClassIcon(classid)
 
 end
 
---- Check if the specID provided matches the plauers current class.
+--- Check if the specID provided matches the players current class
 function GSE.isSpecIDForCurrentClass(specID)
   local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(specID)
   local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
