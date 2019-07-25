@@ -31,7 +31,7 @@ end
 --- Prints <code>filepath</code>to the chat handler.  This accepts an optional
 --    <code>title</code> to be prepended to that message.
 function GSE.Print(message, title)
-  -- stroe this for later on.
+  -- Store this for later on.
   if not GSE.isEmpty(title) then
     message = GSEOptions.CommandColour .. title .. Statics.StringReset .." " .. message
   end
@@ -80,7 +80,7 @@ end
 GSE.CurrentGCD = GetSpellCooldown(61304)
 GSE.RecorderActive = false
 
--- Macro mode Status
+-- Macro Mode Status
 GSE.PVPFlag = false
 GSE.inRaid = false
 GSE.inMythic = false
