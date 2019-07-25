@@ -331,11 +331,11 @@ end
 ]]
 
 Statics.StringFormatEscapes = {
-    ["|c%x%x%x%x%x%x%x%x"] = "", -- color start
-    ["|r"] = "", -- color end
-    ["|H.-|h(.-)|h"] = "%1", -- links
-    ["|T.-|t"] = "", -- textures
-    ["{.-}"] = "", -- raid target icons
+    ["|c%x%x%x%x%x%x%x%x"] = "", -- Color start
+    ["|r"] = "", -- Color end
+    ["|H.-|h(.-)|h"] = "%1", -- Links
+    ["|T.-|t"] = "", -- Textures
+    ["{.-}"] = "", -- Raid target icons
 }
 
 Statics.MacroResetSkeleton = [[
@@ -376,9 +376,9 @@ Statics.CommPrefix = "GSE"
 Statics.BaseSpellTable = {}
 
 -- Paladin
-Statics.BaseSpellTable[231895] = 31884 -- Crusade to Avenging Wrath
-Statics.BaseSpellTable[216331] = 31884 -- Avenging Crusader to Avenging Wrath
-Statics.BaseSpellTable[200025] = 53563 -- Beacon of Virtue to Beacon of Light
+Statics.BaseSpellTable[231895] = 31884 -- Crusade -> Avenging Wrath
+Statics.BaseSpellTable[216331] = 31884 -- Avenging Crusader -> Avenging Wrath
+Statics.BaseSpellTable[200025] = 53563 -- Beacon of Virtue -> Beacon of Light
 Statics.BaseSpellTable[204019] = 53595 -- Blessed Hammer -> Hammer of the Righteous
 Statics.BaseSpellTable[204018] = 1022 -- Blessing of Spellwarding -> Blessing of Protection
 Statics.BaseSpellTable[213652] = 184092 -- Hand of the Protector -> Light of the Protector
