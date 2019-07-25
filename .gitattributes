@@ -1,7 +1,7 @@
-# Auto detect text files and perform LF normalization
+# Autodetect text files and perform LF normalization
 * text=auto
 
-#wow Lua
+# WoW Lua
 *.toc eol=crlf
 *.lua eol=crlf
 ReadMe.txt eol=crlf
