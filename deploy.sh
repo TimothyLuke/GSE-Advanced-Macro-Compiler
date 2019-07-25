@@ -20,7 +20,7 @@ REPO="https://TimothyLuke:$GitHubPagesToken@github.com/TimothyLuke/GnomeSequence
 
 echo "Using REPO $REPO"
 # Clone the existing gh-pages for this repo into out/
-# Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
+# Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deploy)
 
 git config --global user.name "Travis CI"
 git config --global user.email $USERNAME
