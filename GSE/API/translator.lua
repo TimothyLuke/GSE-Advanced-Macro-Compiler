@@ -7,14 +7,14 @@ local L = GSE.L
 
 
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
--- mode of "STRING" will return local names where mode "ID" will return id's
+-- Mode of "STRING" will return local names where mode "ID" will return id's
 
 function GSE.TranslateSequence(sequence, sequenceName, mode)
   GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
 
   for k,v in ipairs(sequence) do
-    -- Translate sequence
+    -- Translate Sequence
     sequence[k] = GSE.TranslateString(v, mode)
   end
 
@@ -54,7 +54,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
     GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
   end
 
-  -- check for blanks
+  -- Check for blanks
   for i, v in ipairs(sequence) do
     if v == "" then
       sequence[i] = nil
@@ -97,12 +97,12 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
             GSE.PrintDebugMessage("Did not find : " .. etc , GNOME)
             output = output  .. etc
           end
-        -- check for cast Sequences
+        -- Check for cast Sequences
         elseif string.lower(cmd) == "castsequence" then
           GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
           for x,y in ipairs(GSE.split(etc,";")) do
             for _, w in ipairs(GSE.SplitCastSequence(y,",")) do
-              --look for conditionals at the startattack
+              -- Look for conditionals at the startattack
               local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
               if conditionals then
                 output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
@@ -130,7 +130,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
           end
 
         else
-          -- pass it through
+          -- Pass it through
           output = output .. " " .. etc
         end
       end
@@ -138,7 +138,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
       GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--', 1, true), GNOME)
       output = output ..  GSEOptions.CONCAT .. instring .. Statics.StringReset
     end
-    -- If nothing was found pass throught
+    -- If nothing was found, pass through
     if output == "" then
       output = instring
     end
@@ -146,7 +146,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
     output = output .. instring
   end
   GSE.PrintDebugMessage("Exiting GSE.TranslateString with : \n" .. output, GNOME)
-  -- check for random , at the end
+  -- Check for random "," at the end
   if string.sub(output, string.len(output)-1) == ", " then
     output = string.sub(output, 1, string.len(output)-2)
   end
@@ -159,7 +159,7 @@ end
 function GSE.TranslateSpell(str, mode, cleanNewLines)
   local output = ""
   local found = false
-  -- check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
+  -- Check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
   if not cleanNewLines then
     str = string.match(str, "^%s*(.-)%s*$")
   end
@@ -206,7 +206,7 @@ end
 
 function GSE.GetConditionalsFromString(str)
   GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
-  --check for conditionals
+  -- Check for conditionals
   local found = false
   local mods = ""
   local leftstr
@@ -266,7 +266,7 @@ function GSE.GetConditionalsFromString(str)
 end
 
 
---- This option reports on language table errors and ommissions.  It is accessible
+--- This option reports on language table errors and omissions.  It is accessible
 -- via the command line /gs compilemissingspells and saves this informationm into
 -- GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID
 -- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
@@ -295,7 +295,7 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
     returnval = name
   else
     returnval = spellId
-    -- Check for overides like Crusade and Avenging Wrath
+    -- Check for overrides like Crusade and Avenging Wrath.
     if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
       returnval = Statics.BaseSpellTable[returnval]
     end
@@ -312,12 +312,12 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   return returnval
 end
 
---- takes a section of a sequence and returns the spells used.
+--- Takes a section of a sequence and returns the spells used.
 function GSE.IdentifySpells(tab)
   local foundspells = {}
   local returnval = ""
   for _,p in ipairs(tab) do
-    -- run a regex to find all spell id's from the table and add them to the table foundspells
+    -- Run a regex to find all spell id's from the table and add them to the table foundspells
     for m in string.gmatch( p, "%w%d+" ) do
 
       foundspells[m] = 1
