@@ -12,7 +12,7 @@ local GCD, GCD_Update_Timer
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
   if GSE.UnsavedOptions.DebugSequenceExecution then
-    -- Note to self do i care if its a loop sequence?
+    -- Note to self: Do I care if it's a loop sequence?
     local isUsable, notEnoughMana = IsUsableSpell(task)
     local usableOutput, manaOutput, GCDOutput, CastingOutput
     if isUsable then
@@ -164,7 +164,7 @@ function GSE:ADDON_LOADED(event, addon)
     end
   end
 
-  -- added in 2.1.0
+  -- Added in 2.1.0
   if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
     GSEOptions.MacroResetModifiers = {}
     GSEOptions.MacroResetModifiers["LeftButton"] = false
