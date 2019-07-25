@@ -101,10 +101,10 @@ function GSE.GUIEditorPerformLayout(frame)
   nameeditbox:SetCallback("OnTextChanged", function()
     editframe.SequenceName = nameeditbox:GetText()
   end)
-  -- nameeditbox:SetScript("OnEditFocusLost", function()
-  --   editframe:SetText(string.upper(editframe:GetText()))
-  --   editframe.SequenceName = nameeditbox:GetText()
-  -- end)
+  --nameeditbox:SetScript("OnEditFocusLost", function()
+  --  editframe:SetText(string.upper(editframe:GetText()))
+  --  editframe.SequenceName = nameeditbox:GetText()
+  --end)
   nameeditbox:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["Sequence Name"], L["The name of your macro.  This name has to be unique and can only be used for one object.\nYou can copy this entire macro by changing the name and choosing Save."], editframe)
   end)
@@ -242,7 +242,7 @@ function GSE:GUIDrawMetadataEditor(container)
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
   scrollcontainer:SetHeight(editframe.Height - 260)
-  scrollcontainer:SetLayout("Fill") -- important!
+  scrollcontainer:SetLayout("Fill") -- Important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
@@ -649,14 +649,14 @@ function GSE:GUIDrawMacroEditor(container, version)
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
   layoutcontainer:SetHeight(editframe.Height - 260 )
-  layoutcontainer:SetLayout("Flow") -- important!
+  layoutcontainer:SetLayout("Flow") -- Important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   --scrollcontainer:SetFullWidth(true)
-  --scrollcontainer:SetFullHeight(true) -- probably?
+  --scrollcontainer:SetFullHeight(true) -- Probably?
   scrollcontainer:SetWidth(editframe.Width - 200)
   scrollcontainer:SetHeight(editframe.Height - 260)
-  scrollcontainer:SetLayout("Fill") -- important!
+  scrollcontainer:SetLayout("Fill") -- Important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
@@ -870,18 +870,18 @@ function GSE:GUIDrawMacroEditor(container, version)
   heading2:SetText(L["Resets"])
   toolbarcontainer:AddChild(heading2)
 
-  -- local targetresetcheckbox = AceGUI:Create("CheckBox")
-  -- targetresetcheckbox:SetType("checkbox")
-  -- targetresetcheckbox:SetWidth(78)
-  -- targetresetcheckbox:SetTriState(false)
-  -- targetresetcheckbox:SetLabel(L["Target"])
-  -- toolbarcontainer:AddChild(targetresetcheckbox)
-  -- if editframe.Sequence.MacroVersions[version].Target then
-  --   targetresetcheckbox:SetValue(true)
-  -- end
-  -- targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-  --   editframe.Sequence.MacroVersions[version].Target = value
-  -- end)
+  --local targetresetcheckbox = AceGUI:Create("CheckBox")
+  --targetresetcheckbox:SetType("checkbox")
+  --targetresetcheckbox:SetWidth(78)
+  --targetresetcheckbox:SetTriState(false)
+  --targetresetcheckbox:SetLabel(L["Target"])
+  --toolbarcontainer:AddChild(targetresetcheckbox)
+  --if editframe.Sequence.MacroVersions[version].Target then
+  --  targetresetcheckbox:SetValue(true)
+  --end
+  --targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
+  --  editframe.Sequence.MacroVersions[version].Target = value
+  --end)
 
   local combatresetcheckbox = AceGUI:Create("CheckBox")
   combatresetcheckbox:SetType("checkbox")
