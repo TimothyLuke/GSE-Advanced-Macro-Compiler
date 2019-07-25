@@ -15,7 +15,7 @@ local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
 local baseFont = CreateFont("baseFont")
 
--- CHeck for ElvUI
+-- Check for ElvUI
 if GSE.isEmpty(ElvUI) then
   baseFont:SetFont(GameTooltipText:GetFont(), 10)
 elseif LibSharedMedia:IsValid('font', ElvUI[1].db.general.font) then
@@ -41,7 +41,7 @@ function dataobj:OnEnter()
   y,x = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Right Click to open the Sequence Debugger"],"CENTER", 3)
 
-  -- If in party add other users and their versions
+  -- If in party, add other users and their versions
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
     tooltip:AddSeparator()
     y,x = tooltip:AddLine()
