@@ -19,7 +19,7 @@ describe('API Storage', function()
 
     Statics = GSE.Static
 
-    -- OOC Queue overrides
+    -- OOC Queue Overrides
     function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
       GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     end
