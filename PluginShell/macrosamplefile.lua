@@ -1,4 +1,4 @@
-local ModName, Sequences = ... -- Library will hold some stuff if there are other files.if not it wont.
+local ModName, Sequences = ... -- Library will hold some stuff if there are other files, if not it won't.
 
 Sequences['EG_Feral-AoE'] = {
   SpecID = 103,
