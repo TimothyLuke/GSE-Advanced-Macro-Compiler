@@ -675,7 +675,7 @@ function GSE.GetOptionsTable()
       }
     }
   }
-  -- Add Dynamic contentcontainer
+  -- Add Dynamic Content Container
 
   local ord = 900
   for k,v in pairs(GSEOptions.AddInPacks) do
