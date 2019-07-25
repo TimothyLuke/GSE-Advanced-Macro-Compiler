@@ -88,7 +88,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
     end
   end)
 
-  -- workaround for vanishing label ace3 bug
+  -- Workaround for vanishing label ace3 bug
   local label = AceGUI:Create("Label")
   label:SetFontObject(fontlarge)
   selpanel:AddChild(label)
