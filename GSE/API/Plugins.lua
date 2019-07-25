@@ -12,15 +12,15 @@ function GSE.ListUnloadedAddons()
   return returnVal
 end
 
--- --- List addons that GSE knows about that have been enabled
--- function GSE.ListAddons()
---   local returnVal = "";
---   for k,v in pairs(GSEOptions.AddInPacks) do
---     aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
---     returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
---   end
---   return returnVal
--- end
+--- List addons that GSE knows about that have been enabled
+--function GSE.ListAddons()
+--  local returnVal = "";
+--  for k,v in pairs(GSEOptions.AddInPacks) do
+--    aname, atitle, anotes, _, _, _ = GetAddOnInfo(k)
+--    returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n'
+--  end
+--  return returnVal
+--end
 
 function GSE.RegisterAddon(name, version, sequencenames)
   local updateflag = false
