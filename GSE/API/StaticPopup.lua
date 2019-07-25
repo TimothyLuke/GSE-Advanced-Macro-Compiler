@@ -13,7 +13,7 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GS-DebugOutput"] = {
@@ -29,17 +29,17 @@ StaticPopupDialogs["GS-DebugOutput"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 	hasEditBox = true,
 }
 
 StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
-	text = L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."],
+	text = L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."],
 	hasEditBox = 1,
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
 		self.editBox:SetWidth(220)
-		self.editBox:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
+		self.editBox:SetText("https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros")
 		self.editBox:HighlightText()
 		ChatEdit_FocusActiveWindow();
 	end,
@@ -57,8 +57,8 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 		self:GetParent():Hide();
 	end,
 	EditBoxOnTextChanged = function(self)
-		if(self:GetText() ~= "https://mods.curse.com/addons/wow/gnomesequencer-enhanced") then
-			self:SetText("https://mods.curse.com/addons/wow/gnomesequencer-enhanced")
+		if(self:GetText() ~= "https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros") then
+			self:SetText("https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros")
 		end
 		self:HighlightText()
 		self:ClearFocus()
@@ -73,7 +73,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
 StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
 	text = L["Copy this link and open it in a Browser."],
 	hasEditBox = 1,
-  url = "http://www.wowlazymacros.com",
+  url = "https://wowlazymacros.com",
 	OnShow = function(self)
 		self.editBox:SetAutoFocus(false)
 		self.editBox.width = self.editBox:GetWidth()
@@ -120,7 +120,7 @@ StaticPopupDialogs["GSE-SampleMacroDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-MacroImportSuccess"] = {
@@ -129,7 +129,7 @@ StaticPopupDialogs["GSE-MacroImportSuccess"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-MacroImportFailure"] = {
@@ -138,7 +138,7 @@ StaticPopupDialogs["GSE-MacroImportFailure"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
@@ -148,5 +148,5 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
