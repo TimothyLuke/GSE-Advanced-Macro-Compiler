@@ -104,7 +104,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
   sequenceName = string.gsub(sequenceName, ",", "_")
   sequenceName = string.upper(sequenceName)
 
-  -- CHeck for colissions
+  -- Check for collisions
   local found = false
   if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
     classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
@@ -121,15 +121,15 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
       GSE.PrintDebugMessage("Macro Exists", "Storage" )
   end
   if found then
-    -- check if modified
+    -- Check if modified
     if GSE.isEmpty(GSELibrary[classid][sequenceName].ManualIntervention) then
       -- Macro hasnt been touched.
       GSE.PrintDebugMessage(L["No changes were made to "].. sequenceName, "Storage")
     else
       -- Perform choice.
-      -- first check if GUI.
+      -- First check if GUI.
       if GSE.GUI then
-        -- show dialog.
+        -- Show dialog.
         GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
       else
         GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
@@ -167,11 +167,11 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     GSE.Print (string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
   elseif action == "REPLACE" then
     if GSE.isEmpty(newSequence.Author) then
-      -- set to unknown author
+      -- Set to Unknown Author
       newSequence.Author = "Unknown Author"
     end
     if GSE.isEmpty(newSequence.Talents) then
-      -- set to currentSpecID
+      -- Set to currentSpecID
       newSequence.Talents = "?,?,?,?,?,?,?"
     end
 
@@ -181,11 +181,11 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSELibrary[classid][sequenceName]), "Storage")
   elseif action == "RENAME" then
     if GSE.isEmpty(newSequence.Author) then
-      -- set to unknown author
+      -- Set to Unknown Author
       newSequence.Author = "Unknown Author"
     end
     if GSE.isEmpty(newSequence.Talents) then
-      -- set to currentSpecID
+      -- Set to currentSpecID
       newSequence.Talents = "?,?,?,?,?,?,?"
     end
 
@@ -258,12 +258,12 @@ function GSE.GetActiveSequenceVersion(sequenceName)
 end
 
 
---- Add a macro for a sequence amd register it in the list of known sequences
+--- Add a macro for a sequence and register it in the list of known sequences
 function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
   local sequenceIndex = GetMacroIndexByName(sequenceName)
   local numAccountMacros, numCharacterMacros = GetNumMacros()
   if sequenceIndex > 0 then
-    -- Sequence exists do nothing
+    -- Sequence exists, do nothing
     GSE.PrintDebugMessage("Moving on - macro for " .. sequenceName .. " already exists.", GNOME)
   else
     -- Create Sequence as a player sequence
@@ -587,7 +587,7 @@ function GSE.CleanOrphanSequences()
       end
 
       if not found then
-        -- check if body is a gs one and delete the orphan
+        -- Check if body is a gs one and delete the orphan
         todelete[mname] = true
       end
     end
@@ -597,9 +597,9 @@ function GSE.CleanOrphanSequences()
   end
 end
 
---- This function is used to clean the loacl sequence library
+--- This function is used to clean the local sequence library
 function GSE.CleanMacroLibrary(forcedelete)
-  -- clean out the sequences database except for the current version
+  -- Clean out the sequences database except for the current version
   if forcedelete then
     GSELibrary[GSE.GetCurrentClassID()] = nil
     GSELibrary[GSE.GetCurrentClassID()] = {}
@@ -648,7 +648,7 @@ function GSE.OOCUpdateSequence(name,sequence)
       existingbutton = false
     end
     local gsebutton = _G[name]
-    -- only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
+    -- Only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
     tempseq = GSE.TranslateSequence(tempseq, name, "STRING")
     tempseq = GSE.UnEscapeSequence(tempseq)
     local executionseq = {}
@@ -726,7 +726,7 @@ function GSE.PrepareStepFunction(stepper, looper)
   return retvalue
 end
 
---- This funciton dumps what is currently running on an existing button.
+--- This function dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
   local targetreset = ""
   local looper = GSE.IsLoopSequence(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)])
@@ -744,8 +744,8 @@ function GSE.DebugDumpButton(SequenceName)
 end
 
 
---- Compares two sequences and return a boolean if the match.  If they do not
---    match then if will print an element by element comparison.  This comparison
+--- Compares two sequences and return a boolean if they match.  If they do not
+--    match then it will print an element by element comparison.  This comparison
 --    ignores version, authorversion, source, helpTxt elements as these are not
 --    needed for the execution of the macro but are more for help and versioning.
 function GSE.CompareSequence(seq1,seq2)
@@ -898,7 +898,7 @@ function GSE.CheckMacroCreated(SequenceName, create)
   table.insert(GSE.OOCQueue, vals)
 end
 
---- Check if a macro has been created and if the create flag is true and the macro hasnt been created then create it.
+--- Check if a macro has been created and if the create flag is true and the macro hasn't been created, then create it.
 function GSE.OOCCheckMacroCreated(SequenceName, create)
   local found = false
   local classid = GSE.GetCurrentClassID()
@@ -1130,12 +1130,12 @@ function GSE.PrepareKeyPress(sequence)
   local tab = {}
   if GSEOptions.requireTarget then
 
-    -- see #20 prevent target hopping
+    -- See #20 prevent target hopping
     table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
 
   if GSEOptions.hideSoundErrors then
-    -- potentially change this to SetCVar("Sound_EnableSFX", 0)
+    -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
     table.insert(tab,"/run sfx=GetCVar(\"Sound_EnableSFX\");")
     table.insert(tab, "/run ers=GetCVar(\"Sound_EnableErrorSpeech\");")
     table.insert(tab, "/console Sound_EnableSFX 0")
@@ -1153,7 +1153,7 @@ end
 function GSE.PrepareKeyRelease(sequence)
   local tab = {}
   if GSEOptions.requireTarget then
-    -- see #20 prevent target hopping
+    -- See #20 prevent target hopping
     table.insert(tab, "/stopmacro [@playertarget, noexists]")
   end
   if not GSE.isEmpty(sequence.KeyRelease) then
@@ -1183,16 +1183,16 @@ function GSE.PrepareKeyRelease(sequence)
     table.insert(tab, "/use [combat,nochanneling] 6")
   end
   if GSEOptions.hideSoundErrors then
-    -- potentially change this to SetCVar("Sound_EnableSFX", 1)
+    -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
     table.insert(tab, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
     table.insert(tab, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
   end
   if GSEOptions.hideUIErrors then
     table.insert(tab, "/script UIErrorsFrame:Hide();")
-    -- potentially change this to UIErrorsFrame:Hide()
+    -- Potentially change this to UIErrorsFrame:Hide()
   end
   if GSEOptions.clearUIErrors then
-    -- potentially change this to UIErrorsFrame:Clear()
+    -- Potentially change this to UIErrorsFrame:Clear()
     table.insert(tab, "/run UIErrorsFrame:Clear()")
   end
   return tab
@@ -1225,13 +1225,13 @@ function GSE.MoveMacroToClassFromGlobal()
   GSE.ReloadSequences()
 end
 
---- This function returns addition to the stepfunction for the KeyBind to Reset a sequence
+--- This function returns in addition to the stepfunction for the KeyBind to Reset a sequence
 function GSE.GetMacroResetImplementation()
   local activemods = {}
   local returnstring = ""
   local flagactive = false
 
-  -- extra null check just in case.
+  -- Extra null check just in case.
   if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
     GSE.resetMacroResetModifiers()
   end
@@ -1332,7 +1332,7 @@ function GSE.DecompressSequenceFromString(importstring)
   return returnstr, seqName, decompresssuccess
 end
 
---- This function allows the player to toggle Target Proction from the LDB Plugin.
+--- This function allows the player to toggle Target Protection from the LDB Plugin.
 function GSE.ToggleTargetProtection()
   if GSE.isEmpty(GSEOptions.requireTarget) then
     GSEOptions.requireTarget = true
@@ -1346,7 +1346,7 @@ end
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     local returnstring = "<strong>".. sequencename .."</strong>\n<em>Talents</em> " .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "\n\n\n\n"
     if not GSE.isEmpty(sequence.Help) then
-      returnstring = "<em>Usage Information</em>\n" .. sequence.Help .. "\n\n"
+      returnstring = "\n\n<em>Usage Information</em>\n" .. sequence.Help .. "\n\n"
     end
     returnstring = returnstring .. "This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions. " or "1 macro version. ") .. string.format(L["This Sequence was exported from GSE %s."], GSE.formatModVersion(GSE.VersionString)) .. "\n\n"
     if (table.getn(sequence.MacroVersions) > 1) then
