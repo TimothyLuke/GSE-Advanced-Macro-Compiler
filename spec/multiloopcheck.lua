@@ -1,4 +1,4 @@
--- use this to test sequential loop on https://www.lua.org/cgi-bin/demo
+-- Use this to test sequential loop on https://www.lua.org/cgi-bin/demo
 macros = {}
 macros[1] = {
   "pre1",
