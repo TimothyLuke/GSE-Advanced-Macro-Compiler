@@ -13,7 +13,7 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GS-DebugOutput"] = {
@@ -29,7 +29,7 @@ StaticPopupDialogs["GS-DebugOutput"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 	hasEditBox = true,
 }
 
@@ -120,7 +120,7 @@ StaticPopupDialogs["GSE-SampleMacroDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-MacroImportSuccess"] = {
@@ -129,7 +129,7 @@ StaticPopupDialogs["GSE-MacroImportSuccess"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-MacroImportFailure"] = {
@@ -138,7 +138,7 @@ StaticPopupDialogs["GSE-MacroImportFailure"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
 StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
@@ -148,5 +148,5 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
   timeout = 0,
   whileDead = true,
   hideOnEscape = true,
-  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+  preferredIndex = 3,  -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
