@@ -7,7 +7,7 @@ GNOME = "UnitTest"
 
 GSELibrary = {}
 
--- Mock Character FUncitons
+-- Mock Character Functions
 function GetTalentTierInfo(tier, ...)
   return 1
 end
@@ -54,7 +54,7 @@ function GetSpellInfo(spellstring)
   return name, rank, icon, castTime, minRange, maxRange, spellId
 end
 
--- Mock standard functions
+-- Mock Standard Functions
 function GSE.Print(message, title)
   print (title .. ": " .. message)
 end
