@@ -26,7 +26,7 @@ end
 
 function GSE.GUIEnableDebugView()
   if GSE.UnsavedOptions["DebugSequenceExecution"] then
-    --Disable
+    -- Disable
     GSE.UnsavedOptions["DebugSequenceExecution"] = false
     GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
     GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
@@ -34,7 +34,7 @@ function GSE.GUIEnableDebugView()
     GSE:CancelTimer(GSE.GUIUpdateTimer)
     onpause = false
   else
-    --enable
+    -- Enable
     GSE.UnsavedOptions["DebugSequenceExecution"] = true
     GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Disable"])
     GSE.GUIUpdateTimer = GSE:ScheduleRepeatingTimer("GUIUpdateOutput", 1)
