@@ -12,7 +12,7 @@ function GSE.UpdateFrom735to801()
   if GSE.isEmpty(GSEOptions.Updated801) then
      GSEOptions.UseVerboseExportFormat = false
      -- Update Sequence Names to UPPERCASE
-    -- if next(GSELibrary) == nil then
+     --if next(GSELibrary) == nil then
        for k,v in ipairs(GSELibrary) do
          for i,j in pairs(v) do
            --i = string.upper(i)
