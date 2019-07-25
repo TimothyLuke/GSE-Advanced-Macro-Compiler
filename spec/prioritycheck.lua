@@ -1,4 +1,4 @@
--- use this to test sequential loop on https://www.lua.org/cgi-bin/demo
+-- Use this to test sequential loop on https://www.lua.org/cgi-bin/demo
 sequence = {
   "main1",
   "main2",
@@ -23,9 +23,9 @@ end
 
 local loopstop = #macros
 
--- for k,v in ipairs(sequence.PostMacro) do
---   table.insert(macros, v)
--- end
+--for k,v in ipairs(sequence.PostMacro) do
+--  table.insert(macros, v)
+--end
 
 print ("Number of Macros: " .. #macros)
 
