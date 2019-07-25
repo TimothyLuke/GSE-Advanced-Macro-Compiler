@@ -20,7 +20,7 @@ describe('API StringFunctions', function()
     assert.is_false(GSE.isEmpty("String"))
   end)
 
-  -- note these are all different implementations of the same thing
+  -- Note these are all different implementations of the same thing
   it ("tests GSE.SplitMeIntolines(str)", function ()
     assert.are.same({[1] = "a", [2] = "b"}, GSE.SplitMeIntolines("a\nb"))
   end)
