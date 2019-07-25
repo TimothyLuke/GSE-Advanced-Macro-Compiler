@@ -16,7 +16,7 @@ lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 Lib\AceGUI-3.0-Selectable-Panel\AceGUI-3.0-Selectable-Panel.lua
 
 
-#Setup Localisation
+# Setup Localization
 Localization\ModL_enUS.lua
 Localization\ModL_ptBR.lua
 Localization\ModL_frFR.lua
@@ -35,7 +35,7 @@ API\Statics.lua
 API\InitialOptions.lua
 
 
-#storage and core
+# Storage and core
 API\StaticPopup.lua
 API\StringFunctions.lua
 API\CharacterFunctions.lua
