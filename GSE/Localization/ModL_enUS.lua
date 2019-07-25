@@ -5,7 +5,7 @@ L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
 
---Output Strings from Core
+-- Output Strings from Core
 L["Close to Maximum Personal Macros.|r  You can have a maximum of "] = true
 L[" macros per character.  You currently have "] = true
 L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] = true
@@ -53,7 +53,7 @@ L["Matching helpTxt"] = true
 L["Different helpTxt"] = true
 L["You cannot delete this version of a sequence.  This version will be reloaded as it is contained in "] = true
 
---sequence editor stuff
+-- Sequence Editor Stuff
 L["Sequence"] = true
 L["Edit"] = true
 L["New"] = true
@@ -89,10 +89,11 @@ L["Delete Version"] = true
 L["No Sequences present so none displayed in the list."] = true
 L["Specialisation / Class ID"] = true
 L["You need to reload the User Interface for the change in StepFunction to take effect.  Would you like to do this now?"] = true
--- options Debug
+
+-- Options Debug
 
 
--- options stuff
+-- Options Stuff
 L["You need to reload the User Interface to complete this task.  Would you like to do this now?"] = true
 L["Yes"] = true
 L["No"] = true
@@ -201,7 +202,7 @@ L["When loading or creating a sequence, if it is a global or the macro has an un
 L["Updating due to new version."] = true
 L["Creating New Sequence."] = true
 
--- Transmission stuff
+-- Transmission Stuff
 L["This will display debug messages for the GS-E Ingame Transmission and transfer"] = true
 
 -- New Strings 1.4
@@ -249,7 +250,7 @@ L["The Custom StepFunction Specified is not recognised and has been ignored."] =
 L["Load"] = true
 L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"]= true
 L["A sequence collision has occured.  Extra versions of this macro have been loaded.  Manage the sequence to determine how to use them "] = true
-L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
+L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = true
 L["Macro unable to be imported."] = true
 L["Macro Import Successful."]= true
 L["Gnome Sequencer: Import a Macro String."] = true
@@ -293,7 +294,7 @@ L["Create Icon"] = true
 L["Addin Version %s contained versions for the following macros:"] = true
 L["GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."] = true
 L["The Sample Macros have been reloaded."] = true
-L["GSE is out of date. You can download the newest version from https://mods.curse.com/addons/wow/gnomesequencer-enhanced."] = true
+L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = true
 L["GSE"] = true
 L["/gs |r to get started."] = true
 L["Gnome Sequencer: Export a Sequence String."] = true
@@ -317,7 +318,7 @@ L["Your current Specialisation is "] = true
 -- GSE 2.0.14
 L["This Sequence was exported from GSE %s."] = true
 
---GSE 2.1.0
+-- GSE 2.1.0
 L["Dungeon"] = true
 L["Heroic"] = true
 L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."] = true
