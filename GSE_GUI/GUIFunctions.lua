@@ -15,7 +15,7 @@ function GSE.GUIDeleteSequence(classid, sequenceName)
   StaticPopup_Show ("GSE-DeleteMacroDialog")
 end
 
---- This function then deletes the macro
+--- This function then deletes the macro.
 function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
   GSE.GUIViewFrame:Hide()
   GSE.GUIEditFrame:Hide()
@@ -111,7 +111,7 @@ end
 
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
-  -- Changes have been made so save them
+  -- Changes have been made, so save them
   for k,v in ipairs(sequence.MacroVersions) do
     sequence.MacroVersions[k] = GSE.TranslateSequence(v, SequenceName, "ID")
     sequence.MacroVersions[k] = GSE.UnEscapeSequence(sequence.MacroVersions[k])
