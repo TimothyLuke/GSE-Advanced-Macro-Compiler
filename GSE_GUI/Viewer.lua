@@ -328,7 +328,10 @@ end
 
 function GSE.GUIViewerLayout(mcontainer)
   mcontainer:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
-  mcontainer:SetCallback("OnClose", function(widget) viewframe:Hide() end)
+  mcontainer:SetCallback("OnClose", function(widget) 
+    GSE.ClearTooltip(viewframe)
+    viewframe:Hide() 
+  end)
   mcontainer:SetLayout("List")
 
 

@@ -45,6 +45,7 @@ editframe.Height = fheight
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self)
+  GSE.ClearTooltip(editframe)
   editframe:Hide();
   if editframe.save then
     local event = {}
