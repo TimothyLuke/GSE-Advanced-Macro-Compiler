@@ -1005,9 +1005,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     editframe.Sequence.MacroVersions[version].Trinket1 = value
   end)
   trinket1checkbox:SetValue(editframe.Sequence.MacroVersions[version].Trinket1)
-  trinket1checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    editframe.Sequence.MacroVersions[version].Ring1 = value
-  end)
   trinket1checkbox:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["Trinket 1"], L["These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."], editframe)
   end)
@@ -1020,9 +1017,6 @@ function GSE:GUIDrawMacroEditor(container, version)
   trinket2checkbox:SetLabel(L["Trinket 2"])
   trinket2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
     editframe.Sequence.MacroVersions[version].Trinket2 = value
-  end)
-  trinket2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    editframe.Sequence.MacroVersions[version].Ring1 = value
   end)
   trinket2checkbox:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["Trinket 2"], L["These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."], editframe)
