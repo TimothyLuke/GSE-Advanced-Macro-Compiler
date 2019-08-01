@@ -7,7 +7,7 @@ local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataobj = ldb:NewDataObject(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], {
   type = "data source",
   text = "GSE",
-  icon = "Interface\\Icons\\INV_Chest_Cloth_17",
+  icon = "Interface\\Addons\\GSE_LDB\\GSE2_Logo_Dark_32.blp",
   OnLeave = dataObject_OnLeave
 })
 local LibQTip = LibStub('LibQTip-1.0')

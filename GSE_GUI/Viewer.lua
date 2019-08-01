@@ -13,7 +13,12 @@ local editkey = ""
 
 local viewframe = AceGUI:Create("Frame")
 viewframe:SetTitle(L["Sequence Viewer"])
-
+-- viewframe.frame:SetBackdrop({
+-- bgFile="Interface/Addons/GSE_GUI/GSE2_Logo_Dark_512.blp",
+-- edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", 
+-- tile=false, edgeSize=10, 
+-- insets={left=3, right=3, top=3, bottom=3}
+-- });
 
 GSE.GUIViewFrame = viewframe
 
@@ -318,19 +323,15 @@ function GSE.GUIViewerToolbar(container)
   end)
 
   buttonGroup:AddChild(recordwindowbutton)
-
   container:AddChild(buttonGroup)
-
   sequenceboxtext = sequencebox
 end
 
-
-
 function GSE.GUIViewerLayout(mcontainer)
   mcontainer:SetStatusText(L["Gnome Sequencer: Sequence Viewer"])
-  mcontainer:SetCallback("OnClose", function(widget) 
+  mcontainer:SetCallback("OnClose", function(widget)
     GSE.ClearTooltip(viewframe)
-    viewframe:Hide() 
+    viewframe:Hide()
   end)
   mcontainer:SetLayout("List")
 
