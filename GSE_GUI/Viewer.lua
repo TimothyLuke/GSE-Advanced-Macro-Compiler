@@ -14,10 +14,11 @@ local editkey = ""
 local viewframe = AceGUI:Create("Frame")
 viewframe:SetTitle(L["Sequence Viewer"])
 -- viewframe.frame:SetBackdrop({
--- bgFile="Interface/Addons/GSE_GUI/GSE2_Logo_Dark_512.blp",
--- edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", 
--- tile=false, edgeSize=10, 
--- insets={left=3, right=3, top=3, bottom=3}
+--   bgFile="Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
+--   edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
+--   tile=false,
+--   edgeSize=10,
+--   insets={left=3, right=3, top=3, bottom=3}
 -- });
 
 GSE.GUIViewFrame = viewframe
