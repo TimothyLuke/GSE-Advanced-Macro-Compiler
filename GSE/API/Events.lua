@@ -140,7 +140,11 @@ function GSE:ADDON_LOADED(event, addon)
     end
   end
   if counter <= 0 then
-    StaticPopup_Show ("GSE-SampleMacroDialog")
+    if GSEOptions.PromptSample then
+      if table.getn(Statics.SampleMacros) > 0 then
+        StaticPopup_Show ("GSE-SampleMacroDialog")
+      end
+    end
   end
   GSE.PrintDebugMessage("I am loaded")
   GSEOptions.UnfoundSpells = {}

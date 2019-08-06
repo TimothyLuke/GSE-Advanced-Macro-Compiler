@@ -6,6 +6,7 @@ local L = GSE.L
 function GSE.PerformOneOffEvents()
   GSE.UpdateFrom735to801()
   GSE.Update2305()
+  GSE.Update2410()
 end
 
 function GSE.UpdateFrom735to801()
@@ -36,4 +37,11 @@ function GSE.Update2305()
      GSEOptions.UseWLMExportFormat = true
   end
   GSEOptions.Update2305 = true
+end
+
+function GSE.Update2410()
+  if GSE.isEmpty(GSEOptions.Update2410) then
+    GSEOptions.PromptSample = true
+  end
+  GSEOptions.Update2410 = true
 end

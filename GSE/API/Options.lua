@@ -43,6 +43,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.HideLoginMessage end,
             order = 202
           },
+          promptSamples = {
+            name = L["Prompt Samples"],
+            desc = L["When you log into a class without any macros, prompt to load the sample macros."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.PromptSample = val end,
+            get = function(info) return GSEOptions.PromptSample end,
+            order = 202
+          },
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],

@@ -489,3 +489,7 @@ L["Export this Macro."] = true
 L["Create or remove a Macro stub in /macro that can be dragged to your action bar so that you can use this macro.\nGSE can store an unlimited number of macros however WOW's /macro interface can only store a limited number of macros."] = true
 L["Record the spells and items you use into a new macro."] = true
 L["Decompress"] = true
+
+-- GSE 2.4.10
+L["Prompt Samples"] = true
+L["When you log into a class without any macros, prompt to load the sample macros."] = true

@@ -95,6 +95,7 @@ function GSE.SetDefaultOptions()
   GSEOptions.UseVerboseExportFormat = false
   GSEOptions.DefaultImportAction = "MERGE"
   GSEOptions.UseWLMExportFormat = true
+  GSEOptions.PromptSample = true
   GSE.resetMacroResetModifiers()
 end
 
