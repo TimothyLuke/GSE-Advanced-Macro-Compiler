@@ -59,5 +59,5 @@ if tonumber(majorVersion[1]) == 1 then
     -- Classic WoW
     Statics.SampleMacros = ClassicSampleMacros
   else
-  	Statics.SampleMacros = RetailSampleMacros
+	Statics.SampleMacros = RetailSampleMacros
 end
