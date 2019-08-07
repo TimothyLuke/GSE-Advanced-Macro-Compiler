@@ -988,7 +988,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     editframe.Sequence.MacroVersions[version].Ring2 = value
   end)
   ring2checkbox:SetCallback("OnValueChanged", function (sel, object, value)
-    editframe.Sequence.MacroVersions[version].Ring1 = value
+    editframe.Sequence.MacroVersions[version].Ring2 = value
   end)
   ring2checkbox:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["Ring 2"], L["These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."], editframe)
