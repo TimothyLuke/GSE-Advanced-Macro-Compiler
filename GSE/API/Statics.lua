@@ -442,3 +442,9 @@ Statics.BaseSpellTable[210152] = 188499 -- Death Sweep -> Blade Dance
 Statics.BaseSpellTable[207311] = 55090 -- Clawing Shadows -> Scourge Strike
 Statics.BaseSpellTable[152280] = 43265 -- Defile -> Death and Decay
 Statics.BaseSpellTable[207127] = 47568 -- Hungering Rune Weapon -> Empower Rune Weapon
+
+
+Statics.Patrons = {
+  "rezaadams",
+  "susietoo12"
+}

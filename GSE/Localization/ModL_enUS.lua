@@ -60,7 +60,7 @@ L["New"] = true
 L["Choose Language"] = true
 L["Translated Sequence"] = true
 L["Sequence Viewer"] = true
-L["Gnome Sequencer: Sequence Viewer"] = true
+
 L["Load Sequence"] = true
 L["Disable Sequence"] = true
 L["Enable Sequence"] = true
@@ -493,3 +493,11 @@ L["Decompress"] = true
 -- GSE 2.4.10
 L["Prompt Samples"] = true
 L["When you log into a class without any macros, prompt to load the sample macros."] = true
+
+-- GSE 2.4.11
+L["About"] = true
+L["About GSE"] = true
+L["History"] = true
+L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write macros with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."] = true
+L["Supporters"] = true
+L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."] = true
