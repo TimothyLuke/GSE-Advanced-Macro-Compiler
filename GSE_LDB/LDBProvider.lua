@@ -140,7 +140,7 @@ function GSE.MiniMapControl(show)
   if show then
     GSE.miniMapShow()
   else
-    GSE.miniMapHide() 
+    GSE.miniMapHide()
   end
 end
 
