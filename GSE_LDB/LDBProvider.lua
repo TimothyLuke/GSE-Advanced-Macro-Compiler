@@ -127,20 +127,18 @@ function dataobj:OnClick(button)
   end
 end
 
-
-function GSE.miniMapShow() 
+function GSE.miniMapShow()
   icon:Show(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"])
 end
 
-function GSE.miniMapHide() 
+function GSE.miniMapHide()
   icon:Hide(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"])
 end
 
-
+--- This shows or hides the minimap icon.
 function GSE.MiniMapControl(show)
-
   if show then
-    GSE.miniMapShow() 
+    GSE.miniMapShow()
   else
     GSE.miniMapHide() 
   end
