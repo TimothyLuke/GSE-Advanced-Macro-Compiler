@@ -96,6 +96,9 @@ function GSE.SetDefaultOptions()
   GSEOptions.DefaultImportAction = "MERGE"
   GSEOptions.UseWLMExportFormat = true
   GSEOptions.PromptSample = true
+  GSEOptions.showMiniMap = {
+    hide = true
+  }
   GSE.resetMacroResetModifiers()
 end
 

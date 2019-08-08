@@ -45,3 +45,12 @@ function GSE.Update2410()
   end
   GSEOptions.Update2410 = true
 end
+
+function GSE.Update2411()
+  if GSE.isEmpty(GSEOptions.Update2411) then
+      GSEOptions.showMiniMap = {
+        hide = true
+      }
+  end
+  GSEOptions.Update2411 = true
+end

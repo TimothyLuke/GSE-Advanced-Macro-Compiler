@@ -3,15 +3,22 @@ local GSE = GSE
 local Statics = GSE.Static
 local L = GSE.L
 
+local iconSource = "Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.blp"
+
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataobj = ldb:NewDataObject(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], {
   type = "data source",
   text = "GSE",
-  icon = "Interface\\Addons\\GSE_LDB\\GSE2_Logo_Dark_32.blp",
+  icon = iconSource,
   OnLeave = dataObject_OnLeave
 })
 local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
+
+local icon = LibStub("LibDBIcon-1.0")
+icon:Register(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], dataobj, GSEOptions.showMiniMap)
+
+print(GSEOptions.showMiniMap)
 
 local baseFont = CreateFont("baseFont")
 
@@ -119,3 +126,26 @@ function dataobj:OnClick(button)
     GSE.GUIShowDebugWindow()
   end
 end
+
+
+function GSE.miniMapShow() 
+  icon:Show(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"])
+end
+
+function GSE.miniMapHide() 
+  icon:Hide(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"])
+end
+
+
+function GSE.MiniMapControl(show)
+
+  if show then
+    GSE.miniMapShow() 
+  else
+    GSE.miniMapHide() 
+  end
+end
+
+GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+
+GSE.LDB = true

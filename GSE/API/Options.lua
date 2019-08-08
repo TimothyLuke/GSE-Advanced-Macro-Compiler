@@ -19,6 +19,19 @@ function GSE.GetOptionsTable()
             name = L["General Options"],
             order = 100
           },
+          minimapIcon = {
+            name = L["Show Minimap Icon"],
+            desc = L["Show Minimap Icon for LibDataBroker (LDB) data text."],
+            type = "toggle",
+            set = function(info,val) 
+              GSEOptions.showMiniMap.hide = val 
+              if GSE.LDB then
+                GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+              end
+            end,
+            get = function(info) return GSEOptions.showMiniMap.hide end,
+            order = 199
+          },
           showothergseusersintooltip = {
             name = L["Show GSE Users in LDB"],
             desc = L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."],
@@ -661,15 +674,10 @@ function GSE.GetOptionsTable()
           supportersDescription = {
             type = "description",
             name = L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."],
-            order = 20,
-            image = "Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
-            imageWidth = 120;
-            imageHeight = 120;
+            order = 31,
           },
-
         },
       },
-      
       debugTab = {
         name = L["Debug"],
         desc = L["Debug Mode Options"],
@@ -757,7 +765,7 @@ function GSE.GetOptionsTable()
     }
   end
 
-  ord = 30
+  ord = 31
   for k,v in ipairs(Statics.Patrons) do
     local pos = ord + k
     OptionsTable.args.aboutTab.args[v..k] = {
