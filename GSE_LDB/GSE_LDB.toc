@@ -1,4 +1,4 @@
-## Interface: 11302
+## Interface: 80200
 ## Title: |cff0000FFGSE2:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE2
 ## Author: TimothyLuke
