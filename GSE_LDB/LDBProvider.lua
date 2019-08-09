@@ -16,9 +16,7 @@ local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
 local icon = LibStub("LibDBIcon-1.0")
-icon:Register(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], dataobj, GSEOptions.showMiniMap)
-
-print(GSEOptions.showMiniMap)
+icon:Register(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], dataobj, {hide=false})
 
 local baseFont = CreateFont("baseFont")
 

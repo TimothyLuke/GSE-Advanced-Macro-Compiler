@@ -12,4 +12,6 @@
     <Include file="Lib\AceTimer-3.0\AceTimer-3.0.xml"/>
     <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
     <Include file="Lib\LibCompress\lib.xml"/>
+    <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
+    <Include file="Lib\LibDBIcon-1.0\lib.xml" />
 </Ui>

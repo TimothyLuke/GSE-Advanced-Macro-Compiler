@@ -7,6 +7,7 @@ function GSE.PerformOneOffEvents()
   GSE.UpdateFrom735to801()
   GSE.Update2305()
   GSE.Update2410()
+  GSE.Update2411()
 end
 
 function GSE.UpdateFrom735to801()
