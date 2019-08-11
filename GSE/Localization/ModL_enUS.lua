@@ -501,5 +501,5 @@ L["History"] = true
 L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write macros with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."] = true
 L["Supporters"] = true
 L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."] = true
-L["Show Minimap Icon"] = true
-L["Show Minimap Icon for LibDataBroker (LDB) data text."] = true
+L["Hide Minimap Icon"] = true
+L["Hide Minimap Icon for LibDataBroker (LDB) data text."] = true

@@ -20,8 +20,8 @@ function GSE.GetOptionsTable()
             order = 100
           },
           minimapIcon = {
-            name = L["Show Minimap Icon"],
-            desc = L["Show Minimap Icon for LibDataBroker (LDB) data text."],
+            name = L["Hide Minimap Icon"],
+            desc = L["Hide Minimap Icon for LibDataBroker (LDB) data text."],
             type = "toggle",
             set = function(info,val)
               GSEOptions.showMiniMap.hide = val

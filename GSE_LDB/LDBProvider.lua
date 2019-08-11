@@ -16,7 +16,7 @@ local LibQTip = LibStub('LibQTip-1.0')
 local LibSharedMedia = LibStub('LibSharedMedia-3.0')
 
 local icon = LibStub("LibDBIcon-1.0")
-icon:Register(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], dataobj, {hide=false})
+icon:Register(L["GSE"] .." ".. L["GnomeSequencer-Enhanced"], dataobj, GSEOptions.showMiniMap)
 
 local baseFont = CreateFont("baseFont")
 
@@ -32,7 +32,7 @@ end
 function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
-  local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
+  local tooltip = LibQTip:Acquire("GSE", 3, "LEFT", "CENTER", "RIGHT")
   self.tooltip = tooltip
   tooltip:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
 
@@ -135,13 +135,14 @@ end
 
 --- This shows or hides the minimap icon.
 function GSE.MiniMapControl(show)
+  -- print(show)
   if show then
-    GSE.miniMapShow()
-  else
     GSE.miniMapHide()
+  else
+    GSE.miniMapShow()
   end
 end
 
-GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+-- GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
 
 GSE.LDB = true

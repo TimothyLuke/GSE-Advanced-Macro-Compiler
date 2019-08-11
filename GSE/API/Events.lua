@@ -444,7 +444,3 @@ function GSE.ToggleOOCQueue()
   end
 end
 
-
-if GSE.LDB then
-  GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
-end
