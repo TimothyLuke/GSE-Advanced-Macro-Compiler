@@ -101,13 +101,20 @@ function dataobj:OnEnter()
   tooltip:Show()
 end
 
-local function dataObject_OnLeave(self)
+local function handleLeave(self)
   -- Dont close the tooltip if mouseover
   if not MouseIsOver(self.tooltip) then
     -- Release the tooltip
     LibQTip:Release(self.tooltip)
     self.tooltip = nil
   end
+  return true
+end
+
+local function dataObject_OnLeave(self)
+  -- this may throw an error - capture the error silently
+  pcall(handleLeave, self)
+
 end
 
 
