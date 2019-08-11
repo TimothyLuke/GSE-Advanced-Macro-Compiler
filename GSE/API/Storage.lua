@@ -280,8 +280,9 @@ end
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, createicon)
   local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
-  GSE.PrintDebugMessage (string.format("Decomsuccess: %s  tablerows: %s   type cell1 %s cell2 %s" , tostring(decompresssuccess), table.getn(actiontable), type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
+  GSE.PrintDebugMessage (string.format("Decomsuccess: %s " , tostring(decompresssuccess)), Statics.SourceTransmission)
   if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and (type(actiontable[2]) == "table") then
+    GSE.PrintDebugMessage (string.format("tablerows: %s   type cell1 %s cell2 %s" ,  table.getn(actiontable), type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
     local seqName = string.upper(actiontable[1])
     GSE.AddSequenceToCollection(seqName, actiontable[2])
     if createicon then
