@@ -2,7 +2,7 @@
 ## Title: |cff0000FFGSE2:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE2
 ## Author: TimothyLuke
-## Version: 2412
+## Version: 2413
 ## Dependencies: GSE
 
 
