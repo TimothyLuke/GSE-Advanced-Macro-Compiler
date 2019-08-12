@@ -1,4 +1,4 @@
-## Interface: 80200
+## Interface: 11302
 ## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
