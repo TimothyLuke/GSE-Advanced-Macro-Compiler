@@ -590,7 +590,11 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
   if mode == "STRING" then
     if not GSE.isEmpty(rank) then
-      returnval = name .. "(" .. rank .. ")"
+      if rank == "Honor Talent" then
+        returnval = name
+      else
+        returnval = name .. "(" .. rank .. ")"
+      end
     else
       returnval = name
     end
