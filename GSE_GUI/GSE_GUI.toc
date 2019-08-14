@@ -2,7 +2,7 @@
 ## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
-## Version: 2413
+## Version: 2414
 ## Dependencies: GSE
 
 
