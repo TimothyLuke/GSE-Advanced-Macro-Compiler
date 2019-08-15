@@ -584,7 +584,6 @@ local function ClassicGetSpellInfo(spellID)
   if tonumber(majorVersion[1]) == 1 then
     rank = rank or GetSpellRank(spellID);
   end
-    
   return name,rank,icon,castTime,minRange,maxRange;
 end
 
