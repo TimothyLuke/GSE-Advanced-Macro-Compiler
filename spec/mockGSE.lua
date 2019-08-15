@@ -112,3 +112,20 @@ INVSLOT_MAINHAND = 16
 INVSLOT_OFFHAND = 17
 INVSLOT_RANGED = 18
 INVSLOT_TABARD = 19
+
+classic = 1.13.2 12345 Aug 10 2019 11302
+retail = 8.2.0 31429 Aug 7 2019 80200
+currentver = retail
+
+function GetBuildInfo()
+  return currentver
+end
+
+function setClassic()
+  currentver = classic
+end
+
+function setRetail()
+  currentver = retail
+end
+
