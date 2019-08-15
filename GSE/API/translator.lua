@@ -578,7 +578,13 @@ end
 
 local function ClassicGetSpellInfo(spellID)
   local name,rank,icon,castTime,minRange,maxRange=GetSpellInfo( spellID );
-  rank = rank or GetSpellRank(spellID);
+  local version, build, date, tocversion = GetBuildInfo()
+  local majorVersion = GSE.split(version, '.')
+  -- only check rank if classic.
+  if tonumber(majorVersion[1]) == 1 then
+    rank = rank or GetSpellRank(spellID);
+  end
+    
   return name,rank,icon,castTime,minRange,maxRange;
 end
 
@@ -590,11 +596,7 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
   local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
   if mode == "STRING" then
     if not GSE.isEmpty(rank) then
-      if rank == "Honor Talent" then
-        returnval = name
-      else
-        returnval = name .. "(" .. rank .. ")"
-      end
+      returnval = name .. "(" .. rank .. ")"
     else
       returnval = name
     end
