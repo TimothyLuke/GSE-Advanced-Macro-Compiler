@@ -28,8 +28,11 @@ script:
 - luacheck --no-max-line-length --no-global --no-unused --allow-defined --std max+busted GSE/SampleMacros.lua
 - bash ./deploy.sh
 - busted --verbose --coverage
+- mkdir .release
 after_success:
 - luacov-coveralls -r ./
+- curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
+- curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash -s -- -g 1.13.2 -m .pkgmeta-classic -w 25155; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
 notifications:
   email:
     on_failure: always

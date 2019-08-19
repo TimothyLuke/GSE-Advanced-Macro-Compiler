@@ -533,6 +533,6 @@ Statics.Patrons = {
   "bf2champ",
   "rezaadams",
   "roberto.zanini",
-  "russbakr"
+  "russbakr",
   "susietoo12"
 }

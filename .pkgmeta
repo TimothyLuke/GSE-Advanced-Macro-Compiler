@@ -75,3 +75,5 @@ ignore:
     - deploy_key.enc
     - Deprecated
     - GSE/tmp
+
+wowi-archive-previous : no
