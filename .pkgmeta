@@ -16,7 +16,7 @@ externals:
     GSE/Lib/CallbackHandler-1.0:
         url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
         tag: latest
-    GSE/lib/AceConfig-3.0:
+    GSE/Lib/AceConfig-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
         tag: latest
     GSE/Lib/AceConsole-3.0:
