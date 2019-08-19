@@ -52,14 +52,15 @@ externals:
     GSE/Lib/AceGUI-3.0-Selectable-Panel:
         url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
         tag: latest
-    GSE/Lib/LibDBIcon-1.0:
-        url: https://repos.wowace.com/wow/libdbicon-1-0/trunk/libdbicon-1-0
+    GSE/Lib2/LibDBIcon-1.0:
+        url: https://repos.wowace.com/wow/libdbicon-1-0/trunk
         tag: latest
 
 move-folders:
     GSE/GSE: GSE
     GSE/GSE_GUI: GSE_GUI
     GSE/GSE_LDB: GSE_LDB
+    GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0: GSE/Lib/LibDBIcon-1.0
 
 
 enable-nolib-creation: no
@@ -76,5 +77,12 @@ ignore:
     - GSE/tmp
     - out
     - tmp
+    - GSE/Lib2/LibDBIcon-1.0/CallbackHandler-1.0
+    - GSE/Lib2/LibDBIcon-1.0/LibDataBroker-1.1
+    - GSE/Lib2/LibDBIcon-1.0/LibStub
+    - GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0
+    - GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0.toc
+    - GSE/Lib2/LibDBIcon-1.0/embeds
+
 
 wowi-archive-previous : no
