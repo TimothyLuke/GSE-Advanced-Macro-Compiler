@@ -80,7 +80,6 @@ ignore:
     - GSE/Lib2/LibDBIcon-1.0/CallbackHandler-1.0
     - GSE/Lib2/LibDBIcon-1.0/LibDataBroker-1.1
     - GSE/Lib2/LibDBIcon-1.0/LibStub
-    - GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0
     - GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0.toc
     - GSE/Lib2/LibDBIcon-1.0/embeds
 
