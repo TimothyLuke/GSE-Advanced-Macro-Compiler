@@ -536,6 +536,3 @@ Statics.Patrons = {
   "russbakr",
   "susietoo12"
 }
-
-Statics.projectVersion = "@project-version@"
-Statics.projectRevision = "@project-revision@"
