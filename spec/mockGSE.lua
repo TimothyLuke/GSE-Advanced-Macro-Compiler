@@ -1,7 +1,7 @@
 GSE = {}
 GSE.L = {}
 GSE.Static = {}
-GSE.VersionString = 2000;
+GSE.VersionString = "2.0.00-18-g95ecb41";
 
 GNOME = "UnitTest"
 

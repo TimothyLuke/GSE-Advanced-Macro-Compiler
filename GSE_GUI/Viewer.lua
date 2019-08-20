@@ -329,7 +329,7 @@ function GSE.GUIViewerToolbar(container)
 end
 
 function GSE.GUIViewerLayout(mcontainer)
-  mcontainer:SetStatusText("GSE: " .. GSE.formatModVersion(GSE.VersionString))
+  mcontainer:SetStatusText("GSE: " .. GSE.VersionString)
   mcontainer:SetCallback("OnClose", function(widget)
     GSE.ClearTooltip(viewframe)
     viewframe:Hide()

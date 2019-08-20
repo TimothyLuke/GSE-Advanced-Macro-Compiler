@@ -92,7 +92,7 @@ function dataobj:OnEnter()
 
   tooltip:AddSeparator()
   y,x = tooltip:AddLine()
-  tooltip:SetCell(y, 1, string.format(L["GSE Version: %s"], GSE.formatModVersion(GSE.VersionString)),"CENTER", 3)
+  tooltip:SetCell(y, 1, string.format(L["GSE Version: %s"], GSE.VersionString),"CENTER", 3)
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
 

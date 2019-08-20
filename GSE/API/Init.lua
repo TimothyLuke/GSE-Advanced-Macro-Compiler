@@ -18,6 +18,16 @@ local GNOME = "GSE"
 -- Initialisation Functions
 
 
+--- This function takes a version String and returns a version number.
+function GSE.ParseVersion(version)
+  local parts = GSE.split(projectVersion, "-")
+  local numbers = GSE.split(parts[1], ".")
+  local number = (tonumber(numbers[1]) * 1000) + (tonumber(numbers[2]) * 100) + (tonumber(numbers[3]) )
+  return tonumber(number)
+end
+
+GSE.VersionNumber = GSE.ParseVersion(GSE.VersionString)
+
 --- When the Addon loads, printing is paused until after every other mod has loaded.
 --    This method prints the print queue.
 function GSE.PerformPrint()
