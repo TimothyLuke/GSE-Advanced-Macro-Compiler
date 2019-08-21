@@ -52,10 +52,7 @@ function GSE.ParseVersion(version)
   return tonumber(returnVal)
 end
 
-
-
 GSE.VersionNumber = GSE.ParseVersion(GSE.VersionString)
---GSE.VersionNumber = GSE.ParseVersion("2.4.14-18-g95ecb41")
 
 --- When the Addon loads, printing is paused until after every other mod has loaded.
 --    This method prints the print queue.
