@@ -57,11 +57,6 @@ function GSE.lines(tab, str)
   helper((str:gsub("(.-)\r?\n", helper)))
 end
 
---- Checks for nil or empty variables.
-function GSE.isEmpty(s)
-  return s == nil or s == ''
-end
-
 --- Convert a string to an array of lines.
 function GSE.SplitMeIntolines(str)
   GSE.PrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
