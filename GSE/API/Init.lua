@@ -16,17 +16,24 @@ local Statics = GSE.Static
 local GNOME = "GSE"
 
 -- Initialisation Functions
-
+--- Split a string into an array based on the delimiter specified.
+function GSE.split(source, delimiters)
+  local elements = {}
+  local pattern = '([^'..delimiters..']+)'
+  string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
+  return elements
+end
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
-  local parts = GSE.split(projectVersion, "-")
+  local parts = GSE.split(version, "-")
   local numbers = GSE.split(parts[1], ".")
   local number = (tonumber(numbers[1]) * 1000) + (tonumber(numbers[2]) * 100) + (tonumber(numbers[3]) )
   return tonumber(number)
 end
 
 GSE.VersionNumber = GSE.ParseVersion(GSE.VersionString)
+--GSE.VersionNumber = GSE.ParseVersion("2.4.14-18-g95ecb41")
 
 --- When the Addon loads, printing is paused until after every other mod has loaded.
 --    This method prints the print queue.

@@ -100,16 +100,6 @@ function GSE.SplitCastSequence(str)
   return tab
 end
 
-
---- Split a string into an array based on the delimiter specified.
-function GSE.split(source, delimiters)
-  local elements = {}
-  local pattern = '([^'..delimiters..']+)'
-  string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
-  return elements
-end
-
-
 function GSE.FixQuotes(source)
   source = string.gsub(source, "%‘", "'")
   source = string.gsub(source, "%’", "'")
