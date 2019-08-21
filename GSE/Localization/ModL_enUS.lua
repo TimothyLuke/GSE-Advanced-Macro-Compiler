@@ -503,3 +503,7 @@ L["Supporters"] = true
 L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."] = true
 L["Hide Minimap Icon"] = true
 L["Hide Minimap Icon for LibDataBroker (LDB) data text."] = true
+
+-- GSE 2.4.15 - Missing translations
+L["Raid setting changed to Default."] = true
+L["Mythic setting changed to Default."] = true
