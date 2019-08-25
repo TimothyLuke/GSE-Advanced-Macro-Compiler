@@ -157,7 +157,7 @@ function GSE.sendMessage(tab, channel, target)
 end
 
 function GSE.performVersionCheck(version)
-  if GSE.VersionNumber(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
+  if GSE.ParseVersion(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
     if not GSold then
       GSE.Print(L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."], Statics.SourceTransmission)
       GSold = true
