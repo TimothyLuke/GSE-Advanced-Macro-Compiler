@@ -287,7 +287,12 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 -- Functions
 --- Handle slash commands
 function GSE:GSSlash(input)
-  if string.lower(input) == "showspec" then
+  local params = GSE.split(input, " ")
+  if table.getn(params) > 1 then
+    input = params[1]
+  end
+  local command = string.lower(input)
+  if command == "showspec" then
     local version, build, date, tocversion = GetBuildInfo()
     local majorVersion = GSE.split(version, '.')
     if tonumber(majorVersion[1]) == 1 then
@@ -298,52 +303,54 @@ function GSE:GSSlash(input)
       local _, specname, specdescription, specicon, _, specrole, specclass = GetSpecializationInfoByID(currentSpecID)
       GSE.Print(L["Your current Specialisation is "] .. currentSpecID .. ':' .. specname .. L["  The Alternative ClassID is "] .. currentclassId, GNOME)
     end
-  elseif string.lower(input) == "help" then
+  elseif command == "help" then
     PrintGnomeHelp()
-  elseif string.lower(input) == "cleanorphans" or string.lower(input) == "clean" then
+  elseif command == "cleanorphans" or command == "clean" then
     GSE.CleanOrphanSequences()
-  elseif string.lower(input) == "forceclean" then
+  elseif command == "forceclean" then
     GSE.CleanOrphanSequences()
     GSE.CleanMacroLibrary(true)
-  elseif string.lower(string.sub(string.lower(input),1,6)) == "export" then
-    GSE.Print(GSE.ExportSequence(string.sub(string.lower(input),8, true, "STRING", true)))
-  elseif string.lower(input) == "showdebugoutput" then
+  elseif command == "showdebugoutput" then
       StaticPopup_Show ("GS-DebugOutput")
-  elseif string.lower(input) == "record" then
+  elseif command == "record" then
     if GSE.UnsavedOptions["GUI"] then
       GSE.GUIRecordFrame:Show()
     else
       GSE.printNoGui()
     end
-  elseif string.lower(input) == "debug" then
+  elseif command == "debug" then
     if GSE.UnsavedOptions["GUI"] then
       GSE.GUIShowDebugWindow()
     else
       GSE.printNoGui()
     end
 
-  elseif string.lower(input) == "compilemissingspells" then
+  elseif command == "compilemissingspells" then
     GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
     GSE.ReportUnfoundSpells()
     GSE.Print("Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
-  elseif string.lower(input) == "resetoptions" then
+  elseif command == "resetoptions" then
     GSE.SetDefaultOptions()
     GSE.Print(L["Options have been reset to defaults."])
     StaticPopup_Show ("GSE_ConfirmReloadUIDialog")
-  elseif string.lower(input) == "updatemacrostrings" then
+  elseif command == "updatemacrostrings" then
     -- Convert macros to new format in a one off run.
     GSE.UpdateMacroString()
-  elseif string.lower(input) == "movelostmacros" then
+  elseif command == "movelostmacros" then
     GSE.MoveMacroToClassFromGlobal()
-  elseif string.lower(input) == "checkmacrosforerrors" then
+  elseif command == "checkmacrosforerrors" then
     GSE.ScanMacrosForErrors()
-  elseif string.lower(input) == "compressstring" then
+  elseif command == "compressstring" then
     if GSE.UnsavedOptions["GUI"] then
       GSE.GUICompressFrame:Show()
     else
       GSE.printNoGui()
     end
-
+  elseif command == "dumpmacro" then
+    GSE_C[params[2]] = {}
+    GSE_C[params[2]].name = params[2]
+    GSE_C[params[2]].sequence = GSE.FindMacro(params[2])
+    GSE_C[params[2]].button = _G[params[2]]
   else
     if GSE.UnsavedOptions["GUI"] then
       GSE.GUIShowViewer()

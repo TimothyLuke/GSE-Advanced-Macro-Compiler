@@ -8,6 +8,7 @@ function GSE.PerformOneOffEvents()
   GSE.Update2305()
   GSE.Update2410()
   GSE.Update2411()
+  GSE.Update2415()
 end
 
 function GSE.UpdateFrom735to801()
@@ -54,4 +55,12 @@ function GSE.Update2411()
       }
   end
   GSEOptions.Update2411 = true
+end
+
+
+function GSE.Update2415()
+  if GSE.isEmpty(GSEOptions.Update2415) then
+      GSE_C = {}
+  end
+  GSEOptions.Update2415 = true
 end

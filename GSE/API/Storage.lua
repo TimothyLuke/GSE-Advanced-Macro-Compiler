@@ -1254,6 +1254,17 @@ function GSE.GetMacroResetImplementation()
 
 end
 
+--- This function finds a macro by name.  It checks current class first then global
+function GSE.FindMacro(sequenceName)
+  local returnVal = {}
+  if not GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()][sequenceName]) then
+    returnVal = GSELibrary[GSE.GetCurrentClassID()][sequenceName]
+  elseif not GSE.isEmpty(GSELibrary[0][sequenceName]) then
+    returnVal = GSELibrary[0][sequenceName]
+  end
+  return returnVal
+end
+
 --- This funcion returns the actual onclick implementation
 function GSE.PrepareOnClickImplementation(sequence)
   local returnstring = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "" )

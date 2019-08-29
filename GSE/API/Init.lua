@@ -7,7 +7,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 --@debug@
 if GSE.VersionString == "@project-version@" then
-  GSE.VersionString = "2.4.14-18-g95ecb41"
+  GSE.VersionString = "2.4.19-18-g95ecb41"
 end
 --@end-debug@
 

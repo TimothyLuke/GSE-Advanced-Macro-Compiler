@@ -9,6 +9,7 @@
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSELibrary
+## SavedVariablesPerCharacter: GSE_C
 ## OptionalDeps: WeakAuras
 
 ## X-WoWI-ID: 23921
