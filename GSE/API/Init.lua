@@ -36,8 +36,8 @@ function GSE.split(source, delimiters)
   return elements
 end
 
-local version, build, date, tocversion = GetBuildInfo()
-local majorVersion = GSE.split(version, '.')
+local gameversion, build, date, tocversion = GetBuildInfo()
+local majorVersion = GSE.split(gameversion, '.')
 
 GSE.GameMode = tonumber(majorVersion[1])
 
