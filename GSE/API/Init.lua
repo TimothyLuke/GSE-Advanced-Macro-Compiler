@@ -11,6 +11,7 @@ if GSE.VersionString == "@project-version@" then
 end
 --@end-debug@
 
+
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 
 GSE.OutputQueue = {}
@@ -34,6 +35,12 @@ function GSE.split(source, delimiters)
   string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
   return elements
 end
+
+local version, build, date, tocversion = GetBuildInfo()
+local majorVersion = GSE.split(version, '.')
+
+GSE.GameMode = tonumber(majorVersion[1])
+
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)

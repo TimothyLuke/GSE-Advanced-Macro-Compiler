@@ -55,11 +55,15 @@ RetailSampleMacros[12][2] = [[dyJMbaWsiYBHkBtQQMnIUPc(fkDBfzNc2l1Uvv7xu)fe63smqq
 ClassicSampleMacros[5] = {}
 ClassicSampleMacros[5][1] = [[dCJacaWskO3cPEnPKzcWSvLBkr)scFdOQDQO9k2nv7xj)LuLFd1qPidwHHtrDqvv9yuDmu6CKcwOQILsQQfJIQLRupeO8uKLbONtPjsk1ubzYuOPtCri6WsDzvUoq2OQsBvvLntQy7Oi(ifywOO8zq1DrHrII0ZifA0sQttYjHW4ifDni58sY0iv64avUnOCyduMSHO)L6zsFeiji9aG8hsaiMgKjWafQS5B8VBBvy3gOmzduMSHk4Tvwd0oMx3UFpLdNXAWu8RAn(Q2xMadvWBRSgODmVUD)EkhoJ1aLMOYuJHk4Tvwd0oMx3UFpLdNXAuQCJRXNxBLm1nubVTYAG2X86297PC4mwJsLBCn((6QqaWyZauWusiuHmHTszZ34afjKHxLP9zTbkt2qfsVHFY5hSQ1aTJR7nmMz8AJmYeyOcR0BPfP5AfjKHxL(37A7fOiHmTVYMVXbkt2qf82kRbkn1qMadvWBRSgSGpsisoZFb5CrH9q0boqNlQ(fjsiO(DUydbgG)eHaSqAF60GEsMSHq66G38dmmmZT0mx9usv(e6piPgVdbPGHL6kaG06crMpocTZevidiK)UTvH9qa1LfyOY2b1peUCBMCUOWE(ejsc]]
 
-local version, build, date, tocversion = GetBuildInfo()
-local majorVersion = GSE.split(version, '.')
-if tonumber(majorVersion[1]) == 1 then
+print(GSE.GameMode)
+
+print(GSE.GameMode == "1")
+
+if GSE.GameMode == 1 then
     -- Classic WoW
     Statics.SampleMacros = ClassicSampleMacros
+    print("Loaded Classic Samples")
   else
 	Statics.SampleMacros = RetailSampleMacros
+	print("Loaded Retail Samples")
 end

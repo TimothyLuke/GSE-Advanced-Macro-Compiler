@@ -578,10 +578,8 @@ end
 
 local function ClassicGetSpellInfo(spellID)
   local name,rank,icon,castTime,minRange,maxRange=GetSpellInfo( spellID );
-  local version, build, date, tocversion = GetBuildInfo()
-  local majorVersion = GSE.split(version, '.')
   -- only check rank if classic.
-  if tonumber(majorVersion[1]) == 1 then
+  if GSE.GameMode == 1 then
     rank = rank or GetSpellRank(spellID);
   end
   return name,rank,icon,castTime,minRange,maxRange;
@@ -601,10 +599,14 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
     end
   else
     returnval = spellId
-    -- Check for overrides like Crusade and Avenging Wrath.
-    if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-      returnval = Statics.BaseSpellTable[returnval]
+    if GSE.GameMode ~= 1 then
+      -- If we are not in classic
+      -- Check for overrides like Crusade and Avenging Wrath.
+      if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+        returnval = Statics.BaseSpellTable[returnval]
+      end
     end
+    
   end
   if not GSE.isEmpty(returnval) then
     GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
