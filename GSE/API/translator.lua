@@ -606,7 +606,6 @@ function GSE.GetSpellId(spellstring, mode, trinketmode)
         returnval = Statics.BaseSpellTable[returnval]
       end
     end
-    
   end
   if not GSE.isEmpty(returnval) then
     GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
