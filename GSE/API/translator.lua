@@ -577,18 +577,21 @@ local function GetSpellRank(spellID)
 end
 
 local function ClassicGetSpellInfo(spellID)
-  local name,rank,icon,castTime,minRange,maxRange=GetSpellInfo( spellID );
+  local name,rank,icon,castTime,minRange,maxRange, sid=GetSpellInfo( spellID );
   -- only check rank if classic.
   if GSE.GameMode == 1 then
     rank = rank or GetSpellRank(spellID);
   end
-  return name,rank,icon,castTime,minRange,maxRange;
+  return name,rank,icon,castTime,minRange,maxRange, sid;
 end
 
 ----------
 
 --- Converts a string spell name to an id and back again.
-function GSE.GetSpellId(spellstring, mode, trinketmode)
+function GSE.GetSpellId(spellstring, mode)
+  if GSE.isEmpty(mode) then
+    mode = ""
+  end
   local returnval = ""
   local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
   if mode == "STRING" then
