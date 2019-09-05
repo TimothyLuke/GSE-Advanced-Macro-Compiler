@@ -412,8 +412,6 @@ function GSE:GUIDrawMetadataEditor(container)
     GSE.ClearTooltip(editframe)
   end)
 
-  contentcontainer:AddChild(defgroup1)
-
   local defgroup2 = AceGUI:Create("SimpleGroup")
   defgroup2:SetLayout("Flow")
   defgroup2:SetWidth(editframe.Width - 100)
@@ -484,7 +482,6 @@ function GSE:GUIDrawMetadataEditor(container)
     GSE.ClearTooltip(editframe)
   end)
 
-  contentcontainer:AddChild(defgroup2)
 
 
   local defgroup3 = AceGUI:Create("SimpleGroup")
@@ -563,9 +560,6 @@ function GSE:GUIDrawMetadataEditor(container)
   local spacerlabel7 = AceGUI:Create("Label")
   spacerlabel7:SetWidth(100)
 
-  contentcontainer:AddChild(defgroup3)
-  contentcontainer:AddChild(defgroup4)
-
   local defgroup5 = AceGUI:Create("SimpleGroup")
   defgroup5:SetLayout("Flow")
   defgroup5:SetWidth(editframe.Width - 100)
@@ -612,23 +606,44 @@ function GSE:GUIDrawMetadataEditor(container)
   mythicplusdropdown:SetCallback('OnLeave', function ()
     GSE.ClearTooltip(editframe)
   end)
-  defgroup1:AddChild(defaultdropdown)
-  defgroup1:AddChild(spacerlabel4)
-  defgroup1:AddChild(raiddropdown)
-  defgroup2:AddChild(arenadropdown)
-  defgroup2:AddChild(spacerlabel5)
-  defgroup2:AddChild(pvpdropdown)
-  defgroup3:AddChild(mythicdropdown)
-  defgroup3:AddChild(spacerlabel6)
-  defgroup3:AddChild(mythicplusdropdown)
-  defgroup4:AddChild(heroicdropdown)
-  defgroup4:AddChild(spacerlabel7)
-  defgroup4:AddChild(dungeondropdown)
-  defgroup5:AddChild(Timewalkingdropdown)
-  defgroup5:AddChild(spacerlabel8)
-  defgroup5:AddChild(partydropdown)
+  
+  if GSE.GameMode == 1 then
+    -- Classic WoW
+    defgroup1:AddChild(defaultdropdown)
+    defgroup1:AddChild(spacerlabel4)
+    defgroup1:AddChild(partydropdown)
+    defgroup2:AddChild(dungeondropdown)
+    defgroup2:AddChild(spacerlabel5)
+    defgroup2:AddChild(raiddropdown
+    defgroup3:AddChild(pvpdropdown))
+    defgroup3:AddChild(spacerlabel6)
 
-  contentcontainer:AddChild(defgroup5)
+    contentcontainer:AddChild(defgroup1)
+    contentcontainer:AddChild(defgroup2)
+    contentcontainer:AddChild(defgroup3)
+  else
+    defgroup1:AddChild(defaultdropdown)
+    defgroup1:AddChild(spacerlabel4)
+    defgroup1:AddChild(raiddropdown)
+    defgroup2:AddChild(arenadropdown)
+    defgroup2:AddChild(spacerlabel5)
+    defgroup2:AddChild(pvpdropdown)
+    defgroup3:AddChild(mythicdropdown)
+    defgroup3:AddChild(spacerlabel6)
+    defgroup3:AddChild(mythicplusdropdown)
+    defgroup4:AddChild(heroicdropdown)
+    defgroup4:AddChild(spacerlabel7)
+    defgroup4:AddChild(dungeondropdown)
+    defgroup5:AddChild(Timewalkingdropdown)
+    defgroup5:AddChild(spacerlabel8)
+    defgroup5:AddChild(partydropdown)
+
+    contentcontainer:AddChild(defgroup1)
+    contentcontainer:AddChild(defgroup2)
+    contentcontainer:AddChild(defgroup3)
+    contentcontainer:AddChild(defgroup4)
+    contentcontainer:AddChild(defgroup5)
+  end
 
   container:AddChild(scrollcontainer)
 end
