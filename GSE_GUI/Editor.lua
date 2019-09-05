@@ -614,8 +614,8 @@ function GSE:GUIDrawMetadataEditor(container)
     defgroup1:AddChild(partydropdown)
     defgroup2:AddChild(dungeondropdown)
     defgroup2:AddChild(spacerlabel5)
-    defgroup2:AddChild(raiddropdown
-    defgroup3:AddChild(pvpdropdown))
+    defgroup2:AddChild(raiddropdown)
+    defgroup3:AddChild(pvpdropdown)
     defgroup3:AddChild(spacerlabel6)
 
     contentcontainer:AddChild(defgroup1)
