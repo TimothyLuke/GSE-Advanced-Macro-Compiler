@@ -585,7 +585,11 @@ local function ClassicGetSpellInfo(spellID)
   return name,rank,icon,castTime,minRange,maxRange, sid;
 end
 
-----------
+
+--- Test override of GetSpellInfo
+function GSE.ClassicGetSpellInfo(spellID)
+  return ClassicGetSpellInfo(spellID)
+end
 
 --- Converts a string spell name to an id and back again.
 function GSE.GetSpellId(spellstring, mode)
