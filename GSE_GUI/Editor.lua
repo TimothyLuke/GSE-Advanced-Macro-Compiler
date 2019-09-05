@@ -606,7 +606,7 @@ function GSE:GUIDrawMetadataEditor(container)
   mythicplusdropdown:SetCallback('OnLeave', function ()
     GSE.ClearTooltip(editframe)
   end)
-  
+
   if GSE.GameMode == 1 then
     -- Classic WoW
     defgroup1:AddChild(defaultdropdown)
