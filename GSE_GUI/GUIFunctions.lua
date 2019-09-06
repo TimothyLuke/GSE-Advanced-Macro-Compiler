@@ -69,6 +69,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     sequence = GSE.CloneSequence(GSELibrary[classid][sequenceName], true)
     GSE.GUIEditFrame.NewSequence = false
   end
+  GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
@@ -87,7 +88,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   incomingframe:Hide()
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)
-    GSE.GUIEditFrame:SetStatusText(L["This sequence is Read Only and unable to be edited."])
+    GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString .. " " .. L["This sequence is Read Only and unable to be edited."])
   end
   GSE.GUIEditFrame:Show()
 
