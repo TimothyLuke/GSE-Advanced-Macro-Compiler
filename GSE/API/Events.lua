@@ -243,6 +243,10 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
   GSE.ReloadSequences()
 end
 
+function GSE:PLAYER_LEVEL_UP()
+  GSE.ReloadSequences()
+end
+
 function GSE:GROUP_ROSTER_UPDATE(...)
   -- Serialisation stuff
   GSE.sendVersionCheck()
@@ -266,6 +270,7 @@ GSE:RegisterEvent('ADDON_LOADED')
 GSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
+GSE:RegisterEvent("PLAYER_LEVEL_UP")
 
 local function PrintGnomeHelp()
   GSE.Print(L["GnomeSequencer was originally written by semlar of wowinterface.com."], GNOME)
