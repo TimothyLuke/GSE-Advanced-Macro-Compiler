@@ -1087,7 +1087,12 @@ end
 
 --- Load in the sample macros for the current class.
 function GSE.LoadSampleMacros(classID)
-  GSE.ImportCompressedMacroCollection(Statics.SampleMacros[classID])
+  if not GSE.isEmpty() then
+    GSE.ImportCompressedMacroCollection(Statics.SampleMacros[classID])
+    GSE.Print(L["The Sample Macros have been reloaded."])
+  else
+    GSE.Print(L["No Sample Macros are available yet for this class."])
+  end
 end
 
 

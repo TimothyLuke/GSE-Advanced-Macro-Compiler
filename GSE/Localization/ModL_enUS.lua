@@ -507,3 +507,6 @@ L["Hide Minimap Icon for LibDataBroker (LDB) data text."] = true
 -- GSE 2.4.15 - Missing translations
 L["Raid setting changed to Default."] = true
 L["Mythic setting changed to Default."] = true
+
+-- GSE 2.4.18
+L["No Sample Macros are available yet for this class."] = true
