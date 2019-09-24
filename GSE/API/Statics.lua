@@ -3,14 +3,14 @@ local Statics = GSE.Static
 local L = GSE.L
 GSELibrary = {}
 
-Statics.CastCmds = { 
-  use = true, 
-  cast = true, 
-  spell = true, 
-  cancelaura = true, 
-  cancelform = true, 
-  stopmacro = true, 
-  petautocastoff = true, 
+Statics.CastCmds = {
+  use = true,
+  cast = true,
+  spell = true,
+  cancelaura = true,
+  cancelform = true,
+  stopmacro = true,
+  petautocastoff = true,
   petautocaston = true
    }
 

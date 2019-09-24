@@ -590,14 +590,14 @@ local function ClassicGetSpellInfo(spellID)
   local name,rank,icon,castTime,minRange,maxRange, sid=GetSpellInfo( spellID );
   -- only check rank if classic.
   if GSE.GameMode == 1 then
-    
+
     if GSE.isEmpty(rank) then
       -- check if the rank is the same as the highest.
       --print("no rank found for " .. spellID)
       rank = GetSpellRank(spellID)
       if pcall(function () tonumber(spellID) end) then
         --GSE.PrintDebugMessage("pcall passed")
-        rank = GetSpellRank(tonumber(spellID)) 
+        rank = GetSpellRank(tonumber(spellID))
         local testName,_,_,_,_,_, testid=GetSpellInfo( name );
         --GSE.PrintDebugMessage(testName, testid, spellID, rank)
         local testRank = GetSpellRank(tonumber(testid))
