@@ -3,7 +3,25 @@ local Statics = GSE.Static
 local L = GSE.L
 GSELibrary = {}
 
-Statics.CastCmds = { use = true, cast = true, spell = true, cancelaura = true, cancelform = true, stopmacro = true, petautocastoff = true, petautocaston = true, petattack = true }
+Statics.CastCmds = { 
+  use = true, 
+  cast = true, 
+  spell = true, 
+  cancelaura = true, 
+  cancelform = true, 
+  stopmacro = true, 
+  petautocastoff = true, 
+  petautocaston = true
+   }
+
+Statics.MacroCommands = {
+  "petattack",
+  "dismount",
+  "shoot",
+  "startattack",
+  "stopattack",
+  "targetenemy"
+}
 
 Statics.CleanStrings = {
   [1] = "/console Sound_EnableSFX 0%;",

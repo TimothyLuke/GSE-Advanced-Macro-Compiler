@@ -6,9 +6,9 @@ local GNOME = Statics.DebugModules["Translator"]
 local L = GSE.L
 
 
+
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
 -- Mode of "STRING" will return local names where mode "ID" will return id's
-
 function GSE.TranslateSequence(sequence, sequenceName, mode)
   GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
@@ -188,6 +188,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines)
     end
 
     local foundspell = GSE.GetSpellId(etc, mode)
+    -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
     if foundspell then
       GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell , GNOME )
       output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
@@ -550,10 +551,6 @@ local spell_ranks=table.concat(
   "................................................................................................................................",
 });
 
-local string_byte=string.byte;
-local string_find=string.find;
-local string_sub =string.sub;
-
 local ranks=
 {
   [49]= 1;[50]= 2;[51]= 3;[52]= 4;[53]= 5;[54]= 6;[55]= 7;[56]= 8;[57]= 9;
@@ -563,24 +560,47 @@ local ranks=
 
 local function GetSpellRank(spellID)
   if(type(spellID)=="number") then
-    return ranks[string_byte(spell_ranks,spellID)];
-    elseif(type(spellID)=="string") then
-         local s=string_find(spellID,"%(");
-     if(s)then
-       local e=string_find(spellID,"%)",s);
-       if(e) then
-           rank=string_sub(spellID,s+1,e-1);
-         return rank;
-       end
-     end
+    return ranks[string.byte(spell_ranks,spellID)];
+  elseif(type(spellID)=="string") then
+    local s=string.find(spellID,"%(");
+    --print("s:" .. s)
+    if(s)then
+      local e=string.find(spellID,"%)",s);
+      if(e) then
+        --print("s:" .. s)
+        rank=string.sub(spellID,s+1,e-1);
+        GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
+        return string.match(rank, "%d+");
+      end
+    end
   end
 end
+
 
 local function ClassicGetSpellInfo(spellID)
   local name,rank,icon,castTime,minRange,maxRange, sid=GetSpellInfo( spellID );
   -- only check rank if classic.
   if GSE.GameMode == 1 then
-    rank = rank or GetSpellRank(spellID);
+    
+    if GSE.isEmpty(rank) then
+      -- check if the rank is the same as the highest.
+      --print("no rank found for " .. spellID)
+      rank = GetSpellRank(spellID)
+      if pcall(function () tonumber(spellID) end) then
+        --GSE.PrintDebugMessage("pcall passed")
+        rank = GetSpellRank(tonumber(spellID)) 
+        local testName,_,_,_,_,_, testid=GetSpellInfo( name );
+        --GSE.PrintDebugMessage(testName, testid, spellID, rank)
+        local testRank = GetSpellRank(tonumber(testid))
+        if testRank == rank then
+          rank = nil
+        end
+      else
+
+        print("pcall failed:", err)
+      end
+    end
+    --print("Did rank check found: " .. (rank or "No Rank"))
   end
   return name,rank,icon,castTime,minRange,maxRange, sid;
 end
@@ -600,7 +620,7 @@ function GSE.GetSpellId(spellstring, mode)
   local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
   if mode == "STRING" then
     if not GSE.isEmpty(rank) then
-      returnval = name .. "(" .. rank .. ")"
+      returnval = name .. "(Rank " .. rank .. ")"
     else
       returnval = name
     end
@@ -623,6 +643,7 @@ function GSE.GetSpellId(spellstring, mode)
       GSE.PrintDebugMessage("Nothing was there to be found" , "Translator")
     end
   end
+  --print("returning " .. returnval .. " from " .. spellstring)
   return returnval
 end
 
