@@ -592,22 +592,27 @@ local function ClassicGetSpellInfo(spellID)
   if GSE.GameMode == 1 then
 
     if GSE.isEmpty(rank) then
-      -- check if the rank is the same as the highest.
-      --print("no rank found for " .. spellID)
-      rank = GetSpellRank(spellID)
-      if pcall(function () tonumber(spellID) end) then
-        --GSE.PrintDebugMessage("pcall passed")
-        rank = GetSpellRank(tonumber(spellID))
-        local testName,_,_,_,_,_, testid=GetSpellInfo( name );
-        --GSE.PrintDebugMessage(testName, testid, spellID, rank)
-        local testRank = GetSpellRank(tonumber(testid))
-        if testRank == rank then
-          rank = nil
-        end
-      else
+      if not GSE.GetCurrentClassID() == 1 and not GSE.GetCurrentClassID() == 4 then
+        -- check if the rank is the same as the highest.
+        --print("no rank found for " .. spellID)
+        rank = GetSpellRank(spellID)
+        if pcall(function () tonumber(spellID) end) then
+          --GSE.PrintDebugMessage("pcall passed")
+          rank = GetSpellRank(tonumber(spellID))
+          local testName,_,_,_,_,_, testid=GetSpellInfo( name );
+          --GSE.PrintDebugMessage(testName, testid, spellID, rank)
+          local testRank = GetSpellRank(tonumber(testid))
+          if testRank == rank then
+            rank = nil
+          end
+        else
 
-        print("pcall failed:", err)
+          print("pcall failed:", err)
+        end
       end
+    else
+      -- dont set a rank for warriors and rogues
+      rank = nil
     end
     --print("Did rank check found: " .. (rank or "No Rank"))
   end
