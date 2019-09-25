@@ -8,10 +8,16 @@ describe('API Translator', function()
     require("../GSE/API/translator")
   end)
 
-  it("Passes through non spell commands ", function()
-    assert.are.equal("/targetenemy", GSE.TranslateString("/targetenemy", "STRING"))
+  it("Passes through non spell commands and adds the things", function()
+    assert.are.equal("|cffddaaff/targetenemy|r", GSE.TranslateString("/targetenemy", "STRING"))
 
   end)
+
+  it("Passes through unknown spell commands ", function()
+    assert.are.equal("/somethingsomethingdarkside", GSE.TranslateString("/somethingsomethingdarkside", "STRING"))
+
+  end)
+
 
   it("checks that comments are processed", function()
     local originalstring = '-- This is a comment'
