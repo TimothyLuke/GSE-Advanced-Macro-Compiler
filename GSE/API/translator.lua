@@ -616,6 +616,12 @@ local function ClassicGetSpellInfo(spellID)
     end
     --print("Did rank check found: " .. (rank or "No Rank"))
   end
+  -- allows for a trinket to be part of a castsequence.
+  if tostring(spellID) == "13" or tostring(spellID) == "14" then
+    name = tostring(spellID)
+    sid = tonumber(spellID)
+  end
+  
   return name,rank,icon,castTime,minRange,maxRange, sid;
 end
 
