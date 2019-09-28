@@ -621,7 +621,6 @@ local function ClassicGetSpellInfo(spellID)
     name = tostring(spellID)
     sid = tonumber(spellID)
   end
-  
   return name,rank,icon,castTime,minRange,maxRange, sid;
 end
 
