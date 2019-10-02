@@ -25,7 +25,14 @@ function GSE.TraceSequence(button, step, task)
     else
       manaOutput =  GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
     end
-    local castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+    local castingspell, castspellid
+    
+    if GSE.GameMode == 1 then 
+      print(CastingInfo())
+      castingspell, _, _, _, _, _, castspellid, _ = CastingInfo()
+    else
+      castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+    end
     if not GSE.isEmpty(castingspell) then
       CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
     else
