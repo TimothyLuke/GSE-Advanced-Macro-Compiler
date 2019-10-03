@@ -604,7 +604,7 @@ local function ClassicGetSpellInfo(spellID)
           if testRank == rank then
             rank = nil
           end
-        else
+        --else
           --print("pcall failed:", err)
         end
       else
