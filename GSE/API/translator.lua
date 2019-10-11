@@ -639,7 +639,7 @@ function GSE.GetSpellId(spellstring, mode)
   local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
   if mode == "STRING" then
     if not GSE.isEmpty(rank) then
-      returnval = name .. "(Rank " .. rank .. ")"
+      returnval = name .. "(" .. L["Rank"] .." .. rank .. ")"
     else
       returnval = name
     end

@@ -510,3 +510,6 @@ L["Mythic setting changed to Default."] = true
 
 -- GSE 2.4.18
 L["No Sample Macros are available yet for this class."] = true
+
+-- GSE 2.4.22
+L["Rank"] = true
