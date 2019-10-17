@@ -513,3 +513,8 @@ L["No Sample Macros are available yet for this class."] = true
 
 -- GSE 2.4.22
 L["Rank"] = true
+
+-- GSE 2.4.23
+L["Clear Keybindings"] = true
+L["This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."] = true
+L["Clear Common Keybindings"] = true

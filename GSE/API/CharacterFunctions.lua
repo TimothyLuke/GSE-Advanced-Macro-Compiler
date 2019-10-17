@@ -116,3 +116,25 @@ function GSE.LoadWeakauras(str)
     WeakAuras.ImportString(str)
   end
 end
+
+if not SaveBindings then
+  function SaveBindings(p)
+    AttemptToSaveBindings(p)
+  end
+end
+
+--- This function clears the Shift+n and CTRL+x keybindings.
+function GSE.ClearCommonKeyBinds()
+  local combinators = {"SHIFT-", "CTRL-", "ALT-"}
+  local defaultbuttons = {"1","2","3","4", "5","6","7","8","9","0","-","="}
+  for _,p in ipairs(combinators) do
+    for _,v in ipairs(defaultbuttons) do
+      SetBinding(p..v)
+      GSE.PrintDebugMessage("Cleared KeyCombination " .. p..v )
+
+    end
+  end
+  -- Save for this character
+  SaveBindings(2)
+  GSE.Print("Common Keybinding combinations cleared for this character.")
+end

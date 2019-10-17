@@ -274,10 +274,24 @@ function GSE.GetOptionsTable()
         order = 2,
         type = "group",
         args = {
+          clearCommonKeyBindsTitle = {
+            type = "header",
+            name = L["Clear Common Keybindings"],
+            order = 500
+          },
+          clearCommonKeyBinds = {
+            name = L["Clear Keybindings"],
+            desc = L["This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."],
+            type = "execute",
+            func = function(info, val)
+              GSE.ClearCommonKeyBinds()
+            end,
+            order = 501
+          },
           enablemacrostubupdatetitle = {
             type = "header",
             name = L["Update Macro Stubs."],
-            order = 500
+            order = 600
           },
           updatemacrobuttonstubs = {
             name = L["Update Macro Stubs"],
@@ -286,125 +300,126 @@ function GSE.GetOptionsTable()
             func = function(info, val)
               GSE.UpdateMacroString()
             end,
-            order = 501
+            order = 601
           },
+
           resetbuttontitle = {
             type = "header",
             name = L["Mouse Buttons."],
-            order = 600
+            order = 550
           },
           resetLeftButton = {
             name = L["Left Mouse Button"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["LeftButton"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["LeftButton"] = value end,
-            order = 601
+            order = 551
           },
           resetRightButton = {
             name = L["Right Mouse Button"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["RightButton"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["RightButton"] = value end,
-            order = 602
+            order = 552
           },
           resetMiddleButton = {
             name = L["Middle Mouse Button"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["MiddleButton"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["MiddleButton"] = value end,
-            order = 603
+            order = 553
           },
           resetButton4 = {
             name = L["Mouse Button 4"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["Button4"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["Button4"] = value end,
-            order = 604
+            order = 554
           },
           resetButton5 = {
             name = L["Mouse Button 5"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["Button5"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["Button5"] = value end,
-            order = 605
+            order = 555
           },
           resetalttitle = {
             type = "header",
             name = L["Alt Keys."],
-            order = 610
+            order = 560
           },
           resetAnyAltKey = {
             name = L["Any Alt Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["Alt"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["Alt"] = value end,
-            order = 611
+            order = 561
           },
           resetLeftAltKey = {
             name = L["Left Alt Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["LeftAlt"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["LeftAlt"] = value end,
-            order = 612
+            order = 562
           },
           resetRightAltKey = {
             name = L["Right Alt Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["RightAlt"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["RightAlt"] = value end,
-            order = 613
+            order = 563
           },
           resetcontroltitle = {
             type = "header",
             name = L["Control Keys."],
-            order = 620
+            order = 560
           },
           resetAnyControlKey = {
             name = L["Any Control Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["Control"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["Control"] = value end,
-            order = 621
+            order = 571
           },
           resetLeftControlKey = {
             name = L["Left Control Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["LeftControl"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["LeftControl"] = value end,
-            order = 622
+            order = 572
           },
           resetRightControlKey = {
             name = L["Right Control Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["RightControl"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["RightControl"] = value end,
-            order = 623
+            order = 573
           },
           resetshifttitle = {
             type = "header",
             name = L["Shift Keys."],
-            order = 630
+            order = 570
           },
           resetAnyShiftKey = {
             name = L["Any Shift Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["Shift"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["Shift"] = value end,
-            order = 631
+            order = 581
           },
           resetLeftShiftKey = {
             name = L["Left Shift Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["LeftShift"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["LeftShift"] = value end,
-            order = 632
+            order = 582
           },
           resetRightShiftKey = {
             name = L["Right Shift Key"],
             type = "toggle",
             get = function() return   GSEOptions.MacroResetModifiers["RightShift"] end,
             set = function(key, value)   GSEOptions.MacroResetModifiers["RightShift"] = value end,
-            order = 633
+            order = 583
           },
 
         },
