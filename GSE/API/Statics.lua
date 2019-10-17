@@ -555,5 +555,6 @@ Statics.Patrons = {
   "rezaadams",
   "roberto.zanini",
   "russbakr",
-  "susietoo12"
+  "susietoo12",
+  "siko760"
 }
