@@ -552,6 +552,7 @@ Statics.Patrons = {
   "dblakesneed",
   "drobaserge",
   "faultless1986",
+  "rchorton",
   "rezaadams",
   "roberto.zanini",
   "russbakr",
