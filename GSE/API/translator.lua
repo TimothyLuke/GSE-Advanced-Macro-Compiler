@@ -573,12 +573,12 @@ local function GetSpellRank(spellID)
   elseif(type(spellID)=="string") then
     local s=string.find(spellID,"%(");
     --print("s:" .. s)
-    if(s)then
+    if(s) and not string.gsub(spellID, "Feral", "") then
       local e=string.find(spellID,"%)",s);
       if(e) then
         --print("s:" .. s)
         rank=string.sub(spellID,s+1,e-1);
-        GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
+        --GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
         return string.match(rank, "%d+");
       end
     end
