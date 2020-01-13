@@ -709,6 +709,7 @@ function GSE.OOCUpdateSequence(name,sequence)
     if not GSE.isEmpty(sequence.LoopLimit) then
       gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
     end
+    GSE.UpdateIcon(gsebutton, true)
   else
     GSE.Print(string.format(L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."], name))
   end
