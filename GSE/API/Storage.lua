@@ -759,6 +759,13 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
+function GSE.enforceMinimumVersion(sequence, line)
+  if string.sub(line, 1, 12) == "/click pause" then
+    sequence.EnforceCompatability = true
+    GSEVersion = "2.5.0"
+  end
+end
+
 
 --- Compares two sequences and return a boolean if they match.  If they do not
 --    match then it will print an element by element comparison.  This comparison
