@@ -307,7 +307,7 @@ if string.sub(macros[checkstep], 1, 12) == "/click pause" then
   local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
   local currentMS = clicks * ms
   if currentMS < localpauselimit then
-    step = step - 1
+    step = checkstep
     clicks = clicks + 1
   else
     clicks = 1
@@ -458,7 +458,7 @@ if string.sub(macros[checkstep], 1, 12) == "/click pause" then
   local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
   local currentMS = clicks * ms
   if currentMS < localpauselimit then
-    step = step - 1
+    step = checkstep
     clicks = clicks + 1
   else
     clicks = 1

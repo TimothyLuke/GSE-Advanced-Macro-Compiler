@@ -9,6 +9,7 @@ function GSE.PerformOneOffEvents()
   GSE.Update2410()
   GSE.Update2411()
   GSE.Update2415()
+  -- GSE.Update2500()
 end
 
 function GSE.UpdateFrom735to801()
@@ -40,6 +41,32 @@ function GSE.Update2305()
   end
   GSEOptions.Update2305 = true
 end
+
+-- function GSE.Update2500()
+--   if GSE.isEmpty(GSEOptions.Update2500) then
+--      GSELibrary[0]['pause'] = {
+--       Author="TimothyLuke",
+--       SpecID=0,
+--       Talents = "",
+--       Help = [[This macro does nothing.  It is used by GSE internally.]],
+--       Default=1,
+--       MacroVersions = {
+--         [1] = {
+--           StepFunction = "Sequential",
+--           KeyPress={
+--           },
+--           PreMacro={
+--           },
+--           PostMacro={
+--           },
+--           KeyRelease={
+--           }
+--         }
+--       }
+--     }
+--   end
+--   GSEOptions.Update2500 = true
+-- end
 
 function GSE.Update2410()
   if GSE.isEmpty(GSEOptions.Update2410) then
