@@ -302,7 +302,7 @@ ms = tonumber(ms)
 self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
 %s
 local checkstep = step - 1
-if checkstep == 0 then 
+if checkstep == 0 then
   checkstep = #macros
 end
 if string.sub(macros[checkstep], 1, 12) == "/click pause" then

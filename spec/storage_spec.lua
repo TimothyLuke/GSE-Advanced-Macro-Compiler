@@ -300,7 +300,7 @@ self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[s
   end
 
 local checkstep = step - 1
-if checkstep == 0 then 
+if checkstep == 0 then
   checkstep = #macros
 end
 if string.sub(macros[checkstep], 1, 12) == "/click pause" then
@@ -451,7 +451,7 @@ self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[s
   end
 
 local checkstep = step - 1
-if checkstep == 0 then 
+if checkstep == 0 then
   checkstep = #macros
 end
 if string.sub(macros[checkstep], 1, 12) == "/click pause" then
