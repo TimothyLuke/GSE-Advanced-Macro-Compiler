@@ -268,6 +268,8 @@ Statics.LoopPriorityImplementation = [[
   end
 ]]
 
+
+
 Statics.PrintKeyModifiers = [[
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
 print("Left alt key " .. tostring(IsLeftAltKeyDown()))
@@ -288,19 +290,39 @@ local loopstart = self:GetAttribute('loopstart') or 1
 local loopstop = self:GetAttribute('loopstop') or #macros
 local loopiter = self:GetAttribute('loopiter') or 1
 local looplimit = self:GetAttribute('looplimit') or 0
+local clicks = self:GetAttribute('clicks') or 0
+local ms = self:GetAttribute('ms') or 1
 loopstart = tonumber(loopstart)
 loopstop = tonumber(loopstop)
 loopiter = tonumber(loopiter)
 looplimit = tonumber(looplimit)
+clicks = tonumber(clicks)
 step = tonumber(step)
+ms = tonumber(ms)
 self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
 %s
+local checkstep = step - 1
+if checkstep == 0 then 
+  checkstep = #macros
+end
+if string.sub(macros[checkstep], 1, 12) == "/click pause" then
+  local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
+  local currentMS = clicks * ms
+  if currentMS < localpauselimit then
+    step = step - 1
+    clicks = clicks + 1
+  else
+    clicks = 1
+  end
+end
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
   step = 1
 end
 self:SetAttribute('step', step)
 self:SetAttribute('loopiter', loopiter)
+self:SetAttribute('clicks', clicks)
+self:SetAttribute('ms', ms)
 self:CallMethod('UpdateIcon')
 ]=]
 

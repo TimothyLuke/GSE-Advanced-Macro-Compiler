@@ -518,3 +518,10 @@ L["Rank"] = true
 L["Clear Keybindings"] = true
 L["This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."] = true
 L["Clear Common Keybindings"] = true
+
+-- GSE 2.5.0
+L["MS Click Rate"] = true
+L["The milliseconds being used in key click delay."] = true
+L["Use External MS Timings"] = true
+L["Enable timing functions by using Click refresh speed as a pseudo timer."] = true
+L["Millisecond click settings"] = true

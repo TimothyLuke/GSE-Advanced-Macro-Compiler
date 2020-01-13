@@ -135,6 +135,27 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.UseWLMExportFormat end,
             order = 300
           },
+          MSFiltertitle1 = {
+            type = "header",
+            name = L["Millisecond click settings"],
+            order = 380
+          },
+          externalMillisecondClickRate = {
+            name = L["MS Click Rate"],
+            desc = L["The milliseconds being used in key click delay."],
+            type = "input",
+            set = function(info,val) GSEOptions.msClickRate = val end,
+            get = function(info) return GSEOptions.msClickRate and GSEOptions.msClickRate or "" end,
+            order = 385
+          },
+          useExternalMSTimings = {
+            name = L["Use External MS Timings"],
+            desc = L["Enable timing functions by using Click refresh speed as a pseudo timer."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.useExternalMSTimings = val end,
+            get = function(info) return GSEOptions.useExternalMSTimings and GSEOptions.useExternalMSTimings or false end,
+            order = 390
+          },
           filtertitle1 = {
             type = "header",
             name = L["Filter Macro Selection"],

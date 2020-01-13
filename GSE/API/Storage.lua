@@ -613,6 +613,12 @@ function GSE.ResetButtons()
     local gsebutton = _G[k]
     if gsebutton:GetAttribute("combatreset") == true then
       gsebutton:SetAttribute("step",1)
+      gsebutton:SetAttribute("clicks",1)
+      if GSEOptions.useExternalMSTimings then
+        gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
+      else
+        gsebutton:SetAttribute("ms", 1)
+      end
       GSE.UpdateIcon(gsebutton, true)
       GSE.UsedSequences[k] = nil
     end
@@ -680,6 +686,12 @@ function GSE.OOCUpdateSequence(name,sequence)
 
     gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
     gsebutton:SetAttribute("step",1)
+    gsebutton:SetAttribute("clicks",1)
+    if GSEOptions.useExternalMSTimings then
+      gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
+    else
+      gsebutton:SetAttribute("ms", 100)
+    end
     gsebutton:SetAttribute('KeyPress',table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
     GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. gsebutton:GetAttribute('KeyPress'))
     gsebutton:SetAttribute('KeyRelease',table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
@@ -738,6 +750,8 @@ function GSE.DebugDumpButton(SequenceName)
   GSE.Print("Button name: "  .. SequenceName)
   GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
   GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
+  GSE.Print("Clicks" .. _G[SequenceName]:GetAttribute('clicks'))
+  GSE.Print("ms" .. _G[SequenceName]:GetAttribute('ms'))
   GSE.Print("LoopMacro?" .. tostring(looper))
   GSE.Print("====================================\nStepFunction\n====================================")
   GSE.Print(GSE.PrepareOnClickImplementation(GSELibrary[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)]))
