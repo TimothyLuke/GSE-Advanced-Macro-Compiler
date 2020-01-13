@@ -762,7 +762,7 @@ end
 function GSE.enforceMinimumVersion(sequence, line)
   if string.sub(line, 1, 12) == "/click pause" then
     sequence.EnforceCompatability = true
-    GSEVersion = "2.5.0"
+    sequence.GSEVersion = "2.5.0"
   end
 end
 
