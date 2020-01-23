@@ -107,7 +107,13 @@ function GSE:ZONE_CHANGED_NEW_AREA()
   else
     GSE.inArena = false
   end
-  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena) .. " inTimeWalking " .. tostring(GSE.inTimeWalking) .. " inMythicPlus " .. tostring(GSE.inMythicPlus),  Statics.DebugModules["API"])
+  if type == "scenario" then
+    GSE.inScenario = true
+  else
+    GSE.inScenario = false
+  end
+
+  GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " .. tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " .. tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena) .. " inTimeWalking " .. tostring(GSE.inTimeWalking) .. " inMythicPlus " .. tostring(GSE.inMythicPlus) .. " inScenario " .. tostring(GSE.inScenario),  Statics.DebugModules["API"])
   GSE.ReloadSequences()
 end
 

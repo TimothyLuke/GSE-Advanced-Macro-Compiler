@@ -32,6 +32,7 @@ editframe.Party = 1
 editframe.Arena = 1
 editframe.Timewalking = 1
 editframe.MythicPlus = 1
+editframe.Scenario = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
@@ -564,6 +565,10 @@ function GSE:GUIDrawMetadataEditor(container)
   defgroup5:SetLayout("Flow")
   defgroup5:SetWidth(editframe.Width - 100)
 
+  local defgroup6 = AceGUI:Create("SimpleGroup")
+  defgroup6:SetLayout("Flow")
+  defgroup6:SetWidth(editframe.Width - 100)
+
   local Timewalkingdropdown = AceGUI:Create("Dropdown")
   Timewalkingdropdown:SetLabel(L["Timewalking"])
   Timewalkingdropdown:SetWidth(250)
@@ -607,6 +612,26 @@ function GSE:GUIDrawMetadataEditor(container)
     GSE.ClearTooltip(editframe)
   end)
 
+  local scenariodropdown = AceGUI:Create("Dropdown")
+  scenariodropdown:SetLabel(L["Scenario"])
+  scenariodropdown:SetWidth(250)
+  scenariodropdown:SetList(GSE.GetVersionList())
+  scenariodropdown:SetValue(tostring(editframe.Scenario))
+  scenariodropdown:SetCallback("OnValueChanged", function (obj,event,key)
+    if editframe.Sequence.Default == tonumber(key) then
+      editframe.Sequence.Scenario = nil
+    else
+      editframe.Sequence.Scenario = tonumber(key)
+      editframe.Scenario = tonumber(key)
+    end
+  end)
+  scenariodropdown:SetCallback('OnEnter', function ()
+    GSE.CreateToolTip(L["Mythic+"], L["The version of this macro to use in Mythic+ Dungeons."], editframe)
+  end)
+  scenariodropdown:SetCallback('OnLeave', function ()
+    GSE.ClearTooltip(editframe)
+  end)
+
   if GSE.GameMode == 1 then
     -- Classic WoW
     defgroup1:AddChild(defaultdropdown)
@@ -637,12 +662,14 @@ function GSE:GUIDrawMetadataEditor(container)
     defgroup5:AddChild(Timewalkingdropdown)
     defgroup5:AddChild(spacerlabel8)
     defgroup5:AddChild(partydropdown)
+    defgroup6:AddChild(scenariodropdown)
 
     contentcontainer:AddChild(defgroup1)
     contentcontainer:AddChild(defgroup2)
     contentcontainer:AddChild(defgroup3)
     contentcontainer:AddChild(defgroup4)
     contentcontainer:AddChild(defgroup5)
+    contentcontainer:AddChild(defgroup6)
   end
 
   container:AddChild(scrollcontainer)
