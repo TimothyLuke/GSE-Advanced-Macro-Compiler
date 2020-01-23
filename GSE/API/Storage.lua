@@ -253,6 +253,8 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     vers = GSELibrary[classid][sequenceName].Timewalking
   elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].MythicPlus) and GSE.inMythicPlus then
     vers = GSELibrary[classid][sequenceName].MythicPlus
+  elseif not GSE.isEmpty(GSELibrary[classid][sequenceName].Scenario) and GSE.inScenario then
+    vers = GSELibrary[classid][sequenceName].Scenario
   end
   return vers
 end
