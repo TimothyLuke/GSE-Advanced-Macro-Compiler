@@ -570,6 +570,7 @@ Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
 Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
 Statics.Patrons = {
+  "axellis",
   "badcath4x",
   "bf2champ",
   "dblakesneed",
