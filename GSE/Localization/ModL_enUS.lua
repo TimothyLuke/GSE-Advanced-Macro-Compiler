@@ -525,3 +525,6 @@ L["The milliseconds being used in key click delay."] = true
 L["Use External MS Timings"] = true
 L["Enable timing functions by using Click refresh speed as a pseudo timer."] = true
 L["Millisecond click settings"] = true
+
+-- 2.5.3
+L["Scenario"] = true
