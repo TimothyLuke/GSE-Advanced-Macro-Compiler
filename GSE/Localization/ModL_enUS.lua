@@ -253,7 +253,6 @@ L["A sequence collision has occured.  Extra versions of this macro have been loa
 L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = true
 L["Macro unable to be imported."] = true
 L["Macro Import Successful."]= true
-L["Gnome Sequencer: Import a Macro String."] = true
 L["GSE Macro"] = true
 L["Legacy GS/GSE1 Macro"] = true
 L["Macro Collection to Import."] = true
@@ -528,3 +527,6 @@ L["Millisecond click settings"] = true
 
 -- 2.5.3
 L["Scenario"] = true
+
+-- 2.5.4
+L["GSE: Import a Macro String."] = true
