@@ -1387,7 +1387,7 @@ end
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     local returnstring = "<br/><strong>".. sequencename .."</strong>\n<em>Talents</em> " .. (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "<br/><br/>"
     if not GSE.isEmpty(sequence.Help) then
-      returnstring = "<em>Usage Information</em>\n" .. sequence.Help .. "<br/><br/>"
+      returnstring = "\n\n<em>Usage Information</em>\n" .. sequence.Help .. "<br/><br/>"
     end
     returnstring = returnstring .. "This macro contains " .. (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) .. "macro versions. " or "1 macro version. ") .. string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
     if (table.getn(sequence.MacroVersions) > 1) then
