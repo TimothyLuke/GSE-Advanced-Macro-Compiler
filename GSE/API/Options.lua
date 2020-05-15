@@ -689,6 +689,17 @@ function GSE.GetOptionsTable()
           --   imageHeight = 100;
           --   order = 5
           -- },
+          title5 = {
+            type = "header",
+            name = L["Version"],
+            order = 6,
+          },
+          aboutDescription = {
+            type = "description",
+            name = "GSE: " .. GSE.VersionString,
+            order = 7,
+          },
+          
           title4 = {
             type = "header",
             name = L["History"],

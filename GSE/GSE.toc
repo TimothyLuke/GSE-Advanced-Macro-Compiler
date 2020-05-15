@@ -2,7 +2,7 @@
 ## Interface: 80300
 #@end-retail@
 #@non-retail@
-# ## Interface: 11303
+# ## Interface: 11304
 #@end-non-retail@
 ## Title: |cff0000FFGSE2:|r |cFF00D1FFGnome Sequencer Enhanced|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.

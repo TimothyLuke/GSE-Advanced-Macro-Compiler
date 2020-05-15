@@ -2,7 +2,7 @@
 ## Interface: 80300
 #@end-retail@
 #@non-retail@
-# ## Interface: 11303
+# ## Interface: 11304
 #@end-non-retail@
 ## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
