@@ -689,16 +689,7 @@ function GSE.GetOptionsTable()
           --   imageHeight = 100;
           --   order = 5
           -- },
-          title5 = {
-            type = "header",
-            name = L["Version"],
-            order = 6,
-          },
-          aboutDescription = {
-            type = "description",
-            name = "GSE: " .. GSE.VersionString,
-            order = 7,
-          },
+
           
           title4 = {
             type = "header",
@@ -712,6 +703,16 @@ function GSE.GetOptionsTable()
             image = "Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
             imageWidth = 120;
             imageHeight = 120;
+          },
+          versionHeader = {
+            type = "header",
+            name = L["Version"],
+            order = 21,
+          },
+          versionDescription = {
+            type = "description",
+            name = "GSE: " .. GSE.VersionString,
+            order = 22,
           },
           title5 = {
             type = "header",

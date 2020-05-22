@@ -530,3 +530,6 @@ L["Scenario"] = true
 
 -- 2.5.4
 L["GSE: Import a Macro String."] = true
+
+-- 2.5.5
+L["Version"] = true
