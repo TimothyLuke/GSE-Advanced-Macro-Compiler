@@ -689,8 +689,6 @@ function GSE.GetOptionsTable()
           --   imageHeight = 100;
           --   order = 5
           -- },
-
-          
           title4 = {
             type = "header",
             name = L["History"],
