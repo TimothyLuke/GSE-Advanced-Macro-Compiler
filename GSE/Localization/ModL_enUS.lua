@@ -533,3 +533,7 @@ L["GSE: Import a Macro String."] = true
 
 -- 2.5.5
 L["Version"] = true
+
+-- 2.5.9
+L["The version of this macro to use in Scenarios."] = true
+L["Scenario setting changed to Default."] = true

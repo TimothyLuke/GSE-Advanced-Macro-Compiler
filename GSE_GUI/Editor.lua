@@ -15,6 +15,7 @@ local pvp = 1
 local arena = 1
 local mythic = 1
 local classid = GSE.GetCurrentClassID()
+local scenario = 1
 
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
@@ -626,7 +627,7 @@ function GSE:GUIDrawMetadataEditor(container)
     end
   end)
   scenariodropdown:SetCallback('OnEnter', function ()
-    GSE.CreateToolTip(L["Mythic+"], L["The version of this macro to use in Mythic+ Dungeons."], editframe)
+    GSE.CreateToolTip(L["Scenario"], L["The version of this macro to use in Scenarios."], editframe)
   end)
   scenariodropdown:SetCallback('OnLeave', function ()
     GSE.ClearTooltip(editframe)
@@ -1138,7 +1139,10 @@ function GSE.GUIDeleteVersion(version)
     sequence.Timewalking = sequence.Default
     printtext = printtext .. " " .. L["Timewalking setting changed to Default."]
   end
-
+  if sequence.Scenario == version then
+    sequence.Scenario = sequence.Default
+    printtext = printtext .. " " .. L["Scenario setting changed to Default."]
+  end
 
   if sequence.Default > 1 then
     sequence.Default = tonumber(sequence.Default) - 1
@@ -1173,7 +1177,9 @@ function GSE.GUIDeleteVersion(version)
   if not GSE.isEmpty(sequence.Party) then
     sequence.Party = tonumber(sequence.Party) - 1
   end
-
+  if not GSE.isEmpty(sequence.Scenario) then
+    sequence.Scenario = tonumber(sequence.Scenario) - 1
+  end
   table.remove(sequence.MacroVersions, version)
   printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
   GSE.GUIEditorPerformLayout(editframe)

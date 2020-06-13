@@ -430,6 +430,9 @@ function GSE.ExportSequence(sequence, sequenceName, verbose, mode, hideversion)
     if not GSE.isEmpty(sequence.Party) then
       sequencemeta = sequencemeta .. "  Party=" ..sequence.Party .. ",\n"
     end
+    if not GSE.isEmpty(sequence.Scenario) then
+      sequencemeta = sequencemeta .. "  Scenario=" ..sequence.Party .. ",\n"
+    end
     local macroversions = "  MacroVersions = {\n"
     for k,v in pairs(sequence.MacroVersions) do
       local outputversion =  GSE.CleanMacroVersion(v)
@@ -1441,6 +1444,11 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
         if not GSE.isEmpty(sequence.Party) then
           if sequence.Party == k then
             returnstring = returnstring .. "<li>Open World Parties use version " .. k .. "</li>\n"
+          end
+        end
+        if not GSE.isEmpty(sequence.Scenario) then
+          if sequence.Party == k then
+            returnstring = returnstring .. "<li>Scenarios use version " .. k .. "</li>\n"
           end
         end
       end
