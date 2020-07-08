@@ -4,10 +4,11 @@ local L = GSE.L
 local Statics = GSE.Static
 local GSEPlugin = LibStub("AceAddon-3.0"):NewAddon(ModName, "AceEvent-3.0")
 
-local Sequences =  [
+-- replace these strings with the macro obtained from GSE's macro export 
+local Sequences =  {
   "asdfasdasdajsdhkajshdkashdakjsdhkajshdkajsdhsjahdaksjhdakjdhjsakdhjaksdh",
   "asdasdlkjhalksdjalksdjlaksdjlaksjdlkasjdlkasjdsklajdlkasjdlkasjdlkasjdlkasasdasdasd"
-] 
+}
 
 
 
@@ -27,6 +28,8 @@ GSEPlugin:RegisterMessage(Statics.ReloadMessage, "loadSequences")
 -- returns true to indicate that it wants you to send through update versions.  The super simple way is below.
 -- You could do specific things via the GSE API like adding an updated version and then setting it to be the default
 -- or pvp version.
+
+-- Note: You could change the loadSequences function to load specific updated sequences.
 if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
   loadSequences("Load", ModName)
 end
