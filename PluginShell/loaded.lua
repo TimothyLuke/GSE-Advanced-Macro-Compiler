@@ -29,7 +29,7 @@ GSEPlugin:RegisterMessage(Statics.ReloadMessage, "loadSequences")
 -- You could do specific things via the GSE API like adding an updated version and then setting it to be the default
 -- or pvp version.
 
--- Note: You could change the loadSequences function to load specific updated sequences.
-if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(library) then
+-- Note: You could change the loadSequences function to load specific updated sequence
+if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(Sequences)) then
   loadSequences("Load", ModName)
 end
