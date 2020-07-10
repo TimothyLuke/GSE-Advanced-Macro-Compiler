@@ -1,17 +1,11 @@
-local ModName, Library = ... -- Library will hold some stuff if there are other files, if not it won't.
+local ModName, Sequences = ... -- Sequences will bring in macros sotred in other other files
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
 local GSEPlugin = LibStub("AceAddon-3.0"):NewAddon(ModName, "AceEvent-3.0")
 
--- replace these strings with the macro obtained from GSE's macro export 
-local Sequences =  {
-  "asdfasdasdajsdhkajshdkashdakjsdhkajshdkajsdhsjahdaksjhdakjdhjsakdhjaksdh",
-  "asdasdlkjhalksdjalksdjlaksdjlaksjdlkasjdlkasjdsklajdlkasjdlkasjdlkasjdlkasasdasdasd"
-}
-
-
-
+-- This is an example only
+-- Sequences["newMacro"] = [[asdaksjdhfskjdfhgsdfsdf]]
 
 
 --- We make this a function as then we can register for the reload event within GSE
