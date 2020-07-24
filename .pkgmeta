@@ -15,7 +15,7 @@ externals:
         tag: Alpha
     GSE/Lib/CallbackHandler-1.0:
         url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
-        tag: Alpha
+        tag: latest
     GSE/Lib/AceConfig-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
         tag: Alpha
@@ -24,7 +24,7 @@ externals:
         tag: Alpha
     GSE/Lib/AceSerializer-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceSerializer-3.0
-        tag: Alpha
+        tag: latest
     GSE/Lib/AceComm-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
         tag: Alpha
