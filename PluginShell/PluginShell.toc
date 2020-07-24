@@ -1,4 +1,4 @@
-## Interface: 80100
+## Interface: 90000
 ## Title: |cffff0000GSE|r |cFF00D1FFPlugin Shell|r
 ## Notes: Sample of a plugin for GSE2
 ## Author: TimothyLuke
