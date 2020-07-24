@@ -6,34 +6,34 @@ externals:
         tag: latest
     GSE/Lib/AceAddon-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceLocale-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceEvent-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceEvent-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/CallbackHandler-1.0:
         url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceConfig-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceConsole-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConsole-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceSerializer-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceSerializer-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceComm-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceGUI-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/AceTimer-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceTimer-3.0
-        tag: latest
+        tag: r1237-alpha
     GSE/Lib/LibCompress:
         url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
         tag: latest
