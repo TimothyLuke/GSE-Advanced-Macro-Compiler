@@ -130,7 +130,7 @@ function GSE.TransmitSequence(key, channel, target)
   GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission )
   t.ClassID = classid
   t.SequenceName = SequenceName
-  t.Sequence = GSELibrary[classid][SequenceName]
+  t.Sequence = GSE.Library[classid][SequenceName]
   GSE.sendMessage(t, channel, target)
   GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end

@@ -1,7 +1,7 @@
 local GSE = GSE
 local Statics = GSE.Static
 local L = GSE.L
-GSELibrary = {}
+GSE.Library = {}
 
 Statics.CastCmds = {
   use = true,

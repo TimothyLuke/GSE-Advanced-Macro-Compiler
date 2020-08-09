@@ -17,14 +17,16 @@ function GSE.UpdateFrom735to801()
      GSEOptions.UseVerboseExportFormat = false
      -- Update Sequence Names to UPPERCASE
      --if next(GSELibrary) == nil then
-       for k,v in ipairs(GSELibrary) do
+       for k,v in ipairs(GSE.Library) do
          for i,j in pairs(v) do
            --i = string.upper(i)
-           GSELibrary[k][string.upper(i)] = j
+           GSE.Library[k][i] = nil
+           GSEStorage[k][i] = nil
+           GSEStorage[k][string.upper(i)] = GSE.EncodeMessage({string.upper(i), j})
+           GSE.Library[k][string.upper(i)] = j
            if (v == GSE.GetCurrentClassID() or v == 0) then
              GSE.CheckMacroCreated(string.upper(i), true)
            end
-           GSELibrary[k][i] = nil
          end
        end
      --end
@@ -90,4 +92,11 @@ function GSE.Update2415()
       GSE_C = {}
   end
   GSEOptions.Update2415 = true
+end
+
+function GSE.Update2601()
+  if GSE.isEmpty(GSEOptions.Update2601) then
+      
+  end
+  GSEOptions.Update2601 = true
 end

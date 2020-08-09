@@ -125,30 +125,36 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
 
-  if GSE.isEmpty(GSELibrary) then
-    GSELibrary = {}
+  if not GSE.isEmpty(GSELibrary) then
+    GSE.ImportLegacyStorage(GSELibrary)
   end
-  if GSE.isEmpty(GSELibrary[GSE.GetCurrentClassID()]) then
-    GSELibrary[GSE.GetCurrentClassID()] = {}
+
+
+
+  GSE.Library = {}
+  GSE.LoadStorage(GSE.Library)
+
+
+  if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
+    GSE.Library[GSE.GetCurrentClassID()] = {}
   end
-  if GSE.isEmpty(GSELibrary[0]) then
-    GSELibrary[0] = {}
+  if GSE.isEmpty(GSE.Library[0]) then
+    GSE.Library[0] = {}
   end
 
   local counter = 0
 
-  for k,v in pairs(GSELibrary[GSE.GetCurrentClassID()]) do
+  for k,v in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
     counter = counter + 1
     for i,j in ipairs(v.MacroVersions) do
-      GSELibrary[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+      GSE.Library[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
     end
   end
-  if not GSE.isEmpty(GSELibrary[0]) then
-
-    for k,v in pairs(GSELibrary[0]) do
+  if not GSE.isEmpty(GSE.Library[0]) then
+    for k,v in pairs(GSE.Library[0]) do
       counter = counter + 1
       for i,j in ipairs(v.MacroVersions) do
-        GSELibrary[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
+        GSE.Library[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
       end
     end
   end
@@ -160,9 +166,7 @@ function GSE:ADDON_LOADED(event, addon)
     end
   end
   GSE.PrintDebugMessage("I am loaded")
-  GSEOptions.UnfoundSpells = {}
-  GSEOptions.ErroneousSpellID = {}
-  GSEOptions.UnfoundSpellIDs = {}
+
   GSE:ZONE_CHANGED_NEW_AREA()
   GSE:SendMessage(Statics.CoreLoadedMessage)
 
@@ -367,6 +371,8 @@ function GSE:GSSlash(input)
     GSE_C[params[2]].name = params[2]
     GSE_C[params[2]].sequence = GSE.FindMacro(params[2])
     GSE_C[params[2]].button = _G[params[2]]
+  elseif command == "reloadLegacyStorage" then
+    GSE.ImportLegacyStorage(GSELegacyLibraryBackup)
   else
     if GSE.UnsavedOptions["GUI"] then
       GSE.GUIShowViewer()
@@ -407,10 +413,10 @@ function GSE:ProcessOOCQueue()
       elseif v.action == "Save" then
         GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
       elseif v.action == "Replace" then
-        if GSE.isEmpty(GSELibrary[v.classid][v.sequencename]) then
+        if GSE.isEmpty(GSE.Library[v.classid][v.sequencename]) then
           GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
         else
-          GSELibrary[v.classid][v.sequencename] = v.sequence
+          GSE.ReplaceMacro(v.classid,v.sequencename,v.sequence)
         end
         if v.checkmacro then
           GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
