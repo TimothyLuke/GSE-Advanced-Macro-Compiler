@@ -159,3 +159,10 @@ function setRetail()
   currentver = retail
 end
 
+function GSE.EncodeMessage(tab)
+  return tab
+end
+
+function GSE.DecodeMessage(tab)
+  return tab
+end
