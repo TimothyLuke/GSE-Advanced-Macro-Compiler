@@ -242,9 +242,8 @@ end
 
 --- Replace a current version of a Macro
 function GSE.ReplaceMacro(classid, sequenceName, sequence)
-    GSEStorage[classid][sequencename] = sequence
-    GSE.Library[classid][sequencename] = GSE.encodeMessage({sequenceName, GSEStorage[classid][sequencename]})
-
+    GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+    GSE.Library[classid][sequenceName] = sequence
 end
 
 --- Load the GSEStorage into a new table.
