@@ -6,6 +6,8 @@ GSE.VersionString = "2.0.00-18-g95ecb41";
 GNOME = "UnitTest"
 
 GSELibrary = {}
+GSEStorage = {}
+GSE.Library = {}
 
 -- Mock Character Functions
 function GetTalentTierInfo(tier, ...)

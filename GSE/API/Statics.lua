@@ -4,184 +4,177 @@ local L = GSE.L
 GSE.Library = {}
 
 Statics.CastCmds = {
-  use = true,
-  cast = true,
-  spell = true,
-  cancelaura = true,
-  cancelform = true,
-  stopmacro = true,
-  petautocastoff = true,
-  petautocaston = true
-   }
-
-Statics.MacroCommands = {
-  "petattack",
-  "dismount",
-  "shoot",
-  "startattack",
-  "stopattack",
-  "targetenemy"
+    use = true,
+    cast = true,
+    spell = true,
+    cancelaura = true,
+    cancelform = true,
+    stopmacro = true,
+    petautocastoff = true,
+    petautocaston = true
 }
+
+Statics.MacroCommands = {"petattack", "dismount", "shoot", "startattack", "stopattack", "targetenemy"}
 
 Statics.CleanStrings = {
-  [1] = "/console Sound_EnableSFX 0%;",
-  [2] = "/console Sound_EnableSFX 1%;",
-  [3] = "/script UIErrorsFrame:Hide%(%)%;",
-  [4] = "/run UIErrorsFrame:Clear%(%)%;",
-  [5] = "/script UIErrorsFrame:Clear%(%)%;",
-  [6] = "/run UIErrorsFrame:Hide%(%)%;",
-  [7] = "/console Sound_EnableErrorSpeech 1",
-  [8] = "/console Sound_EnableErrorSpeech 0",
+    [1] = "/console Sound_EnableSFX 0%;",
+    [2] = "/console Sound_EnableSFX 1%;",
+    [3] = "/script UIErrorsFrame:Hide%(%)%;",
+    [4] = "/run UIErrorsFrame:Clear%(%)%;",
+    [5] = "/script UIErrorsFrame:Clear%(%)%;",
+    [6] = "/run UIErrorsFrame:Hide%(%)%;",
+    [7] = "/console Sound_EnableErrorSpeech 1",
+    [8] = "/console Sound_EnableErrorSpeech 0",
 
-  [11] = "/console Sound_EnableSFX 0",
-  [12] = "/console Sound_EnableSFX 1",
-  [13] = "/script UIErrorsFrame:Hide%(%)",
-  [14] = "/run UIErrorsFrame:Clear%(%)",
-  [15] = "/script UIErrorsFrame:Clear%(%)",
-  [16] = "/run UIErrorsFrame:Hide%(%)",
-  [17] = "/console Sound_EnableErrorSpeech 1%;",
-  [18] = "/console Sound_EnableErrorSpeech 0%;",
-  [19] = [[""]],
-  [20] = "/stopmacro [@playertarget, noexists]",
+    [11] = "/console Sound_EnableSFX 0",
+    [12] = "/console Sound_EnableSFX 1",
+    [13] = "/script UIErrorsFrame:Hide%(%)",
+    [14] = "/run UIErrorsFrame:Clear%(%)",
+    [15] = "/script UIErrorsFrame:Clear%(%)",
+    [16] = "/run UIErrorsFrame:Hide%(%)",
+    [17] = "/console Sound_EnableErrorSpeech 1%;",
+    [18] = "/console Sound_EnableErrorSpeech 0%;",
+    [19] = [[""]],
+    [20] = "/stopmacro [@playertarget, noexists]",
 
-  -- [30] = "/use 2",
-  -- [31] = "/use [combat] 11",
-  -- [32] = "/use [combat] 12",
-  -- [33] = "/use [combat] 13",
-  -- [34] = "/use [combat] 14",
-  -- [35] = "/use 11",
-  -- [36] = "/use 12",
-  -- [37] = "/use 13",
-  -- [38] = "/use 14",
-  -- [39] = "/Use [combat] 11",
-  -- [40] = "/Use [combat] 12",
-  -- [41] = "/Use [combat] 13",
-  -- [42] = "/Use [combat] 14",
-  -- [43] = "/use [combat]11",
-  -- [44] = "/use [combat]12",
-  -- [45] = "/use [combat]13",
-  -- [46] = "/use [combat]14",
-  -- [47] = "/use [combat]2",
-  -- [48] = "/use [combat] 2",
-  -- [49] = "/use [combat]5",
-  -- [50] = "/use [combat] 5",
-  -- [51] = "/use [combat]1",
-  -- [52] = "/use [combat] 1",
-  -- [53] = "/use 1",
-  -- [54] = "/use 5",
-  [101] = "\n\n",
+    -- [30] = "/use 2",
+    -- [31] = "/use [combat] 11",
+    -- [32] = "/use [combat] 12",
+    -- [33] = "/use [combat] 13",
+    -- [34] = "/use [combat] 14",
+    -- [35] = "/use 11",
+    -- [36] = "/use 12",
+    -- [37] = "/use 13",
+    -- [38] = "/use 14",
+    -- [39] = "/Use [combat] 11",
+    -- [40] = "/Use [combat] 12",
+    -- [41] = "/Use [combat] 13",
+    -- [42] = "/Use [combat] 14",
+    -- [43] = "/use [combat]11",
+    -- [44] = "/use [combat]12",
+    -- [45] = "/use [combat]13",
+    -- [46] = "/use [combat]14",
+    -- [47] = "/use [combat]2",
+    -- [48] = "/use [combat] 2",
+    -- [49] = "/use [combat]5",
+    -- [50] = "/use [combat] 5",
+    -- [51] = "/use [combat]1",
+    -- [52] = "/use [combat] 1",
+    -- [53] = "/use 1",
+    -- [54] = "/use 5",
+    [101] = "\n\n"
 }
 
-Statics.StringReset =  "|r"
+Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 
 Statics.SpecIDList = {
-  [0] = "Global",
-  [1] = "Warrior",
-  [2] = "Paladin",
-  [3] = "Hunter",
-  [4] = "Rogue",
-  [5] = "Priest",
-  [6] = "Death Knight",
-  [7] = "Shaman",
-  [8] = "Mage",
-  [9] = "Warlock",
-  [10] = "Monk",
-  [11] = "Druid",
-  [12] = "Demon Hunter",
-  [62] = "Arcane",
-  [63] = "Fire",
-  [64] = "Frost - Mage",
-  [65] = "Holy - Paladin",
-  [66] = "Protection - Paladin",
-  [70] = "Retribution",
-  [71] = "Arms",
-  [72] = "Fury",
-  [73] = "Protection - Warrior",
-  [102] = "Balance",
-  [103] = "Feral",
-  [104] = "Guardian",
-  [105] = "Restoration - Druid",
-  [250] = "Blood",
-  [251] = "Frost - DK",
-  [252] = "Unholy",
-  [253] = "Beast Mastery",
-  [254] = "Marksmanship",
-  [255] = "Survival",
-  [256] = "Discipline",
-  [257] = "Holy - Priest",
-  [258] = "Shadow",
-  [259] = "Assassination",
-  [260] = "Outlaw",
-  [261] = "Subtlety",
-  [262] = "Elemental",
-  [263] = "Enhancement",
-  [264] = "Restoration - Shaman",
-  [265] = "Affliction",
-  [266] = "Demonology",
-  [267] = "Destruction",
-  [268] = "Brewmaster",
-  [269] = "Windwalker",
-  [270] = "Mistweaver",
-  [577] = "Havoc",
-  [581] = "Vengeance",
+    [0] = "Global",
+    [1] = "Warrior",
+    [2] = "Paladin",
+    [3] = "Hunter",
+    [4] = "Rogue",
+    [5] = "Priest",
+    [6] = "Death Knight",
+    [7] = "Shaman",
+    [8] = "Mage",
+    [9] = "Warlock",
+    [10] = "Monk",
+    [11] = "Druid",
+    [12] = "Demon Hunter",
+    [62] = "Arcane",
+    [63] = "Fire",
+    [64] = "Frost - Mage",
+    [65] = "Holy - Paladin",
+    [66] = "Protection - Paladin",
+    [70] = "Retribution",
+    [71] = "Arms",
+    [72] = "Fury",
+    [73] = "Protection - Warrior",
+    [102] = "Balance",
+    [103] = "Feral",
+    [104] = "Guardian",
+    [105] = "Restoration - Druid",
+    [250] = "Blood",
+    [251] = "Frost - DK",
+    [252] = "Unholy",
+    [253] = "Beast Mastery",
+    [254] = "Marksmanship",
+    [255] = "Survival",
+    [256] = "Discipline",
+    [257] = "Holy - Priest",
+    [258] = "Shadow",
+    [259] = "Assassination",
+    [260] = "Outlaw",
+    [261] = "Subtlety",
+    [262] = "Elemental",
+    [263] = "Enhancement",
+    [264] = "Restoration - Shaman",
+    [265] = "Affliction",
+    [266] = "Demonology",
+    [267] = "Destruction",
+    [268] = "Brewmaster",
+    [269] = "Windwalker",
+    [270] = "Mistweaver",
+    [577] = "Havoc",
+    [581] = "Vengeance"
 }
 
 Statics.SpecIDClassList = {
-  [0] = 0,
-  [1] = 1,
-  [2] = 2,
-  [3] = 3,
-  [4] = 4,
-  [5] = 5,
-  [6] = 6,
-  [7] = 7,
-  [8] = 8,
-  [9] = 9,
-  [10] = 10,
-  [11] = 11,
-  [12] = 12,
-  [62] = 8,
-  [63] = 8,
-  [64] = 8,
-  [65] = 2,
-  [66] = 2,
-  [70] = 2,
-  [71] = 1,
-  [72] = 1,
-  [73] = 1,
-  [102] = 11,
-  [103] = 11,
-  [104] = 11,
-  [105] = 11,
-  [250] = 6,
-  [251] = 6,
-  [252] = 6,
-  [253] = 3,
-  [254] = 3,
-  [255] = 3,
-  [256] = 5,
-  [257] = 5,
-  [258] = 5,
-  [259] = 4,
-  [260] = 4,
-  [261] = 4,
-  [262] = 7,
-  [263] = 7,
-  [264] = 7,
-  [265] = 9,
-  [266] = 9,
-  [267] = 9,
-  [268] = 10,
-  [269] = 10,
-  [270] = 10,
-  [577] = 12,
-  [581] = 12,
+    [0] = 0,
+    [1] = 1,
+    [2] = 2,
+    [3] = 3,
+    [4] = 4,
+    [5] = 5,
+    [6] = 6,
+    [7] = 7,
+    [8] = 8,
+    [9] = 9,
+    [10] = 10,
+    [11] = 11,
+    [12] = 12,
+    [62] = 8,
+    [63] = 8,
+    [64] = 8,
+    [65] = 2,
+    [66] = 2,
+    [70] = 2,
+    [71] = 1,
+    [72] = 1,
+    [73] = 1,
+    [102] = 11,
+    [103] = 11,
+    [104] = 11,
+    [105] = 11,
+    [250] = 6,
+    [251] = 6,
+    [252] = 6,
+    [253] = 3,
+    [254] = 3,
+    [255] = 3,
+    [256] = 5,
+    [257] = 5,
+    [258] = 5,
+    [259] = 4,
+    [260] = 4,
+    [261] = 4,
+    [262] = 7,
+    [263] = 7,
+    [264] = 7,
+    [265] = 9,
+    [266] = 9,
+    [267] = 9,
+    [268] = 10,
+    [269] = 10,
+    [270] = 10,
+    [577] = 12,
+    [581] = 12
 }
 
 Statics.SpecIDHashList = {}
-for k,v in pairs(Statics.SpecIDList) do
-  Statics.SpecIDHashList[v] = k
+for k, v in pairs(Statics.SpecIDList) do
+    Statics.SpecIDHashList[v] = k
 end
 
 Statics.SequenceDebug = "SEQUENCEDEBUG"
@@ -197,7 +190,6 @@ Statics.RandomImplementation = [[
 Statics.LoopRandomImplementation = [[
   step = math.random(#macros)
 ]]
-
 
 --- <code>GSStaticPriority</code> is a static step function that goes 1121231234123451234561234567
 --    use this like StepFunction = GSStaticPriority, in a macro
@@ -267,8 +259,6 @@ Statics.LoopPriorityImplementation = [[
     end
   end
 ]]
-
-
 
 Statics.PrintKeyModifiers = [[
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
@@ -375,7 +365,7 @@ Statics.StringFormatEscapes = {
     ["|r"] = "", -- Color end
     ["|H.-|h(.-)|h"] = "%1", -- Links
     ["|T.-|t"] = "", -- Textures
-    ["{.-}"] = "", -- Raid target icons
+    ["{.-}"] = "" -- Raid target icons
 }
 
 Statics.MacroResetSkeleton = [[
@@ -390,13 +380,12 @@ Statics.SourceTransmission = "Transmission"
 Statics.DebugModules = {}
 Statics.DebugModules["Translator"] = "Translator"
 Statics.DebugModules["Storage"] = "Storage"
-Statics.DebugModules["Editor"] ="Editor"
+Statics.DebugModules["Editor"] = "Editor"
 Statics.DebugModules["Viewer"] = "Viewer"
 Statics.DebugModules["Versions"] = "Versions"
 Statics.DebugModules[Statics.SourceTransmission] = Statics.SourceTransmission
 Statics.DebugModules["API"] = "API"
 Statics.DebugModules["GUI"] = "GUI"
-
 
 Statics.TranslationKey = "KEY"
 Statics.TranslationHash = "HASH"
@@ -477,7 +466,6 @@ Statics.BaseSpellTable[263642] = 203782 -- Fracture -> Shear
 Statics.BaseSpellTable[201427] = 162794 -- Annihilation -> Chaos Strike
 Statics.BaseSpellTable[210152] = 188499 -- Death Sweep -> Blade Dance
 
-
 -- Death Knight
 Statics.BaseSpellTable[207311] = 55090 -- Clawing Shadows -> Scourge Strike
 Statics.BaseSpellTable[152280] = 43265 -- Defile -> Death and Decay
@@ -499,7 +487,6 @@ Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 3
 Statics.BaseSpellTable[295258] = 296208 -- Focused Azerite Beam
 Statics.BaseSpellTable[299336] = 296208 -- Focused Azerite Beam
 Statics.BaseSpellTable[299338] = 296208 -- Focused Azerite Beam
-
 
 Statics.BaseSpellTable[295840] = 296208 -- Guardian of Azeroth 1
 Statics.BaseSpellTable[299355] = 296208 -- Guardian of Azeroth 2
@@ -569,28 +556,7 @@ Statics.BaseSpellTable[302731] = 296208 -- Ripple in Space 1
 Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
 Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
-Statics.Patrons = {
-  "axellis",
-  "avmickus",
-  "badcath4x",
-  "bf2champ",
-  "chris_stratis",
-  "dblakesneed",
-  "donnawaldrip78",
-  "drobaserge",
-  "elfyau",
-  "faultless1986",
-  "Flagels",
-  "geoffreytang",
-  "holdingacct",
-  "JamesT",
-  "jhyatt1983",
-  "jjmoc",
-  "mikekauffmann",
-  "rchorton",
-  "rezaadams",
-  "roberto.zanini",
-  "russbakr",
-  "susietoo12",
-  "siko760"
-}
+Statics.Patrons = {"axellis", "avmickus", "badcath4x", "bf2champ", "chris_stratis", "dblakesneed", "donnawaldrip78",
+                   "drobaserge", "elfyau", "faultless1986", "Flagels", "geoffreytang", "holdingacct", "JamesT",
+                   "jhyatt1983", "jjmoc", "mikekauffmann", "rchorton", "rezaadams", "roberto.zanini", "russbakr",
+                   "susietoo12", "siko760"}
