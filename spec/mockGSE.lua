@@ -7,6 +7,21 @@ GNOME = "UnitTest"
 
 GSELibrary = {}
 GSEStorage = {}
+GSEStorage[0] = {}
+GSEStorage[1] = {}
+GSEStorage[2] = {}
+GSEStorage[3] = {}
+GSEStorage[4] = {}
+GSEStorage[5] = {}
+GSEStorage[6] = {}
+GSEStorage[7] = {}
+GSEStorage[8] = {}
+GSEStorage[9] = {}
+GSEStorage[10] = {}
+GSEStorage[11] = {}
+GSEStorage[12] = {}
+GSEStorage[13] = {}
+
 GSE.Library = {}
 
 -- Mock Character Functions
