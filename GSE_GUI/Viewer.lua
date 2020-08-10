@@ -122,8 +122,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local helplabel = AceGUI:Create("Label")
   local helptext = L["No Help Information Available"]
-  if not GSE.isEmpty(GSELibrary[classid][sequencename].Help) then
-    helptext = GSELibrary[classid][sequencename].Help
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].Help) then
+    helptext = GSE.Library[classid][sequencename].Help
   end
   helplabel:SetFullWidth(true)
   helplabel:SetFontObject(font)
@@ -142,8 +142,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   row2:AddChild(talentsHead)
 
   local talentslabel = AceGUI:Create("Label")
-  if not GSE.isEmpty(GSELibrary[classid][sequencename].Talents) then
-    talentslabel:SetText(GSELibrary[classid][sequencename].Talents)
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].Talents) then
+    talentslabel:SetText(GSE.Library[classid][sequencename].Talents)
   end
   talentslabel:SetWidth(80)
   talentslabel:SetFontObject(font)
@@ -163,8 +163,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local urlval = "https://wowlazymacros.com"
   local urllabel = AceGUI:Create("InteractiveLabel")
-  if not GSE.isEmpty(GSELibrary[classid][sequencename].Helplink) then
-   urlval = GSELibrary[classid][sequencename].Helplink
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].Helplink) then
+   urlval = GSE.Library[classid][sequencename].Helplink
   end
   urllabel:SetFontObject(font)
   urllabel:SetText(urlval)
