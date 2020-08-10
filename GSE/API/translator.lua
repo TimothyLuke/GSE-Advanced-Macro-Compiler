@@ -5,686 +5,705 @@ local GNOME = Statics.DebugModules["Translator"]
 
 local L = GSE.L
 
-
-
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
 -- Mode of "STRING" will return local names where mode "ID" will return id's
 function GSE.TranslateSequence(sequence, sequenceName, mode)
-  GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
+    GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
+    for k, v in ipairs(sequence) do
+        -- Translate Sequence
+        sequence[k] = GSE.TranslateString(v, mode)
+    end
 
-  for k,v in ipairs(sequence) do
-    -- Translate Sequence
-    sequence[k] = GSE.TranslateString(v, mode)
-  end
+    if not GSE.isEmpty(sequence.KeyRelease) then
+        for k, v in pairs(sequence.KeyRelease) do
+            sequence.KeyRelease[k] = GSE.TranslateString(v, mode)
+        end
+    else
+        GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
+    end
+    if not GSE.isEmpty(sequence.KeyPress) then
+        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
+        for k, v in pairs(sequence.KeyPress) do
+            -- Translate KeyRelease
+            sequence.KeyPress[k] = GSE.TranslateString(v, mode)
+        end
+    else
+        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+    end
+    if not GSE.isEmpty(sequence.PreMacro) then
+        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
+        for k, v in pairs(sequence.PreMacro) do
+            -- Translate KeyRelease
+            sequence.PreMacro[k] = GSE.TranslateString(v, mode)
+        end
+    else
+        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+    end
+    if not GSE.isEmpty(sequence.PostMacro) then
+        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
+        for k, v in pairs(sequence.PostMacro) do
+            -- Translate KeyRelease
+            sequence.PostMacro[k] = GSE.TranslateString(v, mode)
+        end
+    else
+        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+    end
 
-
-  if not GSE.isEmpty(sequence.KeyRelease) then
-    for k,v in pairs(sequence.KeyRelease) do
-      sequence.KeyRelease[k] = GSE.TranslateString(v, mode)
+    -- Check for blanks
+    for i, v in ipairs(sequence) do
+        if v == "" then
+            sequence[i] = nil
+        end
     end
-  else
-    GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
-  end
-  if not GSE.isEmpty(sequence.KeyPress) then
-    GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-    for k,v in pairs(sequence.KeyPress) do
-      -- Translate KeyRelease
-      sequence.KeyPress[k] = GSE.TranslateString(v, mode)
-    end
-  else
-    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
-  end
-  if not GSE.isEmpty(sequence.PreMacro) then
-      GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-    for k,v in pairs(sequence.PreMacro) do
-      -- Translate KeyRelease
-      sequence.PreMacro[k] = GSE.TranslateString(v, mode)
-    end
-  else
-    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
-  end
-  if not GSE.isEmpty(sequence.PostMacro) then
-    GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-    for k,v in pairs(sequence.PostMacro) do
-      -- Translate KeyRelease
-      sequence.PostMacro[k] = GSE.TranslateString(v, mode)
-    end
-  else
-    GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
-  end
-
-  -- Check for blanks
-  for i, v in ipairs(sequence) do
-    if v == "" then
-      sequence[i] = nil
-    end
-  end
-  return sequence
+    return sequence
 end
 
 function GSE.TranslateString(instring, mode, cleanNewLines)
-  instring = GSE.UnEscapeString(instring)
-  GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
-  local output = ""
-  if not GSE.isEmpty(instring) then
-    if GSE.isEmpty(string.find(instring, '--', 1, true)) then
-      for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
-        GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
-        output = output..GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
-        if string.lower(cmd) == "use" then
-          local conditionals, mods, trinketstuff = GSE.GetConditionalsFromString(etc)
-          if conditionals then
-            output = output .. mods .. " "
-            GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
-          end
-          GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
+    instring = GSE.UnEscapeString(instring)
+    GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
+    local output = ""
+    if not GSE.isEmpty(instring) then
+        if GSE.isEmpty(string.find(instring, '--', 1, true)) then
+            for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
+                GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
+                output = output .. GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
+                if string.lower(cmd) == "use" then
+                    local conditionals, mods, trinketstuff = GSE.GetConditionalsFromString(etc)
+                    if conditionals then
+                        output = output .. mods .. " "
+                        GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
+                    end
+                    GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
 
-          output = output ..  GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
+                    output = output .. GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
 
-        elseif Statics.CastCmds[string.lower(cmd)] then
-          if not cleanNewLines then
-            etc = string.match(etc, "^%s*(.-)%s*$")
-          end
-          if string.sub(etc, 1, 1) == "!" then
-            etc = string.sub(etc, 2)
-            output = output .. "!"
-          end
-          local foundspell, returnval = GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false))
-          if foundspell then
-            output = output ..GSEOptions.KEYWORD .. returnval .. Statics.StringReset
-          else
-            GSE.PrintDebugMessage("Did not find : " .. etc , GNOME)
-            output = output  .. etc
-          end
-        -- Check for cast Sequences
-        elseif string.lower(cmd) == "castsequence" then
-          GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
-          for x,y in ipairs(GSE.split(etc,";")) do
-            for _, w in ipairs(GSE.SplitCastSequence(y,",")) do
-              -- Look for conditionals at the startattack
-              local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
-              if conditionals then
-                output = output ..GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
-              end
+                elseif Statics.CastCmds[string.lower(cmd)] then
+                    if not cleanNewLines then
+                        etc = string.match(etc, "^%s*(.-)%s*$")
+                    end
+                    if string.sub(etc, 1, 1) == "!" then
+                        etc = string.sub(etc, 2)
+                        output = output .. "!"
+                    end
+                    local foundspell, returnval = GSE.TranslateSpell(etc, mode,
+                                                      (cleanNewLines and cleanNewLines or false))
+                    if foundspell then
+                        output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset
+                    else
+                        GSE.PrintDebugMessage("Did not find : " .. etc, GNOME)
+                        output = output .. etc
+                    end
+                    -- Check for cast Sequences
+                elseif string.lower(cmd) == "castsequence" then
+                    GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
+                    for x, y in ipairs(GSE.split(etc, ";")) do
+                        for _, w in ipairs(GSE.SplitCastSequence(y, ",")) do
+                            -- Look for conditionals at the startattack
+                            local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
+                            if conditionals then
+                                output = output .. GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
+                            end
 
-              if not cleanNewLines then
-                w = string.match(uetc, "^%s*(.-)%s*$")
-              end
-              if string.sub(uetc, 1, 1) == "!" then
-                uetc = string.sub(uetc, 2)
-                output = output .. "!"
-              end
-              local foundspell, returnval = GSE.TranslateSpell(uetc, mode, (cleanNewLines and cleanNewLines or false))
-              output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
+                            if not cleanNewLines then
+                                w = string.match(uetc, "^%s*(.-)%s*$")
+                            end
+                            if string.sub(uetc, 1, 1) == "!" then
+                                uetc = string.sub(uetc, 2)
+                                output = output .. "!"
+                            end
+                            local foundspell, returnval = GSE.TranslateSpell(uetc, mode,
+                                                              (cleanNewLines and cleanNewLines or false))
+                            output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
+                        end
+                        output = output .. ";"
+                    end
+                    output = string.sub(output, 1, string.len(output) - 1)
+                    local resetleft = string.find(output, ", , ")
+                    if not GSE.isEmpty(resetleft) then
+                        output = string.sub(output, 1, resetleft - 1)
+                    end
+                    if string.sub(output, string.len(output) - 1) == ", " then
+                        output = string.sub(output, 1, string.len(output) - 2)
+                    end
+
+                else
+                    -- Pass it through
+                    output = output .. " " .. etc
+
+                end
             end
-            output = output .. ";"
-          end
-          output = string.sub(output, 1, string.len(output) -1)
-          local resetleft = string.find(output, ", , ")
-          if not GSE.isEmpty(resetleft) then
-            output = string.sub(output, 1, resetleft -1)
-          end
-          if string.sub(output, string.len(output)-1) == ", " then
-            output = string.sub(output, 1, string.len(output)-2)
-          end
-
+            -- look for single line commands and mark them up
+            for k, v in ipairs(Statics.MacroCommands) do
+                output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
+            end
         else
-          -- Pass it through
-          output = output .. " " .. etc
-
+            GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--', 1, true), GNOME)
+            output = output .. GSEOptions.CONCAT .. instring .. Statics.StringReset
         end
-      end
-      -- look for single line commands and mark them up
-      for k,v in ipairs(Statics.MacroCommands) do
-        output = string.gsub(output, "/"..v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
-      end
-    else
-      GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--', 1, true), GNOME)
-      output = output ..  GSEOptions.CONCAT .. instring .. Statics.StringReset
+        -- If nothing was found, pass through
+        if output == "" then
+            output = instring
+            -- look for single line commands and mark them up
+            for k, v in ipairs(Statics.MacroCommands) do
+                output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
+            end
+        end
+    elseif cleanNewLines then
+        output = output .. instring
     end
-    -- If nothing was found, pass through
-    if output == "" then
-      output = instring
-      -- look for single line commands and mark them up
-      for k,v in ipairs(Statics.MacroCommands) do
-        output = string.gsub(output, "/"..v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
-      end
+    GSE.PrintDebugMessage("Exiting GSE.TranslateString with : \n" .. output, GNOME)
+    -- Check for random "," at the end
+    if string.sub(output, string.len(output) - 1) == ", " then
+        output = string.sub(output, 1, string.len(output) - 2)
     end
-  elseif cleanNewLines then
-    output = output .. instring
-  end
-  GSE.PrintDebugMessage("Exiting GSE.TranslateString with : \n" .. output, GNOME)
-  -- Check for random "," at the end
-  if string.sub(output, string.len(output)-1) == ", " then
-    output = string.sub(output, 1, string.len(output)-2)
-  end
-  output = string.gsub(output, ", ;", "; ")
+    output = string.gsub(output, ", ;", "; ")
 
-  output = string.gsub(output, "  ", " ")
-  return output
+    output = string.gsub(output, "  ", " ")
+    return output
 end
 
 function GSE.TranslateSpell(str, mode, cleanNewLines)
-  local output = ""
-  local found = false
-  -- Check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
-  if not cleanNewLines then
-    str = string.match(str, "^%s*(.-)%s*$")
-  end
-  GSE.PrintDebugMessage("GSE.TranslateSpell Attempting to translate " .. str, GNOME)
-  if string.sub(str, string.len(str)) == "," then
-    str = string.sub(str, 1, string.len(str)-1)
-  end
-  if string.match(str, ";") then
-    GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
-    for _, w in ipairs(GSE.split(str,";")) do
-      found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), mode, (cleanNewLines and cleanNewLines or false))
-      output = output ..  GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
-    end
-    if string.sub(output, string.len(output)-1) == "; " then
-      output = string.sub(output, 1, string.len(output)-2)
-    end
-  else
-    local conditionals, mods, etc = GSE.GetConditionalsFromString(str)
-    if conditionals then
-      output = output .. mods .. " "
-      GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
-    end
-    GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
+    local output = ""
+    local found = false
+    -- Check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
     if not cleanNewLines then
-      etc = string.match(etc, "^%s*(.-)%s*$")
+        str = string.match(str, "^%s*(.-)%s*$")
     end
-
-    local foundspell = GSE.GetSpellId(etc, mode)
-    -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
-    if foundspell then
-      GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell , GNOME )
-      output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
-      found = true
+    GSE.PrintDebugMessage("GSE.TranslateSpell Attempting to translate " .. str, GNOME)
+    if string.sub(str, string.len(str)) == "," then
+        str = string.sub(str, 1, string.len(str) - 1)
+    end
+    if string.match(str, ";") then
+        GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
+        for _, w in ipairs(GSE.split(str, ";")) do
+            found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), mode,
+                                   (cleanNewLines and cleanNewLines or false))
+            output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
+        end
+        if string.sub(output, string.len(output) - 1) == "; " then
+            output = string.sub(output, 1, string.len(output) - 2)
+        end
     else
-      GSE.PrintDebugMessage("Did not find : " .. etc .. ".  Spell may no longer exist", GNOME)
-      output = output  .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
-      if GSE.isEmpty(GSEOptions.UnfoundSpells) then
-        GSEOptions.UnfoundSpells = {}
-      end
-      GSEOptions.UnfoundSpells [etc] = true
+        local conditionals, mods, etc = GSE.GetConditionalsFromString(str)
+        if conditionals then
+            output = output .. mods .. " "
+            GSE.PrintDebugMessage("GSE.TranslateSpell conditionals found ", GNOME)
+        end
+        GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
+        if not cleanNewLines then
+            etc = string.match(etc, "^%s*(.-)%s*$")
+        end
+
+        local foundspell = GSE.GetSpellId(etc, mode)
+        -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
+        if foundspell then
+            GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell, GNOME)
+            output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
+            found = true
+        else
+            GSE.PrintDebugMessage("Did not find : " .. etc .. ".  Spell may no longer exist", GNOME)
+            output = output .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
+            if GSE.isEmpty(GSEOptions.UnfoundSpells) then
+                GSEOptions.UnfoundSpells = {}
+            end
+            GSEOptions.UnfoundSpells[etc] = true
+        end
     end
-  end
-  return found, output
+    return found, output
 end
 
 function GSE.GetConditionalsFromString(str)
-  GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
-  -- Check for conditionals
-  local found = false
-  local mods = ""
-  local leftstr
-  local rightstr
-  local leftfound = false
-  for i = 1, #str do
-    local c = str:sub(i,i)
-    if c == "[" and not leftfound then
-      leftfound = true
-      leftstr = i
-    end
-    if c == "]" then
-      rightstr = i
-    end
-  end
-  GSE.PrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
-  GSE.PrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
-  if rightstr and leftstr then
-     found = true
-     GSE.PrintDebugMessage("We have left and right stuff", GNOME)
-     mods = string.sub(str, leftstr, rightstr)
-     GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
-     str = string.sub(str, rightstr + 1)
-     GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
-  end
-  if not cleanNewLines then
-    str = string.match(str, "^%s*(.-)%s*$")
-  end
-  -- Check for resets
-  GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
-  local resetleft = string.find(str, "reset=")
-  if not GSE.isEmpty(resetleft) then
-    GSE.PrintDebugMessage("found reset= at" .. resetleft, GNOME)
-  end
-
-  local rightfound = false
-  local resetright = 0
-  if resetleft then
+    GSE.PrintDebugMessage("Entering GSE.GetConditionalsFromString with : " .. str, GNOME)
+    -- Check for conditionals
+    local found = false
+    local mods = ""
+    local leftstr
+    local rightstr
+    local leftfound = false
     for i = 1, #str do
-      local c = str:sub(i,i)
-      if c == " " then
-        if not rightfound then
-          resetright = i
-          rightfound = true
+        local c = str:sub(i, i)
+        if c == "[" and not leftfound then
+            leftfound = true
+            leftstr = i
         end
-      end
+        if c == "]" then
+            rightstr = i
+        end
     end
-    mods = mods .. " " .. string.sub(str, resetleft, resetright)
-    GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
-    str = string.sub(str, resetright + 1)
-    GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
-    found = true
-  end
+    GSE.PrintDebugMessage("checking left : " .. (leftstr and leftstr or "nope"), GNOME)
+    GSE.PrintDebugMessage("checking right : " .. (rightstr and rightstr or "nope"), GNOME)
+    if rightstr and leftstr then
+        found = true
+        GSE.PrintDebugMessage("We have left and right stuff", GNOME)
+        mods = string.sub(str, leftstr, rightstr)
+        GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
+        str = string.sub(str, rightstr + 1)
+        GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
+    end
+    if not cleanNewLines then
+        str = string.match(str, "^%s*(.-)%s*$")
+    end
+    -- Check for resets
+    GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
+    local resetleft = string.find(str, "reset=")
+    if not GSE.isEmpty(resetleft) then
+        GSE.PrintDebugMessage("found reset= at" .. resetleft, GNOME)
+    end
 
-  mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
-  return found, mods, str
+    local rightfound = false
+    local resetright = 0
+    if resetleft then
+        for i = 1, #str do
+            local c = str:sub(i, i)
+            if c == " " then
+                if not rightfound then
+                    resetright = i
+                    rightfound = true
+                end
+            end
+        end
+        mods = mods .. " " .. string.sub(str, resetleft, resetright)
+        GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
+        str = string.sub(str, resetright + 1)
+        GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
+        found = true
+    end
+
+    mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
+    return found, mods, str
 end
-
 
 --- This option reports on language table errors and omissions.  It is accessible
 -- via the command line /gs compilemissingspells and saves this informationm into
 -- GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID
 -- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
 function GSE.ReportUnfoundSpells()
-  GSEOptions.UnfoundSpells = {}
-  for classid, macroset in ipairs(GSELibrary) do
-    for name, version in pairs(macroset) do
-      for v, sequence in ipairs(version) do
-        GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
-      end
+    GSEOptions.UnfoundSpells = {}
+    for classid, macroset in ipairs(GSELibrary) do
+        for name, version in pairs(macroset) do
+            for v, sequence in ipairs(version) do
+                GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
+            end
+        end
     end
-  end
-  GSEOptions.UnfoundSpellIDs = {}
+    GSEOptions.UnfoundSpellIDs = {}
 
-  for _,spell in pairs(GSEOptions.UnfoundSpells) do
-    GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
-  end
+    for _, spell in pairs(GSEOptions.UnfoundSpells) do
+        GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
+    end
 
 end
 
 -- Embedded in from https://www.wowinterface.com/downloads/info24984-ClassicSpellRanks.html
 -- Classic doesnt return ranks at the moment
 
-local spell_ranks=table.concat(
-{
-  ".........1......1...................................1.............1....1...1.1..........1....2....111...........11.1.1.1.1......",
-  "....1..1..1...2.3......................1...1......1.........................2......................2.................1..........",
-  "...........................23......................1......1........12.....12......1........1................1....1..............",
-  "..................1....1............1.............................1.1..1........1.1........111.1212211111211123111..23.2.1.2...2",
-  ".21.11227.....1.2.211111122111122.3321...2..213221613321212.31211.......1111112212.1232313.111.111122112112313.3131121341.11..2.",
-  ".13.2.311151122241113233.............214....111.1....122..21.111312.31..211..111221121121123122321.1.....11.......1..1....1211..",
-  "31.1.1.1.21212.11111111122221.23..................111...............33.222.211.1.13214.322.622.122.3.4.2.1.3.115.6...2...5.1.2.1",
-  "..33332233.133.3444431.1.144.2.1.22.2441.451..5544442155..41.562.4.3.11.233111311.311.44435223344.2222232.2554411111122.1..2211.",
-  "244.3.35121.1.1..55.1...3.111...222..2211...33...333..1..1..3224422.133.413.1...35122.2.215.1..13...21...1...1.1.....1...123411.",
-  "2.....21..1234.1....221.1...234.1...112211.1.3.3.......21.3.21..2.3.2.2.2..2............1.1231231231341231234123111...12..232312",
-  "1212..12..111..124145.12312312312311.123...2323...1.1.....12..12.........4564545..444.123....123....2321.4..121.12....1....2.45.",
-  ".....123...1231.1..1233231121.1....11..11....1234.123.11..1....12341234.11..1....112..1...1.........11..1..1...........1......1.",
-  ".......12...1..1..........21..11..11345....123................1.....1234545.......................1....1....2..3................",
-  "......23..123....................1...1....1......111..................2121...1....1234512345234512345123451234512..12..1234.1234",
-  "..................1..........123.512321..2..1.2..........1..1..1212......3.....123135112.......1234.....12......12.1..1.45......",
-  "....................1.1.1...1..........1.....1...........11.....1.................11.1.1.22.11.22..............................3",
-  "31123122312113..113422....11.............4545..111................1111112.112..........123.1123.................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "..........................23..2.....23.........1..............5512354..........12345....................1.......................",
-  "......................111.1.2341234..........213451234512..12.............1.1.....1.....1.11........................1123452345..",
-  "...1....1123452345.........................................................11.5444545......11.2..2....4.4...1.52...2.......1....",
-  ".12...123451......1.2.....12......1..1.1...343455121..1..11..1........4541...23..1.........1.1.1.1.11.34................3.3.4411",
-  "111112..............1.......115671112311........................871.................22...11234123411.211............234623123123",
-  "123.14234123111241232312311..........12...........................1414.....................................................1....",
-  ".........121231212............1...................................34............................................................",
-  ".........................11........1...........................................1122........1212.........234.....................",
-  ".........66....666............1.............................................................4........111........................",
-  "............6611.....1....................661...............................3434.8455....11......2.1.4.1.112412212342341234..1..",
-  "2..1......51.1145111111.13261.661244.225.........................................................1..........................1...",
-  "................................................................................................................................",
-  "....................................................................................................................1...........",
-  "..........123.4124323456782345678.........................................12345678123456781234567812345678.12345.67812345678.123",
-  "4567812345678.........12345678123456781234567812345678........2212121212121212312312312.3..............1231231231456782345678123",
-  "456781234567811234567823456781123456782345678112211221122112211231123232.112323.112.32311234567823456781123456782345678112345678",
-  "23456781123456782345678.............234.234...23456785678..234567811112345678234567823456782345678123456782345678234567823456782",
-  "34567823456782345678..2345678234567812345678123456781234567812345678.1123.456.782345678.1123456.7823456781.123456782345678......",
-  "..............232312323112323............1122....221122112211221122.....12323...123456782345678112345678234567811234567823456781",
-  "1234567823456781123456782345678121211221122.......112323112323..................................................................",
-  "..................................9ABCDEF9ABCDEF9ABCDEF9ABDEFC9ABCDEF9BCDEFA9ABCDEF9ABCDEF.9ABCDEF9ABCDEF....1.................1",
-  "1111111111.......11...123123..1..12345........1...1..41123452345123452134534122.3.34.....111.11111..1111.....21224311112222....1",
-  "....1.1..1..........11.1111....12.1.123.2345.234511...1211113124.......111111............1.9ABCDEF.9ABCDEF9ABCDEF.1123423412345.",
-  "...........22122.1.1...1....1.....................G9ABCDE..............9ABCDE1239ABCDE12312339ABCDEF12321231.1..9ABCDE.123.....1",
-  "2311123.F..9ABCDEF.12312312.9ABCDEF123..1239ABCDEF1239ABCDEF23..61612233345454.11232323..12312222323.2..323.123232.12....12.2234",
-  "56789ABCDEF23.312123456789ABCDEF.....111..1111...345678345678..1......111...1.....123....1.231211111111111.11123456789ABCDEF12.1",
-  "11121231456789ABCDEF.11..1234567845645612345678....123412339A49A34123412311.23234349A9A1123234341.......1123234349AA9341123.234.",
-  "..9A34.11234239A3411.23423.111349A1234123349A112323412341234...12345671234567...112323456.71123234567...........1234....123412..",
-  ".........123..12.12341..626.............133666345656223412345623456.23456789A112231112345678A2239..113111322..444433123123222211",
-  ".2222.11263456234511234.5234523232.2...2222..2233...........33123123223333221232322.1111...................................1....",
-  ".......1234.15....2345............1...1.12345....2345..1.12345....234512..1..2341......121234.234523452435234.2312.2.234234.2342",
-  "34......1............1...........1........12345.1....2345................1...................1............1.....1111............",
-  ".............4411234234112323112323112233111122.......................................................12..1.334.4333..1...1.....",
-  "..1.............11....................................11...........1.1.1....11111.33...............3...234234..22122222..6666422",
-  "112.121.22...2222....1123123....................................................................................................",
-  ".......21.....1............11.......1.......1..1.234566.22....2344232.32323....21222222.1.........................234234........",
-  "............................................................3...1..1...................222......1.................1......1..1...",
-  ".........1...................5555.6789678966.................1234512435123451234512345.............123..1..............1.1...1.1",
-  "1..231.................214441111111..........1....................1..1..2112323.4233.1.111...23231.....22331221.................",
-  "................................................................................................................................",
-  "........................................................................................66...44441444....23231.111..............",
-  "...............................................11..................................1..................................2345.23123",
-  "23412123............1..2345...................................123231232.1234112.2............................11......56....11...",
-  "..1....................1.............1....................11...1...1771223322...123123.111223323111.222..11234234112323112211...",
-  "2....1111.111........1....11123123...2345623456123123123111221111122155....1......1..111.232323232323.........1..1..111111111112",
-  "222..2111..3434...1....1..........1.111111222........4.222221.4....1.11111..........1..........23231.......................2323.",
-  "...........................1111.......................1....33.....2222......1..567567567567454545544534.34331.....1.234234123423",
-  "42323.2223232323..............2342.34234...222323232323232323..11111............................................................",
-  "................1..1.3.................1....6656561.3323423433232322..112323.....................1.1.11111..22233.3222222..12...",
-  ".......1........5.523.23.......1...................................................4.....................3.4.....4.22.2323......",
-  "..111....................................1...23.......................777755.77..44..2.211.2345672345671123452345...23423422....",
-  "...........44234234...33...111.33.1111122...1111..........................1.....................1...............................",
-  "...........................................1...................................................................1................",
-  "....1111.........1......................2.......................................................................................",
-  "........................................................................................4..................11..................2",
-  "34234...6..122...332323..................................................................................2323..........44.......",
-  "...............................11...............................................................................................",
-  "....1..11..11...554436644445588.......................................1.....................22222333454589A89A89A89A343445556567",
-  "89789343434345656.5656.676767679A9A33556655.33.44.455688333............................................................1........",
-  "................................33.................................2....34......................................................",
-  ".........................567567565689AB89AB4553453453434343445454489A89A456456456456667756565675676767565634344455...443344.....",
-  "............................45456744.3345454564562467246723452345334433456456232.223333787878784545...6........................1",
-  "......................787889894145456456456567567.67675656565667675656564443444545.....333.4545454564563434232323..3.3.3..2.3423",
-  "4..............2.34.....3.33.3.3.....23.23.23.....................................2342342342342323111232323.4.2223332323.....232",
-  "3222............................................................................................................................",
-  "............................................1........................................78..................................3453453",
-  "43423333344678678789A789A...222323567567......789789787856565656789789563333233344234...........................................",
-  "................56.........................................1111......1.2..1.1........11....1..1....1....1.1...12...1............",
-  "..............1........1....1....1....1....1....1...11......454522....1.11..1........1.........1....1....1....1....1..1......1..",
-  "..4564564564566786784545565678783378784434545454545453........1.2.....456456456456......343434134....1234511....................",
-  ".....3333...........123..........1..........................................432.................................................",
-  "..................1.........4565634534523235678..785675673356563434456456..45454545343434.......................................",
-  "..........7897895567675656443434232323456456567567565634345656456456442223232323....3453452323...................676745454545565",
-  "64564563434.................................................1...................................................................",
-  "................................................................................................................................",
-  "..................1.............................................................................................................",
-  ".11.1........4444.4..................1..................................................................................11.11111",
-  "11...11.1111111...21..111...111111.1111.12.......2345345....23232.1.2345.................2...................345................",
-  "..............................................23..2.3...2.2........1232323...1.23452345.2............23..345678.................",
-  "................1.......243.52345.23...........23....2.345.222...................................................23...2323.2...2",
-  "...2345.....1.........122..123451.23..2345........12345......................2345.......23452...............2.345..23.45....1123",
-  "..22..3..232345..2..1..2342342345123452345...34522.2314523.451234533...234523451.....2..........................................",
-  "...............31....2.234.152234521.123452345.......2345.............2345........34.56782345623453...2345672345672.2345........",
-  ".23..................1......................................................................................1...................",
-  ".................................1111234234234234...............................................................................",
-  "...............................................................................................................1................",
-  ".........................................1.......11...................................1....1.........567567.23456782345678......",
-  "................................................................................................................................",
-  "........111.11.11.1................11.......1111.......2.1.................................234532.1.1.123452345....111..........",
-  ".......2..1.......345..23.452345..2...2.232....2..23...................1...........1............................................",
-  ".....1.12345.234523451111.231.1.........................................................................123452345234523234511212",
-  "31212..1..23123.............1...12345.1........1...2..3451234511...22334455111223123123123123123....1....1...2..345.....2345....",
-  "............................................1.12345234567823234232234.232345678234...232.23452345..2323..23232345623423....23456",
-  "78232342322342323456783423223452.3.2323456....................................................23.4..........23..................",
-  ".......................................................111112345..1.............................................................",
-  "................................................................................................................................",
-  "......................1..11111.1..............22323222.2345234523452345..........................233............................",
-  "........................................1..11....11.1..11..1111111.234567234567.................................................",
-  "...............................2345223452232.2.23452345..214..........3....45....123.......2....................................",
-  "..1123231.23..............................34567.......................................................9A9A......................",
-  "....1...................1111823456711112111..........1....................23452234.521.3452345234523452345..........223453452.34",
-  "52345..........................1..............1......................2345345.1.........2.3.2.34.5.67............................",
-  "....................3.........................1...............................234............................1...1..............",
-  "............3456....3456...1.1..................................................1............................................1..",
-  ".............................................................................1..................................................",
-  "................................................................................................................................",
-  "..................................11.1111.1.........................................11.1.1..............2345234523452345..2...2.",
-  "22345......................23452345.........1..1111111111.1..11111.2.345234523452234523452345234523452.34522345345........111111",
-  "1111111111....2345..234523452222323223232234523452345.56756767....................4.5656..56...45.4545..444.....................",
-  "..444....42.345..............................................................12345....................1.2..312........45......1.",
-  "123......................12345.2.12..1.....................1.....12345....................1.............1.......................",
-  "................................................1.......66....................45..1..........12345.................112....3.4511",
-  "45.145111111.1...........................2345123451212345.1234561231..2345..123451....1.112345..........633567............315451",
-  "2.34512345..1234512..123..2345..1234512345.1212345123451.234511.2345.1.2...1.2345....1...............1212.1234..................",
-  ".........................12.3451.2345.1.23451234512345112233.............1.23451.1234512345..1234512............................",
-  ".1....................................345.......................................1...........1.234...1123456782345678............",
-  "..............................2345.345...12.3...6...1.............23..1..22223333231........3456..........234234.3434...23...3..",
-  "..................12345.....................................................12345.1.............................................",
-  "........6.......................................................................................................................",
-  "......................................................................11.............234234...........1........1.123451234512345",
-  "1..2....34512345.123451.................2345.............23456234.56.1.11...........1.......................................1223",
-  "456223122345....22......2.3.4....123451..1....1.................................................................................",
-  "........................2.......1.......1....121....1.................12345..121212345121.1..............23456.223......2....123",
-  "4512312...1.5.......................1....121..............111...........................1.....12345..111........................",
-  ".....1234..........................................................2........1...........21................................123...",
-  "..........................12.1234545.............................................................12.345..45....1..234512345.....",
-  "...............................................9.A....................................22........2323............................",
-  "...1212312345.12123.12....................1..1........2345.12345.12312.....1..121234512..............................8668.......",
-  "...112345.1.231...................................234562..3456234.............................................234234234.2323....",
-  "...................................1...11.......................................................................................",
-  "..............................................................................12345...12.34.5..1...........23..1................",
-  "...........................1...23452.314567123452.345612345.23.45623452.3452345623456123213452122335445671.23456234561.234561234",
-  "56123456.123456712345123456712345........12.3451212.1234512345................1....2345123451234512.345..1...2234563456......123",
-  "45..12.12345.....111111..11.1.23451.23...1231...1112345.....................................123123451212345........1212..11...12",
-  "345..1.2345..123451.234512435.11234512345.....................21.2.23423.1.41234................................................",
-  "..................223344234111111....11..................................................................................2345623",
-  "456......2.3452345...........12..1.1...........1..1111232323...232323.............................2345623456....................",
-  ".6543212123..............212366..........................................11123451......234512345..........................123451",
-  "2345123451234512345212345.....1..2....34512345123451234511.......21.111111...12.1.2435111112122231212345...1123541.2345........1",
-  "2.....111122123.1211234512311123123451234511.2.........23456782345678......3456634566..3456722345123.45..34523123544234234234232",
-  "32323.12345...........1.345612345612345612341234561234....234523452.345.1234123412..2345678234566123451234123.....1123451.......",
-  "...11.12345....3345121212......1...........................1..................4545......5.5.....................................",
-  "231..2323...23........1..........................2.345........................................45.7....1.................22.....1",
-  ".12..3.23.4545...................554545452345.................1...A........................................................1....",
-  "2345.67.............11111..2.323...2345623232312342.2345.34513232323456..3.2323234512343451232.3322345451.......................",
-  ".................................................................................1.......1111.......................1...........",
-  "..........................................1....1..............1..11.............................................................",
-  "................................................................................................111111..........................",
-  "................................................................................................................................",
-  "..............................................234.2.34.1.1.2..112.................1111.11111111111111111111111111...............",
-  ".....................................................................................................................1..........",
-  "......................................................................3.................1212.....................1..............",
-  "...................................................................1.1..........11....................1.................5.......",
-  "..............................1111..............................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  ".................................................................................1..............................................",
-  ".......................................1111...........123.......................................................................",
-  ".................................................................................1...........................1...........1...232",
-  "3...............1..1......................234234.........1........1.2.......34...............................12323..............",
-  "...............................................12345............................................................1.1111..........",
-  "..........................................................11..1.....2323................................112323...........112323.",
-  ".........................................1.......................................................1..............................",
-  "...................................................................................................1.123.....................5..",
-  "..............................1..23....................1234.....................................................................",
-  "..............A86..............12345.............1..............................................................................",
-  "..............3A................................................................................................................",
-  ".....................................444.4..............................1..........234...234.....................1234234........",
-  "..........56..........88...............................1.................................................44.....................",
-  "................................................123..123..........12323.........................................................",
-  "...............................1.........1...63........4....................1234521123....3..45.....1234512.....................",
-  ".................................................................45..........1.......1.....68A.1......11..............2121134123",
-  "4112323.......34...2.3.41.1234..2..34..1.1.1111.2..342342342342342341112342342342...123456789...1.11234567823456782.345678......",
-  "23423422.3434.......4.4...312.321...................9A9A9A.A...11........................................1.1......3.............",
-  "...............................................7................................................................................",
-  "...........11................................................5....11.....................1....................2345..............",
-  ".......12345.23452345..........................2345623456..........................................................11...........",
-  "....................................................1...........................................................................",
-  ".....................................................................9.67679.597B7B9.5.B.CA.8.7..5A5............................",
-  "8854555A5967A.3355...................................6793A5597B7B.955BC8A87.....................................................",
-  "..........................................................................................................................1.....",
-  "...............................................................................................................38.8...........76",
-  "54321176543211..1.....4.......2345...................1..........................1....1.6............5......2....................",
-  ".................................1...1....1..33.....1.2121122212...................B.......1451....12976679A53597B7B95.5BC8A875A",
-  "5..2........1..................22345312........................................11...1....................1...1..................",
-  "................................................................234....2342323..........55.......................1..............",
-  "..........................................................................................................................71234.",
-  "56......1.......................................................................................................................",
-  "............................................................................12..................................................",
-  "...........................111.............................................................................................1....",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "........................................................3654...3....................89A724....2.26..335622.....63...............",
-  "................................11116..................................................2................3.......................",
-  "............12.....1..4564456.....1.1.2323..456....2..........1245451........................23.2323.......................12345",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  ".............................................................................................................1.............1....",
-  "...........................................2..........6.................................123456...............123................",
-  ".............1....23............................................................................................................",
-  "...............................................2345............654477...........................................................",
-  "..........1.....................................................................................................................",
-  "..............................................................................................................4.................",
-  "...................................................................12312....1...................................................",
-  ".....1.23........123..23.1.2.345...................................................1.12345................1...1.........2323....",
-  "..1.2.312........3..21.....................66...................................................................................",
-  ".............................................................................................................................123",
-  "1..2345.....................12.................................................4......................................1.........",
-  "...................23.................A.........................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "...............................................................................1....1...........................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "...............................................2.........................................32.....................................",
-  "..............................................................................1231123452345123.1.2345...........................",
-  "............123123123451.......1...........12123.....12345............12........................................................",
-  ".............................12........995.5....................................................................................",
-  "................................................................................................................................",
-  "......................1.........................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-  "................................................................................................................................",
-});
+local spell_ranks = table.concat(
+                        {".........1......1...................................1.............1....1...1.1..........1....2....111...........11.1.1.1.1......",
+                         "....1..1..1...2.3......................1...1......1.........................2......................2.................1..........",
+                         "...........................23......................1......1........12.....12......1........1................1....1..............",
+                         "..................1....1............1.............................1.1..1........1.1........111.1212211111211123111..23.2.1.2...2",
+                         ".21.11227.....1.2.211111122111122.3321...2..213221613321212.31211.......1111112212.1232313.111.111122112112313.3131121341.11..2.",
+                         ".13.2.311151122241113233.............214....111.1....122..21.111312.31..211..111221121121123122321.1.....11.......1..1....1211..",
+                         "31.1.1.1.21212.11111111122221.23..................111...............33.222.211.1.13214.322.622.122.3.4.2.1.3.115.6...2...5.1.2.1",
+                         "..33332233.133.3444431.1.144.2.1.22.2441.451..5544442155..41.562.4.3.11.233111311.311.44435223344.2222232.2554411111122.1..2211.",
+                         "244.3.35121.1.1..55.1...3.111...222..2211...33...333..1..1..3224422.133.413.1...35122.2.215.1..13...21...1...1.1.....1...123411.",
+                         "2.....21..1234.1....221.1...234.1...112211.1.3.3.......21.3.21..2.3.2.2.2..2............1.1231231231341231234123111...12..232312",
+                         "1212..12..111..124145.12312312312311.123...2323...1.1.....12..12.........4564545..444.123....123....2321.4..121.12....1....2.45.",
+                         ".....123...1231.1..1233231121.1....11..11....1234.123.11..1....12341234.11..1....112..1...1.........11..1..1...........1......1.",
+                         ".......12...1..1..........21..11..11345....123................1.....1234545.......................1....1....2..3................",
+                         "......23..123....................1...1....1......111..................2121...1....1234512345234512345123451234512..12..1234.1234",
+                         "..................1..........123.512321..2..1.2..........1..1..1212......3.....123135112.......1234.....12......12.1..1.45......",
+                         "....................1.1.1...1..........1.....1...........11.....1.................11.1.1.22.11.22..............................3",
+                         "31123122312113..113422....11.............4545..111................1111112.112..........123.1123.................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "..........................23..2.....23.........1..............5512354..........12345....................1.......................",
+                         "......................111.1.2341234..........213451234512..12.............1.1.....1.....1.11........................1123452345..",
+                         "...1....1123452345.........................................................11.5444545......11.2..2....4.4...1.52...2.......1....",
+                         ".12...123451......1.2.....12......1..1.1...343455121..1..11..1........4541...23..1.........1.1.1.1.11.34................3.3.4411",
+                         "111112..............1.......115671112311........................871.................22...11234123411.211............234623123123",
+                         "123.14234123111241232312311..........12...........................1414.....................................................1....",
+                         ".........121231212............1...................................34............................................................",
+                         ".........................11........1...........................................1122........1212.........234.....................",
+                         ".........66....666............1.............................................................4........111........................",
+                         "............6611.....1....................661...............................3434.8455....11......2.1.4.1.112412212342341234..1..",
+                         "2..1......51.1145111111.13261.661244.225.........................................................1..........................1...",
+                         "................................................................................................................................",
+                         "....................................................................................................................1...........",
+                         "..........123.4124323456782345678.........................................12345678123456781234567812345678.12345.67812345678.123",
+                         "4567812345678.........12345678123456781234567812345678........2212121212121212312312312.3..............1231231231456782345678123",
+                         "456781234567811234567823456781123456782345678112211221122112211231123232.112323.112.32311234567823456781123456782345678112345678",
+                         "23456781123456782345678.............234.234...23456785678..234567811112345678234567823456782345678123456782345678234567823456782",
+                         "34567823456782345678..2345678234567812345678123456781234567812345678.1123.456.782345678.1123456.7823456781.123456782345678......",
+                         "..............232312323112323............1122....221122112211221122.....12323...123456782345678112345678234567811234567823456781",
+                         "1234567823456781123456782345678121211221122.......112323112323..................................................................",
+                         "..................................9ABCDEF9ABCDEF9ABCDEF9ABDEFC9ABCDEF9BCDEFA9ABCDEF9ABCDEF.9ABCDEF9ABCDEF....1.................1",
+                         "1111111111.......11...123123..1..12345........1...1..41123452345123452134534122.3.34.....111.11111..1111.....21224311112222....1",
+                         "....1.1..1..........11.1111....12.1.123.2345.234511...1211113124.......111111............1.9ABCDEF.9ABCDEF9ABCDEF.1123423412345.",
+                         "...........22122.1.1...1....1.....................G9ABCDE..............9ABCDE1239ABCDE12312339ABCDEF12321231.1..9ABCDE.123.....1",
+                         "2311123.F..9ABCDEF.12312312.9ABCDEF123..1239ABCDEF1239ABCDEF23..61612233345454.11232323..12312222323.2..323.123232.12....12.2234",
+                         "56789ABCDEF23.312123456789ABCDEF.....111..1111...345678345678..1......111...1.....123....1.231211111111111.11123456789ABCDEF12.1",
+                         "11121231456789ABCDEF.11..1234567845645612345678....123412339A49A34123412311.23234349A9A1123234341.......1123234349AA9341123.234.",
+                         "..9A34.11234239A3411.23423.111349A1234123349A112323412341234...12345671234567...112323456.71123234567...........1234....123412..",
+                         ".........123..12.12341..626.............133666345656223412345623456.23456789A112231112345678A2239..113111322..444433123123222211",
+                         ".2222.11263456234511234.5234523232.2...2222..2233...........33123123223333221232322.1111...................................1....",
+                         ".......1234.15....2345............1...1.12345....2345..1.12345....234512..1..2341......121234.234523452435234.2312.2.234234.2342",
+                         "34......1............1...........1........12345.1....2345................1...................1............1.....1111............",
+                         ".............4411234234112323112323112233111122.......................................................12..1.334.4333..1...1.....",
+                         "..1.............11....................................11...........1.1.1....11111.33...............3...234234..22122222..6666422",
+                         "112.121.22...2222....1123123....................................................................................................",
+                         ".......21.....1............11.......1.......1..1.234566.22....2344232.32323....21222222.1.........................234234........",
+                         "............................................................3...1..1...................222......1.................1......1..1...",
+                         ".........1...................5555.6789678966.................1234512435123451234512345.............123..1..............1.1...1.1",
+                         "1..231.................214441111111..........1....................1..1..2112323.4233.1.111...23231.....22331221.................",
+                         "................................................................................................................................",
+                         "........................................................................................66...44441444....23231.111..............",
+                         "...............................................11..................................1..................................2345.23123",
+                         "23412123............1..2345...................................123231232.1234112.2............................11......56....11...",
+                         "..1....................1.............1....................11...1...1771223322...123123.111223323111.222..11234234112323112211...",
+                         "2....1111.111........1....11123123...2345623456123123123111221111122155....1......1..111.232323232323.........1..1..111111111112",
+                         "222..2111..3434...1....1..........1.111111222........4.222221.4....1.11111..........1..........23231.......................2323.",
+                         "...........................1111.......................1....33.....2222......1..567567567567454545544534.34331.....1.234234123423",
+                         "42323.2223232323..............2342.34234...222323232323232323..11111............................................................",
+                         "................1..1.3.................1....6656561.3323423433232322..112323.....................1.1.11111..22233.3222222..12...",
+                         ".......1........5.523.23.......1...................................................4.....................3.4.....4.22.2323......",
+                         "..111....................................1...23.......................777755.77..44..2.211.2345672345671123452345...23423422....",
+                         "...........44234234...33...111.33.1111122...1111..........................1.....................1...............................",
+                         "...........................................1...................................................................1................",
+                         "....1111.........1......................2.......................................................................................",
+                         "........................................................................................4..................11..................2",
+                         "34234...6..122...332323..................................................................................2323..........44.......",
+                         "...............................11...............................................................................................",
+                         "....1..11..11...554436644445588.......................................1.....................22222333454589A89A89A89A343445556567",
+                         "89789343434345656.5656.676767679A9A33556655.33.44.455688333............................................................1........",
+                         "................................33.................................2....34......................................................",
+                         ".........................567567565689AB89AB4553453453434343445454489A89A456456456456667756565675676767565634344455...443344.....",
+                         "............................45456744.3345454564562467246723452345334433456456232.223333787878784545...6........................1",
+                         "......................787889894145456456456567567.67675656565667675656564443444545.....333.4545454564563434232323..3.3.3..2.3423",
+                         "4..............2.34.....3.33.3.3.....23.23.23.....................................2342342342342323111232323.4.2223332323.....232",
+                         "3222............................................................................................................................",
+                         "............................................1........................................78..................................3453453",
+                         "43423333344678678789A789A...222323567567......789789787856565656789789563333233344234...........................................",
+                         "................56.........................................1111......1.2..1.1........11....1..1....1....1.1...12...1............",
+                         "..............1........1....1....1....1....1....1...11......454522....1.11..1........1.........1....1....1....1....1..1......1..",
+                         "..4564564564566786784545565678783378784434545454545453........1.2.....456456456456......343434134....1234511....................",
+                         ".....3333...........123..........1..........................................432.................................................",
+                         "..................1.........4565634534523235678..785675673356563434456456..45454545343434.......................................",
+                         "..........7897895567675656443434232323456456567567565634345656456456442223232323....3453452323...................676745454545565",
+                         "64564563434.................................................1...................................................................",
+                         "................................................................................................................................",
+                         "..................1.............................................................................................................",
+                         ".11.1........4444.4..................1..................................................................................11.11111",
+                         "11...11.1111111...21..111...111111.1111.12.......2345345....23232.1.2345.................2...................345................",
+                         "..............................................23..2.3...2.2........1232323...1.23452345.2............23..345678.................",
+                         "................1.......243.52345.23...........23....2.345.222...................................................23...2323.2...2",
+                         "...2345.....1.........122..123451.23..2345........12345......................2345.......23452...............2.345..23.45....1123",
+                         "..22..3..232345..2..1..2342342345123452345...34522.2314523.451234533...234523451.....2..........................................",
+                         "...............31....2.234.152234521.123452345.......2345.............2345........34.56782345623453...2345672345672.2345........",
+                         ".23..................1......................................................................................1...................",
+                         ".................................1111234234234234...............................................................................",
+                         "...............................................................................................................1................",
+                         ".........................................1.......11...................................1....1.........567567.23456782345678......",
+                         "................................................................................................................................",
+                         "........111.11.11.1................11.......1111.......2.1.................................234532.1.1.123452345....111..........",
+                         ".......2..1.......345..23.452345..2...2.232....2..23...................1...........1............................................",
+                         ".....1.12345.234523451111.231.1.........................................................................123452345234523234511212",
+                         "31212..1..23123.............1...12345.1........1...2..3451234511...22334455111223123123123123123....1....1...2..345.....2345....",
+                         "............................................1.12345234567823234232234.232345678234...232.23452345..2323..23232345623423....23456",
+                         "78232342322342323456783423223452.3.2323456....................................................23.4..........23..................",
+                         ".......................................................111112345..1.............................................................",
+                         "................................................................................................................................",
+                         "......................1..11111.1..............22323222.2345234523452345..........................233............................",
+                         "........................................1..11....11.1..11..1111111.234567234567.................................................",
+                         "...............................2345223452232.2.23452345..214..........3....45....123.......2....................................",
+                         "..1123231.23..............................34567.......................................................9A9A......................",
+                         "....1...................1111823456711112111..........1....................23452234.521.3452345234523452345..........223453452.34",
+                         "52345..........................1..............1......................2345345.1.........2.3.2.34.5.67............................",
+                         "....................3.........................1...............................234............................1...1..............",
+                         "............3456....3456...1.1..................................................1............................................1..",
+                         ".............................................................................1..................................................",
+                         "................................................................................................................................",
+                         "..................................11.1111.1.........................................11.1.1..............2345234523452345..2...2.",
+                         "22345......................23452345.........1..1111111111.1..11111.2.345234523452234523452345234523452.34522345345........111111",
+                         "1111111111....2345..234523452222323223232234523452345.56756767....................4.5656..56...45.4545..444.....................",
+                         "..444....42.345..............................................................12345....................1.2..312........45......1.",
+                         "123......................12345.2.12..1.....................1.....12345....................1.............1.......................",
+                         "................................................1.......66....................45..1..........12345.................112....3.4511",
+                         "45.145111111.1...........................2345123451212345.1234561231..2345..123451....1.112345..........633567............315451",
+                         "2.34512345..1234512..123..2345..1234512345.1212345123451.234511.2345.1.2...1.2345....1...............1212.1234..................",
+                         ".........................12.3451.2345.1.23451234512345112233.............1.23451.1234512345..1234512............................",
+                         ".1....................................345.......................................1...........1.234...1123456782345678............",
+                         "..............................2345.345...12.3...6...1.............23..1..22223333231........3456..........234234.3434...23...3..",
+                         "..................12345.....................................................12345.1.............................................",
+                         "........6.......................................................................................................................",
+                         "......................................................................11.............234234...........1........1.123451234512345",
+                         "1..2....34512345.123451.................2345.............23456234.56.1.11...........1.......................................1223",
+                         "456223122345....22......2.3.4....123451..1....1.................................................................................",
+                         "........................2.......1.......1....121....1.................12345..121212345121.1..............23456.223......2....123",
+                         "4512312...1.5.......................1....121..............111...........................1.....12345..111........................",
+                         ".....1234..........................................................2........1...........21................................123...",
+                         "..........................12.1234545.............................................................12.345..45....1..234512345.....",
+                         "...............................................9.A....................................22........2323............................",
+                         "...1212312345.12123.12....................1..1........2345.12345.12312.....1..121234512..............................8668.......",
+                         "...112345.1.231...................................234562..3456234.............................................234234234.2323....",
+                         "...................................1...11.......................................................................................",
+                         "..............................................................................12345...12.34.5..1...........23..1................",
+                         "...........................1...23452.314567123452.345612345.23.45623452.3452345623456123213452122335445671.23456234561.234561234",
+                         "56123456.123456712345123456712345........12.3451212.1234512345................1....2345123451234512.345..1...2234563456......123",
+                         "45..12.12345.....111111..11.1.23451.23...1231...1112345.....................................123123451212345........1212..11...12",
+                         "345..1.2345..123451.234512435.11234512345.....................21.2.23423.1.41234................................................",
+                         "..................223344234111111....11..................................................................................2345623",
+                         "456......2.3452345...........12..1.1...........1..1111232323...232323.............................2345623456....................",
+                         ".6543212123..............212366..........................................11123451......234512345..........................123451",
+                         "2345123451234512345212345.....1..2....34512345123451234511.......21.111111...12.1.2435111112122231212345...1123541.2345........1",
+                         "2.....111122123.1211234512311123123451234511.2.........23456782345678......3456634566..3456722345123.45..34523123544234234234232",
+                         "32323.12345...........1.345612345612345612341234561234....234523452.345.1234123412..2345678234566123451234123.....1123451.......",
+                         "...11.12345....3345121212......1...........................1..................4545......5.5.....................................",
+                         "231..2323...23........1..........................2.345........................................45.7....1.................22.....1",
+                         ".12..3.23.4545...................554545452345.................1...A........................................................1....",
+                         "2345.67.............11111..2.323...2345623232312342.2345.34513232323456..3.2323234512343451232.3322345451.......................",
+                         ".................................................................................1.......1111.......................1...........",
+                         "..........................................1....1..............1..11.............................................................",
+                         "................................................................................................111111..........................",
+                         "................................................................................................................................",
+                         "..............................................234.2.34.1.1.2..112.................1111.11111111111111111111111111...............",
+                         ".....................................................................................................................1..........",
+                         "......................................................................3.................1212.....................1..............",
+                         "...................................................................1.1..........11....................1.................5.......",
+                         "..............................1111..............................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         ".................................................................................1..............................................",
+                         ".......................................1111...........123.......................................................................",
+                         ".................................................................................1...........................1...........1...232",
+                         "3...............1..1......................234234.........1........1.2.......34...............................12323..............",
+                         "...............................................12345............................................................1.1111..........",
+                         "..........................................................11..1.....2323................................112323...........112323.",
+                         ".........................................1.......................................................1..............................",
+                         "...................................................................................................1.123.....................5..",
+                         "..............................1..23....................1234.....................................................................",
+                         "..............A86..............12345.............1..............................................................................",
+                         "..............3A................................................................................................................",
+                         ".....................................444.4..............................1..........234...234.....................1234234........",
+                         "..........56..........88...............................1.................................................44.....................",
+                         "................................................123..123..........12323.........................................................",
+                         "...............................1.........1...63........4....................1234521123....3..45.....1234512.....................",
+                         ".................................................................45..........1.......1.....68A.1......11..............2121134123",
+                         "4112323.......34...2.3.41.1234..2..34..1.1.1111.2..342342342342342341112342342342...123456789...1.11234567823456782.345678......",
+                         "23423422.3434.......4.4...312.321...................9A9A9A.A...11........................................1.1......3.............",
+                         "...............................................7................................................................................",
+                         "...........11................................................5....11.....................1....................2345..............",
+                         ".......12345.23452345..........................2345623456..........................................................11...........",
+                         "....................................................1...........................................................................",
+                         ".....................................................................9.67679.597B7B9.5.B.CA.8.7..5A5............................",
+                         "8854555A5967A.3355...................................6793A5597B7B.955BC8A87.....................................................",
+                         "..........................................................................................................................1.....",
+                         "...............................................................................................................38.8...........76",
+                         "54321176543211..1.....4.......2345...................1..........................1....1.6............5......2....................",
+                         ".................................1...1....1..33.....1.2121122212...................B.......1451....12976679A53597B7B95.5BC8A875A",
+                         "5..2........1..................22345312........................................11...1....................1...1..................",
+                         "................................................................234....2342323..........55.......................1..............",
+                         "..........................................................................................................................71234.",
+                         "56......1.......................................................................................................................",
+                         "............................................................................12..................................................",
+                         "...........................111.............................................................................................1....",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "........................................................3654...3....................89A724....2.26..335622.....63...............",
+                         "................................11116..................................................2................3.......................",
+                         "............12.....1..4564456.....1.1.2323..456....2..........1245451........................23.2323.......................12345",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         ".............................................................................................................1.............1....",
+                         "...........................................2..........6.................................123456...............123................",
+                         ".............1....23............................................................................................................",
+                         "...............................................2345............654477...........................................................",
+                         "..........1.....................................................................................................................",
+                         "..............................................................................................................4.................",
+                         "...................................................................12312....1...................................................",
+                         ".....1.23........123..23.1.2.345...................................................1.12345................1...1.........2323....",
+                         "..1.2.312........3..21.....................66...................................................................................",
+                         ".............................................................................................................................123",
+                         "1..2345.....................12.................................................4......................................1.........",
+                         "...................23.................A.........................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "...............................................................................1....1...........................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "...............................................2.........................................32.....................................",
+                         "..............................................................................1231123452345123.1.2345...........................",
+                         "............123123123451.......1...........12123.....12345............12........................................................",
+                         ".............................12........995.5....................................................................................",
+                         "................................................................................................................................",
+                         "......................1.........................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................",
+                         "................................................................................................................................"});
 
-local ranks=
-{
-  [49]= 1;[50]= 2;[51]= 3;[52]= 4;[53]= 5;[54]= 6;[55]= 7;[56]= 8;[57]= 9;
-  [65]=10;[66]=11;[67]=12;[68]=13;[69]=14;[70]=15;[71]=16;[72]=17;[73]=18;
-  [74]=19;[75]=20;[76]=21;[77]=22;[78]=23;[79]=24;[80]=25;[81]=26;[82]=27;
+local ranks = {
+    [49] = 1,
+    [50] = 2,
+    [51] = 3,
+    [52] = 4,
+    [53] = 5,
+    [54] = 6,
+    [55] = 7,
+    [56] = 8,
+    [57] = 9,
+    [65] = 10,
+    [66] = 11,
+    [67] = 12,
+    [68] = 13,
+    [69] = 14,
+    [70] = 15,
+    [71] = 16,
+    [72] = 17,
+    [73] = 18,
+    [74] = 19,
+    [75] = 20,
+    [76] = 21,
+    [77] = 22,
+    [78] = 23,
+    [79] = 24,
+    [80] = 25,
+    [81] = 26,
+    [82] = 27
 };
 
 local function GetSpellRank(spellID)
-  if(type(spellID)=="number") then
-    return ranks[string.byte(spell_ranks,spellID)];
-  elseif(type(spellID)=="string") then
-    local s=string.find(spellID,"%(");
-    --print("s:" .. s)
-    if(s) and not string.gsub(spellID, "Feral", "") then
-      local e=string.find(spellID,"%)",s);
-      if(e) then
-        --print("s:" .. s)
-        rank=string.sub(spellID,s+1,e-1);
-        --GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
-        return string.match(rank, "%d+");
-      end
+    if (type(spellID) == "number") then
+        return ranks[string.byte(spell_ranks, spellID)];
+    elseif (type(spellID) == "string") then
+        local s = string.find(spellID, "%(");
+        -- print("s:" .. s)
+        if (s) and not string.gsub(spellID, "Feral", "") then
+            local e = string.find(spellID, "%)", s);
+            if (e) then
+                -- print("s:" .. s)
+                rank = string.sub(spellID, s + 1, e - 1);
+                -- GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
+                return string.match(rank, "%d+");
+            end
+        end
     end
-  end
 end
-
 
 local function ClassicGetSpellInfo(spellID)
-  local name,rank,icon,castTime,minRange,maxRange, sid=GetSpellInfo( spellID );
-  -- only check rank if classic.
-  if GSE.GameMode == 1 then
-    if GSE.isEmpty(rank) then
-      if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
-        -- check if the rank is the same as the highest.
-        --print("no rank found for " .. spellID)
-        rank = GetSpellRank(spellID)
-        if pcall(function () tonumber(spellID) end) then
-          --print("pcall passed")
-          rank = GetSpellRank(tonumber(spellID))
-          local testName,_,_,_,_,_, testid=GetSpellInfo( name );
-          --print(testName, testid, spellID, rank)
-          local testRank = GetSpellRank(tonumber(testid))
-          if testRank == rank then
-            rank = nil
-          end
-        --else
-          --print("pcall failed:", err)
+    local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
+    -- only check rank if classic.
+    if GSE.GameMode == 1 then
+        if GSE.isEmpty(rank) then
+            if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
+                -- check if the rank is the same as the highest.
+                -- print("no rank found for " .. spellID)
+                rank = GetSpellRank(spellID)
+                if pcall(function()
+                    tonumber(spellID)
+                end) then
+                    -- print("pcall passed")
+                    rank = GetSpellRank(tonumber(spellID))
+                    local testName, _, _, _, _, _, testid = GetSpellInfo(name);
+                    -- print(testName, testid, spellID, rank)
+                    local testRank = GetSpellRank(tonumber(testid))
+                    if testRank == rank then
+                        rank = nil
+                    end
+                    -- else
+                    -- print("pcall failed:", err)
+                end
+            else
+                -- dont set a rank for warriors and rogues
+                -- print("Warrior or Rogue")
+                rank = nil
+            end
         end
-      else
-        -- dont set a rank for warriors and rogues
-        --print("Warrior or Rogue")
-        rank = nil
-      end
+        -- print("Did rank check found: " .. (rank or "No Rank"))
     end
-    --print("Did rank check found: " .. (rank or "No Rank"))
-  end
-  -- allows for a trinket to be part of a castsequence.
-  if tostring(spellID) == "13" or tostring(spellID) == "14" then
-    name = tostring(spellID)
-    sid = tonumber(spellID)
-  end
-  return name,rank,icon,castTime,minRange,maxRange, sid;
+    -- allows for a trinket to be part of a castsequence.
+    if tostring(spellID) == "13" or tostring(spellID) == "14" then
+        name = tostring(spellID)
+        sid = tonumber(spellID)
+    end
+    return name, rank, icon, castTime, minRange, maxRange, sid;
 end
-
-
 
 --- Test override of GetSpellInfo
 function GSE.ClassicGetSpellInfo(spellID)
-  return ClassicGetSpellInfo(spellID)
+    return ClassicGetSpellInfo(spellID)
 end
 
 --- Converts a string spell name to an id and back again.
 function GSE.GetSpellId(spellstring, mode)
-  if GSE.isEmpty(mode) then
-    mode = ""
-  end
-  local returnval = ""
-  local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
-  if mode == "STRING" then
-    if not GSE.isEmpty(rank) then
-      returnval = name .. "(" .. L["Rank"] .." " .. rank .. ")"
+    if GSE.isEmpty(mode) then
+        mode = ""
+    end
+    local returnval = ""
+    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
+    if mode == "STRING" then
+        if not GSE.isEmpty(rank) then
+            returnval = name .. "(" .. L["Rank"] .. " " .. rank .. ")"
+        else
+            returnval = name
+        end
     else
-      returnval = name
+        returnval = spellId
+        if GSE.GameMode ~= 1 then
+            -- If we are not in classic
+            -- Check for overrides like Crusade and Avenging Wrath.
+            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+                returnval = Statics.BaseSpellTable[returnval]
+            end
+        end
     end
-  else
-    returnval = spellId
-    if GSE.GameMode ~= 1 then
-      -- If we are not in classic
-      -- Check for overrides like Crusade and Avenging Wrath.
-      if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-        returnval = Statics.BaseSpellTable[returnval]
-      end
-    end
-  end
-  if not GSE.isEmpty(returnval) then
-    GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
-  else
-    if not GSE.isEmpty(spellstring) then
-      GSE.PrintDebugMessage(spellstring .. " was not found" , "Translator")
+    if not GSE.isEmpty(returnval) then
+        GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
     else
-      GSE.PrintDebugMessage("Nothing was there to be found" , "Translator")
+        if not GSE.isEmpty(spellstring) then
+            GSE.PrintDebugMessage(spellstring .. " was not found", "Translator")
+        else
+            GSE.PrintDebugMessage("Nothing was there to be found", "Translator")
+        end
     end
-  end
-  --print("returning " .. returnval .. " from " .. spellstring)
-  return returnval
+    -- print("returning " .. returnval .. " from " .. spellstring)
+    return returnval
 end
 
 --- Takes a section of a sequence and returns the spells used.
 function GSE.IdentifySpells(tab)
-  local foundspells = {}
-  local returnval = ""
-  for _,p in ipairs(tab) do
-    -- Run a regex to find all spell id's from the table and add them to the table foundspells
-    for m in string.gmatch( p, "%w%d+" ) do
+    local foundspells = {}
+    local returnval = ""
+    for _, p in ipairs(tab) do
+        -- Run a regex to find all spell id's from the table and add them to the table foundspells
+        for m in string.gmatch(p, "%w%d+") do
 
-      foundspells[m] = 1
+            foundspells[m] = 1
+        end
     end
-  end
 
-  for k,v in pairs(foundspells) do
-   if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
-     returnval = returnval .. '<a href="http://www.wowdb.com/spells/' .. k .. '">' .. GSE.GetSpellId(k, "STRING", false) .. '</a>, '
-   end
-  end
+    for k, v in pairs(foundspells) do
+        if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
+            returnval = returnval .. '<a href="http://www.wowdb.com/spells/' .. k .. '">' ..
+                            GSE.GetSpellId(k, "STRING", false) .. '</a>, '
+        end
+    end
 
-  return string.sub(returnval, 1, string.len(returnval) - 2), foundspells
+    return string.sub(returnval, 1, string.len(returnval) - 2), foundspells
 end
 
 GSE.TranslatorAvailable = true
