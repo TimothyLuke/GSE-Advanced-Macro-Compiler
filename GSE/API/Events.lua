@@ -380,6 +380,8 @@ function GSE:GSSlash(input)
         else
             GSE.printNoGui()
         end
+    elseif command == 'testlink' then
+        print("|cFFFFFF00|Hgarrmission:GSE:foo|h[Some Clickable Message]|h|r")
     elseif command == "dumpmacro" then
         GSE_C[params[2]] = {}
         GSE_C[params[2]].name = params[2]
@@ -486,3 +488,12 @@ function GSE.ToggleOOCQueue()
     end
 end
 
+-- process chatlinks
+hooksecurefunc("SetItemRef", function(link)
+	local linkType, addon, param1 = strsplit(":", link)
+	if linkType == "garrmission" and addon == "GSE" then
+		if param1 == "foo" then
+			print(link)
+		end
+	end
+end)
