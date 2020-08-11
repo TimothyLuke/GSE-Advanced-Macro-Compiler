@@ -128,11 +128,6 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
 
-    if not GSE.isEmpty(GSELibrary) then
-        GSE.ImportLegacyStorage(GSELibrary)
-    end
-
-    GSE.Library = {}
     GSE.LoadStorage(GSE.Library)
 
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then

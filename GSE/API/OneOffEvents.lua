@@ -10,6 +10,7 @@ function GSE.PerformOneOffEvents()
     GSE.Update2411()
     GSE.Update2415()
     -- GSE.Update2500()
+    GSE.Update2601()
 end
 
 function GSE.UpdateFrom735to801()
@@ -94,9 +95,11 @@ function GSE.Update2415()
     GSEOptions.Update2415 = true
 end
 
--- function GSE.Update2601()
---     if GSE.isEmpty(GSEOptions.Update2601) then
-
---     end
---     GSEOptions.Update2601 = true
--- end
+function GSE.Update2601()
+    if GSE.isEmpty(GSEOptions.Update2601) then
+        if not GSE.isEmpty(GSELibrary) then
+            GSE.ImportLegacyStorage(GSELibrary)
+        end
+    end
+    GSEOptions.Update2601 = true
+end
