@@ -248,6 +248,9 @@ end
 
 --- Load the GSEStorage into a new table.
 function GSE.LoadStorage(destination)
+    if GSE.isEmpty(GSEStorage) then
+        GSEStorage = {}
+    end
     for k, v in pairs(GSEStorage) do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
