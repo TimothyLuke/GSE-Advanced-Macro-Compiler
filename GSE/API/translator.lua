@@ -280,7 +280,7 @@ end
 -- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
 function GSE.ReportUnfoundSpells()
     GSEOptions.UnfoundSpells = {}
-    for classid, macroset in ipairs(GSELibrary) do
+    for classid, macroset in ipairs(GSE.Library) do
         for name, version in pairs(macroset) do
             for v, sequence in ipairs(version) do
                 GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
