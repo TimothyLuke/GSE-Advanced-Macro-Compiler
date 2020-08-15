@@ -698,7 +698,11 @@ function GSE.IdentifySpells(tab)
 
     for k, v in pairs(foundspells) do
         if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
-            returnval = returnval .. '<a href="http://www.wowdb.com/spells/' .. k .. '">' ..
+            local wowheaddata = "spell="..k
+            if GSE.GameMode == 1 then
+                wowheaddata = wowheaddata .. "?domain=classic"
+            end
+            returnval = returnval .. '<a href="http://www.wowhead.com/spell=' .. k .. '" data-wowhead="' .. wowheaddata .. '">' ..
                             GSE.GetSpellId(k, "STRING", false) .. '</a>, '
         end
     end
