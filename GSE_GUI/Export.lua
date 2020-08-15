@@ -87,7 +87,7 @@ exportframe.ExportSequenceBox = exportsequencebox
 
 function GSE.GUIUpdateExportBox()
   if wlmforumexportcheckbox:GetValue() then
-    local exporttext = "`" .. GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."`"
+    local exporttext = "```" .. GSE.ExportSequence(GSE.GUIExportframe.sequence, exportframe.sequencename, GSEOptions.UseVerboseExportFormat, "ID", false) .."```\n\n"
     exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
     GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
   else
