@@ -66,7 +66,6 @@ local funcs = {
 	tremove = table.remove,
 	tconcat = table.concat,
 	tContains = tContains,
-	tconcat = table.concat,
 	sort = table.sort,
 	wipe = wipe,
 

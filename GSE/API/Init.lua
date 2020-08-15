@@ -8,7 +8,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 -- @debug@
 if GSE.VersionString == "@project-version@" then
-    GSE.VersionString = "2.5.24-18-g95ecb41"
+    GSE.VersionString = "2.6.01-alpha14-shadowlands"
 end
 -- @end-debug@
 
@@ -45,6 +45,10 @@ GSE.GameMode = tonumber(majorVersion[1])
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
+    -- If it contains alpha or beta replace with the current version.  This will prevent notifying about test builds.
+    if string.match(version, 'alpha') or string.match(version, 'beta') then
+        version = GSE.VersionString
+    end
     local parts = GSE.split(version, "-")
     local numbers = GSE.split(parts[1], ".")
     local returnVal = 0

@@ -625,7 +625,7 @@ function GSE.ExportSequence(sequence, sequenceName, verbose, mode, hideversion)
         returnVal = returnVal .. macroversions
         returnVal = returnVal .. "}\n"
     else
-        returnVal = returnVal .. GSE.EncodeMessage({sequenceName, sequence})
+        returnVal = GSE.EncodeMessage({sequenceName, sequence})
     end
 
     return returnVal
