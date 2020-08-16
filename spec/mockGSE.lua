@@ -71,10 +71,6 @@ function GetSpellInfo(spellstring)
   return name, rank, icon, castTime, minRange, maxRange, spellId
 end
 
--- Mock Standard Functions
-function GSE.Print(message, title)
-  print (title .. ": " .. message)
-end
 
 function GSE.PrintDebugMessage(message, title)
   GSE.Print(message, title)
@@ -82,6 +78,14 @@ end
 
 function GSE.isEmpty(s)
   return s == nil or s == ''
+end
+
+-- Mock Standard Functions
+function GSE.Print(message, title)
+  if GSE.isEmpty(title) then
+    title = "GSETEST"
+  end
+  print (title .. ": " .. message)
 end
 
 --- Split a string into an array based on the delimiter specified.
