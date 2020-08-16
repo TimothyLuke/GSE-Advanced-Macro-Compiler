@@ -194,12 +194,17 @@ function GSE.GUIEditorPerformLayout(frame)
   savebutton:SetText(L["Save"])
   savebutton:SetWidth(150)
   savebutton:SetCallback("OnClick", function()
+    local gameversion, build, date, tocversion = GetBuildInfo()
     editframe.Sequence.ManualIntervention = true
+    editframe.Sequence.GSEVersion = GSE.VersionString
+    editframe.Sequence.EnforceCompatability = true
+    editframe.Sequence.TOC = tocversion
     nameeditbox:SetText(string.upper(nameeditbox:GetText()))
     editframe.SequenceName = nameeditbox:GetText()
     GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
     editframe.save = true
   end)
+
   savebutton:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["Save"], L["Save the changes made to this macro"], editframe)
   end)

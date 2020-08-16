@@ -537,3 +537,6 @@ L["Version"] = true
 -- 2.5.9
 L["The version of this macro to use in Scenarios."] = true
 L["Scenario setting changed to Default."] = true
+
+-- 2.6.01
+L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."] = true

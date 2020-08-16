@@ -130,6 +130,14 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     sequenceName = string.gsub(sequenceName, ",", "_")
     sequenceName = string.upper(sequenceName)
 
+    -- check Sequence TOC matches the current TOC
+    local gameversion, build, date, tocversion = GetBuildInfo()
+    if GSE.isEmpty(sequence.TOC) or sequence.TOC ~= tocversion then
+        GSE.Print(string.format(
+            L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
+                          sequenceName))
+    end
+    
     -- Check for collisions
     local found = false
     if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
