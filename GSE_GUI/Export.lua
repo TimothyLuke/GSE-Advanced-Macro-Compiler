@@ -84,7 +84,7 @@ function GSE.GUIExportSequence(classid, sequencename)
   GSE.GUIExportframe.classid = classid
   GSE.GUIExportframe.sequencename = sequencename
   GSE.GUIExportframe.sequence = GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
-  GSE.GUIExportframe.sequence.GSEVersion = GSE.VersionString
+  GSE.GUIExportframe.sequence.GSEVersion = GSE.VersionNumber
   GSE.GUIExportframe.sequence.EnforceCompatability = true
   GSE.GUIExportframe.sequence.TOC = tocversion
   GSE.GUIUpdateExportBox()

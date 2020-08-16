@@ -196,7 +196,7 @@ function GSE.GUIEditorPerformLayout(frame)
   savebutton:SetCallback("OnClick", function()
     local gameversion, build, date, tocversion = GetBuildInfo()
     editframe.Sequence.ManualIntervention = true
-    editframe.Sequence.GSEVersion = GSE.VersionString
+    editframe.Sequence.GSEVersion = GSE.VersionNumber
     editframe.Sequence.EnforceCompatability = true
     editframe.Sequence.TOC = tocversion
     nameeditbox:SetText(string.upper(nameeditbox:GetText()))
