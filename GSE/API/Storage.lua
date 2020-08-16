@@ -137,7 +137,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
             L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
                           sequenceName))
     end
-    
+
     -- Check for collisions
     local found = false
     if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
