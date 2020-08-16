@@ -16,6 +16,7 @@ describe('API Storage', function()
     L["Extra Macro Versions of %s has been added."] = "Extra Macro Versions of %s has been added."
     L["No changes were made to "] = "No changes were made to "
     L[" was updated to new version."] = " was updated to new version."
+    L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."] = "Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."
 
     Statics = GSE.Static
 
