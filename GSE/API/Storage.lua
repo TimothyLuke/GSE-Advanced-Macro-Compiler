@@ -15,6 +15,9 @@ end
 function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSEStorage) then
         GSEStorage = {}
+        for i=1,15 do
+            GSEStorage[i]={}
+        end
     end
     for k, v in pairs(Library) do
 
