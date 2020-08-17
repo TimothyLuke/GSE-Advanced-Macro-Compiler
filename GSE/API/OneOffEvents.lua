@@ -97,11 +97,7 @@ end
 
 function GSE.Update2601()
     if GSE.isEmpty(GSEOptions.Update2601) then
-        if not GSE.isEmpty(GSELibrary) then
-            GSE.ImportLegacyStorage(GSELibrary)
-        elseif condition then
-            GSE.ImportLegacyStorage({})
-        end
+        GSE.ImportLegacyStorage(GSELibrary)
     end
     GSEOptions.Update2601 = true
 end

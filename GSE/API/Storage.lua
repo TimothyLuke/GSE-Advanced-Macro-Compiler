@@ -15,18 +15,20 @@ end
 function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSEStorage) then
         GSEStorage = {}
-        for i=1,15 do
+    end
+    for i=0,12 do
+        if GSE.isEmpty(GSEStorage[i]) then
             GSEStorage[i]={}
         end
     end
-    for k, v in pairs(Library) do
 
-        if GSE.isEmpty(GSEStorage[k]) then
-            GSEStorage[k] = {}
-        end
-        for i, j in pairs(v) do
-            local compressedVersion = GSE.EncodeMessage({i, j})
-            GSEStorage[k][i] = compressedVersion
+    if not GSE.isEmpty(Library) then
+        for k, v in pairs(Library) do
+
+            for i, j in pairs(v) do
+                local compressedVersion = GSE.EncodeMessage({i, j})
+                GSEStorage[k][i] = compressedVersion
+            end
         end
     end
     GSELegacyLibraryBackup = GSELibrary
