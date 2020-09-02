@@ -42,6 +42,12 @@ end
 function GSE.Update2305()
     if GSE.isEmpty(GSEOptions.Update2305) then
         GSEOptions.UseWLMExportFormat = true
+        if GSE.isEmpty(GSEOptions.useExternalMSTimings) then
+            GSEOptions.useExternalMSTimings = true
+        end
+        if GSE.isEmpty(GSEOptions.msClickRate) then
+            GSEOptions.msClickRate = 100
+        end
     end
     GSEOptions.Update2305 = true
 end

@@ -65,6 +65,6 @@ ignore:
     - GSE/Lib2/LibDBIcon-1.0/LibStub
     - GSE/Lib2/LibDBIcon-1.0/LibDBIcon-1.0.toc
     - GSE/Lib2/LibDBIcon-1.0/embeds.xml
-
+    - App
 
 wowi-archive-previous : no

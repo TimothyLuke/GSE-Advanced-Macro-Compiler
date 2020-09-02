@@ -95,6 +95,8 @@ function GSE.SetDefaultOptions()
     GSEOptions.DefaultImportAction = "MERGE"
     GSEOptions.UseWLMExportFormat = true
     GSEOptions.PromptSample = true
+    GSEOptions.useExternalMSTimings = true
+    GSEOptions.msClickRate = 100
     GSEOptions.showMiniMap = {
         hide = true
     }
