@@ -30,7 +30,7 @@ externals:
     GSE/Lib/AceGUI-3.0-Completing-EditBox:
         url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
     GSE/Lib/LibQTip-1.0:
-        url: svn://svn.wowace.com/wow/libqtip-1-0/mainline/trunk
+        url: git://git.wowace.com/wow/libqtip-1-0
     GSE/Lib/LibSharedMedia-3.0:
         url: svn://svn.wowace.com/wow/libsharedmedia-3-0/mainline/trunk
     GSE/Lib/AceGUI-3.0-Selectable-Panel:
