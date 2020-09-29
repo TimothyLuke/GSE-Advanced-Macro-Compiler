@@ -17,14 +17,13 @@ end
 function GSE.GetGCD()
 
     local gcdSpell
- 
+
     local gcd = 1500
     local haste = UnitSpellHaste("player")
 
     gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
 
     return gcd
-
 
 end
 

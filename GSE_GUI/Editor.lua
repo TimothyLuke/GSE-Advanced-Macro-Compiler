@@ -84,7 +84,7 @@ function GSE.GUICreateEditorTabs()
       value="variables"
     }
   }
-  
+
   for k,v in ipairs(editframe.Sequence.MacroVersions) do
     local insline = {}
     insline.text = tostring(k)
@@ -1112,7 +1112,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
   editframe.tempVariables[row] = {}
   editframe.tempVariables[row]["key"] = key
   editframe.tempVariables[row]["value"] = value
-  
+
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
   linegroup1:SetWidth(rowWidth)
@@ -1126,7 +1126,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
     editframe.tempVariables[row]["key"] = keyEditBox:GetText()
   end)
   linegroup1:AddChild(keyEditBox)
-  
+
   local spacerlabel1 = AceGUI:Create("Label")
   spacerlabel1:SetWidth(5)
   linegroup1:AddChild(spacerlabel1)
@@ -1144,7 +1144,6 @@ local function addKeyPairRow(container, rowWidth, key, value)
   spacerlabel2:SetWidth(8)
   linegroup1:AddChild(spacerlabel2)
 
-  
   -- local iconpicker = AceGUI:Create("Icon")
   -- iconpicker:SetLabel(L["Macro Icon"])
   -- iconpicker.frame:RegisterForDrag("LeftButton")
@@ -1162,7 +1161,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
   deleteRowButton:SetHeight(20)
   deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
 
-  deleteRowButton:SetCallback("OnClick", function()  
+  deleteRowButton:SetCallback("OnClick", function()
     table.remove(editframe.tempVariables[row])
     linegroup1:ReleaseChildren()
    end)
@@ -1179,7 +1178,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
 end
 
 function GSE:GUIDrawVariableEditor(container)
-  
+
   if GSE.isEmpty(editframe.Sequence.Variables) then
     editframe.Sequence.Variables = {}
   end
@@ -1221,7 +1220,7 @@ function GSE:GUIDrawVariableEditor(container)
   valueLabel:SetText(L["Value"])
   valueLabel:SetWidth((columnWidth /2) -25)
   linegroup1:AddChild(valueLabel)
-  
+
   local spacerlabel2 = AceGUI:Create("Label")
   spacerlabel2:SetWidth(5)
   linegroup1:AddChild(spacerlabel2)
@@ -1230,7 +1229,6 @@ function GSE:GUIDrawVariableEditor(container)
   delLabel:SetText(L["Del"])
   delLabel:SetWidth(25)
   linegroup1:AddChild(delLabel)
-  
 
   contentcontainer:AddChild(linegroup1)
   for key,value in pairs(editframe.Sequence.Variables) do
@@ -1238,7 +1236,7 @@ function GSE:GUIDrawVariableEditor(container)
     --print("Creating pair", key, value)
     addKeyPairRow(contentcontainer, columnWidth, key, value)
   end
-  
+
   local addVariablsButton = AceGUI:Create("Button")
   addVariablsButton:SetText(L["Add Variable"])
   addVariablsButton:SetWidth(150)
@@ -1249,7 +1247,7 @@ function GSE:GUIDrawVariableEditor(container)
   addVariablsButton:SetCallback('OnLeave', function ()
     GSE.ClearTooltip(editframe)
   end)
-  
+
   layoutcontainer:AddChild(scrollcontainer)
   layoutcontainer:AddChild(addVariablsButton)
   container:AddChild(layoutcontainer)

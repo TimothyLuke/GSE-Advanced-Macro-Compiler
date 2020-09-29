@@ -779,8 +779,7 @@ function GSE.OOCUpdateSequence(name, sequence)
         GSE.FixSequence(sequence)
         tempseq = GSE.CloneMacroVersion(sequence)
         GSE.ProcessSequenceVariables(tempseq,variables)
-        
-        
+
         local existingbutton = true
         if GSE.isEmpty(_G[name]) then
             GSE.CreateButton(name, tempseq)
