@@ -55,7 +55,7 @@ function GSE.GUIPauseDebugView()
 end
 
 DebugFrame:SetTitle(L["Sequence Debugger"])
-local _, GCD_Timer = GetSpellCooldown(61304)
+local GCD_Timer = GSE.GetGCD()
 DebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. "   GCD: " .. GCD_Timer)
 DebugFrame:SetCallback("OnClose", function(widget) DebugFrame:Hide()  end)
 DebugFrame:SetLayout("List")

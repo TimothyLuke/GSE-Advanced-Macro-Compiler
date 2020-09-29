@@ -670,6 +670,32 @@ function GSE.FixSequence(sequence)
     end
 
 end
+
+function GSE.ProcessSequenceVariables(sequence, variables)
+
+    if not GSE.isEmpty(sequence.PreMacro) then
+        sequence.PreMacro = GSE.ProcessVariables(sequence.PreMacro, variables)
+        GSE.PrintDebugMessage("Processed for Variables PreMacro", GNOME)
+    end
+    if not GSE.isEmpty(sequence.PostMacro) then
+        sequence.PostMacro = GSE.ProcessVariables(sequence.PostMacro, variables)
+        GSE.PrintDebugMessage("Empty PostMacro", GNOME)
+    end
+    if not GSE.isEmpty(sequence.KeyPress) then
+        sequence.KeyPress = GSE.ProcessVariables(sequence.KeyPress, variables)
+        GSE.PrintDebugMessage("Empty KeyPress", GNOME)
+    end
+    if not GSE.isEmpty(sequence.KeyRelease) then
+        sequence.KeyRelease = GSE.ProcessVariables(sequence.KeyRelease, variables)
+        GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
+    end
+
+    for key, value in ipairs(sequence) do
+        local returnval = GSE.ProcessVariables({value}, variables)[1]
+        sequence[key] = GSE.ProcessVariables({value}, variables)[1]
+    end
+end
+
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
     local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
@@ -743,10 +769,18 @@ function GSE.OOCUpdateSequence(name, sequence)
         return
     end
     if pcall(GSE.CheckSequence, sequence) then
+        local variables = GSE.Library[GSE.GetCurrentClassID()][name].Variables
+        if GSE.isEmpty(variables) then
+            GSE.PrintDebugMessage("Sequence " .. name .. " has no variables", Statics.DebugModules["Storage"] )
+        else
+            GSE.PrintDebugMessage("Sequence " .. name .. " has variables", Statics.DebugModules["Storage"] )
+        end
         sequence = GSE.CleanMacroVersion(sequence)
         GSE.FixSequence(sequence)
         tempseq = GSE.CloneMacroVersion(sequence)
-
+        GSE.ProcessSequenceVariables(tempseq,variables)
+        
+        
         local existingbutton = true
         if GSE.isEmpty(_G[name]) then
             GSE.CreateButton(name, tempseq)

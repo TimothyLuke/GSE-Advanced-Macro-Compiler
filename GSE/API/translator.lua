@@ -59,6 +59,34 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
     return sequence
 end
 
+--- This function interates through each line in lines and does a string replace on each varible in the variableTable
+function GSE.ProcessVariables(lines, variableTable)
+
+    local returnLines = {}
+
+    for _, line in ipairs(lines) do
+        if not GSE.isEmpty(variableTable) then
+            for key,value in pairs(variableTable) do
+                if type(value) == "function" then
+                    value = value()
+                end
+                line = string.gsub(line, string.format("~~%s~~", key), value)
+            end
+        end
+
+        for key,value in pairs(Statics.SystemVariables) do
+
+            if type(value) == "function" then
+                value = value()
+            end
+            local oldline = line
+            line = string.gsub(line, string.format("~~%s~~", key), value)
+        end
+        table.insert(returnLines, line)
+    end
+    return returnLines
+end
+
 function GSE.TranslateString(instring, mode, cleanNewLines)
     instring = GSE.UnEscapeString(instring)
     GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)

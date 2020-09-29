@@ -303,7 +303,6 @@ L["Help URL"] = true
 L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
 L[" Deleted Orphaned Macro "] = true
-
 --- GSE2.0.1-2.0.4
 L["Create buttons for Global Macros"] = true
 L["Global Macros are those that are valid for all classes.  GSE2 also imports unknown macros as Global.  This option will create a button for these macros so they can be called for any class.  Having all macros in this space is a performance loss hence having them saved with a the right specialisation is important."] = true
@@ -540,3 +539,11 @@ L["Scenario setting changed to Default."] = true
 
 -- 2.6.01
 L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."] = true
+L["Variables"] = true
+L["Add Variable"] = true
+L["Add a substitution variable for this macro.  This can either be a straight string swap or can be a function.  If a lua function the function needs to return a value."] = true
+L["Name"] = true
+L["Value"] = true
+L["Delete Variable"] = true
+L["Del"] = true
+L["Delete this variable from the sequence."] = true

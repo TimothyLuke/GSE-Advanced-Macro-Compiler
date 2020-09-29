@@ -68,6 +68,12 @@ Statics.CleanStrings = {
 Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 
+Statics.SystemVariables = {
+  ["GCD"] = function()
+    return GSE.GetGCD()
+  end,
+}
+
 Statics.SpecIDList = {
     [0] = "Global",
     [1] = "Warrior",

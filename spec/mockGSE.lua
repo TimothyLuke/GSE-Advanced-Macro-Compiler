@@ -41,6 +41,11 @@ function GetClassInfo(i)
   end
 end
 
+function UnitSpellHaste()
+  -- return a haste of 25%
+  return 25
+end
+
 function GetSpecializationInfoByID(id)
   return id, "SPecName", "SPecDescription", 1234567, "file.blp", 1, "DRUID"
 end

@@ -128,7 +128,7 @@ function GSE.printNoGui()
         "GSE GUI")
 end
 
-GSE.CurrentGCD = GetSpellCooldown(61304)
+GSE.CurrentGCD = 1.5
 GSE.RecorderActive = false
 
 -- Macro Mode Status
