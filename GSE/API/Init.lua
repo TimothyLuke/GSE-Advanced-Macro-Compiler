@@ -8,7 +8,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 -- @debug@
 if GSE.VersionString == "@project-version@" then
-    GSE.VersionString = "2.6.01-beta1-shadowlands"
+    GSE.VersionString = "2.6.01-beta4-shadowlands"
 end
 -- @end-debug@
 
