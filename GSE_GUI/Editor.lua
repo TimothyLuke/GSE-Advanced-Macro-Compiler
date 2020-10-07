@@ -1162,6 +1162,8 @@ local function addKeyPairRow(container, rowWidth, key, value)
   deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
 
   deleteRowButton:SetCallback("OnClick", function()
+    
+    editframe.Sequence.Variables[editframe.tempVariables[row].key] = nil
     table.remove(editframe.tempVariables[row])
     linegroup1:ReleaseChildren()
    end)
@@ -1232,7 +1234,7 @@ function GSE:GUIDrawVariableEditor(container)
 
   contentcontainer:AddChild(linegroup1)
   for key,value in pairs(editframe.Sequence.Variables) do
-    GSE.Dump(editframe.Sequence.Variables)
+    --GSE.Dump(editframe.Sequence.Variables)
     --print("Creating pair", key, value)
     addKeyPairRow(contentcontainer, columnWidth, key, value)
   end
