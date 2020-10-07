@@ -1162,7 +1162,6 @@ local function addKeyPairRow(container, rowWidth, key, value)
   deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
 
   deleteRowButton:SetCallback("OnClick", function()
-    
     editframe.Sequence.Variables[editframe.tempVariables[row].key] = nil
     table.remove(editframe.tempVariables[row])
     linegroup1:ReleaseChildren()
