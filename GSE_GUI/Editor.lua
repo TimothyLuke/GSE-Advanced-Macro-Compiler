@@ -43,7 +43,8 @@ editframe.variablecount = 0
 if GSE.isEmpty(GSEOptions.editorHeight) then
   GSEOptions.editorHeight = 700
   GSEOptions.editorWidth = 500
-end    
+end
+
 editframe.Height = GSEOptions.editorHeight
 editframe.Width = GSEOptions.editorWidth
 editframe.frame:SetClampRectInsets(-10,-10,-10,-10)
@@ -981,11 +982,8 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local headingspace1 = AceGUI:Create("Label")
   headingspace1:SetText(" ")
-  
-
   local heading1 = AceGUI:Create("Label")
   heading1:SetText(L["Use"])
-  
 
   local toolbarrow2 = AceGUI:Create("SimpleGroup")
   toolbarrow2:SetLayout("Flow")
