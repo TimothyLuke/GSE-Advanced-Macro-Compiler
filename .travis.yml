@@ -32,7 +32,6 @@ script:
 after_success:
 - luacov-coveralls -r ./GSE/
 - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
-- curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash -s -- -g 1.13.5 -m .pkgmeta -w 25155; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
 notifications:
   email:
     on_failure: always
