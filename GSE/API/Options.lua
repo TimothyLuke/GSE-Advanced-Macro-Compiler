@@ -56,30 +56,31 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.HideLoginMessage end,
             order = 202
           },
+          editorHeight = {
+            name = L["Default Editor Height"],
+            desc = L["How many pixels high should the Editor start at.  Defaults to 700"],
+            type = "input",
+            set = function(info,val) GSEOptions.editorHeight = tonumber(val) end,
+            get = function(info) return tostring(GSEOptions.editorHeight) end,
+            order = 204
+          },
+          editorWidth = {
+            name = L["Default Editor Width"],
+            desc = L["How many pixels wide should the Editor start at.  Defaults to 700"],
+            type = "input",
+            set = function(info,val) GSEOptions.editorWidth = tonumber(val) end,
+            get = function(info) return tostring(GSEOptions.editorWidth) end,
+            order = 205
+          },
           promptSamples = {
             name = L["Prompt Samples"],
             desc = L["When you log into a class without any macros, prompt to load the sample macros."],
             type = "toggle",
             set = function(info,val) GSEOptions.PromptSample = val end,
             get = function(info) return GSEOptions.PromptSample end,
-            order = 203
+            order = 208
           },
-          editorHeight = {
-            name = L["Default Editor Height"],
-            desc = L["How many pixels high should the Editor start at.  Defaults to 700"],
-            type = "input",
-            set = function(info,val) if type(val)=='number' then GSEOptions.editorHeight = val end end,
-            get = function(info) return GSEOptions.editorHeight end,
-            order = 204
-          },
-          editorWidth = {
-            name = L["Default Editor Width"],
-            desc = L["How many pixels high should the Editor start at.  Defaults to 500"],
-            type = "toggle",
-            set = function(info,val) if type(val)=='number' then GSEOptions.editorWidth = val end end,
-            get = function(info) return GSEOptions.editorWidth end,
-            order = 205
-          },
+
           resetOOC = {
             name = L["Reset Macro when out of combat"],
             desc = L["Resets macros back to the initial state when out of combat."],

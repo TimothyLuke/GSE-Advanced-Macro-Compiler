@@ -101,7 +101,7 @@ function GSE.SetDefaultOptions()
         hide = true
     }
     GSEOptions.editorHeight = 700
-    GSEOptions.editorWidth = 500
+    GSEOptions.editorWidth = 700
     GSE.resetMacroResetModifiers()
 end
 

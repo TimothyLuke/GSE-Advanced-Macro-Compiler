@@ -550,4 +550,4 @@ L["Delete this variable from the sequence."] = true
 L["Default Editor Height"] = true
 L["How many pixels high should the Editor start at.  Defaults to 700"] = true
 L["Default Editor Width"] = true
-L["How many pixels high should the Editor start at.  Defaults to 500"] = true
+L["How many pixels wide should the Editor start at.  Defaults to 700"] = true

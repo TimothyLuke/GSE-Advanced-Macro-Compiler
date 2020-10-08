@@ -42,7 +42,7 @@ editframe.variablecount = 0
 
 if GSE.isEmpty(GSEOptions.editorHeight) then
   GSEOptions.editorHeight = 700
-  GSEOptions.editorWidth = 500
+  GSEOptions.editorWidth = 700
 end
 
 editframe.Height = GSEOptions.editorHeight
@@ -53,6 +53,9 @@ editframe.frame:SetWidth(GSEOptions.editorWidth)
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self)
+  if not GSE.isEmpty(editframe.tempVariables) then
+    editframe.tempVariables = nil
+  end
   GSE.ClearTooltip(editframe)
   editframe:Hide();
   if editframe.save then
@@ -1205,6 +1208,14 @@ function GSE:GUIDrawVariableEditor(container)
 
   if GSE.isEmpty(editframe.Sequence.Variables) then
     editframe.Sequence.Variables = {}
+  end
+  if not GSE.isEmpty(editframe.tempVariables) then
+    local variables = {}
+    for index, pair in ipairs(editframe.tempVariables) do
+      variables[pair.key] = pair.value
+      --print("inserted", pair.key, pair.value)
+    end
+    editframe.Sequence.Variables = variables
   end
   editframe.tempVariables = {}
   editframe.variablecount = 0
