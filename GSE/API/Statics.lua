@@ -423,10 +423,11 @@ Statics.BaseSpellTable[202168] = 34428 -- Impending Victory -> Victory Rush
 Statics.BaseSpellTable[262161] = 167105 -- Warbreaker -> Colossus Smash
 Statics.BaseSpellTable[152277] = 227847 -- Ravager -> Bladestorm
 Statics.BaseSpellTable[236279] = 20243 -- Devastator -> Devastate
+Statics.BaseSpellTable[845] = 260708 -- Cleave -> Sweeping Strikes
 
 -- Rogue
 Statics.BaseSpellTable[200758] = 53 -- Gloomblade -> Backstab
-Statics.BaseSpellTable[5171] = 193316 -- Slice and Dice -> Roll the Bones
+
 
 -- Priest
 Statics.BaseSpellTable[123040] = 34433 -- Mindbender -> Shadow Fiend
@@ -441,11 +442,12 @@ Statics.BaseSpellTable[205448] = 228260 -- Void Bolt -> Void Eruption
 -- Hunter
 Statics.BaseSpellTable[259387] = 186270 -- Mongoose Bite -> Raptor Strike
 Statics.BaseSpellTable[136] = 982 -- Mend Pet -> Revive Pet
-Statics.BaseSpellTable[270335] = 259495 -- Shrapnel Bomb -> Wildfire Bomb
-Statics.BaseSpellTable[270323] = 259495 -- Pheromone Bomb -> Wildfire Bomb
-Statics.BaseSpellTable[271045] = 259495 -- Volatile Bomb -> Wildfire Bomb
+Statics.BaseSpellTable[212436] = 187708 -- Butchery -> Carve
+Statics.BaseSpellTable[342049] = 185358 -- Chimera Shot -> Arcane Shot
 
 -- Warlock
+Statics.BaseSpellTable[198590] = 232670 -- Drain Soul -> Shadow Bolt
+
 
 -- Shaman
 Statics.BaseSpellTable[192249] = 198067 -- Storm Elemental -> Fire Elemental
@@ -458,109 +460,107 @@ Statics.BaseSpellTable[212653] = 1953 -- Shimmer -> Blink
 -- Monk
 Statics.BaseSpellTable[115008] = 109132 -- Chi Torpedo -> Roll
 Statics.BaseSpellTable[152173] = 137639 -- Serenity -> Storm, Earth and Fire
+Statics.BaseSpellTable[325197] = 322118 -- Invoke Chi-Ji -> Invoke Yu'lon
 
 -- Druid
 Statics.BaseSpellTable[252216] = 1850 -- Tiger Dash -> Dash
-Statics.BaseSpellTable[102560] = 194223 -- Incarnation: Chosen of Elune -> Celestial Alignment
 Statics.BaseSpellTable[102543] = 106951 -- Incarnation: King of the Jungle -> Beserk
-Statics.BaseSpellTable[202028] = 213764 -- Brutal Slash -> Swipe
-Statics.BaseSpellTable[236748] = 99 -- Intimidating Roar -> Incapacitating Roar
+Statics.BaseSpellTable[102558] = 50334 -- Incarnation: Guardian of Ursoc -> Beserk
+
 
 -- Demon Hunter
 Statics.BaseSpellTable[203555] = 162243 -- Demon Blades -> Demon’s Bite
 Statics.BaseSpellTable[263642] = 203782 -- Fracture -> Shear
-Statics.BaseSpellTable[201427] = 162794 -- Annihilation -> Chaos Strike
-Statics.BaseSpellTable[210152] = 188499 -- Death Sweep -> Blade Dance
 
 -- Death Knight
 Statics.BaseSpellTable[207311] = 55090 -- Clawing Shadows -> Scourge Strike
 Statics.BaseSpellTable[152280] = 43265 -- Defile -> Death and Decay
-Statics.BaseSpellTable[207127] = 47568 -- Hungering Rune Weapon -> Empower Rune Weapon
 
--- Azerite essences
-Statics.BaseSpellTable[296325] = 296208 -- Vision of Perfection 1
-Statics.BaseSpellTable[299368] = 296208 -- Vision of Perfection 2
-Statics.BaseSpellTable[299370] = 296208 -- Vision of Perfection 3
 
-Statics.BaseSpellTable[303823] = 296208 -- Conflict 1
-Statics.BaseSpellTable[304088] = 296208 -- Conflict 2
-Statics.BaseSpellTable[304121] = 296208 -- Conflict 3
+-- -- Azerite essences
+-- Statics.BaseSpellTable[296325] = 296208 -- Vision of Perfection 1
+-- Statics.BaseSpellTable[299368] = 296208 -- Vision of Perfection 2
+-- Statics.BaseSpellTable[299370] = 296208 -- Vision of Perfection 3
 
-Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 1
-Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 2
-Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 3
+-- Statics.BaseSpellTable[303823] = 296208 -- Conflict 1
+-- Statics.BaseSpellTable[304088] = 296208 -- Conflict 2
+-- Statics.BaseSpellTable[304121] = 296208 -- Conflict 3
 
-Statics.BaseSpellTable[295258] = 296208 -- Focused Azerite Beam
-Statics.BaseSpellTable[299336] = 296208 -- Focused Azerite Beam
-Statics.BaseSpellTable[299338] = 296208 -- Focused Azerite Beam
+-- Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 1
+-- Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 2
+-- Statics.BaseSpellTable[297108] = 296208 -- Blood of the Enemy 3
 
-Statics.BaseSpellTable[295840] = 296208 -- Guardian of Azeroth 1
-Statics.BaseSpellTable[299355] = 296208 -- Guardian of Azeroth 2
-Statics.BaseSpellTable[299358] = 296208 -- Guardian of Azeroth 3
+-- Statics.BaseSpellTable[295258] = 296208 -- Focused Azerite Beam
+-- Statics.BaseSpellTable[299336] = 296208 -- Focused Azerite Beam
+-- Statics.BaseSpellTable[299338] = 296208 -- Focused Azerite Beam
 
-Statics.BaseSpellTable[295337] = 296208 -- Purification Protocol 1
-Statics.BaseSpellTable[299345] = 296208 -- Purification Protocol 2
-Statics.BaseSpellTable[299347] = 296208 -- Purification Protocol 3
+-- Statics.BaseSpellTable[295840] = 296208 -- Guardian of Azeroth 1
+-- Statics.BaseSpellTable[299355] = 296208 -- Guardian of Azeroth 2
+-- Statics.BaseSpellTable[299358] = 296208 -- Guardian of Azeroth 3
 
-Statics.BaseSpellTable[295186] = 296208 -- World Vein Resonance 1
-Statics.BaseSpellTable[298628] = 296208 -- World Vein Resonance 2
-Statics.BaseSpellTable[299334] = 296208 -- World Vein Resonance 3
+-- Statics.BaseSpellTable[295337] = 296208 -- Purification Protocol 1
+-- Statics.BaseSpellTable[299345] = 296208 -- Purification Protocol 2
+-- Statics.BaseSpellTable[299347] = 296208 -- Purification Protocol 3
 
-Statics.BaseSpellTable[298357] = 296208 -- Memory of Lucid Dreams 1
-Statics.BaseSpellTable[299372] = 296208 -- Memory of Lucid Dreams 2
-Statics.BaseSpellTable[299374] = 296208 -- Memory of Lucid Dreams 3
+-- Statics.BaseSpellTable[295186] = 296208 -- World Vein Resonance 1
+-- Statics.BaseSpellTable[298628] = 296208 -- World Vein Resonance 2
+-- Statics.BaseSpellTable[299334] = 296208 -- World Vein Resonance 3
 
-Statics.BaseSpellTable[296072] = 296208 -- Overcharge Mana 1
-Statics.BaseSpellTable[299876] = 296208 -- Overcharge Mana 2
-Statics.BaseSpellTable[299374] = 296208 -- Overcharge Mana 3
+-- Statics.BaseSpellTable[298357] = 296208 -- Memory of Lucid Dreams 1
+-- Statics.BaseSpellTable[299372] = 296208 -- Memory of Lucid Dreams 2
+-- Statics.BaseSpellTable[299374] = 296208 -- Memory of Lucid Dreams 3
 
-Statics.BaseSpellTable[295746] = 296208 -- Empowered Null Barrier 1
-Statics.BaseSpellTable[300015] = 296208 -- Empowered Null Barrier 2
-Statics.BaseSpellTable[300016] = 296208 -- Empowered Null Barrier 3
+-- Statics.BaseSpellTable[296072] = 296208 -- Overcharge Mana 1
+-- Statics.BaseSpellTable[299876] = 296208 -- Overcharge Mana 2
+-- Statics.BaseSpellTable[299374] = 296208 -- Overcharge Mana 3
 
-Statics.BaseSpellTable[293032] = 296208 -- Life-Binders Invocation 1
-Statics.BaseSpellTable[299943] = 296208 -- Life-Binders Invocation 2
-Statics.BaseSpellTable[299944] = 296208 -- Life-Binders Invocation 3
+-- Statics.BaseSpellTable[295746] = 296208 -- Empowered Null Barrier 1
+-- Statics.BaseSpellTable[300015] = 296208 -- Empowered Null Barrier 2
+-- Statics.BaseSpellTable[300016] = 296208 -- Empowered Null Barrier 3
 
-Statics.BaseSpellTable[295373] = 296208 -- Concentrated Flame 1
-Statics.BaseSpellTable[299349] = 296208 -- Concentrated Flame 2
-Statics.BaseSpellTable[299353] = 296208 -- Concentrated Flame 3
+-- Statics.BaseSpellTable[293032] = 296208 -- Life-Binders Invocation 1
+-- Statics.BaseSpellTable[299943] = 296208 -- Life-Binders Invocation 2
+-- Statics.BaseSpellTable[299944] = 296208 -- Life-Binders Invocation 3
 
-Statics.BaseSpellTable[294926] = 296208 -- Anima of Death 1
-Statics.BaseSpellTable[300002] = 296208 -- Anima of Death 2
-Statics.BaseSpellTable[300003] = 296208 -- Anima of Death 3
+-- Statics.BaseSpellTable[295373] = 296208 -- Concentrated Flame 1
+-- Statics.BaseSpellTable[299349] = 296208 -- Concentrated Flame 2
+-- Statics.BaseSpellTable[299353] = 296208 -- Concentrated Flame 3
 
-Statics.BaseSpellTable[296197] = 296208 -- Refreshment 1
-Statics.BaseSpellTable[299932] = 296208 -- Refreshment 2
-Statics.BaseSpellTable[299933] = 296208 -- Refreshment 3
+-- Statics.BaseSpellTable[294926] = 296208 -- Anima of Death 1
+-- Statics.BaseSpellTable[300002] = 296208 -- Anima of Death 2
+-- Statics.BaseSpellTable[300003] = 296208 -- Anima of Death 3
 
-Statics.BaseSpellTable[298168] = 296208 -- Aegis of the Deep 1
-Statics.BaseSpellTable[299273] = 296208 -- Aegis of the Deep 2
-Statics.BaseSpellTable[299275] = 296208 -- Aegis of the Deep 3
+-- Statics.BaseSpellTable[296197] = 296208 -- Refreshment 1
+-- Statics.BaseSpellTable[299932] = 296208 -- Refreshment 2
+-- Statics.BaseSpellTable[299933] = 296208 -- Refreshment 3
 
-Statics.BaseSpellTable[293019] = 296208 -- Azeroth's Undying Gift 1
-Statics.BaseSpellTable[298080] = 296208 -- Azeroth's Undying Gift 2
-Statics.BaseSpellTable[298081] = 296208 -- Azeroth's Undying Gift 3
+-- Statics.BaseSpellTable[298168] = 296208 -- Aegis of the Deep 1
+-- Statics.BaseSpellTable[299273] = 296208 -- Aegis of the Deep 2
+-- Statics.BaseSpellTable[299275] = 296208 -- Aegis of the Deep 3
 
-Statics.BaseSpellTable[298452] = 296208 -- The Unbound Force 1
-Statics.BaseSpellTable[299376] = 296208 -- The Unbound Force 2
-Statics.BaseSpellTable[299378] = 296208 -- The Unbound Force 3
+-- Statics.BaseSpellTable[293019] = 296208 -- Azeroth's Undying Gift 1
+-- Statics.BaseSpellTable[298080] = 296208 -- Azeroth's Undying Gift 2
+-- Statics.BaseSpellTable[298081] = 296208 -- Azeroth's Undying Gift 3
 
-Statics.BaseSpellTable[296230] = 296208 -- Vitality Conduit 1
-Statics.BaseSpellTable[299958] = 296208 -- Vitality Conduit 2
-Statics.BaseSpellTable[299959] = 296208 -- Vitality Conduit 3
+-- Statics.BaseSpellTable[298452] = 296208 -- The Unbound Force 1
+-- Statics.BaseSpellTable[299376] = 296208 -- The Unbound Force 2
+-- Statics.BaseSpellTable[299378] = 296208 -- The Unbound Force 3
 
-Statics.BaseSpellTable[293031] = 296208 -- Suppressing Pulse 1
-Statics.BaseSpellTable[300009] = 296208 -- Suppressing Pulse 2
-Statics.BaseSpellTable[300010] = 296208 -- Suppressing Pulse 3
+-- Statics.BaseSpellTable[296230] = 296208 -- Vitality Conduit 1
+-- Statics.BaseSpellTable[299958] = 296208 -- Vitality Conduit 2
+-- Statics.BaseSpellTable[299959] = 296208 -- Vitality Conduit 3
 
-Statics.BaseSpellTable[296094] = 296208 -- Standstill 1
-Statics.BaseSpellTable[299882] = 296208 -- Standstill 2
-Statics.BaseSpellTable[299883] = 296208 -- Standstill 3
+-- Statics.BaseSpellTable[293031] = 296208 -- Suppressing Pulse 1
+-- Statics.BaseSpellTable[300009] = 296208 -- Suppressing Pulse 2
+-- Statics.BaseSpellTable[300010] = 296208 -- Suppressing Pulse 3
 
-Statics.BaseSpellTable[302731] = 296208 -- Ripple in Space 1
-Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
-Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
+-- Statics.BaseSpellTable[296094] = 296208 -- Standstill 1
+-- Statics.BaseSpellTable[299882] = 296208 -- Standstill 2
+-- Statics.BaseSpellTable[299883] = 296208 -- Standstill 3
+
+-- Statics.BaseSpellTable[302731] = 296208 -- Ripple in Space 1
+-- Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
+-- Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
 Statics.Patrons = {"axellis", "avmickus", "badcath4x", "bf2champ", "chris_stratis", "dblakesneed", "donnawaldrip78",
                    "drobaserge", "elfyau", "faultless1986", "Flagels", "geoffreytang", "holdingacct", "JamesT",
