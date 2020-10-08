@@ -40,11 +40,9 @@ editframe.SelectedTab = "group"
 editframe.tempVariables = {}
 editframe.variablecount = 0
 
-local fleft, fbottom, fwidth, fheight = editframe.frame:GetBoundsRect()
-editframe.Left = fleft
-editframe.Bottom = fbottom
-editframe.Width = fwidth
-editframe.Height = fheight
+editframe.Height = 700
+editframe.Width = 500
+editframe.frame:SetClampRectInsets(-10,-10,-10,-10)
 
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
@@ -60,10 +58,12 @@ editframe:SetCallback("OnClose", function (self)
   end
 end)
 editframe:SetLayout("List")
-editframe.frame:SetScript("OnSizeChanged", function ()
-  editframe.Left, editframe.Bottom, editframe.Width, editframe.Height = editframe.frame:GetBoundsRect()
+editframe.frame:SetScript("OnSizeChanged", function (self, width, height)
+  editframe.Height = height
+  editframe.Width = width
   if editframe.Height > GetScreenHeight() then
     editframe.Height = GetScreenHeight() - 10
+    editframe:SetHeight(editframe.Height)
   end
   GSE.GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
   editframe:DoLayout()

@@ -81,6 +81,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local font = GameFontNormal:GetFontObject()
   local fontlarge = GameFontNormalLarge:GetFontObject()
   local origjustifyV = font:GetJustifyV()
+  local origjustifyH = font:GetJustifyH()
   font:SetJustifyV("BOTTOM")
 
   local selpanel = AceGUI:Create("SelectablePanel")
@@ -205,6 +206,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   container:AddChild(selpanel)
   font:SetJustifyV(origjustifyV)
+  font:SetJustifyH(origjustifyH)
 end
 
 function GSE.GUIViewerToolbar(container)
