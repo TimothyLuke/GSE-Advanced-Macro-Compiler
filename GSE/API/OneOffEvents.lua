@@ -105,5 +105,7 @@ function GSE.Update2601()
     if GSE.isEmpty(GSEOptions.Update2601) then
         GSE.ImportLegacyStorage(GSELibrary)
     end
+    GSEOptions.editorHeight = 700
+    GSEOptions.editorWidth = 500
     GSEOptions.Update2601 = true
 end

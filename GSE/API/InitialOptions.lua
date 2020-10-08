@@ -100,6 +100,8 @@ function GSE.SetDefaultOptions()
     GSEOptions.showMiniMap = {
         hide = true
     }
+    GSEOptions.editorHeight = 700
+    GSEOptions.editorWidth = 500
     GSE.resetMacroResetModifiers()
 end
 
