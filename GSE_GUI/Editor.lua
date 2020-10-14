@@ -47,6 +47,14 @@ end
 
 editframe.Height = GSEOptions.editorHeight
 editframe.Width = GSEOptions.editorWidth
+if editframe.Height < 745 then
+  editframe.Height = 745
+  GSEOptions.editorHeight = editframe.Height
+end
+if editframe.Width < 765 then
+  editframe.Width = 765
+  GSEOptions.editorWidth = editframe.Width
+end
 editframe.frame:SetClampRectInsets(-10,-10,-10,-10)
 editframe.frame:SetHeight(GSEOptions.editorHeight)
 editframe.frame:SetWidth(GSEOptions.editorWidth)
@@ -76,9 +84,11 @@ editframe.frame:SetScript("OnSizeChanged", function (self, width, height)
   end
   if editframe.Height < 745 then
     editframe.Height = 745
+    editframe:SetHeight(editframe.Height)
   end
   if editframe.Width < 765 then
     editframe.Width = 765
+    editframe:SetWidth(editframe.Width)
   end
   GSEOptions.editorHeight = editframe.Height
   GSEOptions.editorWidth = editframe.Width
