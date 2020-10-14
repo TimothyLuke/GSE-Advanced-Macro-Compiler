@@ -67,6 +67,17 @@ function GSE.ProcessVariables(lines, variableTable)
     for _, line in ipairs(lines) do
         if not GSE.isEmpty(variableTable) then
             for key,value in pairs(variableTable) do
+                if type(value) == "string" then
+                    local functline = value
+                    if string.sub(functline, 1, 10) == "function()" then
+                        functline = string.sub(functline, 11)
+                         functline = functline:gsub("end end", "end")
+                        functline = loadstring(functline)
+                        if functline ~= nil then
+                            value = functline
+                        end
+                    end
+                end
                 if type(value) == "function" then
                     value = value()
                 end
@@ -75,13 +86,19 @@ function GSE.ProcessVariables(lines, variableTable)
         end
 
         for key,value in pairs(Statics.SystemVariables) do
-
+            if type(value) == "string" then
+                if string.match(value, "function") then
+                    value = loadstring(value)
+                end
+            end
             if type(value) == "function" then
                 value = value()
             end
             local oldline = line
             line = string.gsub(line, string.format("~~%s~~", key), value)
+            
         end
+        
         table.insert(returnLines, line)
     end
     return returnLines
