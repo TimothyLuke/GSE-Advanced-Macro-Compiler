@@ -87,7 +87,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   GSE.GUIEditFrame.tempVariables = {}
-  if not GSE.isEmpty(sequence.Variables) then 
+  if not GSE.isEmpty(sequence.Variables) then
     for k, value in pairs(sequence.Variables) do
       local pair = {}
       pair.key = k
