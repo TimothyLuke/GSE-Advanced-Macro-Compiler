@@ -86,6 +86,13 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.Scenario = sequence.Scenario or sequence.Default
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
+  GSE.GUIEditFrame.tempVariables = {}
+  for key, value in pairs(sequence.Variables) do
+    local pair = {}
+    pair.key = key
+    pair.value = value
+    table.insert(GSE.GUIEditFrame.tempVariables, pair)
+  end
   incomingframe:Hide()
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)

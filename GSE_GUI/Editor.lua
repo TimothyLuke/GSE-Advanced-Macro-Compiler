@@ -1226,16 +1226,6 @@ function GSE:GUIDrawVariableEditor(container)
 
   if GSE.isEmpty(editframe.Sequence.Variables) then
     editframe.Sequence.Variables = {}
-  else
-    for key, value in pairs(editframe.Sequence.Variables) do
-      if GSE.isEmpty(editframe.tempVariables) then
-        editframe.tempVariables = {}
-      end
-      local pair = {}
-      pair.key = key
-      pair.value = value
-      table.insert(editframe.tempVariables, pair)
-    end
   end
   if not GSE.isEmpty(editframe.tempVariables) then
     local variables = {}
