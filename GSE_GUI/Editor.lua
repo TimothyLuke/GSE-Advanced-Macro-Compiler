@@ -218,9 +218,11 @@ function GSE.GUIEditorPerformLayout(frame)
     editframe.Sequence.EnforceCompatability = true
     editframe.Sequence.TOC = tocversion
     local variables = {}
-    for index, pair in ipairs(editframe.tempVariables) do
-      variables[pair.key] = pair.value
-      --print("inserted", pair.key, pair.value)
+    if not GSE.isEmpty(editframe.tempVariable) then
+      for index, pair in ipairs(editframe.tempVariables) do
+        --print("inserted", pair.key, pair.value)
+        variables[pair.key] = pair.value
+      end    
     end
     editframe.Sequence.Variables = variables
     nameeditbox:SetText(string.upper(nameeditbox:GetText()))
