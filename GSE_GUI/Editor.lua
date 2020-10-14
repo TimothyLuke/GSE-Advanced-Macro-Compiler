@@ -41,18 +41,18 @@ editframe.tempVariables = {}
 editframe.variablecount = 0
 
 if GSE.isEmpty(GSEOptions.editorHeight) then
-  GSEOptions.editorHeight = 745
-  GSEOptions.editorWidth = 765
+  GSEOptions.editorHeight = 700
+  GSEOptions.editorWidth = 500
 end
 
 editframe.Height = GSEOptions.editorHeight
 editframe.Width = GSEOptions.editorWidth
-if editframe.Height < 745 then
-  editframe.Height = 745
+if editframe.Height < 700 then
+  editframe.Height = 700
   GSEOptions.editorHeight = editframe.Height
 end
-if editframe.Width < 765 then
-  editframe.Width = 765
+if editframe.Width < 500 then
+  editframe.Width = 500
   GSEOptions.editorWidth = editframe.Width
 end
 editframe.frame:SetClampRectInsets(-10,-10,-10,-10)
@@ -82,12 +82,12 @@ editframe.frame:SetScript("OnSizeChanged", function (self, width, height)
     editframe.Height = GetScreenHeight() - 10
     editframe:SetHeight(editframe.Height)
   end
-  if editframe.Height < 745 then
-    editframe.Height = 745
+  if editframe.Height < 700 then
+    editframe.Height = 700
     editframe:SetHeight(editframe.Height)
   end
-  if editframe.Width < 765 then
-    editframe.Width = 765
+  if editframe.Width < 500 then
+    editframe.Width = 500
     editframe:SetWidth(editframe.Width)
   end
   GSEOptions.editorHeight = editframe.Height
