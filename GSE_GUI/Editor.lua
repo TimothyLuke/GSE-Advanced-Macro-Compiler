@@ -42,7 +42,6 @@ editframe.variablecount = 0
 
 if GSE.isEmpty(GSEOptions.editorHeight) then
   GSEOptions.editorHeight = 500
-  
 end
 if GSE.isEmpty(GSEOptions.editorWidth) then
   GSEOptions.editorWidth = 700
