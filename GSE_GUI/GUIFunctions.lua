@@ -87,9 +87,9 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   GSE.GUIEditFrame.tempVariables = {}
-  for key, value in pairs(sequence.Variables) do
+  for k, value in pairs(sequence.Variables) do
     local pair = {}
-    pair.key = key
+    pair.key = k
     pair.value = value
     table.insert(GSE.GUIEditFrame.tempVariables, pair)
   end
