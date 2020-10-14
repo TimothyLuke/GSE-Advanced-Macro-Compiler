@@ -96,9 +96,7 @@ function GSE.ProcessVariables(lines, variableTable)
             end
             local oldline = line
             line = string.gsub(line, string.format("~~%s~~", key), value)
-            
         end
-        
         table.insert(returnLines, line)
     end
     return returnLines
