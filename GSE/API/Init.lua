@@ -6,11 +6,11 @@ GSE.Static = {}
 
 GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
--- @debug@
+--@debug@
 if GSE.VersionString == "@project-version@" then
-    GSE.VersionString = "2.6.02-asdflands"
+    GSE.VersionString = "2.6.06-development"
 end
--- @end-debug@
+--@end-debug@
 
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 
