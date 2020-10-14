@@ -7,8 +7,8 @@ GSE.Static = {}
 GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 --@debug@
-if GSE.VersionString == "@project-version@" then
-    GSE.VersionString = "2.6.06-development"
+if GSE.VersionString:find("version") then
+    GSE.VersionString = "2.6.16-development"
 end
 --@end-debug@
 
