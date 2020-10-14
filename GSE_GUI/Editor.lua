@@ -41,8 +41,8 @@ editframe.tempVariables = {}
 editframe.variablecount = 0
 
 if GSE.isEmpty(GSEOptions.editorHeight) then
-  GSEOptions.editorHeight = 700
-  GSEOptions.editorWidth = 700
+  GSEOptions.editorHeight = 745
+  GSEOptions.editorWidth = 765
 end
 
 editframe.Height = GSEOptions.editorHeight
@@ -73,6 +73,12 @@ editframe.frame:SetScript("OnSizeChanged", function (self, width, height)
   if editframe.Height > GetScreenHeight() then
     editframe.Height = GetScreenHeight() - 10
     editframe:SetHeight(editframe.Height)
+  end
+  if editframe.Height < 745 then
+    editframe.Height = 745
+  end
+  if editframe.Width < 765 then
+    editframe.Width = 765
   end
   GSEOptions.editorHeight = editframe.Height
   GSEOptions.editorWidth = editframe.Width
@@ -949,7 +955,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   toolbarcontainer:SetWidth(editframe.Width)
   toolbarcontainer:SetLayout("list")
   local heading2 = AceGUI:Create("Label")
-  heading2:SetText(L["Resets"])
+  heading2:SetText(L["Use"])
   toolbarcontainer:AddChild(heading2)
 
   local toolbarrow1 = AceGUI:Create("SimpleGroup")
@@ -988,7 +994,7 @@ function GSE:GUIDrawMacroEditor(container, version)
   local headingspace1 = AceGUI:Create("Label")
   headingspace1:SetText(" ")
   local heading1 = AceGUI:Create("Label")
-  heading1:SetText(L["Use"])
+  heading1:SetText(L["Resets"])
 
   local toolbarrow2 = AceGUI:Create("SimpleGroup")
   toolbarrow2:SetLayout("Flow")
