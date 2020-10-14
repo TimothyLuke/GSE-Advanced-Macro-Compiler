@@ -218,7 +218,7 @@ function GSE.GUIEditorPerformLayout(frame)
     editframe.Sequence.EnforceCompatability = true
     editframe.Sequence.TOC = tocversion
     local variables = {}
-    if not GSE.isEmpty(editframe.tempVariable) then
+    if not GSE.isEmpty(editframe.tempVariables) then
       for index, pair in ipairs(editframe.tempVariables) do
         --print("inserted", pair.key, pair.value)
         variables[pair.key] = pair.value
