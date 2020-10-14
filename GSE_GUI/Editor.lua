@@ -222,7 +222,7 @@ function GSE.GUIEditorPerformLayout(frame)
       for index, pair in ipairs(editframe.tempVariables) do
         --print("inserted", pair.key, pair.value)
         variables[pair.key] = pair.value
-      end    
+      end
     end
     editframe.Sequence.Variables = variables
     nameeditbox:SetText(string.upper(nameeditbox:GetText()))
