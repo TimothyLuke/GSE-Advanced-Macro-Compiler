@@ -60,7 +60,7 @@ function GSE.GetOptionsTable()
             name = L["Default Editor Height"],
             desc = L["How many pixels high should the Editor start at.  Defaults to 700"],
             type = "input",
-            set = function(info,val) if tonumber(val) >= 700 then GSEOptions.editorHeight = tonumber(val) end end,
+            set = function(info,val) if tonumber(val) >= 500 then GSEOptions.editorHeight = tonumber(val) end end,
             get = function(info) return tostring(GSEOptions.editorHeight) end,
             order = 204
           },
@@ -68,7 +68,7 @@ function GSE.GetOptionsTable()
             name = L["Default Editor Width"],
             desc = L["How many pixels wide should the Editor start at.  Defaults to 700"],
             type = "input",
-            set = function(info,val) if tonumber(val) >= 500 then GSEOptions.editorWidth = tonumber(val) end end,
+            set = function(info,val) if tonumber(val) >= 700 then GSEOptions.editorWidth = tonumber(val) end end,
             get = function(info) return tostring(GSEOptions.editorWidth) end,
             order = 205
           },
