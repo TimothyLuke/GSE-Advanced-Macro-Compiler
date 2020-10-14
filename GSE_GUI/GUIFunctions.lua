@@ -87,11 +87,13 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   GSE.GUIEditFrame.tempVariables = {}
-  for k, value in pairs(sequence.Variables) do
-    local pair = {}
-    pair.key = k
-    pair.value = value
-    table.insert(GSE.GUIEditFrame.tempVariables, pair)
+  if not GSE.isEmpty(sequence.Variables) then 
+    for k, value in pairs(sequence.Variables) do
+      local pair = {}
+      pair.key = k
+      pair.value = value
+      table.insert(GSE.GUIEditFrame.tempVariables, pair)
+    end
   end
   incomingframe:Hide()
   if sequence.ReadOnly then
