@@ -469,7 +469,7 @@ Statics.BaseSpellTable[102558] = 50334 -- Incarnation: Guardian of Ursoc -> Bese
 
 
 -- Demon Hunter
-Statics.BaseSpellTable[203555] = 162243 -- Demon Blades -> Demon’s Bite
+-- Statics.BaseSpellTable[203555] = 162243 -- Demon Blades -> Demon’s Bite
 Statics.BaseSpellTable[263642] = 203782 -- Fracture -> Shear
 
 -- Death Knight
