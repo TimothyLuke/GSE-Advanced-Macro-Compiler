@@ -136,7 +136,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     local gameversion, build, date, tocversion = GetBuildInfo()
     if GSE.isEmpty(sequence.TOC) or sequence.TOC ~= tocversion then
         GSE.Print(string.format(
-            L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
+            L["WARNING ONLY"] ..": " .. L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
                           sequenceName))
     end
 
