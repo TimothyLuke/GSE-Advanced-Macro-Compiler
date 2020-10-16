@@ -72,6 +72,14 @@ Statics.SystemVariables = {
   ["GCD"] = function()
     return GSE.GetGCD()
   end,
+  ["HE"] = function()
+    local itemLink= GetInventoryItemLink("player", 2) 
+    if GetItemInfo(itemLink) == "Heart of Azeroth" then 
+      return '/cast [combat,nochanneling] Heart Essence' 
+    else 
+      return '-- /cast Heart Essence' 
+    end 
+  end,
 }
 
 Statics.SpecIDList = {
