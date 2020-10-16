@@ -214,7 +214,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName )
-        GSE.PrintDebugMessage(.. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
+        GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
         

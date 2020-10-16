@@ -89,7 +89,7 @@ if GSE.GameMode ~= 1 then
       end
     else
       return '-- /cast Heart Essence'
-    end  
+    end
   end
   Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
 
