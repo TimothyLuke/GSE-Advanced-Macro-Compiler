@@ -72,20 +72,25 @@ Statics.SystemVariables = {
   ["GCD"] = function()
     return GSE.GetGCD()
   end,
-  ["HE"] = function()
-    local itemLink= GetInventoryItemLink("player", 2)
+}
+
+Statics.SystemVariableDescriptions = {
+  ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
+}
+
+if GSE.GameMode ~= 1 then	
+  Statics.SystemVariables["HE"] = function()
+    local itemLink = GetInventoryItemLink("player", 2)
     if GetItemInfo(itemLink) == "Heart of Azeroth" then
       return '/cast [combat,nochanneling] Heart Essence'
     else
       return '-- /cast Heart Essence'
     end
-  end,
-}
+  end
+  Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
 
-Statics.SystemVariableDescriptions = {
-  ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
-  ["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
-}
+end
+
 
 Statics.SpecIDList = {
     [0] = "Global",

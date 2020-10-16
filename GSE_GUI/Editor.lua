@@ -1254,6 +1254,24 @@ function GSE:GUIDrawVariableEditor(container)
   local contentcontainer = AceGUI:Create("ScrollFrame")
   scrollcontainer:AddChild(contentcontainer)
 
+  local variableLabel = AceGUI:Create("Heading")
+  variableLabel:SetText(L["System Variables"])
+  variableLabel:SetFullWidth(true)
+  contentcontainer:AddChild(variableLabel)
+
+  for key, value in pairs(Statics.SystemVariableDescriptions) do
+    local textlabel = AceGUI:Create("Label")
+    local tempLabel = GSEOptions.UNKNOWN .. "~~" .. key .. "~~ " .. Statics.StringReset .. value
+    textlabel:SetText(tempLabel)
+    textlabel:SetFullWidth(true)
+    contentcontainer:AddChild(textlabel)
+  end
+
+  local uvariableLabel = AceGUI:Create("Heading")
+  uvariableLabel:SetText(L["Macro Variables"])
+  uvariableLabel:SetFullWidth(true)
+  contentcontainer:AddChild(uvariableLabel)
+
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
   local columnWidth = editframe.Width - 55
@@ -1285,25 +1303,7 @@ function GSE:GUIDrawVariableEditor(container)
   linegroup1:AddChild(delLabel)
   contentcontainer:AddChild(linegroup1)
 
-  local variableLabel = AceGUI:Create("Heading")
-  variableLabel:SetText(L["System Variables"])
-  variableLabel:SetWidth((columnWidth /2) -25)
-  variableLabel:SetFullWidth(true)
-  contentcontainer:AddChild(variableLabel)
 
-  for key, value in pairs(Statics.SystemVariableDescriptions) do
-    local textlabel = AceGUI:Create("Label")
-    local tempLabel = GSEOptions.UNKNOWN .. "~~" .. key .. "~~ " .. Statics.StringReset .. value
-    textlabel:SetText(tempLabel)
-    textlabel:SetFullWidth(true)
-    contentcontainer:AddChild(textlabel)
-  end
-
-  local uvariableLabel = AceGUI:Create("Heading")
-  uvariableLabel:SetText(L["Macro Variables"])
-  uvariableLabel:SetWidth((columnWidth /2) -25)
-  uvariableLabel:SetFullWidth(true)
-  contentcontainer:AddChild(uvariableLabel)
 
   for key,value in pairs(editframe.Sequence.Variables) do
     --GSE.Dump(editframe.Sequence.Variables)
