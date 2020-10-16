@@ -554,3 +554,9 @@ L["How many pixels wide should the Editor start at.  Defaults to 700"] = true
 
 --2.6.08
 L["WARNING ONLY"] = true
+
+-- 2.6.11
+L["Returns your current Global Cooldown value accounting for your haste if that stat is present."] = true
+L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."] = true
+L["System Variables"] = true
+L["Macro Variables"] = true
