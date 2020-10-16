@@ -78,7 +78,7 @@ Statics.SystemVariableDescriptions = {
   ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
 }
 
-if GSE.GameMode ~= 1 then	
+if GSE.GameMode ~= 1 then
   Statics.SystemVariables["HE"] = function()
     local itemLink = GetInventoryItemLink("player", 2)
     if GetItemInfo(itemLink) == "Heart of Azeroth" then
