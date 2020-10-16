@@ -217,7 +217,6 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
-        
     elseif action == "RENAME" then
         if GSE.isEmpty(newSequence.Author) then
             -- Set to Unknown Author
