@@ -81,11 +81,15 @@ Statics.SystemVariableDescriptions = {
 if GSE.GameMode ~= 1 then
   Statics.SystemVariables["HE"] = function()
     local itemLink = GetInventoryItemLink("player", 2)
-    if GetItemInfo(itemLink) == "Heart of Azeroth" then
-      return '/cast [combat,nochanneling] Heart Essence'
+    if not GSE.isEmpty(itemLink) then
+      if GetItemInfo(itemLink) == "Heart of Azeroth" then
+        return '/cast [combat,nochanneling] Heart Essence'
+      else
+        return '-- /cast Heart Essence'
+      end
     else
       return '-- /cast Heart Essence'
-    end
+    end  
   end
   Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
 
