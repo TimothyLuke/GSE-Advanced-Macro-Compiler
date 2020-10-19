@@ -560,3 +560,6 @@ L["Returns your current Global Cooldown value accounting for your haste if that 
 L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."] = true
 L["System Variables"] = true
 L["Macro Variables"] = true
+
+-- 2.6.16
+L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."] = true
