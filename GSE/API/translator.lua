@@ -722,7 +722,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         if GSE.GameMode ~= 1 then
             -- If we are not in classic
             -- Check for overrides like Crusade and Avenging Wrath.
-            if not absolute then
+            if not absolute and not GSE.isEmpty(returnval) then
                 if FindBaseSpellByID(returnval) then
                     returnval = FindBaseSpellByID(returnval)
                 end
