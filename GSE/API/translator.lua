@@ -6,7 +6,7 @@ local GNOME = Statics.DebugModules["Translator"]
 local L = GSE.L
 
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
--- Mode of "STRING" will return local names where mode "ID" will return id's
+-- Mode of "STRING" will return local names where mode "ID" will return id's 
 function GSE.TranslateSequence(sequence, sequenceName, mode)
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
@@ -107,6 +107,11 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
     GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
     local output = ""
     if not GSE.isEmpty(instring) then
+        local absolute = false
+        if instring:find('$$', 1, true) then
+            GSE.PrintDebugMessage("Setting Absolute", GNOME)
+            absolute = true
+        end
         if GSE.isEmpty(string.find(instring, '--', 1, true)) then
             for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
                 GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
@@ -130,7 +135,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
                         output = output .. "!"
                     end
                     local foundspell, returnval = GSE.TranslateSpell(etc, mode,
-                                                      (cleanNewLines and cleanNewLines or false))
+                                                      (cleanNewLines and cleanNewLines or false), absolute)
                     if foundspell then
                         output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset
                     else
@@ -156,7 +161,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
                                 output = output .. "!"
                             end
                             local foundspell, returnval = GSE.TranslateSpell(uetc, mode,
-                                                              (cleanNewLines and cleanNewLines or false))
+                                                              (cleanNewLines and cleanNewLines or false), asbolute)
                             output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
                         end
                         output = output .. ";"
@@ -206,7 +211,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
     return output
 end
 
-function GSE.TranslateSpell(str, mode, cleanNewLines)
+function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
     local output = ""
     local found = false
     -- Check for cases like /cast [talent:7/1] Bladestorm;[talent:7/3] Dragon Roar
@@ -238,7 +243,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines)
             etc = string.match(etc, "^%s*(.-)%s*$")
         end
 
-        local foundspell = GSE.GetSpellId(etc, mode)
+        local foundspell = GSE.GetSpellId(etc, mode, absolute)
         -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
         if foundspell then
             GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell, GNOME)
@@ -692,7 +697,7 @@ function GSE.ClassicGetSpellInfo(spellID)
 end
 
 --- Converts a string spell name to an id and back again.
-function GSE.GetSpellId(spellstring, mode)
+function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
         mode = ""
     end
@@ -709,13 +714,14 @@ function GSE.GetSpellId(spellstring, mode)
         if GSE.GameMode ~= 1 then
             -- If we are not in classic
             -- Check for overrides like Crusade and Avenging Wrath.
-
-            if FindBaseSpellByID(returnval) then
-                returnval = FindBaseSpellByID(returnval)
-            end
-            -- Still need Heart of Azeroth overrides.
-            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-                returnval = Statics.BaseSpellTable[returnval]
+            if not absolute then 
+                if FindBaseSpellByID(returnval) then
+                    returnval = FindBaseSpellByID(returnval)
+                end
+                -- Still need Heart of Azeroth overrides.
+                if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+                    returnval = Statics.BaseSpellTable[returnval]
+                end
             end
         end
     end
