@@ -6,8 +6,9 @@ local GNOME = Statics.DebugModules["Translator"]
 local L = GSE.L
 
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
--- Mode of "STRING" will return local names where mode "ID" will return id's 
-function GSE.TranslateSequence(sequence, sequenceName, mode)
+-- Mode of "STRING" will return local names where mode "ID" will return id's
+-- dropAbsolute will remove "$$" from the start of lines.
+function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
     for k, v in ipairs(sequence) do
@@ -17,7 +18,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
 
     if not GSE.isEmpty(sequence.KeyRelease) then
         for k, v in pairs(sequence.KeyRelease) do
-            sequence.KeyRelease[k] = GSE.TranslateString(v, mode)
+            sequence.KeyRelease[k] = GSE.TranslateString(v, mode, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
@@ -26,7 +27,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.KeyPress) do
             -- Translate KeyRelease
-            sequence.KeyPress[k] = GSE.TranslateString(v, mode)
+            sequence.KeyPress[k] = GSE.TranslateString(v, mode, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
@@ -35,7 +36,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.PreMacro) do
             -- Translate KeyRelease
-            sequence.PreMacro[k] = GSE.TranslateString(v, mode)
+            sequence.PreMacro[k] = GSE.TranslateString(v, mode, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
@@ -44,7 +45,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.PostMacro) do
             -- Translate KeyRelease
-            sequence.PostMacro[k] = GSE.TranslateString(v, mode)
+            sequence.PostMacro[k] = GSE.TranslateString(v, mode, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
@@ -102,7 +103,7 @@ function GSE.ProcessVariables(lines, variableTable)
     return returnLines
 end
 
-function GSE.TranslateString(instring, mode, cleanNewLines)
+function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
     instring = GSE.UnEscapeString(instring)
     GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
     local output = ""
@@ -196,6 +197,13 @@ function GSE.TranslateString(instring, mode, cleanNewLines)
             for k, v in ipairs(Statics.MacroCommands) do
                 output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
             end
+        end
+
+        if GSE.isEmpty(dropAbsolute) then
+            dropAbsolute = false
+        end
+        if  absolute and not dropAbsolute then
+            output = "$$" .. output
         end
     elseif cleanNewLines then
         output = output .. instring
@@ -714,7 +722,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         if GSE.GameMode ~= 1 then
             -- If we are not in classic
             -- Check for overrides like Crusade and Avenging Wrath.
-            if not absolute then 
+            if not absolute then
                 if FindBaseSpellByID(returnval) then
                     returnval = FindBaseSpellByID(returnval)
                 end
