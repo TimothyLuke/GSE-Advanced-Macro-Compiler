@@ -145,8 +145,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.TranslateSequence">GSE.TranslateSequence</a>&nbsp;(sequence, sequenceName, mode)</td>
-	<td class="summary">GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's </td>
+	<td class="name" nowrap><a href="#GSE.TranslateSequence">GSE.TranslateSequence</a>&nbsp;(sequence, sequenceName, mode, dropAbsolute)</td>
+	<td class="summary">GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's dropAbsolute will remove "$$" from the start of lines.</td>
 	</tr>
 
 </table>
@@ -300,9 +300,9 @@ This option reports on language table errors and omissions.  It is accessible vi
 
 
 
-<dt><a name="GSE.TranslateSequence"></a><strong>GSE.TranslateSequence</strong>&nbsp;(sequence, sequenceName, mode)</dt>
+<dt><a name="GSE.TranslateSequence"></a><strong>GSE.TranslateSequence</strong>&nbsp;(sequence, sequenceName, mode, dropAbsolute)</dt>
 <dd>
-GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's
+GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's dropAbsolute will remove "$$" from the start of lines.
 
 
 <h3>Parameters</h3>
@@ -318,6 +318,10 @@ GSE.TranslateSequence will translate from local spell name to spell id and back 
 	
 	<li>
 	  mode: 
+	</li>
+	
+	<li>
+	  dropAbsolute: 
 	</li>
 	
 </ul>
