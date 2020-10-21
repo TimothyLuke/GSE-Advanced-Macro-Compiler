@@ -37,7 +37,7 @@ editframe.Scenario = 1
 editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
-editframe.tempVariables = {}
+
 editframe.variablecount = 0
 
 if GSE.isEmpty(GSEOptions.editorHeight) then
@@ -62,9 +62,6 @@ editframe.frame:SetWidth(GSEOptions.editorWidth)
 editframe:SetTitle(L["Sequence Editor"])
 --editframe:SetStatusText(L["Gnome Sequencer: Sequence Editor."])
 editframe:SetCallback("OnClose", function (self)
-  if not GSE.isEmpty(editframe.tempVariables) then
-    editframe.tempVariables = nil
-  end
   GSE.ClearTooltip(editframe)
   editframe:Hide();
   if editframe.save then
@@ -234,14 +231,6 @@ function GSE.GUIEditorPerformLayout(frame)
     editframe.Sequence.GSEVersion = GSE.VersionNumber
     editframe.Sequence.EnforceCompatability = true
     editframe.Sequence.TOC = tocversion
-    local variables = {}
-    if not GSE.isEmpty(editframe.tempVariables) then
-      for index, pair in ipairs(editframe.tempVariables) do
-        --print("inserted", pair.key, pair.value)
-        variables[pair.key] = pair.value
-      end
-    end
-    editframe.Sequence.Variables = variables
     nameeditbox:SetText(string.upper(nameeditbox:GetText()))
     editframe.SequenceName = nameeditbox:GetText()
     GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
@@ -1136,7 +1125,6 @@ end
 local function addKeyPairRow(container, rowWidth, key, value)
   if GSE.isEmpty(editframe.variablecount) then
     editframe.variablecount = 0
-    editframe.tempVariables = {}
   end
   --print("KEY/VAL", key, value)
   if GSE.isEmpty(key) then
@@ -1152,12 +1140,6 @@ local function addKeyPairRow(container, rowWidth, key, value)
   --   key = ""
   -- end
 
-  editframe.variablecount = editframe.variablecount + 1
-  local row = editframe.variablecount
-  editframe.tempVariables[row] = {}
-  editframe.tempVariables[row]["key"] = key
-  editframe.tempVariables[row]["value"] = value
-
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
   linegroup1:SetWidth(rowWidth)
@@ -1165,10 +1147,19 @@ local function addKeyPairRow(container, rowWidth, key, value)
 
   local keyEditBox = AceGUI:Create("EditBox")
   keyEditBox:SetLabel()
-  keyEditBox:SetWidth(rowWidth /2)
+  keyEditBox:SetWidth(rowWidth * 0.25)
   keyEditBox:SetText(key)
+  local oldkey = key
   keyEditBox:SetCallback("OnTextChanged", function()
-    editframe.tempVariables[row]["key"] = keyEditBox:GetText()
+
+    if GSE.isEmpty(editframe.Sequence.Variables[keyEditBox:GetText()]) then
+      editframe.Sequence.Variables[keyEditBox:GetText()] = ""
+
+    else
+      editframe.Sequence.Variables[keyEditBox:GetText()] = editframe.Sequence.Variables[oldkey]
+    end
+    editframe.Sequence.Variables[oldkey] = nil
+    oldkey = keyEditBox:GetText()
   end)
   linegroup1:AddChild(keyEditBox)
 
@@ -1178,10 +1169,10 @@ local function addKeyPairRow(container, rowWidth, key, value)
 
   local valueEditBox = AceGUI:Create("EditBox")
   valueEditBox:SetLabel()
-  valueEditBox:SetWidth(rowWidth /2)
+  valueEditBox:SetWidth(rowWidth * 0.75)
   valueEditBox:SetText(value)
   valueEditBox:SetCallback("OnTextChanged", function()
-    editframe.tempVariables[row]["value"] = valueEditBox:GetText()
+    editframe.Sequence.Variables[keyEditBox:GetText()] = valueEditBox:GetText()
   end)
   linegroup1:AddChild(valueEditBox)
 
@@ -1207,8 +1198,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
   deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
 
   deleteRowButton:SetCallback("OnClick", function()
-    editframe.Sequence.Variables[editframe.tempVariables[row].key] = nil
-    table.remove(editframe.tempVariables[row])
+    editframe.Sequence.Variables[keyEditBox:GetText()] = nil
     linegroup1:ReleaseChildren()
    end)
   deleteRowButton:SetCallback('OnEnter', function ()
@@ -1228,16 +1218,6 @@ function GSE:GUIDrawVariableEditor(container)
   if GSE.isEmpty(editframe.Sequence.Variables) then
     editframe.Sequence.Variables = {}
   end
-  if not GSE.isEmpty(editframe.tempVariables) then
-    local variables = {}
-    for index, pair in ipairs(editframe.tempVariables) do
-      variables[pair.key] = pair.value
-      --print("inserted", pair.key, pair.value)
-    end
-    editframe.Sequence.Variables = variables
-  end
-  editframe.tempVariables = {}
-  editframe.variablecount = 0
 
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
@@ -1281,7 +1261,7 @@ function GSE:GUIDrawVariableEditor(container)
 
   local nameLabel = AceGUI:Create("Heading")
   nameLabel:SetText(L["Name"])
-  nameLabel:SetWidth((columnWidth /2) - 25 )
+  nameLabel:SetWidth((columnWidth - 25 ) * 0.25 )
   linegroup1:AddChild(nameLabel)
 
   local spacerlabel1 = AceGUI:Create("Label")
@@ -1290,7 +1270,7 @@ function GSE:GUIDrawVariableEditor(container)
 
   local valueLabel = AceGUI:Create("Heading")
   valueLabel:SetText(L["Value"])
-  valueLabel:SetWidth((columnWidth /2) -25)
+  valueLabel:SetWidth((columnWidth -25) * 0.75 - 18)
   linegroup1:AddChild(valueLabel)
 
   local spacerlabel2 = AceGUI:Create("Label")
@@ -1306,8 +1286,6 @@ function GSE:GUIDrawVariableEditor(container)
 
 
   for key,value in pairs(editframe.Sequence.Variables) do
-    --GSE.Dump(editframe.Sequence.Variables)
-    --print("Creating pair", key, value)
     addKeyPairRow(contentcontainer, columnWidth, key, value)
   end
 
