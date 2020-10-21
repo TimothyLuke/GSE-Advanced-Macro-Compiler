@@ -62,9 +62,9 @@ end
 
 --- This function interates through each line in lines and does a string replace on each varible in the variableTable
 function GSE.ProcessVariables(lines, variableTable)
-
+    --print("GSE.ProcessVariables(lines, variableTable)")
     local returnLines = {}
-
+    --print(GSE.isEmpty(variableTable))
     for _, line in ipairs(lines) do
         if not GSE.isEmpty(variableTable) then
             for key,value in pairs(variableTable) do
@@ -72,13 +72,16 @@ function GSE.ProcessVariables(lines, variableTable)
                     local functline = value
                     if string.sub(functline, 1, 10) == "function()" then
                         functline = string.sub(functline, 11)
-                         functline = functline:gsub("end end", "end")
+                        functline = functline:sub(1, -4)
                         functline = loadstring(functline)
+                        --print(type(functline))
                         if functline ~= nil then
                             value = functline
                         end
                     end
                 end
+                --print("updated Type: ".. type(value))
+                --print(value)
                 if type(value) == "function" then
                     value = value()
                 end
@@ -87,11 +90,6 @@ function GSE.ProcessVariables(lines, variableTable)
         end
 
         for key,value in pairs(Statics.SystemVariables) do
-            if type(value) == "string" then
-                if string.match(value, "function") then
-                    value = loadstring(value)
-                end
-            end
             if type(value) == "function" then
                 value = value()
             end

@@ -677,7 +677,6 @@ function GSE.FixSequence(sequence)
 end
 
 function GSE.ProcessSequenceVariables(sequence, variables)
-
     if not GSE.isEmpty(sequence.PreMacro) then
         sequence.PreMacro = GSE.ProcessVariables(sequence.PreMacro, variables)
         GSE.PrintDebugMessage("Processed for Variables PreMacro", GNOME)
@@ -777,14 +776,16 @@ function GSE.OOCUpdateSequence(name, sequence)
         return
     end
     if pcall(GSE.CheckSequence, sequence) then
+        local variables
         if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name].Variables) then
             GSE.PrintDebugMessage("Sequence " .. name .. " has no variables", Statics.DebugModules["Storage"] )
         else
+            variables = GSE.Library[GSE.GetCurrentClassID()][name].Variables
             GSE.PrintDebugMessage("Sequence " .. name .. " has variables", Statics.DebugModules["Storage"] )
         end
         sequence = GSE.CleanMacroVersion(sequence)
         GSE.FixSequence(sequence)
-        tempseq = GSE.CloneMacroVersion(sequence)
+        local tempseq = GSE.CloneMacroVersion(sequence)
         GSE.ProcessSequenceVariables(tempseq,variables)
 
         local existingbutton = true
