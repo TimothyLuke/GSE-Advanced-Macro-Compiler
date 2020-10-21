@@ -448,6 +448,10 @@ function GSE:ProcessOOCQueue()
             GSE.OOCQueue[k] = nil
         end
     end
+    if not GSE.isEmpty(GSE.GCDLDB) then
+        GSE.GCDLDB.value = GSE.GetGCD()
+        GSE.GCDLDB.text = string.format("GCD: %ss", GSE.GetGCD())
+    end
 end
 
 function GSE.prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)

@@ -64,7 +64,9 @@ function dataobj:OnEnter()
     GSE.ToggleTargetProtection()
     tooltip:SetCell(RequireTargetStatusline, 1, GSE.CheckOOCQueueStatus(),"CENTER", 3)
   end)
-
+  tooltip:AddSeparator()
+  y,x = tooltip:AddLine()
+  tooltip:SetCell(y, 1, string.format("GCD: %ss", GSE.GetGCD()),"CENTER", 3)
 
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
@@ -151,5 +153,15 @@ function GSE.MiniMapControl(show)
 end
 
 -- GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+
+local GCDLDB = ldb:NewDataObject(L["GSE"] ..": ".. L["Current GCD"], {
+  type = "data source",
+  text = string.format("GCD: %ss", GSE.GetGCD()),
+  icon = iconSource,
+  value = GSE.GetGCD(),
+  suffix = "s"
+})
+
+GSE.GCDLDB = GCDLDB
 
 GSE.LDB = true

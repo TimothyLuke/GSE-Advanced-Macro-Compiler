@@ -563,3 +563,7 @@ L["Macro Variables"] = true
 
 -- 2.6.16
 L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."] = true
+
+-- 2.6.19
+L["Current GCD: %s"] = true
+L["Current GCD"] = true
