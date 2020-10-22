@@ -69,6 +69,9 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
     GSE.GUIEditFrame.NewSequence = false
   end
+  if GSE.isEmpty(sequence.WeakAuras) then
+    sequence.WeakAuras = {}
+  end 
   GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence

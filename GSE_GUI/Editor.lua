@@ -38,8 +38,6 @@ editframe.ClassID = classid
 editframe.save = false
 editframe.SelectedTab = "group"
 
-editframe.variablecount = 0
-
 if GSE.isEmpty(GSEOptions.editorHeight) then
   GSEOptions.editorHeight = 500
 end
@@ -119,6 +117,10 @@ function GSE.GUICreateEditorTabs()
   table.insert(tabl,   {
       text=L["New"],
       value="new"
+    }  )
+  table.insert(tabl,   {
+      text=L["WeakAuras"],
+      value="weakauras"
     }  )
   return tabl
 end
@@ -728,14 +730,14 @@ function GSE:GUIDrawMacroEditor(container, version)
 
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
-  layoutcontainer:SetHeight(editframe.Height - 260 )
+  layoutcontainer:SetHeight(editframe.Height - 300 )
   layoutcontainer:SetLayout("Flow") -- Important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   --scrollcontainer:SetFullWidth(true)
   --scrollcontainer:SetFullHeight(true) -- Probably?
   scrollcontainer:SetWidth(editframe.Width)
-  scrollcontainer:SetHeight(editframe.Height - 260)
+  scrollcontainer:SetHeight(editframe.Height - 300)
   scrollcontainer:SetLayout("Fill") -- Important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -1123,9 +1125,6 @@ function GSE:GUIDrawMacroEditor(container, version)
 end
 
 local function addKeyPairRow(container, rowWidth, key, value)
-  if GSE.isEmpty(editframe.variablecount) then
-    editframe.variablecount = 0
-  end
   --print("KEY/VAL", key, value)
   if GSE.isEmpty(key) then
     key = ""
@@ -1147,6 +1146,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
 
   local keyEditBox = AceGUI:Create("EditBox")
   keyEditBox:SetLabel()
+  keyEditBox:DisableButton(true)
   keyEditBox:SetWidth(rowWidth * 0.25)
   keyEditBox:SetText(key)
   local oldkey = key
@@ -1170,6 +1170,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
   local valueEditBox = AceGUI:Create("EditBox")
   valueEditBox:SetLabel()
   valueEditBox:SetWidth(rowWidth * 0.75)
+  valueEditBox:DisableButton(true)
   valueEditBox:SetText(value)
   valueEditBox:SetCallback("OnTextChanged", function()
     editframe.Sequence.Variables[keyEditBox:GetText()] = valueEditBox:GetText()
@@ -1221,14 +1222,14 @@ function GSE:GUIDrawVariableEditor(container)
 
   local layoutcontainer = AceGUI:Create("SimpleGroup")
   layoutcontainer:SetFullWidth(true)
-  layoutcontainer:SetHeight(editframe.Height - 300 )
+  layoutcontainer:SetHeight(editframe.Height - 320 )
   layoutcontainer:SetLayout("Flow") -- Important!
 
   local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
   scrollcontainer:SetFullWidth(true)
   -- scrollcontainer:SetFullHeight(true) -- Probably?
   -- scrollcontainer:SetWidth(editframe.Width )
-  scrollcontainer:SetHeight(editframe.Height - 300)
+  scrollcontainer:SetHeight(editframe.Height - 320)
   scrollcontainer:SetLayout("Fill") -- Important!
 
   local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -1305,6 +1306,166 @@ function GSE:GUIDrawVariableEditor(container)
   container:AddChild(layoutcontainer)
 end
 
+local function addKeyPairWARow(container, rowWidth, key, value)
+  --print("KEY/VAL", key, value)
+  if GSE.isEmpty(key) then
+    key = ""
+  end
+  if GSE.isEmpty(value) then
+    value = ""
+  end
+  -- if type(GSE.isEmpty(value)) ~= "string" then
+  --   value = ""
+  -- end
+  -- if type(GSE.isEmpty(key)) ~= "string" then
+  --   key = ""
+  -- end
+
+  local linegroup1 = AceGUI:Create("SimpleGroup")
+  linegroup1:SetLayout("Flow")
+  linegroup1:SetWidth(rowWidth)
+  rowWidth = rowWidth - 50
+
+  local keyEditBox = AceGUI:Create("EditBox")
+  keyEditBox:SetLabel()
+  keyEditBox:DisableButton(true)
+  keyEditBox:SetWidth(rowWidth * 0.25)
+  keyEditBox:SetText(key)
+  local oldkey = key
+  keyEditBox:SetCallback("OnTextChanged", function()
+
+    if GSE.isEmpty(editframe.Sequence.WeakAuras[keyEditBox:GetText()]) then
+      editframe.Sequence.WeakAuras[keyEditBox:GetText()] = ""
+
+    else
+      editframe.Sequence.WeakAuras[keyEditBox:GetText()] = editframe.Sequence.WeakAuras[oldkey]
+    end
+    editframe.Sequence.WeakAuras[oldkey] = nil
+    oldkey = keyEditBox:GetText()
+  end)
+  linegroup1:AddChild(keyEditBox)
+
+  local spacerlabel1 = AceGUI:Create("Label")
+  spacerlabel1:SetWidth(5)
+  linegroup1:AddChild(spacerlabel1)
+
+  local valueEditBox = AceGUI:Create("MultiLineEditBox")
+  valueEditBox:SetLabel()
+  valueEditBox:SetNumLines(3)
+  valueEditBox:SetDisabled(false)
+  valueEditBox:SetWidth(rowWidth * 0.75)
+  valueEditBox:DisableButton(true)
+  valueEditBox:SetText(value)
+  valueEditBox:SetCallback("OnTextChanged", function()
+    editframe.Sequence.WeakAuras[keyEditBox:GetText()] = valueEditBox:GetText()
+  end)
+  linegroup1:AddChild(valueEditBox)
+
+  local spacerlabel2 = AceGUI:Create("Label")
+  spacerlabel2:SetWidth(8)
+  linegroup1:AddChild(spacerlabel2)
+
+  -- local iconpicker = AceGUI:Create("Icon")
+  -- iconpicker:SetLabel(L["Macro Icon"])
+  -- iconpicker.frame:RegisterForDrag("LeftButton")
+  -- iconpicker.frame:SetScript("OnDragStart", function()
+  --   if not GSE.isEmpty(editframe.SequenceName) then
+  --     PickupMacro(editframe.SequenceName)
+  --   end
+  -- end)
+  -- iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+
+  local deleteRowButton = AceGUI:Create("Icon")
+  -- deleteRowButton:SetLabel(L["Delete"])
+  deleteRowButton:SetImageSize(20, 20)
+  deleteRowButton:SetWidth(20)
+  deleteRowButton:SetHeight(20)
+  deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
+
+  deleteRowButton:SetCallback("OnClick", function()
+    editframe.Sequence.WeakAuras[keyEditBox:GetText()] = nil
+    linegroup1:ReleaseChildren()
+   end)
+  deleteRowButton:SetCallback('OnEnter', function ()
+    GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
+  end)
+  deleteRowButton:SetCallback('OnLeave', function ()
+    GSE.ClearTooltip(editframe)
+  end)
+  linegroup1:AddChild(deleteRowButton)
+
+  container:AddChild(linegroup1)
+
+end
+
+function GSE:GUIDrawWeakauraStorage(container)
+
+  if GSE.isEmpty(editframe.Sequence.Variables) then
+    editframe.Sequence.Variables = {}
+  end
+
+  local layoutcontainer = AceGUI:Create("SimpleGroup")
+  layoutcontainer:SetFullWidth(true)
+  layoutcontainer:SetHeight(editframe.Height - 320 )
+  layoutcontainer:SetLayout("Flow") -- Important!
+
+  local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+  scrollcontainer:SetFullWidth(true)
+  -- scrollcontainer:SetFullHeight(true) -- Probably?
+  -- scrollcontainer:SetWidth(editframe.Width )
+  scrollcontainer:SetHeight(editframe.Height - 320)
+  scrollcontainer:SetLayout("Fill") -- Important!
+
+  local contentcontainer = AceGUI:Create("ScrollFrame")
+  scrollcontainer:AddChild(contentcontainer)
+
+   local linegroup1 = AceGUI:Create("SimpleGroup")
+  linegroup1:SetLayout("Flow")
+  local columnWidth = editframe.Width - 55
+
+  linegroup1:SetWidth(editframe.Width - 50)
+
+
+  local nameLabel = AceGUI:Create("Heading")
+  nameLabel:SetText(L["Name"])
+  nameLabel:SetWidth((columnWidth - 25 ) * 0.25 )
+  linegroup1:AddChild(nameLabel)
+
+  local spacerlabel1 = AceGUI:Create("Label")
+  spacerlabel1:SetWidth(5)
+  linegroup1:AddChild(spacerlabel1)
+
+  local valueLabel = AceGUI:Create("Heading")
+  valueLabel:SetText(L["Value"])
+  valueLabel:SetWidth((columnWidth -25) * 0.75 - 18)
+  linegroup1:AddChild(valueLabel)
+
+  local spacerlabel2 = AceGUI:Create("Label")
+  spacerlabel2:SetWidth(5)
+  linegroup1:AddChild(spacerlabel2)
+
+  local delLabel = AceGUI:Create("Heading")
+  delLabel:SetText(L["Del"])
+  delLabel:SetWidth(25)
+  linegroup1:AddChild(delLabel)
+  contentcontainer:AddChild(linegroup1)
+
+
+
+  for key,value in pairs(editframe.Sequence.WeakAuras) do
+    addKeyPairWARow(contentcontainer, columnWidth, key, value)
+  end
+
+  local addVariablsButton = AceGUI:Create("Button")
+  addVariablsButton:SetText(L["Add WeakAura"])
+  addVariablsButton:SetWidth(150)
+  addVariablsButton:SetCallback("OnClick", function()  addKeyPairWARow(contentcontainer, columnWidth) end)
+  
+  layoutcontainer:AddChild(scrollcontainer)
+  layoutcontainer:AddChild(addVariablsButton)
+  container:AddChild(layoutcontainer)
+end
+
 function GSE.GUISelectEditorTab(container, event, group)
   if not  GSE.isEmpty(container) then
     container:ReleaseChildren()
@@ -1321,6 +1482,8 @@ function GSE.GUISelectEditorTab(container, event, group)
       GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.MacroVersions))
     elseif group == "variables" then
       GSE:GUIDrawVariableEditor(container)
+    elseif group == "weakauras" then
+      GSE:GUIDrawWeakauraStorage(container)
     else
       GSE:GUIDrawMacroEditor(container, group)
     end

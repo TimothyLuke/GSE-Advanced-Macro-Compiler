@@ -567,3 +567,10 @@ L["Your sequence name was longer than 27 characters.  It has been shortened from
 -- 2.6.19
 L["Current GCD: %s"] = true
 L["Current GCD"] = true
+
+-- 2.6.20
+L["WeakAuras"] = true
+L["WeakAuras is a mod that watches for certain conditions and actions and they alerts the player to them occuring.  These are included for convenience and still need to be copied from here and imported to the WeakAuras mod via the command /wa."] = true
+L["Add WeakAura"] = true
+L["Delete WeakAura"] = true
+L["Delete this WeakAura from the sequence."] = true
