@@ -9,16 +9,17 @@ local L = GSE.L
 -- Mode of "STRING" will return local names where mode "ID" will return id's
 -- dropAbsolute will remove "$$" from the start of lines.
 function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
+
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
     for k, v in ipairs(sequence) do
         -- Translate Sequence
-        sequence[k] = GSE.TranslateString(v, mode)
+        sequence[k] = GSE.TranslateString(v, mode,nil,  dropAbsolute)
     end
 
     if not GSE.isEmpty(sequence.KeyRelease) then
         for k, v in pairs(sequence.KeyRelease) do
-            sequence.KeyRelease[k] = GSE.TranslateString(v, mode, dropAbsolute)
+            sequence.KeyRelease[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
@@ -27,7 +28,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.KeyPress) do
             -- Translate KeyRelease
-            sequence.KeyPress[k] = GSE.TranslateString(v, mode, dropAbsolute)
+            sequence.KeyPress[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
@@ -36,7 +37,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.PreMacro) do
             -- Translate KeyRelease
-            sequence.PreMacro[k] = GSE.TranslateString(v, mode, dropAbsolute)
+            sequence.PreMacro[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
@@ -45,7 +46,7 @@ function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
         GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
         for k, v in pairs(sequence.PostMacro) do
             -- Translate KeyRelease
-            sequence.PostMacro[k] = GSE.TranslateString(v, mode, dropAbsolute)
+            sequence.PostMacro[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
         end
     else
         GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
