@@ -71,7 +71,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   end
   if GSE.isEmpty(sequence.WeakAuras) then
     sequence.WeakAuras = {}
-  end 
+  end
   GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence

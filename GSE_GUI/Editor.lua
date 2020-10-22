@@ -1460,7 +1460,6 @@ function GSE:GUIDrawWeakauraStorage(container)
   addVariablsButton:SetText(L["Add WeakAura"])
   addVariablsButton:SetWidth(150)
   addVariablsButton:SetCallback("OnClick", function()  addKeyPairWARow(contentcontainer, columnWidth) end)
-  
   layoutcontainer:AddChild(scrollcontainer)
   layoutcontainer:AddChild(addVariablsButton)
   container:AddChild(layoutcontainer)
