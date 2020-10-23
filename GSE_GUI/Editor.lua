@@ -1370,7 +1370,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     GSE.ClearTooltip(editframe)
   end)
   linegroup1:AddChild(loadWeakAuraButton)
-  
+
   local deleteRowButton = AceGUI:Create("Icon")
   deleteRowButton:SetImageSize(20, 20)
   deleteRowButton:SetWidth(20)
@@ -1444,9 +1444,6 @@ function GSE:GUIDrawWeakauraStorage(container)
   delLabel:SetWidth(45)
   linegroup1:AddChild(delLabel)
   contentcontainer:AddChild(linegroup1)
-
-
-
   for key,value in pairs(editframe.Sequence.WeakAuras) do
     addKeyPairWARow(contentcontainer, columnWidth, key, value)
   end
