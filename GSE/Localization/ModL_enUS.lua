@@ -575,7 +575,7 @@ L["Add WeakAura"] = true
 L["Delete WeakAura"] = true
 L["Delete this WeakAura from the sequence."] = true
 
--- 2.6.21 
+-- 2.6.21
 L["Load WeakAura"] = true
 L["Load or update this WeakAura into WeakAuras."] = true
 L["Actions"] = true
