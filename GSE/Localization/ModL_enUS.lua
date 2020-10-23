@@ -574,3 +574,11 @@ L["WeakAuras is a mod that watches for certain conditions and actions and they a
 L["Add WeakAura"] = true
 L["Delete WeakAura"] = true
 L["Delete this WeakAura from the sequence."] = true
+
+-- 2.6.21 
+L["Load WeakAura"] = true
+L["Load or update this WeakAura into WeakAuras."] = true
+L["Actions"] = true
+L["WeakAuras was not found."] = true
+L["WeakAuras was not found.  Reported error was %s"] = true
+L["Auras included in GSE Macros"] = true

@@ -1,5 +1,6 @@
 local GSE = GSE
 local L = GSE.L
+local GNOME, _ = ...
 
 local Statics = GSE.Static
 
@@ -123,12 +124,16 @@ function GSE.GetCurrentTalents()
 end
 
 --- Experimental attempt to load a WeakAuras string.
-function GSE.LoadWeakauras(str)
-    local WeakAuras = WeakAuras
+function GSE.LoadWeakAura(str)
 
-    if WeakAuras then
-        WeakAuras.ImportString(str)
+    if IsAddOnLoaded("WeakAuras") then
+        WeakAuras.OpenOptions()
+        WeakAuras.OpenOptions()
+        WeakAuras.Import(str)
+    else
+        GSE.Print(L["WeakAuras was not found."])
     end
+
 end
 
 if not SaveBindings then

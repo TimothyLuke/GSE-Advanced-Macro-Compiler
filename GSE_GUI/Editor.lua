@@ -1181,18 +1181,7 @@ local function addKeyPairRow(container, rowWidth, key, value)
   spacerlabel2:SetWidth(8)
   linegroup1:AddChild(spacerlabel2)
 
-  -- local iconpicker = AceGUI:Create("Icon")
-  -- iconpicker:SetLabel(L["Macro Icon"])
-  -- iconpicker.frame:RegisterForDrag("LeftButton")
-  -- iconpicker.frame:SetScript("OnDragStart", function()
-  --   if not GSE.isEmpty(editframe.SequenceName) then
-  --     PickupMacro(editframe.SequenceName)
-  --   end
-  -- end)
-  -- iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-
   local deleteRowButton = AceGUI:Create("Icon")
-  -- deleteRowButton:SetLabel(L["Delete"])
   deleteRowButton:SetImageSize(20, 20)
   deleteRowButton:SetWidth(20)
   deleteRowButton:SetHeight(20)
@@ -1324,7 +1313,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
   local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
   linegroup1:SetWidth(rowWidth)
-  rowWidth = rowWidth - 50
+  rowWidth = rowWidth - 70
 
   local keyEditBox = AceGUI:Create("EditBox")
   keyEditBox:SetLabel()
@@ -1365,18 +1354,24 @@ local function addKeyPairWARow(container, rowWidth, key, value)
   spacerlabel2:SetWidth(8)
   linegroup1:AddChild(spacerlabel2)
 
-  -- local iconpicker = AceGUI:Create("Icon")
-  -- iconpicker:SetLabel(L["Macro Icon"])
-  -- iconpicker.frame:RegisterForDrag("LeftButton")
-  -- iconpicker.frame:SetScript("OnDragStart", function()
-  --   if not GSE.isEmpty(editframe.SequenceName) then
-  --     PickupMacro(editframe.SequenceName)
-  --   end
-  -- end)
-  -- iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+  local loadWeakAuraButton = AceGUI:Create("Icon")
+  loadWeakAuraButton:SetImageSize(20, 20)
+  loadWeakAuraButton:SetWidth(20)
+  loadWeakAuraButton:SetHeight(20)
+  loadWeakAuraButton:SetImage("Interface\\Icons\\spell_chargepositive")
 
+  loadWeakAuraButton:SetCallback("OnClick", function()
+    GSE.LoadWeakAura(valueEditBox:GetText())
+   end)
+  loadWeakAuraButton:SetCallback('OnEnter', function ()
+    GSE.CreateToolTip(L["Load WeakAura"] , L["Load or update this WeakAura into WeakAuras."], editframe)
+  end)
+  loadWeakAuraButton:SetCallback('OnLeave', function ()
+    GSE.ClearTooltip(editframe)
+  end)
+  linegroup1:AddChild(loadWeakAuraButton)
+  
   local deleteRowButton = AceGUI:Create("Icon")
-  -- deleteRowButton:SetLabel(L["Delete"])
   deleteRowButton:SetImageSize(20, 20)
   deleteRowButton:SetWidth(20)
   deleteRowButton:SetHeight(20)
@@ -1387,7 +1382,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     linegroup1:ReleaseChildren()
    end)
   deleteRowButton:SetCallback('OnEnter', function ()
-    GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
+    GSE.CreateToolTip(L["Delete WeakAura"] , L["Delete this WeakAura from the sequence."], editframe)
   end)
   deleteRowButton:SetCallback('OnLeave', function ()
     GSE.ClearTooltip(editframe)
@@ -1421,7 +1416,7 @@ function GSE:GUIDrawWeakauraStorage(container)
 
    local linegroup1 = AceGUI:Create("SimpleGroup")
   linegroup1:SetLayout("Flow")
-  local columnWidth = editframe.Width - 55
+  local columnWidth = editframe.Width - 75
 
   linegroup1:SetWidth(editframe.Width - 50)
 
@@ -1445,8 +1440,8 @@ function GSE:GUIDrawWeakauraStorage(container)
   linegroup1:AddChild(spacerlabel2)
 
   local delLabel = AceGUI:Create("Heading")
-  delLabel:SetText(L["Del"])
-  delLabel:SetWidth(25)
+  delLabel:SetText(L["Actions"])
+  delLabel:SetWidth(45)
   linegroup1:AddChild(delLabel)
   contentcontainer:AddChild(linegroup1)
 
