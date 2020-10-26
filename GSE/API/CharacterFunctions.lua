@@ -25,7 +25,7 @@ function GSE.GetGCD()
         local haste = UnitSpellHaste("player")
 
         gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
-    else 
+    else
         -- Hard coded for classic
         gcd = 1.5
     end
