@@ -1289,7 +1289,7 @@ function GSE.UpdateIcon(self, reset)
             end
             if strlower(cmd) == "castsequence" then
                 local index, csitem, csspell = QueryCastSequence(etc)
-                if not GSE.isEmpty(csitem) then 
+                if not GSE.isEmpty(csitem) then
                     SetMacroSpell(gsebutton, csitem, target)
                     foundSpell = true
                 end

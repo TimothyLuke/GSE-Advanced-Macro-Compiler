@@ -49,7 +49,7 @@ function GSE.TraceSequence(button, step, task)
         if GCD then
             GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
         end
-        GSE.PrintDebugMessage(button .. "," .. step .. "," .. (spell and spell or "nil") .. (csindex and " from castsequence " .. (csspell and csspell or csitem) .." (item " .. csindex .. "in castsequence.) " or "") .. "," .. usableOutput .. "," ..
+        GSE.PrintDebugMessage(button .. "," .. step .. "," .. (spell and spell or "nil") .. (csindex and " from castsequence " .. (csspell and csspell or csitem) .." (item " .. csindex .. " in castsequence.) " or "") .. "," .. usableOutput .. "," ..
                                   manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
     end
 end
