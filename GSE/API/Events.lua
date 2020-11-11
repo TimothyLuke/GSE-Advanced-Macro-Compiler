@@ -395,6 +395,8 @@ function GSE:GSSlash(input)
         GSE_C[params[2]].name = params[2]
         GSE_C[params[2]].sequence = GSE.FindMacro(params[2])
         GSE_C[params[2]].button = _G[params[2]]
+    elseif command == "recompilesequences" then
+        GSE.ReloadSequences()
     elseif command == "reloadLegacyStorage" then
         GSE.ImportLegacyStorage(GSELegacyLibraryBackup)
     else
