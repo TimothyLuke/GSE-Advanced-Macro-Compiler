@@ -582,3 +582,8 @@ L["Actions"] = true
 L["WeakAuras was not found."] = true
 L["WeakAuras was not found.  Reported error was %s"] = true
 L["Auras included in GSE Macros"] = true
+
+--2.6.28
+L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"] = true
+L["Test Variable"] = true
+L["Show the current value of this variable."] = true
