@@ -1230,28 +1230,28 @@ local function addKeyPairRow(container, rowWidth, key, value)
     testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
 
     testRowButton:SetCallback("OnClick", function()
-        local value = valueEditBox:GetText()
-        if type(value) == "string" then
-            local functline = value
+        local val = valueEditBox:GetText()
+        if type(val) == "string" then
+            local functline = val
             if string.sub(functline, 1, 10) == "function()" then
                 functline = string.sub(functline, 11)
                 functline = functline:sub(1, -4)
                 functline = loadstring(functline)
                 -- print(type(functline))
                 if functline ~= nil then
-                    value = functline
+                    val = functline
                 end
             end
         end
         -- print("updated Type: ".. type(value))
         -- print(value)
-        if type(value) == "function" then
-            value = value()
+        if type(val) == "function" then
+            val = val()
         end
 
         StaticPopupDialogs["GSE-GenericMessage"].text = string.format(
           L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"],
-          keyEditBox:GetText(), value)
+          keyEditBox:GetText(), val)
         StaticPopup_Show ("GSE-GenericMessage")
     end)
     testRowButton:SetCallback('OnEnter', function()
