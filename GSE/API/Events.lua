@@ -114,11 +114,12 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     else
         GSE.inArena = false
     end
-    if type == "scenario" then
+    if type == "scenario" or difficulty == 167 or difficulty == 152 then
         GSE.inScenario = true
     else
         GSE.inScenario = false
     end
+
 
     GSE.PrintDebugMessage("PVP: " .. tostring(GSE.PVPFlag) .. " inMythic: " .. tostring(GSE.inMythic) .. " inRaid: " ..
                               tostring(GSE.inRaid) .. " inDungeon " .. tostring(GSE.inDungeon) .. " inHeroic " ..
