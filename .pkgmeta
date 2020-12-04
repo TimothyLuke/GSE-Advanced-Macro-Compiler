@@ -53,7 +53,7 @@ externals:
         url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
         tag: latest
     GSE/Lib/LibDBIcon-1.0:
-        url: https://repos.wowace.com/wow/libdbicon-1-0/trunk
+        url: https://repos.curseforge.com/wow/libdbicon-1-0/trunk
         tag: latest
 
 move-folders:
