@@ -587,3 +587,7 @@ L["Auras included in GSE Macros"] = true
 L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"] = true
 L["Test Variable"] = true
 L["Show the current value of this variable."] = true
+
+--2.6.33
+L["Show Current Spells"] = true
+L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."] = true

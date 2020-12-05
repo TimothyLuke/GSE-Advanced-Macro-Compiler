@@ -11,6 +11,7 @@ function GSE.PerformOneOffEvents()
     GSE.Update2415()
     -- GSE.Update2500()
     GSE.Update2601()
+    GSE.Update2633()
 end
 
 function GSE.UpdateFrom735to801()
@@ -108,4 +109,11 @@ function GSE.Update2601()
     GSEOptions.editorHeight = 700
     GSEOptions.editorWidth = 500
     GSEOptions.Update2601 = true
+end
+
+function GSE.Update2633()
+    if GSE.isEmpty(GSEOptions.Update2633) then
+        GSEOptions.showCurrentSpells = true
+    end
+    GSEOptions.Update2633 = true
 end

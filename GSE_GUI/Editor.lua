@@ -730,7 +730,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     end
 
     editframe.Sequence.MacroVersions[version] = GSE.TranslateSequence(editframe.Sequence.MacroVersions[version],
-                                                    "From Editor", "STRING")
+                                                    "From Editor", "CURRENT")
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     layoutcontainer:SetFullWidth(true)
@@ -753,7 +753,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     local stepdropdown = AceGUI:Create("Dropdown")
     stepdropdown:SetLabel(L["Step Function"])
-    stepdropdown:SetWidth((editframe.Width) * 0.48)
+    stepdropdown:SetWidth((editframe.Width) * 0.24)
     stepdropdown:SetList({
         ["Sequential"] = L["Sequential (1 2 3 4)"],
         ["Priority"] = L["Priority List (1 12 123 1234)"],
@@ -795,6 +795,29 @@ function GSE:GUIDrawMacroEditor(container, version)
     end)
 
     linegroup1:AddChild(looplimit)
+    local basespellspacer = AceGUI:Create("Label")
+    basespellspacer:SetWidth(5)
+    linegroup1:AddChild(basespellspacer)
+
+    local showBaseSpells = AceGUI:Create("CheckBox")
+    showBaseSpells:SetType("checkbox")
+    showBaseSpells:SetWidth((editframe.Width) * 0.24)
+    showBaseSpells:SetTriState(false)
+    showBaseSpells:SetLabel(L["Show Current Spells"])
+    
+    showBaseSpells:SetValue(GSEOptions.showCurrentSpells)
+    showBaseSpells:SetCallback("OnValueChanged", function(sel, object, value)
+        GSEOptions.showCurrentSpells = value
+        GSE.GUISelectEditorTab(container, "event", version)
+    end)
+    showBaseSpells:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Show Current Spells"], L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."], editframe)
+    end)
+    showBaseSpells:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    linegroup1:AddChild(showBaseSpells)
     if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then
         looplimit:SetText(tonumber(editframe.Sequence.MacroVersions[version].LoopLimit))
     end

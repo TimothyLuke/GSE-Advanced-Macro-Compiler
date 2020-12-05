@@ -249,9 +249,23 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
         end
-
+        if mode == "CURRENT" then
+            if GSEOptions.showCurrentSpells then
+                GSE.Print(etc, "TEST")
+                local test = tonumber(etc)
+                if test then
+                    local currentSpell = FindSpellOverrideByID(etc)
+                    if currentSpell then
+                        etc = currentSpell
+                    end
+                end
+            end
+            mode = "STRING"
+        end
         local foundspell = GSE.GetSpellId(etc, mode, absolute)
-        -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
+
+       -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
+
         if foundspell then
             GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell, GNOME)
             output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset

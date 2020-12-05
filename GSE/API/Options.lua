@@ -210,7 +210,14 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.CreateGlobalButtons end,
             order = 440
           },
-
+          showCurrentSpells = {
+            name = L["Show Current Spells"],
+            desc = L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.showCurrentSpells = val end,
+            get = function(info) return GSEOptions.showCurrentSpells end,
+            order = 441
+          },
           title2 = {
             type = "header",
             name = L["Gameplay Options"],

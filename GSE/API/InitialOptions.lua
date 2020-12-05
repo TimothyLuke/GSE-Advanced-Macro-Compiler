@@ -102,6 +102,7 @@ function GSE.SetDefaultOptions()
     }
     GSEOptions.editorHeight = 700
     GSEOptions.editorWidth = 700
+    GSEOptions.showCurrentSpells = true
     GSE.resetMacroResetModifiers()
 end
 
