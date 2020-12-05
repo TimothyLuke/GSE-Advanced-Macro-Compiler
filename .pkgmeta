@@ -52,15 +52,15 @@ externals:
     GSE/Lib/AceGUI-3.0-Selectable-Panel:
         url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
         tag: latest
-    GSE/Lib/LibDBIcon-1.0:
-        url: https://repos.curseforge.com/wow/libdbicon-1-0/trunk
-        tag: latest
+#    GSE/Lib/LibDBIcon-1.0:
+#        url: https://repos.curseforge.com/wow/libdbicon-1-0/trunk
+#        tag: latest
 
 move-folders:
     GSE/GSE: GSE
     GSE/GSE_GUI: GSE_GUI
     GSE/GSE_LDB: GSE_LDB
-
+    GSE/LibDBIcon-1.0: GSE/Lib/LibDBIcon-1.0
 
 enable-nolib-creation: no
 
