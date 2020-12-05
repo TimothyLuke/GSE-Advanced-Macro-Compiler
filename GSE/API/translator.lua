@@ -251,7 +251,6 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         end
         if mode == "CURRENT" then
             if GSEOptions.showCurrentSpells then
-                GSE.Print(etc, "TEST")
                 local test = tonumber(etc)
                 if test then
                     local currentSpell = FindSpellOverrideByID(etc)
