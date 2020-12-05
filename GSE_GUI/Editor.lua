@@ -804,7 +804,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     showBaseSpells:SetWidth((editframe.Width) * 0.24)
     showBaseSpells:SetTriState(false)
     showBaseSpells:SetLabel(L["Show Current Spells"])
-    
+
     showBaseSpells:SetValue(GSEOptions.showCurrentSpells)
     showBaseSpells:SetCallback("OnValueChanged", function(sel, object, value)
         GSEOptions.showCurrentSpells = value
