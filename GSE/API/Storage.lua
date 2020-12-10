@@ -744,6 +744,7 @@ function GSE.ResetButtons()
         if gsebutton:GetAttribute("combatreset") == true then
             gsebutton:SetAttribute("step", 1)
             gsebutton:SetAttribute("clicks", 1)
+            gsebutton:SetAttribute("loopiter", 1)
             if GSEOptions.useExternalMSTimings then
                 gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
             else
