@@ -1,66 +1,56 @@
 package-as: GSE
 
 externals:
-    GSE/Lib/LibStub:
-        url: https://repos.curseforge.com/wow/libstub/mainline/trunk
-        tag: latest
+    GSE/Lib/LibStub: https://repos.wowace.com/wow/libstub/trunk
     GSE/Lib/AceAddon-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceAddon-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
         tag: latest
     GSE/Lib/AceLocale-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceLocale-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
         tag: latest
     GSE/Lib/AceEvent-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceEvent-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceEvent-3.0
         tag: latest
-    GSE/Lib/CallbackHandler-1.0:
-        url: https://repos.curseforge.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
-        tag: latest
+    GSE/Lib/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
     GSE/Lib/AceConfig-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceConfig-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
         tag: latest
     GSE/Lib/AceConsole-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceConsole-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConsole-3.0
         tag: latest
     GSE/Lib/AceSerializer-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceSerializer-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceSerializer-3.0
         tag: latest
     GSE/Lib/AceComm-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceComm-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceComm-3.0
         tag: latest
     GSE/Lib/AceGUI-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceGUI-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
         tag: latest
     GSE/Lib/AceTimer-3.0:
-        url: https://repos.curseforge.com/wow/ace3/mainline/trunk/AceTimer-3.0
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceTimer-3.0
         tag: latest
     GSE/Lib/LibCompress:
-        url: https://repos.curseforge.com/wow/libcompress/mainline/trunk
+        url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
         tag: latest
-    GSE/Lib/LibDataBroker-1.1:
-        url: git://git.wowace.com/wow/libdatabroker-1-1/mainline.git
-        tag: latest
+    GSE/Lib/LibDataBroker-1.1: git://github.com/tekkub/libdatabroker-1-1.git
     GSE/Lib/AceGUI-3.0-Completing-EditBox:
-        url: https://repos.curseforge.com/wow/acegui-3-0-completing-editbox/mainline/trunk
+        url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
         tag: latest
     GSE/Lib/LibQTip-1.0:
         url: git://git.wowace.com/wow/libqtip-1-0
         tag: latest
-    GSE/Lib/LibSharedMedia-3.0:
-        url: https://repos.curseforge.com/wow/libsharedmedia-3-0/mainline/trunk
-        tag: latest
+    GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
     GSE/Lib/AceGUI-3.0-Selectable-Panel:
         url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
         tag: latest
-#    GSE/Lib/LibDBIcon-1.0:
-#        url: https://repos.curseforge.com/wow/libdbicon-1-0/trunk
-#        tag: latest
+    GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
 
 move-folders:
     GSE/GSE: GSE
     GSE/GSE_GUI: GSE_GUI
     GSE/GSE_LDB: GSE_LDB
-    GSE/LibDBIcon-1.0: GSE/Lib/LibDBIcon-1.0
+
 
 enable-nolib-creation: no
 
