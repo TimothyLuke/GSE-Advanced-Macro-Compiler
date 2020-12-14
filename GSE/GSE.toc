@@ -20,7 +20,7 @@ embeds.xml
 Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Lib\LibQTip-1.0\LibQTip-1.0.lua
 Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
-Lib\LibSharedMedia-3.0\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 Lib\AceGUI-3.0-Selectable-Panel\AceGUI-3.0-Selectable-Panel.lua
 
 # Setup Localization
