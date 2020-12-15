@@ -6,7 +6,8 @@
   "dependencies": {
     "discourse-api": "^1.8.0",
     "lodash": "^4.17.20",
-    "luamin": "^1.0.4"
+    "luamin": "^1.0.4",
+    "request": "^2.88.2"
   },
   "keywords": [],
   "author": "",
