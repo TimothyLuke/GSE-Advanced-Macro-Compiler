@@ -310,10 +310,12 @@ local loopiter = self:GetAttribute('loopiter') or 1
 local looplimit = self:GetAttribute('looplimit') or 0
 local clicks = self:GetAttribute('clicks') or 0
 local ms = self:GetAttribute('ms') or 1
+local limit = self:GetAttribute('limit') or 1
 loopstart = tonumber(loopstart)
 loopstop = tonumber(loopstop)
 loopiter = tonumber(loopiter)
 looplimit = tonumber(looplimit)
+limit = tonumber(limit)
 clicks = tonumber(clicks)
 step = tonumber(step)
 ms = tonumber(ms)
@@ -341,10 +343,11 @@ self:SetAttribute('step', step)
 self:SetAttribute('loopiter', loopiter)
 self:SetAttribute('clicks', clicks)
 self:SetAttribute('ms', ms)
+self:SetAttribute('limit', limit)
 self:CallMethod('UpdateIcon')
 ]=]
 
---- <code>GSStaticLoopPriority</code> is a static step function that
+--- <code>Statics.LoopSequentialImplementation</code> is a static step function that
 --    operates in a sequential mode but with an internal loop.
 --    eg 12342345
 Statics.LoopSequentialImplementation = [[
