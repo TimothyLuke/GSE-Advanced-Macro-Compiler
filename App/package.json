@@ -1,0 +1,14 @@
+{
+  "name": "wlm-syncro",
+  "version": "1.0.0",
+  "description": "GSE syncro App",
+  "main": "compress.js",
+  "dependencies": {
+    "discourse-api": "^1.8.0",
+    "lodash": "^4.17.20",
+    "luamin": "^1.0.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,87 @@
+{
+  "_args": [
+    [
+      "luaparse@0.3.0",
+      "D:\\games\\Mods\\GnomeSequencer-Enhanced\\App"
+    ]
+  ],
+  "_from": "luaparse@0.3.0",
+  "_id": "luaparse@0.3.0",
+  "_inBundle": false,
+  "_integrity": "sha512-hrRXc3QJfZ0BfgOGgNfFaKM01zCjSP2y000WOG4jwl3s06vKzODIfqJ3QKSm64mS52ROpnRnfi756jJbDr59fw==",
+  "_location": "/luaparse",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "luaparse@0.3.0",
+    "name": "luaparse",
+    "escapedName": "luaparse",
+    "rawSpec": "0.3.0",
+    "saveSpec": null,
+    "fetchSpec": "0.3.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/luaparse/-/luaparse-0.3.0.tgz",
+  "_spec": "0.3.0",
+  "_where": "D:\\games\\Mods\\GnomeSequencer-Enhanced\\App",
+  "author": {
+    "name": "Oskar Schöldström",
+    "email": "public@oxy.fi",
+    "url": "http://www.oxy.fi/"
+  },
+  "bin": {
+    "luaparse": "./bin/luaparse"
+  },
+  "bugs": {
+    "url": "https://github.com/fstirlitz/luaparse/issues"
+  },
+  "description": "A Lua parser in JavaScript",
+  "devDependencies": {
+    "benchmark": "~1.0.0",
+    "complexity-report": "~0.10.5",
+    "docco": "~0.6.3",
+    "gulp": "^4.0.0",
+    "gulp-add-src": "^1.0.0",
+    "gulp-filelog": "^0.4.1",
+    "gulp-header": "^2.0.9",
+    "gulp-jshint": "^2.1.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-striphtml": "0.0.1",
+    "gulp-uglify": "^3.0.2",
+    "jshint": "^2.11.0",
+    "marked": "^0.8.0",
+    "nyc": "^15.0.0",
+    "spec": "1.0.1",
+    "testem": "^3.0.2"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "luaparse.js",
+    "bin/luaparse"
+  ],
+  "homepage": "https://fstirlitz.github.io/luaparse/",
+  "keywords": [
+    "ast",
+    "lua",
+    "parser",
+    "parsing"
+  ],
+  "license": "MIT",
+  "main": "luaparse.js",
+  "man": [
+    "./docs/luaparse.1"
+  ],
+  "name": "luaparse",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fstirlitz/luaparse.git"
+  },
+  "scripts": {
+    "test": "make qa"
+  },
+  "version": "0.3.0"
+}

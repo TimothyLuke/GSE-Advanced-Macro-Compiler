@@ -4,3 +4,4 @@ deploy_key.pub
 GS-Core/lib
 GSE/Lib
 .release
+App/node_modules/
