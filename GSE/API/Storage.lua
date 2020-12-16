@@ -427,6 +427,13 @@ function GSE.ImportSequence(importStr, legacy, createicon)
 end
 
 function GSE.ReloadSequences()
+    if GSE.isEmpty (GSE.UnsavedOptions.ReloadQueued) then
+        GSE.PerformReloadSequences()
+        GSE.UnsavedOptions.ReloadQueued = true
+    end
+end
+
+function GSE.PerformReloadSequences()
     GSE.PrintDebugMessage("Reloading Sequences")
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
@@ -438,6 +445,9 @@ function GSE.ReloadSequences()
             end
         end
     end
+    local vals = {}
+    vals.action = "FinishReload"
+    table.insert(GSE.OOCQueue, vals)
 end
 
 function GSE.PrepareLogout(deletenonlocalmacros)
@@ -745,6 +755,7 @@ function GSE.ResetButtons()
             gsebutton:SetAttribute("step", 1)
             gsebutton:SetAttribute("clicks", 1)
             gsebutton:SetAttribute("loopiter", 1)
+            gsebutton:SetAttribute("limit", 1)
             if GSEOptions.useExternalMSTimings then
                 gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
             else
@@ -828,6 +839,7 @@ function GSE.OOCUpdateSequence(name, sequence)
                               strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
         gsebutton:SetAttribute("step", 1)
         gsebutton:SetAttribute("clicks", 1)
+        gsebutton:SetAttribute("limit", 1)
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
         else
@@ -844,7 +856,7 @@ function GSE.OOCUpdateSequence(name, sequence)
         if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC) or sequence.Combat then
             gsebutton:SetAttribute("combatreset", true)
         else
-            gsebutton:SetAttribute("combatreset", true)
+            gsebutton:SetAttribute("combatreset", false)
         end
         gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImplementation(sequence))
         if not GSE.isEmpty(sequence.LoopLimit) then

@@ -455,6 +455,8 @@ function GSE:ProcessOOCQueue()
                 GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then
                 GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.sequencename, v.newSequence)
+            elseif v.action == "FinishReload" then
+                GSE.UnsavedOptions.ReloadQueued = nil
             end
             GSE.OOCQueue[k] = nil
         end
