@@ -1624,7 +1624,7 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
                 end
             end
             if not GSE.isEmpty(sequence.Scenario) then
-                if sequence.Party == k then
+                if sequence.Scenario == k then
                     returnstring = returnstring .. "- Scenarios use version " .. k .. "\n"
                 end
             end
