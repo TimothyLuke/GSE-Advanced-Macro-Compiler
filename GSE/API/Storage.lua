@@ -1675,3 +1675,16 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
 
     return returnstring
 end
+
+
+function GSE.GetSequenceSummary()
+    local returntable = {}
+    for k,v in ipairs(GSE.Library) do
+        returntable[k]= {}
+        for i,j in pairs(v) do
+            returntable[k][i] = {}
+            returntable[k][i].Help = j.Help
+        end
+    end
+    return returntable
+end

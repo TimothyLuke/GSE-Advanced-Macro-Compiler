@@ -45,6 +45,18 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
         GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
         GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false, "ID", false), Statics.SourceTransmission)
       end
+    elseif t.Command == "GSE_LISTSEQUENCES" then
+      if sender ~= GetUnitName("player", true) then
+        GSE.ListSequences(sender)
+      else
+        GSE.PrintDebugMessage("Ignoring List Request from me.", Statics.SourceTransmission)
+      end
+    elseif t.Command == "GSE_SEQUENCELIST" then
+      if sender ~= GetUnitName("player", true) then
+        GSE.ShowSequenceList(t.SequenceTable)
+      else
+        GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
+      end
     end
   end
 end
@@ -106,3 +118,16 @@ function GSE.GUIShowTransmissionGui(inckey)
   transmissionFrame:Show()
   GSE.GUITransmissionFrame:SetStatusText(L["Ready to Send"])
 end
+
+function GSE.ShowSequenceList(SequenceTable)
+  for k,v in ipairs(SequenceTable) do
+    for i,j in pairs(v) do
+      local msg = i .. " "
+      if not GSE.isEmpty(j.Help) then
+        msg = msg .. j.Help
+      end
+      GSE.Print(msg, "TRANSMISSION")
+    end
+  end
+end
+

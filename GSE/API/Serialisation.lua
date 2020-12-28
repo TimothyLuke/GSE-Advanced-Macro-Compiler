@@ -302,3 +302,18 @@ function GSE.sendVersionCheck()
     t.Version = GSE.VersionString
     GSE.sendMessage(t)
 end
+
+
+function GSE.ListSequences(recipient)
+    local sequenceTable = GSE.GetSequenceSummary()
+    local t = {}
+    t.Command = "GSE_SEQUENCELIST"
+    t.SequenceTable = sequenceTable
+    GSE.sendMessage(t, "WHISPER", recipient)
+  end
+
+function GSE.RequestSequenceList(gseuser) 
+    local t = {}
+    t.Command = "GSE_LISTSEQUENCES"
+    GSE.sendMessage(t, "WHISPER", gseuser)
+end

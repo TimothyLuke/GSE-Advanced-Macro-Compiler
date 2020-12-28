@@ -52,7 +52,10 @@ function dataobj:OnEnter()
     y,x = tooltip:AddLine()
     tooltip:SetCell(y,1,L["GSE Users"],"CENTER", 3)
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
-      tooltip:AddLine(k, nil, v)
+      local userline, _ = tooltip:AddLine(k, nil, v)
+      tooltip:SetLineScript(userline, "OnMouseDown", function(obj, button)
+        GSE.RequestSequenceList(k)
+      end)
     end
   end
 
