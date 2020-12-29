@@ -102,36 +102,36 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
 end
 
 function GSE.ShowRemoteWindow(SequenceList, GSEUser)
-    local linegroup1 = AceGUI:Create("SimpleGroup")
-    linegroup1:SetLayout("Flow")
+    local classlinegroup = AceGUI:Create("SimpleGroup")
+    classlinegroup:SetLayout("Flow")
     local columnWidth = remoteFrame.Width - 55
 
-    linegroup1:SetWidth(remoteFrame.Width - 50)
+    classlinegroup:SetWidth(remoteFrame.Width - 50)
 
     local nameLabel = AceGUI:Create("Heading")
     nameLabel:SetText(L["Name"])
     nameLabel:SetWidth((columnWidth - 25) * 0.25)
-    linegroup1:AddChild(nameLabel)
+    classlinegroup:AddChild(nameLabel)
 
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(5)
-    linegroup1:AddChild(spacerlabel1)
+    classlinegroup:AddChild(spacerlabel1)
 
     local valueLabel = AceGUI:Create("Heading")
     valueLabel:SetText(L["Help Information"])
     valueLabel:SetWidth((columnWidth - 45) * 0.75 - 18)
-    linegroup1:AddChild(valueLabel)
+    classlinegroup:AddChild(valueLabel)
 
     local spacerlabel2 = AceGUI:Create("Label")
     spacerlabel2:SetWidth(5)
-    linegroup1:AddChild(spacerlabel2)
+    classlinegroup:AddChild(spacerlabel2)
 
     local delLabel = AceGUI:Create("Heading")
     delLabel:SetText(L["Actions"])
     delLabel:SetWidth(25)
-    linegroup1:AddChild(delLabel)
+    classlinegroup:AddChild(delLabel)
 
-    contentcontainer:AddChild(linegroup1)
+    contentcontainer:AddChild(classlinegroup)
 
     remoteFrame.SequenceList = SequenceList
     remoteFrame.GSEUser = GSEUser
