@@ -62,6 +62,10 @@ function GetUnitName(str)
   return retval
 end
 
+function date()
+  return os.date()
+end
+
 function GetSpellInfo(spellstring)
   print( "GetSpellInfo -- " .. spellstring)
   local name, rank, icon, castTime, minRange, maxRange, spellId
