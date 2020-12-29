@@ -312,7 +312,7 @@ function GSE.ListSequences(recipient)
     GSE.sendMessage(t, "WHISPER", recipient)
   end
 
-function GSE.RequestSequenceList(gseuser) 
+function GSE.RequestSequenceList(gseuser)
     local t = {}
     t.Command = "GSE_LISTSEQUENCES"
     GSE.sendMessage(t, "WHISPER", gseuser)
