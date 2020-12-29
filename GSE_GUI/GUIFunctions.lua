@@ -125,6 +125,7 @@ end
 
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
+  sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
   for k,v in ipairs(sequence.MacroVersions) do
     sequence.MacroVersions[k] = GSE.TranslateSequence(v, SequenceName, "ID")

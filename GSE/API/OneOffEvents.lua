@@ -12,6 +12,7 @@ function GSE.PerformOneOffEvents()
     -- GSE.Update2500()
     GSE.Update2601()
     GSE.Update2633()
+    GSE.Update2638()
 end
 
 function GSE.UpdateFrom735to801()
@@ -116,4 +117,16 @@ function GSE.Update2633()
         GSEOptions.showCurrentSpells = true
     end
     GSEOptions.Update2633 = true
+end
+
+function GSE.Update2638()
+    if GSE.isEmpty(GSEOptions.Update2638) then
+        for k,v in ipairs(GSE.Library) do
+            for i,j in pairs(v) do
+                j.LastUpdated = GSE.GetTimestamp()
+                GSE.PerformMergeAction("REPLACE", k, i, j)
+            end
+        end 
+    end
+    GSEOptions.Update2638 = true
 end

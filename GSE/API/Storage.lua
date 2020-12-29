@@ -193,6 +193,9 @@ function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
 end
 
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+    if GSE.isEmpty(newSequence.LastUpdated) then
+        newSequence.LastUpdated = GSE.GetTimestamp()
+    end
     if sequenceName:len() > 28 then
         local tempseqName = sequenceName:sub(1,28)
         GSE.Print(string.format(L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."], sequenceName, tempseqName), "GSE Storage")
