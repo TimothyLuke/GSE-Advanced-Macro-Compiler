@@ -288,9 +288,26 @@ function GSE.SendSequence(ClassID, SequenceName, recipient)
     GSE.TransmitSequence(key, "WHISPER", recipient)
 end
 
+function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
+    t.Command = "GSE_SEQUENCEMETA"
+    t.ClassID = ClassID
+    t.SequenceName = SequenceName
+    t.LastUpdated = GSE.Library[ClassID][SequenceName].LastUpdated
+    t.Help = GSE.Library[ClassID][SequenceName].Help
+    GSE.sendMessage(t, "WHISPER", gseuser)
+end
+
 function GSE.RequestSequence(ClassID, SequenceName, gseuser)
     local t = {}
     t.Command = "GSE_REQUESTSEQUENCE"
+    t.ClassID = ClassID
+    t.SequenceName = SequenceName
+    GSE.sendMessage(t, "WHISPER", gseuser)
+end
+
+function GSE.RequestSequenceMeta(ClassID, SequenceName, gseuser)
+    local t = {}
+    t.Command = "GSE_REQUESTSEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
     GSE.sendMessage(t, "WHISPER", gseuser)
@@ -366,8 +383,28 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
                     GSE.SendSequence(GSEStorage[t.ClassID][t.SequenceName], sender)
                 end
             else
-                GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
+                GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
             end
+        elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
+            if sender ~= GetUnitName("player", true) then
+                if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
+                    GSE.SendSequenceMeta(t.ClassID,t.SequenceName, sender)
+                end
+            else
+                GSE.PrintDebugMessage("Ignoring SequenceMeta from me.", Statics.SourceTransmission)
+            end
+        elseif t.Command == "GSE_SEQUENCEMETA" then
+            if sender ~= GetUnitName("player", true) then
+                if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
+                    local sequence = GSE.Library[t.ClassID][t.SequenceName]
+                    if sequence.LastUpdated ~= t.LastUpdated then
+                        GSE.RequestSequence(t.ClassID, t.SequenceName, sender)
+                    end
+                end
+            else
+                GSE.PrintDebugMessage("Ignoring SequenceMeta data from me.", Statics.SourceTransmission)
+            end
+
         end
     end
 end
