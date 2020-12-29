@@ -126,7 +126,7 @@ function GSE.Update2638()
                 j.LastUpdated = GSE.GetTimestamp()
                 GSE.PerformMergeAction("REPLACE", k, i, j)
             end
-        end 
+        end
     end
     GSEOptions.Update2638 = true
 end
