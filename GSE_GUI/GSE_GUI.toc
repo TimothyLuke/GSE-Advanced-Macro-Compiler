@@ -20,6 +20,7 @@ VersionManagement.lua
 Recorder.lua
 Editor.lua
 Viewer.lua
+RemoteMacroBrowser.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua

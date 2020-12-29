@@ -283,6 +283,20 @@ function GSE.performVersionCheck(version)
     end
 end
 
+function GSE.SendSequence(ClassID, SequenceName, recipient)
+    local key = ClassID .. "," .. SequenceName
+    GSE.TransmitSequence(key, "WHISPER", recipient)
+end
+
+function GSE.RequestSequence(ClassID, SequenceName, gseuser)
+    local t = {}
+    t.Command = "GSE_REQUESTSEQUENCE"
+    t.ClassID = ClassID
+    t.SequenceName = SequenceName
+    GSE.sendMessage(t, "WHISPER", gseuser)
+end
+
+
 function GSE.ReceiveSequence(classid, SequenceName, Sequence, sender)
     GSE.AddSequenceToCollection(SequenceName, Sequence, classid)
     GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender)
@@ -317,3 +331,48 @@ function GSE.RequestSequenceList(gseuser)
     t.Command = "GSE_LISTSEQUENCES"
     GSE.sendMessage(t, "WHISPER", gseuser)
 end
+
+function GSE:OnCommReceived(prefix, message, distribution, sender)
+    GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
+    GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, Statics.SourceTransmission)
+    local success, t = GSE.DecodeMessage(message)
+    if success then
+      if t.Command == "GS-E_VERSIONCHK" then
+        if not GSold then
+          GSE.performVersionCheck(t.Version)
+        end
+        GSE.storeSender(sender, t.Version)
+      elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
+        if sender ~= GetUnitName("player", true) then
+          GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
+        else
+          GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
+          GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false, "ID", false), Statics.SourceTransmission)
+        end
+      elseif t.Command == "GSE_LISTSEQUENCES" then
+        if sender ~= GetUnitName("player", true) then
+          GSE.ListSequences(sender)
+        else
+          GSE.PrintDebugMessage("Ignoring List Request from me.", Statics.SourceTransmission)
+        end
+      elseif t.Command == "GSE_SEQUENCELIST" then
+        if sender ~= GetUnitName("player", true) then
+          GSE.ShowSequenceList(t.SequenceTable, sender)
+        else
+          GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
+        end
+      elseif t.Command == "GSE_REQUESTSEQUENCE" then
+        if sender ~= GetUnitName("player", true) then
+          if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
+            GSE.SendSequence(GSEStorage[t.ClassID][t.SequenceName], sender)
+          end
+        else
+          GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
+        end
+      end
+    end
+  end
+  
+  
+  
+  GSE:RegisterComm("GSE")

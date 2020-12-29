@@ -591,3 +591,9 @@ L["Show the current value of this variable."] = true
 --2.6.33
 L["Show Current Spells"] = true
 L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."] = true
+
+--2.6.38
+L["GSE - %s's Macros"] = true
+L["Request Macro"] = true
+L["Request that the user sends you a copy of this macro."] = true
+L["Select a Sequence"] = true
