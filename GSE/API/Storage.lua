@@ -1687,6 +1687,7 @@ function GSE.GetSequenceSummary()
         for i,j in pairs(v) do
             returntable[k][i] = {}
             returntable[k][i].Help = j.Help
+            returntable[k][i].LastUpdated = j.LastUpdated
         end
     end
     return returntable
