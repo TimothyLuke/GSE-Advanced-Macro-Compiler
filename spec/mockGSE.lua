@@ -41,7 +41,7 @@ function GetClassInfo(i)
   end
 end
 
-function UnitSpellHaste()
+function UnitSpellHaste(unit)
   -- return a haste of 25%
   return 25
 end
@@ -54,7 +54,7 @@ function UnitClass(str)
   return "Druid", "DRUID", 11
 end
 
-function GetUnitName(str)
+function GetUnitName(str, bool)
   local retval = "Unknown"
   if str == "player" then
     retval = "Draik"
@@ -62,7 +62,7 @@ function GetUnitName(str)
   return retval
 end
 
-function date()
+function date(dateval)
   return os.date()
 end
 

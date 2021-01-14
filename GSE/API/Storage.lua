@@ -310,22 +310,23 @@ function GSE.GetActiveSequenceVersion(sequenceName)
         vers = GSE.Library[classid][sequenceName].Arena
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].PVP) and GSE.PVPFlag then
         vers = GSE.Library[classid][sequenceName].PVP
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Raid) and GSE.inRaid then
+    end
+    if not GSE.isEmpty(GSE.Library[classid][sequenceName].Raid) and GSE.inRaid then
         vers = GSE.Library[classid][sequenceName].Raid
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Mythic) and GSE.inMythic then
         vers = GSE.Library[classid][sequenceName].Mythic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Dungeon) and GSE.inDungeon then
-        vers = GSE.Library[classid][sequenceName].Dungeon
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Heroic) and GSE.inHeroic then
-        vers = GSE.Library[classid][sequenceName].Heroic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Party) and GSE.inParty then
-        vers = GSE.Library[classid][sequenceName].Party
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Timewalking) and GSE.inTimeWalking then
-        vers = GSE.Library[classid][sequenceName].Timewalking
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].MythicPlus) and GSE.inMythicPlus then
         vers = GSE.Library[classid][sequenceName].MythicPlus
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Heroic) and GSE.inHeroic then
+        vers = GSE.Library[classid][sequenceName].Heroic
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Dungeon) and GSE.inDungeon then
+        vers = GSE.Library[classid][sequenceName].Dungeon
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Timewalking) and GSE.inTimeWalking then
+        vers = GSE.Library[classid][sequenceName].Timewalking
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Scenario) and GSE.inScenario then
         vers = GSE.Library[classid][sequenceName].Scenario
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Party) and GSE.inParty then
+        vers = GSE.Library[classid][sequenceName].Party
     end
     return vers
 end
@@ -670,6 +671,10 @@ function GSE.FixSequence(sequence)
     if GSE.isEmpty(sequence.PostMacro) then
         sequence.PostMacro = {}
         GSE.PrintDebugMessage("Empty PostMacro", GNOME)
+    end
+    if GSE.isEmpty(sequence.LoopLimit) then 
+        sequence.PostMacro = {}
+        GSE.PrintDebugMessage("Empty PostMacro as no LoopLimit", GNOME)
     end
     if GSE.isEmpty(sequence.KeyPress) then
         sequence.KeyPress = {}

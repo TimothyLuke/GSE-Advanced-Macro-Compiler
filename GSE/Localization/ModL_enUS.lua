@@ -477,7 +477,6 @@ L["These lines are executed every time you click this macro.  They are evaluated
 L["These lines are executed before the lines in the Sequence Box.  If an Inner Loop Limit is not set, these are executed only once.  \nIf an Inner Loop Limit has been set these are executed after the Sequence has been looped through the number of times.  \nThe Sequence will then go on to the Post Macro if it exists then back to the PreMacro."] = true
 L["The main lines of the macro."] = true
 L["These lines are executed every time you click this macro.  They are evaluated by WOW after the line in the Sequence Box."] = true
-L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.  If an Inner Loop Limit is not set, these are never executed as the sequence will never stop repeating.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."] = true
 L["Reset this macro when you exit combat."] = true
 L["These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."] = true
 L["Delete this macro.  This is not able to be undone."] = true
@@ -597,3 +596,6 @@ L["GSE - %s's Macros"] = true
 L["Request Macro"] = true
 L["Request that the user sends you a copy of this macro."] = true
 L["Select a Sequence"] = true
+--2.6.39
+L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."] = true
+L["This box is disabled as no Inner Loop Limit has been set.  It will never be called without it."] = true

@@ -774,11 +774,36 @@ function GSE:GUIDrawMacroEditor(container, version)
     stepdropdown:SetCallback("OnValueChanged", function(sel, object, value)
         editframe.Sequence.MacroVersions[version].StepFunction = value
     end)
-    linegroup1:AddChild(stepdropdown)
 
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(5)
-    linegroup1:AddChild(spacerlabel1)
+
+    local PostMacro = AceGUI:Create("MultiLineEditBox")
+    PostMacro:SetLabel(L["PostMacro"])
+    PostMacro:SetNumLines(smallbox)
+    PostMacro:DisableButton(true)
+    PostMacro:SetWidth((editframe.Width) * 0.48)
+    PostMacro.editBox:SetScript("OnLeave", function()
+        GSE.GUIParseText(PostMacro)
+    end)
+    if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].PostMacro) then
+        PostMacro:SetText(table.concat(editframe.Sequence.MacroVersions[version].PostMacro, "\n"))
+    end
+    PostMacro:SetCallback("OnTextChanged", function(sel, object, value)
+        editframe.Sequence.MacroVersions[version].PostMacro = GSE.SplitMeIntolines(value)
+    end)
+    PostMacro:SetCallback('OnEnter', function()
+        if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then 
+            GSE.CreateToolTip(L["PostMacro"], L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."], editframe)
+        else
+            GSE.CreateToolTip(L["PostMacro"],
+            L["This box is disabled as no Inner Loop Limit has been set.  It will never be called without it."],
+                editframe)
+        end
+    end)
+    PostMacro:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
 
     local looplimit = AceGUI:Create("EditBox")
     looplimit:SetLabel(L["Inner Loop Limit"])
@@ -794,10 +819,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    linegroup1:AddChild(looplimit)
     local basespellspacer = AceGUI:Create("Label")
     basespellspacer:SetWidth(5)
-    linegroup1:AddChild(basespellspacer)
 
     local showBaseSpells = AceGUI:Create("CheckBox")
     showBaseSpells:SetType("checkbox")
@@ -817,18 +840,38 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    linegroup1:AddChild(showBaseSpells)
     if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then
         looplimit:SetText(tonumber(editframe.Sequence.MacroVersions[version].LoopLimit))
+        PostMacro:SetDisabled(false)
+    else
+        editframe.Sequence.PostMacroSave = PostMacro:GetText()
+        PostMacro:SetText("")
+        PostMacro:SetDisabled(true)
     end
     looplimit.editbox:SetNumeric()
     looplimit:SetCallback("OnTextChanged", function(sel, object, value)
         editframe.Sequence.MacroVersions[version].LoopLimit = value
+        if GSE.isEmpty(value) then
+            PostMacro:SetDisabled(true)
+            editframe.Sequence.PostMacroSave = PostMacro:GetText()
+            PostMacro:SetText("")
+        else
+            if tonumber(value) > 1 then 
+                PostMacro:SetDisabled(false)
+                if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
+                    PostMacro:SetText(editframe.Sequence.PostMacroSave)
+                end
+            else
+                PostMacro:SetDisabled(true)
+                editframe.Sequence.PostMacroSave = PostMacro:GetText()
+                PostMacro:SetText("")
+                looplimit:SetText("")
+            end
+        end
     end)
 
     local spacerlabel7 = AceGUI:Create("Label")
     spacerlabel7:SetWidth(5)
-    linegroup1:AddChild(spacerlabel7)
 
     local delversionbutton = AceGUI:Create("Button")
     delversionbutton:SetText(L["Delete Version"])
@@ -844,9 +887,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     delversionbutton:SetCallback('OnLeave', function()
         GSE.ClearTooltip(editframe)
     end)
-    linegroup1:AddChild(delversionbutton)
-
-    contentcontainer:AddChild(linegroup1)
     local linegroup2 = AceGUI:Create("SimpleGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
@@ -882,11 +922,9 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    linegroup2:AddChild(KeyPressbox)
 
     local spacerlabel2 = AceGUI:Create("Label")
     spacerlabel2:SetWidth(6)
-    linegroup2:AddChild(spacerlabel2)
 
     local PreMacro = AceGUI:Create("MultiLineEditBox")
     PreMacro:SetLabel(L["PreMacro"])
@@ -905,15 +943,14 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
+
+
     if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].PreMacro) then
         PreMacro:SetText(table.concat(editframe.Sequence.MacroVersions[version].PreMacro, "\n"))
     end
     PreMacro:SetCallback("OnTextChanged", function(sel, object, value)
         editframe.Sequence.MacroVersions[version].PreMacro = GSE.SplitMeIntolines(value)
     end)
-    linegroup2:AddChild(PreMacro)
-
-    contentcontainer:AddChild(linegroup2)
 
     local spellbox = AceGUI:Create("MultiLineEditBox")
     spellbox:SetLabel(L["Sequence"])
@@ -942,7 +979,6 @@ function GSE:GUIDrawMacroEditor(container, version)
             editframe.Sequence.MacroVersions[version][k] = v
         end
     end)
-    contentcontainer:AddChild(spellbox)
 
     local linegroup3 = AceGUI:Create("SimpleGroup")
     linegroup3:SetLayout("Flow")
@@ -970,36 +1006,27 @@ function GSE:GUIDrawMacroEditor(container, version)
     KeyReleasebox:SetCallback("OnTextChanged", function(sel, object, value)
         editframe.Sequence.MacroVersions[version].KeyRelease = GSE.SplitMeIntolines(value)
     end)
-    linegroup3:AddChild(KeyReleasebox)
 
     local spacerlabel3 = AceGUI:Create("Label")
     spacerlabel3:SetWidth(6)
+
+
+    linegroup1:AddChild(stepdropdown)
+    linegroup1:AddChild(spacerlabel1)
+    linegroup1:AddChild(looplimit)
+    linegroup1:AddChild(basespellspacer)
+    linegroup1:AddChild(showBaseSpells)
+    linegroup1:AddChild(spacerlabel7)
+    linegroup1:AddChild(delversionbutton)
+    contentcontainer:AddChild(linegroup1)
+    linegroup2:AddChild(KeyPressbox)
+    linegroup2:AddChild(spacerlabel2)
+    linegroup2:AddChild(PreMacro)
+    contentcontainer:AddChild(linegroup2)
+    contentcontainer:AddChild(spellbox)
+    linegroup3:AddChild(KeyReleasebox)
     linegroup3:AddChild(spacerlabel3)
-
-    local PostMacro = AceGUI:Create("MultiLineEditBox")
-    PostMacro:SetLabel(L["PostMacro"])
-    PostMacro:SetNumLines(smallbox)
-    PostMacro:DisableButton(true)
-    PostMacro:SetWidth((editframe.Width) * 0.48)
-    PostMacro.editBox:SetScript("OnLeave", function()
-        GSE.GUIParseText(PostMacro)
-    end)
     linegroup3:AddChild(PostMacro)
-    if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].PostMacro) then
-        PostMacro:SetText(table.concat(editframe.Sequence.MacroVersions[version].PostMacro, "\n"))
-    end
-    PostMacro:SetCallback("OnTextChanged", function(sel, object, value)
-        editframe.Sequence.MacroVersions[version].PostMacro = GSE.SplitMeIntolines(value)
-    end)
-    PostMacro:SetCallback('OnEnter', function()
-        GSE.CreateToolTip(L["PostMacro"],
-            L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.  If an Inner Loop Limit is not set, these are never executed as the sequence will never stop repeating.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."],
-            editframe)
-    end)
-    PostMacro:SetCallback('OnLeave', function()
-        GSE.ClearTooltip(editframe)
-    end)
-
     contentcontainer:AddChild(linegroup3)
 
     layoutcontainer:AddChild(scrollcontainer)
