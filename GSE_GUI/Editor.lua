@@ -793,7 +793,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         editframe.Sequence.MacroVersions[version].PostMacro = GSE.SplitMeIntolines(value)
     end)
     PostMacro:SetCallback('OnEnter', function()
-        if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then 
+        if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) then
             GSE.CreateToolTip(L["PostMacro"], L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."], editframe)
         else
             GSE.CreateToolTip(L["PostMacro"],
@@ -856,7 +856,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             editframe.Sequence.PostMacroSave = PostMacro:GetText()
             PostMacro:SetText("")
         else
-            if tonumber(value) > 1 then 
+            if tonumber(value) > 1 then
                 PostMacro:SetDisabled(false)
                 if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
                     PostMacro:SetText(editframe.Sequence.PostMacroSave)

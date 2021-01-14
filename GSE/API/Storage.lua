@@ -672,7 +672,7 @@ function GSE.FixSequence(sequence)
         sequence.PostMacro = {}
         GSE.PrintDebugMessage("Empty PostMacro", GNOME)
     end
-    if GSE.isEmpty(sequence.LoopLimit) then 
+    if GSE.isEmpty(sequence.LoopLimit) then
         sequence.PostMacro = {}
         GSE.PrintDebugMessage("Empty PostMacro as no LoopLimit", GNOME)
     end
