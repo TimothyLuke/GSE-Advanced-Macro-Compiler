@@ -675,6 +675,11 @@ function GSE.FixSequence(sequence)
     if GSE.isEmpty(sequence.LoopLimit) then
         sequence.PostMacro = {}
         GSE.PrintDebugMessage("Empty PostMacro as no LoopLimit", GNOME)
+    else
+        if tonumber(sequence.LoopLimit) < 2 then
+            sequence.PostMacro = {}
+            GSE.PrintDebugMessage("Ignoring PostMacro as incorrect LoopLimit", GNOME)
+        end
     end
     if GSE.isEmpty(sequence.KeyPress) then
         sequence.KeyPress = {}
