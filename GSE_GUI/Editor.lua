@@ -865,6 +865,25 @@ function GSE:GUIDrawMacroEditor(container, version)
                 PostMacro:SetDisabled(true)
                 editframe.Sequence.PostMacroSave = PostMacro:GetText()
                 PostMacro:SetText("")
+            end
+        end
+    end)
+
+    looplimit.editbox:SetScript("OnEditFocusLost", function()
+        if GSE.isEmpty(looplimit:GetText()) then
+            PostMacro:SetDisabled(true)
+            editframe.Sequence.PostMacroSave = PostMacro:GetText()
+            PostMacro:SetText("")
+        else
+            if tonumber(looplimit:GetText()) > 1 then
+                PostMacro:SetDisabled(false)
+                if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
+                    PostMacro:SetText(editframe.Sequence.PostMacroSave)
+                end
+            else
+                PostMacro:SetDisabled(true)
+                editframe.Sequence.PostMacroSave = PostMacro:GetText()
+                PostMacro:SetText("")
                 looplimit:SetText("")
             end
         end
