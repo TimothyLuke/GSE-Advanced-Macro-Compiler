@@ -844,8 +844,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         looplimit:SetText(tonumber(editframe.Sequence.MacroVersions[version].LoopLimit))
         PostMacro:SetDisabled(false)
     else
-        editframe.Sequence.PostMacroSave = PostMacro:GetText()
-        PostMacro:SetText("")
+        --editframe.Sequence.PostMacroSave = PostMacro:GetText()
+        --PostMacro:SetText("")
         PostMacro:SetDisabled(true)
     end
     looplimit.editbox:SetNumeric()
@@ -853,18 +853,18 @@ function GSE:GUIDrawMacroEditor(container, version)
         editframe.Sequence.MacroVersions[version].LoopLimit = value
         if GSE.isEmpty(value) then
             PostMacro:SetDisabled(true)
-            editframe.Sequence.PostMacroSave = PostMacro:GetText()
-            PostMacro:SetText("")
+            --editframe.Sequence.PostMacroSave = PostMacro:GetText()
+            --PostMacro:SetText("")
         else
             if tonumber(value) > 1 then
                 PostMacro:SetDisabled(false)
-                if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
-                    PostMacro:SetText(editframe.Sequence.PostMacroSave)
-                end
+                --if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
+                --    PostMacro:SetText(editframe.Sequence.PostMacroSave)
+                --end
             else
                 PostMacro:SetDisabled(true)
-                editframe.Sequence.PostMacroSave = PostMacro:GetText()
-                PostMacro:SetText("")
+                --editframe.Sequence.PostMacroSave = PostMacro:GetText()
+                --PostMacro:SetText("")
             end
         end
     end)
@@ -872,18 +872,18 @@ function GSE:GUIDrawMacroEditor(container, version)
     looplimit.editbox:SetScript("OnEditFocusLost", function()
         if GSE.isEmpty(looplimit:GetText()) then
             PostMacro:SetDisabled(true)
-            editframe.Sequence.PostMacroSave = PostMacro:GetText()
-            PostMacro:SetText("")
+            --editframe.Sequence.PostMacroSave = PostMacro:GetText()
+            --PostMacro:SetText("")
         else
             if tonumber(looplimit:GetText()) > 1 then
                 PostMacro:SetDisabled(false)
-                if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
-                    PostMacro:SetText(editframe.Sequence.PostMacroSave)
-                end
+                --if not GSE.isEmpty(editframe.Sequence.PostMacroSave) then
+                --    PostMacro:SetText(editframe.Sequence.PostMacroSave)
+                --end
             else
                 PostMacro:SetDisabled(true)
-                editframe.Sequence.PostMacroSave = PostMacro:GetText()
-                PostMacro:SetText("")
+                --editframe.Sequence.PostMacroSave = PostMacro:GetText()
+                --PostMacro:SetText("")
                 looplimit:SetText("")
             end
         end
