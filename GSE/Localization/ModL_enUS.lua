@@ -600,4 +600,4 @@ L["Select a Sequence"] = true
 L["These lines are executed after the lines in the Sequence Box have been repeated Inner Loop Limit number of times.\nThe Sequence will then go on to the PreMacro if it exists then back to the Sequence."] = true
 L["This box is disabled as no Inner Loop Limit has been set.  It will never be called without it."] = true
 --2.6.44
-L["cffff0000MACRO VALIDATION ERROR|r - PostMacro found with invalid LoopLimit.  PostMacro will not be saved for version %s"] = true
+L["%sMACRO VALIDATION ERROR|r - PostMacro found with invalid LoopLimit.  PostMacro will not be saved for version %s"] = true
