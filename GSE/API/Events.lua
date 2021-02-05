@@ -348,6 +348,8 @@ function GSE:GSSlash(input)
         end
     elseif command == "help" then
         PrintGnomeHelp()
+    elseif command == "gse3" then
+        _G["GSE3"]:Show()
     elseif command == "cleanorphans" or command == "clean" then
         GSE.CleanOrphanSequences()
     elseif command == "forceclean" then

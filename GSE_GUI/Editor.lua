@@ -1,6 +1,6 @@
 local GNOME, _ = ...
-local Statics = GSE.Static
 local GSE = GSE
+local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L

@@ -24,4 +24,5 @@ RemoteMacroBrowser.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
+3_ParentFrame.lua
 Init.lua

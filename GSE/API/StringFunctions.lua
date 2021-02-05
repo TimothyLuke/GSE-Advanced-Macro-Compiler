@@ -182,12 +182,19 @@ end
 
 function GSE.Dump(o)
     if type(o) == 'table' then
-        local s = '{ '
+        local s = '{ \n'
         for k, v in pairs(o) do
             if type(k) ~= 'number' then
                 k = '"' .. k .. '"'
             end
-            s = s .. '[' .. k .. '] = ' .. GSE.Dump(v) .. ','
+            s = s .. '[' .. k .. '] = ' 
+            if GSE.isEmpty(v) then
+                s = s .. '"",\n'
+            elseif type(v) == 'string' then
+                s = s .. "[[" .. GSE.Dump(v) .. ']],\n'
+            else
+                s = s .. GSE.Dump(v) .. ',\n'
+            end
         end
         return s .. '} '
     else
