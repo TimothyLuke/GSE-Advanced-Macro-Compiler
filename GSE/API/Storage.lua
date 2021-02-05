@@ -676,7 +676,7 @@ function GSE.FixSequence(sequence)
         sequence.PostMacro = {}
         GSE.PrintDebugMessage("Empty PostMacro as no LoopLimit", GNOME)
     else
-        if tonumber(sequence.LoopLimit) < 2 then
+        if tonumber(sequence.LoopLimit) < 1 then
             sequence.PostMacro = {}
             GSE.PrintDebugMessage("Ignoring PostMacro as incorrect LoopLimit", GNOME)
         end

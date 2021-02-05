@@ -847,7 +847,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) and tonumber(editframe.Sequence.MacroVersions[version].LoopLimit) > 1 then
+    if not GSE.isEmpty(editframe.Sequence.MacroVersions[version].LoopLimit) and tonumber(editframe.Sequence.MacroVersions[version].LoopLimit) > 0 then
         looplimit:SetText(tonumber(editframe.Sequence.MacroVersions[version].LoopLimit))
         PostMacro:SetDisabled(false)
     else
@@ -859,7 +859,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         if GSE.isEmpty(value) then
             PostMacro:SetDisabled(true)
         else
-            if tonumber(value) > 1 then
+            if tonumber(value) > 0 then
                 PostMacro:SetDisabled(false)
             else
                 PostMacro:SetDisabled(true)
@@ -871,7 +871,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         if GSE.isEmpty(looplimit:GetText()) then
             PostMacro:SetDisabled(true)
         else
-            if tonumber(looplimit:GetText()) > 1 then
+            if tonumber(looplimit:GetText()) > 0 then
                 PostMacro:SetDisabled(false)
             else
                 PostMacro:SetDisabled(true)

@@ -191,14 +191,14 @@ function GSE.Dump(o)
             if GSE.isEmpty(v) then
                 s = s .. '"",\n'
             elseif type(v) == 'string' then
-                s = s .. "[[" .. GSE.Dump(v) .. ']],\n'
+                s = s .. '"' .. GSE.Dump(v) .. '",\n'
             else
                 s = s .. GSE.Dump(v) .. ',\n'
             end
         end
         return s .. '} '
     else
-        return tostring(o)
+        return GSE.TranslateString(tostring(o) , "STRING", true)
     end
 end
 

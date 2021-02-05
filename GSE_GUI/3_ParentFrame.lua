@@ -8,7 +8,7 @@ local L = GSE.L
 local AceGUI = LibStub("AceGUI-3.0")
 
 local frame = CreateFrame("frame", "GSE3", UIParent, BackdropTemplateMixin and "BackdropTemplate" )
-frame:SetSize(300, 200)
+frame:SetSize(500, 300)
 frame:SetPoint("CENTER")
 
 frame:SetBackdrop({
@@ -20,17 +20,18 @@ frame:SetBackdrop({
 frame:SetBackdropColor(0, 0, 0, .5)
 
 local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-scrollFrame:SetSize(300, 200)
+scrollFrame:SetSize(500, 300)
 scrollFrame:SetPoint("CENTER")
 
 
 local AdvancedTextEditor = CreateFrame("EditBox", nil, scrollFrame)
 
 AdvancedTextEditor:SetMultiLine(true)
-AdvancedTextEditor:SetText("local sequence = " .. GSE.Dump(GSE.Library[2]["SAM_PROTGOD"]))
+--AdvancedTextEditor:SetText("local sequence = " .. GSE.Dump(GSE.Library[2]["SAM_PROTGOD"]))
+AdvancedTextEditor:SetText(GSE.Dump(GSE.Library[2]["SAM_PROTGOD"]))
 
 AdvancedTextEditor:SetFontObject(ChatFontNormal)
-AdvancedTextEditor:SetWidth(300)
+AdvancedTextEditor:SetWidth(500)
 AdvancedTextEditor:SetScript("OnEscapePressed", function() frame:Hide() end)
 
 frame.TextBox = AdvancedTextEditor
@@ -75,6 +76,9 @@ local logicColor2 = GSEOptions.EQUALS
 colorTable["and"] = logicColor2
 colorTable["or"] = logicColor2
 colorTable["not"] = logicColor2
+
+local castColor = GSEOptions.UNKNOWN
+colorTable["/cast"] = castColor
 
 colorTable[0] = "|r"
 
