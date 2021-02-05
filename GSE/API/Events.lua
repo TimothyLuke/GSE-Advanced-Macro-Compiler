@@ -296,7 +296,9 @@ GSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
-GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+if GSE.GameMode > 8 then
+    GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+end
 
 local function PrintGnomeHelp()
     GSE.Print(L["GnomeSequencer was originally written by semlar of wowinterface.com."], GNOME)
