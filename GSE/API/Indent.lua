@@ -601,6 +601,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
 
             if tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
                 -- ignore color codes
+                local tempxxxxx = true
             elseif tokenType == tokens.TOKEN_LINEBREAK or tokenType == tokens.TOKEN_WHITESPACE then
                 if tokenType == tokens.TOKEN_LINEBREAK then
                     numLines = numLines + 1
@@ -765,6 +766,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
                 end
             elseif tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
                 -- skip these, though they shouldn't be encountered here anyway
+                local tempxxxxx = true
             else
                 hitNonWhitespace = true
                 local str = stringsub(code, pos, nextPos - 1)
@@ -983,6 +985,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
                 linebreakcount = linebreakcount + 1
             elseif whitespaceCharacters[b] then
                 -- Ignore whitespace characters
+                local tempxxxxxx = true
             else
                 break
             end

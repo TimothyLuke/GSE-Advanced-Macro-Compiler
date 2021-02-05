@@ -187,7 +187,7 @@ function GSE.Dump(o)
             if type(k) ~= 'number' then
                 k = '"' .. k .. '"'
             end
-            s = s .. '[' .. k .. '] = ' 
+            s = s .. '[' .. k .. '] = '
             if GSE.isEmpty(v) then
                 s = s .. '"",\n'
             elseif type(v) == 'string' then
