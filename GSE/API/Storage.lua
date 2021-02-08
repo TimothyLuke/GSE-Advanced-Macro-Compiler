@@ -16,9 +16,9 @@ function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSEStorage) then
         GSEStorage = {}
     end
-    for i=0,12 do
+    for i = 0, 12 do
         if GSE.isEmpty(GSEStorage[i]) then
-            GSEStorage[i]={}
+            GSEStorage[i] = {}
         end
     end
 
@@ -135,9 +135,9 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- check Sequence TOC matches the current TOC
     local gameversion, build, date, tocversion = GetBuildInfo()
     if GSE.isEmpty(sequence.TOC) or sequence.TOC ~= tocversion then
-        GSE.Print(string.format(
-            L["WARNING ONLY"] ..": " .. L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
-                          sequenceName))
+        GSE.Print(string.format(L["WARNING ONLY"] .. ": " ..
+                                    L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
+                      sequenceName))
     end
 
     -- Check for collisions
@@ -197,8 +197,10 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         newSequence.LastUpdated = GSE.GetTimestamp()
     end
     if sequenceName:len() > 28 then
-        local tempseqName = sequenceName:sub(1,28)
-        GSE.Print(string.format(L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."], sequenceName, tempseqName), "GSE Storage")
+        local tempseqName = sequenceName:sub(1, 28)
+        GSE.Print(string.format(
+                      L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."],
+                      sequenceName, tempseqName), "GSE Storage")
         sequenceName = tempseqName
     end
     if action == "MERGE" then
@@ -221,7 +223,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
 
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
-        GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName )
+        GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
@@ -431,7 +433,7 @@ function GSE.ImportSequence(importStr, legacy, createicon)
 end
 
 function GSE.ReloadSequences()
-    if GSE.isEmpty (GSE.UnsavedOptions.ReloadQueued) then
+    if GSE.isEmpty(GSE.UnsavedOptions.ReloadQueued) then
         GSE.PerformReloadSequences()
         GSE.UnsavedOptions.ReloadQueued = true
     end
@@ -803,15 +805,15 @@ function GSE.OOCUpdateSequence(name, sequence)
     if pcall(GSE.CheckSequence, sequence) then
         local variables
         if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name].Variables) then
-            GSE.PrintDebugMessage("Sequence " .. name .. " has no variables", Statics.DebugModules["Storage"] )
+            GSE.PrintDebugMessage("Sequence " .. name .. " has no variables", Statics.DebugModules["Storage"])
         else
             variables = GSE.Library[GSE.GetCurrentClassID()][name].Variables
-            GSE.PrintDebugMessage("Sequence " .. name .. " has variables", Statics.DebugModules["Storage"] )
+            GSE.PrintDebugMessage("Sequence " .. name .. " has variables", Statics.DebugModules["Storage"])
         end
         sequence = GSE.CleanMacroVersion(sequence)
         GSE.FixSequence(sequence)
         local tempseq = GSE.CloneMacroVersion(sequence)
-        GSE.ProcessSequenceVariables(tempseq,variables)
+        GSE.ProcessSequenceVariables(tempseq, variables)
 
         local existingbutton = true
         if GSE.isEmpty(_G[name]) then
@@ -1649,16 +1651,14 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
         returnstring = returnstring .. "<blockquote>\n\n**Step Function:** " .. v.StepFunction .. "\n\n"
         if not GSE.isEmpty(v.PreMacro) then
             if table.getn(v.PreMacro) > 0 then
-                returnstring = returnstring .. "**Pre Macro:** " .. GSE.IdentifySpells(v.PreMacro) ..
-                                   "\n\n"
+                returnstring = returnstring .. "**Pre Macro:** " .. GSE.IdentifySpells(v.PreMacro) .. "\n\n"
             end
         end
         if not GSE.isEmpty(v.KeyPress) then
             if table.getn(v.KeyPress) > 0 then
                 spells, _ = GSE.IdentifySpells(v.KeyPress)
                 if not GSE.isEmpty(spells) then
-                    returnstring = returnstring .. "**KeyPress:** " .. GSE.IdentifySpells(v.KeyPress) ..
-                                       "\n\n"
+                    returnstring = returnstring .. "**KeyPress:** " .. GSE.IdentifySpells(v.KeyPress) .. "\n\n"
                 else
                     returnstring = returnstring .. "**KeyPress:** Contains various utility functions.\n\n"
                 end
@@ -1669,18 +1669,15 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
             if table.getn(v.KeyRelease) > 0 then
                 spells, _ = GSE.IdentifySpells(v.KeyRelease)
                 if not GSE.isEmpty(spells) then
-                    returnstring =
-                        returnstring .. "**KeyRelease:** " .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
+                    returnstring = returnstring .. "**KeyRelease:** " .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
                 else
-                    returnstring = returnstring ..
-                                       "**KeyRelease:**  Contains various utility functions.\n\n"
+                    returnstring = returnstring .. "**KeyRelease:**  Contains various utility functions.\n\n"
                 end
             end
         end
         if not GSE.isEmpty(v.PostMacro) then
             if table.getn(v.PostMacro) > 0 then
-                returnstring = returnstring .. "**Post Macro:** " .. GSE.IdentifySpells(v.PostMacro) ..
-                                   "\n\n"
+                returnstring = returnstring .. "**Post Macro:** " .. GSE.IdentifySpells(v.PostMacro) .. "\n\n"
             end
         end
         returnstring = returnstring .. "</blockquote>\n\n"
@@ -1689,16 +1686,107 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     return returnstring
 end
 
-
 function GSE.GetSequenceSummary()
     local returntable = {}
-    for k,v in ipairs(GSE.Library) do
-        returntable[k]= {}
-        for i,j in pairs(v) do
+    for k, v in ipairs(GSE.Library) do
+        returntable[k] = {}
+        for i, j in pairs(v) do
             returntable[k][i] = {}
             returntable[k][i].Help = j.Help
             returntable[k][i].LastUpdated = j.LastUpdated
         end
     end
     return returntable
+end
+
+local function fixLine(line, KeyPress, KeyRelease)
+    local action = [[]]
+    if KeyPress then
+        --print("KeyPress false")
+        action = action .. [[~~KeyPress~~
+]]
+    end
+    action = action .. line
+    if KeyRelease then
+        --print("KeyRelease false")
+        action = action .. [[
+~~KeyRelease~~]]
+    end
+    return action
+end
+
+function GSE.ConvertGSE2(sequence, sequenceName)
+    local returnSequence = {}
+    returnSequence["MetaData"] = {}
+    returnSequence["MetaData"]["Name"] = sequenceName
+    returnSequence["MetaData"]["ClassID"] = Statics.SpecIDClassList[sequence.SpecID]
+    for k,v in pairs(sequence) do
+        if k ~= "MacroVersions" then
+            returnSequence["MetaData"][k] = v
+        end
+    end
+    local MacroVersions = {}
+    for k, v in ipairs(sequence.MacroVersions) do
+        local gse3seq = {}
+        gse3seq.Actions = {}
+        gse3seq.Variables = {}
+
+        local KeyPress = table.getn(v.KeyPress) > 0
+        local KeyRelease = table.getn(v.KeyRelease) > 0
+
+        if KeyPress then
+            gse3seq.Variables["KeyPress"] = table.concat(v.KeyPress, "\n")
+        end
+        if KeyRelease then
+            gse3seq.Variables["KeyRelease"] = table.concat(v.KeyRelease, "\n")
+        end
+        if table.getn(v.PreMacro) > 0 then
+            for i, j in ipairs(v.PreMacro) do
+                local action = fixLine(j, KeyPress, KeyRelease)
+                table.insert(gse3seq.actions, action)
+            end
+        end
+
+        local sequenceactions = {}
+        for i, j in ipairs(v) do
+            local action = fixLine(j, KeyPress, KeyRelease)
+            table.insert(sequenceactions, action)
+        end
+        if GSE.isEmpty(v.LoopLimit) then
+            gse3seq.Actions = sequenceactions
+        else
+            local loop = {}
+            table.insert(loop, sequenceactions)
+            loop["StepFunction"] = v.StepFunction
+            loop["Repeat"] = v.LoopLimit
+            table.insert(gse3seq.Actions, loop)
+        end
+    
+        if table.getn(v.PostMacro) > 0 then
+            for i, j in ipairs(v.PreMacro) do
+                local action = fixLine(j, KeyPress, KeyRelease)
+                table.insert(gse3seq.Actions, action)
+            end
+        end
+
+        local function checkParameter(param)
+            if not GSE.isEmpty(v[param]) then
+                gse3seq.Variables[param] = v[param]
+            end
+        end
+
+        checkParameter("Combat")
+        checkParameter("Ring1")
+        checkParameter("Ring2")
+        checkParameter("Trinket1")
+        checkParameter("Trinket2")
+        checkParameter("Neck")
+        checkParameter("Head")
+        checkParameter("Belt")
+
+        table.insert(MacroVersions, gse3seq)
+    end
+    returnSequence["Macros"] = MacroVersions
+    returnSequence["Variables"] = nil
+    return returnSequence
 end

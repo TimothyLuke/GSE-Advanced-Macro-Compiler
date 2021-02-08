@@ -28,7 +28,7 @@ local AdvancedTextEditor = CreateFrame("EditBox", nil, scrollFrame)
 
 AdvancedTextEditor:SetMultiLine(true)
 --AdvancedTextEditor:SetText("local sequence = " .. GSE.Dump(GSE.Library[2]["SAM_PROTGOD"]))
-AdvancedTextEditor:SetText(GSE.Dump(GSE.Library[2]["SAM_PROTGOD"]))
+AdvancedTextEditor:SetText(GSE.Dump(GSE.ConvertGSE2(GSE.Library[2]["SAM_PROTGOD"], "SAM_PROTGOD")))
 
 AdvancedTextEditor:SetFontObject(ChatFontNormal)
 AdvancedTextEditor:SetWidth(500)

@@ -855,7 +855,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
         return script
     end
 
-    local function critical_leave(editbox, script)
+    local function critical_leave(editbox, script, script2)
         if script then
             editbox:SetScript("OnTextSet", script)
         end
