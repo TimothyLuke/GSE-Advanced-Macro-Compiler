@@ -524,3 +524,9 @@ Statics.Patrons = {"axellis", "avmickus", "badcath4x", "bf2champ", "chris_strati
                    "drobaserge", "elfyau", "faultless1986", "Flagels", "geoffreytang", "holdingacct", "JamesT",
                    "jhyatt1983", "jjmoc", "mikekauffmann", "rchorton", "rezaadams", "roberto.zanini", "russbakr",
                    "susietoo12", "siko760"}
+
+
+Statics.Actions = {}
+Statics.Actions.Loop = "Loop"
+Statics.Actions.If = "If"
+Statics.Actions.Repeat = "Repeat"

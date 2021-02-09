@@ -1743,7 +1743,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         if table.getn(v.PreMacro) > 0 then
             for i, j in ipairs(v.PreMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
-                table.insert(gse3seq.actions, action)
+                table.insert(gse3seq.Actions, action)
             end
         end
 
@@ -1757,11 +1757,12 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         else
             local loop = {}
             table.insert(loop, sequenceactions)
+            loop["Type"] = Statics.Actions.Loop
             loop["StepFunction"] = v.StepFunction
             loop["Repeat"] = v.LoopLimit
             table.insert(gse3seq.Actions, loop)
         end
-    
+
         if table.getn(v.PostMacro) > 0 then
             for i, j in ipairs(v.PreMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
@@ -1771,7 +1772,10 @@ function GSE.ConvertGSE2(sequence, sequenceName)
 
         local function checkParameter(param)
             if not GSE.isEmpty(v[param]) then
-                gse3seq.Variables[param] = v[param]
+                if GSE.isEmpty(gse3seq.InbuiltVariables) then
+                    gse3seq.InbuiltVariables = {}
+                end
+                gse3seq.InbuiltVariables[param] = v[param]
             end
         end
 
@@ -1787,6 +1791,6 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         table.insert(MacroVersions, gse3seq)
     end
     returnSequence["Macros"] = MacroVersions
-    returnSequence["Variables"] = nil
+    returnSequence["MetaData"]["Variables"] = nil
     return returnSequence
 end
