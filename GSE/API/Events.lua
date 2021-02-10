@@ -351,7 +351,13 @@ function GSE:GSSlash(input)
     elseif command == "help" then
         PrintGnomeHelp()
     elseif command == "gse3" then
-        _G["GSE3"]:Show()
+        local seqName = params[2]
+        if not GSE.isEmpty(seqName) then
+            local classID = params[3] and params[3] or GSE.GetCurrentClassID()
+            print(classID)
+            _G["GSE3"].TextBox:SetText(GSE.Dump(GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)))
+            _G["GSE3"]:Show()
+        end
     elseif command == "cleanorphans" or command == "clean" then
         GSE.CleanOrphanSequences()
     elseif command == "forceclean" then
