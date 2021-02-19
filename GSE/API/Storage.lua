@@ -1700,17 +1700,17 @@ function GSE.GetSequenceSummary()
 end
 
 local function fixLine(line, KeyPress, KeyRelease)
-    local action = [[]]
+    local action = {}
+    action["Type"] = Statics.Actions.Action
     if KeyPress then
         --print("KeyPress false")
-        action = action .. [[~~KeyPress~~
-]]
+        table.insert(action, [[~~KeyPress~~]])
     end
-    action = action .. line
+    table.insert(action, line)
+    
     if KeyRelease then
         --print("KeyRelease false")
-        action = action .. [[
-~~KeyRelease~~]]
+        table.insert(action, [[~~KeyRelease~~]])
     end
     return action
 end
@@ -1735,10 +1735,10 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         local KeyRelease = table.getn(v.KeyRelease) > 0
 
         if KeyPress then
-            gse3seq.Variables["KeyPress"] = table.concat(v.KeyPress, "\n")
+            gse3seq.Variables["KeyPress"] = KeyPress
         end
         if KeyRelease then
-            gse3seq.Variables["KeyRelease"] = table.concat(v.KeyRelease, "\n")
+            gse3seq.Variables["KeyRelease"] = KeyRelease
         end
         if table.getn(v.PreMacro) > 0 then
             for i, j in ipairs(v.PreMacro) do
@@ -1793,4 +1793,9 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     returnSequence["Macros"] = MacroVersions
     returnSequence["MetaData"]["Variables"] = nil
     return returnSequence
+end
+
+--- Compiles a macro template into a macro
+function GSE.CompileTemplate(template)
+
 end
