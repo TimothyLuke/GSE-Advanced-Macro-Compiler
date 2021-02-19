@@ -1707,7 +1707,6 @@ local function fixLine(line, KeyPress, KeyRelease)
         table.insert(action, [[~~KeyPress~~]])
     end
     table.insert(action, line)
-    
     if KeyRelease then
         --print("KeyRelease false")
         table.insert(action, [[~~KeyRelease~~]])
