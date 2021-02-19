@@ -270,14 +270,19 @@ function GSE.sendMessage(tab, channel, target)
 end
 
 function GSE.performVersionCheck(version)
-    if GSE.ParseVersion(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
-        if not GSold then
-            GSE.Print(
-                L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."],
-                Statics.SourceTransmission)
-            GSold = true
-            if (GSE.ParseVersion(version) - GSE.VersionNumber >= 5) then
-                StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+    if string.match(GSE.VersionString, "development") then
+        local developer = true
+        GSE.old = false
+    else
+        if GSE.ParseVersion(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
+            if not GSE.old then
+                GSE.Print(
+                    L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."],
+                    Statics.SourceTransmission)
+                GSE.old = true
+                if (GSE.ParseVersion(version) - GSE.VersionNumber >= 5) then
+                    StaticPopup_Show('GSE_UPDATE_AVAILABLE')
+                end
             end
         end
     end
@@ -353,7 +358,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
     local success, t = GSE.DecodeMessage(message)
     if success then
         if t.Command == "GS-E_VERSIONCHK" then
-            if not GSold then
+            if not GSE.old then
                 GSE.performVersionCheck(t.Version)
             end
             GSE.storeSender(sender, t.Version)

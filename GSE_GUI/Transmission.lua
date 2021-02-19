@@ -2,10 +2,6 @@ local GSE = GSE
 
 local Statics = GSE.Static
 
-
-
-
-local GSold = false
 local L = GSE.L
 
 local AceGUI = LibStub("AceGUI-3.0")

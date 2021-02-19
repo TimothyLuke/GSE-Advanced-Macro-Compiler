@@ -14,7 +14,7 @@ local raid = 1
 local pvp = 1
 local arena = 1
 local mythic = 1
-local classid = GSE.GetCurrentClassID()
+
 local scenario = 1
 
 local editframe = AceGUI:Create("Frame")
@@ -34,7 +34,7 @@ editframe.Arena = 1
 editframe.Timewalking = 1
 editframe.MythicPlus = 1
 editframe.Scenario = 1
-editframe.ClassID = classid
+editframe.ClassID = GSE.GetCurrentClassID()
 editframe.save = false
 editframe.SelectedTab = "group"
 
@@ -208,7 +208,7 @@ function GSE.GUIEditorPerformLayout(frame)
     transbutton:SetText(L["Send"])
     transbutton:SetWidth(150)
     transbutton:SetCallback("OnClick", function()
-        GSE.GUIShowTransmissionGui(editframe.ClassId .. "," .. editframe.SequenceName)
+        GSE.GUIShowTransmissionGui(editframe.ClassID .. "," .. editframe.SequenceName)
     end)
     transbutton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Send"], L["Send this macro to another GSE player who is on the same server as you are."],
@@ -276,7 +276,6 @@ end
 
 function GSE.GetVersionList()
     local tabl = {}
-    classid = tonumber(classid)
     for k, v in ipairs(editframe.Sequence.MacroVersions) do
         tabl[tostring(k)] = tostring(k)
     end

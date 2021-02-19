@@ -520,13 +520,31 @@ Statics.BaseSpellTable[302731] = 296208 -- Ripple in Space 1
 Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
 Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
-Statics.Patrons = {"axellis", "avmickus", "badcath4x", "bf2champ", "chris_stratis", "dblakesneed", "donnawaldrip78",
-                   "drobaserge", "elfyau", "faultless1986", "Flagels", "geoffreytang", "holdingacct", "JamesT",
-                   "jhyatt1983", "jjmoc", "mikekauffmann", "rchorton", "rezaadams", "roberto.zanini", "russbakr",
-                   "susietoo12", "siko760"}
+Statics.Patrons = {
+  "Airwave",
+  "Blackwell",
+  "BadCatVPN",
+  "clash",
+  "Deezyl",
+  "Dorlerean",
+  "Elange",
+  "ElfyAU",
+  "Flagels",
+  "Kleetus",
+  "Meisterhand",
+  "Mixmasterarne",
+  "Plaguelord",
+  "paytun",
+  "rezaadams",
+  "shikarr",
+  "Susietoo12",
+  "Tiegars",
+  "Vince",
+}
 
 
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
 Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
+Statics.Actions.Action = "Action"
