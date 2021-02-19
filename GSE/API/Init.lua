@@ -8,7 +8,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 --@debug@
 if GSE.VersionString:find("version") then
-    GSE.VersionString = "2.6.48-development"
+    GSE.VersionString = "3.0.0-development"
 end
 --@end-debug@
 
