@@ -1707,7 +1707,6 @@ local function fixLine(line, KeyPress, KeyRelease)
         table.insert(action, [[~~KeyPress~~]])
     end
     table.insert(action, line)
-    
     if KeyRelease then
         --print("KeyRelease false")
         table.insert(action, [[~~KeyRelease~~]])
@@ -1753,10 +1752,14 @@ function GSE.ConvertGSE2(sequence, sequenceName)
             table.insert(sequenceactions, action)
         end
         if GSE.isEmpty(v.LoopLimit) then
-            gse3seq.Actions = sequenceactions
+            for i, j in ipairs(sequenceactions) do
+                table.insert(gse3seq.Actions, j)
+            end
         else
             local loop = {}
-            table.insert(loop, sequenceactions)
+            for i, j in ipairs(sequenceactions) do
+                table.insert(loop, j)
+            end
             loop["Type"] = Statics.Actions.Loop
             loop["StepFunction"] = v.StepFunction
             loop["Repeat"] = v.LoopLimit
