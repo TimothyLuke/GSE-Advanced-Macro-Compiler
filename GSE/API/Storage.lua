@@ -1835,9 +1835,9 @@ local function processAction(action)
         local inserts = {}
         for k,v in ipairs(returnActions) do
             if type(v) == "table" then
-                local action = v[1]
+                local act = v[1]
                 local rep =  v.Repeat
-                table.insert(inserts, {action, rep} )
+                table.insert(inserts, {act, rep} )
                 table.remove(returnActions, k)
             end
         end
@@ -1847,7 +1847,7 @@ local function processAction(action)
                 table.insert(returnActions, v[1], i)
             end
         end
-        
+
         return returnActions
     elseif action.Type == Statics.Actions.Action then
         for k,v in ipairs(action) do
@@ -1875,14 +1875,14 @@ function GSE.CompileTemplate(template)
         --GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
-                table.insert(compiledMacro, value) 
+                table.insert(compiledMacro, value)
             end
         else
-            table.insert(compiledMacro, compiledAction) 
+            table.insert(compiledMacro, compiledAction)
         end
     end
     local variables = {}
-    
+
     for k,v in pairs(template.Variables) do
         if type(v) == "table" then
             for i,j in ipairs(v) do

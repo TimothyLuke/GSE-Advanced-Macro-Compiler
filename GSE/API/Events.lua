@@ -356,7 +356,7 @@ function GSE:GSSlash(input)
             local classID = params[3] and params[3] or GSE.GetCurrentClassID()
             --print(classID)
             local GSE3Macro = GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)
-            
+
             --_G["GSE3"].TextBox:SetText(GSE.Dump(GSE.Library[classID][seqName] ))
             --_G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
             _G["GSE3"].TextBox:SetText(GSE.Dump(GSE.CompileTemplate(GSE3Macro.Macros[1]) ))
