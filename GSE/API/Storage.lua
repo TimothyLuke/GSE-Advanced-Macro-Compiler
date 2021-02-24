@@ -1803,6 +1803,7 @@ local function processAction(action)
 
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
+        -- setup the interation
         for k, v in ipairs(action) do
             local tempTable = {}
             for i, j in ipairs(v) do
@@ -1825,20 +1826,43 @@ local function processAction(action)
                 end
             else
                 for k, v in ipairs(actionList) do
-                    table.insert(returnActions, v)    
+                    table.insert(returnActions, v)
                 end
             end
         end
+
+        -- process repeats for the block
+        local inserts = {}
+        for k,v in ipairs(returnActions) do
+            if type(v) == "table" then
+                local action = v[1]
+                local rep =  v.Repeat
+                table.insert(inserts, {action, rep} )
+                table.remove(returnActions, k)
+            end
+        end
+
+        for k,v in ipairs(inserts) do
+            for i=k, table.getn(returnActions), v[2] do
+                table.insert(returnActions, v[1], i)
+            end
+        end
+        
         return returnActions
     elseif action.Type == Statics.Actions.Action then
         for k,v in ipairs(action) do
             action[k] = GSE.TranslateString(v, "STRING", nil,  true)
         end
         return table.concat(action, "\n")
-    
+
     elseif action.Type == Statics.Actions.Repeat then
-        
-    elseif action.Type == Statics.Actions.If then
+
+        for k,v in ipairs(action) do
+            action[k] = GSE.TranslateString(v, "STRING", nil,  true)
+        end
+        return {table.concat(action, "\n"), action["Interval"]}
+
+    -- elseif action.Type == Statics.Actions.If then
 
     end
 end
