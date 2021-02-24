@@ -1734,10 +1734,10 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         local KeyRelease = table.getn(v.KeyRelease) > 0
 
         if KeyPress then
-            gse3seq.Variables["KeyPress"] = KeyPress
+            gse3seq.Variables["KeyPress"] = v.KeyPress
         end
         if KeyRelease then
-            gse3seq.Variables["KeyRelease"] = KeyRelease
+            gse3seq.Variables["KeyRelease"] = v.KeyRelease
         end
         if table.getn(v.PreMacro) > 0 then
             for i, j in ipairs(v.PreMacro) do
@@ -1798,7 +1798,75 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
+local function processAction(action)
+
+
+    if action.Type == Statics.Actions.Loop then
+        local actionList = {}
+        for k, v in ipairs(action) do
+            local tempTable = {}
+            for i, j in ipairs(v) do
+                table.insert(tempTable, GSE.TranslateString(j, "STRING", nil,  true))
+            end
+            table.insert(actionList, table.concat(tempTable, "\n"))
+        end
+        local returnActions = {}
+        local loop = tonumber(action.Repeat)
+        for step = 1, loop do
+            if action.StepFunction == Statics.Priority then
+                for limit = 1, table.getn(actionList) do
+                    table.insert(returnActions, actionList[step])
+                    if step == limit then
+                        limit = limit % #actionList + 1
+                        step = 1
+                    else
+                        step = step % #actionList + 1
+                    end
+                end
+            else
+                for k, v in ipairs(actionList) do
+                    table.insert(returnActions, v)    
+                end
+            end
+        end
+        return returnActions
+    elseif action.Type == Statics.Actions.Action then
+        for k,v in ipairs(action) do
+            action[k] = GSE.TranslateString(v, "STRING", nil,  true)
+        end
+        return table.concat(action, "\n")
+    
+    elseif action.Type == Statics.Actions.Repeat then
+        
+    elseif action.Type == Statics.Actions.If then
+
+    end
+end
+
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(template)
+    local compiledMacro = {}
+    for k, action in ipairs(template.Actions) do
+        local compiledAction = processAction(action)
+        --GSE.Print(compiledAction)
+        if type(compiledAction) == "table" then
+            for _, value in ipairs(compiledAction) do
+                table.insert(compiledMacro, value) 
+            end
+        else
+            table.insert(compiledMacro, compiledAction) 
+        end
+    end
+    local variables = {}
+    
+    for k,v in pairs(template.Variables) do
+        if type(v) == "table" then
+            for i,j in ipairs(v) do
+                template.Variables[k][i] = GSE.TranslateString(j, "STRING",nil,  true)
+            end
+            variables[k] = table.concat(template.Variables[k], "\n")
+        end
+    end
 
+    return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables))
 end
