@@ -1798,7 +1798,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
-local function buildAction(action, metaData) 
+local function buildAction(action, metaData)
     if GSEOptions.requireTarget then
 
         -- See #20 prevent target hopping
