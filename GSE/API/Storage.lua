@@ -1798,18 +1798,75 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
-local function processAction(action)
+local function buildAction(action, metaData) {
+    if GSEOptions.requireTarget then
 
+        -- See #20 prevent target hopping
+        table.insert(action, "/stopmacro [@playertarget, noexists]",1)
+    end
+
+    if GSEOptions.hideSoundErrors then
+        -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
+        table.insert(action, "/console Sound_EnableErrorSpeech 0", 1)
+        table.insert(action, "/console Sound_EnableSFX 0", 1)
+        table.insert(action, '/run ers=GetCVar("Sound_EnableErrorSpeech");', 1)
+        table.insert(action, '/run sfx=GetCVar("Sound_EnableSFX");', 1)
+    end
+
+    for k,v in ipairs(action) do
+        action[k] = GSE.TranslateString(v, "STRING", nil,  true)
+    end
+
+    if GSEOptions.requireTarget then
+        -- See #20 prevent target hopping
+        table.insert(tab, "/stopmacro [@playertarget, noexists]")
+    end
+
+    if metaData.Ring1 or (metaData.Ring1 == nil and GSEOptions.use11) then
+        table.insert(action, "/use [combat,nochanneling] 11")
+    end
+    if metaData.Ring2 or (metaData.Ring2 == nil and GSEOptions.use12) then
+        table.insert(action, "/use [combat,nochanneling] 12")
+    end
+    if metaData.Trinket1 or (metaData.Trinket1 == nil and GSEOptions.use13) then
+        table.insert(action, "/use [combat,nochanneling] 13")
+    end
+    if metaData.Trinket2 or (metaData.Trinket2 == nil and GSEOptions.use14) then
+        table.insert(action, "/use [combat,nochanneling] 14")
+    end
+    if metaData.Neck or (metaData.Neck == nil and GSEOptions.use2) then
+        table.insert(action, "/use [combat,nochanneling] 2")
+    end
+    if metaData.Head or (metaData.Head == nil and GSEOptions.use1) then
+        table.insert(action, "/use [combat,nochanneling] 1")
+    end
+    if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
+        table.insert(action, "/use [combat,nochanneling] 6")
+    end
+    if GSEOptions.hideSoundErrors then
+        -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
+        table.insert(action, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
+        table.insert(action, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
+    end
+    if GSEOptions.hideUIErrors then
+        table.insert(action, "/script UIErrorsFrame:Hide();")
+        -- Potentially change this to UIErrorsFrame:Hide()
+    end
+    if GSEOptions.clearUIErrors then
+        -- Potentially change this to UIErrorsFrame:Clear()
+        table.insert(action, "/run UIErrorsFrame:Clear()")
+    end
+
+    return table.concat(action, "\n")
+}
+
+local function processAction(action, metaData)
 
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
         -- setup the interation
         for k, v in ipairs(action) do
-            local tempTable = {}
-            for i, j in ipairs(v) do
-                table.insert(tempTable, GSE.TranslateString(j, "STRING", nil,  true))
-            end
-            table.insert(actionList, table.concat(tempTable, "\n"))
+            table.insert(actionList, buildAction(v, metaData))
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
@@ -1850,17 +1907,10 @@ local function processAction(action)
 
         return returnActions
     elseif action.Type == Statics.Actions.Action then
-        for k,v in ipairs(action) do
-            action[k] = GSE.TranslateString(v, "STRING", nil,  true)
-        end
-        return table.concat(action, "\n")
+        return buildAction(action, metaData)
 
     elseif action.Type == Statics.Actions.Repeat then
-
-        for k,v in ipairs(action) do
-            action[k] = GSE.TranslateString(v, "STRING", nil,  true)
-        end
-        return {table.concat(action, "\n"), action["Interval"]}
+        return {buildAction(action, metaData), action["Interval"]}
 
     -- elseif action.Type == Statics.Actions.If then
 
@@ -1870,8 +1920,14 @@ end
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(template)
     local compiledMacro = {}
+    local metaData = {}
+    for k,v in pairs(template.Variables) do
+        if type(v) == 'boolean' then
+            metaData[k] = v
+        end
+    end
     for k, action in ipairs(template.Actions) do
-        local compiledAction = processAction(action)
+        local compiledAction = processAction(action, metaData)
         --GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
