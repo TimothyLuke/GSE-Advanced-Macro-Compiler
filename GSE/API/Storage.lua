@@ -1863,6 +1863,7 @@ end
 local function processAction(action, metaData)
 
     if action.Type == Statics.Actions.Loop then
+
         local actionList = {}
         -- setup the interation
         for k, v in ipairs(action) do
@@ -1921,13 +1922,9 @@ end
 function GSE.CompileTemplate(template)
     local compiledMacro = {}
     local metaData = {}
-    for k,v in pairs(template.Variables) do
-        if type(v) == 'boolean' then
-            metaData[k] = v
-        end
-    end
+
     for k, action in ipairs(template.Actions) do
-        local compiledAction = processAction(action, metaData)
+        local compiledAction = processAction(action, template.InbuiltVariables)
         --GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
