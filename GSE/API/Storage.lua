@@ -1920,6 +1920,18 @@ end
 
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(template)
+    
+    setmetatable(template, {
+        __index = function(t, k)
+          for i,v in ipairs(k) do
+            if not t then error("attempt to index nil") end
+            t = rawget(t, v)
+          end
+          return t
+        end
+        })
+      
+        
     local compiledMacro = {}
     local metaData = {}
 
@@ -1945,5 +1957,32 @@ function GSE.CompileTemplate(template)
         end
     end
 
-    return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables))
+    return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables)), template
+end
+
+--- Build GSE3 Executable Buttons
+function GSE.CreateGSE3Button(macro, name)
+    print(GSE.Dump(macro))
+    name = name .. "T"
+    -- if button already exists no need to recreate it.  Maybe able to create this in combat.
+    if GSE.isEmpty(_G[name]) then
+        
+        local gsebutton = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
+        gsebutton:SetAttribute('type', 'macro')
+        gsebutton:SetAttribute('step', 1)
+        gsebutton:UnwrapScript(gsebutton, 'OnClick')
+
+        print(name, gsebutton:GetAttribute('step'))
+        if GSEOptions.useExternalMSTimings then
+            gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
+        else
+            gsebutton:SetAttribute("ms", 100)
+        end
+        gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' ..
+                                strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
+
+        local stepfunction = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") .. GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
+        print(stepfunction)
+        gsebutton:WrapScript(gsebutton, 'OnClick', stepfunction)
+    end
 end
