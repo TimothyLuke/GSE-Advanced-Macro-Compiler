@@ -1,8 +1,8 @@
 #@retail@
-## Interface: 90002
+## Interface: 90005
 #@end-retail@
 #@non-retail@
-# ## Interface: 11306
+# ## Interface: 11307
 #@end-non-retail@
 ## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
