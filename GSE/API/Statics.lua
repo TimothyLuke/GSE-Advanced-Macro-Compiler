@@ -554,7 +554,7 @@ Statics.Actions.Action = "Action"
 
 
 Statics.GSE3OnClick = [=[
-local step = self:GetAttribute('step') 
+local step = self:GetAttribute('step')
 local clicks = self:GetAttribute('clicks') or 0
 local ms = self:GetAttribute('ms') or 1
 step = tonumber(step)

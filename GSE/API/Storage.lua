@@ -1920,7 +1920,7 @@ end
 
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(template)
-    
+
     setmetatable(template, {
         __index = function(t, k)
           for i,v in ipairs(k) do
@@ -1930,8 +1930,8 @@ function GSE.CompileTemplate(template)
           return t
         end
         })
-      
-        
+
+
     local compiledMacro = {}
     local metaData = {}
 
@@ -1966,7 +1966,7 @@ function GSE.CreateGSE3Button(macro, name)
     name = name .. "T"
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
     if GSE.isEmpty(_G[name]) then
-        
+
         local gsebutton = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
         gsebutton:SetAttribute('type', 'macro')
         gsebutton:SetAttribute('step', 1)
