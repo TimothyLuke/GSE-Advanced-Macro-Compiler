@@ -558,9 +558,14 @@ local step = self:GetAttribute('step')
 local clicks = self:GetAttribute('clicks') or 0
 local ms = self:GetAttribute('ms') or 1
 step = tonumber(step)
+print(macros[step])  
 ms = tonumber(ms)
 self:SetAttribute('macrotext', macros[step] )
 step = step % #macros + 1
+local checkstep = step - 1
+if checkstep == 0 then
+  checkstep = #macros
+end
 if string.sub(macros[checkstep], 1, 12) == "/click pause" then
   local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
   local currentMS = clicks * ms

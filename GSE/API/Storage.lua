@@ -1962,7 +1962,6 @@ end
 
 --- Build GSE3 Executable Buttons
 function GSE.CreateGSE3Button(macro, name)
-    print(GSE.Dump(macro))
     name = name .. "T"
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
     if GSE.isEmpty(_G[name]) then
@@ -1971,18 +1970,16 @@ function GSE.CreateGSE3Button(macro, name)
         gsebutton:SetAttribute('type', 'macro')
         gsebutton:SetAttribute('step', 1)
         gsebutton:UnwrapScript(gsebutton, 'OnClick')
-
-        print(name, gsebutton:GetAttribute('step'))
+        
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
-        else
+         else
             gsebutton:SetAttribute("ms", 100)
         end
         gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' ..
                                 strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
 
         local stepfunction = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") .. GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
-        print(stepfunction)
         gsebutton:WrapScript(gsebutton, 'OnClick', stepfunction)
     end
 end
