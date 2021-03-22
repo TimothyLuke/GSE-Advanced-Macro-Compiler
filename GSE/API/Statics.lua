@@ -548,9 +548,7 @@ Statics.Actions.Loop = "Loop"
 Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
 Statics.Actions.Action = "Action"
-
-
-
+Statics.Actions.Pause = "Pause"
 
 
 Statics.GSE3OnClick = [=[
@@ -562,20 +560,6 @@ print(macros[step])
 ms = tonumber(ms)
 self:SetAttribute('macrotext', macros[step] )
 step = step % #macros + 1
-local checkstep = step - 1
-if checkstep == 0 then
-  checkstep = #macros
-end
-if string.sub(macros[checkstep], 1, 12) == "/click pause" then
-  local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
-  local currentMS = clicks * ms
-  if currentMS < localpauselimit then
-    step = checkstep
-    clicks = clicks + 1
-  else
-    clicks = 1
-  end
-end
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
   print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
   step = 1

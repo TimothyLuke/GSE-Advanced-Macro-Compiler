@@ -1711,6 +1711,12 @@ local function fixLine(line, KeyPress, KeyRelease)
         --print("KeyRelease false")
         table.insert(action, [[~~KeyRelease~~]])
     end
+
+    if string.sub(line, 1, 12) == "/click pause" then
+        action = {}
+        action["Type"] = Statics.Actions.Pause
+        action["MS"] = tonumber(string.sub(line, 14)) * 1000
+    end
     return action
 end
 
@@ -1907,6 +1913,18 @@ local function processAction(action, metaData)
         end
 
         return returnActions
+    elseif action.Type == Statics.Actions.Pause then
+        local PauseActions = {}
+        local clicks = action.Clicks
+        if GSE.isEmpty(clicks) then
+            clicks = math.ceil(action.MS / GSEOptions.msClickRate)
+        end
+        if clicks > 0 then
+            for loop=1,clicks do
+                table.insert(PauseActions, "/click nil")
+            end
+        end
+        return PauseActions
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
 
