@@ -1919,7 +1919,7 @@ local function processAction(action, metaData)
         if GSE.isEmpty(clicks) then
             local clicks = action.MS
             if clicks == '~~GCD~~' or clicks == 'GCD' then
-                clicks = GSE.GetGCD()
+                clicks = GSE.GetGCD() * 1000
             else
                 clicks = math.ceil(clicks / GSEOptions.msClickRate)
             end
