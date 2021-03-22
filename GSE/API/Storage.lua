@@ -1917,7 +1917,12 @@ local function processAction(action, metaData)
         local PauseActions = {}
         local clicks = action.Clicks
         if GSE.isEmpty(clicks) then
-            clicks = math.ceil(action.MS / GSEOptions.msClickRate)
+            local clicks = action.MS
+            if clicks == '~~GCD~~' or clicks == 'GCD' then
+                clicks = GSE.GetGCD()
+            else
+                clicks = math.ceil(clicks / GSEOptions.msClickRate)
+            end
         end
         if clicks > 0 then
             for loop=1,clicks do
