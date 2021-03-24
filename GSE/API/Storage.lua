@@ -1986,6 +1986,7 @@ end
 --- Build GSE3 Executable Buttons
 function GSE.CreateGSE3Button(macro, name)
     name = name .. "T"
+    GSE.SequencesExec[name] = macro
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
     if GSE.isEmpty(_G[name]) then
 
@@ -1993,6 +1994,7 @@ function GSE.CreateGSE3Button(macro, name)
         gsebutton:SetAttribute('type', 'macro')
         gsebutton:SetAttribute('step', 1)
         gsebutton:UnwrapScript(gsebutton, 'OnClick')
+        gsebutton.UpdateIcon = GSE.UpdateIcon
 
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
