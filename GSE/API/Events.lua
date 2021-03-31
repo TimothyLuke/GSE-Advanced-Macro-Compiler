@@ -146,22 +146,8 @@ function GSE:ADDON_LOADED(event, addon)
         GSE.Library[0] = {}
     end
 
-    local counter = 0
+    local counter = table.getn(GSE.Library[GSE.GetCurrentClassID()]) + table.getn(GSE.Library[0])
 
-    for k, v in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
-        counter = counter + 1
-        for i, j in ipairs(v.MacroVersions) do
-            GSE.Library[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
-        end
-    end
-    if not GSE.isEmpty(GSE.Library[0]) then
-        for k, v in pairs(GSE.Library[0]) do
-            counter = counter + 1
-            for i, j in ipairs(v.MacroVersions) do
-                GSE.Library[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
-            end
-        end
-    end
     if counter <= 0 then
         if GSEOptions.PromptSample then
             if table.getn(Statics.SampleMacros) > 0 then
@@ -229,6 +215,7 @@ function GSE:ADDON_LOADED(event, addon)
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
+    -- UPDATE for GSE3
     if unit == "player" then
         local _, GCD_Timer = GetSpellCooldown(61304)
         GCD = true
@@ -354,15 +341,22 @@ function GSE:GSSlash(input)
         local seqName = params[2]
         if not GSE.isEmpty(seqName) then
             local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            --print(classID)
+            local GSE3Macro = GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)
+            _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
+            _G["GSE3"]:Show()
+
+        end
+    elseif command == "gse3compiled" then
+        local seqName = params[2]
+        if not GSE.isEmpty(seqName) then
+            local classID = params[3] and params[3] or GSE.GetCurrentClassID()
             local GSE3Macro = GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)
             local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[1])
-            --_G["GSE3"].TextBox:SetText(GSE.Dump(GSE.Library[classID][seqName] ))
-            --_G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
             _G["GSE3"].TextBox:SetText(GSE.Dump(compiledMacro))
             _G["GSE3"]:Show()
-            GSE.CreateGSE3Button(compiledMacro, seqName)
+
         end
+
     elseif command == "cleanorphans" or command == "clean" then
         GSE.CleanOrphanSequences()
     elseif command == "forceclean" then

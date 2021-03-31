@@ -280,7 +280,8 @@ function GSE.LoadStorage(destination)
         end
         for i, j in pairs(v) do
             localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-            destination[k][i] = uncompressedVersion[2]
+
+            destination[k][i] = GSE.ConvertGSE2(uncompressedVersion[2], i)
         end
     end
 
@@ -358,7 +359,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                           L["|r. As a result this macro was not created.  Please delete some macros and reenter "] ..
                           GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
         else
-            sequenceid = CreateMacro(sequenceName,
+            CreateMacro(sequenceName,
                              (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon),
                              GSE.CreateMacroString(sequenceName), (forceglobalstub and false or GSE.SetMacroLocation()))
         end
@@ -442,12 +443,12 @@ end
 function GSE.PerformReloadSequences()
     GSE.PrintDebugMessage("Reloading Sequences")
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
-        GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+        GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
     end
     if GSEOptions.CreateGlobalButtons then
         if not GSE.isEmpty(GSE.Library[0]) then
             for name, sequence in pairs(GSE.Library[0]) do
-                GSE.UpdateSequence(name, sequence.MacroVersions[GSE.GetActiveSequenceVersion(name)])
+                GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
             end
         end
     end
@@ -460,268 +461,6 @@ function GSE.PrepareLogout(deletenonlocalmacros)
     GSE.CleanMacroLibrary(deletenonlocalmacros)
     if GSEOptions.deleteOrphansOnLogout then
         GSE.CleanOrphanSequences()
-    end
-end
-
-function GSE.IsLoopSequence(sequence)
-    local loopcheck = false
-    if not GSE.isEmpty(sequence.PreMacro) then
-        if type(sequence.PreMacro) == "table" then
-            if table.getn(sequence.PreMacro) > 0 then
-                loopcheck = true
-                GSE.PrintDebugMessage("Setting Loop Check True due to PreMacro", "Storage")
-            end
-        end
-    end
-    if not GSE.isEmpty(sequence.PostMacro) then
-        if type(sequence.Postmacro) == "table" then
-            if table.getn(sequence.PostMacro) > 0 then
-                loopcheck = true
-                GSE.PrintDebugMessage("Setting Loop Check True due to PreMacro", "Storage")
-            end
-        end
-    end
-    if not GSE.isEmpty(sequence.LoopLimit) then
-        loopcheck = true
-        GSE.PrintDebugMessage("Setting Loop Check True due to LoopLimit", "Storage")
-    end
-    return loopcheck
-end
-
---- Creates a string representation of the a Sequence that can be shared as a string.
---      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-function GSE.ExportSequence(sequence, sequenceName, verbose, mode, hideversion)
-    local returnVal = ""
-    if verbose then
-        GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
-        local disabledseq = ""
-        local sequencemeta = "  Talents = \"" .. GSEOptions.INDENT ..
-                                 (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) ..
-                                 Statics.StringReset .. "\",\n"
-        if not GSE.isEmpty(sequence.Helplink) then
-            sequencemeta = sequencemeta .. "  Helplink = \"" .. GSEOptions.INDENT .. sequence.Helplink ..
-                               Statics.StringReset .. "\",\n"
-        end
-        if not GSE.isEmpty(sequence.Help) then
-            sequencemeta = sequencemeta .. "  Help = [[" .. GSEOptions.INDENT .. sequence.Help .. Statics.StringReset ..
-                               "]],\n"
-        end
-        sequencemeta = sequencemeta .. "  Default=" .. sequence.Default .. ",\n"
-        if not GSE.isEmpty(sequence.Raid) then
-            sequencemeta = sequencemeta .. "  Raid=" .. sequence.Raid .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.PVP) then
-            sequencemeta = sequencemeta .. "  PVP=" .. sequence.PVP .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Dungeon) then
-            sequencemeta = sequencemeta .. "  Dungeon=" .. sequence.Dungeon .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Heroic) then
-            sequencemeta = sequencemeta .. "  Heroic=" .. sequence.Heroic .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Mythic) then
-            sequencemeta = sequencemeta .. "  Mythic=" .. sequence.Mythic .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Arena) then
-            sequencemeta = sequencemeta .. "  Arena=" .. sequence.Arena .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Timewalking) then
-            sequencemeta = sequencemeta .. "  Timewalking=" .. sequence.Timewalking .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.MythicPlus) then
-            sequencemeta = sequencemeta .. "  MythicPlus=" .. sequence.MythicPlus .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Party) then
-            sequencemeta = sequencemeta .. "  Party=" .. sequence.Party .. ",\n"
-        end
-        if not GSE.isEmpty(sequence.Scenario) then
-            sequencemeta = sequencemeta .. "  Scenario=" .. sequence.Party .. ",\n"
-        end
-        local macroversions = "  MacroVersions = {\n"
-        for k, v in pairs(sequence.MacroVersions) do
-            local outputversion = GSE.CleanMacroVersion(v)
-            macroversions = macroversions .. "    [" .. k .. "] = {\n"
-
-            local steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Sequential\"" .. Statics.StringReset ..
-                              ",\n" -- Set to this as the default if its blank.
-
-            if not GSE.isEmpty(v.StepFunction) then
-                if v.StepFunction == Statics.PriorityImplementation then
-                    steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset ..
-                                ",\n"
-                elseif v.StepFunction == Statics.Random then
-                    steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Random\"" .. Statics.StringReset .. ",\n"
-                elseif v.StepFunction == Statics.Priority then
-                    steps = "      StepFunction = " .. GSEOptions.INDENT .. "\"Priority\"" .. Statics.StringReset ..
-                                ",\n"
-                else
-                    steps = "      StepFunction = \"" .. GSEOptions.INDENT .. v.StepFunction .. Statics.StringReset ..
-                                "\",\n"
-                end
-            end
-            if not GSE.isEmpty(outputversion.Combat) then
-                macroversions = macroversions .. "     Combat=" .. tostring(outputversion.Combat) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Trinket1) then
-                macroversions = macroversions .. "      Trinket1=" .. tostring(outputversion.Trinket1) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Trinket2) then
-                macroversions = macroversions .. "      Trinket2=" .. tostring(outputversion.Trinket2) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Head) then
-                macroversions = macroversions .. "      Head=" .. tostring(outputversion.Head) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Neck) then
-                macroversions = macroversions .. "      Neck=" .. tostring(outputversion.Neck) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Belt) then
-                macroversions = macroversions .. "      Belt=" .. tostring(outputversion.Belt) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Ring1) then
-                macroversions = macroversions .. "      Ring1=" .. tostring(outputversion.Ring1) .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.Ring2) then
-                macroversions = macroversions .. "      Ring2=" .. tostring(outputversion.Ring2) .. ",\n"
-            end
-
-            macroversions = macroversions .. steps
-            if not GSE.isEmpty(outputversion.LoopLimit) then
-                macroversions = macroversions .. "      LoopLimit=" .. GSEOptions.EQUALS .. outputversion.LoopLimit ..
-                                    Statics.StringReset .. ",\n"
-            end
-            if not GSE.isEmpty(outputversion.KeyPress) then
-                macroversions = macroversions .. "      KeyPress={\n"
-                for _, p in ipairs(outputversion.KeyPress) do
-                    local results = GSE.TranslateString(p, mode, true)
-                    if not GSE.isEmpty(results) then
-                        macroversions = macroversions .. "        \"" .. results .. "\",\n"
-                    end
-                end
-                macroversions = macroversions .. "      },\n"
-            end
-            if not GSE.isEmpty(outputversion.PreMacro) then
-                macroversions = macroversions .. "      PreMacro={\n"
-                for _, p in ipairs(outputversion.PreMacro) do
-                    local results = GSE.TranslateString(p, mode, true)
-                    if not GSE.isEmpty(results) then
-                        macroversions = macroversions .. "        \"" .. results .. "\",\n"
-                    end
-                end
-                macroversions = macroversions .. "      },\n"
-            end
-            for _, p in ipairs(v) do
-                local results = GSE.TranslateString(p, mode, true)
-                if not GSE.isEmpty(results) then
-                    macroversions = macroversions .. "        \"" .. results .. "\",\n"
-                end
-            end
-            if not GSE.isEmpty(outputversion.PostMacro) then
-                macroversions = macroversions .. "      PostMacro={\n"
-                for _, p in ipairs(outputversion.PostMacro) do
-                    local results = GSE.TranslateString(p, mode, true)
-                    if not GSE.isEmpty(results) then
-                        macroversions = macroversions .. "        \"" .. results .. "\",\n"
-                    end
-                end
-                macroversions = macroversions .. "      },\n"
-            end
-            if not GSE.isEmpty(outputversion.KeyRelease) then
-                macroversions = macroversions .. "      KeyRelease={\n"
-                for _, p in ipairs(outputversion.KeyRelease) do
-                    local results = GSE.TranslateString(p, mode, true)
-                    if not GSE.isEmpty(results) then
-                        macroversions = macroversions .. "        \"" .. results .. "\",\n"
-                    end
-                end
-                macroversions = macroversions .. "      },\n"
-            end
-            macroversions = macroversions .. "    },\n"
-        end
-        macroversions = macroversions .. "  },\n"
-        -- local returnVal = ("Sequences['" .. sequenceName .. "'] = {\n" .."author=\"".. sequence.author .."\",\n" .."specID="..sequence.specID ..",\n" .. sequencemeta .. steps )
-        returnVal = "Sequences['" .. GSEOptions.EmphasisColour .. sequenceName .. Statics.StringReset .. "'] = {\n"
-        if not hideversion then
-            returnVal = returnVal .. GSEOptions.CONCAT .. "-- " ..
-                            string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) ..
-                            Statics.StringReset .. "\n"
-        end
-        returnVal = returnVal .. "  Author=\"" .. GSEOptions.AuthorColour ..
-                        (GSE.isEmpty(sequence.Author) and "Unknown Author" or sequence.Author) .. Statics.StringReset ..
-                        "\",\n" .. (GSE.isEmpty(sequence.SpecID) and
-                        "-- Unknown SpecID.  This could be a GS sequence and not a GS-E one.  Care will need to be taken. \n" or
-                        "  SpecID=" .. GSEOptions.NUMBER .. sequence.SpecID .. Statics.StringReset .. ",\n") ..
-                        sequencemeta
-        if not GSE.isEmpty(sequence.Icon) then
-            returnVal = returnVal .. "  Icon=" .. GSEOptions.CONCAT ..
-                            (tonumber(sequence.Icon) and sequence.Icon or "'" .. sequence.Icon .. "'") ..
-                            Statics.StringReset .. ",\n"
-        end
-        returnVal = returnVal .. macroversions
-        returnVal = returnVal .. "}\n"
-    else
-        returnVal = GSE.EncodeMessage({sequenceName, sequence})
-    end
-
-    return returnVal
-end
-
-function GSE.FixSequence(sequence)
-    if GSE.isEmpty(sequence.PreMacro) then
-        sequence.PreMacro = {}
-        GSE.PrintDebugMessage("Empty PreMacro", GNOME)
-    end
-    if GSE.isEmpty(sequence.PostMacro) then
-        sequence.PostMacro = {}
-        GSE.PrintDebugMessage("Empty PostMacro", GNOME)
-    end
-    if GSE.isEmpty(sequence.LoopLimit) then
-        sequence.PostMacro = {}
-        GSE.PrintDebugMessage("Empty PostMacro as no LoopLimit", GNOME)
-    else
-        if tonumber(sequence.LoopLimit) < 1 then
-            sequence.PostMacro = {}
-            GSE.PrintDebugMessage("Ignoring PostMacro as incorrect LoopLimit", GNOME)
-        end
-    end
-    if GSE.isEmpty(sequence.KeyPress) then
-        sequence.KeyPress = {}
-        GSE.PrintDebugMessage("Empty KeyPress", GNOME)
-    end
-    if GSE.isEmpty(sequence.KeyRelease) then
-        sequence.KeyRelease = {}
-        GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
-    end
-    if GSE.isEmpty(sequence.StepFunction) then
-        sequence.StepFunciton = Statics.Sequential
-        GSE.PrintDebugMessage("Empty StepFunction", GNOME)
-    end
-    if not GSE.isEmpty(sequence.Target) then
-        sequence.Target = nil
-    end
-
-end
-
-function GSE.ProcessSequenceVariables(sequence, variables)
-    if not GSE.isEmpty(sequence.PreMacro) then
-        sequence.PreMacro = GSE.ProcessVariables(sequence.PreMacro, variables)
-        GSE.PrintDebugMessage("Processed for Variables PreMacro", GNOME)
-    end
-    if not GSE.isEmpty(sequence.PostMacro) then
-        sequence.PostMacro = GSE.ProcessVariables(sequence.PostMacro, variables)
-        GSE.PrintDebugMessage("Empty PostMacro", GNOME)
-    end
-    if not GSE.isEmpty(sequence.KeyPress) then
-        sequence.KeyPress = GSE.ProcessVariables(sequence.KeyPress, variables)
-        GSE.PrintDebugMessage("Empty KeyPress", GNOME)
-    end
-    if not GSE.isEmpty(sequence.KeyRelease) then
-        sequence.KeyRelease = GSE.ProcessVariables(sequence.KeyRelease, variables)
-        GSE.PrintDebugMessage("Empty KeyRelease", GNOME)
-    end
-
-    for key, value in ipairs(sequence) do
-        local returnval = GSE.ProcessVariables({value}, variables)[1]
-        sequence[key] = GSE.ProcessVariables({value}, variables)[1]
     end
 end
 
@@ -768,14 +507,6 @@ function GSE.ResetButtons()
         local gsebutton = _G[k]
         if gsebutton:GetAttribute("combatreset") == true then
             gsebutton:SetAttribute("step", 1)
-            gsebutton:SetAttribute("clicks", 1)
-            gsebutton:SetAttribute("loopiter", 1)
-            gsebutton:SetAttribute("limit", 1)
-            if GSEOptions.useExternalMSTimings then
-                gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
-            else
-                gsebutton:SetAttribute("ms", 1)
-            end
             GSE.UpdateIcon(gsebutton, true)
             GSE.UsedSequences[k] = nil
         end
@@ -802,124 +533,13 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
         return
     end
-    if pcall(GSE.CheckSequence, sequence) then
-        local variables
-        if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name].Variables) then
-            GSE.PrintDebugMessage("Sequence " .. name .. " has no variables", Statics.DebugModules["Storage"])
-        else
-            variables = GSE.Library[GSE.GetCurrentClassID()][name].Variables
-            GSE.PrintDebugMessage("Sequence " .. name .. " has variables", Statics.DebugModules["Storage"])
-        end
-        sequence = GSE.CleanMacroVersion(sequence)
-        GSE.FixSequence(sequence)
-        local tempseq = GSE.CloneMacroVersion(sequence)
-        GSE.ProcessSequenceVariables(tempseq, variables)
-
-        local existingbutton = true
-        if GSE.isEmpty(_G[name]) then
-            GSE.CreateButton(name, tempseq)
-            existingbutton = false
-        end
-        local gsebutton = _G[name]
-        -- Only translate a sequence if the option to use the translator is on, there is a translator available and the sequence matches the current class
-        tempseq = GSE.TranslateSequence(tempseq, name, "STRING", true)
-        tempseq = GSE.UnEscapeSequence(tempseq)
-        local executionseq = {}
-        local pmcount = 0
-        if not GSE.isEmpty(tempseq.PreMacro) then
-            pmcount = table.getn(tempseq.PreMacro) + 1
-            gsebutton:SetAttribute('loopstart', pmcount)
-            for k, v in ipairs(tempseq.PreMacro) do
-                table.insert(executionseq, v)
-            end
-
-        end
-
-        for k, v in ipairs(tempseq) do
-            table.insert(executionseq, v)
-        end
-
-        gsebutton:SetAttribute('loopstop', table.getn(executionseq))
-
-        if not GSE.isEmpty(tempseq.PostMacro) then
-            for k, v in ipairs(tempseq.PostMacro) do
-                table.insert(executionseq, v)
-            end
-
-        end
-
-        GSE.SequencesExec[name] = executionseq
-
-        gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' ..
-                              strjoin(']=======],[=======[', unpack(executionseq)) .. ']=======])')
-        gsebutton:SetAttribute("step", 1)
-        gsebutton:SetAttribute("clicks", 1)
-        gsebutton:SetAttribute("limit", 1)
-        if GSEOptions.useExternalMSTimings then
-            gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
-        else
-            gsebutton:SetAttribute("ms", 100)
-        end
-        gsebutton:SetAttribute('KeyPress', table.concat(GSE.PrepareKeyPress(tempseq), "\n") or '' .. '\n')
-        GSE.PrintDebugMessage("GSUpdateSequence KeyPress updated to: " .. gsebutton:GetAttribute('KeyPress'))
-        gsebutton:SetAttribute('KeyRelease', table.concat(GSE.PrepareKeyRelease(tempseq), "\n") or '' .. '\n')
-        GSE.PrintDebugMessage("GSUpdateSequence KeyRelease updated to: " .. gsebutton:GetAttribute('KeyRelease'))
-        if existingbutton then
-            gsebutton:UnwrapScript(gsebutton, 'OnClick')
-        end
-
-        if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC) or sequence.Combat then
-            gsebutton:SetAttribute("combatreset", true)
-        else
-            gsebutton:SetAttribute("combatreset", false)
-        end
-        gsebutton:WrapScript(gsebutton, 'OnClick', GSE.PrepareOnClickImplementation(sequence))
-        if not GSE.isEmpty(sequence.LoopLimit) then
-            gsebutton:SetAttribute('looplimit', sequence.LoopLimit)
-        end
-        GSE.UpdateIcon(gsebutton, true)
-    else
-        GSE.Print(string.format(
-                      L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."],
-                      name))
-    end
-
-end
-
-function GSE.PrepareStepFunction(stepper, looper)
-    local retvalue = ""
-    if looper then
-        if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
-            retvalue = Statics.LoopSequentialImplementation
-        elseif stepper == Statics.Random then
-            retvalue = Statics.LoopRandomImplementation
-        else
-            retvalue = Statics.LoopPriorityImplementation
-        end
-    else
-        if GSE.isEmpty(stepper) or stepper == Statics.Sequential then
-            retvalue = 'step = step % #macros + 1'
-        elseif stepper == Statics.Priority then
-            retvalue = Statics.PriorityImplementation
-        elseif stepper == Statics.Random then
-            retvalue = Statics.RandomImplementation
-        else
-            retvalue = stepper
-        end
-    end
-    return retvalue
+    
+    GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name)
 end
 
 --- This function dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
-    local targetreset = ""
-    local looper = GSE.IsLoopSequence(
-                       GSE.Library[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(
-                           SequenceName)])
-    if GSE.Library[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(SequenceName)]
-        .Target then
-        targetreset = Statics.TargetResetImplementation
-    end
+
     GSE.Print("====================================\nStart GSE Button Dump\n====================================")
     GSE.Print("Button name: " .. SequenceName)
     GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute('KeyPress'))
@@ -928,9 +548,7 @@ function GSE.DebugDumpButton(SequenceName)
     GSE.Print("ms" .. _G[SequenceName]:GetAttribute('ms'))
     GSE.Print("LoopMacro?" .. tostring(looper))
     GSE.Print("====================================\nStepFunction\n====================================")
-    GSE.Print(GSE.PrepareOnClickImplementation(
-                  GSE.Library[GSE.GetCurrentClassID()][SequenceName].MacroVersions[GSE.GetActiveSequenceVersion(
-                      SequenceName)]))
+    GSE.Print(GSE.SequencesExec[SequenceName][_G[SequenceName]:GetAttribute('step')])
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
@@ -941,113 +559,6 @@ function GSE.enforceMinimumVersion(sequence, line)
     end
 end
 
---- Compares two sequences and return a boolean if they match.  If they do not
---    match then it will print an element by element comparison.  This comparison
---    ignores version, authorversion, source, helpTxt elements as these are not
---    needed for the execution of the macro but are more for help and versioning.
-function GSE.CompareSequence(seq1, seq2)
-    GSE.FixSequence(seq1)
-    GSE.FixSequence(seq2)
-    local match = true
-    local steps1 = table.concat(seq1, "")
-    local steps2 = table.concat(seq2, "")
-
-    if seq1.SpecID == seq2.SpecID then
-        GSE.PrintDebugMessage("Matching specID", GNOME)
-    else
-        GSE.PrintDebugMessage("Different specID", GNOME)
-        match = false
-    end
-    if seq1.StepFunction == seq2.StepFunction then
-        GSE.PrintDebugMessage("Matching StepFunction", GNOME)
-    else
-        GSE.PrintDebugMessage("Different StepFunction", GNOME)
-        match = false
-    end
-    if table.concat(seq1.KeyPress, "") == table.concat(seq2.KeyPress, "") then
-        GSE.PrintDebugMessage("Matching KeyPress", GNOME)
-    else
-        GSE.PrintDebugMessage("Different KeyPress", GNOME)
-        match = false
-    end
-    if steps1 == steps2 then
-        GSE.PrintDebugMessage("Same Sequence Steps", GNOME)
-    else
-        GSE.PrintDebugMessage("Different Sequence Steps", GNOME)
-        match = false
-    end
-    if table.concat(seq1.KeyRelease) == table.concat(seq2.KeyRelease) then
-        GSE.PrintDebugMessage("Matching KeyRelease", GNOME)
-    else
-        GSE.PrintDebugMessage("Different KeyRelease", GNOME)
-        match = false
-    end
-    if table.concat(seq1.PreMacro) == table.concat(seq2.PreMacro) then
-        GSE.PrintDebugMessage("Matching PreMacro", GNOME)
-    else
-        GSE.PrintDebugMessage("Different PreMacro", GNOME)
-        match = false
-    end
-    if table.concat(seq1.PostMacro) == table.concat(seq2.PostMacro) then
-        GSE.PrintDebugMessage("Matching PostMacro", GNOME)
-    else
-        GSE.PrintDebugMessage("Different PostMacro", GNOME)
-        match = false
-    end
-
-    if not GSE.compareValues(seq1.Head, seq2.Head, "Head") then
-        match = false
-    end
-
-    if not GSE.compareValues(seq1.Trinket1, seq2.Trinket1, "Trinket1") then
-        match = false
-    end
-
-    if not GSE.compareValues(seq1.Trinket2, seq2.Trinket2, "Trinket2") then
-        match = false
-    end
-    if not GSE.compareValues(seq1.Ring1, seq2.Ring1, "Ring1") then
-        match = false
-    end
-    if not GSE.compareValues(seq1.Ring2, seq2.Ring2, "Ring2") then
-        match = false
-    end
-    if not GSE.compareValues(seq1.Neck, seq2.Neck, "Neck") then
-        match = false
-    end
-    if not GSE.compareValues(seq1.Belt, seq2.Belt, "Belt") then
-        match = false
-    end
-    if not GSE.compareValues(seq1.LoopLimit, seq2.LoopLimit, "LoopLimit") then
-        match = false
-    end
-
-    return match
-end
-
---- Compares the values of a sequence used in GSE.CompareSequence
-function GSE.compareValues(a, b, description)
-    local match = true
-    if not GSE.isEmpty(a) then
-        if GSE.isEmpty(b) then
-            GSE.PrintDebugMessage(description .. " in Sequence 1 but not in Sequence 2", GNOME)
-            match = false
-        else
-            if a == b then
-                GSE.PrintDebugMessage("Matching " .. description, GNOME)
-            else
-                GSE.PrintDebugMessage("Different  " .. description .. " Values", GNOME)
-                match = false
-            end
-        end
-    else
-        if not GSE.isEmpty(a) then
-            GSE.PrintDebugMessage(description .. " in Sequence 2 but not in Sequence 1", GNOME)
-            match = false
-        end
-    end
-    return match
-end
 
 --- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSE.SetMacroLocation()
@@ -1289,12 +800,6 @@ function GSE.LoadSampleMacros(classID)
     end
 end
 
-function GSE.CreateButton(name, sequence)
-    local gsebutton = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
-    gsebutton:SetAttribute('type', 'macro')
-    gsebutton.UpdateIcon = GSE.UpdateIcon
-end
-
 function GSE.UpdateIcon(self, reset)
     local step = self:GetAttribute('step') or 1
     local gsebutton = self:GetName()
@@ -1334,79 +839,6 @@ function GSE.UpdateIcon(self, reset)
     if not reset then
         GSE.UsedSequences[gsebutton] = true
     end
-end
-
-function GSE.PrepareKeyPress(sequence)
-
-    local tab = {}
-    if GSEOptions.requireTarget then
-
-        -- See #20 prevent target hopping
-        table.insert(tab, "/stopmacro [@playertarget, noexists]")
-    end
-
-    if GSEOptions.hideSoundErrors then
-        -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
-        table.insert(tab, "/run sfx=GetCVar(\"Sound_EnableSFX\");")
-        table.insert(tab, "/run ers=GetCVar(\"Sound_EnableErrorSpeech\");")
-        table.insert(tab, "/console Sound_EnableSFX 0")
-        table.insert(tab, "/console Sound_EnableErrorSpeech 0")
-    end
-    if not GSE.isEmpty(sequence.KeyPress) then
-        for k, v in pairs(sequence.KeyPress) do
-            table.insert(tab, v)
-        end
-    end
-
-    return tab
-end
-
-function GSE.PrepareKeyRelease(sequence)
-    local tab = {}
-    if GSEOptions.requireTarget then
-        -- See #20 prevent target hopping
-        table.insert(tab, "/stopmacro [@playertarget, noexists]")
-    end
-    if not GSE.isEmpty(sequence.KeyRelease) then
-        for k, v in pairs(sequence.KeyRelease) do
-            table.insert(tab, v)
-        end
-    end
-    if sequence.Ring1 or (sequence.Ring1 == nil and GSEOptions.use11) then
-        table.insert(tab, "/use [combat,nochanneling] 11")
-    end
-    if sequence.Ring2 or (sequence.Ring2 == nil and GSEOptions.use12) then
-        table.insert(tab, "/use [combat,nochanneling] 12")
-    end
-    if sequence.Trinket1 or (sequence.Trinket1 == nil and GSEOptions.use13) then
-        table.insert(tab, "/use [combat,nochanneling] 13")
-    end
-    if sequence.Trinket2 or (sequence.Trinket2 == nil and GSEOptions.use14) then
-        table.insert(tab, "/use [combat,nochanneling] 14")
-    end
-    if sequence.Neck or (sequence.Neck == nil and GSEOptions.use2) then
-        table.insert(tab, "/use [combat,nochanneling] 2")
-    end
-    if sequence.Head or (sequence.Head == nil and GSEOptions.use1) then
-        table.insert(tab, "/use [combat,nochanneling] 1")
-    end
-    if sequence.Belt or (sequence.Belt == nil and GSEOptions.use6) then
-        table.insert(tab, "/use [combat,nochanneling] 6")
-    end
-    if GSEOptions.hideSoundErrors then
-        -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
-        table.insert(tab, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
-        table.insert(tab, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
-    end
-    if GSEOptions.hideUIErrors then
-        table.insert(tab, "/script UIErrorsFrame:Hide();")
-        -- Potentially change this to UIErrorsFrame:Hide()
-    end
-    if GSEOptions.clearUIErrors then
-        -- Potentially change this to UIErrorsFrame:Clear()
-        table.insert(tab, "/run UIErrorsFrame:Clear()")
-    end
-    return tab
 end
 
 --- Takes a collection of Sequences and returns a list of names
@@ -1476,26 +908,16 @@ function GSE.FindMacro(sequenceName)
     return returnVal
 end
 
---- This funcion returns the actual onclick implementation
-function GSE.PrepareOnClickImplementation(sequence)
-    local returnstring = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "")
-    returnstring = returnstring .. GSE.GetMacroResetImplementation()
-    returnstring = returnstring ..
-                       format(Statics.OnClick,
-                           GSE.PrepareStepFunction(sequence.StepFunction, GSE.IsLoopSequence(sequence)))
-    return returnstring
-end
+-- --- This function checks a sequence for mod breaking errors.  Use this with a pcall
+-- function GSE.CheckSequence(sequence)
 
---- This function checks a sequence for mod breaking errors.  Use this with a pcall
-function GSE.CheckSequence(sequence)
-
-    for k, v in ipairs(sequence) do
-        if type(v) == "table" then
-            GSE.PrintDebugMessage("Macro corrupt at " .. k, "Storage")
-            error("Corrupt MacroVersion")
-        end
-    end
-end
+--     for k, v in ipairs(sequence) do
+--         if type(v) == "table" then
+--             GSE.PrintDebugMessage("Macro corrupt at " .. k, "Storage")
+--             error("Corrupt MacroVersion")
+--         end
+--     end
+-- end
 
 --- This function scans all macros in the library and reports on corrupt macros.
 function GSE.ScanMacrosForErrors()
@@ -1578,110 +1000,113 @@ end
 --- This creates a pretty export for WLM Forums
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     local returnstring = "# " .. sequencename .. "\n\n## Talents: " ..
-                             (GSE.isEmpty(sequence.Talents) and "?,?,?,?,?,?,?" or sequence.Talents) .. "\n\n"
-    if not GSE.isEmpty(sequence.Help) then
-        returnstring = "\n\n## Usage Information\n" .. sequence.Help .. "\n\n"
+                             (GSE.isEmpty(sequence["MetaData"].Talents) and "?,?,?,?,?,?,?" or sequence["MetaData"].Talents) .. "\n\n"
+    if not GSE.isEmpty(sequence["MetaData"].Help) then
+        returnstring = "\n\n## Usage Information\n" .. sequence["MetaData"].Help .. "\n\n"
     end
     returnstring = returnstring .. "This macro contains " ..
-                       (table.getn(sequence.MacroVersions) > 1 and table.getn(sequence.MacroVersions) ..
-                           " macro versions. " or "1 macro version. ") ..
+                       (table.getn(sequence.Macros) > 1 and table.getn(sequence.Macros) ..
+                           " macro templates. " or "1 macro template. ") ..
                        string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
-    if (table.getn(sequence.MacroVersions) > 1) then
-        for k, v in pairs(sequence.MacroVersions) do
-            if not GSE.isEmpty(sequence.Default) then
-                if sequence.Default == k then
-                    returnstring = returnstring .. "- The Default macro is " .. k .. "\n"
+    if (table.getn(sequence.Macros) > 1) then
+        for k, v in pairs(sequence.Macros) do
+            if not GSE.isEmpty(sequence["MetaData"].Default) then
+                if sequence["MetaData"].Default == k then
+                    returnstring = returnstring .. "- The Default macro template is " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Raid) then
-                if sequence.Raid == k then
-                    returnstring = returnstring .. "- Raids use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Raid) then
+                if sequence["MetaData"].Raid == k then
+                    returnstring = returnstring .. "- Raids use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.PVP) then
-                if sequence.PVP == k then
-                    returnstring = returnstring .. "- PVP uses version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].PVP) then
+                if sequence["MetaData"].PVP == k then
+                    returnstring = returnstring .. "- PVP uses template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Dungeon) then
-                if sequence.Dungeon == k then
-                    returnstring = returnstring .. "- Normal Dungeons use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Dungeon) then
+                if sequence["MetaData"].Dungeon == k then
+                    returnstring = returnstring .. "- Normal Dungeons use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Heroic) then
-                if sequence.Heroic == k then
-                    returnstring = returnstring .. "- Heroic Dungeons use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Heroic) then
+                if sequence["MetaData"].Heroic == k then
+                    returnstring = returnstring .. "- Heroic Dungeons use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Mythic) then
-                if sequence.Mythic == k then
-                    returnstring = returnstring .. "- Mythic Dungeons use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Mythic) then
+                if sequence["MetaData"].Mythic == k then
+                    returnstring = returnstring .. "- Mythic Dungeons use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Arena) then
-                if sequence.Arena == k then
-                    returnstring = returnstring .. "- Arenas use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Arena) then
+                if sequence["MetaData"].Arena == k then
+                    returnstring = returnstring .. "- Arenas use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Timewalking) then
-                if sequence.Timewalking == k then
-                    returnstring = returnstring .. "- Timewalking Dungeons use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Timewalking) then
+                if sequence["MetaData"].Timewalking == k then
+                    returnstring = returnstring .. "- Timewalking Dungeons use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.MythicPlus) then
-                if sequence.MythicPlus == k then
-                    returnstring = returnstring .. "- Mythic+ Dungeons use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].MythicPlus) then
+                if sequence["MetaData"].MythicPlus == k then
+                    returnstring = returnstring .. "- Mythic+ Dungeons use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Party) then
-                if sequence.Party == k then
-                    returnstring = returnstring .. "- Open World Parties use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Party) then
+                if sequence["MetaData"].Party == k then
+                    returnstring = returnstring .. "- Open World Parties use template " .. k .. "\n"
                 end
             end
-            if not GSE.isEmpty(sequence.Scenario) then
-                if sequence.Scenario == k then
-                    returnstring = returnstring .. "- Scenarios use version " .. k .. "\n"
+            if not GSE.isEmpty(sequence["MetaData"].Scenario) then
+                if sequence["MetaData"].Scenario == k then
+                    returnstring = returnstring .. "- Scenarios use template " .. k .. "\n"
                 end
             end
         end
 
     end
-    for k, v in pairs(sequence.MacroVersions) do
-        returnstring = returnstring .. "## Macro Version " .. k .. "\n"
-        returnstring = returnstring .. "<blockquote>\n\n**Step Function:** " .. v.StepFunction .. "\n\n"
-        if not GSE.isEmpty(v.PreMacro) then
-            if table.getn(v.PreMacro) > 0 then
-                returnstring = returnstring .. "**Pre Macro:** " .. GSE.IdentifySpells(v.PreMacro) .. "\n\n"
-            end
-        end
-        if not GSE.isEmpty(v.KeyPress) then
-            if table.getn(v.KeyPress) > 0 then
-                spells, _ = GSE.IdentifySpells(v.KeyPress)
-                if not GSE.isEmpty(spells) then
-                    returnstring = returnstring .. "**KeyPress:** " .. GSE.IdentifySpells(v.KeyPress) .. "\n\n"
-                else
-                    returnstring = returnstring .. "**KeyPress:** Contains various utility functions.\n\n"
-                end
-            end
-        end
-        returnstring = returnstring .. "**Main Sequence:** " .. GSE.IdentifySpells(v) .. "\n\n"
-        if not GSE.isEmpty(v.KeyRelease) then
-            if table.getn(v.KeyRelease) > 0 then
-                spells, _ = GSE.IdentifySpells(v.KeyRelease)
-                if not GSE.isEmpty(spells) then
-                    returnstring = returnstring .. "**KeyRelease:** " .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
-                else
-                    returnstring = returnstring .. "**KeyRelease:**  Contains various utility functions.\n\n"
-                end
-            end
-        end
-        if not GSE.isEmpty(v.PostMacro) then
-            if table.getn(v.PostMacro) > 0 then
-                returnstring = returnstring .. "**Post Macro:** " .. GSE.IdentifySpells(v.PostMacro) .. "\n\n"
-            end
-        end
-        returnstring = returnstring .. "</blockquote>\n\n"
-    end
+
+    -- TODO update for GSE3
+
+    -- for k, v in pairs(sequence.MacroVersions) do
+    --     returnstring = returnstring .. "## Macro Version " .. k .. "\n"
+    --     returnstring = returnstring .. "<blockquote>\n\n**Step Function:** " .. v.StepFunction .. "\n\n"
+    --     if not GSE.isEmpty(v.PreMacro) then
+    --         if table.getn(v.PreMacro) > 0 then
+    --             returnstring = returnstring .. "**Pre Macro:** " .. GSE.IdentifySpells(v.PreMacro) .. "\n\n"
+    --         end
+    --     end
+    --     if not GSE.isEmpty(v.KeyPress) then
+    --         if table.getn(v.KeyPress) > 0 then
+    --             spells, _ = GSE.IdentifySpells(v.KeyPress)
+    --             if not GSE.isEmpty(spells) then
+    --                 returnstring = returnstring .. "**KeyPress:** " .. GSE.IdentifySpells(v.KeyPress) .. "\n\n"
+    --             else
+    --                 returnstring = returnstring .. "**KeyPress:** Contains various utility functions.\n\n"
+    --             end
+    --         end
+    --     end
+    --     returnstring = returnstring .. "**Main Sequence:** " .. GSE.IdentifySpells(v) .. "\n\n"
+    --     if not GSE.isEmpty(v.KeyRelease) then
+    --         if table.getn(v.KeyRelease) > 0 then
+    --             spells, _ = GSE.IdentifySpells(v.KeyRelease)
+    --             if not GSE.isEmpty(spells) then
+    --                 returnstring = returnstring .. "**KeyRelease:** " .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
+    --             else
+    --                 returnstring = returnstring .. "**KeyRelease:**  Contains various utility functions.\n\n"
+    --             end
+    --         end
+    --     end
+    --     if not GSE.isEmpty(v.PostMacro) then
+    --         if table.getn(v.PostMacro) > 0 then
+    --             returnstring = returnstring .. "**Post Macro:** " .. GSE.IdentifySpells(v.PostMacro) .. "\n\n"
+    --         end
+    --     end
+    --     returnstring = returnstring .. "</blockquote>\n\n"
+    -- end
 
     return returnstring
 end
@@ -1692,8 +1117,8 @@ function GSE.GetSequenceSummary()
         returntable[k] = {}
         for i, j in pairs(v) do
             returntable[k][i] = {}
-            returntable[k][i].Help = j.Help
-            returntable[k][i].LastUpdated = j.LastUpdated
+            returntable[k][i].Help = j["MetaData"].Help
+            returntable[k][i].LastUpdated = j["MetaData"].LastUpdated
         end
     end
     return returntable
@@ -1715,7 +1140,11 @@ local function fixLine(line, KeyPress, KeyRelease)
     if string.sub(line, 1, 12) == "/click pause" then
         action = {}
         action["Type"] = Statics.Actions.Pause
-        action["MS"] = tonumber(string.sub(line, 14)) * 1000
+        if string.sub(line, 14) == "~~GCD~~" then
+            action["MS"] = GSE.GetGCD() * 1000
+        else
+            action["MS"] = tonumber(string.sub(line, 14)) * 1000
+        end
     end
     return action
 end
@@ -1823,31 +1252,28 @@ local function buildAction(action, metaData)
         action[k] = GSE.TranslateString(v, "STRING", nil,  true)
     end
 
-    if GSEOptions.requireTarget then
-        -- See #20 prevent target hopping
-        table.insert(tab, "/stopmacro [@playertarget, noexists]")
-    end
-
-    if metaData.Ring1 or (metaData.Ring1 == nil and GSEOptions.use11) then
-        table.insert(action, "/use [combat,nochanneling] 11")
-    end
-    if metaData.Ring2 or (metaData.Ring2 == nil and GSEOptions.use12) then
-        table.insert(action, "/use [combat,nochanneling] 12")
-    end
-    if metaData.Trinket1 or (metaData.Trinket1 == nil and GSEOptions.use13) then
-        table.insert(action, "/use [combat,nochanneling] 13")
-    end
-    if metaData.Trinket2 or (metaData.Trinket2 == nil and GSEOptions.use14) then
-        table.insert(action, "/use [combat,nochanneling] 14")
-    end
-    if metaData.Neck or (metaData.Neck == nil and GSEOptions.use2) then
-        table.insert(action, "/use [combat,nochanneling] 2")
-    end
-    if metaData.Head or (metaData.Head == nil and GSEOptions.use1) then
-        table.insert(action, "/use [combat,nochanneling] 1")
-    end
-    if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
-        table.insert(action, "/use [combat,nochanneling] 6")
+    if not GSE.isEmpty(metaData) then
+        if metaData.Ring1 or (metaData.Ring1 == nil and GSEOptions.use11) then
+            table.insert(action, "/use [combat,nochanneling] 11")
+        end
+        if metaData.Ring2 or (metaData.Ring2 == nil and GSEOptions.use12) then
+            table.insert(action, "/use [combat,nochanneling] 12")
+        end
+        if metaData.Trinket1 or (metaData.Trinket1 == nil and GSEOptions.use13) then
+            table.insert(action, "/use [combat,nochanneling] 13")
+        end
+        if metaData.Trinket2 or (metaData.Trinket2 == nil and GSEOptions.use14) then
+            table.insert(action, "/use [combat,nochanneling] 14")
+        end
+        if metaData.Neck or (metaData.Neck == nil and GSEOptions.use2) then
+            table.insert(action, "/use [combat,nochanneling] 2")
+        end
+        if metaData.Head or (metaData.Head == nil and GSEOptions.use1) then
+            table.insert(action, "/use [combat,nochanneling] 1")
+        end
+        if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
+            table.insert(action, "/use [combat,nochanneling] 6")
+        end
     end
     if GSEOptions.hideSoundErrors then
         -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
@@ -1944,15 +1370,15 @@ end
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(template)
 
-    setmetatable(template, {
-        __index = function(t, k)
-          for i,v in ipairs(k) do
-            if not t then error("attempt to index nil") end
-            t = rawget(t, v)
-          end
-          return t
-        end
-        })
+    -- setmetatable(template, {
+    --     __index = function(t, k)
+    --       for i,v in ipairs(k) do
+    --         if not t then error("attempt to index nil") end
+    --         t = rawget(t, v)
+    --       end
+    --       return t
+    --     end
+    --     })
 
 
     local compiledMacro = {}
@@ -1985,8 +1411,13 @@ end
 
 --- Build GSE3 Executable Buttons
 function GSE.CreateGSE3Button(macro, name)
-    name = name .. "T"
+    if GSE.isEmpty(macro) then
+        print("Macro missing for ", name)
+        return
+    end
+    -- name = name .. "T"
     GSE.SequencesExec[name] = macro
+
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
     if GSE.isEmpty(_G[name]) then
 
@@ -2001,10 +1432,10 @@ function GSE.CreateGSE3Button(macro, name)
          else
             gsebutton:SetAttribute("ms", 100)
         end
-        gsebutton:Execute('name, macros = self:GetName(), newtable([=======[' ..
-                                strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
 
         local stepfunction = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") .. GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
         gsebutton:WrapScript(gsebutton, 'OnClick', stepfunction)
     end
+    _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
+    GSE.UpdateIcon(_G[name], true)
 end

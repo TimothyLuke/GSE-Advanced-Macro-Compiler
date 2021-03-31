@@ -229,7 +229,7 @@ function GSE.Dump(node)
                 if (type(k) == "number" or type(k) == "boolean") then
                     key = "["..tostring(k).."]"
                 else
-                    key = "['"..tostring(k).."']"
+                    key = "[\""..tostring(k).."\"]"
                 end
 
                 if (type(v) == "number" or type(v) == "boolean") then
@@ -241,7 +241,7 @@ function GSE.Dump(node)
                     cache[node] = cur_index+1
                     break
                 else
-                    output_str = output_str .. string.rep('\t',depth) .. key .. " = '"..tostring(v).."'"
+                    output_str = output_str .. string.rep('\t',depth) .. key .. " = \""..tostring(v).."\""
                 end
 
                 if (cur_index == size) then
