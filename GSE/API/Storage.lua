@@ -533,7 +533,6 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
         return
     end
-    
     GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name)
 end
 
