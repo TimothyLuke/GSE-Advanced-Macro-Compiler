@@ -134,11 +134,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.CheckSequence">GSE.CheckSequence</a>&nbsp;(sequence)</td>
-	<td class="summary">This function checks a sequence for mod breaking errors.</td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.CleanMacroLibrary">GSE.CleanMacroLibrary</a>&nbsp;(forcedelete)</td>
 	<td class="summary">This function is used to clean the local sequence library </td>
 	</tr>
@@ -151,11 +146,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.CloneMacroVersion">GSE.CloneMacroVersion</a>&nbsp;(macroversion, keepcomments)</td>
 	<td class="summary">This function clones the Macro Version part of a sequence.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.CompareSequence">GSE.CompareSequence</a>&nbsp;(seq1, seq2)</td>
-	<td class="summary">Compares two sequences and return a boolean if they match.</td>
 	</tr>
 
 	<tr>
@@ -201,11 +191,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.DeleteSequence">GSE.DeleteSequence</a>&nbsp;(classid, sequenceName)</td>
 	<td class="summary">Delete a sequence starting with the macro and then the sequence from the library </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, verbose, mode, hideversion)</td>
-	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
 	</tr>
 
 	<tr>
@@ -299,11 +284,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.PrepareOnClickImplementation">GSE.PrepareOnClickImplementation</a>&nbsp;(sequence)</td>
-	<td class="summary">This funcion returns the actual onclick implementation </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.ReplaceMacro">GSE.ReplaceMacro</a>&nbsp;(classid, sequenceName, sequence)</td>
 	<td class="summary">Replace a current version of a Macro </td>
 	</tr>
@@ -331,11 +311,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.UpdateSequence">GSE.UpdateSequence</a>&nbsp;(name, sequence)</td>
 	<td class="summary">This functions schedules an update to a sequence in the OOCQueue.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.compareValues">GSE.compareValues</a>&nbsp;(a, b, description)</td>
-	<td class="summary">Compares the values of a sequence used in GSE.CompareSequence </td>
 	</tr>
 
 </table>
@@ -420,32 +395,6 @@ Add a Create Macro to the Out of Combat Queue
 
 
 
-<dt><a name="GSE.CheckSequence"></a><strong>GSE.CheckSequence</strong>&nbsp;(sequence)</dt>
-<dd>
-This function checks a sequence for mod breaking errors.  Use this with a pcall
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.CleanMacroLibrary"></a><strong>GSE.CleanMacroLibrary</strong>&nbsp;(forcedelete)</dt>
 <dd>
 This function is used to clean the local sequence library
@@ -503,36 +452,6 @@ This function clones the Macro Version part of a sequence.
 	
 	<li>
 	  keepcomments: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.CompareSequence"></a><strong>GSE.CompareSequence</strong>&nbsp;(seq1, seq2)</dt>
-<dd>
-Compares two sequences and return a boolean if they match.  If they do not match then it will print an element by element comparison.  This comparison ignores version, authorversion, source, helpTxt elements as these are not needed for the execution of the macro but are more for help and versioning.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  seq1: 
-	</li>
-	
-	<li>
-	  seq2: 
 	</li>
 	
 </ul>
@@ -783,48 +702,6 @@ Delete a sequence starting with the macro and then the sequence from the library
 	
 	<li>
 	  sequenceName: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, verbose, mode, hideversion)</dt>
-<dd>
-Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  verbose: 
-	</li>
-	
-	<li>
-	  mode: 
-	</li>
-	
-	<li>
-	  hideversion: 
 	</li>
 	
 </ul>
@@ -1309,32 +1186,6 @@ This function updates the button for an existing sequence.  It is called from th
 
 
 
-<dt><a name="GSE.PrepareOnClickImplementation"></a><strong>GSE.PrepareOnClickImplementation</strong>&nbsp;(sequence)</dt>
-<dd>
-This funcion returns the actual onclick implementation
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.ReplaceMacro"></a><strong>GSE.ReplaceMacro</strong>&nbsp;(classid, sequenceName, sequence)</dt>
 <dd>
 Replace a current version of a Macro
@@ -1451,40 +1302,6 @@ This functions schedules an update to a sequence in the OOCQueue.
 	
 	<li>
 	  sequence: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.compareValues"></a><strong>GSE.compareValues</strong>&nbsp;(a, b, description)</dt>
-<dd>
-Compares the values of a sequence used in GSE.CompareSequence
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  a: 
-	</li>
-	
-	<li>
-	  b: 
-	</li>
-	
-	<li>
-	  description: 
 	</li>
 	
 </ul>
