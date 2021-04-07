@@ -167,6 +167,13 @@ function GSE:ADDON_LOADED(event, addon)
 
     GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
+    local seqnames = {}
+    table.insert(seqnames, "GSE2 Macros")
+    GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
+
+    GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
+
+
     LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
     if addon == GNOME then
         LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
@@ -418,6 +425,10 @@ function GSE:processReload(action, arg)
     if arg == "Samples" then
         GSE.LoadSampleMacros(GSE.GetCurrentClassID())
     end
+    if arg == "GSE2Library" then
+        GSE.UpdateGSE2LibrarytoGSE3()
+    end
+
 end
 
 function GSE:OnEnable()
