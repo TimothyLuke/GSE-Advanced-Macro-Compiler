@@ -158,7 +158,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
     if found then
         -- Check if modified
-        if GSE.isEmpty(GSE.Library[classid][sequenceName].ManualIntervention) then
+        if GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].ManualIntervention) then
             -- Macro hasnt been touched.
             GSE.PrintDebugMessage(L["No changes were made to "] .. sequenceName, "Storage")
         else
@@ -206,7 +206,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     if action == "MERGE" then
         for k, v in ipairs(newSequence.MacroVersions) do
             GSE.PrintDebugMessage("adding " .. k, "Storage")
-            table.insert(GSE.Library[classid][sequenceName].MacroVersions, v)
+            table.insert(GSE.Library[classid][sequenceName]["MetaData"].MacroVersions, v)
         end
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
@@ -246,7 +246,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     else
         GSE.Print(L["No changes were made to "] .. sequenceName, GNOME)
     end
-    GSE.Library[classid][sequenceName].ManualIntervention = false
+    GSE.Library[classid][sequenceName]["MetaData"].ManualIntervention = false
     GSE.PrintDebugMessage("Sequence " .. sequenceName .. " Finalised Entry: " ..
                               GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
     if GSE.GUI then
@@ -271,20 +271,29 @@ end
 
 --- Load the GSEStorage into a new table.
 function GSE.LoadStorage(destination)
-    if GSE.isEmpty(GSEStorage) then
-        GSEStorage = {}
+    if GSE.isEmpty(destination) then
+        destination = {}
     end
-    for k, v in pairs(GSEStorage) do
+    if GSE.isEmpty(GSE3Storage) then
+        GSE3Storage = {}
+        for iind=0, 12 do
+            GSE3Storage[iind] = {}
+        end
+    end
+    for k, v in ipairs(GSE3Storage) do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
         end
         for i, j in pairs(v) do
-            localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-
-            destination[k][i] = GSE.ConvertGSE2(uncompressedVersion[2], i)
+            local status, err = pcall(function()
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
+                destination[k][i] = uncompressedVersion[2]
+            end)
+            if err then
+                GSE.Print("There was an error processing " .. i .. ', You will need to reimport this macro from another source.', err )
+            end
         end
     end
-
 end
 
 --- Load a collection of Sequences
@@ -304,32 +313,32 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     if GSE.isEmpty(GSE.Library[classid][sequenceName]) then
         return
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName].Default) then
-        vers = GSE.Library[classid][sequenceName].Default
+    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Default) then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Default
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName].Arena) and GSE.inArena then
-        vers = GSE.Library[classid][sequenceName].Arena
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].PVP) and GSE.inArena then
-        vers = GSE.Library[classid][sequenceName].Arena
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].PVP) and GSE.PVPFlag then
-        vers = GSE.Library[classid][sequenceName].PVP
+    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Arena) and GSE.inArena then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.inArena then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.PVPFlag then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].PVP
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName].Raid) and GSE.inRaid then
-        vers = GSE.Library[classid][sequenceName].Raid
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Mythic) and GSE.inMythic then
-        vers = GSE.Library[classid][sequenceName].Mythic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].MythicPlus) and GSE.inMythicPlus then
-        vers = GSE.Library[classid][sequenceName].MythicPlus
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Heroic) and GSE.inHeroic then
-        vers = GSE.Library[classid][sequenceName].Heroic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Dungeon) and GSE.inDungeon then
-        vers = GSE.Library[classid][sequenceName].Dungeon
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Timewalking) and GSE.inTimeWalking then
-        vers = GSE.Library[classid][sequenceName].Timewalking
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Scenario) and GSE.inScenario then
-        vers = GSE.Library[classid][sequenceName].Scenario
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName].Party) and GSE.inParty then
-        vers = GSE.Library[classid][sequenceName].Party
+    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Raid) and GSE.inRaid then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Raid
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Mythic) and GSE.inMythic then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Mythic
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].MythicPlus) and GSE.inMythicPlus then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].MythicPlus
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Heroic) and GSE.inHeroic then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Heroic
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Dungeon) and GSE.inDungeon then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Dungeon
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Timewalking) and GSE.inTimeWalking then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Timewalking
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Scenario) and GSE.inScenario then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Scenario
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Party) and GSE.inParty then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Party
     end
     return vers
 end

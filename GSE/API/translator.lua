@@ -272,10 +272,6 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         else
             GSE.PrintDebugMessage("Did not find : " .. etc .. ".  Spell may no longer exist", GNOME)
             output = output .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
-            if GSE.isEmpty(GSEOptions.UnfoundSpells) then
-                GSEOptions.UnfoundSpells = {}
-            end
-            GSEOptions.UnfoundSpells[etc] = true
         end
     end
     return found, output
@@ -340,27 +336,6 @@ function GSE.GetConditionalsFromString(str)
 
     mods = GSEOptions.COMMENT .. mods .. Statics.StringReset
     return found, mods, str
-end
-
---- This option reports on language table errors and omissions.  It is accessible
--- via the command line /gs compilemissingspells and saves this informationm into
--- GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID
--- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
-function GSE.ReportUnfoundSpells()
-    GSEOptions.UnfoundSpells = {}
-    for classid, macroset in ipairs(GSE.Library) do
-        for name, version in pairs(macroset) do
-            for v, sequence in ipairs(version) do
-                GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
-            end
-        end
-    end
-    GSEOptions.UnfoundSpellIDs = {}
-
-    for _, spell in pairs(GSEOptions.UnfoundSpells) do
-        GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
-    end
-
 end
 
 -- Embedded in from https://www.wowinterface.com/downloads/info24984-ClassicSpellRanks.html

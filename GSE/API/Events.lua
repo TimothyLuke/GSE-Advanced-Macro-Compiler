@@ -376,12 +376,6 @@ function GSE:GSSlash(input)
         else
             GSE.printNoGui()
         end
-
-    elseif command == "compilemissingspells" then
-        GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
-        GSE.ReportUnfoundSpells()
-        GSE.Print(
-            "Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
