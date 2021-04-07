@@ -167,7 +167,6 @@ function GSE:ADDON_LOADED(event, addon)
 
     GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
-    local seqnames = {}
     table.insert(seqnames, "GSE2 Macros")
     GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
 
@@ -348,7 +347,7 @@ function GSE:GSSlash(input)
         local seqName = params[2]
         if not GSE.isEmpty(seqName) then
             local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            local GSE3Macro = GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)
+            local GSE3Macro = GSE.Library[classID][seqName]
             _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
             _G["GSE3"]:Show()
 
@@ -357,8 +356,8 @@ function GSE:GSSlash(input)
         local seqName = params[2]
         if not GSE.isEmpty(seqName) then
             local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            local GSE3Macro = GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)
-            local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[1])
+            local GSE3Macro = GSE.Library[classID][seqName]
+            local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[GSE.GetActiveSequenceVersion(seqName)])
             _G["GSE3"].TextBox:SetText(GSE.Dump(compiledMacro))
             _G["GSE3"]:Show()
 
