@@ -8,57 +8,22 @@ local L = GSE.L
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
 -- Mode of "STRING" will return local names where mode "ID" will return id's
 -- dropAbsolute will remove "$$" from the start of lines.
-function GSE.TranslateSequence(sequence, sequenceName, mode, dropAbsolute)
+function GSE.TranslateSequence(tab, mode, dropAbsolute)
 
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
 
-    for k, v in ipairs(sequence) do
+    for k, v in ipairs(tab) do
         -- Translate Sequence
-        sequence[k] = GSE.TranslateString(v, mode,nil,  dropAbsolute)
-    end
-
-    if not GSE.isEmpty(sequence.KeyRelease) then
-        for k, v in pairs(sequence.KeyRelease) do
-            sequence.KeyRelease[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
-        end
-    else
-        GSE.PrintDebugMessage("empty Keyrelease in translate", Statics.Translate)
-    end
-    if not GSE.isEmpty(sequence.KeyPress) then
-        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-        for k, v in pairs(sequence.KeyPress) do
-            -- Translate KeyRelease
-            sequence.KeyPress[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
-        end
-    else
-        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
-    end
-    if not GSE.isEmpty(sequence.PreMacro) then
-        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-        for k, v in pairs(sequence.PreMacro) do
-            -- Translate KeyRelease
-            sequence.PreMacro[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
-        end
-    else
-        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
-    end
-    if not GSE.isEmpty(sequence.PostMacro) then
-        GSE.PrintDebugMessage("Keypress has stuff in translate", Statics.Translate)
-        for k, v in pairs(sequence.PostMacro) do
-            -- Translate KeyRelease
-            sequence.PostMacro[k] = GSE.TranslateString(v, mode, nil, dropAbsolute)
-        end
-    else
-        GSE.PrintDebugMessage("empty Keypress in translate", Statics.Translate)
+        tab[k] = GSE.TranslateString(v, mode,nil,  dropAbsolute)
     end
 
     -- Check for blanks
-    for i, v in ipairs(sequence) do
+    for i, v in ipairs(tab) do
         if v == "" then
-            sequence[i] = nil
+            tab[i] = nil
         end
     end
-    return sequence
+    return tab
 end
 
 --- This function interates through each line in lines and does a string replace on each varible in the variableTable

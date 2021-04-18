@@ -42,24 +42,30 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     classid = GSE.GetCurrentClassID()
     sequenceName = "NEW_SEQUENCE"
     sequence = {
-      ["Author"] = GSE.GetCharacterName(),
-      ["Talents"] = GSE.GetCurrentTalents(),
-      ["Default"] = 1,
-      ["SpecID"] = GSE.GetCurrentSpecID();
-      ["MacroVersions"] = {
+      ["MetaData"] = {
+        ["Author"] = GSE.GetCharacterName(),
+        ["Talents"] = GSE.GetCurrentTalents(),
+        ["Default"] = 1,
+        ["SpecID"] = GSE.GetCurrentSpecID();
+      },
+      ["Macros"] = {
         [1] = {
-          ["PreMacro"] = {},
-          ["PostMacro"] = {},
-          ["KeyPress"] = {},
-          ["KeyRelease"] = {},
-          ["StepFunction"] = "Sequential",
-          [1] = "/say Hello",
+            [1] = "/say Hello",
+            ['Type'] = 'Action'
         }
       },
     }
     if not GSE.isEmpty(recordedstring) then
-      sequence.MacroVersions[1][1] = nil
-      sequence.MacroVersions[1] = GSE.SplitMeIntolines(recordedstring)
+      sequence.Macros[1][1] = nil
+      local recordedMacro = {}
+      for k,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
+        local action = {
+          ["Type"] = "Action"
+        }
+        table.insert(action, v)
+        table.insert(recordedMacro, action)
+      end
+      sequence.Macros[1] = recordedMacro
     end
     GSE.GUIEditFrame.NewSequence = true
   else
@@ -76,17 +82,6 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
-  GSE.GUIEditFrame.Default = sequence.Default
-  GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
-  GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
-  GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
-  GSE.GUIEditFrame.Dungeon = sequence.Dungeon or sequence.Default
-  GSE.GUIEditFrame.Heroic = sequence.Heroic or sequence.Default
-  GSE.GUIEditFrame.Party = sequence.Party or sequence.Default
-  GSE.GUIEditFrame.Timewalking = sequence.Timewalking or sequence.Default
-  GSE.GUIEditFrame.MythicPlus = sequence.MythicPlus or sequence.Default
-  GSE.GUIEditFrame.Arena = sequence.Arena or sequence.Default
-  GSE.GUIEditFrame.Scenario = sequence.Scenario or sequence.Default
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
   GSE.GUIEditFrame.tempVariables = {}
