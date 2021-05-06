@@ -1,9 +1,9 @@
-#@retail@
 ## Interface: 90005
-#@end-retail@
-#@non-retail@
-# ## Interface: 11307
-#@end-non-retail@
+
+## Interface-Retail: 90005
+## Interface-Classic: 11307
+## Interface-BC: 20501
+
 ## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
