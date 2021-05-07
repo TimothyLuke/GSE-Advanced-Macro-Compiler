@@ -214,7 +214,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
         end
-        if mode == "CURRENT" then
+        if mode == Statics.TranslatorMode.Current then
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
                 if test then

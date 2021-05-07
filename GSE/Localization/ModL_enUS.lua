@@ -601,3 +601,14 @@ L["These lines are executed after the lines in the Sequence Box have been repeat
 L["This box is disabled as no Inner Loop Limit has been set.  It will never be called without it."] = true
 --2.6.44
 L["%sMACRO VALIDATION ERROR|r - PostMacro found with invalid LoopLimit.  PostMacro will not be saved for version %s"] = true
+--3.0.0
+L["Action Type: %s"] = true
+L["Repeat"] = true
+L["How many times does this action repeat"] = true
+L["How many macro Clicks to pause for?"] = true
+L["How many seconds to pause for?"] = true
+L["Clicks"] = true
+L["Seconds"] = true
+L["Measure"] = true
+L["A pause can be measured in either clicks or seconds.  It will either wait 5 clicks or 1.5 seconds.\nIf using seconds, you can also wait for the GCD by entering ~~GCD~~ into the box."] = true
+

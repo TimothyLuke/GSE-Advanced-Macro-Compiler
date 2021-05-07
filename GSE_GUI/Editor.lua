@@ -736,42 +736,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(editframe.Width)
 
-    --- TODO Put this into a loop action
-    -- local stepdropdown = AceGUI:Create("Dropdown")
-    -- stepdropdown:SetLabel(L["Step Function"])
-    -- stepdropdown:SetWidth((editframe.Width) * 0.24)
-    -- stepdropdown:SetList({
-    --     ["Sequential"] = L["Sequential (1 2 3 4)"],
-    --     ["Priority"] = L["Priority List (1 12 123 1234)"],
-    --     ["Random"] = L["Random - It will select .... a spell, any spell"]
-    -- })
-    -- stepdropdown:SetCallback('OnEnter', function()
-    --     GSE.CreateToolTip(L["Step Function"],
-    --         L["The step function determines how your macro executes.  Each time you click your macro GSE will go to the next line.  \nThe next line it chooses varies.  If Random then it will choose any line.  If Sequential it will go to the next line.  \nIf Priority it will try some spells more often than others."],
-    --         editframe)
-    -- end)
-    -- stepdropdown:SetCallback('OnLeave', function()
-    --     GSE.ClearTooltip(editframe)
-    -- end)
-
-    -- local looplimit = AceGUI:Create("EditBox")
-    -- looplimit:SetLabel(L["Inner Loop Limit"])
-    -- looplimit:DisableButton(true)
-    -- looplimit:SetMaxLetters(4)
-    -- looplimit:SetWidth(100)
-    -- looplimit:SetCallback('OnEnter', function()
-    --     GSE.CreateToolTip(L["Inner Loop Limit"],
-    --         L["Inner Loop Limit controls how many times the Sequence part of your macro executes \nuntil it goes onto to the PostMacro and then resets to the PreMacro."],
-    --         editframe)
-    -- end)
-    -- looplimit:SetCallback('OnLeave', function()
-    --     GSE.ClearTooltip(editframe)
-    -- end)
-    -- looplimit:SetCallback("OnTextChanged", function(sel, object, value)
-    --     editframe.Sequence.Macros[version].LoopLimit = value
-    -- end)
-
-
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(5)
 
@@ -879,15 +843,17 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
     contentcontainer:AddChild(linegroup1)
-    -- contentcontainer:AddChild(spellbox)
-    -- linegroup3:AddChild(KeyReleasebox)
-    -- linegroup3:AddChild(spacerlabel3)
-    -- linegroup3:AddChild(PostMacro)
-    -- contentcontainer:AddChild(linegroup3)
 
-    GSE:GUIDrawVariableEditor(contentcontainer, version)
-    
-
+    local macrocontainer = AceGUI:Create("InlineGroup")
+    macrocontainer:SetTitle(L["Sequence"]) 
+    macrocontainer:SetWidth(contentcontainer.frame:GetWidth()-50)
+    GSE:DrawSequenceEditor(macrocontainer, version)
+    contentcontainer:AddChild(macrocontainer)
+    local variableContainer = AceGUI:Create("InlineGroup")
+    variableContainer:SetTitle(L["Variables"])
+    variableContainer:SetWidth(editframe.Width)
+    GSE:GUIDrawVariableEditor(variableContainer, version)
+    contentcontainer:AddChild(variableContainer)
     layoutcontainer:AddChild(scrollcontainer)
 
     local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
@@ -1191,14 +1157,201 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 
 end
 
-function GSE:GUIDrawVariableEditor(container, version)
+local function drawAction(container, action)
 
+    local maxWidth = container.frame:GetWidth() - 10
+    container:SetCallback("OnClick", function(widget, _, selected, button)
+      if button == "RightButton" then
+        
+      end
+    end)
+
+    -- Workaround for vanishing label ace3 bug
+    local label = AceGUI:Create("Label")
+    label:SetFontObject(fontlarge)
+    container:AddChild(label)
+
+    local hlabel = AceGUI:Create("Label")
+    --print(GSE.dump(action))
+    hlabel:SetText(string.format(L["Action Type: %s"], Statics.Actions[action.Type]))
+    --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
+    hlabel:SetFontObject(fontlarge)
+    hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+    container:AddChild(hlabel)
+
+    if action.Type == Statics.Actions.Pause then
+        local linegroup1 = AceGUI:Create("SimpleGroup")
+        linegroup1:SetLayout("Flow")
+        linegroup1:SetFullWidth(true)
+ 
+        local clicksdropdown = AceGUI:Create("Dropdown")
+        clicksdropdown:SetLabel(L["Measure"])
+        clicksdropdown:SetWidth((editframe.Width) * 0.24)
+        clicksdropdown:SetList({
+            [L["Clicks"]] = L["How many macro Clicks to pause for?"],
+            [L["Seconds"]] = L["How many seconds to pause for?"],
+            --["Random"] = L["Random - It will select .... a spell, any spell"]
+        })
+        clicksdropdown:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Step Function"],
+                L["A pause can be measured in either clicks or seconds.  It will either wait 5 clicks or 1.5 seconds.\nIf using seconds, you can also wait for the GCD by entering ~~GCD~~ into the box."],
+                editframe)
+        end)
+        if GSE.isEmpty(action.MS) then
+            clicksdropdown:SetValue(L["Clicks"])
+        else
+            clicksdropdown:SetValue(L["Seconds"])
+        end
+
+        clicksdropdown:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+        linegroup1:AddChild(clicksdropdown)
+        local spacerlabel1 = AceGUI:Create("Label")
+        spacerlabel1:SetWidth(5)
+        linegroup1:AddChild(spacerlabel1)
+    
+        local valueEditBox = AceGUI:Create("EditBox")
+        valueEditBox:SetLabel()
+
+        valueEditBox:SetWidth(100)
+        valueEditBox:DisableButton(true)
+        local value = GSE.isEmpty(action.MS) and action.Clicks or action.MS
+        valueEditBox:SetText(value)
+        valueEditBox:SetCallback("OnTextChanged", function()
+            --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+        end)
+        linegroup1:AddChild(valueEditBox)
+        container:AddChild(linegroup1)
+
+    elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
+        local valueEditBox = AceGUI:Create("MultiLineEditBox")
+        valueEditBox:SetLabel()
+        valueEditBox:SetNumLines(3)
+        valueEditBox:SetWidth(maxWidth)
+        valueEditBox:DisableButton(true)
+        valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
+        valueEditBox:SetCallback("OnTextChanged", function()
+            
+        end)
+        container:AddChild(valueEditBox)
+    elseif action.Type == Statics.Actions.Loop then
+
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        macroPanel:SetWidth(maxWidth)
+
+        local stepdropdown = AceGUI:Create("Dropdown")
+        stepdropdown:SetLabel(L["Step Function"])
+        stepdropdown:SetWidth((editframe.Width) * 0.24)
+        stepdropdown:SetList({
+            ["Sequential"] = L["Sequential (1 2 3 4)"],
+            ["Priority"] = L["Priority List (1 12 123 1234)"],
+            --["Random"] = L["Random - It will select .... a spell, any spell"]
+        })
+        stepdropdown:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Step Function"],
+                L["The step function determines how your macro executes.  Each time you click your macro GSE will go to the next line.  \nThe next line it chooses varies.  If Random then it will choose any line.  If Sequential it will go to the next line.  \nIf Priority it will try some spells more often than others."],
+                editframe)
+        end)
+        stepdropdown:SetValue(action.StepFunction)
+        stepdropdown:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+
+        local looplimit = AceGUI:Create("EditBox")
+        looplimit:SetLabel(L["Repeat"])
+        looplimit:DisableButton(true)
+        looplimit:SetMaxLetters(4)
+        looplimit:SetWidth(100)
+        --print(GSE.Dump(action))
+        looplimit:SetText(action.Repeat)
+        looplimit:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Repeat"],
+                L["How many times does this action repeat"],
+                editframe)
+        end)
+        looplimit:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+        looplimit:SetCallback("OnTextChanged", function(sel, object, value)
+            editframe.Sequence.Macros[version].LoopLimit = value
+        end)    
+        local linegroup1 = AceGUI:Create("SimpleGroup")
+        linegroup1:SetLayout("Flow")
+        linegroup1:SetWidth(maxWidth)
+        linegroup1:AddChild(stepdropdown)
+        local spacerlabel1 = AceGUI:Create("Label")
+        spacerlabel1:SetWidth(5)
+        linegroup1:AddChild(spacerlabel1)
+        linegroup1:AddChild(looplimit)
+        container:AddChild(linegroup1)
+
+        local linegroup2 = AceGUI:Create("SimpleGroup")
+        linegroup2:SetLayout("Flow")
+        linegroup2:SetWidth(maxWidth)
+        local testRowButton = AceGUI:Create("Icon")
+        testRowButton:SetImageSize(20, 20)
+        testRowButton:SetWidth(20)
+        testRowButton:SetHeight(20)
+        testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
+        linegroup2:AddChild(testRowButton)
+        local spacerlabel2 = AceGUI:Create("Label")
+        spacerlabel1:SetWidth(5)
+        linegroup2:AddChild(spacerlabel2)
+
+        local macroGroup = AceGUI:Create("SimpleGroup")
+        macroGroup:SetWidth(maxWidth - 50)
+
+
+        for key,act in ipairs(action) do
+            drawAction(macroGroup, act)
+            
+        end
+        linegroup2:AddChild(macroGroup)
+        macroPanel:AddChild(linegroup2)
+        container:AddChild(macroPanel)
+    -- elseif action.Type == Statics.Actions.If then
+
+    end
+end
+
+function GSE:DrawSequenceEditor(container, version)
+    local maxWidth = container.frame:GetWidth() - 50
+    if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
+        editframe.Sequence.Macros[version].Actions = {}
+        editframe.Sequence.Macros[version].Actions[1] = {
+            [1] = '/say Hello',
+            ['Type'] = Statics.Actions.Action
+        }
+    end
+
+
+    local macro = editframe.Sequence.Macros[version].Actions
+
+    local font = GameFontNormal:GetFontObject()
+    local fontlarge = GameFontNormalLarge:GetFontObject()
+    local origjustifyV = font:GetJustifyV()
+    local origjustifyH = font:GetJustifyH()
+    font:SetJustifyV("BOTTOM")
+
+    for key,action in ipairs(macro) do
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        macroPanel:SetWidth(maxWidth)
+        drawAction(macroPanel, action)
+
+        container:AddChild(macroPanel)
+    end
+
+end
+
+function GSE:GUIDrawVariableEditor(container, version)
+    local maxWidth = container.frame:GetWidth() - 50
     if GSE.isEmpty(editframe.Sequence.Macros[version].Variables) then
         editframe.Sequence.Macros[version].Variables = {}
     end
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    layoutcontainer:SetFullWidth(true)
+    layoutcontainer:SetWidth(maxWidth)
     layoutcontainer:SetHeight(editframe.Height - 320)
     layoutcontainer:SetLayout("Flow") -- Important!
 

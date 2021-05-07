@@ -51,7 +51,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       ["Macros"] = {
         [1] = {
             [1] = "/say Hello",
-            ['Type'] = 'Action'
+            ['Type'] = Statics.Actions.Action
         }
       },
     }
@@ -60,7 +60,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       local recordedMacro = {}
       for k,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
         local action = {
-          ["Type"] = "Action"
+          ["Type"] = Statics.Actions.Action
         }
         table.insert(action, v)
         table.insert(recordedMacro, action)
@@ -84,15 +84,6 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.ClassID = classid
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
-  GSE.GUIEditFrame.tempVariables = {}
-  if not GSE.isEmpty(sequence.Variables) then
-    for k, value in pairs(sequence.Variables) do
-      local pair = {}
-      pair.key = k
-      pair.value = value
-      table.insert(GSE.GUIEditFrame.tempVariables, pair)
-    end
-  end
   incomingframe:Hide()
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)

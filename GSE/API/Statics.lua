@@ -399,3 +399,7 @@ end
 self:SetAttribute('step', step)
 self:CallMethod('UpdateIcon')
 ]=]
+
+
+Statics.TranslatorMode = {}
+Statics.TranslatorMode.Current = "CURRENT"
