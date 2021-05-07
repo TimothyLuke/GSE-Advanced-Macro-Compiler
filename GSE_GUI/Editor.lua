@@ -96,7 +96,7 @@ function GSE.GUICreateEditorTabs()
         {
             text = L["Configuration"],
             value = "config"
-        }, 
+        },
         -- {
         --     text = L["Variables"],
         --     value = "variables"
@@ -832,10 +832,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup3:SetLayout("Flow")
     linegroup3:SetWidth(editframe.Width)
 
-    
     local spacerlabel3 = AceGUI:Create("Label")
     spacerlabel3:SetWidth(6)
-
 
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
@@ -845,19 +843,19 @@ function GSE:GUIDrawMacroEditor(container, version)
     contentcontainer:AddChild(linegroup1)
 
     local macrocontainer = AceGUI:Create("InlineGroup")
-    macrocontainer:SetTitle(L["Sequence"]) 
+    macrocontainer:SetTitle(L["Sequence"])
     macrocontainer:SetWidth(contentcontainer.frame:GetWidth()-50)
     GSE:DrawSequenceEditor(macrocontainer, version)
     contentcontainer:AddChild(macrocontainer)
     local variableContainer = AceGUI:Create("InlineGroup")
     variableContainer:SetTitle(L["Variables"])
-    variableContainer:SetWidth(editframe.Width)
+    variableContainer:SetWidth(contentcontainer.frame:GetWidth()-50)
     GSE:GUIDrawVariableEditor(variableContainer, version)
     contentcontainer:AddChild(variableContainer)
     layoutcontainer:AddChild(scrollcontainer)
 
     local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    toolbarcontainer:SetWidth(editframe.Width)
+    toolbarcontainer:SetWidth(contentcontainer.frame:GetWidth()-50)
     toolbarcontainer:SetLayout("list")
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
@@ -865,7 +863,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     local toolbarrow1 = AceGUI:Create("SimpleGroup")
     toolbarrow1:SetLayout("Flow")
-    toolbarrow1:SetWidth(editframe.Width)
+    toolbarrow1:SetWidth(contentcontainer.frame:GetWidth()-50)
     -- local targetresetcheckbox = AceGUI:Create("CheckBox")
     -- targetresetcheckbox:SetType("checkbox")
     -- targetresetcheckbox:SetWidth(78)
@@ -1161,9 +1159,9 @@ local function drawAction(container, action)
 
     local maxWidth = container.frame:GetWidth() - 10
     container:SetCallback("OnClick", function(widget, _, selected, button)
-      if button == "RightButton" then
-        
-      end
+    --   if button == "RightButton" then
+
+    --   end
     end)
 
     -- Workaround for vanishing label ace3 bug
@@ -1183,7 +1181,7 @@ local function drawAction(container, action)
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
- 
+
         local clicksdropdown = AceGUI:Create("Dropdown")
         clicksdropdown:SetLabel(L["Measure"])
         clicksdropdown:SetWidth((editframe.Width) * 0.24)
@@ -1210,7 +1208,7 @@ local function drawAction(container, action)
         local spacerlabel1 = AceGUI:Create("Label")
         spacerlabel1:SetWidth(5)
         linegroup1:AddChild(spacerlabel1)
-    
+
         local valueEditBox = AceGUI:Create("EditBox")
         valueEditBox:SetLabel()
 
@@ -1232,7 +1230,7 @@ local function drawAction(container, action)
         valueEditBox:DisableButton(true)
         valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
         valueEditBox:SetCallback("OnTextChanged", function()
-            
+
         end)
         container:AddChild(valueEditBox)
     elseif action.Type == Statics.Actions.Loop then
@@ -1275,7 +1273,8 @@ local function drawAction(container, action)
         end)
         looplimit:SetCallback("OnTextChanged", function(sel, object, value)
             editframe.Sequence.Macros[version].LoopLimit = value
-        end)    
+        end)
+
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetWidth(maxWidth)
@@ -1289,12 +1288,14 @@ local function drawAction(container, action)
         local linegroup2 = AceGUI:Create("SimpleGroup")
         linegroup2:SetLayout("Flow")
         linegroup2:SetWidth(maxWidth)
+
         local testRowButton = AceGUI:Create("Icon")
         testRowButton:SetImageSize(20, 20)
-        testRowButton:SetWidth(20)
-        testRowButton:SetHeight(20)
+        --testRowButton:SetWidth(20)
+        --testRowButton:SetHeight(20)
         testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
         linegroup2:AddChild(testRowButton)
+
         local spacerlabel2 = AceGUI:Create("Label")
         spacerlabel1:SetWidth(5)
         linegroup2:AddChild(spacerlabel2)
@@ -1302,11 +1303,10 @@ local function drawAction(container, action)
         local macroGroup = AceGUI:Create("SimpleGroup")
         macroGroup:SetWidth(maxWidth - 50)
 
-
         for key,act in ipairs(action) do
             drawAction(macroGroup, act)
-            
         end
+
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
         container:AddChild(macroPanel)
@@ -1356,7 +1356,7 @@ function GSE:GUIDrawVariableEditor(container, version)
     layoutcontainer:SetLayout("Flow") -- Important!
 
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    scrollcontainer:SetFullWidth(true)
+    scrollcontainer:SetWidth(layoutcontainer.frame:GetWidth())
     -- scrollcontainer:SetFullHeight(true) -- Probably?
     -- scrollcontainer:SetWidth(editframe.Width )
     scrollcontainer:SetHeight(editframe.Height - 320)
@@ -1367,27 +1367,27 @@ function GSE:GUIDrawVariableEditor(container, version)
 
     local variableLabel = AceGUI:Create("Heading")
     variableLabel:SetText(L["System Variables"])
-    variableLabel:SetFullWidth(true)
+    variableLabel:SetWidth(layoutcontainer.frame:GetWidth())
     contentcontainer:AddChild(variableLabel)
 
     for key, value in pairs(Statics.SystemVariableDescriptions) do
         local textlabel = AceGUI:Create("Label")
         local tempLabel = GSEOptions.UNKNOWN .. "~~" .. key .. "~~ " .. Statics.StringReset .. value
         textlabel:SetText(tempLabel)
-        textlabel:SetFullWidth(true)
+        textlabel:SetWidth(layoutcontainer.frame:GetWidth())
         contentcontainer:AddChild(textlabel)
     end
 
     local uvariableLabel = AceGUI:Create("Heading")
     uvariableLabel:SetText(L["Macro Variables"])
-    uvariableLabel:SetFullWidth(true)
+    uvariableLabel:SetWidth(layoutcontainer.frame:GetWidth())
     contentcontainer:AddChild(uvariableLabel)
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
-    local columnWidth = editframe.Width - 55
+    local columnWidth = layoutcontainer.frame:GetWidth() - 55
 
-    linegroup1:SetWidth(editframe.Width - 50)
+    linegroup1:SetWidth(columnWidth + 5)
 
     local nameLabel = AceGUI:Create("Heading")
     nameLabel:SetText(L["Name"])
@@ -1558,7 +1558,7 @@ function GSE:GUIDrawWeakauraStorage(container)
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
-    local columnWidth = editframe.Width - 75
+    local columnWidth = contentcontainer.frame:GetWidth()
 
     linegroup1:SetWidth(editframe.Width - 50)
 
