@@ -33,7 +33,7 @@ after_success:
 - luacov-coveralls -r ./GSE/
 - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
 - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash -s -- -g classic -m .pkgmeta -w 25155; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
-- curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash -s -- -g tbc -m .pkgmeta -w 25155; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
+- curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash -s -- -g bc -m .pkgmeta -w 0; if [[ $? != 0 ]]; then TRAVIS_TEST_RESULT=1; fi
 notifications:
   email:
     on_failure: always

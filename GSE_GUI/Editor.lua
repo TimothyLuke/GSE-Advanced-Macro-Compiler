@@ -1237,7 +1237,7 @@ local function drawAction(container, action)
 
         local macroPanel = AceGUI:Create("SimpleGroup")
         macroPanel:SetWidth(maxWidth)
-
+        macroPanel:SetLayout("List")
         local stepdropdown = AceGUI:Create("Dropdown")
         stepdropdown:SetLabel(L["Step Function"])
         stepdropdown:SetWidth((editframe.Width) * 0.24)
@@ -1289,24 +1289,25 @@ local function drawAction(container, action)
         linegroup2:SetLayout("Flow")
         linegroup2:SetWidth(maxWidth)
 
-        local testRowButton = AceGUI:Create("Icon")
-        testRowButton:SetImageSize(20, 20)
-        --testRowButton:SetWidth(20)
-        --testRowButton:SetHeight(20)
-        testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
-        linegroup2:AddChild(testRowButton)
-
+        -- local testRowButton = AceGUI:Create("Icon")
+        -- testRowButton:SetImageSize(20, 20)
+        -- testRowButton:SetWidth(20)
+        -- --testRowButton:SetHeight(20)
+        -- testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
+        
         local spacerlabel2 = AceGUI:Create("Label")
-        spacerlabel1:SetWidth(5)
-        linegroup2:AddChild(spacerlabel2)
+        spacerlabel1:SetWidth(25)
 
         local macroGroup = AceGUI:Create("SimpleGroup")
-        macroGroup:SetWidth(maxWidth - 50)
+        macroGroup:SetWidth(maxWidth - 25)
+        macroGroup:SetLayout("List")
 
         for key,act in ipairs(action) do
             drawAction(macroGroup, act)
         end
-
+        -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
+        -- linegroup2:AddChild(testRowButton)
+        linegroup2:AddChild(spacerlabel2)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
         container:AddChild(macroPanel)
