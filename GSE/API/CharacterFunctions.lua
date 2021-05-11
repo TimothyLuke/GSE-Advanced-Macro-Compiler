@@ -21,7 +21,7 @@ function GSE.GetGCD()
 
     local gcd = 1500
     -- Classic doesnt have haste.
-    if GSE.GameMode ~= 1 then
+    if GSE.GameMode > 3 then
         local haste = UnitSpellHaste("player")
         gcd = 1.5/(1 + 0.01 * haste)
         --gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
