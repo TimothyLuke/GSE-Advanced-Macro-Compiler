@@ -49,7 +49,7 @@ end
 function GSE.GetClassIDforSpec(specid)
     -- Check for Classic WoW
     local classid = 0
-    if GSE.GameMode == 1 then
+    if GSE.GameMode < 3 then
         -- Classic WoW
         classid = Statics.SpecIDClassList[specid]
     else
@@ -117,6 +117,8 @@ function GSE.GetCurrentTalents()
     -- Need to change this later on to something meaningful
     if GSE.GameMode == 1 then
         talents = "CLASSIC"
+    elseif GSE.GameMode == 2 then
+        talents = "BC CLASSIC"
     else
         for talentTier = 1, MAX_TALENT_TIERS do
             local available, selected = GetTalentTierInfo(talentTier, 1)
