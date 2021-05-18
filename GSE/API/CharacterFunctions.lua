@@ -6,7 +6,7 @@ local Statics = GSE.Static
 
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
-    if GSE.GameMode == 1 then
+    if GSE.GameMode < 4 then
         return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
     else
         local currentSpec = GetSpecialization()
