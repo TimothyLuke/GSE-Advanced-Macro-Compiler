@@ -3,9 +3,9 @@ describe('API Translator', function()
     require("../spec/mockGSE")
     require("../GSE/API/Statics")
     require("../GSE/API/InitialOptions")
-
     require("../GSE/API/StringFunctions")
     require("../GSE/API/translator")
+    GSE.GameMode = 9
   end)
 
   it("Passes through non spell commands and adds the things", function()
