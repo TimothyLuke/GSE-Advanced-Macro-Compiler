@@ -194,3 +194,7 @@ end
 function GSE.DecodeMessage(tab)
   return tab
 end
+
+function FindBaseSpellByID(stuff)
+  return stuff
+end
