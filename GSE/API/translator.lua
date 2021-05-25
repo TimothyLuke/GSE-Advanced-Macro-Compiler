@@ -675,7 +675,7 @@ end
 local function ClassicGetSpellInfo(spellID)
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
     -- only check rank if classic.
-    if GSE.GameMode == 1 then
+    if GSE.GameMode < 3 then
         if GSE.isEmpty(rank) then
             if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
                 -- check if the rank is the same as the highest.
@@ -731,7 +731,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         end
     else
         returnval = spellId
-        if GSE.GameMode ~= 1 then
+        if GSE.GameMode > 2 then
             -- If we are not in classic
             -- Check for overrides like Crusade and Avenging Wrath.
             if not absolute and not GSE.isEmpty(returnval) then
@@ -773,8 +773,13 @@ function GSE.IdentifySpells(tab)
     for k, v in pairs(foundspells) do
         if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
             local wowheaddata = "spell="..k
+            local domain = "www"
             if GSE.GameMode == 1 then
                 wowheaddata = wowheaddata .. "?domain=classic"
+                domain = "classic"
+            elseif GSE.GameMode == 2 then
+                wowheaddata = wowheaddata .. "?domain=classic"
+                local domain = "tbc"
             end
             returnval = returnval .. '<a href="http://www.wowhead.com/spell=' .. k .. '" data-wowhead="' .. wowheaddata .. '">' ..
                             GSE.GetSpellId(k, "STRING", false) .. '</a>, '
