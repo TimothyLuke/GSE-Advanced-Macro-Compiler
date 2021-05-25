@@ -12,7 +12,7 @@ local editkey = ""
 
 
 local viewframe = AceGUI:Create("Frame")
-viewframe:SetTitle(L["Sequence Viewer"])
+viewframe:SetTitle(L["Sequence Editor"])
 -- viewframe.frame:SetBackdrop({
 --   bgFile="Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
 --   edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
