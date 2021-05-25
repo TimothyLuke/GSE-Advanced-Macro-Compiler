@@ -144,7 +144,12 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.TranslateSequence">GSE.TranslateSequence</a>&nbsp;(tab, mode, dropAbsolute)</td>
+	<td class="name" nowrap><a href="#GSE.ReportUnfoundSpells">GSE.ReportUnfoundSpells</a>&nbsp;()</td>
+	<td class="summary">This option reports on language table errors and omissions.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.TranslateSequence">GSE.TranslateSequence</a>&nbsp;(sequence, sequenceName, mode, dropAbsolute)</td>
 	<td class="summary">GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's dropAbsolute will remove "$$" from the start of lines.</td>
 	</tr>
 
@@ -282,7 +287,24 @@ This function interates through each line in lines and does a string replace on 
 
 
 
-<dt><a name="GSE.TranslateSequence"></a><strong>GSE.TranslateSequence</strong>&nbsp;(tab, mode, dropAbsolute)</dt>
+<dt><a name="GSE.ReportUnfoundSpells"></a><strong>GSE.ReportUnfoundSpells</strong>&nbsp;()</dt>
+<dd>
+This option reports on language table errors and omissions.  It is accessible via the command line /gs compilemissingspells and saves this informationm into GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.TranslateSequence"></a><strong>GSE.TranslateSequence</strong>&nbsp;(sequence, sequenceName, mode, dropAbsolute)</dt>
 <dd>
 GSE.TranslateSequence will translate from local spell name to spell id and back again.\ Mode of "STRING" will return local names where mode "ID" will return id's dropAbsolute will remove "$$" from the start of lines.
 
@@ -291,7 +313,11 @@ GSE.TranslateSequence will translate from local spell name to spell id and back 
 <ul>
 	
 	<li>
-	  tab: 
+	  sequence: 
+	</li>
+	
+	<li>
+	  sequenceName: 
 	</li>
 	
 	<li>
