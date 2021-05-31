@@ -717,6 +717,17 @@ function GSE:GUIDrawMacroEditor(container, version)
     -- editframe.Sequence.Macros[version] = GSE.TranslateSequence(editframe.Sequence.Macros[version],
                                                     -- "From Editor", "CURRENT")
 
+
+    setmetatable(editframe.Sequence.Macros[version], {
+        __index = function(t, k)
+          for i,v in ipairs(k) do
+            if not t then error("attempt to index nil") end
+            t = rawget(t, v)
+          end
+          return t
+        end
+    })
+
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     layoutcontainer:SetFullWidth(true)
     layoutcontainer:SetHeight(editframe.Height - 300)
@@ -1155,7 +1166,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 
 end
 
-local function drawAction(container, action)
+local function drawAction(container, action, version, keyPath)
 
     local maxWidth = container.frame:GetWidth() - 10
     container:SetCallback("OnClick", function(widget, _, selected, button)
@@ -1188,6 +1199,7 @@ local function drawAction(container, action)
         clicksdropdown:SetList({
             [L["Clicks"]] = L["How many macro Clicks to pause for?"],
             [L["Seconds"]] = L["How many seconds to pause for?"],
+            [L["GCD"]] = L["Pause for the GCD."],
             --["Random"] = L["Random - It will select .... a spell, any spell"]
         })
         clicksdropdown:SetCallback('OnEnter', function()
@@ -1199,7 +1211,11 @@ local function drawAction(container, action)
             clicksdropdown:SetValue(L["Clicks"])
         else
             clicksdropdown:SetValue(L["Seconds"])
+            if action.MS == "~~GCD~~" or action.MS == "GCD" then
+                clicksdropdown:SetValue(L["GCD"])
+            end
         end
+
 
         clicksdropdown:SetCallback('OnLeave', function()
             GSE.ClearTooltip(editframe)
@@ -1218,6 +1234,30 @@ local function drawAction(container, action)
         valueEditBox:SetText(value)
         valueEditBox:SetCallback("OnTextChanged", function()
             --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+            local returnAction = {}
+            returnAction["Type"] = action.Type
+            if clicksdropdown:GetValue() == L["Clicks"] then
+                returnAction["Clicks"] = valueEditBox:GetText()
+            elseif clicksdropdown:GetValue() == L["GCD"] then
+                returnAction["MS"] = "GCD"
+            else
+                returnAction["MS"] = valueEditBox:GetText()
+            end
+            editframe.Sequence.Macros[version][keyPath] = returnAction
+        end)
+
+        clicksdropdown:SetCallback("OnValueChanged", function()
+            --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+            local returnAction = {}
+            returnAction["Type"] = action.Type
+            if clicksdropdown:GetValue() == L["Clicks"] then
+                returnAction["Clicks"] = valueEditBox:GetText()
+            elseif clicksdropdown:GetValue() == L["GCD"] then
+                returnAction["MS"] = "GCD"
+            else
+                returnAction["MS"] = valueEditBox:GetText()
+            end
+            editframe.Sequence.Macros[version][keyPath] = returnAction
         end)
         linegroup1:AddChild(valueEditBox)
         container:AddChild(linegroup1)
@@ -1230,7 +1270,9 @@ local function drawAction(container, action)
         valueEditBox:DisableButton(true)
         valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
         valueEditBox:SetCallback("OnTextChanged", function()
-
+            local returnAction = GSE.TranslateSequence(GSE.SplitMeIntolines(valueEditBox:GetText()), Statics.TranslatorMode.ID)
+            returnAction["Type"] = action.Type
+            editframe.Sequence.Macros[version][keyPath] = returnAction
         end)
         container:AddChild(valueEditBox)
     elseif action.Type == Statics.Actions.Loop then
@@ -1256,6 +1298,10 @@ local function drawAction(container, action)
             GSE.ClearTooltip(editframe)
         end)
 
+        stepdropdown:SetCallback("OnValueChanged", function()
+            editframe.Sequence.Macros[version][keyPath].StepFunction =  stepdropdown:GetValue()
+        end)
+
         local looplimit = AceGUI:Create("EditBox")
         looplimit:SetLabel(L["Repeat"])
         looplimit:DisableButton(true)
@@ -1272,7 +1318,7 @@ local function drawAction(container, action)
             GSE.ClearTooltip(editframe)
         end)
         looplimit:SetCallback("OnTextChanged", function(sel, object, value)
-            editframe.Sequence.Macros[version].LoopLimit = value
+            editframe.Sequence.Macros[version][keyPath].Repeat = value
         end)
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
@@ -1303,7 +1349,12 @@ local function drawAction(container, action)
         macroGroup:SetLayout("List")
 
         for key,act in ipairs(action) do
-            drawAction(macroGroup, act)
+            local newKeyPath = {}
+            for k,v in ipairs(keyPath) do
+                table.insert(newKeyPath, v)
+            end
+            table.insert(newKeyPath, key)
+            drawAction(macroGroup, act, version, newKeyPath)
         end
         -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
         -- linegroup2:AddChild(testRowButton)
@@ -1338,7 +1389,9 @@ function GSE:DrawSequenceEditor(container, version)
     for key,action in ipairs(macro) do
         local macroPanel = AceGUI:Create("SimpleGroup")
         macroPanel:SetWidth(maxWidth)
-        drawAction(macroPanel, action)
+        local keyPath = {}
+        table.insert(keyPath, key)
+        drawAction(macroPanel, action, version, keyPath)
 
         container:AddChild(macroPanel)
     end

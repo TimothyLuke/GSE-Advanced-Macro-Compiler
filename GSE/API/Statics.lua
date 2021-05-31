@@ -403,3 +403,5 @@ self:CallMethod('UpdateIcon')
 
 Statics.TranslatorMode = {}
 Statics.TranslatorMode.Current = "CURRENT"
+Statics.TranslatorMode.String = "STRING"
+Statics.TranslatorMode.ID = "ID"
