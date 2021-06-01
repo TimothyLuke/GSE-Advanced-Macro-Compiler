@@ -113,12 +113,9 @@ end
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
-  for k,v in ipairs(sequence.MacroVersions) do
-    sequence.MacroVersions[k] = GSE.TranslateSequence(v, SequenceName, "ID")
-    sequence.MacroVersions[k] = GSE.UnEscapeSequence(sequence.MacroVersions[k])
-    for i,j in ipairs(v) do
-      GSE.enforceMinimumVersion(sequence, j)
-    end
+  for k,v in ipairs(sequence.Macros) do
+    sequence.Macros[k] = GSE.TranslateSequence(v, SequenceName, "ID")
+    sequence.Macros[k] = GSE.UnEscapeSequence(sequence.Macros[k])
   end
 
   if not GSE.isEmpty(SequenceName) then

@@ -579,14 +579,6 @@ function GSE.DebugDumpButton(SequenceName)
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
-function GSE.enforceMinimumVersion(sequence, line)
-    if string.sub(line, 1, 12) == "/click pause" then
-        sequence.MetaData.EnforceCompatability = true
-        sequence.MetaData.GSEVersion = "2.5.0"
-    end
-end
-
-
 --- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSE.SetMacroLocation()
     local numAccountMacros, numCharacterMacros = GetNumMacros()
@@ -1322,6 +1314,23 @@ local function buildAction(action, metaData)
 
     return table.concat(action, "\n")
 end
+
+function GSE.CompileAction(action, template) 
+    local returnAction = buildAction(action, template.InbuiltVariables)
+    local variables = {}
+
+    for k,v in pairs(template.Variables) do
+        if type(v) == "table" then
+            for i,j in ipairs(v) do
+                template.Variables[k][i] = GSE.TranslateString(j, "STRING",nil,  true)
+            end
+            variables[k] = table.concat(template.Variables[k], "\n")
+        end
+    end
+    local returnMacro = {}
+    table.insert(returnMacro, returnAction)
+    return table.concat(GSE.UnEscapeTable(GSE.ProcessVariables(returnMacro, variables))[1], "\n")
+end 
 
 local function processAction(action, metaData)
 

@@ -37,6 +37,8 @@ editframe.ClassID = GSE.GetCurrentClassID()
 editframe.save = false
 editframe.SelectedTab = "group"
 
+local frameTableUpdated = {}
+
 if GSE.isEmpty(GSEOptions.editorHeight) then
     GSEOptions.editorHeight = 500
 end
@@ -716,17 +718,19 @@ function GSE:GUIDrawMacroEditor(container, version)
     -- TODO change the translating to be per action not per sequence
     -- editframe.Sequence.Macros[version] = GSE.TranslateSequence(editframe.Sequence.Macros[version],
                                                     -- "From Editor", "CURRENT")
+    if GSE.isEmpty(frameTableUpdated[version]) then
+        setmetatable(editframe.Sequence.Macros[version].Actions, {
+            __index = function(t, k)
 
-
-    setmetatable(editframe.Sequence.Macros[version], {
-        __index = function(t, k)
-          for i,v in ipairs(k) do
-            if not t then error("attempt to index nil") end
-            t = rawget(t, v)
-          end
-          return t
-        end
-    })
+            for i,v in ipairs(k) do
+                if not t then error("attempt to index nil") end
+                t = rawget(t, v)
+            end
+            return t
+            end
+        })
+        frameTableUpdated[version] = true
+    end
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     layoutcontainer:SetFullWidth(true)
@@ -1243,7 +1247,7 @@ local function drawAction(container, action, version, keyPath)
             else
                 returnAction["MS"] = valueEditBox:GetText()
             end
-            editframe.Sequence.Macros[version][keyPath] = returnAction
+            editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
         end)
 
         clicksdropdown:SetCallback("OnValueChanged", function()
@@ -1257,7 +1261,7 @@ local function drawAction(container, action, version, keyPath)
             else
                 returnAction["MS"] = valueEditBox:GetText()
             end
-            editframe.Sequence.Macros[version][keyPath] = returnAction
+            editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
         end)
         linegroup1:AddChild(valueEditBox)
         container:AddChild(linegroup1)
@@ -1269,11 +1273,31 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetWidth(maxWidth)
         valueEditBox:DisableButton(true)
         valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
+        --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
         valueEditBox:SetCallback("OnTextChanged", function()
             local returnAction = GSE.TranslateSequence(GSE.SplitMeIntolines(valueEditBox:GetText()), Statics.TranslatorMode.ID)
             returnAction["Type"] = action.Type
-            editframe.Sequence.Macros[version][keyPath] = returnAction
+            print(GSE.Dump(keyPath))
+            print("Before")
+            print(GSE.Dump(editframe.Sequence.Macros[version].Actions[keyPath]))
+            
+            editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+            --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+            print("After")
+            print("via Keypath")
+            print(GSE.Dump(editframe.Sequence.Macros[version].Actions[keyPath]))
+            print("Full Macro")
+            print(GSE.Dump(editframe.Sequence.Macros[version]))
+            
         end)
+        
+        -- valueEditBox:SetCallback('OnEnter', function()
+        --     GSE.CreateToolTip(L["Compiled Action"], compiledAction, editframe)
+        -- end)
+        -- valueEditBox:SetCallback('OnLeave', function()
+        --     GSE.ClearTooltip(editframe)
+        -- end)
+
         container:AddChild(valueEditBox)
     elseif action.Type == Statics.Actions.Loop then
 
