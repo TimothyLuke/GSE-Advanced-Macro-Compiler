@@ -727,6 +727,22 @@ function GSE:GUIDrawMacroEditor(container, version)
                 t = rawget(t, v)
             end
             return t
+            end,
+            __newindex = function(t, k, v)
+               local last_k
+               for i, k in ipairs(k) do
+                  k, last_k = last_k, k
+                  if k ~= nil then
+                     local parent_t = t
+                     t = rawget(parent_t, k)
+                     if t == nil then
+                        t = {}
+                        rawset(parent_t, k, t)
+                     end
+                     if type(t) ~= "table" then error("Unexpected subtable", 2) end
+                  end
+               end
+               rawset(t, last_k, v)
             end
         })
         frameTableUpdated[version] = true
@@ -1277,20 +1293,10 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetCallback("OnTextChanged", function()
             local returnAction = GSE.TranslateSequence(GSE.SplitMeIntolines(valueEditBox:GetText()), Statics.TranslatorMode.ID)
             returnAction["Type"] = action.Type
-            print(GSE.Dump(keyPath))
-            print("Before")
-            print(GSE.Dump(editframe.Sequence.Macros[version].Actions[keyPath]))
-            
             editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
             --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
-            print("After")
-            print("via Keypath")
-            print(GSE.Dump(editframe.Sequence.Macros[version].Actions[keyPath]))
-            print("Full Macro")
-            print(GSE.Dump(editframe.Sequence.Macros[version]))
-            
         end)
-        
+
         -- valueEditBox:SetCallback('OnEnter', function()
         --     GSE.CreateToolTip(L["Compiled Action"], compiledAction, editframe)
         -- end)

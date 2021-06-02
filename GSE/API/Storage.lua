@@ -1315,7 +1315,7 @@ local function buildAction(action, metaData)
     return table.concat(action, "\n")
 end
 
-function GSE.CompileAction(action, template) 
+function GSE.CompileAction(action, template)
     local returnAction = buildAction(action, template.InbuiltVariables)
     local variables = {}
 
@@ -1330,7 +1330,7 @@ function GSE.CompileAction(action, template)
     local returnMacro = {}
     table.insert(returnMacro, returnAction)
     return table.concat(GSE.UnEscapeTable(GSE.ProcessVariables(returnMacro, variables))[1], "\n")
-end 
+end
 
 local function processAction(action, metaData)
 
