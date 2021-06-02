@@ -728,9 +728,9 @@ function GSE:GUIDrawMacroEditor(container, version)
             end
             return t
             end,
-            __newindex = function(t, k, v)
+            __newindex = function(t, key, v)
                local last_k
-               for i, k in ipairs(k) do
+               for i, k in ipairs(key) do
                   k, last_k = last_k, k
                   if k ~= nil then
                      local parent_t = t
