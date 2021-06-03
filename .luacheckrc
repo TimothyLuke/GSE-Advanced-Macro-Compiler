@@ -3,8 +3,8 @@ max_line_length = false
 exclude_files = {
 	"**/Libs/**/*.lua",
 	".luacheckrc",
-    "**/Deprecated/**/*.lua
-    "**/spec/**/*.lua
+    "**/Deprecated/**/*.lua",
+    "**/spec/**/*.lua",
 }
 ignore = {
 	"11./SLASH_.*", -- Setting an undefined (Slash handler) global variable
