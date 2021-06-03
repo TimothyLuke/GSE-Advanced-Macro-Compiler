@@ -225,7 +225,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     if unit == "player" then
         local _, GCD_Timer = GetSpellCooldown(61304)
         GCD = true
-        GCD_Update_Timer = C_Timer.After(GCD_Timer, function()
+        C_Timer.After(GCD_Timer, function()
             GCD = nil;
             GSE.PrintDebugMessage("GCD OFF")
         end)
