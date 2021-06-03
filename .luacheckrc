@@ -22,6 +22,8 @@ globals = {
 	"GSEStorage",
     "GSEOptions",
     "GSELibrary",
+    "GSELegacyLibraryBackup",
+    "GSE3Storage",
 
 	-- GSE
 	"GSE",
@@ -31,12 +33,19 @@ globals = {
     -- Libraries
     "LibStub",
     "ElvUI",
+    "IndentationLib",
 
 	-- Lua
 	"bit.band",
+	"bit.lshift",
+	"bit.rshift",
 	"string.split",
 	"table.wipe",
+    "table.getn",
 	"time",
+    "strsub",
+    "gmatch",
+    "strlower",
 
 	-- Utility functions
 	"geterrorhandler",
@@ -331,5 +340,23 @@ globals = {
     --WOW functions
     "PickupMacro",
     "GameFontNormalLarge",   
-    "GameTooltipText",   
+    "GameTooltipText",
+    "ReloadUI",
+    "LE_PARTY_CATEGORY_HOME",
+    "LE_PARTY_CATEGORY_INSTANCE",
+    "ChatEdit_FocusActiveWindow"
+    "GetMacroIndexByName",
+    "GetNumMacros",
+    "MAX_CHARACTER_MACROS",
+    "CreateMacro",
+    "EditMacro",
+    "GetMacroInfo",
+    "DeleteMacro",
+    "SetMacroSpell",
+    "SetMacroItem",
+    "FindBaseSpellByID",
+    "GetScreenHeight",
+    "MouseIsOver",
+    "CreateFont",
+
 }
