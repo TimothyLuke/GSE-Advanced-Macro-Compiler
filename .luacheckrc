@@ -344,7 +344,7 @@ globals = {
     "ReloadUI",
     "LE_PARTY_CATEGORY_HOME",
     "LE_PARTY_CATEGORY_INSTANCE",
-    "ChatEdit_FocusActiveWindow"
+    "ChatEdit_FocusActiveWindow",
     "GetMacroIndexByName",
     "GetNumMacros",
     "MAX_CHARACTER_MACROS",
