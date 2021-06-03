@@ -27,8 +27,8 @@ end
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
-    text = GSE.UnEscapeString(editbox:GetText())
-    returntext = GSE.TranslateString(text , "STRING", true)
+    local text = GSE.UnEscapeString(editbox:GetText())
+    local returntext = GSE.TranslateString(text , "STRING", true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
   end
@@ -58,18 +58,18 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     if not GSE.isEmpty(recordedstring) then
       sequence.Macros[1][1] = nil
       local recordedMacro = {}
-      for k,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
-        local action = {
-          ["Type"] = Statics.Actions.Action
-        }
+      local action = {
+        ["Type"] = Statics.Actions.Action
+      }
+      for _,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
         table.insert(action, v)
-        table.insert(recordedMacro, action)
       end
+      table.insert(recordedMacro, action)
       sequence.Macros[1] = recordedMacro
     end
     GSE.GUIEditFrame.NewSequence = true
   else
-    elements = GSE.split(key, ",")
+    local elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
     sequenceName = elements[2]
     sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
@@ -99,15 +99,15 @@ function GSE.GUIUpdateSequenceList()
   GSE.GUIViewFrame.SequenceListbox:SetList(names)
 end
 
-function GSE.GUIToggleClasses(buttonname)
-  if buttonname == "class" then
-    classradio:SetValue(true)
-    specradio:SetValue(false)
-  else
-    classradio:SetValue(false)
-    specradio:SetValue(true)
-  end
-end
+-- function GSE.GUIToggleClasses(buttonname)
+--   if buttonname == "class" then
+--     classradio:SetValue(true)
+--     specradio:SetValue(false)
+--   else
+--     classradio:SetValue(false)
+--     specradio:SetValue(true)
+--   end
+-- end
 
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
@@ -146,12 +146,13 @@ end
 
 
 function GSE.GUIGetColour(option)
-  hex = string.gsub(option, "#","")
+  -- hex = string.gsub(option, "#","")
   return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
 end
 
 function  GSE.GUISetColour(option, r, g, b)
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
+  GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
 end
 
 
@@ -166,8 +167,6 @@ end
 function GSE.OpenOptionsPanel()
   local config = LibStub:GetLibrary("AceConfigDialog-3.0")
   config:Open("GSE")
-  --config:SelectGroup("GSSE", "Debug")
-
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
@@ -191,7 +190,7 @@ function GSE.ShowSequenceList(SequenceTable, GSEUser)
   if GSE.UnsavedOptions["GUI"] then
     GSE.ShowRemoteWindow(SequenceTable, GSEUser)
   else
-    for k,v in ipairs(SequenceTable) do
+    for _,v in ipairs(SequenceTable) do
       for i,j in pairs(v) do
         local msg = i .. " "
         if not GSE.isEmpty(j.Help) then

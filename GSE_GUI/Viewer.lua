@@ -383,7 +383,7 @@ function GSE.GUIShowViewer()
   viewframe:ReleaseChildren()
   GSE.GUIViewerLayout(viewframe)
   local cclassid = -1
-  for k,v in GSE.pairsByKeys(names) do
+  for k,_ in GSE.pairsByKeys(names) do
     local elements = GSE.split(k, ",")
     local tclassid = tonumber(elements[1])
     if tclassid ~= cclassid then

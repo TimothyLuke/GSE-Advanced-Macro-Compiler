@@ -6,7 +6,7 @@ local L = GSE.L
 
 local onpause = false
 
-DebugFrame = AceGUI:Create("Frame")
+local DebugFrame = AceGUI:Create("Frame")
 GSE.GUIDebugFrame = DebugFrame
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")

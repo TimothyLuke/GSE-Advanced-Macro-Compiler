@@ -105,7 +105,7 @@ function GSE.GUICreateEditorTabs()
         -- }
     }
 
-    for k, v in ipairs(editframe.Sequence.Macros) do
+    for k,_ in ipairs(editframe.Sequence.Macros) do
         local insline = {}
         insline.text = tostring(k)
         insline.value = tostring(k)
@@ -271,7 +271,7 @@ end
 
 function GSE.GetVersionList()
     local tabl = {}
-    for k, v in ipairs(editframe.Sequence.Macros) do
+    for k,_ in ipairs(editframe.Sequence.Macros) do
         tabl[tostring(k)] = tostring(k)
     end
     return tabl
@@ -722,7 +722,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         setmetatable(editframe.Sequence.Macros[version].Actions, {
             __index = function(t, k)
 
-            for i,v in ipairs(k) do
+            for _,v in ipairs(k) do
                 if not t then error("attempt to index nil") end
                 t = rawget(t, v)
             end
@@ -730,7 +730,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             end,
             __newindex = function(t, key, v)
                local last_k
-               for i, k in ipairs(key) do
+               for _,k in ipairs(key) do
                   k, last_k = last_k, k
                   if k ~= nil then
                      local parent_t = t
@@ -815,13 +815,13 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
 
-    local smallbox = 2
-    local largebox = 8
-    if editframe.Height > 700 then
-        local framesize = editframe.Height / 700
-        smallbox = math.ceil(framesize * smallbox) + 2
-        largebox = math.ceil(framesize * largebox) + 8
-    end
+    -- local smallbox = 2
+    -- local largebox = 8
+    -- if editframe.Height > 700 then
+    --     local framesize = editframe.Height / 700
+    --     smallbox = math.ceil(framesize * smallbox) + 2
+    --     largebox = math.ceil(framesize * largebox) + 8
+    -- end
 
 
 
@@ -1197,14 +1197,14 @@ local function drawAction(container, action, version, keyPath)
 
     -- Workaround for vanishing label ace3 bug
     local label = AceGUI:Create("Label")
-    label:SetFontObject(fontlarge)
+    label:SetFontObject(GameFontNormalLarge)
     container:AddChild(label)
 
     local hlabel = AceGUI:Create("Label")
     --print(GSE.dump(action))
     hlabel:SetText(string.format(L["Action Type: %s"], Statics.Actions[action.Type]))
     --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
-    hlabel:SetFontObject(fontlarge)
+    hlabel:SetFontObject(GameFontNormalLarge)
     hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
     container:AddChild(hlabel)
 
@@ -1380,7 +1380,7 @@ local function drawAction(container, action, version, keyPath)
 
         for key,act in ipairs(action) do
             local newKeyPath = {}
-            for k,v in ipairs(keyPath) do
+            for _,v in ipairs(keyPath) do
                 table.insert(newKeyPath, v)
             end
             table.insert(newKeyPath, key)

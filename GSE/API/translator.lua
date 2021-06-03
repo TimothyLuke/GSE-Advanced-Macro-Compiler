@@ -110,7 +110,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     -- Check for cast Sequences
                 elseif string.lower(cmd) == "castsequence" then
                     GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
-                    for x, y in ipairs(GSE.split(etc, ";")) do
+                    for _, y in ipairs(GSE.split(etc, ";")) do
                         for _, w in ipairs(GSE.SplitCastSequence(y, ",")) do
                             -- Look for conditionals at the startattack
                             local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
@@ -118,15 +118,15 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                                 output = output .. GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
                             end
 
-                            if not cleanNewLines then
-                                w = string.match(uetc, "^%s*(.-)%s*$")
-                            end
+                            -- if not cleanNewLines then
+                            --     w = string.match(uetc, "^%s*(.-)%s*$")
+                            -- end
                             if string.sub(uetc, 1, 1) == "!" then
                                 uetc = string.sub(uetc, 2)
                                 output = output .. "!"
                             end
                             local foundspell, returnval = GSE.TranslateSpell(uetc, mode,
-                                                              (cleanNewLines and cleanNewLines or false), asbolute)
+                                                              (cleanNewLines and cleanNewLines or false), absolute)
                             output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
                         end
                         output = output .. ";"
@@ -147,7 +147,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                 end
             end
             -- look for single line commands and mark them up
-            for k, v in ipairs(Statics.MacroCommands) do
+            for _,v in ipairs(Statics.MacroCommands) do
                 output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
             end
         else
@@ -158,7 +158,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
         if output == "" then
             output = instring
             -- look for single line commands and mark them up
-            for k, v in ipairs(Statics.MacroCommands) do
+            for _,v in ipairs(Statics.MacroCommands) do
                 output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
             end
         end
@@ -197,6 +197,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
     if string.match(str, ";") then
         GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
         for _, w in ipairs(GSE.split(str, ";")) do
+            local returnval
             found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), mode,
                                    (cleanNewLines and cleanNewLines or false))
             output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
@@ -270,9 +271,9 @@ function GSE.GetConditionalsFromString(str)
         str = string.sub(str, rightstr + 1)
         GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
     end
-    if not cleanNewLines then
-        str = string.match(str, "^%s*(.-)%s*$")
-    end
+    -- if not cleanNewLines then
+    --     str = string.match(str, "^%s*(.-)%s*$")
+    -- end
     -- Check for resets
     GSE.PrintDebugMessage("checking for reset= in " .. str, GNOME)
     local resetleft = string.find(str, "reset=")
@@ -604,7 +605,7 @@ local function GetSpellRank(spellID)
             local e = string.find(spellID, "%)", s);
             if (e) then
                 -- print("s:" .. s)
-                rank = string.sub(spellID, s + 1, e - 1);
+                local rank = string.sub(spellID, s + 1, e - 1);
                 -- GSE.PrintDebugMessage("rank:" .. rank .. " " .. string.match(rank, "%d+"), "Translator")
                 return string.match(rank, "%d+");
             end
@@ -661,7 +662,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
         mode = ""
     end
-    local returnval = ""
+    local returnval
     local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
     if mode == "STRING" then
         if not GSE.isEmpty(rank) then
@@ -710,10 +711,10 @@ function GSE.IdentifySpells(tab)
         end
     end
 
-    for k, v in pairs(foundspells) do
+    for k,_ in pairs(foundspells) do
         if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
             local wowheaddata = "spell="..k
-            local domain = "www"
+            -- local domain = "www"
             if GSE.GameMode == 1 then
                 wowheaddata = wowheaddata .. "?domain=classic"
                 domain = "classic"

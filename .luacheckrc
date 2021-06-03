@@ -378,4 +378,5 @@ globals = {
     "SecureCmdOptionParse",
     "FindSpellOverrideByID",
     "dataObject_OnLeave",
+    "AUTOCOMPLETE_LIST",
 }
