@@ -55,7 +55,7 @@ jobs:
           args: -g classic -m .pkgmeta -w 25155
 
       # Runs a set of commands using the runners shell
-      - name: Create Package Classic
+      - name: Create Package BC Classic
         uses: BigWigsMods/packager@master
         if: ${{ github.event_name != 'pull_request' }}
         env:
