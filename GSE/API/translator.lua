@@ -717,10 +717,10 @@ function GSE.IdentifySpells(tab)
             -- local domain = "www"
             if GSE.GameMode == 1 then
                 wowheaddata = wowheaddata .. "?domain=classic"
-                domain = "classic"
+                --domain = "classic"
             elseif GSE.GameMode == 2 then
                 wowheaddata = wowheaddata .. "?domain=classic"
-                domain = "tbc"
+                --domain = "tbc"
             end
             returnval = returnval .. '<a href="http://www.wowhead.com/spell=' .. k .. '" data-wowhead="' .. wowheaddata .. '">' ..
                             GSE.GetSpellId(k, "STRING", false) .. '</a>, '

@@ -102,7 +102,7 @@ function GSE.FixQuotes(source)
 end
 
 function GSE.CleanStrings(source)
-    for k, v in pairs(Statics.CleanStrings) do
+    for _, v in pairs(Statics.CleanStrings) do
 
         if source == v then
             source = ""
@@ -207,7 +207,7 @@ function GSE.Dump(node)
 
     while true do
         local size = 0
-        for k,v in pairs(node) do
+        for _,_ in pairs(node) do
             size = size + 1
         end
 

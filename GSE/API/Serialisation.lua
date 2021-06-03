@@ -294,6 +294,7 @@ function GSE.SendSequence(ClassID, SequenceName, recipient)
 end
 
 function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
+    local t = {}
     t.Command = "GSE_SEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName

@@ -151,6 +151,7 @@ function GSE.GUIGetColour(option)
 end
 
 function  GSE.GUISetColour(option, r, g, b)
+  GSE.PrintDebugMessage("Original option: " .. option, "GUI")
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
   GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
 end

@@ -6,7 +6,7 @@ local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("
 local L = GSE.L
 local Statics = GSE.Static
 
-local GCD, GCD_Update_Timer
+local GCD
 
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
@@ -33,12 +33,12 @@ function GSE.TraceSequence(button, step, task)
         else
             manaOutput = GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
         end
-        local castingspell, castspellid
+        local castingspell
 
         if GSE.GameMode == 1 then
-            castingspell, _, _, _, _, _, castspellid, _ = CastingInfo()
+            castingspell, _, _, _, _, _, _, _ = CastingInfo()
         else
-            castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+            castingspell, _, _, _, _, _, _, _ = UnitCastingInfo("player")
         end
         if not GSE.isEmpty(castingspell) then
             CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
@@ -269,7 +269,7 @@ end
 function GSE:GROUP_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck()
-    for k, v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
+    for k,_ in pairs(GSE.UnsavedOptions["PartyUsers"]) do
         if not (UnitInParty(k) or UnitInRaid(k)) then
             -- Take them out of the list
             GSE.UnsavedOptions["PartyUsers"][k] = nil
@@ -498,7 +498,7 @@ function GSE.prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
 end
 
 function GSE.CheckOOCQueueStatus()
-    local output = ""
+    local output
     if GSE.isEmpty(GSE.OOCTimer) then
         output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
     else

@@ -331,7 +331,8 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
             return tokens.TOKEN_COMMENT_LONG, nextPos2
         end
 
-        local byte = stringbyte(text, pos)
+        -- local byte = stringbyte(text, pos)
+        local byte
 
         -- Short comment, find the first linebreak
         while true do
@@ -731,7 +732,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
                     newCaretPositionFinalized = true
                 end
 
-                for k, v in next,workingTable2 do
+                for _,v in next,workingTable2 do
                     tsize = tsize + 1
                     workingTable[tsize] = v
                     totalLen = totalLen + stringlen(v)

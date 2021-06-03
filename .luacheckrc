@@ -48,6 +48,7 @@ globals = {
     "strsub",
     "gmatch",
     "strlower",
+    "date",
 
 	-- Utility functions
 	"geterrorhandler",
@@ -379,4 +380,5 @@ globals = {
     "FindSpellOverrideByID",
     "dataObject_OnLeave",
     "AUTOCOMPLETE_LIST",
+    "AttemptToSaveBindings",
 }

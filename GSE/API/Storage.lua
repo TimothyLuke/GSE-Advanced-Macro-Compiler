@@ -61,11 +61,11 @@ function GSE.CloneSequence(orig, keepcomments)
     else -- number, string, boolean, etc
         copy = orig
     end
-    if not GSE.isEmpty(keepcomments) then
-        for k,v in ipairs(copy.Macros) do
-            -- TODO Strip COmments
-        end
-    end
+    -- if not GSE.isEmpty(keepcomments) then
+    --     for k,v in ipairs(copy.Macros) do
+    --         -- TODO Strip COmments
+    --     end
+    -- end
     return copy
 end
 
@@ -317,7 +317,7 @@ end
 
 --- Load a collection of Sequences
 function GSE.ImportCompressedMacroCollection(Sequences)
-    for k, v in ipairs(Sequences) do
+    for _,v in ipairs(Sequences) do
         GSE.ImportSerialisedSequence(v)
     end
 end
@@ -531,7 +531,7 @@ end
 
 --- This function resets a gsebutton back to its initial setting
 function GSE.ResetButtons()
-    for k, v in pairs(GSE.UsedSequences) do
+    for k,_ in pairs(GSE.UsedSequences) do
         local gsebutton = _G[k]
         if gsebutton:GetAttribute("combatreset") == true then
             gsebutton:SetAttribute("step", 1)
@@ -573,7 +573,6 @@ function GSE.DebugDumpButton(SequenceName)
     GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute('KeyRelease'))
     GSE.Print("Clicks" .. _G[SequenceName]:GetAttribute('clicks'))
     GSE.Print("ms" .. _G[SequenceName]:GetAttribute('ms'))
-    GSE.Print("LoopMacro?" .. tostring(looper))
     GSE.Print("====================================\nStepFunction\n====================================")
     GSE.Print(GSE.SequencesExec[SequenceName][_G[SequenceName]:GetAttribute('step')])
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
@@ -627,10 +626,7 @@ end
 --- Check if a macro has been created and if the create flag is true and the macro hasn't been created, then create it.
 function GSE.OOCCheckMacroCreated(SequenceName, create)
     local found = false
-    local classid = GSE.GetCurrentClassID()
-    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][SequenceName]) then
-        classid = 0
-    end
+
     local macroIndex = GetMacroIndexByName(SequenceName)
     if macroIndex and macroIndex ~= 0 then
         found = true
@@ -650,9 +646,9 @@ end
 function GSE.DeleteMacroStub(sequenceName)
     local mname, _, mbody = GetMacroInfo(sequenceName)
     if mname == sequenceName then
-        trimmedmbody = mbody:gsub("[^%w ]", "")
-        compar = GSE.CreateMacroString(mname)
-        trimmedcompar = compar:gsub("[^%w ]", "")
+        local trimmedmbody = mbody:gsub("[^%w ]", "")
+        local compar = GSE.CreateMacroString(mname)
+        local trimmedcompar = compar:gsub("[^%w ]", "")
         if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
             GSE.Print(L[" Deleted Orphaned Macro "] .. mname, GNOME)
             DeleteMacro(sequenceName)
@@ -671,7 +667,7 @@ end
 --- This returns a list of Sequence Names for the current spec
 function GSE.GetSequenceNames()
     local keyset = {}
-    for k, v in pairs(GSE.Library) do
+    for k,_ in pairs(GSE.Library) do
         if GSE.isEmpty(GSEOptions.filterList) then
             GSEOptions.filterList = {}
             GSEOptions.filterList[Statics.Spec] = true
@@ -967,7 +963,7 @@ end
 
 --- This function takes a text string and compresses it without loading it to the library
 function GSE.CompressSequenceFromString(importstring)
-    importStr = GSE.StripControlandExtendedCodes(importstring)
+    local importStr = GSE.StripControlandExtendedCodes(importstring)
     local returnstr = ""
     local functiondefinition = GSE.FixQuotes(importStr) .. [===[
   return Sequences
@@ -1028,7 +1024,7 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
                            " macro templates. " or "1 macro template. ") ..
                        string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
     if (table.getn(sequence.Macros) > 1) then
-        for k, v in pairs(sequence.Macros) do
+        for k,_ in pairs(sequence.Macros) do
             if not GSE.isEmpty(sequence["MetaData"].Default) then
                 if sequence["MetaData"].Default == k then
                     returnstring = returnstring .. "- The Default macro template is " .. k .. "\n"
@@ -1179,7 +1175,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         end
     end
     local MacroVersions = {}
-    for k, v in ipairs(sequence.MacroVersions) do
+    for _,v in ipairs(sequence.MacroVersions) do
         local gse3seq = {}
         gse3seq.Actions = {}
         gse3seq.Variables = {}
@@ -1194,24 +1190,24 @@ function GSE.ConvertGSE2(sequence, sequenceName)
             gse3seq.Variables["KeyRelease"] = v.KeyRelease
         end
         if table.getn(v.PreMacro) > 0 then
-            for i, j in ipairs(v.PreMacro) do
+            for _, j in ipairs(v.PreMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
                 table.insert(gse3seq.Actions, action)
             end
         end
 
         local sequenceactions = {}
-        for i, j in ipairs(v) do
+        for _, j in ipairs(v) do
             local action = fixLine(j, KeyPress, KeyRelease)
             table.insert(sequenceactions, action)
         end
         if GSE.isEmpty(v.LoopLimit) then
-            for i, j in ipairs(sequenceactions) do
+            for _, j in ipairs(sequenceactions) do
                 table.insert(gse3seq.Actions, j)
             end
         else
             local loop = {}
-            for i, j in ipairs(sequenceactions) do
+            for _, j in ipairs(sequenceactions) do
                 table.insert(loop, j)
             end
             loop["Type"] = Statics.Actions.Loop
@@ -1221,7 +1217,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         end
 
         if table.getn(v.PostMacro) > 0 then
-            for i, j in ipairs(v.PreMacro) do
+            for _,j in ipairs(v.PreMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
                 table.insert(gse3seq.Actions, action)
             end
@@ -1338,7 +1334,7 @@ local function processAction(action, metaData)
 
         local actionList = {}
         -- setup the interation
-        for k, v in ipairs(action) do
+        for _, v in ipairs(action) do
             table.insert(actionList, buildAction(v, metaData))
         end
         local returnActions = {}
@@ -1350,12 +1346,13 @@ local function processAction(action, metaData)
                     if step == limit then
                         limit = limit % #actionList + 1
                         step = 1
+                        GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
                     else
                         step = step % #actionList + 1
                     end
                 end
             else
-                for k, v in ipairs(actionList) do
+                for _,v in ipairs(actionList) do
                     table.insert(returnActions, v)
                 end
             end
@@ -1393,6 +1390,7 @@ local function processAction(action, metaData)
         if clicks > 0 then
             for loop=1,clicks do
                 table.insert(PauseActions, "/click nil")
+                GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
         return PauseActions
@@ -1424,7 +1422,7 @@ function GSE.CompileTemplate(template)
     local compiledMacro = {}
     local metaData = {}
 
-    for k, action in ipairs(template.Actions) do
+    for _, action in ipairs(template.Actions) do
         local compiledAction = processAction(action, template.InbuiltVariables)
         --GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
