@@ -39,17 +39,17 @@ function dataobj:OnEnter()
   tooltip:Clear()
   tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
-  local y,x = tooltip:AddLine()
+  local y,_ = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Left Click to open the Sequence Editor"],"CENTER", 3)
-  y,x = tooltip:AddLine()
+  y,_ = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Middle Click to open the Transmission Interface"],"CENTER", 3)
-  y,x = tooltip:AddLine()
+  y,_ = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Right Click to open the Sequence Debugger"],"CENTER", 3)
 
   -- If in party, add other users and their versions
   if not GSE.isEmpty(GSE.UnsavedOptions["PartyUsers"]) and GSEOptions.showGSEUsers then
     tooltip:AddSeparator()
-    y,x = tooltip:AddLine()
+    y,_ = tooltip:AddLine()
     tooltip:SetCell(y,1,L["GSE Users"],"CENTER", 3)
     for k,v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
       local userline, _ = tooltip:AddLine(k, nil, v)
@@ -60,7 +60,7 @@ function dataobj:OnEnter()
   end
 
   tooltip:AddSeparator()
-  y,x = tooltip:AddLine()
+  y,_ = tooltip:AddLine()
   tooltip:SetCell(y,1, GSE.ReportTargetProtection(), "CENTER", 3)
   local RequireTargetStatusline = y
   tooltip:SetLineScript(y, "OnMouseDown", function(obj, button)
@@ -68,13 +68,13 @@ function dataobj:OnEnter()
     tooltip:SetCell(RequireTargetStatusline, 1, GSE.CheckOOCQueueStatus(),"CENTER", 3)
   end)
   tooltip:AddSeparator()
-  y,x = tooltip:AddLine()
+  y,_ = tooltip:AddLine()
   tooltip:SetCell(y, 1, string.format("GCD: %ss", GSE.GetGCD()),"CENTER", 3)
 
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
-    y,x = tooltip:AddLine()
+    y,_ = tooltip:AddLine()
     tooltip:SetCell(y, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
     local OOCStatusline = y
     tooltip:SetLineScript(y, "OnMouseDown", function(obj, button)
@@ -82,11 +82,11 @@ function dataobj:OnEnter()
       tooltip:SetCell(OOCStatusline, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),"CENTER", 3)
     end)
     tooltip:AddSeparator()
-    y,x = tooltip:AddLine()
+    y,_ = tooltip:AddLine()
     if table.getn(GSE.OOCQueue) > 0 then
       tooltip:SetCell(y, 1, string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)),"CENTER", 3)
       for k,v in ipairs(GSE.OOCQueue) do
-        y,x = tooltip:AddLine()
+        y,_ = tooltip:AddLine()
         GSE.prepareTooltipOOCLine(tooltip, v, y, k)
       end
     else
@@ -96,7 +96,7 @@ function dataobj:OnEnter()
   end
 
   tooltip:AddSeparator()
-  y,x = tooltip:AddLine()
+  y,_ = tooltip:AddLine()
   tooltip:SetCell(y, 1, string.format(L["GSE Version: %s"], GSE.VersionString),"CENTER", 3)
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)

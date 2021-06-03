@@ -24,6 +24,7 @@ globals = {
     "GSELibrary",
     "GSELegacyLibraryBackup",
     "GSE3Storage",
+    "GSE_C",
 
 	-- GSE
 	"GSE",
@@ -34,6 +35,7 @@ globals = {
     "LibStub",
     "ElvUI",
     "IndentationLib",
+    "WeakAuras",
 
 	-- Lua
 	"bit.band",
@@ -348,6 +350,7 @@ globals = {
     "GetMacroIndexByName",
     "GetNumMacros",
     "MAX_CHARACTER_MACROS",
+    "MAX_ACCOUNT_MACROS",
     "CreateMacro",
     "EditMacro",
     "GetMacroInfo",
@@ -358,5 +361,21 @@ globals = {
     "GetScreenHeight",
     "MouseIsOver",
     "CreateFont",
-
+    "MAX_TALENT_TIERS",
+    "UnitSpellHaste",
+    "GetClassInfo",
+    "GetTalentTierInfo",
+    "SaveBindings",
+    "SetBinding",
+    "QueryCastSequence",
+    "IsUsableSpell",
+    "CastingInfo",
+    "UnitIsPVP",
+    "GetSpellBookItemInfo",
+    "UnitInParty",
+    "UnitInRaid",
+    "hooksecurefunc",
+    "SecureCmdOptionParse",
+    "FindSpellOverrideByID",
+    "dataObject_OnLeave",
 }

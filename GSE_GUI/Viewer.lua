@@ -26,8 +26,8 @@ viewframe.Height = 500
 viewframe.Width = 700
 
 viewframe:Hide()
-local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
-local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
+-- local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
+-- local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
 viewframe.panels = {}
 viewframe.SequenceName = ""
@@ -35,7 +35,7 @@ viewframe.ClassID = 0
 
 function viewframe:clearpanels(widget, selected)
   GSE.PrintDebugMessage("widget = " .. widget:GetKey(), "GUI")
-  for k,v in pairs(viewframe.panels) do
+  for k,_ in pairs(viewframe.panels) do
     GSE.PrintDebugMessage("k " .. k, "GUI")
     if k == widget:GetKey() then
       GSE.PrintDebugMessage ("matching key", "GUI")
@@ -291,7 +291,7 @@ function GSE.GUIViewerToolbar(container)
   end)
   buttonGroup:AddChild(tranbutton)
 
-  disableSeqbutton = AceGUI:Create("Button")
+  local disableSeqbutton = AceGUI:Create("Button")
   disableSeqbutton:SetDisabled(true)
   disableSeqbutton:SetText(L["Create Icon"])
   disableSeqbutton:SetWidth(150)
@@ -330,7 +330,7 @@ function GSE.GUIViewerToolbar(container)
 
   buttonGroup:AddChild(recordwindowbutton)
   container:AddChild(buttonGroup)
-  sequenceboxtext = sequencebox
+  -- sequenceboxtext = sequencebox
 end
 
 function GSE.GUIViewerLayout(mcontainer)
