@@ -388,7 +388,6 @@ local function ClassicGetSpellInfo(spellID)
                 --     -- print("pcall failed:", err)
                     rank = GetSpellSubtext(spellID)
                  end
-                
             else
                 -- dont set a rank for warriors and rogues
                 -- print("Warrior or Rogue")
