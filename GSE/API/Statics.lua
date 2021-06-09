@@ -389,7 +389,6 @@ Statics.Actions.Pause = "Pause"
 Statics.GSE3OnClick = [=[
 local step = self:GetAttribute('step')
 step = tonumber(step)
-print(macros[step] .. "\n------------------------")
 self:SetAttribute('macrotext', macros[step] )
 step = step % #macros + 1
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
