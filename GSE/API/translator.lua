@@ -376,7 +376,7 @@ local function ClassicGetSpellInfo(spellID)
                 if pcall(function()
                     tonumber(spellID)
                 end) then
-                    print("pcall passed")
+                    --print("pcall passed")
                 --     rank = GetSpellRank(tonumber(spellID))
                 --     local testName, _, _, _, _, _, testid = GetSpellInfo(name);
                 --     -- print(testName, testid, spellID, rank)
