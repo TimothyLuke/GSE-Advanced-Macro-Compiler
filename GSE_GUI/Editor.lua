@@ -241,6 +241,9 @@ function GSE.GUIEditorPerformLayout(frame)
         editframe.SequenceName = nameeditbox:GetText()
         GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
         editframe.save = true
+        C_Timer.After(5, function()
+            GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
+        end)
     end)
 
     savebutton:SetCallback('OnEnter', function()
@@ -1833,4 +1836,8 @@ function GSE.GUIDeleteVersion(version)
     GSE.GUIEditorPerformLayout(editframe)
     GSE.GUIEditFrame.ContentContainer:SelectTab("config")
     GSE.GUIEditFrame:SetStatusText(string.format(printtext, version))
+    C_Timer.After(5, function()
+        GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
+    end)
+
 end
