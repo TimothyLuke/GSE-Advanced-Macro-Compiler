@@ -1218,6 +1218,199 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 
 end
 
+local function ChooseVersionTab(version)
+    GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+    GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
+end
+
+local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
+    local layoutcontainer = AceGUI:Create("SimpleGroup")
+
+    layoutcontainer:SetLayout("List")
+    layoutcontainer:SetWidth(width)
+    layoutcontainer:SetHeight(30)
+    local moveUpButton = AceGUI:Create("Icon")
+    moveUpButton:SetImageSize(20, 20)
+    moveUpButton:SetWidth(20)
+    moveUpButton:SetHeight(20)
+    moveUpButton:SetImage("Interface\\Icons\\misc_arrowlup")
+
+    moveUpButton:SetCallback("OnClick", function()
+        local original = GSE.CloneSequence(editframe.Sequence.Macros[version][path])
+        local sourcePath = {}
+        local destinationPath = {}
+        for k, v in ipairs(path) do
+            table.insert(sourcePath, v)
+            if k == #path then
+                v = v - 1
+            end
+            table.insert(destinationPath, v)
+        end
+        editframe.Sequence.Macros[version][sourcePath] = GSE.CloneSequence(
+            editframe.Sequence.Macros[version][destinationPath])
+        editframe.Sequence.Macros[version][destinationPath] = original
+        ChooseVersionTab(version)
+    end)
+    moveUpButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
+    end)
+    moveUpButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    local moveDownButton = AceGUI:Create("Icon")
+    moveDownButton:SetImageSize(20, 20)
+    moveDownButton:SetWidth(20)
+    moveDownButton:SetHeight(20)
+    moveDownButton:SetImage("Interface\\Icons\\misc_arrowdown")
+
+    moveDownButton:SetCallback("OnClick", function()
+        local original = GSE.CloneSequence(editframe.Sequence.Macros[version][path])
+        local sourcePath = {}
+        local destinationPath = {}
+        for k, v in ipairs(path) do
+            table.insert(sourcePath, v)
+            if k == #path then
+                v = v + 1
+            end
+            table.insert(destinationPath, v)
+        end
+        editframe.Sequence.Macros[version][sourcePath] = GSE.CloneSequence(
+            editframe.Sequence.Macros[version][destinationPath])
+        editframe.Sequence.Macros[version][destinationPath] = original
+        ChooseVersionTab(version)
+    end)
+    moveDownButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Move Down"], L["Move this block down one block."], editframe)
+    end)
+    moveDownButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    local deleteBlockButton = AceGUI:Create("Icon")
+    deleteBlockButton:SetImageSize(20, 20)
+    deleteBlockButton:SetWidth(20)
+    deleteBlockButton:SetHeight(20)
+    deleteBlockButton:SetImage("Interface\\Icons\\spell_chargenegative")
+
+    deleteBlockButton:SetCallback("OnClick", function()
+        editframe.Sequence.Macros[version][path] = nil
+        ChooseVersionTab(version)
+    end)
+    deleteBlockButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Delete Block"],
+            L["Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."],
+            editframe)
+    end)
+    deleteBlockButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    local addRepeatButton = AceGUI:Create("Icon")
+    local addLoopButton = AceGUI:Create("Icon")
+    local addActionButton = AceGUI:Create("Icon")
+
+    local addPauseButton = AceGUI:Create("Icon")
+
+    if includeAdd then
+        addActionButton:SetImageSize(20, 20)
+        addActionButton:SetWidth(20)
+        addActionButton:SetHeight(20)
+        addActionButton:SetImage(Statics.ActionsIcons.Action)
+
+        addActionButton:SetCallback("OnClick", function()
+            -- TODO
+        end)
+        addActionButton:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
+        end)
+        addActionButton:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+
+        addLoopButton:SetImageSize(20, 20)
+        addLoopButton:SetWidth(20)
+        addLoopButton:SetHeight(20)
+        addLoopButton:SetImage(Statics.ActionsIcons.Loop)
+
+        addLoopButton:SetCallback("OnClick", function()
+            -- TODO
+        end)
+        addLoopButton:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Add Loop"], L["Add a Loop Block."], editframe)
+        end)
+        addLoopButton:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+
+        
+        addRepeatButton:SetImageSize(20, 20)
+        addRepeatButton:SetWidth(20)
+        addRepeatButton:SetHeight(20)
+        addRepeatButton:SetImage(Statics.ActionsIcons.Repeat)
+
+        addRepeatButton:SetCallback("OnClick", function()
+            -- TODO
+        end)
+        addRepeatButton:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Add Repeat"], L["Add a Repeat Block."], editframe)
+        end)
+        addRepeatButton:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+        addPauseButton:SetImageSize(20, 20)
+        addPauseButton:SetWidth(20)
+        addPauseButton:SetHeight(20)
+        addPauseButton:SetImage(Statics.ActionsIcons.Pause)
+
+        addPauseButton:SetCallback("OnClick", function()
+            -- TODO
+        end)
+        addPauseButton:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Add Pause"], L["Add a Pause Block."], editframe)
+        end)
+        addPauseButton:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+    end
+
+    local lastPath = path[#path]
+    if lastPath == 1 then
+        moveUpButton:SetDisabled(true)
+    elseif lastPath == #path then
+        moveDownButton:SetDisabled(true)
+    end
+
+    layoutcontainer:AddChild(moveUpButton)
+    layoutcontainer:AddChild(moveDownButton)
+
+    local spacerlabel1 = AceGUI:Create("Label")
+    spacerlabel1:SetWidth(5)
+    layoutcontainer:AddChild(spacerlabel1)
+
+    layoutcontainer:AddChild(headingLabel)
+
+    local spacerlabel2 = AceGUI:Create("Label")
+    spacerlabel2:SetWidth(5)
+    layoutcontainer:AddChild(spacerlabel2)
+
+    if includeAdd then
+        layoutcontainer:AddChild(addActionButton)
+        layoutcontainer:AddChild(addRepeatButton)
+        layoutcontainer:AddChild(addLoopButton)
+        layoutcontainer:AddChild(addPauseButton)
+    end
+    local spacerlabel3 = AceGUI:Create("Label")
+    spacerlabel3:SetWidth(5)
+    layoutcontainer:AddChild(spacerlabel3)
+
+    layoutcontainer:AddChild(deleteBlockButton)
+
+    return layoutcontainer
+end
+
+
+
 local function drawAction(container, action, version, keyPath)
 
     local maxWidth = container.frame:GetWidth() - 10
@@ -1231,15 +1424,19 @@ local function drawAction(container, action, version, keyPath)
     local label = AceGUI:Create("Label")
     label:SetFontObject(GameFontNormalLarge)
     container:AddChild(label)
-
+   
     local hlabel = AceGUI:Create("Label")
     --print(GSE.dump(action))
     hlabel:SetText(string.format(L["Block Type: %s"], Statics.Actions[action.Type]))
     --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
     hlabel:SetFontObject(GameFontNormalLarge)
     hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-    container:AddChild(hlabel)
-
+    local includeAdd = false
+    if action.Type == Statics.Actions.Loop then
+        includeAdd = true
+    end
+    container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+        
     if action.Type == Statics.Actions.Pause then
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")

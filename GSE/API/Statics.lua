@@ -389,10 +389,17 @@ Statics.Patrons = {
 
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
-Statics.Actions.If = "If"
+--Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
 Statics.Actions.Action = "Action"
 Statics.Actions.Pause = "Pause"
+
+Statics.ActionsIcons = {}
+Statics.ActionsIcons.Loop = "Interface\\Icons\\ability_hunter_misdirection"
+--Statics.ActionsIcons.If = "If"
+Statics.ActionsIcons.Repeat = "Interface\\Icons\\ability_monk_chiswirl"
+Statics.ActionsIcons.Action = "Interface\\Icons\\inv_blacksmithing_khazgoriananvil"
+Statics.ActionsIcons.Pause = "Interface\\Icons\\inv_misc_pocketwatch_01"
 
 
 Statics.GSE3OnClick = [=[
