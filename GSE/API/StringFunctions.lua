@@ -26,16 +26,9 @@ function GSE.UnEscapeSequence(sequence)
     return retseq
 end
 
+--- Deprecated Use GSE.UnEscapeTableRecursive instead
 function GSE.UnEscapeTable(tab)
-    local newtab = {}
-    for k, v in ipairs(tab) do
-        -- print (k .. " " .. v)
-        local cleanstring = GSE.UnEscapeString(v)
-        if not GSE.isEmpty(cleanstring) then
-            newtab[k] = cleanstring
-        end
-    end
-    return newtab
+    return GSE.UnEscapeTableRecursive(tab)
 end
 
 --- Remove WoW Text Markup from a string.
@@ -49,7 +42,6 @@ end
 
 function GSE.UnEscapeTableRecursive(tab)
     for k, v in pairs(tab) do
-        --print(type(v))
         if type(v) == 'table' then
             tab[k] = GSE.UnEscapeTableRecursive(v)
         elseif type(v) == 'string' then
@@ -58,7 +50,6 @@ function GSE.UnEscapeTableRecursive(tab)
     end
 
     for k,v in ipairs(tab) do
-        print(type(v))
         if type(v) == 'table' then
             tab[k] = GSE.UnEscapeTableRecursive(v)
         elseif type(v) == 'string' then

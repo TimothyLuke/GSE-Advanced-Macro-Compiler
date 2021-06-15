@@ -46,6 +46,12 @@ button:SetPoint("BOTTOM", frame, "BOTTOM", 0, -50)
 button:SetWidth(150)
 button:SetHeight(50)
 button:SetText(L["Compile"])
+button:SetNormalFontObject(GameFontNormal)
+
+local fontObject = button:GetFontString()
+fontObject:SetPoint("CENTER", button, "CENTER", -27, 8)
+
+--button:SetFontString(fontObject)
 
 button:SetNormalTexture("Interface/Buttons/UI-Panel-Button-Up")
 button:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")

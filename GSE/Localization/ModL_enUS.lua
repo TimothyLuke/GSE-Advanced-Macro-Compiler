@@ -602,7 +602,7 @@ L["This box is disabled as no Inner Loop Limit has been set.  It will never be c
 --2.6.44
 L["%sMACRO VALIDATION ERROR|r - PostMacro found with invalid LoopLimit.  PostMacro will not be saved for version %s"] = true
 --3.0.0
-L["Action Type: %s"] = true
+L["Block Type: %s"] = true
 L["Repeat"] = true
 L["How many times does this action repeat"] = true
 L["How many macro Clicks to pause for?"] = true

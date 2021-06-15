@@ -1233,7 +1233,7 @@ local function drawAction(container, action, version, keyPath)
 
     local hlabel = AceGUI:Create("Label")
     --print(GSE.dump(action))
-    hlabel:SetText(string.format(L["Action Type: %s"], Statics.Actions[action.Type]))
+    hlabel:SetText(string.format(L["Block Type: %s"], Statics.Actions[action.Type]))
     --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
     hlabel:SetFontObject(GameFontNormalLarge)
     hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
