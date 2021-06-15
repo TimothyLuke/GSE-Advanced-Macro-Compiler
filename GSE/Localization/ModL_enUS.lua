@@ -616,3 +616,4 @@ L["Edit this macro directly in Lua. WARNING: This may render the macro unable to
 L["Compile"] = true
 L["Unable to process content.  Fix table and try again."] = true
 L["GSE Raw Editor"] = true
+L["Global"] = true
