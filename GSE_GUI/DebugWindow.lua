@@ -72,6 +72,10 @@ local buttonGroup = AceGUI:Create("SimpleGroup")
 buttonGroup:SetFullWidth(true)
 buttonGroup:SetLayout("Flow")
 
+DebugFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+  local numlines = math.floor(height / 18)
+  GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(numlines)
+end)
 
 GSE.GUIDebugFrame.DebugEnableViewButton:SetWidth(150)
 GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
