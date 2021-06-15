@@ -7,8 +7,11 @@ local L = GSE.L
 
 local AceGUI = LibStub("AceGUI-3.0")
 
+local width = GSEOptions.editorWidth
+local height = GSEOptions.editorHeight
+
 local frame = CreateFrame("frame", "GSE3", UIParent, BackdropTemplateMixin and "BackdropTemplate" )
-frame:SetSize(550, 300)
+frame:SetSize(width, height)
 frame:SetPoint("CENTER")
 
 frame:SetBackdrop({
@@ -20,7 +23,7 @@ frame:SetBackdrop({
 frame:SetBackdropColor(0, 0, 0, .5)
 
 local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-scrollFrame:SetSize(500, 300)
+scrollFrame:SetSize((width - 50), (height - 30))
 scrollFrame:SetPoint("CENTER")
 
 
@@ -31,7 +34,7 @@ AdvancedTextEditor:SetMultiLine(true)
 --AdvancedTextEditor:SetText()
 
 AdvancedTextEditor:SetFontObject(ChatFontNormal)
-AdvancedTextEditor:SetWidth(500)
+AdvancedTextEditor:SetWidth((width - 28))
 AdvancedTextEditor:SetScript("OnEscapePressed", function() 
 	frame:Hide()
 	GSE.GUIEditFrame:Show()
