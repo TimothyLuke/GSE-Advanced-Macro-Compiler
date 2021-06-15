@@ -611,4 +611,8 @@ L["Clicks"] = true
 L["Seconds"] = true
 L["Measure"] = true
 L["A pause can be measured in either clicks or seconds.  It will either wait 5 clicks or 1.5 seconds.\nIf using seconds, you can also wait for the GCD by entering ~~GCD~~ into the box."] = true
-
+L["Raw Edit"] = true
+L["Edit this macro directly in Lua. WARNING: This may render the macro unable to operate and can crash your Game Session."] = true
+L["Compile"] = true
+L["Unable to process content.  Fix table and try again."] = true
+L["GSE Raw Editor"] = true

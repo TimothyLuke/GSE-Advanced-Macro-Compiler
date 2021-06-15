@@ -8,7 +8,7 @@ local L = GSE.L
 local AceGUI = LibStub("AceGUI-3.0")
 
 local frame = CreateFrame("frame", "GSE3", UIParent, BackdropTemplateMixin and "BackdropTemplate" )
-frame:SetSize(500, 300)
+frame:SetSize(550, 300)
 frame:SetPoint("CENTER")
 
 frame:SetBackdrop({
@@ -32,9 +32,46 @@ AdvancedTextEditor:SetMultiLine(true)
 
 AdvancedTextEditor:SetFontObject(ChatFontNormal)
 AdvancedTextEditor:SetWidth(500)
-AdvancedTextEditor:SetScript("OnEscapePressed", function() frame:Hide() end)
+AdvancedTextEditor:SetScript("OnEscapePressed", function() 
+	frame:Hide()
+	GSE.GUIEditFrame:Show()
+	GSE.GUIEditFrame.AdvancedEditor = false
+end)
 
 frame.TextBox = AdvancedTextEditor
+frame.Version = 0
+
+local button = CreateFrame("Button", nil, frame)
+button:SetPoint("BOTTOM", frame, "BOTTOM", 0, -50)
+button:SetWidth(150)
+button:SetHeight(50)
+button:SetText(L["Compile"])
+
+button:SetNormalTexture("Interface/Buttons/UI-Panel-Button-Up")
+button:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")
+button:SetPushedTexture("Interface/Buttons/UI-Panel-Button-Down")
+
+button:SetScript("OnClick", function(self, arg1)
+	local tab
+	local load = "return " .. AdvancedTextEditor:GetText()
+	local func, err = loadstring(load)
+	if err then
+		GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+		GSE.Print(err, L["GSE Raw Editor"])
+	else
+		tab = func()
+		if not GSE.isEmpty(tab) then
+			GSE.GUIEditFrame.Sequence.Macros[frame.Version] = tab
+			GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+			GSE.GUIEditFrame.ContentContainer:SelectTab(frame.Version)
+			GSE.GUIEditFrame.AdvancedEditor = false
+			frame:Hide()
+			GSE.GUIEditFrame:Show()
+		else
+			GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+		end
+	end
+end)
 
 local colorTable = {}
 

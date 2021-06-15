@@ -47,6 +47,27 @@ function GSE.UnEscapeString(str)
     return str
 end
 
+function GSE.UnEscapeTableRecursive(tab)
+    for k, v in pairs(tab) do
+        --print(type(v))
+        if type(v) == 'table' then
+            tab[k] = GSE.UnEscapeTableRecursive(v)
+        elseif type(v) == 'string' then
+            tab[k] = GSE.UnEscapeString(v)
+        end
+    end
+
+    for k,v in ipairs(tab) do
+        print(type(v))
+        if type(v) == 'table' then
+            tab[k] = GSE.UnEscapeTableRecursive(v)
+        elseif type(v) == 'string' then
+            tab[k] = GSE.UnEscapeString(v)
+        end
+    end
+    return tab
+end
+
 --- Add the lines of a string as individual entries.
 function GSE.lines(tab, str)
     local function helper(line)

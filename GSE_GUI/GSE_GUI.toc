@@ -16,7 +16,6 @@ Import.lua
 Export.lua
 DebugWindow.lua
 Transmission.lua
-VersionManagement.lua
 Recorder.lua
 Editor.lua
 Viewer.lua
@@ -24,5 +23,5 @@ RemoteMacroBrowser.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
-3_ParentFrame.lua
+3_AdvancedEditor.lua
 Init.lua

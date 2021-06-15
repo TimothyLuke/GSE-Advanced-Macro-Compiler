@@ -36,6 +36,7 @@ editframe.Scenario = 1
 editframe.ClassID = GSE.GetCurrentClassID()
 editframe.save = false
 editframe.SelectedTab = "group"
+editframe.AdvancedEditor = false
 
 local frameTableUpdated = {}
 
@@ -67,7 +68,9 @@ editframe:SetCallback("OnClose", function(self)
         event.action = "openviewer"
         table.insert(GSE.OOCQueue, event)
     else
-        GSE.GUIShowViewer()
+        if not editframe.AdvancedEditor then
+            GSE.GUIShowViewer()
+        end
     end
 end)
 editframe:SetLayout("List")
@@ -811,6 +814,32 @@ function GSE:GUIDrawMacroEditor(container, version)
     delversionbutton:SetCallback('OnLeave', function()
         GSE.ClearTooltip(editframe)
     end)
+
+    local delspacerlabel = AceGUI:Create("Label")
+    delspacerlabel:SetWidth(5)
+
+    local raweditbutton = AceGUI:Create("Button")
+    raweditbutton:SetText(L["Raw Edit"])
+    raweditbutton:SetWidth(100)
+    raweditbutton:SetCallback("OnClick", function()
+        local GSE3Macro = GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version])
+        _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro))
+        _G["GSE3"].Version = version
+        _G["GSE3"]:Show()
+        editframe.AdvancedEditor = true
+        editframe:Hide()
+    end)
+    raweditbutton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Raw Edit"],
+            L["Edit this macro directly in Lua. WARNING: This may render the macro unable to operate and can crash your Game Session."],
+            editframe)
+    end)
+    raweditbutton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    
+
     local linegroup2 = AceGUI:Create("SimpleGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
@@ -869,6 +898,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
     linegroup1:AddChild(showBaseSpells)
+    linegroup1:AddChild(delspacerlabel)
+    linegroup1:AddChild(raweditbutton)
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
     contentcontainer:AddChild(linegroup1)

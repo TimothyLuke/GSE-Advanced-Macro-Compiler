@@ -343,25 +343,25 @@ function GSE:GSSlash(input)
         end
     elseif command == "help" then
         PrintGnomeHelp()
-    elseif command == "gse3" then
-        local seqName = params[2]
-        if not GSE.isEmpty(seqName) then
-            local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            local GSE3Macro = GSE.Library[classID][seqName]
-            _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
-            _G["GSE3"]:Show()
+    -- elseif command == "gse3" then
+    --     local seqName = params[2]
+    --     if not GSE.isEmpty(seqName) then
+    --         local classID = params[3] and params[3] or GSE.GetCurrentClassID()
+    --         local GSE3Macro = GSE.Library[classID][seqName]
+    --         _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
+    --         _G["GSE3"]:Show()
 
-        end
-    elseif command == "gse3compiled" then
-        local seqName = params[2]
-        if not GSE.isEmpty(seqName) then
-            local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            local GSE3Macro = GSE.Library[classID][seqName]
-            local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[GSE.GetActiveSequenceVersion(seqName)])
-            _G["GSE3"].TextBox:SetText(GSE.Dump(compiledMacro))
-            _G["GSE3"]:Show()
+    --     end
+    -- elseif command == "gse3compiled" then
+    --     local seqName = params[2]
+    --     if not GSE.isEmpty(seqName) then
+    --         local classID = params[3] and params[3] or GSE.GetCurrentClassID()
+    --         local GSE3Macro = GSE.Library[classID][seqName]
+    --         local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[GSE.GetActiveSequenceVersion(seqName)])
+    --         _G["GSE3"].TextBox:SetText(GSE.Dump(compiledMacro))
+    --         _G["GSE3"]:Show()
 
-        end
+    --     end
 
     elseif command == "cleanorphans" or command == "clean" then
         GSE.CleanOrphanSequences()
