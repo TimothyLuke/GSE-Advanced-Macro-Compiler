@@ -838,8 +838,6 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    
-
     local linegroup2 = AceGUI:Create("SimpleGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)

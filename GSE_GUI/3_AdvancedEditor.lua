@@ -35,7 +35,7 @@ AdvancedTextEditor:SetMultiLine(true)
 
 AdvancedTextEditor:SetFontObject(ChatFontNormal)
 AdvancedTextEditor:SetWidth((width - 28))
-AdvancedTextEditor:SetScript("OnEscapePressed", function() 
+AdvancedTextEditor:SetScript("OnEscapePressed", function()
 	frame:Hide()
 	GSE.GUIEditFrame:Show()
 	GSE.GUIEditFrame.AdvancedEditor = false

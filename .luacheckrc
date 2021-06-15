@@ -381,4 +381,5 @@ globals = {
     "dataObject_OnLeave",
     "AUTOCOMPLETE_LIST",
     "AttemptToSaveBindings",
+	"GetSpellSubtext",
 }
