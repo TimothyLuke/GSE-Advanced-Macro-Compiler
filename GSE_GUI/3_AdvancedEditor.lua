@@ -72,7 +72,7 @@ button:SetScript("OnClick", function(self, arg1)
 		if not GSE.isEmpty(tab) then
 			GSE.GUIEditFrame.Sequence.Macros[frame.Version] = tab
 			GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
-			GSE.GUIEditFrame.ContentContainer:SelectTab(frame.Version)
+			GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(frame.Version))
 			GSE.GUIEditFrame.AdvancedEditor = false
 			frame:Hide()
 			GSE.GUIEditFrame:Show()
