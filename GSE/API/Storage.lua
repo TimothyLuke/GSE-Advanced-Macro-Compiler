@@ -341,8 +341,7 @@ function GSE.GetActiveSequenceVersion(sequenceName)
         vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.PVPFlag then
         vers = GSE.Library[classid][sequenceName]["MetaData"].PVP
-    end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Raid) and GSE.inRaid then
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Raid) and GSE.inRaid then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Raid
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Mythic) and GSE.inMythic then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Mythic
