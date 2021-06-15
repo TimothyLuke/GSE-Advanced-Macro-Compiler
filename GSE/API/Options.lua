@@ -417,7 +417,7 @@ function GSE.GetOptionsTable()
           resetcontroltitle = {
             type = "header",
             name = L["Control Keys."],
-            order = 560
+            order = 570
           },
           resetAnyControlKey = {
             name = L["Any Control Key"],
@@ -443,7 +443,7 @@ function GSE.GetOptionsTable()
           resetshifttitle = {
             type = "header",
             name = L["Shift Keys."],
-            order = 570
+            order = 580
           },
           resetAnyShiftKey = {
             name = L["Any Shift Key"],
