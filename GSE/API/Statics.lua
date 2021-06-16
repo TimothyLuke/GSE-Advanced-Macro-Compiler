@@ -94,10 +94,66 @@ if GSE.GameMode ~= 1 then
   Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
 
 end
+Statics.SpecIDClassList = {
+    [0] = 0,
+    [1] = 1,
+    [2] = 2,
+    [3] = 3,
+    [4] = 4,
+    [5] = 5,
+    [6] = 6,
+    [7] = 7,
+    [8] = 8,
+    [9] = 9,
+    [10] = 10,
+    [11] = 11,
+    [12] = 12,
+    [62] = 8,
+    [63] = 8,
+    [64] = 8,
+    [65] = 2,
+    [66] = 2,
+    [70] = 2,
+    [71] = 1,
+    [72] = 1,
+    [73] = 1,
+    [102] = 11,
+    [103] = 11,
+    [104] = 11,
+    [105] = 11,
+    [250] = 6,
+    [251] = 6,
+    [252] = 6,
+    [253] = 3,
+    [254] = 3,
+    [255] = 3,
+    [256] = 5,
+    [257] = 5,
+    [258] = 5,
+    [259] = 4,
+    [260] = 4,
+    [261] = 4,
+    [262] = 7,
+    [263] = 7,
+    [264] = 7,
+    [265] = 9,
+    [266] = 9,
+    [267] = 9,
+    [268] = 10,
+    [269] = 10,
+    [270] = 10,
+    [577] = 12,
+    [581] = 12
+}
+
 
 local function determineSpecializationName(specID)
-  local _, specname = GetSpecializationInfoByID(specID)
-  return specname
+  if GSE.GameMode < 4 then
+    return GetClassInfo(Statics.SpecIDClassList[specID])
+  else
+    local _, specname = GetSpecializationInfoByID(specID)
+    return specname
+  end
 end
 
 local function determineClassName(specID)
@@ -157,57 +213,6 @@ Statics.SpecIDList = {
     [581] = determineSpecializationName(581),
 }
 
-Statics.SpecIDClassList = {
-    [0] = 0,
-    [1] = 1,
-    [2] = 2,
-    [3] = 3,
-    [4] = 4,
-    [5] = 5,
-    [6] = 6,
-    [7] = 7,
-    [8] = 8,
-    [9] = 9,
-    [10] = 10,
-    [11] = 11,
-    [12] = 12,
-    [62] = 8,
-    [63] = 8,
-    [64] = 8,
-    [65] = 2,
-    [66] = 2,
-    [70] = 2,
-    [71] = 1,
-    [72] = 1,
-    [73] = 1,
-    [102] = 11,
-    [103] = 11,
-    [104] = 11,
-    [105] = 11,
-    [250] = 6,
-    [251] = 6,
-    [252] = 6,
-    [253] = 3,
-    [254] = 3,
-    [255] = 3,
-    [256] = 5,
-    [257] = 5,
-    [258] = 5,
-    [259] = 4,
-    [260] = 4,
-    [261] = 4,
-    [262] = 7,
-    [263] = 7,
-    [264] = 7,
-    [265] = 9,
-    [266] = 9,
-    [267] = 9,
-    [268] = 10,
-    [269] = 10,
-    [270] = 10,
-    [577] = 12,
-    [581] = 12
-}
 
 Statics.SpecIDHashList = {}
 for k, v in pairs(Statics.SpecIDList) do
