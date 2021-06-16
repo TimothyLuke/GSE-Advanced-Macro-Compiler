@@ -449,7 +449,6 @@ if GSE.GameMode < 4 then
   Statics.ActionsIcons.Up = "Interface\\Icons\\inv_spear_01"
   Statics.ActionsIcons.Down = "Interface\\Icons\\inv_weapon_shortblade_26"
 
-  
 end
 
 Statics.GSE3OnClick = [=[
