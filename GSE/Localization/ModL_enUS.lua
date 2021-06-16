@@ -631,3 +631,4 @@ L["Add Repeat"] = true
 L["Add a Repeat Block."] = true
 L["Add Pause"] = true
 L["Add a Pause Block."] = true
+L["Pause for the GCD."] = true

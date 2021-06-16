@@ -712,6 +712,13 @@ function GSE:GUIDrawMetadataEditor(container)
 
     container:AddChild(scrollcontainer)
 end
+
+local function ChooseVersionTab(version)
+    GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+    GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
+end
+
+
 function GSE:GUIDrawMacroEditor(container, version)
     version = tonumber(version)
     if GSE.isEmpty(editframe.Sequence.Macros[version]) then
@@ -858,36 +865,101 @@ function GSE:GUIDrawMacroEditor(container, version)
     local spacerlabel2 = AceGUI:Create("Label")
     spacerlabel2:SetWidth(6)
 
+    local addRepeatButton = AceGUI:Create("Icon")
+    local addLoopButton = AceGUI:Create("Icon")
+    local addActionButton = AceGUI:Create("Icon")
+    local addPauseButton = AceGUI:Create("Icon")
 
-    -- TODO Replace Spell box with ACTIONS
+    addActionButton:SetImageSize(20, 20)
+    addActionButton:SetWidth(20)
+    addActionButton:SetHeight(20)
+    addActionButton:SetImage(Statics.ActionsIcons.Action)
 
-    -- local spellbox = AceGUI:Create("MultiLineEditBox")
-    -- spellbox:SetLabel(L["Sequence"])
-    -- spellbox:SetNumLines(largebox)
-    -- spellbox:DisableButton(true)
-    -- spellbox:SetFullWidth(true)
-    -- spellbox:SetCallback('OnEnter', function()
-    --     GSE.CreateToolTip(L["Sequence"], L["The main lines of the macro."], editframe)
-    -- end)
-    -- spellbox:SetCallback('OnLeave', function()
-    --     GSE.ClearTooltip(editframe)
-    -- end)
+    addActionButton:SetCallback("OnClick", function()
 
-    -- spellbox.editBox:SetScript("OnLeave", function()
-    --     GSE.GUIParseText(KeyPressbox)
-    -- end)
-    -- if not GSE.isEmpty(editframe.Sequence.Macros[version]) then
-    --     spellbox:SetText(table.concat(editframe.Sequence.Macros[version], "\n"))
-    -- end
-    -- spellbox:SetCallback("OnTextChanged", function(sel, object, value)
-    --     for k, v in ipairs(editframe.Sequence.Macros[version]) do
-    --         editframe.Sequence.Macros[version][k] = nil
-    --     end
-    --     local newpairs = GSE.SplitMeIntolines(value)
-    --     for k, v in ipairs(newpairs) do
-    --         editframe.Sequence.Macros[version][k] = v
-    --     end
-    -- end)
+        local newAction = {
+            [1] = "/say Hello",
+            ['Type'] = Statics.Actions.Action,
+        }
+        table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+        ChooseVersionTab(version)
+    end)
+    addActionButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
+    end)
+    addActionButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    addLoopButton:SetImageSize(20, 20)
+    addLoopButton:SetWidth(20)
+    addLoopButton:SetHeight(20)
+    addLoopButton:SetImage(Statics.ActionsIcons.Loop)
+
+    addLoopButton:SetCallback("OnClick", function()
+        local newAction = {
+            ['StepFunction'] = Statics.Sequential,
+            ['Type'] = Statics.Actions.Loop,
+            ['Repeat'] = 2,
+            [1] = {
+                [1] = "/say Hello",
+                ['Type'] = Statics.Actions.Action
+            }
+        }
+        table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+        ChooseVersionTab(version)
+    end)
+    addLoopButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Add Loop"], L["Add a Loop Block."], editframe)
+    end)
+    addLoopButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+    addRepeatButton:SetImageSize(20, 20)
+    addRepeatButton:SetWidth(20)
+    addRepeatButton:SetHeight(20)
+    addRepeatButton:SetImage(Statics.ActionsIcons.Repeat)
+
+    addRepeatButton:SetCallback("OnClick", function()
+        local newAction = {
+            [1] = "/say Hello",
+            ['Type'] = Statics.Actions.Repeat,
+            ['Repeat'] = 3
+        }
+
+        table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+        ChooseVersionTab(version)
+
+
+    end)
+    addRepeatButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Add Repeat"], L["Add a Repeat Block."], editframe)
+    end)
+    addRepeatButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+    addPauseButton:SetImageSize(20, 20)
+    addPauseButton:SetWidth(20)
+    addPauseButton:SetHeight(20)
+    addPauseButton:SetImage(Statics.ActionsIcons.Pause)
+
+    addPauseButton:SetCallback("OnClick", function()
+        
+        local newAction = {
+            ['MS'] = 'GCD',
+            ['Type'] = Statics.Actions.Pause
+        }
+        table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+        ChooseVersionTab(version)
+
+    end)
+    addPauseButton:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Add Pause"], L["Add a Pause Block."], editframe)
+    end)
+    addPauseButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
 
     local linegroup3 = AceGUI:Create("SimpleGroup")
     linegroup3:SetLayout("Flow")
@@ -895,6 +967,11 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     local spacerlabel3 = AceGUI:Create("Label")
     spacerlabel3:SetWidth(6)
+
+    linegroup1:AddChild(addActionButton)
+    linegroup1:AddChild(addRepeatButton)
+    linegroup1:AddChild(addLoopButton)
+    linegroup1:AddChild(addPauseButton)
 
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
@@ -1218,11 +1295,6 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 
 end
 
-local function ChooseVersionTab(version)
-    GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
-    GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
-end
-
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     local layoutcontainer = AceGUI:Create("InlineGroup")
 
@@ -1236,20 +1308,20 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     moveUpButton:SetImage("Interface\\Icons\\misc_arrowlup")
 
     moveUpButton:SetCallback("OnClick", function()
-        local original = GSE.CloneSequence(editframe.Sequence.Macros[version][path])
-        local sourcePath = {}
+        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
         local destinationPath = {}
         for k, v in ipairs(path) do
-            table.insert(sourcePath, v)
             if k == #path then
                 v = v - 1
             end
             table.insert(destinationPath, v)
         end
-        editframe.Sequence.Macros[version][sourcePath] = GSE.CloneSequence(
-            editframe.Sequence.Macros[version][destinationPath])
-        editframe.Sequence.Macros[version][destinationPath] = original
+
+        editframe.Sequence.Macros[version].Actions[path] = GSE.CloneSequence(
+            editframe.Sequence.Macros[version].Actions[destinationPath])
+        editframe.Sequence.Macros[version].Actions[destinationPath] = original
         ChooseVersionTab(version)
+
     end)
     moveUpButton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
@@ -1265,19 +1337,17 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     moveDownButton:SetImage("Interface\\Icons\\misc_arrowdown")
 
     moveDownButton:SetCallback("OnClick", function()
-        local original = GSE.CloneSequence(editframe.Sequence.Macros[version][path])
-        local sourcePath = {}
+        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
         local destinationPath = {}
         for k, v in ipairs(path) do
-            table.insert(sourcePath, v)
             if k == #path then
                 v = v + 1
             end
             table.insert(destinationPath, v)
         end
-        editframe.Sequence.Macros[version][sourcePath] = GSE.CloneSequence(
-            editframe.Sequence.Macros[version][destinationPath])
-        editframe.Sequence.Macros[version][destinationPath] = original
+
+        editframe.Sequence.Macros[version].Actions[path] = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
+        editframe.Sequence.Macros[version].Actions[destinationPath] = original
         ChooseVersionTab(version)
     end)
     moveDownButton:SetCallback('OnEnter', function()
@@ -1294,7 +1364,16 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     deleteBlockButton:SetImage("Interface\\Icons\\spell_chargenegative")
 
     deleteBlockButton:SetCallback("OnClick", function()
-        editframe.Sequence.Macros[version][path] = nil
+        local delPath = {}
+        local delObj 
+        for k,v in ipairs(path) do
+            if k == #path then
+                delObj = v
+            else
+                table.insert(delPath, v)
+            end
+        end
+        table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
         ChooseVersionTab(version)
     end)
     deleteBlockButton:SetCallback('OnEnter', function()
@@ -1319,7 +1398,15 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
         addActionButton:SetImage(Statics.ActionsIcons.Action)
 
         addActionButton:SetCallback("OnClick", function()
-            -- TODO
+            local addPath = {}
+            local newAction = {
+                [1] = "/say Hello",
+                ['Type'] = Statics.Actions.Action,
+            }
+
+            table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+            ChooseVersionTab(version)
+
         end)
         addActionButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
@@ -1334,7 +1421,20 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
         addLoopButton:SetImage(Statics.ActionsIcons.Loop)
 
         addLoopButton:SetCallback("OnClick", function()
-            -- TODO
+            local addPath = {}
+            local newAction = {
+                ['StepFunction'] = Statics.Sequential,
+                ['Type'] = Statics.Actions.Loop,
+                ['Repeat'] = 2,
+                [1] = {
+                    [1] = "/say Hello",
+                    ['Type'] = Statics.Actions.Action,
+                }
+            }
+
+            table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+            ChooseVersionTab(version)
+
         end)
         addLoopButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Loop"], L["Add a Loop Block."], editframe)
@@ -1350,7 +1450,15 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
         addRepeatButton:SetImage(Statics.ActionsIcons.Repeat)
 
         addRepeatButton:SetCallback("OnClick", function()
-            -- TODO
+            local addPath = {}
+            local newAction = {
+                [1] = "/say Hello",
+                ['Type'] = Statics.Actions.Repeat,
+                ['Repeat'] = 3,
+            }
+            table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+            ChooseVersionTab(version)
+
         end)
         addRepeatButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Repeat"], L["Add a Repeat Block."], editframe)
@@ -1364,7 +1472,14 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
         addPauseButton:SetImage(Statics.ActionsIcons.Pause)
 
         addPauseButton:SetCallback("OnClick", function()
-            -- TODO
+            local addPath = {}
+            local newAction = {
+                ['MS'] = 'GCD',
+                ['Type'] = Statics.Actions.Pause
+            }
+            table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+            ChooseVersionTab(version)
+
         end)
         addPauseButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Pause"], L["Add a Pause Block."], editframe)
@@ -1450,7 +1565,7 @@ local function drawAction(container, action, version, keyPath)
         clicksdropdown:SetList({
             [L["Clicks"]] = L["How many macro Clicks to pause for?"],
             [L["Seconds"]] = L["How many seconds to pause for?"],
-            [L["GCD"]] = L["Pause for the GCD."],
+            ["GCD"] = L["Pause for the GCD."],
             --["Random"] = L["Random - It will select .... a spell, any spell"]
         })
         clicksdropdown:SetCallback('OnEnter', function()
@@ -1463,7 +1578,7 @@ local function drawAction(container, action, version, keyPath)
         else
             clicksdropdown:SetValue(L["Seconds"])
             if action.MS == "~~GCD~~" or action.MS == "GCD" then
-                clicksdropdown:SetValue(L["GCD"])
+                clicksdropdown:SetValue("GCD")
             end
         end
 
@@ -1489,7 +1604,7 @@ local function drawAction(container, action, version, keyPath)
             returnAction["Type"] = action.Type
             if clicksdropdown:GetValue() == L["Clicks"] then
                 returnAction["Clicks"] = valueEditBox:GetText()
-            elseif clicksdropdown:GetValue() == L["GCD"] then
+            elseif clicksdropdown:GetValue() == "GCD" then
                 returnAction["MS"] = "GCD"
             else
                 returnAction["MS"] = valueEditBox:GetText()
@@ -1503,7 +1618,7 @@ local function drawAction(container, action, version, keyPath)
             returnAction["Type"] = action.Type
             if clicksdropdown:GetValue() == L["Clicks"] then
                 returnAction["Clicks"] = valueEditBox:GetText()
-            elseif clicksdropdown:GetValue() == L["GCD"] then
+            elseif clicksdropdown:GetValue() == "GCD" then
                 returnAction["MS"] = "GCD"
             else
                 returnAction["MS"] = valueEditBox:GetText()
