@@ -63,16 +63,17 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       },
     }
     if not GSE.isEmpty(recordedstring) then
-      sequence.Macros[1][1] = nil
+      sequence.Macros[1]["Actions"] = nil
       local recordedMacro = {}
-      local action = {
-        ["Type"] = Statics.Actions.Action
-      }
       for _,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
+      local action = {
+          ["Type"] = Statics.Actions.Action
+        }
+
         table.insert(action, v)
+        table.insert(recordedMacro, action)
       end
-      table.insert(recordedMacro, action)
-      sequence.Macros[1] = recordedMacro
+      sequence.Macros[1]["Actions"] = recordedMacro
     end
     GSE.GUIEditFrame.NewSequence = true
   else
