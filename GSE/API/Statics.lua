@@ -94,60 +94,6 @@ if GSE.GameMode ~= 1 then
   Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
 
 end
-
-
-Statics.SpecIDList = {
-    [0] = "Global",
-    [1] = "Warrior",
-    [2] = "Paladin",
-    [3] = "Hunter",
-    [4] = "Rogue",
-    [5] = "Priest",
-    [6] = "Death Knight",
-    [7] = "Shaman",
-    [8] = "Mage",
-    [9] = "Warlock",
-    [10] = "Monk",
-    [11] = "Druid",
-    [12] = "Demon Hunter",
-    [62] = "Arcane",
-    [63] = "Fire",
-    [64] = "Frost - Mage",
-    [65] = "Holy - Paladin",
-    [66] = "Protection - Paladin",
-    [70] = "Retribution",
-    [71] = "Arms",
-    [72] = "Fury",
-    [73] = "Protection - Warrior",
-    [102] = "Balance",
-    [103] = "Feral",
-    [104] = "Guardian",
-    [105] = "Restoration - Druid",
-    [250] = "Blood",
-    [251] = "Frost - DK",
-    [252] = "Unholy",
-    [253] = "Beast Mastery",
-    [254] = "Marksmanship",
-    [255] = "Survival",
-    [256] = "Discipline",
-    [257] = "Holy - Priest",
-    [258] = "Shadow",
-    [259] = "Assassination",
-    [260] = "Outlaw",
-    [261] = "Subtlety",
-    [262] = "Elemental",
-    [263] = "Enhancement",
-    [264] = "Restoration - Shaman",
-    [265] = "Affliction",
-    [266] = "Demonology",
-    [267] = "Destruction",
-    [268] = "Brewmaster",
-    [269] = "Windwalker",
-    [270] = "Mistweaver",
-    [577] = "Havoc",
-    [581] = "Vengeance"
-}
-
 Statics.SpecIDClassList = {
     [0] = 0,
     [1] = 1,
@@ -200,6 +146,105 @@ Statics.SpecIDClassList = {
     [581] = 12
 }
 
+
+local function determineSpecializationName(specID)
+  if GSE.GameMode < 4 then
+    return GetClassInfo(Statics.SpecIDClassList[specID])
+  else
+    local _, specname = GetSpecializationInfoByID(specID)
+    return specname
+  end
+end
+
+local function determineClassName(specID)
+    local specname = GetClassInfo(specID)
+    return specname
+end
+
+Statics.SpecIDList = {
+    [0] = L["Global"],
+    [1] = determineClassName(1),
+    [2] = determineClassName(2),
+    [3] = determineClassName(3),
+    [4] = determineClassName(4),
+    [5] = determineClassName(5),
+    [6] = determineClassName(6),
+    [7] = determineClassName(7),
+    [8] = determineClassName(8),
+    [9] = determineClassName(9),
+    [10] = determineClassName(10),
+    [11] = determineClassName(11),
+    [12] = determineClassName(12),
+    [62] = determineSpecializationName(62),
+    [63] = determineSpecializationName(63),
+    [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
+    [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
+    [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
+    [70] = determineSpecializationName(70),
+    [71] = determineSpecializationName(71),
+    [72] = determineSpecializationName(72),
+    [73] = determineSpecializationName(73),
+    [102] = determineSpecializationName(102),
+    [103] = determineSpecializationName(103),
+    [104] = determineSpecializationName(104),
+    [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
+    [250] = determineSpecializationName(250),
+    [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
+    [252] = determineSpecializationName(252),
+    [253] = determineSpecializationName(253),
+    [254] = determineSpecializationName(254),
+    [255] = determineSpecializationName(255),
+    [256] = determineSpecializationName(256),
+    [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
+    [258] = determineSpecializationName(258),
+    [259] = determineSpecializationName(259),
+    [260] = determineSpecializationName(260),
+    [261] = determineSpecializationName(261),
+    [262] = determineSpecializationName(262),
+    [263] = determineSpecializationName(263),
+    [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
+    [265] = determineSpecializationName(265),
+    [266] = determineSpecializationName(266),
+    [267] = determineSpecializationName(267),
+    [268] = determineSpecializationName(268),
+    [269] = determineSpecializationName(269),
+    [270] = determineSpecializationName(270),
+    [577] = determineSpecializationName(577),
+    [581] = determineSpecializationName(581),
+}
+if GSE.GameMode < 4 then
+  Statics.SpecIDClassList = {
+      [0] = 0,
+      [1] = 1,
+      [2] = 2,
+      [3] = 3,
+      [4] = 4,
+      [5] = 5,
+      [6] = 6,
+      [7] = 7,
+      [8] = 8,
+      [9] = 9,
+      [10] = 10,
+      [11] = 11,
+      [12] = 12,
+  }
+  Statics.SpecIDList = {
+    [0] = L["Global"],
+    [1] = determineClassName(1),
+    [2] = determineClassName(2),
+    [3] = determineClassName(3),
+    [4] = determineClassName(4),
+    [5] = determineClassName(5),
+    [6] = determineClassName(6),
+    [7] = determineClassName(7),
+    [8] = determineClassName(8),
+    [9] = determineClassName(9),
+    [10] = determineClassName(10),
+    [11] = determineClassName(11),
+    [12] = determineClassName(12),
+  }
+end
+
 Statics.SpecIDHashList = {}
 for k, v in pairs(Statics.SpecIDList) do
     Statics.SpecIDHashList[v] = k
@@ -209,84 +254,7 @@ Statics.SequenceDebug = "SEQUENCEDEBUG"
 
 Statics.Priority = "Priority"
 Statics.Sequential = "Sequential"
-Statics.Random = "Random"
 
-Statics.RandomImplementation = [[
-  step = math.random(#macros)
-]]
-
-Statics.LoopRandomImplementation = [[
-  step = math.random(#macros)
-]]
-
---- <code>GSStaticPriority</code> is a static step function that goes 1121231234123451234561234567
---    use this like StepFunction = GSStaticPriority, in a macro
---    This overides the sequential behaviour that is standard in GS
-Statics.PriorityImplementation = [[
-  limit = limit or 1
-  if step == limit then
-    limit = limit % #macros + 1
-    step = 1
-  else
-    step = step % #macros + 1
-  end
-]]
-
---- <code>GSStaticLoopPriority</code> is a static step function that goes 1121231234123451234561234567
---    but it does this within an internal loop.  So more like 123343456
---    If the macro has loopstart or loopstop defined then it will use this instead of GSStaticPriority
-Statics.LoopPriorityImplementation = [[
-  if step < loopstart then
-    step = step + 1
-
-  elseif step > loopstop and loopstop == #macros then
-    if step >= #macros then
-      loopiter = 1
-      step = loopstart
-      if looplimit > 0 then
-        step = 1
-        limit = loopstart
-      end
-    else
-      step = step + 1
-    end
-  elseif step == loopstop then
-    if looplimit > 0 then
-      if loopiter >= looplimit then
-        if loopstop >= #macros then
-          step = 1
-          limit = loopstart
-        else
-          step = step + 1
-          loopiter = 1
-        end
-      else
-        step = loopstart
-        loopiter = loopiter + 1
-      end
-    else
-      step = loopstart
-    end
-  elseif step >= #macros then
-    loopiter = 1
-    step = loopstart
-    if looplimit > 0 then
-      step = 1
-      limit = loopstart
-    end
-  else
-    limit = limit or loopstart
-    if step == limit then
-      limit = limit % loopstop + 1
-      step = loopstart
-      if limit == loopiter then
-        loopiter = loopiter + 1
-      end
-    else
-      step = step + 1
-    end
-  end
-]]
 
 Statics.PrintKeyModifiers = [[
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
@@ -302,94 +270,6 @@ print("Any mod key " .. tostring(IsModifierKeyDown()))
 print("GetMouseButtonClicked() " .. GetMouseButtonClicked() )
 ]]
 
-Statics.OnClick = [=[
-local step = self:GetAttribute('step')
-local loopstart = self:GetAttribute('loopstart') or 1
-local loopstop = self:GetAttribute('loopstop') or #macros
-local loopiter = self:GetAttribute('loopiter') or 1
-local looplimit = self:GetAttribute('looplimit') or 0
-local clicks = self:GetAttribute('clicks') or 0
-local ms = self:GetAttribute('ms') or 1
-local limit = self:GetAttribute('limit') or 1
-loopstart = tonumber(loopstart)
-loopstop = tonumber(loopstop)
-loopiter = tonumber(loopiter)
-looplimit = tonumber(looplimit)
-limit = tonumber(limit)
-clicks = tonumber(clicks)
-step = tonumber(step)
-ms = tonumber(ms)
-self:SetAttribute('macrotext', self:GetAttribute('KeyPress') .. "\n" .. macros[step] .. "\n" .. self:GetAttribute('KeyRelease'))
-%s
-local checkstep = step - 1
-if checkstep == 0 then
-  checkstep = #macros
-end
-if string.sub(macros[checkstep], 1, 12) == "/click pause" then
-  local localpauselimit = tonumber(string.sub(macros[checkstep], 14)) * 1000
-  local currentMS = clicks * ms
-  if currentMS < localpauselimit then
-    step = checkstep
-    clicks = clicks + 1
-  else
-    clicks = 1
-  end
-end
-if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
-  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
-  step = 1
-end
-self:SetAttribute('step', step)
-self:SetAttribute('loopiter', loopiter)
-self:SetAttribute('clicks', clicks)
-self:SetAttribute('ms', ms)
-self:SetAttribute('limit', limit)
-self:CallMethod('UpdateIcon')
-]=]
-
---- <code>Statics.LoopSequentialImplementation</code> is a static step function that
---    operates in a sequential mode but with an internal loop.
---    eg 12342345
-Statics.LoopSequentialImplementation = [[
-if step < loopstart then
-  -- I am before the loop increment to next step.
-  step = step + 1
-elseif step > loopstop then
-  if step >= #macros then
-    loopiter = 1
-    step = loopstart
-    if looplimit > 0 then
-      step = 1
-    end
-  else
-    step = step + 1
-  end
-elseif step == loopstop then
-  if looplimit > 0 then
-    if loopiter >= looplimit then
-      if loopstop >= #macros then
-        step = 1
-      else
-        step = step + 1
-      end
-      loopiter = 1
-    else
-      step = loopstart
-      loopiter = loopiter + 1
-    end
-  else
-    step = loopstart
-  end
-elseif step >= #macros then
-  loopiter = 1
-  step = loopstart
-  if looplimit > 0 then
-    step = 1
-  end
-else
-  step = step + 1
-end
-]]
 
 Statics.StringFormatEscapes = {
     ["|c%x%x%x%x%x%x%x%x"] = "", -- Color start
@@ -545,6 +425,34 @@ Statics.Patrons = {
 
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
-Statics.Actions.If = "If"
+--Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
 Statics.Actions.Action = "Action"
+Statics.Actions.Pause = "Pause"
+
+Statics.ActionsIcons = {}
+Statics.ActionsIcons.Loop = "Interface\\Icons\\ability_hunter_misdirection"
+--Statics.ActionsIcons.If = "If"
+Statics.ActionsIcons.Repeat = "Interface\\Icons\\ability_monk_chiswirl"
+Statics.ActionsIcons.Action = "Interface\\Icons\\inv_blacksmithing_khazgoriananvil"
+Statics.ActionsIcons.Pause = "Interface\\Icons\\inv_misc_pocketwatch_01"
+
+
+Statics.GSE3OnClick = [=[
+local step = self:GetAttribute('step')
+step = tonumber(step)
+self:SetAttribute('macrotext', macros[step] )
+step = step % #macros + 1
+if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
+  step = 1
+end
+self:SetAttribute('step', step)
+self:CallMethod('UpdateIcon')
+]=]
+
+
+Statics.TranslatorMode = {}
+Statics.TranslatorMode.Current = "CURRENT"
+Statics.TranslatorMode.String = "STRING"
+Statics.TranslatorMode.ID = "ID"

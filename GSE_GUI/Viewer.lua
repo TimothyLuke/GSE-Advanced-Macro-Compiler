@@ -26,8 +26,8 @@ viewframe.Height = 500
 viewframe.Width = 700
 
 viewframe:Hide()
-local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
-local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
+-- local sequenceboxtext = AceGUI:Create("MultiLineEditBox")
+-- local remotesequenceboxtext = AceGUI:Create("MultiLineEditBox")
 
 viewframe.panels = {}
 viewframe.SequenceName = ""
@@ -35,7 +35,7 @@ viewframe.ClassID = 0
 
 function viewframe:clearpanels(widget, selected)
   GSE.PrintDebugMessage("widget = " .. widget:GetKey(), "GUI")
-  for k,v in pairs(viewframe.panels) do
+  for k,_ in pairs(viewframe.panels) do
     GSE.PrintDebugMessage("k " .. k, "GUI")
     if k == widget:GetKey() then
       GSE.PrintDebugMessage ("matching key", "GUI")
@@ -115,7 +115,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   columngroup:SetLayout("Flow")
 
   local column1 = AceGUI:Create("SimpleGroup")
-  column1:SetWidth(560)
+  column1:SetWidth(viewframe.Width - 140)
   column1:SetLayout("List")
 
 
@@ -125,8 +125,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local helplabel = AceGUI:Create("Label")
   local helptext = L["No Help Information Available"]
-  if not GSE.isEmpty(GSE.Library[classid][sequencename].Help) then
-    helptext = GSE.Library[classid][sequencename].Help
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Help) then
+    helptext = GSE.Library[classid][sequencename].MetaData.Help
   end
   helplabel:SetFullWidth(true)
   helplabel:SetFontObject(font)
@@ -145,8 +145,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   row2:AddChild(talentsHead)
 
   local talentslabel = AceGUI:Create("Label")
-  if not GSE.isEmpty(GSE.Library[classid][sequencename].Talents) then
-    talentslabel:SetText(GSE.Library[classid][sequencename].Talents)
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Talents) then
+    talentslabel:SetText(GSE.Library[classid][sequencename].MetaData.Talents)
   end
   talentslabel:SetWidth(80)
   talentslabel:SetFontObject(font)
@@ -166,8 +166,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local urlval = "https://wowlazymacros.com"
   local urllabel = AceGUI:Create("InteractiveLabel")
-  if not GSE.isEmpty(GSE.Library[classid][sequencename].Helplink) then
-   urlval = GSE.Library[classid][sequencename].Helplink
+  if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Helplink) then
+   urlval = GSE.Library[classid][sequencename].MetaData.Helplink
   end
   urllabel:SetFontObject(font)
   urllabel:SetText(urlval)
@@ -192,6 +192,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   viewiconpicker.frame:SetScript("OnDragStart", function()
     PickupMacro(sequencename)
   end)
+
   selpanel.Icon = viewiconpicker
   viewiconpicker:SetImage(GSE.GetMacroIcon(classid, sequencename))
   viewiconpicker:SetImageSize(50,50)
@@ -221,7 +222,10 @@ function GSE.GUIViewerToolbar(container)
   local newbutton = AceGUI:Create("Button")
   newbutton:SetText(L["New"])
   newbutton:SetWidth(150)
-  newbutton:SetCallback("OnClick", function() GSE.GUILoadEditor(nil, viewframe)end)
+  newbutton:SetCallback("OnClick", function()
+    GSE.GUILoadEditor(nil, viewframe)
+    viewframe:Hide()
+  end)
   newbutton:SetCallback('OnEnter', function ()
     GSE.CreateToolTip(L["New"], L["Create a new macro."], viewframe)
   end)
@@ -238,6 +242,7 @@ function GSE.GUIViewerToolbar(container)
       GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
     else
       GSE.GUILoadEditor(editkey, viewframe)
+      viewframe:Hide()
     end
   end)
   updbutton:SetCallback('OnEnter', function ()
@@ -291,7 +296,7 @@ function GSE.GUIViewerToolbar(container)
   end)
   buttonGroup:AddChild(tranbutton)
 
-  disableSeqbutton = AceGUI:Create("Button")
+  local disableSeqbutton = AceGUI:Create("Button")
   disableSeqbutton:SetDisabled(true)
   disableSeqbutton:SetText(L["Create Icon"])
   disableSeqbutton:SetWidth(150)
@@ -330,7 +335,7 @@ function GSE.GUIViewerToolbar(container)
 
   buttonGroup:AddChild(recordwindowbutton)
   container:AddChild(buttonGroup)
-  sequenceboxtext = sequencebox
+  -- sequenceboxtext = sequencebox
 end
 
 function GSE.GUIViewerLayout(mcontainer)
@@ -363,6 +368,7 @@ function GSE.GUIViewerLayout(mcontainer)
         viewframe:SetWidth(viewframe.Width)
     end
     scrollcontainer:SetHeight(viewframe.Height - 130)
+    scrollcontainer:DoLayout()
     viewframe:DoLayout()
   end)
 
@@ -383,7 +389,7 @@ function GSE.GUIShowViewer()
   viewframe:ReleaseChildren()
   GSE.GUIViewerLayout(viewframe)
   local cclassid = -1
-  for k,v in GSE.pairsByKeys(names) do
+  for k,_ in GSE.pairsByKeys(names) do
     local elements = GSE.split(k, ",")
     local tclassid = tonumber(elements[1])
     if tclassid ~= cclassid then

@@ -26,16 +26,9 @@ function GSE.UnEscapeSequence(sequence)
     return retseq
 end
 
+--- Deprecated Use GSE.UnEscapeTableRecursive instead
 function GSE.UnEscapeTable(tab)
-    local newtab = {}
-    for k, v in ipairs(tab) do
-        -- print (k .. " " .. v)
-        local cleanstring = GSE.UnEscapeString(v)
-        if not GSE.isEmpty(cleanstring) then
-            newtab[k] = cleanstring
-        end
-    end
-    return newtab
+    return GSE.UnEscapeTableRecursive(tab)
 end
 
 --- Remove WoW Text Markup from a string.
@@ -45,6 +38,25 @@ function GSE.UnEscapeString(str)
         str = string.gsub(str, k, v)
     end
     return str
+end
+
+function GSE.UnEscapeTableRecursive(tab)
+    for k, v in pairs(tab) do
+        if type(v) == 'table' then
+            tab[k] = GSE.UnEscapeTableRecursive(v)
+        elseif type(v) == 'string' then
+            tab[k] = GSE.UnEscapeString(v)
+        end
+    end
+
+    for k,v in ipairs(tab) do
+        if type(v) == 'table' then
+            tab[k] = GSE.UnEscapeTableRecursive(v)
+        elseif type(v) == 'string' then
+            tab[k] = GSE.UnEscapeString(v)
+        end
+    end
+    return tab
 end
 
 --- Add the lines of a string as individual entries.
@@ -102,7 +114,7 @@ function GSE.FixQuotes(source)
 end
 
 function GSE.CleanStrings(source)
-    for k, v in pairs(Statics.CleanStrings) do
+    for _, v in pairs(Statics.CleanStrings) do
 
         if source == v then
             source = ""
@@ -207,7 +219,7 @@ function GSE.Dump(node)
 
     while true do
         local size = 0
-        for k,v in pairs(node) do
+        for _,_ in pairs(node) do
             size = size + 1
         end
 
@@ -229,7 +241,7 @@ function GSE.Dump(node)
                 if (type(k) == "number" or type(k) == "boolean") then
                     key = "["..tostring(k).."]"
                 else
-                    key = "['"..tostring(k).."']"
+                    key = "[\""..tostring(k).."\"]"
                 end
 
                 if (type(v) == "number" or type(v) == "boolean") then
@@ -241,7 +253,7 @@ function GSE.Dump(node)
                     cache[node] = cur_index+1
                     break
                 else
-                    output_str = output_str .. string.rep('\t',depth) .. key .. " = '"..tostring(v).."'"
+                    output_str = output_str .. string.rep('\t',depth) .. key .. " = \""..tostring(v).."\""
                 end
 
                 if (cur_index == size) then

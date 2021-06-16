@@ -27,8 +27,8 @@ end
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
-    text = GSE.UnEscapeString(editbox:GetText())
-    returntext = GSE.TranslateString(text , "STRING", true)
+    local text = GSE.UnEscapeString(editbox:GetText())
+    local returntext = GSE.TranslateString(text , "STRING", true)
     editbox:SetText(returntext)
     editbox:SetCursorPosition(string.len(returntext)+2)
   end
@@ -42,28 +42,34 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     classid = GSE.GetCurrentClassID()
     sequenceName = "NEW_SEQUENCE"
     sequence = {
-      ["Author"] = GSE.GetCharacterName(),
-      ["Talents"] = GSE.GetCurrentTalents(),
-      ["Default"] = 1,
-      ["SpecID"] = GSE.GetCurrentSpecID();
-      ["MacroVersions"] = {
+      ["MetaData"] = {
+        ["Author"] = GSE.GetCharacterName(),
+        ["Talents"] = GSE.GetCurrentTalents(),
+        ["Default"] = 1,
+        ["SpecID"] = GSE.GetCurrentSpecID();
+      },
+      ["Macros"] = {
         [1] = {
-          ["PreMacro"] = {},
-          ["PostMacro"] = {},
-          ["KeyPress"] = {},
-          ["KeyRelease"] = {},
-          ["StepFunction"] = "Sequential",
-          [1] = "/say Hello",
+            [1] = "/say Hello",
+            ['Type'] = Statics.Actions.Action
         }
       },
     }
     if not GSE.isEmpty(recordedstring) then
-      sequence.MacroVersions[1][1] = nil
-      sequence.MacroVersions[1] = GSE.SplitMeIntolines(recordedstring)
+      sequence.Macros[1][1] = nil
+      local recordedMacro = {}
+      local action = {
+        ["Type"] = Statics.Actions.Action
+      }
+      for _,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
+        table.insert(action, v)
+      end
+      table.insert(recordedMacro, action)
+      sequence.Macros[1] = recordedMacro
     end
     GSE.GUIEditFrame.NewSequence = true
   else
-    elements = GSE.split(key, ",")
+    local elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
     sequenceName = elements[2]
     sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
@@ -76,28 +82,8 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
-  GSE.GUIEditFrame.Default = sequence.Default
-  GSE.GUIEditFrame.PVP = sequence.PVP or sequence.Default
-  GSE.GUIEditFrame.Mythic = sequence.Mythic or sequence.Default
-  GSE.GUIEditFrame.Raid = sequence.Raid or sequence.Default
-  GSE.GUIEditFrame.Dungeon = sequence.Dungeon or sequence.Default
-  GSE.GUIEditFrame.Heroic = sequence.Heroic or sequence.Default
-  GSE.GUIEditFrame.Party = sequence.Party or sequence.Default
-  GSE.GUIEditFrame.Timewalking = sequence.Timewalking or sequence.Default
-  GSE.GUIEditFrame.MythicPlus = sequence.MythicPlus or sequence.Default
-  GSE.GUIEditFrame.Arena = sequence.Arena or sequence.Default
-  GSE.GUIEditFrame.Scenario = sequence.Scenario or sequence.Default
   GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
-  GSE.GUIEditFrame.tempVariables = {}
-  if not GSE.isEmpty(sequence.Variables) then
-    for k, value in pairs(sequence.Variables) do
-      local pair = {}
-      pair.key = k
-      pair.value = value
-      table.insert(GSE.GUIEditFrame.tempVariables, pair)
-    end
-  end
   incomingframe:Hide()
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)
@@ -113,26 +99,23 @@ function GSE.GUIUpdateSequenceList()
   GSE.GUIViewFrame.SequenceListbox:SetList(names)
 end
 
-function GSE.GUIToggleClasses(buttonname)
-  if buttonname == "class" then
-    classradio:SetValue(true)
-    specradio:SetValue(false)
-  else
-    classradio:SetValue(false)
-    specradio:SetValue(true)
-  end
-end
+-- function GSE.GUIToggleClasses(buttonname)
+--   if buttonname == "class" then
+--     classradio:SetValue(true)
+--     specradio:SetValue(false)
+--   else
+--     classradio:SetValue(false)
+--     specradio:SetValue(true)
+--   end
+-- end
 
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
-  for k,v in ipairs(sequence.MacroVersions) do
-    sequence.MacroVersions[k] = GSE.TranslateSequence(v, SequenceName, "ID")
-    sequence.MacroVersions[k] = GSE.UnEscapeSequence(sequence.MacroVersions[k])
-    for i,j in ipairs(v) do
-      GSE.enforceMinimumVersion(sequence, j)
-    end
+  for k,v in ipairs(sequence.Macros) do
+    sequence.Macros[k] = GSE.TranslateSequence(v, SequenceName, "ID")
+    sequence.Macros[k] = GSE.UnEscapeSequence(sequence.Macros[k])
   end
 
   if not GSE.isEmpty(SequenceName) then
@@ -163,12 +146,14 @@ end
 
 
 function GSE.GUIGetColour(option)
-  hex = string.gsub(option, "#","")
+  -- hex = string.gsub(option, "#","")
   return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
 end
 
 function  GSE.GUISetColour(option, r, g, b)
+  GSE.PrintDebugMessage("Original option: " .. option, "GUI")
   option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
+  GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
 end
 
 
@@ -183,8 +168,6 @@ end
 function GSE.OpenOptionsPanel()
   local config = LibStub:GetLibrary("AceConfigDialog-3.0")
   config:Open("GSE")
-  --config:SelectGroup("GSSE", "Debug")
-
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
@@ -208,7 +191,7 @@ function GSE.ShowSequenceList(SequenceTable, GSEUser)
   if GSE.UnsavedOptions["GUI"] then
     GSE.ShowRemoteWindow(SequenceTable, GSEUser)
   else
-    for k,v in ipairs(SequenceTable) do
+    for _,v in ipairs(SequenceTable) do
       for i,j in pairs(v) do
         local msg = i .. " "
         if not GSE.isEmpty(j.Help) then

@@ -8,7 +8,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version");
 
 --@debug@
 if GSE.VersionString:find("version") then
-    GSE.VersionString = "2.6.48-development"
+    GSE.VersionString = "3.0.0-development"
 end
 --@end-debug@
 
@@ -51,8 +51,8 @@ function GSE.ParseVersion(version)
     end
     local parts = GSE.split(version, "-")
     local numbers = GSE.split(parts[1], ".")
-    local returnVal = 0
-    if GSE.isEmpty(number) and type(version) == "number" then
+    local returnVal
+    if GSE.isEmpty(numbers) and type(version) == "number" then
         returnVal = version
     else
         if table.getn(numbers) > 1 then
@@ -115,7 +115,7 @@ function GSE.PrintDebugMessage(message, module)
     if module == Statics.SequenceDebug then
         determinationOutputDestination(message,
             GSEOptions.CommandColour .. GNOME .. ':|r ' .. GSEOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "])
-    elseif GSEOptions.debug and module ~= GSStaticSequenceDebug and GSEOptions.DebugModules[module] == true then
+    elseif GSEOptions.debug and module ~= Statics.SequenceDebug and GSEOptions.DebugModules[module] == true then
         determinationOutputDestination(
             GSEOptions.CommandColour .. (GSE.isEmpty(module) and GNOME or module) .. ':|r ' .. GSEOptions.AuthorColour ..
                 L["<DEBUG> |r "] .. message)

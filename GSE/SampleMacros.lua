@@ -88,9 +88,9 @@ ClassicSampleMacros[11][2] = [[b4vmErLxofJxtnvqn9vvorursfdmE5KmErLxtrvySvMB0nNxt
 if GSE.GameMode == 1 then
   -- Classic WoW
   Statics.SampleMacros = ClassicSampleMacros
--- elseif GSE.GameMode == 2 then
---     -- BC Classic
---     Statics.SampleMacros = ClassicSampleMacros
+elseif GSE.GameMode == 2 then
+    -- BC Classic
+    Statics.SampleMacros = ClassicSampleMacros
 elseif GSE.GameMode == 9 then
   -- Shadowlands
   Statics.SampleMacros = SLSampleMacros

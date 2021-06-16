@@ -19,15 +19,12 @@ function GSE.GetGCD()
 
     local gcdSpell
 
-    local gcd = 1500
+    local gcd = 1.5
     -- Classic doesnt have haste.
     if GSE.GameMode > 3 then
         local haste = UnitSpellHaste("player")
         gcd = 1.5/(1 + 0.01 * haste)
         --gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
-    else
-        -- Hard coded for classic
-        gcd = 1.5
     end
 
     return gcd
@@ -100,7 +97,7 @@ end
 
 function GSE.GetSpecNames()
     local keyset = {}
-    for k, v in pairs(Statics.SpecIDList) do
+    for _, v in pairs(Statics.SpecIDList) do
         keyset[v] = v
     end
     return keyset

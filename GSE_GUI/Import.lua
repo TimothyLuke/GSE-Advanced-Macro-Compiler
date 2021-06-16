@@ -63,15 +63,15 @@ recButtonGroup:AddChild(recbutton)
 importframe:AddChild(recButtonGroup)
 GSE.GUIImportFrame = importframe
 
-function GSE.GUIToggleImportDefault(switchstate)
-  if switchstate == 1 then
-      legacyradio:SetValue(true)
-      defaultradio:SetValue(false)
-    else
-      legacyradio:SetValue(false)
-      defaultradio:SetValue(true)
-  end
-end
+-- function GSE.GUIToggleImportDefault(switchstate)
+--   if switchstate == 1 then
+--       legacyradio:SetValue(true)
+--       defaultradio:SetValue(false)
+--     else
+--       legacyradio:SetValue(false)
+--       defaultradio:SetValue(true)
+--   end
+-- end
 
 function GSE.GUIImportSequence()
   local importstring = importsequencebox:GetText()

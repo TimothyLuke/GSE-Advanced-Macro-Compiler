@@ -6,7 +6,7 @@ local currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("
 local L = GSE.L
 local Statics = GSE.Static
 
-local GCD, GCD_Update_Timer
+local GCD
 
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
@@ -33,12 +33,12 @@ function GSE.TraceSequence(button, step, task)
         else
             manaOutput = GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
         end
-        local castingspell, castspellid
+        local castingspell
 
         if GSE.GameMode == 1 then
-            castingspell, _, _, _, _, _, castspellid, _ = CastingInfo()
+            castingspell, _, _, _, _, _, _, _ = CastingInfo()
         else
-            castingspell, _, _, _, _, _, castspellid, _ = UnitCastingInfo("player")
+            castingspell, _, _, _, _, _, _, _ = UnitCastingInfo("player")
         end
         if not GSE.isEmpty(castingspell) then
             CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
@@ -146,22 +146,8 @@ function GSE:ADDON_LOADED(event, addon)
         GSE.Library[0] = {}
     end
 
-    local counter = 0
+    local counter = table.getn(GSE.Library[GSE.GetCurrentClassID()]) + table.getn(GSE.Library[0])
 
-    for k, v in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
-        counter = counter + 1
-        for i, j in ipairs(v.MacroVersions) do
-            GSE.Library[GSE.GetCurrentClassID()][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
-        end
-    end
-    if not GSE.isEmpty(GSE.Library[0]) then
-        for k, v in pairs(GSE.Library[0]) do
-            counter = counter + 1
-            for i, j in ipairs(v.MacroVersions) do
-                GSE.Library[0][k].MacroVersions[tonumber(i)] = GSE.UnEscapeSequence(j)
-            end
-        end
-    end
     if counter <= 0 then
         if GSEOptions.PromptSample then
             if table.getn(Statics.SampleMacros) > 0 then
@@ -180,6 +166,12 @@ function GSE:ADDON_LOADED(event, addon)
     GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
 
     GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
+
+    table.insert(seqnames, "GSE2 Macros")
+    GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
+
+    GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
+
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
     if addon == GNOME then
@@ -229,10 +221,11 @@ function GSE:ADDON_LOADED(event, addon)
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
+    -- UPDATE for GSE3
     if unit == "player" then
         local _, GCD_Timer = GetSpellCooldown(61304)
         GCD = true
-        GCD_Update_Timer = C_Timer.After(GCD_Timer, function()
+        C_Timer.After(GCD_Timer, function()
             GCD = nil;
             GSE.PrintDebugMessage("GCD OFF")
         end)
@@ -276,7 +269,7 @@ end
 function GSE:GROUP_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck()
-    for k, v in pairs(GSE.UnsavedOptions["PartyUsers"]) do
+    for k,_ in pairs(GSE.UnsavedOptions["PartyUsers"]) do
         if not (UnitInParty(k) or UnitInRaid(k)) then
             -- Take them out of the list
             GSE.UnsavedOptions["PartyUsers"][k] = nil
@@ -350,14 +343,26 @@ function GSE:GSSlash(input)
         end
     elseif command == "help" then
         PrintGnomeHelp()
-    elseif command == "gse3" then
-        local seqName = params[2]
-        if not GSE.isEmpty(seqName) then
-            local classID = params[3] and params[3] or GSE.GetCurrentClassID()
-            print(classID)
-            _G["GSE3"].TextBox:SetText(GSE.Dump(GSE.ConvertGSE2(GSE.Library[classID][seqName], seqName)))
-            _G["GSE3"]:Show()
-        end
+    -- elseif command == "gse3" then
+    --     local seqName = params[2]
+    --     if not GSE.isEmpty(seqName) then
+    --         local classID = params[3] and params[3] or GSE.GetCurrentClassID()
+    --         local GSE3Macro = GSE.Library[classID][seqName]
+    --         _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro ))
+    --         _G["GSE3"]:Show()
+
+    --     end
+    -- elseif command == "gse3compiled" then
+    --     local seqName = params[2]
+    --     if not GSE.isEmpty(seqName) then
+    --         local classID = params[3] and params[3] or GSE.GetCurrentClassID()
+    --         local GSE3Macro = GSE.Library[classID][seqName]
+    --         local compiledMacro = GSE.CompileTemplate(GSE3Macro.Macros[GSE.GetActiveSequenceVersion(seqName)])
+    --         _G["GSE3"].TextBox:SetText(GSE.Dump(compiledMacro))
+    --         _G["GSE3"]:Show()
+
+    --     end
+
     elseif command == "cleanorphans" or command == "clean" then
         GSE.CleanOrphanSequences()
     elseif command == "forceclean" then
@@ -377,12 +382,6 @@ function GSE:GSSlash(input)
         else
             GSE.printNoGui()
         end
-
-    elseif command == "compilemissingspells" then
-        GSE.Print("Compiling Language Table errors.  If the game hangs please be patient.")
-        GSE.ReportUnfoundSpells()
-        GSE.Print(
-            "Language Spells compiled.  Please exit the game and obtain the values from WTF/AccountName/SavedVariables/GSE.lua")
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
@@ -425,6 +424,10 @@ function GSE:processReload(action, arg)
     if arg == "Samples" then
         GSE.LoadSampleMacros(GSE.GetCurrentClassID())
     end
+    if arg == "GSE2Library" then
+        GSE.UpdateGSE2LibrarytoGSE3()
+    end
+
 end
 
 function GSE:OnEnable()
@@ -459,7 +462,7 @@ function GSE:ProcessOOCQueue()
                     GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
                 end
                 GSE.UpdateSequence(v.sequencename,
-                    v.sequence.MacroVersions[GSE.GetActiveSequenceVersion(v.sequencename)])
+                    v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
             elseif v.action == "openviewer" then
                 GSE.GUIShowViewer()
             elseif v.action == "CheckMacroCreated" then
@@ -495,7 +498,7 @@ function GSE.prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
 end
 
 function GSE.CheckOOCQueueStatus()
-    local output = ""
+    local output
     if GSE.isEmpty(GSE.OOCTimer) then
         output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
     else

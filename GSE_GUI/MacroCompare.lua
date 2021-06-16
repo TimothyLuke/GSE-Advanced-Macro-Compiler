@@ -35,7 +35,7 @@ headerGroup:SetFullWidth(true)
 headerGroup:SetLayout("Flow")
 
 
-leftColumn = AceGUI:Create("MultiLineEditBox")
+local leftColumn = AceGUI:Create("MultiLineEditBox")
 compareframe.OrigText = leftColumn
 leftColumn:SetRelativeWidth(0.5)
 leftColumn:SetFullHeight(true)
@@ -43,7 +43,7 @@ leftColumn:SetNumLines(25)
 leftColumn:DisableButton(true)
 leftColumn:SetLabel(L["Local Macro"])
 
-rightColumn = AceGUI:Create("MultiLineEditBox")
+local rightColumn = AceGUI:Create("MultiLineEditBox")
 compareframe.NewText = rightColumn
 rightColumn:SetRelativeWidth(0.5)
 rightColumn:SetFullHeight(true)

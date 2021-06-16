@@ -417,7 +417,7 @@ function GSE.GetOptionsTable()
           resetcontroltitle = {
             type = "header",
             name = L["Control Keys."],
-            order = 560
+            order = 570
           },
           resetAnyControlKey = {
             name = L["Any Control Key"],
@@ -443,7 +443,7 @@ function GSE.GetOptionsTable()
           resetshifttitle = {
             type = "header",
             name = L["Shift Keys."],
-            order = 570
+            order = 580
           },
           resetAnyShiftKey = {
             name = L["Any Shift Key"],
@@ -808,7 +808,7 @@ function GSE.GetOptionsTable()
   -- Add Dynamic Content Container
 
   local ord = 900
-  for k,v in pairs(GSEOptions.AddInPacks) do
+  for _,v in pairs(GSEOptions.AddInPacks) do
     ord = ord + 1
     OptionsTable.args.pluginsTab.args[v.Name] = {
       name = v.Name,
@@ -823,7 +823,7 @@ function GSE.GetOptionsTable()
   end
 
   ord = 30
-  for k,v in pairs(GSEOptions.DebugModules) do
+  for k,_ in pairs(GSEOptions.DebugModules) do
     ord = ord + 1
     OptionsTable.args.debugTab.args[k] = {
       name = k,

@@ -81,6 +81,7 @@ function GSE.GUIUpdateExportBox()
 end
 
 function GSE.GUIExportSequence(classid, sequencename)
+  local _, _, _, tocversion = GetBuildInfo()
   GSE.GUIExportframe.classid = classid
   GSE.GUIExportframe.sequencename = sequencename
   GSE.GUIExportframe.sequence = GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
