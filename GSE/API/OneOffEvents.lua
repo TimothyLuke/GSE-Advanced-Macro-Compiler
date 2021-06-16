@@ -24,7 +24,7 @@ function GSE.UpdateGSE2LibrarytoGSE3()
     for k,v in ipairs(GSEStorage) do
         for i,j in pairs(v) do
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-            print(GSE.Dump(uncompressedVersion))
+            --print(GSE.Dump(uncompressedVersion))
             local decoded = GSE.ConvertGSE2(uncompressedVersion[2], i)
             decoded.MetaData.GSEVersion = "3.0.0"
             decoded.MetaData.EnforceCompatability = true

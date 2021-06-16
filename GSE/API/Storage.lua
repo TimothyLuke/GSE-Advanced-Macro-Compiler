@@ -1159,13 +1159,13 @@ local function fixLine(line, KeyPress, KeyRelease)
         else
             local mynumber = tonumber(string.sub(line, 14))
 
-            if GSE.isEmpty(number) then
+            if GSE.isEmpty(mynumber) then
                 action["MS"] = 10
                 GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "Storage")
             else
                 action["MS"] = tonumber(string.sub(line, 14)) * 1000
             end
-            
+
         end
     end
     return action
@@ -1231,7 +1231,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         end
 
         gse3seq.InbuiltVariables = {}
-        
+
         local function checkParameter(param)
                 gse3seq.InbuiltVariables[param] = v[param]
         end
