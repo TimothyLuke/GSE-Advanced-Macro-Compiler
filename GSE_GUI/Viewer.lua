@@ -192,8 +192,6 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   viewiconpicker.frame:SetScript("OnDragStart", function()
     PickupMacro(sequencename)
   end)
-  
-  
 
   selpanel.Icon = viewiconpicker
   viewiconpicker:SetImage(GSE.GetMacroIcon(classid, sequencename))
@@ -208,7 +206,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   selpanel:AddChild(columngroup)
   selpanel:AddChild(row2)
-  
+
   container:AddChild(selpanel)
   font:SetJustifyV(origjustifyV)
   font:SetJustifyH(origjustifyH)

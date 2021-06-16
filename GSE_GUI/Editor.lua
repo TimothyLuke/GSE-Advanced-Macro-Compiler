@@ -945,7 +945,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     addPauseButton:SetImage(Statics.ActionsIcons.Pause)
 
     addPauseButton:SetCallback("OnClick", function()
-        
+
         local newAction = {
             ['MS'] = 'GCD',
             ['Type'] = Statics.Actions.Pause
@@ -1365,7 +1365,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
 
     deleteBlockButton:SetCallback("OnClick", function()
         local delPath = {}
-        local delObj 
+        local delObj
         for k,v in ipairs(path) do
             if k == #path then
                 delObj = v
@@ -1443,7 +1443,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
             GSE.ClearTooltip(editframe)
         end)
 
-        
+
         addRepeatButton:SetImageSize(20, 20)
         addRepeatButton:SetWidth(20)
         addRepeatButton:SetHeight(20)
@@ -1505,7 +1505,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
 
     layoutcontainer:AddChild(headingLabel)
 
-    
+
     if includeAdd then
         local spacerlabel2 = AceGUI:Create("Label")
         spacerlabel2:SetWidth(5)
@@ -1539,7 +1539,7 @@ local function drawAction(container, action, version, keyPath)
     local label = AceGUI:Create("Label")
     label:SetFontObject(GameFontNormalLarge)
     container:AddChild(label)
-   
+
     local hlabel = AceGUI:Create("Label")
     --print(GSE.dump(action))
     hlabel:SetText(string.format(L["Block Type: %s"], Statics.Actions[action.Type]))
@@ -1550,8 +1550,7 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Loop then
         includeAdd = true
     end
-    
-        
+
     if action.Type == Statics.Actions.Pause then
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
 
