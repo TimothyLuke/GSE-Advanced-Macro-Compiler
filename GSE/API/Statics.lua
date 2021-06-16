@@ -161,6 +161,40 @@ local function determineClassName(specID)
     return specname
 end
 
+Statics.SpecIDList = {}
+
+if GSE.GameMode < 4 then
+  Statics.SpecIDClassList = {
+      [0] = 0,
+      [1] = 1,
+      [2] = 2,
+      [3] = 3,
+      [4] = 4,
+      [5] = 5,
+      [6] = 6,
+      [7] = 7,
+      [8] = 8,
+      [9] = 9,
+      [10] = 10,
+      [11] = 11,
+      [12] = 12,
+  }
+  Statics.SpecIDList = {
+    [0] = L["Global"],
+    [1] = determineClassName(1),
+    [2] = determineClassName(2),
+    [3] = determineClassName(3),
+    [4] = determineClassName(4),
+    [5] = determineClassName(5),
+    [6] = determineClassName(6),
+    [7] = determineClassName(7),
+    [8] = determineClassName(8),
+    [9] = determineClassName(9),
+    [10] = determineClassName(10),
+    [11] = determineClassName(11),
+    [12] = determineClassName(12),
+  }
+else
 Statics.SpecIDList = {
     [0] = L["Global"],
     [1] = determineClassName(1),
@@ -212,37 +246,7 @@ Statics.SpecIDList = {
     [577] = determineSpecializationName(577),
     [581] = determineSpecializationName(581),
 }
-if GSE.GameMode < 4 then
-  Statics.SpecIDClassList = {
-      [0] = 0,
-      [1] = 1,
-      [2] = 2,
-      [3] = 3,
-      [4] = 4,
-      [5] = 5,
-      [6] = 6,
-      [7] = 7,
-      [8] = 8,
-      [9] = 9,
-      [10] = 10,
-      [11] = 11,
-      [12] = 12,
-  }
-  Statics.SpecIDList = {
-    [0] = L["Global"],
-    [1] = determineClassName(1),
-    [2] = determineClassName(2),
-    [3] = determineClassName(3),
-    [4] = determineClassName(4),
-    [5] = determineClassName(5),
-    [6] = determineClassName(6),
-    [7] = determineClassName(7),
-    [8] = determineClassName(8),
-    [9] = determineClassName(9),
-    [10] = determineClassName(10),
-    [11] = determineClassName(11),
-    [12] = determineClassName(12),
-  }
+
 end
 
 Statics.SpecIDHashList = {}

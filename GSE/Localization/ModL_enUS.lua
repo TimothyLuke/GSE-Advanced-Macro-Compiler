@@ -632,3 +632,4 @@ L["Add a Repeat Block."] = true
 L["Add Pause"] = true
 L["Add a Pause Block."] = true
 L["Pause for the GCD."] = true
+L["Error processing Custom Pause Value.  You will need to recheck your macros."] = true

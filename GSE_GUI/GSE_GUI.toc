@@ -4,7 +4,7 @@
 ## Interface-Classic: 11307
 ## Interface-BCC: 20501
 
-## Title: |cff0000ffGSE2:|r |cFF00D1FFGUI|r
+## Title: |cff0000ffGSE:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
 ## Version: @project-version@

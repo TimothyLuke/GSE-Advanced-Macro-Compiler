@@ -4,8 +4,8 @@
 ## Interface-Classic: 11307
 ## Interface-BCC: 20501
 
-## Title: |cff0000FFGSE2:|r |cFF00D1FFLDB|r
-## Notes: LibDataBroker Plugin for GSE2
+## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
+## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE

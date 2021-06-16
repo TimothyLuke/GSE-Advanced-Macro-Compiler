@@ -1157,7 +1157,15 @@ local function fixLine(line, KeyPress, KeyRelease)
         if string.sub(line, 14) == "~~GCD~~" then
             action["MS"] = GSE.GetGCD() * 1000
         else
-            action["MS"] = tonumber(string.sub(line, 14)) * 1000
+            local mynumber = tonumber(string.sub(line, 14))
+
+            if GSE.isEmpty(number) then
+                action["MS"] = 10
+                GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "Storage")
+            else
+                action["MS"] = tonumber(string.sub(line, 14)) * 1000
+            end
+            
         end
     end
     return action
@@ -1222,13 +1230,10 @@ function GSE.ConvertGSE2(sequence, sequenceName)
             end
         end
 
+        gse3seq.InbuiltVariables = {}
+        
         local function checkParameter(param)
-            if not GSE.isEmpty(v[param]) then
-                if GSE.isEmpty(gse3seq.InbuiltVariables) then
-                    gse3seq.InbuiltVariables = {}
-                end
                 gse3seq.InbuiltVariables[param] = v[param]
-            end
         end
 
         checkParameter("Combat")
@@ -1260,10 +1265,10 @@ local function buildAction(action, metaData)
 
     if GSEOptions.hideSoundErrors then
         -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
-        table.insert(action, "/console Sound_EnableErrorSpeech 0", 1)
-        table.insert(action, "/console Sound_EnableSFX 0", 1)
-        table.insert(action, '/run ers=GetCVar("Sound_EnableErrorSpeech");', 1)
-        table.insert(action, '/run sfx=GetCVar("Sound_EnableSFX");', 1)
+        table.insert(action, "/console Sound_EnableErrorSpeech 0")
+        table.insert(action, "/console Sound_EnableSFX 0")
+        table.insert(action, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
+        table.insert(action, '/run sfx=GetCVar("Sound_EnableSFX");')
     end
 
     for k,v in ipairs(action) do
