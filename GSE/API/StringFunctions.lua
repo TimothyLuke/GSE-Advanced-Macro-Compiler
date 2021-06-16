@@ -70,7 +70,7 @@ end
 
 --- Convert a string to an array of lines.
 function GSE.SplitMeIntolines(str)
-    GSE.PrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
+    --GSE.PrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
     local t = {}
     local function helper(line)
         table.insert(t, line)

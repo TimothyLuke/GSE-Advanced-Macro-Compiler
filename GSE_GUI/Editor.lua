@@ -728,7 +728,8 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Author"] = GSE.GetCharacterName(),
                 ["Talents"] = GSE.GetCurrentTalents(),
                 ["Default"] = 1,
-                ["SpecID"] = GSE.GetCurrentSpecID();
+                ["SpecID"] = GSE.GetCurrentSpecID(),
+                ["GSEVersion"] = GSE.VersionString,
             },
             ["Macros"] = {
                 [1] = {

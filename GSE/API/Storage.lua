@@ -9,16 +9,16 @@ local GNOME = "Storage"
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.DeleteMacroStub(sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
-    GSEStorage[tonumber(classid)][sequenceName] = nil
+    GSE3Storage[tonumber(classid)][sequenceName] = nil
 end
 
 function GSE.ImportLegacyStorage(Library)
-    if GSE.isEmpty(GSEStorage) then
-        GSEStorage = {}
+    if GSE.isEmpty(GSE3Storage) then
+        GSE3Storage = {}
     end
     for i = 0, 12 do
-        if GSE.isEmpty(GSEStorage[i]) then
-            GSEStorage[i] = {}
+        if GSE.isEmpty(GSE3Storage[i]) then
+            GSE3Storage[i] = {}
         end
     end
 
@@ -27,7 +27,7 @@ function GSE.ImportLegacyStorage(Library)
 
             for i, j in pairs(v) do
                 local compressedVersion = GSE.EncodeMessage({i, j})
-                GSEStorage[k][i] = compressedVersion
+                GSE3Storage[k][i] = compressedVersion
             end
         end
     end
@@ -133,12 +133,12 @@ end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- check for version flags.
-    if sequence.EnforceCompatability then
-        if GSE.ParseVersion(sequence.GSEVersion) > (GSE.VersionNumber) then
+    if sequence.MetaData.EnforceCompatability then
+        if GSE.ParseVersion(sequence.MetaData.GSEVersion) > (GSE.VersionNumber) then
             GSE.Print(string.format(
                           L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."],
-                          sequence.GSEVersion))
-            GSE.PrintDebugMessage("Macro Version " .. sequence.GSEVersion .. " Required Version: " .. GSE.VersionString,
+                          sequence.MetaData.GSEVersion))
+            GSE.PrintDebugMessage("Macro Version " .. sequence.MetaData.GSEVersion .. " Required Version: " .. GSE.VersionString,
                 "Storage")
             return
         end
@@ -153,7 +153,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
     -- check Sequence TOC matches the current TOC
     local gameversion, build, date, tocversion = GetBuildInfo()
-    if GSE.isEmpty(sequence.TOC) or sequence.TOC ~= tocversion then
+    if GSE.isEmpty(sequence.MetaData.TOC) or sequence.MetaData.TOC ~= tocversion then
         GSE.Print(string.format(L["WARNING ONLY"] .. ": " ..
                                     L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
                       sequenceName))
@@ -197,7 +197,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
     if classid == GSE.GetCurrentClassID() or classid == 0 then
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
-        GSE.UpdateSequence(sequenceName, sequence.MacroVersions[sequence.Default])
+        GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.Default])
     end
 end
 
@@ -223,13 +223,13 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         sequenceName = tempseqName
     end
     if action == "MERGE" then
-        for k, v in ipairs(newSequence.MacroVersions) do
+        for k, v in ipairs(newSequence.Macros) do
             GSE.PrintDebugMessage("adding " .. k, "Storage")
-            table.insert(GSE.Library[classid][sequenceName]["MetaData"].MacroVersions, v)
+            table.insert(GSE.Library[classid][sequenceName].Macros, v)
         end
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
-        GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
         if GSE.isEmpty(newSequence.Author) then
             -- Set to Unknown Author
@@ -244,7 +244,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.Library[classid][sequenceName] = newSequence
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
-        GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
     elseif action == "RENAME" then
         if GSE.isEmpty(newSequence.Author) then
@@ -258,7 +258,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
 
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
-        GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was imported as a new macro."], "GSE Storage")
         GSE.PrintDebugMessage("Sequence " .. sequenceName .. " New Entry: " ..
                                   GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
@@ -284,7 +284,7 @@ end
 
 --- Replace a current version of a Macro
 function GSE.ReplaceMacro(classid, sequenceName, sequence)
-    GSEStorage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+    GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
 end
 
@@ -521,8 +521,8 @@ end
 function GSE.CleanMacroLibrary(forcedelete)
     -- Clean out the sequences database except for the current version
     if forcedelete then
-        GSEStorage[GSE.GetCurrentClassID()] = nil
-        GSEStorage[GSE.GetCurrentClassID()] = {}
+        GSE3Storage[GSE.GetCurrentClassID()] = nil
+        GSE3Storage[GSE.GetCurrentClassID()] = {}
         GSE.Library[GSE.GetCurrentClassID()] = nil
         GSE.Library[GSE.GetCurrentClassID()] = {}
     end
