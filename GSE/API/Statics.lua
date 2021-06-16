@@ -435,12 +435,22 @@ Statics.Actions.Action = "Action"
 Statics.Actions.Pause = "Pause"
 
 Statics.ActionsIcons = {}
-Statics.ActionsIcons.Loop = "Interface\\Icons\\ability_hunter_misdirection"
+Statics.ActionsIcons.Loop = "Interface\\Icons\\spell_frost_stun"
 --Statics.ActionsIcons.If = "If"
 Statics.ActionsIcons.Repeat = "Interface\\Icons\\ability_monk_chiswirl"
-Statics.ActionsIcons.Action = "Interface\\Icons\\inv_blacksmithing_khazgoriananvil"
+Statics.ActionsIcons.Action = "Interface\\Icons\\trade_blacksmithing"
 Statics.ActionsIcons.Pause = "Interface\\Icons\\inv_misc_pocketwatch_01"
+Statics.ActionsIcons.Up = "Interface\\Icons\\misc_arrowlup"
+Statics.ActionsIcons.Down = "Interface\\Icons\\misc_arrowdown"
 
+
+if GSE.GameMode < 4 then
+  Statics.ActionsIcons.Repeat = "Interface\\Icons\\inv_misc_bandage_15"
+  Statics.ActionsIcons.Up = "Interface\\Icons\\inv_spear_01"
+  Statics.ActionsIcons.Down = "Interface\\Icons\\inv_weapon_shortblade_26"
+
+  
+end
 
 Statics.GSE3OnClick = [=[
 local step = self:GetAttribute('step')

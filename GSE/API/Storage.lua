@@ -1260,15 +1260,15 @@ local function buildAction(action, metaData)
     if GSEOptions.requireTarget then
 
         -- See #20 prevent target hopping
-        table.insert(action, "/stopmacro [@playertarget, noexists]",1)
+        table.insert(action, 1, "/stopmacro [@playertarget, noexists]")
     end
 
     if GSEOptions.hideSoundErrors then
         -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
-        table.insert(action, "/console Sound_EnableErrorSpeech 0")
-        table.insert(action, "/console Sound_EnableSFX 0")
-        table.insert(action, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
-        table.insert(action, '/run sfx=GetCVar("Sound_EnableSFX");')
+        table.insert(action, 1, "/console Sound_EnableErrorSpeech 0")
+        table.insert(action, 1, "/console Sound_EnableSFX 0")
+        table.insert(action, 1, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
+        table.insert(action, 1, '/run sfx=GetCVar("Sound_EnableSFX");')
     end
 
     for k,v in ipairs(action) do

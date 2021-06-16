@@ -146,15 +146,16 @@ function GSE:ADDON_LOADED(event, addon)
         GSE.Library[0] = {}
     end
 
-    local counter = table.getn(GSE.Library[GSE.GetCurrentClassID()]) + table.getn(GSE.Library[0])
+    -- Why doesnt this work anymore?
+    -- local counter = table.getn(GSE3Storage[GSE.GetCurrentClassID()]) + table.getn(GSE3Storage[0])
 
-    if counter <= 0 then
-        if GSEOptions.PromptSample then
-            if table.getn(Statics.SampleMacros) > 0 then
-                StaticPopup_Show("GSE-SampleMacroDialog")
-            end
-        end
-    end
+    -- if counter <= 0 then
+    --     if GSEOptions.PromptSample then
+    --         if table.getn(Statics.SampleMacros) > 0 then
+    --             StaticPopup_Show("GSE-SampleMacroDialog")
+    --         end
+    --     end
+    -- end
     GSE.PrintDebugMessage("I am loaded")
 
     GSE:ZONE_CHANGED_NEW_AREA()
