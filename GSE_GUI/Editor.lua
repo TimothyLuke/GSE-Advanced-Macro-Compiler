@@ -721,16 +721,30 @@ end
 
 function GSE:GUIDrawMacroEditor(container, version)
     version = tonumber(version)
-    if GSE.isEmpty(editframe.Sequence.Macros[version]) then
-        editframe.Sequence.Macros[version][1] = {
-            [1] = "/say Hello",
-            ['Type'] = 'Action'
+
+    if GSE.isEmpty(editframe.Sequence) then
+        editframe.Sequence = {
+            ["MetaData"] = {
+                ["Author"] = GSE.GetCharacterName(),
+                ["Talents"] = GSE.GetCurrentTalents(),
+                ["Default"] = 1,
+                ["SpecID"] = GSE.GetCurrentSpecID();
+            },
+            ["Macros"] = {
+                [1] = {
+                    ["Actions"] = {
+                        [1] = {
+                            [1] = "/say Hello",
+                            ['Type'] = Statics.Actions.Action
+                        }
+                    },
+                    ['InbuiltVariables'] = {},
+                    ['Variables'] = {}
+                }
+            },
         }
     end
 
-    -- TODO change the translating to be per action not per sequence
-    -- editframe.Sequence.Macros[version] = GSE.TranslateSequence(editframe.Sequence.Macros[version],
-                                                    -- "From Editor", "CURRENT")
     if GSE.isEmpty(frameTableUpdated[version]) then
         setmetatable(editframe.Sequence.Macros[version].Actions, {
             __index = function(t, k)
@@ -1017,6 +1031,9 @@ function GSE:GUIDrawMacroEditor(container, version)
     --  editframe.Sequence.Macros[version].Target = value
     -- end)
 
+    if GSE.isEmpty(editframe.Sequence.Macros[version].InbuiltVariables) then
+        editframe.Sequence.Macros[version].InbuiltVariables = {}
+    end
     local combatresetcheckbox = AceGUI:Create("CheckBox")
     combatresetcheckbox:SetType("checkbox")
     combatresetcheckbox:SetWidth(78)

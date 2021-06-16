@@ -50,8 +50,14 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       },
       ["Macros"] = {
         [1] = {
-            [1] = "/say Hello",
-            ['Type'] = Statics.Actions.Action
+          ["Actions"] = {
+            [1] = {
+                [1] = "/say Hello",
+                ['Type'] = Statics.Actions.Action
+            }
+          },
+          ['InbuiltVariables'] = {},
+          ['Variables'] = {}
         }
       },
     }
