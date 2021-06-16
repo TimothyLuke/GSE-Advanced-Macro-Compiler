@@ -2048,7 +2048,7 @@ function GSE.GUISelectEditorTab(container, event, group)
         elseif group == "new" then
             -- Copy the Default to a new version
             table.insert(editframe.Sequence.Macros,
-                GSE.CloneMacroVersion(editframe.Sequence.Macros[editframe.Sequence.Default]))
+                GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.Default]))
 
             GSE.GUIEditorPerformLayout(editframe)
             GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
