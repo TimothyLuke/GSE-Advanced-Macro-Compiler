@@ -1224,9 +1224,9 @@ local function ChooseVersionTab(version)
 end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
-    local layoutcontainer = AceGUI:Create("SimpleGroup")
+    local layoutcontainer = AceGUI:Create("InlineGroup")
 
-    layoutcontainer:SetLayout("List")
+    layoutcontainer:SetLayout("Flow")
     layoutcontainer:SetWidth(width)
     layoutcontainer:SetHeight(30)
     local moveUpButton = AceGUI:Create("Icon")
@@ -1390,18 +1390,18 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
 
     layoutcontainer:AddChild(headingLabel)
 
-    local spacerlabel2 = AceGUI:Create("Label")
-    spacerlabel2:SetWidth(5)
-    layoutcontainer:AddChild(spacerlabel2)
-
+    
     if includeAdd then
+        local spacerlabel2 = AceGUI:Create("Label")
+        spacerlabel2:SetWidth(5)
+        layoutcontainer:AddChild(spacerlabel2)
         layoutcontainer:AddChild(addActionButton)
         layoutcontainer:AddChild(addRepeatButton)
         layoutcontainer:AddChild(addLoopButton)
         layoutcontainer:AddChild(addPauseButton)
     end
     local spacerlabel3 = AceGUI:Create("Label")
-    spacerlabel3:SetWidth(5)
+    spacerlabel3:SetWidth(15)
     layoutcontainer:AddChild(spacerlabel3)
 
     layoutcontainer:AddChild(deleteBlockButton)
@@ -1435,9 +1435,11 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Loop then
         includeAdd = true
     end
-    container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+    
         
     if action.Type == Statics.Actions.Pause then
+        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
@@ -1512,6 +1514,8 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(linegroup1)
 
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
+        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel()
         valueEditBox:SetNumLines(3)
@@ -1536,9 +1540,13 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(valueEditBox)
     elseif action.Type == Statics.Actions.Loop then
 
-        local macroPanel = AceGUI:Create("SimpleGroup")
+        local macroPanel = AceGUI:Create("InlineGroup")
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
+
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel)
+
+
         local stepdropdown = AceGUI:Create("Dropdown")
         stepdropdown:SetLabel(L["Step Function"])
         stepdropdown:SetWidth((editframe.Width) * 0.24)
@@ -1580,13 +1588,13 @@ local function drawAction(container, action, version, keyPath)
             editframe.Sequence.Macros[version][keyPath].Repeat = value
         end)
 
-        local linegroup1 = AceGUI:Create("SimpleGroup")
-        linegroup1:SetLayout("Flow")
-        linegroup1:SetWidth(maxWidth)
-        linegroup1:AddChild(stepdropdown)
         local spacerlabel1 = AceGUI:Create("Label")
-        spacerlabel1:SetWidth(5)
+        spacerlabel1:SetWidth(15)
         linegroup1:AddChild(spacerlabel1)
+        linegroup1:AddChild(stepdropdown)
+        local spacerlabel2 = AceGUI:Create("Label")
+        spacerlabel2:SetWidth(5)
+        linegroup1:AddChild(spacerlabel2)
         linegroup1:AddChild(looplimit)
         container:AddChild(linegroup1)
 
@@ -1600,11 +1608,11 @@ local function drawAction(container, action, version, keyPath)
         -- --testRowButton:SetHeight(20)
         -- testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
 
-        local spacerlabel2 = AceGUI:Create("Label")
-        spacerlabel1:SetWidth(25)
+        local spacerlabel3 = AceGUI:Create("Label")
+        spacerlabel3:SetWidth(45)
 
-        local macroGroup = AceGUI:Create("SimpleGroup")
-        macroGroup:SetWidth(maxWidth - 25)
+        local macroGroup = AceGUI:Create("InlineGroup")
+        macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
 
         for key,act in ipairs(action) do
@@ -1617,7 +1625,7 @@ local function drawAction(container, action, version, keyPath)
         end
         -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
         -- linegroup2:AddChild(testRowButton)
-        linegroup2:AddChild(spacerlabel2)
+        linegroup2:AddChild(spacerlabel3)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
         container:AddChild(macroPanel)
@@ -1646,8 +1654,9 @@ function GSE:DrawSequenceEditor(container, version)
     font:SetJustifyV("BOTTOM")
 
     for key,action in ipairs(macro) do
-        local macroPanel = AceGUI:Create("SimpleGroup")
+        local macroPanel = AceGUI:Create("InlineGroup")
         macroPanel:SetWidth(maxWidth)
+        macroPanel:SetLayout("List")
         local keyPath = {}
         table.insert(keyPath, key)
         drawAction(macroPanel, action, version, keyPath)
