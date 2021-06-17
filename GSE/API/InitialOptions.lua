@@ -124,5 +124,6 @@ GSE.PrintAvailable = false
 GSE.StandardAddInPacks = {}
 GSE.UsedSequences = {}
 GSE.SequencesExec = {}
+GSE.SequencesReverseExec = {}
 GSE.UnsavedOptions["PartyUsers"] = {}
 GSE.UnsavedOptions["GUI"] = false
