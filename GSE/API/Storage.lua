@@ -1485,4 +1485,4 @@ function GSE.CreateGSE3Button(macro, name)
     end
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
-end
+end--      Accepts a <code>sequence table</code> and a <code>SequenceName</code>

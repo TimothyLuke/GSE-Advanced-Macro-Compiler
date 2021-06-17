@@ -125,8 +125,8 @@ compareframe:AddChild (actionButtonGroup)
 
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   GSE.GUICompareFrame.NewSequence = newsequence
-  GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSE.Library[classid][sequenceName], sequenceName, true, "STRING", true))
-  GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true, "STRING", true))
+  GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSE.Library[classid][sequenceName], sequenceName, true))
+  GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true))
   GSE.GUICompareFrame:Show()
   GSE.GUICompareFrame.classid = classid
   GSE.GUICompareFrame.sequenceName = sequenceName
