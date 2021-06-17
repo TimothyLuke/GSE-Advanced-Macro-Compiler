@@ -670,7 +670,7 @@ function GSE:GUIDrawMetadataEditor(container)
         GSE.ClearTooltip(editframe)
     end)
 
-    if GSE.GameMode == 1 then
+    if GSE.GameMode < 4 then
         -- Classic WoW
         defgroup1:AddChild(defaultdropdown)
         defgroup1:AddChild(spacerlabel4)
@@ -746,7 +746,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         }
     end
 
-    if GSE.isEmpty(frameTableUpdated[version]) then
+    --if GSE.isEmpty(frameTableUpdated[version]) then
         setmetatable(editframe.Sequence.Macros[version].Actions, {
             __index = function(t, k)
 
@@ -773,8 +773,8 @@ function GSE:GUIDrawMacroEditor(container, version)
                rawset(t, last_k, v)
             end
         })
-        frameTableUpdated[version] = true
-    end
+    --    frameTableUpdated[version] = true
+    --end
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     layoutcontainer:SetFullWidth(true)
@@ -1559,7 +1559,6 @@ local function drawAction(container, action, version, keyPath)
     container:AddChild(label)
 
     local hlabel = AceGUI:Create("Label")
-    --print(GSE.dump(action))
     hlabel:SetText(string.format(L["Block Type: %s"], Statics.Actions[action.Type]))
     --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
     hlabel:SetFontObject(GameFontNormalLarge)
@@ -1647,7 +1646,6 @@ local function drawAction(container, action, version, keyPath)
 
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
-
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel()
         valueEditBox:SetNumLines(3)

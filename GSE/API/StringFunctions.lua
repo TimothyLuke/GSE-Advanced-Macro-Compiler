@@ -1,28 +1,10 @@
 local GSE = GSE
 local Statics = GSE.Static
 
---- Remove WoW Text Markup from a sequence.
+--- Remove WoW Text Markup from a sequence.  Deprecated Use GSE.UnEscapeTableRecursive
 function GSE.UnEscapeSequence(sequence)
 
     local retseq = GSE.UnEscapeTable(sequence)
-    for k, v in pairs(sequence) do
-        if type(k) == "string" then
-            retseq[k] = v
-        end
-    end
-    if not GSE.isEmpty(sequence.KeyPress) then
-        retseq.KeyPress = GSE.UnEscapeTable(sequence.KeyPress)
-    end
-    if not GSE.isEmpty(sequence.KeyRelease) then
-        retseq.KeyRelease = GSE.UnEscapeTable(sequence.KeyRelease)
-    end
-    if not GSE.isEmpty(sequence.PreMacro) then
-        retseq.PreMacro = GSE.UnEscapeTable(sequence.PreMacro)
-    end
-    if not GSE.isEmpty(sequence.PostMacro) then
-        retseq.PostMacro = GSE.UnEscapeTable(sequence.PostMacro)
-    end
-
     return retseq
 end
 

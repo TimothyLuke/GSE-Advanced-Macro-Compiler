@@ -135,16 +135,18 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Check its not a GSE2 Sequence
     if GSE.isEmpty(sequence.Macros) then
         sequence = GSE.ConvertGSE2(sequence, sequenceName)
-        GSE.Print(string.format("%s " .. L["was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."], sequenceName), "Import GSE2")
+        GSE.Print(string.format("%s " ..
+                                    L["was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."],
+            sequenceName), "Import GSE2")
     end
     -- check for version flags.
     if sequence.MetaData.EnforceCompatability then
         if GSE.ParseVersion(sequence.MetaData.GSEVersion) > (GSE.VersionNumber) then
             GSE.Print(string.format(
-                          L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."],
-                          sequence.MetaData.GSEVersion))
-            GSE.PrintDebugMessage("Macro Version " .. sequence.MetaData.GSEVersion .. " Required Version: " .. GSE.VersionString,
-                "Storage")
+                L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."],
+                sequence.MetaData.GSEVersion))
+            GSE.PrintDebugMessage("Macro Version " .. sequence.MetaData.GSEVersion .. " Required Version: " ..
+                                      GSE.VersionString, "Storage")
             return
         end
     end
@@ -161,7 +163,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     if GSE.isEmpty(sequence.MetaData.TOC) or sequence.MetaData.TOC ~= tocversion then
         GSE.Print(string.format(L["WARNING ONLY"] .. ": " ..
                                     L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."],
-                      sequenceName))
+            sequenceName))
     end
 
     -- Check for collisions
@@ -223,8 +225,8 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     if sequenceName:len() > 28 then
         local tempseqName = sequenceName:sub(1, 28)
         GSE.Print(string.format(
-                      L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."],
-                      sequenceName, tempseqName), "GSE Storage")
+            L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."],
+            sequenceName, tempseqName), "GSE Storage")
         sequenceName = tempseqName
     end
     if action == "MERGE" then
@@ -300,7 +302,7 @@ function GSE.LoadStorage(destination)
     end
     if GSE.isEmpty(GSE3Storage) then
         GSE3Storage = {}
-        for iind=0, 12 do
+        for iind = 0, 12 do
             GSE3Storage[iind] = {}
         end
     end
@@ -314,7 +316,8 @@ function GSE.LoadStorage(destination)
                 destination[k][i] = uncompressedVersion[2]
             end)
             if err then
-                GSE.Print("There was an error processing " .. i .. ', You will need to reimport this macro from another source.', err )
+                GSE.Print("There was an error processing " .. i ..
+                              ', You will need to reimport this macro from another source.', err)
             end
         end
     end
@@ -322,7 +325,7 @@ end
 
 --- Load a collection of Sequences
 function GSE.ImportCompressedMacroCollection(Sequences)
-    for _,v in ipairs(Sequences) do
+    for _, v in ipairs(Sequences) do
         GSE.ImportSerialisedSequence(v)
     end
 end
@@ -391,9 +394,8 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                           L["|r. As a result this macro was not created.  Please delete some macros and reenter "] ..
                           GSEOptions.CommandColour .. L["/gs|r again."], GNOME)
         else
-            CreateMacro(sequenceName,
-                             (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon),
-                             GSE.CreateMacroString(sequenceName), (forceglobalstub and false or GSE.SetMacroLocation()))
+            CreateMacro(sequenceName, (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon),
+                GSE.CreateMacroString(sequenceName), (forceglobalstub and false or GSE.SetMacroLocation()))
         end
     end
 end
@@ -405,7 +407,7 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
     if (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and
         (type(actiontable[2]) == "table") then
         GSE.PrintDebugMessage(string.format("tablerows: %s   type cell1 %s cell2 %s", table.getn(actiontable),
-                                  type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
+            type(actiontable[1]), type(actiontable[2])), Statics.SourceTransmission)
         local seqName = string.upper(actiontable[1])
         GSE.AddSequenceToCollection(seqName, actiontable[2])
         if createicon then
@@ -535,7 +537,7 @@ end
 
 --- This function resets a gsebutton back to its initial setting
 function GSE.ResetButtons()
-    for k,_ in pairs(GSE.UsedSequences) do
+    for k, _ in pairs(GSE.UsedSequences) do
         local gsebutton = _G[k]
         if gsebutton:GetAttribute("combatreset") == true then
             gsebutton:SetAttribute("step", 1)
@@ -596,8 +598,8 @@ end
 
 function GSE.CreateMacroString(macroname)
     return string.format(
-               "#showtooltip\n/click [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s",
-               macroname, macroname, macroname, macroname, macroname)
+        "#showtooltip\n/click [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s",
+        macroname, macroname, macroname, macroname, macroname)
 end
 
 function GSE.UpdateMacroString()
@@ -673,7 +675,7 @@ end
 --- This returns a list of Sequence Names for the current spec
 function GSE.GetSequenceNames()
     local keyset = {}
-    for k,_ in pairs(GSE.Library) do
+    for k, _ in pairs(GSE.Library) do
         if GSE.isEmpty(GSEOptions.filterList) then
             GSEOptions.filterList = {}
             GSEOptions.filterList[Statics.Spec] = true
@@ -742,8 +744,7 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
             return "INV_MISC_QUESTIONMARK"
         else
             local _, _, _, specicon, _, _, _ = GetSpecializationInfoByID(
-                                                   (GSE.isEmpty(sequence.SpecID) and GSE.GetCurrentSpecID() or
-                                                       sequence.SpecID))
+                (GSE.isEmpty(sequence.SpecID) and GSE.GetCurrentSpecID() or sequence.SpecID))
             GSE.PrintDebugMessage("No Sequence Icon setting to " .. strsub(specicon, 17), GNOME)
             return strsub(specicon, 17)
         end
@@ -883,7 +884,7 @@ function GSE.MoveMacroToClassFromGlobal()
             else
                 GSE.Library[GSE.GetClassIDforSpec(v.SpecID)][k] = v
                 GSE.Print(string.format(L["Moved %s to class %s."], k,
-                              Statics.SpecIDList[GSE.GetClassIDforSpec(v.SpecID)]))
+                    Statics.SpecIDList[GSE.GetClassIDforSpec(v.SpecID)]))
                 GSE.Library[0][k] = nil
             end
         end
@@ -950,18 +951,18 @@ function GSE.ScanMacrosForErrors()
                 if not status then
                     GSE.Print(string.format(L["Error found in version %i of %s."], macroversionid, seqname), "Error")
                     GSE.Print(string.format(
-                                  L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"],
-                                  GSEOptions.CommandColour, classlibid, seqname, Statics.StringReset))
+                        L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"],
+                        GSEOptions.CommandColour, classlibid, seqname, Statics.StringReset))
                 end
             end
             if seqname == "WW" then
                 GSE.Print(string.format(
-                              L["Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."],
-                              GSEOptions.CommandColour, Statics.StringReset), "Error")
+                    L["Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."],
+                    GSEOptions.CommandColour, Statics.StringReset), "Error")
             elseif seqname == "PVP" then
                 GSE.Print(string.format(
-                              L["Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."],
-                              GSEOptions.CommandColour, Statics.StringReset), "Error")
+                    L["Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."],
+                    GSEOptions.CommandColour, Statics.StringReset), "Error")
             end
         end
     end
@@ -1022,16 +1023,17 @@ end
 --- This creates a pretty export for WLM Forums
 function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     local returnstring = "# " .. sequencename .. "\n\n## Talents: " ..
-                             (GSE.isEmpty(sequence["MetaData"].Talents) and "?,?,?,?,?,?,?" or sequence["MetaData"].Talents) .. "\n\n"
+                             (GSE.isEmpty(sequence["MetaData"].Talents) and "?,?,?,?,?,?,?" or
+                                 sequence["MetaData"].Talents) .. "\n\n"
     if not GSE.isEmpty(sequence["MetaData"].Help) then
         returnstring = "\n\n## Usage Information\n" .. sequence["MetaData"].Help .. "\n\n"
     end
     returnstring = returnstring .. "This macro contains " ..
-                       (table.getn(sequence.Macros) > 1 and table.getn(sequence.Macros) ..
-                           " macro templates. " or "1 macro template. ") ..
+                       (table.getn(sequence.Macros) > 1 and table.getn(sequence.Macros) .. " macro templates. " or
+                           "1 macro template. ") ..
                        string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
     if (table.getn(sequence.Macros) > 1) then
-        for k,_ in pairs(sequence.Macros) do
+        for k, _ in pairs(sequence.Macros) do
             if not GSE.isEmpty(sequence["MetaData"].Default) then
                 if sequence["MetaData"].Default == k then
                     returnstring = returnstring .. "- The Default macro template is " .. k .. "\n"
@@ -1150,12 +1152,12 @@ local function fixLine(line, KeyPress, KeyRelease)
     local action = {}
     action["Type"] = Statics.Actions.Action
     if KeyPress then
-        --print("KeyPress false")
+        -- print("KeyPress false")
         table.insert(action, [[~~KeyPress~~]])
     end
     table.insert(action, line)
     if KeyRelease then
-        --print("KeyRelease false")
+        -- print("KeyRelease false")
         table.insert(action, [[~~KeyRelease~~]])
     end
 
@@ -1184,13 +1186,13 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     returnSequence["MetaData"] = {}
     returnSequence["MetaData"]["Name"] = sequenceName
     returnSequence["MetaData"]["ClassID"] = Statics.SpecIDClassList[sequence.SpecID]
-    for k,v in pairs(sequence) do
+    for k, v in pairs(sequence) do
         if k ~= "MacroVersions" then
             returnSequence["MetaData"][k] = v
         end
     end
     local MacroVersions = {}
-    for _,v in ipairs(sequence.MacroVersions) do
+    for _, v in ipairs(sequence.MacroVersions) do
         local gse3seq = {}
         gse3seq.Actions = {}
         gse3seq.Variables = {}
@@ -1232,7 +1234,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         end
 
         if table.getn(v.PostMacro) > 0 then
-            for _,j in ipairs(v.PreMacro) do
+            for _, j in ipairs(v.PreMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
                 table.insert(gse3seq.Actions, action)
             end
@@ -1241,7 +1243,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         gse3seq.InbuiltVariables = {}
 
         local function checkParameter(param)
-                gse3seq.InbuiltVariables[param] = v[param]
+            gse3seq.InbuiltVariables[param] = v[param]
         end
 
         checkParameter("Combat")
@@ -1279,8 +1281,8 @@ local function buildAction(action, metaData)
         table.insert(action, 1, '/run sfx=GetCVar("Sound_EnableSFX");')
     end
 
-    for k,v in ipairs(action) do
-        action[k] = GSE.TranslateString(v, "STRING", nil,  true)
+    for k, v in ipairs(action) do
+        action[k] = GSE.TranslateString(v, "STRING", nil, true)
     end
 
     if not GSE.isEmpty(metaData) then
@@ -1327,10 +1329,10 @@ function GSE.CompileAction(action, template)
     local returnAction = buildAction(action, template.InbuiltVariables)
     local variables = {}
 
-    for k,v in pairs(template.Variables) do
+    for k, v in pairs(template.Variables) do
         if type(v) == "table" then
-            for i,j in ipairs(v) do
-                template.Variables[k][i] = GSE.TranslateString(j, "STRING",nil,  true)
+            for i, j in ipairs(v) do
+                template.Variables[k][i] = GSE.TranslateString(j, "STRING", nil, true)
             end
             variables[k] = table.concat(template.Variables[k], "\n")
         end
@@ -1354,7 +1356,7 @@ local function processAction(action, metaData, path)
             end
             table.insert(newPath, k)
             local actions = buildAction(v, metaData)
-            
+
             table.insert(actionList, actions)
             table.insert(retPath, newPath)
         end
@@ -1374,7 +1376,7 @@ local function processAction(action, metaData, path)
                     end
                 end
             else
-                for _,v in ipairs(actionList) do
+                for _, v in ipairs(actionList) do
                     table.insert(returnActions, v)
                     table.insert(finalSolution, v)
 
@@ -1384,17 +1386,17 @@ local function processAction(action, metaData, path)
 
         -- process repeats for the block
         local inserts = {}
-        for k,v in ipairs(returnActions) do
+        for k, v in ipairs(returnActions) do
             if type(v) == "table" then
                 local act = v[1]
-                local rep =  v.Repeat
-                table.insert(inserts, {act, rep} )
+                local rep = v.Repeat
+                table.insert(inserts, {act, rep})
                 table.remove(returnActions, k)
             end
         end
 
-        for k,v in ipairs(inserts) do
-            for i=k, table.getn(returnActions), v[2] do
+        for k, v in ipairs(inserts) do
+            for i = k, table.getn(returnActions), v[2] do
                 table.insert(returnActions, v[1], i)
             end
         end
@@ -1412,19 +1414,19 @@ local function processAction(action, metaData, path)
             end
         end
         if clicks > 0 then
-            for loop=1,clicks do
+            for loop = 1, clicks do
                 table.insert(PauseActions, "/click nil")
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
         return PauseActions, path
     elseif action.Type == Statics.Actions.Action then
-        return buildAction(action, metaData) , path
+        return buildAction(action, metaData), path
 
     elseif action.Type == Statics.Actions.Repeat then
         return {buildAction(action, metaData), action["Interval"]}, path
 
-    -- elseif action.Type == Statics.Actions.If then
+        -- elseif action.Type == Statics.Actions.If then
 
     end
 end
@@ -1434,21 +1436,41 @@ function GSE.CompileTemplate(template)
 
     setmetatable(template.Actions, {
         __index = function(t, k)
-          for i,v in ipairs(k) do
-            if not t then error("attempt to index nil") end
-            t = rawget(t, v)
-          end
-          return t
-        end
-        })
 
+            for _, v in ipairs(k) do
+                if not t then
+                    error("attempt to index nil")
+                end
+                t = rawget(t, v)
+            end
+            return t
+        end,
+        __newindex = function(t, key, v)
+            local last_k
+            for _, k in ipairs(key) do
+                k, last_k = last_k, k
+                if k ~= nil then
+                    local parent_t = t
+                    t = rawget(parent_t, k)
+                    if t == nil then
+                        t = {}
+                        rawset(parent_t, k, t)
+                    end
+                    if type(t) ~= "table" then
+                        error("Unexpected subtable", 2)
+                    end
+                end
+            end
+            rawset(t, last_k, v)
+        end
+    })
 
     local compiledMacro = {}
     local metaData = {}
 
     for k, action in ipairs(template.Actions) do
         local compiledAction, reversepath = processAction(action, template.InbuiltVariables, {k})
-        --GSE.Print(compiledAction)
+        -- GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
                 table.insert(compiledMacro, value)
@@ -1465,10 +1487,10 @@ function GSE.CompileTemplate(template)
     end
     local variables = {}
 
-    for k,v in pairs(template.Variables) do
+    for k, v in pairs(template.Variables) do
         if type(v) == "table" then
-            for i,j in ipairs(v) do
-                template.Variables[k][i] = GSE.TranslateString(j, "STRING",nil,  true)
+            for i, j in ipairs(v) do
+                template.Variables[k][i] = GSE.TranslateString(j, "STRING", nil, true)
             end
             variables[k] = table.concat(template.Variables[k], "\n")
         end
@@ -1497,14 +1519,16 @@ function GSE.CreateGSE3Button(macro, name, meta)
 
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
-         else
+        else
             gsebutton:SetAttribute("ms", 100)
         end
 
-        local stepfunction = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") .. GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
+        local stepfunction = (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") ..
+                                 GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
         gsebutton:WrapScript(gsebutton, 'OnClick', stepfunction)
     end
-    _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' .. strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
+    _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
+                         strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
 end
 

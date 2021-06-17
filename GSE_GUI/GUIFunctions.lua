@@ -80,7 +80,9 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     local elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
     sequenceName = elements[2]
-    sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
+    --sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
+    local _, seq = GSE.DecodeMessage(GSE3Storage[classid][sequenceName])
+    sequence = seq[2]
     GSE.GUIEditFrame.NewSequence = false
   end
   if GSE.isEmpty(sequence.WeakAuras) then
@@ -123,8 +125,9 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   -- Changes have been made, so save them
   for k,v in ipairs(sequence.Macros) do
     sequence.Macros[k] = GSE.TranslateSequence(v, SequenceName, "ID")
-    sequence.Macros[k] = GSE.UnEscapeSequence(sequence.Macros[k])
+    sequence.Macros[k] = GSE.UnEscapeTableRecursive(sequence.Macros[k])
   end
+
 
   if not GSE.isEmpty(SequenceName) then
     if GSE.isEmpty(classid) then
@@ -134,7 +137,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       local vals = {}
       vals.action = "Replace"
       vals.sequencename = SequenceName
-      vals.sequence = sequence
+      vals.sequence = GSE.CloneSequence(sequence)
       vals.classid = classid
       if GSE.GUIEditFrame.NewSequence then
         if GSE.ObjectExists(SequenceName) then
