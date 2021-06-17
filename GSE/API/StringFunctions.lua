@@ -175,7 +175,7 @@ function GSE.TrimWhiteSpace(str)
 end
 
 function GSE.Dump(node)
-    
+
     --     local s = '{ \n'
     --     for k, v in pairs(node) do
     --         if type(k) ~= 'number' then

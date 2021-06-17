@@ -11,9 +11,7 @@ local GCD
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
     if GSE.UnsavedOptions.DebugSequenceExecution then
-        
         local reverseExec = GSE.SequencesReverseExec[button]
-        
         local classid = GSE.GetCurrentClassID()
         if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][button]) then
             classid = 0

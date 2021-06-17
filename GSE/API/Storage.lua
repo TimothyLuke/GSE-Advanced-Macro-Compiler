@@ -1535,7 +1535,7 @@ end
 --- Creates a string representation of the a Sequence that can be shared as a string.
 --      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
 function GSE.ExportSequence(sequence, sequenceName, verbose)
-    local returnVal = ""
+    local returnVal
     if verbose then
         GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
         returnVal = GSE.Dump(GSE.TranslateSequence(sequence, Statics.TranslatorMode.Current)) .. "\n"
