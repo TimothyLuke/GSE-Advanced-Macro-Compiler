@@ -132,6 +132,11 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
 end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+    -- Check its not a GSE2 Sequence
+    if GSE.isEmpty(sequence.Macros) then
+        sequence = GSE.ConvertGSE2(sequence, sequenceName)
+        GSE.Print(string.format("%s " .. L["was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."], sequenceName), "Import GSE2")
+    end
     -- check for version flags.
     if sequence.MetaData.EnforceCompatability then
         if GSE.ParseVersion(sequence.MetaData.GSEVersion) > (GSE.VersionNumber) then

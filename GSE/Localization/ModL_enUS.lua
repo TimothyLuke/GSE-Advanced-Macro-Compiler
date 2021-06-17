@@ -633,3 +633,4 @@ L["Add Pause"] = true
 L["Add a Pause Block."] = true
 L["Pause for the GCD."] = true
 L["Error processing Custom Pause Value.  You will need to recheck your macros."] = true
+L["was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."] = true
