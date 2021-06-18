@@ -1391,7 +1391,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     deleteBlockButton:SetImageSize(20, 20)
     deleteBlockButton:SetWidth(20)
     deleteBlockButton:SetHeight(20)
-    deleteBlockButton:SetImage("Interface\\Icons\\spell_chargenegative")
+    deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
 
     deleteBlockButton:SetCallback("OnClick", function()
         local delPath = {}
