@@ -37,6 +37,7 @@ editframe.ClassID = GSE.GetCurrentClassID()
 editframe.save = false
 editframe.SelectedTab = "group"
 editframe.AdvancedEditor = false
+editframe.statusText = "GSE: " .. GSE.VersionString
 
 local frameTableUpdated = {}
 
@@ -107,17 +108,25 @@ function GSE.GUICreateEditorTabs()
         --     value = "variables"
         -- }
     }
+    -- If disabled editor then dont show the internal tabs
+    if GSE.isEmpty(editframe.Sequence.MetaData.DisableEditor) then
+        for k,_ in ipairs(editframe.Sequence.Macros) do
+            local insline = {}
+            insline.text = tostring(k)
+            insline.value = tostring(k)
+            table.insert(tabl, insline)
+        end
+        table.insert(tabl, {
+            text = L["New"],
+            value = "new"
+        })
+        if not GSE.isEmpty(editframe.Sequence.MetaData.ReadOnly) then
+            editframe.statusText = "GSE: " .. GSE.VersionString .. " " .. GSEOptions.UNKNOWN .. L["This sequence is Read Only and unable to be edited."] .. Statics.StringReset
+        end
 
-    for k,_ in ipairs(editframe.Sequence.Macros) do
-        local insline = {}
-        insline.text = tostring(k)
-        insline.value = tostring(k)
-        table.insert(tabl, insline)
+    else
+        editframe.statusText = "GSE: " .. GSE.VersionString .. " " .. GSEOptions.UNKNOWN .. L["RESTRICTED: Macro specifics disabled by author."] .. Statics.StringReset
     end
-    table.insert(tabl, {
-        text = L["New"],
-        value = "new"
-    })
     table.insert(tabl, {
         text = L["WeakAuras"],
         value = "weakauras"
@@ -127,6 +136,7 @@ end
 
 function GSE.GUIEditorPerformLayout(frame)
     frame:ReleaseChildren()
+    
     local headerGroup = AceGUI:Create("SimpleGroup")
     headerGroup:SetFullWidth(true)
     headerGroup:SetLayout("Flow")
@@ -242,7 +252,7 @@ function GSE.GUIEditorPerformLayout(frame)
         GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
         editframe.save = true
         C_Timer.After(5, function()
-            GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
+            GSE.GUIEditFrame:SetStatusText(editframe.statusText)
         end)
     end)
 
@@ -273,6 +283,7 @@ function GSE.GUIEditorPerformLayout(frame)
     editButtonGroup:AddChild(transbutton)
     editButtonGroup:AddChild(editOptionsbutton)
     frame:AddChild(editButtonGroup)
+    GSE.GUIEditFrame:SetStatusText(editframe.statusText)
 
 end
 
@@ -291,7 +302,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetHeight(editframe.Height - 260)
+    scrollcontainer:SetHeight(editframe.Height - 310)
     scrollcontainer:SetLayout("Fill") -- Important!
 
     local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -2174,7 +2185,7 @@ function GSE.GUIDeleteVersion(version)
     GSE.GUIEditFrame.ContentContainer:SelectTab("config")
     GSE.GUIEditFrame:SetStatusText(string.format(printtext, version))
     C_Timer.After(5, function()
-        GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
+        GSE.GUIEditFrame:SetStatusText(editframe.statusText)
     end)
 
 end

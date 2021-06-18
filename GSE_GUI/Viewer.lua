@@ -46,14 +46,8 @@ function viewframe:clearpanels(widget, selected)
         viewframe.EditButton:SetDisabled(false)
         viewframe.ExportButton:SetDisabled(false)
         editkey = k
-        if elements[3] == "1" then
-          viewframe.EditButton:SetText(L["Delete"])
-          viewframe.editbuttonaction = 1
-          viewframe.ExportButton:SetDisabled(true)
-        else
-          viewframe.EditButton:SetText(L["Edit"])
-          viewframe.editbuttonaction = 0
-        end
+        viewframe.EditButton:SetText(L["Edit"])
+        viewframe.editbuttonaction = 0
       else
         viewframe.ClassID = 0
         viewframe.SequenceName = ""
@@ -79,6 +73,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local elements = GSE.split(key, ",")
   local classid = tonumber(elements[1])
   local sequencename = elements[2]
+  local readonly = elements[3]
   local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
   local font = GameFontNormal:GetFontObject()
   local fontlarge = GameFontNormalLarge:GetFontObject()
@@ -105,6 +100,10 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local hlabel = AceGUI:Create("Label")
   hlabel:SetText(sequencename)
+  if readonly == "1" then
+    hlabel:SetText(sequencename .. "( "..L["Restricted"] ..")")
+  end
+
   --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
   hlabel:SetFontObject(fontlarge)
   hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))

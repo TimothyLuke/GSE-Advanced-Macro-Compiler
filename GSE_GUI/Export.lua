@@ -47,11 +47,11 @@ exportframe:AddChild(disableEditorCheckBox)
 
 readOnlyCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
   if value then
-    exportframe.sequence.ReadOnly = true
+    exportframe.sequence.MetaData.ReadOnly = true
     disableEditorCheckBox:SetDisabled(false)
   else
-    exportframe.sequence.ReadOnly = false
-    exportframe.sequence.DisableEditor = nil
+    exportframe.sequence.MetaData.ReadOnly = false
+    exportframe.sequence.MetaData.DisableEditor = false
     disableEditorCheckBox:SetDisabled(true)
   end
   GSE.GUIUpdateExportBox()
@@ -59,9 +59,9 @@ end)
 
 disableEditorCheckBox:SetCallback("OnValueChanged", function (sel, object, value)
   if value then
-    exportframe.sequence.DisableEditor = true
+    exportframe.sequence.MetaData.DisableEditor = true
   else
-    exportframe.sequence.DisableEditor = false
+    exportframe.sequence.MetaData.DisableEditor = false
   end
   GSE.GUIUpdateExportBox()
 end)
