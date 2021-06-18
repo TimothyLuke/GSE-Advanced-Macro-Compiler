@@ -1520,9 +1520,19 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
     end
 
     local lastPath = path[#path]
+
+    local parentPath = GSE.CloneSequence(path)
+    local blocksThisLevel
+
+    if #parentPath == 1 then
+        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions)
+    else
+        parentPath[#parentPath] = nil
+        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions[parentPath])
+    end
     if lastPath == 1 then
         moveUpButton:SetDisabled(true)
-    elseif lastPath == #path then
+    elseif lastPath == blocksThisLevel then
         moveDownButton:SetDisabled(true)
     end
 
