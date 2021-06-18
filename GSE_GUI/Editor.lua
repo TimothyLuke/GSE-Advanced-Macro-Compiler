@@ -136,7 +136,7 @@ end
 
 function GSE.GUIEditorPerformLayout(frame)
     frame:ReleaseChildren()
-    
+
     local headerGroup = AceGUI:Create("SimpleGroup")
     headerGroup:SetFullWidth(true)
     headerGroup:SetLayout("Flow")
