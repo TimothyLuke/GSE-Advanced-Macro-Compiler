@@ -157,5 +157,7 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
-    preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
+    preferredIndex = STATICPOPUPS_NUMDIALOGS,
+    showAlert = true,
+    exclusive = true
 }
