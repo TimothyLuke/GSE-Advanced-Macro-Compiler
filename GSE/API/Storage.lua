@@ -35,20 +35,6 @@ function GSE.ImportLegacyStorage(Library)
     GSELibrary = nil
 end
 
--- function GSE.CloneSequence(sequence, keepcomments)
---     local newsequence = {}
-
---     for k, v in pairs(sequence) do
---         newsequence[k] = v
---     end
-
---     newsequence.MacroVersions = {}
---     for k, v in ipairs(sequence.MacroVersions) do
---         newsequence.MacroVersions[tonumber(k)] = GSE.CloneMacroVersion(v, keepcomments)
---     end
-
---     return newsequence
--- end
 function GSE.CloneSequence(orig, keepcomments)
     local orig_type = type(orig)
     local copy
@@ -68,58 +54,6 @@ function GSE.CloneSequence(orig, keepcomments)
     -- end
     return copy
 end
-
--- --- This function clones the Macro Version part of a sequence.
--- function GSE.CloneMacroVersion(macroversion, keepcomments)
---     local retseq = {}
---     for k, v in ipairs(macroversion) do
---         if GSE.isEmpty(string.find(v, '--', 1, true)) then
---             table.insert(retseq, v)
---         else
---             if not GSE.isEmpty(keepcomments) then
---                 table.insert(retseq, v)
---             else
---                 GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
---             end
---         end
---     end
-
---     for k, v in pairs(macroversion) do
---         GSE.PrintDebugMessage(string.format("Processing Key: %s KeyType: %s valuetype: %s", k, type(k), type(v)),
---             "Storage")
---         if type(k) == "string" and type(v) == "string" then
---             if GSE.isEmpty(string.find(v, '--', 1, true)) then
---                 retseq[k] = v
---             else
---                 if not GSE.isEmpty(keepcomments) then
---                     table.insert(retseq, v)
---                 else
---                     GSE.PrintDebugMessage(string.format("comment found %s", v), "Storage")
---                 end
---             end
---         elseif type(k) == "string" and type(v) == "boolean" then
---             retseq[k] = v
---         elseif type(k) == "string" and type(v) == "number" then
---             retseq[k] = v
---         elseif type(k) == "string" and type(v) == "table" then
---             retseq[k] = {}
---             for i, x in ipairs(v) do
---                 if GSE.isEmpty(string.find(x, '--', 1, true)) then
---                     table.insert(retseq[k], x)
---                 else
---                     if not GSE.isEmpty(keepcomments) then
---                         table.insert(retseq[k], x)
---                     else
---                         GSE.PrintDebugMessage(string.format("comment found %s", x), "Storage")
---                     end
---                 end
---             end
---         end
---     end
-
---     return retseq
-
--- end
 
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
@@ -693,7 +627,7 @@ function GSE.GetSequenceNames()
                 if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
                     keyset[keyLabel] = i
                 elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
-                    if j.SpecID == GSE.GetCurrentSpecID() or j.SpecID == GSE.GetCurrentClassID() then
+                    if j.MetaData.SpecID == GSE.GetCurrentSpecID() or j.MetaData.SpecID == GSE.GetCurrentClassID() then
                         keyset[keyLabel] = i
                     end
                 else

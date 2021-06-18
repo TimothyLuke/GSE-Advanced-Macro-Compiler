@@ -435,23 +435,16 @@ Statics.Actions.Action = "Action"
 Statics.Actions.Pause = "Pause"
 
 Statics.ActionsIcons = {}
-Statics.ActionsIcons.Loop = "Interface\\Addons\\GSE_GUI\\loop.tga"
+Statics.ActionsIcons.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop.tga"
 --Statics.ActionsIcons.If = "If"
-Statics.ActionsIcons.Repeat = "Interface\\Addons\\GSE_GUI\\repeat.tga"
-Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\action.tga"
-Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\pause.tga"
-Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\up.tga"
-Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\down.tga"
-Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\delete.tga"
+Statics.ActionsIcons.Repeat = "Interface\\Addons\\GSE_GUI\\Assets\\repeat.tga"
+Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action.tga"
+Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.tga"
+Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.tga"
+Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.tga"
+Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.tga"
 
 
-
-if GSE.GameMode < 4 then
-  Statics.ActionsIcons.Repeat = "Interface\\Icons\\inv_misc_bandage_15"
-  Statics.ActionsIcons.Up = "Interface\\Icons\\inv_spear_01"
-  Statics.ActionsIcons.Down = "Interface\\Icons\\inv_weapon_shortblade_26"
-
-end
 
 Statics.GSE3OnClick = [=[
 local step = self:GetAttribute('step')
