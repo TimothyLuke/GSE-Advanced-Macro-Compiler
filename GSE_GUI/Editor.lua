@@ -242,18 +242,22 @@ function GSE.GUIEditorPerformLayout(frame)
     savebutton:SetText(L["Save"])
     savebutton:SetWidth(100)
     savebutton:SetCallback("OnClick", function()
-        local gameversion, build, date, tocversion = GetBuildInfo()
-        editframe.Sequence.MetaData.ManualIntervention = true
-        editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
-        editframe.Sequence.MetaData.EnforceCompatability = true
-        editframe.Sequence.MetaData.TOC = tocversion
-        nameeditbox:SetText(string.upper(nameeditbox:GetText()))
-        editframe.SequenceName = nameeditbox:GetText()
-        GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
-        editframe.save = true
-        C_Timer.After(5, function()
-            GSE.GUIEditFrame:SetStatusText(editframe.statusText)
-        end)
+        if GSE.isEmpty(editframe.invalidPause) then
+            local gameversion, build, date, tocversion = GetBuildInfo()
+            editframe.Sequence.MetaData.ManualIntervention = true
+            editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
+            editframe.Sequence.MetaData.EnforceCompatability = true
+            editframe.Sequence.MetaData.TOC = tocversion
+            nameeditbox:SetText(string.upper(nameeditbox:GetText()))
+            editframe.SequenceName = nameeditbox:GetText()
+            GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
+            editframe.save = true
+            C_Timer.After(5, function()
+                GSE.GUIEditFrame:SetStatusText(editframe.statusText)
+            end)
+        else
+           GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "ERROR")
+        end
     end)
 
     savebutton:SetCallback('OnEnter', function()
@@ -1636,18 +1640,32 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:DisableButton(true)
         local value = GSE.isEmpty(action.MS) and action.Clicks or action.MS
         valueEditBox:SetText(value)
-        valueEditBox:SetCallback("OnTextChanged", function()
+        valueEditBox:SetCallback("OnTextChanged", function(self, event, text)
             --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+            
             local returnAction = {}
             returnAction["Type"] = action.Type
             if clicksdropdown:GetValue() == L["Clicks"] then
-                returnAction["Clicks"] = valueEditBox:GetText()
+                returnAction["Clicks"] = tonumber(text)
             elseif clicksdropdown:GetValue() == "GCD" then
                 returnAction["MS"] = "GCD"
             else
-                returnAction["MS"] = valueEditBox:GetText()
+                returnAction["MS"] = tonumber(text)
+            end
+
+            if GSE.isNaN(tonumber(text)) then 
+                if clicksdropdown:GetValue() ~= "GCD" or clicksdropdown:GetValue() ~= "~~GCD~~" then
+                    -- Invalid value
+                    GSE.GUIEditFrame:SetStatusText(GSEOptions.UNKNOWN .. L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] .. Statics.StringReset)
+                    editframe.invalidPause = true
+                    return
+                end
             end
             editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+            GSE.GUIEditFrame:SetStatusText(editframe.statusText)
+            editframe.invalidPause = false
+
+           
         end)
 
         clicksdropdown:SetCallback("OnValueChanged", function()
@@ -1655,14 +1673,26 @@ local function drawAction(container, action, version, keyPath)
             local returnAction = {}
             returnAction["Type"] = action.Type
             if clicksdropdown:GetValue() == L["Clicks"] then
-                returnAction["Clicks"] = valueEditBox:GetText()
+                returnAction["Clicks"] = tonumber(valueEditBox:GetText())
             elseif clicksdropdown:GetValue() == "GCD" then
                 returnAction["MS"] = "GCD"
+                valueEditBox:SetText("GCD")
             else
-                returnAction["MS"] = valueEditBox:GetText()
+                returnAction["MS"] = tonumber(valueEditBox:GetText())
             end
+            if clicksdropdown:GetValue() == "GCD" then
+                valueEditBox:SetDisabled(true)
+            else
+                valueEditBox:SetDisabled(false)
+            end
+
             editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
         end)
+        if clicksdropdown:GetValue() == "GCD" then
+            valueEditBox:SetDisabled(true)
+        else
+            valueEditBox:SetDisabled(false)
+        end
         linegroup1:AddChild(valueEditBox)
         container:AddChild(linegroup1)
 

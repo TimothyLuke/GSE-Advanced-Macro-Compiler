@@ -306,3 +306,8 @@ function GSE.DecodeTimeStamp(stamp)
     tab.sec = stamp:sub(13,2)
     return tab
 end
+
+--- Check is the value is present and if it is actually a number.
+function GSE.isNaN(v)
+    return  type( v ) ~= "number" or GSE.isEmpty(v)
+end
