@@ -1442,7 +1442,6 @@ function GSE.CreateGSE3Button(macro, name)
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
                          strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
-<<<<<<< HEAD
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
@@ -1458,6 +1457,3 @@ function GSE.ExportSequence(sequence, sequenceName, verbose)
 
     return returnVal
 end
-=======
-end--      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
->>>>>>> parent of 4924acb... #862 initial progress

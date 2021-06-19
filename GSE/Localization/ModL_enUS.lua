@@ -97,7 +97,6 @@ L["You need to reload the User Interface for the change in StepFunction to take 
 L["You need to reload the User Interface to complete this task.  Would you like to do this now?"] = true
 L["Yes"] = true
 L["No"] = true
-L["|cffff0000GS-E:|r Gnome Sequencer - Enhanced Options"] = true
 L["General"] = true
 L["General Options"] = true
 L["Only Save Local Macros"] = true
@@ -637,3 +636,5 @@ L["was created in an older version of GSE.  It has been updated to the current v
 L["Restricted"] = true
 L["RESTRICTED: Macro specifics disabled by author."] = true
 L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] = true
+L["Show Full Block Execution"] = true
+L["When debugging the output of a sequence, show the full executed block in the Debugger Output."] = true

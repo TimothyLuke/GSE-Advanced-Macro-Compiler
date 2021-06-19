@@ -6,7 +6,7 @@ local Statics = GSE.Static
 function GSE.GetOptionsTable()
   local OptionsTable = {
     type = "group",
-    name = L["|cffff0000GS-E:|r Gnome Sequencer - Enhanced Options"],
+    name = "|cffff0000GSE:|r " .. L["Options"],
     args = {
       generalTab = {
         name = L["General"],
@@ -142,6 +142,14 @@ function GSE.GetOptionsTable()
             set = function(info,val) GSEOptions.DefaultImportAction = val end,
             get = function(info) return GSEOptions.DefaultImportAction end,
             order = 320
+          },
+          fullBlockDebug = {
+            name = L["Show Full Block Execution"],
+            desc = L["When debugging the output of a sequence, show the full executed block in the Debugger Output."],
+            type = "toggle",
+            set = function(info,val) GSEOptions.showFullBlockDebug = val end,
+            get = function(info) return GSEOptions.showFullBlockDebug and GSEOptions.showFullBlockDebug or false end,
+            order = 330
           },
           UseVerboseExportFormat = {
             name = L["Use WLM Export Sequence Format"],

@@ -10,7 +10,7 @@ local GCD
 
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
-    if GSE.UnsavedOptions.DebugSequenceExecution then
+    if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(task) then
         -- Note to self: Do I care if it's a loop sequence?
         local spell = task
         local csindex, csitem, csspell = QueryCastSequence(task)
@@ -49,8 +49,14 @@ function GSE.TraceSequence(button, step, task)
         if GCD then
             GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
         end
-        GSE.PrintDebugMessage(button .. "," .. step .. "," .. (spell and spell or "nil") .. (csindex and " from castsequence " .. (csspell and csspell or csitem) .." (item " .. csindex .. " in castsequence.) " or "") .. "," .. usableOutput .. "," ..
-                                  manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
+
+        local fullBlock = ""
+        
+        if GSEOptions.showFullBlockDebug then
+            fullBlock = "\n" .. GSE.SequencesExec[button][step] .. GSEOptions.EmphasisColour .. "\n============================================================================================\n" .. Statics.StringReset
+        end
+        GSE.PrintDebugMessage(GSEOptions.AuthorColour .. button .. Statics.StringReset .. "," .. step .. "," .. (spell and spell or "nil") .. (csindex and " from castsequence " .. (csspell and csspell or csitem) .." (item " .. csindex .. " in castsequence.) " or "") .. "," .. usableOutput .. "," ..
+                                  manaOutput .. "," .. GCDOutput .. "," .. CastingOutput .. fullBlock, Statics.SequenceDebug)
     end
 end
 
