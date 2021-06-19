@@ -138,7 +138,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
     if classid == GSE.GetCurrentClassID() or classid == 0 then
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
-        GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.Default])
+        GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.MetaData.Default])
     end
 end
 

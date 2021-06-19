@@ -464,12 +464,12 @@ function GSE:ProcessOOCQueue()
                     GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
                 else
                     GSE.ReplaceMacro(v.classid, v.sequencename, v.sequence)
+                    GSE.UpdateSequence(v.sequencename, v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
+
                 end
                 if v.checkmacro then
                     GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
-                end
-                GSE.UpdateSequence(v.sequencename,
-                    v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
+                end               
             elseif v.action == "openviewer" then
                 GSE.GUIShowViewer()
             elseif v.action == "CheckMacroCreated" then

@@ -1616,7 +1616,6 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetText(value)
         valueEditBox:SetCallback("OnTextChanged", function(self, event, text)
             --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
-            
             local returnAction = {}
             returnAction["Type"] = action.Type
             if clicksdropdown:GetValue() == L["Clicks"] then
@@ -1627,7 +1626,7 @@ local function drawAction(container, action, version, keyPath)
                 returnAction["MS"] = tonumber(text)
             end
 
-            if GSE.isNaN(tonumber(text)) then 
+            if GSE.isNaN(tonumber(text)) then
                 if clicksdropdown:GetValue() ~= "GCD" or clicksdropdown:GetValue() ~= "~~GCD~~" then
                     -- Invalid value
                     GSE.GUIEditFrame:SetStatusText(GSEOptions.UNKNOWN .. L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] .. Statics.StringReset)
@@ -1639,7 +1638,6 @@ local function drawAction(container, action, version, keyPath)
             GSE.GUIEditFrame:SetStatusText(editframe.statusText)
             editframe.invalidPause = false
 
-           
         end)
 
         clicksdropdown:SetCallback("OnValueChanged", function()
