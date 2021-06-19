@@ -11,13 +11,7 @@ local GCD
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
     if GSE.UnsavedOptions.DebugSequenceExecution then
-        local reverseExec = GSE.SequencesReverseExec[button]
-        local classid = GSE.GetCurrentClassID()
-        if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][button]) then
-            classid = 0
-        end
-
-        local originalBlock = table.concat(GSE.Library[classid][button]['Macros'][GSE.GetActiveSequenceVersion(button)].Actions[reverseExec[step]], "\n")
+        -- Note to self: Do I care if it's a loop sequence?
         local spell = task
         local csindex, csitem, csspell = QueryCastSequence(task)
         if not GSE.isEmpty(csitem) then
@@ -56,7 +50,7 @@ function GSE.TraceSequence(button, step, task)
             GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
         end
         GSE.PrintDebugMessage(button .. "," .. step .. "," .. (spell and spell or "nil") .. (csindex and " from castsequence " .. (csspell and csspell or csitem) .." (item " .. csindex .. " in castsequence.) " or "") .. "," .. usableOutput .. "," ..
-                                  manaOutput .. "," .. GCDOutput .. "," .. CastingOutput .. '\n' .. originalBlock .. "\n=====================================\n", Statics.SequenceDebug)
+                                  manaOutput .. "," .. GCDOutput .. "," .. CastingOutput, Statics.SequenceDebug)
     end
 end
 

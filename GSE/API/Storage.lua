@@ -498,12 +498,10 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(name) then
         return
     end
-    -- if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
-    --     return
-    -- end
-    local compiledTemplate, template, macroMeta = GSE.CompileTemplate(sequence)
-
-    GSE.CreateGSE3Button(compiledTemplate, name, macroMeta)
+    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
+        return
+    end
+    GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name)
 end
 
 --- This function dumps what is currently running on an existing button.
@@ -760,7 +758,6 @@ function GSE.UpdateIcon(self, reset)
     local step = self:GetAttribute('step') or 1
     local gsebutton = self:GetName()
     local executionseq = GSE.SequencesExec[gsebutton]
-
     local commandline, foundSpell, notSpell = executionseq[step], false, ''
     for cmd, etc in gmatch(commandline or '', '/(%w+)%s+([^\n]+)') do
         if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
@@ -1276,23 +1273,14 @@ function GSE.CompileAction(action, template)
     return table.concat(GSE.UnEscapeTable(GSE.ProcessVariables(returnMacro, variables))[1], "\n")
 end
 
-local function processAction(action, metaData, path)
+local function processAction(action, metaData)
+
     if action.Type == Statics.Actions.Loop then
 
         local actionList = {}
-        local retPath = {}
-        local finalSolution = {}
         -- setup the interation
-        for k, v in ipairs(action) do
-            local newPath = {}
-            for _, j in ipairs(path) do
-                table.insert(newPath, j)
-            end
-            table.insert(newPath, k)
-            local actions = buildAction(v, metaData)
-
-            table.insert(actionList, actions)
-            table.insert(retPath, newPath)
+        for _, v in ipairs(action) do
+            table.insert(actionList, buildAction(v, metaData))
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
@@ -1300,7 +1288,6 @@ local function processAction(action, metaData, path)
             if action.StepFunction == Statics.Priority then
                 for limit = 1, table.getn(actionList) do
                     table.insert(returnActions, actionList[step])
-                    table.insert(finalSolution, retPath[step])
                     if step == limit then
                         limit = limit % #actionList + 1
                         step = 1
@@ -1312,8 +1299,6 @@ local function processAction(action, metaData, path)
             else
                 for _, v in ipairs(actionList) do
                     table.insert(returnActions, v)
-                    table.insert(finalSolution, v)
-
                 end
             end
         end
@@ -1335,7 +1320,7 @@ local function processAction(action, metaData, path)
             end
         end
 
-        return returnActions, finalSolution
+        return returnActions
     elseif action.Type == Statics.Actions.Pause then
         local PauseActions = {}
         local clicks = action.Clicks
@@ -1353,12 +1338,12 @@ local function processAction(action, metaData, path)
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
-        return PauseActions, path
+        return PauseActions
     elseif action.Type == Statics.Actions.Action then
-        return buildAction(action, metaData), path
+        return buildAction(action, metaData)
 
     elseif action.Type == Statics.Actions.Repeat then
-        return {buildAction(action, metaData), action["Interval"]}, path
+        return {buildAction(action, metaData), action["Interval"]}
 
         -- elseif action.Type == Statics.Actions.If then
 
@@ -1370,7 +1355,6 @@ function GSE.CompileTemplate(template)
 
     setmetatable(template.Actions, {
         __index = function(t, k)
-
             for _, v in ipairs(k) do
                 if not t then
                     error("attempt to index nil")
@@ -1402,21 +1386,15 @@ function GSE.CompileTemplate(template)
     local compiledMacro = {}
     local metaData = {}
 
-    for k, action in ipairs(template.Actions) do
-        local compiledAction, reversepath = processAction(action, template.InbuiltVariables, {k})
-        -- GSE.Print(compiledAction)
+    for _, action in ipairs(template.Actions) do
+        local compiledAction = processAction(action, template.InbuiltVariables)
+        --GSE.Print(compiledAction)
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
                 table.insert(compiledMacro, value)
             end
-            for _, value in ipairs(reversepath) do
-                table.insert(metaData, value)
-            end
-
         else
             table.insert(compiledMacro, compiledAction)
-            table.insert(metaData, reversepath)
-
         end
     end
     local variables = {}
@@ -1430,18 +1408,18 @@ function GSE.CompileTemplate(template)
         end
     end
 
-    return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables)), template, metaData
+    return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables)), template
 end
 
 --- Build GSE3 Executable Buttons
-function GSE.CreateGSE3Button(macro, name, meta)
+function GSE.CreateGSE3Button(macro, name)
     if GSE.isEmpty(macro) then
         print("Macro missing for ", name)
         return
     end
     -- name = name .. "T"
     GSE.SequencesExec[name] = macro
-    GSE.SequencesReverseExec[name] = meta
+
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
     if GSE.isEmpty(_G[name]) then
 
@@ -1464,6 +1442,7 @@ function GSE.CreateGSE3Button(macro, name, meta)
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
                          strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
+<<<<<<< HEAD
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
@@ -1479,3 +1458,6 @@ function GSE.ExportSequence(sequence, sequenceName, verbose)
 
     return returnVal
 end
+=======
+end--      Accepts a <code>sequence table</code> and a <code>SequenceName</code>
+>>>>>>> parent of 4924acb... #862 initial progress
