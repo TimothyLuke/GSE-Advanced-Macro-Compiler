@@ -1611,6 +1611,7 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetLabel()
 
         valueEditBox:SetWidth(100)
+        valueEditBox.editbox:SetNumeric(true)
         valueEditBox:DisableButton(true)
         local value = GSE.isEmpty(action.MS) and action.Clicks or action.MS
         valueEditBox:SetText(value)
@@ -1626,17 +1627,17 @@ local function drawAction(container, action, version, keyPath)
                 returnAction["MS"] = tonumber(text)
             end
 
-            if GSE.isNaN(tonumber(text)) then
-                if clicksdropdown:GetValue() ~= "GCD" or clicksdropdown:GetValue() ~= "~~GCD~~" then
-                    -- Invalid value
-                    GSE.GUIEditFrame:SetStatusText(GSEOptions.UNKNOWN .. L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] .. Statics.StringReset)
-                    editframe.invalidPause = true
-                    return
-                end
-            end
+            -- if GSE.isNaN(tonumber(text)) then
+            --     if clicksdropdown:GetValue() ~= "GCD" or clicksdropdown:GetValue() ~= "~~GCD~~" then
+            --         -- Invalid value
+            --         GSE.GUIEditFrame:SetStatusText(GSEOptions.UNKNOWN .. L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] .. Statics.StringReset)
+            --         editframe.invalidPause = true
+            --         return
+            --     end
+            -- end
             editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
             GSE.GUIEditFrame:SetStatusText(editframe.statusText)
-            editframe.invalidPause = false
+            -- editframe.invalidPause = false
 
         end)
 
@@ -1648,7 +1649,7 @@ local function drawAction(container, action, version, keyPath)
                 returnAction["Clicks"] = tonumber(valueEditBox:GetText())
             elseif clicksdropdown:GetValue() == "GCD" then
                 returnAction["MS"] = "GCD"
-                valueEditBox:SetText("GCD")
+                valueEditBox:SetText(0)
             else
                 returnAction["MS"] = tonumber(valueEditBox:GetText())
             end
