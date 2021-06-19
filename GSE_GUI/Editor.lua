@@ -909,6 +909,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ['Type'] = Statics.Actions.Action
             }
         }
+        setmetatable(newAction, Statics.TableMetadataFunction)
         table.insert(editframe.Sequence.Macros[version].Actions, newAction)
         ChooseVersionTab(version)
     end)
@@ -1438,6 +1439,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
                 }
             }
 
+            setmetatable(newAction, Statics.TableMetadataFunction)
             table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
             ChooseVersionTab(version)
 
