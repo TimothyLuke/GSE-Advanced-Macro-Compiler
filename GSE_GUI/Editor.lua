@@ -2086,11 +2086,9 @@ function GSE.GUISelectEditorTab(container, event, group)
             GSE:GUIDrawMetadataEditor(container)
         elseif group == "new" then
             -- Copy the Default to a new version
-            table.insert(editframe.Sequence.Macros,
-                GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.Default]))
-
-            GSE.GUIEditorPerformLayout(editframe)
+            table.insert(editframe.Sequence.Macros, GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default]))
             GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
+            GSE.GUIEditorPerformLayout(editframe)
         -- elseif group == "variables" then
         --     GSE:GUIDrawVariableEditor(container)
         elseif group == "weakauras" then
