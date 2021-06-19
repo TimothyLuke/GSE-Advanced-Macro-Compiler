@@ -2102,94 +2102,94 @@ end
 function GSE.GUIDeleteVersion(version)
     version = tonumber(version)
     local sequence = editframe.Sequence
-    if table.getn(sequence.MacroVersions) <= 1 then
+    if table.getn(sequence.Macros) <= 1 then
         GSE.Print(L["This is the only version of this macro.  Delete the entire macro to delete this version."])
         return
     end
-    if sequence.Default == version then
+    if sequence.MetaData.Default == version then
         GSE.Print(
             L["You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."])
         return
     end
     local printtext = L["Macro Version %d deleted."]
-    if sequence.PVP == version then
-        sequence.PVP = sequence.Default
+    if sequence.MetaData.PVP == version then
+        sequence.MetaData.PVP = sequence.MetaData.Default
         printtext = printtext .. " " .. L["PVP setting changed to Default."]
     end
-    if sequence.Arena == version then
-        sequence.Arena = sequence.Default
+    if sequence.MetaData.Arena == version then
+        sequence.MetaData.Arena = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Arena setting changed to Default."]
     end
-    if sequence.Raid == version then
-        sequence.Raid = sequence.Default
+    if sequence.MetaData.Raid == version then
+        sequence.MetaData.Raid = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Raid setting changed to Default."]
     end
-    if sequence.Mythic == version then
-        sequence.Mythic = sequence.Default
+    if sequence.MetaData.Mythic == version then
+        sequence.MetaData.Mythic = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Mythic setting changed to Default."]
     end
-    if sequence.Heroic == version then
-        sequence.Heroic = sequence.Default
+    if sequence.MetaData.Heroic == version then
+        sequence.MetaData.Heroic = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Heroic setting changed to Default."]
     end
-    if sequence.Dungeon == version then
-        sequence.Dungeon = sequence.Default
+    if sequence.MetaData.Dungeon == version then
+        sequence.MetaData.Dungeon = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Dungeon setting changed to Default."]
     end
-    if sequence.Party == version then
-        sequence.Party = sequence.Default
+    if sequence.MetaData.Party == version then
+        sequence.MetaData.Party = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Party setting changed to Default."]
     end
-    if sequence.MythicPlus == version then
-        sequence.MythicPlus = sequence.Default
+    if sequence.MetaData.MythicPlus == version then
+        sequence.MetaData.MythicPlus = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Mythic+ setting changed to Default."]
     end
-    if sequence.Timewalking == version then
-        sequence.Timewalking = sequence.Default
+    if sequence.MetaData.Timewalking == version then
+        sequence.MetaData.Timewalking = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Timewalking setting changed to Default."]
     end
-    if sequence.Scenario == version then
-        sequence.Scenario = sequence.Default
+    if sequence.MetaData.Scenario == version then
+        sequence.MetaData.Scenario = sequence.MetaData.Default
         printtext = printtext .. " " .. L["Scenario setting changed to Default."]
     end
 
-    if sequence.Default > 1 then
-        sequence.Default = tonumber(sequence.Default) - 1
+    if sequence.MetaData.Default > 1 then
+        sequence.MetaData.Default = tonumber(sequence.MetaData.Default) - 1
     else
-        sequence.Default = 1
+        sequence.MetaData.Default = 1
     end
 
-    if not GSE.isEmpty(sequence.PVP) then
-        sequence.PVP = tonumber(sequence.PVP) - 1
+    if not GSE.isEmpty(sequence.MetaData.PVP) then
+        sequence.MetaData.PVP = tonumber(sequence.MetaData.PVP) - 1
     end
-    if not GSE.isEmpty(sequence.Arena) then
-        sequence.Arena = tonumber(sequence.Arena) - 1
+    if not GSE.isEmpty(sequence.MetaData.Arena) then
+        sequence.MetaData.Arena = tonumber(sequence.MetaData.Arena) - 1
     end
-    if not GSE.isEmpty(sequence.Raid) then
-        sequence.Raid = tonumber(sequence.Raid) - 1
+    if not GSE.isEmpty(sequence.MetaData.Raid) then
+        sequence.MetaData.Raid = tonumber(sequence.MetaData.Raid) - 1
     end
-    if not GSE.isEmpty(sequence.Mythic) then
-        sequence.Mythic = tonumber(sequence.Mythic) - 1
+    if not GSE.isEmpty(sequence.MetaData.Mythic) then
+        sequence.MetaData.Mythic = tonumber(sequence.MetaData.Mythic) - 1
     end
-    if not GSE.isEmpty(sequence.MythicPlus) then
-        sequence.MythicPlus = tonumber(sequence.MythicPlus) - 1
+    if not GSE.isEmpty(sequence.MetaData.MythicPlus) then
+        sequence.MetaData.MythicPlus = tonumber(sequence.MetaData.MythicPlus) - 1
     end
-    if not GSE.isEmpty(sequence.Timewalking) then
-        sequence.Timewalking = tonumber(sequence.Timewalking) - 1
+    if not GSE.isEmpty(sequence.MetaData.Timewalking) then
+        sequence.MetaData.Timewalking = tonumber(sequence.MetaData.Timewalking) - 1
     end
-    if not GSE.isEmpty(sequence.Heroic) then
-        sequence.Heroic = tonumber(sequence.Heroic) - 1
+    if not GSE.isEmpty(sequence.MetaData.Heroic) then
+        sequence.MetaData.Heroic = tonumber(sequence.MetaData.Heroic) - 1
     end
-    if not GSE.isEmpty(sequence.Dungeon) then
-        sequence.Dungeon = tonumber(sequence.Dungeon) - 1
+    if not GSE.isEmpty(sequence.MetaData.Dungeon) then
+        sequence.MetaData.Dungeon = tonumber(sequence.MetaData.Dungeon) - 1
     end
-    if not GSE.isEmpty(sequence.Party) then
-        sequence.Party = tonumber(sequence.Party) - 1
+    if not GSE.isEmpty(sequence.MetaData.Party) then
+        sequence.MetaData.Party = tonumber(sequence.MetaData.Party) - 1
     end
-    if not GSE.isEmpty(sequence.Scenario) then
-        sequence.Scenario = tonumber(sequence.Scenario) - 1
+    if not GSE.isEmpty(sequence.MetaData.Scenario) then
+        sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
     end
-    table.remove(sequence.MacroVersions, version)
+    table.remove(sequence.Macros, version)
     printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
     GSE.GUIEditorPerformLayout(editframe)
     GSE.GUIEditFrame.ContentContainer:SelectTab("config")
