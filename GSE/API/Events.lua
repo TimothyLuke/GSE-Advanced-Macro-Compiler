@@ -51,7 +51,7 @@ function GSE.TraceSequence(button, step, task)
         end
 
         local fullBlock = ""
-        
+
         if GSEOptions.showFullBlockDebug then
             fullBlock = "\n" .. GSE.SequencesExec[button][step] .. GSEOptions.EmphasisColour .. "\n============================================================================================\n" .. Statics.StringReset
         end
