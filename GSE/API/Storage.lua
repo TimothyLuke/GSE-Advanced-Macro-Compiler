@@ -1389,8 +1389,7 @@ function GSE.CompileTemplate(template)
 
     for _, action in ipairs(template.Actions) do
         local compiledAction = processAction(action, template.InbuiltVariables)
-        --GSE.Print(compiledAction)
-            
+
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
                 table.insert(compiledMacro, value)
