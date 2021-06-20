@@ -1338,7 +1338,7 @@ local function processAction(action, metaData)
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
-        print(#PauseActions, GSE.Dump(action))
+        -- print(#PauseActions, GSE.Dump(action))
         return PauseActions
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
