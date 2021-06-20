@@ -32,35 +32,37 @@ function GSE.ProcessVariables(lines, variableTable)
     local returnLines = {}
     --print(GSE.isEmpty(variableTable))
     for _, line in ipairs(lines) do
-        if not GSE.isEmpty(variableTable) then
-            for key,value in pairs(variableTable) do
-                if type(value) == "string" then
-                    local functline = value
-                    if string.sub(functline, 1, 10) == "function()" then
-                        functline = string.sub(functline, 11)
-                        functline = functline:sub(1, -4)
-                        functline = loadstring(functline)
-                        --print(type(functline))
-                        if functline ~= nil then
-                            value = functline
+        if line ~= "/click GSE.Pause" then
+            if not GSE.isEmpty(variableTable) then
+                for key,value in pairs(variableTable) do
+                    if type(value) == "string" then
+                        local functline = value
+                        if string.sub(functline, 1, 10) == "function()" then
+                            functline = string.sub(functline, 11)
+                            functline = functline:sub(1, -4)
+                            functline = loadstring(functline)
+                            --print(type(functline))
+                            if functline ~= nil then
+                                value = functline
+                            end
                         end
                     end
+                    --print("updated Type: ".. type(value))
+                    --print(value)
+                    if type(value) == "function" then
+                        value = value()
+                    end
+                    line = string.gsub(line, string.format("~~%s~~", key), value)
                 end
-                --print("updated Type: ".. type(value))
-                --print(value)
+            end
+
+            for key,value in pairs(Statics.SystemVariables) do
                 if type(value) == "function" then
                     value = value()
                 end
+                local oldline = line
                 line = string.gsub(line, string.format("~~%s~~", key), value)
             end
-        end
-
-        for key,value in pairs(Statics.SystemVariables) do
-            if type(value) == "function" then
-                value = value()
-            end
-            local oldline = line
-            line = string.gsub(line, string.format("~~%s~~", key), value)
         end
         table.insert(returnLines, line)
     end

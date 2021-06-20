@@ -1327,17 +1327,18 @@ local function processAction(action, metaData)
         if GSE.isEmpty(clicks) then
             clicks = action.MS
             if clicks == '~~GCD~~' or clicks == 'GCD' then
-                clicks = GSE.GetGCD() * 1000
+                clicks = GSE.GetGCD() * 1000 / GSEOptions.msClickRate
             else
                 clicks = math.ceil(clicks / GSEOptions.msClickRate)
             end
         end
         if clicks > 0 then
             for loop = 1, clicks do
-                table.insert(PauseActions, "/click nil")
+                table.insert(PauseActions, "/click GSE.Pause")
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
+        print(#PauseActions, GSE.Dump(action))
         return PauseActions
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
@@ -1389,6 +1390,7 @@ function GSE.CompileTemplate(template)
     for _, action in ipairs(template.Actions) do
         local compiledAction = processAction(action, template.InbuiltVariables)
         --GSE.Print(compiledAction)
+            
         if type(compiledAction) == "table" then
             for _, value in ipairs(compiledAction) do
                 table.insert(compiledMacro, value)

@@ -13,7 +13,7 @@ end
 --@end-debug@
 
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
-
+GSE.Pause = {}
 GSE.OutputQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
