@@ -1413,7 +1413,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
             local scrollpos = container.height
             table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
             ChooseVersionTab(version)
-            editframe.ScrollWindow:SetScroll(scrollpos)
+            --editframe.ScrollWindow:SetScroll(scrollpos)
         end)
         addActionButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
@@ -1569,7 +1569,7 @@ local function drawAction(container, action, version, keyPath)
     end
 
     if action.Type == Statics.Actions.Pause then
-        
+
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
@@ -1666,10 +1666,10 @@ local function drawAction(container, action, version, keyPath)
             valueEditBox:SetDisabled(false)
         end
         linegroup1:AddChild(valueEditBox)
-     
+
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
         container:AddChild(linegroup1)
-        
+
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
