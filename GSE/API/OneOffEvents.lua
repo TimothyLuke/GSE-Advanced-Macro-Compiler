@@ -5,6 +5,9 @@ local L = GSE.L
 
 function GSE.PerformOneOffEvents()
     GSE.Update3000()
+    if GSE.isEmpty(GSEOptions.msClickRate) then
+        GSEOptions.msClickRate = 250
+    end
 end
 
 function GSE.Update3000()
