@@ -638,3 +638,5 @@ L["RESTRICTED: Macro specifics disabled by author."] = true
 L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] = true
 L["Show Full Block Execution"] = true
 L["When debugging the output of a sequence, show the full executed block in the Debugger Output."] = true
+L["Support GSE"] = true
+L["Get Help"] = true
