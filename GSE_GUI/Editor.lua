@@ -145,7 +145,9 @@ function GSE.GUIEditorPerformLayout(frame)
     nameeditbox:SetLabel(L["Sequence Name"])
     nameeditbox:SetWidth(250)
     nameeditbox:SetCallback("OnTextChanged", function()
-        editframe.SequenceName = nameeditbox:GetText()
+        if not editframe.reloading then
+            editframe.SequenceName = nameeditbox:GetText()
+        end
     end)
     -- nameeditbox:SetScript("OnEditFocusLost", function()
     --  editframe:SetText(string.upper(editframe:GetText()))
@@ -1206,7 +1208,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     local keyEditBox = AceGUI:Create("EditBox")
     keyEditBox:SetLabel()
     keyEditBox:DisableButton(true)
-    keyEditBox:SetWidth(rowWidth * 0.25)
+    keyEditBox:SetWidth(rowWidth * 0.15 + 5)
     keyEditBox:SetText(key)
     local oldkey = key
     keyEditBox:SetCallback("OnTextChanged", function()
@@ -1229,16 +1231,16 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
     valueEditBox:SetLabel()
     valueEditBox:SetNumLines(3)
-    valueEditBox:SetWidth(rowWidth * 0.75)
+    valueEditBox:SetWidth(rowWidth  * 0.75 + 5)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(value)
     valueEditBox:SetCallback("OnTextChanged", function()
-        editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+        editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = GSE.SplitMeIntolines(valueEditBox:GetText())
     end)
     linegroup1:AddChild(valueEditBox)
 
     local spacerlabel2 = AceGUI:Create("Label")
-    spacerlabel2:SetWidth(8)
+    spacerlabel2:SetWidth(15)
     linegroup1:AddChild(spacerlabel2)
 
     local testRowButton = AceGUI:Create("Icon")
@@ -1823,53 +1825,41 @@ function GSE:DrawSequenceEditor(container, version)
 end
 
 function GSE:GUIDrawVariableEditor(container, version)
-    local maxWidth = container.frame:GetWidth() - 50
+    local maxWidth = container.frame:GetWidth() 
     if GSE.isEmpty(editframe.Sequence.Macros[version].Variables) then
         editframe.Sequence.Macros[version].Variables = {}
     end
 
-    local layoutcontainer = AceGUI:Create("SimpleGroup")
-    layoutcontainer:SetWidth(maxWidth)
-    layoutcontainer:SetHeight(editframe.Height - 320)
-    layoutcontainer:SetLayout("Flow") -- Important!
-
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    scrollcontainer:SetWidth(layoutcontainer.frame:GetWidth())
-    -- scrollcontainer:SetFullHeight(true) -- Probably?
-    -- scrollcontainer:SetWidth(editframe.Width )
-    scrollcontainer:SetHeight(editframe.Height - 320)
-    scrollcontainer:SetLayout("Fill") -- Important!
-
-    local contentcontainer = AceGUI:Create("ScrollFrame")
-    scrollcontainer:AddChild(contentcontainer)
+    local contentcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    contentcontainer:SetWidth(maxWidth)
 
     local variableLabel = AceGUI:Create("Heading")
     variableLabel:SetText(L["System Variables"])
-    variableLabel:SetWidth(layoutcontainer.frame:GetWidth())
+    variableLabel:SetWidth(contentcontainer.frame:GetWidth())
     contentcontainer:AddChild(variableLabel)
 
     for key, value in pairs(Statics.SystemVariableDescriptions) do
         local textlabel = AceGUI:Create("Label")
         local tempLabel = GSEOptions.UNKNOWN .. "~~" .. key .. "~~ " .. Statics.StringReset .. value
         textlabel:SetText(tempLabel)
-        textlabel:SetWidth(layoutcontainer.frame:GetWidth())
+        textlabel:SetWidth(contentcontainer.frame:GetWidth())
         contentcontainer:AddChild(textlabel)
     end
 
     local uvariableLabel = AceGUI:Create("Heading")
     uvariableLabel:SetText(L["Macro Variables"])
-    uvariableLabel:SetWidth(layoutcontainer.frame:GetWidth())
+    uvariableLabel:SetWidth(contentcontainer.frame:GetWidth())
     contentcontainer:AddChild(uvariableLabel)
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
-    local columnWidth = layoutcontainer.frame:GetWidth() - 55
+    local columnWidth = contentcontainer.frame:GetWidth() - 55
 
     linegroup1:SetWidth(columnWidth + 5)
 
     local nameLabel = AceGUI:Create("Heading")
     nameLabel:SetText(L["Name"])
-    nameLabel:SetWidth((columnWidth - 25) * 0.25)
+    nameLabel:SetWidth(columnWidth * 0.15 )
     linegroup1:AddChild(nameLabel)
 
     local spacerlabel1 = AceGUI:Create("Label")
@@ -1878,7 +1868,7 @@ function GSE:GUIDrawVariableEditor(container, version)
 
     local valueLabel = AceGUI:Create("Heading")
     valueLabel:SetText(L["Value"])
-    valueLabel:SetWidth((columnWidth - 45) * 0.75 - 18)
+    valueLabel:SetWidth(columnWidth * 0.70 )
     linegroup1:AddChild(valueLabel)
 
     local spacerlabel2 = AceGUI:Create("Label")
@@ -1887,19 +1877,21 @@ function GSE:GUIDrawVariableEditor(container, version)
 
     local delLabel = AceGUI:Create("Heading")
     delLabel:SetText(L["Actions"])
-    delLabel:SetWidth(25)
+    delLabel:SetWidth(columnWidth * 0.10)
     linegroup1:AddChild(delLabel)
     contentcontainer:AddChild(linegroup1)
 
     for key, value in pairs(editframe.Sequence.Macros[version].Variables) do
-        addKeyPairRow(contentcontainer, columnWidth, key, table.concat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"), version)
+        if type(value) == "table" then
+            addKeyPairRow(contentcontainer, columnWidth, key, table.concat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"), version)
+        end
     end
 
     local addVariablsButton = AceGUI:Create("Button")
     addVariablsButton:SetText(L["Add Variable"])
     addVariablsButton:SetWidth(100)
     addVariablsButton:SetCallback("OnClick", function()
-        addKeyPairRow(contentcontainer, columnWidth)
+        addKeyPairRow(contentcontainer, columnWidth, null, null, version)
     end)
     addVariablsButton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Add Variable"],
@@ -1910,9 +1902,9 @@ function GSE:GUIDrawVariableEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
-    layoutcontainer:AddChild(scrollcontainer)
-    layoutcontainer:AddChild(addVariablsButton)
-    container:AddChild(layoutcontainer)
+    container:AddChild(contentcontainer)
+    container:AddChild(addVariablsButton)
+    
 end
 
 local function addKeyPairWARow(container, rowWidth, key, value)
@@ -1962,7 +1954,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     valueEditBox:SetLabel()
     valueEditBox:SetNumLines(3)
     valueEditBox:SetDisabled(false)
-    valueEditBox:SetWidth(rowWidth * 0.75)
+    valueEditBox:SetWidth(rowWidth * 0.80)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(value)
     valueEditBox:SetCallback("OnTextChanged", function()
@@ -2080,8 +2072,10 @@ end
 
 function GSE.GUISelectEditorTab(container, event, group)
     if not GSE.isEmpty(container) then
+        editframe.reloading = true
         container:ReleaseChildren()
         editframe.SelectedTab = group
+
         editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
         editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
         if group == "config" then
@@ -2098,6 +2092,7 @@ function GSE.GUISelectEditorTab(container, event, group)
         else
             GSE:GUIDrawMacroEditor(container, group)
         end
+        editframe.reloading = false
     end
 end
 
