@@ -1825,7 +1825,7 @@ function GSE:DrawSequenceEditor(container, version)
 end
 
 function GSE:GUIDrawVariableEditor(container, version)
-    local maxWidth = container.frame:GetWidth() 
+    local maxWidth = container.frame:GetWidth()
     if GSE.isEmpty(editframe.Sequence.Macros[version].Variables) then
         editframe.Sequence.Macros[version].Variables = {}
     end
@@ -1891,7 +1891,7 @@ function GSE:GUIDrawVariableEditor(container, version)
     addVariablsButton:SetText(L["Add Variable"])
     addVariablsButton:SetWidth(100)
     addVariablsButton:SetCallback("OnClick", function()
-        addKeyPairRow(contentcontainer, columnWidth, null, null, version)
+        addKeyPairRow(contentcontainer, columnWidth, nil, nil, version)
     end)
     addVariablsButton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Add Variable"],
@@ -1904,7 +1904,7 @@ function GSE:GUIDrawVariableEditor(container, version)
 
     container:AddChild(contentcontainer)
     container:AddChild(addVariablsButton)
-    
+
 end
 
 local function addKeyPairWARow(container, rowWidth, key, value)
