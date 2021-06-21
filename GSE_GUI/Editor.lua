@@ -725,7 +725,7 @@ function GSE:GUIDrawMetadataEditor(container)
         contentcontainer:AddChild(defgroup5)
         contentcontainer:AddChild(defgroup6)
     end
-
+    editframe.ScrollWindow = contentcontainer
     container:AddChild(scrollcontainer)
 end
 
@@ -1302,7 +1302,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 
 end
 
-local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
+local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
     local layoutcontainer = AceGUI:Create("InlineGroup")
 
     layoutcontainer:SetLayout("Flow")
@@ -1410,10 +1410,10 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel)
                 [1] = "/say Hello",
                 ['Type'] = Statics.Actions.Action,
             }
-
+            local scrollpos = container.height
             table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
             ChooseVersionTab(version)
-
+            editframe.ScrollWindow:SetScroll(scrollpos)
         end)
         addActionButton:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
@@ -1569,8 +1569,7 @@ local function drawAction(container, action, version, keyPath)
     end
 
     if action.Type == Statics.Actions.Pause then
-        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
-
+        
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
@@ -1667,8 +1666,10 @@ local function drawAction(container, action, version, keyPath)
             valueEditBox:SetDisabled(false)
         end
         linegroup1:AddChild(valueEditBox)
+     
+        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
         container:AddChild(linegroup1)
-
+        
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
@@ -1699,7 +1700,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel)
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container)
 
 
         local stepdropdown = AceGUI:Create("Dropdown")
@@ -1720,8 +1721,8 @@ local function drawAction(container, action, version, keyPath)
             GSE.ClearTooltip(editframe)
         end)
 
-        stepdropdown:SetCallback("OnValueChanged", function()
-            editframe.Sequence.Macros[version][keyPath].StepFunction =  stepdropdown:GetValue()
+        stepdropdown:SetCallback("OnValueChanged", function(sel, object, value)
+            editframe.Sequence.Macros[version].Actions[keyPath].StepFunction = value
         end)
 
         local looplimit = AceGUI:Create("EditBox")
@@ -1740,7 +1741,7 @@ local function drawAction(container, action, version, keyPath)
             GSE.ClearTooltip(editframe)
         end)
         looplimit:SetCallback("OnTextChanged", function(sel, object, value)
-            editframe.Sequence.Macros[version][keyPath].Repeat = value
+            editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
         end)
 
         local spacerlabel1 = AceGUI:Create("Label")
@@ -1776,7 +1777,7 @@ local function drawAction(container, action, version, keyPath)
                 table.insert(newKeyPath, v)
             end
             table.insert(newKeyPath, key)
-            drawAction(macroGroup, act, version, newKeyPath)
+            drawAction(macroGroup, act, version, newKeyPath, macroGroup)
         end
         -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
         -- linegroup2:AddChild(testRowButton)
