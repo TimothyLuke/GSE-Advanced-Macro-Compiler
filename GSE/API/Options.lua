@@ -751,7 +751,7 @@ function GSE.GetOptionsTable()
             image = "Interface\\Addons\\GSE_GUI\\Assets\\github.tga",
             imageWidth = 120,
             imageHeight = 120,
-            func = function() 
+            func = function()
               StaticPopupDialogs['GSE_SEQUENCEHELP'].url = "https://github.com/TimothyLuke/GnomeSequencer-Enhanced/issues"
               StaticPopup_Show('GSE_SEQUENCEHELP')
             end
@@ -763,7 +763,7 @@ function GSE.GetOptionsTable()
             image = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.tga",
             imageWidth = 120,
             imageHeight = 120,
-            func = function() 
+            func = function()
               StaticPopupDialogs['GSE_SEQUENCEHELP'].url = "https://www.patreon.com/TimothyLuke"
               StaticPopup_Show('GSE_SEQUENCEHELP')
             end
