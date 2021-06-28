@@ -1301,7 +1301,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     linegroup1:AddChild(deleteRowButton)
 
     container:AddChild(linegroup1)
-
+    return keyEditBox
 end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
@@ -1891,7 +1891,10 @@ function GSE:GUIDrawVariableEditor(container, version)
     addVariablsButton:SetText(L["Add Variable"])
     addVariablsButton:SetWidth(100)
     addVariablsButton:SetCallback("OnClick", function()
-        addKeyPairRow(contentcontainer, columnWidth, nil, nil, version)
+        local position = container.frame:GetHeight()
+        local focusfield = addKeyPairRow(contentcontainer, columnWidth, nil, nil, version)
+        container:DoLayout()
+        focusfield:SetFocus()
     end)
     addVariablsButton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Add Variable"],
