@@ -503,6 +503,9 @@ function GSE.OOCUpdateSequence(name, sequence)
     end
 
     local combatReset = false
+    if GSE.isEmpty(sequence.InbuiltVariables) then
+        sequence.InbuiltVariables = {}
+    end
     if (GSE.isEmpty(sequence.InbuiltVariables.Combat) and GSEOptions.resetOOC) or sequence.InbuiltVariables.Combat then
         combatReset = true
     end
@@ -1358,7 +1361,9 @@ local function processAction(action, metaData)
 end
 
 --- Compiles a macro template into a macro
-function GSE.CompileTemplate(template)
+function GSE.CompileTemplate(macro)
+
+    local template = GSE.CloneSequence(macro)
 
     setmetatable(template.Actions, {
         __index = function(t, k)
