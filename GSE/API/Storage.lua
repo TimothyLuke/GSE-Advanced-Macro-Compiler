@@ -1174,7 +1174,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         end
 
         if table.getn(v.PostMacro) > 0 then
-            for _, j in ipairs(v.PreMacro) do
+            for _, j in ipairs(v.PostMacro) do
                 local action = fixLine(j, KeyPress, KeyRelease)
                 table.insert(gse3seq.Actions, action)
             end
