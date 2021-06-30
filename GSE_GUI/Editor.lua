@@ -251,7 +251,7 @@ function GSE.GUIEditorPerformLayout(frame)
             editframe.Sequence.MetaData.EnforceCompatability = true
             editframe.Sequence.MetaData.TOC = tocversion
             nameeditbox:SetText(string.upper(nameeditbox:GetText()))
-            editframe.SequenceName = nameeditbox:GetText()
+            editframe.SequenceName = GSE.UnEscapeString(nameeditbox:GetText())
             GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
             editframe.save = true
             C_Timer.After(5, function()
