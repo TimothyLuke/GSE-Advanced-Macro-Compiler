@@ -109,7 +109,7 @@ function GSE.GUICreateEditorTabs()
         -- }
     }
     -- If disabled editor then dont show the internal tabs
-    if GSE.isEmpty(editframe.Sequence.MetaData.DisableEditor) then
+    if GSE.isEmpty(editframe.Sequence.MetaData.DisableEditor) or editframe.Sequence.MetaData.DisableEditor == false then
         for k,_ in ipairs(editframe.Sequence.Macros) do
             local insline = {}
             insline.text = tostring(k)
