@@ -1430,6 +1430,12 @@ function GSE.CreateGSE3Button(macro, name)
         gsebutton:UnwrapScript(gsebutton, 'OnClick')
         gsebutton.UpdateIcon = GSE.UpdateIcon
 
+        if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC) or sequence.Combat then
+            gsebutton:SetAttribute("combatreset", true)
+        else
+            gsebutton:SetAttribute("combatreset", true)
+        end
+
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
         else
