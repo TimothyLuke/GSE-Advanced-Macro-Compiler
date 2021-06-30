@@ -767,6 +767,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
+    layoutcontainer.frame:SetBackdrop(nil)
+
     layoutcontainer:SetFullWidth(true)
     layoutcontainer:SetHeight(editframe.Height - 300)
     layoutcontainer:SetLayout("Flow") -- Important!
@@ -1026,7 +1028,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
     toolbarcontainer:AddChild(heading2)
-
+    toolbarcontainer.frame:SetBackdrop(nil)
     local toolbarrow1 = AceGUI:Create("SimpleGroup")
     toolbarrow1:SetLayout("Flow")
     toolbarrow1:SetWidth(contentcontainer.frame:GetWidth()-50)
@@ -1221,6 +1223,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     -- end
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
+    linegroup1.frame:SetBackdrop(nil)
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
@@ -1325,8 +1328,8 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
-    local layoutcontainer = AceGUI:Create("InlineGroup")
-
+    local layoutcontainer = AceGUI:Create("SimpleGroup")
+    layoutcontainer.frame:SetBackdrop(nil)
     layoutcontainer:SetLayout("Flow")
     layoutcontainer:SetWidth(width)
     layoutcontainer:SetHeight(30)
@@ -1718,7 +1721,9 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(valueEditBox)
     elseif action.Type == Statics.Actions.Loop then
 
-        local macroPanel = AceGUI:Create("InlineGroup")
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        macroPanel.frame:SetBackdrop(nil)
+
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
@@ -1948,6 +1953,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
+    linegroup1.frame:SetBackdrop(nil)
     rowWidth = rowWidth - 70
 
     local keyEditBox = AceGUI:Create("EditBox")
