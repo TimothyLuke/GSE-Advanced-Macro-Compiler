@@ -503,7 +503,6 @@ function GSE.OOCUpdateSequence(name, sequence)
     end
 
     local combatReset = false
-    
     if (GSE.isEmpty(sequence.InbuiltVariables.Combat) and GSEOptions.resetOOC) or sequence.InbuiltVariables.Combat then
         combatReset = true
     end
