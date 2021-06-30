@@ -120,7 +120,7 @@ function GSE.GUICreateEditorTabs()
             text = L["New"],
             value = "new"
         })
-        if not GSE.isEmpty(editframe.Sequence.MetaData.ReadOnly) then
+        if not GSE.isEmpty(editframe.Sequence.MetaData.ReadOnly) or editframe.Sequence.MetaData.ReadOnly == false then
             editframe.statusText = "GSE: " .. GSE.VersionString .. " " .. GSEOptions.UNKNOWN .. L["This sequence is Read Only and unable to be edited."] .. Statics.StringReset
         end
 
