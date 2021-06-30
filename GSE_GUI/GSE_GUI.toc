@@ -23,5 +23,6 @@ RemoteMacroBrowser.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
+MacroPreview.lua
 3_AdvancedEditor.lua
 Init.lua

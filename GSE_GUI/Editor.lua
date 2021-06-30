@@ -853,6 +853,24 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
+    local previewMacro = AceGUI:Create("Button")
+    previewMacro:SetText(L["Compiled Template"])
+    previewMacro:SetWidth(130)
+    previewMacro:SetCallback("OnClick", function()
+        local GSE3Macro = GSE.CompileTemplate(editframe.Sequence.Macros[version])
+        GSE.GUIShowCompiledMacroGui(GSE3Macro, editframe.SequenceName .. " : " .. version)
+
+    end)
+    previewMacro:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Compiled Template"],
+            L["Show the compiled version of this macro."],
+            editframe)
+    end)
+    previewMacro:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+
+
     local linegroup2 = AceGUI:Create("SimpleGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
@@ -984,6 +1002,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     -- linegroup1:AddChild(showBaseSpells)
     linegroup1:AddChild(delspacerlabel)
     linegroup1:AddChild(raweditbutton)
+    linegroup1:AddChild(previewMacro)
+
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
     contentcontainer:AddChild(linegroup1)

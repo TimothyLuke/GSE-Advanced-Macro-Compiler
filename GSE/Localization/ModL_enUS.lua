@@ -640,3 +640,7 @@ L["Show Full Block Execution"] = true
 L["When debugging the output of a sequence, show the full executed block in the Debugger Output."] = true
 L["Support GSE"] = true
 L["Get Help"] = true
+
+-- 3.0.2
+L["Compiled Template"] = true
+L["Show the compiled version of this macro."] = true
