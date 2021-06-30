@@ -501,7 +501,13 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
         return
     end
-    GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name)
+
+    local combatReset = false
+    if (GSE.isEmpty(sequence.MetaData.Combat) and GSEOptions.resetOOC) or sequence.MetaData.Combat then
+        combatReset = true
+    end
+
+    GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name, combatReset)
 end
 
 --- This function dumps what is currently running on an existing button.
@@ -1413,10 +1419,13 @@ function GSE.CompileTemplate(template)
 end
 
 --- Build GSE3 Executable Buttons
-function GSE.CreateGSE3Button(macro, name)
+function GSE.CreateGSE3Button(macro, name, combatReset)
     if GSE.isEmpty(macro) then
         print("Macro missing for ", name)
         return
+    end
+    if GSE.isEmpty(combatReset) then
+        combatReset = false
     end
     -- name = name .. "T"
     GSE.SequencesExec[name] = macro
@@ -1430,11 +1439,7 @@ function GSE.CreateGSE3Button(macro, name)
         gsebutton:UnwrapScript(gsebutton, 'OnClick')
         gsebutton.UpdateIcon = GSE.UpdateIcon
 
-        if (GSE.isEmpty(sequence.Combat) and GSEOptions.resetOOC) or sequence.Combat then
-            gsebutton:SetAttribute("combatreset", true)
-        else
-            gsebutton:SetAttribute("combatreset", true)
-        end
+        gsebutton:SetAttribute("combatreset", combatReset)
 
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
