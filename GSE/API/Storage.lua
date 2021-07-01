@@ -1137,6 +1137,18 @@ function GSE.ConvertGSE2(sequence, sequenceName)
         gse3seq.Actions = {}
         gse3seq.Variables = {}
 
+        if GSE.isEmpty(v.KeyPress) then
+            v.KeyPress = {}
+        end    
+        if GSE.isEmpty(v.KeyRelease) then
+            v.KeyRelease = {}
+        end
+        if GSE.isEmpty(v.PreMacro) then
+            v.PreMacro = {}
+        end
+        if GSE.isEmpty(v.PostMacro) then
+            v.PostMacro = {}
+        end
         local KeyPress = table.getn(v.KeyPress) > 0
         local KeyRelease = table.getn(v.KeyRelease) > 0
 
