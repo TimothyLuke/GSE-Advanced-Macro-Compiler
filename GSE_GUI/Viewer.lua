@@ -10,6 +10,24 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 local editkey = ""
 
+local addonSkinsEnabled = false
+
+if not GSE.isEmpty(ElvUI) then
+    local ElvPrivateDB = ElvPrivateDB
+    if ElvPrivateDB then
+        local myname = UnitName("player")
+        local profileKey
+		if ElvPrivateDB.profileKeys then
+			profileKey = ElvPrivateDB.profileKeys[myname..' - '..GetRealmName()]
+		end
+
+        if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
+            if GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) or ElvPrivateDB.profiles[profileKey].skins.ace3Enable ~= false then
+                addonSkinsEnabled = true
+            end
+        end
+    end
+end
 
 local viewframe = AceGUI:Create("Frame")
 viewframe:SetTitle(L["Sequence Editor"])
@@ -113,7 +131,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local columngroup = AceGUI:Create("SimpleGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
-  if not GSE.isEmpty(ElvUI) then
+  if addonSkinsEnabled then
     columngroup.frame:SetBackdrop(nil)
   end
 
@@ -121,7 +139,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local column1 = AceGUI:Create("SimpleGroup")
   column1:SetWidth(viewframe.Width - 140)
   column1:SetLayout("List")
-  if not GSE.isEmpty(ElvUI) then
+  if addonSkinsEnabled then
     column1.frame:SetBackdrop(nil)
   end
 
@@ -141,7 +159,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column1:AddChild(helplabel)
 
   local row2 = AceGUI:Create("SimpleGroup")
-  if not GSE.isEmpty(ElvUI) then
+  if addonSkinsEnabled then
     row2.frame:SetBackdrop(nil)
   end
   row2:SetLayout("Flow")
@@ -194,7 +212,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column2:SetWidth(60)
   column2:SetLayout("List")
   columngroup:AddChild(column2)
-  if not GSE.isEmpty(ElvUI) then
+  if addonSkinsEnabled then
     column2.frame:SetBackdrop(nil)
   end
 

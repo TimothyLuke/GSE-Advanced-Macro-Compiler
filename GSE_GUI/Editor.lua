@@ -17,6 +17,27 @@ local mythic = 1
 
 local scenario = 1
 
+local addonSkinsEnabled = false
+
+if not GSE.isEmpty(ElvUI) then
+    local ElvPrivateDB = ElvPrivateDB
+    if ElvPrivateDB then
+
+        local myname = UnitName("player")
+        local profileKey
+		if ElvPrivateDB.profileKeys then
+			profileKey = ElvPrivateDB.profileKeys[myname..' - '..GetRealmName()]
+		end
+
+        if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
+            if GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) or ElvPrivateDB.profiles[profileKey].skins.ace3Enable ~= false then
+                addonSkinsEnabled = true
+            end
+        end
+
+    end
+end
+
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 GSE.GUIEditFrame = editframe
@@ -767,7 +788,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if not GSE.isEmpty(ElvUI) then
+    if addonSkinsEnabled then
         layoutcontainer.frame:SetBackdrop(nil)
     end
 
@@ -1030,7 +1051,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
     toolbarcontainer:AddChild(heading2)
-    if not GSE.isEmpty(ElvUI) then
+    if addonSkinsEnabled then
         toolbarcontainer.frame:SetBackdrop(nil)
     end
     local toolbarrow1 = AceGUI:Create("SimpleGroup")
@@ -1227,7 +1248,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     -- end
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
-    if not GSE.isEmpty(ElvUI) then
+    if addonSkinsEnabled then
         linegroup1.frame:SetBackdrop(nil)
     end
     linegroup1:SetLayout("Flow")
@@ -1335,7 +1356,7 @@ end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if not GSE.isEmpty(ElvUI) then
+    if addonSkinsEnabled then
         layoutcontainer.frame:SetBackdrop(nil)
     end
     layoutcontainer:SetLayout("Flow")
@@ -1604,7 +1625,7 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Pause then
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
-        if not GSE.isEmpty(ElvUI) then
+        if addonSkinsEnabled then
             linegroup1.frame:SetBackdrop(nil)
         end
 
@@ -1734,7 +1755,7 @@ local function drawAction(container, action, version, keyPath)
     elseif action.Type == Statics.Actions.Loop then
 
         local macroPanel = AceGUI:Create("SimpleGroup")
-        if not GSE.isEmpty(ElvUI) then
+        if addonSkinsEnabled then
             macroPanel.frame:SetBackdrop(nil)
         end
         macroPanel:SetWidth(maxWidth)
@@ -1810,7 +1831,7 @@ local function drawAction(container, action, version, keyPath)
         local macroGroup = AceGUI:Create("SimpleGroup")
         macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
-        if not GSE.isEmpty(ElvUI) then
+        if addonSkinsEnabled then
             macroPanel.frame:SetBackdrop(nil)
         end
         for key,act in ipairs(action) do
@@ -1853,7 +1874,7 @@ function GSE:DrawSequenceEditor(container, version)
 
     for key,action in ipairs(macro) do
         local macroPanel = AceGUI:Create("SimpleGroup")
-        if not GSE.isEmpty(ElvUI) then
+        if addonSkinsEnabled then
             macroPanel.frame:SetBackdrop(nil)
         end
         macroPanel:SetWidth(maxWidth)
@@ -1971,7 +1992,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
-    if not GSE.isEmpty(ElvUI) then
+    if addonSkinsEnabled then
         linegroup1.frame:SetBackdrop(nil)
     end
     rowWidth = rowWidth - 70
