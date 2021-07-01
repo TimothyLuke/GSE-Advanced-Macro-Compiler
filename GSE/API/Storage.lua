@@ -1305,16 +1305,23 @@ local function processAction(action, metaData)
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
-        for step = 1, loop do
+        for _=1, loop do
             if action.StepFunction == Statics.Priority then
-                for limit = 1, table.getn(actionList) do
+                local limit = 1
+                local step = 1
+                local looplimit = 0
+                for x=1, table.getn(actionList) do
+                    looplimit = looplimit + x
+                    x = x + 1
+                end
+                for _ = 1, looplimit do
                     table.insert(returnActions, actionList[step])
                     if step == limit then
                         limit = limit % #actionList + 1
                         step = 1
                         GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
                     else
-                        step = step % #actionList + 1
+                        step = step + 1
                     end
                 end
             else
