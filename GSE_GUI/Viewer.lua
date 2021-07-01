@@ -82,7 +82,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   font:SetJustifyV("BOTTOM")
 
   local selpanel = AceGUI:Create("SelectablePanel")
-  
+
   selpanel:SetKey(key)
   selpanel:SetFullWidth(true)
   selpanel:SetHeight(300)
