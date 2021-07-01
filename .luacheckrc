@@ -36,6 +36,7 @@ globals = {
     "ElvUI",
     "IndentationLib",
     "WeakAuras",
+	"ElvPrivateDB",
 
 	-- Lua
 	"bit.band",
