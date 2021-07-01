@@ -82,6 +82,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   font:SetJustifyV("BOTTOM")
 
   local selpanel = AceGUI:Create("SelectablePanel")
+  
   selpanel:SetKey(key)
   selpanel:SetFullWidth(true)
   selpanel:SetHeight(300)
@@ -112,10 +113,13 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local columngroup = AceGUI:Create("SimpleGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
+  columngroup.frame:SetBackdrop(nil)
+
 
   local column1 = AceGUI:Create("SimpleGroup")
   column1:SetWidth(viewframe.Width - 140)
   column1:SetLayout("List")
+  column1.frame:SetBackdrop(nil)
 
 
   columngroup:AddChild(column1)
@@ -133,6 +137,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column1:AddChild(helplabel)
 
   local row2 = AceGUI:Create("SimpleGroup")
+  row2.frame:SetBackdrop(nil)
+
   row2:SetLayout("Flow")
   row2:SetFullWidth(true)
 
@@ -183,6 +189,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column2:SetWidth(60)
   column2:SetLayout("List")
   columngroup:AddChild(column2)
+  column2.frame:SetBackdrop(nil)
 
 
   local viewiconpicker = AceGUI:Create("Icon")
@@ -191,6 +198,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   viewiconpicker.frame:SetScript("OnDragStart", function()
     PickupMacro(sequencename)
   end)
+  --viewiconpicker.frame:SetBackdrop(nil)
 
   selpanel.Icon = viewiconpicker
   viewiconpicker:SetImage(GSE.GetMacroIcon(classid, sequencename))
