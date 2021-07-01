@@ -1313,6 +1313,7 @@ local function processAction(action, metaData)
                 for x=1, table.getn(actionList) do
                     looplimit = looplimit + x
                     x = x + 1
+                    GSE.PrintDebugMessage("X is now " .. x, "Storage")
                 end
                 for _ = 1, looplimit do
                     table.insert(returnActions, actionList[step])
