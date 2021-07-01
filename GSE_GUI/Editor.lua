@@ -1596,6 +1596,8 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Pause then
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
+        linegroup1.frame:SetBackdrop(nil)
+
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
 
@@ -1794,9 +1796,10 @@ local function drawAction(container, action, version, keyPath)
         local spacerlabel3 = AceGUI:Create("Label")
         spacerlabel3:SetWidth(45)
 
-        local macroGroup = AceGUI:Create("InlineGroup")
+        local macroGroup = AceGUI:Create("SimpleGroup")
         macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
+        macroPanel.frame:SetBackdrop(nil)
 
         for key,act in ipairs(action) do
             local newKeyPath = {}
@@ -1837,7 +1840,8 @@ function GSE:DrawSequenceEditor(container, version)
     font:SetJustifyV("BOTTOM")
 
     for key,action in ipairs(macro) do
-        local macroPanel = AceGUI:Create("InlineGroup")
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        macroPanel.frame:SetBackdrop(nil)
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
         local keyPath = {}

@@ -138,7 +138,6 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
   local row2 = AceGUI:Create("SimpleGroup")
   row2.frame:SetBackdrop(nil)
-
   row2:SetLayout("Flow")
   row2:SetFullWidth(true)
 
