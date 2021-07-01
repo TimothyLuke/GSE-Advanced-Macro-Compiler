@@ -113,13 +113,17 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local columngroup = AceGUI:Create("SimpleGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
-  columngroup.frame:SetBackdrop(nil)
+  if not GSE.isEmpty(ElvUI) then
+    columngroup.frame:SetBackdrop(nil)
+  end
 
 
   local column1 = AceGUI:Create("SimpleGroup")
   column1:SetWidth(viewframe.Width - 140)
   column1:SetLayout("List")
-  column1.frame:SetBackdrop(nil)
+  if not GSE.isEmpty(ElvUI) then
+    column1.frame:SetBackdrop(nil)
+  end
 
 
   columngroup:AddChild(column1)
@@ -137,7 +141,9 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column1:AddChild(helplabel)
 
   local row2 = AceGUI:Create("SimpleGroup")
-  row2.frame:SetBackdrop(nil)
+  if not GSE.isEmpty(ElvUI) then
+    row2.frame:SetBackdrop(nil)
+  end
   row2:SetLayout("Flow")
   row2:SetFullWidth(true)
 
@@ -188,8 +194,9 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column2:SetWidth(60)
   column2:SetLayout("List")
   columngroup:AddChild(column2)
-  column2.frame:SetBackdrop(nil)
-
+  if not GSE.isEmpty(ElvUI) then
+    column2.frame:SetBackdrop(nil)
+  end
 
   local viewiconpicker = AceGUI:Create("Icon")
 

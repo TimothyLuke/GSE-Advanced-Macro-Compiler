@@ -767,7 +767,9 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    layoutcontainer.frame:SetBackdrop(nil)
+    if not GSE.isEmpty(ElvUI) then
+        layoutcontainer.frame:SetBackdrop(nil)
+    end
 
     layoutcontainer:SetFullWidth(true)
     layoutcontainer:SetHeight(editframe.Height - 300)
@@ -1028,7 +1030,9 @@ function GSE:GUIDrawMacroEditor(container, version)
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
     toolbarcontainer:AddChild(heading2)
-    toolbarcontainer.frame:SetBackdrop(nil)
+    if not GSE.isEmpty(ElvUI) then
+        toolbarcontainer.frame:SetBackdrop(nil)
+    end
     local toolbarrow1 = AceGUI:Create("SimpleGroup")
     toolbarrow1:SetLayout("Flow")
     toolbarrow1:SetWidth(contentcontainer.frame:GetWidth()-50)
@@ -1223,7 +1227,9 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     -- end
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
-    linegroup1.frame:SetBackdrop(nil)
+    if not GSE.isEmpty(ElvUI) then
+        linegroup1.frame:SetBackdrop(nil)
+    end
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
@@ -1329,7 +1335,9 @@ end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    layoutcontainer.frame:SetBackdrop(nil)
+    if not GSE.isEmpty(ElvUI) then
+        layoutcontainer.frame:SetBackdrop(nil)
+    end
     layoutcontainer:SetLayout("Flow")
     layoutcontainer:SetWidth(width)
     layoutcontainer:SetHeight(30)
@@ -1596,7 +1604,9 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Pause then
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
-        linegroup1.frame:SetBackdrop(nil)
+        if not GSE.isEmpty(ElvUI) then
+            linegroup1.frame:SetBackdrop(nil)
+        end
 
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
@@ -1724,8 +1734,9 @@ local function drawAction(container, action, version, keyPath)
     elseif action.Type == Statics.Actions.Loop then
 
         local macroPanel = AceGUI:Create("SimpleGroup")
-        macroPanel.frame:SetBackdrop(nil)
-
+        if not GSE.isEmpty(ElvUI) then
+            macroPanel.frame:SetBackdrop(nil)
+        end
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
@@ -1799,8 +1810,9 @@ local function drawAction(container, action, version, keyPath)
         local macroGroup = AceGUI:Create("SimpleGroup")
         macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
-        macroPanel.frame:SetBackdrop(nil)
-
+        if not GSE.isEmpty(ElvUI) then
+            macroPanel.frame:SetBackdrop(nil)
+        end
         for key,act in ipairs(action) do
             local newKeyPath = {}
             for _,v in ipairs(keyPath) do
@@ -1841,7 +1853,9 @@ function GSE:DrawSequenceEditor(container, version)
 
     for key,action in ipairs(macro) do
         local macroPanel = AceGUI:Create("SimpleGroup")
-        macroPanel.frame:SetBackdrop(nil)
+        if not GSE.isEmpty(ElvUI) then
+            macroPanel.frame:SetBackdrop(nil)
+        end
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
         local keyPath = {}
@@ -1957,7 +1971,9 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
-    linegroup1.frame:SetBackdrop(nil)
+    if not GSE.isEmpty(ElvUI) then
+        linegroup1.frame:SetBackdrop(nil)
+    end
     rowWidth = rowWidth - 70
 
     local keyEditBox = AceGUI:Create("EditBox")
