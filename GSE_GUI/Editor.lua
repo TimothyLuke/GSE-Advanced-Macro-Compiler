@@ -257,6 +257,9 @@ function GSE.GUIEditorPerformLayout(frame)
     end)
 
     local editButtonGroup = AceGUI:Create("SimpleGroup")
+    if addonSkinsEnabled then
+        editButtonGroup.frame:SetBackdrop(nil)
+    end
     editButtonGroup:SetWidth(602)
     editButtonGroup:SetLayout("Flow")
     editButtonGroup:SetHeight(15)
@@ -328,6 +331,9 @@ function GSE:GUIDrawMetadataEditor(container)
     editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    if addonSkinsEnabled then
+        scrollcontainer.frame:SetBackdrop(nil)
+    end
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetHeight(editframe.Height - 310)
     scrollcontainer:SetLayout("Fill") -- Important!
@@ -338,6 +344,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local metasimplegroup = AceGUI:Create("SimpleGroup")
     metasimplegroup:SetLayout("Flow")
     metasimplegroup:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        metasimplegroup.frame:SetBackdrop(nil)
+    end
 
     local speciddropdown = AceGUI:Create("Dropdown")
     speciddropdown:SetLabel(L["Specialisation / Class ID"])
@@ -413,6 +422,9 @@ function GSE:GUIDrawMetadataEditor(container)
     helpgroup1:SetLayout("Flow")
     helpgroup1:SetWidth(editframe.Width - 100)
 
+    if addonSkinsEnabled then
+        helpgroup1.frame:SetBackdrop(nil)
+    end
     local helplinkeditbox = AceGUI:Create("EditBox")
     helplinkeditbox:SetLabel(L["Help Link"])
     helplinkeditbox:SetWidth(250)
@@ -461,6 +473,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup1 = AceGUI:Create("SimpleGroup")
     defgroup1:SetLayout("Flow")
     defgroup1:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        defgroup1.frame:SetBackdrop(nil)
+    end
 
     local defaultdropdown = AceGUI:Create("Dropdown")
     defaultdropdown:SetLabel(L["Default Version"])
@@ -503,6 +518,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup2 = AceGUI:Create("SimpleGroup")
     defgroup2:SetLayout("Flow")
     defgroup2:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        defgroup2.frame:SetBackdrop(nil)
+    end
 
     local arenadropdown = AceGUI:Create("Dropdown")
     arenadropdown:SetLabel(L["Arena"])
@@ -571,6 +589,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup3 = AceGUI:Create("SimpleGroup")
     defgroup3:SetLayout("Flow")
     defgroup3:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        defgroup3.frame:SetBackdrop(nil)
+    end
 
     local dungeondropdown = AceGUI:Create("Dropdown")
     dungeondropdown:SetLabel(L["Dungeon"])
@@ -617,6 +638,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup4 = AceGUI:Create("SimpleGroup")
     defgroup4:SetLayout("Flow")
     defgroup4:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        defgroup4.frame:SetBackdrop(nil)
+    end
 
     local partydropdown = AceGUI:Create("Dropdown")
     partydropdown:SetLabel(L["Party"])
@@ -647,6 +671,10 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup6 = AceGUI:Create("SimpleGroup")
     defgroup6:SetLayout("Flow")
     defgroup6:SetWidth(editframe.Width - 100)
+    if addonSkinsEnabled then
+        defgroup5.frame:SetBackdrop(nil)
+        defgroup6.frame:SetBackdrop(nil)
+    end
 
     local Timewalkingdropdown = AceGUI:Create("Dropdown")
     Timewalkingdropdown:SetLabel(L["Timewalking"])
