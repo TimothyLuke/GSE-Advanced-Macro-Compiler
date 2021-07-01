@@ -1139,7 +1139,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
 
         if GSE.isEmpty(v.KeyPress) then
             v.KeyPress = {}
-        end    
+        end  
         if GSE.isEmpty(v.KeyRelease) then
             v.KeyRelease = {}
         end
