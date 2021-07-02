@@ -1312,6 +1312,9 @@ function GSE.processAction(action, metaData)
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
+        if GSE.isEmpty(loop) or loop < 1 then
+            loop = 1
+        end
         for _=1, loop do
             if action.StepFunction == Statics.Priority then
                 local limit = 1

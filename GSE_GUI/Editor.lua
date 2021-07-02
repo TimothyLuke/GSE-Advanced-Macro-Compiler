@@ -1514,7 +1514,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
             local newAction = {
                 ['StepFunction'] = Statics.Sequential,
                 ['Type'] = Statics.Actions.Loop,
-                ['Repeat'] = 2,
+                ['Repeat'] = 1,
                 [1] = {
                     [1] = "/say Hello",
                     ['Type'] = Statics.Actions.Action,
@@ -1820,6 +1820,9 @@ local function drawAction(container, action, version, keyPath)
         looplimit:SetMaxLetters(4)
         looplimit:SetWidth(100)
         --print(GSE.Dump(action))
+        if type(action.Repeat) == "number" and action.Repeat > 0 then
+            action.Repeat = 1
+        end
         looplimit:SetText(action.Repeat)
         looplimit:SetCallback('OnEnter', function()
             GSE.CreateToolTip(L["Repeat"],
@@ -1830,7 +1833,9 @@ local function drawAction(container, action, version, keyPath)
             GSE.ClearTooltip(editframe)
         end)
         looplimit:SetCallback("OnTextChanged", function(sel, object, value)
-            editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+            if type(value) == "number" and value > 0 then
+                editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+            end
         end)
 
         local spacerlabel1 = AceGUI:Create("Label")
