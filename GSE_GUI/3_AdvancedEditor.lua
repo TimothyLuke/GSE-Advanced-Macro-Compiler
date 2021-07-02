@@ -56,10 +56,8 @@ saveButton:SetHeight(50)
 saveButton:SetText(L["Compile"])
 saveButton:SetNormalFontObject(GameFontNormal)
 
-local fontObject = saveButton:GetFontString()
-fontObject:SetPoint("CENTER", saveButton, "CENTER", -27, 8)
-
---button:SetFontString(fontObject)
+local CancelFontObject = saveButton:GetFontString()
+CancelFontObject:SetPoint("CENTER", saveButton, "CENTER", -27, 8)
 
 saveButton:SetNormalTexture("Interface/Buttons/UI-Panel-Button-Up")
 saveButton:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")
