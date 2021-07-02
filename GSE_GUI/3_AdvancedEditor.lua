@@ -21,6 +21,11 @@ frame:SetBackdrop({
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 })
 frame:SetBackdropColor(0, 0, 0, .5)
+frame:SetMovable(true)
+frame:EnableMouse(true)
+frame:RegisterForDrag("LeftButton")
+frame:SetScript("OnDragStart", frame.StartMoving)
+frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
 local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
 scrollFrame:SetSize((width - 50), (height - 30))
