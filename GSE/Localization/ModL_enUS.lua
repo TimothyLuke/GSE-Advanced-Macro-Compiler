@@ -644,3 +644,7 @@ L["Get Help"] = true
 -- 3.0.2
 L["Compiled Template"] = true
 L["Show the compiled version of this macro."] = true
+
+--3.0.10
+L["was unable to be programmed.  This macro will not fire until errors in the macro are corrected."] = true
+L["%s macro may cause a 'RestrictedExecution.lua:431' error as it has %s actions when compiled.  This get interesting when you go past 255 actions.  You may need to simplify this macro."] = true

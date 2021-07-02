@@ -510,6 +510,10 @@ function GSE.OOCUpdateSequence(name, sequence)
         combatReset = true
     end
     local compiledTemplate = GSE.CompileTemplate(sequence)
+    local actionCount = table.getn(compiledTemplate)
+    if actionCount > 255 then
+        GSE.Print(string.format(L["%s macro may cause a 'RestrictedExecution.lua:431' error as it has %s actions when compiled.  This get interesting when you go past 255 actions.  You may need to simplify this macro."], name,  actionCount), "MACRO ERROR")
+    end
     GSE.CreateGSE3Button(compiledTemplate, name, combatReset)
 end
 
@@ -1457,8 +1461,8 @@ function GSE.CompileTemplate(macro)
     return GSE.UnEscapeTable(GSE.ProcessVariables(compiledMacro, variables)), template
 end
 
---- Build GSE3 Executable Buttons
-function GSE.CreateGSE3Button(macro, name, combatReset)
+local function PCallCreateGSE3Button(macro, name, combatReset)
+
     if GSE.isEmpty(macro) then
         print("Macro missing for ", name)
         return
@@ -1475,7 +1479,7 @@ function GSE.CreateGSE3Button(macro, name, combatReset)
         local gsebutton = CreateFrame('Button', name, nil, 'SecureActionButtonTemplate,SecureHandlerBaseTemplate')
         gsebutton:SetAttribute('type', 'macro')
         gsebutton:SetAttribute('step', 1)
-        gsebutton:UnwrapScript(gsebutton, 'OnClick')
+        -- gsebutton:UnwrapScript(gsebutton, 'OnClick')
         gsebutton.UpdateIcon = GSE.UpdateIcon
 
         gsebutton:SetAttribute("combatreset", combatReset)
@@ -1493,6 +1497,16 @@ function GSE.CreateGSE3Button(macro, name, combatReset)
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
                          strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
+end
+
+--- Build GSE3 Executable Buttons
+function GSE.CreateGSE3Button(macro, name, combatReset)
+    local status, err = pcall(PCallCreateGSE3Button, macro, name, combatReset)
+    if err or not status then
+        GSE.Print(string.format("%s " ..
+                                    L["was unable to be programmed.  This macro will not fire until errors in the macro are corrected."],
+            name), "BROKEN MACRO")
+    end
 end
 
 --- Creates a string representation of the a Sequence that can be shared as a string.
