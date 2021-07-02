@@ -239,14 +239,6 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.requireTarget end,
             order = 510
           },
-          hideSoundErrors={
-            name = L["Prevent Sound Errors"],
-            desc = L["This option hide error sounds like \"That is out of range\" from being played while you are hitting a GS Macro.  This is the equivalent of /console Sound_EnableErrorSpeech lines within a Sequence.  Turning this on will trigger a Scam warning about running custom scripts."],
-            type = "toggle",
-            set = function(info,val) GSEOptions.hideSoundErrors = val GSE.PerformReloadSequences() end,
-            get = function(info) return GSEOptions.hideSoundErrors end,
-            order = 520
-          },
           hideUIErrors={
             name = L["Prevent UI Errors"],
             desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],

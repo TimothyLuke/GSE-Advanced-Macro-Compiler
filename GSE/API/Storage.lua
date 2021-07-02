@@ -1237,14 +1237,6 @@ local function buildAction(action, metaData)
             table.insert(action, 1, "/stopmacro [@playertarget, noexists]")
         end
 
-        if GSEOptions.hideSoundErrors then
-            -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
-            table.insert(action, 1, "/console Sound_EnableErrorSpeech 0")
-            table.insert(action, 1, "/console Sound_EnableSFX 0")
-            table.insert(action, 1, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
-            table.insert(action, 1, '/run sfx=GetCVar("Sound_EnableSFX");')
-        end
-
         for k, v in ipairs(action) do
             action[k] = GSE.TranslateString(v, "STRING", nil, true)
         end
@@ -1271,11 +1263,6 @@ local function buildAction(action, metaData)
             if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
                 table.insert(action, "/use [combat,nochanneling] 6")
             end
-        end
-        if GSEOptions.hideSoundErrors then
-            -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
-            table.insert(action, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
-            table.insert(action, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
         end
         if GSEOptions.hideUIErrors then
             table.insert(action, "/script UIErrorsFrame:Hide();")
