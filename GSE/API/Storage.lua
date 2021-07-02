@@ -509,8 +509,8 @@ function GSE.OOCUpdateSequence(name, sequence)
     if (GSE.isEmpty(sequence.InbuiltVariables.Combat) and GSEOptions.resetOOC) or sequence.InbuiltVariables.Combat then
         combatReset = true
     end
-
-    GSE.CreateGSE3Button(GSE.CompileTemplate(sequence), name, combatReset)
+    local compiledTemplate = GSE.CompileTemplate(sequence)
+    GSE.CreateGSE3Button(compiledTemplate, name, combatReset)
 end
 
 --- This function dumps what is currently running on an existing button.
@@ -1218,63 +1218,72 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
+local function processAction(action, metaData)
+    return GSE.processAction(action, metaData)
+end
+
 local function buildAction(action, metaData)
-    if GSEOptions.requireTarget then
+    if action.Type == "Loop" then
+        -- we have a loop within a loop
+        return processAction(action, metaData)
+    else
+        if GSEOptions.requireTarget then
 
-        -- See #20 prevent target hopping
-        table.insert(action, 1, "/stopmacro [@playertarget, noexists]")
-    end
+            -- See #20 prevent target hopping
+            table.insert(action, 1, "/stopmacro [@playertarget, noexists]")
+        end
 
-    if GSEOptions.hideSoundErrors then
-        -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
-        table.insert(action, 1, "/console Sound_EnableErrorSpeech 0")
-        table.insert(action, 1, "/console Sound_EnableSFX 0")
-        table.insert(action, 1, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
-        table.insert(action, 1, '/run sfx=GetCVar("Sound_EnableSFX");')
-    end
+        if GSEOptions.hideSoundErrors then
+            -- Potentially change this to SetCVar("Sound_EnableSFX", 0)
+            table.insert(action, 1, "/console Sound_EnableErrorSpeech 0")
+            table.insert(action, 1, "/console Sound_EnableSFX 0")
+            table.insert(action, 1, '/run ers=GetCVar("Sound_EnableErrorSpeech");')
+            table.insert(action, 1, '/run sfx=GetCVar("Sound_EnableSFX");')
+        end
 
-    for k, v in ipairs(action) do
-        action[k] = GSE.TranslateString(v, "STRING", nil, true)
-    end
+        for k, v in ipairs(action) do
+            action[k] = GSE.TranslateString(v, "STRING", nil, true)
+        end
 
-    if not GSE.isEmpty(metaData) then
-        if metaData.Ring1 or (metaData.Ring1 == nil and GSEOptions.use11) then
-            table.insert(action, "/use [combat,nochanneling] 11")
+        if not GSE.isEmpty(metaData) then
+            if metaData.Ring1 or (metaData.Ring1 == nil and GSEOptions.use11) then
+                table.insert(action, "/use [combat,nochanneling] 11")
+            end
+            if metaData.Ring2 or (metaData.Ring2 == nil and GSEOptions.use12) then
+                table.insert(action, "/use [combat,nochanneling] 12")
+            end
+            if metaData.Trinket1 or (metaData.Trinket1 == nil and GSEOptions.use13) then
+                table.insert(action, "/use [combat,nochanneling] 13")
+            end
+            if metaData.Trinket2 or (metaData.Trinket2 == nil and GSEOptions.use14) then
+                table.insert(action, "/use [combat,nochanneling] 14")
+            end
+            if metaData.Neck or (metaData.Neck == nil and GSEOptions.use2) then
+                table.insert(action, "/use [combat,nochanneling] 2")
+            end
+            if metaData.Head or (metaData.Head == nil and GSEOptions.use1) then
+                table.insert(action, "/use [combat,nochanneling] 1")
+            end
+            if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
+                table.insert(action, "/use [combat,nochanneling] 6")
+            end
         end
-        if metaData.Ring2 or (metaData.Ring2 == nil and GSEOptions.use12) then
-            table.insert(action, "/use [combat,nochanneling] 12")
+        if GSEOptions.hideSoundErrors then
+            -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
+            table.insert(action, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
+            table.insert(action, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
         end
-        if metaData.Trinket1 or (metaData.Trinket1 == nil and GSEOptions.use13) then
-            table.insert(action, "/use [combat,nochanneling] 13")
+        if GSEOptions.hideUIErrors then
+            table.insert(action, "/script UIErrorsFrame:Hide();")
+            -- Potentially change this to UIErrorsFrame:Hide()
         end
-        if metaData.Trinket2 or (metaData.Trinket2 == nil and GSEOptions.use14) then
-            table.insert(action, "/use [combat,nochanneling] 14")
+        if GSEOptions.clearUIErrors then
+            -- Potentially change this to UIErrorsFrame:Clear()
+            table.insert(action, "/run UIErrorsFrame:Clear()")
         end
-        if metaData.Neck or (metaData.Neck == nil and GSEOptions.use2) then
-            table.insert(action, "/use [combat,nochanneling] 2")
-        end
-        if metaData.Head or (metaData.Head == nil and GSEOptions.use1) then
-            table.insert(action, "/use [combat,nochanneling] 1")
-        end
-        if metaData.Belt or (metaData.Belt == nil and GSEOptions.use6) then
-            table.insert(action, "/use [combat,nochanneling] 6")
-        end
-    end
-    if GSEOptions.hideSoundErrors then
-        -- Potentially change this to SetCVar("Sound_EnableSFX", 1)
-        table.insert(action, "/run SetCVar(\"Sound_EnableSFX\",sfx);")
-        table.insert(action, "/run SetCVar(\"Sound_EnableErrorSpeech\",ers);")
-    end
-    if GSEOptions.hideUIErrors then
-        table.insert(action, "/script UIErrorsFrame:Hide();")
-        -- Potentially change this to UIErrorsFrame:Hide()
-    end
-    if GSEOptions.clearUIErrors then
-        -- Potentially change this to UIErrorsFrame:Clear()
-        table.insert(action, "/run UIErrorsFrame:Clear()")
-    end
 
-    return table.concat(action, "\n")
+        return table.concat(action, "\n")
+    end
 end
 
 function GSE.CompileAction(action, template)
@@ -1294,14 +1303,21 @@ function GSE.CompileAction(action, template)
     return table.concat(GSE.UnEscapeTable(GSE.ProcessVariables(returnMacro, variables))[1], "\n")
 end
 
-local function processAction(action, metaData)
+function GSE.processAction(action, metaData)
 
     if action.Type == Statics.Actions.Loop then
 
         local actionList = {}
         -- setup the interation
         for _, v in ipairs(action) do
-            table.insert(actionList, buildAction(v, metaData))
+            local builtaction = buildAction(v, metaData)
+            if type(builtaction) == "table" and GSE.isEmpty(builtaction.Repeat) then
+                for _, j in ipairs(builtaction) do
+                    table.insert(actionList, j)
+                end
+            else
+                table.insert(actionList, builtaction)
+            end
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
@@ -1374,9 +1390,7 @@ local function processAction(action, metaData)
 
     elseif action.Type == Statics.Actions.Repeat then
         return {buildAction(action, metaData), action["Interval"]}
-
         -- elseif action.Type == Statics.Actions.If then
-
     end
 end
 
