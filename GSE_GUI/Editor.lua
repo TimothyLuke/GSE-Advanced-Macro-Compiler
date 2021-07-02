@@ -1059,7 +1059,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
-    contentcontainer:AddChild(linegroup1)
+    layoutcontainer:AddChild(linegroup1)
 
     local macrocontainer = AceGUI:Create("InlineGroup")
     macrocontainer:SetTitle(L["Sequence"])

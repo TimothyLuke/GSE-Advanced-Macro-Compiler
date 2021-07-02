@@ -74,7 +74,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
             sequenceName), "Import GSE2")
     end
     -- check for version flags.
-    if sequence.MetaData.EnforceCompatability then
+    if sequence.MetaData.EnforceCompatability and not string.match(GSE.VersionString, "development") then
         if GSE.ParseVersion(sequence.MetaData.GSEVersion) > (GSE.VersionNumber) then
             GSE.Print(string.format(
                 L["This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."],
