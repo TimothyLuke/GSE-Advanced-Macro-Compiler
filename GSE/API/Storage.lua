@@ -1348,16 +1348,29 @@ function GSE.processAction(action, metaData)
             if type(v) == "table" then
                 local act = v[1]
                 local rep = v.Repeat
-                table.insert(inserts, {act, rep})
+                local start = k
+                table.insert(inserts, {act, rep, start})
                 table.remove(returnActions, k)
             end
         end
 
-        for k, v in ipairs(inserts) do
-            for i = k, table.getn(returnActions), v[2] do
-                table.insert(returnActions, v[1], i)
+        -- print("num INserts", #inserts)
+        for k,v in ipairs(inserts) do
+
+        local insertcount = math.ceil((#returnActions - v[3]) / v[3])
+        local insertStart = v[2]
+
+        for i=1, v[2] do
+            local insertpos 
+            if i > 1 then 
+                insertpos = insertStart  + 1
+            else
+                insertpos = insertStart  +  i * insertcount + 1
             end
+            table.insert(returnActions, insertpos , v[1])
         end
+        end
+
 
         return returnActions
     elseif action.Type == Statics.Actions.Pause then

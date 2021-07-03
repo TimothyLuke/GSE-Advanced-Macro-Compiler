@@ -1757,7 +1757,39 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(linegroup1)
 
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+
+
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
+
+        if action.Type == Statics.Actions.Repeat then
+            local looplimit = AceGUI:Create("EditBox")
+            looplimit:SetLabel(L["Repeat"])
+            looplimit:DisableButton(true)
+            looplimit:SetMaxLetters(4)
+            looplimit:SetWidth(100)
+            --print(GSE.Dump(action))
+            if type(action.Repeat) ~= "number" or action.Repeat < 1 then
+                action.Repeat = 1
+            end
+            looplimit:SetText(action.Repeat)
+            looplimit:SetCallback('OnEnter', function()
+                GSE.CreateToolTip(L["Repeat"],
+                    L["How many times does this action repeat"],
+                    editframe)
+            end)
+            looplimit:SetCallback('OnLeave', function()
+                GSE.ClearTooltip(editframe)
+            end)
+            looplimit:SetCallback("OnTextChanged", function(sel, object, value)
+                value = tonumber(value)
+                if type(value) == "number" and value > 0 then
+                    editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+                end
+            end)
+
+            linegroup1:AddChild(looplimit)
+        end
+        container:AddChild(linegroup1)
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel()
         valueEditBox:SetNumLines(3)
@@ -1778,8 +1810,8 @@ local function drawAction(container, action, version, keyPath)
         -- valueEditBox:SetCallback('OnLeave', function()
         --     GSE.ClearTooltip(editframe)
         -- end)
-
         container:AddChild(valueEditBox)
+
     elseif action.Type == Statics.Actions.Loop then
 
         local macroPanel = AceGUI:Create("SimpleGroup")
