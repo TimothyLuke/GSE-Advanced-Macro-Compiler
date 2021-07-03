@@ -653,3 +653,4 @@ L["%s macro may cause a 'RestrictedExecution.lua:431' error as it has %s actions
 L["FinishReload"] = "Finish Reload"
 L["Interval"] = true
 L["Insert this block again after how many blocks."] = true
+L["Compiled"] = true

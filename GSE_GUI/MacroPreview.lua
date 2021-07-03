@@ -10,8 +10,6 @@ local AceGUI = LibStub("AceGUI-3.0")
 local PreviewFrame = AceGUI:Create("Frame")
 GSE.MacroPreviewFrame = PreviewFrame
 
-local transSequencevalue = ""
-
 PreviewFrame:SetTitle(L["Compiled Template"])
 PreviewFrame:SetCallback("OnClose", function(widget) PreviewFrame:Hide() end)
 PreviewFrame:SetLayout("List")
@@ -20,9 +18,18 @@ PreviewFrame:SetHeight(700)
 PreviewFrame:Hide()
 
 
+-- local CountLabel = AceGUI:Create("Heading")
+-- --SequenceListbox:SetLabel(L["Load Sequence"])
+-- --CountLabel:SetFullWidth(true)
+-- PreviewFrame:AddChild(CountLabel)
+
+
+
+
+
 local PreviewLabel = AceGUI:Create("MultiLineEditBox")
 --SequenceListbox:SetLabel(L["Load Sequence"])
-PreviewLabel:SetWidth(250)
+PreviewLabel:SetWidth(270)
 PreviewLabel:SetNumLines(40)
 PreviewLabel:DisableButton(true)
 
@@ -30,10 +37,15 @@ PreviewFrame.PreviewLabel = PreviewLabel
 PreviewFrame:AddChild(PreviewLabel)
 
 
+PreviewFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+    PreviewLabel:SetWidth(width - 20)
+end)
+
 
 function GSE.GUIShowCompiledMacroGui(label, title)
   PreviewFrame.text = GSE.ConcatIndexed(label, GSEOptions.AuthorColour .. "Step %d" .. Statics.StringReset .."\n%s\n--------------------------------------\n")
-
+  local count = #label
+  PreviewLabel:SetLabel(L["Compiled"] .. " " .. count .. " " .. L["Actions"])
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
     --	GSE.GUIPreviewFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
