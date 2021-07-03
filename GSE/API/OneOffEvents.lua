@@ -26,15 +26,17 @@ function GSE.UpdateGSE2LibrarytoGSE3()
     end
     if not GSE.isEmpty(GSEStorage) then
         for k,v in ipairs(GSEStorage) do
-            for i,j in pairs(v) do
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-                --print(GSE.Dump(uncompressedVersion))
-                local decoded = GSE.ConvertGSE2(uncompressedVersion[2], i)
-                decoded.MetaData.GSEVersion = "3.0.0"
-                decoded.MetaData.EnforceCompatability = true
-                local encoded = GSE.EncodeMessage({i, decoded})
-                GSE3Storage[k][i] = encoded
-                GSE.Print("Storage updated " .. k .. " " .. i)
+            if v then
+                for i,j in pairs(v) do
+                    local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
+                    --print(GSE.Dump(uncompressedVersion))
+                    local decoded = GSE.ConvertGSE2(uncompressedVersion[2], i)
+                    decoded.MetaData.GSEVersion = "3.0.0"
+                    decoded.MetaData.EnforceCompatability = true
+                    local encoded = GSE.EncodeMessage({i, decoded})
+                    GSE3Storage[k][i] = encoded
+                    GSE.Print("Storage updated " .. k .. " " .. i)
+                end
             end
         end
     end

@@ -35,7 +35,7 @@ L["/gs cleanorphans|r will loop through your macros and delete any left over GS-
 L[":|r Your current Specialisation is "] = true
 L["  The Alternative ClassID is "] = true
 L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
-L["/gs help|r to get started."] = true
+L["/gs help|r to get started."] = "/gse help|r to get started."
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
@@ -79,7 +79,7 @@ L["KeyRelease"] = true
 L["Completely New GS Macro."] = true
 L["Please wait till you have left combat before using the Sequence Editor."] = true
 L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] = true
-L["/gs |r to get started."] = true
+L["/gs |r to get started."] = "/gse |r to get started."
 L["Gnome Sequencer: Sequence Version Manager"] = true
 L["Manage Versions"] = true
 L["Active Version: "] = true
