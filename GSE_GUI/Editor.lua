@@ -1002,7 +1002,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         local newAction = {
             [1] = "/say Hello",
             ['Type'] = Statics.Actions.Repeat,
-            ['Repeat'] = 3
+            ['Interval'] = 3
         }
 
         table.insert(editframe.Sequence.Macros[version].Actions, newAction)
@@ -1763,19 +1763,22 @@ local function drawAction(container, action, version, keyPath)
 
         if action.Type == Statics.Actions.Repeat then
             local looplimit = AceGUI:Create("EditBox")
-            looplimit:SetLabel(L["Repeat"])
+            looplimit:SetLabel(L["Interval"])
             looplimit:DisableButton(true)
             looplimit:SetMaxLetters(4)
             looplimit:SetWidth(100)
             --print(GSE.Dump(action))
-            if type(action.Repeat) ~= "number" or action.Repeat < 1 then
-                action.Repeat = 1
+            if GSE.isEmpty(action.Interval) and action.Repeat then
+                action.Interval = tonumber(action.Repeat)
+                action.Repeat = nil
             end
-            looplimit:SetText(action.Repeat)
+            if type(action.Interval) ~= "number" or action.Interval < 1 then
+                action.Interval = 1
+            end
+            looplimit:SetText(action.Interval)
             looplimit:SetCallback('OnEnter', function()
-                GSE.CreateToolTip(L["Repeat"],
-                    L["How many times does this action repeat"],
-                    editframe)
+                GSE.CreateToolTip(L["Interval"],
+                    L["Insert this block again after how many blocks."], editframe)
             end)
             looplimit:SetCallback('OnLeave', function()
                 GSE.ClearTooltip(editframe)
@@ -1783,7 +1786,7 @@ local function drawAction(container, action, version, keyPath)
             looplimit:SetCallback("OnTextChanged", function(sel, object, value)
                 value = tonumber(value)
                 if type(value) == "number" and value > 0 then
-                    editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].Interval = value
                 end
             end)
 

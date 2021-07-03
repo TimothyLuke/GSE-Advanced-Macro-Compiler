@@ -1227,7 +1227,7 @@ local function processAction(action, metaData)
 end
 
 local function buildAction(action, metaData)
-    if action.Type == "Loop" then
+    if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
         return processAction(action, metaData)
     else
@@ -1297,12 +1297,11 @@ end
 function GSE.processAction(action, metaData)
 
     if action.Type == Statics.Actions.Loop then
-
         local actionList = {}
         -- setup the interation
         for _, v in ipairs(action) do
-            local builtaction = buildAction(v, metaData)
-            if type(builtaction) == "table" and GSE.isEmpty(builtaction.Repeat) then
+            local builtaction = GSE.processAction(v, metaData)
+            if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
                 for _, j in ipairs(builtaction) do
                     table.insert(actionList, j)
                 end
@@ -1322,8 +1321,6 @@ function GSE.processAction(action, metaData)
                 local looplimit = 0
                 for x=1, table.getn(actionList) do
                     looplimit = looplimit + x
-                    x = x + 1
-                    GSE.PrintDebugMessage("X is now " .. x, "Storage")
                 end
                 for _ = 1, looplimit do
                     table.insert(returnActions, actionList[step])
@@ -1344,33 +1341,33 @@ function GSE.processAction(action, metaData)
 
         -- process repeats for the block
         local inserts = {}
+        local processedInserts = {}
         for k, v in ipairs(returnActions) do
             if type(v) == "table" then
-                local act = v[1]
-                local rep = v.Repeat
-                local start = k
-                table.insert(inserts, {act, rep, start})
+                if GSE.isEmpty(processedInserts[v.Action]) then 
+                    table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
+                    processedInserts[v.Action] = {}
+                end
                 table.remove(returnActions, k)
             end
         end
 
         -- print("num INserts", #inserts)
-        for k,v in ipairs(inserts) do
+        for _,v in ipairs(inserts) do
 
-        local insertcount = math.ceil((#returnActions - v[3]) / v[3])
-        local insertStart = v[2]
-
-        for i=1, v[2] do
-            local insertpos 
-            if i > 1 then 
-                insertpos = insertStart  + 1
-            else
-                insertpos = insertStart  +  i * insertcount + 1
+            local insertcount = math.ceil((#returnActions - v["Start"]) / v["Start"])
+            local repeatCount = v["Interval"]
+            print(#returnActions, repeatCount, insertcount)
+            for i=1, repeatCount do
+                local insertpos
+                if i > 1 then
+                    insertpos = repeatCount  + 1
+                else
+                    insertpos = repeatCount  +  i * insertcount + 1
+                end
+                table.insert(returnActions, insertpos , v["Action"])
             end
-            table.insert(returnActions, insertpos , v[1])
         end
-        end
-
 
         return returnActions
     elseif action.Type == Statics.Actions.Pause then
@@ -1392,12 +1389,24 @@ function GSE.processAction(action, metaData)
         end
         -- print(#PauseActions, GSE.Dump(action))
         return PauseActions
+    elseif action.Type == Statics.Actions.Repeat then
+        if GSE.isEmpty(action.Interval) then
+            if not GSE.isEmpty(action.Repeat) then
+                action.Interval = action.Repeat
+                action.Repeat = nil
+            else
+                action.Interval = 2
+            end
+        end
+        local returnAction = {
+            ["Action"] = buildAction(action, metaData), 
+            ["Interval"] = action.Interval
+        }
+        return returnAction
+    -- elseif action.Type == Statics.Actions.If then
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
 
-    elseif action.Type == Statics.Actions.Repeat then
-        return {buildAction(action, metaData), action["Interval"]}
-        -- elseif action.Type == Statics.Actions.If then
     end
 end
 
