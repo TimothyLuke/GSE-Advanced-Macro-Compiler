@@ -32,7 +32,7 @@ PreviewFrame:AddChild(PreviewLabel)
 
 
 function GSE.GUIShowCompiledMacroGui(label, title)
-  PreviewFrame.text = table.concat(label, "\n--------------------------------------\n")
+  PreviewFrame.text = GSE.ConcatIndexed(label, GSEOptions.AuthorColour .. "Step %d" .. Statics.StringReset .."\n%s\n--------------------------------------\n")
 
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()

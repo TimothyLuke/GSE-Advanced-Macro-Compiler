@@ -311,3 +311,12 @@ end
 function GSE.isNaN(v)
     return  type( v ) ~= "number" or GSE.isEmpty(v)
 end
+
+function GSE.ConcatIndexed(tab,template)
+    template = template or '%d %s\n'
+    local tt = {}
+    for k,v in ipairs(tab) do
+        tt[#tt+1]=template:format(k,v)
+    end
+    return table.concat(tt)
+end
