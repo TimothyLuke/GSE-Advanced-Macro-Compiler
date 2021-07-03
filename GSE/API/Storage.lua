@@ -1357,7 +1357,7 @@ function GSE.processAction(action, metaData)
 
             local insertcount = math.ceil((#returnActions - v["Start"]) / v["Start"])
             local repeatCount = v["Interval"]
-            print(#returnActions, repeatCount, insertcount)
+            --print(#returnActions, repeatCount, insertcount)
             for i=1, repeatCount do
                 local insertpos
                 if i > 1 then
