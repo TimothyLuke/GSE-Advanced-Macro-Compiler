@@ -1833,6 +1833,7 @@ local function drawAction(container, action, version, keyPath)
             GSE.ClearTooltip(editframe)
         end)
         looplimit:SetCallback("OnTextChanged", function(sel, object, value)
+            value = tonumber(value)
             if type(value) == "number" and value > 0 then
                 editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
             end
