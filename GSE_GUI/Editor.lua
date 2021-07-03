@@ -1820,7 +1820,7 @@ local function drawAction(container, action, version, keyPath)
         looplimit:SetMaxLetters(4)
         looplimit:SetWidth(100)
         --print(GSE.Dump(action))
-        if type(action.Repeat) == "number" and action.Repeat > 0 then
+        if type(action.Repeat) ~= "number" or action.Repeat < 1 then
             action.Repeat = 1
         end
         looplimit:SetText(action.Repeat)
