@@ -1344,7 +1344,7 @@ function GSE.processAction(action, metaData)
         local processedInserts = {}
         for k, v in ipairs(returnActions) do
             if type(v) == "table" then
-                if GSE.isEmpty(processedInserts[v.Action]) then 
+                if GSE.isEmpty(processedInserts[v.Action]) then
                     table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
                     processedInserts[v.Action] = {}
                 end
@@ -1399,7 +1399,7 @@ function GSE.processAction(action, metaData)
             end
         end
         local returnAction = {
-            ["Action"] = buildAction(action, metaData), 
+            ["Action"] = buildAction(action, metaData),
             ["Interval"] = action.Interval
         }
         return returnAction

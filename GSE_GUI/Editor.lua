@@ -1757,9 +1757,7 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(linegroup1)
 
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-
-
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel)
 
         if action.Type == Statics.Actions.Repeat then
             local looplimit = AceGUI:Create("EditBox")
