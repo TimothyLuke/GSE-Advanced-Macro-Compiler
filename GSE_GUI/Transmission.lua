@@ -54,12 +54,14 @@ function GSE.GUIShowTransmissionGui(inckey)
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
     --	GSE.GUITransmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUITransmissionFrame:ClearAllPoints()
     GSE.GUITransmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end
   if GSE.GUIEditFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
     --	GSE.GUITransmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    GSE.GUITransmissionFrame:ClearAllPoints()
     GSE.GUITransmissionFrame:SetPoint(point, xOfs + 500, yOfs + 155)
 
   end

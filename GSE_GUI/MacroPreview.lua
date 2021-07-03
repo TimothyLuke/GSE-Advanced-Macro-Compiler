@@ -37,12 +37,14 @@ function GSE.GUIShowCompiledMacroGui(label, title)
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
     --	GSE.GUIPreviewFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    PreviewFrame:ClearAllPoints()
     PreviewFrame:SetPoint(point, xOfs + 150 + (GSE.GUIViewFrame:GetWidth() / 2), yOfs)
 
   end
   if GSE.GUIEditFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
     --	GSE.GUIPreviewFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
+    PreviewFrame:ClearAllPoints()
     PreviewFrame:SetPoint(point, xOfs + 150 + (GSEOptions.editorWidth / 2), yOfs)
 
   end
