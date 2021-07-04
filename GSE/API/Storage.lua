@@ -1408,7 +1408,10 @@ end
 
 --- Compiles a macro template into a macro
 function GSE.CompileTemplate(macro)
-
+    if GSE.isEmpty(macro) or #macro < 1 then
+        -- return early nothing to compile
+        return {}
+    end
     local template = GSE.CloneSequence(macro)
 
     setmetatable(template.Actions, {
