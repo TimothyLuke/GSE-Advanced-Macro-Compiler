@@ -1357,14 +1357,10 @@ function GSE.processAction(action, metaData)
 
             local insertcount = math.ceil((#returnActions - v["Start"]) / v["Start"])
             local repeatCount = v["Interval"]
-            --print(#returnActions, repeatCount, insertcount)
-            for i=1, repeatCount do
+            table.insert(returnActions, v["Start"] , v["Action"])
+            for i=1, insertcount do
                 local insertpos
-                if i > 1 then
-                    insertpos = repeatCount  + 1
-                else
-                    insertpos = repeatCount  +  i * insertcount + 1
-                end
+                    insertpos = v["Start"]  +  i * repeatCount 
                 table.insert(returnActions, insertpos , v["Action"])
             end
         end

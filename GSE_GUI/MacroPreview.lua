@@ -18,17 +18,7 @@ PreviewFrame:SetHeight(700)
 PreviewFrame:Hide()
 
 
--- local CountLabel = AceGUI:Create("Heading")
--- --SequenceListbox:SetLabel(L["Load Sequence"])
--- --CountLabel:SetFullWidth(true)
--- PreviewFrame:AddChild(CountLabel)
-
-
-
-
-
 local PreviewLabel = AceGUI:Create("MultiLineEditBox")
---SequenceListbox:SetLabel(L["Load Sequence"])
 PreviewLabel:SetWidth(270)
 PreviewLabel:SetNumLines(40)
 PreviewLabel:DisableButton(true)
