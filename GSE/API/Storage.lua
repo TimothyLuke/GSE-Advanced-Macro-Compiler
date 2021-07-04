@@ -1360,7 +1360,7 @@ function GSE.processAction(action, metaData)
             table.insert(returnActions, v["Start"] , v["Action"])
             for i=1, insertcount do
                 local insertpos
-                    insertpos = v["Start"]  +  i * repeatCount 
+                    insertpos = v["Start"]  +  i * repeatCount
                 table.insert(returnActions, insertpos , v["Action"])
             end
         end
