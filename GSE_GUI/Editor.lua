@@ -1674,9 +1674,6 @@ local function drawAction(container, action, version, keyPath)
     --   end
     end)
 
-    if (action.Disabled) then
-        container.frame:SetBackdropColor(1,0,0,0.5)
-    end
     -- Workaround for vanishing label ace3 bug
     local label = AceGUI:Create("Label")
     label:SetFontObject(GameFontNormalLarge)
