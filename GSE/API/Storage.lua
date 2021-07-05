@@ -1296,7 +1296,7 @@ end
 
 function GSE.processAction(action, metaData)
     if action.Disabled then
-        return 
+        return
     end
     if action.Type == Statics.Actions.Loop then
         local actionList = {}

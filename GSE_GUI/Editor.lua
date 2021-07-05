@@ -1634,8 +1634,6 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
 
     disableBlock:SetCallback("OnValueChanged", function(sel, object, value)
         editframe.Sequence.Macros[version].Actions[path].Disabled = value
-       
-
         if value == true then
             highlightTexture:SetColorTexture(1, 0, 0, 0.15)
         else
@@ -1651,7 +1649,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     disableBlock:SetCallback('OnLeave', function()
         GSE.ClearTooltip(editframe)
     end)
-    
+
     local spacerlabel4 = AceGUI:Create("Label")
     spacerlabel4:SetWidth(15)
     layoutcontainer:AddChild(spacerlabel4)
