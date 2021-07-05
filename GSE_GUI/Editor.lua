@@ -257,7 +257,7 @@ function GSE.GUIEditorPerformLayout(frame)
     end)
 
     local editButtonGroup = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         editButtonGroup.frame:SetBackdrop(nil)
     end
     editButtonGroup:SetWidth(602)
@@ -331,7 +331,7 @@ function GSE:GUIDrawMetadataEditor(container)
     editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         scrollcontainer.frame:SetBackdrop(nil)
     end
     scrollcontainer:SetFullWidth(true)
@@ -344,7 +344,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local metasimplegroup = AceGUI:Create("SimpleGroup")
     metasimplegroup:SetLayout("Flow")
     metasimplegroup:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         metasimplegroup.frame:SetBackdrop(nil)
     end
 
@@ -422,7 +422,7 @@ function GSE:GUIDrawMetadataEditor(container)
     helpgroup1:SetLayout("Flow")
     helpgroup1:SetWidth(editframe.Width - 100)
 
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         helpgroup1.frame:SetBackdrop(nil)
     end
     local helplinkeditbox = AceGUI:Create("EditBox")
@@ -473,7 +473,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup1 = AceGUI:Create("SimpleGroup")
     defgroup1:SetLayout("Flow")
     defgroup1:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         defgroup1.frame:SetBackdrop(nil)
     end
 
@@ -518,7 +518,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup2 = AceGUI:Create("SimpleGroup")
     defgroup2:SetLayout("Flow")
     defgroup2:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         defgroup2.frame:SetBackdrop(nil)
     end
 
@@ -589,7 +589,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup3 = AceGUI:Create("SimpleGroup")
     defgroup3:SetLayout("Flow")
     defgroup3:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         defgroup3.frame:SetBackdrop(nil)
     end
 
@@ -638,7 +638,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup4 = AceGUI:Create("SimpleGroup")
     defgroup4:SetLayout("Flow")
     defgroup4:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         defgroup4.frame:SetBackdrop(nil)
     end
 
@@ -671,7 +671,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local defgroup6 = AceGUI:Create("SimpleGroup")
     defgroup6:SetLayout("Flow")
     defgroup6:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         defgroup5.frame:SetBackdrop(nil)
         defgroup6.frame:SetBackdrop(nil)
     end
@@ -816,7 +816,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
     end
 
@@ -1081,7 +1081,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
     toolbarcontainer:AddChild(heading2)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         toolbarcontainer.frame:SetBackdrop(nil)
     end
     local toolbarrow1 = AceGUI:Create("SimpleGroup")
@@ -1278,7 +1278,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     -- end
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         linegroup1.frame:SetBackdrop(nil)
     end
     linegroup1:SetLayout("Flow")
@@ -1386,7 +1386,7 @@ end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
     end
     layoutcontainer:SetLayout("Flow")
@@ -1691,7 +1691,7 @@ local function drawAction(container, action, version, keyPath)
     if action.Type == Statics.Actions.Pause then
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled then
+        if addonSkinsEnabled == true then
             linegroup1.frame:SetBackdrop(nil)
         end
 
@@ -1854,7 +1854,7 @@ local function drawAction(container, action, version, keyPath)
     elseif action.Type == Statics.Actions.Loop then
 
         local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled then
+        if addonSkinsEnabled == true then
             macroPanel.frame:SetBackdrop(nil)
         end
         macroPanel:SetWidth(maxWidth)
@@ -1936,7 +1936,7 @@ local function drawAction(container, action, version, keyPath)
         local macroGroup = AceGUI:Create("SimpleGroup")
         macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
-        if addonSkinsEnabled then
+        if addonSkinsEnabled == true then
             macroPanel.frame:SetBackdrop(nil)
         end
         for key,act in ipairs(action) do
@@ -1979,7 +1979,7 @@ function GSE:DrawSequenceEditor(container, version)
 
     for key,action in ipairs(macro) do
         local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled then
+        if addonSkinsEnabled == true then
             macroPanel.frame:SetBackdrop(nil)
         end
         macroPanel:SetWidth(maxWidth)
@@ -2097,7 +2097,7 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
-    if addonSkinsEnabled then
+    if addonSkinsEnabled == true then
         linegroup1.frame:SetBackdrop(nil)
     end
     rowWidth = rowWidth - 70
