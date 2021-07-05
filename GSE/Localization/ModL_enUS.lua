@@ -654,3 +654,7 @@ L["FinishReload"] = "Finish Reload"
 L["Interval"] = true
 L["Insert this block again after how many blocks."] = true
 L["Compiled"] = true
+
+--3.0.16
+L["Disable Block"] = true
+L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."] = true

@@ -1618,8 +1618,43 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         layoutcontainer:AddChild(addPauseButton)
     end
     local spacerlabel3 = AceGUI:Create("Label")
-    spacerlabel3:SetWidth(15)
+    spacerlabel3:SetWidth(100)
     layoutcontainer:AddChild(spacerlabel3)
+
+
+    local disableBlock = AceGUI:Create("CheckBox")
+    disableBlock:SetType("checkbox")
+    disableBlock:SetWidth(100)
+    disableBlock:SetTriState(false)
+    disableBlock:SetLabel(L["Disable Block"])
+    layoutcontainer:AddChild(disableBlock)
+    disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
+    local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+    highlightTexture:SetAllPoints(true)
+
+    disableBlock:SetCallback("OnValueChanged", function(sel, object, value)
+        editframe.Sequence.Macros[version].Actions[path].Disabled = value
+       
+
+        if value == true then
+            highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+        else
+            highlightTexture:SetColorTexture(1, 0, 0, 0)
+        end
+    end)
+    if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+        highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+    end
+    disableBlock:SetCallback('OnEnter', function()
+        GSE.CreateToolTip(L["Disable Block"], L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."], editframe)
+    end)
+    disableBlock:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+    
+    local spacerlabel4 = AceGUI:Create("Label")
+    spacerlabel4:SetWidth(15)
+    layoutcontainer:AddChild(spacerlabel4)
 
     layoutcontainer:AddChild(deleteBlockButton)
 
@@ -1637,6 +1672,9 @@ local function drawAction(container, action, version, keyPath)
     --   end
     end)
 
+    if (action.Disabled) then
+        container.frame:SetBackdropColor(1,0,0,0.5)
+    end
     -- Workaround for vanishing label ace3 bug
     local label = AceGUI:Create("Label")
     label:SetFontObject(GameFontNormalLarge)
@@ -1755,11 +1793,11 @@ local function drawAction(container, action, version, keyPath)
         end
         linegroup1:AddChild(valueEditBox)
 
-        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel))
+        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container))
         container:AddChild(linegroup1)
 
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel)
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container)
 
         if action.Type == Statics.Actions.Repeat then
             local looplimit = AceGUI:Create("EditBox")

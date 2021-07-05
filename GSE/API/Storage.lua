@@ -1295,7 +1295,9 @@ function GSE.CompileAction(action, template)
 end
 
 function GSE.processAction(action, metaData)
-
+    if action.Disabled then
+        return 
+    end
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
         -- setup the interation
