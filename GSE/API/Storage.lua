@@ -1445,20 +1445,18 @@ function GSE.CompileTemplate(macro)
         end
     })
 
-    local compiledMacro = {}
-    local metaData = {}
+   
 
+
+    local actions = {
+        ["Type"] = "Loop",
+        ["Repeat"] = '1'
+    }
     for _, action in ipairs(template.Actions) do
-        local compiledAction = processAction(action, template.InbuiltVariables)
-
-        if type(compiledAction) == "table" then
-            for _, value in ipairs(compiledAction) do
-                table.insert(compiledMacro, value)
-            end
-        else
-            table.insert(compiledMacro, compiledAction)
-        end
+        table.insert(actions, action)
     end
+    local compiledMacro = GSE.processAction(actions, template.InbuildVariables)
+
     local variables = {}
 
     for k, v in pairs(template.Variables) do
