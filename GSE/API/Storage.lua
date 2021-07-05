@@ -1445,9 +1445,6 @@ function GSE.CompileTemplate(macro)
         end
     })
 
-   
-
-
     local actions = {
         ["Type"] = "Loop",
         ["Repeat"] = '1'

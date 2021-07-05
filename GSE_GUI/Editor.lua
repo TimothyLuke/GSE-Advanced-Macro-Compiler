@@ -828,10 +828,11 @@ function GSE:GUIDrawMacroEditor(container, version)
     -- scrollcontainer:SetFullWidth(true)
     -- scrollcontainer:SetFullHeight(true) -- Probably?
     scrollcontainer:SetWidth(editframe.Width)
-    scrollcontainer:SetHeight(editframe.Height - 300)
+    scrollcontainer:SetHeight(editframe.Height - 325)
     scrollcontainer:SetLayout("Fill") -- Important!
 
     local contentcontainer = AceGUI:Create("ScrollFrame")
+    contentcontainer:SetAutoAdjustHeight(true)
     scrollcontainer:AddChild(contentcontainer)
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
@@ -1067,6 +1068,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     GSE:DrawSequenceEditor(macrocontainer, version)
     contentcontainer:AddChild(macrocontainer)
     local variableContainer = AceGUI:Create("InlineGroup")
+    variableContainer:SetAutoAdjustHeight(true)
     variableContainer:SetTitle(L["Variables"])
     variableContainer:SetWidth(contentcontainer.frame:GetWidth()-50)
     GSE:GUIDrawVariableEditor(variableContainer, version)
