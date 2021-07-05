@@ -1454,7 +1454,7 @@ function GSE.CompileTemplate(macro)
     for _, action in ipairs(template.Actions) do
         table.insert(actions, action)
     end
-    local compiledMacro = GSE.processAction(actions, template.InbuildVariables)
+    local compiledMacro = GSE.processAction(actions, template.InbuiltVariables)
 
     local variables = {}
 
