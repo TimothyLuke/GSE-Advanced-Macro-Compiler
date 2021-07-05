@@ -669,4 +669,3 @@ L["Boolean Functions are GSE variables that return either a true or false value.
 --3.0.18
 L["Fix SetBackdrop Nil"] = true
 L["On some clients the Editor will throw an error relating to setBackdrop. Turning this on will prevent those errors."] = true
-            
