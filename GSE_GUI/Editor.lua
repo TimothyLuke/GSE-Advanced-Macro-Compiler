@@ -38,6 +38,10 @@ if not GSE.isEmpty(ElvUI) then
     end
 end
 
+if GSEOptions.DisableElvFix == true then
+    addonSkinsEnabled = false
+end
+
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 GSE.GUIEditFrame = editframe

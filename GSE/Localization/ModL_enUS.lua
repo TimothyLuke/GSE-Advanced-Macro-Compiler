@@ -658,3 +658,15 @@ L["Compiled"] = true
 --3.0.16
 L["Disable Block"] = true
 L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."] = true
+
+--3.0.17
+L["If Blocks require a variable that returns either true or false.  Create the variable first."] = true
+L["Add If"] = true
+L["Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."] = true
+L["Boolean Functions"] = true
+L["Boolean Functions are GSE variables that return either a true or false value."] = true
+
+--3.0.18
+L["Fix SetBackdrop Nil"] = true
+L["On some clients the Editor will throw an error relating to setBackdrop. Turning this on will prevent those errors."] = true
+            
