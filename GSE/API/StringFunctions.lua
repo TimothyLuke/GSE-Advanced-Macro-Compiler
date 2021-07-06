@@ -320,3 +320,9 @@ function GSE.ConcatIndexed(tab,template)
     end
     return table.concat(tt)
 end
+
+function GSE.TableLength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end

@@ -429,14 +429,14 @@ Statics.Patrons = {
 
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
---Statics.Actions.If = "If"
+Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
 Statics.Actions.Action = "Action"
 Statics.Actions.Pause = "Pause"
 
 Statics.ActionsIcons = {}
 Statics.ActionsIcons.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop.tga"
---Statics.ActionsIcons.If = "If"
+Statics.ActionsIcons.If = "Interface\\Addons\\GSE_GUI\\Assets\\if.tga"
 Statics.ActionsIcons.Repeat = "Interface\\Addons\\GSE_GUI\\Assets\\repeat.tga"
 Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action.tga"
 Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.tga"

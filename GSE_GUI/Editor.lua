@@ -63,6 +63,7 @@ editframe.save = false
 editframe.SelectedTab = "group"
 editframe.AdvancedEditor = false
 editframe.statusText = "GSE: " .. GSE.VersionString
+editframe.booleanFunctions = {}
 
 local frameTableUpdated = {}
 
@@ -793,6 +794,7 @@ end
 function GSE:GUIDrawMacroEditor(container, version)
     version = tonumber(version)
 
+    
     if GSE.isEmpty(editframe.Sequence) then
         editframe.Sequence = {
             ["MetaData"] = {
@@ -818,6 +820,28 @@ function GSE:GUIDrawMacroEditor(container, version)
     end
 
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
+    editframe.booleanFunctions = {}
+    for k,v in pairs(editframe.Sequence.Macros[version].Variables) do
+        local value = table.concat(v, " ")
+        if type(value) == "string" then
+            local functline = value
+            if string.sub(functline, 1, 10) == "function()" then
+                functline = string.sub(functline, 11)
+                functline = functline:sub(1, -4)
+                functline = loadstring(functline)
+                --print(type(functline))
+                if functline ~= nil then
+                    value = functline
+                end
+            end
+        end
+        if type(value) == "function" then
+            value = value()
+            if type(value) == "boolean" then
+                editframe.booleanFunctions[k] = k
+            end
+        end
+    end
 
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     if addonSkinsEnabled == true then
@@ -950,6 +974,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     local addLoopButton = AceGUI:Create("Icon")
     local addActionButton = AceGUI:Create("Icon")
     local addPauseButton = AceGUI:Create("Icon")
+    local addIfButton = AceGUI:Create("Icon")
 
     addActionButton:SetImageSize(20, 20)
     addActionButton:SetWidth(20)
@@ -1043,6 +1068,48 @@ function GSE:GUIDrawMacroEditor(container, version)
         GSE.ClearTooltip(editframe)
     end)
 
+    addIfButton:SetImageSize(20, 20)
+    addIfButton:SetWidth(20)
+    addIfButton:SetHeight(20)
+    addIfButton:SetImage(Statics.ActionsIcons.If)
+
+    addIfButton:SetCallback("OnClick", function()
+        if GSE.TableLength(editframe.booleanFunctions) > 0 then
+            local addPath = {}
+            local newAction = {
+                ['Type'] = Statics.Actions.If,
+                [1] = {
+                    {
+                        [1] = "/say Variable returned True",
+                        ['Type'] = Statics.Actions.Action
+                    }
+                },
+                [2] = {
+                    {
+                        [1] = "/say Variable returned False",
+                        ['Type'] = Statics.Actions.Action
+                    }
+                }
+            }
+            table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+            ChooseVersionTab(version)
+        end
+    end)
+    addIfButton:SetCallback('OnEnter', function()
+        if table.getn(editframe.booleanFunctions) > 0 then
+            GSE.CreateToolTip(L["Add If"], L["Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."], editframe)
+        else
+            GSE.CreateToolTip(L["Add If"], L["If Blocks require a variable that returns either true or false.  Create the variable first."], editframe)
+        end
+    end)
+    addIfButton:SetCallback('OnLeave', function()
+        GSE.ClearTooltip(editframe)
+    end)
+    
+    if GSE.TableLength(editframe.booleanFunctions) < 1 then
+        addIfButton:SetDisabled(true)
+    end
+    
     local linegroup3 = AceGUI:Create("SimpleGroup")
     linegroup3:SetLayout("Flow")
     linegroup3:SetWidth(editframe.Width)
@@ -1054,6 +1121,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(addRepeatButton)
     linegroup1:AddChild(addLoopButton)
     linegroup1:AddChild(addPauseButton)
+    linegroup1:AddChild(addIfButton)
 
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
@@ -1353,6 +1421,10 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
             val = val()
         end
 
+        if type(val) == "boolean" then
+            val = tostring(val)
+        end
+
         StaticPopupDialogs["GSE-GenericMessage"].text = string.format(
           L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"],
           keyEditBox:GetText(), val)
@@ -1388,7 +1460,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     return keyEditBox
 end
 
-local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container)
+local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
@@ -1483,8 +1555,8 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     local addRepeatButton = AceGUI:Create("Icon")
     local addLoopButton = AceGUI:Create("Icon")
     local addActionButton = AceGUI:Create("Icon")
-
     local addPauseButton = AceGUI:Create("Icon")
+    local addIfButton = AceGUI:Create("Icon")
 
     if includeAdd then
         addActionButton:SetImageSize(20, 20)
@@ -1583,6 +1655,44 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         addPauseButton:SetCallback('OnLeave', function()
             GSE.ClearTooltip(editframe)
         end)
+
+        addIfButton:SetImageSize(20, 20)
+        addIfButton:SetWidth(20)
+        addIfButton:SetHeight(20)
+        addIfButton:SetImage(Statics.ActionsIcons.If)
+
+        addIfButton:SetCallback("OnClick", function()
+            if GSE.TableLength(editframe.booleanFunctions) > 0 then
+                local addPath = {}
+                local newAction = {
+                    ['Type'] = Statics.Actions.If,
+                    [1] = {
+                        {
+                            [1] = "/say Variable returned True",
+                            ['Type'] = Statics.Actions.Action
+                        }
+                    },
+                    [2] = {
+                        {
+                            [1] = "/say Variable returned False",
+                            ['Type'] = Statics.Actions.Action
+                        }
+                    }
+                }
+                table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                ChooseVersionTab(version)
+            end
+        end)
+        addIfButton:SetCallback('OnEnter', function()
+            if GSE.TableLength(editframe.booleanFunctions) > 0 then
+                GSE.CreateToolTip(L["Add If"], L["Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."], editframe)
+            else
+                GSE.CreateToolTip(L["Add If"], L["If Blocks require a variable that returns either true or false.  Create the variable first."], editframe)
+            end
+        end)
+        addIfButton:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
     end
 
     local lastPath = path[#path]
@@ -1602,8 +1712,10 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         moveDownButton:SetDisabled(true)
     end
 
-    layoutcontainer:AddChild(moveUpButton)
-    layoutcontainer:AddChild(moveDownButton)
+    if GSE.isEmpty(disableMove) then
+        layoutcontainer:AddChild(moveUpButton)
+        layoutcontainer:AddChild(moveDownButton)
+    end
 
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(5)
@@ -1620,6 +1732,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         layoutcontainer:AddChild(addRepeatButton)
         layoutcontainer:AddChild(addLoopButton)
         layoutcontainer:AddChild(addPauseButton)
+        layoutcontainer:AddChild(addIfButton)
     end
     local spacerlabel3 = AceGUI:Create("Label")
     spacerlabel3:SetWidth(100)
@@ -1954,8 +2067,83 @@ local function drawAction(container, action, version, keyPath)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
         container:AddChild(macroPanel)
-    -- elseif action.Type == Statics.Actions.If then
+    elseif action.Type == Statics.Actions.If then
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        if addonSkinsEnabled == true then
+            macroPanel.frame:SetBackdrop(nil)
+        end
+        macroPanel:SetWidth(maxWidth)
+        macroPanel:SetLayout("List")
 
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, container)
+
+
+        local booleanDropdown = AceGUI:Create("Dropdown")
+        booleanDropdown:SetLabel(L["Boolean Functions"])
+        booleanDropdown:SetWidth((editframe.Width) * 0.24)
+        local booleans = {}
+        for _,v in ipairs(editframe.booleanFunctions) do
+            booleans[v] = v
+        end
+        booleanDropdown:SetList(booleans)
+        booleanDropdown:SetCallback('OnEnter', function()
+            GSE.CreateToolTip(L["Boolean Functions"], L["Boolean Functions are GSE variables that return either a true or false value."], editframe)
+        end)
+        if not GSE.isEmpty(action.Variable) then
+            booleanDropdown:SetValue(action.Variable)
+        end
+        booleanDropdown:SetCallback('OnLeave', function()
+            GSE.ClearTooltip(editframe)
+        end)
+
+        booleanDropdown:SetCallback("OnValueChanged", function(sel, object, value)
+            editframe.Sequence.Macros[version].Actions[keyPath].Variable = value
+        end)
+
+        linegroup1:AddChild(booleanDropdown)
+
+        
+        local trueKeyPath = GSE.CloneSequence(keyPath)
+        table.insert(trueKeyPath, 1)
+        local trueGroup = AceGUI:Create("SimpleGroup")
+        trueGroup:SetWidth(maxWidth - 45)
+        trueGroup:SetLayout("List")
+        if addonSkinsEnabled == true then
+            trueGroup.frame:SetBackdrop(nil)
+        end
+
+        trueGroup:AddChild(GetBlockToolbar(version, trueKeyPath, maxWidth, true, "True", trueGroup, false))
+
+        for key,act in ipairs(action.True) do
+            local newKeyPath = GSE.CloneSequence(trueKeyPath)
+            table.insert(newKeyPath, key)
+            drawAction(trueGroup, act, version, newKeyPath)
+        end
+
+        local falseKeyPath = FalseCloneSequence(keyPath)
+        table.insert(falseKeyPath, 2)
+
+        local falseGroup = AceGUI:Create("SimpleGroup")
+        falseGroup:SetWidth(maxWidth - 45)
+        falseGroup:SetLayout("List")
+        if addonSkinsEnabled == true then
+            falseGroup.frame:SetBackdrop(nil)
+        end
+        
+        falseGroup:AddChild(GetBlockToolbar(version, falseKeyPath, maxWidth, true, "False", falseGroup, false))
+
+        
+        for key,act in ipairs(action.False) do
+            local newKeyPath = GSE.CloneSequence(falseKeyPath)
+            table.insert(newKeyPath, key)
+            drawAction(falseGroup, act, version, newKeyPath)
+        end
+        macroPanel:AddChild(linegroup1)
+
+        
+        macroPanel:AddChild(trueGroup)
+        macroPanel:AddChild(falseGroup)
+        container:AddChild(macroPanel)
     end
 end
 
@@ -1968,7 +2156,6 @@ function GSE:DrawSequenceEditor(container, version)
             ['Type'] = Statics.Actions.Action
         }
     end
-
 
     local macro = editframe.Sequence.Macros[version].Actions
 
