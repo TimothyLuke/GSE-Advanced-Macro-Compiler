@@ -986,7 +986,6 @@ function GSE:GUIDrawMacroEditor(container, version)
             ['StepFunction'] = Statics.Sequential,
             ['Type'] = Statics.Actions.Loop,
             ['Repeat'] = 2
-           
         }
         -- setmetatable(newAction, Statics.TableMetadataFunction)
         table.insert(editframe.Sequence.Macros[version].Actions, newAction)
