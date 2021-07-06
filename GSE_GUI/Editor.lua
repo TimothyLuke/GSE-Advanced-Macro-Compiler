@@ -2053,7 +2053,7 @@ function GSE:GUIDrawVariableEditor(container, version)
     linegroup1:AddChild(delLabel)
     contentcontainer:AddChild(linegroup1)
 
-    for key, value in pairs(editframe.Sequence.Macros[version].Variables) do
+    for key, value in GSE.pairsByKeys(editframe.Sequence.Macros[version].Variables) do
         if type(value) == "table" then
             addKeyPairRow(contentcontainer, columnWidth, key, table.concat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"), version)
         end
