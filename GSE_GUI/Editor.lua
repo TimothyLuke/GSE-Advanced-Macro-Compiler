@@ -1081,13 +1081,13 @@ function GSE:GUIDrawMacroEditor(container, version)
             local newAction = {
                 ['Type'] = Statics.Actions.If,
                 [1] = {
-                    {
+                    [1] = {
                         [1] = "/say Variable returned True",
                         ['Type'] = Statics.Actions.Action
                     }
                 },
                 [2] = {
-                    {
+                    [1] = {
                         [1] = "/say Variable returned False",
                         ['Type'] = Statics.Actions.Action
                     }
@@ -2116,7 +2116,7 @@ local function drawAction(container, action, version, keyPath)
 
         trueGroup:AddChild(GetBlockToolbar(version, trueKeyPath, maxWidth, true, "True", trueGroup, false))
 
-        for key,act in ipairs(action.True) do
+        for key,act in ipairs(action[1]) do
             local newKeyPath = GSE.CloneSequence(trueKeyPath)
             table.insert(newKeyPath, key)
             drawAction(trueGroup, act, version, newKeyPath)
@@ -2135,7 +2135,7 @@ local function drawAction(container, action, version, keyPath)
         falseGroup:AddChild(GetBlockToolbar(version, falseKeyPath, maxWidth, true, "False", falseGroup, false))
 
         
-        for key,act in ipairs(action.False) do
+        for key,act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)
             table.insert(newKeyPath, key)
             drawAction(falseGroup, act, version, newKeyPath)
