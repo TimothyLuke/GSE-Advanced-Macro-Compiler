@@ -577,7 +577,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
     pvpdropdown:SetCallback("OnValueChanged", function(obj, event, key)
         if editframe.Sequence.MetaData.Default == tonumber(key) then
-            editframe.Sequence.MetaData.MetaData.PVP = nil
+            editframe.Sequence.MetaData.PVP = nil
         else
             editframe.Sequence.MetaData.PVP = tonumber(key)
             editframe.PVP = tonumber(key)
