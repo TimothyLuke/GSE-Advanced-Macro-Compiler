@@ -15,6 +15,7 @@ local addonSkinsEnabled = false
 if not GSE.isEmpty(ElvUI) then
     local ElvPrivateDB = ElvPrivateDB
     if ElvPrivateDB then
+
         local myname = UnitName("player")
         local profileKey
 		if ElvPrivateDB.profileKeys then
@@ -22,11 +23,16 @@ if not GSE.isEmpty(ElvUI) then
 		end
 
         if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
-            if GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) or ElvPrivateDB.profiles[profileKey].skins.ace3Enable ~= false then
+            if not GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
                 addonSkinsEnabled = true
             end
         end
+
     end
+end
+
+if GSEOptions.DisableElvFix == true then
+    addonSkinsEnabled = false
 end
 
 local viewframe = AceGUI:Create("Frame")
@@ -131,7 +137,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local columngroup = AceGUI:Create("SimpleGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
-  if addonSkinsEnabled then
+  if addonSkinsEnabled == true then
     columngroup.frame:SetBackdrop(nil)
   end
 
@@ -159,7 +165,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   column1:AddChild(helplabel)
 
   local row2 = AceGUI:Create("SimpleGroup")
-  if addonSkinsEnabled then
+  if addonSkinsEnabled == true then
     row2.frame:SetBackdrop(nil)
   end
   row2:SetLayout("Flow")

@@ -466,28 +466,28 @@ Statics.TranslatorMode.String = "STRING"
 Statics.TranslatorMode.ID = "ID"
 
 Statics.TableMetadataFunction = {
-            __index = function(t, k)
+    __index = function(t, k)
 
-            for _,v in ipairs(k) do
-                if not t then error("attempt to index nil") end
-                t = rawget(t, v)
-            end
-            return t
-            end,
-            __newindex = function(t, key, v)
-               local last_k
-               for _,k in ipairs(key) do
-                  k, last_k = last_k, k
-                  if k ~= nil then
-                     local parent_t = t
-                     t = rawget(parent_t, k)
-                     if t == nil then
-                        t = {}
-                        rawset(parent_t, k, t)
-                     end
-                     if type(t) ~= "table" then error("Unexpected subtable", 2) end
-                  end
-               end
-               rawset(t, last_k, v)
-            end
-        }
+    for _,v in ipairs(k) do
+        if not t then error("attempt to index nil") end
+        t = rawget(t, v)
+    end
+    return t
+    end,
+    __newindex = function(t, key, v)
+        local last_k
+        for _,k in ipairs(key) do
+          k, last_k = last_k, k
+          if k ~= nil then
+              local parent_t = t
+              t = rawget(parent_t, k)
+              if t == nil then
+                t = {}
+                rawset(parent_t, k, t)
+              end
+              if type(t) ~= "table" then error("Unexpected subtable", 2) end
+          end
+        end
+        rawset(t, last_k, v)
+    end
+}

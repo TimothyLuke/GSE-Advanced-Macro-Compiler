@@ -30,7 +30,7 @@ if not GSE.isEmpty(ElvUI) then
 		end
 
         if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
-            if GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) or ElvPrivateDB.profiles[profileKey].skins.ace3Enable ~= false then
+            if not GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
                 addonSkinsEnabled = true
             end
         end
@@ -578,7 +578,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
     pvpdropdown:SetCallback("OnValueChanged", function(obj, event, key)
         if editframe.Sequence.MetaData.Default == tonumber(key) then
-            editframe.Sequence.MetaData.MetaData.PVP = nil
+            editframe.Sequence.MetaData.PVP = nil
         else
             editframe.Sequence.MetaData.PVP = tonumber(key)
             editframe.PVP = tonumber(key)
@@ -1004,15 +1004,15 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     addLoopButton:SetCallback("OnClick", function()
         local newAction = {
-            ['StepFunction'] = Statics.Sequential,
-            ['Type'] = Statics.Actions.Loop,
-            ['Repeat'] = 2,
             [1] = {
                 [1] = "/say Hello",
                 ['Type'] = Statics.Actions.Action
-            }
+            },
+            ['StepFunction'] = Statics.Sequential,
+            ['Type'] = Statics.Actions.Loop,
+            ['Repeat'] = 2
         }
-        setmetatable(newAction, Statics.TableMetadataFunction)
+        -- setmetatable(newAction, Statics.TableMetadataFunction)
         table.insert(editframe.Sequence.Macros[version].Actions, newAction)
         ChooseVersionTab(version)
     end)
@@ -1590,16 +1590,16 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         addLoopButton:SetCallback("OnClick", function()
             local addPath = {}
             local newAction = {
-                ['StepFunction'] = Statics.Sequential,
-                ['Type'] = Statics.Actions.Loop,
-                ['Repeat'] = 1,
                 [1] = {
                     [1] = "/say Hello",
-                    ['Type'] = Statics.Actions.Action,
-                }
+                    ['Type'] = Statics.Actions.Action
+                },
+                ['StepFunction'] = Statics.Sequential,
+                ['Type'] = Statics.Actions.Loop,
+                ['Repeat'] = 2
             }
 
-            setmetatable(newAction, Statics.TableMetadataFunction)
+            -- setmetatable(newAction, Statics.TableMetadataFunction)
             table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
             ChooseVersionTab(version)
 
@@ -1746,20 +1746,20 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     disableBlock:SetLabel(L["Disable Block"])
     layoutcontainer:AddChild(disableBlock)
     disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
-    local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
-    highlightTexture:SetAllPoints(true)
+    -- local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+    -- highlightTexture:SetAllPoints(true)
 
     disableBlock:SetCallback("OnValueChanged", function(sel, object, value)
         editframe.Sequence.Macros[version].Actions[path].Disabled = value
-        if value == true then
-            highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-        else
-            highlightTexture:SetColorTexture(1, 0, 0, 0)
-        end
+        -- if value == true then
+        --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+        -- else
+        --     highlightTexture:SetColorTexture(1, 0, 0, 0)
+        -- end
     end)
-    if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
-        highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-    end
+    -- if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+    --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+    -- end
     disableBlock:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Disable Block"], L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."], editframe)
     end)
