@@ -18,12 +18,14 @@ if not GSE.isEmpty(ElvUI) then
 
         local myname = UnitName("player")
         local profileKey
-		if ElvPrivateDB.profileKeys then
-			profileKey = ElvPrivateDB.profileKeys[myname..' - '..GetRealmName()]
-		end
+        if ElvPrivateDB.profileKeys then
+          profileKey = ElvPrivateDB.profileKeys[myname..' - '..GetRealmName()]
+        end
 
         if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
-            if not GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
+            if ElvPrivateDB.profiles[profileKey].skins.ace3Enable and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
+                addonSkinsEnabled = true
+            elseif GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) then
                 addonSkinsEnabled = true
             end
         end
