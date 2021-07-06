@@ -7,29 +7,44 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+🔵 **Describe the bug:**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
+🔵 **To reproduce:**
+Steps to reproduce the behavior.
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+🔵 **The error:**
+Paste the error message in this blockquote.
+```
 
-**Screenshots**
+```
+
+🔵 **Screenshots:**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. Windows 10 64bit]
- - Game Version [e.g. classic/retail/9.0.5]
+🔵 **Expected behavior:**
+A clear and concise description of what you expected to happen.
 
-**GSE Version**
- - Version: [e.g. iPhone6]
+🔵 **GSE.lua file:**
+Please provide your `GSE.lua` file or the export string for the specific macro that . 
+- _To find the GSE.lua file_
+- _First, make sure you have enabled the "File Name Extensions" checkbox in Explorer (View tab)_
+- _Browse to `C:\path\to\wow\_retail_\WTF\Account\YourAccountName\SavedVariables\` or `/path/to/WoW_retail_\WTF\Account\YourAccountName\SavedVariables` _
+- _Copy the `GSE.lua` file to your Desktop_
+- _Rename this copy to `GSA.lua.txt`_
+- _Then just drag it here in your message_
+
+🔵 **Desktop (please complete the following information):**
+ - OS: [e.g. Windows 10 64bit]
+ - Game Version [e.g. classic/bcc/retail (9.1.0)]
+
+🔵 **GSE Version:**
+ - Version: [e.g. 3.x.y]
  - Downloaded From: [e.g. https://www.curseforge.com]
 
-**Additional context**
+🔵 **Additional context:**
 Add any other context about the problem here.
