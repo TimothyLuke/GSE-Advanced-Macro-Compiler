@@ -52,6 +52,9 @@ function GSE.ProcessVariables(lines, variableTable)
                     if type(value) == "function" then
                         value = value()
                     end
+                    if type(value) == "boolean" then
+                        value = tostring(value)
+                    end
                     line = string.gsub(line, string.format("~~%s~~", key), value)
                 end
             end

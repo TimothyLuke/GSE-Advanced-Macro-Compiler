@@ -979,15 +979,16 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     addLoopButton:SetCallback("OnClick", function()
         local newAction = {
-            ['StepFunction'] = Statics.Sequential,
-            ['Type'] = Statics.Actions.Loop,
-            ['Repeat'] = 2,
             [1] = {
                 [1] = "/say Hello",
                 ['Type'] = Statics.Actions.Action
-            }
+            },
+            ['StepFunction'] = Statics.Sequential,
+            ['Type'] = Statics.Actions.Loop,
+            ['Repeat'] = 2
+           
         }
-        setmetatable(newAction, Statics.TableMetadataFunction)
+        -- setmetatable(newAction, Statics.TableMetadataFunction)
         table.insert(editframe.Sequence.Macros[version].Actions, newAction)
         ChooseVersionTab(version)
     end)
@@ -1518,16 +1519,16 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         addLoopButton:SetCallback("OnClick", function()
             local addPath = {}
             local newAction = {
-                ['StepFunction'] = Statics.Sequential,
-                ['Type'] = Statics.Actions.Loop,
-                ['Repeat'] = 1,
                 [1] = {
                     [1] = "/say Hello",
-                    ['Type'] = Statics.Actions.Action,
-                }
+                    ['Type'] = Statics.Actions.Action
+                },
+                ['StepFunction'] = Statics.Sequential,
+                ['Type'] = Statics.Actions.Loop,
+                ['Repeat'] = 2
             }
 
-            setmetatable(newAction, Statics.TableMetadataFunction)
+            -- setmetatable(newAction, Statics.TableMetadataFunction)
             table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
             ChooseVersionTab(version)
 
