@@ -30,7 +30,7 @@ if not GSE.isEmpty(ElvUI) then
 		end
 
         if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
-            if GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) or ElvPrivateDB.profiles[profileKey].skins.ace3Enable ~= false then
+            if not GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
                 addonSkinsEnabled = true
             end
         end
