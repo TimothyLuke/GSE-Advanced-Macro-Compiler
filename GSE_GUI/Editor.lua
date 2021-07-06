@@ -1634,20 +1634,20 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     disableBlock:SetLabel(L["Disable Block"])
     layoutcontainer:AddChild(disableBlock)
     disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
-    local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
-    highlightTexture:SetAllPoints(true)
+    -- local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+    -- highlightTexture:SetAllPoints(true)
 
     disableBlock:SetCallback("OnValueChanged", function(sel, object, value)
         editframe.Sequence.Macros[version].Actions[path].Disabled = value
-        if value == true then
-            highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-        else
-            highlightTexture:SetColorTexture(1, 0, 0, 0)
-        end
+        -- if value == true then
+        --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+        -- else
+        --     highlightTexture:SetColorTexture(1, 0, 0, 0)
+        -- end
     end)
-    if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
-        highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-    end
+    -- if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+    --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+    -- end
     disableBlock:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Disable Block"], L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."], editframe)
     end)
