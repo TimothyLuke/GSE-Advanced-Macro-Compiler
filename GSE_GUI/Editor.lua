@@ -1296,7 +1296,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     keyEditBox:DisableButton(true)
     keyEditBox:SetWidth(rowWidth * 0.15 + 5)
     keyEditBox:SetText(key)
-    local oldkey = key
+    local currentKey = key
     keyEditBox:SetCallback("OnTextChanged", function(self, event, text)
 
         if GSE.isEmpty(editframe.Sequence.Macros[version].Variables[text]) then
@@ -1305,8 +1305,8 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
         else
             editframe.Sequence.Macros[version].Variables[text] = editframe.Sequence.Macros[version].Variables[oldkey]
         end
-        editframe.Sequence.Macros[version].Variables[oldkey] = nil
-        oldkey = text
+        editframe.Sequence.Macros[version].Variables[currentKey] = nil
+        currentKey = text
     end)
     linegroup1:AddChild(keyEditBox)
 
@@ -1321,7 +1321,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(value)
     valueEditBox:SetCallback("OnTextChanged", function(self, event, text)
-        editframe.Sequence.Macros[version].Variables[text] = GSE.SplitMeIntolines(valueEditBox:GetText())
+        editframe.Sequence.Macros[version].Variables[currentKey] = GSE.SplitMeIntolines(text)
     end)
     linegroup1:AddChild(valueEditBox)
 
