@@ -1222,14 +1222,14 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
-local function processAction(action, metaData)
+local function processAction(action, metaData, variables)
     return GSE.processAction(action, metaData)
 end
 
-local function buildAction(action, metaData)
+local function buildAction(action, metaData, variables)
     if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
-        return processAction(action, metaData)
+        return processAction(action, metaData, variables)
     else
         if GSEOptions.requireTarget then
 
@@ -1277,24 +1277,7 @@ local function buildAction(action, metaData)
     end
 end
 
-function GSE.CompileAction(action, template)
-    local returnAction = buildAction(action, template.InbuiltVariables)
-    local variables = {}
-
-    for k, v in pairs(template.Variables) do
-        if type(v) == "table" then
-            for i, j in ipairs(v) do
-                template.Variables[k][i] = GSE.TranslateString(j, "STRING", nil, true)
-            end
-            variables[k] = table.concat(template.Variables[k], "\n")
-        end
-    end
-    local returnMacro = {}
-    table.insert(returnMacro, returnAction)
-    return table.concat(GSE.UnEscapeTable(GSE.ProcessVariables(returnMacro, variables))[1], "\n")
-end
-
-function GSE.processAction(action, metaData)
+function GSE.processAction(action, metaData, variables)
     if action.Disabled then
         return
     end
@@ -1302,7 +1285,7 @@ function GSE.processAction(action, metaData)
         local actionList = {}
         -- setup the interation
         for _, v in ipairs(action) do
-            local builtaction = GSE.processAction(v, metaData)
+            local builtaction = GSE.processAction(v, metaData, variables)
             if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
                 for _, j in ipairs(builtaction) do
                     table.insert(actionList, j)
@@ -1401,7 +1384,74 @@ function GSE.processAction(action, metaData)
             ["Interval"] = action.Interval
         }
         return returnAction
-    -- elseif action.Type == Statics.Actions.If then
+    elseif action.Type == Statics.Actions.If then
+
+        if GSE.isEmpty(action.Variable) then
+            GSE.Print(L["If Blocks Require a variable."], L["Macro Compile Error"])
+            return 
+        end
+
+        local funcline = variables[action.Variable]
+
+        funcline = string.sub(table.concat(funcline, "\n"), 11)
+        funcline = funcline:sub(1, -4)
+        funcline = loadstring(funcline)
+        if funcline ~= nil then
+            value = funcline
+        end
+        value = value()
+        local actions
+        if type(value) == "boolean" then
+            if value == true then
+                actions = action[1]
+            else
+                actions = action[2]
+            end
+        else
+            GSE.Print(string.format(L["Boolean not found.  There is a problem with %s not returning true or false."], action.Variable), L["Macro Compile Error"])
+            return
+        end
+
+        local actionList = {}
+        for _, v in ipairs(actions) do
+            local builtaction = GSE.processAction(v, metaData, variables)
+            if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
+                for _, j in ipairs(builtaction) do
+                    table.insert(actionList, j)
+                end
+            else
+                table.insert(actionList, builtaction)
+            end
+        end
+        
+        -- process repeats for the block
+        local inserts = {}
+        local processedInserts = {}
+        for k, v in ipairs(actionList) do
+            if type(v) == "table" then
+                if GSE.isEmpty(processedInserts[v.Action]) then
+                    table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
+                    processedInserts[v.Action] = {}
+                end
+                table.remove(actionList, k)
+            end
+        end
+
+        -- print("num INserts", #inserts)
+        for _,v in ipairs(inserts) do
+
+            local insertcount = math.ceil((#actionList - v["Start"]) / v["Start"])
+            local repeatCount = v["Interval"]
+            table.insert(actionList, v["Start"] , v["Action"])
+            for i=1, insertcount do
+                local insertpos
+                    insertpos = v["Start"]  +  i * repeatCount
+                table.insert(actionList, insertpos , v["Action"])
+            end
+        end
+
+        return actionList
+
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
 
@@ -1454,7 +1504,7 @@ function GSE.CompileTemplate(macro)
     for _, action in ipairs(template.Actions) do
         table.insert(actions, action)
     end
-    local compiledMacro = GSE.processAction(actions, template.InbuiltVariables)
+    local compiledMacro = GSE.processAction(actions, template.InbuiltVariables, template.Variables)
 
     local variables = {}
 

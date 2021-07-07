@@ -2717,14 +2717,11 @@ local function drawAction(container, action, version, keyPath)
         trueGroup:SetWidth(maxWidth - 45)
         trueGroup:SetLayout("List")
 
-
-        
         local tlabel = AceGUI:Create("Label")
         tlabel:SetText("True", Statics.Actions[action.Type])
         --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
         tlabel:SetFontObject(GameFontNormalLarge)
         tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-        
 
         local trueContainer = AceGUI:Create("SimpleGroup")
         trueContainer:SetLayout("Flow")
@@ -2746,8 +2743,6 @@ local function drawAction(container, action, version, keyPath)
         local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true)
         trueGroup:AddChild(toolbar)
 
-
-        
         for key,act in ipairs(action[1]) do
             local newKeyPath = GSE.CloneSequence(trueKeyPath)
             table.insert(newKeyPath, key)
@@ -2756,15 +2751,12 @@ local function drawAction(container, action, version, keyPath)
 
         macroPanel:AddChild(linegroup1)
 
-
         local trueindentlabel = AceGUI:Create("Label")
         trueindentlabel:SetWidth(45)
         trueContainer:AddChild(trueindentlabel)
 
         trueContainer:AddChild(trueGroup)
         macroPanel:AddChild(trueContainer)
-
-
 
         -- macroPanel:AddChild(falseGroup)
         local falseKeyPath = GSE.CloneSequence(keyPath)
@@ -2776,14 +2768,11 @@ local function drawAction(container, action, version, keyPath)
             falsegroup.frame:SetBackdrop(nil)
         end
 
-        
         local flabel = AceGUI:Create("Label")
         flabel:SetText("False")
         --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
         flabel:SetFontObject(GameFontNormalLarge)
         flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-        
-
         local falsecontainer = AceGUI:Create("SimpleGroup")
         if addonSkinsEnabled == true then
             falsecontainer.frame:SetBackdrop(nil)
@@ -2794,8 +2783,6 @@ local function drawAction(container, action, version, keyPath)
         local toolbar = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true)
         falsegroup:AddChild(toolbar)
 
-
-        
         for key,act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)
             table.insert(newKeyPath, key)
@@ -2805,11 +2792,8 @@ local function drawAction(container, action, version, keyPath)
         local falseindentlabel = AceGUI:Create("Label")
         falseindentlabel:SetWidth(45)
         falsecontainer:AddChild(falseindentlabel)
-
         falsecontainer:AddChild(falsegroup)
-
         macroPanel:AddChild(falsecontainer)
-        
         container:AddChild(macroPanel)
     end
 end

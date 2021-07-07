@@ -669,3 +669,8 @@ L["Boolean Functions are GSE variables that return either a true or false value.
 --3.0.18
 L["Fix SetBackdrop Nil"] = true
 L["On some clients the Editor will throw an error relating to setBackdrop. Turning this on will prevent those errors."] = true
+
+--3.0.20
+L["Boolean not found.  There is a problem with %s not returning true or false."] = true
+L["Macro Compile Error"] = true
+L["If Blocks Require a variable."] = true
