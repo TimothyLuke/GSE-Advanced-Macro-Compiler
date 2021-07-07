@@ -1364,17 +1364,16 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     keyEditBox:DisableButton(true)
     keyEditBox:SetWidth(rowWidth * 0.15 + 5)
     keyEditBox:SetText(key)
-    local oldkey = key
-    keyEditBox:SetCallback("OnTextChanged", function()
+    local currentKey = key
+    keyEditBox:SetCallback("OnTextChanged", function(self, event, text)
 
-        if GSE.isEmpty(editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()]) then
-            editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = ""
-
+        if GSE.isEmpty(editframe.Sequence.Macros[version].Variables[text]) then
+            editframe.Sequence.Macros[version].Variables[text] = ""
         else
-            editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = editframe.Sequence.Macros[version].Variables[oldkey]
+            editframe.Sequence.Macros[version].Variables[text] = editframe.Sequence.Macros[version].Variables[currentKey]
         end
-        editframe.Sequence.Macros[version].Variables[oldkey] = nil
-        oldkey = keyEditBox:GetText()
+        editframe.Sequence.Macros[version].Variables[currentKey] = nil
+        currentKey = text
     end)
     linegroup1:AddChild(keyEditBox)
 
@@ -1388,8 +1387,8 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     valueEditBox:SetWidth(rowWidth  * 0.75 + 5)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(value)
-    valueEditBox:SetCallback("OnTextChanged", function()
-        editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = GSE.SplitMeIntolines(valueEditBox:GetText())
+    valueEditBox:SetCallback("OnTextChanged", function(self, event, text)
+        editframe.Sequence.Macros[version].Variables[currentKey] = GSE.SplitMeIntolines(text)
     end)
     linegroup1:AddChild(valueEditBox)
 
@@ -1748,20 +1747,24 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     disableBlock:SetLabel(L["Disable Block"])
     layoutcontainer:AddChild(disableBlock)
     disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
-    -- local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
-    -- highlightTexture:SetAllPoints(true)
+    local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+    highlightTexture:SetAllPoints(true)
 
     disableBlock:SetCallback("OnValueChanged", function(sel, object, value)
         editframe.Sequence.Macros[version].Actions[path].Disabled = value
-        -- if value == true then
-        --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-        -- else
-        --     highlightTexture:SetColorTexture(1, 0, 0, 0)
-        -- end
+        if value == true then
+            highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+        else
+            highlightTexture:SetColorTexture(1, 0, 0, 0)
+        end
     end)
-    -- if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
-    --     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-    -- end
+    if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+        highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+    end
+
+    container:SetCallback("OnRelease", function(self, obj, value)
+        highlightTexture:SetColorTexture(0, 0, 0, 0)
+    end)
     disableBlock:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Disable Block"], L["Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."], editframe)
     end)
@@ -2240,7 +2243,7 @@ function GSE:GUIDrawVariableEditor(container, version)
     linegroup1:AddChild(delLabel)
     contentcontainer:AddChild(linegroup1)
 
-    for key, value in pairs(editframe.Sequence.Macros[version].Variables) do
+    for key, value in GSE.pairsByKeys(editframe.Sequence.Macros[version].Variables) do
         if type(value) == "table" then
             addKeyPairRow(contentcontainer, columnWidth, key, table.concat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"), version)
         end
