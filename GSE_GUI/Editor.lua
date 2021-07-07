@@ -1087,23 +1087,28 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
     editframe.booleanFunctions = {}
     for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
-        local value = table.concat(v, " ")
-        if type(value) == "string" then
-            local functline = value
-            if string.sub(functline, 1, 10) == "function()" then
-                functline = string.sub(functline, 11)
-                functline = functline:sub(1, -4)
-                functline = loadstring(functline)
-                --print(type(functline))
-                if functline ~= nil then
-                    value = functline
+        if k ~= "" and not GSE.isEmpty(v) then
+            if type(v) == string then
+                v = { [1]={ v } }
+            end
+            local value = table.concat(v, " ")
+            if type(value) == "string" then
+                local functline = value
+                if string.sub(functline, 1, 10) == "function()" then
+                    functline = string.sub(functline, 11)
+                    functline = functline:sub(1, -4)
+                    functline = loadstring(functline)
+                    --print(type(functline))
+                    if functline ~= nil then
+                        value = functline
+                    end
                 end
             end
-        end
-        if type(value) == "function" then
-            value = value()
-            if type(value) == "boolean" then
-                editframe.booleanFunctions[k] = k
+            if type(value) == "function" then
+                value = value()
+                if type(value) == "boolean" then
+                    editframe.booleanFunctions[k] = k
+                end
             end
         end
     end

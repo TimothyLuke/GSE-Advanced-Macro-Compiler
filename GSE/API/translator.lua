@@ -31,8 +31,8 @@ function GSE.ProcessVariables(lines, variableTable)
     --print("GSE.ProcessVariables(lines, variableTable)")
     local returnLines = {}
     --print(GSE.isEmpty(variableTable))
-    for _, line in ipairs(lines) do
-        if line ~= "/click GSE.Pause" then
+    for key, line in ipairs(lines) do
+        if key ~= "" or not GSE.isEmpty(key) or not GSE.isEmpty(line) or  line ~= "/click GSE.Pause" then
             if not GSE.isEmpty(variableTable) then
                 for key,value in pairs(variableTable) do
                     if type(value) == "string" then
