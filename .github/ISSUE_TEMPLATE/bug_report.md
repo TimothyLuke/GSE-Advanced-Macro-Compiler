@@ -30,10 +30,10 @@ If applicable, add screenshots to help explain your problem.
 A clear and concise description of what you expected to happen.
 
 🔵 **GSE.lua file:**
-Please provide your `GSE.lua` file or the export string for the specific macro that . 
+Please provide your `GSE.lua` file or the export string for the specific macro that is causing an issue. 
 - _To find the GSE.lua file_
 - _First, make sure you have enabled the "File Name Extensions" checkbox in Explorer (View tab)_
-- _Browse to `C:\path\to\wow\_retail_\WTF\Account\YourAccountName\SavedVariables\` or `/path/to/WoW_retail_\WTF\Account\YourAccountName\SavedVariables` _
+- _Browse to `C:\path\to\wow\_retail_\WTF\Account\YourAccountName\SavedVariables\` or `/path/to/WoW_retail_/WTF/Account/YourAccountName/SavedVariables`_
 - _Copy the `GSE.lua` file to your Desktop_
 - _Rename this copy to `GSA.lua.txt`_
 - _Then just drag it here in your message_
