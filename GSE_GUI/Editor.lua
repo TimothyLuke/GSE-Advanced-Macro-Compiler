@@ -2780,8 +2780,8 @@ local function drawAction(container, action, version, keyPath)
         falsecontainer:SetWidth(maxWidth)
         falsecontainer:SetLayout("Flow")
 
-        local toolbar = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true)
-        falsegroup:AddChild(toolbar)
+        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true)
+        falsegroup:AddChild(toolbar2)
 
         for key,act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)

@@ -1388,7 +1388,7 @@ function GSE.processAction(action, metaData, variables)
 
         if GSE.isEmpty(action.Variable) then
             GSE.Print(L["If Blocks Require a variable."], L["Macro Compile Error"])
-            return 
+            return
         end
 
         local funcline = variables[action.Variable]
@@ -1396,10 +1396,12 @@ function GSE.processAction(action, metaData, variables)
         funcline = string.sub(table.concat(funcline, "\n"), 11)
         funcline = funcline:sub(1, -4)
         funcline = loadstring(funcline)
+        local value
         if funcline ~= nil then
             value = funcline
+            value = value()
         end
-        value = value()
+
         local actions
         if type(value) == "boolean" then
             if value == true then
@@ -1423,7 +1425,7 @@ function GSE.processAction(action, metaData, variables)
                 table.insert(actionList, builtaction)
             end
         end
-        
+
         -- process repeats for the block
         local inserts = {}
         local processedInserts = {}

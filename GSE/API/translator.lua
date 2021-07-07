@@ -35,7 +35,6 @@ function GSE.ProcessVariables(lines, variableTable)
         if line ~= "/click GSE.Pause" then
             if not GSE.isEmpty(variableTable) then
                 for key,value in pairs(variableTable) do
-                    
                     if type(value) == "string" then
                         local functline = value
                         if string.sub(functline, 1, 10) == "function()" then
