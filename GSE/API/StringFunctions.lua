@@ -321,7 +321,7 @@ function GSE.ConcatIndexed(tab,template)
     return table.concat(tt)
 end
 
-function GSE.pairsByKeys (t, f)
+function GSE.pairsByKeys(t, f)
     local a = {}
     for n in pairs(t) do table.insert(a, n) end
         table.sort(a, f)
