@@ -25,7 +25,6 @@ Statics.CleanStrings = {
     [6] = "/run UIErrorsFrame:Hide%(%)%;",
     [7] = "/console Sound_EnableErrorSpeech 1",
     [8] = "/console Sound_EnableErrorSpeech 0",
-
     [11] = "/console Sound_EnableSFX 0",
     [12] = "/console Sound_EnableSFX 1",
     [13] = "/script UIErrorsFrame:Hide%(%)",
@@ -36,7 +35,6 @@ Statics.CleanStrings = {
     [18] = "/console Sound_EnableErrorSpeech 0%;",
     [19] = [[""]],
     [20] = "/stopmacro [@playertarget, noexists]",
-
     -- [30] = "/use 2",
     -- [31] = "/use [combat] 11",
     -- [32] = "/use [combat] 12",
@@ -69,30 +67,32 @@ Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 
 Statics.SystemVariables = {
-  ["GCD"] = function()
-    return GSE.GetGCD()
-  end,
+    ["GCD"] = function()
+        return GSE.GetGCD()
+    end
 }
 
 Statics.SystemVariableDescriptions = {
-  ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
+    ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."]
 }
 
 if GSE.GameMode ~= 1 then
-  Statics.SystemVariables["HE"] = function()
-    local itemLink = GetInventoryItemLink("player", 2)
-    if not GSE.isEmpty(itemLink) then
-      if GetItemInfo(itemLink) == "Heart of Azeroth" then
-        return '/cast [combat,nochanneling] Heart Essence'
-      else
-        return '-- /cast Heart Essence'
-      end
-    else
-      return '-- /cast Heart Essence'
+    Statics.SystemVariables["HE"] = function()
+        local itemLink = GetInventoryItemLink("player", 2)
+        if not GSE.isEmpty(itemLink) then
+            if GetItemInfo(itemLink) == "Heart of Azeroth" then
+                return "/cast [combat,nochanneling] Heart Essence"
+            else
+                return "-- /cast Heart Essence"
+            end
+        else
+            return "-- /cast Heart Essence"
+        end
     end
-  end
-  Statics.SystemVariableDescriptions["HE"] = L["Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."]
-
+    Statics.SystemVariableDescriptions["HE"] =
+        L[
+        "Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."
+    ]
 end
 Statics.SpecIDClassList = {
     [0] = 0,
@@ -146,14 +146,13 @@ Statics.SpecIDClassList = {
     [581] = 12
 }
 
-
 local function determineSpecializationName(specID)
-  if GSE.GameMode < 4 then
-    return GetClassInfo(Statics.SpecIDClassList[specID])
-  else
-    local _, specname = GetSpecializationInfoByID(specID)
-    return specname
-  end
+    if GSE.GameMode < 4 then
+        return GetClassInfo(Statics.SpecIDClassList[specID])
+    else
+        local _, specname = GetSpecializationInfoByID(specID)
+        return specname
+    end
 end
 
 local function determineClassName(specID)
@@ -164,89 +163,88 @@ end
 Statics.SpecIDList = {}
 
 if GSE.GameMode < 4 then
-  Statics.SpecIDClassList = {
-      [0] = 0,
-      [1] = 1,
-      [2] = 2,
-      [3] = 3,
-      [4] = 4,
-      [5] = 5,
-      [6] = 6,
-      [7] = 7,
-      [8] = 8,
-      [9] = 9,
-      [10] = 10,
-      [11] = 11,
-      [12] = 12,
-  }
-  Statics.SpecIDList = {
-    [0] = L["Global"],
-    [1] = determineClassName(1),
-    [2] = determineClassName(2),
-    [3] = determineClassName(3),
-    [4] = determineClassName(4),
-    [5] = determineClassName(5),
-    [6] = determineClassName(6),
-    [7] = determineClassName(7),
-    [8] = determineClassName(8),
-    [9] = determineClassName(9),
-    [10] = determineClassName(10),
-    [11] = determineClassName(11),
-    [12] = determineClassName(12),
-  }
+    Statics.SpecIDClassList = {
+        [0] = 0,
+        [1] = 1,
+        [2] = 2,
+        [3] = 3,
+        [4] = 4,
+        [5] = 5,
+        [6] = 6,
+        [7] = 7,
+        [8] = 8,
+        [9] = 9,
+        [10] = 10,
+        [11] = 11,
+        [12] = 12
+    }
+    Statics.SpecIDList = {
+        [0] = L["Global"],
+        [1] = determineClassName(1),
+        [2] = determineClassName(2),
+        [3] = determineClassName(3),
+        [4] = determineClassName(4),
+        [5] = determineClassName(5),
+        [6] = determineClassName(6),
+        [7] = determineClassName(7),
+        [8] = determineClassName(8),
+        [9] = determineClassName(9),
+        [10] = determineClassName(10),
+        [11] = determineClassName(11),
+        [12] = determineClassName(12)
+    }
 else
-Statics.SpecIDList = {
-    [0] = L["Global"],
-    [1] = determineClassName(1),
-    [2] = determineClassName(2),
-    [3] = determineClassName(3),
-    [4] = determineClassName(4),
-    [5] = determineClassName(5),
-    [6] = determineClassName(6),
-    [7] = determineClassName(7),
-    [8] = determineClassName(8),
-    [9] = determineClassName(9),
-    [10] = determineClassName(10),
-    [11] = determineClassName(11),
-    [12] = determineClassName(12),
-    [62] = determineSpecializationName(62),
-    [63] = determineSpecializationName(63),
-    [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
-    [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
-    [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
-    [70] = determineSpecializationName(70),
-    [71] = determineSpecializationName(71),
-    [72] = determineSpecializationName(72),
-    [73] = determineSpecializationName(73),
-    [102] = determineSpecializationName(102),
-    [103] = determineSpecializationName(103),
-    [104] = determineSpecializationName(104),
-    [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
-    [250] = determineSpecializationName(250),
-    [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
-    [252] = determineSpecializationName(252),
-    [253] = determineSpecializationName(253),
-    [254] = determineSpecializationName(254),
-    [255] = determineSpecializationName(255),
-    [256] = determineSpecializationName(256),
-    [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
-    [258] = determineSpecializationName(258),
-    [259] = determineSpecializationName(259),
-    [260] = determineSpecializationName(260),
-    [261] = determineSpecializationName(261),
-    [262] = determineSpecializationName(262),
-    [263] = determineSpecializationName(263),
-    [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
-    [265] = determineSpecializationName(265),
-    [266] = determineSpecializationName(266),
-    [267] = determineSpecializationName(267),
-    [268] = determineSpecializationName(268),
-    [269] = determineSpecializationName(269),
-    [270] = determineSpecializationName(270),
-    [577] = determineSpecializationName(577),
-    [581] = determineSpecializationName(581),
-}
-
+    Statics.SpecIDList = {
+        [0] = L["Global"],
+        [1] = determineClassName(1),
+        [2] = determineClassName(2),
+        [3] = determineClassName(3),
+        [4] = determineClassName(4),
+        [5] = determineClassName(5),
+        [6] = determineClassName(6),
+        [7] = determineClassName(7),
+        [8] = determineClassName(8),
+        [9] = determineClassName(9),
+        [10] = determineClassName(10),
+        [11] = determineClassName(11),
+        [12] = determineClassName(12),
+        [62] = determineSpecializationName(62),
+        [63] = determineSpecializationName(63),
+        [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
+        [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
+        [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
+        [70] = determineSpecializationName(70),
+        [71] = determineSpecializationName(71),
+        [72] = determineSpecializationName(72),
+        [73] = determineSpecializationName(73),
+        [102] = determineSpecializationName(102),
+        [103] = determineSpecializationName(103),
+        [104] = determineSpecializationName(104),
+        [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
+        [250] = determineSpecializationName(250),
+        [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
+        [252] = determineSpecializationName(252),
+        [253] = determineSpecializationName(253),
+        [254] = determineSpecializationName(254),
+        [255] = determineSpecializationName(255),
+        [256] = determineSpecializationName(256),
+        [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
+        [258] = determineSpecializationName(258),
+        [259] = determineSpecializationName(259),
+        [260] = determineSpecializationName(260),
+        [261] = determineSpecializationName(261),
+        [262] = determineSpecializationName(262),
+        [263] = determineSpecializationName(263),
+        [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
+        [265] = determineSpecializationName(265),
+        [266] = determineSpecializationName(266),
+        [267] = determineSpecializationName(267),
+        [268] = determineSpecializationName(268),
+        [269] = determineSpecializationName(269),
+        [270] = determineSpecializationName(270),
+        [577] = determineSpecializationName(577),
+        [581] = determineSpecializationName(581)
+    }
 end
 
 Statics.SpecIDHashList = {}
@@ -259,8 +257,8 @@ Statics.SequenceDebug = "SEQUENCEDEBUG"
 Statics.Priority = "Priority"
 Statics.Sequential = "Sequential"
 
-
-Statics.PrintKeyModifiers = [[
+Statics.PrintKeyModifiers =
+    [[
 print("Right alt key " .. tostring(IsRightAltKeyDown()))
 print("Left alt key " .. tostring(IsLeftAltKeyDown()))
 print("Any alt key " .. tostring(IsAltKeyDown()))
@@ -274,7 +272,6 @@ print("Any mod key " .. tostring(IsModifierKeyDown()))
 print("GetMouseButtonClicked() " .. GetMouseButtonClicked() )
 ]]
 
-
 Statics.StringFormatEscapes = {
     ["|c%x%x%x%x%x%x%x%x"] = "", -- Color start
     ["|r"] = "", -- Color end
@@ -285,8 +282,8 @@ Statics.StringFormatEscapes = {
 
 Statics.MacroResetSkeleton = [[
 if %s then
-  self:SetAttribute('step', 1)
-  self:SetAttribute('loopiter', 1)
+	self:SetAttribute('step', 1)
+	self:SetAttribute('loopiter', 1)
 end
 ]]
 
@@ -405,27 +402,26 @@ Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
 Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
 Statics.Patrons = {
-  "Airwave",
-  "Blackwell",
-  "BadCatVPN",
-  "clash",
-  "Deezyl",
-  "Dorlerean",
-  "Elange",
-  "ElfyAU",
-  "Flagels",
-  "Kleetus",
-  "Meisterhand",
-  "Mixmasterarne",
-  "Plaguelord",
-  "paytun",
-  "rezaadams",
-  "shikarr",
-  "Susietoo12",
-  "Tiegars",
-  "Vince",
+    "Airwave",
+    "Blackwell",
+    "BadCatVPN",
+    "clash",
+    "Deezyl",
+    "Dorlerean",
+    "Elange",
+    "ElfyAU",
+    "Flagels",
+    "Kleetus",
+    "Meisterhand",
+    "Mixmasterarne",
+    "Plaguelord",
+    "paytun",
+    "rezaadams",
+    "shikarr",
+    "Susietoo12",
+    "Tiegars",
+    "Vince"
 }
-
 
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
@@ -444,21 +440,19 @@ Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.tga"
 Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.tga"
 Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.tga"
 
-
-
-Statics.GSE3OnClick = [=[
+Statics.GSE3OnClick =
+[=[
 local step = self:GetAttribute('step')
 step = tonumber(step)
 self:SetAttribute('macrotext', macros[step] )
 step = step % #macros + 1
 if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
-  print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
-  step = 1
+	print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
+	step = 1
 end
 self:SetAttribute('step', step)
 self:CallMethod('UpdateIcon')
 ]=]
-
 
 Statics.TranslatorMode = {}
 Statics.TranslatorMode.Current = "CURRENT"
@@ -467,26 +461,29 @@ Statics.TranslatorMode.ID = "ID"
 
 Statics.TableMetadataFunction = {
     __index = function(t, k)
-
-    for _,v in ipairs(k) do
-        if not t then error("attempt to index nil") end
-        t = rawget(t, v)
-    end
-    return t
+        for _, v in ipairs(k) do
+            if not t then
+                error("attempt to index nil")
+            end
+            t = rawget(t, v)
+        end
+        return t
     end,
     __newindex = function(t, key, v)
         local last_k
-        for _,k in ipairs(key) do
-          k, last_k = last_k, k
-          if k ~= nil then
-              local parent_t = t
-              t = rawget(parent_t, k)
-              if t == nil then
-                t = {}
-                rawset(parent_t, k, t)
-              end
-              if type(t) ~= "table" then error("Unexpected subtable", 2) end
-          end
+        for _, k in ipairs(key) do
+            k, last_k = last_k, k
+            if k ~= nil then
+                local parent_t = t
+                t = rawget(parent_t, k)
+                if t == nil then
+                    t = {}
+                    rawset(parent_t, k, t)
+                end
+                if type(t) ~= "table" then
+                    error("Unexpected subtable", 2)
+                end
+            end
         end
         rawset(t, last_k, v)
     end
