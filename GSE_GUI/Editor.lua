@@ -228,13 +228,12 @@ function GSE.GUIEditorPerformLayout(frame)
     nameeditbox:DisableButton(true)
     nameeditbox:SetText(editframe.SequenceName)
     editframe.nameeditbox = nameeditbox
-    headerGroup:AddChild(nameeditbox)
 
     local spacerlabel = AceGUI:Create("Label")
-    spacerlabel:SetWidth(editframe.Width - 300)
-    headerGroup:AddChild(spacerlabel)
+    spacerlabel:SetWidth(10)
 
     local iconpicker = AceGUI:Create("Icon")
+    iconpicker:SetImageSize(40, 40)
     iconpicker:SetLabel(L["Macro Icon"])
     iconpicker.frame:RegisterForDrag("LeftButton")
     iconpicker.frame:SetScript(
@@ -263,6 +262,9 @@ function GSE.GUIEditorPerformLayout(frame)
         end
     )
     headerGroup:AddChild(iconpicker)
+    headerGroup:AddChild(spacerlabel)
+    headerGroup:AddChild(nameeditbox)
+
     editframe.iconpicker = iconpicker
 
     frame:AddChild(headerGroup)
@@ -432,7 +434,7 @@ function GSE:GUIDrawMetadataEditor(container)
         scrollcontainer.frame:SetBackdrop(nil)
     end
     scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetHeight(editframe.Height - 310)
+    scrollcontainer:SetHeight(editframe.Height - 255)
     scrollcontainer:SetLayout("Fill") -- Important!
 
     local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -1048,7 +1050,7 @@ function GSE:GUIDrawMetadataEditor(container)
         contentcontainer:AddChild(defgroup5)
         contentcontainer:AddChild(defgroup6)
     end
-    editframe.ScrollWindow = contentcontainer
+
     container:AddChild(scrollcontainer)
 end
 
@@ -1119,18 +1121,23 @@ function GSE:GUIDrawMacroEditor(container, version)
     end
 
     layoutcontainer:SetFullWidth(true)
-    layoutcontainer:SetHeight(editframe.Height - 300)
+    layoutcontainer:SetHeight(editframe.Height - 230)
     layoutcontainer:SetLayout("Flow") -- Important!
 
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     -- scrollcontainer:SetFullWidth(true)
     -- scrollcontainer:SetFullHeight(true) -- Probably?
     scrollcontainer:SetWidth(editframe.Width)
-    scrollcontainer:SetHeight(editframe.Height - 325)
+    scrollcontainer:SetHeight(editframe.Height - 255)
     scrollcontainer:SetLayout("Fill") -- Important!
+    editframe.scrollStatus = {}
+    
 
     local contentcontainer = AceGUI:Create("ScrollFrame")
     contentcontainer:SetAutoAdjustHeight(true)
+    contentcontainer:SetStatusTable(editframe.scrollStatus)
+    editframe.scrollContainer = contentcontainer 
+
     scrollcontainer:AddChild(contentcontainer)
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
@@ -1285,7 +1292,10 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Type"] = Statics.Actions.Action
             }
             table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+            local scrollpos = editframe.scrollStatus.scrollvalue
+            print(GSE.Dump(editframe.scrollStatus))
             ChooseVersionTab(version)
+            editframe.scrollContainer:SetScroll(scrollpos)
         end
     )
     addActionButton:SetCallback(
@@ -2846,7 +2856,7 @@ function GSE:GUIDrawVariableEditor(container, version)
 
     local contentcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     contentcontainer:SetWidth(maxWidth)
-
+    contentcontainer:SetAutoAdjustHeight(true)
     local variableLabel = AceGUI:Create("Heading")
     variableLabel:SetText(L["System Variables"])
     variableLabel:SetWidth(contentcontainer.frame:GetWidth())
@@ -2916,6 +2926,8 @@ function GSE:GUIDrawVariableEditor(container, version)
             local position = container.frame:GetHeight()
             local focusfield = addKeyPairRow(contentcontainer, columnWidth, nil, nil, version)
             container:DoLayout()
+            print(GSE.Dump(editframe.scrollStatus))
+            editframe:DoLayout()
             focusfield:SetFocus()
         end
     )
