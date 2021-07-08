@@ -1054,9 +1054,12 @@ function GSE:GUIDrawMetadataEditor(container)
     container:AddChild(scrollcontainer)
 end
 
-local function ChooseVersionTab(version)
+local function ChooseVersionTab(version, scrollpos)
     GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
     GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
+    if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
+        editframe.scrollContainer:SetScroll(scrollpos)
+    end
 end
 
 function GSE:GUIDrawMacroEditor(container, version)
@@ -1292,10 +1295,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Type"] = Statics.Actions.Action
             }
             table.insert(editframe.Sequence.Macros[version].Actions, newAction)
-            local scrollpos = editframe.scrollStatus.scrollvalue
-            print(GSE.Dump(editframe.scrollStatus))
-            ChooseVersionTab(version)
-            editframe.scrollContainer:SetScroll(scrollpos)
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addActionButton:SetCallback(
@@ -1330,7 +1330,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             }
             -- setmetatable(newAction, Statics.TableMetadataFunction)
             table.insert(editframe.Sequence.Macros[version].Actions, newAction)
-            ChooseVersionTab(version)
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addLoopButton:SetCallback(
@@ -1361,7 +1361,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             }
 
             table.insert(editframe.Sequence.Macros[version].Actions, newAction)
-            ChooseVersionTab(version)
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addRepeatButton:SetCallback(
@@ -1389,7 +1389,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Type"] = Statics.Actions.Pause
             }
             table.insert(editframe.Sequence.Macros[version].Actions, newAction)
-            ChooseVersionTab(version)
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addPauseButton:SetCallback(
@@ -1430,7 +1430,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                     ["Type"] = Statics.Actions.If
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions, newAction)
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         end
     )
@@ -1783,10 +1783,10 @@ end
 local function addKeyPairRow(container, rowWidth, key, value, version)
     -- print("KEY/VAL", key, value)
     if GSE.isEmpty(key) then
-        key = ""
+        key = "MyNewVar" .. math.random(100)
     end
     if GSE.isEmpty(value) then
-        value = ""
+        value = "My new variable"
     end
     -- if type(GSE.isEmpty(value)) ~= "string" then
     --   value = ""
@@ -1964,7 +1964,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 editframe.Sequence.Macros[version].Actions[path] =
                     GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
                 editframe.Sequence.Macros[version].Actions[destinationPath] = original
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         moveUpButton:SetCallback(
@@ -2000,7 +2000,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 editframe.Sequence.Macros[version].Actions[path] =
                     GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
                 editframe.Sequence.Macros[version].Actions[destinationPath] = original
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         moveDownButton:SetCallback(
@@ -2036,7 +2036,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 end
             end
             table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
-            ChooseVersionTab(version)
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     deleteBlockButton:SetCallback(
@@ -2079,8 +2079,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 }
                 local scrollpos = container.height
                 table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
-                ChooseVersionTab(version)
-                --editframe.ScrollWindow:SetScroll(scrollpos)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         addActionButton:SetCallback(
@@ -2117,7 +2116,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
 
                 -- setmetatable(newAction, Statics.TableMetadataFunction)
                 table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         addLoopButton:SetCallback(
@@ -2147,7 +2146,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     ["Repeat"] = 3
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         addRepeatButton:SetCallback(
@@ -2176,7 +2175,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     ["Type"] = Statics.Actions.Pause
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
-                ChooseVersionTab(version)
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         addPauseButton:SetCallback(
@@ -2217,7 +2216,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                         ["Type"] = Statics.Actions.If
                     }
                     table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
-                    ChooseVersionTab(version)
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
         )
@@ -2924,11 +2923,8 @@ function GSE:GUIDrawVariableEditor(container, version)
         "OnClick",
         function()
             local position = container.frame:GetHeight()
-            local focusfield = addKeyPairRow(contentcontainer, columnWidth, nil, nil, version)
-            container:DoLayout()
-            print(GSE.Dump(editframe.scrollStatus))
-            editframe:DoLayout()
-            focusfield:SetFocus()
+            editframe.Sequence.Macros[version].Variables["NewVar"..math.random(100)] = { [1] = "My New Variable" }
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addVariablsButton:SetCallback(
