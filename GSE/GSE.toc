@@ -8,7 +8,7 @@
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke
 ## Version: @project-version@
-## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage
+## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## OptionalDeps: WeakAuras
 

@@ -410,10 +410,24 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         end
     end
     if not GSE.isEmpty(returnval) then
+        if mode == Statics.TranslatorMode.ID and tonumber(spellstring) == nil then
+            if GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or GSESpellCache[GetLocale()][spellstring] ~= returnVal then
+                GSESpellCache[GetLocale()][spellstring] = returnval
+            end
+        end
         GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
     else
         if not GSE.isEmpty(spellstring) then
             GSE.PrintDebugMessage(spellstring .. " was not found", "Translator")
+            if not GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) then
+                returnval = GSESpellCache[GetLocale()][spellstring]
+            end
+            if GSE.isEmpty(returnval) then
+                -- hail mary - try the enUS cache
+                if not GSE.isEmpty(GSESpellCache["enUS"][spellstring]) then
+                    returnval = GSESpellCache["enUS"][spellstring]
+                end
+            end
         else
             GSE.PrintDebugMessage("Nothing was there to be found", "Translator")
         end

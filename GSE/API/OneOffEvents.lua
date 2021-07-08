@@ -42,3 +42,21 @@ function GSE.UpdateGSE2LibrarytoGSE3()
     end
     GSE.LoadStorage(GSE.Library)
 end
+
+function GSE.Update3023()
+    if GSE.isEmpty(GSEOptions.Update3023) then
+        GSEOptions.UnfoundSpells = nil
+        if GSE.isEmpty(GSESpellCache) then
+            GSESpellCache = {}
+        end
+        if GSE.isEmpty(GSESpellCache["enUS"]) then
+            GSESpellCache["enUS"] = {}
+        end
+        
+        if GSE.isEmpty(GSESpellCache[GetLocale()]) then
+            GSESpellCache[GetLocale()] = {}
+        end
+        
+    end
+    GSEOptions.Update3023 = true
+end

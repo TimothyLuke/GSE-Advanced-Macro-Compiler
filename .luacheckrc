@@ -25,6 +25,7 @@ globals = {
     "GSELegacyLibraryBackup",
     "GSE3Storage",
     "GSE_C",
+	"GSESpellCache",
 
 	-- GSE
 	"GSE",
