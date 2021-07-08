@@ -1811,12 +1811,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     keyEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            if GSE.isEmpty(editframe.Sequence.Macros[version].Variables[text]) then
-                editframe.Sequence.Macros[version].Variables[text] = ""
-            else
-                editframe.Sequence.Macros[version].Variables[text] =
-                    editframe.Sequence.Macros[version].Variables[currentKey]
-            end
+            editframe.Sequence.Macros[version].Variables[text] = editframe.Sequence.Macros[version].Variables[currentKey]
             editframe.Sequence.Macros[version].Variables[currentKey] = nil
             currentKey = text
         end
