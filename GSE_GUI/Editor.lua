@@ -1293,7 +1293,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 [1] = "/say Hello",
                 ["Type"] = Statics.Actions.Action
             }
-            table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
             ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
@@ -1328,7 +1328,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Repeat"] = 2
             }
             -- setmetatable(newAction, Statics.TableMetadataFunction)
-            table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
             ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
@@ -1359,7 +1359,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["Interval"] = 3
             }
 
-            table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
             ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
@@ -1387,7 +1387,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 ["MS"] = "GCD",
                 ["Type"] = Statics.Actions.Pause
             }
-            table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
             ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
@@ -1428,7 +1428,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                     },
                     ["Type"] = Statics.Actions.If
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions, newAction)
+                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         end
@@ -1931,10 +1931,21 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     return keyEditBox
 end
 
-local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove)
+local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove, isCollection)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
+    end
+    
+    local lastPath = path[#path]
+    local parentPath = GSE.CloneSequence(path)
+    local blocksThisLevel
+
+    if #parentPath == 1 then
+        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions)
+    else
+        parentPath[#parentPath] = nil
+        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions[parentPath])
     end
     layoutcontainer:SetLayout("Flow")
     layoutcontainer:SetWidth(width)
@@ -2071,12 +2082,18 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         addActionButton:SetCallback(
             "OnClick",
             function()
-                local addPath = {}
+
                 local newAction = {
                     [1] = "/say Hello",
                     ["Type"] = Statics.Actions.Action
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                print  (path[#path], GSE.Dump(path))
+                
+                if #path > 1 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
@@ -2113,7 +2130,11 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 }
 
                 -- setmetatable(newAction, Statics.TableMetadataFunction)
-                table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                if #path > 1 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
@@ -2143,7 +2164,11 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     ["Type"] = Statics.Actions.Repeat,
                     ["Repeat"] = 3
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                if #path > 1 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
@@ -2172,7 +2197,11 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     ["MS"] = "GCD",
                     ["Type"] = Statics.Actions.Pause
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                if #path > 1 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
@@ -2213,7 +2242,11 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                         },
                         ["Type"] = Statics.Actions.If
                     }
-                    table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
+                    if #path > 1 then
+                        table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                    else
+                        table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                    end
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
@@ -2247,22 +2280,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     end
 
     if GSE.isEmpty(disableMove) then
-        local lastPath = path[#path]
 
-        local parentPath = GSE.CloneSequence(path)
-        local blocksThisLevel
-
-        if #parentPath == 1 then
-            blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions)
-        else
-            parentPath[#parentPath] = nil
-            blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions[parentPath])
-        end
-        if lastPath == 1 then
-            moveUpButton:SetDisabled(true)
-        elseif lastPath == blocksThisLevel then
-            moveDownButton:SetDisabled(true)
-        end
         layoutcontainer:AddChild(moveUpButton)
         layoutcontainer:AddChild(moveDownButton)
         local spacerlabel1 = AceGUI:Create("Label")
@@ -2270,7 +2288,11 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         layoutcontainer:AddChild(spacerlabel1)
     end
     layoutcontainer:AddChild(headingLabel)
-
+    if lastPath == 1 then
+        moveUpButton:SetDisabled(true)
+    elseif lastPath == blocksThisLevel then
+        moveDownButton:SetDisabled(true)
+    end
     if includeAdd then
         local spacerlabel2 = AceGUI:Create("Label")
         spacerlabel2:SetWidth(5)
@@ -2364,10 +2386,10 @@ local function drawAction(container, action, version, keyPath)
     --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
     hlabel:SetFontObject(GameFontNormalLarge)
     hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-    local includeAdd = false
-    if action.Type == Statics.Actions.Loop then
-        includeAdd = true
-    end
+    local includeAdd = true
+    -- if action.Type == Statics.Actions.Loop then
+    --     includeAdd = true
+    -- end
 
     if action.Type == Statics.Actions.Pause then
         local linegroup1 = AceGUI:Create("SimpleGroup")
