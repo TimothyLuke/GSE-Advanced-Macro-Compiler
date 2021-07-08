@@ -11,15 +11,19 @@ local L = GSE.L
 function GSE.TranslateSequence(tab, mode, dropAbsolute)
 
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
-
     for k, v in ipairs(tab) do
         -- Translate Sequence
-        tab[k] = GSE.TranslateString(v, mode,nil,  dropAbsolute)
+        if type(v) == "table" then
+            tab[k] = GSE.TranslateSequence(v, mode, dropAbsolute)
+        else
+            local translation = GSE.TranslateString(v, mode, nil, dropAbsolute)
+            tab[k] = translation
+        end
     end
 
     -- Check for blanks
     for i, v in ipairs(tab) do
-        if v == "" then
+        if GSE.isEmpty(v) or v == "" then
             tab[i] = nil
         end
     end
@@ -31,8 +35,8 @@ function GSE.ProcessVariables(lines, variableTable)
     --print("GSE.ProcessVariables(lines, variableTable)")
     local returnLines = {}
     --print(GSE.isEmpty(variableTable))
-    for varkey, line in ipairs(lines) do
-        if varkey ~= "" or not GSE.isEmpty(varkey) or not GSE.isEmpty(line) or  line ~= "/click GSE.Pause" then
+    for _, line in ipairs(lines) do
+        if line ~= "/click GSE.Pause" then
             if not GSE.isEmpty(variableTable) then
                 for key,value in pairs(variableTable) do
                     if type(value) == "string" then
@@ -230,7 +234,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
                     end
                 end
             end
-            mode = "STRING"
+            mode = Statics.TranslatorMode.String
         end
         local foundspell = GSE.GetSpellId(etc, mode, absolute)
 
@@ -379,7 +383,7 @@ end
 --- Converts a string spell name to an id and back again.
 function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
-        mode = ""
+        mode = Statics.TranslatorMode.ID
     end
     local returnval
     local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)

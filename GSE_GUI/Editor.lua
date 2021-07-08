@@ -2574,7 +2574,7 @@ local function drawAction(container, action, version, keyPath)
             "OnTextChanged",
             function()
                 local returnAction =
-                    GSE.TranslateSequence(GSE.SplitMeIntolines(valueEditBox:GetText()), Statics.TranslatorMode.ID)
+                    GSE.SplitMeIntolines(valueEditBox:GetText())
                 returnAction["Type"] = action.Type
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])

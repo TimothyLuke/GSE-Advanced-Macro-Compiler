@@ -124,7 +124,8 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
   for k,v in ipairs(sequence.Macros) do
-    sequence.Macros[k] = GSE.TranslateSequence(v, SequenceName, "ID")
+    sequence.Macros[k].Actions = GSE.TranslateSequence(v.Actions, Statics.TranslatorMode.ID, false)
+    sequence.Macros[k].Variables = GSE.TranslateSequence(v.Variables, Statics.TranslatorMode.ID, false)
     sequence.Macros[k] = GSE.UnEscapeTableRecursive(sequence.Macros[k])
   end
 
@@ -137,7 +138,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       local vals = {}
       vals.action = "Replace"
       vals.sequencename = SequenceName
-      vals.sequence = GSE.CloneSequence(sequence)
+      vals.sequence = sequence
       vals.classid = classid
       if GSE.GUIEditFrame.NewSequence then
         if GSE.ObjectExists(SequenceName) then
