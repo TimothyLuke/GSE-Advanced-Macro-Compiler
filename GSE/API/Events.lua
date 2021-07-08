@@ -281,10 +281,15 @@ function GSE:GROUP_ROSTER_UPDATE(...)
             -- Take them out of the list
             GSE.UnsavedOptions["PartyUsers"][k] = nil
         end
-
+        GSE.SendSpellCache(nil)
     end
     -- Group Team stuff
     GSE:ZONE_CHANGED_NEW_AREA()
+end
+
+function GSE:GUILD_ROSTER_UPDATE(...)
+    -- Serialisation stuff
+    GSE.sendVersionCheck("GUILD")
 end
 
 GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
@@ -296,6 +301,8 @@ GSE:RegisterEvent('UNIT_SPELLCAST_SUCCEEDED')
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
+GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
+
 if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 end

@@ -385,6 +385,9 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
         mode = Statics.TranslatorMode.ID
     end
+    if GSE.isEmpty(GSESpellCache[GetLocale()]) then
+        GSESpellCache[GetLocale()] = {}
+    end
     local returnval
     local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
     if mode == "STRING" then

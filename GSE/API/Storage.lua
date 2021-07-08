@@ -1468,7 +1468,6 @@ function GSE.CompileTemplate(macro)
     end
     -- print(#macro.Actions)
     local template = GSE.CloneSequence(macro)
-
     setmetatable(template.Actions, {
         __index = function(t, k)
             for _, v in ipairs(k) do
@@ -1504,16 +1503,16 @@ function GSE.CompileTemplate(macro)
         ["Repeat"] = '1'
     }
     for _, action in ipairs(template.Actions) do
-        table.insert(actions, action)
+        table.insert(actions, GSE.TranslateSequence(action, Statics.TranslatorMode.String, true))
     end
     local compiledMacro = GSE.processAction(actions, template.InbuiltVariables, template.Variables)
-
+    
     local variables = {}
 
     for k, v in pairs(template.Variables) do
         if type(v) == "table" then
             for i, j in ipairs(v) do
-                template.Variables[k][i] = GSE.TranslateString(j, "STRING", nil, true)
+                template.Variables[k][i] = GSE.TranslateString(j, Statics.TranslatorMode.String, nil, true)
             end
             variables[k] = table.concat(template.Variables[k], "\n")
         end

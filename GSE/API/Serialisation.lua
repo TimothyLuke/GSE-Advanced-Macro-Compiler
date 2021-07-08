@@ -246,7 +246,10 @@ function GSE.TransmitSequence(key, channel, target)
     GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
 end
 
-function GSE.sendMessage(tab, channel, target)
+function GSE.sendMessage(tab, channel, target, priority)
+    if GSE.isEmpty(priority) then
+        priority = "NORMAL"
+    end
     local _, instanceType = IsInInstance()
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
     if tab.Command == "GS-E_TRANSMITSEQUENCE" then
@@ -265,7 +268,7 @@ function GSE.sendMessage(tab, channel, target)
                           "INSTANCE_CHAT" or "PARTY"
         end
     end
-    GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
+    GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target, priority)
 
 end
 
@@ -298,9 +301,16 @@ function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
     t.Command = "GSE_SEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
-    t.LastUpdated = GSE.Library[ClassID][SequenceName].LastUpdated
-    t.Help = GSE.Library[ClassID][SequenceName].Help
+    t.LastUpdated = GSE.Library[ClassID][SequenceName].MetaData.LastUpdated
+    t.Help = GSE.Library[ClassID][SequenceName].MetaData.Help
     GSE.sendMessage(t, "WHISPER", gseuser)
+end
+
+function GSE.SendSpellCache(channel)
+    local t = {}
+    t.Command = "GSE_SPELLCACHE"
+    t.cache = GSESpellCache
+    GSE.sendMessage(t, channel, nil, "BULK")
 end
 
 function GSE.RequestSequence(ClassID, SequenceName, gseuser)
@@ -410,7 +420,16 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
             else
                 GSE.PrintDebugMessage("Ignoring SequenceMeta data from me.", Statics.SourceTransmission)
             end
-
+        elseif t.command == "GSE_SPELLCACHE" then
+            if sender ~= GetUnitName("player", true) then
+                for locale, spells in pairs(t.cache) do
+                    for k,v in ipairs(spells) do
+                        if GSE.isEmpty(GSESpellCache[locale][k]) then
+                            GSESpellCache[locale][k] = v
+                        end
+                    end
+                end
+            end
         end
     end
 end
