@@ -1936,7 +1936,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
     end
-    
+
     local lastPath = path[#path]
     local parentPath = GSE.CloneSequence(path)
     local blocksThisLevel
@@ -2087,8 +2087,6 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     [1] = "/say Hello",
                     ["Type"] = Statics.Actions.Action
                 }
-                print  (path[#path], GSE.Dump(path))
-                
                 if #path > 1 then
                     table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                 else
@@ -2513,7 +2511,7 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-        
+
         local macroPanel = AceGUI:Create("SimpleGroup")
         if addonSkinsEnabled == true then
             macroPanel.frame:SetBackdrop(nil)
@@ -2712,6 +2710,14 @@ local function drawAction(container, action, version, keyPath)
         linegroup2:AddChild(spacerlabel3)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
+        macroPanel.frame:SetBackdrop({            
+            edgeFile = [[Interface/Buttons/WHITE8X8]], 
+            edgeSize = 1, 
+        })
+        macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        macroPanel:SetCallback("OnRelease", function(self, obj, value)
+            macroPanel.frame:SetBackdrop(nil)
+        end)
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.If then
         local macroPanel = AceGUI:Create("SimpleGroup")
@@ -2720,7 +2726,14 @@ local function drawAction(container, action, version, keyPath)
         end
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
-
+        macroPanel.frame:SetBackdrop({            
+            edgeFile = [[Interface/Buttons/WHITE8X8]], 
+            edgeSize = 1, 
+        })
+        macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        macroPanel:SetCallback("OnRelease", function(self, obj, value)
+            macroPanel.frame:SetBackdrop(nil)
+        end)
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
 
         local booleanDropdown = AceGUI:Create("Dropdown")
@@ -2777,15 +2790,6 @@ local function drawAction(container, action, version, keyPath)
             trueContainer.frame:SetBackdrop(nil)
         end
 
-        -- local tborder=trueContainer.frame:CreateTexture(nil, "BACKGROUND")
-        -- tborder:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
-        -- tborder:SetPoint("TOPLEFT",-1,1)
-        -- tborder:SetPoint("BOTTOMRIGHT",1,-1)
-        -- tborder:SetVertexColor(1.0, 0.96, 0.41, 0) -- half-alpha light grey
-        -- trueContainer:SetCallback("OnRelease", function(self, obj, value)
-        --     tborder=trueContainer.frame:CreateTexture(nil, "BACKGROUND")
-        -- end)
-
         local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true, true)
         trueGroup:AddChild(toolbar)
 
@@ -2803,7 +2807,14 @@ local function drawAction(container, action, version, keyPath)
 
         trueContainer:AddChild(trueGroup)
         macroPanel:AddChild(trueContainer)
-
+        trueGroup.frame:SetBackdrop({            
+            edgeFile = [[Interface/Buttons/WHITE8X8]], 
+            edgeSize = 1, 
+        })
+        trueGroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        trueGroup:SetCallback("OnRelease", function(self, obj, value)
+            trueGroup.frame:SetBackdrop(nil)
+        end)
         -- macroPanel:AddChild(falseGroup)
         local falseKeyPath = GSE.CloneSequence(keyPath)
         table.insert(falseKeyPath, 2)
@@ -2828,6 +2839,15 @@ local function drawAction(container, action, version, keyPath)
 
         local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true, true)
         falsegroup:AddChild(toolbar2)
+
+        falsegroup.frame:SetBackdrop({            
+            edgeFile = [[Interface/Buttons/WHITE8X8]], 
+            edgeSize = 1, 
+        })
+        falsegroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        falsegroup:SetCallback("OnRelease", function(self, obj, value)
+            falsegroup.frame:SetBackdrop(nil)
+        end)
 
         for key,act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)
