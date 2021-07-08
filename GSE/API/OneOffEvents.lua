@@ -46,6 +46,8 @@ end
 function GSE.Update3023()
     if GSE.isEmpty(GSEOptions.Update3023) then
         GSEOptions.UnfoundSpells = nil
+        GSEOptions.UnfoundSpellIDS = nil
+        GSEOptions.ActiveSequenceVersions = nil
         if GSE.isEmpty(GSESpellCache) then
             GSESpellCache = {}
         end

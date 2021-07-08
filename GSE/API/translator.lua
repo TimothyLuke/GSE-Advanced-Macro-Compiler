@@ -313,28 +313,6 @@ function GSE.GetConditionalsFromString(str)
     return found, mods, str
 end
 
---- This option reports on language table errors and omissions.  It is accessible
--- via the command line /gs compilemissingspells and saves this informationm into
--- GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID
--- This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
-function GSE.ReportUnfoundSpells()
-    GSEOptions.UnfoundSpells = {}
-    for _, macroset in ipairs(GSE.Library) do
-        for name, version in pairs(macroset) do
-            for _, sequence in ipairs(version) do
-                GSE.TranslateSequenceFromTo(sequence, "enUS", "enUS", name)
-            end
-        end
-    end
-    GSEOptions.UnfoundSpellIDs = {}
-
-    for _, spell in pairs(GSEOptions.UnfoundSpells) do
-        GSEOptions.UnfoundSpellIDs[spell] = GetSpellInfo(spell)
-    end
-
-end
-
-
 local function ClassicGetSpellInfo(spellID)
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
     -- only check rank if classic.
