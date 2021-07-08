@@ -2474,7 +2474,7 @@ local function drawAction(container, action, version, keyPath)
         )
 
         msvalueeditbox:SetCallback(
-            "OnRelease",function(self, event, text) 
+            "OnRelease",function(self, event, text)
                 msvalueeditbox.editbox:SetNumeric(false)
             end)
         clicksdropdown:SetCallback(
