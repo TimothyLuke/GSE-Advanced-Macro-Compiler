@@ -2437,15 +2437,15 @@ local function drawAction(container, action, version, keyPath)
         spacerlabel1:SetWidth(5)
         linegroup1:AddChild(spacerlabel1)
 
-        local valueEditBox = AceGUI:Create("EditBox")
-        valueEditBox:SetLabel()
+        local msvalueeditbox = AceGUI:Create("EditBox")
+        msvalueeditbox:SetLabel()
 
-        valueEditBox:SetWidth(100)
-        valueEditBox.editbox:SetNumeric(true)
-        valueEditBox:DisableButton(true)
+        msvalueeditbox:SetWidth(100)
+        msvalueeditbox.editbox:SetNumeric(true)
+        msvalueeditbox:DisableButton(true)
         local value = GSE.isEmpty(action.MS) and action.Clicks or action.MS
-        valueEditBox:SetText(value)
-        valueEditBox:SetCallback(
+        msvalueeditbox:SetText(value)
+        msvalueeditbox:SetCallback(
             "OnTextChanged",
             function(self, event, text)
                 --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
@@ -2473,6 +2473,10 @@ local function drawAction(container, action, version, keyPath)
             end
         )
 
+        msvalueeditbox:SetCallback(
+            "OnRelease",function(self, event, text) 
+                msvalueeditbox.editbox:SetNumeric(false)
+            end)
         clicksdropdown:SetCallback(
             "OnValueChanged",
             function()
@@ -2480,28 +2484,28 @@ local function drawAction(container, action, version, keyPath)
                 local returnAction = {}
                 returnAction["Type"] = action.Type
                 if clicksdropdown:GetValue() == L["Clicks"] then
-                    returnAction["Clicks"] = tonumber(valueEditBox:GetText())
+                    returnAction["Clicks"] = tonumber(msvalueeditbox:GetText())
                 elseif clicksdropdown:GetValue() == "GCD" then
                     returnAction["MS"] = "GCD"
-                    valueEditBox:SetText(0)
+                    msvalueeditbox:SetText(0)
                 else
-                    returnAction["MS"] = tonumber(valueEditBox:GetText())
+                    returnAction["MS"] = tonumber(msvalueeditbox:GetText())
                 end
                 if clicksdropdown:GetValue() == "GCD" then
-                    valueEditBox:SetDisabled(true)
+                    msvalueeditbox:SetDisabled(true)
                 else
-                    valueEditBox:SetDisabled(false)
+                    msvalueeditbox:SetDisabled(false)
                 end
 
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
             end
         )
         if clicksdropdown:GetValue() == "GCD" then
-            valueEditBox:SetDisabled(true)
+            msvalueeditbox:SetDisabled(true)
         else
-            valueEditBox:SetDisabled(false)
+            msvalueeditbox:SetDisabled(false)
         end
-        linegroup1:AddChild(valueEditBox)
+        linegroup1:AddChild(msvalueeditbox)
 
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
