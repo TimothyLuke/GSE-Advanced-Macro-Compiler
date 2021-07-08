@@ -2090,7 +2090,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 if #path > 1 then
                     table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                 else
-                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                    table.insert(editframe.Sequence.Macros[version].Actions, newAction)
                 end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
@@ -2131,7 +2131,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 if #path > 1 then
                     table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                 else
-                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                    table.insert(editframe.Sequence.Macros[version].Actions, newAction)
                 end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
@@ -2165,7 +2165,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 if #path > 1 then
                     table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                 else
-                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                    table.insert(editframe.Sequence.Macros[version].Actions, newAction)
                 end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
@@ -2198,7 +2198,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                 if #path > 1 then
                     table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                 else
-                    table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                    table.insert(editframe.Sequence.Macros[version].Actions, newAction)
                 end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
@@ -2243,7 +2243,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     if #path > 1 then
                         table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions[path], 1, newAction)
+                        table.insert(editframe.Sequence.Macros[version].Actions, newAction)
                     end
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
