@@ -281,8 +281,16 @@ function GSE:GROUP_ROSTER_UPDATE(...)
             -- Take them out of the list
             GSE.UnsavedOptions["PartyUsers"][k] = nil
         end
-        GSE.SendSpellCache(nil)
     end
+        local channel
+        if IsInRaid() then
+            channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and
+                          "INSTANCE_CHAT" or "RAID"
+        else
+            channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and
+                          "INSTANCE_CHAT" or "PARTY"
+        end
+        GSE.SendSpellCache(channel)
     -- Group Team stuff
     GSE:ZONE_CHANGED_NEW_AREA()
 end

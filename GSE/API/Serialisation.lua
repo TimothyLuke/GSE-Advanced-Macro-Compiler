@@ -247,9 +247,6 @@ function GSE.TransmitSequence(key, channel, target)
 end
 
 function GSE.sendMessage(tab, channel, target, priority)
-    if GSE.isEmpty(priority) then
-        priority = "NORMAL"
-    end
     local _, instanceType = IsInInstance()
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
     if tab.Command == "GS-E_TRANSMITSEQUENCE" then
@@ -268,7 +265,7 @@ function GSE.sendMessage(tab, channel, target, priority)
                           "INSTANCE_CHAT" or "PARTY"
         end
     end
-    GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target, priority)
+    GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
 
 end
 
@@ -307,10 +304,11 @@ function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
 end
 
 function GSE.SendSpellCache(channel)
+    print("sending to", channel)
     local t = {}
     t.Command = "GSE_SPELLCACHE"
     t.cache = GSESpellCache
-    GSE.sendMessage(t, channel, nil, "BULK")
+    GSE.sendMessage(t, channel)
 end
 
 function GSE.RequestSequence(ClassID, SequenceName, gseuser)
@@ -367,7 +365,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
     GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
     GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, Statics.SourceTransmission)
     local success, t = GSE.DecodeMessage(message)
-    if success then
+     if success then
         if t.Command == "GS-E_VERSIONCHK" then
             if not GSE.old then
                 GSE.performVersionCheck(t.Version)
@@ -420,11 +418,17 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
             else
                 GSE.PrintDebugMessage("Ignoring SequenceMeta data from me.", Statics.SourceTransmission)
             end
-        elseif t.command == "GSE_SPELLCACHE" then
-            if sender ~= GetUnitName("player", true) then
+        elseif t.Command == "GSE_SPELLCACHE" then
+           if sender ~= GetUnitName("player", true) then
                 for locale, spells in pairs(t.cache) do
-                    for k,v in ipairs(spells) do
+                    GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
+                    for k,v in pairs(spells) do
+                        GSE.PrintDebugMessage("processing spell" .. k, Statics.SourceTransmission)
+                        if GSE.isEmpty(GSESpellCache[locale]) then
+                            GSESpellCache[locale] = {}
+                        end
                         if GSE.isEmpty(GSESpellCache[locale][k]) then
+                            GSE.PrintDebugMessage("Added spell" .. k .. " " .. v, Statics.SourceTransmission)
                             GSESpellCache[locale][k] = v
                         end
                     end
