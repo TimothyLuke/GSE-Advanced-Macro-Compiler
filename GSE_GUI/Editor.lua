@@ -1134,12 +1134,11 @@ function GSE:GUIDrawMacroEditor(container, version)
     scrollcontainer:SetHeight(editframe.Height - 255)
     scrollcontainer:SetLayout("Fill") -- Important!
     editframe.scrollStatus = {}
-    
 
     local contentcontainer = AceGUI:Create("ScrollFrame")
     contentcontainer:SetAutoAdjustHeight(true)
     contentcontainer:SetStatusTable(editframe.scrollStatus)
-    editframe.scrollContainer = contentcontainer 
+    editframe.scrollContainer = contentcontainer
 
     scrollcontainer:AddChild(contentcontainer)
 
@@ -2077,7 +2076,6 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     [1] = "/say Hello",
                     ["Type"] = Statics.Actions.Action
                 }
-                local scrollpos = container.height
                 table.insert(editframe.Sequence.Macros[version].Actions[path], newAction)
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
@@ -2489,10 +2487,20 @@ local function drawAction(container, action, version, keyPath)
         end
         linegroup1:AddChild(valueEditBox)
 
-        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container))
+        container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container)
+        
+        local macroPanel = AceGUI:Create("SimpleGroup")
+        if addonSkinsEnabled == true then
+            macroPanel.frame:SetBackdrop(nil)
+        end
+
+        macroPanel:SetLayout("List")
+        macroPanel:SetFullWidth(true)
+
+
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
         if action.Type == Statics.Actions.Repeat then
             local looplimit = AceGUI:Create("EditBox")
@@ -2533,7 +2541,7 @@ local function drawAction(container, action, version, keyPath)
 
             linegroup1:AddChild(looplimit)
         end
-        container:AddChild(linegroup1)
+        macroPanel:AddChild(linegroup1)
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel()
         valueEditBox:SetNumLines(3)
@@ -2558,7 +2566,8 @@ local function drawAction(container, action, version, keyPath)
         -- valueEditBox:SetCallback('OnLeave', function()
         --     GSE.ClearTooltip(editframe)
         -- end)
-        container:AddChild(valueEditBox)
+        macroPanel:AddChild(valueEditBox)
+        container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.Loop then
         local macroPanel = AceGUI:Create("SimpleGroup")
         if addonSkinsEnabled == true then
@@ -2567,7 +2576,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, container)
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
         local stepdropdown = AceGUI:Create("Dropdown")
         stepdropdown:SetLabel(L["Step Function"])
@@ -2689,7 +2698,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
-        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, container)
+        local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
 
         local booleanDropdown = AceGUI:Create("Dropdown")
         booleanDropdown:SetLabel(L["Boolean Functions"])
