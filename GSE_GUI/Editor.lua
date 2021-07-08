@@ -1781,18 +1781,23 @@ end
 
 local function addKeyPairRow(container, rowWidth, key, value, version)
     -- print("KEY/VAL", key, value)
+    local blank = false
+    local oldkey = key
     if GSE.isEmpty(key) then
         key = "MyNewVar" .. math.random(100)
+        blank = true
     end
     if GSE.isEmpty(value) then
         value = "My new variable"
+        blank = true
     end
-    -- if type(GSE.isEmpty(value)) ~= "string" then
-    --   value = ""
-    -- end
-    -- if type(GSE.isEmpty(key)) ~= "string" then
-    --   key = ""
-    -- end
+    if blank == true then
+        editframe.Sequence.Macros[version].Variables[key] = value
+        if oldkey ~= key then
+            editframe.Sequence.Macros[version].Variables[oldkey] = nil
+        end
+    end
+
 
     local linegroup1 = AceGUI:Create("SimpleGroup")
     if addonSkinsEnabled == true then
