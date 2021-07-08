@@ -52,11 +52,9 @@ function GSE.Update3023()
         if GSE.isEmpty(GSESpellCache["enUS"]) then
             GSESpellCache["enUS"] = {}
         end
-        
         if GSE.isEmpty(GSESpellCache[GetLocale()]) then
             GSESpellCache[GetLocale()] = {}
         end
-        
     end
     GSEOptions.Update3023 = true
 end

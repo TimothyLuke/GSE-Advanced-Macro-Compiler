@@ -1506,7 +1506,7 @@ function GSE.CompileTemplate(macro)
         table.insert(actions, GSE.TranslateSequence(action, Statics.TranslatorMode.String, true))
     end
     local compiledMacro = GSE.processAction(actions, template.InbuiltVariables, template.Variables)
-    
+
     local variables = {}
 
     for k, v in pairs(template.Variables) do
