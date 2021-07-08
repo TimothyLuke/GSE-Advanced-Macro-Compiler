@@ -390,7 +390,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             ["enUS"] = {}
         }
     end
-    
+
     if GSE.isEmpty(GSESpellCache[GetLocale()]) then
         GSESpellCache[GetLocale()] = {}
     end
@@ -420,7 +420,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     end
     if not GSE.isEmpty(returnval) then
         if mode == Statics.TranslatorMode.ID and tonumber(spellstring) == nil then
-            if GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or GSESpellCache[GetLocale()][spellstring] ~= returnVal then
+            if GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or GSESpellCache[GetLocale()][spellstring] ~= returnval then
                 GSESpellCache[GetLocale()][spellstring] = returnval
             end
         end
