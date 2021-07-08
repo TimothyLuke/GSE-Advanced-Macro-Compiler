@@ -304,7 +304,6 @@ function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
 end
 
 function GSE.SendSpellCache(channel)
-    print("sending to", channel)
     local t = {}
     t.Command = "GSE_SPELLCACHE"
     t.cache = GSESpellCache
