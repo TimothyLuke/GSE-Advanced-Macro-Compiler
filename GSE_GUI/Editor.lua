@@ -1931,7 +1931,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     return keyEditBox
 end
 
-local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove, isCollection)
+local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove, disableDelete)
     local layoutcontainer = AceGUI:Create("SimpleGroup")
     if addonSkinsEnabled == true then
         layoutcontainer.frame:SetBackdrop(nil)
@@ -2360,8 +2360,9 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     local spacerlabel4 = AceGUI:Create("Label")
     spacerlabel4:SetWidth(15)
     layoutcontainer:AddChild(spacerlabel4)
-
-    layoutcontainer:AddChild(deleteBlockButton)
+    if not disableDelete then
+        layoutcontainer:AddChild(deleteBlockButton)
+    end
 
     return layoutcontainer
 end
@@ -2785,7 +2786,7 @@ local function drawAction(container, action, version, keyPath)
         --     tborder=trueContainer.frame:CreateTexture(nil, "BACKGROUND")
         -- end)
 
-        local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true)
+        local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true, true)
         trueGroup:AddChild(toolbar)
 
         for key,act in ipairs(action[1]) do
@@ -2825,7 +2826,7 @@ local function drawAction(container, action, version, keyPath)
         falsecontainer:SetWidth(maxWidth)
         falsecontainer:SetLayout("Flow")
 
-        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true)
+        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true, true)
         falsegroup:AddChild(toolbar2)
 
         for key,act in ipairs(action[2]) do
