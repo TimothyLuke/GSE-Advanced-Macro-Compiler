@@ -2710,9 +2710,9 @@ local function drawAction(container, action, version, keyPath)
         linegroup2:AddChild(spacerlabel3)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
-        macroPanel.frame:SetBackdrop({            
-            edgeFile = [[Interface/Buttons/WHITE8X8]], 
-            edgeSize = 1, 
+        macroPanel.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
         })
         macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
         macroPanel:SetCallback("OnRelease", function(self, obj, value)
@@ -2726,9 +2726,9 @@ local function drawAction(container, action, version, keyPath)
         end
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
-        macroPanel.frame:SetBackdrop({            
-            edgeFile = [[Interface/Buttons/WHITE8X8]], 
-            edgeSize = 1, 
+        macroPanel.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
         })
         macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
         macroPanel:SetCallback("OnRelease", function(self, obj, value)
@@ -2807,9 +2807,9 @@ local function drawAction(container, action, version, keyPath)
 
         trueContainer:AddChild(trueGroup)
         macroPanel:AddChild(trueContainer)
-        trueGroup.frame:SetBackdrop({            
-            edgeFile = [[Interface/Buttons/WHITE8X8]], 
-            edgeSize = 1, 
+        trueGroup.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
         })
         trueGroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
         trueGroup:SetCallback("OnRelease", function(self, obj, value)
@@ -2840,9 +2840,9 @@ local function drawAction(container, action, version, keyPath)
         local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true, true)
         falsegroup:AddChild(toolbar2)
 
-        falsegroup.frame:SetBackdrop({            
-            edgeFile = [[Interface/Buttons/WHITE8X8]], 
-            edgeSize = 1, 
+        falsegroup.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
         })
         falsegroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
         falsegroup:SetCallback("OnRelease", function(self, obj, value)
