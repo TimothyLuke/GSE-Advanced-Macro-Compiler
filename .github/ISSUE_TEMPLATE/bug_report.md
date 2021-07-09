@@ -37,6 +37,7 @@ Please provide your `GSE.lua` file or the export string for the specific macro t
 - _Copy the `GSE.lua` file to your Desktop_
 - _Rename this copy to `GSA.lua.txt`_
 - _Then just drag it here in your message_
+**Note: If you do not include your GSE.lua file you are wasting your time and mine.  The first thing I will ask for is "Can you please upload your GSE.lua file?"**
 
 🔵 **Desktop (please complete the following information):**
  - OS: [e.g. Windows 10 64bit]
