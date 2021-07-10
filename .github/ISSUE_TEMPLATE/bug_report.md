@@ -32,11 +32,12 @@ A clear and concise description of what you expected to happen.
 Please provide your `GSE.lua` file or the export string for the specific macro that is causing an issue. 
 - To find the GSE.lua file: 
 1. First, make sure you have enabled the "File Name Extensions" checkbox in Explorer (View tab)
-2. Browse to `C:\path\to\wow\_retail_\WTF\Account\YourAccountName\SavedVariables\` or `/path/to/WoW_retail_/WTF/Account/YourAccountName/SavedVariables`
+2. Browse to `C:\path\to\wow\_retail_\WTF\Account\YourAccountName\SavedVariables\` or `/path/to/WoW/_retail_/WTF/Account/YourAccountName/SavedVariables`
 3. Copy the `GSE.lua` file to your Desktop
 4. Rename this copy to `GSA.lua.txt`
 5. Then just drag it here in your message
-- **Note: If you do not include your GSE.lua file you are wasting your time and mine. The first thing I will ask for is "Can you please upload your GSE.lua file?"**
+- **Note: If you do not include your GSE.lua file you are wasting your time and mine. 90% of the time, the first thing I will ask for is "Can you please upload your GSE.lua file?".  This file is needed with the error to work out _Why_ that error occured for you.**
+
 
 🔵 **Desktop (please complete the following information):**
  - OS: [e.g. Windows 10 64bit]

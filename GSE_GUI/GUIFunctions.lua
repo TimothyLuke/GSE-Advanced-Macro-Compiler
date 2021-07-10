@@ -47,7 +47,8 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
         ["Talents"] = GSE.GetCurrentTalents(),
         ["Default"] = 1,
         ["SpecID"] = GSE.GetCurrentSpecID(),
-        ["GSEVersion"] = GSE.VersionString
+        ["GSEVersion"] = GSE.VersionString,
+        ["Name"] = sequenceName
       },
       ["Macros"] = {
         [1] = {
@@ -134,6 +135,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
     if GSE.isEmpty(classid) then
       classid = GSE.GetCurrentClassID()
     end
+    sequence.MetaData.Name = SequenceName
     if not GSE.isEmpty(SequenceName) then
       local vals = {}
       vals.action = "Replace"
