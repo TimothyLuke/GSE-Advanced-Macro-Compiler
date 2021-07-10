@@ -1092,9 +1092,11 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
     editframe.booleanFunctions = {}
     for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
-        if k ~= "" and not GSE.isEmpty(v) then
-            if type(v) == string then
-                v = { [1]={ v } }
+        if k ~= "" then
+            if type(v) == "string" and not  GSE.isEmpty(v) then
+                v = { v }
+                -- save the fixed variable
+                editframe.Sequence.Macros[version].Variables[k] = v
             end
             local value = table.concat(v, " ")
             if type(value) == "string" then

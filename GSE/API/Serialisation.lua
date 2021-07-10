@@ -419,6 +419,11 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
             end
         elseif t.Command == "GSE_SPELLCACHE" then
            if sender ~= GetUnitName("player", true) then
+                if GSE.isEmpty(GSESpellCache) then
+                    GSESpellCache = {
+                        ['enUS'] = {}
+                    }
+                end
                 for locale, spells in pairs(t.cache) do
                     GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
                     for k,v in pairs(spells) do
