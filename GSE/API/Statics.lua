@@ -148,7 +148,7 @@ Statics.SpecIDClassList = {
 
 local function determineSpecializationName(specID)
     if GSE.GameMode < 4 then
-        return GetClassInfo(Statics.SpecIDClassList[specID])
+        return Statics.SpecIDClassList[specID]
     else
         local _, specname = GetSpecializationInfoByID(specID)
         return specname
@@ -156,7 +156,26 @@ local function determineSpecializationName(specID)
 end
 
 local function determineClassName(specID)
-    local specname = GetClassInfo(specID)
+    local specname
+    if GSE.GameMode == 1 then
+        local ClassTable = {
+            "Warrior",
+            "Paladin",
+            "Hunter",
+            "Rogue",
+            "Priest",
+            "Death Knight",
+            "Shaman",
+            "Mage",
+            "Warlock",
+            "Monk",
+            "Druid",
+            "Demon hunter"
+        }
+        return ClassTable[specID]
+    else
+        specname = GetClassInfo(specID)
+    end
     return specname
 end
 
