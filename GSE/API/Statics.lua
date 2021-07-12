@@ -181,7 +181,6 @@ if GSE.GameMode < 4 then
         [9] = 9,
         --[10] = 10,
         [11] = 11,
-        
     }
     Statics.SpecIDList = {
         [0] = L["Global"],

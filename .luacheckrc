@@ -384,5 +384,6 @@ globals = {
     "AUTOCOMPLETE_LIST",
     "AttemptToSaveBindings",
 	"GetSpellSubtext",
-	"STATICPOPUPS_NUMDIALOGS"
+	"STATICPOPUPS_NUMDIALOGS",
+	"C_CreatureInfo"
 }
