@@ -340,3 +340,29 @@ function GSE.pairsByKeys(t, f)
     end
     return iter
 end
+
+function GSE.TableDiff(t1, t2) 
+    local diff = {}
+    local bool = false
+    for i, v in pairs (t1) do
+        if t2 and type (v) == "table" then
+            local deep_diff = get_diff (t1[i], t2[i]) 
+            if deep_diff then
+                diff[i] = deep_diff
+                bool = true
+            end
+        elseif t2 then
+            if not (t1[i] == t2[i]) then
+                diff[i] = t1[i] .. ' -- not [' .. t2[i] .. ']'
+                bool = true
+            end
+        else 
+            diff[i] = t1[i]
+            bool = true
+        end
+    end
+    
+    if bool then
+        return diff
+    end
+end
