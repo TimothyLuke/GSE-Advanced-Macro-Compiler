@@ -402,6 +402,8 @@ Statics.BaseSpellTable[302731] = 296208 -- Ripple in Space 1
 Statics.BaseSpellTable[302982] = 296208 -- Ripple in Space 2
 Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
+Statics.BaseSpellTable[201427] = 162794 -- Annihilation -> Chaos Strike
+
 Statics.Patrons = {
     "Airwave",
     "Blackwell",
