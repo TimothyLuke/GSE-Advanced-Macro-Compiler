@@ -313,7 +313,7 @@ function GSE.GetConditionalsFromString(str)
     return found, mods, str
 end
 
-local function ClassicGetSpellInfo(spellID)
+local function ClassicGetSpellInfo(spellID, absolute)
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
     -- only check rank if classic.
     if GSE.GameMode < 3 then
@@ -344,6 +344,19 @@ local function ClassicGetSpellInfo(spellID)
             end
         end
         -- print("Did rank check found: " .. (rank or "No Rank"))
+    else
+        -- Do override check.
+            if not absolute and not GSE.isEmpty(sid) then
+                local returnval = sid
+                if FindBaseSpellByID(returnval) then
+                    returnval = FindBaseSpellByID(returnval)
+                end
+                -- Still need Heart of Azeroth overrides.
+                if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+                    returnval = Statics.BaseSpellTable[returnval]
+                end
+                name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(returnval);
+            end
     end
     -- allows for a trinket to be part of a castsequence.
     if tostring(spellID) == "13" or tostring(spellID) == "14" then
@@ -373,7 +386,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         GSESpellCache[GetLocale()] = {}
     end
     local returnval
-    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring)
+    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring, absolute)
     if mode == "STRING" then
         if not GSE.isEmpty(rank) then
             returnval = name .. "(" .. rank .. ")"
