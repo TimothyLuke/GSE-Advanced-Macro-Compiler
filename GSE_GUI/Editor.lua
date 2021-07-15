@@ -1094,12 +1094,10 @@ function GSE:GUIDrawMacroEditor(container, version)
     for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
         if k ~= "" then
             if type(v) == "string" then
-                print("updated", k, v)
                 v = { v }
                 -- save the fixed variable
                 editframe.Sequence.Macros[version].Variables[k] = v
             end
-            print(type(v), v)
             local value = table.concat(v, " ")
             if type(value) == "string" then
                 local functline = value
