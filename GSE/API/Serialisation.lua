@@ -424,16 +424,18 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
                         ['enUS'] = {}
                     }
                 end
-                for locale, spells in pairs(t.cache) do
-                    GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
-                    for k,v in pairs(spells) do
-                        GSE.PrintDebugMessage("processing spell" .. k, Statics.SourceTransmission)
-                        if GSE.isEmpty(GSESpellCache[locale]) then
-                            GSESpellCache[locale] = {}
-                        end
-                        if GSE.isEmpty(GSESpellCache[locale][k]) then
-                            GSE.PrintDebugMessage("Added spell" .. k .. " " .. v, Statics.SourceTransmission)
-                            GSESpellCache[locale][k] = v
+                if not GSE.isEmpty(t.cache) and table.getn(t.cache) > 0 then
+                    for locale, spells in pairs(t.cache) do
+                        GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
+                        for k,v in pairs(spells) do
+                            GSE.PrintDebugMessage("processing spell" .. k, Statics.SourceTransmission)
+                            if GSE.isEmpty(GSESpellCache[locale]) then
+                                GSESpellCache[locale] = {}
+                            end
+                            if GSE.isEmpty(GSESpellCache[locale][k]) then
+                                GSE.PrintDebugMessage("Added spell" .. k .. " " .. v, Statics.SourceTransmission)
+                                GSESpellCache[locale][k] = v
+                            end
                         end
                     end
                 end
