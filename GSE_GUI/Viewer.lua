@@ -112,10 +112,6 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   local columngroup = AceGUI:Create("KeyGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
-  if addonSkinsEnabled == true then
-    columngroup.frame:SetBackdrop(nil)
-  end
-
 
   local column1 = AceGUI:Create("KeyGroup")
   column1:SetWidth(viewframe.Width - 140)

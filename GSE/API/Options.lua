@@ -239,14 +239,6 @@ function GSE.GetOptionsTable()
             get = function(info) return GSEOptions.requireTarget end,
             order = 510
           },
-          PreventBackdrop={
-            name = L["Fix SetBackdrop Nil"],
-            desc = L["On some clients the Editor will throw an error relating to setBackdrop. Turning this on will prevent those errors."],
-            type = "toggle",
-            set = function(info,val) GSEOptions.DisableElvFix = val GSE.PerformReloadSequences() end,
-            get = function(info) return GSEOptions.DisableElvFix end,
-            order = 530
-          },
           hideUIErrors={
             name = L["Prevent UI Errors"],
             desc = L["This option hides text error popups and dialogs and stack traces ingame.  This is the equivalent of /script UIErrorsFrame:Hide() in a KeyRelease.  Turning this on will trigger a Scam warning about running custom scripts."],

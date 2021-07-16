@@ -42,8 +42,7 @@ local methods = {
 	end,
 
 	["SetKey"] = function(self, value)
-		local key = self.key
-		key = value
+		self.key = value
 	end,
 
 	["GetKey"] = function(self)
