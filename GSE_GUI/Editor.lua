@@ -17,37 +17,6 @@ local mythic = 1
 
 local scenario = 1
 
-local addonSkinsEnabled = false
-
-if not GSE.isEmpty(ElvUI) then
-    local ElvPrivateDB = ElvPrivateDB
-    if ElvPrivateDB then
-        local myname = UnitName("player")
-        local profileKey
-        if ElvPrivateDB.profileKeys then
-            profileKey = ElvPrivateDB.profileKeys[myname .. " - " .. GetRealmName()]
-        end
-
-        if
-            profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and
-                ElvPrivateDB.profiles[profileKey].skins
-         then
-            if
-                ElvPrivateDB.profiles[profileKey].skins.ace3Enable and
-                    ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true
-             then
-                addonSkinsEnabled = true
-            elseif GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) then
-                addonSkinsEnabled = true
-            end
-        end
-    end
-end
-
-if GSEOptions.DisableElvFix == true then
-    addonSkinsEnabled = false
-end
-
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 GSE.GUIEditFrame = editframe
@@ -187,7 +156,7 @@ end
 function GSE.GUIEditorPerformLayout(frame)
     frame:ReleaseChildren()
 
-    local headerGroup = AceGUI:Create("SimpleGroup")
+    local headerGroup = AceGUI:Create("KeyGroup")
     headerGroup:SetFullWidth(true)
     headerGroup:SetLayout("Flow")
 
@@ -335,10 +304,8 @@ function GSE.GUIEditorPerformLayout(frame)
         end
     )
 
-    local editButtonGroup = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled == true then
-        editButtonGroup.frame:SetBackdrop(nil)
-    end
+    local editButtonGroup = AceGUI:Create("KeyGroup")
+
     editButtonGroup:SetWidth(602)
     editButtonGroup:SetLayout("Flow")
     editButtonGroup:SetHeight(15)
@@ -429,10 +396,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
     editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    if addonSkinsEnabled == true then
-        scrollcontainer.frame:SetBackdrop(nil)
-    end
+    local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetHeight(editframe.Height - 255)
     scrollcontainer:SetLayout("Fill") -- Important!
@@ -440,12 +404,9 @@ function GSE:GUIDrawMetadataEditor(container)
     local contentcontainer = AceGUI:Create("ScrollFrame")
     scrollcontainer:AddChild(contentcontainer)
 
-    local metasimplegroup = AceGUI:Create("SimpleGroup")
-    metasimplegroup:SetLayout("Flow")
-    metasimplegroup:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        metasimplegroup.frame:SetBackdrop(nil)
-    end
+    local metaKeyGroup = AceGUI:Create("KeyGroup")
+    metaKeyGroup:SetLayout("Flow")
+    metaKeyGroup:SetWidth(editframe.Width - 100)
 
     local speciddropdown = AceGUI:Create("Dropdown")
     speciddropdown:SetLabel(L["Specialisation / Class ID"])
@@ -480,19 +441,19 @@ function GSE:GUIDrawMetadataEditor(container)
             GSE.ClearTooltip(editframe)
         end
     )
-    metasimplegroup:AddChild(speciddropdown)
+    metaKeyGroup:AddChild(speciddropdown)
     speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.MetaData.SpecID])
 
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(80)
-    metasimplegroup:AddChild(spacerlabel1)
+    metaKeyGroup:AddChild(spacerlabel1)
 
     local talentseditbox = AceGUI:Create("EditBox")
     talentseditbox:SetLabel(L["Talents"])
     talentseditbox:SetWidth(200)
     talentseditbox:DisableButton(true)
-    metasimplegroup:AddChild(talentseditbox)
-    contentcontainer:AddChild(metasimplegroup)
+    metaKeyGroup:AddChild(talentseditbox)
+    contentcontainer:AddChild(metaKeyGroup)
     talentseditbox:SetText(editframe.Sequence.MetaData.Talents)
     talentseditbox:SetCallback(
         "OnTextChanged",
@@ -555,13 +516,10 @@ function GSE:GUIDrawMetadataEditor(container)
     )
     contentcontainer:AddChild(helpeditbox)
 
-    local helpgroup1 = AceGUI:Create("SimpleGroup")
+    local helpgroup1 = AceGUI:Create("KeyGroup")
     helpgroup1:SetLayout("Flow")
     helpgroup1:SetWidth(editframe.Width - 100)
 
-    if addonSkinsEnabled == true then
-        helpgroup1.frame:SetBackdrop(nil)
-    end
     local helplinkeditbox = AceGUI:Create("EditBox")
     helplinkeditbox:SetLabel(L["Help Link"])
     helplinkeditbox:SetWidth(250)
@@ -627,12 +585,9 @@ function GSE:GUIDrawMetadataEditor(container)
 
     contentcontainer:AddChild(helpgroup1)
 
-    local defgroup1 = AceGUI:Create("SimpleGroup")
+    local defgroup1 = AceGUI:Create("KeyGroup")
     defgroup1:SetLayout("Flow")
     defgroup1:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        defgroup1.frame:SetBackdrop(nil)
-    end
 
     local defaultdropdown = AceGUI:Create("Dropdown")
     defaultdropdown:SetLabel(L["Default Version"])
@@ -697,12 +652,9 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
 
-    local defgroup2 = AceGUI:Create("SimpleGroup")
+    local defgroup2 = AceGUI:Create("KeyGroup")
     defgroup2:SetLayout("Flow")
     defgroup2:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        defgroup2.frame:SetBackdrop(nil)
-    end
 
     local arenadropdown = AceGUI:Create("Dropdown")
     arenadropdown:SetLabel(L["Arena"])
@@ -799,12 +751,9 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
 
-    local defgroup3 = AceGUI:Create("SimpleGroup")
+    local defgroup3 = AceGUI:Create("KeyGroup")
     defgroup3:SetLayout("Flow")
     defgroup3:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        defgroup3.frame:SetBackdrop(nil)
-    end
 
     local dungeondropdown = AceGUI:Create("Dropdown")
     dungeondropdown:SetLabel(L["Dungeon"])
@@ -866,12 +815,9 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
 
-    local defgroup4 = AceGUI:Create("SimpleGroup")
+    local defgroup4 = AceGUI:Create("KeyGroup")
     defgroup4:SetLayout("Flow")
     defgroup4:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        defgroup4.frame:SetBackdrop(nil)
-    end
 
     local partydropdown = AceGUI:Create("Dropdown")
     partydropdown:SetLabel(L["Party"])
@@ -908,17 +854,13 @@ function GSE:GUIDrawMetadataEditor(container)
     local spacerlabel7 = AceGUI:Create("Label")
     spacerlabel7:SetWidth(100)
 
-    local defgroup5 = AceGUI:Create("SimpleGroup")
+    local defgroup5 = AceGUI:Create("KeyGroup")
     defgroup5:SetLayout("Flow")
     defgroup5:SetWidth(editframe.Width - 100)
 
-    local defgroup6 = AceGUI:Create("SimpleGroup")
+    local defgroup6 = AceGUI:Create("KeyGroup")
     defgroup6:SetLayout("Flow")
     defgroup6:SetWidth(editframe.Width - 100)
-    if addonSkinsEnabled == true then
-        defgroup5.frame:SetBackdrop(nil)
-        defgroup6.frame:SetBackdrop(nil)
-    end
 
     local Timewalkingdropdown = AceGUI:Create("Dropdown")
     Timewalkingdropdown:SetLabel(L["Timewalking"])
@@ -1120,16 +1062,13 @@ function GSE:GUIDrawMacroEditor(container, version)
         end
     end
 
-    local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled == true then
-        layoutcontainer.frame:SetBackdrop(nil)
-    end
+    local layoutcontainer = AceGUI:Create("KeyGroup")
 
     layoutcontainer:SetFullWidth(true)
     layoutcontainer:SetHeight(editframe.Height - 230)
     layoutcontainer:SetLayout("Flow") -- Important!
 
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     -- scrollcontainer:SetFullWidth(true)
     -- scrollcontainer:SetFullHeight(true) -- Probably?
     scrollcontainer:SetWidth(editframe.Width)
@@ -1144,7 +1083,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     scrollcontainer:AddChild(contentcontainer)
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(editframe.Width)
 
@@ -1262,7 +1201,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         end
     )
 
-    local linegroup2 = AceGUI:Create("SimpleGroup")
+    local linegroup2 = AceGUI:Create("KeyGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
 
@@ -1466,7 +1405,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         addIfButton:SetDisabled(true)
     end
 
-    local linegroup3 = AceGUI:Create("SimpleGroup")
+    local linegroup3 = AceGUI:Create("KeyGroup")
     linegroup3:SetLayout("Flow")
     linegroup3:SetWidth(editframe.Width)
 
@@ -1503,16 +1442,14 @@ function GSE:GUIDrawMacroEditor(container, version)
     contentcontainer:AddChild(variableContainer)
     layoutcontainer:AddChild(scrollcontainer)
 
-    local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local toolbarcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     toolbarcontainer:SetWidth(contentcontainer.frame:GetWidth() - 50)
     toolbarcontainer:SetLayout("list")
     local heading2 = AceGUI:Create("Label")
     heading2:SetText(L["Use"])
     toolbarcontainer:AddChild(heading2)
-    if addonSkinsEnabled == true then
-        toolbarcontainer.frame:SetBackdrop(nil)
-    end
-    local toolbarrow1 = AceGUI:Create("SimpleGroup")
+
+    local toolbarrow1 = AceGUI:Create("KeyGroup")
     toolbarrow1:SetLayout("Flow")
     toolbarrow1:SetWidth(contentcontainer.frame:GetWidth() - 50)
     -- local targetresetcheckbox = AceGUI:Create("CheckBox")
@@ -1562,7 +1499,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     local heading1 = AceGUI:Create("Label")
     heading1:SetText(L["Resets"])
 
-    local toolbarrow2 = AceGUI:Create("SimpleGroup")
+    local toolbarrow2 = AceGUI:Create("KeyGroup")
     toolbarrow2:SetLayout("Flow")
     toolbarrow2:SetWidth(editframe.Width)
 
@@ -1801,10 +1738,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     end
 
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled == true then
-        linegroup1.frame:SetBackdrop(nil)
-    end
+    local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
@@ -1934,10 +1868,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
 end
 
 local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove, disableDelete)
-    local layoutcontainer = AceGUI:Create("SimpleGroup")
-    if addonSkinsEnabled == true then
-        layoutcontainer.frame:SetBackdrop(nil)
-    end
+    local layoutcontainer = AceGUI:Create("KeyGroup")
 
     local lastPath = path[#path]
     local parentPath = GSE.CloneSequence(path)
@@ -2393,10 +2324,7 @@ local function drawAction(container, action, version, keyPath)
     -- end
 
     if action.Type == Statics.Actions.Pause then
-        local linegroup1 = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            linegroup1.frame:SetBackdrop(nil)
-        end
+        local linegroup1 = AceGUI:Create("KeyGroup")
 
         linegroup1:SetLayout("Flow")
         linegroup1:SetFullWidth(true)
@@ -2518,10 +2446,7 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(linegroup1)
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
 
-        local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop(nil)
-        end
+        local macroPanel = AceGUI:Create("KeyGroup")
 
         macroPanel:SetLayout("List")
         macroPanel:SetFullWidth(true)
@@ -2596,10 +2521,8 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:AddChild(valueEditBox)
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.Loop then
-        local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop(nil)
-        end
+        local macroPanel = AceGUI:Create("KeyGroup")
+
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
 
@@ -2684,7 +2607,7 @@ local function drawAction(container, action, version, keyPath)
         linegroup1:AddChild(looplimit)
         container:AddChild(linegroup1)
 
-        local linegroup2 = AceGUI:Create("SimpleGroup")
+        local linegroup2 = AceGUI:Create("KeyGroup")
         linegroup2:SetLayout("Flow")
         linegroup2:SetWidth(maxWidth)
 
@@ -2697,12 +2620,9 @@ local function drawAction(container, action, version, keyPath)
         local spacerlabel3 = AceGUI:Create("Label")
         spacerlabel3:SetWidth(45)
 
-        local macroGroup = AceGUI:Create("SimpleGroup")
+        local macroGroup = AceGUI:Create("KeyGroup")
         macroGroup:SetWidth(maxWidth - 45)
         macroGroup:SetLayout("List")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop(nil)
-        end
         for key, act in ipairs(action) do
             local newKeyPath = {}
             for _, v in ipairs(keyPath) do
@@ -2716,34 +2636,28 @@ local function drawAction(container, action, version, keyPath)
         linegroup2:AddChild(spacerlabel3)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop({
-                edgeFile = [[Interface/Buttons/WHITE8X8]],
-                edgeSize = 1,
-            })
-            macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-            macroPanel:SetCallback("OnRelease", function(self, obj, value)
-                macroPanel.frame:SetBackdrop(nil)
-            end)
-        end
+
+        macroPanel.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
+        })
+        macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        macroPanel:SetCallback("OnRelease", function(self, obj, value)
+            macroPanel.frame:SetBackdrop(nil)
+        end)
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.If then
-        local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop(nil)
-        end
+        local macroPanel = AceGUI:Create("KeyGroup")
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop({
-                edgeFile = [[Interface/Buttons/WHITE8X8]],
-                edgeSize = 1,
-            })
-            macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-            macroPanel:SetCallback("OnRelease", function(self, obj, value)
-                macroPanel.frame:SetBackdrop(nil)
-            end)
-        end
+        macroPanel.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
+        })
+        macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        macroPanel:SetCallback("OnRelease", function(self, obj, value)
+            macroPanel.frame:SetBackdrop(nil)
+        end)
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
 
         local booleanDropdown = AceGUI:Create("Dropdown")
@@ -2782,7 +2696,7 @@ local function drawAction(container, action, version, keyPath)
 
         local trueKeyPath = GSE.CloneSequence(keyPath)
         table.insert(trueKeyPath, 1)
-        local trueGroup = AceGUI:Create("SimpleGroup")
+        local trueGroup = AceGUI:Create("KeyGroup")
         trueGroup:SetWidth(maxWidth - 45)
         trueGroup:SetLayout("List")
 
@@ -2792,13 +2706,9 @@ local function drawAction(container, action, version, keyPath)
         tlabel:SetFontObject(GameFontNormalLarge)
         tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 
-        local trueContainer = AceGUI:Create("SimpleGroup")
+        local trueContainer = AceGUI:Create("KeyGroup")
         trueContainer:SetLayout("Flow")
         trueContainer:SetWidth(maxWidth)
-        if addonSkinsEnabled == true then
-            trueGroup.frame:SetBackdrop(nil)
-            trueContainer.frame:SetBackdrop(nil)
-        end
 
         local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true, true)
         trueGroup:AddChild(toolbar)
@@ -2817,50 +2727,40 @@ local function drawAction(container, action, version, keyPath)
 
         trueContainer:AddChild(trueGroup)
         macroPanel:AddChild(trueContainer)
-        if addonSkinsEnabled == true then
-            trueGroup.frame:SetBackdrop({
-                edgeFile = [[Interface/Buttons/WHITE8X8]],
-                edgeSize = 1,
-            })
-            trueGroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-            trueGroup:SetCallback("OnRelease", function(self, obj, value)
-                trueGroup.frame:SetBackdrop(nil)
-            end)
-        end
+        trueGroup.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
+        })
+        trueGroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        trueGroup:SetCallback("OnRelease", function(self, obj, value)
+            trueGroup.frame:SetBackdrop(nil)
+        end)
         -- macroPanel:AddChild(falseGroup)
         local falseKeyPath = GSE.CloneSequence(keyPath)
         table.insert(falseKeyPath, 2)
-        local falsegroup = AceGUI:Create("SimpleGroup")
+        local falsegroup = AceGUI:Create("KeyGroup")
         falsegroup:SetWidth(maxWidth - 45)
         falsegroup:SetLayout("List")
-        if addonSkinsEnabled == true then
-            falsegroup.frame:SetBackdrop(nil)
-        end
 
         local flabel = AceGUI:Create("Label")
         flabel:SetText("False")
         --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
         flabel:SetFontObject(GameFontNormalLarge)
         flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-        local falsecontainer = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            falsecontainer.frame:SetBackdrop(nil)
-        end
+        local falsecontainer = AceGUI:Create("KeyGroup")
         falsecontainer:SetWidth(maxWidth)
         falsecontainer:SetLayout("Flow")
 
         local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true, true)
         falsegroup:AddChild(toolbar2)
-        if addonSkinsEnabled == true then
-            falsegroup.frame:SetBackdrop({
-                edgeFile = [[Interface/Buttons/WHITE8X8]],
-                edgeSize = 1,
-            })
-            falsegroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-            falsegroup:SetCallback("OnRelease", function(self, obj, value)
-                falsegroup.frame:SetBackdrop(nil)
-            end)
-        end
+        falsegroup.frame:SetBackdrop({
+            edgeFile = [[Interface/Buttons/WHITE8X8]],
+            edgeSize = 1,
+        })
+        falsegroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
+        falsegroup:SetCallback("OnRelease", function(self, obj, value)
+            falsegroup.frame:SetBackdrop(nil)
+        end)
         for key,act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)
             table.insert(newKeyPath, key)
@@ -2896,10 +2796,7 @@ function GSE:DrawSequenceEditor(container, version)
     font:SetJustifyV("BOTTOM")
 
     for key, action in ipairs(macro) do
-        local macroPanel = AceGUI:Create("SimpleGroup")
-        if addonSkinsEnabled == true then
-            macroPanel.frame:SetBackdrop(nil)
-        end
+        local macroPanel = AceGUI:Create("KeyGroup")
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
         local keyPath = {
@@ -2917,7 +2814,7 @@ function GSE:GUIDrawVariableEditor(container, version)
         editframe.Sequence.Macros[version].Variables = {}
     end
 
-    local contentcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local contentcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     contentcontainer:SetWidth(maxWidth)
     contentcontainer:SetAutoAdjustHeight(true)
     local variableLabel = AceGUI:Create("Heading")
@@ -2938,7 +2835,7 @@ function GSE:GUIDrawVariableEditor(container, version)
     uvariableLabel:SetWidth(contentcontainer.frame:GetWidth())
     contentcontainer:AddChild(uvariableLabel)
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     local columnWidth = contentcontainer.frame:GetWidth() - 55
 
@@ -3029,12 +2926,9 @@ local function addKeyPairWARow(container, rowWidth, key, value)
     --   key = ""
     -- end
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
-    if addonSkinsEnabled == true then
-        linegroup1.frame:SetBackdrop(nil)
-    end
     rowWidth = rowWidth - 70
 
     local keyEditBox = AceGUI:Create("EditBox")
@@ -3141,12 +3035,12 @@ function GSE:GUIDrawWeakauraStorage(container)
         editframe.Sequence.Variables = {}
     end
 
-    local layoutcontainer = AceGUI:Create("SimpleGroup")
+    local layoutcontainer = AceGUI:Create("KeyGroup")
     layoutcontainer:SetFullWidth(true)
     layoutcontainer:SetHeight(editframe.Height - 320)
     layoutcontainer:SetLayout("Flow") -- Important!
 
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     -- scrollcontainer:SetFullHeight(true) -- Probably?
     -- scrollcontainer:SetWidth(editframe.Width )
@@ -3156,7 +3050,7 @@ function GSE:GUIDrawWeakauraStorage(container)
     local contentcontainer = AceGUI:Create("ScrollFrame")
     scrollcontainer:AddChild(contentcontainer)
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     local columnWidth = contentcontainer.frame:GetWidth()
 

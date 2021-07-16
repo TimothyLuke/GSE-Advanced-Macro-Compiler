@@ -41,9 +41,6 @@ externals:
         url: git://git.wowace.com/wow/libqtip-1-0
         tag: latest
     GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
-    GSE/Lib/AceGUI-3.0-Selectable-Panel:
-        url: https://github.com/TimothyLuke/AceGUI-3.0-Selectable-Panel.git
-        tag: latest
     GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
 
 move-folders:

@@ -10,33 +10,6 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 local editkey = ""
 
-local addonSkinsEnabled = false
-
-if not GSE.isEmpty(ElvUI) then
-    local ElvPrivateDB = ElvPrivateDB
-    if ElvPrivateDB then
-
-        local myname = UnitName("player")
-        local profileKey
-        if ElvPrivateDB.profileKeys then
-          profileKey = ElvPrivateDB.profileKeys[myname..' - '..GetRealmName()]
-        end
-
-        if profileKey and ElvPrivateDB.profiles and ElvPrivateDB.profiles[profileKey] and ElvPrivateDB.profiles[profileKey].skins  then
-            if ElvPrivateDB.profiles[profileKey].skins.ace3Enable and ElvPrivateDB.profiles[profileKey].skins.ace3Enable == true then
-                addonSkinsEnabled = true
-            elseif GSE.isEmpty(ElvPrivateDB.profiles[profileKey].skins.ace3Enable) then
-                addonSkinsEnabled = true
-            end
-        end
-
-    end
-end
-
-if GSEOptions.DisableElvFix == true then
-    addonSkinsEnabled = false
-end
-
 local viewframe = AceGUI:Create("Frame")
 viewframe:SetTitle(L["Sequence Editor"])
 -- viewframe.frame:SetBackdrop({
@@ -136,7 +109,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
   selpanel:AddChild(hlabel)
 
-  local columngroup = AceGUI:Create("SimpleGroup")
+  local columngroup = AceGUI:Create("KeyGroup")
   columngroup:SetFullWidth(true)
   columngroup:SetLayout("Flow")
   if addonSkinsEnabled == true then
@@ -144,13 +117,9 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   end
 
 
-  local column1 = AceGUI:Create("SimpleGroup")
+  local column1 = AceGUI:Create("KeyGroup")
   column1:SetWidth(viewframe.Width - 140)
   column1:SetLayout("List")
-  if addonSkinsEnabled then
-    column1.frame:SetBackdrop(nil)
-  end
-
 
   columngroup:AddChild(column1)
 
@@ -166,10 +135,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   helplabel:SetText(helptext )
   column1:AddChild(helplabel)
 
-  local row2 = AceGUI:Create("SimpleGroup")
-  if addonSkinsEnabled == true then
-    row2.frame:SetBackdrop(nil)
-  end
+  local row2 = AceGUI:Create("KeyGroup")
   row2:SetLayout("Flow")
   row2:SetFullWidth(true)
 
@@ -216,13 +182,10 @@ function GSE.GUICreateSequencePanels(frame, container, key)
   row2:AddChild(urllabel)
 
 
-  local column2 = AceGUI:Create("SimpleGroup")
+  local column2 = AceGUI:Create("KeyGroup")
   column2:SetWidth(60)
   column2:SetLayout("List")
   columngroup:AddChild(column2)
-  if addonSkinsEnabled then
-    column2.frame:SetBackdrop(nil)
-  end
 
   local viewiconpicker = AceGUI:Create("Icon")
 
@@ -254,7 +217,7 @@ end
 function GSE.GUIViewerToolbar(container)
 
 
-  local buttonGroup = AceGUI:Create("SimpleGroup")
+  local buttonGroup = AceGUI:Create("KeyGroup")
   buttonGroup:SetFullWidth(true)
   buttonGroup:SetLayout("Flow")
 
@@ -386,7 +349,7 @@ function GSE.GUIViewerLayout(mcontainer)
   mcontainer:SetLayout("List")
 
 
-  local scrollcontainer = AceGUI:Create("SimpleGroup")
+  local scrollcontainer = AceGUI:Create("KeyGroup")
   scrollcontainer:SetFullWidth(true)
   scrollcontainer:SetLayout("Fill")
   scrollcontainer:SetHeight(viewframe.Height - 130)
