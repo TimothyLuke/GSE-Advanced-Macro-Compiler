@@ -2450,7 +2450,7 @@ local function drawAction(container, action, version, keyPath)
 
         macroPanel:SetLayout("List")
         macroPanel:SetFullWidth(true)
-
+        macroPanel:SetAutoAdjustHeight(true)
 
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
@@ -2496,7 +2496,8 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:AddChild(linegroup1)
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel()
-        valueEditBox:SetNumLines(3)
+        local numlines = #action
+        valueEditBox:SetNumLines(numlines)
         valueEditBox:SetWidth(maxWidth)
         valueEditBox:DisableButton(true)
         valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
@@ -2506,6 +2507,7 @@ local function drawAction(container, action, version, keyPath)
             function()
                 local returnAction =
                     GSE.SplitMeIntolines(valueEditBox:GetText())
+                local boxlines = #returnAction    
                 returnAction["Type"] = action.Type
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
@@ -2525,7 +2527,7 @@ local function drawAction(container, action, version, keyPath)
 
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
-
+        macroPanel:SetAutoAdjustHeight(true)
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
         local stepdropdown = AceGUI:Create("Dropdown")
