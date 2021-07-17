@@ -2507,7 +2507,7 @@ local function drawAction(container, action, version, keyPath)
             function()
                 local returnAction =
                     GSE.SplitMeIntolines(valueEditBox:GetText())
-                local boxlines = #returnAction    
+                local boxlines = #returnAction
                 returnAction["Type"] = action.Type
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
