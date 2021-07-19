@@ -234,7 +234,6 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
                     end
                 end
             end
-            mode = Statics.TranslatorMode.String
         end
         local foundspell = GSE.GetSpellId(etc, mode, absolute)
 
@@ -313,40 +312,25 @@ function GSE.GetConditionalsFromString(str)
     return found, mods, str
 end
 
-local function ClassicGetSpellInfo(spellID, absolute)
+local function ClassicGetSpellInfo(spellID, absolute, mode)
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
     -- only check rank if classic.
     if GSE.GameMode < 3 then
         if GSE.isEmpty(rank) then
             if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
-                -- -- check if the rank is the same as the highest.
-                -- -- print("no rank found for " .. spellID)
-                -- rank = GetSpellRank(spellID)
                 if pcall(function()
                     tonumber(spellID)
                 end) then
-                    -- print("pcall passed")
-                --     rank = GetSpellRank(tonumber(spellID))
-                --     local testName, _, _, _, _, _, testid = GetSpellInfo(name);
-                --     -- print(testName, testid, spellID, rank)
-                --     local testRank = GetSpellRank(tonumber(testid))
-                --     if testRank == rank then
-                --         rank = nil
-                --     end
-                --     -- else
-                --     -- print("pcall failed:", err)
                     rank = GetSpellSubtext(spellID)
                  end
             else
-                -- dont set a rank for warriors and rogues
-                -- print("Warrior or Rogue")
                 rank = nil
             end
         end
         -- print("Did rank check found: " .. (rank or "No Rank"))
     else
         -- Do override check.
-            if not absolute and not GSE.isEmpty(sid) then
+            if not absolute and not GSE.isEmpty(sid) and mode ~= Statics.TranslatorMode.Current then
                 local returnval = sid
                 if FindBaseSpellByID(returnval) then
                     returnval = FindBaseSpellByID(returnval)
@@ -367,8 +351,8 @@ local function ClassicGetSpellInfo(spellID, absolute)
 end
 
 --- Test override of GetSpellInfo
-function GSE.ClassicGetSpellInfo(spellID)
-    return ClassicGetSpellInfo(spellID)
+function GSE.ClassicGetSpellInfo(spellID, mode)
+    return ClassicGetSpellInfo(spellID, mode)
 end
 
 --- Converts a string spell name to an id and back again.
@@ -386,8 +370,8 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         GSESpellCache[GetLocale()] = {}
     end
     local returnval
-    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring, absolute)
-    if mode == "STRING" then
+    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring, absolute, mode)
+    if mode ~= Statics.TranslatorMode.ID then
         if not GSE.isEmpty(rank) then
             returnval = name .. "(" .. rank .. ")"
         else
@@ -407,6 +391,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
                     returnval = Statics.BaseSpellTable[returnval]
                 end
             end
+
         end
     end
     if not GSE.isEmpty(returnval) then
@@ -449,7 +434,7 @@ function GSE.IdentifySpells(tab)
     end
 
     for k,_ in pairs(foundspells) do
-        if not GSE.isEmpty(GSE.GetSpellId(k, "STRING", false)) then
+        if not GSE.isEmpty(GSE.GetSpellId(k, Statics.TranslatorMode.Current, false)) then
             local wowheaddata = "spell="..k
             -- local domain = "www"
             if GSE.GameMode == 1 then
@@ -460,7 +445,7 @@ function GSE.IdentifySpells(tab)
                 --domain = "tbc"
             end
             returnval = returnval .. '<a href="http://www.wowhead.com/spell=' .. k .. '" data-wowhead="' .. wowheaddata .. '">' ..
-                            GSE.GetSpellId(k, "STRING", false) .. '</a>, '
+                            GSE.GetSpellId(k, Statics.TranslatorMode.Current, false) .. '</a>, '
         end
     end
 
