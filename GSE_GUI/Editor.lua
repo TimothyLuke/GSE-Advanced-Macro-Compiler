@@ -1775,6 +1775,10 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
             editframe.Sequence.Macros[version].Variables[currentKey] = GSE.SplitMeIntolines(text)
         end
     )
+    valueEditBox:SetCallback("OnEditFocusLost", function()
+        valueEditBox:SetText(table.concat(GSE.TranslateSequence(editframe.Sequence.Macros[version].Variables[currentKey], Statics.TranslatorMode.Current), "\n"))
+    end)
+
     linegroup1:AddChild(valueEditBox)
 
     local spacerlabel2 = AceGUI:Create("Label")
@@ -2513,7 +2517,9 @@ local function drawAction(container, action, version, keyPath)
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
         )
-
+        valueEditBox:SetCallback("OnEditFocusLost", function()
+            valueEditBox:SetText(table.concat(GSE.TranslateSequence(editframe.Sequence.Macros[version].Actions[keyPath], Statics.TranslatorMode.Current), "\n"))
+        end)
         -- valueEditBox:SetCallback('OnEnter', function()
         --     GSE.CreateToolTip(L["Compiled Action"], compiledAction, editframe)
         -- end)
