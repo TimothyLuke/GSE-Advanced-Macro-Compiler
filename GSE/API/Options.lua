@@ -963,7 +963,7 @@ function GSE.GetOptionsTable()
                     },
                     menuHeight = {
                         name = L["Default Menu Height"],
-                        desc = L["How many pixels high should the Menu start at.  Defaults to 700"],
+                        desc = L["How many pixels high should the Menu start at.  Defaults to 500"],
                         type = "input",
                         set = function(info, val)
                             if tonumber(val) >= 500 then
@@ -971,7 +971,7 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         get = function(info)
-                            return tostring(GSEOptions.menuHeight)
+                            return (GSEOptions.menuHeight and tostring(GSEOptions.menuHeight) or "500")
                         end,
                         order = 14
                     },
@@ -985,7 +985,40 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         get = function(info)
-                            return tostring(GSEOptions.menuWidth)
+                            return (GSEOptions.menuWidth and tostring(GSEOptions.menuWidth) or "700")
+                        end,
+                        order = 15
+                    },
+                    debugtitle = {
+                        type = "header",
+                        name = L["Sequence Debugger"],
+                        order = 16
+                    },
+                    debugHeight = {
+                        name = L["Default Debugger Height"],
+                        desc = L["How many pixels high should the Debuger start at.  Defaults to 500"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 500 then
+                                GSEOptions.debugHeight = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.debugHeight and tostring(GSEOptions.debugHeight) or "500")
+                        end,
+                        order = 14
+                    },
+                    debugWidth = {
+                        name = L["Default Debugger Width"],
+                        desc = L["How many pixels wide should the Debugger start at.  Defaults to 700"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 700 then
+                                GSEOptions.debugWidth = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.debugWidth and tostring(GSEOptions.debugWidth) or "500")
                         end,
                         order = 15
                     }

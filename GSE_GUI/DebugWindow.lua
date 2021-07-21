@@ -11,13 +11,10 @@ GSE.GUIDebugFrame = DebugFrame
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugPauseViewButton = AceGUI:Create("Button")
-
-
-
-function GSE.GUIShowDebugWindow()
-  DebugFrame:Show()
-end
-
+DebugFrame.Height = (GSEOptions.debugHeight and GSEOptions.debugHeight or 500)
+DebugFrame.Width = (GSEOptions.debugWidth and GSEOptions.debugWidth or 700)
+DebugFrame:SetWidth(DebugFrame.Width)
+DebugFrame:SetHeight(DebugFrame.Height)
 
 function GSE.GUIUpdateOutput()
   GSE.GUIDebugFrame.DebugOutputTextbox:SetText(GSE.GUIDebugFrame.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
@@ -61,49 +58,78 @@ DebugFrame:SetCallback("OnClose", function(widget) DebugFrame:Hide()  end)
 DebugFrame:SetLayout("List")
 DebugFrame:Hide()
 
+local function buildDebugFrame()
+  GSE.GUIDebugFrame.DebugOutputTextbox:SetLabel(L["Output"])
+  GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(25)
+  GSE.GUIDebugFrame.DebugOutputTextbox:DisableButton(true)
+  GSE.GUIDebugFrame.DebugOutputTextbox:SetFullWidth(true)
+  DebugFrame:AddChild(GSE.GUIDebugFrame.DebugOutputTextbox)
 
-GSE.GUIDebugFrame.DebugOutputTextbox:SetLabel(L["Output"])
-GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(25)
-GSE.GUIDebugFrame.DebugOutputTextbox:DisableButton(true)
-GSE.GUIDebugFrame.DebugOutputTextbox:SetFullWidth(true)
-DebugFrame:AddChild(GSE.GUIDebugFrame.DebugOutputTextbox)
+  local buttonGroup = AceGUI:Create("SimpleGroup")
+  buttonGroup:SetFullWidth(true)
+  buttonGroup:SetLayout("Flow")
 
-local buttonGroup = AceGUI:Create("SimpleGroup")
-buttonGroup:SetFullWidth(true)
-buttonGroup:SetLayout("Flow")
+  DebugFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+    local numlines = math.floor(height / 18)
+    GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(numlines)
+  end)
 
-DebugFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
-  local numlines = math.floor(height / 18)
-  GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(numlines)
-end)
+  GSE.GUIDebugFrame.DebugEnableViewButton:SetWidth(150)
+  GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
+  buttonGroup:AddChild(GSE.GUIDebugFrame.DebugEnableViewButton)
 
-GSE.GUIDebugFrame.DebugEnableViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
-buttonGroup:AddChild(GSE.GUIDebugFrame.DebugEnableViewButton)
+  GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
+  GSE.GUIDebugFrame.DebugPauseViewButton:SetWidth(150)
+  GSE.GUIDebugFrame.DebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
+  buttonGroup:AddChild(GSE.GUIDebugFrame.DebugPauseViewButton)
 
-GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
-GSE.GUIDebugFrame.DebugPauseViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
-buttonGroup:AddChild(GSE.GUIDebugFrame.DebugPauseViewButton)
+  if GSE.UnsavedOptions["DebugSequenceExecution"] then
+    GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Disable"])
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(false)
+  else
+    GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
+    GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
+  end
 
-if GSE.UnsavedOptions["DebugSequenceExecution"] then
-  GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Disable"])
-  GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(false)
-else
-  GSE.GUIDebugFrame.DebugEnableViewButton:SetText(L["Enable"])
-  GSE.GUIDebugFrame.DebugPauseViewButton:SetDisabled(true)
+  GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
+  GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
+  GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
+  GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.GUIDebugFrame.DebugOutputTextbox:SetText('') end)
+  buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
+
+  GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
+  GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
+  GSE.GUIDebugFrame.DebugOptionsViewButton:SetWidth(150)
+  GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
+  buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
+
+  DebugFrame:AddChild(buttonGroup)
 end
 
-GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
-GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
-GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.GUIDebugFrame.DebugOutputTextbox:SetText('') end)
-buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
+DebugFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+    DebugFrame.Height = height
+    DebugFrame.Width = width
+    if DebugFrame.Height > GetScreenHeight() then
+            DebugFrame.Height = GetScreenHeight() - 10
+            DebugFrame:SetHeight(DebugFrame.Height)
+    end
+    if DebugFrame.Height < 500 then
+            DebugFrame.Height = 500
+            DebugFrame:SetHeight(DebugFrame.Height)
+    end
+    if DebugFrame.Width < 700 then
+            DebugFrame.Width = 700
+            DebugFrame:SetWidth(DebugFrame.Width)
+    end
+    GSEOptions.debugHeight = DebugFrame.Height
+    GSEOptions.debugWidth = DebugFrame.Width
+    if DebugFrame:IsVisible() then
+        GSE.GUIShowViewer()
+    end
+end)
 
-GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
-GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
-GSE.GUIDebugFrame.DebugOptionsViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
-buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
-
-DebugFrame:AddChild(buttonGroup)
+function GSE.GUIShowDebugWindow()
+  DebugFrame:ReleaseChildren()
+  buildDebugFrame()
+  DebugFrame:Show()
+end

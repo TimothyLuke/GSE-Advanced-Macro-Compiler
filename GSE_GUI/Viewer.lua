@@ -356,7 +356,7 @@ function GSE.GUIViewerLayout(mcontainer)
 	contentcontainer:SetLayout("list")
 	scrollcontainer:AddChild(contentcontainer)
 	viewframe.ScrollContainer = contentcontainer
-				
+			
 	GSE.GUIViewerToolbar(mcontainer)
 
 end
