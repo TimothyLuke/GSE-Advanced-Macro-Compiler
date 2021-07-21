@@ -277,7 +277,9 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Default) then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Default
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Arena) and GSE.inArena then
+    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Scenario) and GSE.inScenario then
+        vers = GSE.Library[classid][sequenceName]["MetaData"].Scenario
+    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Arena) and GSE.inArena then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.inArena then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
