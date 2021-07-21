@@ -1006,7 +1006,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugHeight and tostring(GSEOptions.debugHeight) or "500")
                         end,
-                        order = 14
+                        order = 17
                     },
                     debugWidth = {
                         name = L["Default Debugger Width"],
@@ -1020,7 +1020,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugWidth and tostring(GSEOptions.debugWidth) or "500")
                         end,
-                        order = 15
+                        order = 18
                     }
                 }
             },
