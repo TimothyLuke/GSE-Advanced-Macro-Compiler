@@ -300,7 +300,7 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Party) and GSE.inParty then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Party
     end
-    if vers == 0 then 
+    if vers == 0 then
         vers = 1
     end
     return vers
