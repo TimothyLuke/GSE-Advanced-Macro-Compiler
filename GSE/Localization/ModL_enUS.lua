@@ -674,3 +674,13 @@ L["On some clients the Editor will throw an error relating to setBackdrop. Turni
 L["Boolean not found.  There is a problem with %s not returning true or false."] = true
 L["Macro Compile Error"] = true
 L["If Blocks Require a variable."] = true
+
+--3.0.35
+L["Window Sizes"] = true
+L["GSE Plugins"] = true
+L["The default sizes of each window."] = true
+L["Sequence Menu"] = true
+L["Default Menu Height"] = true
+L["How many pixels high should the Menu start at.  Defaults to 700"] = true
+L["Default Menu Width"] = true
+L["How many pixels wide should the Menu start at.  Defaults to 700"] = true
