@@ -1341,7 +1341,7 @@ function GSE.processAction(action, metaData, variables)
             table.remove(returnActions, removes[i])
         end
 
-        for k,v in ipairs(inserts) do
+        for _,v in ipairs(inserts) do
             local startInterval = v["Interval"]
             if startInterval == 1 then
                 startInterval = 2
