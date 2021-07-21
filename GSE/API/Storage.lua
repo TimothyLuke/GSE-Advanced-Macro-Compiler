@@ -297,10 +297,11 @@ function GSE.GetActiveSequenceVersion(sequenceName)
         vers = GSE.Library[classid][sequenceName]["MetaData"].Dungeon
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Timewalking) and GSE.inTimeWalking then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Timewalking
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Scenario) and GSE.inScenario then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Scenario
     elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Party) and GSE.inParty then
         vers = GSE.Library[classid][sequenceName]["MetaData"].Party
+    end
+    if vers == 0 then 
+        vers = 1
     end
     return vers
 end

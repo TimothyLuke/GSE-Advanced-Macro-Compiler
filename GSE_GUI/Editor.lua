@@ -3197,34 +3197,34 @@ function GSE.GUIDeleteVersion(version)
         sequence.MetaData.Default = 1
     end
 
-    if not GSE.isEmpty(sequence.MetaData.PVP) then
+    if not GSE.isEmpty(sequence.MetaData.PVP) and sequence.MetaData.PVP > 1 then
         sequence.MetaData.PVP = tonumber(sequence.MetaData.PVP) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Arena) then
+    if not GSE.isEmpty(sequence.MetaData.Arena) and sequence.MetaData.Arena > 1 then
         sequence.MetaData.Arena = tonumber(sequence.MetaData.Arena) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Raid) then
+    if not GSE.isEmpty(sequence.MetaData.Raid) and sequence.MetaData.Raid > 1 then
         sequence.MetaData.Raid = tonumber(sequence.MetaData.Raid) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Mythic) then
+    if not GSE.isEmpty(sequence.MetaData.Mythic) and sequence.MetaData.Mythic > 1 then
         sequence.MetaData.Mythic = tonumber(sequence.MetaData.Mythic) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.MythicPlus) then
+    if not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythisPlus > 1 then
         sequence.MetaData.MythicPlus = tonumber(sequence.MetaData.MythicPlus) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Timewalking) then
+    if not GSE.isEmpty(sequence.MetaData.Timewalking) and sequence.MetaData.Timewalking > 1 then
         sequence.MetaData.Timewalking = tonumber(sequence.MetaData.Timewalking) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Heroic) then
+    if not GSE.isEmpty(sequence.MetaData.Heroic) and sequence.MetaData.Heroic > 1 then
         sequence.MetaData.Heroic = tonumber(sequence.MetaData.Heroic) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Dungeon) then
+    if not GSE.isEmpty(sequence.MetaData.Dungeon) and sequence.MetaData.Dyngeon > 1 then
         sequence.MetaData.Dungeon = tonumber(sequence.MetaData.Dungeon) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Party) then
+    if not GSE.isEmpty(sequence.MetaData.Party) and sequence.MetaData.Party > 1 then
         sequence.MetaData.Party = tonumber(sequence.MetaData.Party) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Scenario) then
+    if not GSE.isEmpty(sequence.MetaData.Scenario) and sequence.MetaData.Scenario > 1 then
         sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
     end
     table.remove(sequence.Macros, version)
