@@ -1329,22 +1329,28 @@ function GSE.processAction(action, metaData, variables)
 
         -- process repeats for the block
         local inserts = {}
-       for k, v in ipairs(returnActions) do
+        local removes = {}
+        for k, v in ipairs(returnActions) do
             if type(v) == "table" then
                 table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
-                table.remove(returnActions, k)
+                table.insert(removes, k)
             end
         end
 
-        -- print("num INserts", #inserts)
-        for _,v in ipairs(inserts) do
+        for i = #removes, 1, -1 do
+            table.remove(returnActions, removes[i])
+        end
 
-            local insertcount = math.ceil((#returnActions - v["Start"]) / v["Interval"])
-            local repeatCount = v["Interval"]
+        for k,v in ipairs(inserts) do
+            local startInterval = v["Interval"]
+            if startInterval == 1 then
+                startInterval = 2
+            end
+            local insertcount = math.ceil((#returnActions - v["Start"]) / startInterval)
+            local interval = v["Interval"]
             table.insert(returnActions, v["Start"] , v["Action"])
             for i=1, insertcount do
-                local insertpos
-                    insertpos = v["Start"]  +  i * repeatCount
+                local insertpos = v["Start"]  +  i * interval
                 table.insert(returnActions, insertpos , v["Action"])
             end
         end
