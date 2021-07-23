@@ -2541,8 +2541,9 @@ local function drawAction(container, action, version, keyPath)
         stepdropdown:SetWidth((editframe.Width) * 0.24)
         stepdropdown:SetList(
             {
-                ["Sequential"] = L["Sequential (1 2 3 4)"],
-                ["Priority"] = L["Priority List (1 12 123 1234)"]
+                [Statics.Sequential] = L["Sequential (1 2 3 4)"],
+                [Statics.Priority] = L["Priority List (1 12 123 1234)"],
+                [Statics.ReversePriority] = L["Reverse Priority (1 21 321 4321)"]
                 --["Random"] = L["Random - It will select .... a spell, any spell"]
             }
         )

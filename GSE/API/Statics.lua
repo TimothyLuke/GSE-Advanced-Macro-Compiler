@@ -257,6 +257,7 @@ Statics.SequenceDebug = "SEQUENCEDEBUG"
 
 Statics.Priority = "Priority"
 Statics.Sequential = "Sequential"
+Statics.ReversePriority = "ReversePriority"
 
 Statics.PrintKeyModifiers =
     [[

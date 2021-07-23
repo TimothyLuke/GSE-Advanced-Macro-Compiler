@@ -1303,21 +1303,34 @@ function GSE.processAction(action, metaData, variables)
             loop = 1
         end
         for _=1, loop do
-            if action.StepFunction == Statics.Priority then
+            if action.StepFunction == Statics.Priority or action.StepFunction == Statics.ReversePriority then
                 local limit = 1
                 local step = 1
                 local looplimit = 0
                 for x=1, table.getn(actionList) do
                     looplimit = looplimit + x
                 end
-                for _ = 1, looplimit do
-                    table.insert(returnActions, actionList[step])
-                    if step == limit then
-                        limit = limit % #actionList + 1
-                        step = 1
-                        GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
-                    else
-                        step = step + 1
+                if action.StepFunction == Statics.Priority then
+                    for _ = 1, looplimit do
+                        table.insert(returnActions, actionList[step])
+                        if step == limit then
+                            limit = limit % #actionList + 1
+                            step = 1
+                            GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
+                        else
+                            step = step + 1
+                        end
+                    end
+                else
+                    for _ = looplimit, 1, -1 do
+                        table.insert(returnActions, actionList[step])
+                        if step == 1 then
+                            limit = limit % #actionList + 1
+                            step = limit
+                            GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
+                        else
+                            step = step - 1
+                        end
                     end
                 end
             else

@@ -688,3 +688,6 @@ L["Default Debugger Height"] = true
 L["How many pixels high should the Debuger start at.  Defaults to 500"] = true
 L["Default Debugger Width"] = true
 L["How many pixels wide should the Debugger start at.  Defaults to 700"] = true
+
+--#994
+L["Reverse Priority (1 21 321 4321)"] = true
