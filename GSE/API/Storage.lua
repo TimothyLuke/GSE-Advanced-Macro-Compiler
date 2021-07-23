@@ -1360,6 +1360,7 @@ function GSE.processAction(action, metaData, variables)
                 startInterval = 2
             end
             local insertcount = math.ceil((#returnActions - v["Start"]) / startInterval)
+            insertcount = math.ceil((#returnActions + insertcount - v["Start"]) / startInterval)
             local interval = v["Interval"]
             table.insert(returnActions, v["Start"] , v["Action"])
             for i=1, insertcount do
