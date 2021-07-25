@@ -273,9 +273,8 @@ function GSE.sendMessage(tab, channel, target, priority)
             channel = "PARTY"
             transmission = ("§§%s:%s"):format(target, transmission)
         end
-    end 
+    end
     GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
-
 end
 
 function GSE.performVersionCheck(version)
@@ -301,7 +300,6 @@ function GSE.SendSequence(ClassID, SequenceName, recipient, channel)
     if GSE.isEmpty(channel) then
         channel = "WHISPER"
     end
-     
     local key = ClassID .. "," .. SequenceName
     GSE.TransmitSequence(key, channel, recipient)
 end
@@ -396,7 +394,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
         local dest, msg = string.match(message, "^§§([^:]+):(.+)$")
         if dest then
             local dName, dServer = string.match(dest, "^(.*)-(.*)$")
-            local myName, myServer = UnitFullName("player")
+            local myName, myServer = UnitName("player")
             if myName == dName and myServer == dServer then
                 message = msg
             end
@@ -486,7 +484,7 @@ end
 function GSE.CreateSequenceLink(sequenceName, classID)
     local playerName = UnitName("player")
     local message = "GSE Sequence: " .. sequenceName .. "' (" .. GSE.GetClassName(classID) .. ")"
-    local command = "seq_" .. sequenceName .."_" .. playerName .. "_" .. classID 
+    local command = "seq_" .. sequenceName .."_" .. playerName .. "_" .. classID
     local link = "|cFFFFFF00|Hgarrmission:GSE:".. command .. "|h[" .. message .."]|h|r"
     return link
 end
@@ -501,7 +499,7 @@ hooksecurefunc("SetItemRef", function(link)
             local cmd, sequenceName, player, ClassID = strsplit("_", param1)
             if cmd == "seq" then
                 if player == UnitName("player") then
-                    GSE.GUILoadEditor(ClassID .. "," .. sequenceName, GSE.GUIViewFrame)  
+                    GSE.GUILoadEditor(ClassID .. "," .. sequenceName, GSE.GUIViewFrame)
                 else
                     GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
                     GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")

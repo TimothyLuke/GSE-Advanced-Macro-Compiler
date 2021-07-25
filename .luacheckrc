@@ -385,5 +385,6 @@ globals = {
     "AttemptToSaveBindings",
 	"GetSpellSubtext",
 	"STATICPOPUPS_NUMDIALOGS",
-	"C_CreatureInfo"
+	"C_CreatureInfo",
+	"UnitIsSameServer"
 }
