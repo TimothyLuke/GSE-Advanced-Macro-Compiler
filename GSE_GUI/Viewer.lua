@@ -93,6 +93,11 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 		if button == "RightButton" then
 			GSE.GUILoadEditor(widget:GetKey(), viewframe)
 		end
+		if button == "LeftButton" and IsShiftKeyDown() then
+			
+			local link = GSE.CreateSequenceLink(elements[2], elements[1])
+			print(L["Shift Click this link to add it into chat --> "] .. link)
+		end
 	end)
 
 	-- Workaround for vanishing label ace3 bug

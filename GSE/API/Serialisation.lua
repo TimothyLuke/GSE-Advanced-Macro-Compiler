@@ -463,4 +463,32 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
     end
 end
 
+function GSE.CreateSequenceLink(sequenceName, classID)
+    local playerName = UnitName("player")
+    local message = "GSE Sequence: " .. sequenceName .. "' (" .. GSE.GetClassName(classID) .. ")"
+    local command = "seq_" .. sequenceName .."_" .. playerName .. "_" .. classID 
+    local link = "|cFFFFFF00|Hgarrmission:GSE:".. command .. "|h[" .. message .."]|h|r"
+    return link
+end
+
+-- process chatlinks
+hooksecurefunc("SetItemRef", function(link)
+	local linkType, addon, param1 = strsplit(":", link)
+	if linkType == "garrmission" and addon == "GSE" then
+        if param1 == "foo" then
+            print("Processed test link foo")
+        else
+            local cmd, sequenceName, player, ClassID = strsplit("_", param1)
+            if cmd == "seq" then
+                if player == UnitName("player") then
+                    GSE.GUILoadEditor(ClassID .. "," .. sequenceName, GSE.GUIViewFrame)  
+                else
+                    GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
+                    GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")
+                end
+            end
+        end
+	end
+end)
+
 GSE:RegisterComm("GSE")

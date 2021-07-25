@@ -166,6 +166,10 @@ local function determineClassName(specID)
     return specname
 end
 
+function GSE.GetClassName(classID)
+    return determineClassName(classID)
+end
+
 Statics.SpecIDList = {}
 
 if GSE.GameMode < 4 then
