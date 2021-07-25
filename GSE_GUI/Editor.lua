@@ -1033,6 +1033,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
     editframe.booleanFunctions = {}
+    editframe.numericFunctions = {}
     for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
         if k ~= "" then
             if type(v) == "string" then
@@ -1057,6 +1058,9 @@ function GSE:GUIDrawMacroEditor(container, version)
                 value = value()
                 if type(value) == "boolean" then
                     editframe.booleanFunctions[k] = k
+                end
+                if type(value) == "number" then
+                    editframe.numericFunctions[k] = k
                 end
             end
         end
@@ -2336,14 +2340,17 @@ local function drawAction(container, action, version, keyPath)
         local clicksdropdown = AceGUI:Create("Dropdown")
         clicksdropdown:SetLabel(L["Measure"])
         clicksdropdown:SetWidth((editframe.Width) * 0.24)
-        clicksdropdown:SetList(
-            {
-                [L["Clicks"]] = L["How many macro Clicks to pause for?"],
-                [L["Seconds"]] = L["How many seconds to pause for?"],
-                ["GCD"] = L["Pause for the GCD."]
-                --["Random"] = L["Random - It will select .... a spell, any spell"]
-            }
-        )
+        local clickdroplist = {
+            [L["Clicks"]] = L["How many macro Clicks to pause for?"],
+            [L["Seconds"]] = L["How many milliseconds to pause for?"],
+            [L["GCD"]] = L["Pause for the GCD."]
+            --["Random"] = L["Random - It will select .... a spell, any spell"]
+
+        }
+        for k,_ in pairs(editframe.numericFunctions) do
+            clickdroplist[k] = L["Local Function: "] .. k
+        end
+        clicksdropdown:SetList(clickdroplist)
         clicksdropdown:SetCallback(
             "OnEnter",
             function()
@@ -2358,19 +2365,26 @@ local function drawAction(container, action, version, keyPath)
         )
         if GSE.isEmpty(action.MS) then
             clicksdropdown:SetValue(L["Clicks"])
+        elseif not GSE.isEmpty(action.Variable) then
+            if not GSE.isEmpty(editframe.numericFunctions[action.Variable]) then
+                clicksdropdown:SetValue(action.MS)
+            else
+                action.Variable = nil
+            end
         else
-            clicksdropdown:SetValue(L["Seconds"])
+            clicksdropdown:SetValue(L["Milliseconds"])
             if action.MS == "~~GCD~~" or action.MS == "GCD" then
                 clicksdropdown:SetValue("GCD")
             end
         end
-
         clicksdropdown:SetCallback(
             "OnLeave",
             function()
                 GSE.ClearTooltip(editframe)
             end
         )
+
+
         linegroup1:AddChild(clicksdropdown)
         local spacerlabel1 = AceGUI:Create("Label")
         spacerlabel1:SetWidth(5)
@@ -2383,32 +2397,24 @@ local function drawAction(container, action, version, keyPath)
         msvalueeditbox.editbox:SetNumeric(true)
         msvalueeditbox:DisableButton(true)
         local value = GSE.isEmpty(action.MS) and action.Clicks or action.MS
+        if not GSE.isEmpty(action.Clicks) or GSE.isEmpty(action.MS) then
+            msvalueeditbox:SetDisabled(false)
+        else
+            msvalueeditbox:SetDisabled(true)
+        end
         msvalueeditbox:SetText(value)
         msvalueeditbox:SetCallback(
             "OnTextChanged",
             function(self, event, text)
-                --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
                 local returnAction = {}
                 returnAction["Type"] = action.Type
                 if clicksdropdown:GetValue() == L["Clicks"] then
                     returnAction["Clicks"] = tonumber(text)
-                elseif clicksdropdown:GetValue() == "GCD" then
-                    returnAction["MS"] = "GCD"
                 else
                     returnAction["MS"] = tonumber(text)
                 end
-
-                -- if GSE.isNaN(tonumber(text)) then
-                --     if clicksdropdown:GetValue() ~= "GCD" or clicksdropdown:GetValue() ~= "~~GCD~~" then
-                --         -- Invalid value
-                --         GSE.GUIEditFrame:SetStatusText(GSEOptions.UNKNOWN .. L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] .. Statics.StringReset)
-                --         editframe.invalidPause = true
-                --         return
-                --     end
-                -- end
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
                 GSE.GUIEditFrame:SetStatusText(editframe.statusText)
-                -- editframe.invalidPause = false
             end
         )
 
@@ -2418,31 +2424,28 @@ local function drawAction(container, action, version, keyPath)
             end)
         clicksdropdown:SetCallback(
             "OnValueChanged",
-            function()
+            function(self, event, text)
                 --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
                 local returnAction = {}
                 returnAction["Type"] = action.Type
-                if clicksdropdown:GetValue() == L["Clicks"] then
+                if text == L["Clicks"] then
                     returnAction["Clicks"] = tonumber(msvalueeditbox:GetText())
-                elseif clicksdropdown:GetValue() == "GCD" then
-                    returnAction["MS"] = "GCD"
-                    msvalueeditbox:SetText(0)
-                else
-                    returnAction["MS"] = tonumber(msvalueeditbox:GetText())
-                end
-                if clicksdropdown:GetValue() == "GCD" then
-                    msvalueeditbox:SetDisabled(true)
-                else
                     msvalueeditbox:SetDisabled(false)
+                elseif text == L["milliseconds"] then
+                    returnAction["MS"] = tonumber(msvalueeditbox:GetText())
+                    msvalueeditbox:SetDisabled(false)
+                else
+                    returnAction["Variable"] = text
+                    msvalueeditbox:SetDisabled(true)
                 end
 
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
             end
         )
-        if clicksdropdown:GetValue() == "GCD" then
-            msvalueeditbox:SetDisabled(true)
-        else
+        if clicksdropdown:GetValue() == L["Milliseconds"] or  clicksdropdown:GetValue() == L["Clicks"] then
             msvalueeditbox:SetDisabled(false)
+        else
+            msvalueeditbox:SetDisabled(true)
         end
         linegroup1:AddChild(msvalueeditbox)
 

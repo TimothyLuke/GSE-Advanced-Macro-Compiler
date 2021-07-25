@@ -1375,14 +1375,16 @@ function GSE.processAction(action, metaData, variables)
         return processRepeats(returnActions)
     elseif action.Type == Statics.Actions.Pause then
         local PauseActions = {}
-        local clicks = action.Clicks
-        if GSE.isEmpty(clicks) then
-            clicks = action.MS
-            if clicks == '~~GCD~~' or clicks == 'GCD' then
+        local clicks = action.Clicks 
+        if not GSE.isEmpty(action.Variable) then
+            if action.Variable == "GCD" then
                 clicks = GSE.GetGCD() * 1000 / GSEOptions.msClickRate
             else
-                clicks = math.ceil(clicks / GSEOptions.msClickRate)
+                clicks = tonumber(variables[action.Variable]) / GSEOptions.msClickRate
             end
+        elseif not GSE.isEmpty(action.MS) then
+            clicks = action.MS
+            clicks = math.ceil(clicks / GSEOptions.msClickRate)
         end
         if clicks > 0 then
             for loop = 1, clicks do
