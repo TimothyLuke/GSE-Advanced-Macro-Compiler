@@ -182,10 +182,10 @@ function GSE:ADDON_LOADED(event, addon)
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
     if addon == GNOME then
-        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Gnome Sequencer Enhanced")
+        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Advanced Macro Compiler")
         if not GSEOptions.HideLoginMessage then
-            GSE.Print(GSEOptions.AuthorColour .. L["GnomeSequencer-Enhanced loaded.|r  Type "] ..
-                          GSEOptions.CommandColour .. L["/gs help|r to get started."], GNOME)
+            GSE.Print(GSEOptions.AuthorColour .. L["GSE: Advanced Macro Compiler loaded.|r  Type "] ..
+                          GSEOptions.CommandColour .. L["/gse help|r to get started."], GNOME)
         end
     end
 
@@ -273,6 +273,22 @@ function GSE:PLAYER_LEVEL_UP()
     GSE.ReloadSequences()
 end
 
+function GSE:CHARACTER_POINTS_CHANGED()
+    GSE.ReloadSequences()
+end
+
+function GSE:SPELLS_CHANGED()
+    GSE.ReloadSequences()
+end
+
+function GSE:ACTIVE_TALENT_GROUP_CHANGED()
+    GSE.ReloadSequences()
+end
+
+function GSE:PLAYER_PVP_TALENT_UPDATE()
+    GSE.ReloadSequences()
+end
+
 function GSE:GROUP_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck()
@@ -313,6 +329,13 @@ GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
 
 if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
+    GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
+end
+
+if GSE.GameMode < 3 then
+    GSE:RegisterEvent("CHARACTER_POINTS_CHANGED");
+    GSE:RegisterEvent("SPELLS_CHANGED");
 end
 
 local function PrintGnomeHelp()
@@ -327,22 +350,22 @@ local function PrintGnomeHelp()
         L["This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."],
         GNOME)
     GSE.Print(L["To get started "] .. GSEOptions.CommandColour ..
-                  L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."],
+                  L["/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."],
         GNOME)
     GSE.Print(L["The command "] .. GSEOptions.CommandColour ..
-                  L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."],
+                  L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."],
         GNOME)
     GSE.Print(L["The command "] .. GSEOptions.CommandColour ..
-                  L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."],
+                  L["/gse cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."],
         GNOME)
     GSE.Print(L["The command "] .. GSEOptions.CommandColour ..
-                  L["/gs checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."],
+                  L["/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."],
         GNOME)
 end
 
-GSE:RegisterChatCommand("gsse", "GSSlash")
 GSE:RegisterChatCommand("gs", "GSSlash")
 GSE:RegisterChatCommand("gse", "GSSlash")
+GSE:RegisterChatCommand("gsse", "GSSlash")
 
 -- Functions
 --- Handle slash commands

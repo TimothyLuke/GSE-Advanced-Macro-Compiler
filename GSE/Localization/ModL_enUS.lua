@@ -698,4 +698,12 @@ L["How many milliseconds to pause for?"] = true
 L['Local Function: '] = true
 
 -- #659
-L["Shift Click this link to add it into chat --> "] = true
+L["Shift Click this link to add it into chat --> "] = true-- #996
+
+-- #996
+L["/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."] = true
+L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
+L["/gse cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."] = true
+L["/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
+L["/gse help|r to get started."] = true
+L["GSE: Advanced Macro Compiler loaded.|r  Type "] = true
