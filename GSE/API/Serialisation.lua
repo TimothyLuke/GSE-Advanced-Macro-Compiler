@@ -265,6 +265,15 @@ function GSE.sendMessage(tab, channel, target, priority)
                           "INSTANCE_CHAT" or "PARTY"
         end
     end
+    if target and not UnitIsSameServer(target) then
+        if UnitInRaid(target) then
+            channel = "RAID"
+            transmission = ("§§%s:%s"):format(target, transmission)
+        elseif UnitInParty(target) then
+            channel = "PARTY"
+            transmission = ("§§%s:%s"):format(target, transmission)
+        end
+    end 
     GSE:SendCommMessage(Statics.CommPrefix, transmission, channel, target)
 
 end
@@ -292,6 +301,7 @@ function GSE.SendSequence(ClassID, SequenceName, recipient, channel)
     if GSE.isEmpty(channel) then
         channel = "WHISPER"
     end
+     
     local key = ClassID .. "," .. SequenceName
     GSE.TransmitSequence(key, channel, recipient)
 end
@@ -382,6 +392,16 @@ end
 function GSE:OnCommReceived(prefix, message, channel, sender)
     GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
     GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. channel .. " " .. sender, Statics.SourceTransmission)
+    if channel == "PARTY" or channel == "RAID" then
+        local dest, msg = string.match(message, "^§§([^:]+):(.+)$")
+        if dest then
+            local dName, dServer = string.match(dest, "^(.*)-(.*)$")
+            local myName, myServer = UnitFullName("player")
+            if myName == dName and myServer == dServer then
+                message = msg
+            end
+        end
+    end
     local success, t = GSE.DecodeMessage(message)
      if success then
         if t.Command == "GS-E_VERSIONCHK" then
@@ -411,15 +431,15 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
-                    GSE.SendSequence(GSEStorage[t.ClassID][t.SequenceName], sender, "WHISPER")
+                if not GSE.isEmpty(GSE3Storage[t.ClassID][t.SequenceName]) then
+                    GSE.SendSequence(GSE3Storage[t.ClassID][t.SequenceName], sender, "WHISPER")
                 end
             else
                 GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
+                if not GSE.isEmpty(GSE3Storage[t.ClassID][t.SequenceName]) then
                     GSE.SendSequenceMeta(t.ClassID,t.SequenceName, sender, "WHISPER")
                 end
             else
@@ -427,9 +447,9 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_SEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
+                if not GSE.isEmpty(GSE3Storage[t.ClassID][t.SequenceName]) then
                     local sequence = GSE.Library[t.ClassID][t.SequenceName]
-                    if sequence.LastUpdated ~= t.LastUpdated then
+                    if sequence.MetaData.LastUpdated ~= t.LastUpdated then
                         GSE.RequestSequence(t.ClassID, t.SequenceName, sender, "WHISPER")
                     end
                 end

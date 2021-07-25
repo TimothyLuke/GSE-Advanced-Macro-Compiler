@@ -161,3 +161,43 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
     showAlert = true,
     exclusive = true
 }
+
+StaticPopupDialogs['GSE_ChatLink'] = {
+    text = L["Copy this link and paste it into a chat window."],
+    hasEditBox = 1,
+    link = "",
+    OnShow = function(self)
+        self.editBox:SetAutoFocus(false)
+        self.editBox.width = self.editBox:GetWidth()
+        self.editBox:SetWidth(220)
+        self.editBox:SetText(StaticPopupDialogs['GSE_ChatLink'].link)
+        self.editBox:HighlightText()
+        ChatEdit_FocusActiveWindow();
+    end,
+    OnHide = function(self)
+        self.editBox:SetWidth(self.editBox.width or 50)
+        self.editBox.width = nil
+    end,
+    hideOnEscape = 1,
+    button1 = OKAY,
+    EditBoxOnEnterPressed = function(self)
+        ChatEdit_FocusActiveWindow();
+        self:GetParent():Hide();
+    end,
+    EditBoxOnEscapePressed = function(self)
+        ChatEdit_FocusActiveWindow();
+        self:GetParent():Hide();
+    end,
+    EditBoxOnTextChanged = function(self)
+        if (self:GetText() ~= StaticPopupDialogs['GSE_ChatLink'].link) then
+            self:SetText(StaticPopupDialogs['GSE_ChatLink'].link)
+        end
+        self:HighlightText()
+        self:ClearFocus()
+        ChatEdit_FocusActiveWindow();
+    end,
+    OnEditFocusGained = function(self)
+        self:HighlightText()
+    end,
+    showAlert = 1
+}

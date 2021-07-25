@@ -11,7 +11,7 @@ local libCE = libC:GetAddonEncodeTable()
 local editkey = ""
 
 local viewframe = AceGUI:Create("Frame")
-viewframe:SetTitle(L["Sequence Editor"])
+viewframe:SetTitle(L["Sequence Menu"])
 -- viewframe.frame:SetBackdrop({
 --   bgFile="Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
 --   edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
@@ -94,9 +94,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 			GSE.GUILoadEditor(widget:GetKey(), viewframe)
 		end
 		if button == "LeftButton" and IsShiftKeyDown() then
-			
-			local link = GSE.CreateSequenceLink(elements[2], elements[1])
-			print(L["Shift Click this link to add it into chat --> "] .. link)
+			StaticPopupDialogs["GSE_ChatLink"].link = GSE.CreateSequenceLink(elements[2], elements[1])
+			StaticPopup_Show ("GSE_ChatLink")
 		end
 	end)
 
