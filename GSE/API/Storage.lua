@@ -1280,6 +1280,37 @@ local function buildAction(action, metaData, variables)
     end
 end
 
+local function processRepeats(actionList)
+    local inserts = {}
+    local removes = {}
+    for k, v in ipairs(returnActions) do
+        if type(v) == "table" then
+            table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
+            table.insert(removes, k)
+        end
+    end
+
+    for i = #removes, 1, -1 do
+        table.remove(actionList, removes[i])
+    end
+
+    for _,v in ipairs(inserts) do
+        local startInterval = v["Interval"]
+        if startInterval == 1 then
+            startInterval = 2
+        end
+        local insertcount = math.ceil((#actionList - v["Start"]) / startInterval)
+        insertcount = math.ceil((#actionList + insertcount - v["Start"]) / startInterval)
+        local interval = v["Interval"]
+        table.insert(actionList, v["Start"] , v["Action"])
+        for i=1, insertcount do
+            local insertpos = v["Start"]  +  i * interval
+            table.insert(actionList, insertpos , v["Action"])
+        end
+    end
+    return actionList
+end
+
 function GSE.processAction(action, metaData, variables)
     if action.Disabled then
         return
@@ -1341,35 +1372,7 @@ function GSE.processAction(action, metaData, variables)
         end
 
         -- process repeats for the block
-        local inserts = {}
-        local removes = {}
-        for k, v in ipairs(returnActions) do
-            if type(v) == "table" then
-                table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
-                table.insert(removes, k)
-            end
-        end
-
-        for i = #removes, 1, -1 do
-            table.remove(returnActions, removes[i])
-        end
-
-        for _,v in ipairs(inserts) do
-            local startInterval = v["Interval"]
-            if startInterval == 1 then
-                startInterval = 2
-            end
-            local insertcount = math.ceil((#returnActions - v["Start"]) / startInterval)
-            insertcount = math.ceil((#returnActions + insertcount - v["Start"]) / startInterval)
-            local interval = v["Interval"]
-            table.insert(returnActions, v["Start"] , v["Action"])
-            for i=1, insertcount do
-                local insertpos = v["Start"]  +  i * interval
-                table.insert(returnActions, insertpos , v["Action"])
-            end
-        end
-
-        return returnActions
+        return processRepeats(returnActions)
     elseif action.Type == Statics.Actions.Pause then
         local PauseActions = {}
         local clicks = action.Clicks
@@ -1446,32 +1449,7 @@ function GSE.processAction(action, metaData, variables)
         end
 
         -- process repeats for the block
-        local inserts = {}
-        local processedInserts = {}
-        for k, v in ipairs(actionList) do
-            if type(v) == "table" then
-                if GSE.isEmpty(processedInserts[v.Action]) then
-                    table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
-                    processedInserts[v.Action] = {}
-                end
-                table.remove(actionList, k)
-            end
-        end
-
-        -- print("num INserts", #inserts)
-        for _,v in ipairs(inserts) do
-
-            local insertcount = math.ceil((#actionList - v["Start"]) / v["Start"])
-            local repeatCount = v["Interval"]
-            table.insert(actionList, v["Start"] , v["Action"])
-            for i=1, insertcount do
-                local insertpos
-                    insertpos = v["Start"]  +  i * repeatCount
-                table.insert(actionList, insertpos , v["Action"])
-            end
-        end
-
-        return actionList
+        return processRepeats(actionList)
 
     elseif action.Type == Statics.Actions.Action then
         return buildAction(action, metaData)
