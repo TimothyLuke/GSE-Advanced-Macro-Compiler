@@ -691,3 +691,7 @@ L["How many pixels wide should the Debugger start at.  Defaults to 700"] = true
 
 --#994
 L["Reverse Priority (1 21 321 4321)"] = true
+
+-- #880
+L["Milliseconds"] = true
+L["How many milliseconds to pause for?"] = true
