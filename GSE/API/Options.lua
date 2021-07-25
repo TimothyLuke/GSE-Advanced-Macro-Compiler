@@ -101,7 +101,7 @@ function GSE.GetOptionsTable()
                     deleteOrphanLogout = {
                         name = L["Delete Orphaned Macros on Logout"],
                         desc = L[
-                            "As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans"
+                            "As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"
                         ],
                         type = "toggle",
                         set = function(info, val)

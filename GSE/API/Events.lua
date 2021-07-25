@@ -356,7 +356,7 @@ local function PrintGnomeHelp()
                   L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."],
         GNOME)
     GSE.Print(L["The command "] .. GSEOptions.CommandColour ..
-                  L["/gse cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."],
+                  L["/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."],
         GNOME)
     GSE.Print(L["The command "] .. GSEOptions.CommandColour ..
                   L["/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."],

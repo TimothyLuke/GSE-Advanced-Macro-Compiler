@@ -9,7 +9,6 @@ L["<DEBUG> |r "] = true
 L["Close to Maximum Personal Macros.|r  You can have a maximum of "] = true
 L[" macros per character.  You currently have "] = true
 L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] = true
-L["/gs|r again."] = true
 L["Close to Maximum Macros.|r  You can have a maximum of "] = true
 L["|r.  You can also have a  maximum of "] = true
 L[" macros per Account.  You currently have "] = true
@@ -26,16 +25,10 @@ L["This is a small addon that allows you create a sequence of macros to be execu
 L["Like a /castsequence macro, it cycles through a series of commands when the button is pushed. However, unlike castsequence, it uses macro text for the commands instead of spells, and it advances every time the button is pushed instead of stopping when it can't cast something."] = true
 L["This version has been modified by TimothyLuke to make the power of GnomeSequencer avaialble to people who are not comfortable with lua programming."] = true
 L[":|r To get started "] = true
-L["/gs|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."] = true
-L["/gs listall|r will produce a list of all available macros with some help information."] = true
 L["To use a macro, open the macros interface and create a macro with the exact same name as one from the list.  A new macro with two lines will be created and place this on your action bar."] = true
 L["The command "] = true
-L["/gs showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
-L["/gs cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."] = true
 L[":|r Your current Specialisation is "] = true
 L["  The Alternative ClassID is "] = true
-L["GnomeSequencer-Enhanced loaded.|r  Type "] = true
-L["/gs help|r to get started."] = "/gse help|r to get started."
 L["Version="] = true
 L[":|r You cannot delete the only copy of a sequence."] = true
 L[" has been added as a new version and set to active.  Please review if this is as expected."] = true
@@ -79,8 +72,6 @@ L["KeyRelease"] = true
 L["Completely New GS Macro."] = true
 L["Please wait till you have left combat before using the Sequence Editor."] = true
 L["The Sequence Editor is an addon for GnomeSequencer-Enhanced that allows you to view and edit Sequences in game.  Type "] = true
-L["/gs |r to get started."] = "/gse |r to get started."
-L["Gnome Sequencer: Sequence Version Manager"] = true
 L["Manage Versions"] = true
 L["Active Version: "] = true
 L["Select Other Version"] = true
@@ -100,11 +91,9 @@ L["No"] = true
 L["General"] = true
 L["General Options"] = true
 L["Only Save Local Macros"] = true
-L["GS-E can save all macros or only those versions that you have created locally.  Turning this off will cache all macros in your WTF\\GS-Core.lua variables file but will increase load times and potentially cause colissions."] = true
 L["Use Macro Translator"] = true
 L["The Macro Translator will translate an English sequence to your local language for execution.  It can also be used to translate a sequence into a different language.  It is also used for syntax based colour markup of Sequences in the editor."] = true
 L["Delete Orphaned Macros on Logout"] = true
-L["As GS-E is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gs cleanorphans"] = true
 L["Use Global Account Macros"] = true
 L["When creating a macro, if there is not a personal character macro space, create an account wide macro."] = true
 L["Set Default Icon QuestionMark"] = true
@@ -175,10 +164,9 @@ L["Picks a Custom Colour to be used for language descriptors"] = true
 L["Blizzard Functions Colour"] = true
 L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"] = true
 L["Plugins"] = true
-L["GS-E Plugins"] = true
+
 L["Registered Addons"] = true
 L["Available Addons"] = true
-L[":|r The Sequence Translator allows you to use GS-E on other languages than enUS.  It will translate sequences to match your language.  If you also have the Sequence Editor you can translate sequences between languages.  The GS-E Sequence Translator is available on curse.com"] = true
 L["Use Realtime Parsing"] = true
 L["The Sequence Editor can attempt to parse the Sequences, KeyPress and KeyRelease in realtime.  This is still experimental so can be turned off."] = true
 L["Import"] = true
@@ -201,8 +189,6 @@ L["When loading or creating a sequence, if it is a global or the macro has an un
 L["Updating due to new version."] = true
 L["Creating New Sequence."] = true
 
--- Transmission Stuff
-L["This will display debug messages for the GS-E Ingame Transmission and transfer"] = true
 
 -- New Strings 1.4
 L["Use Head Item in KeyRelease"] = true
@@ -294,7 +280,6 @@ L["GSE allows plugins to load Macro Collections as plugins.  You can reload a co
 L["The Sample Macros have been reloaded."] = true
 L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = true
 L["GSE"] = true
-L["/gs |r to get started."] = true
 L["Gnome Sequencer: Export a Sequence String."] = true
 L["Export a Sequence"] = true
 L["Export"] = true
@@ -351,7 +336,6 @@ L["This function will update macro stubs to support listening to the options bel
 L["There is an issue with sequence %s.  It has not been loaded to prevent the mod from failing."] = true
 L["Error found in version %i of %s."] = true
 L["To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"] = true
-L["/gs checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
 L["By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."] = true
 
 -- GSE 2.1.04
@@ -698,12 +682,18 @@ L["How many milliseconds to pause for?"] = true
 L['Local Function: '] = true
 
 -- #659
-L["Shift Click this link to add it into chat --> "] = true-- #996
+L["Copy this link and paste it into a chat window."] = true
 
 -- #996
 L["/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."] = true
 L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
-L["/gse cleanorphans|r will loop through your macros and delete any left over GS-E macros that no longer have a sequence to match them."] = true
+L["/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."] = true
 L["/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
 L["/gse help|r to get started."] = true
 L["GSE: Advanced Macro Compiler loaded.|r  Type "] = true
+L["/gse|r to get started."] = true
+L["/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."] = true
+L["GSE Plugins"] = true
+L["This will display debug messages for the GSE Ingame Transmission and transfer"] = true
+L["As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"] = true
+L["Sequence Menu"] = true
