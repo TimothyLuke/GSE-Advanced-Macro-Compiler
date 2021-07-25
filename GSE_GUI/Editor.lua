@@ -2342,8 +2342,8 @@ local function drawAction(container, action, version, keyPath)
         clicksdropdown:SetWidth((editframe.Width) * 0.24)
         local clickdroplist = {
             [L["Clicks"]] = L["How many macro Clicks to pause for?"],
-            [L["Seconds"]] = L["How many milliseconds to pause for?"],
-            [L["GCD"]] = L["Pause for the GCD."]
+            [L["Milliseconds"]] = L["How many milliseconds to pause for?"],
+            ["GCD"] = L["Pause for the GCD."]
             --["Random"] = L["Random - It will select .... a spell, any spell"]
 
         }
@@ -2431,7 +2431,7 @@ local function drawAction(container, action, version, keyPath)
                 if text == L["Clicks"] then
                     returnAction["Clicks"] = tonumber(msvalueeditbox:GetText())
                     msvalueeditbox:SetDisabled(false)
-                elseif text == L["milliseconds"] then
+                elseif text == L["Milliseconds"] then
                     returnAction["MS"] = tonumber(msvalueeditbox:GetText())
                     msvalueeditbox:SetDisabled(false)
                 else

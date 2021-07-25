@@ -695,3 +695,4 @@ L["Reverse Priority (1 21 321 4321)"] = true
 -- #880
 L["Milliseconds"] = true
 L["How many milliseconds to pause for?"] = true
+L['Local Function: '] = true
