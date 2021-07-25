@@ -70,7 +70,7 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
     testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
 
     testRowButton:SetCallback("OnClick", function()
-        GSE.RequestSequence(ClassID, SequenceName, remoteFrame.GSEUser)
+        GSE.RequestSequence(ClassID, SequenceName, remoteFrame.GSEUser, remoteFrame.Channel)
     end)
     testRowButton:SetCallback('OnEnter', function()
         GSE.CreateToolTip(L["Request Macro"], L["Request that the user sends you a copy of this macro."], remoteFrame)
@@ -101,7 +101,7 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
     container:AddChild(linegroup1)
 end
 
-function GSE.ShowRemoteWindow(SequenceList, GSEUser)
+function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
     local classlinegroup = AceGUI:Create("SimpleGroup")
     classlinegroup:SetLayout("Flow")
     local columnWidth = remoteFrame.Width - 55
@@ -135,6 +135,7 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser)
 
     remoteFrame.SequenceList = SequenceList
     remoteFrame.GSEUser = GSEUser
+    remoteFrame.Channel = channel
     for ClassID, v in ipairs(remoteFrame.SequenceList) do
         local lClassID = tonumber(ClassID)
         local linegroup1 = AceGUI:Create("SimpleGroup")

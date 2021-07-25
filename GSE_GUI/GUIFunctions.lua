@@ -201,9 +201,9 @@ function GSE.ClearTooltip(GSEFrame)
   GSEFrame.tooltip = nil
 end
 
-function GSE.ShowSequenceList(SequenceTable, GSEUser)
+function GSE.ShowSequenceList(SequenceTable, GSEUser, channel)
   if GSE.UnsavedOptions["GUI"] then
-    GSE.ShowRemoteWindow(SequenceTable, GSEUser)
+    GSE.ShowRemoteWindow(SequenceTable, GSEUser, channel)
   else
     for _,v in ipairs(SequenceTable) do
       for i,j in pairs(v) do

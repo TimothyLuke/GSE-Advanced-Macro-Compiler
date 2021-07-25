@@ -288,19 +288,25 @@ function GSE.performVersionCheck(version)
     end
 end
 
-function GSE.SendSequence(ClassID, SequenceName, recipient)
+function GSE.SendSequence(ClassID, SequenceName, recipient, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
     local key = ClassID .. "," .. SequenceName
-    GSE.TransmitSequence(key, "WHISPER", recipient)
+    GSE.TransmitSequence(key, channel, recipient)
 end
 
-function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser)
+function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
     local t = {}
     t.Command = "GSE_SEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
     t.LastUpdated = GSE.Library[ClassID][SequenceName].MetaData.LastUpdated
     t.Help = GSE.Library[ClassID][SequenceName].MetaData.Help
-    GSE.sendMessage(t, "WHISPER", gseuser)
+    GSE.sendMessage(t, channel, gseuser)
 end
 
 function GSE.SendSpellCache(channel)
@@ -310,20 +316,26 @@ function GSE.SendSpellCache(channel)
     GSE.sendMessage(t, channel)
 end
 
-function GSE.RequestSequence(ClassID, SequenceName, gseuser)
+function GSE.RequestSequence(ClassID, SequenceName, gseuser, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
     local t = {}
     t.Command = "GSE_REQUESTSEQUENCE"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
-    GSE.sendMessage(t, "WHISPER", gseuser)
+    GSE.sendMessage(t, channel, gseuser)
 end
 
-function GSE.RequestSequenceMeta(ClassID, SequenceName, gseuser)
+function GSE.RequestSequenceMeta(ClassID, SequenceName, gseuser, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
     local t = {}
     t.Command = "GSE_REQUESTSEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
-    GSE.sendMessage(t, "WHISPER", gseuser)
+    GSE.sendMessage(t, channel, gseuser)
 end
 
 function GSE.ReceiveSequence(classid, SequenceName, Sequence, sender)
@@ -346,23 +358,30 @@ function GSE.sendVersionCheck()
     GSE.sendMessage(t)
 end
 
-function GSE.ListSequences(recipient)
+function GSE.ListSequences(recipient, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
+
     local sequenceTable = GSE.GetSequenceSummary()
     local t = {}
     t.Command = "GSE_SEQUENCELIST"
     t.SequenceTable = sequenceTable
-    GSE.sendMessage(t, "WHISPER", recipient)
+    GSE.sendMessage(t, channel, recipient)
 end
 
-function GSE.RequestSequenceList(gseuser)
+function GSE.RequestSequenceList(gseuser, channel)
+    if GSE.isEmpty(channel) then
+        channel = "WHISPER"
+    end
     local t = {}
     t.Command = "GSE_LISTSEQUENCES"
-    GSE.sendMessage(t, "WHISPER", gseuser)
+    GSE.sendMessage(t, channel, gseuser)
 end
 
-function GSE:OnCommReceived(prefix, message, distribution, sender)
+function GSE:OnCommReceived(prefix, message, channel, sender)
     GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
-    GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. distribution .. " " .. sender, Statics.SourceTransmission)
+    GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. channel .. " " .. sender, Statics.SourceTransmission)
     local success, t = GSE.DecodeMessage(message)
      if success then
         if t.Command == "GS-E_VERSIONCHK" then
@@ -380,20 +399,20 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
             end
         elseif t.Command == "GSE_LISTSEQUENCES" then
             if sender ~= GetUnitName("player", true) then
-                GSE.ListSequences(sender)
+                GSE.ListSequences(sender, "WHISPER")
             else
                 GSE.PrintDebugMessage("Ignoring List Request from me.", Statics.SourceTransmission)
             end
         elseif t.Command == "GSE_SEQUENCELIST" then
             if sender ~= GetUnitName("player", true) then
-                GSE.ShowSequenceList(t.SequenceTable, sender)
+                GSE.ShowSequenceList(t.SequenceTable, sender, channel)
             else
                 GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
                 if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
-                    GSE.SendSequence(GSEStorage[t.ClassID][t.SequenceName], sender)
+                    GSE.SendSequence(GSEStorage[t.ClassID][t.SequenceName], sender, "WHISPER")
                 end
             else
                 GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
@@ -401,7 +420,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
         elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
                 if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
-                    GSE.SendSequenceMeta(t.ClassID,t.SequenceName, sender)
+                    GSE.SendSequenceMeta(t.ClassID,t.SequenceName, sender, "WHISPER")
                 end
             else
                 GSE.PrintDebugMessage("Ignoring SequenceMeta from me.", Statics.SourceTransmission)
@@ -411,7 +430,7 @@ function GSE:OnCommReceived(prefix, message, distribution, sender)
                 if not GSE.isEmpty(GSEStorage[t.ClassID][t.SequenceName]) then
                     local sequence = GSE.Library[t.ClassID][t.SequenceName]
                     if sequence.LastUpdated ~= t.LastUpdated then
-                        GSE.RequestSequence(t.ClassID, t.SequenceName, sender)
+                        GSE.RequestSequence(t.ClassID, t.SequenceName, sender, "WHISPER")
                     end
                 end
             else
