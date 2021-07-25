@@ -1283,7 +1283,7 @@ end
 local function processRepeats(actionList)
     local inserts = {}
     local removes = {}
-    for k, v in ipairs(returnActions) do
+    for k, v in ipairs(actionList) do
         if type(v) == "table" then
             table.insert(inserts, {Action = v.Action, Interval = v.Interval, Start = k})
             table.insert(removes, k)
