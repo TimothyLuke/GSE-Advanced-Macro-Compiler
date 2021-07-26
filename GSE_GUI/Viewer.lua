@@ -94,7 +94,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 			GSE.GUILoadEditor(widget:GetKey(), viewframe)
 		end
 		if button == "LeftButton" and IsShiftKeyDown() then
-			StaticPopupDialogs["GSE_ChatLink"].link = GSE.CreateSequenceLink(elements[2], elements[1])
+			StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(elements[2], elements[1])
 			StaticPopup_Show ("GSE_ChatLink")
 		end
 	end)
