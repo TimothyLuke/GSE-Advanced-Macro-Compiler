@@ -386,5 +386,9 @@ globals = {
 	"GetSpellSubtext",
 	"STATICPOPUPS_NUMDIALOGS",
 	"C_CreatureInfo",
-	"UnitIsSameServer"
+	"UnitIsSameServer",
+	"C_BattleNet",
+	"BNGetNumFriendGameAccounts",
+	"BNGetFriendGameAccountInfo",
+	"ChatFrame_AddMessageEventFilter"
 }
