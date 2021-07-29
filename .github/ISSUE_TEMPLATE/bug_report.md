@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a new Bug. A Bug is where you think GSE is not working the way it is supposed to. This is different to an Enhancement which is a change to how GSE Works.
 title: "[BUG]"
 labels: bug
 assignees: ''
