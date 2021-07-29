@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions
+    url: https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/discussions
+    about: Please ask and answer questions here.
+  - name: Bugs
+    url: https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/issues/new?assignees=&labels=bug&template=bug_report.md&title=%5BBUG%5D
+    about: Report a new Bug.  A Bug is where you think GSE is not working the way it is supposed to.  This is different to an Enhancement which is a change to how GSE Works.
+  - name: Enhancements
+    url: https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/issues/new?assignees=&labels=bug&template=bug_report.md&title=%5BBUG%5D
+    about: Report a change to the way GSE works.
