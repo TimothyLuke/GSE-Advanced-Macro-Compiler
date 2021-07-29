@@ -7,11 +7,11 @@ assignees: ''
 
 ---
 
-🟢 **Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+🟢 **How does GSE currently work**
+A clear and concise description of what currently happens. Eg. Every time you go to do x you need to perform the following [...]
 
 🟢 **Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+A clear and concise description of what you want to happen instead of what currently occurs.
 
 🟢 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.
