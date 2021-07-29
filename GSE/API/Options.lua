@@ -1182,7 +1182,7 @@ function GSE.GetOptionsTable()
     -- Add Dynamic Content Container
 
     local ord = 900
-    for _, v in pairs(GSEOptions.AddInPacks) do
+    for _, v in pairs(GSE.AddInPacks) do
         ord = ord + 1
         OptionsTable.args.pluginsTab.args[v.Name] = {
             name = v.Name,
