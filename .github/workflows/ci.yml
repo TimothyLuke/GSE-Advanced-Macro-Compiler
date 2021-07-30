@@ -50,11 +50,20 @@ jobs:
         luarocks install luacov
         luarocks install luacov-coveralls
         luarocks install luadoc
-
+        luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
+        
     - name: Run Busted UnitTests
       run: |
         busted -o utfTerminal --verbose --coverage
-#        luacov-coveralls -r ./GSE/ -t {{ secrets.COVERALLS_TOKEN }} -c .luacov
+   
+    - name: Log coverage to coveralls.io
+      if: success()
+      continue-on-error: true
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+      run: |
+        export LUA_PATH="./GSE/?.lua;$LUA_PATH"
+        luacov-coveralls -i GSE -v
         
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
@@ -99,9 +108,3 @@ jobs:
       with:
         branch: gh-pages # The branch the action should deploy to.
         folder: .pages # The folder the action should deploy.
-
-#    - name: Coveralls
-#      uses: coverallsapp/github-action@master
-#      with:
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#        path-to-lcov: luacov.report.out
