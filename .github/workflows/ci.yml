@@ -50,7 +50,7 @@ jobs:
         luarocks install luacov
         luarocks install luacov-coveralls
         luarocks install luadoc
-        luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
+       # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
         
     - name: Run Busted UnitTests
       run: |
