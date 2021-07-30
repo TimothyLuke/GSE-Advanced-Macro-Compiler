@@ -1393,8 +1393,12 @@ function GSE.processAction(action, metaData, variables)
                 clicks = tonumber(value) / GSEOptions.msClickRate
             end
         elseif not GSE.isEmpty(action.MS) then
-            clicks = action.MS
-            clicks = math.ceil(clicks / GSEOptions.msClickRate)
+            if action.MS == "GCD" or action.MS == "~~GCD~~" then
+                clicks = GSE.GetGCD() * 1000 / GSEOptions.msClickRate
+            else
+                clicks = action.MS
+                clicks = math.ceil(clicks / GSEOptions.msClickRate)
+            end
         end
         if clicks > 1 then
             for loop = 1, clicks do

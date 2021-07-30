@@ -1329,7 +1329,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         "OnClick",
         function()
             local newAction = {
-                ["MS"] = "GCD",
+                ["Variable"] = "GCD",
                 ["Type"] = Statics.Actions.Pause
             }
             table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
@@ -2133,7 +2133,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
             function()
                 local addPath = {}
                 local newAction = {
-                    ["MS"] = "GCD",
+                    ["Variable"] = "GCD",
                     ["Type"] = Statics.Actions.Pause
                 }
                 if #path > 1 then
@@ -2363,18 +2363,22 @@ local function drawAction(container, action, version, keyPath)
                 )
             end
         )
-        if GSE.isEmpty(action.MS) then
-            clicksdropdown:SetValue(L["Clicks"])
-        elseif not GSE.isEmpty(action.Variable) then
-            if not GSE.isEmpty(editframe.numericFunctions[action.Variable]) then
-                clicksdropdown:SetValue(action.MS)
+        if not GSE.isEmpty(action.Variable) then
+            if action.Variable == "GCD" then
+                clicksdropdown:SetValue(action.Variable)
+            elseif not GSE.isEmpty(editframe.numericFunctions[action.Variable]) then
+                clicksdropdown:SetValue(action.Variable)
             else
                 action.Variable = nil
             end
+        elseif GSE.isEmpty(action.MS) then
+            clicksdropdown:SetValue(L["Clicks"])
         else
             clicksdropdown:SetValue(L["Milliseconds"])
             if action.MS == "~~GCD~~" or action.MS == "GCD" then
                 clicksdropdown:SetValue("GCD")
+                action.Variable = "GCD"
+                action.MS = nil
             end
         end
         clicksdropdown:SetCallback(
