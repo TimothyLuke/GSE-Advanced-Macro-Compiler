@@ -98,3 +98,8 @@ jobs:
       with:
         branch: gh-pages # The branch the action should deploy to.
         folder: .pages # The folder the action should deploy.
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
