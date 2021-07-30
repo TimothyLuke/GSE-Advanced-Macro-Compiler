@@ -55,6 +55,7 @@ return {
     'file_loader$',
     '.luarocks$',
     '$lua_install$',
+    '.lua$',
   },
 
  ['include'] = {
