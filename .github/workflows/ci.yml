@@ -54,7 +54,7 @@ jobs:
     - name: Run Busted UnitTests
       run: |
         busted -o utfTerminal --verbose --coverage
-        luacov-coveralls -r ./GSE/ -t {{ secrets.COVERALLS_TOKEN }} -c .luacov
+#        luacov-coveralls -r ./GSE/ -t {{ secrets.COVERALLS_TOKEN }} -c .luacov
         
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
@@ -100,8 +100,8 @@ jobs:
         branch: gh-pages # The branch the action should deploy to.
         folder: .pages # The folder the action should deploy.
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: luacov.report.out
+#    - name: Coveralls
+#      uses: coverallsapp/github-action@master
+#      with:
+#        github-token: ${{ secrets.GITHUB_TOKEN }}
+#        path-to-lcov: luacov.report.out
