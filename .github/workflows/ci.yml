@@ -56,7 +56,6 @@ jobs:
         busted -o utfTerminal --verbose --coverage
         luacov
         cat luacov.report.out
-        ls .coverage
         ls
   
     # Runs a set of commands using the runners shell
@@ -107,3 +106,4 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: luacov.report.out
