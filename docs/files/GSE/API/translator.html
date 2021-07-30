@@ -124,7 +124,7 @@
 <table class="function_list">
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ClassicGetSpellInfo">GSE.ClassicGetSpellInfo</a>&nbsp;(spellID)</td>
+	<td class="name" nowrap><a href="#GSE.ClassicGetSpellInfo">GSE.ClassicGetSpellInfo</a>&nbsp;(spellID, mode)</td>
 	<td class="summary">Test override of GetSpellInfo </td>
 	</tr>
 
@@ -141,11 +141,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.ProcessVariables">GSE.ProcessVariables</a>&nbsp;(lines, variableTable)</td>
 	<td class="summary">This function interates through each line in lines and does a string replace on each varible in the variableTable </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ReportUnfoundSpells">GSE.ReportUnfoundSpells</a>&nbsp;()</td>
-	<td class="summary">This option reports on language table errors and omissions.</td>
 	</tr>
 
 	<tr>
@@ -171,7 +166,7 @@
 
 
 
-<dt><a name="GSE.ClassicGetSpellInfo"></a><strong>GSE.ClassicGetSpellInfo</strong>&nbsp;(spellID)</dt>
+<dt><a name="GSE.ClassicGetSpellInfo"></a><strong>GSE.ClassicGetSpellInfo</strong>&nbsp;(spellID, mode)</dt>
 <dd>
 Test override of GetSpellInfo
 
@@ -181,6 +176,10 @@ Test override of GetSpellInfo
 	
 	<li>
 	  spellID: 
+	</li>
+	
+	<li>
+	  mode: 
 	</li>
 	
 </ul>
@@ -274,23 +273,6 @@ This function interates through each line in lines and does a string replace on 
 	</li>
 	
 </ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ReportUnfoundSpells"></a><strong>GSE.ReportUnfoundSpells</strong>&nbsp;()</dt>
-<dd>
-This option reports on language table errors and omissions.  It is accessible via the command line /gs compilemissingspells and saves this informationm into GSE.lua under GSEOptions.UnfoundSpellIDs, GSEOptions.UnfoundSpells and GSEOptions.ErroneousSpellID This information is used by the GSEUtils that generates the enUS.lua, enUSHash.lua and enUSSHADOW.lua files.
-
 
 
 

@@ -125,7 +125,7 @@
 
 	<tr>
 	<td class="name" nowrap><a href="#GSE.RegisterAddon">GSE.RegisterAddon</a>&nbsp;(name, version, sequencenames)</td>
-	<td class="summary">List addons that GSE knows about that have been enabled function GSE.ListAddons() local returnVal = ""; for k,v in pairs(GSEOptions.AddInPacks) do aname, atitle, anotes, _, _, _ = GetAddOnInfo(k) returnVal = returnVal ..</td>
+	<td class="summary">List addons that GSE knows about that have been enabled function GSE.ListAddons() local returnVal = ""; for k,v in pairs(GSE.AddInPacks) do aname, atitle, anotes, _, _, _ = GetAddOnInfo(k) returnVal = returnVal ..</td>
 	</tr>
 
 </table>
@@ -148,7 +148,7 @@
 
 <dt><a name="GSE.RegisterAddon"></a><strong>GSE.RegisterAddon</strong>&nbsp;(name, version, sequencenames)</dt>
 <dd>
-List addons that GSE knows about that have been enabled function GSE.ListAddons() local returnVal = ""; for k,v in pairs(GSEOptions.AddInPacks) do aname, atitle, anotes, _, _, _ = GetAddOnInfo(k) returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n' end return returnVal end
+List addons that GSE knows about that have been enabled function GSE.ListAddons() local returnVal = ""; for k,v in pairs(GSE.AddInPacks) do aname, atitle, anotes, _, _, _ = GetAddOnInfo(k) returnVal = returnVal .. '|cffff0000' .. atitle .. ':|r '.. anotes .. '\n\n' end return returnVal end
 
 
 <h3>Parameters</h3>
