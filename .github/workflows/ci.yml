@@ -85,3 +85,15 @@ jobs:
         WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
       with:
         args: -g bcc -m .pkgmeta -w 0
+
+    - name: Parse and generate documentation
+      run: |
+        mkdir .pages
+        luadoc -d .pages/docs GSE/API/*.lua
+        
+
+    - name: Deploy API to GitHuib Pages🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.4
+      with:
+        branch: gh-pages # The branch the action should deploy to.
+        folder: .pages # The folder the action should deploy.
