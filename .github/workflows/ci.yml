@@ -18,7 +18,40 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  
+ test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+
+    - uses: actions/checkout@master
+
+    - uses: leafo/gh-actions-lua@v8.0.0
+      with:
+        luaVersion: "5.1.5"
+
+    # Runs a single command using the runners shell
+    - name: Install and Run Luacheck
+      uses: nebularg/actions-luacheck@v1
+      with:
+        args: -q
+
+    # do Busted checkes
+    - uses: leafo/gh-actions-luarocks@v4.0.0
+
+    - name: Build Luarocks
+      run: |
+        luarocks install busted
+        luarocks install luacov
+        luarocks install luacov-coveralls
+        luarocks install luadoc
+        luarocks make
+
+    - name: Run Busted UnitTests
+      run: |
+        busted -o utfTerminal --verbose --coverage
+  
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -29,12 +62,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      # Runs a single command using the runners shell
-      - name: Install and Run Luacheck
-        uses: nebularg/actions-luacheck@v1
-        with:
-          args: -q
 
       # Runs a set of commands using the runners shell
       - name: Create Package Retail
