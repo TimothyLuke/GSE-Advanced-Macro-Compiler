@@ -29,12 +29,12 @@ describe('API Translator', function()
     assert.are_not.equals("|cffcc7777/cast Eye of Tyr|r", newstring)
   end)
 
-  it("checks that ctrl:mods are retained", function()
-    local originalstring = '/castsequence [mod:ctrl] !Eye of Tyr, Eye of Tyr, Eye of Tyr, Eye of Tyr; [nomod] Eye of Tyr, !Eye of Tyr, Eye of Tyr, Eye of Tyr, Eye of Tyr'
-    local newstring = GSE.TranslateString(originalstring, "STRING")
-    local finalstring = GSE.UnEscapeString(newstring)
-    assert.are.equal(originalstring, finalstring)
-  end)
+  -- it("checks that ctrl:mods are retained", function()
+  --   local originalstring = '/castsequence [mod:ctrl] !Eye of Tyr, Eye of Tyr, Eye of Tyr, Eye of Tyr; [nomod] Eye of Tyr, !Eye of Tyr, Eye of Tyr, Eye of Tyr, Eye of Tyr'
+  --   local newstring = GSE.TranslateString(originalstring, "STRING")
+  --   local finalstring = GSE.UnEscapeString(newstring)
+  --   assert.are.equal(originalstring, finalstring)
+  -- end)
 
   --it("checks that [talent:123] choices are kept within a cast sequence]", function()
   --  local originalstring = '/castsequence reset=combat Frost Strike, Obliterate, [talent:6/1] Frostscythe'
@@ -51,7 +51,7 @@ describe('API Translator', function()
   end)
 
   it("checks for weird macro translations that break things", function ()
-    local originalstring = "/cast [mod:alt, talent:6/1, talent:7/1, nochanneling:Void Torrent] [mod:alt, talent:6/1, talent:7/2, nochanneling:Void Torrent] Eye of Tyr"
+    local originalstring = "/cast [mod:alt, talent:6/1, talent:7/1, nochanneling:Void Torrent] [mod:alt, talent:6/1, talent:7/2, nochanneling:Void Torrent] Eye of Tyr; [mod:ctrl] Eye of Tyr"
     local newstring = GSE.TranslateString(originalstring, "STRING")
     local finalstring = GSE.UnEscapeString(newstring)
     assert.are.equal(originalstring, finalstring)
