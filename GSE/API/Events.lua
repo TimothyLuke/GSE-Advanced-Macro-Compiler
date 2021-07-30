@@ -139,6 +139,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformOneOffEvents()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
+    GSE.currentZone = GetRealZoneText()
 end
 
 function GSE:ADDON_LOADED(event, addon)
@@ -298,15 +299,15 @@ function GSE:GROUP_ROSTER_UPDATE(...)
             GSE.UnsavedOptions["PartyUsers"][k] = nil
         end
     end
-        local channel
-        if IsInRaid() then
-            channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and
-                          "INSTANCE_CHAT" or "RAID"
-        else
-            channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and
-                          "INSTANCE_CHAT" or "PARTY"
-        end
-        GSE.SendSpellCache(channel)
+    local channel
+    if IsInRaid() then
+        channel = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and
+                        "INSTANCE_CHAT" or "RAID"
+    else
+        channel = (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and
+                        "INSTANCE_CHAT" or "PARTY"
+    end
+    GSE.SendSpellCache(channel)
     -- Group Team stuff
     GSE:ZONE_CHANGED_NEW_AREA()
 end
@@ -471,6 +472,11 @@ function GSE.StopOOCTimer()
 end
 
 function GSE:ProcessOOCQueue()
+    -- check ZONE_CHANGED_NEW_AREA issues
+    if GSE.currentZone ~= GetRealZoneText() then
+        GSE:ZONE_CHANGED_NEW_AREA()
+        GSE.currentZone = GetRealZoneText()
+    end
     for k, v in ipairs(GSE.OOCQueue) do
         if not InCombatLockdown() then
             if v.action == "UpdateSequence" then
