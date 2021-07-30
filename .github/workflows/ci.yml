@@ -54,10 +54,8 @@ jobs:
     - name: Run Busted UnitTests
       run: |
         busted -o utfTerminal --verbose --coverage
-        luacov
-        cat luacov.report.out
-        ls
-  
+        luacov-coveralls -r ./GSE/ -t {{ secrets.COVERALLS_TOKEN }} -c .luacov
+        
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
       uses: BigWigsMods/packager@master
