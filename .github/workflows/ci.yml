@@ -54,6 +54,10 @@ jobs:
     - name: Run Busted UnitTests
       run: |
         busted -o utfTerminal --verbose --coverage
+        luacov
+        cat luacov.report.out
+        ls .coverage
+        ls
   
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
