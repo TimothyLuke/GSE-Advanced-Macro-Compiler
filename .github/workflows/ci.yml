@@ -90,6 +90,7 @@ jobs:
       run: |
         mkdir .pages
         luadoc -d .pages/docs GSE/API/*.lua
+        cp pages/* .pages
         
 
     - name: Deploy API to GitHuib Pages🚀
