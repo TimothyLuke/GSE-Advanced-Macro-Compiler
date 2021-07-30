@@ -60,10 +60,10 @@ jobs:
       if: success()
       continue-on-error: true
       env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         export LUA_PATH="./GSE/?.lua;$LUA_PATH"
-        luacov-coveralls -i GSE -v
+        luacov-coveralls -i GSE -v -e .luarocks
         
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
