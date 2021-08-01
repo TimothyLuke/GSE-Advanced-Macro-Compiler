@@ -6,6 +6,12 @@ local L = GSE.L
 
 local AceGUI = LibStub("AceGUI-3.0")
 
+if GSE.isEmpty(GSEOptions.editorWidth) then
+	GSEOptions.editorWidth = 700
+end
+if GSE.isEmpty(GSEOptions.menuWidth) then
+	GSEOptions.menuWidth = 700
+end
 
 local PreviewFrame = AceGUI:Create("Frame")
 GSE.MacroPreviewFrame = PreviewFrame

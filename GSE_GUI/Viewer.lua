@@ -21,8 +21,15 @@ viewframe:SetTitle(L["Sequence Menu"])
 -- });
 
 GSE.GUIViewFrame = viewframe
-viewframe.Height = (GSEOptions.menuHeight and GSEOptions.menuHeight or 500)
-viewframe.Width = (GSEOptions.menuWidth and GSEOptions.menuWidth or 700)
+if GSE.isEmpty(GSEOptions.menuHeight) then
+	GSEOptions.menuHeight = 500
+end
+if GSE.isEmpty(GSEOptions.menuWidth) then
+	GSEOptions.menuWidth = 700
+end
+
+viewframe.Height = GSEOptions.menuHeight
+viewframe.Width = GSEOptions.menuWidth
 viewframe:SetWidth(viewframe.Width)
 viewframe:SetHeight(viewframe.Height)
 
