@@ -3217,7 +3217,7 @@ function GSE.GUIDeleteVersion(version)
     if not GSE.isEmpty(sequence.MetaData.Mythic) and sequence.MetaData.Mythic > 1 then
         sequence.MetaData.Mythic = tonumber(sequence.MetaData.Mythic) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythisPlus > 1 then
+    if not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythicPlus > 1 then
         sequence.MetaData.MythicPlus = tonumber(sequence.MetaData.MythicPlus) - 1
     end
     if not GSE.isEmpty(sequence.MetaData.Timewalking) and sequence.MetaData.Timewalking > 1 then
