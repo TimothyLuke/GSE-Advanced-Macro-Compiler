@@ -1364,6 +1364,12 @@ function GSE.processAction(action, metaData, variables)
                         end
                     end
                 end
+            elseif action.StepFunction == Statics.Random then
+                for _ = 1, #actionList do
+                    local randomAction = math.random(1, #actionList)
+                    table.insert(returnActions, actionList[randomAction])
+                    table.remove(actionList, randomAction)
+                end
             else
                 for _, v in ipairs(actionList) do
                     table.insert(returnActions, v)

@@ -2550,8 +2550,8 @@ local function drawAction(container, action, version, keyPath)
             {
                 [Statics.Sequential] = L["Sequential (1 2 3 4)"],
                 [Statics.Priority] = L["Priority List (1 12 123 1234)"],
-                [Statics.ReversePriority] = L["Reverse Priority (1 21 321 4321)"]
-                --["Random"] = L["Random - It will select .... a spell, any spell"]
+                [Statics.ReversePriority] = L["Reverse Priority (1 21 321 4321)"],
+                [Statics.Random] = L["Random - It will select .... a spell, any spell"],
             }
         )
         stepdropdown:SetCallback(
