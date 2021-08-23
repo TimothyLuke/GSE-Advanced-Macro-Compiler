@@ -31,12 +31,19 @@ function GSE.RegisterAddon(name, version, sequencenames)
         GSE.AddInPacks[name] = {}
         GSE.AddInPacks[name].Name = name
     end
-    if GSE.isEmpty(GSE.AddInPacks[name].Version) then
+    if GSE.isEmpty(GSEOptions.AddInPacks) then
+        GSEOptions.AddInPacks = {}
+    end
+    if GSE.isEmpty(GSEOptions.AddInPacks[name]) then
+        GSEOptions.AddInPacks[name] = {}
+        GSEOptions.AddInPacks[name].Name = name
+    end
+    
+    if GSE.isEmpty(GSEOptions.AddInPacks[name].Version) then
         updateflag = true
-        GSE.AddInPacks[name].Version = version
-    elseif GSE.AddInPacks[name].Version ~= version then
+        GSEOptions.AddInPacks[name].Version = version
+    elseif GSEOptions.AddInPacks[name].Version ~= version then
         updateflag = true
-        GSE.AddInPacks[name].Version = version
     end
     GSE.AddInPacks[name].SequenceNames = sequencenames
     return updateflag
