@@ -1549,6 +1549,11 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
     if GSE.isEmpty(combatReset) then
         combatReset = false
     end
+
+    local sequenceIndex = GetMacroIndexByName(name)
+    -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
+    if sequenceIndex > 0 then
+
     -- name = name .. "T"
     GSE.SequencesExec[name] = macro
 
@@ -1576,6 +1581,7 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
                          strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
+    end
 end
 
 --- Build GSE3 Executable Buttons
