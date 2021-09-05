@@ -418,7 +418,7 @@ function GSE.PerformReloadSequences()
         -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
         local sequenceIndex = GetMacroIndexByName(name)
         if sequenceIndex > 0 then
-            GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])    
+            GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
         end
     end
     if GSEOptions.CreateGlobalButtons then
