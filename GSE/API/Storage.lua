@@ -413,13 +413,22 @@ end
 
 function GSE.PerformReloadSequences()
     GSE.PrintDebugMessage("Reloading Sequences")
+
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
-        GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+        -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
+        local sequenceIndex = GetMacroIndexByName(name)
+        if sequenceIndex > 0 then
+            GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])    
+        end
     end
     if GSEOptions.CreateGlobalButtons then
         if not GSE.isEmpty(GSE.Library[0]) then
             for name, sequence in pairs(GSE.Library[0]) do
-                GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+                -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
+                local sequenceIndex = GetMacroIndexByName(name)
+                if sequenceIndex > 0 then
+                    GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+                end
             end
         end
     end
@@ -1550,10 +1559,6 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         combatReset = false
     end
 
-    local sequenceIndex = GetMacroIndexByName(name)
-    -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
-    if sequenceIndex > 0 then
-
     -- name = name .. "T"
     GSE.SequencesExec[name] = macro
 
@@ -1581,7 +1586,6 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
     _G[name]:Execute('name, macros = self:GetName(), newtable([=======[' ..
                          strjoin(']=======],[=======[', unpack(macro)) .. ']=======])')
     GSE.UpdateIcon(_G[name], true)
-    end
 end
 
 --- Build GSE3 Executable Buttons
