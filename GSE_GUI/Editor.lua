@@ -1884,7 +1884,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     local layoutcontainer = AceGUI:Create("KeyGroup")
 
     local lastPath = path[#path]
-    
+
     local parentPath = GSE.CloneSequence(path)
     local blocksThisLevel
 
