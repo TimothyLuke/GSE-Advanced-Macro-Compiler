@@ -132,6 +132,8 @@ function GSE:ZONE_CHANGED_NEW_AREA()
                               tostring(GSE.inHeroic) .. " inArena " .. tostring(GSE.inArena) .. " inTimeWalking " ..
                               tostring(GSE.inTimeWalking) .. " inMythicPlus " .. tostring(GSE.inMythicPlus) ..
                               " inScenario " .. tostring(GSE.inScenario), Statics.DebugModules["API"])
+    -- Force Reload of all Sequences
+    GSE.UnsavedOptions.ReloadQueued = nil
     GSE.ReloadSequences()
 end
 
@@ -425,8 +427,6 @@ function GSE:GSSlash(input)
         else
             GSE.printNoGui()
         end
-    elseif command == 'testlink' then
-        print("|cFFFFFF00|Hgarrmission:GSE:foo|h[Some Clickable Message]|h|r")
     elseif command == "dumpmacro" then
         GSE_C[params[2]] = {}
         GSE_C[params[2]].name = params[2]
