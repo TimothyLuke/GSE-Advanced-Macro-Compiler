@@ -1,7 +1,7 @@
 ## Interface: 90100
 
 ## Interface-Retail: 90100
-## Interface-Classic: 11307
+## Interface-Classic: 11400
 ## Interface-BCC: 20502
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
