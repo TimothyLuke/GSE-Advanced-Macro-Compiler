@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global, lowercase-global
 --[[
 wowmock - WoW environment mock
 Copyright 2014 Adirelle (adirelle@gmail.com)

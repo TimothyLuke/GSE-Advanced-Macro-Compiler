@@ -1,0 +1,38 @@
+{
+    "Lua.diagnostics.globals": [
+        "MAX_TALENT_TIERS",
+        "LibStub",
+        "GnomeOptions",
+        "BackdropTemplateMixin",
+        "GameFontNormal",
+        "ChatFontNormal",
+        "AUTOCOMPLETE_LIST",
+        "GameFontNormalLarge",
+        "dataObject_OnLeave",
+        "ElvUI",
+        "GameTooltipText",
+        "MouseIsOver",
+        "WeakAuras",
+        "AttemptToSaveBindings",
+        "QueryCastSequence",
+        "LE_PARTY_CATEGORY_HOME",
+        "LE_PARTY_CATEGORY_INSTANCE",
+        "GSE_C",
+        "BNGetNumFriendGameAccounts",
+        "BNGetFriendGameAccountInfo",
+        "ChatFrame_AddMessageEventFilter",
+        "ReloadUI",
+        "ChatEdit_FocusActiveWindow",
+        "OKAY",
+        "STATICPOPUPS_NUMDIALOGS",
+        "MAX_CHARACTER_MACROS",
+        "MAX_ACCOUNT_MACROS",
+        "repeats",
+        "sequence"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-field"
+    ],
+    "luahelper.Warn.CheckLocalNoUse": true,
+    "luahelper.Warn.CheckNoUseAssign": true
+}

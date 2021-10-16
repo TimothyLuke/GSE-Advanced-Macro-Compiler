@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 describe('API Translator', function()
   setup (function()
     require("../spec/mockGSE")

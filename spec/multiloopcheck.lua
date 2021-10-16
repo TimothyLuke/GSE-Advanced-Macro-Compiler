@@ -1,5 +1,5 @@
 -- Use this to test sequential loop on https://www.lua.org/cgi-bin/demo
-macros = {}
+local macros = {}
 macros[1] = {
   "pre1",
   "pre2",
@@ -26,9 +26,9 @@ print ("Number of stages: " .. #macros)
 
 local function click(stage, step)
 
-  numstages = #macros
-  limit = limit or 1
-  repeats = repeats or 1
+  local numstages = #macros
+  local limit = limit or 1
+  local repeats = repeats or 1
   --print ("limit: " .. limit .. ", stage: " .. stage .. ", step: " .. step)
   if step == limit then
     limit = limit % #macros[stage] + 1

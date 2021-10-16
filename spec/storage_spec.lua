@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 describe('API Storage', function()
   setup (function()
     require("../spec/mockGSE")

@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global, lowercase-global
 GSE = {}
 GSE.L = {}
 GSE.Static = {}
@@ -110,7 +111,7 @@ function GSE.ParseVersion(version)
   local parts = GSE.split(version, "-")
   local numbers = GSE.split(parts[1], ".")
   local returnVal = 0
-  if GSE.isEmpty(number) and type(version) == "number" then
+  if GSE.isEmpty(numbers) and type(version) == "number" then
     returnVal = version
   else
     if table.getn(numbers) > 1 then

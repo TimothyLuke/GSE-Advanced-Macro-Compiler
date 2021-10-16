@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 describe('API StringFunctions', function()
   setup (function()
 
