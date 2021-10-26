@@ -353,3 +353,7 @@ function GSE.TableDiff(t1, t2)
         return diff
     end
 end
+
+-- local tab1 = { "abcd", "edge"}
+-- local tab2 = { "abcd", "ed"}
+-- GSE.Print(GSE.Dump(GSE.TableDiff(tab1, tab2)))

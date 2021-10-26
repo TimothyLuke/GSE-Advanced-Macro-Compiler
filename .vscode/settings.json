@@ -28,7 +28,8 @@
         "MAX_CHARACTER_MACROS",
         "MAX_ACCOUNT_MACROS",
         "repeats",
-        "sequence"
+        "sequence",
+        "CastingInfo"
     ],
     "Lua.diagnostics.disable": [
         "undefined-field"

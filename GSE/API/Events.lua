@@ -72,8 +72,7 @@ function GSE:UNIT_FACTION()
 end
 
 function GSE:ZONE_CHANGED_NEW_AREA()
-    local name, type, difficulty, difficultyName, maxPlayers, playerDifficulty, isDynamicInstance, mapID,
-        instanceGroupSize = GetInstanceInfo()
+    local _, type, difficulty, _, _, _, _, _, _ = GetInstanceInfo()
     if type == "pvp" then
         GSE.PVPFlag = true
     else
@@ -261,8 +260,6 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     end
     GSE:RegisterEvent('PLAYER_REGEN_ENABLED')
 end
-
-local IgnoreMacroUpdates = false
 
 function GSE:PLAYER_LOGOUT()
     GSE.PrepareLogout()
