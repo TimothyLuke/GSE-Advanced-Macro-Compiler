@@ -37,9 +37,7 @@ externals:
     GSE/Lib/AceGUI-3.0-Completing-EditBox:
         url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
         tag: latest
-    GSE/Lib/LibQTip-1.0:
-        url: git://git.wowace.com/wow/libqtip-1-0
-        tag: latest
+    GSE/Lib/LibQTip-1.0: git://git.wowace.com/wow/libqtip-1-0
     GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
     GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
 
