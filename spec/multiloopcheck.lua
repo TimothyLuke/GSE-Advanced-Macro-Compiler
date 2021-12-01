@@ -28,6 +28,7 @@ local function click(stage, step)
 
   local numstages = #macros
   local limit = limit or 1
+---@diagnostic disable-next-line: undefined-global
   local repeats = repeats or 1
   --print ("limit: " .. limit .. ", stage: " .. stage .. ", step: " .. step)
   if step == limit then

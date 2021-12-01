@@ -200,6 +200,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
 	viewiconpicker.frame:RegisterForDrag("LeftButton")
 	viewiconpicker.frame:SetScript("OnDragStart", function()
+---@diagnostic disable-next-line: redundant-parameter
 		PickupMacro(sequencename)
 	end)
 	--viewiconpicker.frame:SetBackdrop(nil)

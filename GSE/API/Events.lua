@@ -21,6 +21,7 @@ function GSE.TraceSequence(button, step, task)
             spell = csspell
         end
 
+---@diagnostic disable-next-line: redundant-parameter
         local isUsable, notEnoughMana = IsUsableSpell(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
         if isUsable then
@@ -232,6 +233,7 @@ end
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     -- UPDATE for GSE3
     if unit == "player" then
+---@diagnostic disable-next-line: redundant-parameter
         local _, GCD_Timer = GetSpellCooldown(61304)
         GCD = true
         C_Timer.After(GCD_Timer, function()
@@ -243,6 +245,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
 
         local elements = GSE.split(action, "-")
         local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
+---@diagnostic disable-next-line: redundant-parameter
         local fskilltype, fspellid = GetSpellBookItemInfo(spell)
         if not GSE.isEmpty(fskilltype) then
             if GSE.RecorderActive then
@@ -547,11 +550,11 @@ function GSE.ToggleOOCQueue()
 end
 
 -- process chatlinks
-hooksecurefunc("SetItemRef", function(link)
-	local linkType, addon, param1 = strsplit(":", link)
-	if linkType == "garrmission" and addon == "GSE" then
-		if param1 == "foo" then
-			print(link)
-		end
-	end
-end)
+-- hooksecurefunc("SetItemRef", function(link)
+-- 	local linkType, addon, param1 = strsplit(":", link)
+-- 	if linkType == "garrmission" and addon == "GSE" then
+-- 		if param1 == "foo" then
+-- 			print(link)
+-- 		end
+-- 	end
+-- end)
