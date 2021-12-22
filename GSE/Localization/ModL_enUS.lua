@@ -699,6 +699,5 @@ L["As GSE is updated, there may be left over macros that no longer relate to seq
 L["Sequence Menu"] = true
 
 -- #1087
- L["Character"] = true
- L["Character Specific Options which override the normal account settings."] = true
- 
+L["Character"] = true
+L["Character Specific Options which override the normal account settings."] = true
