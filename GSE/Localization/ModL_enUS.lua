@@ -697,3 +697,8 @@ L["GSE Plugins"] = true
 L["This will display debug messages for the GSE Ingame Transmission and transfer"] = true
 L["As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"] = true
 L["Sequence Menu"] = true
+
+-- #1087
+ L["Character"] = true
+ L["Character Specific Options which override the normal account settings."] = true
+ 

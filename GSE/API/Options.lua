@@ -468,12 +468,40 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
+            characterOptionsTab = {
+                name = L["Character"],
+                desc = L["Character Specific Options which override the normal account settings."],
+                type = "group",
+                order = 2,
+                args = {
+                    MSFiltertitle1 = {
+                        type = "header",
+                        name = L["Millisecond click settings"],
+                        order = 380
+                    },
+                    externalMillisecondClickRate = {
+                        name = L["MS Click Rate"],
+                        desc = L["The milliseconds being used in key click delay."],
+                        type = "input",
+                        set = function(info, val)
+                            GSE_C.msClickRate = val
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.msClickRate and GSE_C.msClickRate or ""
+                        end,
+                        order = 385
+                    },
+                }
+            },
             macroResetTab = {
                 name = L["Macro Reset"],
                 desc = L[
                     "These options combine to allow you to reset a macro while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
                 ],
-                order = 2,
+                order = 3,
                 type = "group",
                 args = {
                     clearCommonKeyBindsTitle = {
@@ -688,7 +716,7 @@ function GSE.GetOptionsTable()
                 name = L["Colour"],
                 desc = L["Colour and Accessibility Options"],
                 type = "group",
-                order = 3,
+                order = 4,
                 args = {
                     ctitle1 = {
                         type = "header",
@@ -902,7 +930,7 @@ function GSE.GetOptionsTable()
                 name = L["Plugins"],
                 desc = L["GSE Plugins"],
                 type = "group",
-                order = 4,
+                order = 5,
                 args = {
                     title3 = {
                         type = "header",
@@ -921,7 +949,7 @@ function GSE.GetOptionsTable()
                 name = L["Window Sizes"],
                 desc = L["The default sizes of each window."],
                 type = "group",
-                order = 5,
+                order = 6,
                 args = {
                     editortitle = {
                         type = "header",
@@ -1028,7 +1056,7 @@ function GSE.GetOptionsTable()
                 name = L["About"],
                 desc = L["About GSE"],
                 type = "group",
-                order = 6,
+                order = 7,
                 args = {
                     -- aboutIcon = {
                     --   type = "description",

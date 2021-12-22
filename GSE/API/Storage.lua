@@ -12,6 +12,18 @@ function GSE.DeleteSequence(classid, sequenceName)
     GSE3Storage[tonumber(classid)][sequenceName] = nil
 end
 
+--- Obtain the Click Rate from GSE Options or from the characters internal options
+function GSE.GetClickRate()
+    local clickRate = GSEOptions.msClickRate and GSEOptions.msClickRate or 250
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    if not GSE.isEmpty(GSE_C.msClickRate) then
+        clickRate = GSE_C.msClickRate
+    end
+    return clickRate
+end
+
 function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSE3Storage) then
         GSE3Storage = {}
@@ -1393,7 +1405,7 @@ function GSE.processAction(action, metaData, variables)
         local clicks = action.Clicks and action.Clicks or 0
         if not GSE.isEmpty(action.Variable) then
             if action.Variable == "GCD" then
-                clicks = GSE.GetGCD() * 1000 / GSEOptions.msClickRate
+                clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
             else
                 local funcline = variables[action.Variable]
 
@@ -1405,14 +1417,14 @@ function GSE.processAction(action, metaData, variables)
                     value = funcline
                     value = value()
                 end
-                clicks = tonumber(value) / GSEOptions.msClickRate
+                clicks = tonumber(value) / GSE.GetClickRate()
             end
         elseif not GSE.isEmpty(action.MS) then
             if action.MS == "GCD" or action.MS == "~~GCD~~" then
-                clicks = GSE.GetGCD() * 1000 / GSEOptions.msClickRate
+                clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
             else
                 clicks = action.MS
-                clicks = math.ceil(clicks / GSEOptions.msClickRate)
+                clicks = math.ceil(clicks / GSE.GetClickRate())
             end
         end
         if clicks > 1 then
@@ -1574,7 +1586,7 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         gsebutton:SetAttribute("combatreset", combatReset)
 
         if GSEOptions.useExternalMSTimings then
-            gsebutton:SetAttribute("ms", GSEOptions.msClickRate)
+            gsebutton:SetAttribute("ms", GSE.GetClickRate())
         else
             gsebutton:SetAttribute("ms", 100)
         end
