@@ -2811,10 +2811,9 @@ function GSE:DrawSequenceEditor(container, version)
 
     local macro = editframe.Sequence.Macros[version].Actions
 
-    local font = GameFontNormal:GetFontObject()
-    local fontlarge = GameFontNormalLarge:GetFontObject()
-    local origjustifyV = font:GetJustifyV()
-    local origjustifyH = font:GetJustifyH()
+	local font = CreateFont("seqPanelFont")
+  	font:SetFontObject(GameFontNormal)
+
     font:SetJustifyV("BOTTOM")
 
     for key, action in ipairs(macro) do

@@ -1,4 +1,4 @@
-local GNOME,_ = ...
+local GNOME, _ = ...
 
 local GSE = GSE
 local Statics = GSE.Static
@@ -43,10 +43,10 @@ viewframe.ClassID = 0
 
 function viewframe:clearpanels(widget, selected)
 	GSE.PrintDebugMessage("widget = " .. widget:GetKey(), "GUI")
-	for k,_ in pairs(viewframe.panels) do
+	for k, _ in pairs(viewframe.panels) do
 		GSE.PrintDebugMessage("k " .. k, "GUI")
 		if k == widget:GetKey() then
-			GSE.PrintDebugMessage ("matching key", "GUI")
+			GSE.PrintDebugMessage("matching key", "GUI")
 			local elements = GSE.split(widget:GetKey(), ",")
 			if selected then
 				viewframe.ClassID = elements[1]
@@ -66,7 +66,7 @@ function viewframe:clearpanels(widget, selected)
 
 			viewframe.panels[k]:SetClicked(true)
 		else
-			GSE.PrintDebugMessage ("other widget key", "GUI")
+			GSE.PrintDebugMessage("other widget key", "GUI")
 			GSE.PrintDebugMessage("reprinting k " .. k, "GUI")
 			local wid = viewframe.panels[k]
 			wid:SetClicked(false)
@@ -74,7 +74,6 @@ function viewframe:clearpanels(widget, selected)
 	end
 
 	GSE.GUIConfigureMacroButton(viewframe.MacroIconButton)
-
 end
 
 function GSE.GUICreateSequencePanels(frame, container, key)
@@ -83,8 +82,10 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	local sequencename = elements[2]
 	local readonly = elements[3]
 	local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-	local font = GameFontNormal:GetFontObject()
-	local fontlarge = GameFontNormalLarge:GetFontObject()
+	local font = CreateFont("seqPanelFont")
+	font:SetFontObject(GameFontNormal)
+	local fontlarge = CreateFont("seqLargePanelFont")
+	fontlarge:SetFontObject(GameFontNormalLarge)
 	local origjustifyV = font:GetJustifyV()
 	local origjustifyH = font:GetJustifyH()
 	font:SetJustifyV("BOTTOM")
@@ -95,16 +96,19 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	selpanel:SetFullWidth(true)
 	selpanel:SetHeight(300)
 	viewframe.panels[key] = selpanel
-	selpanel:SetCallback("OnClick", function(widget, _, selected, button)
-		viewframe:clearpanels(widget, selected)
-		if button == "RightButton" then
-			GSE.GUILoadEditor(widget:GetKey(), viewframe)
+	selpanel:SetCallback(
+		"OnClick",
+		function(widget, _, selected, button)
+			viewframe:clearpanels(widget, selected)
+			if button == "RightButton" then
+				GSE.GUILoadEditor(widget:GetKey(), viewframe)
+			end
+			if button == "LeftButton" and IsShiftKeyDown() then
+				StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(elements[2], elements[1])
+				StaticPopup_Show("GSE_ChatLink")
+			end
 		end
-		if button == "LeftButton" and IsShiftKeyDown() then
-			StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(elements[2], elements[1])
-			StaticPopup_Show ("GSE_ChatLink")
-		end
-	end)
+	)
 
 	-- Workaround for vanishing label ace3 bug
 	local label = AceGUI:Create("Label")
@@ -114,7 +118,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	local hlabel = AceGUI:Create("Label")
 	hlabel:SetText(sequencename)
 	if readonly == "1" then
-		hlabel:SetText(sequencename .. "( "..L["Restricted"] ..")")
+		hlabel:SetText(sequencename .. "( " .. L["Restricted"] .. ")")
 	end
 
 	--hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
@@ -132,8 +136,6 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 
 	columngroup:AddChild(column1)
 
-
-
 	local helplabel = AceGUI:Create("Label")
 	local helptext = L["No Help Information Available"]
 	if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Help) then
@@ -141,7 +143,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	end
 	helplabel:SetFullWidth(true)
 	helplabel:SetFontObject(font)
-	helplabel:SetText(helptext )
+	helplabel:SetText(helptext)
 	column1:AddChild(helplabel)
 
 	local row2 = AceGUI:Create("KeyGroup")
@@ -149,8 +151,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	row2:SetFullWidth(true)
 
 	local talentsHead = AceGUI:Create("Label")
-	talentsHead:SetFont(fontName, fontHeight + 2 , fontFlags)
-	talentsHead:SetText(L["Talents"] ..":")
+	talentsHead:SetFont(fontName, fontHeight + 2, fontFlags)
+	talentsHead:SetText(L["Talents"] .. ":")
 	talentsHead:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 	talentsHead:SetWidth(60)
 	row2:AddChild(talentsHead)
@@ -169,8 +171,8 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	row2:AddChild(spacerlabel1)
 
 	local urlHead = AceGUI:Create("Label")
-	urlHead:SetFont(fontName, fontHeight + 2 , fontFlags)
-	urlHead:SetText(L["Help URL"] ..":")
+	urlHead:SetFont(fontName, fontHeight + 2, fontFlags)
+	urlHead:SetText(L["Help URL"] .. ":")
 	urlHead:SetColor(GSE.GUIGetColour(GSEOptions.EmphasisColour))
 	urlHead:SetWidth(70)
 	row2:AddChild(urlHead)
@@ -178,18 +180,20 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	local urlval = "https://wowlazymacros.com"
 	local urllabel = AceGUI:Create("InteractiveLabel")
 	if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Helplink) then
-	 urlval = GSE.Library[classid][sequencename].MetaData.Helplink
+		urlval = GSE.Library[classid][sequencename].MetaData.Helplink
 	end
 	urllabel:SetFontObject(font)
 	urllabel:SetText(urlval)
-	urllabel:SetCallback("OnClick", function()
-		StaticPopupDialogs['GSE_SEQUENCEHELP'].url = urlval
-		StaticPopup_Show('GSE_SEQUENCEHELP')
-	end)
+	urllabel:SetCallback(
+		"OnClick",
+		function()
+			StaticPopupDialogs["GSE_SEQUENCEHELP"].url = urlval
+			StaticPopup_Show("GSE_SEQUENCEHELP")
+		end
+	)
 	urllabel:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
 	urllabel:SetWidth(280)
 	row2:AddChild(urllabel)
-
 
 	local column2 = AceGUI:Create("KeyGroup")
 	column2:SetWidth(60)
@@ -199,20 +203,33 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	local viewiconpicker = AceGUI:Create("Icon")
 
 	viewiconpicker.frame:RegisterForDrag("LeftButton")
-	viewiconpicker.frame:SetScript("OnDragStart", function()
-		PickupMacro(sequencename)
-	end)
+	viewiconpicker.frame:SetScript(
+		"OnDragStart",
+		function()
+			PickupMacro(sequencename)
+		end
+	)
 	--viewiconpicker.frame:SetBackdrop(nil)
 
 	selpanel.Icon = viewiconpicker
 	viewiconpicker:SetImage(GSE.GetMacroIcon(classid, sequencename))
-	viewiconpicker:SetImageSize(50,50)
-	viewiconpicker:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Macro Icon"], L["Drag this icon to your action bar to use this macro. You can change this icon in the /macro window."], viewframe)
-	end)
-	viewiconpicker:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	viewiconpicker:SetImageSize(50, 50)
+	viewiconpicker:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(
+				L["Macro Icon"],
+				L["Drag this icon to your action bar to use this macro. You can change this icon in the /macro window."],
+				viewframe
+			)
+		end
+	)
+	viewiconpicker:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	column2:AddChild(viewiconpicker)
 
 	selpanel:AddChild(columngroup)
@@ -224,7 +241,6 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 end
 
 function GSE.GUIViewerToolbar(container)
-
 	local buttonGroup = AceGUI:Create("KeyGroup")
 	buttonGroup:SetFullWidth(true)
 	buttonGroup:SetLayout("Flow")
@@ -232,35 +248,57 @@ function GSE.GUIViewerToolbar(container)
 	local newbutton = AceGUI:Create("Button")
 	newbutton:SetText(L["New"])
 	newbutton:SetWidth(150)
-	newbutton:SetCallback("OnClick", function()
-		GSE.GUILoadEditor(nil, viewframe)
-		viewframe:Hide()
-	end)
-	newbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["New"], L["Create a new macro."], viewframe)
-	end)
-	newbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	newbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.GUILoadEditor(nil, viewframe)
+			viewframe:Hide()
+		end
+	)
+	newbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(L["New"], L["Create a new macro."], viewframe)
+		end
+	)
+	newbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	buttonGroup:AddChild(newbutton)
 
 	local updbutton = AceGUI:Create("Button")
 	updbutton:SetText(L["Edit"])
 	updbutton:SetWidth(150)
-	updbutton:SetCallback("OnClick", function()
-		if viewframe.editbuttonaction == 1 then
-			GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
-		else
-			GSE.GUILoadEditor(editkey, viewframe)
-			viewframe:Hide()
+	updbutton:SetCallback(
+		"OnClick",
+		function()
+			if viewframe.editbuttonaction == 1 then
+				GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
+			else
+				GSE.GUILoadEditor(editkey, viewframe)
+				viewframe:Hide()
+			end
 		end
-	end)
-	updbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Edit"], L["Edit this macro.  To delete a macro, choose this edit option and then from inside hit the delete button."], viewframe)
-	end)
-	updbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	)
+	updbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(
+				L["Edit"],
+				L["Edit this macro.  To delete a macro, choose this edit option and then from inside hit the delete button."],
+				viewframe
+			)
+		end
+	)
+	updbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 
 	updbutton:SetDisabled(true)
 	buttonGroup:AddChild(updbutton)
@@ -269,79 +307,149 @@ function GSE.GUIViewerToolbar(container)
 	local impbutton = AceGUI:Create("Button")
 	impbutton:SetText(L["Import"])
 	impbutton:SetWidth(150)
-	impbutton:SetCallback("OnClick", function() GSE.GUIViewFrame:Hide(); GSE.GUIImportFrame:Show() end)
-	impbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Import"], L["Import Macro from Forums"], viewframe)
-	end)
-	impbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	impbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.GUIViewFrame:Hide()
+			GSE.GUIImportFrame:Show()
+		end
+	)
+	impbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(L["Import"], L["Import Macro from Forums"], viewframe)
+		end
+	)
+	impbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	buttonGroup:AddChild(impbutton)
 
 	local expbutton = AceGUI:Create("Button")
 	expbutton:SetText(L["Export"])
 	expbutton:SetWidth(150)
-	expbutton:SetCallback("OnClick", function()
-		GSE.GUIExportSequence(viewframe.ClassID, viewframe.SequenceName)
-	end)
+	expbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.GUIExportSequence(viewframe.ClassID, viewframe.SequenceName)
+		end
+	)
 	buttonGroup:AddChild(expbutton)
 	expbutton:SetDisabled(true)
-	expbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Export"], L["Export this Macro."], viewframe)
-	end)
-	expbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	expbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(L["Export"], L["Export this Macro."], viewframe)
+		end
+	)
+	expbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	viewframe.ExportButton = expbutton
 
 	local tranbutton = AceGUI:Create("Button")
 	tranbutton:SetText(L["Send"])
 	tranbutton:SetWidth(150)
-	tranbutton:SetCallback("OnClick", function() GSE.GUIShowTransmissionGui(viewframe.ClassID .. "," .. viewframe.SequenceName) end)
-	tranbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Send"], L["Send this macro to another GSE player who is on the same server as you are."], viewframe)
-	end)
-	tranbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	tranbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.GUIShowTransmissionGui(viewframe.ClassID .. "," .. viewframe.SequenceName)
+		end
+	)
+	tranbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(
+				L["Send"],
+				L["Send this macro to another GSE player who is on the same server as you are."],
+				viewframe
+			)
+		end
+	)
+	tranbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	buttonGroup:AddChild(tranbutton)
 
 	local disableSeqbutton = AceGUI:Create("Button")
 	disableSeqbutton:SetDisabled(true)
 	disableSeqbutton:SetText(L["Create Icon"])
 	disableSeqbutton:SetWidth(150)
-	disableSeqbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Create Icon"], L["Create or remove a Macro stub in /macro that can be dragged to your action bar so that you can use this macro.\nGSE can store an unlimited number of macros however WOW's /macro interface can only store a limited number of macros."], viewframe)
-	end)
-	disableSeqbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
-
+	disableSeqbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(
+				L["Create Icon"],
+				L[
+					"Create or remove a Macro stub in /macro that can be dragged to your action bar so that you can use this macro.\nGSE can store an unlimited number of macros however WOW's /macro interface can only store a limited number of macros."
+				],
+				viewframe
+			)
+		end
+	)
+	disableSeqbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 
 	buttonGroup:AddChild(disableSeqbutton)
 	viewframe.MacroIconButton = disableSeqbutton
 	local eOptionsbutton = AceGUI:Create("Button")
 	eOptionsbutton:SetText(L["Options"])
 	eOptionsbutton:SetWidth(150)
-	eOptionsbutton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
-	eOptionsbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Options"], L["Opens the GSE Options window"], viewframe)
-	end)
-	eOptionsbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	eOptionsbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.OpenOptionsPanel()
+		end
+	)
+	eOptionsbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(L["Options"], L["Opens the GSE Options window"], viewframe)
+		end
+	)
+	eOptionsbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 	buttonGroup:AddChild(eOptionsbutton)
 
 	local recordwindowbutton = AceGUI:Create("Button")
 	recordwindowbutton:SetText(L["Record Macro"])
 	recordwindowbutton:SetWidth(150)
-	recordwindowbutton:SetCallback("OnClick", function() GSE.GUIViewFrame:Hide(); GSE.GUIRecordFrame:Show() end)
-	recordwindowbutton:SetCallback('OnEnter', function ()
-		GSE.CreateToolTip(L["Record Macro"], L["Record the spells and items you use into a new macro."], viewframe)
-	end)
-	recordwindowbutton:SetCallback('OnLeave', function ()
-		GSE.ClearTooltip(viewframe)
-	end)
+	recordwindowbutton:SetCallback(
+		"OnClick",
+		function()
+			GSE.GUIViewFrame:Hide()
+			GSE.GUIRecordFrame:Show()
+		end
+	)
+	recordwindowbutton:SetCallback(
+		"OnEnter",
+		function()
+			GSE.CreateToolTip(L["Record Macro"], L["Record the spells and items you use into a new macro."], viewframe)
+		end
+	)
+	recordwindowbutton:SetCallback(
+		"OnLeave",
+		function()
+			GSE.ClearTooltip(viewframe)
+		end
+	)
 
 	buttonGroup:AddChild(recordwindowbutton)
 	container:AddChild(buttonGroup)
@@ -350,12 +458,14 @@ end
 
 function GSE.GUIViewerLayout(mcontainer)
 	mcontainer:SetStatusText("GSE: " .. GSE.VersionString)
-	mcontainer:SetCallback("OnClose", function(widget)
-		GSE.ClearTooltip(viewframe)
-		viewframe:Hide()
-	end)
+	mcontainer:SetCallback(
+		"OnClose",
+		function(widget)
+			GSE.ClearTooltip(viewframe)
+			viewframe:Hide()
+		end
+	)
 	mcontainer:SetLayout("List")
-
 
 	local scrollcontainer = AceGUI:Create("KeyGroup")
 	scrollcontainer:SetFullWidth(true)
@@ -377,7 +487,7 @@ function GSE.GUIShowViewer()
 	viewframe:ReleaseChildren()
 	GSE.GUIViewerLayout(viewframe)
 	local cclassid = -1
-	for k,_ in GSE.pairsByKeys(names) do
+	for k, _ in GSE.pairsByKeys(names) do
 		local elements = GSE.split(k, ",")
 		local tclassid = tonumber(elements[1])
 		if tclassid ~= cclassid then
@@ -385,19 +495,19 @@ function GSE.GUIShowViewer()
 			local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
 			local sectionspacer1 = AceGUI:Create("Label")
 			sectionspacer1:SetText(" ")
-			sectionspacer1:SetFont(fontName, 4 , fontFlags)
+			sectionspacer1:SetFont(fontName, 4, fontFlags)
 			viewframe.ScrollContainer:AddChild(sectionspacer1)
 			local sectionheader = AceGUI:Create("Label")
 			sectionheader:SetText(Statics.SpecIDList[cclassid])
-			sectionheader:SetFont(fontName, fontHeight + 6 , fontFlags)
+			sectionheader:SetFont(fontName, fontHeight + 6, fontFlags)
 			sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
 			viewframe.ScrollContainer:AddChild(sectionheader)
 			local sectionspacer2 = AceGUI:Create("Label")
 			sectionspacer2:SetText(" ")
-			sectionspacer2:SetFont(fontName, 2 , fontFlags)
+			sectionspacer2:SetFont(fontName, 2, fontFlags)
 			viewframe.ScrollContainer:AddChild(sectionspacer2)
 		end
-		GSE.GUICreateSequencePanels(viewframe,viewframe.ScrollContainer, k)
+		GSE.GUICreateSequencePanels(viewframe, viewframe.ScrollContainer, k)
 	end
 	viewframe:Show()
 end
@@ -405,18 +515,28 @@ end
 function GSE.GUIConfigureMacroButton(button)
 	if GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName) then
 		button:SetText(L["Delete Icon"])
-		button:SetCallback("OnClick", function()
-			GSE.DeleteMacroStub(GSE.GUIViewFrame.SequenceName)
-			GSE.GUIConfigureMacroButton(button)
-			GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName .. "," .. GSE.GUIViewFrame.editbuttonaction].Icon:SetImage(GSE.GetMacroIcon(tonumber(GSE.GUIViewFrame.ClassID), GSE.GUIViewFrame.SequenceName))
-		end)
+		button:SetCallback(
+			"OnClick",
+			function()
+				GSE.DeleteMacroStub(GSE.GUIViewFrame.SequenceName)
+				GSE.GUIConfigureMacroButton(button)
+				GSE.GUIViewFrame.panels[
+					viewframe.ClassID .. "," .. GSE.GUIViewFrame.SequenceName .. "," .. GSE.GUIViewFrame.editbuttonaction
+				].Icon:SetImage(GSE.GetMacroIcon(tonumber(GSE.GUIViewFrame.ClassID), GSE.GUIViewFrame.SequenceName))
+			end
+		)
 	else
 		button:SetText(L["Create Icon"])
-		button:SetCallback("OnClick", function()
-			GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
-			GSE.GUIConfigureMacroButton(button)
-			GSE.GUIViewFrame.panels[viewframe.ClassID .."," .. GSE.GUIViewFrame.SequenceName .. "," .. GSE.GUIViewFrame.editbuttonaction].Icon:SetImage(GSE.GetMacroIcon(tonumber(GSE.GUIViewFrame.ClassID), GSE.GUIViewFrame.SequenceName))
-		end)
+		button:SetCallback(
+			"OnClick",
+			function()
+				GSE.OOCCheckMacroCreated(GSE.GUIViewFrame.SequenceName, true)
+				GSE.GUIConfigureMacroButton(button)
+				GSE.GUIViewFrame.panels[
+					viewframe.ClassID .. "," .. GSE.GUIViewFrame.SequenceName .. "," .. GSE.GUIViewFrame.editbuttonaction
+				].Icon:SetImage(GSE.GetMacroIcon(tonumber(GSE.GUIViewFrame.ClassID), GSE.GUIViewFrame.SequenceName))
+			end
+		)
 	end
 	if GSE.isEmpty(GSE.GUIViewFrame.SequenceName) then
 		button:SetDisabled(true)
@@ -426,27 +546,29 @@ function GSE.GUIConfigureMacroButton(button)
 	if GSE.GUIViewFrame.ClassID == 0 or GSE.GUIViewFrame.ClassID == GSE.GetCurrentClassID() then
 		button:SetDisabled(true)
 	end
-
 end
 
-viewframe.frame:SetScript("OnSizeChanged", function(self, width, height)
-    viewframe.Height = height
-    viewframe.Width = width
-    if viewframe.Height > GetScreenHeight() then
-            viewframe.Height = GetScreenHeight() - 10
-            viewframe:SetHeight(viewframe.Height)
-    end
-    if viewframe.Height < 500 then
-            viewframe.Height = 500
-            viewframe:SetHeight(viewframe.Height)
-    end
-    if viewframe.Width < 700 then
-            viewframe.Width = 700
-            viewframe:SetWidth(viewframe.Width)
-    end
-    GSEOptions.menuHeight = viewframe.Height
-    GSEOptions.menuWidth = viewframe.Width
-    if viewframe:IsVisible() then
-        GSE.GUIShowViewer()
-    end
-end)
+viewframe.frame:SetScript(
+	"OnSizeChanged",
+	function(self, width, height)
+		viewframe.Height = height
+		viewframe.Width = width
+		if viewframe.Height > GetScreenHeight() then
+			viewframe.Height = GetScreenHeight() - 10
+			viewframe:SetHeight(viewframe.Height)
+		end
+		if viewframe.Height < 500 then
+			viewframe.Height = 500
+			viewframe:SetHeight(viewframe.Height)
+		end
+		if viewframe.Width < 700 then
+			viewframe.Width = 700
+			viewframe:SetWidth(viewframe.Width)
+		end
+		GSEOptions.menuHeight = viewframe.Height
+		GSEOptions.menuWidth = viewframe.Width
+		if viewframe:IsVisible() then
+			GSE.GUIShowViewer()
+		end
+	end
+)
