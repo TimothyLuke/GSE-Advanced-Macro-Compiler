@@ -1037,7 +1037,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
         if k ~= "" then
             if type(v) == "string" then
-                v = { v }
+                v = {v}
                 -- save the fixed variable
                 editframe.Sequence.Macros[version].Variables[k] = v
             end
@@ -1746,7 +1746,6 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
         end
     end
 
-
     local linegroup1 = AceGUI:Create("KeyGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
@@ -1761,7 +1760,8 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     keyEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            editframe.Sequence.Macros[version].Variables[text] = editframe.Sequence.Macros[version].Variables[currentKey]
+            editframe.Sequence.Macros[version].Variables[text] =
+                editframe.Sequence.Macros[version].Variables[currentKey]
             editframe.Sequence.Macros[version].Variables[currentKey] = nil
             currentKey = text
         end
@@ -1784,9 +1784,20 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
             editframe.Sequence.Macros[version].Variables[currentKey] = GSE.SplitMeIntolines(text)
         end
     )
-    valueEditBox:SetCallback("OnEditFocusLost", function()
-        valueEditBox:SetText(table.concat(GSE.TranslateSequence(editframe.Sequence.Macros[version].Variables[currentKey], Statics.TranslatorMode.Current), "\n"))
-    end)
+    valueEditBox:SetCallback(
+        "OnEditFocusLost",
+        function()
+            valueEditBox:SetText(
+                table.concat(
+                    GSE.TranslateSequence(
+                        editframe.Sequence.Macros[version].Variables[currentKey],
+                        Statics.TranslatorMode.Current
+                    ),
+                    "\n"
+                )
+            )
+        end
+    )
 
     linegroup1:AddChild(valueEditBox)
 
@@ -2029,7 +2040,6 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         addActionButton:SetCallback(
             "OnClick",
             function()
-
                 local newAction = {
                     [1] = "/say Hello",
                     ["Type"] = Statics.Actions.Action
@@ -2225,7 +2235,6 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     end
 
     if GSE.isEmpty(disableMove) then
-
         layoutcontainer:AddChild(moveUpButton)
         layoutcontainer:AddChild(moveDownButton)
         local spacerlabel1 = AceGUI:Create("Label")
@@ -2351,9 +2360,8 @@ local function drawAction(container, action, version, keyPath)
             [L["Milliseconds"]] = L["How many milliseconds to pause for?"],
             ["GCD"] = L["Pause for the GCD."]
             --["Random"] = L["Random - It will select .... a spell, any spell"]
-
         }
-        for k,_ in pairs(editframe.numericFunctions) do
+        for k, _ in pairs(editframe.numericFunctions) do
             clickdroplist[k] = L["Local Function: "] .. k
         end
         clicksdropdown:SetList(clickdroplist)
@@ -2394,7 +2402,6 @@ local function drawAction(container, action, version, keyPath)
             end
         )
 
-
         linegroup1:AddChild(clicksdropdown)
         local spacerlabel1 = AceGUI:Create("Label")
         spacerlabel1:SetWidth(5)
@@ -2429,9 +2436,11 @@ local function drawAction(container, action, version, keyPath)
         )
 
         msvalueeditbox:SetCallback(
-            "OnRelease",function(self, event, text)
+            "OnRelease",
+            function(self, event, text)
                 msvalueeditbox.editbox:SetNumeric(false)
-            end)
+            end
+        )
         clicksdropdown:SetCallback(
             "OnValueChanged",
             function(self, event, text)
@@ -2452,7 +2461,7 @@ local function drawAction(container, action, version, keyPath)
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
             end
         )
-        if clicksdropdown:GetValue() == L["Milliseconds"] or  clicksdropdown:GetValue() == L["Clicks"] then
+        if clicksdropdown:GetValue() == L["Milliseconds"] or clicksdropdown:GetValue() == L["Clicks"] then
             msvalueeditbox:SetDisabled(false)
         else
             msvalueeditbox:SetDisabled(true)
@@ -2462,7 +2471,6 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
     elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
-
         local macroPanel = AceGUI:Create("KeyGroup")
 
         macroPanel:SetLayout("List")
@@ -2522,17 +2530,27 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetCallback(
             "OnTextChanged",
             function()
-                local returnAction =
-                    GSE.SplitMeIntolines(valueEditBox:GetText())
+                local returnAction = GSE.SplitMeIntolines(valueEditBox:GetText())
                 local boxlines = #returnAction
                 returnAction["Type"] = action.Type
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
         )
-        valueEditBox:SetCallback("OnEditFocusLost", function()
-            valueEditBox:SetText(table.concat(GSE.TranslateSequence(editframe.Sequence.Macros[version].Actions[keyPath], Statics.TranslatorMode.Current), "\n"))
-        end)
+        valueEditBox:SetCallback(
+            "OnEditFocusLost",
+            function()
+                valueEditBox:SetText(
+                    table.concat(
+                        GSE.TranslateSequence(
+                            editframe.Sequence.Macros[version].Actions[keyPath],
+                            Statics.TranslatorMode.Current
+                        ),
+                        "\n"
+                    )
+                )
+            end
+        )
         -- valueEditBox:SetCallback('OnEnter', function()
         --     GSE.CreateToolTip(L["Compiled Action"], compiledAction, editframe)
         -- end)
@@ -2557,7 +2575,7 @@ local function drawAction(container, action, version, keyPath)
                 [Statics.Sequential] = L["Sequential (1 2 3 4)"],
                 [Statics.Priority] = L["Priority List (1 12 123 1234)"],
                 [Statics.ReversePriority] = L["Reverse Priority (1 21 321 4321)"],
-                [Statics.Random] = L["Random - It will select .... a spell, any spell"],
+                [Statics.Random] = L["Random - It will select .... a spell, any spell"]
             }
         )
         stepdropdown:SetCallback(
@@ -2659,27 +2677,37 @@ local function drawAction(container, action, version, keyPath)
         linegroup2:AddChild(macroGroup)
         macroPanel:AddChild(linegroup2)
 
-        macroPanel.frame:SetBackdrop({
-            edgeFile = [[Interface/Buttons/WHITE8X8]],
-            edgeSize = 1,
-        })
+        macroPanel.frame:SetBackdrop(
+            {
+                edgeFile = [[Interface/Buttons/WHITE8X8]],
+                edgeSize = 1
+            }
+        )
         macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-        macroPanel:SetCallback("OnRelease", function(self, obj, value)
-            macroPanel.frame:SetBackdrop(nil)
-        end)
+        macroPanel:SetCallback(
+            "OnRelease",
+            function(self, obj, value)
+                macroPanel.frame:SetBackdrop(nil)
+            end
+        )
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.If then
         local macroPanel = AceGUI:Create("KeyGroup")
         macroPanel:SetWidth(maxWidth)
         macroPanel:SetLayout("List")
-        macroPanel.frame:SetBackdrop({
-            edgeFile = [[Interface/Buttons/WHITE8X8]],
-            edgeSize = 1,
-        })
+        macroPanel.frame:SetBackdrop(
+            {
+                edgeFile = [[Interface/Buttons/WHITE8X8]],
+                edgeSize = 1
+            }
+        )
         macroPanel.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-        macroPanel:SetCallback("OnRelease", function(self, obj, value)
-            macroPanel.frame:SetBackdrop(nil)
-        end)
+        macroPanel:SetCallback(
+            "OnRelease",
+            function(self, obj, value)
+                macroPanel.frame:SetBackdrop(nil)
+            end
+        )
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
 
         local booleanDropdown = AceGUI:Create("Dropdown")
@@ -2715,7 +2743,6 @@ local function drawAction(container, action, version, keyPath)
 
         linegroup1:AddChild(booleanDropdown)
 
-
         local trueKeyPath = GSE.CloneSequence(keyPath)
         table.insert(trueKeyPath, 1)
         local trueGroup = AceGUI:Create("KeyGroup")
@@ -2732,10 +2759,10 @@ local function drawAction(container, action, version, keyPath)
         trueContainer:SetLayout("Flow")
         trueContainer:SetWidth(maxWidth)
 
-        local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45,  true, tlabel, trueContainer, true, true)
+        local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45, true, tlabel, trueContainer, true, true)
         trueGroup:AddChild(toolbar)
 
-        for key,act in ipairs(action[1]) do
+        for key, act in ipairs(action[1]) do
             local newKeyPath = GSE.CloneSequence(trueKeyPath)
             table.insert(newKeyPath, key)
             drawAction(trueGroup, act, version, newKeyPath)
@@ -2749,14 +2776,19 @@ local function drawAction(container, action, version, keyPath)
 
         trueContainer:AddChild(trueGroup)
         macroPanel:AddChild(trueContainer)
-        trueGroup.frame:SetBackdrop({
-            edgeFile = [[Interface/Buttons/WHITE8X8]],
-            edgeSize = 1,
-        })
+        trueGroup.frame:SetBackdrop(
+            {
+                edgeFile = [[Interface/Buttons/WHITE8X8]],
+                edgeSize = 1
+            }
+        )
         trueGroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-        trueGroup:SetCallback("OnRelease", function(self, obj, value)
-            trueGroup.frame:SetBackdrop(nil)
-        end)
+        trueGroup:SetCallback(
+            "OnRelease",
+            function(self, obj, value)
+                trueGroup.frame:SetBackdrop(nil)
+            end
+        )
         -- macroPanel:AddChild(falseGroup)
         local falseKeyPath = GSE.CloneSequence(keyPath)
         table.insert(falseKeyPath, 2)
@@ -2773,17 +2805,22 @@ local function drawAction(container, action, version, keyPath)
         falsecontainer:SetWidth(maxWidth)
         falsecontainer:SetLayout("Flow")
 
-        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45,  true, flabel, falsecontainer, true, true)
+        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45, true, flabel, falsecontainer, true, true)
         falsegroup:AddChild(toolbar2)
-        falsegroup.frame:SetBackdrop({
-            edgeFile = [[Interface/Buttons/WHITE8X8]],
-            edgeSize = 1,
-        })
+        falsegroup.frame:SetBackdrop(
+            {
+                edgeFile = [[Interface/Buttons/WHITE8X8]],
+                edgeSize = 1
+            }
+        )
         falsegroup.frame:SetBackdropBorderColor(1.0, 0.96, 0.41, 0.15)
-        falsegroup:SetCallback("OnRelease", function(self, obj, value)
-            falsegroup.frame:SetBackdrop(nil)
-        end)
-        for key,act in ipairs(action[2]) do
+        falsegroup:SetCallback(
+            "OnRelease",
+            function(self, obj, value)
+                falsegroup.frame:SetBackdrop(nil)
+            end
+        )
+        for key, act in ipairs(action[2]) do
             local newKeyPath = GSE.CloneSequence(falseKeyPath)
             table.insert(newKeyPath, key)
             drawAction(falsegroup, act, version, newKeyPath)
@@ -2811,9 +2848,8 @@ function GSE:DrawSequenceEditor(container, version)
 
     local macro = editframe.Sequence.Macros[version].Actions
 
-	local font = CreateFont("seqPanelFont")
-  	font:SetFontObject(GameFontNormal)
-
+    local font = CreateFont("seqPanelFont")
+    font:SetFontObject(GameFontNormal)
     font:SetJustifyV("BOTTOM")
 
     for key, action in ipairs(macro) do
@@ -2905,7 +2941,7 @@ function GSE:GUIDrawVariableEditor(container, version)
         "OnClick",
         function()
             local position = container.frame:GetHeight()
-            editframe.Sequence.Macros[version].Variables["NewVar"..math.random(100)] = { [1] = "My New Variable" }
+            editframe.Sequence.Macros[version].Variables["NewVar" .. math.random(100)] = {[1] = "My New Variable"}
             ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
@@ -3210,7 +3246,7 @@ function GSE.GUIDeleteVersion(version)
         sequence.MetaData.Default = 1
     end
 
-    if not GSE.isEmpty(sequence.MetaData.PVP) and sequence.MetaData.PVP > 1  and sequence.MetaData.PVP >= version then
+    if not GSE.isEmpty(sequence.MetaData.PVP) and sequence.MetaData.PVP > 1 and sequence.MetaData.PVP >= version then
         sequence.MetaData.PVP = tonumber(sequence.MetaData.PVP) - 1
     end
     if not GSE.isEmpty(sequence.MetaData.Arena) and sequence.MetaData.Arena > 1 and sequence.MetaData.Arena >= version then
@@ -3219,25 +3255,43 @@ function GSE.GUIDeleteVersion(version)
     if not GSE.isEmpty(sequence.MetaData.Raid) and sequence.MetaData.Raid > 1 and sequence.MetaData.Raid >= version then
         sequence.MetaData.Raid = tonumber(sequence.MetaData.Raid) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Mythic) and sequence.MetaData.Mythic > 1 and sequence.MetaData.Mythic >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.Mythic) and sequence.MetaData.Mythic > 1 and
+            sequence.MetaData.Mythic >= version
+     then
         sequence.MetaData.Mythic = tonumber(sequence.MetaData.Mythic) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythicPlus > 1 and sequence.MetaData.MythicPlus >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythicPlus > 1 and
+            sequence.MetaData.MythicPlus >= version
+     then
         sequence.MetaData.MythicPlus = tonumber(sequence.MetaData.MythicPlus) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Timewalking) and sequence.MetaData.Timewalking > 1 and sequence.MetaData.Timewalking >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.Timewalking) and sequence.MetaData.Timewalking > 1 and
+            sequence.MetaData.Timewalking >= version
+     then
         sequence.MetaData.Timewalking = tonumber(sequence.MetaData.Timewalking) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Heroic) and sequence.MetaData.Heroic > 1 and sequence.MetaData.Heroic >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.Heroic) and sequence.MetaData.Heroic > 1 and
+            sequence.MetaData.Heroic >= version
+     then
         sequence.MetaData.Heroic = tonumber(sequence.MetaData.Heroic) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Dungeon) and sequence.MetaData.Dungeon > 1 and sequence.MetaData.Dungeon >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.Dungeon) and sequence.MetaData.Dungeon > 1 and
+            sequence.MetaData.Dungeon >= version
+     then
         sequence.MetaData.Dungeon = tonumber(sequence.MetaData.Dungeon) - 1
     end
     if not GSE.isEmpty(sequence.MetaData.Party) and sequence.MetaData.Party > 1 and sequence.MetaData.Party >= version then
         sequence.MetaData.Party = tonumber(sequence.MetaData.Party) - 1
     end
-    if not GSE.isEmpty(sequence.MetaData.Scenario) and sequence.MetaData.Scenario > 1 and sequence.MetaData.Scenario >= version then
+    if
+        not GSE.isEmpty(sequence.MetaData.Scenario) and sequence.MetaData.Scenario > 1 and
+            sequence.MetaData.Scenario >= version
+     then
         sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
     end
     table.remove(sequence.Macros, version)
