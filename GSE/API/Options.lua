@@ -114,7 +114,9 @@ function GSE.GetOptionsTable()
                     },
                     overflowPersonalMacros = {
                         name = L["Use Global Account Macros"],
-                        desc = L["When creating a macro, if there is not a personal character macro space, create an account wide macro."],
+                        desc = L[
+                            "When creating a macro, if there is not a personal character macro space, create an account wide macro."
+                        ],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.overflowPersonalMacros = val
@@ -188,7 +190,9 @@ function GSE.GetOptionsTable()
                     },
                     fullBlockDebug = {
                         name = L["Show Full Block Execution"],
-                        desc = L["When debugging the output of a sequence, show the full executed block in the Debugger Output."],
+                        desc = L[
+                            "When debugging the output of a sequence, show the full executed block in the Debugger Output."
+                        ],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.showFullBlockDebug = val
@@ -474,6 +478,171 @@ function GSE.GetOptionsTable()
                 type = "group",
                 order = 2,
                 args = {
+                    title1 = {
+                        type = "header",
+                        name = L["General Options"],
+                        order = 100
+                    },
+                    resetOOC = {
+                        name = L["Reset Macro when out of combat"],
+                        desc = L["Resets macros back to the initial state when out of combat."],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.resetOOC = val
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
+                        end,
+                        order = 110
+                    },
+                    requireTarget = {
+                        name = L["Require Target to use"],
+                        desc = L[
+                            "This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.requireTarget = val
+                            GSE.PerformReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.requireTarget and GSE_C.requireTarget or GSEOptions.requireTarget
+                        end,
+                        order = 120
+                    },
+                    use11 = {
+                        name = L["Use First Ring in KeyRelease"],
+                        desc = L[
+                            "Incorporate the first ring slot into the KeyRelease. This is the equivalent of /use [combat] 11 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use11 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use11 and GSE_C.use11 or GSEOptions.use11
+                        end,
+                        order = 130
+                    },
+                    use12 = {
+                        name = L["Use Second Ring in KeyRelease"],
+                        desc = L[
+                            "Incorporate the second ring slot into the KeyRelease. This is the equivalent of /use [combat] 12 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use12 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use12 and GSE_C.use12 or GSEOptions.use12
+                        end,
+                        order = 140
+                    },
+                    use13 = {
+                        name = L["Use First Trinket in KeyRelease"],
+                        desc = L[
+                            "Incorporate the first trinket slot into the KeyRelease. This is the equivalent of /use [combat] 13 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use13 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+
+                            return GSE_C.use13 and GSE_C.use13 or GSEOptions.use13
+                        end,
+                        order = 150
+                    },
+                    use14 = {
+                        name = L["Use Second Trinket in KeyRelease"],
+                        desc = L[
+                            "Incorporate the second trinket slot into the KeyRelease. This is the equivalent of /use [combat] 14 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use14 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use14 and GSE_C.use14 or GSEOptions.use14
+                        end,
+                        order = 160
+                    },
+                    use2 = {
+                        name = L["Use Neck Item in KeyRelease"],
+                        desc = L[
+                            "Incorporate the neck slot into the KeyRelease. This is the equivalent of /use [combat] 2 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use2 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use2 and GSE_C.use2 or GSEOptions.use2
+                        end,
+                        order = 170
+                    },
+                    use6 = {
+                        name = L["Use Belt Item in KeyRelease"],
+                        desc = L[
+                            "Incorporate the belt slot into the KeyRelease. This is the equivalent of /use [combat] 5 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use6 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use6 and GSE_C.use6 or GSEOptions.use6
+                        end,
+                        order = 180
+                    },
+                    use1 = {
+                        name = L["Use Head Item in KeyRelease"],
+                        desc = L[
+                            "Incorporate the Head slot into the KeyRelease. This is the equivalent of /use [combat] 1 in a KeyRelease."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSE_C.use1 = val
+                            GSE.ReloadSequences()
+                        end,
+                        get = function(info)
+                            if GSE.isEmpty(GSE_C) then
+                                GSE_C = {}
+                            end
+                            return GSE_C.use1 and GSE_C.use1 or GSEOptions.use1
+                        end,
+                        order = 190
+                    },
                     MSFiltertitle1 = {
                         type = "header",
                         name = L["Millisecond click settings"],
@@ -493,7 +662,7 @@ function GSE.GetOptionsTable()
                             return GSE_C.msClickRate and GSE_C.msClickRate or ""
                         end,
                         order = 385
-                    },
+                    }
                 }
             },
             macroResetTab = {
@@ -733,7 +902,8 @@ function GSE.GetOptionsTable()
                             return GSE.GUIGetColour(GSEOptions.TitleColour)
                         end,
                         set = function(info, r, g, b, a)
-                            GSEOptions.TitleColour = string.format("|c%02x%02x%02x%02x", a * 255, r * 255, g * 255, b * 255)
+                            GSEOptions.TitleColour =
+                                string.format("|c%02x%02x%02x%02x", a * 255, r * 255, g * 255, b * 255)
                         end
                     },
                     authorColour = {
@@ -746,7 +916,8 @@ function GSE.GetOptionsTable()
                             return GSE.GUIGetColour(GSEOptions.AuthorColour)
                         end,
                         set = function(info, r, g, b)
-                            GSEOptions.AuthorColour = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+                            GSEOptions.AuthorColour =
+                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
                         end
                     },
                     commandColour = {
@@ -759,7 +930,8 @@ function GSE.GetOptionsTable()
                             return GSE.GUIGetColour(GSEOptions.CommandColour)
                         end,
                         set = function(info, r, g, b)
-                            GSEOptions.CommandColour = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+                            GSEOptions.CommandColour =
+                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
                         end
                     },
                     emphasisColour = {
@@ -772,7 +944,8 @@ function GSE.GetOptionsTable()
                             return GSE.GUIGetColour(GSEOptions.EmphasisColour)
                         end,
                         set = function(info, r, g, b)
-                            GSEOptions.EmphasisColour = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+                            GSEOptions.EmphasisColour =
+                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
                         end
                     },
                     normalColour = {
@@ -785,7 +958,8 @@ function GSE.GetOptionsTable()
                             return GSE.GUIGetColour(GSEOptions.NormalColour)
                         end,
                         set = function(info, r, g, b)
-                            GSEOptions.NormalColour = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+                            GSEOptions.NormalColour =
+                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
                         end
                     },
                     ctitle2 = {
@@ -1099,7 +1273,8 @@ function GSE.GetOptionsTable()
                         imageWidth = 120,
                         imageHeight = 120,
                         func = function()
-                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url = "https://github.com/TimothyLuke/GnomeSequencer-Enhanced/issues"
+                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url =
+                                "https://github.com/TimothyLuke/GnomeSequencer-Enhanced/issues"
                             StaticPopup_Show("GSE_SEQUENCEHELP")
                         end
                     },
@@ -1174,7 +1349,9 @@ function GSE.GetOptionsTable()
                     },
                     sendDebugOutputToDebugOutput = {
                         name = L["Store Debug Messages"],
-                        desc = L["Store output of debug messages in a Global Variable that can be referrenced by other mods."],
+                        desc = L[
+                            "Store output of debug messages in a Global Variable that can be referrenced by other mods."
+                        ],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.sendDebugOutputToDebugOutput = val

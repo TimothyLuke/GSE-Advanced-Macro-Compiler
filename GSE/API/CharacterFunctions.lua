@@ -16,19 +16,17 @@ end
 
 --- Return the current GCD for the current character
 function GSE.GetGCD()
-
     local gcdSpell
 
     local gcd = 1.5
     -- Classic doesnt have haste.
     if GSE.GameMode > 3 then
         local haste = UnitSpellHaste("player")
-        gcd = 1.5/(1 + 0.01 * haste)
-        --gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
+        gcd = 1.5 / (1 + 0.01 * haste)
+    --gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
     end
 
     return gcd
-
 end
 
 --- Return the characters class id
@@ -80,7 +78,6 @@ function GSE.GetClassIcon(classid)
     classicon[11] = "Interface\\Icons\\inv_misc_monsterclaw_04" -- Druid
     classicon[12] = "Interface\\Icons\\INV_Weapon_Glave_01" -- DEMONHUNTER
     return classicon[classid]
-
 end
 
 --- Check if the specID provided matches the players current class
@@ -105,7 +102,7 @@ end
 
 --- Returns the Character Name in the form Player@server
 function GSE.GetCharacterName()
-    return GetUnitName("player", true) .. '@' .. GetRealmName()
+    return GetUnitName("player", true) .. "@" .. GetRealmName()
 end
 
 --- Returns the current Talent Selections as a string
@@ -127,7 +124,6 @@ end
 
 --- Experimental attempt to load a WeakAuras string.
 function GSE.LoadWeakAura(str)
-
     if IsAddOnLoaded("WeakAuras") then
         WeakAuras.OpenOptions()
         WeakAuras.OpenOptions()
@@ -135,7 +131,6 @@ function GSE.LoadWeakAura(str)
     else
         GSE.Print(L["WeakAuras was not found."])
     end
-
 end
 
 if not SaveBindings then
@@ -152,10 +147,95 @@ function GSE.ClearCommonKeyBinds()
         for _, v in ipairs(defaultbuttons) do
             SetBinding(p .. v)
             GSE.PrintDebugMessage("Cleared KeyCombination " .. p .. v)
-
         end
     end
     -- Save for this character
     SaveBindings(2)
     GSE.Print("Common Keybinding combinations cleared for this character.")
+end
+
+--- Obtain the Click Rate from GSE Options or from the characters internal options
+function GSE.GetClickRate()
+    local clickRate = GSEOptions.msClickRate and GSEOptions.msClickRate or 250
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    if not GSE.isEmpty(GSE_C.msClickRate) then
+        clickRate = GSE_C.msClickRate
+    end
+    return clickRate
+end
+
+function GSE.GetResetOOC()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
+end
+
+function GSE.GetRequireTarget()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.requireTarget and GSE_C.requireTarget or GSEOptions.requireTarget
+end
+
+function GSE.SetRequireTarget(value)
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    if GSE_C.requireTarget then
+        GSE_C.requireTarget = value
+    else
+        GSEOptions.requireTarget = value
+    end
+end
+
+function GSE.GetUse11()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use11 and GSE_C.use11 or GSEOptions.use11
+end
+
+function GSE.GetUse12()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use12 and GSE_C.use12 or GSEOptions.use12
+end
+
+function GSE.GetUse13()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use13 and GSE_C.use13 or GSEOptions.use13
+end
+
+function GSE.GetUse14()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use14 and GSE_C.use14 or GSEOptions.use14
+end
+
+function GSE.GetUse2()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use2 and GSE_C.use2 or GSEOptions.use2
+end
+
+function GSE.GetUse6()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use6 and GSE_C.use6 or GSEOptions.use6
+end
+
+function GSE.GetUse1()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    return GSE_C.use1 and GSE_C.use11 or GSEOptions.use1
 end
