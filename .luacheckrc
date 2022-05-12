@@ -5,7 +5,7 @@ exclude_files = {
     ".luacheckrc",
     "**/Deprecated/**/*.lua",
     "**/spec/**/*.lua",
-    "**/.install/**/*.lua",
+    "**/.install/**/*.lua"
 }
 ignore = {
     "11./SLASH_.*", -- Setting an undefined (Slash handler) global variable
@@ -15,8 +15,8 @@ ignore = {
     "211/CL", -- Unused local variable "CL"
     "212", -- Unused argument
     "43.", -- Shadowing an upvalue, an upvalue argument, an upvalue loop variable.
---    "431", -- shadowing upvalue
-    "542", -- An empty if branch
+    --    "431", -- shadowing upvalue
+    "542" -- An empty if branch
 }
 globals = {
     -- Saved Variables
@@ -27,19 +27,16 @@ globals = {
     "GSE3Storage",
     "GSE_C",
     "GSESpellCache",
-
     -- GSE
     "GSE",
     "GSEGUI",
     "GNOME",
-
     -- Libraries
     "LibStub",
     "ElvUI",
     "IndentationLib",
     "WeakAuras",
     "ElvPrivateDB",
-
     -- Lua
     "bit.band",
     "bit.lshift",
@@ -52,7 +49,6 @@ globals = {
     "gmatch",
     "strlower",
     "date",
-
     -- Utility functions
     "geterrorhandler",
     "fastrandom",
@@ -65,7 +61,6 @@ globals = {
     "tinsert",
     "tostringall",
     "tremove",
-
     -- WoW
     "ALL",
     "ALWAYS",
@@ -143,7 +138,6 @@ globals = {
     "WOW_PROJECT_MAINLINE",
     "WOW_PROJECT_ID",
     "YES",
-
     "AlertFrame",
     "BackdropTemplateMixin",
     "ChatFontNormal",
@@ -160,14 +154,12 @@ globals = {
     "StaticPopupDialogs",
     "TimerTracker",
     "WorldFrame",
-
     "CinematicFrame_CancelCinematic",
     "ObjectiveTracker_Collapse",
     "ObjectiveTracker_Expand",
     "OptionsList_OnLoad",
     "StaticPopup_Hide",
     "TimerTracker_OnEvent",
-
     "C_BattleNet.GetAccountInfoByID",
     "C_BattleNet.GetFriendAccountInfo",
     "C_BattleNet.GetGameAccountInfoByID",
@@ -342,10 +334,9 @@ globals = {
     "UnitRealmRelationship",
     "UnitSetRole",
     "UnitThreatSituation",
-
     --WOW functions
     "PickupMacro",
-    "GameFontNormalLarge",   
+    "GameFontNormalLarge",
     "GameTooltipText",
     "ReloadUI",
     "LE_PARTY_CATEGORY_HOME",
@@ -391,5 +382,6 @@ globals = {
     "C_BattleNet",
     "BNGetNumFriendGameAccounts",
     "BNGetFriendGameAccountInfo",
-    "ChatFrame_AddMessageEventFilter"
+    "ChatFrame_AddMessageEventFilter",
+    "LoadAddOn"
 }

@@ -2,14 +2,14 @@
 
 ## Interface-Retail: 90200
 ## Interface-Classic: 11402
-## Interface-BCC: 20503
+## Interface-BCC: 20504
 
 ## Title: |cff0000ffGSE:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE
-
+## LoadOnDemand: 1
 
 Ace3_Extensions\AceGUI-3.0-Selectable-Panel.lua
 Ace3_Extensions\AceGUIContainer-KeyGroup.lua

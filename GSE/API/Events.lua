@@ -462,16 +462,14 @@ function GSE:GSSlash(input)
     elseif command == "showdebugoutput" then
         StaticPopup_Show("GS-DebugOutput")
     elseif command == "record" then
+        GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUIRecordFrame:Show()
-        else
-            GSE.printNoGui()
         end
     elseif command == "debug" then
+        GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUIShowDebugWindow()
-        else
-            GSE.printNoGui()
         end
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
@@ -485,10 +483,9 @@ function GSE:GSSlash(input)
     elseif command == "checkmacrosforerrors" then
         GSE.ScanMacrosForErrors()
     elseif command == "compressstring" then
+        GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUICompressFrame:Show()
-        else
-            GSE.printNoGui()
         end
     elseif command == "dumpmacro" then
         GSE_C[params[2]] = {}
@@ -500,10 +497,9 @@ function GSE:GSSlash(input)
     elseif string.lower(command) == "clearoocqueue" then
         GSE.OOCQueue = {}
     else
+        GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUIShowViewer()
-        else
-            GSE.printNoGui()
         end
     end
 end
@@ -555,6 +551,7 @@ function GSE:ProcessOOCQueue()
                     GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
                 end
             elseif v.action == "openviewer" then
+                GSE.CheckGUI()
                 GSE.GUIShowViewer()
             elseif v.action == "CheckMacroCreated" then
                 GSE.OOCCheckMacroCreated(v.sequencename, v.create)
@@ -614,12 +611,20 @@ function GSE.ToggleOOCQueue()
     end
 end
 
--- process chatlinks
--- hooksecurefunc("SetItemRef", function(link)
--- 	local linkType, addon, param1 = strsplit(":", link)
--- 	if linkType == "garrmission" and addon == "GSE" then
--- 		if param1 == "foo" then
--- 			print(link)
--- 		end
--- 	end
--- end)
+function GSE.CheckGUI()
+    local loaded, reason = LoadAddOn("GSE_GUI")
+    if not loaded then
+        if reason == "DISABLED" then
+            GSE.PrintDebugMessage("GSE GUI Disabled", "GSE_GUI")
+            GSE.Print(
+                L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the GSE GUI."]
+            )
+        elseif reason == "MISSING" then
+            GSE.Print(L["The GUI is missing.  Please ensure that your GSE install is complete."])
+        elseif reason == "CORRUPT" then
+            GSE.Print(L["The GUI is corrupt.  Please ensure that your GSE install is complete."])
+        elseif reason == "INTERFACE_VERSION" then
+            GSE.Print(L["The GUI needs updating.  Please ensure that your GSE install is complete."])
+        end
+    end
+end

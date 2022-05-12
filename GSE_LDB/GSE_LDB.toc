@@ -2,7 +2,7 @@
 
 ## Interface-Retail: 90200
 ## Interface-Classic: 11402
-## Interface-BCC: 20503
+## Interface-BCC: 20505
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE
