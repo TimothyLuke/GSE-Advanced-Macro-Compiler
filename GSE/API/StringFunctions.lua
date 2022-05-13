@@ -335,8 +335,8 @@ function GSE.TableDiff(t1, t2)
                 bool = true
             end
         elseif t2 then
-            if not (t1[i] == t2[i]) then
-                diff[i] = t1[i] .. " -- is not [" .. t2[i] .. "]"
+            if t1[i] ~= t2[i] then
+                diff[i] = t1[i] .. " -- not [" .. t2[i] .. "]"
                 bool = true
             end
         else
