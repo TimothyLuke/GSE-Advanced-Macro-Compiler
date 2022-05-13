@@ -45,7 +45,7 @@ jobs:
       run: |
         luarocks install mockagne 1.0
         luarocks install luaunit
-        luarocks install luabitop
+        # luarocks install luabitop
         luarocks install busted
         luarocks install luacov
         luarocks install luacov-coveralls
