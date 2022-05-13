@@ -3,7 +3,6 @@ local Statics = GSE.Static
 
 --- Remove WoW Text Markup from a sequence.  Deprecated Use GSE.UnEscapeTableRecursive
 function GSE.UnEscapeSequence(sequence)
-
     local retseq = GSE.UnEscapeTable(sequence)
     return retseq
 end
@@ -15,7 +14,6 @@ end
 
 --- Remove WoW Text Markup from a string.
 function GSE.UnEscapeString(str)
-
     for k, v in pairs(Statics.StringFormatEscapes) do
         str = string.gsub(str, k, v)
     end
@@ -24,17 +22,17 @@ end
 
 function GSE.UnEscapeTableRecursive(tab)
     for k, v in pairs(tab) do
-        if type(v) == 'table' then
+        if type(v) == "table" then
             tab[k] = GSE.UnEscapeTableRecursive(v)
-        elseif type(v) == 'string' then
+        elseif type(v) == "string" then
             tab[k] = GSE.UnEscapeString(v)
         end
     end
 
-    for k,v in ipairs(tab) do
-        if type(v) == 'table' then
+    for k, v in ipairs(tab) do
+        if type(v) == "table" then
             tab[k] = GSE.UnEscapeTableRecursive(v)
-        elseif type(v) == 'string' then
+        elseif type(v) == "string" then
             tab[k] = GSE.UnEscapeString(v)
         end
     end
@@ -82,7 +80,6 @@ function GSE.SplitCastSequence(str)
             start = i + 1
             GSE.PrintDebugMessage("found terminator at " .. i, "Storage")
         end
-
     end
     table.insert(tab, string.sub(str, start))
     return tab
@@ -91,13 +88,12 @@ end
 function GSE.FixQuotes(source)
     source = string.gsub(source, "%‘", "'")
     source = string.gsub(source, "%’", "'")
-    source = string.gsub(source, "%”", "\"")
+    source = string.gsub(source, "%”", '"')
     return source
 end
 
 function GSE.CleanStrings(source)
     for _, v in pairs(Statics.CleanStrings) do
-
         if source == v then
             source = ""
         else
@@ -129,7 +125,6 @@ function GSE.CleanStringsArray(tabl)
     return tabl
 end
 
-
 --- This function removes any hidden characters from a string.
 function GSE.StripControlandExtendedCodes(str)
     local s = ""
@@ -158,7 +153,6 @@ function GSE.TrimWhiteSpace(str)
 end
 
 function GSE.Dump(node)
-
     --     local s = '{ \n'
     --     for k, v in pairs(node) do
     --         if type(k) ~= 'number' then
@@ -187,7 +181,7 @@ function GSE.Dump(node)
     end
     while true do
         local size = 0
-        if type(node) == 'table' then
+        if type(node) == "table" then
             for _, _ in pairs(node) do
                 size = size + 1
             end
@@ -195,7 +189,6 @@ function GSE.Dump(node)
             local cur_index = 1
             for k, v in pairs(node) do
                 if (cache[node] == nil) or (cur_index >= cache[node]) then
-
                     if (string.find(output_str, "}", output_str:len())) then
                         output_str = output_str .. ",\n"
                     elseif not (string.find(output_str, "\n", output_str:len())) then
@@ -210,30 +203,30 @@ function GSE.Dump(node)
                     if (type(k) == "number" or type(k) == "boolean") then
                         key = "[" .. tostring(k) .. "]"
                     else
-                        key = "[\"" .. tostring(k) .. "\"]"
+                        key = '["' .. tostring(k) .. '"]'
                     end
 
                     if (type(v) == "number" or type(v) == "boolean") then
-                        output_str = output_str .. string.rep('\t', depth) .. key .. " = " .. tostring(v)
+                        output_str = output_str .. string.rep("\t", depth) .. key .. " = " .. tostring(v)
                     elseif (type(v) == "table") then
-                        output_str = output_str .. string.rep('\t', depth) .. key .. " = {\n"
+                        output_str = output_str .. string.rep("\t", depth) .. key .. " = {\n"
                         table.insert(stack, node)
                         table.insert(stack, v)
                         cache[node] = cur_index + 1
                         break
                     else
-                        output_str = output_str .. string.rep('\t', depth) .. key .. " = \"" .. tostring(v) .. "\""
+                        output_str = output_str .. string.rep("\t", depth) .. key .. ' = "' .. tostring(v) .. '"'
                     end
 
                     if (cur_index == size) then
-                        output_str = output_str .. "\n" .. string.rep('\t', depth - 1) .. "}"
+                        output_str = output_str .. "\n" .. string.rep("\t", depth - 1) .. "}"
                     else
                         output_str = output_str .. ","
                     end
                 else
                     -- close the table
                     if (cur_index == size) then
-                        output_str = output_str .. "\n" .. string.rep('\t', depth - 1) .. "}"
+                        output_str = output_str .. "\n" .. string.rep("\t", depth - 1) .. "}"
                     end
                 end
 
@@ -241,7 +234,7 @@ function GSE.Dump(node)
             end
         end
         if (size == 0) then
-            output_str = output_str .. "\n" .. string.rep('\t', depth - 1) .. "}"
+            output_str = output_str .. "\n" .. string.rep("\t", depth - 1) .. "}"
         end
 
         if (#stack > 0) then
@@ -272,7 +265,7 @@ function GSE.FindGlobalObject(name)
 end
 
 function GSE.ObjectExists(name)
-    return type(GSE.FindGlobalObject(name)) ~= 'nil'
+    return type(GSE.FindGlobalObject(name)) ~= "nil"
 end
 
 function GSE.GetTimestamp()
@@ -281,33 +274,35 @@ end
 
 function GSE.DecodeTimeStamp(stamp)
     local tab = {}
-    tab.year = stamp:sub(1,4)
-    tab.month = stamp:sub(5,2)
-    tab.day = stamp:sub(7,2)
-    tab.hour = stamp:sub(9,2)
-    tab.hour = stamp:sub(11,2)
-    tab.sec = stamp:sub(13,2)
+    tab.year = stamp:sub(1, 4)
+    tab.month = stamp:sub(5, 2)
+    tab.day = stamp:sub(7, 2)
+    tab.hour = stamp:sub(9, 2)
+    tab.hour = stamp:sub(11, 2)
+    tab.sec = stamp:sub(13, 2)
     return tab
 end
 
 --- Check is the value is present and if it is actually a number.
 function GSE.isNaN(v)
-    return  type( v ) ~= "number" or GSE.isEmpty(v)
+    return type(v) ~= "number" or GSE.isEmpty(v)
 end
 
-function GSE.ConcatIndexed(tab,template)
-    template = template or '%d %s\n'
+function GSE.ConcatIndexed(tab, template)
+    template = template or "%d %s\n"
     local tt = {}
-    for k,v in ipairs(tab) do
-        tt[#tt+1]=template:format(k,v)
+    for k, v in ipairs(tab) do
+        tt[#tt + 1] = template:format(k, v)
     end
     return table.concat(tt)
 end
 
 function GSE.TableLength(T)
-  local count = 0
-  for _ in pairs(T) do count = count + 1 end
-  return count
+    local count = 0
+    for _ in pairs(T) do
+        count = count + 1
+    end
+    return count
 end
 
 function GSE.pairsByKeys(t, f)
@@ -317,7 +312,8 @@ function GSE.pairsByKeys(t, f)
     end
     table.sort(a, f)
     local i = 0 -- Iterator variable
-    local iter = function() -- Iterator function
+    local iter = function()
+        -- Iterator function
         i = i + 1
         if a[i] == nil then
             return nil
@@ -331,8 +327,8 @@ end
 function GSE.TableDiff(t1, t2)
     local diff = {}
     local bool = false
-    for i, v in pairs (t1) do
-        if t2 and type (v) == "table" then
+    for i, v in pairs(t1) do
+        if t2 and type(v) == "table" then
             local deep_diff = GSE.TableDiff(t1[i], t2[i])
             if deep_diff then
                 diff[i] = deep_diff
@@ -340,7 +336,7 @@ function GSE.TableDiff(t1, t2)
             end
         elseif t2 then
             if not (t1[i] == t2[i]) then
-                diff[i] = t1[i] .. ' -- not [' .. t2[i] .. ']'
+                diff[i] = t1[i] .. " -- is not [" .. t2[i] .. "]"
                 bool = true
             end
         else
