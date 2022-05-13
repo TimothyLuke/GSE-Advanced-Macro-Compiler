@@ -33,7 +33,7 @@ externals:
   GSE/Lib/LibCompress:
     url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
     tag: latest
-  GSE/Lib/LibDataBroker-1.1: git://github.com/tekkub/libdatabroker-1-1.git
+  GSE/Lib/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1.git
   GSE/Lib/AceGUI-3.0-Completing-EditBox:
     url: svn://svn.wowace.com/wow/acegui-3-0-completing-editbox/mainline/trunk
     tag: latest
