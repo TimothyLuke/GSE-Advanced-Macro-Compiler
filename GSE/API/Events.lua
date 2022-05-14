@@ -339,7 +339,9 @@ function GSE:GROUP_ROSTER_UPDATE(...)
             (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and "INSTANCE_CHAT" or
             "PARTY"
     end
-    GSE.SendSpellCache(channel)
+    if #GSE.UnsavedOptions["PartyUsers"] > 1 then
+        GSE.SendSpellCache(channel)
+    end
     -- Group Team stuff
     GSE:ZONE_CHANGED_NEW_AREA()
 end
@@ -366,7 +368,7 @@ if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
 end
 
-if GSE.GameMode < 3 then
+if GSE.GameMode <= 3 then
     GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
     GSE:RegisterEvent("SPELLS_CHANGED")
 end
