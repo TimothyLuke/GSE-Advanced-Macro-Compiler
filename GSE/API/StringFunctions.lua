@@ -350,6 +350,19 @@ function GSE.TableDiff(t1, t2)
     end
 end
 
--- local tab1 = { "abcd", "edge"}
--- local tab2 = { "abcd", "ed"}
--- GSE.Print(GSE.Dump(GSE.TableDiff(tab1, tab2)))
+function GSE.RemoveComments(str)
+    if GSE.isEmpty(str) then
+        return str
+    end
+    local tab = GSE.SplitMeIntolines(str)
+    for i = #tab, 1, -1 do
+        local teststring = tab[i]
+        teststring = GSE.UnEscapeString(GSE.TrimWhiteSpace(teststring))
+        teststring = teststring:gsub("^%s*", "")
+        if string.sub(teststring, 1, 2) == "--" then
+            table.remove(tab, i)
+        end
+    end
+
+    return table.concat(tab, "\n")
+end

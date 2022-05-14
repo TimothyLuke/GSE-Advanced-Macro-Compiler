@@ -11,7 +11,6 @@ local GCD
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(task) then
-        -- Note to self: Do I care if it's a loop sequence?
         local spell = task
         local csindex, csitem, csspell = QueryCastSequence(task)
         if not GSE.isEmpty(csitem) then

@@ -1816,7 +1816,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
         function()
             local val = valueEditBox:GetText()
             if type(val) == "string" then
-                local functline = val
+                local functline = GSE.RemoveComments(val)
                 if string.sub(functline, 1, 10) == "function()" then
                     functline = string.sub(functline, 11)
                     functline = functline:sub(1, -4)

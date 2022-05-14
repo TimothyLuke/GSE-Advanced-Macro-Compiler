@@ -1352,7 +1352,7 @@ function GSE.ConvertGSE2(sequence, sequenceName)
 end
 
 local function processAction(action, metaData, variables)
-    return GSE.processAction(action, metaData)
+    return GSE.processAction(action, metaData, variables)
 end
 
 local function buildAction(action, metaData, variables)
@@ -1511,7 +1511,7 @@ function GSE.processAction(action, metaData, variables)
             if action.Variable == "GCD" then
                 clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
             else
-                local funcline = variables[action.Variable]
+                local funcline = GSE.RemoveComments(variables[action.Variable])
 
                 funcline = string.sub(table.concat(funcline, "\n"), 11)
                 funcline = funcline:sub(1, -4)
@@ -1559,7 +1559,7 @@ function GSE.processAction(action, metaData, variables)
             return
         end
 
-        local funcline = variables[action.Variable]
+        local funcline = GSE.RemoveComments(variables[action.Variable])
 
         funcline = string.sub(table.concat(funcline, "\n"), 11)
         funcline = funcline:sub(1, -4)

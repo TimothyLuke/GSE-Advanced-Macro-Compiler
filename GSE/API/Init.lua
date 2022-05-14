@@ -15,7 +15,7 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version")
 
 --@debug@
 if GSE.VersionString:find("version") then
-    GSE.VersionString = "3.0.30-development"
+    GSE.VersionString = "3.0.64-development"
 end
 --@end-debug@
 
@@ -39,7 +39,8 @@ end
 function GSE.split(source, delimiters)
     local elements = {}
     local pattern = "([^" .. delimiters .. "]+)"
-    string.gsub(
+    local _ =
+        string.gsub(
         source,
         pattern,
         function(value)
