@@ -628,4 +628,5 @@ function GSE.CheckGUI()
             GSE.Print(L["The GUI needs updating.  Please ensure that your GSE install is complete."])
         end
     end
+    return loaded
 end
