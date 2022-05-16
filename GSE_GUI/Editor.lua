@@ -2263,7 +2263,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     if GSE.isEmpty(disableMove) then
         local disableBlock = AceGUI:Create("CheckBox")
         disableBlock:SetType("checkbox")
-        disableBlock:SetWidth(100)
+        disableBlock:SetWidth(130)
         disableBlock:SetTriState(false)
         disableBlock:SetLabel(L["Disable Block"])
         layoutcontainer:AddChild(disableBlock)

@@ -350,11 +350,16 @@ function GSE.TableDiff(t1, t2)
     end
 end
 
+--- Remove the comments from a GSE Variable before attempting to execute it
 function GSE.RemoveComments(str)
     if GSE.isEmpty(str) then
         return str
     end
-    local tab = GSE.SplitMeIntolines(str)
+    local tab = str
+    if type(str) ~= "table" then
+        tab = GSE.SplitMeIntolines(str)
+    end
+
     for i = #tab, 1, -1 do
         local teststring = tab[i]
         teststring = GSE.UnEscapeString(GSE.TrimWhiteSpace(teststring))

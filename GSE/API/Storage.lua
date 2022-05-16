@@ -1561,7 +1561,7 @@ function GSE.processAction(action, metaData, variables)
 
         local funcline = GSE.RemoveComments(variables[action.Variable])
 
-        funcline = string.sub(table.concat(funcline, "\n"), 11)
+        funcline = string.sub(funcline, 11)
         funcline = funcline:sub(1, -4)
         funcline = loadstring(funcline)
         local value
@@ -1664,7 +1664,7 @@ function GSE.CompileTemplate(macro)
             for i, j in ipairs(v) do
                 template.Variables[k][i] = GSE.TranslateString(j, Statics.TranslatorMode.String, nil, true)
             end
-            variables[k] = table.concat(template.Variables[k], "\n")
+            variables[k] = GSE.RemoveComments(template.Variables[k])
         end
     end
 
