@@ -1184,7 +1184,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     local previewMacro = AceGUI:Create("Button")
     previewMacro:SetText(L["Compiled Template"])
-    previewMacro:SetWidth(130)
+    previewMacro:SetWidth(200)
     previewMacro:SetCallback(
         "OnClick",
         function()
@@ -1431,8 +1431,8 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(basespellspacer)
     -- linegroup1:AddChild(showBaseSpells)
     linegroup1:AddChild(delspacerlabel)
-    linegroup1:AddChild(raweditbutton)
     linegroup1:AddChild(previewMacro)
+    linegroup1:AddChild(raweditbutton)
 
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
@@ -2317,7 +2317,111 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     if not disableDelete then
         layoutcontainer:AddChild(deleteBlockButton)
     end
+    local spacerlabel5 = AceGUI:Create("Label")
+    spacerlabel5:SetWidth(15)
+    layoutcontainer:AddChild(spacerlabel5)
 
+    local textpath = table.concat(path, ".")
+    local patheditbox = AceGUI:Create("EditBox")
+    patheditbox:SetLabel(L["Block Path"])
+    patheditbox:SetWidth(250)
+    patheditbox:SetCallback(
+        "OnEnterPressed",
+        function(obj, event, key)
+            if not editframe.reloading then
+                -- put the move stuff here.
+                print("moving from " .. textpath .. " to " .. key)
+                local destinationPath = GSE.split(key, ".")
+                for k, v in ipairs(destinationPath) do
+                    destinationPath[k] = tonumber(v)
+                end
+                local testpath = GSE.CloneSequence(destinationPath)
+                table.remove(testpath, #testpath)
+                local sourcepath = GSE.CloneSequence(path)
+                for k, v in ipairs(sourcepath) do
+                    sourcepath[k] = tonumber(v)
+                end
+                table.remove(sourcepath, #sourcepath)
+                if #testpath > 0 then
+                    -- check that the path exists
+                    if
+                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
+                            type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
+                     then
+                        GSE.Print(L["Error: Destination path not found."])
+                        -- print(
+                        --     GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]),
+                        --     type(editframe.Sequence.Macros[version].Actions[testpath])
+                        -- )
+                        -- print("testpath " .. GSE.Dump(testpath))
+                        return
+                    end
+                end
+                if #sourcepath > 0 then
+                    -- check that the path exists
+                    if
+                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
+                            type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
+                     then
+                        GSE.Print(L["Error: Source path not found."])
+                        -- print(
+                        --     GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]),
+                        --     type(editframe.Sequence.Macros[version].Actions[testpath])
+                        -- )
+                        -- print("testpath " .. GSE.Dump(testpath))
+                        return
+                    end
+                end
+                --     table.insert(
+                --         editframe.Sequence.Macros[version].Actions[testpath],
+                --         destinationPath[#destinationPath],
+                --         GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                --     )
+                --     table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], path[#path])
+                -- else
+                --     print(path[1], type(path[1]), destinationPath[1], type(destinationPath[1]))
+
+                local insertActions = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                local endPoint = tonumber(destinationPath[#destinationPath])
+                local pathPoint = tonumber(path[#path])
+
+                if #sourcepath > 0 then
+                    table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
+                else
+                    table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
+                end
+                if #testpath > 0 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[testpath], endPoint, insertActions)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
+                end
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+            end
+        end
+    )
+    patheditbox:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Block Path"],
+                L[
+                    "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
+                ],
+                editframe
+            )
+        end
+    )
+    patheditbox:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+
+    -- patheditbox:DisableButton(true)
+
+    patheditbox:SetText(textpath)
+    layoutcontainer:AddChild(patheditbox)
     return layoutcontainer
 end
 

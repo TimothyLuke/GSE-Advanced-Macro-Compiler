@@ -834,3 +834,11 @@ L["Character Specific Options which override the normal account settings."] = tr
 L["The GUI is missing.  Please ensure that your GSE install is complete."] = true
 L["The GUI is corrupt.  Please ensure that your GSE install is complete."] = true
 L["The GUI needs updating.  Please ensure that your GSE install is complete."] = true
+
+-- #1009
+L["Block Path"] = true
+L[
+        "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
+    ] = true
+L["Error: Destination path not found."] = true
+L["Error: Source path not found."] = true
