@@ -60,23 +60,30 @@ function GSE.TraceSequence(button, step, task)
                             Statics.StringReset
         end
         GSE.PrintDebugMessage(
-            GSEOptions.AuthorColour ..
-                button ..
-                    Statics.StringReset ..
-                        "," ..
-                            step ..
-                                "," ..
-                                    (spell and spell or "nil") ..
-                                        (csindex and
-                                            " from castsequence " ..
-                                                (csspell and csspell or csitem) ..
-                                                    " (item " .. csindex .. " in castsequence.) " or
-                                            "") ..
-                                            "," ..
-                                                usableOutput ..
-                                                    "," ..
-                                                        manaOutput ..
-                                                            "," .. GCDOutput .. "," .. CastingOutput .. fullBlock,
+            table.concat(
+                {
+                    GSEOptions.AuthorColour,
+                    button,
+                    Statics.StringReset,
+                    ",",
+                    step,
+                    ",",
+                    (spell and spell or "nil"),
+                    (csindex and
+                        " from castsequence " ..
+                            (csspell and csspell or csitem) .. " (item " .. csindex .. " in castsequence.) " or
+                        ""),
+                    ",",
+                    usableOutput,
+                    ",",
+                    manaOutput,
+                    ",",
+                    GCDOutput,
+                    ",",
+                    CastingOutput,
+                    fullBlock
+                }
+            ),
             Statics.SequenceDebug
         )
     end
