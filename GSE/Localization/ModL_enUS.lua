@@ -842,3 +842,4 @@ L[
     ] = true
 L["Error: Destination path not found."] = true
 L["Error: Source path not found."] = true
+L["Error: You cannot move a container to be a child within itself."] = true

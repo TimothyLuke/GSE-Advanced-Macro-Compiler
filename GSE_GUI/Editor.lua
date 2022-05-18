@@ -2349,40 +2349,29 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                             type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
                      then
                         GSE.Print(L["Error: Destination path not found."])
-                        -- print(
-                        --     GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]),
-                        --     type(editframe.Sequence.Macros[version].Actions[testpath])
-                        -- )
-                        -- print("testpath " .. GSE.Dump(testpath))
                         return
                     end
                 end
+
                 if #sourcepath > 0 then
-                    -- check that the path exists
+                    -- check that the path exists  If this has happened we have a big problem
                     if
                         GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
                             type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
                      then
                         GSE.Print(L["Error: Source path not found."])
-                        -- print(
-                        --     GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]),
-                        --     type(editframe.Sequence.Macros[version].Actions[testpath])
-                        -- )
-                        -- print("testpath " .. GSE.Dump(testpath))
                         return
                     end
                 end
-                --     table.insert(
-                --         editframe.Sequence.Macros[version].Actions[testpath],
-                --         destinationPath[#destinationPath],
-                --         GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
-                --     )
-                --     table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], path[#path])
-                -- else
-                --     print(path[1], type(path[1]), destinationPath[1], type(destinationPath[1]))
+
+                if string.sub(key, 1, string.len(textpath)) == textpath then
+                    GSE.Print(L["Error: You cannot move a container to be a child within itself."])
+                    return
+                end
 
                 local insertActions = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
                 local endPoint = tonumber(destinationPath[#destinationPath])
+
                 local pathPoint = tonumber(path[#path])
 
                 if #sourcepath > 0 then
@@ -2391,8 +2380,14 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
                     table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
                 end
                 if #testpath > 0 then
+                    if endPoint > #testpath + 1 then
+                        endPoint = #testpath + 1
+                    end
                     table.insert(editframe.Sequence.Macros[version].Actions[testpath], endPoint, insertActions)
                 else
+                    if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
+                        endPoint = #editframe.Sequence.Macros[version].Actions + 1
+                    end
                     table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
                 end
                 ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)

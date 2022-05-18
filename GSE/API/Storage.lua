@@ -1351,14 +1351,10 @@ function GSE.ConvertGSE2(sequence, sequenceName)
     return returnSequence
 end
 
-local function processAction(action, metaData, variables)
-    return GSE.processAction(action, metaData, variables)
-end
-
 local function buildAction(action, metaData, variables)
     if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
-        return processAction(action, metaData, variables)
+        return GSE.processAction(action, metaData, variables)
     else
         if GSE.GetRequireTarget() then
             -- See #20 prevent target hopping
