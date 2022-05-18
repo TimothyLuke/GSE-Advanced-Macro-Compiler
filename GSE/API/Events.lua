@@ -148,23 +148,28 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     end
 
     GSE.PrintDebugMessage(
-        "PVP: " ..
-            tostring(GSE.PVPFlag) ..
-                " inMythic: " ..
-                    tostring(GSE.inMythic) ..
-                        " inRaid: " ..
-                            tostring(GSE.inRaid) ..
-                                " inDungeon " ..
-                                    tostring(GSE.inDungeon) ..
-                                        " inHeroic " ..
-                                            tostring(GSE.inHeroic) ..
-                                                " inArena " ..
-                                                    tostring(GSE.inArena) ..
-                                                        " inTimeWalking " ..
-                                                            tostring(GSE.inTimeWalking) ..
-                                                                " inMythicPlus " ..
-                                                                    tostring(GSE.inMythicPlus) ..
-                                                                        " inScenario " .. tostring(GSE.inScenario),
+        table.concat(
+            {
+                "PVP: ",
+                tostring(GSE.PVPFlag),
+                " inMythic: ",
+                tostring(GSE.inMythic),
+                " inRaid: ",
+                tostring(GSE.inRaid),
+                " inDungeon ",
+                tostring(GSE.inDungeon),
+                " inHeroic ",
+                tostring(GSE.inHeroic),
+                " inArena ",
+                tostring(GSE.inArena),
+                " inTimeWalking ",
+                tostring(GSE.inTimeWalking),
+                " inMythicPlus ",
+                tostring(GSE.inMythicPlus),
+                " inScenario ",
+                tostring(GSE.inScenario)
+            }
+        ),
         Statics.DebugModules["API"]
     )
     -- Force Reload of all Sequences
