@@ -1116,11 +1116,11 @@ function GSE:GUIDrawMacroEditor(container, version)
     -- end)
 
     local spacerlabel7 = AceGUI:Create("Label")
-    spacerlabel7:SetWidth(5 + (editframe.Width * 0.24))
+    spacerlabel7:SetWidth(10)
 
     local delversionbutton = AceGUI:Create("Button")
     delversionbutton:SetText(L["Delete Version"])
-    delversionbutton:SetWidth(100)
+    delversionbutton:SetWidth(130)
     delversionbutton:SetCallback(
         "OnClick",
         function()
@@ -1184,7 +1184,7 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     local previewMacro = AceGUI:Create("Button")
     previewMacro:SetText(L["Compiled Template"])
-    previewMacro:SetWidth(200)
+    previewMacro:SetWidth(150)
     previewMacro:SetCallback(
         "OnClick",
         function()
@@ -1429,9 +1429,9 @@ function GSE:GUIDrawMacroEditor(container, version)
 
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
+    linegroup1:AddChild(previewMacro)
     -- linegroup1:AddChild(showBaseSpells)
     linegroup1:AddChild(delspacerlabel)
-    linegroup1:AddChild(previewMacro)
     linegroup1:AddChild(raweditbutton)
 
     linegroup1:AddChild(spacerlabel7)
@@ -2258,7 +2258,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         layoutcontainer:AddChild(addIfButton)
     end
     local spacerlabel3 = AceGUI:Create("Label")
-    spacerlabel3:SetWidth(100)
+    spacerlabel3:SetWidth(30)
     layoutcontainer:AddChild(spacerlabel3)
     if GSE.isEmpty(disableMove) then
         local disableBlock = AceGUI:Create("CheckBox")
@@ -2324,7 +2324,7 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     local textpath = table.concat(path, ".")
     local patheditbox = AceGUI:Create("EditBox")
     patheditbox:SetLabel(L["Block Path"])
-    patheditbox:SetWidth(250)
+    patheditbox:SetWidth(80)
     patheditbox:SetCallback(
         "OnEnterPressed",
         function(obj, event, key)
@@ -2768,7 +2768,7 @@ local function drawAction(container, action, version, keyPath)
                 table.insert(newKeyPath, v)
             end
             table.insert(newKeyPath, key)
-            drawAction(macroGroup, act, version, newKeyPath, macroGroup)
+            drawAction(macroGroup, act, version, newKeyPath)
         end
         -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
         -- linegroup2:AddChild(testRowButton)

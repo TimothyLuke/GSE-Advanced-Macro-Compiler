@@ -148,30 +148,13 @@ function GSE.StripControlandExtendedCodes(str)
     return s
 end
 
+--- Remove the whitespace from the end of a string
 function GSE.TrimWhiteSpace(str)
     return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
 end
 
+--- Dump a table out to a string representation.
 function GSE.Dump(node)
-    --     local s = '{ \n'
-    --     for k, v in pairs(node) do
-    --         if type(k) ~= 'number' then
-    --             k = '"' .. k .. '"'
-    --         end
-    --         s = s .. '[' .. k .. '] = '
-    --         if GSE.isEmpty(v) then
-    --             s = s .. '"",\n'
-    --         elseif type(v) == 'string' then
-    --             s = s .. '[[' .. GSE.Dump(v) .. ']],\n'
-    --         else
-    --             s = s .. GSE.Dump(v) .. ',\n'
-    --         end
-    --     end
-    --     return s .. '} '
-    -- else
-    --     return GSE.TranslateString(tostring(o) , "STRING", true)
-    -- end
-
     local cache, stack, output = {}, {}, {}
     local depth = 1
     local output_str = "{\n"
@@ -252,6 +235,7 @@ function GSE.Dump(node)
     return output_str
 end
 
+--- Return an object from the Global namespace or else return nil
 function GSE.FindGlobalObject(name)
     local a = _G
     for key in string.gmatch(name, "([^%.]+)(%.?)") do
@@ -264,14 +248,17 @@ function GSE.FindGlobalObject(name)
     return a
 end
 
+--- Check if an object exists in the global space with the specified name. Returns a boolean
 function GSE.ObjectExists(name)
     return type(GSE.FindGlobalObject(name)) ~= "nil"
 end
 
+--- Get the current time as a timestamp
 function GSE.GetTimestamp()
     return date("%Y%m%d%H%M%S")
 end
 
+--- decode a timestamp into a table
 function GSE.DecodeTimeStamp(stamp)
     local tab = {}
     tab.year = stamp:sub(1, 4)
