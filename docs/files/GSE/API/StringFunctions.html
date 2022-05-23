@@ -124,6 +124,31 @@
 <table class="function_list">
 
 	<tr>
+	<td class="name" nowrap><a href="#GSE.DecodeTimeStamp">GSE.DecodeTimeStamp</a>&nbsp;(stamp)</td>
+	<td class="summary">decode a timestamp into a table </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.Dump">GSE.Dump</a>&nbsp;(node)</td>
+	<td class="summary">Dump a table out to a string representation.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.FindGlobalObject">GSE.FindGlobalObject</a>&nbsp;(name)</td>
+	<td class="summary">Return an object from the Global namespace or else return nil </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.GetTimestamp">GSE.GetTimestamp</a>&nbsp;()</td>
+	<td class="summary">Get the current time as a timestamp </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.ObjectExists">GSE.ObjectExists</a>&nbsp;(name)</td>
+	<td class="summary">Check if an object exists in the global space with the specified name.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#GSE.RemoveComments">GSE.RemoveComments</a>&nbsp;(str)</td>
 	<td class="summary">Remove the comments from a GSE Variable before attempting to execute it </td>
 	</tr>
@@ -141,6 +166,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.StripControlandExtendedCodes">GSE.StripControlandExtendedCodes</a>&nbsp;(str)</td>
 	<td class="summary">This function removes any hidden characters from a string.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#GSE.TrimWhiteSpace">GSE.TrimWhiteSpace</a>&nbsp;(str)</td>
+	<td class="summary">Remove the whitespace from the end of a string </td>
 	</tr>
 
 	<tr>
@@ -183,6 +213,127 @@
 
 <h2><a name="functions"></a>Functions</h2>
 <dl class="function">
+
+
+
+<dt><a name="GSE.DecodeTimeStamp"></a><strong>GSE.DecodeTimeStamp</strong>&nbsp;(stamp)</dt>
+<dd>
+decode a timestamp into a table
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  stamp: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.Dump"></a><strong>GSE.Dump</strong>&nbsp;(node)</dt>
+<dd>
+Dump a table out to a string representation.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  node: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.FindGlobalObject"></a><strong>GSE.FindGlobalObject</strong>&nbsp;(name)</dt>
+<dd>
+Return an object from the Global namespace or else return nil
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  name: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.GetTimestamp"></a><strong>GSE.GetTimestamp</strong>&nbsp;()</dt>
+<dd>
+Get the current time as a timestamp
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.ObjectExists"></a><strong>GSE.ObjectExists</strong>&nbsp;(name)</dt>
+<dd>
+Check if an object exists in the global space with the specified name. Returns a boolean
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  name: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
 
 
 
@@ -267,6 +418,32 @@ Convert a string to an array of lines.
 <dt><a name="GSE.StripControlandExtendedCodes"></a><strong>GSE.StripControlandExtendedCodes</strong>&nbsp;(str)</dt>
 <dd>
 This function removes any hidden characters from a string.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  str: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="GSE.TrimWhiteSpace"></a><strong>GSE.TrimWhiteSpace</strong>&nbsp;(str)</dt>
+<dd>
+Remove the whitespace from the end of a string
 
 
 <h3>Parameters</h3>
