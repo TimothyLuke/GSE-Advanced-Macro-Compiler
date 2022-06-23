@@ -109,10 +109,6 @@ function GSE.GUICreateEditorTabs()
             text = L["Configuration"],
             value = "config"
         }
-        -- {
-        --     text = L["Variables"],
-        --     value = "variables"
-        -- }
     }
     -- If disabled editor then dont show the internal tabs
     if not editframe.Sequence.MetaData.DisableEditor then
@@ -1097,24 +1093,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     local basespellspacer = AceGUI:Create("Label")
     basespellspacer:SetWidth(5)
 
-    -- local showBaseSpells = AceGUI:Create("CheckBox")
-    -- showBaseSpells:SetType("checkbox")
-    -- showBaseSpells:SetWidth((editframe.Width) * 0.24)
-    -- showBaseSpells:SetTriState(false)
-    -- showBaseSpells:SetLabel(L["Show Current Spells"])
-
-    -- showBaseSpells:SetValue(GSEOptions.showCurrentSpells)
-    -- showBaseSpells:SetCallback("OnValueChanged", function(sel, object, value)
-    --     GSEOptions.showCurrentSpells = value
-    --     GSE.GUISelectEditorTab(container, "event", version)
-    -- end)
-    -- showBaseSpells:SetCallback('OnEnter', function()
-    --     GSE.CreateToolTip(L["Show Current Spells"], L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."], editframe)
-    -- end)
-    -- showBaseSpells:SetCallback('OnLeave', function()
-    --     GSE.ClearTooltip(editframe)
-    -- end)
-
     local spacerlabel7 = AceGUI:Create("Label")
     spacerlabel7:SetWidth(10)
 
@@ -1208,14 +1186,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     local linegroup2 = AceGUI:Create("KeyGroup")
     linegroup2:SetLayout("Flow")
     linegroup2:SetWidth(editframe.Width)
-
-    -- local smallbox = 2
-    -- local largebox = 8
-    -- if editframe.Height > 700 then
-    --     local framesize = editframe.Height / 700
-    --     smallbox = math.ceil(framesize * smallbox) + 2
-    --     largebox = math.ceil(framesize * largebox) + 8
-    -- end
 
     local spacerlabel2 = AceGUI:Create("Label")
     spacerlabel2:SetWidth(6)
@@ -1430,7 +1400,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
     linegroup1:AddChild(previewMacro)
-    -- linegroup1:AddChild(showBaseSpells)
+    
     linegroup1:AddChild(delspacerlabel)
     linegroup1:AddChild(raweditbutton)
 
@@ -1461,18 +1431,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     local toolbarrow1 = AceGUI:Create("KeyGroup")
     toolbarrow1:SetLayout("Flow")
     toolbarrow1:SetWidth(contentcontainer.frame:GetWidth() - 50)
-    -- local targetresetcheckbox = AceGUI:Create("CheckBox")
-    -- targetresetcheckbox:SetType("checkbox")
-    -- targetresetcheckbox:SetWidth(78)
-    -- targetresetcheckbox:SetTriState(false)
-    -- targetresetcheckbox:SetLabel(L["Target"])
-    -- toolbarcontainer:AddChild(targetresetcheckbox)
-    -- if editframe.Sequence.Macros[version].Target then
-    --  targetresetcheckbox:SetValue(true)
-    -- end
-    -- targetresetcheckbox:SetCallback("OnValueChanged", function (sel, object, value)
-    --  editframe.Sequence.Macros[version].Target = value
-    -- end)
 
     if GSE.isEmpty(editframe.Sequence.Macros[version].InbuiltVariables) then
         editframe.Sequence.Macros[version].InbuiltVariables = {}
@@ -2284,6 +2242,8 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
         )
         if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
             highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+        else
+            highlightTexture:SetColorTexture(1, 0, 0, 0)
         end
 
         container:SetCallback(
