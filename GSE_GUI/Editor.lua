@@ -1400,7 +1400,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(spacerlabel1)
     linegroup1:AddChild(basespellspacer)
     linegroup1:AddChild(previewMacro)
-    
     linegroup1:AddChild(delspacerlabel)
     linegroup1:AddChild(raweditbutton)
 
