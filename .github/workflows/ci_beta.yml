@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - '!master'
-      - 'wrath'
+      - 'Wrath'
     tags:
       - "*"
   pull_request:
