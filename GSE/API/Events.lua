@@ -230,6 +230,9 @@ function GSE:ADDON_LOADED(event, addon)
             )
         end
     end
+    if GSE.isEmpty(GSEOptions) then
+        GSE.SetDefaultOptions()
+    end
 
     -- Added in 2.1.0
     if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
@@ -265,6 +268,12 @@ function GSE:ADDON_LOADED(event, addon)
     if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
         GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
         GSEOptions.MacroResetModifiers["AnyAlt"] = nil
+    end
+
+    if GSE.isEmpty(GSEOptions.showMiniMap) then
+        GSEOptions.showMiniMap = {
+            hide = true
+        }
     end
 end
 
