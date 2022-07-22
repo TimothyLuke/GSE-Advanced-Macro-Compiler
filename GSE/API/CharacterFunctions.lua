@@ -113,6 +113,8 @@ function GSE.GetCurrentTalents()
         talents = "CLASSIC"
     elseif GSE.GameMode == 2 then
         talents = "BC CLASSIC"
+    elseif GSE.GameMode == 3 then
+        talents = "Wrath CLASSIC"
     else
         for talentTier = 1, MAX_TALENT_TIERS do
             local available, selected = GetTalentTierInfo(talentTier, 1)

@@ -3,6 +3,7 @@
 ## Interface-Retail: 90205
 ## Interface-Classic: 11403
 ## Interface-BCC: 20504
+## Interface-Wrath: 30400
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFAdvanced Macro Compiler|r
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
