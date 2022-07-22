@@ -1,0 +1,77 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI_Wrath
+
+# Controls when the action will run. 
+on:
+  push:
+    branches:
+      - '!master'
+      - 'wrath'
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch: 
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: 0
+
+    - uses: leafo/gh-actions-lua@v8.0.0
+      with:
+        luaVersion: "5.1.5"
+
+    # Runs a single command using the runners shell
+    - name: Install and Run Luacheck
+      uses: nebularg/actions-luacheck@v1
+      with:
+        args: -q
+
+    # do Busted checkes
+    - uses: leafo/gh-actions-luarocks@v4.0.0
+
+    - name: Build Luarocks
+      run: |
+        luarocks install mockagne 1.0
+        luarocks install luaunit
+        # luarocks install luabitop
+        luarocks install busted
+        luarocks install luacov
+        luarocks install luacov-coveralls
+        luarocks install luadoc
+       # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
+        
+    - name: Run Busted UnitTests
+      run: |
+        busted -o utfTerminal --verbose --coverage
+   
+    - name: Log coverage to coveralls.io
+      if: success()
+      continue-on-error: true
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        export LUA_PATH="./GSE/API/?.lua;$LUA_PATH"
+        luacov-coveralls -v -e .luarocks
+        
+    # Runs a set of commands using the runners shell
+    - name: Create Package Classic
+      uses: BigWigsMods/packager@master
+      if: ${{ github.event_name != 'pull_request' }}
+      env:
+        CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: -g wrath -m .pkgmeta
