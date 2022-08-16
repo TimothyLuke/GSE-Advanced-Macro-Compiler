@@ -44,7 +44,7 @@ end
 function GSE.GetClassIDforSpec(specid)
     -- Check for Classic WoW
     local classid = 0
-    if GSE.GameMode < 3 then
+    if GSE.GameMode < 5 then
         -- Classic WoW
         classid = Statics.SpecIDClassList[specid]
     else

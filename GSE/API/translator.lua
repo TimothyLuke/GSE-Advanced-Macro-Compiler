@@ -9,7 +9,6 @@ local L = GSE.L
 -- Mode of "STRING" will return local names where mode "ID" will return id's
 -- dropAbsolute will remove "$$" from the start of lines.
 function GSE.TranslateSequence(tab, mode, dropAbsolute)
-
     GSE.PrintDebugMessage("GSE.TranslateSequence  Mode: " .. mode, GNOME)
     for k, v in ipairs(tab) do
         -- Translate Sequence
@@ -38,16 +37,16 @@ function GSE.ProcessVariables(lines, variableTable)
     for _, line in ipairs(lines) do
         if line ~= "/click GSE.Pause" then
             if not GSE.isEmpty(variableTable) then
-                for key,value in pairs(variableTable) do
+                for key, value in pairs(variableTable) do
                     if type(value) == "string" then
                         local functline = value
                         if string.sub(functline, 1, 10) == "function()" then
                             functline = string.sub(functline, 11)
                             functline = functline:sub(1, -4)
-                            functline = loadstring(functline)
+                            local funct = loadstring(functline)
                             --print(type(functline))
-                            if functline ~= nil then
-                                value = functline
+                            if funct ~= nil then
+                                value = funct
                             end
                         end
                     end
@@ -63,7 +62,7 @@ function GSE.ProcessVariables(lines, variableTable)
                 end
             end
 
-            for key,value in pairs(Statics.SystemVariables) do
+            for key, value in pairs(Statics.SystemVariables) do
                 if type(value) == "function" then
                     value = value()
                 end
@@ -82,12 +81,12 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
     local output = ""
     if not GSE.isEmpty(instring) then
         local absolute = false
-        if instring:find('$$', 1, true) then
+        if instring:find("$$", 1, true) then
             GSE.PrintDebugMessage("Setting Absolute", GNOME)
             absolute = true
         end
-        if GSE.isEmpty(string.find(instring, '--', 1, true)) then
-            for cmd, etc in string.gmatch(instring or '', '/(%w+)%s+([^\n]+)') do
+        if GSE.isEmpty(string.find(instring, "--", 1, true)) then
+            for cmd, etc in string.gmatch(instring or "", "/(%w+)%s+([^\n]+)") do
                 GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
                 output = output .. GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
                 if string.lower(cmd) == "use" then
@@ -99,8 +98,8 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
 
                     output = output .. GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
-
                 elseif Statics.CastCmds[string.lower(cmd)] then
+                    -- Check for cast Sequences
                     if not cleanNewLines then
                         etc = string.match(etc, "^%s*(.-)%s*$")
                     end
@@ -108,15 +107,14 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                         etc = string.sub(etc, 2)
                         output = output .. "!"
                     end
-                    local foundspell, returnval = GSE.TranslateSpell(etc, mode,
-                                                      (cleanNewLines and cleanNewLines or false), absolute)
+                    local foundspell, returnval =
+                        GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false), absolute)
                     if foundspell then
                         output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset
                     else
                         GSE.PrintDebugMessage("Did not find : " .. etc, GNOME)
                         output = output .. etc
                     end
-                    -- Check for cast Sequences
                 elseif string.lower(cmd) == "castsequence" then
                     GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
                     for _, y in ipairs(GSE.split(etc, ";")) do
@@ -134,8 +132,8 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                                 uetc = string.sub(uetc, 2)
                                 output = output .. "!"
                             end
-                            local foundspell, returnval = GSE.TranslateSpell(uetc, mode,
-                                                              (cleanNewLines and cleanNewLines or false), absolute)
+                            local foundspell, returnval =
+                                GSE.TranslateSpell(uetc, mode, (cleanNewLines and cleanNewLines or false), absolute)
                             output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. ", "
                         end
                         output = output .. ";"
@@ -148,26 +146,24 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     if string.sub(output, string.len(output) - 1) == ", " then
                         output = string.sub(output, 1, string.len(output) - 2)
                     end
-
                 else
                     -- Pass it through
                     output = output .. " " .. etc
-
                 end
             end
             -- look for single line commands and mark them up
-            for _,v in ipairs(Statics.MacroCommands) do
+            for _, v in ipairs(Statics.MacroCommands) do
                 output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
             end
         else
-            GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, '--', 1, true), GNOME)
+            GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, "--", 1, true), GNOME)
             output = output .. GSEOptions.CONCAT .. instring .. Statics.StringReset
         end
         -- If nothing was found, pass through
         if output == "" then
             output = instring
             -- look for single line commands and mark them up
-            for _,v in ipairs(Statics.MacroCommands) do
+            for _, v in ipairs(Statics.MacroCommands) do
                 output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
             end
         end
@@ -175,7 +171,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
         if GSE.isEmpty(dropAbsolute) then
             dropAbsolute = false
         end
-        if  absolute and not dropAbsolute then
+        if absolute and not dropAbsolute then
             output = "$$" .. output
         end
     elseif cleanNewLines then
@@ -207,8 +203,12 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         GSE.PrintDebugMessage("GSE.TranslateSpell found ; in " .. str .. " about to do recursive call.", GNOME)
         for _, w in ipairs(GSE.split(str, ";")) do
             local returnval
-            found, returnval = GSE.TranslateSpell((cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")), mode,
-                                   (cleanNewLines and cleanNewLines or false))
+            found, returnval =
+                GSE.TranslateSpell(
+                (cleanNewLines and w or string.match(w, "^%s*(.-)%s*$")),
+                mode,
+                (cleanNewLines and cleanNewLines or false)
+            )
             output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset .. "; "
         end
         if string.sub(output, string.len(output) - 1) == "; " then
@@ -228,7 +228,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
                 if test then
-                    local currentSpell = FindSpellOverrideByID(etc)
+                    local currentSpell = FindSpellOverrideByID(test)
                     if currentSpell then
                         etc = currentSpell
                     end
@@ -237,7 +237,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         end
         local foundspell = GSE.GetSpellId(etc, mode, absolute)
 
-       -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
+        -- print("Foudn Spell: " .. foundspell .. " etc:" .. etc .. " mode:" .. mode .. " str:" .. str)
 
         if foundspell then
             GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell, GNOME)
@@ -313,41 +313,45 @@ function GSE.GetConditionalsFromString(str)
 end
 
 local function ClassicGetSpellInfo(spellID, absolute, mode)
-    local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID);
+    local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID)
     -- only check rank if classic.
     if GSE.GameMode < 3 then
+        -- print("Did rank check found: " .. (rank or "No Rank"))
         if GSE.isEmpty(rank) then
             if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
-                if pcall(function()
-                    tonumber(spellID)
-                end) then
+                if
+                    pcall(
+                        function()
+                            tonumber(spellID)
+                        end
+                    )
+                 then
                     rank = GetSpellSubtext(spellID)
-                 end
+                end
             else
                 rank = nil
             end
         end
-        -- print("Did rank check found: " .. (rank or "No Rank"))
     else
         -- Do override check.
-            if not absolute and not GSE.isEmpty(sid) and mode ~= Statics.TranslatorMode.Current then
-                local returnval = sid
-                if FindBaseSpellByID(returnval) then
-                    returnval = FindBaseSpellByID(returnval)
-                end
-                -- Still need Heart of Azeroth overrides.
-                if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-                    returnval = Statics.BaseSpellTable[returnval]
-                end
-                name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(returnval);
+        if not absolute and not GSE.isEmpty(sid) and mode ~= Statics.TranslatorMode.Current then
+            local returnval = sid
+            if FindBaseSpellByID(returnval) then
+                returnval = FindBaseSpellByID(returnval)
             end
+            -- Still need Heart of Azeroth overrides.
+            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+                returnval = Statics.BaseSpellTable[returnval]
+            end
+            name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(returnval)
+        end
     end
     -- allows for a trinket to be part of a castsequence.
     if tostring(spellID) == "13" or tostring(spellID) == "14" then
         name = tostring(spellID)
         sid = tonumber(spellID)
     end
-    return name, rank, icon, castTime, minRange, maxRange, sid;
+    return name, rank, icon, castTime, minRange, maxRange, sid
 end
 
 --- Test override of GetSpellInfo
@@ -391,16 +395,21 @@ function GSE.GetSpellId(spellstring, mode, absolute)
                     returnval = Statics.BaseSpellTable[returnval]
                 end
             end
-
         end
     end
     if not GSE.isEmpty(returnval) then
         if mode == Statics.TranslatorMode.ID and tonumber(spellstring) == nil then
-            if GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or GSESpellCache[GetLocale()][spellstring] ~= returnval then
+            if
+                GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or
+                    GSESpellCache[GetLocale()][spellstring] ~= returnval
+             then
                 GSESpellCache[GetLocale()][spellstring] = returnval
             end
         end
-        GSE.PrintDebugMessage("Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode, "Translator")
+        GSE.PrintDebugMessage(
+            "Converted " .. spellstring .. " to " .. returnval .. " using mode " .. mode,
+            "Translator"
+        )
     else
         if not GSE.isEmpty(spellstring) then
             GSE.PrintDebugMessage(spellstring .. " was not found", "Translator")
@@ -428,24 +437,27 @@ function GSE.IdentifySpells(tab)
     for _, p in ipairs(tab) do
         -- Run a regex to find all spell id's from the table and add them to the table foundspells
         for m in string.gmatch(p, "%w%d+") do
-
             foundspells[m] = 1
         end
     end
 
-    for k,_ in pairs(foundspells) do
+    for k, _ in pairs(foundspells) do
         if not GSE.isEmpty(GSE.GetSpellId(k, Statics.TranslatorMode.Current, false)) then
-            local wowheaddata = "spell="..k
+            local wowheaddata = "spell=" .. k
             -- local domain = "www"
             if GSE.GameMode == 1 then
-                wowheaddata = wowheaddata .. "?domain=classic"
                 --domain = "classic"
+                wowheaddata = wowheaddata .. "?domain=classic"
             elseif GSE.GameMode == 2 then
                 wowheaddata = wowheaddata .. "?domain=classic"
-                --domain = "tbc"
+            --domain = "tbc"
             end
-            returnval = returnval .. '<a href="http://www.wowhead.com/spell=' .. k .. '" data-wowhead="' .. wowheaddata .. '">' ..
-                            GSE.GetSpellId(k, Statics.TranslatorMode.Current, false) .. '</a>, '
+            returnval =
+                returnval ..
+                '<a href="http://www.wowhead.com/spell=' ..
+                    k ..
+                        '" data-wowhead="' ..
+                            wowheaddata .. '">' .. GSE.GetSpellId(k, Statics.TranslatorMode.Current, false) .. "</a>, "
         end
     end
 
