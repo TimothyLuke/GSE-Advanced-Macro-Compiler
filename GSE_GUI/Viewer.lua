@@ -550,7 +550,7 @@ end
 
 viewframe.frame:SetScript(
 	"OnSizeChanged",
-	function(self, width, height)
+	function(_, width, height)
 		viewframe.Height = height
 		viewframe.Width = width
 		if viewframe.Height > GetScreenHeight() then
