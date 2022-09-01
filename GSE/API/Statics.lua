@@ -180,11 +180,12 @@ if GSE.GameMode < 4 then
         [3] = 3,
         [4] = 4,
         [5] = 5,
+        [6] = 6,
         [7] = 7,
         [8] = 8,
         [9] = 9,
         --[10] = 10,
-        [11] = 11,
+        [11] = 11
     }
     Statics.SpecIDList = {
         [0] = L["Global"],
@@ -193,10 +194,11 @@ if GSE.GameMode < 4 then
         [3] = determineClassName(3),
         [4] = determineClassName(4),
         [5] = determineClassName(5),
+        [6] = determineClassName(6),
         [7] = determineClassName(7),
         [8] = determineClassName(8),
         [9] = determineClassName(9),
-        [11] = determineClassName(11),
+        [11] = determineClassName(11)
     }
 else
     Statics.SpecIDList = {
@@ -450,7 +452,7 @@ Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.tga"
 Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.tga"
 
 Statics.GSE3OnClick =
-[=[
+    [=[
 local step = self:GetAttribute('step')
 step = tonumber(step)
 self:SetAttribute('macrotext', macros[step] )
