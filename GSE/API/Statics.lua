@@ -159,6 +159,9 @@ local function determineClassName(specID)
     local specname
     if GSE.GameMode == 1 then
         local ClassTable = C_CreatureInfo.GetClassInfo(specID)
+        if ClassTable == nil then
+            return nil
+        end
         return ClassTable["className"]
     else
         specname = GetClassInfo(specID)
