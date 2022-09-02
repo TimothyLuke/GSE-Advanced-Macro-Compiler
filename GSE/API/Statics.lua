@@ -194,12 +194,14 @@ if GSE.GameMode < 4 then
         [3] = determineClassName(3),
         [4] = determineClassName(4),
         [5] = determineClassName(5),
-        [6] = determineClassName(6),
         [7] = determineClassName(7),
         [8] = determineClassName(8),
         [9] = determineClassName(9),
         [11] = determineClassName(11)
     }
+    if GSE.GameMode == 3 then
+        Statics.SpecIDList[6] = determineClassName(6)
+    end
 else
     Statics.SpecIDList = {
         [0] = L["Global"],
