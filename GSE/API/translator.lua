@@ -315,7 +315,7 @@ end
 local function ClassicGetSpellInfo(spellID, absolute, mode)
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID)
     -- only check rank if classic.
-    if GSE.GameMode < 3 then
+    if GSE.GameMode <= 3 then
         -- print("Did rank check found: " .. (rank or "No Rank"))
         if GSE.isEmpty(rank) then
             if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
