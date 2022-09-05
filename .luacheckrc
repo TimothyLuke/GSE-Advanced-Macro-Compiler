@@ -37,6 +37,7 @@ globals = {
     "IndentationLib",
     "WeakAuras",
     "ElvPrivateDB",
+    "Talented",
     -- Lua
     "bit.band",
     "bit.lshift",
@@ -383,5 +384,6 @@ globals = {
     "BNGetNumFriendGameAccounts",
     "BNGetFriendGameAccountInfo",
     "ChatFrame_AddMessageEventFilter",
-    "LoadAddOn"
+    "LoadAddOn",
+    "GetActiveTalentGroup"
 }

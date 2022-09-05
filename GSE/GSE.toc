@@ -10,7 +10,7 @@
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
-## OptionalDeps: WeakAuras
+## OptionalDeps: WeakAuras Talented
 
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161

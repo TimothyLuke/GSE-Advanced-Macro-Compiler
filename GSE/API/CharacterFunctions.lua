@@ -109,12 +109,24 @@ end
 function GSE.GetCurrentTalents()
     local talents = ""
     -- Need to change this later on to something meaningful
-    if GSE.GameMode == 1 then
-        talents = "CLASSIC"
-    elseif GSE.GameMode == 2 then
-        talents = "BC CLASSIC"
-    elseif GSE.GameMode == 3 then
-        talents = "Wrath CLASSIC"
+    if GSE.GameMode < 4 then
+        local Talented = Talented
+        if not GSE.isEmpty(Talented) then
+            if GSE.isEmpty(Talented.alternates) then
+                Talented:UpdatePlayerSpecs()
+            end
+            local LT = LibStub("AceLocale-3.0"):GetLocale("Talented")
+            local current_spec = Talented.alternates[GetActiveTalentGroup()]
+            talents = Talented.exporters[LT["Wowhead Talent Calculator"]](Talented, current_spec)
+        else
+            if GSE.GameMode == 1 then
+                talents = "CLASSIC"
+            elseif GSE.GameMode == 2 then
+                talents = "BC CLASSIC"
+            else --GSE.GameMode == 3 then
+                talents = "Wrath CLASSIC"
+            end
+        end
     else
         for talentTier = 1, MAX_TALENT_TIERS do
             local available, selected = GetTalentTierInfo(talentTier, 1)
