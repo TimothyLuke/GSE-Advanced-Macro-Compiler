@@ -1684,15 +1684,14 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         local gsebutton = CreateFrame("Button", name, nil, "SecureActionButtonTemplate,SecureHandlerBaseTemplate")
         gsebutton:SetAttribute("type", "macro")
         gsebutton:SetAttribute("step", 1)
-        -- gsebutton:UnwrapScript(gsebutton, 'OnClick')
         gsebutton.UpdateIcon = GSE.UpdateIcon
-
+        gsebutton:RegisterForClicks("AnyUp", "AnyDown")
         gsebutton:SetAttribute("combatreset", combatReset)
 
         if GSEOptions.useExternalMSTimings then
             gsebutton:SetAttribute("ms", GSE.GetClickRate())
         else
-            gsebutton:SetAttribute("ms", 100)
+            gsebutton:SetAttribute("ms", 250)
         end
 
         local stepfunction =
