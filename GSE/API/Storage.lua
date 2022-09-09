@@ -67,17 +67,8 @@ end
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Check its not a GSE2 Sequence
     if GSE.isEmpty(sequence.Macros) then
-        sequence = GSE.ConvertGSE2(sequence, sequenceName)
-        GSE.Print(
-            string.format(
-                "%s " ..
-                    L[
-                        "was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."
-                    ],
-                sequenceName
-            ),
-            "Import GSE2"
-        )
+        GSE.Print(string.format("%s " .. L["was unable to be interpreted."], sequenceName), L["Unrecognised Import"])
+        return
     end
     -- check for version flags.
     if sequence.MetaData.EnforceCompatability and not string.match(GSE.VersionString, "development") then
@@ -425,55 +416,6 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
     return decompresssuccess
 end
 
---- Load a GSE Sequence Collection from a String
-function GSE.ImportSequence(importStr, legacy, createicon)
-    local success, returnmessage = false, ""
-    importStr = GSE.StripControlandExtendedCodes(importStr)
-    local functiondefinition = GSE.FixQuotes(importStr) .. [===[
-  return Sequences
-  ]===]
-
-    GSE.PrintDebugMessage(functiondefinition, "Storage")
-    local fake_globals =
-        setmetatable(
-        {
-            Sequences = {}
-        },
-        {
-            __index = _G
-        }
-    )
-    local func, err = loadstring(functiondefinition, "Storage")
-    if func then
-        -- Make the compiled function see this table as its "globals"
-        setfenv(func, fake_globals)
-
-        local TempSequences = assert(func())
-        if not GSE.isEmpty(TempSequences) then
-            local newkey = ""
-            for k, v in pairs(TempSequences) do
-                if legacy then
-                    v = GSE.ConvertLegacySequence(v)
-                end
-                GSE.AddSequenceToCollection(string.upper(k), v)
-                if GSE.isEmpty(v.Icon) then
-                    -- Set a default icon
-                    v.Icon = GSE.GetDefaultIcon()
-                end
-                newkey = k
-            end
-            if createicon then
-                GSE.CheckMacroCreated(string.upper(newkey), true)
-            end
-            success = true
-        end
-    else
-        GSE.Print(err, GNOME)
-        returnmessage = err
-    end
-    return success, returnmessage
-end
-
 function GSE.ReloadSequences()
     if GSE.isEmpty(GSE.UnsavedOptions.ReloadQueued) then
         GSE.PerformReloadSequences()
@@ -612,11 +554,9 @@ end
 function GSE.DebugDumpButton(SequenceName)
     GSE.Print("====================================\nStart GSE Button Dump\n====================================")
     GSE.Print("Button name: " .. SequenceName)
-    GSE.Print("KeyPress" .. _G[SequenceName]:GetAttribute("KeyPress"))
-    GSE.Print("KeyRelease" .. _G[SequenceName]:GetAttribute("KeyRelease"))
-    GSE.Print("Clicks" .. _G[SequenceName]:GetAttribute("clicks"))
-    GSE.Print("ms" .. _G[SequenceName]:GetAttribute("ms"))
-    GSE.Print("====================================\nStepFunction\n====================================")
+    GSE.Print("Step Id: " .. _G[SequenceName]:GetAttribute("step"))
+    GSE.Print("ms: " .. _G[SequenceName]:GetAttribute("ms"))
+    GSE.Print("====================================\nStep\n====================================")
     GSE.Print(GSE.SequencesExec[SequenceName][_G[SequenceName]:GetAttribute("step")])
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
@@ -633,7 +573,7 @@ end
 
 function GSE.CreateMacroString(macroname)
     return string.format(
-        "#showtooltip\n/click [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s LeftButton",
+        "#showtooltip\n/click [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; %s LeftButton",
         macroname,
         macroname,
         macroname,
@@ -701,14 +641,6 @@ function GSE.DeleteMacroStub(sequenceName)
             DeleteMacro(sequenceName)
         end
     end
-end
-
---- Not Used
-function GSE.GetDefaultIcon()
-    local currentSpec = GetSpecialization()
-    local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or ""
-    local _, _, _, defaulticon, _, _, _ = GetSpecializationInfoByID(currentSpecID)
-    return strsub(defaulticon, 17)
 end
 
 --- This returns a list of Sequence Names for the current spec
@@ -797,62 +729,6 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
     else
         return iconid
     end
-end
-
---- This converts a legacy GS/GSE1 sequence to a new GSE2
-function GSE.ConvertLegacySequence(sequence)
-    local GSStaticPriority = Statics.PriorityImplementation
-    local returnSequence = {}
-    if not GSE.isEmpty(sequence.specID) then
-        returnSequence.SpecID = sequence.specID
-    end
-    if not GSE.isEmpty(sequence.author) then
-        returnSequence.Author = sequence.author
-    end
-    if not GSE.isEmpty(sequence.helpTxt) then
-        returnSequence.Help = sequence.helpTxt
-    end
-    returnSequence.Default = 1
-    returnSequence.MacroVersions = {}
-    returnSequence.MacroVersions[1] = {}
-    if not GSE.isEmpty(sequence.PreMacro) then
-        returnSequence.MacroVersions[1].KeyPress = GSE.SplitMeIntolines(sequence.PreMacro)
-    end
-    if not GSE.isEmpty(sequence.PostMacro) then
-        returnSequence.MacroVersions[1].KeyRelease = GSE.SplitMeIntolines(sequence.PostMacro)
-    end
-    if not GSE.isEmpty(sequence.StepFunction) then
-        if sequence.StepFunction == GSStaticPriority then
-            returnSequence.MacroVersions[1].StepFunction = Statics.Priority
-        else
-            GSE.Print(L["The Custom StepFunction Specified is not recognised and has been ignored."], GNOME)
-            returnSequence.MacroVersions[1].StepFunction = Statics.Sequential
-        end
-    else
-        returnSequence.MacroVersions[1].StepFunction = Statics.Sequential
-    end
-    if not GSE.isEmpty(sequence.icon) then
-        returnSequence.Icon = sequence.icon
-    end
-    local macroversion = returnSequence.MacroVersions[1]
-    local loopstart = tonumber(sequence.loopstart) or 1
-    local loopstop = tonumber(sequence.loopstop) or table.getn(sequence)
-    if loopstart > 1 then
-        macroversion.PreMacro = {}
-    end
-    if loopstop < table.getn(sequence) then
-        macroversion.PostMacro = {}
-    end
-    for k, v in ipairs(sequence) do
-        if k < loopstart then
-            table.insert(macroversion.PreMacro, v)
-        elseif k > loopstop then
-            table.insert(macroversion.PostMacro, v)
-        else
-            table.insert(macroversion, v)
-        end
-    end
-    return returnSequence
 end
 
 --- Load in the sample macros for the current class.
@@ -972,17 +848,6 @@ function GSE.FindMacro(sequenceName)
     end
     return returnVal
 end
-
--- --- This function checks a sequence for mod breaking errors.  Use this with a pcall
--- function GSE.CheckSequence(sequence)
-
---     for k, v in ipairs(sequence) do
---         if type(v) == "table" then
---             GSE.PrintDebugMessage("Macro corrupt at " .. k, "Storage")
---             error("Corrupt MacroVersion")
---         end
---     end
--- end
 
 --- This function scans all macros in the library and reports on corrupt macros.
 function GSE.ScanMacrosForErrors()
@@ -1167,45 +1032,6 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
         end
     end
 
-    -- TODO update for GSE3
-
-    -- for k, v in pairs(sequence.MacroVersions) do
-    --     returnstring = returnstring .. "## Macro Version " .. k .. "\n"
-    --     returnstring = returnstring .. "<blockquote>\n\n**Step Function:** " .. v.StepFunction .. "\n\n"
-    --     if not GSE.isEmpty(v.PreMacro) then
-    --         if table.getn(v.PreMacro) > 0 then
-    --             returnstring = returnstring .. "**Pre Macro:** " .. GSE.IdentifySpells(v.PreMacro) .. "\n\n"
-    --         end
-    --     end
-    --     if not GSE.isEmpty(v.KeyPress) then
-    --         if table.getn(v.KeyPress) > 0 then
-    --             spells, _ = GSE.IdentifySpells(v.KeyPress)
-    --             if not GSE.isEmpty(spells) then
-    --                 returnstring = returnstring .. "**KeyPress:** " .. GSE.IdentifySpells(v.KeyPress) .. "\n\n"
-    --             else
-    --                 returnstring = returnstring .. "**KeyPress:** Contains various utility functions.\n\n"
-    --             end
-    --         end
-    --     end
-    --     returnstring = returnstring .. "**Main Sequence:** " .. GSE.IdentifySpells(v) .. "\n\n"
-    --     if not GSE.isEmpty(v.KeyRelease) then
-    --         if table.getn(v.KeyRelease) > 0 then
-    --             spells, _ = GSE.IdentifySpells(v.KeyRelease)
-    --             if not GSE.isEmpty(spells) then
-    --                 returnstring = returnstring .. "**KeyRelease:** " .. GSE.IdentifySpells(v.KeyRelease) .. "\n\n"
-    --             else
-    --                 returnstring = returnstring .. "**KeyRelease:**  Contains various utility functions.\n\n"
-    --             end
-    --         end
-    --     end
-    --     if not GSE.isEmpty(v.PostMacro) then
-    --         if table.getn(v.PostMacro) > 0 then
-    --             returnstring = returnstring .. "**Post Macro:** " .. GSE.IdentifySpells(v.PostMacro) .. "\n\n"
-    --         end
-    --     end
-    --     returnstring = returnstring .. "</blockquote>\n\n"
-    -- end
-
     return returnstring
 end
 
@@ -1252,103 +1078,6 @@ local function fixLine(line, KeyPress, KeyRelease)
         end
     end
     return action
-end
-
-function GSE.ConvertGSE2(sequence, sequenceName)
-    local returnSequence = {}
-    returnSequence["MetaData"] = {}
-    returnSequence["MetaData"]["Name"] = sequenceName
-    returnSequence["MetaData"]["ClassID"] = Statics.SpecIDClassList[sequence.SpecID]
-    for k, v in pairs(sequence) do
-        if k ~= "MacroVersions" then
-            returnSequence["MetaData"][k] = v
-        end
-    end
-    local MacroVersions = {}
-    for _, v in ipairs(sequence.MacroVersions) do
-        local gse3seq = {}
-        gse3seq.Actions = {}
-        gse3seq.Variables = {}
-
-        if GSE.isEmpty(v.KeyPress) then
-            v.KeyPress = {}
-        end
-        if GSE.isEmpty(v.KeyRelease) then
-            v.KeyRelease = {}
-        end
-        if GSE.isEmpty(v.PreMacro) then
-            v.PreMacro = {}
-        end
-        if GSE.isEmpty(v.PostMacro) then
-            v.PostMacro = {}
-        end
-        local KeyPress = table.getn(v.KeyPress) > 0
-        local KeyRelease = table.getn(v.KeyRelease) > 0
-
-        if KeyPress then
-            gse3seq.Variables["KeyPress"] = v.KeyPress
-        end
-        if KeyRelease then
-            gse3seq.Variables["KeyRelease"] = v.KeyRelease
-        end
-        if table.getn(v.PreMacro) > 0 then
-            for _, j in ipairs(v.PreMacro) do
-                local action = fixLine(j, KeyPress, KeyRelease)
-                table.insert(gse3seq.Actions, action)
-            end
-        end
-
-        local sequenceactions = {}
-        for _, j in ipairs(v) do
-            local action = fixLine(j, KeyPress, KeyRelease)
-            table.insert(sequenceactions, action)
-        end
-        if GSE.isEmpty(v.LoopLimit) then
-            for _, j in ipairs(sequenceactions) do
-                table.insert(gse3seq.Actions, j)
-            end
-        else
-            local loop = {}
-            for _, j in ipairs(sequenceactions) do
-                table.insert(loop, j)
-            end
-            loop["Type"] = Statics.Actions.Loop
-            loop["StepFunction"] = v.StepFunction
-            loop["Repeat"] = v.LoopLimit
-            table.insert(gse3seq.Actions, loop)
-        end
-
-        if table.getn(v.PostMacro) > 0 then
-            for _, j in ipairs(v.PostMacro) do
-                local action = fixLine(j, KeyPress, KeyRelease)
-                table.insert(gse3seq.Actions, action)
-            end
-        end
-
-        gse3seq.InbuiltVariables = {}
-
-        local function checkParameter(param)
-            gse3seq.InbuiltVariables[param] = v[param]
-        end
-
-        checkParameter("Combat")
-        checkParameter("Ring1")
-        checkParameter("Ring2")
-        checkParameter("Trinket1")
-        checkParameter("Trinket2")
-        checkParameter("Neck")
-        checkParameter("Head")
-        checkParameter("Belt")
-
-        table.insert(MacroVersions, gse3seq)
-    end
-    returnSequence["Macros"] = MacroVersions
-    returnSequence["MetaData"]["Variables"] = nil
-    if GSE.isEmpty(sequence["WeakAuras"]) then
-        sequence["WeakAuras"] = {}
-    end
-    returnSequence["WeakAuras"] = sequence["WeakAuras"]
-    return returnSequence
 end
 
 local function buildAction(action, metaData, variables)

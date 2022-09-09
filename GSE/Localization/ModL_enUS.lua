@@ -725,9 +725,6 @@ L["Add Pause"] = true
 L["Add a Pause Block."] = true
 L["Pause for the GCD."] = true
 L["Error processing Custom Pause Value.  You will need to recheck your macros."] = true
-L[
-        "was created in an older version of GSE.  It has been updated to the current version however may need to be checked manually."
-    ] = true
 L["Restricted"] = true
 L["RESTRICTED: Macro specifics disabled by author."] = true
 L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] = true
@@ -843,3 +840,6 @@ L[
 L["Error: Destination path not found."] = true
 L["Error: Source path not found."] = true
 L["Error: You cannot move a container to be a child within itself."] = true
+-- #1146
+L["was unable to be interpreted."] = true
+L["Unrecognised Import"] = true

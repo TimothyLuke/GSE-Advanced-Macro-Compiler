@@ -11,10 +11,15 @@ importframe.AutoCreateIcon = true
 
 importframe:Hide()
 
-
 importframe:SetTitle(L["GSE: Import a Macro String."])
 importframe:SetStatusText(L["Import Macro from Forums"])
-importframe:SetCallback("OnClose", function(widget)  importframe:Hide(); GSE.GUIShowViewer() end)
+importframe:SetCallback(
+  "OnClose",
+  function(widget)
+    importframe:Hide()
+    GSE.GUIShowViewer()
+  end
+)
 importframe:SetLayout("List")
 
 local importsequencebox = AceGUI:Create("MultiLineEditBox")
@@ -29,19 +34,26 @@ createicondropdown:SetLabel(L["Automatically Create Macro Icon"])
 createicondropdown:SetWidth(250)
 createicondropdown:SetType("checkbox")
 createicondropdown:SetValue(true)
-createicondropdown:SetCallback("OnValueChanged", function (obj,event,key)
-  importframe.AutoCreateIcon = key
-end)
+createicondropdown:SetCallback(
+  "OnValueChanged",
+  function(obj, event, key)
+    importframe.AutoCreateIcon = key
+  end
+)
 importframe:AddChild(createicondropdown)
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
 
-
 local recbutton = AceGUI:Create("Button")
 recbutton:SetText(L["Import"])
 recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSE.GUIImportSequence() end)
+recbutton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUIImportSequence()
+  end
+)
 recButtonGroup:AddChild(recbutton)
 
 --local testbutton = AceGUI:Create("Button")
@@ -59,7 +71,6 @@ recButtonGroup:AddChild(recbutton)
 --end)
 --recButtonGroup:AddChild(testbutton)
 
-
 importframe:AddChild(recButtonGroup)
 GSE.GUIImportFrame = importframe
 
@@ -76,28 +87,12 @@ GSE.GUIImportFrame = importframe
 function GSE.GUIImportSequence()
   local importstring = importsequencebox:GetText()
   importstring = GSE.TrimWhiteSpace(importstring)
-  if string.sub(importstring,1,9) == "Sequences" then
-    local legacy = false
-
-    if GSE.isEmpty(string.find(importstring, "MacroVersions")) then
-      legacy = true
-    end
-    local success, message = GSE.ImportSequence(importstring, legacy, importframe.AutoCreateIcon)
-    if success then
-      importsequencebox:SetText('')
-      GSE.GUIImportFrame:Hide()
-    else
-      StaticPopup_Show ("GSE-MacroImportFailure")
-    end
+  -- Either a compressed import or a failed copy
+  local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
+  if success then
+    importsequencebox:SetText("")
+    GSE.GUIImportFrame:Hide()
   else
-    -- Either a compressed import or a failed copy
-    local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
-    if success then
-      importsequencebox:SetText('')
-       GSE.GUIImportFrame:Hide()
-    else
-      StaticPopup_Show ("GSE-MacroImportFailure")
-    end
+    StaticPopup_Show("GSE-MacroImportFailure")
   end
-
 end
