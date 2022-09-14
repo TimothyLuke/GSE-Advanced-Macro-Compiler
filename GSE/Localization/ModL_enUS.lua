@@ -843,3 +843,7 @@ L["Error: You cannot move a container to be a child within itself."] = true
 -- #1146
 L["was unable to be interpreted."] = true
 L["Unrecognised Import"] = true
+
+-- #1161
+L["Update Talents"] = true
+L["Update the stored talents to match the current chosen talents."] = true

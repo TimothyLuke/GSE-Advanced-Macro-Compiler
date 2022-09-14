@@ -446,7 +446,7 @@ function GSE:GUIDrawMetadataEditor(container)
 
     local talentseditbox = AceGUI:Create("EditBox")
     talentseditbox:SetLabel(L["Talents"])
-    talentseditbox:SetWidth(200)
+    talentseditbox:SetWidth(250)
     talentseditbox:DisableButton(true)
     metaKeyGroup:AddChild(talentseditbox)
     contentcontainer:AddChild(metaKeyGroup)
@@ -470,6 +470,35 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
     talentseditbox:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+
+    local updateTalents = AceGUI:Create("Button")
+    updateTalents:SetText(L["Update Talents"])
+    updateTalents:SetWidth(120)
+    metaKeyGroup:AddChild(updateTalents)
+    updateTalents:SetCallback(
+        "OnClick",
+        function()
+            local key = GSE.GetCurrentTalents()
+            talentseditbox:SetText(key)
+            editframe.Sequence.MetaData.Talents = key
+        end
+    )
+    updateTalents:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Update Talents"],
+                L["Update the stored talents to match the current chosen talents."],
+                editframe
+            )
+        end
+    )
+    updateTalents:SetCallback(
         "OnLeave",
         function()
             GSE.ClearTooltip(editframe)
