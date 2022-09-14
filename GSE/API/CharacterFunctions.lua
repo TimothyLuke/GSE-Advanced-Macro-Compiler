@@ -127,6 +127,8 @@ function GSE.GetCurrentTalents()
                 talents = "Wrath CLASSIC"
             end
         end
+    elseif GSE.GameMode == 10 then
+        talents = "Dragonflight"
     else
         for talentTier = 1, MAX_TALENT_TIERS do
             local available, selected = GetTalentTierInfo(talentTier, 1)
