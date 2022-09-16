@@ -73,7 +73,8 @@ Statics.SystemVariables = {
 }
 
 Statics.SystemVariableDescriptions = {
-    ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."]
+    ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
+    ["LID"] = L["Returns the current Loop Index.  If this is the third action in a loop it will return 3."]
 }
 
 if GSE.GameMode ~= 1 then

@@ -847,3 +847,6 @@ L["Unrecognised Import"] = true
 -- #1161
 L["Update Talents"] = true
 L["Update the stored talents to match the current chosen talents."] = true
+
+-- #1134
+L["Returns the current Loop Index.  If this is the third action in a loop it will return 3."] = true

@@ -1168,13 +1168,14 @@ function GSE.processAction(action, metaData, variables)
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
         -- setup the interation
-        for _, v in ipairs(action) do
+        for id, v in ipairs(action) do
             local builtaction = GSE.processAction(v, metaData, variables)
             if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
                 for _, j in ipairs(builtaction) do
                     table.insert(actionList, j)
                 end
             else
+                builtaction = GSE.ProcessLoopVariables(builtaction, id)
                 table.insert(actionList, builtaction)
             end
         end

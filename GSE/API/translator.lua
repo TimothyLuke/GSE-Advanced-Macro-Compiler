@@ -29,6 +29,11 @@ function GSE.TranslateSequence(tab, mode, dropAbsolute)
     return tab
 end
 
+function GSE.ProcessLoopVariables(action, id)
+    local temp = GSE.ProcessVariables(GSE.SplitMeIntolines(action), {["LID"] = id})
+    return table.concat(temp, "\n")
+end
+
 --- This function interates through each line in lines and does a string replace on each varible in the variableTable
 function GSE.ProcessVariables(lines, variableTable)
     --print("GSE.ProcessVariables(lines, variableTable)")
