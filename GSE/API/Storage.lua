@@ -1174,6 +1174,9 @@ function GSE.processAction(action, metaData, variables)
                 for _, j in ipairs(builtaction) do
                     table.insert(actionList, j)
                 end
+            elseif type(builtaction) == "table" and builtaction.Interval then
+                builtaction.Action = GSE.ProcessLoopVariables(builtaction.Action, id)
+                table.insert(actionList, builtaction)
             else
                 if builtaction then
                     builtaction = GSE.ProcessLoopVariables(builtaction, id)
