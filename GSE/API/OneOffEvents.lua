@@ -4,18 +4,10 @@ local Statics = GSE.Static
 local L = GSE.L
 
 function GSE.PerformOneOffEvents()
-    GSE.Update3000()
     GSE.Update3023()
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
     end
-end
-
-function GSE.Update3000()
-    if GSE.isEmpty(GSEOptions.Update3000) then
-        GSE.UpdateGSE2LibrarytoGSE3()
-    end
-    GSEOptions.Update3000 = true
 end
 
 function GSE.Update3023()
