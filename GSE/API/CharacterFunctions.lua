@@ -128,7 +128,17 @@ function GSE.GetCurrentTalents()
             end
         end
     elseif GSE.GameMode == 10 then
-        talents = "Dragonflight"
+	-- force load the addon
+	local loaded, reason = LoadAddOn("Blizzard_ClassTalentUI")
+	
+	if not loaded then
+		talents=""
+		print(reason)
+	else
+		ShowUIPanel(ClassTalentFrame);
+		HideUIPanel(ClassTalentFrame);
+	  	talents = ClassTalentFrame.TalentsTab:GetLoadoutExportString()
+	end
     else
         for talentTier = 1, MAX_TALENT_TIERS do
             local available, selected = GetTalentTierInfo(talentTier, 1)
