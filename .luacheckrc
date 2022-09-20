@@ -190,6 +190,7 @@ globals = {
     "C_Scenario.IsInScenario",
     "C_Timer.After",
     "C_Timer.NewTicker",
+    "ClassTalentFrame",
     "C_UIWidgetManager.GetStatusBarWidgetVisualizationInfo",
     "AcceptGroup",
     "Ambiguate",
