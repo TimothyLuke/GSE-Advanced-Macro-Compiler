@@ -198,7 +198,7 @@ if GSE.GameMode < 4 then
         [3] = determineClassName(3),
         [4] = determineClassName(4),
         [5] = determineClassName(5),
-        [6] = determineClassName(5),
+        [6] = determineClassName(6),
         [7] = determineClassName(7),
         [8] = determineClassName(8),
         [9] = determineClassName(9),
