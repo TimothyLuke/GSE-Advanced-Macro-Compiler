@@ -109,6 +109,7 @@ Statics.SpecIDClassList = {
     [10] = 10,
     [11] = 11,
     [12] = 12,
+    [13] = 13,
     [62] = 8,
     [63] = 8,
     [64] = 8,
@@ -144,7 +145,9 @@ Statics.SpecIDClassList = {
     [269] = 10,
     [270] = 10,
     [577] = 12,
-    [581] = 12
+    [581] = 12,
+    [1467] = 13,
+    [1468] = 13
 }
 
 local function determineSpecializationName(specID)
@@ -195,6 +198,7 @@ if GSE.GameMode < 4 then
         [3] = determineClassName(3),
         [4] = determineClassName(4),
         [5] = determineClassName(5),
+        [6] = determineClassName(5),
         [7] = determineClassName(7),
         [8] = determineClassName(8),
         [9] = determineClassName(9),
@@ -253,7 +257,9 @@ else
         [269] = determineSpecializationName(269),
         [270] = determineSpecializationName(270),
         [577] = determineSpecializationName(577),
-        [581] = determineSpecializationName(581)
+        [581] = determineSpecializationName(581),
+        [1467] = determineSpecializationName(1467),
+        [1468] = determineSpecializationName(1468)
     }
 end
 
