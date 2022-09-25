@@ -195,6 +195,9 @@ end
 function GSE:ADDON_LOADED(event, addon)
     GSE.LoadStorage(GSE.Library)
 
+    if GSE.isEmpty(GSE3Storage[GSE.GetCurrentClassID()]) then
+        GSE3Storage[GSE.GetCurrentClassID()] = {}
+    end
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
         GSE.Library[GSE.GetCurrentClassID()] = {}
     end
