@@ -190,15 +190,6 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
         GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
-        if GSE.isEmpty(newSequence.Author) then
-            -- Set to Unknown Author
-            newSequence.Author = "Unknown Author"
-        end
-        if GSE.isEmpty(newSequence.Talents) then
-            -- Set to currentSpecID
-            newSequence.Talents = "?,?,?,?,?,?,?"
-        end
-
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
@@ -206,15 +197,6 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
     elseif action == "RENAME" then
-        if GSE.isEmpty(newSequence.Author) then
-            -- Set to Unknown Author
-            newSequence.Author = "Unknown Author"
-        end
-        if GSE.isEmpty(newSequence.Talents) then
-            -- Set to currentSpecID
-            newSequence.Talents = "?,?,?,?,?,?,?"
-        end
-
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
