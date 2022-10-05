@@ -1240,7 +1240,7 @@ function GSE.processAction(action, metaData, variables)
             if action.MS == "GCD" or action.MS == "~~GCD~~" then
                 clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
             else
-                clicks = action.MS
+                clicks = action.MS and action.MS and 1000 -- pause for 1 second if no ms specified.
                 clicks = math.ceil(clicks / GSE.GetClickRate())
             end
         end
