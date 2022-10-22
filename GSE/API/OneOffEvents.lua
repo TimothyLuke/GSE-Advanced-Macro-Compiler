@@ -27,3 +27,12 @@ function GSE.Update3023()
     end
     GSEOptions.Update3023 = true
 end
+
+function GSE.Update3111()
+    if GSE.isEmpty(GSEOptions.Update3111) then
+        if GSE.isEmpty(GSE3Storage[13]) then
+            GSE3Storage[13] = {}
+        end
+    end
+    GSEOptions.Update3111 = true
+end

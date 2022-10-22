@@ -16,7 +16,7 @@ function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSE3Storage) then
         GSE3Storage = {}
     end
-    for i = 0, 12 do
+    for i = 0, 13 do
         if GSE.isEmpty(GSE3Storage[i]) then
             GSE3Storage[i] = {}
         end
@@ -240,7 +240,7 @@ function GSE.LoadStorage(destination)
     end
     if GSE.isEmpty(GSE3Storage) then
         GSE3Storage = {}
-        for iind = 0, 12 do
+        for iind = 0, 13 do
             GSE3Storage[iind] = {}
         end
     end
@@ -777,7 +777,7 @@ end
 function GSE.MoveMacroToClassFromGlobal()
     for k, v in pairs(GSE.Library[0]) do
         if not GSE.isEmpty(v.SpecID) and tonumber(v.SpecID) > 0 then
-            if v.SpecID < 12 then
+            if v.SpecID < 13 then
                 GSE.Library[v.SpecID][k] = v
                 GSE.Print(string.format(L["Moved %s to class %s."], k, Statics.SpecIDList[v.SpecID]))
                 GSE.Library[0][k] = nil
@@ -1043,7 +1043,7 @@ local function fixLine(line, KeyPress, KeyRelease)
         table.insert(action, [[~~KeyRelease~~]])
     end
 
-    if string.sub(line, 1, 12) == "/click pause" then
+    if string.sub(line, 1, 13) == "/click pause" then
         action = {}
         action["Type"] = Statics.Actions.Pause
         if string.sub(line, 14) == "~~GCD~~" then
