@@ -222,6 +222,7 @@ else
         [10] = determineClassName(10),
         [11] = determineClassName(11),
         [12] = determineClassName(12),
+        [13] = determineClassName(13),
         [62] = determineSpecializationName(62),
         [63] = determineSpecializationName(63),
         [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
