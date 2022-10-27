@@ -673,38 +673,6 @@ function GSE.GetOptionsTable()
                 order = 3,
                 type = "group",
                 args = {
-                    clearCommonKeyBindsTitle = {
-                        type = "header",
-                        name = L["Clear Common Keybindings"],
-                        order = 500
-                    },
-                    clearCommonKeyBinds = {
-                        name = L["Clear Keybindings"],
-                        desc = L[
-                            "This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."
-                        ],
-                        type = "execute",
-                        func = function(info, val)
-                            GSE.ClearCommonKeyBinds()
-                        end,
-                        order = 501
-                    },
-                    enablemacrostubupdatetitle = {
-                        type = "header",
-                        name = L["Update Macro Stubs."],
-                        order = 600
-                    },
-                    updatemacrobuttonstubs = {
-                        name = L["Update Macro Stubs"],
-                        desc = L[
-                            "This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."
-                        ],
-                        type = "execute",
-                        func = function(info, val)
-                            GSE.UpdateMacroString()
-                        end,
-                        order = 601
-                    },
                     resetbuttontitle = {
                         type = "header",
                         name = L["Mouse Buttons."],
@@ -881,11 +849,78 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
+            troubleshootingTab = {
+                name = L["Troubleshooting"],
+                desc = L["Common Solutions to game quirks that seem to affect some people."],
+                type = "group",
+                order = 5,
+                args = {
+                    clearCommonKeyBindsTitle = {
+                        type = "header",
+                        name = L["Clear Common Keybindings"],
+                        order = 500
+                    },
+                    clearCommonKeyBinds = {
+                        name = L["Clear Keybindings"],
+                        desc = L[
+                            "This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."
+                        ],
+                        type = "execute",
+                        func = function(info, val)
+                            GSE.ClearCommonKeyBinds()
+                        end,
+                        order = 501
+                    },
+                    enablemacrostubupdatetitle = {
+                        type = "header",
+                        name = L["Update Macro Stubs."],
+                        order = 520
+                    },
+                    updatemacrobuttonstubs = {
+                        name = L["Update Macro Stubs"],
+                        desc = L[
+                            "This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."
+                        ],
+                        type = "execute",
+                        func = function(info, val)
+                            GSE.UpdateMacroString()
+                        end,
+                        order = 521
+                    },
+                    cvarsettingstitle = {
+                        type = "header",
+                        name = L["CVar Settings"],
+                        order = 540
+                    },
+                    ActionButtonUseKeyDownCvar = {
+                        name = L["ActionButtonUseKeyDown"],
+                        desc = L[
+                            "This CVAR makes WoW use your abilities when you press the key not when you release it.  To use GSE in its native configuration this needs to be checked."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            if GSE.GameMode > 7 then
+                                C_CVar.SetCVar("ActionButtonUseKeyDown", val)
+                            else
+                                SetCVar("ActionButtonUseKeyDown", val)
+                            end
+                        end,
+                        get = function(info)
+                            if GSE.GameMode > 7 then
+                                return C_CVar.GetCVar("ActionButtonUseKeyDown")
+                            else
+                                return GetCVar("ActionButtonUseKeyDown")
+                            end
+                        end,
+                        order = 541
+                    }
+                }
+            },
             colourTab = {
                 name = L["Colour"],
                 desc = L["Colour and Accessibility Options"],
                 type = "group",
-                order = 4,
+                order = 5,
                 args = {
                     ctitle1 = {
                         type = "header",
@@ -1104,7 +1139,7 @@ function GSE.GetOptionsTable()
                 name = L["Plugins"],
                 desc = L["GSE Plugins"],
                 type = "group",
-                order = 5,
+                order = 6,
                 args = {
                     title3 = {
                         type = "header",
@@ -1123,7 +1158,7 @@ function GSE.GetOptionsTable()
                 name = L["Window Sizes"],
                 desc = L["The default sizes of each window."],
                 type = "group",
-                order = 6,
+                order = 7,
                 args = {
                     editortitle = {
                         type = "header",
@@ -1230,7 +1265,7 @@ function GSE.GetOptionsTable()
                 name = L["About"],
                 desc = L["About GSE"],
                 type = "group",
-                order = 7,
+                order = 8,
                 args = {
                     -- aboutIcon = {
                     --   type = "description",

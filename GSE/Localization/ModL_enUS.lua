@@ -850,3 +850,12 @@ L["Update the stored talents to match the current chosen talents."] = true
 
 -- #1134
 L["Returns the current Loop Index.  If this is the third action in a loop it will return 3."] = true
+
+-- #1202
+L["Troubleshooting"] = true
+L["Common Solutions to game quirks that seem to affect some people."] = true
+L["CVar Settings"] = true
+L["ActionButtonUseKeyDown"] = true
+L[
+        "This CVAR makes WoW use your abilities when you press the key not when you release it.  To use GSE in its native configuration this needs to be checked."
+    ] = true
