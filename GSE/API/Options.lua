@@ -914,7 +914,7 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         get = function(info)
-                            local setting = 0
+                            local setting
                             if GSE.GameMode > 7 then
                                 setting = C_CVar.GetCVar("ActionButtonUseKeyDown")
                             else
