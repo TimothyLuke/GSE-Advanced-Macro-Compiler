@@ -898,18 +898,33 @@ function GSE.GetOptionsTable()
                             "This CVAR makes WoW use your abilities when you press the key not when you release it.  To use GSE in its native configuration this needs to be checked."
                         ],
                         type = "toggle",
+                        tristate = false,
                         set = function(info, val)
+                            local setting
+                            if val == true then
+                                setting = 1
+                            end
+                            if val == false then
+                                setting = 0
+                            end
                             if GSE.GameMode > 7 then
-                                C_CVar.SetCVar("ActionButtonUseKeyDown", val)
+                                C_CVar.SetCVar("ActionButtonUseKeyDown", setting)
                             else
-                                SetCVar("ActionButtonUseKeyDown", val)
+                                SetCVar("ActionButtonUseKeyDown", setting)
                             end
                         end,
                         get = function(info)
+                            local setting = 0
                             if GSE.GameMode > 7 then
-                                return C_CVar.GetCVar("ActionButtonUseKeyDown")
+                                setting = C_CVar.GetCVar("ActionButtonUseKeyDown")
                             else
-                                return GetCVar("ActionButtonUseKeyDown")
+                                setting = GetCVar("ActionButtonUseKeyDown")
+                            end
+
+                            if tonumber(setting) == 1 then
+                                return true
+                            else
+                                return false
                             end
                         end,
                         order = 541

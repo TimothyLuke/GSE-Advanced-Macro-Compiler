@@ -1,18 +1,20 @@
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
-local LibQTip = LibStub('LibQTip-1.0')
-
+local LibQTip = LibStub("LibQTip-1.0")
 
 --- This function pops up a confirmation dialog.
 function GSE.GUIDeleteSequence(classid, sequenceName)
-  StaticPopupDialogs["GSE-DeleteMacroDialog"].text = string.format(L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."], sequenceName)
+  StaticPopupDialogs["GSE-DeleteMacroDialog"].text =
+    string.format(
+    L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."],
+    sequenceName
+  )
   StaticPopupDialogs["GSE-DeleteMacroDialog"].OnAccept = function(self, data)
     GSE.GUIConfirmDeleteSequence(classid, sequenceName)
   end
 
-
-  StaticPopup_Show ("GSE-DeleteMacroDialog")
+  StaticPopup_Show("GSE-DeleteMacroDialog")
 end
 
 --- This function then deletes the macro.
@@ -23,14 +25,13 @@ function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
   GSE.GUIShowViewer()
 end
 
-
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
     local text = GSE.UnEscapeString(editbox:GetText())
-    local returntext = GSE.TranslateString(text , "STRING", true)
+    local returntext = GSE.TranslateString(text, "STRING", true)
     editbox:SetText(returntext)
-    editbox:SetCursorPosition(string.len(returntext)+2)
+    editbox:SetCursorPosition(string.len(returntext) + 2)
   end
 end
 
@@ -54,20 +55,20 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
         [1] = {
           ["Actions"] = {
             [1] = {
-                [1] = "/say Hello",
-                ['Type'] = Statics.Actions.Action
+              [1] = "/say Hello",
+              ["Type"] = Statics.Actions.Action
             }
           },
-          ['InbuiltVariables'] = {},
-          ['Variables'] = {}
+          ["InbuiltVariables"] = {},
+          ["Variables"] = {}
         }
-      },
+      }
     }
     if not GSE.isEmpty(recordedstring) then
       sequence.Macros[1]["Actions"] = nil
       local recordedMacro = {}
-      for _,v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
-      local action = {
+      for _, v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
+        local action = {
           ["Type"] = Statics.Actions.Action
         }
 
@@ -98,12 +99,12 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   incomingframe:Hide()
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)
-    GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString .. " " .. L["This sequence is Read Only and unable to be edited."])
+    GSE.GUIEditFrame:SetStatusText(
+      "GSE: " .. GSE.VersionString .. " " .. L["This sequence is Read Only and unable to be edited."]
+    )
   end
   GSE.GUIEditFrame:Show()
-
 end
-
 
 function GSE.GUIUpdateSequenceList()
   local names = GSE.GetSequenceNames()
@@ -120,16 +121,14 @@ end
 --   end
 -- end
 
-
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
-  for k,v in ipairs(sequence.Macros) do
+  for k, v in ipairs(sequence.Macros) do
     sequence.Macros[k].Actions = GSE.TranslateSequence(v.Actions, Statics.TranslatorMode.ID, false)
     sequence.Macros[k].Variables = GSE.TranslateSequence(v.Variables, Statics.TranslatorMode.ID, false)
     sequence.Macros[k] = GSE.UnEscapeTableRecursive(sequence.Macros[k])
   end
-
 
   if not GSE.isEmpty(SequenceName) then
     if GSE.isEmpty(classid) then
@@ -144,8 +143,12 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
       vals.classid = classid
       if GSE.GUIEditFrame.NewSequence then
         if GSE.ObjectExists(SequenceName) then
-          GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName))
-          GSE.GUIEditFrame.nameeditbox:SetText(GSEOptions.UNKNOWN .. GSE.GUIEditFrame.nameeditbox:GetText() .. Statics.StringReset)
+          GSE.GUIEditFrame:SetStatusText(
+            string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
+          )
+          GSE.GUIEditFrame.nameeditbox:SetText(
+            GSEOptions.UNKNOWN .. GSE.GUIEditFrame.nameeditbox:GetText() .. Statics.StringReset
+          )
           GSE.GUIEditFrame.nameeditbox:SetFocus()
           return
         end
@@ -158,26 +161,12 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   end
 end
 
-
-function GSE.GUIGetColour(option)
-  -- hex = string.gsub(option, "#","")
-  return tonumber("0x".. string.sub(option,5,6))/255, tonumber("0x"..string.sub(option,7,8))/255, tonumber("0x"..string.sub(option,9,10))/255
-end
-
-function  GSE.GUISetColour(option, r, g, b)
-  GSE.PrintDebugMessage("Original option: " .. option, "GUI")
-  option = string.format("|c%02x%02x%02x%02x", 255 , r*255, g*255, b*255)
-  GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
-end
-
-
 function GSE:OnInitialize()
-    GSE.GUIRecordFrame:Hide()
-    GSE.GUIVersionFrame:Hide()
-    GSE.GUIEditFrame:Hide()
-    GSE.GUIViewFrame:Hide()
+  GSE.GUIRecordFrame:Hide()
+  GSE.GUIVersionFrame:Hide()
+  GSE.GUIEditFrame:Hide()
+  GSE.GUIViewFrame:Hide()
 end
-
 
 function GSE.OpenOptionsPanel()
   local config = LibStub:GetLibrary("AceConfigDialog-3.0")
@@ -205,8 +194,8 @@ function GSE.ShowSequenceList(SequenceTable, GSEUser, channel)
   if GSE.UnsavedOptions["GUI"] then
     GSE.ShowRemoteWindow(SequenceTable, GSEUser, channel)
   else
-    for _,v in ipairs(SequenceTable) do
-      for i,j in pairs(v) do
+    for _, v in ipairs(SequenceTable) do
+      for i, j in pairs(v) do
         local msg = i .. " "
         if not GSE.isEmpty(j.Help) then
           msg = msg .. j.Help

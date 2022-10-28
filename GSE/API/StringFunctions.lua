@@ -358,3 +358,16 @@ function GSE.RemoveComments(str)
 
     return table.concat(tab, "\n")
 end
+
+function GSE.GUIGetColour(option)
+    -- hex = string.gsub(option, "#","")
+    return tonumber("0x" .. string.sub(option, 5, 6)) / 255, tonumber("0x" .. string.sub(option, 7, 8)) / 255, tonumber(
+        "0x" .. string.sub(option, 9, 10)
+    ) / 255
+end
+
+function GSE.GUISetColour(option, r, g, b)
+    GSE.PrintDebugMessage("Original option: " .. option, "GUI")
+    option = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+    GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
+end
