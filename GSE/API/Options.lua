@@ -899,7 +899,7 @@ function GSE.GetOptionsTable()
                         ],
                         type = "toggle",
                         tristate = false,
-                        set = function(info, val)
+                        set = function(_, val)
                             local setting
                             if val == true then
                                 setting = 1
