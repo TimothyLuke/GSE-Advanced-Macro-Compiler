@@ -371,3 +371,12 @@ function GSE.GUISetColour(option, r, g, b)
     option = string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
     GSE.PrintDebugMessage("Color choice: " .. option, "GUI")
 end
+
+function GSE.GetMacroStringFormat()
+    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
+    if state == "DOWN" then
+        return Statics.DownStringFormat
+    else
+        return Statics.UpStringFormat
+    end
+end

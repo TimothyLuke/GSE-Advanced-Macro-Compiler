@@ -554,21 +554,13 @@ function GSE.SetMacroLocation()
 end
 
 function GSE.CreateMacroString(macroname)
-    return string.format(
-        "#showtooltip\n/click [button:1] %s LeftButton; [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s",
-        macroname,
-        macroname,
-        macroname,
-        macroname,
-        macroname,
-        macroname
-    )
+    return string.format(GSE.GetMacroStringFormat, macroname, macroname, macroname, macroname, macroname, macroname)
 end
 
 function GSE.UpdateMacroString()
     local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
     for macid = 1, maxmacros do
-        local mname, mtexture, mbody = GetMacroInfo(macid)
+        local mname, _, _ = GetMacroInfo(macid)
         if not GSE.isEmpty(mname) then
             if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][mname]) then
                 EditMacro(macid, nil, nil, GSE.CreateMacroString(mname))

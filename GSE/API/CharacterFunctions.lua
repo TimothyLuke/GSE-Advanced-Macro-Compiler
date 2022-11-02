@@ -265,3 +265,21 @@ function GSE.GetUse1()
     end
     return GSE_C.use1 and GSE_C.use11 or GSEOptions.use1
 end
+
+function GSE.setActionButtonUseKeyDown()
+    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
+    GSE.UpdateMacroString()
+    if state == "UP" then
+        GSE.Print(
+            L[
+                "GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"
+            ]
+        )
+    else
+        GSE.Print(
+            L[
+                "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton`"
+            ]
+        )
+    end
+end

@@ -859,3 +859,18 @@ L["ActionButtonUseKeyDown"] = true
 L[
         "This CVAR makes WoW use your abilities when you press the key not when you release it.  To use GSE in its native configuration this needs to be checked."
     ] = true
+
+-- #1209
+L["KeyUp"] = true
+L["KeyDown"] = true
+L["Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"] = true
+L["State"] = true
+L[
+        "This setting forces the ActionButtonUseKeyDown setting one way or another.  It also reconfigures GSE's Macro Stubs to operate in the specified mode."
+    ] = true
+L["Force ActionButtonUseKeyDown State"] = true
+L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"] =
+    true
+L[
+        "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton`"
+    ] = true
