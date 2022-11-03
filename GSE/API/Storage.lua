@@ -554,7 +554,7 @@ function GSE.SetMacroLocation()
 end
 
 function GSE.CreateMacroString(macroname)
-    return string.format(GSE.GetMacroStringFormat, macroname, macroname, macroname, macroname, macroname, macroname)
+    return string.format(GSE.GetMacroStringFormat(), macroname, macroname, macroname, macroname, macroname, macroname)
 end
 
 function GSE.UpdateMacroString()

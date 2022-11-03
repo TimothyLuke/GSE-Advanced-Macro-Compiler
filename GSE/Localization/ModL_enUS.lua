@@ -874,3 +874,4 @@ L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command n
 L[
         "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton`"
     ] = true
+L["Force CVar State"] = true

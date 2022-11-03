@@ -270,16 +270,20 @@ function GSE.setActionButtonUseKeyDown()
     local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
     GSE.UpdateMacroString()
     if state == "UP" then
+        C_CVar.SetCVar("ActionButtonUseKeyDown", 0)
         GSE.Print(
             L[
                 "GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"
-            ]
+            ],
+            L["GSE"] .. " " .. L["Troubleshooting"]
         )
     else
+        C_CVar.SetCVar("ActionButtonUseKeyDown", 1)
         GSE.Print(
             L[
                 "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton`"
-            ]
+            ],
+            L["GSE"] .. " " .. L["Troubleshooting"]
         )
     end
 end

@@ -949,18 +949,18 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return GSEOptions.ForceActionButtonState and GSEOptions.ForceActionButtonState or false
                         end,
-                        order = 541
+                        order = 551
                     },
                     CvarActionButtonState = {
                         type = "select",
                         name = L["State"],
-                        disable = not GSEOptions.ForceActionButtonState,
+                        disabled = not GSEOptions.ForceActionButtonState,
                         desc = L[
                             "Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"
                         ],
-                        values = { 
-                            [L["KeyUp"]] = "UP",
-                            [L["KeyDown"]] = "DOWN"
+                        values = {
+                            ["UP"] = L["KeyUp"],
+                            ["DOWN"] = L["KeyDown"]
                         },
                         set = function(_, val)
                             local setting
@@ -970,7 +970,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
                         end,
-                        order = 542
+                        order = 552
                     }
                 }
             },
