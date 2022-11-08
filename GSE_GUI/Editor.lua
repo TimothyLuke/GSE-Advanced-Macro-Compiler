@@ -1877,7 +1877,16 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
     return keyEditBox
 end
 
-local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, container, disableMove, disableDelete)
+local function GetBlockToolbar(
+    version,
+    path,
+    width,
+    includeAdd,
+    headingLabel,
+    container,
+    disableMove,
+    disableDelete,
+    dontDeleteLastParent)
     local layoutcontainer = AceGUI:Create("KeyGroup")
 
     local lastPath = path[#path]
@@ -1888,7 +1897,9 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
     if #parentPath == 1 then
         blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions)
     else
-        parentPath[#parentPath] = nil
+        if GSE.isEmpty(dontDeleteLastParent) then
+            parentPath[#parentPath] = nil
+        end
         blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions[parentPath])
     end
     layoutcontainer:SetLayout("Flow")
@@ -2169,13 +2180,13 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
             function()
                 if GSE.TableLength(editframe.booleanFunctions) > 0 then
                     local newAction = {
-                        {
+                        [1] = {
                             {
                                 [1] = "/say Variable returned True",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
-                        {
+                        [2] = {
                             {
                                 [1] = "/say Variable returned False",
                                 ["Type"] = Statics.Actions.Action
@@ -2311,100 +2322,102 @@ local function GetBlockToolbar(version, path, width, includeAdd, headingLabel, c
 
     local textpath = table.concat(path, ".")
     local patheditbox = AceGUI:Create("EditBox")
-    patheditbox:SetLabel(L["Block Path"])
-    patheditbox:SetWidth(80)
-    patheditbox:SetCallback(
-        "OnEnterPressed",
-        function(obj, event, key)
-            if not editframe.reloading then
-                -- put the move stuff here.
-                print("moving from " .. textpath .. " to " .. key)
-                local destinationPath = GSE.split(key, ".")
-                for k, v in ipairs(destinationPath) do
-                    destinationPath[k] = tonumber(v)
-                end
-                local testpath = GSE.CloneSequence(destinationPath)
-                table.remove(testpath, #testpath)
-                local sourcepath = GSE.CloneSequence(path)
-                for k, v in ipairs(sourcepath) do
-                    sourcepath[k] = tonumber(v)
-                end
-                table.remove(sourcepath, #sourcepath)
-                if #testpath > 0 then
-                    -- check that the path exists
-                    if
-                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
-                            type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
-                     then
-                        GSE.Print(L["Error: Destination path not found."])
+    if GSE.isEmpty(disableMove) then
+        patheditbox:SetLabel(L["Block Path"])
+        patheditbox:SetWidth(80)
+        patheditbox:SetCallback(
+            "OnEnterPressed",
+            function(obj, event, key)
+                if not editframe.reloading then
+                    -- put the move stuff here.
+                    print("moving from " .. textpath .. " to " .. key)
+                    local destinationPath = GSE.split(key, ".")
+                    for k, v in ipairs(destinationPath) do
+                        destinationPath[k] = tonumber(v)
+                    end
+                    local testpath = GSE.CloneSequence(destinationPath)
+                    table.remove(testpath, #testpath)
+                    local sourcepath = GSE.CloneSequence(path)
+                    for k, v in ipairs(sourcepath) do
+                        sourcepath[k] = tonumber(v)
+                    end
+                    table.remove(sourcepath, #sourcepath)
+                    if #testpath > 0 then
+                        -- check that the path exists
+                        if
+                            GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
+                                type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
+                         then
+                            GSE.Print(L["Error: Destination path not found."])
+                            return
+                        end
+                    end
+
+                    if #sourcepath > 0 then
+                        -- check that the path exists  If this has happened we have a big problem
+                        if
+                            GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
+                                type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
+                         then
+                            GSE.Print(L["Error: Source path not found."])
+                            return
+                        end
+                    end
+
+                    if string.sub(key, 1, string.len(textpath)) == textpath then
+                        GSE.Print(L["Error: You cannot move a container to be a child within itself."])
                         return
                     end
-                end
 
-                if #sourcepath > 0 then
-                    -- check that the path exists  If this has happened we have a big problem
-                    if
-                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
-                            type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
-                     then
-                        GSE.Print(L["Error: Source path not found."])
-                        return
+                    local insertActions = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                    local endPoint = tonumber(destinationPath[#destinationPath])
+
+                    local pathPoint = tonumber(path[#path])
+
+                    if #sourcepath > 0 then
+                        table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
+                    else
+                        table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
                     end
-                end
-
-                if string.sub(key, 1, string.len(textpath)) == textpath then
-                    GSE.Print(L["Error: You cannot move a container to be a child within itself."])
-                    return
-                end
-
-                local insertActions = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
-                local endPoint = tonumber(destinationPath[#destinationPath])
-
-                local pathPoint = tonumber(path[#path])
-
-                if #sourcepath > 0 then
-                    table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
-                else
-                    table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
-                end
-                if #testpath > 0 then
-                    if endPoint > #testpath + 1 then
-                        endPoint = #testpath + 1
+                    if #testpath > 0 then
+                        if endPoint > #testpath + 1 then
+                            endPoint = #testpath + 1
+                        end
+                        table.insert(editframe.Sequence.Macros[version].Actions[testpath], endPoint, insertActions)
+                    else
+                        if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
+                            endPoint = #editframe.Sequence.Macros[version].Actions + 1
+                        end
+                        table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
                     end
-                    table.insert(editframe.Sequence.Macros[version].Actions[testpath], endPoint, insertActions)
-                else
-                    if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
-                        endPoint = #editframe.Sequence.Macros[version].Actions + 1
-                    end
-                    table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
-                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
-        end
-    )
-    patheditbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Block Path"],
-                L[
-                    "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
-                ],
-                editframe
-            )
-        end
-    )
-    patheditbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
+        )
+        patheditbox:SetCallback(
+            "OnEnter",
+            function()
+                GSE.CreateToolTip(
+                    L["Block Path"],
+                    L[
+                        "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
+                    ],
+                    editframe
+                )
+            end
+        )
+        patheditbox:SetCallback(
+            "OnLeave",
+            function()
+                GSE.ClearTooltip(editframe)
+            end
+        )
 
-    -- patheditbox:DisableButton(true)
+        -- patheditbox:DisableButton(true)
 
-    patheditbox:SetText(textpath)
-    layoutcontainer:AddChild(patheditbox)
+        patheditbox:SetText(textpath)
+        layoutcontainer:AddChild(patheditbox)
+    end
     return layoutcontainer
 end
 
@@ -2837,7 +2850,7 @@ local function drawAction(container, action, version, keyPath)
         trueGroup:SetLayout("List")
 
         local tlabel = AceGUI:Create("Label")
-        tlabel:SetText("True", Statics.Actions[action.Type])
+        tlabel:SetText("True")
         --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
         tlabel:SetFontObject(GameFontNormalLarge)
         tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
@@ -2846,7 +2859,8 @@ local function drawAction(container, action, version, keyPath)
         trueContainer:SetLayout("Flow")
         trueContainer:SetWidth(maxWidth)
 
-        local toolbar = GetBlockToolbar(version, trueKeyPath, maxWidth - 45, true, tlabel, trueContainer, true, true)
+        local toolbar =
+            GetBlockToolbar(version, trueKeyPath, maxWidth - 45, true, tlabel, trueContainer, true, true, true)
         trueGroup:AddChild(toolbar)
 
         for key, act in ipairs(action[1]) do
@@ -2892,7 +2906,8 @@ local function drawAction(container, action, version, keyPath)
         falsecontainer:SetWidth(maxWidth)
         falsecontainer:SetLayout("Flow")
 
-        local toolbar2 = GetBlockToolbar(version, falseKeyPath, maxWidth - 45, true, flabel, falsecontainer, true, true)
+        local toolbar2 =
+            GetBlockToolbar(version, falseKeyPath, maxWidth - 45, true, flabel, falsecontainer, true, true, true)
         falsegroup:AddChild(toolbar2)
         falsegroup.frame:SetBackdrop(
             {
