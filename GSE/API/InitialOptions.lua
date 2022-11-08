@@ -102,6 +102,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.editorHeight = 700
     GSEOptions.editorWidth = 700
     GSEOptions.showCurrentSpells = true
+    GSEOptions.OOCQueueDelay = 7
     GSE.resetMacroResetModifiers()
 end
 

@@ -544,7 +544,8 @@ end
 
 --- Start the OOC Queue Timer
 function GSE.StartOOCTimer()
-    GSE.OOCTimer = GSE:ScheduleRepeatingTimer("ProcessOOCQueue", 8)
+    GSE.OOCTimer =
+        GSE:ScheduleRepeatingTimer("ProcessOOCQueue", GSEOptions.OOCQueueDelay and GSEOptions.OOCQueueDelay or 7)
 end
 
 --- Stop the OOC Queue Timer
