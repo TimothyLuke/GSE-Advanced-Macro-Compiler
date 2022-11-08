@@ -934,11 +934,9 @@ function GSE.GetOptionsTable()
                         name = L["Force ActionButtonUseKeyDown State"],
                         order = 550
                     },
-
                     CvarActionButtonState = {
                         type = "select",
                         name = L["Force CVar State"],
-                        
                         desc = L[
                             "Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"
                         ],
