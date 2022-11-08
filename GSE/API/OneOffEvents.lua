@@ -5,6 +5,8 @@ local L = GSE.L
 
 function GSE.PerformOneOffEvents()
     GSE.Update3023()
+    GSE.Update3111()
+    GSE.Update3117()
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
     end
@@ -35,4 +37,16 @@ function GSE.Update3111()
         end
     end
     GSEOptions.Update3111 = true
+end
+function GSE.Update3117()
+    if GSE.isEmpty(GSE_C.Update3117) then
+        GSE.Print(
+            L[
+                "Dragonflight has changed how the /click command operates.  As a result all your macro stubs (found in /macro) have been updated to match the value of the CVar ActionButtonUseKeyDown.  This is a one off configuration change that needs to be done for each character.  You can change this configuration in GSE's Options."
+            ],
+            "GSE Configuration"
+        )
+        GSE.setActionButtonUseKeyDown()
+    end
+    GSE_C.Update3117 = true
 end

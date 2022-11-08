@@ -511,6 +511,6 @@ Statics.TableMetadataFunction = {
 }
 
 Statics.DownStringFormat =
-    "#showtooltip\n/click [button:1] %s LeftButton; [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s"
+    "#showtooltip\n/click [button:1] %s LeftButton t; [button:2] %s RightButton t; [button:3] %s MiddleButton t; [button:4] %s Button4 t; [button:5] %s Button5 t; %s"
 Statics.UpStringFormat =
     "#showtooltip\n/click [button:2] %s RightButton; [button:3] %s MiddleButton; [button:4] %s Button4; [button:5] %s Button5; %s"

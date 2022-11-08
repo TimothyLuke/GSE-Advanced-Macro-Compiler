@@ -934,31 +934,16 @@ function GSE.GetOptionsTable()
                         name = L["Force ActionButtonUseKeyDown State"],
                         order = 550
                     },
-                    forceCvarState = {
-                        name = L["Force CVar State"],
-                        desc = L[
-                            "This setting forces the ActionButtonUseKeyDown setting one way or another.  It also reconfigures GSE's Macro Stubs to operate in the specified mode."
-                        ],
-                        type = "toggle",
-                        tristate = false,
-                        set = function(_, val)
-                            local setting
-                            GSEOptions.ForceActionButtonState = val
-                            GSE.setActionButtonUseKeyDown()
-                        end,
-                        get = function(info)
-                            return GSEOptions.ForceActionButtonState and GSEOptions.ForceActionButtonState or false
-                        end,
-                        order = 551
-                    },
+
                     CvarActionButtonState = {
                         type = "select",
-                        name = L["State"],
-                        disabled = not GSEOptions.ForceActionButtonState,
+                        name = L["Force CVar State"],
+                        
                         desc = L[
                             "Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"
                         ],
                         values = {
+                            ["DONTFORCE"] = L["Don't Force"],
                             ["UP"] = L["KeyUp"],
                             ["DOWN"] = L["KeyDown"]
                         },
