@@ -61,6 +61,14 @@ ignore:
   - out
   - tmp
   - App
+  - patreonUpdate.js
+  - pages
+  - package.*
+  - paclage-lock.*
+  - GSE/patreonUpdate.js
+  - GSE/pages
+  - GSE/package.*
+  - GSE/package-lock.*
 
 wowi-archive-previous: no
 enable-toc-creation: yes
