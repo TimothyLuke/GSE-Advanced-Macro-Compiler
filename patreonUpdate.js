@@ -1,6 +1,6 @@
 let request = require("request");
 let _ = require("lodash");
-let creator_access_token = env.NODE_PATREON_TOKEN;
+let creator_access_token = process.env.NODE_PATREON_TOKEN;
 let campaignID = "440241";
 const fs = require("fs");
 
