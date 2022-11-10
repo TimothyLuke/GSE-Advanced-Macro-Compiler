@@ -64,7 +64,15 @@ jobs:
       run: |
         export LUA_PATH="./GSE/API/?.lua;$LUA_PATH"
         luacov-coveralls -v -e .luarocks
-        
+    
+    - name: Setup Node
+      uses: actions/setup-node@v3
+    - name: Install Dependencies
+      run: npm ci
+           npm run-script run
+      env: 
+          NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
+          
     # Runs a set of commands using the runners shell
     - name: Create Package Retail
       uses: BigWigsMods/packager@master
