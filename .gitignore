@@ -5,3 +5,4 @@ GS-Core/lib
 GSE/Lib
 .release
 App/node_modules/
+node_modules/

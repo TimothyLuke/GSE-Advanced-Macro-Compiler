@@ -39,6 +39,7 @@ Localization\ModL_zhTW.lua
 # Startup
 API\Init.lua
 API\Statics.lua
+API\Patrons.lua
 API\InitialOptions.lua
 
 
