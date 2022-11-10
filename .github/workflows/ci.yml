@@ -69,7 +69,8 @@ jobs:
       uses: actions/setup-node@v3
     - name: Install Dependencies
       run: npm ci
-           npm run-script run
+    - name: Update GSE/API/Patreon.js
+      run: npm run-script run
       env: 
           NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
           
