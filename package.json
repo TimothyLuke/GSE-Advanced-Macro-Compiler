@@ -2,5 +2,8 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "request": "^2.88.2"
+  },
+  "scripts": {
+    "run": "node patreonUpdate.js"
   }
 }

@@ -1,7 +1,8 @@
 let request = require("request");
 let _ = require("lodash");
-let creator_access_token = "";
+let creator_access_token = env.NODE_PATREON_TOKEN;
 let campaignID = "440241";
+const fs = require("fs");
 
 let apiPath = `campaigns/${campaignID}/members`;
 
@@ -47,5 +48,17 @@ function getMembers(members, newpath, done) {
 }
 
 getMembers([], "fields%5Bmember%5D=full_name", function (err, result) {
-  console.log(_.sortBy(result));
+  let memberList = _.sortBy(result);
+  let output = `local GSE = GSE
+local Statics = GSE.Static
+
+Statics.Patrons = {
+    "${memberList.join('",\n    "')}"
+}`;
+  console.log(output);
+  fs.writeFile("GSE/API/Patrons.lua", output, (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
 });
