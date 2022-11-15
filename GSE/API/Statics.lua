@@ -422,28 +422,6 @@ Statics.BaseSpellTable[302983] = 296208 -- Ripple in Space 3
 
 Statics.BaseSpellTable[201427] = 344862 -- Annihilation -> Chaos Strike
 
-Statics.Patrons = {
-    "Airwave",
-    "Blackwell",
-    "BadCatVPN",
-    "clash",
-    "Deezyl",
-    "Dorlerean",
-    "Elange",
-    "ElfyAU",
-    "Flagels",
-    "Kleetus",
-    "Meisterhand",
-    "Mixmasterarne",
-    "Plaguelord",
-    "paytun",
-    "rezaadams",
-    "shikarr",
-    "Susietoo12",
-    "Tiegars",
-    "Vince"
-}
-
 Statics.Actions = {}
 Statics.Actions.Loop = "Loop"
 Statics.Actions.If = "If"

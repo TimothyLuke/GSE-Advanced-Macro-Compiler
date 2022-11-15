@@ -286,4 +286,5 @@ function GSE.setActionButtonUseKeyDown()
             L["GSE"] .. " " .. L["Troubleshooting"]
         )
     end
+    GSE.ReloadSequences()
 end

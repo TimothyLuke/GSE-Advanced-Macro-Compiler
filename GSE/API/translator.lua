@@ -151,6 +151,17 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     if string.sub(output, string.len(output) - 1) == ", " then
                         output = string.sub(output, 1, string.len(output) - 2)
                     end
+                elseif string.lower(cmd) == "click" then
+                    local trimRight = string.find(etc, "LeftButton")
+                    if not GSE.isEmpty(trimRight) then
+                        etc = string.sub(etc, 1, trimRight - 1)
+                    end
+                    if mode == Statics.TranslatorMode.String then
+                        if tonumber(GetCVar("ActionButtonUseKeyDown")) == 1 then
+                            etc = etc .. " LeftButton t"
+                        end
+                    end
+                    output = output .. " " .. etc
                 else
                     -- Pass it through
                     output = output .. " " .. etc
