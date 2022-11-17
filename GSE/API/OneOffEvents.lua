@@ -39,6 +39,9 @@ function GSE.Update3111()
     GSEOptions.Update3111 = true
 end
 function GSE.Update3117()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
     if GSE.isEmpty(GSE_C.Update3117) then
         GSE.Print(
             L[
@@ -47,9 +50,6 @@ function GSE.Update3117()
             "GSE Configuration"
         )
         GSE.setActionButtonUseKeyDown()
-    end
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
     end
     GSE_C.Update3117 = true
 end
