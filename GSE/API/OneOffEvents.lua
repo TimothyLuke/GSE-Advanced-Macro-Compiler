@@ -48,5 +48,8 @@ function GSE.Update3117()
         )
         GSE.setActionButtonUseKeyDown()
     end
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
     GSE_C.Update3117 = true
 end
