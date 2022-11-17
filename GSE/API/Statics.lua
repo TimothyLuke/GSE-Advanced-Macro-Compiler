@@ -161,12 +161,12 @@ end
 
 local function determineClassName(specID)
     local specname
-    if GSE.GameMode == 1 then
-        local ClassTable = C_CreatureInfo.GetClassInfo(specID)
-        return ClassTable["className"]
-    else
-        specname = GetClassInfo(specID)
-    end
+    -- if GSE.GameMode == 1 then
+    --     local ClassTable = C_CreatureInfo.GetClassInfo(specID)
+    --     return ClassTable["className"]
+    -- else
+    specname = GetClassInfo(specID)
+    -- end
     return specname
 end
 
@@ -204,7 +204,7 @@ if GSE.GameMode < 4 then
         [9] = determineClassName(9),
         [11] = determineClassName(11)
     }
-    if GSE.GameMode == 3 then
+    if GSE.GameMode >= 3 then
         Statics.SpecIDList[6] = determineClassName(6)
     end
 else
