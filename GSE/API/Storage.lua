@@ -113,10 +113,10 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 
     -- Check for collisions
     local found = false
-    if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.SpecID) then
-        classid = tonumber(GSE.GetClassIDforSpec(sequence.SpecID))
-    elseif GSE.isEmpty(sequence.SpecID) then
-        sequence.SpecID = GSE.GetCurrentClassID()
+    if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.MetaData.SpecID) then
+        classid = tonumber(GSE.GetClassIDforSpec(sequence.MetaData.SpecID))
+    elseif GSE.isEmpty(sequence.MetaData.SpecID) then
+        sequence.MetaData.SpecID = GSE.GetCurrentClassID()
         classid = GSE.GetCurrentClassID()
     end
     GSE.PrintDebugMessage("Classid now - " .. classid, "Storage")
@@ -690,12 +690,14 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
         return GSEOptions.DefaultDisabledMacroIcon
     end
     if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
-        GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.SpecID, GNOME)
-        if sequence.SpecID == 0 then
+        GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.Metadata.SpecID, GNOME)
+        if sequence.Metadata.SpecID == 0 then
             return "INV_MISC_QUESTIONMARK"
         else
             local _, _, _, specicon, _, _, _ =
-                GetSpecializationInfoByID((GSE.isEmpty(sequence.SpecID) and GSE.GetCurrentSpecID() or sequence.SpecID))
+                GetSpecializationInfoByID(
+                (GSE.isEmpty(sequence.Metadata.SpecID) and GSE.GetCurrentSpecID() or sequence.Metadata.SpecID)
+            )
             GSE.PrintDebugMessage("No Sequence Icon setting to " .. strsub(specicon, 17), GNOME)
             return strsub(specicon, 17)
         end

@@ -49,10 +49,10 @@ function GSE.GetClassIDforSpec(specid)
         classid = Statics.SpecIDClassList[specid]
     else
         local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
-        if specid <= 12 then
+        if specid <= 13 then
             classid = specid
         else
-            for i = 1, 12, 1 do
+            for i = 1, 13, 1 do
                 local cdn, st, cid = GetClassInfo(i)
                 if class == st then
                     classid = i
@@ -129,15 +129,18 @@ function GSE.GetCurrentTalents()
         end
     elseif GSE.GameMode == 10 then
         -- force load the addon
-        local loaded, reason = LoadAddOn("Blizzard_ClassTalentUI")
+        local loaded, _ = LoadAddOn("Blizzard_ClassTalentUI")
 
         if not loaded then
             talents = ""
-            print(reason)
         else
             local t = ClassTalentFrame.TalentsTab
-            t:UpdateTreeInfo()
-            talents = t:GetLoadoutExportString()
+            if GSE.GetCurrentClassID() < 13 or (GSE.GetCurrentClassID() == 13 and UnitLevel("player") > 59) then
+                t:UpdateTreeInfo()
+                talents = t:GetLoadoutExportString()
+            else
+                talents = ""
+            end
         end
     else
         for talentTier = 1, MAX_TALENT_TIERS do
