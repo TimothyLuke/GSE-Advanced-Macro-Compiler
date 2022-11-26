@@ -451,9 +451,7 @@ local function PrintGnomeHelp()
     )
 end
 
-GSE:RegisterChatCommand("gs", "GSSlash")
 GSE:RegisterChatCommand("gse", "GSSlash")
-GSE:RegisterChatCommand("gsse", "GSSlash")
 
 -- Functions
 --- Handle slash commands
