@@ -887,3 +887,6 @@ L[
         "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates macros.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
     ] = true
 L["OOC Queue Delay"] = true
+
+--1239
+L["/gse|r again."] = true

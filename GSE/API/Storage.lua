@@ -336,7 +336,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                                         L[
                                             "|r.  As a result this macro was not created.  Please delete some macros and reenter "
                                         ] ..
-                                            GSEOptions.CommandColour .. L["/gs|r again."],
+                                            GSEOptions.CommandColour .. L["/gse|r again."],
                 GNOME
             )
         elseif numAccountMacros >= MAX_ACCOUNT_MACROS and GSEOptions.overflowPersonalMacros then
@@ -354,7 +354,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                                                         L[
                                                             "|r. As a result this macro was not created.  Please delete some macros and reenter "
                                                         ] ..
-                                                            GSEOptions.CommandColour .. L["/gs|r again."],
+                                                            GSEOptions.CommandColour .. L["/gse|r again."],
                 GNOME
             )
         else
