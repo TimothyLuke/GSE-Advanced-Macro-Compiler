@@ -344,6 +344,14 @@ function GSE:PLAYER_PVP_TALENT_UPDATE()
     GSE.ReloadSequences()
 end
 
+function GSE:SPEC_INVOLUNTARILY_CHANGED()
+    GSE.ReloadSequences()
+end
+
+function GSE:PLAYER_TALENT_UPDATE()
+    GSE.ReloadSequences()
+end
+
 function GSE:GROUP_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck()
@@ -390,6 +398,11 @@ if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
+end
+
+if GSE.GameMode > 10 then
+    GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
+    GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
 end
 
 if GSE.GameMode <= 3 then
