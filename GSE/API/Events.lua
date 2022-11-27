@@ -400,7 +400,7 @@ if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
 end
 
-if GSE.GameMode > 10 then
+if GSE.GameMode >= 10 then
     GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
     GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
 end
