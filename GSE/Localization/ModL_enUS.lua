@@ -890,3 +890,7 @@ L["OOC Queue Delay"] = true
 
 --1239
 L["/gse|r again."] = true
+
+--1248
+L["Clear Spell Cache"] = true
+L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames.."] = true

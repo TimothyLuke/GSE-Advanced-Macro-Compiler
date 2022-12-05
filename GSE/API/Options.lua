@@ -905,6 +905,21 @@ function GSE.GetOptionsTable()
                         end,
                         order = 521
                     },
+                    clearSpellCache = {
+                        name = L["Clear Spell Cache"],
+                        desc = L[
+                            "This function will clear the spell cache and any mappings between individual spellIDs and spellnames.."
+                        ],
+                        type = "execute",
+                        func = function(info, val)
+                            GSESpellCache = {}
+                            GSESpellCache["enUS"] = {}
+                            if GSE.isEmpty(GSESpellCache[GetLocale()]) then
+                                GSESpellCache[GetLocale()] = {}
+                            end
+                        end,
+                        order = 522
+                    },
                     cvarsettingstitle = {
                         type = "header",
                         name = L["CVar Settings"],
