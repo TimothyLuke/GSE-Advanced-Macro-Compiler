@@ -205,3 +205,7 @@ function GSE.ShowSequenceList(SequenceTable, GSEUser, channel)
     end
   end
 end
+
+function GSE.GUIShowSpellCacheWindow()
+  GSE.GUICacheFrame:Show()
+end

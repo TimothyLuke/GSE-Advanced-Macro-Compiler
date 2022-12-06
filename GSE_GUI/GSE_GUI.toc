@@ -25,5 +25,6 @@ GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
 MacroPreview.lua
+SpellCache.lua
 3_AdvancedEditor.lua
 Init.lua

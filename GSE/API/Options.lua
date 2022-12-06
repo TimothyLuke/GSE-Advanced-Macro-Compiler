@@ -905,6 +905,11 @@ function GSE.GetOptionsTable()
                         end,
                         order = 521
                     },
+                    spellCachetitle = {
+                        type = "header",
+                        name = L["Spell Cache Editor"],
+                        order = 522
+                    },
                     clearSpellCache = {
                         name = L["Clear Spell Cache"],
                         desc = L[
@@ -918,7 +923,26 @@ function GSE.GetOptionsTable()
                                 GSESpellCache[GetLocale()] = {}
                             end
                         end,
-                        order = 522
+                        order = 523
+                    },
+                    editSpellCache = {
+                        name = L["Edit Spell Cache"],
+                        desc = L[
+                            "This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames.."
+                        ],
+                        type = "execute",
+                        func = function(info, val)
+                            GSE.CheckGUI()
+                            if GSE.UnsavedOptions["GUI"] then
+                                GSE.GUIShowSpellCacheWindow()
+                            else
+                                GSE.Print(
+                                    L["The GSE_GUI Module needs to be enabled to edit the spell cache."],
+                                    L["Options"]
+                                )
+                            end
+                        end,
+                        order = 524
                     },
                     cvarsettingstitle = {
                         type = "header",

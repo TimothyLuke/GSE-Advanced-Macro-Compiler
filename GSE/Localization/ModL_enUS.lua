@@ -894,3 +894,10 @@ L["/gse|r again."] = true
 --1248
 L["Clear Spell Cache"] = true
 L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames.."] = true
+L[
+        "This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames.."
+    ] = true
+L["Edit Spell Cache"] = true
+L["Spell Cache Editor"] = true
+L["Spell ID"] = true
+L["Spell Name"] = true

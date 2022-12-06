@@ -1,21 +1,8 @@
-local GNOME, _ = ...
 local GSE = GSE
 local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
-local libS = LibStub:GetLibrary("AceSerializer-3.0")
-local libC = LibStub:GetLibrary("LibCompress")
-local libCE = libC:GetAddonEncodeTable()
-
-local otherversionlistboxvalue = ""
-local default = 1
-local raid = 1
-local pvp = 1
-local arena = 1
-local mythic = 1
-
-local scenario = 1
 
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
