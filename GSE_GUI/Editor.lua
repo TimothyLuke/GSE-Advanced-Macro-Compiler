@@ -2627,15 +2627,18 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetCallback(
             "OnEditFocusLost",
             function()
-                valueEditBox:SetText(
-                    table.concat(
-                        GSE.TranslateSequence(
-                            editframe.Sequence.Macros[version].Actions[keyPath],
-                            Statics.TranslatorMode.Current
-                        ),
-                        "\n"
-                    )
+                local translatedact =
+                    GSE.TranslateSequence(
+                    editframe.Sequence.Macros[version].Actions[keyPath],
+                    Statics.TranslatorMode.Current
                 )
+
+                for k, v in ipairs(translatedact) do
+                    if GSE.isEmpty(v) then
+                        translatedact[k] = "\n"
+                    end
+                end
+                valueEditBox:SetText(GSE.SafeConcat(translatedact, "\n"))
             end
         )
         -- valueEditBox:SetCallback('OnEnter', function()

@@ -1103,7 +1103,7 @@ local function buildAction(action, metaData, variables)
             table.insert(action, "/run UIErrorsFrame:Clear()")
         end
 
-        return table.concat(action, "\n")
+        return GSE.SafeConcat(action, "\n")
     end
 end
 

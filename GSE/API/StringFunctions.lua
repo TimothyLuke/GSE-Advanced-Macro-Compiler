@@ -380,3 +380,17 @@ function GSE.GetMacroStringFormat()
         return Statics.UpStringFormat
     end
 end
+
+function GSE.SafeConcat(tab, delimiter)
+    local output = ""
+    for k, v in pairs(tab) do
+        if type(k) == "number" then
+            if k > 1 then
+                output = output .. delimiter .. v
+            else
+                output = v
+            end
+        end
+    end
+    return output
+end
