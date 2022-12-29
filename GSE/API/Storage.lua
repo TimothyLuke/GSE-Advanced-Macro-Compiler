@@ -510,9 +510,9 @@ function GSE.OOCUpdateSequence(name, sequence)
 
     local combatReset = false
     if GSE.isEmpty(sequence.InbuiltVariables) then
-        sequence.InbuiltVariables = {}
+        sequence.InbuiltVariables = {["Combat"] = false}
     end
-    if (not GSE.isEmpty(sequence.InbuiltVariables.Combat) or GSE.GetResetOOC()) or sequence.InbuiltVariables.Combat then
+    if (sequence.InbuiltVariables.Combat or GSE.GetResetOOC()) or sequence.InbuiltVariables.Combat then
         combatReset = true
     end
     local compiledTemplate = GSE.CompileTemplate(sequence)
