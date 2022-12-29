@@ -360,7 +360,14 @@ function GSE:TRAIT_NODE_ENTRY_UPDATED()
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_TREE_CHANGED()
+    GSE:UnregisterEvent("TRAIT_TREE_CHANGED")
     GSE.ReloadSequences()
+    GSE:RegisterEvent("TRAIT_TREE_CHANGED")
+end
+function GSE:TRAIT_CONFIG_UPDATED()
+    GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
+    GSE.ReloadSequences()
+    GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
     GSE.ReloadSequences()
@@ -421,6 +428,7 @@ if GSE.GameMode >= 10 then
     GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")
     GSE:RegisterEvent("TRAIT_NODE_ENTRY_UPDATED")
     GSE:RegisterEvent("TRAIT_TREE_CHANGED")
+    GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
     GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
 end
 
