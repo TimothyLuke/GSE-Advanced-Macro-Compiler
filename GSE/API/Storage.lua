@@ -406,7 +406,7 @@ function GSE.ReloadSequences()
 end
 
 function GSE.PerformReloadSequences()
-    GSE.PrintDebugMessage("Reloading Sequences")
+    GSE.PrintDebugMessage("Reloading Sequences", Statics.DebugModules["Storage"])
 
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
@@ -504,7 +504,7 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(name) then
         return
     end
-    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) then
+    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) and GSE.isEmpty(GSE.Library[0][name]) then
         return
     end
 
@@ -512,7 +512,7 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(sequence.InbuiltVariables) then
         sequence.InbuiltVariables = {}
     end
-    if (GSE.isEmpty(sequence.InbuiltVariables.Combat) and GSE.GetResetOOC()) or sequence.InbuiltVariables.Combat then
+    if (not GSE.isEmpty(sequence.InbuiltVariables.Combat) or GSE.GetResetOOC()) or sequence.InbuiltVariables.Combat then
         combatReset = true
     end
     local compiledTemplate = GSE.CompileTemplate(sequence)
@@ -1415,6 +1415,7 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         "name, macros = self:GetName(), newtable([=======[" ..
             strjoin("]=======],[=======[", unpack(macro)) .. "]=======])"
     )
+    _G[name]:SetAttribute("step", 1)
     GSE.UpdateIcon(_G[name], true)
 end
 

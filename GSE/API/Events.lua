@@ -310,9 +310,7 @@ end
 
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     GSE:UnregisterEvent("PLAYER_REGEN_ENABLED")
-    if GSE.GetResetOOC() then
-        GSE.ResetButtons()
-    end
+    GSE.ResetButtons()
     GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
