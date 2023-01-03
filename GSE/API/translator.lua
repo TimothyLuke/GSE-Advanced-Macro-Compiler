@@ -89,8 +89,8 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
         if instring:find("$$", 1, true) then
             GSE.PrintDebugMessage("Setting Absolute", GNOME)
             absolute = true
-        end
-        if GSE.isEmpty(string.find(instring, "--", 1, true)) then
+            output = string.gsub(instring, "%$%$", "")
+        elseif GSE.isEmpty(string.find(instring, "--", 1, true)) then
             for cmd, etc in string.gmatch(instring or "", "/(%w+)%s+([^\n]+)") do
                 GSE.PrintDebugMessage("cmd : \n" .. cmd .. " etc: " .. etc, GNOME)
                 output = output .. GSEOptions.WOWSHORTCUTS .. "/" .. cmd .. Statics.StringReset .. " "
