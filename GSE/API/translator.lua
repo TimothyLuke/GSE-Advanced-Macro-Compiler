@@ -152,7 +152,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                         output = string.sub(output, 1, string.len(output) - 2)
                     end
                 elseif string.lower(cmd) == "click" then
-                    local trimRight = string.find(etc, "LeftButton")
+                    local trimRight = string.find(etc, " LeftButton")
                     if not GSE.isEmpty(trimRight) then
                         etc = string.sub(etc, 1, trimRight - 1)
                     end
