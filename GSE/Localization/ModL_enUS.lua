@@ -901,3 +901,7 @@ L["Edit Spell Cache"] = true
 L["Spell Cache Editor"] = true
 L["Spell ID"] = true
 L["Spell Name"] = true
+
+--1272
+L["Virtual Button Support"] = true
+L["This is needed for ConsolePort and BindPad."] = true

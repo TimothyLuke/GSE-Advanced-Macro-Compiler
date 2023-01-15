@@ -373,12 +373,9 @@ function GSE.GUISetColour(option, r, g, b)
 end
 
 function GSE.GetMacroStringFormat()
-    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
-    if state == "DOWN" then
-        return Statics.DownStringFormat
-    else
-        return Statics.UpStringFormat
-    end
+    local CVarValue = C_CVar.GetCVar("ActionButtonUseKeyDown") and "DOWN" or "UP"
+    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or CVarValue
+    return state
 end
 
 function GSE.SafeConcat(tab, delimiter)

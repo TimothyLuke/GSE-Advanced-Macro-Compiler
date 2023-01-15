@@ -53,7 +53,7 @@ function GSE.GetClassIDforSpec(specid)
             classid = specid
         else
             for i = 1, 13, 1 do
-                local cdn, st, cid = GetClassInfo(i)
+                local _, st, _ = GetClassInfo(i)
                 if class == st then
                     classid = i
                 end

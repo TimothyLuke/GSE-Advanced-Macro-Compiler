@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 local GSE = GSE
 local Statics = GSE.Static
 
@@ -554,7 +555,31 @@ function GSE.SetMacroLocation()
 end
 
 function GSE.CreateMacroString(macroname)
-    return string.format(GSE.GetMacroStringFormat(), macroname, macroname, macroname, macroname, macroname, macroname)
+    local returnVal = "#showtooltip\n/click "
+    local state = GSE.GetMacroStringFormat()
+    local t = state == "DOWN" and "t" or "f"
+
+    if GSE.GetMacroStringFormat() == "DOWN" or GSEOptions.MacroResetModifiers["LeftButton"] then
+        returnVal = returnVal .. "[button:1] " .. macroname .. " LeftButton " .. t .. "; "
+    end
+    if GSEOptions.MacroResetModifiers["RightButton"] then
+        returnVal = returnVal .. "[button:2] " .. macroname .. " RightButton " .. t .. "; "
+    end
+    if GSEOptions.MacroResetModifiers["MiddleButton"] then
+        returnVal = returnVal .. "[button:3] " .. macroname .. " MiddleButton " .. t .. "; "
+    end
+    if GSEOptions.MacroResetModifiers["Button4"] then
+        returnVal = returnVal .. "[button:4] " .. macroname .. " Button4 " .. t .. "; "
+    end
+    if GSEOptions.MacroResetModifiers["Button5"] then
+        returnVal = returnVal .. "[button:5] " .. macroname .. " Button5 " .. t .. "; "
+    end
+    if GSEOptions.virtualButtonSupport then
+        returnVal = returnVal .. "[nobutton:1] " .. macroname .. "; "
+    end
+
+    returnVal = returnVal .. macroname
+    return returnVal
 end
 
 function GSE.UpdateMacroString()

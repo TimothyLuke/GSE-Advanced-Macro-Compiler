@@ -894,6 +894,18 @@ function GSE.GetOptionsTable()
                         name = L["Update Macro Stubs."],
                         order = 520
                     },
+                    virtualButtonSupport = {
+                        name = L["Virtual Button Support"],
+                        desc = L["This is needed for ConsolePort and BindPad."],
+                        type = "toggle",
+                        get = function()
+                            return GSEOptions.virtualButtonSupport
+                        end,
+                        set = function(key, value)
+                            GSEOptions.virtualButtonSupport = value
+                        end,
+                        order = 521
+                    },
                     updatemacrobuttonstubs = {
                         name = L["Update Macro Stubs"],
                         desc = L[
@@ -903,12 +915,12 @@ function GSE.GetOptionsTable()
                         func = function(info, val)
                             GSE.UpdateMacroString()
                         end,
-                        order = 521
+                        order = 522
                     },
                     spellCachetitle = {
                         type = "header",
                         name = L["Spell Cache Editor"],
-                        order = 522
+                        order = 530
                     },
                     clearSpellCache = {
                         name = L["Clear Spell Cache"],
@@ -923,7 +935,7 @@ function GSE.GetOptionsTable()
                                 GSESpellCache[GetLocale()] = {}
                             end
                         end,
-                        order = 523
+                        order = 531
                     },
                     editSpellCache = {
                         name = L["Edit Spell Cache"],
@@ -942,7 +954,7 @@ function GSE.GetOptionsTable()
                                 )
                             end
                         end,
-                        order = 524
+                        order = 532
                     },
                     cvarsettingstitle = {
                         type = "header",
