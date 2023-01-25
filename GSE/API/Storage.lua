@@ -1,4 +1,3 @@
----@diagnostic disable: duplicate-set-field
 local GSE = GSE
 local Statics = GSE.Static
 
