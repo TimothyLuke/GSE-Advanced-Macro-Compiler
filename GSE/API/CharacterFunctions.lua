@@ -127,7 +127,7 @@ function GSE.GetCurrentTalents()
                 talents = "Wrath CLASSIC"
             end
         end
-    elseif GSE.GameMode == 10 then
+    elseif GSE.GameMode >= 10 then
         -- force load the addon
         local loaded, _ = LoadAddOn("Blizzard_ClassTalentUI")
 
@@ -135,11 +135,9 @@ function GSE.GetCurrentTalents()
             talents = ""
         else
             local t = ClassTalentFrame.TalentsTab
-            if GSE.GetCurrentClassID() < 13 or (GSE.GetCurrentClassID() == 13 and UnitLevel("player") > 59) then
+            if t.isAnythingPending ~= nil then
                 t:UpdateTreeInfo()
                 talents = t:GetLoadoutExportString()
-            else
-                talents = ""
             end
         end
     else
