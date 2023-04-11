@@ -40,6 +40,7 @@ externals:
   GSE/Lib/LibQTip-1.0: git://git.wowace.com/wow/libqtip-1-0
   GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
   GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+  GSE/Lib/LibDBCompartment: https://github.com/Meorawr/LibDBCompartment.git
 
 move-folders:
   GSE/GSE: GSE

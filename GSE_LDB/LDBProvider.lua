@@ -22,6 +22,8 @@ local LibSharedMedia = LibStub("LibSharedMedia-3.0")
 local icon = LibStub("LibDBIcon-1.0")
 icon:Register(L["GSE"] .. " " .. L["GnomeSequencer-Enhanced"], dataobj, GSEOptions.showMiniMap)
 
+local LibDBCompartment = LibStub:GetLibrary("LibDBCompartment-1.0")
+LibDBCompartment:Register(L["GSE"], dataobj)
 local baseFont = CreateFont("baseFont")
 
 -- Check for ElvUI
