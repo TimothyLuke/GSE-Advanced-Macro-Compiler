@@ -57,3 +57,5 @@ function GSE.FormatSequenceNames(names)
     returnstring = returnstring:sub(1, -3)
     return returnstring
 end
+
+GSE.DebugProfile("Plugins")

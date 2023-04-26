@@ -1,6 +1,6 @@
 local GSE = GSE
 local Statics = GSE.Static
-
+GSE.DebugProfile("End Patrons")
 -- These are overridden when the saved variables are loaded in
 GSEOptions = {}
 
@@ -75,6 +75,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.DebugModules[Statics.DebugModules["API"]] = false
     GSEOptions.DebugModules[Statics.DebugModules["GUI"]] = false
     GSEOptions.DebugModules[Statics.DebugModules["Versions"]] = false
+    GSEOptions.DebugModules[Statics.DebugModules["Startup"]] = false
 
     GSEOptions.filterList = {}
     GSEOptions.filterList[Statics.Spec] = true
@@ -116,6 +117,14 @@ GSE.AdditionalLanguagesAvailable = false
 
 local Translator = GSE.TranslatorLanguageTables
 
+GSE.DebugProfile = function(event)
+    local currentTimeStop = debugprofilestop()
+    if GSE.ProfileStop and (GSEOptions.DebugModules[Statics.DebugModules["Startup"]] or GSE.Developer) then
+        print(event, currentTimeStop - GSE.ProfileStop)
+    end
+    GSE.ProfileStop = currentTimeStop
+end
+
 Translator[Statics.TranslationKey] = {}
 Translator[Statics.TranslationHash] = {}
 Translator[Statics.TranslationShadow] = {}
@@ -126,3 +135,5 @@ GSE.UsedSequences = {}
 GSE.SequencesExec = {}
 GSE.UnsavedOptions["PartyUsers"] = {}
 GSE.UnsavedOptions["GUI"] = false
+
+GSE.DebugProfile("InitialOptions")

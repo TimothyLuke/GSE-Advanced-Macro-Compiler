@@ -317,6 +317,7 @@ Statics.DebugModules["Versions"] = "Versions"
 Statics.DebugModules[Statics.SourceTransmission] = Statics.SourceTransmission
 Statics.DebugModules["API"] = "API"
 Statics.DebugModules["GUI"] = "GUI"
+Statics.DebugModules["Startup"] = "Startup"
 
 Statics.TranslationKey = "KEY"
 Statics.TranslationHash = "HASH"
@@ -487,3 +488,5 @@ Statics.TableMetadataFunction = {
         rawset(t, last_k, v)
     end
 }
+
+GSE.DebugProfile("Statics")

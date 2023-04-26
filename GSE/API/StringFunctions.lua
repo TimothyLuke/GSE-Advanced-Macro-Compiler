@@ -391,3 +391,5 @@ function GSE.SafeConcat(tab, delimiter)
     end
     return output
 end
+
+GSE.DebugProfile("StringFunctions")

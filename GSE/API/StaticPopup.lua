@@ -1,5 +1,6 @@
 local GSE = GSE
 local L = GSE.L
+local Statics = GSE.Static
 
 GSE.GUIEditFrame = {}
 
@@ -8,7 +9,7 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
     button1 = L["Yes"],
     button2 = L["No"],
     OnAccept = function()
-        ReloadUI();
+        ReloadUI()
     end,
     timeout = 0,
     whileDead = true,
@@ -33,15 +34,17 @@ StaticPopupDialogs["GS-DebugOutput"] = {
     hasEditBox = true
 }
 
-StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
-    text = L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."],
+StaticPopupDialogs["GSE_UPDATE_AVAILABLE"] = {
+    text = L[
+        "GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."
+    ],
     hasEditBox = 1,
     OnShow = function(self)
         self.editBox:SetAutoFocus(false)
         self.editBox:SetWidth(220)
         self.editBox:SetText("https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros")
         self.editBox:HighlightText()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
         self.editBox:SetWidth(self.editBox.width or 50)
@@ -49,12 +52,12 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
     hideOnEscape = 1,
     button1 = OKAY,
     EditBoxOnEnterPressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnTextChanged = function(self)
         if (self:GetText() ~= "https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros") then
@@ -62,7 +65,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
         end
         self:HighlightText()
         self:ClearFocus()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnEditFocusGained = function(self)
         self:HighlightText()
@@ -70,7 +73,7 @@ StaticPopupDialogs['GSE_UPDATE_AVAILABLE'] = {
     showAlert = 1
 }
 
-StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
+StaticPopupDialogs["GSE_SEQUENCEHELP"] = {
     text = L["Copy this link and open it in a Browser."],
     hasEditBox = 1,
     url = "https://wowlazymacros.com",
@@ -78,9 +81,9 @@ StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
         self.editBox:SetAutoFocus(false)
         self.editBox.width = self.editBox:GetWidth()
         self.editBox:SetWidth(220)
-        self.editBox:SetText(StaticPopupDialogs['GSE_SEQUENCEHELP'].url)
+        self.editBox:SetText(StaticPopupDialogs["GSE_SEQUENCEHELP"].url)
         self.editBox:HighlightText()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
         self.editBox:SetWidth(self.editBox.width or 50)
@@ -89,20 +92,20 @@ StaticPopupDialogs['GSE_SEQUENCEHELP'] = {
     hideOnEscape = 1,
     button1 = OKAY,
     EditBoxOnEnterPressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnTextChanged = function(self)
-        if (self:GetText() ~= StaticPopupDialogs['GSE_SEQUENCEHELP'].url) then
-            self:SetText(StaticPopupDialogs['GSE_SEQUENCEHELP'].url)
+        if (self:GetText() ~= StaticPopupDialogs["GSE_SEQUENCEHELP"].url) then
+            self:SetText(StaticPopupDialogs["GSE_SEQUENCEHELP"].url)
         end
         self:HighlightText()
         self:ClearFocus()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnEditFocusGained = function(self)
         self:HighlightText()
@@ -162,7 +165,7 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
     exclusive = true
 }
 
-StaticPopupDialogs['GSE_ChatLink'] = {
+StaticPopupDialogs["GSE_ChatLink"] = {
     text = L["Copy this link and paste it into a chat window."],
     hasEditBox = 1,
     link = "",
@@ -170,9 +173,9 @@ StaticPopupDialogs['GSE_ChatLink'] = {
         self.editBox:SetAutoFocus(false)
         self.editBox.width = self.editBox:GetWidth()
         self.editBox:SetWidth(220)
-        self.editBox:SetText(StaticPopupDialogs['GSE_ChatLink'].link)
+        self.editBox:SetText(StaticPopupDialogs["GSE_ChatLink"].link)
         self.editBox:HighlightText()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
         self.editBox:SetWidth(self.editBox.width or 50)
@@ -181,23 +184,25 @@ StaticPopupDialogs['GSE_ChatLink'] = {
     hideOnEscape = 1,
     button1 = OKAY,
     EditBoxOnEnterPressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self)
-        ChatEdit_FocusActiveWindow();
-        self:GetParent():Hide();
+        ChatEdit_FocusActiveWindow()
+        self:GetParent():Hide()
     end,
     EditBoxOnTextChanged = function(self)
-        if (self:GetText() ~= StaticPopupDialogs['GSE_ChatLink'].link) then
-            self:SetText(StaticPopupDialogs['GSE_ChatLink'].link)
+        if (self:GetText() ~= StaticPopupDialogs["GSE_ChatLink"].link) then
+            self:SetText(StaticPopupDialogs["GSE_ChatLink"].link)
         end
         self:HighlightText()
         self:ClearFocus()
-        ChatEdit_FocusActiveWindow();
+        ChatEdit_FocusActiveWindow()
     end,
     OnEditFocusGained = function(self)
         self:HighlightText()
     end,
     showAlert = 1
 }
+
+GSE.DebugProfile("Static Popup")

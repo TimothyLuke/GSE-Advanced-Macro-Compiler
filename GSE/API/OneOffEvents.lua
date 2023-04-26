@@ -7,6 +7,7 @@ function GSE.PerformOneOffEvents()
     GSE.Update3023()
     GSE.Update3111()
     GSE.Update3117()
+    GSE.Update3131()
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
     end
@@ -53,3 +54,12 @@ function GSE.Update3117()
     end
     GSE_C.Update3117 = true
 end
+
+function GSE.Update3131()
+    if GSE.isEmpty(GSE.Update3131) then
+        GSEOptions.DebugModules[Statics.DebugModules["Startup"]] = false
+    end
+    GSEOptions.Update3131 = true
+end
+
+GSE.DebugProfile("OneOffEvents")

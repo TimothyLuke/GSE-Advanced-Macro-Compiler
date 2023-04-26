@@ -1547,7 +1547,7 @@ function GSE.GetOptionsTable()
     end
 
     ord = 30
-    for k, _ in pairs(GSEOptions.DebugModules) do
+    for k, _ in pairs(Statics.DebugModules) do
         ord = ord + 1
         OptionsTable.args.debugTab.args[k] = {
             name = k,
@@ -1583,3 +1583,5 @@ function GSE.ReportTargetProtection()
     end
     return string.format(L["Target protection is currently %s"], disabledstr)
 end
+
+GSE.DebugProfile("Options")

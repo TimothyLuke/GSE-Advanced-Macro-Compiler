@@ -436,7 +436,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
                 if not GSE.isEmpty(GSE3Storage[tonumber(t.ClassID)][t.SequenceName]) then
-                    GSE.SendSequence(tonumber(t.ClassID),t.SequenceName, sender, "WHISPER")
+                    GSE.SendSequence(tonumber(t.ClassID), t.SequenceName, sender, "WHISPER")
                 end
             else
                 GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
@@ -501,7 +501,6 @@ function GSE.CreateSequenceLink(sequenceName, classID, playerName)
     local link = "|cFFFFFF00|Hgarrmission:GSE:" .. command .. "|h[" .. message .. "]|h|r"
     return link
 end
-
 
 -- This filter function courtesy of WeakAuras -- https://github.com/WeakAuras/WeakAuras2/blob/main/WeakAuras/Transmission.lua#L147
 local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
@@ -573,7 +572,9 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filterFunc)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
 
 -- process chatlinks
-hooksecurefunc("SetItemRef", function(link)
+hooksecurefunc(
+    "SetItemRef",
+    function(link)
         local linkType, addon, param1 = strsplit(":", link)
         if linkType == "garrmission" and addon == "GSE" then
             if param1 == "foo" then
@@ -594,3 +595,4 @@ hooksecurefunc("SetItemRef", function(link)
 )
 
 GSE:RegisterComm("GSE")
+GSE.DebugProfile("Serialisation")

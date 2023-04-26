@@ -693,3 +693,5 @@ function GSE.CheckGUI()
     end
     return loaded
 end
+
+GSE.DebugProfile("Events")

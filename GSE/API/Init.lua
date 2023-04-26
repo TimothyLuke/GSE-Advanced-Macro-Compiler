@@ -16,9 +16,13 @@ GSE.VersionString = GetAddOnMetadata("GSE", "Version")
 --@debug@
 if GSE.VersionString:find("version") then
     GSE.VersionString = "3.1.01-development"
+    GSE.Developer = true
 end
 --@end-debug@
 
+if GSE.VersionString:find("Patron") then
+    GSE.Patron = true
+end
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 GSE.Pause = {}
 GSE.OutputQueue = {}
@@ -124,18 +128,38 @@ function GSE.PrintDebugMessage(message, module)
     if GSE.isEmpty(module) then
         module = "GS-Core"
     end
+    local DebugModules, Debug, CommandColour, AuthorColour = {}, true, "|cFF00FF00", "|cFF00D1FF"
+    if GSE.isEmpty(GSEOptions) then
+        DebugModules[module] = false
+    else
+        DebugModules[module] = GSEOptions.DebugModules[module]
+        if GSEOptions.debug then
+            Debug = GSEOptions.debug
+        end
+        if GSEOptions.AuthorColour then
+            AuthorColour = GSEOptions.AuthorColour
+            CommandColour = GSEOptions.CommandColour
+        end
+    end
     if module == Statics.SequenceDebug then
         determinationOutputDestination(
             message,
-            GSEOptions.CommandColour .. GNOME .. ":|r " .. GSEOptions.AuthorColour .. L["<SEQUENCEDEBUG> |r "]
+            CommandColour .. GNOME .. ":|r " .. AuthorColour .. L["<SEQUENCEDEBUG> |r "]
         )
-    elseif GSEOptions.debug and module ~= Statics.SequenceDebug and GSEOptions.DebugModules[module] == true then
+    elseif Debug and module ~= Statics.SequenceDebug and DebugModules[module] == true then
         determinationOutputDestination(
-            GSEOptions.CommandColour ..
-                (GSE.isEmpty(module) and GNOME or module) ..
-                    ":|r " .. GSEOptions.AuthorColour .. L["<DEBUG> |r "] .. message
+            CommandColour ..
+                (GSE.isEmpty(module) and GNOME or module) .. ":|r " .. AuthorColour .. L["<DEBUG> |r "] .. message
         )
     end
+end
+
+function GSE.DebugProfile(event)
+    local currentTimeStop = debugprofilestop()
+    if GSE.ProfileStop and GSE.Developer then
+        print(event, currentTimeStop - GSE.ProfileStop)
+    end
+    GSE.ProfileStop = currentTimeStop
 end
 
 GSE.CurrentGCD = 1.5
@@ -148,3 +172,6 @@ GSE.inMythic = false
 GSE.inDungeon = false
 GSE.inHeroic = false
 GSE.inParty = false
+
+-- initialise debugprofilestart
+GSE.DebugProfile("init")

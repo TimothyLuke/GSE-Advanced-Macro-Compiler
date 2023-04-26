@@ -481,3 +481,5 @@ function GSE.IdentifySpells(tab)
 end
 
 GSE.TranslatorAvailable = true
+
+GSE.DebugProfile("Translator")

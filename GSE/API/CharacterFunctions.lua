@@ -289,3 +289,5 @@ function GSE.setActionButtonUseKeyDown()
     end
     GSE.ReloadSequences()
 end
+
+GSE.DebugProfile("CharacterFuntions")

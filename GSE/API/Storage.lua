@@ -1471,3 +1471,5 @@ function GSE.ExportSequence(sequence, sequenceName, verbose)
 
     return returnVal
 end
+
+GSE.DebugProfile("Storage")
