@@ -63,6 +63,7 @@ globals = {
     "tostringall",
     "tremove",
     -- WoW
+    "debugprofilestop",
     "ALL",
     "ALWAYS",
     "BNET_CLIENT_WOW",
