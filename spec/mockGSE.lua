@@ -212,6 +212,14 @@ function FindBaseSpellByID(stuff)
   return stuff
 end
 
+function debugprofilestop()
+  return os.clock()
+end
+
 function GSE.DebugProfile(event)
-  return event
+  local currentTimeStop = debugprofilestop()
+  if GSE.ProfileStop and GSE.Developer then
+    print(event, currentTimeStop - GSE.ProfileStop)
+  end
+  GSE.ProfileStop = currentTimeStop
 end
