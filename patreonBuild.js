@@ -99,14 +99,19 @@ function publishArchive(done) {
     .setTimestamp();
 
   hook.send(embed);
-  console.log(hook.payload);
   hook.sendFile(`GSE-${BuildNumber}.zip`);
   return done();
 }
 
 function deleteExistingZips(done) {
-  var filepath = ".release/*.zip";
-  return fs.unlink(filepath, done);
+  fs.readdir(".release", (err, files) => {
+    for (const file of files) {
+      console.log(file);
+      if (file.endsWith("zip")) {
+        return fs.unlink(`.release/${file}`, done);
+      }
+    }
+  });
 }
 
 async.waterfall(
