@@ -7,6 +7,7 @@
     "request": "^2.88.2"
   },
   "scripts": {
-    "run": "node patreonUpdate.js"
+    "run": "node patreonUpdate.js",
+    "pat": "node patreonBuild.js"
   }
 }
