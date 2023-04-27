@@ -104,6 +104,11 @@ function publishArchive(done) {
   return done();
 }
 
+function deleteExistingZips(done) {
+  var filepath = ".release/*.zip";
+  return fs.unlink(filepath, done);
+}
+
 async.waterfall(
   [
     async.apply(updateToc, "GSE", "GSE"),
@@ -118,6 +123,7 @@ async.waterfall(
     async.apply(updateToc, "GSE_LDB", "GSE_LDB_TBC"),
     async.apply(updateToc, "GSE_LDB", "GSE_LDB_Vanilla"),
     async.apply(updateToc, "GSE_LDB", "GSE_LDB_Wrath"),
+    deleteExistingZips,
     createArchive,
     publishArchive,
   ],
