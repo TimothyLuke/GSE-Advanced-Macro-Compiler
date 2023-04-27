@@ -2,7 +2,7 @@
 GSE = {}
 GSE.L = {}
 GSE.Static = {}
-GSE.VersionString = "2.0.00-18-g95ecb41";
+GSE.VersionString = "2.0.00-18-g95ecb41"
 
 GNOME = "UnitTest"
 
@@ -68,7 +68,7 @@ function date(dateval)
 end
 
 function GetSpellInfo(spellstring)
-  print( "GetSpellInfo -- " .. spellstring)
+  print("GetSpellInfo -- " .. spellstring)
   local name, rank, icon, castTime, minRange, maxRange, spellId
   if type(spellstring) == "string" then
     name = spellstring
@@ -77,17 +77,16 @@ function GetSpellInfo(spellstring)
     name = "Eye of Tyr"
     spellId = spellstring
   end
-  print( "GetSpellInfo " .. name .. spellId)
+  print("GetSpellInfo " .. name .. spellId)
   return name, rank, icon, castTime, minRange, maxRange, spellId
 end
-
 
 function GSE.PrintDebugMessage(message, title)
   GSE.Print(message, title)
 end
 
 function GSE.isEmpty(s)
-  return s == nil or s == ''
+  return s == nil or s == ""
 end
 
 -- Mock Standard Functions
@@ -95,14 +94,20 @@ function GSE.Print(message, title)
   if GSE.isEmpty(title) then
     title = "GSETEST"
   end
-  print (title .. ": " .. message)
+  print(title .. ": " .. message)
 end
 
 --- Split a string into an array based on the delimiter specified.
 function GSE.split(source, delimiters)
   local elements = {}
-  local pattern = '([^'..delimiters..']+)'
-  string.gsub(source, pattern, function(value) elements[#elements + 1] =     value;  end);
+  local pattern = "([^" .. delimiters .. "]+)"
+  string.gsub(
+    source,
+    pattern,
+    function(value)
+      elements[#elements + 1] = value
+    end
+  )
   return elements
 end
 
@@ -115,7 +120,7 @@ function GSE.ParseVersion(version)
     returnVal = version
   else
     if table.getn(numbers) > 1 then
-      returnVal = (tonumber(numbers[1]) * 1000) + (tonumber(numbers[2]) * 100) + (tonumber(numbers[3]) )
+      returnVal = (tonumber(numbers[1]) * 1000) + (tonumber(numbers[2]) * 100) + (tonumber(numbers[3]))
     else
       returnVal = tonumber(version)
     end
@@ -134,14 +139,18 @@ function strmatch(string, pattern, initpos)
 end
 
 function newLocale(application, locale, isDefault, silent)
-  local writedefaultproxy = setmetatable({}, {
-    __newindex = function(self, key, value)
-      if not rawget(registering, key) then
-        rawset(registering, key, value == true and key or value)
-      end
-    end,
-    __index = assertfalse
-  })
+  local writedefaultproxy =
+    setmetatable(
+    {},
+    {
+      __newindex = function(self, key, value)
+        if not rawget(registering, key) then
+          rawset(registering, key, value == true and key or value)
+        end
+      end,
+      __index = assertfalse
+    }
+  )
   if isDefault then
     return writedefaultproxy
   end
@@ -201,4 +210,8 @@ end
 
 function FindBaseSpellByID(stuff)
   return stuff
+end
+
+function GSE.DebugProfile(event)
+  return event
 end
