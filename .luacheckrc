@@ -29,6 +29,7 @@ globals = {
     "GSESpellCache",
     -- GSE
     "GSE",
+    "GSE2",
     "GSEGUI",
     "GNOME",
     -- Libraries
@@ -63,6 +64,7 @@ globals = {
     "tostringall",
     "tremove",
     -- WoW
+    "C_AddOns",
     "debugprofilestop",
     "ALL",
     "ALWAYS",
