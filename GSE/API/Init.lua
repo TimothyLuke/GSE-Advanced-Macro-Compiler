@@ -11,6 +11,7 @@ GSE =
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 
+local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 GSE.VersionString = GetAddOnMetadata("GSE", "Version")
 
 --@debug@

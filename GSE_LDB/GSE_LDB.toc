@@ -2,7 +2,7 @@
 
 ## Interface-Classic: 11403
 ## Interface-BCC: 20504
-## Interface-Wrath: 30401
+## Interface-Wrath: 30402
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE
