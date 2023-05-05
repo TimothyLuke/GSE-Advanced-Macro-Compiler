@@ -63,10 +63,12 @@ ignore:
   - tmp
   - App
   - patreonUpdate.js
+  - patreonBuild.js
   - pages
   - package.*
-  - paclage-lock.*
+  - package-lock.*
   - GSE/patreonUpdate.js
+  - GSE/patreonBuild.js
   - GSE/pages
   - GSE/package.*
   - GSE/package-lock.*
