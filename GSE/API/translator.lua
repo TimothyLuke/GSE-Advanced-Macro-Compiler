@@ -130,9 +130,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                                 output = output .. GSEOptions.STANDARDFUNCS .. mods .. Statics.StringReset .. " "
                             end
 
-                            -- if not cleanNewLines then
-                            --     w = string.match(uetc, "^%s*(.-)%s*$")
-                            -- end
+                            uetc = uetc:gsub("^%s*", "")
                             if string.sub(uetc, 1, 1) == "!" then
                                 uetc = string.sub(uetc, 2)
                                 output = output .. "!"
