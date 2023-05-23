@@ -643,9 +643,12 @@ function GSE.DeleteMacroStub(sequenceName)
 end
 
 --- This returns a list of Sequence Names for the current spec
-function GSE.GetSequenceNames()
+function GSE.GetSequenceNames(Library)
+    if not Library then
+        Library = GSE.Library
+    end
     local keyset = {}
-    for k, _ in pairs(GSE.Library) do
+    for k, _ in pairs(Library) do
         if GSE.isEmpty(GSEOptions.filterList) then
             GSEOptions.filterList = {}
             GSEOptions.filterList[Statics.Spec] = true
@@ -654,7 +657,7 @@ function GSE.GetSequenceNames()
             GSEOptions.filterList[Statics.Global] = true
         end
         if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID() then
-            for i, j in pairs(GSE.Library[k]) do
+            for i, j in pairs(Library[k]) do
                 local disable = 0
                 if j.DisableEditor then
                     disable = 1
@@ -672,7 +675,7 @@ function GSE.GetSequenceNames()
             end
         else
             if k == 0 and GSEOptions.filterList[Statics.Global] then
-                for i, j in pairs(GSE.Library[k]) do
+                for i, j in pairs(Library[k]) do
                     local disable = 0
                     if j.DisableEditor then
                         disable = 1

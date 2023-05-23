@@ -10,6 +10,7 @@
 ## Version: @project-version@
 ## Dependencies: GSE
 ## LoadOnDemand: 1
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 Ace3_Extensions\AceGUI-3.0-Selectable-Panel.lua
 Ace3_Extensions\AceGUIContainer-KeyGroup.lua
