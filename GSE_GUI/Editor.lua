@@ -1053,7 +1053,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 -- save the fixed variable
                 editframe.Sequence.Macros[version].Variables[k] = v
             end
-            local value = table.concat(v, " ")
+            local value = GSE.SafeConcat(v, " ")
             if type(value) == "string" then
                 local functline = value
                 if string.sub(functline, 1, 10) == "function()" then
@@ -1761,7 +1761,7 @@ local function addKeyPairRow(container, rowWidth, key, value, version)
         "OnEditFocusLost",
         function()
             valueEditBox:SetText(
-                table.concat(
+                GSE.SafeConcat(
                     GSE.TranslateSequence(
                         editframe.Sequence.Macros[version].Variables[currentKey],
                         Statics.TranslatorMode.Current
@@ -2307,7 +2307,7 @@ local function GetBlockToolbar(
     spacerlabel5:SetWidth(15)
     layoutcontainer:AddChild(spacerlabel5)
 
-    local textpath = table.concat(path, ".")
+    local textpath = GSE.SafeConcat(path, ".")
     local patheditbox = AceGUI:Create("EditBox")
     if GSE.isEmpty(disableMove) then
         patheditbox:SetLabel(L["Block Path"])
@@ -2612,7 +2612,7 @@ local function drawAction(container, action, version, keyPath)
         valueEditBox:SetNumLines(numlines)
         valueEditBox:SetWidth(maxWidth)
         valueEditBox:DisableButton(true)
-        valueEditBox:SetText(table.concat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
+        valueEditBox:SetText(GSE.SafeConcat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
         --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
         valueEditBox:SetCallback(
             "OnTextChanged",
@@ -3020,7 +3020,7 @@ function GSE:GUIDrawVariableEditor(container, version)
                 contentcontainer,
                 columnWidth,
                 key,
-                table.concat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"),
+                GSE.SafeConcat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"),
                 version
             )
         end
