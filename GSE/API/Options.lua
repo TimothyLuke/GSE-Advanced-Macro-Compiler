@@ -154,24 +154,6 @@ function GSE.GetOptionsTable()
                         end,
                         order = 304
                     },
-                    defaultOOCTimerDelay = {
-                        name = L["OOC Queue Delay"],
-                        desc = L[
-                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates macros.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
-                        ],
-                        type = "input",
-                        set = function(info, val)
-                            val = tonumber(val)
-                            if val < 1 then
-                                val = 7
-                            end
-                            GSEOptions.OOCQueueDelay = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.OOCQueueDelay and GSEOptions.OOCQueueDelay or 7
-                        end,
-                        order = 385
-                    },
                     useQuestionMark = {
                         name = L["Set Default Icon QuestionMark"],
                         desc = L[
@@ -243,24 +225,30 @@ function GSE.GetOptionsTable()
                         desc = L["The milliseconds being used in key click delay."],
                         type = "input",
                         set = function(info, val)
-                            GSEOptions.msClickRate = val
+                            GSEOptions.msClickRate = tonumber(val)
                         end,
                         get = function(info)
-                            return GSEOptions.msClickRate and GSEOptions.msClickRate or ""
+                            return GSEOptions.msClickRate and tostring(GSEOptions.msClickRate) or "250"
                         end,
                         order = 385
                     },
-                    useExternalMSTimings = {
-                        name = L["Use External MS Timings"],
-                        desc = L["Enable timing functions by using Click refresh speed as a pseudo timer."],
-                        type = "toggle",
+                    defaultOOCTimerDelay = {
+                        name = L["OOC Queue Delay"],
+                        desc = L[
+                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates macros.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
+                        ],
+                        type = "input",
                         set = function(info, val)
-                            GSEOptions.useExternalMSTimings = val
+                            val = tonumber(val)
+                            if val < 1 then
+                                val = 7
+                            end
+                            GSEOptions.OOCQueueDelay = val
                         end,
                         get = function(info)
-                            return GSEOptions.useExternalMSTimings and GSEOptions.useExternalMSTimings or false
+                            return GSEOptions.OOCQueueDelay and tostring(GSEOptions.OOCQueueDelay) or "7"
                         end,
-                        order = 390
+                        order = 386
                     },
                     filtertitle1 = {
                         type = "header",
