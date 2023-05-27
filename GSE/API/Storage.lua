@@ -512,9 +512,10 @@ function GSE.OOCUpdateSequence(name, sequence)
     if GSE.isEmpty(sequence.InbuiltVariables) then
         sequence.InbuiltVariables = {["Combat"] = false}
     end
-    if (sequence.InbuiltVariables.Combat or GSE.GetResetOOC()) or sequence.InbuiltVariables.Combat then
+    if sequence.InbuiltVariables.Combat or GSE.GetResetOOC() then
         combatReset = true
     end
+
     local compiledTemplate = GSE.CompileTemplate(sequence)
     local actionCount = table.getn(compiledTemplate)
     if actionCount > 255 then
@@ -1427,12 +1428,6 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         gsebutton:RegisterForClicks("AnyUp", "AnyDown")
         gsebutton:SetAttribute("combatreset", combatReset)
 
-        if GSEOptions.useExternalMSTimings then
-            gsebutton:SetAttribute("ms", GSE.GetClickRate())
-        else
-            gsebutton:SetAttribute("ms", 250)
-        end
-
         local stepfunction =
             (GSEOptions.DebugPrintModConditionsOnKeyPress and Statics.PrintKeyModifiers or "") ..
             GSE.GetMacroResetImplementation() .. Statics.GSE3OnClick
@@ -1442,7 +1437,9 @@ local function PCallCreateGSE3Button(macro, name, combatReset)
         "name, macros = self:GetName(), newtable([=======[" ..
             strjoin("]=======],[=======[", unpack(macro)) .. "]=======])"
     )
-    _G[name]:SetAttribute("step", 1)
+    if combatReset then
+        _G[name]:SetAttribute("step", 1)
+    end
     GSE.UpdateIcon(_G[name], true)
 end
 
