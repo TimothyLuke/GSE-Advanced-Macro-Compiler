@@ -364,6 +364,15 @@ function GSE:TRAIT_TREE_CHANGED()
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_TREE_CHANGED")
 end
+
+function GSE:PLAYER_TARGET_CHANGED()
+    GSE:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    if GSE.isEmpty(GSE.UnsavedOptions.ReloadQueued) and not InCombatLockdown() then
+        GSE.ReloadSequences()
+    end
+    GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
+end
+
 function GSE:TRAIT_CONFIG_UPDATED()
     GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
     GSE.ReloadSequences()
@@ -414,6 +423,7 @@ GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
 GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
+GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 
 if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
@@ -559,6 +569,12 @@ function GSE:GSSlash(input)
         GSE.ReloadSequences()
     elseif string.lower(command) == "clearoocqueue" then
         GSE.OOCQueue = {}
+    elseif string.lower(command) == "retro" then
+        local loaded, _ = LoadAddOn("GSE2")
+        if loaded then
+            local GSE2 = GSE2
+            GSE2.GUIShowViewer()
+        end
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then

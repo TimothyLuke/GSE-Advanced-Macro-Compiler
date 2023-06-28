@@ -1,4 +1,4 @@
----@diagnostic disable: undefined-global, lowercase-global
+---@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
 GSE = {}
 GSE.L = {}
 GSE.Static = {}
