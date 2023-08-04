@@ -393,3 +393,7 @@ function GSE.SafeConcat(tab, delimiter)
 end
 
 GSE.DebugProfile("StringFunctions")
+
+function GSE.NewTable()
+    return {}
+end
