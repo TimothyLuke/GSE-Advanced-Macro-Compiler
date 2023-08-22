@@ -1,6 +1,6 @@
 ## Interface: 100105
 
-## Interface-Classic: 11403
+## Interface-Classic: 11404
 ## Interface-BCC: 20504
 ## Interface-Wrath: 30402
 
