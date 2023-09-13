@@ -1,0 +1,19 @@
+## Interface: 100107
+
+## Interface-Classic: 11404
+## Interface-BCC: 20504
+## Interface-Wrath: 30402
+
+## Title: |cff0000ffGSE:|r |cFF00D1FFGSE2 Retro GUI|r
+## Notes: GSE2
+## Author: TimothyLuke
+## Version: @project-version@
+## Dependencies: GSE GSE_GUI
+## LoadOnDemand: 1
+
+
+Init.lua
+Editor.lua
+Import.lua
+GUIFunctions.lua
+Started.lua

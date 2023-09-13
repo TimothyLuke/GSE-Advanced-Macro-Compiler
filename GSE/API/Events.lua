@@ -572,8 +572,18 @@ function GSE:GSSlash(input)
     elseif string.lower(command) == "retro" then
         local loaded, _ = LoadAddOn("GSE2")
         if loaded then
-            local GSE2 = GSE2
-            GSE2.GUIShowViewer()
+            GSE.Print(
+                string.format(
+                    L[
+                        "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
+                    ],
+                    GSEOptions.CommandColour,
+                    Statics.StringReset,
+                    GSEOptions.CommandColour,
+                    Statics.StringReset
+                ),
+                "GSE2"
+            )
         end
     else
         GSE.CheckGUI()

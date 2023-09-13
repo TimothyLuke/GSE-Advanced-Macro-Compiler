@@ -3,6 +3,7 @@ let async = require("async");
 const fs = require("fs");
 var BuildVersion = false;
 var BuildNumber = "";
+const fse = require("fs-extra");
 
 function lines(text) {
   return text.split("\n");
@@ -44,6 +45,20 @@ function updateToc(path, filename, done) {
       }
     );
   });
+}
+
+function addExtras(done) {
+  const srcDir = `GSE2`;
+  const destDir = `.release/GSE2`;
+
+  try {
+    fse.copySync(srcDir, destDir, true);
+    console.log("Added in GSE2 - success!");
+    return done();
+  } catch (err) {
+    console.error(err);
+    return done(err);
+  }
 }
 
 function createArchive(done) {
@@ -129,6 +144,7 @@ async.waterfall(
     async.apply(updateToc, "GSE_LDB", "GSE_LDB_Vanilla"),
     async.apply(updateToc, "GSE_LDB", "GSE_LDB_Wrath"),
     deleteExistingZips,
+    addExtras,
     createArchive,
     publishArchive,
   ],

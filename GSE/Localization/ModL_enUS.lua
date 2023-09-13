@@ -905,3 +905,13 @@ L["Spell Name"] = true
 --1272
 L["Virtual Button Support"] = true
 L["This is needed for ConsolePort and BindPad."] = true
+
+--1315
+L["Convert"] = true
+L["Convert this to a GSE3 Template"] = true
+L[
+        "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
+    ] = true
+L["GSE2 Retro:"] = true
+L["GSE2 Retro: Import old GSE2 macro."] = true
+L["GSE2 importer available.  Enter /gse2 to import an old string."] = true
