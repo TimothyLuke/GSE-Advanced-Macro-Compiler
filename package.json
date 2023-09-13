@@ -3,6 +3,7 @@
     "archiver": "^5.3.1",
     "async": "^3.2.4",
     "discord-webhook-node": "^1.1.8",
+    "fs-extra": "^11.1.1",
     "lodash": "^4.17.21",
     "request": "^2.88.2"
   },
