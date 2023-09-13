@@ -50,7 +50,7 @@ function addExtras(done) {
   const srcDir = `./GSE2`;
   const destDir = `./.release/GSE2`;
 
-  fs.cp(srcDir, destDir, { recursive: true }, done);
+  return fs.cp(srcDir, destDir, { recursive: true }, done);
 }
 
 function createArchive(done) {
