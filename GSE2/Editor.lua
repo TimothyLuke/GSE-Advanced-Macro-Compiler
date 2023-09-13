@@ -296,7 +296,6 @@ function GSE2:GUIDrawMetadataEditor(container)
         "OnValueChanged",
         function(obj, event, key)
             local sid = Statics.SpecIDHashList[key]
-            specdropdownvalue = key
             editframe.SpecID = sid
             editframe.Sequence.SpecID = sid
 
