@@ -3,7 +3,6 @@ let async = require("async");
 const fs = require("fs");
 var BuildVersion = false;
 var BuildNumber = "";
-const fse = require("fs-extra");
 
 function lines(text) {
   return text.split("\n");
@@ -51,14 +50,7 @@ function addExtras(done) {
   const srcDir = `./GSE2`;
   const destDir = `./.release/GSE2`;
 
-  try {
-    fse.copySync(srcDir, destDir, true);
-    console.log("Added in GSE2 - success!");
-    return done();
-  } catch (err) {
-    console.error(err);
-    return done(err);
-  }
+  fs.cpSync(srcDir, destDir, true, done);
 }
 
 function createArchive(done) {
