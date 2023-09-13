@@ -48,8 +48,8 @@ function updateToc(path, filename, done) {
 }
 
 function addExtras(done) {
-  const srcDir = `GSE2`;
-  const destDir = `.release/GSE2`;
+  const srcDir = `./GSE2`;
+  const destDir = `./.release/GSE2`;
 
   try {
     fse.copySync(srcDir, destDir, true);
