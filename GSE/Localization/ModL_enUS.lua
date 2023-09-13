@@ -914,4 +914,4 @@ L[
     ] = true
 L["GSE2 Retro:"] = true
 L["GSE2 Retro: Import old GSE2 macro."] = true
-L["GSE2 importer available.  Enter /gse2 to import an old string."] = true
+L["GSE2 Retro Importer available."] = true

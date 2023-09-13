@@ -1,5 +1,6 @@
 GSE2 = LibStub("AceAddon-3.0"):NewAddon("GSE2", "AceConsole-3.0")
 local GSE = GSE
+local L = GSE.L
 local Statics = GSE.Static
 
 local function fixLine(line, KeyPress, KeyRelease)

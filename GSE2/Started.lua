@@ -1,4 +1,6 @@
 local GSE2 = GSE2
+local GSE = GSE
+local L = GSE.L
 
 function GSE2:OnInitialize()
     GSE2.GUIEditFrame:Hide()

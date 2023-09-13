@@ -80,7 +80,7 @@ function GSE2.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
     for k, v in ipairs(sequence.MacroVersions) do
         sequence.MacroVersions[k] = GSE.TranslateSequence(v, SequenceName, "ID")
         sequence.MacroVersions[k] = GSE.UnEscapeSequence(sequence.MacroVersions[k])
-        for i, j in ipairs(v) do
+        for _, j in ipairs(v) do
             GSE.enforceMinimumVersion(sequence, j)
         end
     end

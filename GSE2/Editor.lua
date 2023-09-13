@@ -89,8 +89,6 @@ editframe.frame:SetScript(
     end
 )
 
-local specdropdownvalue = editframe.SpecID
-
 function GSE2.GUICreateEditorTabs()
     local tabl = {
         {
@@ -103,7 +101,7 @@ function GSE2.GUICreateEditorTabs()
         }
     }
 
-    for k, v in ipairs(editframe.Sequence.MacroVersions) do
+    for k, _ in ipairs(editframe.Sequence.MacroVersions) do
         local insline = {}
         insline.text = tostring(k)
         insline.value = tostring(k)
@@ -267,7 +265,7 @@ end
 
 function GSE2.GetVersionList()
     local tabl = {}
-    for k, v in ipairs(editframe.Sequence.MacroVersions) do
+    for k, _ in ipairs(editframe.Sequence.MacroVersions) do
         tabl[tostring(k)] = tostring(k)
     end
     return tabl
@@ -1265,7 +1263,7 @@ function GSE2:GUIDrawMacroEditor(container, version)
     spellbox:SetCallback(
         "OnTextChanged",
         function(sel, object, value)
-            for k, v in ipairs(editframe.Sequence.MacroVersions[version]) do
+            for k, _ in ipairs(editframe.Sequence.MacroVersions[version]) do
                 editframe.Sequence.MacroVersions[version][k] = nil
             end
             local newpairs = GSE.SplitMeIntolines(value)
