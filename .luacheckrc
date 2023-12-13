@@ -390,5 +390,6 @@ globals = {
     "BNGetFriendGameAccountInfo",
     "ChatFrame_AddMessageEventFilter",
     "LoadAddOn",
-    "GetActiveTalentGroup"
+    "GetActiveTalentGroup",
+    "GetMaxPlayerLevel"
 }
