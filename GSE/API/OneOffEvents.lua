@@ -3,11 +3,21 @@ local Statics = GSE.Static
 
 local L = GSE.L
 
+local function Update3150()
+    if GSE.isEmpty(GSEOptions.Update3150) then
+        if GSE.GameMode == 1 and GetMaxPlayerLevel() < 60 then
+            GSEOptions.useMaxRanks = true
+        end
+    end
+    GSEOptions.Update3150 = true
+end
+
 function GSE.PerformOneOffEvents()
     GSE.Update3023()
     GSE.Update3111()
     GSE.Update3117()
     GSE.Update3131()
+    Update3150()
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
     end

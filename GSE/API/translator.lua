@@ -346,6 +346,9 @@ local function ClassicGetSpellInfo(spellID, absolute, mode)
                 rank = nil
             end
         end
+        if GSEOptions.useMaxRanks then
+            rank = nil
+        end
     else
         -- Do override check.
         if not absolute and not GSE.isEmpty(sid) and mode ~= Statics.TranslatorMode.Current then

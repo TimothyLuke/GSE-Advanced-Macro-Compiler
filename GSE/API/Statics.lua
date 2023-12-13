@@ -11,7 +11,9 @@ Statics.CastCmds = {
     cancelform = true,
     stopmacro = true,
     petautocastoff = true,
-    petautocaston = true
+    petautocaston = true,
+    usetoy = true,
+    toy = true
 }
 
 Statics.MacroCommands = {"petattack", "dismount", "shoot", "startattack", "stopattack", "targetenemy"}

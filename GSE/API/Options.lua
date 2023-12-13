@@ -1561,6 +1561,23 @@ function GSE.GetOptionsTable()
             order = pos
         }
     end
+
+    ord = 210
+    if GSE.GameMode <= 3 then
+        OptionsTable.args.generalTab.args["useMaxRank"] = {
+            name = L["Always use Max Rank"],
+            desc = L["Alwaus use the highest rank of spell available.  This is useful for levelling."],
+            type = "toggle",
+            set = function(info, val)
+                GSEOptions.useMaxRanks = val
+            end,
+            get = function(info)
+                return GSEOptions.useMaxRanks
+            end,
+            order = ord
+        }
+    end
+
     return OptionsTable
 end
 
