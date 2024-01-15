@@ -116,6 +116,8 @@ function GSE.GUIExportSequence(classid, sequencename)
   GSE.GUIExportframe.sequencename = sequencename
   GSE.GUIExportframe.sequence = GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
   GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
+  disableEditorCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
+  readOnlyCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.ReadOnly)
   GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
   GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
   GSE.GUIUpdateExportBox()
