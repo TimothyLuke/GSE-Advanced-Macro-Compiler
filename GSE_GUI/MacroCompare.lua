@@ -1,6 +1,5 @@
-local GNOME,_ = ...
-local Statics = GSE.Static
 local GSE = GSE
+local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
@@ -16,24 +15,26 @@ GSE.GUICompareFrame = compareframe
 
 compareframe:SetTitle(L["Sequence Compare"])
 
-compareframe:SetCallback("OnClose", function (self)
-  compareframe:Hide();
-  if compareframe.action then
-    -- Some action was taken, so wait for the OOC Queue to process.
-    local event = {}
-    event.action = "openviewer"
-    table.insert(GSE.OOCQueue, event)
-  else
-    GSE.GUIShowViewer()
+compareframe:SetCallback(
+  "OnClose",
+  function(self)
+    compareframe:Hide()
+    if compareframe.action then
+      -- Some action was taken, so wait for the OOC Queue to process.
+      local event = {}
+      event.action = "openviewer"
+      table.insert(GSE.OOCQueue, event)
+    else
+      GSE.GUIShowViewer()
+    end
   end
-end)
+)
 
 compareframe:SetLayout("List")
 
 local headerGroup = AceGUI:Create("SimpleGroup")
 headerGroup:SetFullWidth(true)
 headerGroup:SetLayout("Flow")
-
 
 local leftColumn = AceGUI:Create("MultiLineEditBox")
 compareframe.OrigText = leftColumn
@@ -54,7 +55,7 @@ rightColumn:SetLabel(L["Updated Macro"])
 headerGroup:AddChild(leftColumn)
 headerGroup:AddChild(rightColumn)
 
-compareframe:AddChild (headerGroup)
+compareframe:AddChild(headerGroup)
 
 local actionButtonGroup = AceGUI:Create("SimpleGroup")
 actionButtonGroup:SetWidth(602)
@@ -71,19 +72,23 @@ if GSE.isEmpty(GSEOptions.DefaultImportAction) then
 end
 
 local actionChoiceRadio = AceGUI:Create("Dropdown")
-actionChoiceRadio:SetList({
-  ["MERGE"] = L["Merge"],
-  ["REPLACE"] = L["Replace"],
-  ["IGNORE"] = L["Ignore"],
-  ["RENAME"] = L["Rename New Macro"]
-})
+actionChoiceRadio:SetList(
+  {
+    ["MERGE"] = L["Merge"],
+    ["REPLACE"] = L["Replace"],
+    ["IGNORE"] = L["Ignore"],
+    ["RENAME"] = L["Rename New Macro"]
+  }
+)
 actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
 
 actionButtonGroup:AddChild(actionChoiceRadio)
 
 local nameeditbox = AceGUI:Create("EditBox")
 
-actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
+actionChoiceRadio:SetCallback(
+  "OnValueChanged",
+  function(obj, event, key)
     compareframe.ChosenAction = key
     if key == "RENAME" then
       nameeditbox:SetDisabled(false)
@@ -91,43 +96,64 @@ actionChoiceRadio:SetCallback("OnValueChanged", function (obj,event,key)
     else
       nameeditbox:SetDisabled(true)
     end
-end)
-
+  end
+)
 
 nameeditbox:SetLabel(L["New Sequence Name"])
 nameeditbox:SetWidth(250)
-nameeditbox:SetCallback("OnTextChanged", function(obj, event, key)
-  compareframe.sequenceName = key
-end)
+nameeditbox:SetCallback(
+  "OnTextChanged",
+  function(obj, event, key)
+    compareframe.sequenceName = key
+  end
+)
 --nameeditbox:SetScript("OnEditFocusLost", function()
 --  editframe:SetText(string.upper(editframe:GetText()))
 --  editframe.SequenceName = nameeditbox:GetText()
 --end)
 nameeditbox:SetDisabled(true)
-nameeditbox:DisableButton( true)
+nameeditbox:DisableButton(true)
 nameeditbox:SetText(compareframe.sequenceName)
 
 actionButtonGroup:AddChild(nameeditbox)
 
-
 local actionbutton = AceGUI:Create("Button")
 actionbutton:SetText(L["Continue"])
 actionbutton:SetWidth(150)
-actionbutton:SetCallback("OnClick", function()
-  compareframe:Hide()
-  GSE.PerformMergeAction(compareframe.ChosenAction, compareframe.classid, compareframe.sequenceName, GSE.GUICompareFrame.NewSequence)
-end)
+actionbutton:SetCallback(
+  "OnClick",
+  function()
+    compareframe:Hide()
+    GSE.PerformMergeAction(
+      compareframe.ChosenAction,
+      compareframe.classid,
+      compareframe.sequenceName,
+      GSE.GUICompareFrame.NewSequence
+    )
+  end
+)
 
 actionButtonGroup:AddChild(actionbutton)
-compareframe:AddChild (actionButtonGroup)
-
-
+compareframe:AddChild(actionButtonGroup)
 
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   GSE.GUICompareFrame.NewSequence = newsequence
-  GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSE.Library[classid][sequenceName], sequenceName, true))
-  GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true))
-  GSE.GUICompareFrame:Show()
-  GSE.GUICompareFrame.classid = classid
-  GSE.GUICompareFrame.sequenceName = sequenceName
+
+  if newsequence.MetaData.DisableEditor or GSE.Library[classid][sequenceName].MetaData.DisableEditor then
+    GSE.PerformMergeAction("REPLACE", classid, sequenceName, newsequence)
+  else
+    actionChoiceRadio:SetList(
+      {
+        ["MERGE"] = L["Merge"],
+        ["REPLACE"] = L["Replace"],
+        ["IGNORE"] = L["Ignore"],
+        ["RENAME"] = L["Rename New Macro"]
+      }
+    )
+    GSE.GUICompareFrame.OrigText:SetText(GSE.ExportSequence(GSE.Library[classid][sequenceName], sequenceName, true))
+    GSE.GUICompareFrame.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true))
+    GSE.GUICompareFrame:Show()
+    GSE.GUICompareFrame.classid = classid
+    GSE.GUICompareFrame.sequenceName = sequenceName
+  end
 end

@@ -36,9 +36,7 @@ end
 
 --- This function interates through each line in lines and does a string replace on each varible in the variableTable
 function GSE.ProcessVariables(lines, variableTable)
-    --print("GSE.ProcessVariables(lines, variableTable)")
     local returnLines = {}
-    --print(GSE.isEmpty(variableTable))
     for _, line in ipairs(lines) do
         if line ~= "/click GSE.Pause" then
             if not GSE.isEmpty(variableTable) then
@@ -49,14 +47,11 @@ function GSE.ProcessVariables(lines, variableTable)
                             functline = string.sub(functline, 11)
                             functline = functline:sub(1, -4)
                             local funct = loadstring(functline)
-                            --print(type(functline))
                             if funct ~= nil then
                                 value = funct
                             end
                         end
                     end
-                    --print("updated Type: ".. type(value))
-                    --print(value)
                     if type(value) == "function" then
                         value = value()
                     end
