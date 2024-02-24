@@ -349,10 +349,14 @@ function GSE.RemoveComments(str)
 
     for i = #tab, 1, -1 do
         local teststring = tab[i]
-        teststring = GSE.UnEscapeString(GSE.TrimWhiteSpace(teststring))
-        teststring = teststring:gsub("^%s*", "")
-        if string.sub(teststring, 1, 2) == "--" then
+        if GSE.isEmpty(teststring) then
             table.remove(tab, i)
+        else
+            teststring = GSE.UnEscapeString(GSE.TrimWhiteSpace(teststring))
+            teststring = teststring:gsub("^%s*", "")
+            if string.sub(teststring, 1, 2) == "--" then
+                table.remove(tab, i)
+            end
         end
     end
 
