@@ -98,7 +98,7 @@ function GSE.GUICreateEditorTabs()
         }
     }
     -- If disabled editor then dont show the internal tabs
-    if not editframe.Sequence.MetaData.DisableEditor then
+    if not editframe.Sequence.MetaData.DisableEditor or editframe.Sequence.MetaData.AllowVariables then
         for k, _ in ipairs(editframe.Sequence.Macros) do
             local insline = {}
             insline.text = tostring(k)
@@ -1417,7 +1417,9 @@ function GSE:GUIDrawMacroEditor(container, version)
     linegroup1:AddChild(basespellspacer)
     linegroup1:AddChild(previewMacro)
     linegroup1:AddChild(delspacerlabel)
-    linegroup1:AddChild(raweditbutton)
+    if GSE.Patron or GSE.Developer then
+        linegroup1:AddChild(raweditbutton)
+    end
 
     linegroup1:AddChild(spacerlabel7)
     linegroup1:AddChild(delversionbutton)
@@ -1427,7 +1429,10 @@ function GSE:GUIDrawMacroEditor(container, version)
     macrocontainer:SetTitle(L["Sequence"])
     macrocontainer:SetWidth(contentcontainer.frame:GetWidth() - 50)
     GSE:DrawSequenceEditor(macrocontainer, version)
-    contentcontainer:AddChild(macrocontainer)
+    if not editframe.Sequence.MetaData.DisableEditor then
+        contentcontainer:AddChild(macrocontainer)
+    end
+
     local variableContainer = AceGUI:Create("InlineGroup")
     variableContainer:SetAutoAdjustHeight(true)
     variableContainer:SetTitle(L["Variables"])

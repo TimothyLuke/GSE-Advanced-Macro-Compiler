@@ -52,6 +52,12 @@ disableEditorCheckBox:SetLabel(L["Disable Editor"])
 disableEditorCheckBox:SetDisabled(true)
 exportframe:AddChild(disableEditorCheckBox)
 
+local editVariablesCheckBox = AceGUI:Create("CheckBox")
+editVariablesCheckBox:SetType("checkbox")
+editVariablesCheckBox:SetLabel(L["Allow Variable Editor"])
+editVariablesCheckBox:SetDisabled(true)
+exportframe:AddChild(editVariablesCheckBox)
+
 readOnlyCheckBox:SetCallback(
   "OnValueChanged",
   function(sel, object, value)
@@ -72,8 +78,23 @@ disableEditorCheckBox:SetCallback(
   function(sel, object, value)
     if value then
       exportframe.sequence.MetaData.DisableEditor = true
+      editVariablesCheckBox:SetDisabled(false)
     else
       exportframe.sequence.MetaData.DisableEditor = false
+      exportframe.sequence.MetaData.AllowVariables = false
+      editVariablesCheckBox:SetDisabled(true)
+    end
+    GSE.GUIUpdateExportBox()
+  end
+)
+
+editVariablesCheckBox:SetCallback(
+  "OnValueChanged",
+  function(sel, object, value)
+    if value then
+      exportframe.sequence.MetaData.AllowVariables = true
+    else
+      exportframe.sequence.MetaData.AllowVariables = false
     end
     GSE.GUIUpdateExportBox()
   end

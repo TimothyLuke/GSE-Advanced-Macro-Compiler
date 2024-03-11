@@ -23,7 +23,7 @@ function GSE.TranslateSequence(tab, mode, dropAbsolute)
     -- Check for blanks
     for i, v in ipairs(tab) do
         if GSE.isEmpty(v) or v == "" then
-            tab[i] = nil
+            table.remove(tab, i)
         end
     end
     return tab
@@ -53,7 +53,11 @@ function GSE.ProcessVariables(lines, variableTable)
                         end
                     end
                     if type(value) == "function" then
-                        value = value()
+                        if pcall(value()) then
+                            value = value()
+                        else
+                            value = ""
+                        end
                     end
                     if type(value) == "boolean" then
                         value = tostring(value)

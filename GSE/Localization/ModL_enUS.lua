@@ -919,3 +919,6 @@ L["GSE2 Retro Importer available."] = true
 -- 1377
 L["Always use Max Rank"] = true
 L["Alwaus use the highest rank of spell available.  This is useful for levelling."] = true
+
+-- 1389
+L["Allow Variable Editor"] = true
