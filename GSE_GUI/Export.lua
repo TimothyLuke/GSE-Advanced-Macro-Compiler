@@ -139,6 +139,7 @@ function GSE.GUIExportSequence(classid, sequencename)
   GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
   disableEditorCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
   readOnlyCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.ReadOnly)
+  disableEditorCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
   GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
   GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
   GSE.GUIUpdateExportBox()
