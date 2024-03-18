@@ -659,40 +659,6 @@ function GSE:ProcessOOCQueue()
     end
 end
 
-function GSE.prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
-    tooltip:SetCell(row, 1, L[OOCEvent.action], "LEFT", 1)
-    if OOCEvent.action == "UpdateSequence" then
-        tooltip:SetCell(row, 3, OOCEvent.name, "RIGHT", 1)
-    elseif OOCEvent.action == "Save" then
-        tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
-    elseif OOCEvent.action == "Replace" then
-        tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
-    elseif OOCEvent.action == "CheckMacroCreated" then
-        tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
-    end
-    tooltip:SetLineScript(
-        row,
-        "OnMouseUp",
-        function()
-            table.remove(GSE.OOCQueue, oockey)
-        end
-    )
-end
-
-function GSE.CheckOOCQueueStatus()
-    local output
-    if GSE.isEmpty(GSE.OOCTimer) then
-        output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
-    else
-        if InCombatLockdown() then
-            output = GSEOptions.TitleColour .. L["Paused - In Combat"] .. Statics.StringReset
-        else
-            output = GSEOptions.CommandColour .. L["Running"] .. Statics.StringReset
-        end
-    end
-    return output
-end
-
 function GSE.ToggleOOCQueue()
     if GSE.isEmpty(GSE.OOCTimer) then
         GSE.StartOOCTimer()

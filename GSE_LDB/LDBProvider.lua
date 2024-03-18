@@ -35,6 +35,40 @@ else
   baseFont:SetFont(GameTooltipText:GetFont(), 10, "")
 end
 
+local function CheckOOCQueueStatus()
+  local output
+  if GSE.isEmpty(GSE.OOCTimer) then
+    output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
+  else
+    if InCombatLockdown() then
+      output = GSEOptions.TitleColour .. L["Paused - In Combat"] .. Statics.StringReset
+    else
+      output = GSEOptions.CommandColour .. L["Running"] .. Statics.StringReset
+    end
+  end
+  return output
+end
+
+local function prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
+  tooltip:SetCell(row, 1, L[OOCEvent.action], "LEFT", 1)
+  if OOCEvent.action == "UpdateSequence" then
+    tooltip:SetCell(row, 3, OOCEvent.name, "RIGHT", 1)
+  elseif OOCEvent.action == "Save" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  elseif OOCEvent.action == "Replace" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  elseif OOCEvent.action == "CheckMacroCreated" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  end
+  tooltip:SetLineScript(
+    row,
+    "OnMouseDown",
+    function()
+      table.remove(GSE.OOCQueue, oockey)
+    end
+  )
+end
+
 function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
@@ -78,7 +112,7 @@ function dataobj:OnEnter()
     "OnMouseDown",
     function(obj, button)
       GSE.ToggleTargetProtection()
-      tooltip:SetCell(RequireTargetStatusline, 1, GSE.CheckOOCQueueStatus(), "CENTER", 3)
+      tooltip:SetCell(RequireTargetStatusline, 1, CheckOOCQueueStatus(), "CENTER", 3)
     end
   )
   tooltip:AddSeparator()
@@ -89,7 +123,7 @@ function dataobj:OnEnter()
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
     y, _ = tooltip:AddLine()
-    tooltip:SetCell(y, 1, string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()), "CENTER", 3)
+    tooltip:SetCell(y, 1, string.format(L["The GSE Out of Combat queue is %s"], CheckOOCQueueStatus()), "CENTER", 3)
     local OOCStatusline = y
     tooltip:SetLineScript(
       y,
@@ -99,7 +133,7 @@ function dataobj:OnEnter()
         tooltip:SetCell(
           OOCStatusline,
           1,
-          string.format(L["The GSE Out of Combat queue is %s"], GSE.CheckOOCQueueStatus()),
+          string.format(L["The GSE Out of Combat queue is %s"], CheckOOCQueueStatus()),
           "CENTER",
           3
         )
@@ -115,9 +149,16 @@ function dataobj:OnEnter()
         "CENTER",
         3
       )
+      tooltip:SetLineScript(
+        y,
+        "OnMouseDown",
+        function()
+          GSE.OOCQueue = {}
+        end
+      )
       for k, v in ipairs(GSE.OOCQueue) do
         y, _ = tooltip:AddLine()
-        GSE.prepareTooltipOOCLine(tooltip, v, y, k)
+        prepareTooltipOOCLine(tooltip, v, y, k)
       end
     else
       -- No Items

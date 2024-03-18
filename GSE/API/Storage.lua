@@ -1053,38 +1053,6 @@ function GSE.GetSequenceSummary()
     return returntable
 end
 
-local function fixLine(line, KeyPress, KeyRelease)
-    local action = {}
-    action["Type"] = Statics.Actions.Action
-    if KeyPress then
-        -- print("KeyPress false")
-        table.insert(action, [[~~KeyPress~~]])
-    end
-    table.insert(action, line)
-    if KeyRelease then
-        -- print("KeyRelease false")
-        table.insert(action, [[~~KeyRelease~~]])
-    end
-
-    if string.sub(line, 1, 13) == "/click pause" then
-        action = {}
-        action["Type"] = Statics.Actions.Pause
-        if string.sub(line, 14) == "~~GCD~~" then
-            action["MS"] = GSE.GetGCD() * 1000
-        else
-            local mynumber = tonumber(string.sub(line, 14))
-
-            if GSE.isEmpty(mynumber) then
-                action["MS"] = 10
-                GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "Storage")
-            else
-                action["MS"] = tonumber(string.sub(line, 14)) * 1000
-            end
-        end
-    end
-    return action
-end
-
 local function buildAction(action, metaData, variables)
     if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
