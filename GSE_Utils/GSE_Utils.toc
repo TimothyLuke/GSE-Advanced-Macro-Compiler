@@ -1,0 +1,23 @@
+## Interface: 100206
+
+## Interface-Classic: 11501
+## Interface-BCC: 20504
+## Interface-Wrath: 30403
+
+## Title: |cff0000FFGSE:|r |cFF00D1FFUtils|r
+## Notes: Optional Utilities for GSE
+## Author: TimothyLuke
+## Version: @project-version@
+## Dependencies: GSE
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
+
+## X-WoWI-ID: 23921
+## X-Curse-Project-ID: 101161
+
+Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Lib\LibQTip-1.0\LibQTip-1.0.lua
+Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
+Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+
+Indent.lua
+Utils.lua

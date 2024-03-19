@@ -46,6 +46,7 @@ move-folders:
   GSE/GSE: GSE
   GSE/GSE_GUI: GSE_GUI
   GSE/GSE_LDB: GSE_LDB
+  GSE/GSE_Utils: GSE_Utils
 
 enable-nolib-creation: no
 

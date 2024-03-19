@@ -8,7 +8,7 @@
 ## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke
 ## Version: @project-version@
-## Dependencies: GSE
+## Dependencies: GSE GSE_Utils
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 LDBProvider.lua

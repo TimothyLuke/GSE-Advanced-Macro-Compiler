@@ -10,7 +10,7 @@
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
-## OptionalDeps: WeakAuras Talented ElvUI
+## OptionalDeps: WeakAuras Talented ElvUI Details
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 ## X-WoWI-ID: 23921
@@ -18,11 +18,6 @@
 
 # Lib
 embeds.xml
-Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Lib\LibQTip-1.0\LibQTip-1.0.lua
-Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
-Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
-API\Indent.lua
 
 # Setup Localization
 Localization\ModL_enUS.lua
