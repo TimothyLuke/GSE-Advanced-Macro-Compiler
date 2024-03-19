@@ -542,6 +542,7 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 -- Functions
 --- Handle slash commands
 function GSE:GSSlash(input)
+    local _, _, currentclassId = UnitClass("player")
     local params = GSE.split(input, " ")
     if table.getn(params) > 1 then
         input = params[1]
@@ -553,8 +554,7 @@ function GSE:GSSlash(input)
         else
             local currentSpec = GetSpecialization()
             local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
-            local _, specname, specdescription, specicon, _, specrole, specclass =
-                GetSpecializationInfoByID(currentSpecID)
+            local _, specname, _, _, _, _, _ = GetSpecializationInfoByID(currentSpecID)
             GSE.Print(
                 L["Your current Specialisation is "] ..
                     currentSpecID .. ":" .. specname .. L["  The Alternative ClassID is "] .. currentclassId,
