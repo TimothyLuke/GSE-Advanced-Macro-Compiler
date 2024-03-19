@@ -56,10 +56,6 @@
 	</li>
 
 	<li>
-		<a href="../../../files/GSE/API/Indent.html">GSE/API/Indent.lua</a>
-	</li>
-
-	<li>
 		<a href="../../../files/GSE/API/Init.html">GSE/API/Init.lua</a>
 	</li>
 
@@ -143,11 +139,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.CleanOrphanSequences">GSE.CleanOrphanSequences</a>&nbsp;()</td>
-	<td class="summary">This function removes any macro stubs that do not relate to a GSE macro </td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.CompileTemplate">GSE.CompileTemplate</a>&nbsp;(macro)</td>
 	<td class="summary">Compiles a macro template into a macro </td>
 	</tr>
@@ -163,16 +154,6 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.CreateMacroIcon">GSE.CreateMacroIcon</a>&nbsp;(sequenceName, icon, forceglobalstub)</td>
-	<td class="summary">Add a macro for a sequence and register it in the list of known sequences </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.DebugDumpButton">GSE.DebugDumpButton</a>&nbsp;(SequenceName)</td>
-	<td class="summary">This function dumps what is currently running on an existing button.</td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.DecompressSequenceFromString">GSE.DecompressSequenceFromString</a>&nbsp;(importstring)</td>
 	<td class="summary">This function takes a text string and decompresses it without loading it to the library </td>
 	</tr>
@@ -185,16 +166,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#GSE.DeleteSequence">GSE.DeleteSequence</a>&nbsp;(classid, sequenceName)</td>
 	<td class="summary">Delete a sequence starting with the macro and then the sequence from the library </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequence">GSE.ExportSequence</a>&nbsp;(sequence, sequenceName, verbose)</td>
-	<td class="summary">Creates a string representation of the a Sequence that can be shared as a string.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ExportSequenceWLMFormat">GSE.ExportSequenceWLMFormat</a>&nbsp;(sequence, sequencename)</td>
-	<td class="summary">This creates a pretty export for WLM Forums </td>
 	</tr>
 
 	<tr>
@@ -233,33 +204,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportMacroCollection">GSE.ImportMacroCollection</a>&nbsp;(Sequences)</td>
-	<td class="summary">Load a collection of Sequences </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ImportSerialisedSequence">GSE.ImportSerialisedSequence</a>&nbsp;(importstring, createicon)</td>
-	<td class="summary">Load a serialised Sequence </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.LoadSampleMacros">GSE.LoadSampleMacros</a>&nbsp;(classID)</td>
-	<td class="summary">Load in the sample macros for the current class.</td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.LoadStorage">GSE.LoadStorage</a>&nbsp;(destination)</td>
 	<td class="summary">Load the GSEStorage into a new table.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.MoveMacroToClassFromGlobal">GSE.MoveMacroToClassFromGlobal</a>&nbsp;()</td>
-	<td class="summary">Moves Macros hidden in Global Macros to their appropriate class.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.OOCAddSequenceToCollection">GSE.OOCAddSequenceToCollection</a>&nbsp;(sequenceName, sequence, classid)</td>
-	<td class="summary">Add a sequence to the library </td>
 	</tr>
 
 	<tr>
@@ -283,18 +229,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#GSE.ScanMacrosForErrors">GSE.ScanMacrosForErrors</a>&nbsp;()</td>
-	<td class="summary">This function scans all macros in the library and reports on corrupt macros.</td>
-	</tr>
-
-	<tr>
 	<td class="name" nowrap><a href="#GSE.SetMacroLocation">GSE.SetMacroLocation</a>&nbsp;()</td>
 	<td class="summary">Return whether to store the macro in Personal Character Macros or Account Macros </td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#GSE.ToggleTargetProtection">GSE.ToggleTargetProtection</a>&nbsp;()</td>
-	<td class="summary">This function allows the player to toggle Target Protection from the LDB Plugin.</td>
 	</tr>
 
 	<tr>
@@ -410,23 +346,6 @@ This function is used to clean the local sequence library
 
 
 
-<dt><a name="GSE.CleanOrphanSequences"></a><strong>GSE.CleanOrphanSequences</strong>&nbsp;()</dt>
-<dd>
-This function removes any macro stubs that do not relate to a GSE macro
-
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.CompileTemplate"></a><strong>GSE.CompileTemplate</strong>&nbsp;(macro)</dt>
 <dd>
 Compiles a macro template into a macro
@@ -513,66 +432,6 @@ Build GSE3 Executable Buttons
 
 
 
-<dt><a name="GSE.CreateMacroIcon"></a><strong>GSE.CreateMacroIcon</strong>&nbsp;(sequenceName, icon, forceglobalstub)</dt>
-<dd>
-Add a macro for a sequence and register it in the list of known sequences
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  icon: 
-	</li>
-	
-	<li>
-	  forceglobalstub: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.DebugDumpButton"></a><strong>GSE.DebugDumpButton</strong>&nbsp;(SequenceName)</dt>
-<dd>
-This function dumps what is currently running on an existing button.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  SequenceName: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.DecompressSequenceFromString"></a><strong>GSE.DecompressSequenceFromString</strong>&nbsp;(importstring)</dt>
 <dd>
 This function takes a text string and decompresses it without loading it to the library
@@ -639,70 +498,6 @@ Delete a sequence starting with the macro and then the sequence from the library
 	
 	<li>
 	  sequenceName: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ExportSequence"></a><strong>GSE.ExportSequence</strong>&nbsp;(sequence, sequenceName, verbose)</dt>
-<dd>
-Creates a string representation of the a Sequence that can be shared as a string. Accepts a <code>sequence table</code> and a <code>SequenceName</code>
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  verbose: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ExportSequenceWLMFormat"></a><strong>GSE.ExportSequenceWLMFormat</strong>&nbsp;(sequence, sequencename)</dt>
-<dd>
-This creates a pretty export for WLM Forums
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-	<li>
-	  sequencename: 
 	</li>
 	
 </ul>
@@ -896,88 +691,6 @@ Load a collection of Sequences
 
 
 
-<dt><a name="GSE.ImportMacroCollection"></a><strong>GSE.ImportMacroCollection</strong>&nbsp;(Sequences)</dt>
-<dd>
-Load a collection of Sequences
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  Sequences: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ImportSerialisedSequence"></a><strong>GSE.ImportSerialisedSequence</strong>&nbsp;(importstring, createicon)</dt>
-<dd>
-Load a serialised Sequence
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  importstring: 
-	</li>
-	
-	<li>
-	  createicon: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.LoadSampleMacros"></a><strong>GSE.LoadSampleMacros</strong>&nbsp;(classID)</dt>
-<dd>
-Load in the sample macros for the current class.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  classID: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.LoadStorage"></a><strong>GSE.LoadStorage</strong>&nbsp;(destination)</dt>
 <dd>
 Load the GSEStorage into a new table.
@@ -988,57 +701,6 @@ Load the GSEStorage into a new table.
 	
 	<li>
 	  destination: 
-	</li>
-	
-</ul>
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.MoveMacroToClassFromGlobal"></a><strong>GSE.MoveMacroToClassFromGlobal</strong>&nbsp;()</dt>
-<dd>
-Moves Macros hidden in Global Macros to their appropriate class.
-
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.OOCAddSequenceToCollection"></a><strong>GSE.OOCAddSequenceToCollection</strong>&nbsp;(sequenceName, sequence, classid)</dt>
-<dd>
-Add a sequence to the library
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  sequenceName: 
-	</li>
-	
-	<li>
-	  sequence: 
-	</li>
-	
-	<li>
-	  classid: 
 	</li>
 	
 </ul>
@@ -1166,43 +828,9 @@ This function resets a gsebutton back to its initial setting
 
 
 
-<dt><a name="GSE.ScanMacrosForErrors"></a><strong>GSE.ScanMacrosForErrors</strong>&nbsp;()</dt>
-<dd>
-This function scans all macros in the library and reports on corrupt macros.
-
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
 <dt><a name="GSE.SetMacroLocation"></a><strong>GSE.SetMacroLocation</strong>&nbsp;()</dt>
 <dd>
 Return whether to store the macro in Personal Character Macros or Account Macros
-
-
-
-
-
-
-
-
-
-</dd>
-
-
-
-
-<dt><a name="GSE.ToggleTargetProtection"></a><strong>GSE.ToggleTargetProtection</strong>&nbsp;()</dt>
-<dd>
-This function allows the player to toggle Target Protection from the LDB Plugin.
 
 
 
