@@ -43,6 +43,10 @@ externals:
   GSE/Lib/LibDBCompartment: https://github.com/Meorawr/LibDBCompartment.git
 
 move-folders:
+  GSE/GSE/Lib/LibQTip-1.0: GSE_Utils/Lib/LibQTip-1.0
+  GSE/GSE/Lib/LibSharedMedia-3.0: GSE_Utils/Lib/LibSharedMedia-3.0
+  GSE/GSE/Lib/LibDBIcon-1.0: GSE_Utils/Lib/LibDBIcon-1.0
+  GSE/GSE/Lib/AceGUI-3.0-Completing-EditBox: GSE_Utils/Lib/AceGUI-3.0-Completing-EditBox
   GSE/GSE: GSE
   GSE/GSE_GUI: GSE_GUI
   GSE/GSE_LDB: GSE_LDB
