@@ -14,10 +14,12 @@
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161
 
+embeds.xml
 Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Lib\LibQTip-1.0\LibQTip-1.0.lua
 Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+
 
 Indent.lua
 Utils.lua
