@@ -13,3 +13,4 @@
     <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
     <Include file="Lib\LibCompress\lib.xml"/>
     <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
+</Ui>
