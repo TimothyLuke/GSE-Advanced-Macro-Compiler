@@ -1,5 +1,4 @@
 -- GLOBALS: GSE
----@class GSE
 GSE =
     LibStub("AceAddon-3.0"):NewAddon(
     "GSE",
