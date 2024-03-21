@@ -149,7 +149,8 @@ Statics.SpecIDClassList = {
     [577] = 12,
     [581] = 12,
     [1467] = 13,
-    [1468] = 13
+    [1468] = 13,
+    [1473] = 13
 }
 
 local function determineSpecializationName(specID)
