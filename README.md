@@ -21,4 +21,4 @@ GSE started as a fork of Semlar's GnomeSequencer but has since undergone multipl
 
 # More Information
 - GSE Wiki: https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
-- API Docimentation: Check out the project site at https://timothyluke.github.io/GSE-Advanced-Macro-Compiler/ for API documentation and the Wiki https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki for specifications.
+- API Docimentation: Check out the project site at https://timothyluke.github.io/GSE-Advanced-Macro-Compiler/ for API documentation.
