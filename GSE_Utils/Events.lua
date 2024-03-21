@@ -1,6 +1,7 @@
 local GNOME, _ = ...
 
 local GSE = GSE
+local GCD
 
 local L = GSE.L
 local Statics = GSE.Static

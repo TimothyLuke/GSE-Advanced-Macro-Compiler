@@ -5,8 +5,6 @@ local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
 
-local GCD
-
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, task)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(task) then
