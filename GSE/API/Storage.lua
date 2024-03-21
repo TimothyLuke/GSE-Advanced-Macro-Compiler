@@ -450,7 +450,7 @@ function GSE.UpdateIcon(self, reset)
     for cmd, etc in gmatch(commandline or "", "/(%w+)%s+([^\n]+)") do
         if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
             local spell, target = SecureCmdOptionParse(etc)
-            if not reset then
+            if not reset and GSE.Utils then
                 GSE.TraceSequence(gsebutton, step, spell)
             end
             if spell then
