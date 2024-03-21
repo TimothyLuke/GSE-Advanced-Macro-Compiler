@@ -629,4 +629,14 @@ function GSE:GSSlash(input)
     end
 end
 
+function GSE.ReportTargetProtection()
+    local disabledstr = "disabled"
+    if GSEOptions.requireTarget then
+        disabledstr = "enabled"
+    end
+    return string.format(L["Target protection is currently %s"], disabledstr)
+end
+
+LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
+
 GSE.Utils = true

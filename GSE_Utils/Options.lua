@@ -1580,13 +1580,3 @@ function GSE.GetOptionsTable()
 
     return OptionsTable
 end
-
-function GSE.ReportTargetProtection()
-    local disabledstr = "disabled"
-    if GSEOptions.requireTarget then
-        disabledstr = "enabled"
-    end
-    return string.format(L["Target protection is currently %s"], disabledstr)
-end
-
-GSE.DebugProfile("Options")

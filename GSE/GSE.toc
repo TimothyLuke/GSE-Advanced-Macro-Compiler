@@ -48,6 +48,5 @@ API\Storage.lua
 API\Translator.lua
 API\Plugins.lua
 API\Serialisation.lua
-API\Options.lua
 API\OneOffEvents.lua
 API\Events.lua
