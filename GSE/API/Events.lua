@@ -220,7 +220,6 @@ function GSE:ADDON_LOADED(event, addon)
 
     GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
 
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
     if addon == GNOME then
         LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Advanced Macro Compiler")
         if not GSEOptions.HideLoginMessage then
@@ -276,34 +275,6 @@ function GSE:ADDON_LOADED(event, addon)
         GSEOptions.showMiniMap = {
             hide = true
         }
-    end
-end
-
-function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
-    -- UPDATE for GSE3
-    if unit == "player" then
-        local _, GCD_Timer = GetSpellCooldown(61304)
-        GCD = true
-        C_Timer.After(
-            GCD_Timer,
-            function()
-                GCD = nil
-                GSE.PrintDebugMessage("GCD OFF")
-            end
-        )
-        GSE.PrintDebugMessage("GCD Delay:" .. " " .. GCD_Timer)
-        GSE.CurrentGCD = GCD_Timer
-
-        local elements = GSE.split(action, "-")
-        local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
-        local fskilltype, fspellid = GetSpellBookItemInfo(spell)
-        if not GSE.isEmpty(fskilltype) then
-            if GSE.RecorderActive then
-                GSE.GUIRecordFrame.RecordSequenceBox:SetText(
-                    GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n"
-                )
-            end
-        end
     end
 end
 
@@ -417,7 +388,6 @@ GSE:RegisterEvent("PLAYER_LOGOUT")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 GSE:RegisterEvent("ADDON_LOADED")
-GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
@@ -520,8 +490,10 @@ function GSE.ToggleOOCQueue()
     end
 end
 
+local loadAddon = C_AddOns and C_Addons.LoadAddOn or LoadAddOn
+
 function GSE.CheckGUI()
-    local loaded, reason = LoadAddOn("GSE_GUI")
+    local loaded, reason = loadAddon("GSE_GUI")
     if not loaded then
         if reason == "DISABLED" then
             GSE.PrintDebugMessage("GSE GUI Disabled", "GSE_GUI")
