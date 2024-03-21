@@ -15,6 +15,7 @@
 
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161
+## X-Wago-ID: kGr0YY6y
 
 # Lib
 embeds.xml
