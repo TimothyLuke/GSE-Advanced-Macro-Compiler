@@ -154,7 +154,7 @@ Statics.SpecIDClassList = {
 }
 
 local function determineSpecializationName(specID)
-    if GSE.GameMode < 4 then
+    if GSE.GameMode < 7 then
         return Statics.SpecIDClassList[specID]
     else
         local _, specname = GetSpecializationInfoByID(specID)

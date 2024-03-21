@@ -490,7 +490,7 @@ function GSE.ToggleOOCQueue()
     end
 end
 
-local loadAddon = C_AddOns and C_Addons.LoadAddOn or LoadAddOn
+local loadAddon = C_AddOns and C_AddOns.LoadAddOn or LoadAddOn
 
 function GSE.CheckGUI()
     local loaded, reason = loadAddon("GSE_GUI")
