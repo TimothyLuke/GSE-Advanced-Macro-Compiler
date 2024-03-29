@@ -3,6 +3,15 @@ local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
 
+local function FormatSequenceNames(names)
+    local returnstring = ""
+    for _, v in ipairs(names) do
+        returnstring = returnstring .. " - " .. v .. ",\n"
+    end
+    returnstring = returnstring:sub(1, -3)
+    return returnstring
+end
+
 function GSE.GetOptionsTable()
     local OptionsTable = {
         type = "group",
@@ -1517,23 +1526,23 @@ function GSE.GetOptionsTable()
             }
         }
     }
-    -- Add Dynamic Content Container
-
     local ord = 900
-    for _, v in pairs(GSE.AddInPacks) do
-        ord = ord + 1
-        OptionsTable.args.pluginsTab.args[v.Name] = {
-            name = v.Name,
-            desc = string.format(L["Addin Version %s contained versions for the following macros:"], v.Name) ..
-                string.format("\n%s", GSE.FormatSequenceNames(v.SequenceNames)),
-            type = "execute",
-            func = function(info, val)
-                GSE:SendMessage(Statics.ReloadMessage, v.Name)
-            end,
-            order = ord
-        }
+    -- Add Dynamic Content Container
+    if not GSE.isEmpty(GSE.AddInPacks) then
+        for _, v in pairs(GSE.AddInPacks) do
+            ord = ord + 1
+            OptionsTable.args.pluginsTab.args[v.Name] = {
+                name = v.Name,
+                desc = string.format(L["Addin Version %s contained versions for the following macros:"], v.Name) ..
+                    string.format("\n%s", FormatSequenceNames(v.SequenceNames)),
+                type = "execute",
+                func = function(info, val)
+                    GSE:SendMessage(Statics.ReloadMessage, v.Name)
+                end,
+                order = ord
+            }
+        end
     end
-
     ord = 30
     for k, _ in pairs(Statics.DebugModules) do
         ord = ord + 1

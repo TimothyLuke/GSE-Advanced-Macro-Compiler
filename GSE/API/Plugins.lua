@@ -49,13 +49,4 @@ function GSE.RegisterAddon(name, version, sequencenames)
     return updateflag
 end
 
-function GSE.FormatSequenceNames(names)
-    local returnstring = ""
-    for _, v in ipairs(names) do
-        returnstring = returnstring .. " - " .. v .. ",\n"
-    end
-    returnstring = returnstring:sub(1, -3)
-    return returnstring
-end
-
 GSE.DebugProfile("Plugins")

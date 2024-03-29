@@ -109,35 +109,35 @@ function GSE:PLAYER_ENTERING_WORLD()
 end
 
 function GSE:ADDON_LOADED(event, addon)
-    GSE.LoadStorage(GSE.Library)
-
-    if GSE.isEmpty(GSE3Storage[GSE.GetCurrentClassID()]) then
-        GSE3Storage[GSE.GetCurrentClassID()] = {}
-    end
-    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
-        GSE.Library[GSE.GetCurrentClassID()] = {}
-    end
-    if GSE.isEmpty(GSE.Library[0]) then
-        GSE.Library[0] = {}
-    end
-
-    GSE.PrintDebugMessage("I am loaded")
-
-    GSE:SendMessage(Statics.CoreLoadedMessage)
-
-    -- Register the Sample Macros
-    local seqnames = {}
-    table.insert(seqnames, "Assorted Sample Macros")
-    GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
-
-    GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
-
-    table.insert(seqnames, "GSE2 Macros")
-    GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
-
-    GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
-
     if addon == GNOME then
+        GSE.LoadStorage(GSE.Library)
+
+        if GSE.isEmpty(GSE3Storage[GSE.GetCurrentClassID()]) then
+            GSE3Storage[GSE.GetCurrentClassID()] = {}
+        end
+        if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
+            GSE.Library[GSE.GetCurrentClassID()] = {}
+        end
+        if GSE.isEmpty(GSE.Library[0]) then
+            GSE.Library[0] = {}
+        end
+
+        GSE.PrintDebugMessage("I am loaded")
+
+        GSE:SendMessage(Statics.CoreLoadedMessage)
+
+        -- Register the Sample Macros
+        local seqnames = {}
+        -- table.insert(seqnames, "Assorted Sample Macros")
+        -- GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
+
+        -- GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
+
+        -- table.insert(seqnames, "GSE2 Macros")
+        -- GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
+
+        -- GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
+
         LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Advanced Macro Compiler")
         if not GSEOptions.HideLoginMessage then
             GSE.Print(
@@ -147,51 +147,52 @@ function GSE:ADDON_LOADED(event, addon)
                 GNOME
             )
         end
-    end
-    if GSE.isEmpty(GSEOptions) then
-        GSE.SetDefaultOptions()
-    end
 
-    -- Added in 2.1.0
-    if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
-        GSEOptions.MacroResetModifiers = {}
-        GSEOptions.MacroResetModifiers["LeftButton"] = false
-        GSEOptions.MacroResetModifiers["RighttButton"] = false
-        GSEOptions.MacroResetModifiers["MiddleButton"] = false
-        GSEOptions.MacroResetModifiers["Button4"] = false
-        GSEOptions.MacroResetModifiers["Button5"] = false
-        GSEOptions.MacroResetModifiers["LeftAlt"] = false
-        GSEOptions.MacroResetModifiers["RightAlt"] = false
-        GSEOptions.MacroResetModifiers["Alt"] = false
-        GSEOptions.MacroResetModifiers["LeftControl"] = false
-        GSEOptions.MacroResetModifiers["RightControl"] = false
-        GSEOptions.MacroResetModifiers["Control"] = false
-        GSEOptions.MacroResetModifiers["LeftShift"] = false
-        GSEOptions.MacroResetModifiers["RightShift"] = false
-        GSEOptions.MacroResetModifiers["Shift"] = false
-        GSEOptions.MacroResetModifiers["LeftAlt"] = false
-        GSEOptions.MacroResetModifiers["RightAlt"] = false
-        GSEOptions.MacroResetModifiers["AnyMod"] = false
-    end
+        if GSE.isEmpty(GSEOptions) then
+            GSE.SetDefaultOptions()
+        end
 
-    -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
-        GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
-        GSEOptions.MacroResetModifiers["AnyShift"] = nil
-    end
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
-        GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
-        GSEOptions.MacroResetModifiers["AnyControl"] = nil
-    end
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
-        GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
-        GSEOptions.MacroResetModifiers["AnyAlt"] = nil
-    end
+        -- Added in 2.1.0
+        if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
+            GSEOptions.MacroResetModifiers = {}
+            GSEOptions.MacroResetModifiers["LeftButton"] = false
+            GSEOptions.MacroResetModifiers["RighttButton"] = false
+            GSEOptions.MacroResetModifiers["MiddleButton"] = false
+            GSEOptions.MacroResetModifiers["Button4"] = false
+            GSEOptions.MacroResetModifiers["Button5"] = false
+            GSEOptions.MacroResetModifiers["LeftAlt"] = false
+            GSEOptions.MacroResetModifiers["RightAlt"] = false
+            GSEOptions.MacroResetModifiers["Alt"] = false
+            GSEOptions.MacroResetModifiers["LeftControl"] = false
+            GSEOptions.MacroResetModifiers["RightControl"] = false
+            GSEOptions.MacroResetModifiers["Control"] = false
+            GSEOptions.MacroResetModifiers["LeftShift"] = false
+            GSEOptions.MacroResetModifiers["RightShift"] = false
+            GSEOptions.MacroResetModifiers["Shift"] = false
+            GSEOptions.MacroResetModifiers["LeftAlt"] = false
+            GSEOptions.MacroResetModifiers["RightAlt"] = false
+            GSEOptions.MacroResetModifiers["AnyMod"] = false
+        end
 
-    if GSE.isEmpty(GSEOptions.showMiniMap) then
-        GSEOptions.showMiniMap = {
-            hide = true
-        }
+        -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
+        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
+            GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
+            GSEOptions.MacroResetModifiers["AnyShift"] = nil
+        end
+        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
+            GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
+            GSEOptions.MacroResetModifiers["AnyControl"] = nil
+        end
+        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
+            GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
+            GSEOptions.MacroResetModifiers["AnyAlt"] = nil
+        end
+
+        if GSE.isEmpty(GSEOptions.showMiniMap) then
+            GSEOptions.showMiniMap = {
+                hide = true
+            }
+        end
     end
 end
 
@@ -331,15 +332,6 @@ end
 if GSE.GameMode <= 3 then
     GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
     GSE:RegisterEvent("SPELLS_CHANGED")
-end
-
-function GSE:processReload(action, arg)
-    if arg == "Samples" then
-        GSE.LoadSampleMacros(GSE.GetCurrentClassID())
-    end
-    if arg == "GSE2Library" then
-        GSE.UpdateGSE2LibrarytoGSE3()
-    end
 end
 
 function GSE:OnEnable()

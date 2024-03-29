@@ -519,17 +519,6 @@ function GSE.GetMacroResetImplementation()
     return returnstring
 end
 
---- This function finds a macro by name.  It checks current class first then global
-function GSE.FindMacro(sequenceName)
-    local returnVal = {}
-    if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][sequenceName]) then
-        returnVal = GSE.Library[GSE.GetCurrentClassID()][sequenceName]
-    elseif not GSE.isEmpty(GSE.Library[0][sequenceName]) then
-        returnVal = GSE.Library[0][sequenceName]
-    end
-    return returnVal
-end
-
 --- This function takes a text string and compresses it without loading it to the library
 function GSE.CompressSequenceFromString(importstring)
     local importStr = GSE.StripControlandExtendedCodes(importstring)

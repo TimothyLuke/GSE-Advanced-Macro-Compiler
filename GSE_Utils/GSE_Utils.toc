@@ -24,4 +24,5 @@ Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 Indent.lua
 Options.lua
 Events.lua
+StaticPopup.lua
 Utils.lua

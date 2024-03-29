@@ -12,18 +12,7 @@ local function Update3150()
     GSEOptions.Update3150 = true
 end
 
-function GSE.PerformOneOffEvents()
-    GSE.Update3023()
-    GSE.Update3111()
-    GSE.Update3117()
-    GSE.Update3131()
-    Update3150()
-    if GSE.isEmpty(GSEOptions.msClickRate) then
-        GSEOptions.msClickRate = 250
-    end
-end
-
-function GSE.Update3023()
+local function Update3023()
     if GSE.isEmpty(GSEOptions.Update3023) then
         GSEOptions.UnfoundSpells = nil
         GSEOptions.UnfoundSpellIDS = nil
@@ -41,7 +30,7 @@ function GSE.Update3023()
     GSEOptions.Update3023 = true
 end
 
-function GSE.Update3111()
+local function Update3111()
     if GSE.isEmpty(GSEOptions.Update3111) then
         if GSE.isEmpty(GSE3Storage[13]) then
             GSE3Storage[13] = {}
@@ -49,7 +38,7 @@ function GSE.Update3111()
     end
     GSEOptions.Update3111 = true
 end
-function GSE.Update3117()
+local function Update3117()
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
@@ -65,11 +54,22 @@ function GSE.Update3117()
     GSE_C.Update3117 = true
 end
 
-function GSE.Update3131()
+local function Update3131()
     if GSE.isEmpty(GSE.Update3131) then
         GSEOptions.DebugModules[Statics.DebugModules["Startup"]] = false
     end
     GSEOptions.Update3131 = true
+end
+
+function GSE.PerformOneOffEvents()
+    Update3023()
+    Update3111()
+    Update3117()
+    Update3131()
+    Update3150()
+    if GSE.isEmpty(GSEOptions.msClickRate) then
+        GSEOptions.msClickRate = 250
+    end
 end
 
 GSE.DebugProfile("OneOffEvents")

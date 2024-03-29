@@ -204,5 +204,3 @@ StaticPopupDialogs["GSE_ChatLink"] = {
     end,
     showAlert = 1
 }
-
-GSE.DebugProfile("Static Popup")

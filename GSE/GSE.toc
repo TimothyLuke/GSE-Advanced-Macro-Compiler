@@ -41,7 +41,6 @@ API\InitialOptions.lua
 
 
 # Storage and core
-API\StaticPopup.lua
 API\StringFunctions.lua
 API\CharacterFunctions.lua
 SampleMacros.lua
