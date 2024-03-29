@@ -82,6 +82,7 @@ jobs:
         CF_API_KEY: ${{ secrets.CF_API_KEY }}
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
         WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+        WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
 
 #    # Runs a set of commands using the runners shell
 #    - name: Create Package Classic
