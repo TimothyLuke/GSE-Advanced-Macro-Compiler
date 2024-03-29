@@ -78,6 +78,7 @@ ignore:
   - GSE/pages
   - GSE/package.*
   - GSE/package-lock.*
+  - GSE/GSE_Personal
 
 wowi-archive-previous: no
 enable-toc-creation: yes

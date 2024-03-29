@@ -1,0 +1,14 @@
+## Interface: 100206
+
+## Interface-Classic: 11501
+## Interface-BCC: 20504
+## Interface-Wrath: 30403
+
+## Title: |cff0000FFGSE:|r |cFF00D1FFUtils|r
+## Notes: Personal Compiled Templates for GSE
+## Author: TimothyLuke
+## Version: @project-version@
+## Dependencies: GSE
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
+
+Templates.lua
