@@ -52,6 +52,7 @@ move-folders:
   GSE/GSE_GUI: GSE_GUI
   GSE/GSE_LDB: GSE_LDB
   GSE/GSE_Utils: GSE_Utils
+  GSE/GSE_Personal: GSE_Personal
 
 enable-nolib-creation: no
 
@@ -78,7 +79,7 @@ ignore:
   - GSE/pages
   - GSE/package.*
   - GSE/package-lock.*
-  - GSE/GSE_Personal
+  - GSE_Personal
 
 wowi-archive-previous: no
 enable-toc-creation: yes
