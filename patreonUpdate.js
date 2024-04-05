@@ -56,7 +56,7 @@ Statics.Patrons = {
     "${memberList.join('",\n    "')}"
 }`;
   console.log(output);
-  fs.writeFile("GSE/API/Patrons.lua", output, (err) => {
+  fs.writeFile("GSE_Utils/Patrons.lua", output, (err) => {
     if (err) {
       console.error(err);
     }
