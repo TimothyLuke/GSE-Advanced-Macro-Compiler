@@ -53,7 +53,7 @@ function GSE.ProcessVariables(lines, variableTable)
                         end
                     end
                     if type(value) == "function" then
-                        if pcall(value()) then
+                        if pcall(value) then
                             value = value()
                         else
                             value = ""
