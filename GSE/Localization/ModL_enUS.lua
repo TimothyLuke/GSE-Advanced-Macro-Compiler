@@ -922,3 +922,6 @@ L["Alwaus use the highest rank of spell available.  This is useful for levelling
 
 -- 1389
 L["Allow Variable Editor"] = true
+
+-- 1410
+L["Specialisation"] = true

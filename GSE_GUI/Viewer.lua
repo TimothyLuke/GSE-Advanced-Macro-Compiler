@@ -149,21 +149,20 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	local row2 = AceGUI:Create("KeyGroup")
 	row2:SetLayout("Flow")
 	row2:SetFullWidth(true)
+	if GSE.Library[classid][sequencename].MetaData.SpecID > 13 or GSE.Library[classid][sequencename].MetaData.SpecID == 0 then
+		local SpecialisationHeader = AceGUI:Create("Label")
+		SpecialisationHeader:SetFont(fontName, fontHeight + 2, fontFlags)
+		SpecialisationHeader:SetText(L["Specialisation"] .. ":")
+		SpecialisationHeader:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+		SpecialisationHeader:SetWidth(105)
+		row2:AddChild(SpecialisationHeader)
 
-	local talentsHead = AceGUI:Create("Label")
-	talentsHead:SetFont(fontName, fontHeight + 2, fontFlags)
-	talentsHead:SetText(L["Talents"] .. ":")
-	talentsHead:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
-	talentsHead:SetWidth(60)
-	row2:AddChild(talentsHead)
-
-	local talentslabel = AceGUI:Create("Label")
-	if not GSE.isEmpty(GSE.Library[classid][sequencename].MetaData.Talents) then
-		talentslabel:SetText(GSE.Library[classid][sequencename].MetaData.Talents)
+		local SpecialisationLabel = AceGUI:Create("Label")
+		SpecialisationLabel:SetText(Statics.SpecIDList[GSE.Library[classid][sequencename].MetaData.SpecID])
+		SpecialisationLabel:SetWidth(180)
+		SpecialisationLabel:SetFontObject(font)
+		row2:AddChild(SpecialisationLabel)
 	end
-	talentslabel:SetWidth(80)
-	talentslabel:SetFontObject(font)
-	row2:AddChild(talentslabel)
 
 	local spacerlabel1 = AceGUI:Create("Label")
 	spacerlabel1:SetText("")
@@ -174,7 +173,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 	urlHead:SetFont(fontName, fontHeight + 2, fontFlags)
 	urlHead:SetText(L["Help URL"] .. ":")
 	urlHead:SetColor(GSE.GUIGetColour(GSEOptions.EmphasisColour))
-	urlHead:SetWidth(70)
+	urlHead:SetWidth(75)
 	row2:AddChild(urlHead)
 
 	local urlval = "https://wowlazymacros.com"
@@ -192,7 +191,7 @@ function GSE.GUICreateSequencePanels(frame, container, key)
 		end
 	)
 	urllabel:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
-	urllabel:SetWidth(280)
+	urllabel:SetWidth(300)
 	row2:AddChild(urllabel)
 
 	local column2 = AceGUI:Create("KeyGroup")
