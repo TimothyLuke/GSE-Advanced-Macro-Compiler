@@ -6,7 +6,7 @@ local Statics = GSE.Static
 
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
-    if GSE.GameMode < 4 then
+    if GSE.GameMode <= 4 then
         return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
     else
         local currentSpec = GetSpecialization()
@@ -109,7 +109,7 @@ end
 function GSE.GetCurrentTalents()
     local talents = ""
     -- Need to change this later on to something meaningful
-    if GSE.GameMode < 4 then
+    if GSE.GameMode <= 4 then
         local Talented = Talented
         if not GSE.isEmpty(Talented) then
             if GSE.isEmpty(Talented.alternates) then
