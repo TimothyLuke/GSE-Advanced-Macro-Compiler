@@ -145,7 +145,12 @@ function GSE.GetCurrentTalents()
                 end
             end
         else
-            talents = ""
+            -- local t = {}
+            -- Mixin(t, ClassTalentsFrameMixin, TalentFrameBaseMixin)
+            -- if not t:HasAnyPendingChanges() then
+            --     t:LoadTalentTree()
+            --     talents = t:GetLoadoutExportString()
+            -- end
         end
     else
         for talentTier = 1, MAX_TALENT_TIERS do
