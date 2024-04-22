@@ -90,7 +90,13 @@ end
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     -- UPDATE for GSE3
     if unit == "player" then
-        local _, GCD_Timer = GetSpellCooldown(61304)
+        local GCD_Timer = 0
+        if C_Spell.GetSpellCooldown then
+            GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
+        else
+            local _, gtime = GetSpellCooldown(61304)
+            GCD_Timer = gtime
+        end
         GCD = true
         C_Timer.After(
             GCD_Timer,
@@ -103,9 +109,22 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
         GSE.CurrentGCD = GCD_Timer
 
         local elements = GSE.split(action, "-")
-        local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
-        local fskilltype, fspellid = GetSpellBookItemInfo(spell)
-        if not GSE.isEmpty(fskilltype) then
+
+        local foundskill = false
+        if GetSpellBookItemInfo then
+            local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
+            local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
+            local fskilltype, _ = GetSpellBookItemInfo(spell)
+            if not GSE.isEmpty(fskilltype) then
+                foundskill = true
+            end
+        else
+            local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
+            if found then
+                foundskill = true
+            end
+        end
+        if foundskill then
             if GSE.RecorderActive then
                 GSE.GUIRecordFrame.RecordSequenceBox:SetText(
                     GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n"
