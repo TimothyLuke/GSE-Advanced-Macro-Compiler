@@ -331,6 +331,16 @@ end
 local function ClassicGetSpellInfo(spellID, absolute, mode)
     local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID)
+    if type(name) == "table" then
+        -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
+        sid = name.spellID
+        maxRange = name.maxRange
+        minRange = name.minRange
+        castTime = name.castTime
+        icon = name.iconID
+        rank = name.rank and name.rank or nil
+        name = name.name
+    end
     -- only check rank if classic.
     if GSE.GameMode <= 3 then
         -- print("Did rank check found: " .. (rank or "No Rank"))
@@ -358,12 +368,25 @@ local function ClassicGetSpellInfo(spellID, absolute, mode)
             local returnval = sid
             if FindBaseSpellByID(returnval) then
                 returnval = FindBaseSpellByID(returnval)
+                if type(returnval) == "table" then
+                    returnval = returnval.spellID
+                end
             end
             -- Still need Heart of Azeroth overrides.
             if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
                 returnval = Statics.BaseSpellTable[returnval]
             end
             name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(returnval)
+            if type(name) == "table" then
+                -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
+                sid = name.spellID
+                maxRange = name.maxRange
+                minRange = name.minRange
+                castTime = name.castTime
+                icon = name.iconID
+                rank = name.rank and name.rank or nil
+                name = name.name
+            end
         end
     end
     -- allows for a trinket to be part of a castsequence.
@@ -409,6 +432,9 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             if not absolute and not GSE.isEmpty(returnval) then
                 if FindBaseSpellByID(returnval) then
                     returnval = FindBaseSpellByID(returnval)
+                    if type(returnval) == "table" then
+                        returnval = returnval.spellID
+                    end
                 end
                 -- Still need Heart of Azeroth overrides.
                 if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
