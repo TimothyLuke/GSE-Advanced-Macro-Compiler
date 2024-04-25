@@ -83,6 +83,7 @@ if GSE.GameMode ~= 1 then
     Statics.SystemVariables["HE"] = function()
         local itemLink = GetInventoryItemLink("player", 2)
         if not GSE.isEmpty(itemLink) then
+            local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
             if GetItemInfo(itemLink) == "Heart of Azeroth" then
                 return "/cast [combat,nochanneling] Heart Essence"
             else
