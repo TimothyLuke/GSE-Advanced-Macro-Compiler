@@ -329,6 +329,7 @@ function GSE.GetConditionalsFromString(str)
 end
 
 local function ClassicGetSpellInfo(spellID, absolute, mode)
+    local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
     local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID)
     -- only check rank if classic.
     if GSE.GameMode <= 3 then

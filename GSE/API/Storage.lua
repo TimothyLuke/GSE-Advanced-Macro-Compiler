@@ -454,6 +454,7 @@ function GSE.UpdateIcon(self, reset)
                 GSE.TraceSequence(gsebutton, step, spell)
             end
             if spell then
+                local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
                 if GetSpellInfo(spell) then
                     SetMacroSpell(gsebutton, spell, target)
                     foundSpell = true
