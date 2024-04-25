@@ -129,28 +129,27 @@ function GSE.GetCurrentTalents()
         end
     elseif GSE.GameMode >= 10 then
         -- force load the addon
-        local LoadAddon = C_AddOns and C_AddOns.LoadAddOn or LoadAddOn
+        local addonName = "Blizzard_PlayerSpells"
+        if GSE.GameMode == 10 then
+            addonName = "Blizzard_ClassTalentUI"
+        end
 
-        -- TODO this needs to be refactored for the new Spell book from 11.0
-        if not LoadAddon then
-            local loaded, _ = LoadAddOn("Blizzard_ClassTalentUI")
+        local loaded, reason = C_AddOns.LoadAddOn(addonName)
 
-            if not loaded then
-                talents = ""
-            else
+        if not loaded then
+            talents = ""
+            GSE.Print(reason)
+        else
+            if GSE.GameMode == 10 then
                 local t = ClassTalentFrame.TalentsTab
                 if t.isAnythingPending ~= nil then
                     t:UpdateTreeInfo()
                     talents = t:GetLoadoutExportString()
                 end
+            else
+                PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
+                talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
             end
-        else
-            -- local t = {}
-            -- Mixin(t, ClassTalentsFrameMixin, TalentFrameBaseMixin)
-            -- if not t:HasAnyPendingChanges() then
-            --     t:LoadTalentTree()
-            --     talents = t:GetLoadoutExportString()
-            -- end
         end
     else
         for talentTier = 1, MAX_TALENT_TIERS do
