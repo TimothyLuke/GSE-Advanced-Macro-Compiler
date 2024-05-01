@@ -194,6 +194,8 @@ globals = {
     "C_Timer.After",
     "C_Timer.NewTicker",
     "C_CVar",
+    "C_Spell",
+    "C_Item",
     "ClassTalentFrame",
     "C_UIWidgetManager.GetStatusBarWidgetVisualizationInfo",
     "AcceptGroup",
