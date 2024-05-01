@@ -69,10 +69,11 @@ function GSE.LoadStorage(destination)
             GSE3Storage[iind] = {}
         end
     end
-    for k, v in ipairs(GSE3Storage) do
+    for k = 0, 13 do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
         end
+        local v = GSE3Storage[k]
         for i, j in pairs(v) do
             local status, err =
                 pcall(
@@ -354,15 +355,15 @@ function GSE.GetSequenceNames(Library)
     if not Library then
         Library = GSE.Library
     end
+    if GSE.isEmpty(GSEOptions.filterList) then
+        GSEOptions.filterList = {}
+        GSEOptions.filterList[Statics.Spec] = true
+        GSEOptions.filterList[Statics.Class] = true
+        GSEOptions.filterList[Statics.All] = false
+        GSEOptions.filterList[Statics.Global] = true
+    end
     local keyset = {}
     for k, _ in pairs(Library) do
-        if GSE.isEmpty(GSEOptions.filterList) then
-            GSEOptions.filterList = {}
-            GSEOptions.filterList[Statics.Spec] = true
-            GSEOptions.filterList[Statics.Class] = true
-            GSEOptions.filterList[Statics.All] = false
-            GSEOptions.filterList[Statics.Global] = true
-        end
         if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID() then
             for i, j in pairs(Library[k]) do
                 local disable = 0
