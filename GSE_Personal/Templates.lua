@@ -59,3 +59,29 @@ if GSE.GetCurrentClassID() == 2 then
 -- macro = GSE.CompileTemplate(sequence)
 -- GSE.CreateGSE3Button(macro, name, true)
 end
+
+if GSE.GameMode == 11 then
+    local gsebutton = CreateFrame("Button", "PROTTEST", nil, "SecureActionButtonTemplate,SecureHandlerBaseTemplate")
+    gsebutton:SetAttribute("type", "spell")
+    gsebutton:SetAttribute("step", 1)
+    gsebutton.UpdateIcon = GSE.UpdateIcon
+    gsebutton:RegisterForClicks("AnyUp", "AnyDown")
+    gsebutton:SetAttribute("spelllist", {[1] = {spell = "Judgement"}, [2] = {spell = "Consecration"}})
+    gsebutton:WrapScript(
+        gsebutton,
+        "OnClick",
+        [=[
+        print("clicked ", step)    
+        local step = self:GetAttribute('step')
+step = tonumber(step)
+self:SetAttribute('spell', spelllist[step].spell )
+step = step % #spelllist + 1
+if not step or not macros[step] then -- User attempted to write a step method that doesn't work, reset to 1
+	print('|cffff0000Invalid step assigned by custom step sequence', self:GetName(), step or 'nil', '|r')
+	step = 1
+end
+self:SetAttribute('step', step)
+
+)]=]
+    )
+end
