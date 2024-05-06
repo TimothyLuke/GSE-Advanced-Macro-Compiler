@@ -393,5 +393,6 @@ globals = {
     "ChatFrame_AddMessageEventFilter",
     "LoadAddOn",
     "GetActiveTalentGroup",
-    "GetMaxPlayerLevel"
+    "GetMaxPlayerLevel",
+    "PlayerSpellsFrame"
 }
