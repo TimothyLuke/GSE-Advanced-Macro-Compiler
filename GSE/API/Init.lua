@@ -11,6 +11,8 @@ GSE =
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 
+GSE.WagoAnalytics = LibStub("WagoAnalytics"):Register("kGr0YY6y")
+
 local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 GSE.VersionString = GetAddOnMetadata("GSE", "Version")
 
@@ -30,6 +32,7 @@ GSE.OutputQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}
+GSE.WagoAnalytics:Switch("Patron", GSE.Patron)
 local L = GSE.L
 local Statics = GSE.Static
 local GNOME = "GSE"
@@ -55,7 +58,7 @@ function GSE.split(source, delimiters)
     return elements
 end
 
-local gameversion, build, date, tocversion = GetBuildInfo()
+local gameversion, _, _, _, _, buildType = GetBuildInfo()
 local majorVersion = GSE.split(gameversion, ".")
 
 GSE.GameMode = tonumber(majorVersion[1])
@@ -157,8 +160,8 @@ end
 
 function GSE.DebugProfile(event)
     local currentTimeStop = debugprofilestop()
-    if GSE.ProfileStop and GSE.Developer then
-        print(event, currentTimeStop - GSE.ProfileStop)
+    if GSE.ProfileStop then
+        GSE.WagoAnalytics:SetCounter("Init_" .. event, currentTimeStop - GSE.ProfileStop)
     end
     GSE.ProfileStop = currentTimeStop
 end

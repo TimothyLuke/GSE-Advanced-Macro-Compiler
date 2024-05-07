@@ -9,7 +9,7 @@
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
-## OptionalDeps: WeakAuras Talented ElvUI Details
+## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 ## X-WoWI-ID: 23921
