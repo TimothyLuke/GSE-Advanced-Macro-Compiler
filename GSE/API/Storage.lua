@@ -483,6 +483,7 @@ function GSE.UpdateIcon(self, reset)
     if not reset then
         GSE.UsedSequences[gsebutton] = true
     end
+    GSE.WagoAnalytics:Switch(gsebutton .. "_" .. GSE.GetCurrentClassID(), true)
 end
 
 --- Takes a collection of Sequences and returns a list of names

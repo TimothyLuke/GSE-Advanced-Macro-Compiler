@@ -116,14 +116,6 @@ GSE.AdditionalLanguagesAvailable = false
 
 local Translator = GSE.TranslatorLanguageTables
 
-GSE.DebugProfile = function(event)
-    local currentTimeStop = debugprofilestop()
-    if GSE.ProfileStop and (GSEOptions.DebugModules[Statics.DebugModules["Startup"]] or GSE.Developer) then
-        print(event, currentTimeStop - GSE.ProfileStop)
-    end
-    GSE.ProfileStop = currentTimeStop
-end
-
 Translator[Statics.TranslationKey] = {}
 Translator[Statics.TranslationHash] = {}
 Translator[Statics.TranslationShadow] = {}

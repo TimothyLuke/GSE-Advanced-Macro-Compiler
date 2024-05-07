@@ -1155,6 +1155,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             _G["GSE3"]:Show()
             editframe.AdvancedEditor = true
             editframe:Hide()
+            GSE.WagoAnalytics:Switch("Raw Edit", true)
         end
     )
     raweditbutton:SetCallback(
@@ -1184,6 +1185,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         function()
             local GSE3Macro = GSE.CompileTemplate(editframe.Sequence.Macros[version])
             GSE.GUIShowCompiledMacroGui(GSE3Macro, editframe.SequenceName .. " : " .. version)
+            GSE.WagoAnalytics:Switch("Compile Template", true)
         end
     )
     previewMacro:SetCallback(

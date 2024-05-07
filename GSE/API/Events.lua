@@ -193,6 +193,7 @@ function GSE:ADDON_LOADED(event, addon)
                 hide = true
             }
         end
+        GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
     end
 end
 

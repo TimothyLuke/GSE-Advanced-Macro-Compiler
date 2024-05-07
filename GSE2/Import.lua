@@ -51,6 +51,7 @@ recbutton:SetWidth(150)
 recbutton:SetCallback(
   "OnClick",
   function()
+    GSE.WagoAnalytics:Switch("GSE Retro", true)
     GSE2.GUIImportSequence()
   end
 )
