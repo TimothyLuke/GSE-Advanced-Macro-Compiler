@@ -41,7 +41,6 @@ API\InitialOptions.lua
 # Storage and core
 API\StringFunctions.lua
 API\CharacterFunctions.lua
-SampleMacros.lua
 API\Storage.lua
 API\Translator.lua
 API\Plugins.lua
