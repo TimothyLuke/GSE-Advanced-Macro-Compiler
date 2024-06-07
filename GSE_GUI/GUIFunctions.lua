@@ -55,7 +55,8 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
         [1] = {
           ["Actions"] = {
             [1] = {
-              [1] = "/say Hello",
+              ["spell"] = "Need Spell Here",
+              ["unit"] = "target",
               ["Type"] = Statics.Actions.Action
             }
           },

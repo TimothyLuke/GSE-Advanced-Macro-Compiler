@@ -422,3 +422,37 @@ function GSE.CheckGUI()
 end
 
 GSE.DebugProfile("Events")
+
+-- local spelllist = {"Judgment", "Divine Toll", "Final Reckoning"}
+-- local targetlist = {"target", "target", "player"}
+-- local gsebutton = CreateFrame("Button", "PROTTEST", nil, "SecureActionButtonTemplate,SecureHandlerBaseTemplate")
+-- gsebutton:SetAttribute("type", "spell")
+-- gsebutton:SetAttribute("step", 1)
+-- --
+-- gsebutton:RegisterForClicks("AnyUp", "AnyDown")
+
+-- gsebutton:SetAttribute("spell", spelllist[1])
+-- gsebutton:SetAttribute("unit", targetlist[1])
+-- gsebutton:Execute(
+--     "spelllist, targetlist =  newtable([=======[" ..
+--         strjoin("]=======],[=======[", unpack(spelllist)) ..
+--             "]=======]), newtable([=======[" .. strjoin("]=======],[=======[", unpack(targetlist)) .. "]=======])"
+-- )
+-- gsebutton:WrapScript(
+--     gsebutton,
+--     "OnClick",
+--     [=[
+--         local step = self:GetAttribute('step')
+
+--         print("clicked ", step)
+-- 	print(spelllist[step])
+-- 	step = tonumber(step)
+-- 	self:SetAttribute('spell', spelllist[step] )
+--     self:SetAttribute('unit', targetlist[step] )
+
+-- 	step = step % #spelllist + 1
+
+-- 	self:SetAttribute('step', step)
+
+--     ]=]
+-- )

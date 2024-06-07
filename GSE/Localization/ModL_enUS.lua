@@ -925,3 +925,6 @@ L["Allow Variable Editor"] = true
 
 -- 1410
 L["Specialisation"] = true
+
+-------------------------
+L["Unit Name"] = true

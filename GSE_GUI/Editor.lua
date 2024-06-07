@@ -1032,7 +1032,8 @@ function GSE:GUIDrawMacroEditor(container, version)
                 [1] = {
                     ["Actions"] = {
                         [1] = {
-                            [1] = "/say Hello",
+                            ["spell"] = "Need Spell Here",
+                            ["unit"] = "target",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1208,7 +1209,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     local spacerlabel2 = AceGUI:Create("Label")
     spacerlabel2:SetWidth(6)
 
-    local addRepeatButton = AceGUI:Create("Icon")
     local addLoopButton = AceGUI:Create("Icon")
     local addActionButton = AceGUI:Create("Icon")
     local addPauseButton = AceGUI:Create("Icon")
@@ -1223,7 +1223,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         "OnClick",
         function()
             local newAction = {
-                [1] = "/say Hello",
+                ["spell"] = "Need Spell Here",
+                ["unit"] = "target",
                 ["Type"] = Statics.Actions.Action
             }
             table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
@@ -1254,7 +1255,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         function()
             local newAction = {
                 [1] = {
-                    [1] = "/say Hello",
+                    ["spell"] = "Need Spell Here",
+                    ["unit"] = "target",
                     ["Type"] = Statics.Actions.Action
                 },
                 ["StepFunction"] = Statics.Sequential,
@@ -1280,37 +1282,6 @@ function GSE:GUIDrawMacroEditor(container, version)
         end
     )
 
-    addRepeatButton:SetImageSize(20, 20)
-    addRepeatButton:SetWidth(20)
-    addRepeatButton:SetHeight(20)
-    addRepeatButton:SetImage(Statics.ActionsIcons.Repeat)
-
-    addRepeatButton:SetCallback(
-        "OnClick",
-        function()
-            local newAction = {
-                [1] = "/say Hello",
-                ["Type"] = Statics.Actions.Repeat,
-                ["Interval"] = 3
-            }
-
-            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
-            editframe.scrollStatus.scrollvalue = 1
-            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
-        end
-    )
-    addRepeatButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Add Repeat"], L["Add a Repeat Block."], editframe)
-        end
-    )
-    addRepeatButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
     addPauseButton:SetImageSize(20, 20)
     addPauseButton:SetWidth(20)
     addPauseButton:SetHeight(20)
@@ -1353,13 +1324,15 @@ function GSE:GUIDrawMacroEditor(container, version)
                 local newAction = {
                     [1] = {
                         [1] = {
-                            [1] = "/say Variable returned True",
+                            ["spell"] = "Need True Spell Here",
+                            ["unit"] = "target",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
                     [2] = {
                         [1] = {
-                            [1] = "/say Variable returned False",
+                            ["spell"] = "Need False Spell Here",
+                            ["unit"] = "target",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1410,7 +1383,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     spacerlabel3:SetWidth(6)
 
     linegroup1:AddChild(addActionButton)
-    linegroup1:AddChild(addRepeatButton)
     linegroup1:AddChild(addLoopButton)
     linegroup1:AddChild(addPauseButton)
     linegroup1:AddChild(addIfButton)
@@ -1435,20 +1407,11 @@ function GSE:GUIDrawMacroEditor(container, version)
         contentcontainer:AddChild(macrocontainer)
     end
 
-    local variableContainer = AceGUI:Create("InlineGroup")
-    variableContainer:SetAutoAdjustHeight(true)
-    variableContainer:SetTitle(L["Variables"])
-    variableContainer:SetWidth(contentcontainer.frame:GetWidth() - 50)
-    GSE:GUIDrawVariableEditor(variableContainer, version)
-    contentcontainer:AddChild(variableContainer)
     layoutcontainer:AddChild(scrollcontainer)
 
     local toolbarcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     toolbarcontainer:SetWidth(contentcontainer.frame:GetWidth() - 50)
     toolbarcontainer:SetLayout("list")
-    local heading2 = AceGUI:Create("Label")
-    heading2:SetText(L["Use"])
-    toolbarcontainer:AddChild(heading2)
 
     local toolbarrow1 = AceGUI:Create("KeyGroup")
     toolbarrow1:SetLayout("Flow")
@@ -1487,219 +1450,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     headingspace1:SetText(" ")
     local heading1 = AceGUI:Create("Label")
     heading1:SetText(L["Resets"])
-
-    local toolbarrow2 = AceGUI:Create("KeyGroup")
-    toolbarrow2:SetLayout("Flow")
-    toolbarrow2:SetWidth(editframe.Width)
-
-    local headcheckbox = AceGUI:Create("CheckBox")
-    headcheckbox:SetType("checkbox")
-    headcheckbox:SetWidth(78)
-    headcheckbox:SetTriState(true)
-    headcheckbox:SetLabel(L["Head"])
-    headcheckbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Head = value
-        end
-    )
-    headcheckbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Head)
-    headcheckbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Head"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    headcheckbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-
-    toolbarrow2:AddChild(headcheckbox)
-
-    local neckcheckbox = AceGUI:Create("CheckBox")
-    neckcheckbox:SetType("checkbox")
-    neckcheckbox:SetWidth(78)
-    neckcheckbox:SetTriState(true)
-    neckcheckbox:SetLabel(L["Neck"])
-    neckcheckbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Neck = value
-        end
-    )
-    neckcheckbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Neck)
-    neckcheckbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Neck"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    neckcheckbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    toolbarrow2:AddChild(neckcheckbox)
-
-    local beltcheckbox = AceGUI:Create("CheckBox")
-    beltcheckbox:SetType("checkbox")
-    beltcheckbox:SetWidth(78)
-    beltcheckbox:SetTriState(true)
-    beltcheckbox:SetLabel(L["Belt"])
-    beltcheckbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Belt = value
-        end
-    )
-    beltcheckbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Belt)
-    beltcheckbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Belt"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    beltcheckbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    toolbarrow2:AddChild(beltcheckbox)
-
-    local ring1checkbox = AceGUI:Create("CheckBox")
-    ring1checkbox:SetType("checkbox")
-    ring1checkbox:SetWidth(68)
-    ring1checkbox:SetTriState(true)
-    ring1checkbox:SetLabel(L["Ring 1"])
-    ring1checkbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Ring1 = value
-        end
-    )
-    ring1checkbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Ring 1"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    ring1checkbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    ring1checkbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Ring1)
-    toolbarrow2:AddChild(ring1checkbox)
-
-    local ring2checkbox = AceGUI:Create("CheckBox")
-    ring2checkbox:SetType("checkbox")
-    ring2checkbox:SetWidth(68)
-    ring2checkbox:SetTriState(true)
-    ring2checkbox:SetLabel(L["Ring 2"])
-    ring2checkbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Ring2 = value
-        end
-    )
-    ring2checkbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Ring 2"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    ring2checkbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Ring2)
-    toolbarrow2:AddChild(ring2checkbox)
-
-    local trinket1checkbox = AceGUI:Create("CheckBox")
-    trinket1checkbox:SetType("checkbox")
-    trinket1checkbox:SetWidth(78)
-    trinket1checkbox:SetTriState(true)
-    trinket1checkbox:SetLabel(L["Trinket 1"])
-    trinket1checkbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Trinket1 = value
-        end
-    )
-    trinket1checkbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Trinket1)
-    trinket1checkbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Trinket 1"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    toolbarrow2:AddChild(trinket1checkbox)
-
-    local trinket2checkbox = AceGUI:Create("CheckBox")
-    trinket2checkbox:SetType("checkbox")
-    trinket2checkbox:SetWidth(83)
-    trinket2checkbox:SetTriState(true)
-    trinket2checkbox:SetLabel(L["Trinket 2"])
-    trinket2checkbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            editframe.Sequence.Macros[version].InbuiltVariables.Trinket2 = value
-        end
-    )
-    trinket2checkbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Trinket 2"],
-                L[
-                    "These tick boxes have three settings for each slot.  Gold = Definately use this item. Blank = Do not use this item automatically.  Silver = Either use or not based on my default settings store in GSE's Options."
-                ],
-                editframe
-            )
-        end
-    )
-    trinket2checkbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Trinket2)
-    toolbarrow2:AddChild(trinket2checkbox)
-
-    toolbarcontainer:AddChild(toolbarrow2)
+    --toolbarcontainer:AddChild(toolbarrow2)
     toolbarcontainer:AddChild(headingspace1)
     toolbarcontainer:AddChild(heading1)
     toolbarcontainer:AddChild(toolbarrow1)
@@ -2017,7 +1768,6 @@ local function GetBlockToolbar(
         end
     )
 
-    local addRepeatButton = AceGUI:Create("Icon")
     local addLoopButton = AceGUI:Create("Icon")
     local addActionButton = AceGUI:Create("Icon")
     local addPauseButton = AceGUI:Create("Icon")
@@ -2032,7 +1782,8 @@ local function GetBlockToolbar(
             "OnClick",
             function()
                 local newAction = {
-                    [1] = "/say Hello",
+                    ["spell"] = "Need Spell Here",
+                    ["unit"] = "target",
                     ["Type"] = Statics.Actions.Action
                 }
                 if #path > 1 then
@@ -2067,7 +1818,8 @@ local function GetBlockToolbar(
                 local addPath = {}
                 local newAction = {
                     [1] = {
-                        [1] = "/say Hello",
+                        ["spell"] = "Need Spell Here",
+                        ["unit"] = "target",
                         ["Type"] = Statics.Actions.Action
                     },
                     ["StepFunction"] = Statics.Sequential,
@@ -2097,39 +1849,6 @@ local function GetBlockToolbar(
             end
         )
 
-        addRepeatButton:SetImageSize(20, 20)
-        addRepeatButton:SetWidth(20)
-        addRepeatButton:SetHeight(20)
-        addRepeatButton:SetImage(Statics.ActionsIcons.Repeat)
-
-        addRepeatButton:SetCallback(
-            "OnClick",
-            function()
-                local newAction = {
-                    [1] = "/say Hello",
-                    ["Type"] = Statics.Actions.Repeat,
-                    ["Repeat"] = 3
-                }
-                if #path > 1 then
-                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
-                else
-                    table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                end
-                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
-            end
-        )
-        addRepeatButton:SetCallback(
-            "OnEnter",
-            function()
-                GSE.CreateToolTip(L["Add Repeat"], L["Add a Repeat Block."], editframe)
-            end
-        )
-        addRepeatButton:SetCallback(
-            "OnLeave",
-            function()
-                GSE.ClearTooltip(editframe)
-            end
-        )
         addPauseButton:SetImageSize(20, 20)
         addPauseButton:SetWidth(20)
         addPauseButton:SetHeight(20)
@@ -2176,13 +1895,15 @@ local function GetBlockToolbar(
                     local newAction = {
                         [1] = {
                             {
-                                [1] = "/say Variable returned True",
+                                ["spell"] = "Need True Spell Here",
+                                ["unit"] = "target",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
                         [2] = {
                             {
-                                [1] = "/say Variable returned False",
+                                ["spell"] = "Need False Spell Here",
+                                ["unit"] = "target",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
@@ -2243,7 +1964,6 @@ local function GetBlockToolbar(
         spacerlabel2:SetWidth(5)
         layoutcontainer:AddChild(spacerlabel2)
         layoutcontainer:AddChild(addActionButton)
-        layoutcontainer:AddChild(addRepeatButton)
         layoutcontainer:AddChild(addLoopButton)
         layoutcontainer:AddChild(addPauseButton)
         layoutcontainer:AddChild(addIfButton)
@@ -2564,7 +2284,7 @@ local function drawAction(container, action, version, keyPath)
 
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
-    elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
+    elseif action.Type == Statics.Actions.Action then
         local macroPanel = AceGUI:Create("KeyGroup")
 
         macroPanel:SetLayout("List")
@@ -2573,79 +2293,44 @@ local function drawAction(container, action, version, keyPath)
 
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
-        if action.Type == Statics.Actions.Repeat then
-            local looplimit = AceGUI:Create("EditBox")
-            looplimit:SetLabel(L["Interval"])
-            looplimit:DisableButton(true)
-            looplimit:SetMaxLetters(4)
-            looplimit:SetWidth(100)
-            --print(GSE.Dump(action))
-            if GSE.isEmpty(action.Interval) and action.Repeat then
-                action.Interval = tonumber(action.Repeat)
-                action.Repeat = nil
-            end
-            if type(action.Interval) ~= "number" or action.Interval < 1 then
-                action.Interval = 1
-            end
-            looplimit:SetText(action.Interval)
-            looplimit:SetCallback(
-                "OnEnter",
-                function()
-                    GSE.CreateToolTip(L["Interval"], L["Insert this block again after how many blocks."], editframe)
-                end
-            )
-            looplimit:SetCallback(
-                "OnLeave",
-                function()
-                    GSE.ClearTooltip(editframe)
-                end
-            )
-            looplimit:SetCallback(
-                "OnTextChanged",
-                function(sel, object, value)
-                    value = tonumber(value)
-                    if type(value) == "number" and value > 0 then
-                        editframe.Sequence.Macros[version].Actions[keyPath].Interval = value
-                    end
-                end
-            )
-
-            linegroup1:AddChild(looplimit)
-        end
         macroPanel:AddChild(linegroup1)
-        local valueEditBox = AceGUI:Create("MultiLineEditBox")
-        valueEditBox:SetLabel()
-        local numlines = #action
-        valueEditBox:SetNumLines(numlines)
-        valueEditBox:SetWidth(maxWidth)
-        valueEditBox:DisableButton(true)
-        valueEditBox:SetText(GSE.SafeConcat(GSE.TranslateSequence(action, Statics.TranslatorMode.Current), "\n"))
+        local spellEditBox = AceGUI:Create("EditBox")
+        spellEditBox:SetLabel(L["Spell Name"])
+
+        spellEditBox:SetWidth(250)
+        spellEditBox:DisableButton(true)
+        spellEditBox:SetText(action.spell)
         --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
-        valueEditBox:SetCallback(
+        spellEditBox:SetCallback(
             "OnTextChanged",
-            function()
-                local returnAction = GSE.SplitMeIntolines(valueEditBox:GetText())
-                local boxlines = #returnAction
-                returnAction["Type"] = action.Type
-                editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+            function(sel, object, value)
+                editframe.Sequence.Macros[version].Actions[keyPath].spell = value
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
         )
-        valueEditBox:SetCallback(
+        spellEditBox:SetCallback(
             "OnEditFocusLost",
             function()
-                local translatedact =
-                    GSE.TranslateSequence(
-                    editframe.Sequence.Macros[version].Actions[keyPath],
-                    Statics.TranslatorMode.Current
-                )
+            end
+        )
 
-                for k, v in ipairs(translatedact) do
-                    if GSE.isEmpty(v) then
-                        translatedact[k] = "\n"
-                    end
-                end
-                valueEditBox:SetText(GSE.SafeConcat(translatedact, "\n"))
+        local unitEditBox = AceGUI:Create("EditBox")
+        unitEditBox:SetLabel(L["Unit Name"])
+
+        unitEditBox:SetWidth(250)
+        unitEditBox:DisableButton(true)
+        unitEditBox:SetText(action.unit)
+        --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
+        unitEditBox:SetCallback(
+            "OnTextChanged",
+            function(sel, object, value)
+                editframe.Sequence.Macros[version].Actions[keyPath].unit = value
+                --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+            end
+        )
+        unitEditBox:SetCallback(
+            "OnEditFocusLost",
+            function()
             end
         )
         -- valueEditBox:SetCallback('OnEnter', function()
@@ -2654,7 +2339,13 @@ local function drawAction(container, action, version, keyPath)
         -- valueEditBox:SetCallback('OnLeave', function()
         --     GSE.ClearTooltip(editframe)
         -- end)
-        macroPanel:AddChild(valueEditBox)
+
+        local spellcontainer = AceGUI:Create("SimpleGroup")
+        spellcontainer:SetLayout("Flow")
+        spellcontainer:SetFullWidth(true)
+        spellcontainer:AddChild(spellEditBox)
+        spellcontainer:AddChild(unitEditBox)
+        container:AddChild(spellcontainer)
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.Loop then
         local macroPanel = AceGUI:Create("KeyGroup")
@@ -2939,7 +2630,8 @@ function GSE:DrawSequenceEditor(container, version)
     if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
         editframe.Sequence.Macros[version].Actions = {
             [1] = {
-                [1] = "/say Hello",
+                ["spell"] = "Need Spell Here",
+                ["unit"] = "target",
                 ["Type"] = Statics.Actions.Action
             }
         }
