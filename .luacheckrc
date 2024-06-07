@@ -394,5 +394,6 @@ globals = {
     "LoadAddOn",
     "GetActiveTalentGroup",
     "GetMaxPlayerLevel",
-    "PlayerSpellsFrame"
+    "PlayerSpellsFrame",
+    "C_SpellBook"
 }

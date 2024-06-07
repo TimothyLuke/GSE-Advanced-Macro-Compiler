@@ -860,7 +860,7 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     local steps = {}
 
     for k, v in ipairs(spelllist) do
-        local line = ""
+        local line
         steps[k] = {}
         for i, j in pairs(v) do
             line = i .. "=" .. j
@@ -885,8 +885,7 @@ for k,v in ipairs(compressedspelllist) do
 
     for _,j in ipairs(newtable(strsplit("|",v))) do
         local a,b = strsplit("=",j)
-        spelllist[k][a] = b 
-        
+        spelllist[k][a] = b
     end
 end
 ]==]
@@ -902,8 +901,8 @@ end
         local step = self:GetAttribute('step')
 
     step = tonumber(step)
-    for k,v in pairs(spelllist[step]) do 
-    	self:SetAttribute(k, v )
+    for k,v in pairs(spelllist[step]) do
+        self:SetAttribute(k, v )
     end
 
     step = step % #spelllist + 1

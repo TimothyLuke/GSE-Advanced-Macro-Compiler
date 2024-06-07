@@ -90,7 +90,7 @@ end
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     -- UPDATE for GSE3
     if unit == "player" then
-        local GCD_Timer = 0
+        local GCD_Timer
         if C_Spell.GetSpellCooldown then
             GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
         else
@@ -111,9 +111,10 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
         local elements = GSE.split(action, "-")
 
         local foundskill = false
+        local spell
         if GetSpellBookItemInfo then
             local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
-            local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
+            spell, _, _, _, _, _ = GetSpellInfo(elements[6])
             local fskilltype, _ = GetSpellBookItemInfo(spell)
             if not GSE.isEmpty(fskilltype) then
                 foundskill = true
