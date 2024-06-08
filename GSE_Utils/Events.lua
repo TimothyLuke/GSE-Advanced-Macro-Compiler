@@ -10,13 +10,6 @@ local Statics = GSE.Static
 function GSE.TraceSequence(button, step, task)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(task) then
         local spell = task
-        local csindex, csitem, csspell = QueryCastSequence(task)
-        if not GSE.isEmpty(csitem) then
-            spell = csitem
-        end
-        if not GSE.isEmpty(csitem) then
-            spell = csspell
-        end
 
         local isUsable, notEnoughMana = IsUsableSpell(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
@@ -52,7 +45,7 @@ function GSE.TraceSequence(button, step, task)
         if GSEOptions.showFullBlockDebug then
             fullBlock =
                 "\n" ..
-                GSE.SequencesExec[button][step] ..
+                GSE.SequencesExec[button][step].spell ..
                     GSEOptions.EmphasisColour ..
                         "\n============================================================================================\n" ..
                             Statics.StringReset
@@ -67,10 +60,6 @@ function GSE.TraceSequence(button, step, task)
                     step,
                     ",",
                     (spell and spell or "nil"),
-                    (csindex and
-                        " from castsequence " ..
-                            (csspell and csspell or csitem) .. " (item " .. csindex .. " in castsequence.) " or
-                        ""),
                     ",",
                     usableOutput,
                     ",",

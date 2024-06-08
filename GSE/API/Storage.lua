@@ -454,6 +454,9 @@ function GSE.UpdateIcon(self, reset)
     if not reset then
         GSE.UsedSequences[gsebutton] = true
     end
+    if GSE.Utils then
+        GSE.TraceSequence(gsebutton, step, foundSpell)
+    end
     GSE.WagoAnalytics:Switch(gsebutton .. "_" .. GSE.GetCurrentClassID(), true)
 end
 
@@ -925,6 +928,7 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
             ),
             "BROKEN MACRO"
         )
+        print(err)
     end
 end
 
