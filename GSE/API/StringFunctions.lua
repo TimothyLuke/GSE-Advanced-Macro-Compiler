@@ -401,3 +401,18 @@ GSE.DebugProfile("StringFunctions")
 function GSE.NewTable()
     return {}
 end
+
+function GSE.FlattenTable(v)
+    local res = {}
+    local function flatten(v)
+        if v.spell then
+            table.insert(res, v)
+            return
+        end
+        for _, v in ipairs(v) do
+            flatten(v)
+        end
+    end
+    flatten(v)
+    return res
+end

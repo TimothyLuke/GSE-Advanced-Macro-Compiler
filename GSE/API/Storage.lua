@@ -833,7 +833,7 @@ function GSE.CompileTemplate(macro)
     --     end
     -- end
 
-    return compiledMacro, template
+    return GSE.FlattenTable(compiledMacro), template
 end
 
 local function PCallCreateGSE3Button(spelllist, name, combatReset)
