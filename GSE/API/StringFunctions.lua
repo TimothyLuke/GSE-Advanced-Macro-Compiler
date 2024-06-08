@@ -409,8 +409,8 @@ function GSE.FlattenTable(v)
             table.insert(res, v)
             return
         end
-        for _, v in ipairs(v) do
-            flatten(v)
+        for _, v2 in ipairs(v) do
+            flatten(v2)
         end
     end
     flatten(v)
