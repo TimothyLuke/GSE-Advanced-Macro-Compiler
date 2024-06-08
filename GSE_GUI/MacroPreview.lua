@@ -7,22 +7,26 @@ local L = GSE.L
 local AceGUI = LibStub("AceGUI-3.0")
 
 if GSE.isEmpty(GSEOptions.editorWidth) then
-	GSEOptions.editorWidth = 700
+  GSEOptions.editorWidth = 700
 end
 if GSE.isEmpty(GSEOptions.menuWidth) then
-	GSEOptions.menuWidth = 700
+  GSEOptions.menuWidth = 700
 end
 
 local PreviewFrame = AceGUI:Create("Frame")
 GSE.MacroPreviewFrame = PreviewFrame
 
 PreviewFrame:SetTitle(L["Compiled Template"])
-PreviewFrame:SetCallback("OnClose", function(widget) PreviewFrame:Hide() end)
+PreviewFrame:SetCallback(
+  "OnClose",
+  function(widget)
+    PreviewFrame:Hide()
+  end
+)
 PreviewFrame:SetLayout("List")
 PreviewFrame:SetWidth(290)
 PreviewFrame:SetHeight(700)
 PreviewFrame:Hide()
-
 
 local PreviewLabel = AceGUI:Create("MultiLineEditBox")
 PreviewLabel:SetWidth(270)
@@ -32,15 +36,16 @@ PreviewLabel:DisableButton(true)
 PreviewFrame.PreviewLabel = PreviewLabel
 PreviewFrame:AddChild(PreviewLabel)
 
-
-PreviewFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+PreviewFrame.frame:SetScript(
+  "OnSizeChanged",
+  function(self, width, height)
     PreviewLabel:SetWidth(width - 20)
-end)
+  end
+)
 
-
-function GSE.GUIShowCompiledMacroGui(label, title)
-  PreviewFrame.text = GSE.ConcatIndexed(label, GSEOptions.AuthorColour .. "Step %d" .. Statics.StringReset .."\n%s\n--------------------------------------\n")
-  local count = #label
+function GSE.GUIShowCompiledMacroGui(spelllist, title)
+  PreviewFrame.text = GSE.Dump(spelllist)
+  local count = #spelllist
   PreviewLabel:SetLabel(L["Compiled"] .. " " .. count .. " " .. L["Actions"])
   if GSE.GUIViewFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
@@ -53,15 +58,15 @@ function GSE.GUIShowCompiledMacroGui(label, title)
     PreviewFrame:SetPoint(point, xOfs + 150 + (GSEOptions.editorWidth / 2), yOfs)
   end
 
-  if not GSE.isEmpty(label) then
+  if not GSE.isEmpty(spelllist) then
     PreviewLabel:SetText(PreviewFrame.text)
   end
-  PreviewLabel:SetCallback("OnTextChanged", function()
-    PreviewLabel:SetText(PreviewFrame.text)
-  end)
+  PreviewLabel:SetCallback(
+    "OnTextChanged",
+    function()
+      PreviewLabel:SetText(PreviewFrame.text)
+    end
+  )
   PreviewFrame:Show()
   PreviewFrame:SetStatusText(title)
 end
-
-
-
