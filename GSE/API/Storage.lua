@@ -449,7 +449,7 @@ function GSE.UpdateIcon(self, reset)
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
     if foundSpell then
-        SetMacroItem(gsebutton, foundSpell)
+        SetMacroSpell(gsebutton, foundSpell)
     end
     if not reset then
         GSE.UsedSequences[gsebutton] = true
@@ -911,6 +911,7 @@ end
     step = step % #spelllist + 1
 
     self:SetAttribute('step', step)
+    self:CallMethod('UpdateIcon')
     ]=]
     )
     GSE.UpdateIcon(_G[name], true)
