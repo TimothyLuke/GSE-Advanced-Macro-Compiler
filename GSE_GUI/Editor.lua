@@ -391,6 +391,30 @@ function GSE:GUIDrawMetadataEditor(container)
     metaKeyGroup:SetLayout("Flow")
     metaKeyGroup:SetWidth(editframe.Width - 100)
 
+    local disableSequence = AceGUI:Create("CheckBox")
+    disableSequence:SetLabel(L["Disable Sequence"])
+    disableSequence:SetWidth(200)
+    disableSequence:SetValue(editframe.Sequence.MetaData.Disabled)
+    disableSequence:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key)
+            editframe.Sequence.MetaData.Disabled = key
+            print(editframe.Sequence.MetaData.Disabled)
+        end
+    )
+    disableSequence:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(L["Disable Sequence"], L["Do not compile this Sequence at startup."], editframe)
+        end
+    )
+    disableSequence:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+    metaKeyGroup:AddChild(disableSequence)
     local speciddropdown = AceGUI:Create("Dropdown")
     speciddropdown:SetLabel(L["Specialisation / Class ID"])
     speciddropdown:SetWidth(200)

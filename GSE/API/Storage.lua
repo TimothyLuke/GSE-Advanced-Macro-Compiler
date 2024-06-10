@@ -154,8 +154,8 @@ function GSE.PerformReloadSequences()
 
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
-        local sequenceIndex = GetMacroIndexByName(name)
-        if sequenceIndex > 0 then
+
+        if GSE.isEmpty(sequence.MetaData.Disabled) then
             GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
         end
     end
@@ -163,8 +163,7 @@ function GSE.PerformReloadSequences()
         if not GSE.isEmpty(GSE.Library[0]) then
             for name, sequence in pairs(GSE.Library[0]) do
                 -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
-                local sequenceIndex = GetMacroIndexByName(name)
-                if sequenceIndex > 0 then
+                if GSE.isEmpty(sequence.MetaData.Disabled) then
                     GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
                 end
             end
