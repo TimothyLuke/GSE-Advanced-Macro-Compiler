@@ -2329,7 +2329,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:AddChild(linegroup1)
 
         local spellEditBox = AceGUI:Create("EditBox")
-        spellEditBox:SetLabel(L["Spell/Macro/Pet Ability"])
+        spellEditBox:SetLabel(L["Spell/Item/Macro/Pet Ability"])
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
