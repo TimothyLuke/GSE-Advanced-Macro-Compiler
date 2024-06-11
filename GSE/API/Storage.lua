@@ -850,8 +850,9 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     -- name = name .. "T"
     GSE.SequencesExec[name] = spelllist
     local gsebutton = _G[name]
+    local buttoncreate = GSE.isEmpty(gsebutton)
     -- if button already exists no need to recreate it.  Maybe able to create this in combat.
-    if GSE.isEmpty(gsebutton) then
+    if buttoncreate then
         gsebutton = CreateFrame("Button", name, nil, "SecureActionButtonTemplate,SecureHandlerBaseTemplate")
         gsebutton:SetAttribute("type", "spell")
         gsebutton:SetAttribute("step", 1)
@@ -899,11 +900,12 @@ end
     if combatReset then
         _G[name]:SetAttribute("step", 1)
     end
-    gsebutton:WrapScript(
-        gsebutton,
-        "OnClick",
-        [=[
-        local step = self:GetAttribute('step')
+    if buttoncreate then
+        gsebutton:WrapScript(
+            gsebutton,
+            "OnClick",
+            [=[
+    local step = self:GetAttribute('step')
 
     step = tonumber(step)
     for k,v in pairs(spelllist[step]) do
@@ -915,7 +917,8 @@ end
     self:SetAttribute('step', step)
     self:CallMethod('UpdateIcon')
     ]=]
-    )
+        )
+    end
     GSE.UpdateIcon(_G[name], true)
 end
 
