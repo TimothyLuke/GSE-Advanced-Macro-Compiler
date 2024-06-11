@@ -2342,14 +2342,22 @@ local function drawAction(container, action, version, keyPath)
                     editframe.Sequence.Macros[version].Actions[keyPath].action = value
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
                 elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "macro" then
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = value
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
+                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "item" then
+                    editframe.Sequence.Macros[version].Actions[keyPath].item = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
                 else
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = value
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
                 end
 
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
@@ -2389,7 +2397,7 @@ local function drawAction(container, action, version, keyPath)
 
         local satbtype = AceGUI:Create("Dropdown")
         satbtype:SetLabel(L["Action Type"])
-        satbtype:SetList({["spell"] = "Spell", ["pet"] = "Pet", ["macro"] = "Macro"})
+        satbtype:SetList({["spell"] = "Spell", ["item"] = "Item", ["pet"] = "Pet", ["macro"] = "Macro"})
         satbtype:SetMultiselect(false)
         satbtype:SetCallback(
             "OnValueChanged",
@@ -2399,14 +2407,22 @@ local function drawAction(container, action, version, keyPath)
                     action.action = spellEditBox:GetText()
                     action.spell = nil
                     action.macro = nil
+                    action.item = nil
+                elseif value == "item" then
+                    action.item = spellEditBox:GetText()
+                    action.spell = nil
+                    action.action = nil
+                    action.macro = nil
                 elseif value == "macro" then
                     action.macro = spellEditBox:GetText()
                     action.spell = nil
                     action.action = nil
+                    action.item = nil
                 else
                     action.spell = spellEditBox:GetText()
                     action.action = nil
                     action.macro = nil
+                    action.item = nil
                 end
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
