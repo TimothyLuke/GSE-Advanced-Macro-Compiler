@@ -2329,7 +2329,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:AddChild(linegroup1)
 
         local spellEditBox = AceGUI:Create("EditBox")
-        spellEditBox:SetLabel(L["Spell/Item/Macro/Pet Ability"])
+        spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
@@ -2343,21 +2343,31 @@ local function drawAction(container, action, version, keyPath)
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].item = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
                 elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "macro" then
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = value
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].item = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
                 elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "item" then
                     editframe.Sequence.Macros[version].Actions[keyPath].item = value
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "toy" then
+                    editframe.Sequence.Macros[version].Actions[keyPath].toy = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
                 else
                     editframe.Sequence.Macros[version].Actions[keyPath].spell = value
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].item = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
                 end
 
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
@@ -2397,7 +2407,9 @@ local function drawAction(container, action, version, keyPath)
 
         local satbtype = AceGUI:Create("Dropdown")
         satbtype:SetLabel(L["Action Type"])
-        satbtype:SetList({["spell"] = "Spell", ["item"] = "Item", ["pet"] = "Pet", ["macro"] = "Macro"})
+        satbtype:SetList(
+            {["spell"] = "Spell", ["item"] = "Item", ["macro"] = "Macro", ["pet"] = "Pet", ["toy"] = "Toy"}
+        )
         satbtype:SetMultiselect(false)
         satbtype:SetCallback(
             "OnValueChanged",
@@ -2408,21 +2420,31 @@ local function drawAction(container, action, version, keyPath)
                     action.spell = nil
                     action.macro = nil
                     action.item = nil
+                    action.toy = nil
                 elseif value == "item" then
                     action.item = spellEditBox:GetText()
                     action.spell = nil
                     action.action = nil
                     action.macro = nil
+                    action.toy = nil
                 elseif value == "macro" then
                     action.macro = spellEditBox:GetText()
                     action.spell = nil
                     action.action = nil
                     action.item = nil
+                    action.toy = nil
+                elseif value == "toy" then
+                    action.toy = spellEditBox:GetText()
+                    action.spell = nil
+                    action.action = nil
+                    action.item = nil
+                    action.macro = nil
                 else
                     action.spell = spellEditBox:GetText()
                     action.action = nil
                     action.macro = nil
                     action.item = nil
+                    action.toy = nil
                 end
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
