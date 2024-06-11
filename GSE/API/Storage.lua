@@ -600,6 +600,9 @@ local function buildAction(action, metaData, variables)
         --     -- Potentially change this to UIErrorsFrame:Clear()
         --     table.insert(action, "/run UIErrorsFrame:Clear()")
         -- end
+        if GSE.isEmpty(action.type) then
+            action.type = "spell"
+        end
         local spelllist = {}
         for k, v in pairs(action) do
             if k ~= "Type" then

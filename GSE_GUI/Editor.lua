@@ -1058,6 +1058,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                         [1] = {
                             ["spell"] = "Need Spell Here",
                             ["unit"] = "target",
+                            ["type"] = "spell",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1249,6 +1250,7 @@ function GSE:GUIDrawMacroEditor(container, version)
             local newAction = {
                 ["spell"] = "Need Spell Here",
                 ["unit"] = "target",
+                ["type"] = "spell",
                 ["Type"] = Statics.Actions.Action
             }
             table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
@@ -1281,6 +1283,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 [1] = {
                     ["spell"] = "Need Spell Here",
                     ["unit"] = "target",
+                    ["type"] = "spell",
                     ["Type"] = Statics.Actions.Action
                 },
                 ["StepFunction"] = Statics.Sequential,
@@ -1350,6 +1353,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                         [1] = {
                             ["spell"] = "Need True Spell Here",
                             ["unit"] = "target",
+                            ["type"] = "spell",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1357,6 +1361,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                         [1] = {
                             ["spell"] = "Need False Spell Here",
                             ["unit"] = "target",
+                            ["type"] = "spell",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1808,6 +1813,7 @@ local function GetBlockToolbar(
                 local newAction = {
                     ["spell"] = "Need Spell Here",
                     ["unit"] = "target",
+                    ["type"] = "spell",
                     ["Type"] = Statics.Actions.Action
                 }
                 if #path > 1 then
@@ -1844,6 +1850,7 @@ local function GetBlockToolbar(
                     [1] = {
                         ["spell"] = "Need Spell Here",
                         ["unit"] = "target",
+                        ["type"] = "spell",
                         ["Type"] = Statics.Actions.Action
                     },
                     ["StepFunction"] = Statics.Sequential,
@@ -1921,6 +1928,7 @@ local function GetBlockToolbar(
                             {
                                 ["spell"] = "Need True Spell Here",
                                 ["unit"] = "target",
+                                ["type"] = "spell",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
@@ -1928,6 +1936,7 @@ local function GetBlockToolbar(
                             {
                                 ["spell"] = "Need False Spell Here",
                                 ["unit"] = "target",
+                                ["type"] = "spell",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
@@ -2318,17 +2327,31 @@ local function drawAction(container, action, version, keyPath)
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
 
         macroPanel:AddChild(linegroup1)
+
         local spellEditBox = AceGUI:Create("EditBox")
-        spellEditBox:SetLabel(L["Spell Name"])
+        spellEditBox:SetLabel(L["Spell/Macro/Pet Ability"])
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
-        spellEditBox:SetText(action.spell)
+        spellEditBox:SetText((action.spell and action.spell or (action.macro and action.macro or action.action)))
         --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
         spellEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
-                editframe.Sequence.Macros[version].Actions[keyPath].spell = value
+                if editframe.Sequence.Macros[version].Actions[keyPath].type == "pet" then
+                    editframe.Sequence.Macros[version].Actions[keyPath].action = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "macro" then
+                    editframe.Sequence.Macros[version].Actions[keyPath].macro = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
+                else
+                    editframe.Sequence.Macros[version].Actions[keyPath].spell = value
+                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
+                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
+                end
+
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
             end
         )
@@ -2364,13 +2387,41 @@ local function drawAction(container, action, version, keyPath)
         --     GSE.ClearTooltip(editframe)
         -- end)
 
+        local satbtype = AceGUI:Create("Dropdown")
+        satbtype:SetLabel(L["Action Type"])
+        satbtype:SetList({["spell"] = "Spell", ["pet"] = "Pet", ["macro"] = "Macro"})
+        satbtype:SetMultiselect(false)
+        satbtype:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                editframe.Sequence.Macros[version].Actions[keyPath].type = value
+                if value == "pet" then
+                    action.action = spellEditBox:GetText()
+                    action.spell = nil
+                    action.macro = nil
+                elseif value == "macro" then
+                    action.macro = spellEditBox:GetText()
+                    action.spell = nil
+                    action.action = nil
+                else
+                    action.spell = spellEditBox:GetText()
+                    action.action = nil
+                    action.macro = nil
+                end
+                --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+            end
+        )
+
+        satbtype:SetValue((action.type and action.type or "spell"))
+
         local spellcontainer = AceGUI:Create("SimpleGroup")
         spellcontainer:SetLayout("Flow")
         spellcontainer:SetFullWidth(true)
         spellcontainer:AddChild(spellEditBox)
         spellcontainer:AddChild(unitEditBox)
-        container:AddChild(spellcontainer)
+        spellcontainer:AddChild(satbtype)
         container:AddChild(macroPanel)
+        container:AddChild(spellcontainer)
     elseif action.Type == Statics.Actions.Loop then
         local macroPanel = AceGUI:Create("KeyGroup")
 

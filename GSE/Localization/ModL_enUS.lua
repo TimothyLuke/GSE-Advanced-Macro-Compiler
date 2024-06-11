@@ -930,3 +930,5 @@ L["Specialisation"] = true
 L["Unit Name"] = true
 L["Disable Sequence"] = true
 L["Do not compile this Sequence at startup."] = true
+L["Action Type"] = true
+L["Spell/Macro/Pet Ability"] = true

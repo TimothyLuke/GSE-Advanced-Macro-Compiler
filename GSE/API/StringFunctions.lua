@@ -405,7 +405,7 @@ end
 function GSE.FlattenTable(v)
     local res = {}
     local function flatten(v)
-        if v.spell then
+        if v.type then
             table.insert(res, v)
             return
         end
