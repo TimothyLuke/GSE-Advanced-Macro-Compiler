@@ -2334,7 +2334,7 @@ local function drawAction(container, action, version, keyPath)
         spellEditBox:DisableButton(true)
         local spelltext
         if action.spell then
-            spelltext = GSE.GetSpellId(action.spell, Statics.TranslatorMode.String)
+            spelltext = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
         elseif action.item then
             spelltext = action.item
         elseif action.macro then
