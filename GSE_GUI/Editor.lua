@@ -2332,7 +2332,20 @@ local function drawAction(container, action, version, keyPath)
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
-        spellEditBox:SetText((action.spell and action.spell or (action.macro and action.macro or action.action)))
+        local spelltext
+        if action.spell then
+            spelltext = GSE.GetSpellId(action.spell, Statics.TranslatorMode.String)
+        elseif action.item then
+            spelltext = action.item
+        elseif action.macro then
+            spelltext = action.macro
+        elseif action.action then
+            spelltext = action.action
+        else
+            spelltext = action.toy
+        end
+
+        spellEditBox:SetText(spelltext)
         --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
         spellEditBox:SetCallback(
             "OnTextChanged",
@@ -2362,7 +2375,10 @@ local function drawAction(container, action, version, keyPath)
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].item = nil
                 else
-                    editframe.Sequence.Macros[version].Actions[keyPath].spell = value
+                    local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
+                    if storedValue then
+                        editframe.Sequence.Macros[version].Actions[keyPath].spell = storedValue
+                    end
                     editframe.Sequence.Macros[version].Actions[keyPath].action = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
                     editframe.Sequence.Macros[version].Actions[keyPath].item = nil

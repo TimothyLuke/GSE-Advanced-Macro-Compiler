@@ -606,7 +606,11 @@ local function buildAction(action, metaData, variables)
         local spelllist = {}
         for k, v in pairs(action) do
             if k ~= "Type" then
-                spelllist[k] = v
+                if k == "spell" then
+                    spelllist[k] = GSE.GetSpellId(v, Statics.TranslatorMode.String)
+                else
+                    spelllist[k] = v
+                end
             end
         end
         return spelllist
