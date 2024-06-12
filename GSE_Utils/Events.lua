@@ -9,7 +9,7 @@ local Statics = GSE.Static
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, spell)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(spell) then
-        local isUsable, notEnoughMana = IsUsableSpell(spell)
+        local isUsable, notEnoughMana = C_Spell.IsSpellUsable(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
         if isUsable then
             usableOutput = GSEOptions.CommandColour .. "Able To Cast" .. Statics.StringReset
