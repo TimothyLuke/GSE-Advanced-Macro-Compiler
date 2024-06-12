@@ -155,7 +155,7 @@ function GSE.PerformReloadSequences()
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         -- check that the macro exists.  This will cause an issue if people are calling macros that are in GSE but there is no macro stub made.
 
-        if GSE.isEmpty(sequence.MetaData.Disabled) then
+        if not sequence.MetaData.Disabled then
             GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
         end
     end

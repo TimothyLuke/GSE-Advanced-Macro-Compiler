@@ -399,7 +399,6 @@ function GSE:GUIDrawMetadataEditor(container)
         "OnValueChanged",
         function(obj, event, key)
             editframe.Sequence.MetaData.Disabled = key
-            print(editframe.Sequence.MetaData.Disabled)
         end
     )
     disableSequence:SetCallback(
