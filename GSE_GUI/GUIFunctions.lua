@@ -70,10 +70,11 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
       local recordedMacro = {}
       for _, v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
         local action = {
-          ["Type"] = Statics.Actions.Action
+          ["Type"] = Statics.Actions.Action,
+          ["type"] = "spell",
+          ["spell"] = GSE.GetSpellId(v, Statics.TranslatorMode.ID),
+          ["unit"] = "target"
         }
-
-        table.insert(action, v)
         table.insert(recordedMacro, action)
       end
       sequence.Macros[1]["Actions"] = recordedMacro

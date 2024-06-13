@@ -75,7 +75,6 @@ function GSE.TraceSequence(button, step, spell)
 end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
-    -- UPDATE for GSE3
     if unit == "player" then
         local GCD_Timer
         if C_Spell.GetSpellCooldown then
@@ -110,12 +109,13 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
             local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
             if found then
                 foundskill = true
+                spell = C_Spell.GetSpellInfo(elements[6]).name
             end
         end
         if foundskill then
             if GSE.RecorderActive then
                 GSE.GUIRecordFrame.RecordSequenceBox:SetText(
-                    GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n"
+                    GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. spell .. "\n"
                 )
             end
         end
