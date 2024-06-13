@@ -691,23 +691,7 @@ function GSE.processAction(action, metaData, variables)
     elseif action.Type == Statics.Actions.Pause then
         local PauseActions = {}
         local clicks = action.Clicks and action.Clicks or 0
-        if not GSE.isEmpty(action.Variable) then
-            if action.Variable == "GCD" then
-                clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
-            else
-                local funcline = GSE.RemoveComments(variables[action.Variable])
-
-                funcline = string.sub(table.concat(funcline, "\n"), 11)
-                funcline = funcline:sub(1, -4)
-                funcline = loadstring(funcline)
-                local value
-                if funcline ~= nil then
-                    value = funcline
-                    value = value()
-                end
-                clicks = tonumber(value) / GSE.GetClickRate()
-            end
-        elseif not GSE.isEmpty(action.MS) then
+        if not GSE.isEmpty(action.MS) then
             if action.MS == "GCD" or action.MS == "~~GCD~~" then
                 clicks = GSE.GetGCD() * 1000 / GSE.GetClickRate()
             else
@@ -717,7 +701,7 @@ function GSE.processAction(action, metaData, variables)
         end
         if clicks > 1 then
             for loop = 1, clicks do
-                table.insert(PauseActions, "/click GSE.Pause")
+                table.insert(PauseActions, {["type"] = "click"})
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
