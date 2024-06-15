@@ -8,7 +8,6 @@ local L = GSE.L
 local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
 
 GSE.CreateSpellEditBox = function(action, version, keyPath)
-    print("overridden")
     local spellEditBox = AceGUI:Create("EditBox")
     spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 

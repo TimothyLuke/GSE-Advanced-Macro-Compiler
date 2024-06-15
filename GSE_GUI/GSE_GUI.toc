@@ -8,6 +8,7 @@
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE GSE_Utils
+## OptionalDeps: GSE2
 ## LoadOnDemand: 1
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
