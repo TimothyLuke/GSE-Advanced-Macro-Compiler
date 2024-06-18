@@ -630,11 +630,15 @@ local function buildAction(action, metaData, variables)
         end
         local spelllist = {}
         for k, v in pairs(action) do
+            local value = v
+            if string.sub(value, 1, 1) == "=" then
+                value = loadstring("return " .. string.sub(value, 2, string.len(value) - 1))
+            end
             if k ~= "Type" then
                 if k == "spell" then
-                    spelllist[k] = GSE.GetSpellId(v, Statics.TranslatorMode.String)
+                    spelllist[k] = GSE.GetSpellId(value, Statics.TranslatorMode.String)
                 else
-                    spelllist[k] = v
+                    spelllist[k] = value
                 end
             end
         end
