@@ -932,3 +932,7 @@ L["Disable Sequence"] = true
 L["Do not compile this Sequence at startup."] = true
 L["Action Type"] = true
 L["Spell/Item/Macro/Toy/Pet Ability"] = true
+L["There was an error processing "] = true
+L[", You will need to correct errors in this variable from another source."] = true
+L["Variable Menu"] = true
+L["Export Variable"] = true

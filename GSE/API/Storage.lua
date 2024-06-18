@@ -93,6 +93,28 @@ function GSE.LoadStorage(destination)
     end
 end
 
+--- Load the GSEVariables
+function GSE.LoadVariables()
+    if GSE.isEmpty(GSEVariables) then
+        GSEVariables = {}
+    end
+    for k, v in GSEVariables do
+        local status, err =
+            pcall(
+            function()
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
+                GSE.V[k] = loadstring(uncompressedVersion[2].funct)
+            end
+        )
+        if err then
+            GSE.Print(
+                "There was an error processing " ..
+                    i .. ", You will need to correct errors in this variable from another source.",
+                err
+            )
+        end
+    end
+end
 --- Load a collection of Sequences
 function GSE.ImportCompressedMacroCollection(Sequences)
     for _, v in ipairs(Sequences) do

@@ -7,7 +7,7 @@
 ## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
 ## Author: TimothyLuke
 ## Version: @project-version@
-## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache
+## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache GSEVariables
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512

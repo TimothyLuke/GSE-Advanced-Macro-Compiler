@@ -27,6 +27,7 @@ globals = {
     "GSE3Storage",
     "GSE_C",
     "GSESpellCache",
+    "GSEVariables",
     -- GSE
     "GSE",
     "GSE2",
@@ -395,5 +396,6 @@ globals = {
     "GetActiveTalentGroup",
     "GetMaxPlayerLevel",
     "PlayerSpellsFrame",
-    "C_SpellBook"
+    "C_SpellBook",
+    "MenuUtil"
 }

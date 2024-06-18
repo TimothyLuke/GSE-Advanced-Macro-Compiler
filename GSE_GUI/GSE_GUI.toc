@@ -28,4 +28,5 @@ MacroCompare.lua
 MacroPreview.lua
 SpellCache.lua
 3_AdvancedEditor.lua
+Variables.lua
 Init.lua

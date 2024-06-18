@@ -592,6 +592,11 @@ function GSE:GSSlash(input)
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUIShowDebugWindow()
         end
+    elseif command == "variables" then
+        GSE.CheckGUI()
+        if GSE.UnsavedOptions["GUI"] then
+            GSE.ShowVariables()
+        end
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
