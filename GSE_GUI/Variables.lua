@@ -52,7 +52,7 @@ variablesframe:SetLayout("Flow")
 
 local leftScrollCOntainer = AceGUI:Create("SimpleGroup")
 leftScrollCOntainer:SetWidth(200)
-leftScrollCOntainer:SetFullHeight(true) -- probably?
+--leftScrollCOntainer:SetFullHeight(true) -- probably?
 leftScrollCOntainer:SetLayout("Fill") -- important!
 
 variablesframe:AddChild(leftScrollCOntainer)
@@ -63,7 +63,7 @@ leftScrollCOntainer:AddChild(leftscroll)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
 rightContainer:SetWidth(variablesframe.Width - 202)
-
+rightContainer:SetFullHeight(true)
 rightContainer:SetLayout("List")
 variablesframe:AddChild(rightContainer)
 
@@ -80,16 +80,19 @@ end]],
         local status, err =
             pcall(
             function()
-                local _, uncompressedVersion = GSE.DecodeMessage(v)
+                local _, uncompressedVersion = GSE.DecodeMessage(GSEVariables[name])
                 variable = uncompressedVersion
             end
         )
+        if err then
+            print(err)
+        end
     end
 
     local keyEditBox = AceGUI:Create("EditBox")
     keyEditBox:SetLabel(L["Name"])
     keyEditBox:DisableButton(true)
-    keyEditBox:SetWidth(50)
+    keyEditBox:SetWidth(150)
     keyEditBox:SetText(name)
     local currentKey = name
     keyEditBox:SetCallback(
