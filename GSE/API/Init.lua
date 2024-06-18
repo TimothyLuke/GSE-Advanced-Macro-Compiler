@@ -33,6 +33,8 @@ GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}
 GSE.V = {}
+GSE.BooleanVariables = {}
+
 GSE.WagoAnalytics:Switch("Patron", GSE.Patron)
 local L = GSE.L
 local Statics = GSE.Static

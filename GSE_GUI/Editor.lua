@@ -1400,7 +1400,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         end
     )
 
-    if GSE.TableLength(editframe.booleanFunctions) < 1 then
+    if GSE.TableLength(GSE.BooleanVariables) < 1 then
         addIfButton:SetDisabled(true)
     end
 
@@ -1922,7 +1922,7 @@ local function GetBlockToolbar(
         addIfButton:SetCallback(
             "OnClick",
             function()
-                if GSE.TableLength(editframe.booleanFunctions) > 0 then
+                if GSE.TableLength(GSE.BooleanVariables) > 0 then
                     local newAction = {
                         [1] = {
                             {
@@ -2077,7 +2077,7 @@ local function GetBlockToolbar(
             function(obj, event, key)
                 if not editframe.reloading then
                     -- put the move stuff here.
-                    print("moving from " .. textpath .. " to " .. key)
+                    --print("moving from " .. textpath .. " to " .. key)
                     local destinationPath = GSE.split(key, ".")
                     for k, v in ipairs(destinationPath) do
                         destinationPath[k] = tonumber(v)
@@ -2638,7 +2638,7 @@ local function drawAction(container, action, version, keyPath)
         local booleanDropdown = AceGUI:Create("Dropdown")
         booleanDropdown:SetLabel(L["Boolean Functions"])
         booleanDropdown:SetWidth((editframe.Width) * 0.24)
-        booleanDropdown:SetList(editframe.booleanFunctions)
+        booleanDropdown:SetList(GSE.BooleanVariables)
         booleanDropdown:SetCallback(
             "OnEnter",
             function()

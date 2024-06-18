@@ -104,6 +104,9 @@ function GSE.LoadVariables()
             function()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
                 GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
+                if type(GSE.V[k]()) == "boolean" then
+                    table.insert(GSE.BooleanVariables, k)
+                end
             end
         )
         if err then

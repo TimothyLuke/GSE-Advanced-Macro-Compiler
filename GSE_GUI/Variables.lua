@@ -254,6 +254,9 @@ end]],
             local compressedvariable = GSE.EncodeMessage(variable)
             GSEVariables[name] = compressedvariable
             GSE.V[name] = loadstring(variable.funct)
+            if type(GSE.V[name]()) == "boolean" then
+                table.insert(GSE.BooleanVariables, name)
+            end
         end
     )
 
