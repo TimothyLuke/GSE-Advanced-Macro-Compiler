@@ -62,8 +62,8 @@ leftscroll:SetLayout("Flow") -- probably?
 leftScrollCOntainer:AddChild(leftscroll)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(variablesframe.Width - 200)
-rightContainer:SetFullHeight(true) -- probably?
+rightContainer:SetWidth(variablesframe.Width - 202)
+
 rightContainer:SetLayout("List")
 variablesframe:AddChild(rightContainer)
 
@@ -71,9 +71,9 @@ local function showVariable(name)
     print(name)
     rightContainer:ReleaseChildren()
     local variable = {
-        ["funct"] = [[function ()
-            
-        end]],
+        ["funct"] = [[function()
+    return true            
+end]],
         ["comments"] = ""
     }
     if not GSE.isEmpty(GSEVariables[name]) then
@@ -189,7 +189,7 @@ local function showVariable(name)
     testRowButton:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(L["Test Variable"], L["Show the current value of this variable."], editframe)
+            GSE.CreateToolTip(L["Test Variable"], L["Show the current value of this variable."], variablesframe)
         end
     )
     testRowButton:SetCallback(
@@ -216,7 +216,7 @@ local function showVariable(name)
     deleteRowButton:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
+            GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], variablesframe)
         end
     )
     deleteRowButton:SetCallback(

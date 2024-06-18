@@ -103,13 +103,13 @@ function GSE.LoadVariables()
             pcall(
             function()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
-                GSE.V[k] = loadstring(uncompressedVersion[2].funct)
+                GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
             end
         )
         if err then
             GSE.Print(
                 "There was an error processing " ..
-                    i .. ", You will need to correct errors in this variable from another source.",
+                    k .. ", You will need to correct errors in this variable from another source.",
                 err
             )
         end
