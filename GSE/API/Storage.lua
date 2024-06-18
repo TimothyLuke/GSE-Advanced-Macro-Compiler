@@ -98,7 +98,7 @@ function GSE.LoadVariables()
     if GSE.isEmpty(GSEVariables) then
         GSEVariables = {}
     end
-    for k, v in GSEVariables do
+    for k, v in pairs(GSEVariables) do
         local status, err =
             pcall(
             function()

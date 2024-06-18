@@ -48,7 +48,7 @@ variablesframe:SetCallback(
     end
 )
 
-variablesframe:SetLaayout("Flow")
+variablesframe:SetLayout("Flow")
 
 local leftScrollCOntainer = AceGUI:Create("SimpleGroup")
 leftScrollCOntainer:SetWidth(200)
@@ -62,7 +62,7 @@ leftscroll:SetLayout("List") -- probably?
 leftScrollCOntainer:AddChild(leftscroll)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(variablesframe.width - 200)
+rightContainer:SetWidth(variablesframe.Width - 200)
 rightContainer:SetFullHeight(true) -- probably?
 rightContainer:SetLayout("List")
 variablesframe:AddChild(rightContainer)
@@ -105,7 +105,7 @@ local function showVariable(name)
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel()
     commentsEditBox:SetNumLines(5)
-    commentsEditBox:SetWidth(variablesframe.width - 200)
+    commentsEditBox:SetWidth(variablesframe.Width - 200)
     commentsEditBox:DisableButton(true)
     commentsEditBox:SetText(variable.comments)
     commentsEditBox:SetCallback(
@@ -126,7 +126,7 @@ local function showVariable(name)
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
     valueEditBox:SetLabel()
     valueEditBox:SetNumLines(10)
-    valueEditBox:SetWidth(variablesframe.width - 200)
+    valueEditBox:SetWidth(variablesframe.Width - 200)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(variable.funct)
     valueEditBox:SetCallback(
@@ -277,7 +277,7 @@ local function createVariableHeader(name, variable)
                 )
             end
             if button == "LeftButton" then
-                showVariable(name, (GSEVariables[name] and GSEVariables[name] or nil))
+                showVariable(name)
             end
         end
     )
@@ -309,11 +309,47 @@ local function listVariables()
         local header = createVariableHeader(k)
         leftscroll:AddChild(header)
     end
+
+    local newButton = AceGUI:Create("Button")
+    newButton:SetText(L["New"])
+    newButton:SetWidth(100)
+    newButton:SetCallback(
+        "OnClick",
+        function()
+            newVariable()
+        end
+    )
+
+    newButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(variablesframe)
+        end
+    )
+    leftscroll:AddChild(newButton)
+
+    local importButton = AceGUI:Create("Button")
+    importButton:SetWidth(100)
+    importButton:SetCallback(
+        "OnClick",
+        function()
+            newVariable()
+        end
+    )
+
+    newButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(variablesframe)
+        end
+    )
+    leftscroll:AddChild(importButton)
 end
 
-leftscroll:SetScript(
+leftscroll.frame:SetScript(
     "OnMouseDown",
     function(Self, button)
+        print("clicked", button)
         if button == "RightButton" then
             MenuUtil.CreateContextMenu(
                 leftscroll,

@@ -22,11 +22,11 @@ Recorder.lua
 Editor.lua
 Viewer.lua
 RemoteMacroBrowser.lua
+Variables.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
 MacroPreview.lua
 SpellCache.lua
 3_AdvancedEditor.lua
-Variables.lua
 Init.lua
