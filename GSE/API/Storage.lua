@@ -615,17 +615,7 @@ function GSE.processAction(action, metaData, variables)
         -- setup the interation
         for id, v in ipairs(action) do
             local builtaction = GSE.processAction(v, metaData, variables)
-            -- if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
-            --     for _, j in ipairs(builtaction) do
-            --         table.insert(actionList, j)
-            --     end
-            -- else
-            if type(builtaction) == "table" and builtaction.Interval then
-                builtaction.Action = GSE.ProcessLoopVariables(builtaction.Action, id)
-                table.insert(actionList, builtaction)
-            else
-                table.insert(actionList, builtaction)
-            end
+            table.insert(actionList, builtaction)
         end
         local returnActions = {}
         local loop = tonumber(action.Repeat)
@@ -800,17 +790,6 @@ function GSE.CompileTemplate(macro)
         table.insert(actions, action)
     end
     local compiledMacro = GSE.processAction(actions, template.InbuiltVariables, template.Variables)
-
-    -- local variables = {}
-
-    -- for k, v in pairs(template.Variables) do
-    --     if type(v) == "table" then
-    --         for i, j in ipairs(v) do
-    --             template.Variables[k][i] = GSE.TranslateString(j, Statics.TranslatorMode.String, nil, true)
-    --         end
-    --         variables[k] = GSE.RemoveComments(template.Variables[k])
-    --     end
-    -- end
 
     return GSE.FlattenTable(compiledMacro), template
 end

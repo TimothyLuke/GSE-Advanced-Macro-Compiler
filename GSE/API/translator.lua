@@ -29,59 +29,6 @@ function GSE.TranslateSequence(tab, mode, dropAbsolute)
     return tab
 end
 
-function GSE.ProcessLoopVariables(action, id)
-    local temp = GSE.ProcessVariables(GSE.SplitMeIntolines(action), {["LID"] = id})
-    return table.concat(temp, "\n")
-end
-
---- This function interates through each line in lines and does a string replace on each varible in the variableTable
-function GSE.ProcessVariables(lines, variableTable)
-    local returnLines = {}
-    for _, line in ipairs(lines) do
-        if line ~= "/click GSE.Pause" then
-            if not GSE.isEmpty(variableTable) then
-                for key, value in pairs(variableTable) do
-                    if type(value) == "string" then
-                        local functline = value
-                        if string.sub(functline, 1, 10) == "function()" then
-                            functline = string.sub(functline, 11)
-                            functline = functline:sub(1, -4)
-                            local funct = loadstring(functline)
-                            if funct ~= nil then
-                                value = funct
-                            end
-                        end
-                    end
-                    if type(value) == "function" then
-                        if pcall(value) then
-                            value = value()
-                        else
-                            value = ""
-                        end
-                    end
-                    if type(value) == "boolean" then
-                        value = tostring(value)
-                    end
-                    if value == nil then
-                        value = ""
-                    end
-                    line = string.gsub(line, string.format("~~%s~~", key), value)
-                end
-            end
-
-            for key, value in pairs(Statics.SystemVariables) do
-                if type(value) == "function" then
-                    value = value()
-                end
-                local oldline = line
-                line = string.gsub(line, string.format("~~%s~~", key), value)
-            end
-        end
-        table.insert(returnLines, line)
-    end
-    return returnLines
-end
-
 function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
     instring = GSE.UnEscapeString(instring)
     GSE.PrintDebugMessage("Entering GSE.TranslateString with : \n" .. instring .. "\n " .. mode, GNOME)
