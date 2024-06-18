@@ -156,7 +156,7 @@ local function showVariable(name)
             local val = valueEditBox:GetText()
             if type(val) == "string" then
                 local functline = GSE.RemoveComments(val)
-                if string.sub(functline, 1, 10) == "function()" then
+                if string.sub(functline, 1, 9) == "function(" then
                     functline = string.sub(functline, 11)
                     functline = functline:sub(1, -4)
                     functline = loadstring(functline)
@@ -232,25 +232,9 @@ local function showVariable(name)
     savebutton:SetCallback(
         "OnClick",
         function()
-            if GSE.isEmpty(editframe.invalidPause) then
-                local gameversion, build, date, tocversion = GetBuildInfo()
-                editframe.Sequence.MetaData.ManualIntervention = true
-                editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
-                editframe.Sequence.MetaData.EnforceCompatability = true
-                editframe.Sequence.MetaData.TOC = tocversion
-                nameeditbox:SetText(string.upper(nameeditbox:GetText()))
-                editframe.SequenceName = GSE.UnEscapeString(nameeditbox:GetText())
-                GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
-                editframe.save = true
-                C_Timer.After(
-                    5,
-                    function()
-                        GSE.GUIEditFrame:SetStatusText(editframe.statusText)
-                    end
-                )
-            else
-                GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "ERROR")
-            end
+            local compressedvariable = GSE.EncodeMessage(variable)
+            GSEVariables[name] = compressedvariable
+            GSE.V[name] = loadstring(variable.funct)
         end
     )
 
