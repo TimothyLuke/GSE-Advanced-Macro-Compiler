@@ -10,7 +10,7 @@ local exportframe = AceGUI:Create("Frame")
 exportframe:Hide()
 exportframe.classid = 0
 exportframe.sequencename = ""
-
+exportframe.frame:SetFrameStrata("MEDIUM")
 exportframe:SetTitle(L["Gnome Sequencer: Export a Sequence String."])
 exportframe:SetStatusText(L["Export a Sequence"])
 exportframe:SetCallback(

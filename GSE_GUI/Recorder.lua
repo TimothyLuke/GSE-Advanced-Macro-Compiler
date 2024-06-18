@@ -8,6 +8,7 @@ local libCE = libC:GetAddonEncodeTable()
 
 local recordframe = AceGUI:Create("Frame")
 recordframe:Hide()
+recordframe.frame:SetFrameStrata("MEDIUM")
 GSE.GUIRecordFrame = recordframe
 local recbuttontext = L["Record"]
 
@@ -15,7 +16,12 @@ local recbuttontext = L["Record"]
 
 recordframe:SetTitle(L["Record Macro"])
 recordframe:SetStatusText(L["Gnome Sequencer: Record your rotation to a macro."])
-recordframe:SetCallback("OnClose", function(widget)  recordframe:Hide(); end)
+recordframe:SetCallback(
+  "OnClose",
+  function(widget)
+    recordframe:Hide()
+  end
+)
 recordframe:SetLayout("List")
 
 local recordsequencebox = AceGUI:Create("MultiLineEditBox")
@@ -29,19 +35,26 @@ GSE.GUIRecordFrame.RecordSequenceBox = recordsequencebox
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")
 
-
 local recbutton = AceGUI:Create("Button")
 recbutton:SetText(L["Record"])
 recbutton:SetWidth(150)
-recbutton:SetCallback("OnClick", function() GSE.GUIManageRecord() end)
+recbutton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUIManageRecord()
+  end
+)
 recButtonGroup:AddChild(recbutton)
 
 local createmacrobutton = AceGUI:Create("Button")
 createmacrobutton:SetText(L["Create Macro"])
 createmacrobutton:SetWidth(150)
-createmacrobutton:SetCallback("OnClick", function()
-  GSE.GUILoadEditor( nil, GSE.GUIRecordFrame, recordsequencebox:GetText())
-end)
+createmacrobutton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUILoadEditor(nil, GSE.GUIRecordFrame, recordsequencebox:GetText())
+  end
+)
 createmacrobutton:SetDisabled(true)
 recButtonGroup:AddChild(createmacrobutton)
 

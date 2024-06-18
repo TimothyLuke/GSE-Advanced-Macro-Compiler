@@ -10,7 +10,7 @@ local libCE = libC:GetAddonEncodeTable()
 local compareframe = AceGUI:Create("Frame")
 compareframe:Hide()
 compareframe.ChosenAction = "MERGE"
-
+compareframe.frame:SetFrameStrata("MEDIUM")
 GSE.GUICompareFrame = compareframe
 
 compareframe:SetTitle(L["Sequence Compare"])

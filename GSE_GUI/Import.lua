@@ -7,6 +7,7 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
 local importframe = AceGUI:Create("Frame")
+importframe.frame:SetFrameStrata("MEDIUM")
 importframe.AutoCreateIcon = true
 
 importframe:Hide()

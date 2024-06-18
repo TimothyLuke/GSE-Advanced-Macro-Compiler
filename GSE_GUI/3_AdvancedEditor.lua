@@ -13,7 +13,7 @@ local height = GSEOptions.editorHeight
 local frame = CreateFrame("frame", "GSE3", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 frame:SetSize(width, height)
 frame:SetPoint("CENTER")
-
+frame:SetFrameStrata("MEDIUM")
 frame:SetBackdrop(
 	{
 		bgFile = "Interface/Tooltips/UI-Tooltip-Background",

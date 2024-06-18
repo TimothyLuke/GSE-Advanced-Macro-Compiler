@@ -8,6 +8,8 @@ local variablesframe = AceGUI:Create("Frame")
 variablesframe:Hide()
 variablesframe.panels = {}
 
+variablesframe.frame:SetFrameStrata("MEDIUM")
+
 GSE.GUIVariableFrame = variablesframe
 
 if GSE.isEmpty(GSEOptions.editorHeight) then

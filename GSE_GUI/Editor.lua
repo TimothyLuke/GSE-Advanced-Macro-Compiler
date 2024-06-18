@@ -6,6 +6,7 @@ local L = GSE.L
 
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
+editframe.frame:SetFrameStrata("MEDIUM")
 GSE.GUIEditFrame = editframe
 editframe.Sequence = {}
 editframe.Sequence.Macros = {}

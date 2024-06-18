@@ -8,14 +8,18 @@ local libC = LibStub:GetLibrary("LibCompress")
 local libCE = libC:GetAddonEncodeTable()
 
 local remoteFrame = AceGUI:Create("Frame")
+remoteFrame.frame:SetFrameStrata("MEDIUM")
 remoteFrame:Hide()
 remoteFrame.GSEUser = ""
 remoteFrame.SequenceList = {}
 
 remoteFrame:SetStatusText(L["Select a Sequence"])
-remoteFrame:SetCallback("OnClose", function(widget)
-    remoteFrame:Hide()
-end)
+remoteFrame:SetCallback(
+    "OnClose",
+    function(widget)
+        remoteFrame:Hide()
+    end
+)
 remoteFrame:SetLayout("List")
 
 remoteFrame.Height = GSEOptions.editorHeight
@@ -69,15 +73,28 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
     testRowButton:SetHeight(20)
     testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
 
-    testRowButton:SetCallback("OnClick", function()
-        GSE.RequestSequence(ClassID, SequenceName, remoteFrame.GSEUser, remoteFrame.Channel)
-    end)
-    testRowButton:SetCallback('OnEnter', function()
-        GSE.CreateToolTip(L["Request Macro"], L["Request that the user sends you a copy of this macro."], remoteFrame)
-    end)
-    testRowButton:SetCallback('OnLeave', function()
-        GSE.ClearTooltip(remoteFrame)
-    end)
+    testRowButton:SetCallback(
+        "OnClick",
+        function()
+            GSE.RequestSequence(ClassID, SequenceName, remoteFrame.GSEUser, remoteFrame.Channel)
+        end
+    )
+    testRowButton:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Request Macro"],
+                L["Request that the user sends you a copy of this macro."],
+                remoteFrame
+            )
+        end
+    )
+    testRowButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(remoteFrame)
+        end
+    )
     linegroup1:AddChild(testRowButton)
 
     -- local deleteRowButton = AceGUI:Create("Icon")
@@ -168,8 +185,11 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
     remoteFrame:Show()
 end
 
-remoteFrame:SetCallback("OnClose", function(self)
-    GSE.ClearTooltip(remoteFrame)
-    contentcontainer:ReleaseChildren()
-    remoteFrame:Hide()
-end)
+remoteFrame:SetCallback(
+    "OnClose",
+    function(self)
+        GSE.ClearTooltip(remoteFrame)
+        contentcontainer:ReleaseChildren()
+        remoteFrame:Hide()
+    end
+)

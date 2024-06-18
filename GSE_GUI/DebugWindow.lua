@@ -7,6 +7,7 @@ local L = GSE.L
 local onpause = false
 
 local DebugFrame = AceGUI:Create("Frame")
+DebugFrame.frame:SetFrameStrata("MEDIUM")
 GSE.GUIDebugFrame = DebugFrame
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")
@@ -53,8 +54,15 @@ end
 
 DebugFrame:SetTitle(L["Sequence Debugger"])
 local GCD_Timer = GSE.GetGCD()
-DebugFrame:SetStatusText(L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. "   GCD: " .. GCD_Timer)
-DebugFrame:SetCallback("OnClose", function(widget) DebugFrame:Hide()  end)
+DebugFrame:SetStatusText(
+  L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] .. "   GCD: " .. GCD_Timer
+)
+DebugFrame:SetCallback(
+  "OnClose",
+  function(widget)
+    DebugFrame:Hide()
+  end
+)
 DebugFrame:SetLayout("List")
 DebugFrame:Hide()
 
@@ -69,12 +77,22 @@ buttonGroup:SetFullWidth(true)
 buttonGroup:SetLayout("Flow")
 
 GSE.GUIDebugFrame.DebugEnableViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback("OnClick", function() GSE.GUIEnableDebugView() end)
+GSE.GUIDebugFrame.DebugEnableViewButton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUIEnableDebugView()
+  end
+)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugEnableViewButton)
 
 GSE.GUIDebugFrame.DebugPauseViewButton:SetText(L["Pause"])
 GSE.GUIDebugFrame.DebugPauseViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugPauseViewButton:SetCallback("OnClick", function() GSE.GUIPauseDebugView() end)
+GSE.GUIDebugFrame.DebugPauseViewButton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUIPauseDebugView()
+  end
+)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugPauseViewButton)
 
 if GSE.UnsavedOptions["DebugSequenceExecution"] then
@@ -88,38 +106,50 @@ end
 GSE.GUIDebugFrame.DebugClearViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugClearViewButton:SetText(L["Clear"])
 GSE.GUIDebugFrame.DebugClearViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugClearViewButton:SetCallback("OnClick", function() GSE.GUIDebugFrame.DebugOutputTextbox:SetText('') end)
+GSE.GUIDebugFrame.DebugClearViewButton:SetCallback(
+  "OnClick",
+  function()
+    GSE.GUIDebugFrame.DebugOutputTextbox:SetText("")
+  end
+)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugClearViewButton)
 
 GSE.GUIDebugFrame.DebugOptionsViewButton = AceGUI:Create("Button")
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetText(L["Options"])
 GSE.GUIDebugFrame.DebugOptionsViewButton:SetWidth(150)
-GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
+GSE.GUIDebugFrame.DebugOptionsViewButton:SetCallback(
+  "OnClick",
+  function()
+    GSE.OpenOptionsPanel()
+  end
+)
 buttonGroup:AddChild(GSE.GUIDebugFrame.DebugOptionsViewButton)
 
 DebugFrame:AddChild(buttonGroup)
 
-
-DebugFrame.frame:SetScript("OnSizeChanged", function(self, width, height)
+DebugFrame.frame:SetScript(
+  "OnSizeChanged",
+  function(self, width, height)
     DebugFrame.Height = height
     DebugFrame.Width = width
     if DebugFrame.Height > GetScreenHeight() then
-            DebugFrame.Height = GetScreenHeight() - 10
-            DebugFrame:SetHeight(DebugFrame.Height)
+      DebugFrame.Height = GetScreenHeight() - 10
+      DebugFrame:SetHeight(DebugFrame.Height)
     end
     if DebugFrame.Height < 500 then
-            DebugFrame.Height = 500
-            DebugFrame:SetHeight(DebugFrame.Height)
+      DebugFrame.Height = 500
+      DebugFrame:SetHeight(DebugFrame.Height)
     end
     if DebugFrame.Width < 700 then
-            DebugFrame.Width = 700
-            DebugFrame:SetWidth(DebugFrame.Width)
+      DebugFrame.Width = 700
+      DebugFrame:SetWidth(DebugFrame.Width)
     end
     GSEOptions.debugHeight = DebugFrame.Height
     GSEOptions.debugWidth = DebugFrame.Width
-    GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines( math.floor(height / 18))
+    GSE.GUIDebugFrame.DebugOutputTextbox:SetNumLines(math.floor(height / 18))
     GSE.GUIShowDebugWindow()
-end)
+  end
+)
 
 function GSE.GUIShowDebugWindow()
   DebugFrame:Show()

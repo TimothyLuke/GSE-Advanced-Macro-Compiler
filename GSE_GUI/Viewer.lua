@@ -12,6 +12,7 @@ local editkey = ""
 
 local viewframe = AceGUI:Create("Frame")
 viewframe:SetTitle(L["Sequence Menu"])
+viewframe.frame:SetFrameStrata("MEDIUM")
 -- viewframe.frame:SetBackdrop({
 --   bgFile="Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
 --   edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",

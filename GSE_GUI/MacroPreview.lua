@@ -14,6 +14,7 @@ if GSE.isEmpty(GSEOptions.menuWidth) then
 end
 
 local PreviewFrame = AceGUI:Create("Frame")
+PreviewFrame.frame:SetFrameStrata("MEDIUM")
 GSE.MacroPreviewFrame = PreviewFrame
 
 PreviewFrame:SetTitle(L["Compiled Template"])
