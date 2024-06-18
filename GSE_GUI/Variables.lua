@@ -51,23 +51,36 @@ variablesframe:SetCallback(
 )
 
 variablesframe:SetLayout("Flow")
+variablesframe:SetAutoAdjustHeight(false)
+
+local basecontainer = AceGUI:Create("SimpleGroup")
+basecontainer:SetLayout("Flow")
+basecontainer:SetAutoAdjustHeight(false)
+basecontainer:SetHeight(variablesframe.Height - 100)
+basecontainer:SetFullWidth(true)
+variablesframe:AddChild(basecontainer)
 
 local leftScrollCOntainer = AceGUI:Create("SimpleGroup")
 leftScrollCOntainer:SetWidth(200)
 --leftScrollCOntainer:SetFullHeight(true) -- probably?
+leftScrollCOntainer:SetHeight(variablesframe.Height - 90)
 leftScrollCOntainer:SetLayout("Fill") -- important!
 
-variablesframe:AddChild(leftScrollCOntainer)
+basecontainer:AddChild(leftScrollCOntainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("Flow") -- probably?
 leftScrollCOntainer:AddChild(leftscroll)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(variablesframe.Width - 202)
-rightContainer:SetFullHeight(true)
+rightContainer:SetWidth(variablesframe.Width - 230)
+--rightContainer:SetFullHeight(true)
 rightContainer:SetLayout("List")
-variablesframe:AddChild(rightContainer)
+rightContainer:SetHeight(variablesframe.Height - 90)
+local point, relativeTo, relativePoint, xOfs, yOfs = leftscroll:GetPoint()
+rightContainer:ClearAllPoints()
+rightContainer:SetPoint(point, leftscroll.frame, "TOPRIGHT", 10, 0)
+basecontainer:AddChild(rightContainer)
 
 local function showVariable(name)
     print(name)
