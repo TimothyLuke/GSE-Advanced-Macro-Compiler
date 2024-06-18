@@ -585,46 +585,6 @@ local function buildAction(action, metaData, variables)
         -- we have a loop within a loop
         return GSE.processAction(action, metaData, variables)
     else
-        -- if GSE.GetRequireTarget() then
-        --     -- See #20 prevent target hopping
-        --     table.insert(action, 1, "/stopmacro [@playertarget, noexists]")
-        -- end
-
-        -- for k, v in ipairs(action) do
-        --     action[k] = GSE.TranslateString(v, "STRING", nil, true)
-        -- end
-
-        -- if not GSE.isEmpty(metaData) then
-        --     if metaData.Ring1 or (metaData.Ring1 == nil and GSE.GetUse11()) then
-        --         table.insert(action, "/use [combat,nochanneling] 11")
-        --     end
-        --     if metaData.Ring2 or (metaData.Ring2 == nil and GSE.GetUse12()) then
-        --         table.insert(action, "/use [combat,nochanneling] 12")
-        --     end
-        --     if metaData.Trinket1 or (metaData.Trinket1 == nil and GSE.GetUse13()) then
-        --         table.insert(action, "/use [combat,nochanneling] 13")
-        --     end
-        --     if metaData.Trinket2 or (metaData.Trinket2 == nil and GSE.GetUse14()) then
-        --         table.insert(action, "/use [combat,nochanneling] 14")
-        --     end
-        --     if metaData.Neck or (metaData.Neck == nil and GSE.GetUse2()) then
-        --         table.insert(action, "/use [combat,nochanneling] 2")
-        --     end
-        --     if metaData.Head or (metaData.Head == nil and GSE.GetUse1()) then
-        --         table.insert(action, "/use [combat,nochanneling] 1")
-        --     end
-        --     if metaData.Belt or (metaData.Belt == nil and GSE.GetUse6()) then
-        --         table.insert(action, "/use [combat,nochanneling] 6")
-        --     end
-        -- end
-        -- if GSEOptions.hideUIErrors then
-        --     table.insert(action, "/script UIErrorsFrame:Hide();")
-        -- -- Potentially change this to UIErrorsFrame:Hide()
-        -- end
-        -- if GSEOptions.clearUIErrors then
-        --     -- Potentially change this to UIErrorsFrame:Clear()
-        --     table.insert(action, "/run UIErrorsFrame:Clear()")
-        -- end
         if GSE.isEmpty(action.type) then
             action.type = "spell"
         end
