@@ -936,3 +936,5 @@ L["There was an error processing "] = true
 L[", You will need to correct errors in this variable from another source."] = true
 L["Variable Menu"] = true
 L["Export Variable"] = true
+L["Save the changes made to this variable."] = true
+L["Variable"] = true

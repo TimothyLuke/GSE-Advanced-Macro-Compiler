@@ -58,7 +58,7 @@ leftScrollCOntainer:SetLayout("Fill") -- important!
 variablesframe:AddChild(leftScrollCOntainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
-leftscroll:SetLayout("List") -- probably?
+leftscroll:SetLayout("Flow") -- probably?
 leftScrollCOntainer:AddChild(leftscroll)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
@@ -68,7 +68,8 @@ rightContainer:SetLayout("List")
 variablesframe:AddChild(rightContainer)
 
 local function showVariable(name)
-    rightContainer:Release()
+    print(name)
+    rightContainer:ReleaseChildren()
     local variable = {
         ["funct"] = [[function ()
             
@@ -84,9 +85,9 @@ local function showVariable(name)
             end
         )
     end
-    rightContainer.variable = variable
+
     local keyEditBox = AceGUI:Create("EditBox")
-    keyEditBox:SetLabel()
+    keyEditBox:SetLabel(L["Name"])
     keyEditBox:DisableButton(true)
     keyEditBox:SetWidth(50)
     keyEditBox:SetText(name)
@@ -103,7 +104,7 @@ local function showVariable(name)
     rightContainer:AddChild(keyEditBox)
 
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
-    commentsEditBox:SetLabel()
+    commentsEditBox:SetLabel(L["Help Information"])
     commentsEditBox:SetNumLines(5)
     commentsEditBox:SetWidth(variablesframe.Width - 200)
     commentsEditBox:DisableButton(true)
@@ -124,7 +125,7 @@ local function showVariable(name)
     rightContainer:AddChild(commentsEditBox)
 
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
-    valueEditBox:SetLabel()
+    valueEditBox:SetLabel(L["Variable"])
     valueEditBox:SetNumLines(10)
     valueEditBox:SetWidth(variablesframe.Width - 200)
     valueEditBox:DisableButton(true)
@@ -209,7 +210,7 @@ local function showVariable(name)
         "OnClick",
         function()
             GSEVariables[keyEditBox:GetText()] = nil
-            rightContainer:ReleaseChildren()
+            --rightContainer:ReleaseChildren()
         end
     )
     deleteRowButton:SetCallback(
@@ -278,6 +279,7 @@ local function createVariableHeader(name, variable)
             end
             if button == "LeftButton" then
                 showVariable(name)
+                widget:SetClicked(true)
             end
         end
     )
@@ -304,7 +306,7 @@ local function newVariable()
 end
 
 local function listVariables()
-    leftscroll:Release()
+    leftscroll:ReleaseChildren()
     for k, _ in pairs(GSEVariables) do
         local header = createVariableHeader(k)
         leftscroll:AddChild(header)
@@ -329,6 +331,7 @@ local function listVariables()
     leftscroll:AddChild(newButton)
 
     local importButton = AceGUI:Create("Button")
+    importButton:SetText(L["Import"])
     importButton:SetWidth(100)
     importButton:SetCallback(
         "OnClick",
