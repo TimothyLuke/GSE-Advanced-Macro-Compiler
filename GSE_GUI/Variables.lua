@@ -68,17 +68,17 @@ basecontainer:SetHeight(variablesframe.Height - 100)
 basecontainer:SetFullWidth(true)
 variablesframe:AddChild(basecontainer)
 
-local leftScrollCOntainer = AceGUI:Create("SimpleGroup")
-leftScrollCOntainer:SetWidth(200)
---leftScrollCOntainer:SetFullHeight(true) -- probably?
-leftScrollCOntainer:SetHeight(variablesframe.Height - 90)
-leftScrollCOntainer:SetLayout("Fill") -- important!
+local leftScrollContainer = AceGUI:Create("SimpleGroup")
+leftScrollContainer:SetWidth(200)
 
-basecontainer:AddChild(leftScrollCOntainer)
+leftScrollContainer:SetHeight(variablesframe.Height - 90)
+leftScrollContainer:SetLayout("Fill") -- important!
+
+basecontainer:AddChild(leftScrollContainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("Flow") -- probably?
-leftScrollCOntainer:AddChild(leftscroll)
+leftScrollContainer:AddChild(leftscroll)
 
 local spacer = AceGUI:Create("Label")
 spacer:SetWidth(10)
@@ -91,7 +91,97 @@ rightContainer:SetLayout("List")
 rightContainer:SetHeight(variablesframe.Height - 90)
 basecontainer:AddChild(rightContainer)
 
-local function showVariable(name)
+local function createVariableHeader(name, variable)
+    local selpanel = AceGUI:Create("SelectablePanel")
+    selpanel:SetFullWidth(true)
+    selpanel:SetHeight(100)
+    variablesframe.panels[name] = selpanel
+    selpanel:SetCallback(
+        "OnClick",
+        function(widget, _, selected, button)
+            variablesframe:clearpanels(widget, selected)
+            if button == "RightButton" then
+                MenuUtil.CreateContextMenu(
+                    leftscroll,
+                    function(ownerRegion, rootDescription)
+                        rootDescription:CreateTitle(L["Export"])
+                        rootDescription:CreateButton(
+                            L["Export Variable"],
+                            function()
+                                print("Clicked button 2")
+                            end
+                        )
+                    end
+                )
+            end
+            if button == "LeftButton" then
+                variablesframe.showVariable(name)
+                widget:SetClicked(true)
+            end
+        end
+    )
+
+    local font = CreateFont("seqPanelFont")
+    font:SetFontObject(GameFontNormal)
+    local origjustifyV = font:GetJustifyV()
+    local origjustifyH = font:GetJustifyH()
+    font:SetJustifyV("BOTTOM")
+
+    local label = AceGUI:Create("Label")
+    label:SetFontObject(font)
+    label:SetText(name)
+    selpanel:AddChild(label)
+
+    font:SetJustifyV(origjustifyV)
+    font:SetJustifyH(origjustifyH)
+    return selpanel
+end
+
+local function listVariables()
+    leftscroll:ReleaseChildren()
+    for k, _ in pairs(GSEVariables) do
+        local header = createVariableHeader(k)
+        leftscroll:AddChild(header)
+    end
+
+    local newButton = AceGUI:Create("Button")
+    newButton:SetText(L["New"])
+    newButton:SetWidth(100)
+    newButton:SetCallback(
+        "OnClick",
+        function()
+            newVariable()
+        end
+    )
+
+    newButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(variablesframe)
+        end
+    )
+    leftscroll:AddChild(newButton)
+
+    local importButton = AceGUI:Create("Button")
+    importButton:SetText(L["Import"])
+    importButton:SetWidth(100)
+    importButton:SetCallback(
+        "OnClick",
+        function()
+            newVariable()
+        end
+    )
+
+    newButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(variablesframe)
+        end
+    )
+    leftscroll:AddChild(importButton)
+end
+
+function variablesframe.showVariable(name)
     print(name)
     rightContainer:ReleaseChildren()
     local variable = {
@@ -237,7 +327,8 @@ end]],
         "OnClick",
         function()
             GSEVariables[keyEditBox:GetText()] = nil
-            --rightContainer:ReleaseChildren()
+            rightContainer:ReleaseChildren()
+            listVariables()
         end
     )
     deleteRowButton:SetCallback(
@@ -260,6 +351,7 @@ end]],
     savebutton:SetCallback(
         "OnClick",
         function()
+            variable.LastUpdated = GSE.GetTimestamp()
             local compressedvariable = GSE.EncodeMessage(variable)
             GSEVariables[name] = compressedvariable
             GSE.V[name] = loadstring(variable.funct)
@@ -284,99 +376,9 @@ end]],
     rightContainer:AddChild(savebutton)
 end
 
-local function createVariableHeader(name, variable)
-    local selpanel = AceGUI:Create("SelectablePanel")
-    selpanel:SetFullWidth(true)
-    selpanel:SetHeight(100)
-    variablesframe.panels[name] = selpanel
-    selpanel:SetCallback(
-        "OnClick",
-        function(widget, _, selected, button)
-            variablesframe:clearpanels(widget, selected)
-            if button == "RightButton" then
-                MenuUtil.CreateContextMenu(
-                    leftscroll,
-                    function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Export"])
-                        rootDescription:CreateButton(
-                            L["Export Variable"],
-                            function()
-                                print("Clicked button 2")
-                            end
-                        )
-                    end
-                )
-            end
-            if button == "LeftButton" then
-                showVariable(name)
-                widget:SetClicked(true)
-            end
-        end
-    )
-
-    local font = CreateFont("seqPanelFont")
-    font:SetFontObject(GameFontNormal)
-    local origjustifyV = font:GetJustifyV()
-    local origjustifyH = font:GetJustifyH()
-    font:SetJustifyV("BOTTOM")
-
-    local label = AceGUI:Create("Label")
-    label:SetFontObject(font)
-    label:SetText(name)
-    selpanel:AddChild(label)
-
-    font:SetJustifyV(origjustifyV)
-    font:SetJustifyH(origjustifyH)
-    return selpanel
-end
-
 local function newVariable()
     local header = createVariableHeader("MyNewVar" .. math.random(100))
     leftscroll:AddChild(header)
-end
-
-local function listVariables()
-    leftscroll:ReleaseChildren()
-    for k, _ in pairs(GSEVariables) do
-        local header = createVariableHeader(k)
-        leftscroll:AddChild(header)
-    end
-
-    local newButton = AceGUI:Create("Button")
-    newButton:SetText(L["New"])
-    newButton:SetWidth(100)
-    newButton:SetCallback(
-        "OnClick",
-        function()
-            newVariable()
-        end
-    )
-
-    newButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(variablesframe)
-        end
-    )
-    leftscroll:AddChild(newButton)
-
-    local importButton = AceGUI:Create("Button")
-    importButton:SetText(L["Import"])
-    importButton:SetWidth(100)
-    importButton:SetCallback(
-        "OnClick",
-        function()
-            newVariable()
-        end
-    )
-
-    newButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(variablesframe)
-        end
-    )
-    leftscroll:AddChild(importButton)
 end
 
 leftscroll.frame:SetScript(

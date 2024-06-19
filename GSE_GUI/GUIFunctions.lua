@@ -113,16 +113,6 @@ function GSE.GUIUpdateSequenceList()
   GSE.GUIViewFrame.SequenceListbox:SetList(names)
 end
 
--- function GSE.GUIToggleClasses(buttonname)
---   if buttonname == "class" then
---     classradio:SetValue(true)
---     specradio:SetValue(false)
---   else
---     classradio:SetValue(false)
---     specradio:SetValue(true)
---   end
--- end
-
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
   sequence.LastUpdated = GSE.GetTimestamp()
   -- Changes have been made, so save them
