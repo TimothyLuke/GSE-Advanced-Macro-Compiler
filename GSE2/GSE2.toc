@@ -1,19 +1,11 @@
 ## Interface: 110001
 
-## Interface-Classic: 11501
-## Interface-Cata: 40400
-
-## Title: |cff0000ffGSE:|r |cFF00D1FFGSE2 Retro GUI|r
-## Notes: GSE2
+## Title: |cff0000ffGSE:|r |cFF00D1FFGSE2 QoL|r
+## Notes: GSE Quality of Life
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE GSE_GUI
 ## LoadOnDemand: 1
 
 
-Init.lua
-Editor.lua
-Import.lua
-GUIFunctions.lua
-Started.lua
 QoL.lua

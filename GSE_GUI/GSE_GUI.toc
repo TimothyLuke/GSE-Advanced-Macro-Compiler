@@ -1,8 +1,5 @@
 ## Interface: 110001
 
-## Interface-Classic: 11501
-## Interface-Cata: 40400
-
 ## Title: |cff0000ffGSE:|r |cFF00D1FFGUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke

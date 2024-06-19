@@ -92,6 +92,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.showCurrentSpells = true
     GSEOptions.OOCQueueDelay = 7
     GSE.resetMacroResetModifiers()
+    GSEOptions.frameLocations = {}
 end
 
 GSE.SetDefaultOptions()

@@ -1,8 +1,5 @@
 ## Interface: 110001
 
-## Interface-Classic: 11501
-## Interface-Cata: 40400
-
 ## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
 ## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke

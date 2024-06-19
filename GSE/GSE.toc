@@ -1,10 +1,7 @@
 ## Interface: 110001
 
-## Interface-Classic: 11501
-## Interface-Cata: 40400
-
-## Title: |cff0000FFGSE:|r |cFF00D1FFAdvanced Macro Compiler|r
-## Notes: Allows you to execute a sequence of macros without stopping on unusable spells.
+## Title: |cff0000FFGSE:|r |cFF00D1FFSequences - Variables - Macros|r
+## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSELibrary GSEStorage GSE3Storage GSESpellCache GSEVariables
