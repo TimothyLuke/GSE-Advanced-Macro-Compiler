@@ -2181,16 +2181,24 @@ local function GetBlockToolbar(
 end
 
 if GSE.isEmpty(GSE.CreateSpellEditBox) then
-    GSE.CreateSpellEditBox = function(action, version, keyPath)
+    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
         local spellEditBox = AceGUI:Create("EditBox")
         spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
 
+        if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
+            sequence.Macros[version].Actions[keyPath].type = "spell"
+        end
+        if GSE.isEmpty(action.type) then
+            action.type = "spell"
+        end
+
         local spelltext
-        if action.spell then
-            spelltext = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
+
+        if action.toy then
+            spelltext = action.toy
         elseif action.item then
             spelltext = action.item
         elseif action.macro then
@@ -2198,7 +2206,12 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
         elseif action.action then
             spelltext = action.action
         else
-            spelltext = action.toy
+            local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
+            if translatedSpell then
+                spelltext = translatedSpell
+            else
+                spelltext = action.spell
+            end
         end
 
         spellEditBox:SetText(spelltext)
@@ -2206,39 +2219,41 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
         spellEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
-                if editframe.Sequence.Macros[version].Actions[keyPath].type == "pet" then
-                    editframe.Sequence.Macros[version].Actions[keyPath].action = value
-                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
-                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "macro" then
-                    editframe.Sequence.Macros[version].Actions[keyPath].macro = value
-                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
-                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "item" then
-                    editframe.Sequence.Macros[version].Actions[keyPath].item = value
-                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
-                elseif editframe.Sequence.Macros[version].Actions[keyPath].type == "toy" then
-                    editframe.Sequence.Macros[version].Actions[keyPath].toy = value
-                    editframe.Sequence.Macros[version].Actions[keyPath].spell = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
+                if sequence.Macros[version].Actions[keyPath].type == "pet" then
+                    sequence.Macros[version].Actions[keyPath].action = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif sequence.Macros[version].Actions[keyPath].type == "macro" then
+                    sequence.Macros[version].Actions[keyPath].macro = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif sequence.Macros[version].Actions[keyPath].type == "item" then
+                    sequence.Macros[version].Actions[keyPath].item = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif sequence.Macros[version].Actions[keyPath].type == "toy" then
+                    sequence.Macros[version].Actions[keyPath].toy = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
                 else
                     local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
                     if storedValue then
-                        editframe.Sequence.Macros[version].Actions[keyPath].spell = storedValue
+                        sequence.Macros[version].Actions[keyPath].spell = storedValue
+                    else
+                        sequence.Macros[version].Actions[keyPath].spell = value
                     end
-                    editframe.Sequence.Macros[version].Actions[keyPath].action = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].macro = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].item = nil
-                    editframe.Sequence.Macros[version].Actions[keyPath].toy = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
                 end
 
                 --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
@@ -2413,7 +2428,7 @@ local function drawAction(container, action, version, keyPath)
 
         macroPanel:AddChild(linegroup1)
 
-        local spellEditBox = GSE.CreateSpellEditBox(action, version, keyPath)
+        local spellEditBox = GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence)
 
         local unitEditBox = AceGUI:Create("EditBox")
         unitEditBox:SetLabel(L["Unit Name"])
