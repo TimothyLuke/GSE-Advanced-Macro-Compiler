@@ -9,7 +9,11 @@ variablesframe:Hide()
 variablesframe.panels = {}
 
 variablesframe.frame:SetFrameStrata("MEDIUM")
-if GSEOptions.frameLocations and GSEOptions.frameLocations.variablesframe then
+if
+    GSEOptions.frameLocations and GSEOptions.frameLocations.variablesframe and
+        GSEOptions.frameLocations.variablesframe.left and
+        GSEOptions.frameLocations.variablesframe.top
+ then
     variablesframe:SetPoint(
         "TOPLEFT",
         UIParent,

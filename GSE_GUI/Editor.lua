@@ -27,7 +27,11 @@ editframe.SelectedTab = "group"
 editframe.AdvancedEditor = false
 editframe.statusText = "GSE: " .. GSE.VersionString
 editframe.booleanFunctions = {}
-if GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor then
+if
+    GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and
+        GSEOptions.frameLocations.sequenceeditor.left and
+        GSEOptions.frameLocations.sequenceeditor.top
+ then
     editframe:SetPoint(
         "TOPLEFT",
         UIParent,
