@@ -46,15 +46,6 @@ variablesframe:SetCallback(
     function(self)
         GSE.ClearTooltip(variablesframe)
         variablesframe:Hide()
-        -- if editframe.save then
-        --     local event = {}
-        --     event.action = "openviewer"
-        --     table.insert(GSE.OOCQueue, event)
-        -- else
-        --     if not editframe.AdvancedEditor then
-        --         GSE.GUIShowViewer()
-        --     end
-        -- end
     end
 )
 
@@ -91,10 +82,56 @@ rightContainer:SetLayout("List")
 rightContainer:SetHeight(variablesframe.Height - 90)
 basecontainer:AddChild(rightContainer)
 
+local colorTable = {}
+
+local tokens = IndentationLib.tokens
+
+colorTable[tokens.TOKEN_SPECIAL] = GSEOptions.WOWSHORTCUTS
+colorTable[tokens.TOKEN_KEYWORD] = GSEOptions.KEYWORD
+colorTable[tokens.TOKEN_UNKNOWN] = GSEOptions.UNKNOWN
+colorTable[tokens.TOKEN_COMMENT_SHORT] = GSEOptions.COMMENT
+colorTable[tokens.TOKEN_COMMENT_LONG] = GSEOptions.COMMENT
+
+local stringColor = GSEOptions.NormalColour
+colorTable[tokens.TOKEN_STRING] = stringColor
+colorTable[".."] = stringColor
+
+local tableColor = GSEOptions.CONCAT
+colorTable["..."] = tableColor
+colorTable["{"] = tableColor
+colorTable["}"] = tableColor
+colorTable["["] = GSEOptions.STRING
+colorTable["]"] = GSEOptions.STRING
+
+local arithmeticColor = GSEOptions.NUMBER
+colorTable[tokens.TOKEN_NUMBER] = arithmeticColor
+colorTable["+"] = arithmeticColor
+colorTable["-"] = arithmeticColor
+colorTable["/"] = arithmeticColor
+colorTable["*"] = arithmeticColor
+
+local logicColor1 = GSEOptions.EQUALS
+colorTable["=="] = logicColor1
+colorTable["<"] = logicColor1
+colorTable["<="] = logicColor1
+colorTable[">"] = logicColor1
+colorTable[">="] = logicColor1
+colorTable["~="] = logicColor1
+
+local logicColor2 = GSEOptions.EQUALS
+colorTable["and"] = logicColor2
+colorTable["or"] = logicColor2
+colorTable["not"] = logicColor2
+
+local castColor = GSEOptions.UNKNOWN
+colorTable["/cast"] = castColor
+
+colorTable[0] = "|r"
+
 local function createVariableHeader(name, variable)
     local selpanel = AceGUI:Create("SelectablePanel")
     selpanel:SetFullWidth(true)
-    selpanel:SetHeight(100)
+    selpanel:SetHeight(90)
     variablesframe.panels[name] = selpanel
     selpanel:SetCallback(
         "OnClick",
@@ -108,7 +145,7 @@ local function createVariableHeader(name, variable)
                         rootDescription:CreateButton(
                             L["Export Variable"],
                             function()
-                                print("Clicked button 2")
+                                print("Coming Soon")
                             end
                         )
                     end
@@ -139,18 +176,14 @@ end
 
 local function listVariables()
     leftscroll:ReleaseChildren()
-    for k, _ in pairs(GSEVariables) do
-        local header = createVariableHeader(k)
-        leftscroll:AddChild(header)
-    end
 
     local newButton = AceGUI:Create("Button")
     newButton:SetText(L["New"])
-    newButton:SetWidth(100)
+    newButton:SetWidth(90)
     newButton:SetCallback(
         "OnClick",
         function()
-            newVariable()
+            variablesframe.newVariable()
         end
     )
 
@@ -164,11 +197,11 @@ local function listVariables()
 
     local importButton = AceGUI:Create("Button")
     importButton:SetText(L["Import"])
-    importButton:SetWidth(100)
+    importButton:SetWidth(90)
     importButton:SetCallback(
         "OnClick",
         function()
-            newVariable()
+            variablesframe.newVariable()
         end
     )
 
@@ -179,10 +212,14 @@ local function listVariables()
         end
     )
     leftscroll:AddChild(importButton)
+
+    for k, _ in pairs(GSEVariables) do
+        local header = createVariableHeader(k)
+        leftscroll:AddChild(header)
+    end
 end
 
 function variablesframe.showVariable(name)
-    print(name)
     rightContainer:ReleaseChildren()
     local variable = {
         ["funct"] = [[function()
@@ -222,7 +259,7 @@ end]],
 
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel(L["Help Information"])
-    commentsEditBox:SetNumLines(5)
+    commentsEditBox:SetNumLines(7)
     commentsEditBox:SetWidth(variablesframe.Width - 250)
     commentsEditBox:DisableButton(true)
     commentsEditBox:SetText(variable.comments)
@@ -250,15 +287,17 @@ end]],
     valueEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            variable.funct = text
+            variable.funct = IndentationLib.encode(text)
         end
     )
     valueEditBox:SetCallback(
         "OnEditFocusLost",
         function()
-            variable.funct = valueEditBox:GetText()
+            local variabletext = IndentationLib.decode(valueEditBox:GetText())
+            variable.funct = variabletext
         end
     )
+    IndentationLib.enable(valueEditBox.editBox, colorTable, 4)
 
     rightContainer:AddChild(valueEditBox)
 
@@ -278,14 +317,12 @@ end]],
                     functline = string.sub(functline, 11)
                     functline = functline:sub(1, -4)
                     functline = loadstring(functline)
-                    -- print(type(functline))
                     if functline ~= nil then
                         val = functline
                     end
                 end
             end
-            -- print("updated Type: ".. type(value))
-            -- print(value)
+
             if type(val) == "function" then
                 val = val()
             end
@@ -376,7 +413,7 @@ end]],
     rightContainer:AddChild(savebutton)
 end
 
-local function newVariable()
+function variablesframe.newVariable()
     local header = createVariableHeader("MyNewVar" .. math.random(100))
     leftscroll:AddChild(header)
 end
@@ -384,7 +421,6 @@ end
 leftscroll.frame:SetScript(
     "OnMouseDown",
     function(Self, button)
-        print("clicked", button)
         if button == "RightButton" then
             MenuUtil.CreateContextMenu(
                 leftscroll,
@@ -393,13 +429,13 @@ leftscroll.frame:SetScript(
                     rootDescription:CreateButton(
                         L["New"],
                         function()
-                            newVariable()
+                            variablesframe.newVariable()
                         end
                     )
                     rootDescription:CreateButton(
                         L["Import"],
                         function()
-                            print("Clicked button 1")
+                            print("Coming Soon")
                         end
                     )
                 end
