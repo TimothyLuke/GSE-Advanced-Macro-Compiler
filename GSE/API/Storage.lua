@@ -613,7 +613,7 @@ function GSE.processAction(action, metaData, variables)
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
         -- setup the interation
-        for id, v in ipairs(action) do
+        for _, v in ipairs(action) do
             local builtaction = GSE.processAction(v, metaData, variables)
             table.insert(actionList, builtaction)
         end

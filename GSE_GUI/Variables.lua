@@ -72,14 +72,15 @@ local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("Flow") -- probably?
 leftScrollCOntainer:AddChild(leftscroll)
 
+local spacer = AceGUI:Create("Label")
+spacer:SetWidth(10)
+basecontainer:AddChild(spacer)
+
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(variablesframe.Width - 230)
---rightContainer:SetFullHeight(true)
+rightContainer:SetWidth(variablesframe.Width - 290)
+
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(variablesframe.Height - 90)
-local point, relativeTo, relativePoint, xOfs, yOfs = leftscroll:GetPoint()
-rightContainer:ClearAllPoints()
-rightContainer:SetPoint(point, leftscroll.frame, "TOPRIGHT", 10, 0)
 basecontainer:AddChild(rightContainer)
 
 local function showVariable(name)
@@ -87,7 +88,7 @@ local function showVariable(name)
     rightContainer:ReleaseChildren()
     local variable = {
         ["funct"] = [[function()
-    return true            
+    return true
 end]],
         ["comments"] = ""
     }
@@ -124,7 +125,7 @@ end]],
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel(L["Help Information"])
     commentsEditBox:SetNumLines(5)
-    commentsEditBox:SetWidth(variablesframe.Width - 200)
+    commentsEditBox:SetWidth(variablesframe.Width - 250)
     commentsEditBox:DisableButton(true)
     commentsEditBox:SetText(variable.comments)
     commentsEditBox:SetCallback(
@@ -145,7 +146,7 @@ end]],
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
     valueEditBox:SetLabel(L["Variable"])
     valueEditBox:SetNumLines(10)
-    valueEditBox:SetWidth(variablesframe.Width - 200)
+    valueEditBox:SetWidth(variablesframe.Width - 250)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(variable.funct)
     valueEditBox:SetCallback(
