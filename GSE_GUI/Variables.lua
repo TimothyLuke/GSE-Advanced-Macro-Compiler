@@ -439,7 +439,7 @@ function variablesframe:clearpanels(widget, selected)
     for k, _ in pairs(variablesframe.panels) do
         if k == widget:GetKey() then
             if selected then
-                showVariable(widget, (GSEVariables[widget] and GSEVariables[widget] or nil))
+                variablesframe.showVariable(widget, (GSEVariables[widget] and GSEVariables[widget] or nil))
                 variablesframe.panels[k]:SetClicked(true)
             else
                 variablesframe.panels[k]:SetClicked(false)
