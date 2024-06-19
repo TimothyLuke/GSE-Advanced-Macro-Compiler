@@ -941,3 +941,6 @@ L["Variable"] = true
 L["GSE: Sequences, Variables, Macros"] = true
 L["Sequences"] = true
 L["Macros"] = true
+L["Implementation Link"] = true
+L["Current Value"] = true
+L["Not Yet Active"] = true

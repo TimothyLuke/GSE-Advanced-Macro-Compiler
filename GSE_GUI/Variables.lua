@@ -280,7 +280,7 @@ end]],
 
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
     valueEditBox:SetLabel(L["Variable"])
-    valueEditBox:SetNumLines(10)
+    valueEditBox:SetNumLines(15)
     valueEditBox:SetWidth(variablesframe.Width - 250)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(variable.funct)
@@ -301,65 +301,47 @@ end]],
 
     rightContainer:AddChild(valueEditBox)
 
-    local testRowButton = AceGUI:Create("Icon")
-    testRowButton:SetImageSize(20, 20)
-    testRowButton:SetWidth(20)
-    testRowButton:SetHeight(20)
-    testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
-
-    testRowButton:SetCallback(
-        "OnClick",
-        function()
-            local val = valueEditBox:GetText()
-            if type(val) == "string" then
-                local functline = GSE.RemoveComments(val)
-                if string.sub(functline, 1, 9) == "function(" then
-                    functline = string.sub(functline, 11)
-                    functline = functline:sub(1, -4)
-                    functline = loadstring(functline)
-                    if functline ~= nil then
-                        val = functline
-                    end
-                end
-            end
-
-            if type(val) == "function" then
-                val = val()
-            end
-
-            if type(val) == "boolean" then
-                val = tostring(val)
-            end
-
-            StaticPopupDialogs["GSE-GenericMessage"].text =
-                string.format(
-                L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"],
-                keyEditBox:GetText(),
-                val
-            )
-            StaticPopup_Show("GSE-GenericMessage")
+    local implementation = AceGUI:Create("EditBox")
+    implementation:SetLabel(L["Implementation Link"])
+    implementation:DisableButton(true)
+    local implementationText = [[=GSE.V["]] .. name .. [["]()]]
+    implementation:SetText(implementationText)
+    implementation:SetCallback(
+        "OnTextChanged",
+        function(self, event, text)
+            implementation:SetText(implementationText)
         end
     )
-    testRowButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Test Variable"], L["Show the current value of this variable."], variablesframe)
+    rightContainer:AddChild(implementation)
+
+    local currentOutput = AceGUI:Create("EditBox")
+    currentOutput:SetLabel(L["Current Value"])
+    currentOutput:DisableButton(true)
+    local outputText = L["Not Yet Active"]
+    if GSE.V[name] and type(GSE.V[name]) == "function" then
+        outputText = GSE.V[name]()
+    end
+
+    currentOutput:SetText(outputText)
+    currentOutput:SetCallback(
+        "OnTextChanged",
+        function(self, event, text)
+            currentOutput:SetText(outputText)
         end
     )
-    testRowButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(variablesframe)
-        end
-    )
-    rightContainer:AddChild(testRowButton)
+    rightContainer:AddChild(currentOutput)
 
-    local deleteRowButton = AceGUI:Create("Icon")
-    deleteRowButton:SetImageSize(20, 20)
-    deleteRowButton:SetWidth(20)
-    deleteRowButton:SetHeight(20)
-    deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
+    local spacer2 = AceGUI:Create("Label")
+    spacer2:SetWidth(10)
+    rightContainer:AddChild(spacer2)
 
+    local buttonRow = AceGUI:Create("SimpleGroup")
+    buttonRow:SetLayout("Flow")
+    buttonRow:SetWidth(400)
+
+    local deleteRowButton = AceGUI:Create("Button")
+    deleteRowButton:SetText(L["Delete Variable"])
+    deleteRowButton:SetWidth(150)
     deleteRowButton:SetCallback(
         "OnClick",
         function()
@@ -380,11 +362,15 @@ end]],
             GSE.ClearTooltip(variablesframe)
         end
     )
-    rightContainer:AddChild(deleteRowButton)
+    buttonRow:AddChild(deleteRowButton)
+
+    local spacer3 = AceGUI:Create("Label")
+    spacer3:SetWidth(10)
+    buttonRow:AddChild(spacer3)
 
     local savebutton = AceGUI:Create("Button")
     savebutton:SetText(L["Save"])
-    savebutton:SetWidth(100)
+    savebutton:SetWidth(150)
     savebutton:SetCallback(
         "OnClick",
         function()
@@ -392,7 +378,7 @@ end]],
             local compressedvariable = GSE.EncodeMessage(variable)
             GSEVariables[name] = compressedvariable
             GSE.V[name] = loadstring(variable.funct)
-            if type(GSE.V[name]()) == "boolean" then
+            if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
                 table.insert(GSE.BooleanVariables, name)
             end
         end
@@ -410,7 +396,8 @@ end]],
             GSE.ClearTooltip(variablesframe)
         end
     )
-    rightContainer:AddChild(savebutton)
+    buttonRow:AddChild(savebutton)
+    rightContainer:AddChild(buttonRow)
 end
 
 function variablesframe.newVariable()
