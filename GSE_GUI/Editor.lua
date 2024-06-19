@@ -27,7 +27,15 @@ editframe.SelectedTab = "group"
 editframe.AdvancedEditor = false
 editframe.statusText = "GSE: " .. GSE.VersionString
 editframe.booleanFunctions = {}
-
+if GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor then
+    editframe:SetPoint(
+        "TOPLEFT",
+        UIParent,
+        "BOTTOMLEFT",
+        GSEOptions.frameLocations.sequenceeditor.left,
+        GSEOptions.frameLocations.sequenceeditor.top
+    )
+end
 local frameTableUpdated = {}
 
 if GSE.isEmpty(GSEOptions.editorHeight) then

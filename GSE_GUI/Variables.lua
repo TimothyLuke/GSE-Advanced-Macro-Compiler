@@ -9,7 +9,15 @@ variablesframe:Hide()
 variablesframe.panels = {}
 
 variablesframe.frame:SetFrameStrata("MEDIUM")
-
+if GSEOptions.frameLocations and GSEOptions.frameLocations.variablesframe then
+    variablesframe:SetPoint(
+        "TOPLEFT",
+        UIParent,
+        "BOTTOMLEFT",
+        GSEOptions.frameLocations.variablesframe.left,
+        GSEOptions.frameLocations.variablesframe.top
+    )
+end
 GSE.GUIVariableFrame = variablesframe
 
 if GSE.isEmpty(GSEOptions.editorHeight) then

@@ -641,7 +641,7 @@ function GSE:GSSlash(input)
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
-            GSE.GUIShowViewer()
+            _G["GSE_Menu"]:Show()
         end
     end
 end

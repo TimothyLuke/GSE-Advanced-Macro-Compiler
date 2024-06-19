@@ -938,3 +938,6 @@ L["Variable Menu"] = true
 L["Export Variable"] = true
 L["Save the changes made to this variable."] = true
 L["Variable"] = true
+L["GSE: Sequences, Variables, Macros"] = true
+L["Sequences"] = true
+L["Macros"] = true

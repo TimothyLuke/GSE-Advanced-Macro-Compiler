@@ -208,7 +208,26 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
 end
 
 function GSE:PLAYER_LOGOUT()
-    GSE.PrepareLogout()
+    if GSE.UnsavedOptions["GUI"] then
+        if GSE.isEmpty(GSEOptions.frameLocations) then
+            GSEOptions.frameLocations = {}
+        end
+        if GSE.isEmpty(GSEOptions.frameLocations.menu) then
+            GSEOptions.frameLocations.menu = {}
+        end
+        GSEOptions.frameLocations.menu.top = _G["GSE_Menu"]:GetTop()
+        GSEOptions.frameLocations.menu.left = _G["GSE_Menu"]:GetLeft()
+        if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+            GSEOptions.frameLocations.sequenceeditor = {}
+        end
+        GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame:GetTop()
+        GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame:GetLeft()
+        if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
+            GSEOptions.frameLocations.variablesframe = {}
+        end
+        GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame:GetTop()
+        GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame:GetLeft()
+    end
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
