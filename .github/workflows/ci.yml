@@ -2,7 +2,7 @@
 
 name: CI
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   push:
     branches:
@@ -14,100 +14,96 @@ on:
       - master
 
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch: 
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  
   build:
     runs-on: ubuntu-latest
 
     steps:
-
-    - uses: actions/checkout@v2
-      with:
+      - uses: actions/checkout@v2
+        with:
           fetch-depth: 0
 
-#    - uses: leafo/gh-actions-lua@v10
-#      with:
-#        luaVersion: "5.1.5"
+      #    - uses: leafo/gh-actions-lua@v10
+      #      with:
+      #        luaVersion: "5.1.5"
 
-#    # Runs a single command using the runners shell
-#    - name: Install and Run Luacheck
-#      uses: nebularg/actions-luacheck@v1
-#      with:
-#        args: -q
+      #    # Runs a single command using the runners shell
+      #    - name: Install and Run Luacheck
+      #      uses: nebularg/actions-luacheck@v1
+      #      with:
+      #        args: -q
 
-#    # do Busted checkes
-#    - uses: leafo/gh-actions-luarocks@v4.0.0
+      #    # do Busted checkes
+      #    - uses: leafo/gh-actions-luarocks@v4.0.0
 
-#    - name: Build Luarocks
-#      run: |
-#        luarocks install mockagne 1.0
-#        luarocks install luaunit
-#        # luarocks install luabitop
-#        luarocks install busted
-#        luarocks install luacov
-#        luarocks install luacov-coveralls
-#        luarocks install luadoc
-#       # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
-        
-#    - name: Run Busted UnitTests
-#      run: |
-#        busted -o utfTerminal --verbose --coverage
-   
-#   - name: Log coverage to coveralls.io
-#      if: success()
-#      continue-on-error: true
-#      env:
-#        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      run: |
-#        export LUA_PATH="./GSE/API/?.lua;$LUA_PATH"
-#        luacov-coveralls -v -e .luarocks
-    
-    - name: Setup Node
-      uses: actions/setup-node@v3
-    - name: Install Dependencies
-      run: npm ci
-    - name: Update GSE/API/Patreon.lua
-      run: npm run-script run
-      env: 
+      #    - name: Build Luarocks
+      #      run: |
+      #        luarocks install mockagne 1.0
+      #        luarocks install luaunit
+      #        # luarocks install luabitop
+      #        luarocks install busted
+      #        luarocks install luacov
+      #        luarocks install luacov-coveralls
+      #        luarocks install luadoc
+      #       # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
+
+      #    - name: Run Busted UnitTests
+      #      run: |
+      #        busted -o utfTerminal --verbose --coverage
+
+      #   - name: Log coverage to coveralls.io
+      #      if: success()
+      #      continue-on-error: true
+      #      env:
+      #        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #      run: |
+      #        export LUA_PATH="./GSE/API/?.lua;$LUA_PATH"
+      #        luacov-coveralls -v -e .luarocks
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+      - name: Install Dependencies
+        run: npm ci
+      - name: Update GSE/API/Patreon.lua
+        run: npm run-script run
+        env:
           NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
-          
-    # Runs a set of commands using the runners shell
-    - name: Create Package Retail
-      uses: BigWigsMods/packager@master
-      if: ${{ github.event_name != 'pull_request' }}
-      env:
-        CF_API_KEY: ${{ secrets.CF_API_KEY }}
-        GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-        WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
-        WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
 
-#    # Runs a set of commands using the runners shell
-#    - name: Create Package Classic
-#      uses: BigWigsMods/packager@master
-#      if: ${{ github.event_name != 'pull_request' }}
-#      env:
-#        CF_API_KEY: ${{ secrets.CF_API_KEY }}
-#        GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-#        WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
-#      with:
-#        args: -m .pkgmeta -w 25155
-    - name: Publish Patreon
-      run: npm run-script pat
-      env: 
+      # Runs a set of commands using the runners shell
+      - name: Create Package Retail
+        uses: BigWigsMods/packager@master
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+
+      #    # Runs a set of commands using the runners shell
+      #    - name: Create Package Classic
+      #      uses: BigWigsMods/packager@master
+      #      if: ${{ github.event_name != 'pull_request' }}
+      #      env:
+      #        CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      #        GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      #        WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+      #      with:
+      #        args: -m .pkgmeta -w 25155
+      - name: Publish Patreon
+        run: npm run-script pat
+        env:
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK }}
+#    - name: Parse and generate documentation
+#      run: |
+#        mkdir .pages
+#        luadoc -d .pages/docs GSE/API/*.lua
+#        cp pages/* .pages
 
-    - name: Parse and generate documentation
-      run: |
-        mkdir .pages
-        luadoc -d .pages/docs GSE/API/*.lua
-        cp pages/* .pages
-        
-
-    - name: Deploy API to GitHuib Pages🚀
-      uses: JamesIves/github-pages-deploy-action@4.1.4
-      with:
-        branch: gh-pages # The branch the action should deploy to.
-        folder: .pages # The folder the action should deploy.
+#    - name: Deploy API to GitHuib Pages🚀
+#      uses: JamesIves/github-pages-deploy-action@4.1.4
+#      with:
+#        branch: gh-pages # The branch the action should deploy to.
+#        folder: .pages # The folder the action should deploy.
