@@ -72,6 +72,7 @@ basecontainer:AddChild(leftScrollContainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("List") -- probably?
+leftscroll:SetWidth(200)
 leftScrollContainer:AddChild(leftscroll)
 
 local spacer = AceGUI:Create("Label")
@@ -91,14 +92,17 @@ end
 local function buildMacroHeader(node)
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
+    local origjustification = font:GetJustifyH()
+    font:SetJustifyH("LEFT")
 
     local selpanel = AceGUI:Create("SelectablePanel")
 
     selpanel:SetKey(node.value)
-    selpanel:SetWidth(200)
-    selpanel:SetHeight(30)
+    selpanel:SetFullWidth(true)
+    selpanel:SetHeight(20)
     selpanel:SetAutoAdjustHeight(false)
-    selpanel:SetLayout("Flow")
+    selpanel:SetLayout("List")
+
     macroframe.panels[node.value] = selpanel
     selpanel:SetCallback(
         "OnClick",
@@ -136,21 +140,18 @@ local function buildMacroHeader(node)
         end
     )
 
-    -- Workaround for vanishing label ace3 bug
-    local label = AceGUI:Create("Label")
-    label:SetFontObject(font)
-    selpanel:AddChild(label)
-
-    local headerlabel = node.name
     local hlabel = AceGUI:Create("Label")
 
-    hlabel:SetText(headerlabel)
+    hlabel:SetText(node.name)
     hlabel:SetWidth(200)
     hlabel:SetFontObject(font)
     hlabel:SetImage(node.icon)
+    hlabel:SetImageSize(19, 19)
+
     selpanel:AddChild(hlabel)
 
     leftscroll:AddChild(selpanel)
+    font:SetJustifyH(origjustification)
 end
 
 local function buildMacroMenu()
