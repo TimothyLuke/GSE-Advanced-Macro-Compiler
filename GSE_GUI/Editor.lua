@@ -67,15 +67,6 @@ editframe:SetCallback(
     function(self)
         GSE.ClearTooltip(editframe)
         editframe:Hide()
-        if editframe.save then
-            local event = {}
-            event.action = "openviewer"
-            table.insert(GSE.OOCQueue, event)
-        else
-            if not editframe.AdvancedEditor then
-                GSE.GUIShowViewer()
-            end
-        end
     end
 )
 
@@ -572,7 +563,7 @@ function GSE.GUIEditorPerformLayout(frame)
         "OnClick",
         function()
             if GSE.isEmpty(editframe.invalidPause) then
-                local gameversion, build, date, tocversion = GetBuildInfo()
+                local _, _, _, tocversion = GetBuildInfo()
                 editframe.Sequence.MetaData.ManualIntervention = true
                 editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
                 editframe.Sequence.MetaData.EnforceCompatability = true
