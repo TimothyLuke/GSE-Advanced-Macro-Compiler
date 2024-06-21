@@ -48,8 +48,8 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title)
   PreviewFrame.text = GSE.Dump(spelllist)
   local count = #spelllist
   PreviewLabel:SetLabel(L["Compiled"] .. " " .. count .. " " .. L["Actions"])
-  if GSE.GUIViewFrame:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIViewFrame:GetPoint()
+  if GSE.GUIEditFrame:IsVisible() then
+    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
     PreviewFrame:ClearAllPoints()
     PreviewFrame:SetPoint(point, xOfs + 150 + (GSEOptions.menuWidth / 2), yOfs)
   end

@@ -11,6 +11,13 @@ function GSE.TraceSequence(button, step, spell)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(spell) then
         local isUsable, notEnoughMana = C_Spell.IsSpellUsable(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
+        local FoundInSpellBook = C_SpellBook.FindSpellBookSlotForSpell(GSE.GetSpellId(spell, Statics.TranslatorMode.ID))
+        local foundOutput
+        if FoundInSpellBook > 0 then
+            foundOutput = GSEOptions.CommandColour .. "Found in Spell Book" .. Statics.StringReset
+        else
+            foundOutput = GSEOptions.UNKNOWN .. "Not Found In Spell Book" .. Statics.StringReset
+        end
         if isUsable then
             usableOutput = GSEOptions.CommandColour .. "Able To Cast" .. Statics.StringReset
         else
@@ -21,13 +28,8 @@ function GSE.TraceSequence(button, step, spell)
         else
             manaOutput = GSEOptions.CommandColour .. "Resources Available" .. Statics.StringReset
         end
-        local castingspell
+        local castingspell = UnitCastingInfo("player")
 
-        if GSE.GameMode == 1 then
-            castingspell, _, _, _, _, _, _, _ = CastingInfo()
-        else
-            castingspell, _, _, _, _, _, _, _ = UnitCastingInfo("player")
-        end
         if not GSE.isEmpty(castingspell) then
             CastingOutput = GSEOptions.UNKNOWN .. "Casting " .. castingspell .. Statics.StringReset
         else
@@ -40,14 +42,6 @@ function GSE.TraceSequence(button, step, spell)
 
         local fullBlock = ""
 
-        if GSEOptions.showFullBlockDebug then
-            fullBlock =
-                "\n" ..
-                GSE.SequencesExec[button][step].spell ..
-                    GSEOptions.EmphasisColour ..
-                        "\n============================================================================================\n" ..
-                            Statics.StringReset
-        end
         GSE.PrintDebugMessage(
             table.concat(
                 {
@@ -57,7 +51,9 @@ function GSE.TraceSequence(button, step, spell)
                     ",",
                     step,
                     ",",
-                    (spell and spell or "nil"),
+                    (spell and GSE.GetSpellId(spell, Statics.TranslatorMode.Current) or "nil"),
+                    ",",
+                    foundOutput,
                     ",",
                     usableOutput,
                     ",",

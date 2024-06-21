@@ -220,18 +220,23 @@ function GSE:PLAYER_LOGOUT()
         if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
             GSEOptions.frameLocations.sequenceeditor = {}
         end
-        GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame:GetTop()
-        GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame:GetLeft()
+        GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame.frame:GetTop()
+        GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame.frame:GetLeft()
         if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
             GSEOptions.frameLocations.variablesframe = {}
         end
-        GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame:GetTop()
-        GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame:GetLeft()
+        GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame.frame:GetTop()
+        GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame.frame:GetLeft()
         if GSE.isEmpty(GSEOptions.frameLocations.macroframe) then
             GSEOptions.frameLocations.macroframe = {}
         end
-        GSEOptions.frameLocations.macroframe.top = GSE.GUIMacroFrame:GetTop()
-        GSEOptions.frameLocations.macroframe.left = GSE.GUIMacroFrame:GetLeft()
+        GSEOptions.frameLocations.macroframe.top = GSE.GUIMacroFrame.frame:GetTop()
+        GSEOptions.frameLocations.macroframe.left = GSE.GUIMacroFrame.frame:GetLeft()
+        if GSE.isEmpty(GSEOptions.frameLocations.debug) then
+            GSEOptions.frameLocations.debug = {}
+        end
+        GSEOptions.frameLocations.debug.top = GSE.GUIDebugFrame.frame:GetTop()
+        GSEOptions.frameLocations.debug.left = GSE.GUIDebugFrame.frame:GetLeft()
     end
 end
 

@@ -17,6 +17,19 @@ DebugFrame.Width = (GSEOptions.debugWidth and GSEOptions.debugWidth or 700)
 DebugFrame:SetWidth(DebugFrame.Width)
 DebugFrame:SetHeight(DebugFrame.Height)
 
+if
+  GSEOptions.frameLocations and GSEOptions.frameLocations.debug and GSEOptions.frameLocations.debug.left and
+    GSEOptions.frameLocations.debug.top
+ then
+  DebugFrame:SetPoint(
+    "TOPLEFT",
+    UIParent,
+    "BOTTOMLEFT",
+    GSEOptions.frameLocations.debug.left,
+    GSEOptions.frameLocations.debug.top
+  )
+end
+
 function GSE.GUIUpdateOutput()
   GSE.GUIDebugFrame.DebugOutputTextbox:SetText(GSE.GUIDebugFrame.DebugOutputTextbox:GetText() .. GSE.DebugOutput)
   GSE.DebugOutput = ""
