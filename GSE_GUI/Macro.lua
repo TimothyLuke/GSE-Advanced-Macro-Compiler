@@ -142,11 +142,9 @@ local function buildMacroHeader(node)
 
     local hlabel = AceGUI:Create("Label")
 
-    hlabel:SetText(node.name)
-    hlabel:SetWidth(200)
+    hlabel:SetText("|T" .. node.icon .. ":19:19|t  " .. node.name)
+    hlabel:SetWidth(199)
     hlabel:SetFontObject(font)
-    hlabel:SetImage(node.icon)
-    hlabel:SetImageSize(19, 19)
 
     selpanel:AddChild(hlabel)
 
