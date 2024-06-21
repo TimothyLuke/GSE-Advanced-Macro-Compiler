@@ -116,52 +116,6 @@ cancelButton:SetScript(
 	end
 )
 
-local colorTable = {}
-
-local tokens = IndentationLib.tokens
-
-colorTable[tokens.TOKEN_SPECIAL] = GSEOptions.WOWSHORTCUTS
-colorTable[tokens.TOKEN_KEYWORD] = GSEOptions.KEYWORD
-colorTable[tokens.TOKEN_UNKNOWN] = GSEOptions.UNKNOWN
-colorTable[tokens.TOKEN_COMMENT_SHORT] = GSEOptions.COMMENT
-colorTable[tokens.TOKEN_COMMENT_LONG] = GSEOptions.COMMENT
-
-local stringColor = GSEOptions.NormalColour
-colorTable[tokens.TOKEN_STRING] = stringColor
-colorTable[".."] = stringColor
-
-local tableColor = GSEOptions.CONCAT
-colorTable["..."] = tableColor
-colorTable["{"] = tableColor
-colorTable["}"] = tableColor
-colorTable["["] = GSEOptions.STRING
-colorTable["]"] = GSEOptions.STRING
-
-local arithmeticColor = GSEOptions.NUMBER
-colorTable[tokens.TOKEN_NUMBER] = arithmeticColor
-colorTable["+"] = arithmeticColor
-colorTable["-"] = arithmeticColor
-colorTable["/"] = arithmeticColor
-colorTable["*"] = arithmeticColor
-
-local logicColor1 = GSEOptions.EQUALS
-colorTable["=="] = logicColor1
-colorTable["<"] = logicColor1
-colorTable["<="] = logicColor1
-colorTable[">"] = logicColor1
-colorTable[">="] = logicColor1
-colorTable["~="] = logicColor1
-
-local logicColor2 = GSEOptions.EQUALS
-colorTable["and"] = logicColor2
-colorTable["or"] = logicColor2
-colorTable["not"] = logicColor2
-
-local castColor = GSEOptions.UNKNOWN
-colorTable["/cast"] = castColor
-
-colorTable[0] = "|r"
-
-IndentationLib.enable(AdvancedTextEditor, colorTable, 4)
+IndentationLib.enable(AdvancedTextEditor, Statics.IndentationColorTable, 4)
 scrollFrame:SetScrollChild(AdvancedTextEditor)
 frame:Hide()

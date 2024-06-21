@@ -24,21 +24,21 @@ if
 end
 GSE.GUIVariableFrame = variablesframe
 
-if GSE.isEmpty(GSEOptions.editorHeight) then
-    GSEOptions.editorHeight = 500
+if GSE.isEmpty(GSEOptions.menuHeight) then
+    GSEOptions.menuHeight = 500
 end
-if GSE.isEmpty(GSEOptions.editorWidth) then
-    GSEOptions.editorWidth = 700
+if GSE.isEmpty(GSEOptions.menuWidth) then
+    GSEOptions.menuWidth = 700
 end
-variablesframe.Height = GSEOptions.editorHeight
-variablesframe.Width = GSEOptions.editorWidth
+variablesframe.Height = GSEOptions.menuHeight
+variablesframe.Width = GSEOptions.menuWidth
 if variablesframe.Height < 500 then
     variablesframe.Height = 500
-    GSEOptions.editorHeight = variablesframe.Height
+    GSEOptions.menuWidth = variablesframe.Height
 end
 if variablesframe.Width < 700 then
     variablesframe.Width = 700
-    GSEOptions.editorWidth = variablesframe.Width
+    GSEOptions.menuWidth = variablesframe.Width
 end
 variablesframe.frame:SetClampRectInsets(-10, -10, -10, -10)
 variablesframe.frame:SetHeight(GSEOptions.editorHeight)
@@ -85,52 +85,6 @@ rightContainer:SetWidth(variablesframe.Width - 290)
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(variablesframe.Height - 90)
 basecontainer:AddChild(rightContainer)
-
-local colorTable = {}
-
-local tokens = IndentationLib.tokens
-
-colorTable[tokens.TOKEN_SPECIAL] = GSEOptions.WOWSHORTCUTS
-colorTable[tokens.TOKEN_KEYWORD] = GSEOptions.KEYWORD
-colorTable[tokens.TOKEN_UNKNOWN] = GSEOptions.UNKNOWN
-colorTable[tokens.TOKEN_COMMENT_SHORT] = GSEOptions.COMMENT
-colorTable[tokens.TOKEN_COMMENT_LONG] = GSEOptions.COMMENT
-
-local stringColor = GSEOptions.NormalColour
-colorTable[tokens.TOKEN_STRING] = stringColor
-colorTable[".."] = stringColor
-
-local tableColor = GSEOptions.CONCAT
-colorTable["..."] = tableColor
-colorTable["{"] = tableColor
-colorTable["}"] = tableColor
-colorTable["["] = GSEOptions.STRING
-colorTable["]"] = GSEOptions.STRING
-
-local arithmeticColor = GSEOptions.NUMBER
-colorTable[tokens.TOKEN_NUMBER] = arithmeticColor
-colorTable["+"] = arithmeticColor
-colorTable["-"] = arithmeticColor
-colorTable["/"] = arithmeticColor
-colorTable["*"] = arithmeticColor
-
-local logicColor1 = GSEOptions.EQUALS
-colorTable["=="] = logicColor1
-colorTable["<"] = logicColor1
-colorTable["<="] = logicColor1
-colorTable[">"] = logicColor1
-colorTable[">="] = logicColor1
-colorTable["~="] = logicColor1
-
-local logicColor2 = GSEOptions.EQUALS
-colorTable["and"] = logicColor2
-colorTable["or"] = logicColor2
-colorTable["not"] = logicColor2
-
-local castColor = GSEOptions.UNKNOWN
-colorTable["/cast"] = castColor
-
-colorTable[0] = "|r"
 
 local function createVariableHeader(name, variable)
     local selpanel = AceGUI:Create("SelectablePanel")
@@ -301,7 +255,7 @@ end]],
             variable.funct = variabletext
         end
     )
-    IndentationLib.enable(valueEditBox.editBox, colorTable, 4)
+    IndentationLib.enable(valueEditBox.editBox, Statics.IndentationColorTable, 4)
 
     rightContainer:AddChild(valueEditBox)
 

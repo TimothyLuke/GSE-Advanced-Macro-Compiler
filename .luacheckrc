@@ -28,6 +28,7 @@ globals = {
     "GSE_C",
     "GSESpellCache",
     "GSEVariables",
+    "GSEMacros",
     -- GSE
     "GSE",
     "GSE2",

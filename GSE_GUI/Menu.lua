@@ -57,7 +57,7 @@ macrobutton:SetText(L["Macros"])
 macrobutton:SetScript(
     "OnClick",
     function(self, button, down)
-        print("Macros Coming Soon")
+        GSE.ShowMacros()
     end
 )
 macrobutton:RegisterForClicks("AnyDown", "AnyUp")

@@ -227,6 +227,11 @@ function GSE:PLAYER_LOGOUT()
         end
         GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame:GetTop()
         GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame:GetLeft()
+        if GSE.isEmpty(GSEOptions.frameLocations.macroframe) then
+            GSEOptions.frameLocations.macroframe = {}
+        end
+        GSEOptions.frameLocations.macroframe.top = GSE.GUIMacroFrame:GetTop()
+        GSEOptions.frameLocations.macroframe.left = GSE.GUIMacroFrame:GetLeft()
     end
 end
 
@@ -390,7 +395,7 @@ function GSE:ProcessOOCQueue()
                 if GSE.isEmpty(GSE.Library[v.classid][v.sequencename]) then
                     GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
                 else
-                    GSE.ReplaceMacro(v.classid, v.sequencename, v.sequence)
+                    GSE.ReplaceSequence(v.classid, v.sequencename, v.sequence)
                     GSE.UpdateSequence(v.sequencename, v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
                 end
                 if v.checkmacro then

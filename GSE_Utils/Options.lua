@@ -317,11 +317,6 @@ function GSE.GetOptionsTable()
                             return GSEOptions.showCurrentSpells
                         end,
                         order = 441
-                    },
-                    title2 = {
-                        type = "header",
-                        name = L["Gameplay Options"],
-                        order = 500
                     }
                 }
             },
@@ -1013,7 +1008,7 @@ function GSE.GetOptionsTable()
                     },
                     menutitle = {
                         type = "header",
-                        name = L["Sequence Menu"],
+                        name = L["Variables"],
                         order = 13
                     },
                     menuHeight = {
@@ -1044,10 +1039,43 @@ function GSE.GetOptionsTable()
                         end,
                         order = 15
                     },
+                    macrotitle = {
+                        type = "header",
+                        name = L["Macros"],
+                        order = 16
+                    },
+                    macroHeight = {
+                        name = L["Default Menu Height"],
+                        desc = L["How many pixels high should the Menu start at.  Defaults to 500"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 500 then
+                                GSEOptions.macroHeight = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.macroHeight and tostring(GSEOptions.menuHeight) or "500")
+                        end,
+                        order = 17
+                    },
+                    macroWidth = {
+                        name = L["Default Menu Width"],
+                        desc = L["How many pixels wide should the Menu start at.  Defaults to 700"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 700 then
+                                GSEOptions.macroWidth = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.macroWidth and tostring(GSEOptions.menuWidth) or "700")
+                        end,
+                        order = 18
+                    },
                     debugtitle = {
                         type = "header",
                         name = L["Sequence Debugger"],
-                        order = 16
+                        order = 19
                     },
                     debugHeight = {
                         name = L["Default Debugger Height"],
@@ -1061,7 +1089,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugHeight and tostring(GSEOptions.debugHeight) or "500")
                         end,
-                        order = 17
+                        order = 20
                     },
                     debugWidth = {
                         name = L["Default Debugger Width"],
@@ -1075,7 +1103,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugWidth and tostring(GSEOptions.debugWidth) or "500")
                         end,
-                        order = 18
+                        order = 21
                     }
                 }
             },

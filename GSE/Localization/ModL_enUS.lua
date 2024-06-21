@@ -945,3 +945,5 @@ L["Implementation Link"] = true
 L["Current Value"] = true
 L["Not Yet Active"] = true
 L["Chat Link"] = true
+L["Account Macros"] = true
+L["Character Macros"] = true

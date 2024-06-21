@@ -5,9 +5,8 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
---- Delete a sequence starting with the macro and then the sequence from the library
+--- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
-    GSE.DeleteMacroStub(sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
     GSE3Storage[tonumber(classid)][sequenceName] = nil
 end
@@ -53,7 +52,7 @@ function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
 end
 
 --- Replace a current version of a Macro
-function GSE.ReplaceMacro(classid, sequenceName, sequence)
+function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
 end

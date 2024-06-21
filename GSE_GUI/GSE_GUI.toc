@@ -19,6 +19,7 @@ Recorder.lua
 Editor.lua
 RemoteMacroBrowser.lua
 Variables.lua
+Macro.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua
