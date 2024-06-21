@@ -19,10 +19,8 @@ end
 
 --- This function then deletes the macro.
 function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
-  GSE.GUIViewFrame:Hide()
-  GSE.GUIEditFrame:Hide()
   GSE.DeleteSequence(classid, sequenceName)
-  GSE.GUIShowViewer()
+  GSE.ShowSequences()
 end
 
 --- Format the text against the GSE Sequence Spec.
@@ -59,9 +57,7 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
               ["unit"] = "target",
               ["Type"] = Statics.Actions.Action
             }
-          },
-          ["InbuiltVariables"] = {},
-          ["Variables"] = {}
+          }
         }
       }
     }
@@ -96,9 +92,11 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
-  GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+  GSE.GUIEditorPerformLayout(GSE.GUIEditFrame.rightContainer)
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
-  incomingframe:Hide()
+  if incomingframe then
+    incomingframe:Hide()
+  end
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)
     GSE.GUIEditFrame:SetStatusText(
@@ -106,11 +104,6 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
     )
   end
   GSE.GUIEditFrame:Show()
-end
-
-function GSE.GUIUpdateSequenceList()
-  local names = GSE.GetSequenceNames()
-  GSE.GUIViewFrame.SequenceListbox:SetList(names)
 end
 
 function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
@@ -157,7 +150,6 @@ function GSE:OnInitialize()
   GSE.GUIRecordFrame:Hide()
   GSE.GUIVersionFrame:Hide()
   GSE.GUIEditFrame:Hide()
-  GSE.GUIViewFrame:Hide()
 end
 
 function GSE.OpenOptionsPanel()

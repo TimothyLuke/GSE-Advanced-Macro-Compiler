@@ -7,7 +7,7 @@ local L = GSE.L
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 editframe.frame:SetFrameStrata("MEDIUM")
-GSE.GUIEditFrame = editframe
+
 editframe.Sequence = {}
 editframe.Sequence.Macros = {}
 editframe.SequenceName = ""
@@ -78,7 +78,7 @@ editframe:SetCallback(
         end
     end
 )
-editframe:SetLayout("List")
+
 editframe.frame:SetScript(
     "OnSizeChanged",
     function(self, width, height)
@@ -103,6 +103,265 @@ editframe.frame:SetScript(
     end
 )
 
+editframe:SetLayout("Flow")
+editframe.panels = {}
+
+GSE.GUIEditFrame = editframe
+
+local basecontainer = AceGUI:Create("SimpleGroup")
+basecontainer:SetLayout("Flow")
+basecontainer:SetAutoAdjustHeight(false)
+basecontainer:SetHeight(editframe.Height - 100)
+basecontainer:SetFullWidth(true)
+editframe:AddChild(basecontainer)
+
+local leftScrollContainer = AceGUI:Create("SimpleGroup")
+leftScrollContainer:SetWidth(200)
+
+leftScrollContainer:SetHeight(editframe.Height - 90)
+leftScrollContainer:SetLayout("Fill") -- important!
+
+basecontainer:AddChild(leftScrollContainer)
+
+local leftscroll = AceGUI:Create("ScrollFrame")
+leftscroll:SetLayout("List") -- probably?
+leftScrollContainer:AddChild(leftscroll)
+leftscroll:SetFullWidth(true)
+leftscroll.frame:SetScript(
+    "OnMouseDown",
+    function(Self, button)
+        if button == "RightButton" then
+            MenuUtil.CreateContextMenu(
+                leftscroll,
+                function(ownerRegion, rootDescription)
+                    rootDescription:CreateTitle(L["Sequence Editor"])
+                    rootDescription:CreateButton(
+                        L["New"],
+                        function()
+                            GSE.GUILoadEditor()
+                        end
+                    )
+                    rootDescription:CreateButton(
+                        L["Import"],
+                        function()
+                            editframe:Hide()
+                            GSE.GUIImportFrame:Show()
+                        end
+                    )
+                    -- rootDescription:CreateButton(
+                    --     L["Delete"],
+                    --     function()
+                    --         GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
+                    --     end
+                    -- )
+                end
+            )
+        end
+    end
+)
+
+local spacer = AceGUI:Create("Label")
+spacer:SetWidth(10)
+basecontainer:AddChild(spacer)
+
+local rightContainer = AceGUI:Create("SimpleGroup")
+editframe.rightContainer = rightContainer
+rightContainer:SetWidth(editframe.Width - 290)
+
+rightContainer:SetLayout("List")
+rightContainer:SetHeight(editframe.Height - 90)
+basecontainer:AddChild(rightContainer)
+
+local function CreateSequencePanels(container, key)
+    local elements = GSE.split(key, ",")
+    local classid = tonumber(elements[1])
+    local sequencename = elements[2]
+    local readonly = elements[3]
+
+    local font = CreateFont("seqPanelFont")
+    font:SetFontObject(GameFontNormal)
+
+    local selpanel = AceGUI:Create("SelectablePanel")
+
+    selpanel:SetKey(key)
+    selpanel:SetWidth(200)
+    selpanel:SetHeight(30)
+    selpanel:SetAutoAdjustHeight(false)
+    selpanel:SetLayout("Flow")
+    editframe.panels[key] = selpanel
+    selpanel:SetCallback(
+        "OnClick",
+        function(widget, _, selected, button)
+            editframe:clearpanels(widget, selected)
+            if button == "RightButton" then
+                MenuUtil.CreateContextMenu(
+                    selpanel,
+                    function(ownerRegion, rootDescription)
+                        rootDescription:CreateTitle(L["Sequence Editor"])
+                        rootDescription:CreateButton(
+                            L["New"],
+                            function()
+                                GSE.GUILoadEditor()
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["Import"],
+                            function()
+                                editframe:Hide()
+                                GSE.GUIImportFrame:Show()
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["Chat Link"],
+                            function()
+                                StaticPopupDialogs["GSE_ChatLink"].link =
+                                    GSE.SequenceChatPattern(elements[2], elements[1])
+                                StaticPopup_Show("GSE_ChatLink")
+                            end
+                        )
+                        if GSE.OOCCheckMacroCreated(elements[2]) then
+                            rootDescription:CreateButton(
+                                L["Delete Icon"],
+                                function()
+                                    GSE.DeleteMacroStub(elements[2])
+                                    GSE.GUIConfigureMacroButton(elements[2])
+                                end
+                            )
+                        else
+                            rootDescription:CreateButton(
+                                L["Create Icon"],
+                                function()
+                                    GSE.OOCCheckMacroCreated(elements[2], true)
+                                    GSE.GUIConfigureMacroButton(elements[2])
+                                end
+                            )
+                        end
+                        rootDescription:CreateButton(
+                            L["Delete"],
+                            function()
+                                GSE.GUIDeleteSequence(classid, sequencename)
+                            end
+                        )
+                    end
+                )
+            elseif button == "LeftButton" and IsShiftKeyDown() then
+                StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(elements[2], elements[1])
+                StaticPopup_Show("GSE_ChatLink")
+            else
+                GSE.GUILoadEditor(widget:GetKey())
+            end
+        end
+    )
+
+    -- Workaround for vanishing label ace3 bug
+    local label = AceGUI:Create("Label")
+    label:SetFontObject(font)
+    selpanel:AddChild(label)
+
+    local headerlabel =
+        sequencename ..
+        " - " ..
+            GSEOptions.KEYWORD ..
+                Statics.SpecIDList[GSE.Library[classid][sequencename].MetaData.SpecID] .. Statics.StringReset
+    local hlabel = AceGUI:Create("Label")
+
+    if readonly == "1" then
+        headerlabel = headerlabel .. GSEOptions.UNKNOWN .. " ( " .. L["Restricted"] .. ")" .. Statics.StringReset
+    end
+    hlabel:SetText(headerlabel)
+    hlabel:SetWidth(200)
+    hlabel:SetFontObject(font)
+
+    selpanel:AddChild(hlabel)
+
+    container:AddChild(selpanel)
+end
+
+local function listSequences()
+    leftscroll:ReleaseChildren()
+    local toolbarRow = AceGUI:Create("SimpleGroup")
+    toolbarRow:SetLayout("Flow")
+
+    local newButton = AceGUI:Create("Button")
+    newButton:SetText(L["New"])
+    newButton:SetWidth(90)
+    newButton:SetCallback(
+        "OnClick",
+        function()
+            GSE.GUILoadEditor()
+        end
+    )
+
+    newButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+    toolbarRow:AddChild(newButton)
+
+    local importButton = AceGUI:Create("Button")
+    importButton:SetText(L["Import"])
+    importButton:SetWidth(90)
+    importButton:SetCallback(
+        "OnClick",
+        function()
+        end
+    )
+
+    importButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+    toolbarRow:AddChild(importButton)
+    leftscroll:AddChild(toolbarRow)
+    local names = GSE.GetSequenceNames()
+    local cclassid = tonumber(-1)
+    for k, _ in GSE.pairsByKeys(names) do
+        local elements = GSE.split(k, ",")
+        local tclassid = tonumber(elements[1])
+        if tclassid ~= cclassid then
+            cclassid = tclassid
+            local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+            local sectionspacer1 = AceGUI:Create("Label")
+            sectionspacer1:SetText(" ")
+            sectionspacer1:SetFont(fontName, 4, fontFlags)
+            leftscroll:AddChild(sectionspacer1)
+            local sectionheader = AceGUI:Create("Label")
+            sectionheader:SetText(Statics.SpecIDList[cclassid])
+            sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
+            sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
+            leftscroll:AddChild(sectionheader)
+            local sectionspacer2 = AceGUI:Create("Label")
+            sectionspacer2:SetText(" ")
+            sectionspacer2:SetFont(fontName, 2, fontFlags)
+            leftscroll:AddChild(sectionspacer2)
+        end
+        CreateSequencePanels(leftscroll, k)
+    end
+end
+
+function editframe:clearpanels(widget, selected)
+    for k, _ in pairs(editframe.panels) do
+        if k == widget:GetKey() then
+            if selected then
+                GSE.GUILoadEditor(widget:GetKey())
+                editframe.panels[k]:SetClicked(true)
+            else
+                editframe.panels[k]:SetClicked(false)
+            end
+        else
+            editframe.panels[k]:SetClicked(false)
+        end
+    end
+end
+
+function GSE.ShowSequences()
+    listSequences()
+    editframe:Show()
+end
 function GSE.GUICreateEditorTabs()
     local tabl = {
         {
@@ -1499,170 +1758,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     container:AddChild(layoutcontainer)
 end
 
-local function addKeyPairRow(container, rowWidth, key, value, version)
-    -- print("KEY/VAL", key, value)
-    local blank = false
-    local oldkey = key
-    if GSE.isEmpty(key) then
-        key = "MyNewVar" .. math.random(100)
-        blank = true
-    end
-    if GSE.isEmpty(value) then
-        value = "My new variable"
-        blank = true
-    end
-    if blank == true then
-        editframe.Sequence.Macros[version].Variables[key] = value
-        if oldkey ~= key then
-            editframe.Sequence.Macros[version].Variables[oldkey] = nil
-        end
-    end
-
-    local linegroup1 = AceGUI:Create("KeyGroup")
-    linegroup1:SetLayout("Flow")
-    linegroup1:SetWidth(rowWidth)
-    rowWidth = rowWidth - 70
-
-    local keyEditBox = AceGUI:Create("EditBox")
-    keyEditBox:SetLabel()
-    keyEditBox:DisableButton(true)
-    keyEditBox:SetWidth(rowWidth * 0.15 + 5)
-    keyEditBox:SetText(key)
-    local currentKey = key
-    keyEditBox:SetCallback(
-        "OnTextChanged",
-        function(self, event, text)
-            editframe.Sequence.Macros[version].Variables[text] =
-                editframe.Sequence.Macros[version].Variables[currentKey]
-            editframe.Sequence.Macros[version].Variables[currentKey] = nil
-            currentKey = text
-        end
-    )
-    linegroup1:AddChild(keyEditBox)
-
-    local spacerlabel1 = AceGUI:Create("Label")
-    spacerlabel1:SetWidth(5)
-    linegroup1:AddChild(spacerlabel1)
-
-    local valueEditBox = AceGUI:Create("MultiLineEditBox")
-    valueEditBox:SetLabel()
-    valueEditBox:SetNumLines(3)
-    valueEditBox:SetWidth(rowWidth * 0.75 + 5)
-    valueEditBox:DisableButton(true)
-    valueEditBox:SetText(value)
-    valueEditBox:SetCallback(
-        "OnTextChanged",
-        function(self, event, text)
-            editframe.Sequence.Macros[version].Variables[currentKey] = GSE.SplitMeIntolines(text)
-        end
-    )
-    valueEditBox:SetCallback(
-        "OnEditFocusLost",
-        function()
-            valueEditBox:SetText(
-                GSE.SafeConcat(
-                    GSE.TranslateSequence(
-                        editframe.Sequence.Macros[version].Variables[currentKey],
-                        Statics.TranslatorMode.Current
-                    ),
-                    "\n"
-                )
-            )
-        end
-    )
-
-    linegroup1:AddChild(valueEditBox)
-
-    local spacerlabel2 = AceGUI:Create("Label")
-    spacerlabel2:SetWidth(15)
-    linegroup1:AddChild(spacerlabel2)
-
-    local testRowButton = AceGUI:Create("Icon")
-    testRowButton:SetImageSize(20, 20)
-    testRowButton:SetWidth(20)
-    testRowButton:SetHeight(20)
-    testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
-
-    testRowButton:SetCallback(
-        "OnClick",
-        function()
-            local val = valueEditBox:GetText()
-            if type(val) == "string" then
-                local functline = GSE.RemoveComments(val)
-                if string.sub(functline, 1, 10) == "function()" then
-                    functline = string.sub(functline, 11)
-                    functline = functline:sub(1, -4)
-                    functline = loadstring(functline)
-                    -- print(type(functline))
-                    if functline ~= nil then
-                        val = functline
-                    end
-                end
-            end
-            -- print("updated Type: ".. type(value))
-            -- print(value)
-            if type(val) == "function" then
-                val = val()
-            end
-
-            if type(val) == "boolean" then
-                val = tostring(val)
-            end
-
-            StaticPopupDialogs["GSE-GenericMessage"].text =
-                string.format(
-                L["The current result of variable |cff0000ff~~%s~~|r is |cFF00D1FF%s|r"],
-                keyEditBox:GetText(),
-                val
-            )
-            StaticPopup_Show("GSE-GenericMessage")
-        end
-    )
-    testRowButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Test Variable"], L["Show the current value of this variable."], editframe)
-        end
-    )
-    testRowButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    linegroup1:AddChild(testRowButton)
-
-    local deleteRowButton = AceGUI:Create("Icon")
-    deleteRowButton:SetImageSize(20, 20)
-    deleteRowButton:SetWidth(20)
-    deleteRowButton:SetHeight(20)
-    deleteRowButton:SetImage("Interface\\Icons\\spell_chargenegative")
-
-    deleteRowButton:SetCallback(
-        "OnClick",
-        function()
-            editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = nil
-            linegroup1:ReleaseChildren()
-        end
-    )
-    deleteRowButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
-        end
-    )
-    deleteRowButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    linegroup1:AddChild(deleteRowButton)
-
-    container:AddChild(linegroup1)
-    return keyEditBox
-end
-
 local function GetBlockToolbar(
     version,
     path,
@@ -2820,109 +2915,6 @@ function GSE:DrawSequenceEditor(container, version)
     end
 end
 
-function GSE:GUIDrawVariableEditor(container, version)
-    local maxWidth = container.frame:GetWidth()
-    if GSE.isEmpty(editframe.Sequence.Macros[version].Variables) then
-        editframe.Sequence.Macros[version].Variables = {}
-    end
-
-    local contentcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
-    contentcontainer:SetWidth(maxWidth)
-    contentcontainer:SetAutoAdjustHeight(true)
-    local variableLabel = AceGUI:Create("Heading")
-    variableLabel:SetText(L["System Variables"])
-    variableLabel:SetWidth(contentcontainer.frame:GetWidth())
-    contentcontainer:AddChild(variableLabel)
-
-    for key, value in pairs(Statics.SystemVariableDescriptions) do
-        local textlabel = AceGUI:Create("Label")
-        local tempLabel = GSEOptions.UNKNOWN .. "~~" .. key .. "~~ " .. Statics.StringReset .. value
-        textlabel:SetText(tempLabel)
-        textlabel:SetWidth(contentcontainer.frame:GetWidth())
-        contentcontainer:AddChild(textlabel)
-    end
-
-    local uvariableLabel = AceGUI:Create("Heading")
-    uvariableLabel:SetText(L["Macro Variables"])
-    uvariableLabel:SetWidth(contentcontainer.frame:GetWidth())
-    contentcontainer:AddChild(uvariableLabel)
-
-    local linegroup1 = AceGUI:Create("KeyGroup")
-    linegroup1:SetLayout("Flow")
-    local columnWidth = contentcontainer.frame:GetWidth() - 55
-
-    linegroup1:SetWidth(columnWidth + 5)
-
-    local nameLabel = AceGUI:Create("Heading")
-    nameLabel:SetText(L["Name"])
-    nameLabel:SetWidth(columnWidth * 0.15)
-    linegroup1:AddChild(nameLabel)
-
-    local spacerlabel1 = AceGUI:Create("Label")
-    spacerlabel1:SetWidth(5)
-    linegroup1:AddChild(spacerlabel1)
-
-    local valueLabel = AceGUI:Create("Heading")
-    valueLabel:SetText(L["Value"])
-    valueLabel:SetWidth(columnWidth * 0.70)
-    linegroup1:AddChild(valueLabel)
-
-    local spacerlabel2 = AceGUI:Create("Label")
-    spacerlabel2:SetWidth(5)
-    linegroup1:AddChild(spacerlabel2)
-
-    local delLabel = AceGUI:Create("Heading")
-    delLabel:SetText(L["Actions"])
-    delLabel:SetWidth(columnWidth * 0.10)
-    linegroup1:AddChild(delLabel)
-    contentcontainer:AddChild(linegroup1)
-
-    for key, value in GSE.pairsByKeys(editframe.Sequence.Macros[version].Variables) do
-        if type(value) == "table" then
-            addKeyPairRow(
-                contentcontainer,
-                columnWidth,
-                key,
-                GSE.SafeConcat(GSE.TranslateSequence(value, Statics.TranslatorMode.Current), "\n"),
-                version
-            )
-        end
-    end
-
-    local addVariablsButton = AceGUI:Create("Button")
-    addVariablsButton:SetText(L["Add Variable"])
-    addVariablsButton:SetWidth(100)
-    addVariablsButton:SetCallback(
-        "OnClick",
-        function()
-            local position = container.frame:GetHeight()
-            editframe.Sequence.Macros[version].Variables["NewVar" .. math.random(100)] = {[1] = "My New Variable"}
-            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
-        end
-    )
-    addVariablsButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Add Variable"],
-                L[
-                    "Add a substitution variable for this macro.  This can either be a straight string swap or can be a function.  If a lua function the function needs to return a value."
-                ],
-                editframe
-            )
-        end
-    )
-    addVariablsButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-
-    container:AddChild(contentcontainer)
-    container:AddChild(addVariablsButton)
-end
-
 local function addKeyPairWARow(container, rowWidth, key, value)
     -- print("KEY/VAL", key, value)
     if GSE.isEmpty(key) then
@@ -3120,9 +3112,6 @@ function GSE.GUISelectEditorTab(container, event, group)
         if group == "config" then
             GSE:GUIDrawMetadataEditor(container)
         elseif group == "new" then
-            -- elseif group == "variables" then
-            --     GSE:GUIDrawVariableEditor(container)
-            -- Copy the Default to a new version
             table.insert(
                 editframe.Sequence.Macros,
                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])

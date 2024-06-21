@@ -209,7 +209,7 @@ local function listVariables()
         end
     )
 
-    newButton:SetCallback(
+    importButton:SetCallback(
         "OnLeave",
         function()
             GSE.ClearTooltip(variablesframe)

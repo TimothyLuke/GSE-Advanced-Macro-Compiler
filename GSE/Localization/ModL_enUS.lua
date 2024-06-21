@@ -944,3 +944,4 @@ L["Macros"] = true
 L["Implementation Link"] = true
 L["Current Value"] = true
 L["Not Yet Active"] = true
+L["Chat Link"] = true

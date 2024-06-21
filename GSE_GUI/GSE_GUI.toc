@@ -17,7 +17,6 @@ DebugWindow.lua
 Transmission.lua
 Recorder.lua
 Editor.lua
-Viewer.lua
 RemoteMacroBrowser.lua
 Variables.lua
 GUIFunctions.lua

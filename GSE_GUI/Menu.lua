@@ -33,7 +33,7 @@ sequencebutton:SetText(L["Sequences"])
 sequencebutton:SetScript(
     "OnClick",
     function(self, button, down)
-        GSE.GUIShowViewer()
+        GSE.ShowSequences()
     end
 )
 sequencebutton:RegisterForClicks("AnyDown", "AnyUp")
