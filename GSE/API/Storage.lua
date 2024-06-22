@@ -893,4 +893,22 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
     end
 end
 
+function GSE.UpdateVariable(variable, name)
+    local compressedvariable = GSE.EncodeMessage(variable)
+    GSEVariables[name] = compressedvariable
+    GSE.V[name] = loadstring(variable.funct)
+    if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
+        GSE.BooleanVariables["name"] = true
+    end
+end
+
+function GSE.UpdateMacro(node)
+    if node.value then
+        EditMacro(node.value, node.name, node.icon, text)
+    else
+        node.value = CreateMacro(node.name, node.icon, text)
+    end
+    node.text = text
+end
+
 GSE.DebugProfile("Storage")

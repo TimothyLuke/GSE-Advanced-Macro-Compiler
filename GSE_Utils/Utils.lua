@@ -168,9 +168,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         "Storage"
     )
     if GSE.GUI then
-        local event = {}
-        event.action = "openviewer"
-        table.insert(GSE.OOCQueue, event)
+        GSE.ShowSequences()
     end
 end
 

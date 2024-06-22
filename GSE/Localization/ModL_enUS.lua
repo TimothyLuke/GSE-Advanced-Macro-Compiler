@@ -412,7 +412,6 @@ L["GSE: Right Click to open the Sequence Debugger"] = true
 L["Finished scanning for errors.  If no other messages then no errors were found."] = true
 L["UpdateSequence"] = "Update Sequence"
 L["Replace"] = true
-L["openviewer"] = "Open Viewer"
 L["CheckMacroCreated"] = "Check Macro Created"
 L["Paused"] = true
 L["Running"] = true

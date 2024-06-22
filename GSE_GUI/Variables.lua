@@ -333,12 +333,13 @@ end]],
         "OnClick",
         function()
             variable.LastUpdated = GSE.GetTimestamp()
-            local compressedvariable = GSE.EncodeMessage(variable)
-            GSEVariables[name] = compressedvariable
-            GSE.V[name] = loadstring(variable.funct)
-            if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
-                table.insert(GSE.BooleanVariables, name)
-            end
+
+            local oocaction = {
+                ["action"] = "updatevariable",
+                ["variable"] = variable,
+                ["name"] = name
+            }
+            table.insert(GSE.OOCQueue, oocaction)
         end
     )
 

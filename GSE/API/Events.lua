@@ -409,9 +409,8 @@ function GSE:ProcessOOCQueue()
                 if v.checkmacro then
                     GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
                 end
-            elseif v.action == "openviewer" then
-                GSE.CheckGUI()
-                GSE.GUIShowViewer()
+            elseif v.action == "updatevariable" then
+                GSE.UpdateVariable(v.variable, v.name)
             elseif v.action == "CheckMacroCreated" then
                 GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then

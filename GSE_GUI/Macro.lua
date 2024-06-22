@@ -226,12 +226,12 @@ local function showMacro(node)
         "OnEnterPressed",
         function(self, _, text)
             -- TODO Need to queue this
-            if node.value then
-                EditMacro(node.value, node.name, node.icon, text)
-            else
-                node.value = CreateMacro(node.name, node.icon, text)
-            end
             node.text = text
+            local oocaction = {
+                ["action"] = "updatemacro",
+                ["node"] = node
+            }
+            table.insert(GSE.OOCQueue, oocaction)
         end
     )
     macro:SetCallback(
