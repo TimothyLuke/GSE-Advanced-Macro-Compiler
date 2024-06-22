@@ -73,6 +73,7 @@ basecontainer:AddChild(leftScrollContainer)
 local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("List") -- probably?
 leftscroll:SetWidth(200)
+leftscroll:SetHeight(macroframe.Height - 90)
 leftScrollContainer:AddChild(leftscroll)
 
 local spacer = AceGUI:Create("Label")
@@ -86,15 +87,181 @@ rightContainer:SetLayout("List")
 rightContainer:SetHeight(macroframe.Height - 90)
 basecontainer:AddChild(rightContainer)
 
+macroframe.frame:SetScript(
+    "OnSizeChanged",
+    function(self, width, height)
+        macroframe.Height = height
+        macroframe.Width = width
+        if macroframe.Height > GetScreenHeight() then
+            macroframe.Height = GetScreenHeight() - 10
+            macroframe:SetHeight(macroframe.Height)
+        end
+        if macroframe.Height < 500 then
+            macroframe.Height = 500
+            macroframe:SetHeight(macroframe.Height)
+        end
+        if macroframe.Width < 700 then
+            macroframe.Width = 700
+            macroframe:SetWidth(macroframe.Width)
+        end
+        GSEOptions.macroHeight = macroframe.Height
+        GSEOptions.macroWidth = macroframe.Width
+        rightContainer:SetWidth(macroframe.Width - 250)
+        rightContainer:SetHeight(macroframe.Height - 90)
+
+        macroframe:DoLayout()
+    end
+)
+
 local function showMacro(node)
+    rightContainer:ReleaseChildren()
+    local headerGroup = AceGUI:Create("KeyGroup")
+    headerGroup:SetFullWidth(true)
+    headerGroup:SetLayout("Flow")
+
+    local nameeditbox = AceGUI:Create("EditBox")
+    nameeditbox:SetLabel(L["Macro Name"])
+    nameeditbox:SetWidth(250)
+    nameeditbox:SetCallback(
+        "OnEnterPressed",
+        function(self, _, text)
+            local slot = GetMacroIndexByName(node.name)
+            -- TODO Need to queue this
+            if slot then
+                EditMacro(slot, text)
+            end
+        end
+    )
+
+    nameeditbox:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Macro Name"],
+                L[
+                    "The name of your macro.  This name has to be unique and can only be used for one object.\nYou can copy this entire macro by changing the name and choosing Save."
+                ],
+                macroframe
+            )
+        end
+    )
+    nameeditbox:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(macroframe)
+        end
+    )
+
+    nameeditbox:DisableButton(false)
+    nameeditbox:SetText(node.name)
+
+    local spacerlabel = AceGUI:Create("Label")
+    spacerlabel:SetWidth(10)
+
+    local iconpicker = AceGUI:Create("Icon")
+    iconpicker:SetImageSize(40, 40)
+    iconpicker:SetLabel(L["Macro Icon"])
+    iconpicker.frame:RegisterForDrag("LeftButton")
+    iconpicker.frame:SetScript(
+        "OnDragStart",
+        function()
+            local sequencename = nameeditbox:GetText()
+            if not GSE.isEmpty(sequencename) then
+                local macroIndex = GetMacroIndexByName(sequencename)
+                if macroIndex and macroIndex ~= 0 then
+                    PickupMacro(sequencename)
+                end
+            end
+        end
+    )
+    iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+    iconpicker:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Macro Icon"],
+                L["Drag this icon to your action bar to use this macro. You can change this icon in the /macro window."],
+                macroframe
+            )
+        end
+    )
+    iconpicker:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(macroframe)
+        end
+    )
+    headerGroup:AddChild(iconpicker)
+    headerGroup:AddChild(spacerlabel)
+    headerGroup:AddChild(nameeditbox)
+
+    rightContainer:AddChild(headerGroup)
+
+    local font = CreateFont("seqPanelFont")
+    font:SetFontObject(GameFontNormal)
+    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+    local origjustificationH = font:GetJustifyH()
+    local origjustificationV = font:GetJustifyV()
+    font:SetJustifyH("CENTER")
+    font:SetJustifyV("MIDDLE")
+
+    local linecount = AceGUI:Create("Label")
+    linecount:SetWidth(350)
+    linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
+
+    linecount:SetFontObject(font)
+    linecount:SetFont(fontName, fontHeight, fontFlags)
+
+    font:SetJustifyH(origjustificationH)
+    font:SetJustifyV(origjustificationV)
+
+    local macro = AceGUI:Create("MultiLineEditBox")
+    macro:SetLabel(L["Macro"])
+    macro:SetText(node.text)
+    macro:SetNumLines(5)
+    macro:SetWidth(350)
+    macro:SetCallback(
+        "OnEnterPressed",
+        function(self, _, text)
+            local slot = GetMacroIndexByName(node.name)
+            -- TODO Need to queue this
+            if slot then
+                EditMacro(slot, node.name, node.icon, text)
+            else
+                CreateMacro(node.name, node.icon, text)
+            end
+        end
+    )
+    macro:SetCallback(
+        "OnTextChanged",
+        function(self, _, text)
+            local length = string.len(text)
+            local line = string.format(L["%s/255 Characters Used"], length)
+            if length > 255 then
+                line = GSEOptions.UNKNOWN .. line .. Statics.StringReset
+            end
+            linecount:SetText(line)
+        end
+    )
+
+    macro:DisableButton(false)
+    rightContainer:AddChild(macro)
+    rightContainer:AddChild(linecount)
+    local heading = AceGUI:Create("Heading")
+    heading:SetText(L["Manage Macro"])
+    heading:SetWidth(macroframe.Width - 300)
+    rightContainer:AddChild(heading)
 end
 
 local function buildMacroHeader(node)
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
-    local origjustification = font:GetJustifyH()
-    font:SetJustifyH("LEFT")
 
+    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+    local origjustificationH = font:GetJustifyH()
+    local origjustificationV = font:GetJustifyV()
+    font:SetJustifyH("LEFT")
+    font:SetJustifyV("MIDDLE")
     local selpanel = AceGUI:Create("SelectablePanel")
 
     selpanel:SetKey(node.value)
@@ -142,14 +309,16 @@ local function buildMacroHeader(node)
 
     local hlabel = AceGUI:Create("Label")
 
-    hlabel:SetText("|T" .. node.icon .. ":19:19|t  " .. node.name)
+    hlabel:SetText("|T" .. node.icon .. ":15:15|t " .. node.name)
     hlabel:SetWidth(199)
     hlabel:SetFontObject(font)
+    hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
 
     selpanel:AddChild(hlabel)
 
     leftscroll:AddChild(selpanel)
-    font:SetJustifyH(origjustification)
+    font:SetJustifyH(origjustificationH)
+    font:SetJustifyV(origjustificationV)
 end
 
 local function buildMacroMenu()
@@ -168,13 +337,18 @@ local function buildMacroMenu()
                 sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
                 sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
                 leftscroll:AddChild(sectionheader)
+                leftscroll:AddChild(AceGUI:Create("Spacer"))
                 accountlabelflag = true
             elseif macid > MAX_ACCOUNT_MACROS and personallabelflag == false then
+                if accountlabelflag then
+                    leftscroll:AddChild(AceGUI:Create("Spacer"))
+                end
                 local sectionheader = AceGUI:Create("Label")
                 sectionheader:SetText(L["Character Macros"])
                 sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
                 sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
                 leftscroll:AddChild(sectionheader)
+                leftscroll:AddChild(AceGUI:Create("Spacer"))
                 personallabelflag = true
             end
 

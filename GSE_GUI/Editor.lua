@@ -1320,8 +1320,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                             ["Type"] = Statics.Actions.Action
                         }
                     },
-                    ["InbuiltVariables"] = {},
-                    ["Variables"] = {}
+                    ["InbuiltVariables"] = {}
                 }
             }
         }
