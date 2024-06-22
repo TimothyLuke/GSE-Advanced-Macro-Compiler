@@ -1291,7 +1291,7 @@ function GSE:GUIDrawMetadataEditor(container)
 end
 
 local function ChooseVersionTab(version, scrollpos)
-    GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+    GSE.GUIEditorPerformLayout(editframe.rightContainer)
     GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
     if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
         editframe.scrollContainer:SetScroll(scrollpos)
