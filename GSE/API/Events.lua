@@ -125,6 +125,9 @@ function GSE:ADDON_LOADED(event, addon)
         if GSE.isEmpty(GSEVariables) then
             GSEVariables = {}
         end
+        if GSE.isEmpty(GSEMacros) then
+            GSEMacros = {}
+        end
         GSE.LoadVariables()
         GSE.PrintDebugMessage("I am loaded")
 

@@ -129,6 +129,7 @@ local function showMacro(node)
             -- TODO Need to queue this
             if slot then
                 EditMacro(slot, text)
+                node.name = text
             end
         end
     )
@@ -174,7 +175,7 @@ local function showMacro(node)
             end
         end
     )
-    iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
+    iconpicker:SetImage(node.icon)
     iconpicker:SetCallback(
         "OnEnter",
         function()
@@ -206,9 +207,10 @@ local function showMacro(node)
     font:SetJustifyV("MIDDLE")
 
     local linecount = AceGUI:Create("Label")
-    linecount:SetWidth(350)
+    linecount:SetWidth(macroframe.Width - 300)
     linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
-
+    linecount:ClearAllPoints()
+    linecount:SetPoint("CENTER")
     linecount:SetFontObject(font)
     linecount:SetFont(fontName, fontHeight, fontFlags)
 
@@ -219,17 +221,17 @@ local function showMacro(node)
     macro:SetLabel(L["Macro"])
     macro:SetText(node.text)
     macro:SetNumLines(5)
-    macro:SetWidth(350)
+    macro:SetWidth(macroframe.Width - 300)
     macro:SetCallback(
         "OnEnterPressed",
         function(self, _, text)
-            local slot = GetMacroIndexByName(node.name)
             -- TODO Need to queue this
-            if slot then
-                EditMacro(slot, node.name, node.icon, text)
+            if node.value then
+                EditMacro(node.value, node.name, node.icon, text)
             else
-                CreateMacro(node.name, node.icon, text)
+                node.value = CreateMacro(node.name, node.icon, text)
             end
+            node.text = text
         end
     )
     macro:SetCallback(
@@ -251,6 +253,40 @@ local function showMacro(node)
     heading:SetText(L["Manage Macro"])
     heading:SetWidth(macroframe.Width - 300)
     rightContainer:AddChild(heading)
+    local manageGSE = AceGUI:Create("CheckBox")
+    manageGSE:SetType("radio")
+    manageGSE:SetLabel(L["Manage Macro with GSE"])
+    manageGSE:SetTriState(false)
+    local char, realm = UnitFullName("player")
+
+    local source = GSEMacros
+    if node.value > MAX_ACCOUNT_MACROS then
+        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+            GSEMacros[char .. "-" .. realm] = {}
+        end
+        source = GSEMacros[char .. "-" .. realm]
+    end
+
+    if GSE.isEmpty(source[node.name]) then
+        source[node.name] = {}
+        manageGSE:SetValue(false)
+    else
+        if GSE.isEmpty(source[node.name].Disabled) then
+            manageGSE:SetValue(false)
+        else
+            manageGSE:SetValue(source[node.name].Disabled)
+        end
+    end
+    manageGSE:SetCallback(
+        "OnValueChanged",
+        function(self, _, value)
+            if GSE.isEmpty(source[node.name]) then
+                source[node.name] = {}
+            end
+            source[node.name].Disabled = value
+        end
+    )
+    rightContainer:AddChild(manageGSE)
 end
 
 local function buildMacroHeader(node)
