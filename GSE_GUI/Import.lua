@@ -18,7 +18,6 @@ importframe:SetCallback(
   "OnClose",
   function(widget)
     importframe:Hide()
-    GSE.GUIShowViewer()
   end
 )
 importframe:SetLayout("List")

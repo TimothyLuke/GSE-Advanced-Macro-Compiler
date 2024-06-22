@@ -198,10 +198,15 @@ local function CreateSequencePanels(container, key)
                             end
                         )
                         rootDescription:CreateButton(
-                            L["Import"],
+                            L["Export"],
                             function()
-                                editframe:Hide()
-                                GSE.GUIImportFrame:Show()
+                                GSE.GUIExportSequence(classid, sequencename)
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["Send"],
+                            function()
+                                GSE.GUIShowTransmissionGui(sequencename)
                             end
                         )
                         rootDescription:CreateButton(
