@@ -1334,37 +1334,6 @@ function GSE:GUIDrawMacroEditor(container, version)
     setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
     editframe.booleanFunctions = {}
     editframe.numericFunctions = {}
-    for k, v in pairs(editframe.Sequence.Macros[version].Variables) do
-        if k ~= "" then
-            if type(v) == "string" then
-                v = {v}
-                -- save the fixed variable
-                editframe.Sequence.Macros[version].Variables[k] = v
-            end
-            local value = GSE.SafeConcat(v, " ")
-            if type(value) == "string" then
-                local functline = value
-                if string.sub(functline, 1, 10) == "function()" then
-                    functline = string.sub(functline, 11)
-                    functline = functline:sub(1, -4)
-                    functline = loadstring(functline)
-                    --print(type(functline))
-                    if functline ~= nil then
-                        value = functline
-                    end
-                end
-            end
-            if type(value) == "function" then
-                value = value()
-                if type(value) == "boolean" then
-                    editframe.booleanFunctions[k] = k
-                end
-                if type(value) == "number" then
-                    editframe.numericFunctions[k] = k
-                end
-            end
-        end
-    end
 
     local layoutcontainer = AceGUI:Create("KeyGroup")
 

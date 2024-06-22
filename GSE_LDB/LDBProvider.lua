@@ -198,7 +198,7 @@ end
 function dataobj:OnClick(button)
   if GSE.CheckGUI() then
     if button == "LeftButton" then
-      GSE.GUIShowViewer()
+      GSE.ShowSequences()
     elseif button == "MiddleButton" then
       GSE.GUIShowTransmissionGui()
     elseif button == "RightButton" then
