@@ -904,11 +904,10 @@ end
 
 function GSE.UpdateMacro(node)
     if node.value then
-        EditMacro(node.value, node.name, node.icon, text)
+        EditMacro(node.value, node.name, node.icon, node.text)
     else
-        node.value = CreateMacro(node.name, node.icon, text)
+        node.value = CreateMacro(node.name, node.icon, node.text)
     end
-    node.text = text
 end
 
 GSE.DebugProfile("Storage")

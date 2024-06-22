@@ -221,7 +221,9 @@ local function CreateSequencePanels(container, key)
                                 L["Delete Icon"],
                                 function()
                                     GSE.DeleteMacroStub(elements[2])
-                                    GSE.GUIConfigureMacroButton(elements[2])
+                                    if selected then
+                                        GSE.GUILoadEditor(widget:GetKey())
+                                    end
                                 end
                             )
                         else
@@ -229,7 +231,9 @@ local function CreateSequencePanels(container, key)
                                 L["Create Icon"],
                                 function()
                                     GSE.OOCCheckMacroCreated(elements[2], true)
-                                    GSE.GUIConfigureMacroButton(elements[2])
+                                    if selected then
+                                        GSE.GUILoadEditor(widget:GetKey())
+                                    end
                                 end
                             )
                         end
