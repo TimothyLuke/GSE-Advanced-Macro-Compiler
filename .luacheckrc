@@ -29,6 +29,7 @@ globals = {
     "GSESpellCache",
     "GSEVariables",
     "GSEMacros",
+    "UnitFullName",
     -- GSE
     "GSE",
     "GSE2",
