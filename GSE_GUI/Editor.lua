@@ -2922,7 +2922,7 @@ function GSE.GUISelectEditorTab(container, event, group)
                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
             )
             GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
-            GSE.GUIEditorPerformLayout(editframe)
+            GSE.GUIEditorPerformLayout(rightContainer)
         else
             GSE:GUIDrawMacroEditor(container, group)
         end
