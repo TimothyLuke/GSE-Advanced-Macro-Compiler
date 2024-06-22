@@ -111,7 +111,6 @@ leftscroll.frame:SetScript(
                     rootDescription:CreateButton(
                         L["Import"],
                         function()
-                            editframe:Hide()
                             GSE.GUIImportFrame:Show()
                         end
                     )
@@ -304,6 +303,7 @@ local function listSequences()
     importButton:SetCallback(
         "OnClick",
         function()
+            GSE.GUIImportFrame:Show()
         end
     )
 
