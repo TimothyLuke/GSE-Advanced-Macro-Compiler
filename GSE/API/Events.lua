@@ -413,6 +413,8 @@ function GSE:ProcessOOCQueue()
                 GSE.UpdateVariable(v.variable, v.name)
             elseif v.action == "updatemacro" then
                 GSE.UpdateMacro(v.node)
+            elseif v.action == "managemacros" then
+                GSE.ManageMacros()
             elseif v.action == "CheckMacroCreated" then
                 GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then

@@ -910,4 +910,18 @@ function GSE.UpdateMacro(node)
     end
 end
 
+function GSE.CompileMacroText(text, mode)
+    if GSE.isEmpty(mode) then
+        mode = Statics.TranslatorMode.ID
+    end
+    local lines = GSE.SplitMeIntolines(text)
+    for k, v in ipairs(lines) do
+        lines[k] = GSE.TranslateString(v, mode, false)
+    end
+    return table.concat(lines, "\n")
+end
+
+function GSE.ManageMacros()
+end
+
 GSE.DebugProfile("Storage")

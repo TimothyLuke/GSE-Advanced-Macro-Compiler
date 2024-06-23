@@ -951,3 +951,4 @@ L["Manage Macro with GSE"] = true
 L["Manage Macro"] = true
 L["%s/255 Characters Used"] = true
 L["Macro"] = true
+L["Macro Template"] = true

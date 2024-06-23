@@ -207,7 +207,7 @@ local function showMacro(node)
     font:SetJustifyV("MIDDLE")
 
     local linecount = AceGUI:Create("Label")
-    linecount:SetWidth(macroframe.Width - 300)
+    linecount:SetWidth(macroframe.Width - 200)
     linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
     linecount:ClearAllPoints()
     linecount:SetPoint("CENTER")
@@ -221,11 +221,10 @@ local function showMacro(node)
     macro:SetLabel(L["Macro"])
     macro:SetText(node.text)
     macro:SetNumLines(5)
-    macro:SetWidth(macroframe.Width - 300)
+    macro:SetWidth(macroframe.Width - 200)
     macro:SetCallback(
         "OnEnterPressed",
         function(self, _, text)
-            -- TODO Need to queue this
             node.text = text
             local oocaction = {
                 ["action"] = "updatemacro",
@@ -251,7 +250,7 @@ local function showMacro(node)
     rightContainer:AddChild(linecount)
     local heading = AceGUI:Create("Heading")
     heading:SetText(L["Manage Macro"])
-    heading:SetWidth(macroframe.Width - 300)
+    heading:SetWidth(macroframe.Width - 200)
     rightContainer:AddChild(heading)
     local manageGSE = AceGUI:Create("CheckBox")
     manageGSE:SetType("radio")
@@ -277,16 +276,58 @@ local function showMacro(node)
             manageGSE:SetValue(source[node.name].Disabled)
         end
     end
+
+    local disabled = false
+    if source[node.name] and source[node.name].Disabled then
+        disabled = source[node.name].Disabled
+    end
+
+    local managedMacro = AceGUI:Create("MultiLineEditBox")
+    managedMacro:SetLabel(L["Macro Template"])
+    managedMacro:SetText(
+        (source[node.name].managedMacro and
+            GSE.CompileMacroText(source[node.name].managedMacro, Statics.TranslatorMode.Current) or
+            node.text)
+    )
+    managedMacro:SetNumLines(5)
+    managedMacro:SetDisabled(not disabled)
+    managedMacro:SetWidth(macroframe.Width - 200)
+
+    local compileButton = AceGUI:Create("Button")
+    compileButton:SetText(L["Compile"])
+
+    local compiledMacro = AceGUI:Create("Label")
+    compiledMacro:SetWidth(macroframe.Width - 200)
+
+    compiledMacro:SetText("\n\n\n\n\n")
+
+    managedMacro:SetCallback(
+        "OnTextChanged",
+        function(self, _, text)
+            source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
+            compiledMacro:SetText(GSE.CompileMacroText(text, Statics.TranslatorMode.Current))
+        end
+    )
+
+    managedMacro:DisableButton(true)
     manageGSE:SetCallback(
         "OnValueChanged",
         function(self, _, value)
             if GSE.isEmpty(source[node.name]) then
                 source[node.name] = {}
             end
+
             source[node.name].Disabled = value
+            disabled = not value
+            managedMacro:SetDisabled(disabled)
+            source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
         end
     )
+
     rightContainer:AddChild(manageGSE)
+
+    rightContainer:AddChild(managedMacro)
+    rightContainer:AddChild(compiledMacro)
 end
 
 local function buildMacroHeader(node)
