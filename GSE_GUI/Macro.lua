@@ -81,7 +81,7 @@ spacer:SetWidth(10)
 basecontainer:AddChild(spacer)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(macroframe.Width - 290)
+rightContainer:SetWidth(macroframe.Width - 250)
 
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(macroframe.Height - 90)
@@ -284,11 +284,11 @@ local function showMacro(node)
 
     local managedMacro = AceGUI:Create("MultiLineEditBox")
     managedMacro:SetLabel(L["Macro Template"])
-    managedMacro:SetText(
+    local managedtext =
         (source[node.name].managedMacro and
-            GSE.CompileMacroText(source[node.name].managedMacro, Statics.TranslatorMode.Current) or
-            node.text)
-    )
+        GSE.CompileMacroText(source[node.name].managedMacro, Statics.TranslatorMode.Current) or
+        node.text)
+    managedMacro:SetText(managedtext)
     managedMacro:SetNumLines(5)
     managedMacro:SetDisabled(not disabled)
     managedMacro:SetWidth(macroframe.Width - 200)
@@ -299,13 +299,27 @@ local function showMacro(node)
     local compiledMacro = AceGUI:Create("Label")
     compiledMacro:SetWidth(macroframe.Width - 200)
 
-    compiledMacro:SetText("\n\n\n\n\n")
+    local heading2 = AceGUI:Create("Heading")
+    heading2:SetText(L["Compiled Macro"])
+    heading2:SetWidth(macroframe.Width - 200)
+
+    compiledMacro:SetText(managedtext)
+
+    local compiledlinecount = AceGUI:Create("Label")
+    compiledlinecount:SetWidth(macroframe.Width - 200)
+    compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(managedtext)))
+    compiledlinecount:ClearAllPoints()
+    compiledlinecount:SetPoint("CENTER")
+    compiledlinecount:SetFontObject(font)
+    compiledlinecount:SetFont(fontName, fontHeight, fontFlags)
 
     managedMacro:SetCallback(
         "OnTextChanged",
         function(self, _, text)
             source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
-            compiledMacro:SetText(GSE.CompileMacroText(text, Statics.TranslatorMode.Current))
+            local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.Current)
+            compiledMacro:SetText(compiled)
+            compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
         end
     )
 
@@ -327,7 +341,9 @@ local function showMacro(node)
     rightContainer:AddChild(manageGSE)
 
     rightContainer:AddChild(managedMacro)
+    rightContainer:AddChild(heading2)
     rightContainer:AddChild(compiledMacro)
+    rightContainer:AddChild(compiledlinecount)
 end
 
 local function buildMacroHeader(node)
