@@ -91,6 +91,10 @@ local function createVariableHeader(name, variable)
     selpanel:SetFullWidth(true)
     selpanel:SetHeight(90)
     variablesframe.panels[name] = selpanel
+    local label = AceGUI:Create("Label")
+    label:SetFontObject(font)
+    label:SetText(name)
+    selpanel.label = label
     selpanel:SetCallback(
         "OnClick",
         function(widget, _, selected, button)
@@ -110,7 +114,7 @@ local function createVariableHeader(name, variable)
                 )
             end
             if button == "LeftButton" then
-                variablesframe.showVariable(name)
+                variablesframe.showVariable(name, selpanel.label)
                 widget:SetClicked(true)
             end
         end
@@ -122,9 +126,6 @@ local function createVariableHeader(name, variable)
     local origjustifyH = font:GetJustifyH()
     font:SetJustifyV("BOTTOM")
 
-    local label = AceGUI:Create("Label")
-    label:SetFontObject(font)
-    label:SetText(name)
     selpanel:AddChild(label)
 
     font:SetJustifyV(origjustifyV)
@@ -177,7 +178,7 @@ local function listVariables()
     end
 end
 
-function variablesframe.showVariable(name)
+function variablesframe.showVariable(name, label)
     rightContainer:ReleaseChildren()
     local variable = {
         ["funct"] = [[function()
@@ -210,6 +211,7 @@ end]],
             GSEVariables[text] = GSE.CloneSequence(GSEVariables[currentKey])
             GSEVariables[currentKey] = nil
             currentKey = text
+            label:SetText(text)
         end
     )
 
@@ -337,7 +339,7 @@ end]],
             local oocaction = {
                 ["action"] = "updatevariable",
                 ["variable"] = variable,
-                ["name"] = name
+                ["name"] = keyEditBox:GetText()
             }
             table.insert(GSE.OOCQueue, oocaction)
         end
@@ -394,7 +396,7 @@ function variablesframe:clearpanels(widget, selected)
     for k, _ in pairs(variablesframe.panels) do
         if k == widget:GetKey() then
             if selected then
-                variablesframe.showVariable(widget, (GSEVariables[widget] and GSEVariables[widget] or nil))
+                variablesframe.showVariable(widget, GSEVariables[widget].label)
                 variablesframe.panels[k]:SetClicked(true)
             else
                 variablesframe.panels[k]:SetClicked(false)
