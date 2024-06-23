@@ -80,7 +80,7 @@ saveButton:SetScript(
 			tab = func()
 			if not GSE.isEmpty(tab) then
 				GSE.GUIEditFrame.Sequence.Macros[frame.Version] = tab
-				GSE.GUIEditorPerformLayout(GSE.GUIEditFrame)
+				GSE.GUIEditorPerformLayout(GSE.GUIEditFrame.rightContainer)
 				GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(frame.Version))
 				GSE.GUIEditFrame.AdvancedEditor = false
 				frame:Hide()
