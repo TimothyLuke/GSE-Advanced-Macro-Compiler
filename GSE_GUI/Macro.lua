@@ -334,7 +334,7 @@ local function showMacro(node)
             source[node.name].Disabled = value
             disabled = not value
             managedMacro:SetDisabled(disabled)
-            source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
+            source[node.name].managedMacro = GSE.CompileMacroText(managedMacro:GetText(), Statics.TranslatorMode.ID)
         end
     )
 
