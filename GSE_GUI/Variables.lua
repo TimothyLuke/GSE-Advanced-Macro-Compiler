@@ -92,6 +92,7 @@ local function createVariableHeader(name, variable)
     selpanel:SetHeight(90)
     variablesframe.panels[name] = selpanel
     local label = AceGUI:Create("Label")
+    local font = CreateFont("seqPanelFont")
     label:SetFontObject(font)
     label:SetText(name)
     selpanel.label = label
@@ -120,7 +121,6 @@ local function createVariableHeader(name, variable)
         end
     )
 
-    local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
     local origjustifyV = font:GetJustifyV()
     local origjustifyH = font:GetJustifyH()
