@@ -171,6 +171,7 @@ function GSE.ReloadSequences()
         GSE.PerformReloadSequences()
         GSE.UnsavedOptions.ReloadQueued = true
     end
+    GSE.ManageMacros()
 end
 
 function GSE.PerformReloadSequences()
@@ -947,6 +948,17 @@ function GSE.CompileMacroText(text, mode)
 end
 
 function GSE.ManageMacros()
+    for k, v in pairs(GSEMacros) do
+        if v.Managed then
+            local node = {
+                ["name"] = k,
+                ["value"] = v.value,
+                ["icon"] = v.icon,
+                ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
+            }
+            GSE.UpdateMacro(node)
+        end
+    end
 end
 
 GSE.DebugProfile("Storage")

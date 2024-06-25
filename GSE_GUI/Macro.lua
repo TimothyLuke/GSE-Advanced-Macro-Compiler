@@ -134,15 +134,15 @@ local function showMacro(node)
         source[node.name] = {}
         manageGSE:SetValue(false)
     else
-        if GSE.isEmpty(source[node.name].Disabled) then
+        if GSE.isEmpty(source[node.name].Managed) then
             manageGSE:SetValue(false)
         else
-            manageGSE:SetValue(source[node.name].Disabled)
+            manageGSE:SetValue(source[node.name].Managed)
         end
     end
     local managed = false
-    if source[node.name] and source[node.name].Disabled then
-        managed = source[node.name].Disabled
+    if source[node.name] and source[node.name].Managed then
+        managed = source[node.name].Managed
     end
 
     local headerGroup = AceGUI:Create("KeyGroup")
@@ -287,6 +287,11 @@ local function showMacro(node)
                 local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.Current)
                 compiledMacro:SetText(compiled)
                 compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
+                local oocaction = {
+                    ["action"] = "updatemacro",
+                    ["node"] = source[node.name]
+                }
+                table.insert(GSE.OOCQueue, oocaction)
             end
         )
         if GSE.Patron then
@@ -399,7 +404,10 @@ local function showMacro(node)
                 source[node.name] = {}
             end
 
-            source[node.name].Disabled = value
+            source[node.name].Managed = value
+            for k, v in node do
+                source[node.name][k] = v
+            end
         end
     )
 end
