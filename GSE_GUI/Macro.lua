@@ -302,7 +302,7 @@ local function showMacro(node)
                                 rootDescription:CreateButton(
                                     k,
                                     function()
-                                        managedMacro.editBox:Insert([[=GSE.V["]] .. k .. [["]()]])
+                                        managedMacro.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
                                     end
                                 )
                             end
@@ -312,9 +312,9 @@ local function showMacro(node)
                                     k,
                                     function()
                                         if GSE.GetMacroStringFormat() == "DOWN" then
-                                            managedMacro.editBox:Insert([[/click ]] .. k .. [[LeftButton t]])
+                                            managedMacro.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
                                         else
-                                            managedMacro.editBox:Insert([[/click ]] .. k)
+                                            managedMacro.editBox:Insert("\n/click " .. k)
                                         end
                                     end
                                 )
@@ -324,9 +324,9 @@ local function showMacro(node)
                                     k,
                                     function()
                                         if GSE.GetMacroStringFormat() == "DOWN" then
-                                            managedMacro.editBox:Insert([[/click ]] .. k .. [[LeftButton t]])
+                                            managedMacro.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
                                         else
-                                            managedMacro.editBox:Insert([[/click ]] .. k)
+                                            managedMacro.editBox:Insert("\n/click " .. k)
                                         end
                                     end
                                 )
