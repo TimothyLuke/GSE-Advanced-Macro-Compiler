@@ -313,25 +313,6 @@ function GSE.CreateMacroString(macroname)
     return returnVal
 end
 
-function GSE.UpdateMacroString()
-    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
-    for macid = 1, maxmacros do
-        local mname, _, _ = GetMacroInfo(macid)
-        if not GSE.isEmpty(mname) then
-            if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][mname]) then
-                EditMacro(macid, nil, nil, GSE.CreateMacroString(mname))
-                GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
-            end
-            if not GSE.isEmpty(GSE.Library[0]) then
-                if not GSE.isEmpty(GSE.Library[0][mname]) then
-                    EditMacro(macid, nil, nil, GSE.CreateMacroString(mname))
-                    GSE.PrintDebugMessage(string.format("Updating macro %s to %s", mname, GSE.CreateMacroString(mname)))
-                end
-            end
-        end
-    end
-end
-
 --- Add a Create Macro to the Out of Combat Queue
 function GSE.CheckMacroCreated(SequenceName, create)
     local vals = {}

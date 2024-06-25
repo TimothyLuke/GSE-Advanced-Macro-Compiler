@@ -956,3 +956,9 @@ L["Compiled Macro"] = true
 L["Manage Variables"] = true
 L["Insert GSE Sequence"] = true
 L["Insert GSE Variable"] = true
+L[
+        "The UI has been set to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)  You will need to check your macros and adjust your click commands."
+    ] = true
+L[
+        "The UI has been set to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME` You will need to check your macros and adjust your click commands."
+    ] = true
