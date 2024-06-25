@@ -104,11 +104,19 @@ local function createVariableHeader(name, variable)
                 MenuUtil.CreateContextMenu(
                     leftscroll,
                     function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Export"])
+                        rootDescription:CreateTitle(L["Manage Variables"])
                         rootDescription:CreateButton(
                             L["Export Variable"],
                             function()
                                 print("Coming Soon")
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["Delete"],
+                            function()
+                                GSE.V[name] = nil
+                                GSEVariables[name] = nil
+                                GSE.ShowVariables()
                             end
                         )
                     end

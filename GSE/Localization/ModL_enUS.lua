@@ -953,3 +953,4 @@ L["%s/255 Characters Used"] = true
 L["Macro"] = true
 L["Macro Template"] = true
 L["Compiled Macro"] = true
+L["Manage Variables"] = true

@@ -919,7 +919,26 @@ function GSE.CompileMacroText(text, mode)
     end
     local lines = GSE.SplitMeIntolines(text)
     for k, v in ipairs(lines) do
-        lines[k] = GSE.TranslateString(v, mode, false)
+        local value = v
+        print(v)
+        if mode == Statics.TranslatorMode.String then
+            if string.sub(value, 1, 1) == "=" then
+                print("return " .. string.sub(value, 2, string.len(value)))
+                local functionresult = loadstring("return " .. string.sub(value, 2, string.len(value) - 1))
+                print(functionresult)
+                if GSE.isEmpty(functionresult) then
+                    value = " "
+                end
+                if functionresult and type(functionresult) == "function" then
+                    value = functionresult()
+                end
+                print(value)
+            end
+
+            lines[k] = GSE.UnEscapeString(GSE.TranslateString(value, mode, false))
+        else
+            lines[k] = GSE.TranslateString(value, mode, false)
+        end
     end
     return table.concat(lines, "\n")
 end

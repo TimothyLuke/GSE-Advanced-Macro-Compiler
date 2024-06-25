@@ -115,6 +115,36 @@ macroframe.frame:SetScript(
 
 local function showMacro(node)
     rightContainer:ReleaseChildren()
+    local char, realm = UnitFullName("player")
+
+    local source = GSEMacros
+    if node.value > MAX_ACCOUNT_MACROS then
+        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+            GSEMacros[char .. "-" .. realm] = {}
+        end
+        source = GSEMacros[char .. "-" .. realm]
+    end
+
+    local manageGSE = AceGUI:Create("CheckBox")
+    manageGSE:SetType("radio")
+    manageGSE:SetLabel(L["Manage Macro with GSE"])
+    manageGSE:SetTriState(false)
+
+    if GSE.isEmpty(source[node.name]) then
+        source[node.name] = {}
+        manageGSE:SetValue(false)
+    else
+        if GSE.isEmpty(source[node.name].Disabled) then
+            manageGSE:SetValue(false)
+        else
+            manageGSE:SetValue(source[node.name].Disabled)
+        end
+    end
+    local managed = false
+    if source[node.name] and source[node.name].Disabled then
+        managed = source[node.name].Disabled
+    end
+
     local headerGroup = AceGUI:Create("KeyGroup")
     headerGroup:SetFullWidth(true)
     headerGroup:SetLayout("Flow")
@@ -198,6 +228,8 @@ local function showMacro(node)
 
     rightContainer:AddChild(headerGroup)
 
+    rightContainer:AddChild(manageGSE)
+
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
     local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
@@ -206,124 +238,112 @@ local function showMacro(node)
     font:SetJustifyH("CENTER")
     font:SetJustifyV("MIDDLE")
 
-    local linecount = AceGUI:Create("Label")
-    linecount:SetWidth(macroframe.Width - 200)
-    linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
-    linecount:ClearAllPoints()
-    linecount:SetPoint("CENTER")
-    linecount:SetFontObject(font)
-    linecount:SetFont(fontName, fontHeight, fontFlags)
+    if managed then
+        local managedMacro = AceGUI:Create("MultiLineEditBox")
+        managedMacro:SetLabel(L["Macro Template"])
+        local managedtext =
+            (source[node.name].managedMacro and
+            GSE.CompileMacroText(
+                (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
+                Statics.TranslatorMode.Current
+            ) or
+            node.text)
+        managedMacro:SetText(managedtext)
+        managedMacro:SetNumLines(5)
+        managedMacro:SetWidth(macroframe.Width - 200)
 
-    font:SetJustifyH(origjustificationH)
-    font:SetJustifyV(origjustificationV)
+        local compileButton = AceGUI:Create("Button")
+        compileButton:SetText(L["Compile"])
 
-    local macro = AceGUI:Create("MultiLineEditBox")
-    macro:SetLabel(L["Macro"])
-    macro:SetText(node.text)
-    macro:SetNumLines(5)
-    macro:SetWidth(macroframe.Width - 200)
-    macro:SetCallback(
-        "OnEnterPressed",
-        function(self, _, text)
-            node.text = text
-            local oocaction = {
-                ["action"] = "updatemacro",
-                ["node"] = node
-            }
-            table.insert(GSE.OOCQueue, oocaction)
-        end
-    )
-    macro:SetCallback(
-        "OnTextChanged",
-        function(self, _, text)
-            local length = string.len(text)
-            local line = string.format(L["%s/255 Characters Used"], length)
-            if length > 255 then
-                line = GSEOptions.UNKNOWN .. line .. Statics.StringReset
+        local compiledMacro = AceGUI:Create("Label")
+        compiledMacro:SetWidth(macroframe.Width - 200)
+
+        local heading2 = AceGUI:Create("Heading")
+        heading2:SetText(L["Compiled Macro"])
+        heading2:SetWidth(macroframe.Width - 200)
+
+        local compiledtext =
+            (source[node.name].managedMacro and
+            GSE.CompileMacroText(
+                (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
+                Statics.TranslatorMode.String
+            ) or
+            node.text)
+
+        compiledMacro:SetText(compiledtext)
+
+        local compiledlinecount = AceGUI:Create("Label")
+        compiledlinecount:SetWidth(macroframe.Width - 200)
+        compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiledtext)))
+        compiledlinecount:ClearAllPoints()
+        compiledlinecount:SetPoint("CENTER")
+        compiledlinecount:SetFontObject(font)
+        compiledlinecount:SetFont(fontName, fontHeight, fontFlags)
+
+        managedMacro:SetCallback(
+            "OnTextChanged",
+            function(self, _, text)
+                source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
+                local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.Current)
+                compiledMacro:SetText(compiled)
+                compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
             end
-            linecount:SetText(line)
-        end
-    )
+        )
 
-    macro:DisableButton(false)
-    rightContainer:AddChild(macro)
-    rightContainer:AddChild(linecount)
-    local heading = AceGUI:Create("Heading")
-    heading:SetText(L["Manage Macro"])
-    heading:SetWidth(macroframe.Width - 200)
-    rightContainer:AddChild(heading)
-    local manageGSE = AceGUI:Create("CheckBox")
-    manageGSE:SetType("radio")
-    manageGSE:SetLabel(L["Manage Macro with GSE"])
-    manageGSE:SetTriState(false)
-    local char, realm = UnitFullName("player")
+        managedMacro:DisableButton(true)
 
-    local source = GSEMacros
-    if node.value > MAX_ACCOUNT_MACROS then
-        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-            GSEMacros[char .. "-" .. realm] = {}
-        end
-        source = GSEMacros[char .. "-" .. realm]
-    end
-
-    if GSE.isEmpty(source[node.name]) then
-        source[node.name] = {}
-        manageGSE:SetValue(false)
+        rightContainer:AddChild(managedMacro)
+        rightContainer:AddChild(heading2)
+        local inlinecompiled = AceGUI:Create("InlineGroup")
+        inlinecompiled:SetFullWidth(true)
+        inlinecompiled:AddChild(compiledMacro)
+        rightContainer:AddChild(inlinecompiled)
+        rightContainer:AddChild(AceGUI:Create("Spacer"))
+        rightContainer:AddChild(compiledlinecount)
     else
-        if GSE.isEmpty(source[node.name].Disabled) then
-            manageGSE:SetValue(false)
-        else
-            manageGSE:SetValue(source[node.name].Disabled)
-        end
+        local linecount = AceGUI:Create("Label")
+        linecount:SetWidth(macroframe.Width - 200)
+        linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
+        linecount:ClearAllPoints()
+        linecount:SetPoint("CENTER")
+        linecount:SetFontObject(font)
+        linecount:SetFont(fontName, fontHeight, fontFlags)
+
+        font:SetJustifyH(origjustificationH)
+        font:SetJustifyV(origjustificationV)
+
+        local macro = AceGUI:Create("MultiLineEditBox")
+        macro:SetLabel(L["Macro"])
+        macro:SetText(node.text)
+        macro:SetNumLines(5)
+        macro:SetWidth(macroframe.Width - 200)
+        macro:SetCallback(
+            "OnEnterPressed",
+            function(self, _, text)
+                node.text = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
+                local oocaction = {
+                    ["action"] = "updatemacro",
+                    ["node"] = node
+                }
+                table.insert(GSE.OOCQueue, oocaction)
+            end
+        )
+        macro:SetCallback(
+            "OnTextChanged",
+            function(self, _, text)
+                local length = string.len(text)
+                local line = string.format(L["%s/255 Characters Used"], length)
+                if length > 255 then
+                    line = GSEOptions.UNKNOWN .. line .. Statics.StringReset
+                end
+                linecount:SetText(line)
+            end
+        )
+
+        macro:DisableButton(false)
+        rightContainer:AddChild(macro)
+        rightContainer:AddChild(linecount)
     end
-
-    local disabled = false
-    if source[node.name] and source[node.name].Disabled then
-        disabled = source[node.name].Disabled
-    end
-
-    local managedMacro = AceGUI:Create("MultiLineEditBox")
-    managedMacro:SetLabel(L["Macro Template"])
-    local managedtext =
-        (source[node.name].managedMacro and
-        GSE.CompileMacroText(source[node.name].managedMacro, Statics.TranslatorMode.Current) or
-        node.text)
-    managedMacro:SetText(managedtext)
-    managedMacro:SetNumLines(5)
-    managedMacro:SetDisabled(not disabled)
-    managedMacro:SetWidth(macroframe.Width - 200)
-
-    local compileButton = AceGUI:Create("Button")
-    compileButton:SetText(L["Compile"])
-
-    local compiledMacro = AceGUI:Create("Label")
-    compiledMacro:SetWidth(macroframe.Width - 200)
-
-    local heading2 = AceGUI:Create("Heading")
-    heading2:SetText(L["Compiled Macro"])
-    heading2:SetWidth(macroframe.Width - 200)
-
-    compiledMacro:SetText(managedtext)
-
-    local compiledlinecount = AceGUI:Create("Label")
-    compiledlinecount:SetWidth(macroframe.Width - 200)
-    compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(managedtext)))
-    compiledlinecount:ClearAllPoints()
-    compiledlinecount:SetPoint("CENTER")
-    compiledlinecount:SetFontObject(font)
-    compiledlinecount:SetFont(fontName, fontHeight, fontFlags)
-
-    managedMacro:SetCallback(
-        "OnTextChanged",
-        function(self, _, text)
-            source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
-            local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.Current)
-            compiledMacro:SetText(compiled)
-            compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
-        end
-    )
-
-    managedMacro:DisableButton(true)
     manageGSE:SetCallback(
         "OnValueChanged",
         function(self, _, value)
@@ -332,18 +352,9 @@ local function showMacro(node)
             end
 
             source[node.name].Disabled = value
-            disabled = not value
-            managedMacro:SetDisabled(disabled)
             source[node.name].managedMacro = GSE.CompileMacroText(managedMacro:GetText(), Statics.TranslatorMode.ID)
         end
     )
-
-    rightContainer:AddChild(manageGSE)
-
-    rightContainer:AddChild(managedMacro)
-    rightContainer:AddChild(heading2)
-    rightContainer:AddChild(compiledMacro)
-    rightContainer:AddChild(compiledlinecount)
 end
 
 local function buildMacroHeader(node)
