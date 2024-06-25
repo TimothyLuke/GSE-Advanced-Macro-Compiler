@@ -284,7 +284,7 @@ local function showMacro(node)
             "OnTextChanged",
             function(self, _, text)
                 source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
-                local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.Current)
+                local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
                 compiledMacro:SetText(compiled)
                 compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
                 local oocaction = {
@@ -405,9 +405,10 @@ local function showMacro(node)
             end
 
             source[node.name].Managed = value
-            for k, v in node do
+            for k, v in pairs(node) do
                 source[node.name][k] = v
             end
+            showMacro(node)
         end
     )
 end

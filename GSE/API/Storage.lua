@@ -940,6 +940,18 @@ function GSE.ManageMacros()
             GSE.UpdateMacro(node)
         end
     end
+    local char, realm = UnitFullName("player")
+    for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
+        if v.Managed then
+            local node = {
+                ["name"] = k,
+                ["value"] = v.value,
+                ["icon"] = v.icon,
+                ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
+            }
+            GSE.UpdateMacro(node)
+        end
+    end
 end
 
 GSE.DebugProfile("Storage")
