@@ -289,6 +289,54 @@ local function showMacro(node)
                 compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
             end
         )
+        if GSE.Patron then
+            managedMacro.editBox:SetScript(
+                "OnTabPressed",
+                function(widget, button, down)
+                    -- if button == "RightButton" then
+                    MenuUtil.CreateContextMenu(
+                        managedMacro.editBox,
+                        function(ownerRegion, rootDescription)
+                            rootDescription:CreateTitle(L["Insert GSE Variable"])
+                            for k, _ in pairs(GSEVariables) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        managedMacro.editBox:Insert([[=GSE.V["]] .. k .. [["]()]])
+                                    end
+                                )
+                            end
+                            rootDescription:CreateTitle(L["Insert GSE Sequence"])
+                            for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        if GSE.GetMacroStringFormat() == "DOWN" then
+                                            managedMacro.editBox:Insert([[/click ]] .. k .. [[LeftButton t]])
+                                        else
+                                            managedMacro.editBox:Insert([[/click ]] .. k)
+                                        end
+                                    end
+                                )
+                            end
+                            for k, _ in pairs(GSE3Storage[0]) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        if GSE.GetMacroStringFormat() == "DOWN" then
+                                            managedMacro.editBox:Insert([[/click ]] .. k .. [[LeftButton t]])
+                                        else
+                                            managedMacro.editBox:Insert([[/click ]] .. k)
+                                        end
+                                    end
+                                )
+                            end
+                        end
+                    )
+                    -- end
+                end
+            )
+        end
 
         managedMacro:DisableButton(true)
 
