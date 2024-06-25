@@ -954,3 +954,5 @@ L["Macro"] = true
 L["Macro Template"] = true
 L["Compiled Macro"] = true
 L["Manage Variables"] = true
+L["Insert GSE Sequence"] = true
+L["Insert GSE Variable"] = true

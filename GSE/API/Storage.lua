@@ -920,19 +920,22 @@ function GSE.CompileMacroText(text, mode)
     local lines = GSE.SplitMeIntolines(text)
     for k, v in ipairs(lines) do
         local value = v
-        print(v)
+
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
-                print("return " .. string.sub(value, 2, string.len(value)))
-                local functionresult = loadstring("return " .. string.sub(value, 2, string.len(value) - 1))
-                print(functionresult)
+                local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
+
+                if error then
+                    GSE.Print(L["There was an error processing "] .. v, L["Variables"])
+                    GSE.Print(error, L["Variables"])
+                end
+
                 if GSE.isEmpty(functionresult) then
                     value = " "
                 end
                 if functionresult and type(functionresult) == "function" then
                     value = functionresult()
                 end
-                print(value)
             end
 
             lines[k] = GSE.UnEscapeString(GSE.TranslateString(value, mode, false))
