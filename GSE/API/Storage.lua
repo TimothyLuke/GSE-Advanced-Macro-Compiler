@@ -935,7 +935,7 @@ function GSE.ManageMacros()
     end
     local char, realm = UnitFullName("player")
     if GSE.isEmpty(realm) then
-        realm = GetRealmName()
+        realm = string.gsub(GetRealmName(), "%s*", "")
     end
     for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
         if v.Managed then
