@@ -275,80 +275,6 @@ function GSE.GetConditionalsFromString(str)
     return found, mods, str
 end
 
-local function ClassicGetSpellInfo(spellID, absolute, mode)
-    local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
-    local name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(spellID)
-    if type(name) == "table" then
-        -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
-        sid = name.spellID
-        maxRange = name.maxRange
-        minRange = name.minRange
-        castTime = name.castTime
-        icon = name.iconID
-        rank = name.rank and name.rank or nil
-        name = name.name
-    end
-    -- only check rank if classic.
-    if GSE.GameMode <= 3 then
-        -- print("Did rank check found: " .. (rank or "No Rank"))
-        if GSE.isEmpty(rank) then
-            if GSE.GetCurrentClassID() ~= 1 and GSE.GetCurrentClassID() ~= 4 then
-                if
-                    pcall(
-                        function()
-                            tonumber(spellID)
-                        end
-                    )
-                 then
-                    rank = GetSpellSubtext(spellID)
-                end
-            else
-                rank = nil
-            end
-        end
-        if GSEOptions.useMaxRanks then
-            rank = nil
-        end
-    else
-        -- Do override check.
-        if not absolute and not GSE.isEmpty(sid) and mode ~= Statics.TranslatorMode.Current then
-            local returnval = sid
-            if FindBaseSpellByID(returnval) then
-                returnval = FindBaseSpellByID(returnval)
-                if type(returnval) == "table" then
-                    returnval = returnval.spellID
-                end
-            end
-            -- Still need Heart of Azeroth overrides.
-            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-                returnval = Statics.BaseSpellTable[returnval]
-            end
-            name, rank, icon, castTime, minRange, maxRange, sid = GetSpellInfo(returnval)
-            if type(name) == "table" then
-                -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
-                sid = name.spellID
-                maxRange = name.maxRange
-                minRange = name.minRange
-                castTime = name.castTime
-                icon = name.iconID
-                rank = name.rank and name.rank or nil
-                name = name.name
-            end
-        end
-    end
-    -- allows for a trinket to be part of a castsequence.
-    if tostring(spellID) == "13" or tostring(spellID) == "14" then
-        name = tostring(spellID)
-        sid = tonumber(spellID)
-    end
-    return name, rank, icon, castTime, minRange, maxRange, sid
-end
-
---- Test override of GetSpellInfo
-function GSE.ClassicGetSpellInfo(spellID, mode)
-    return ClassicGetSpellInfo(spellID, mode)
-end
-
 --- Converts a string spell name to an id and back again.
 function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
@@ -364,7 +290,17 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         GSESpellCache[GetLocale()] = {}
     end
     local returnval
-    local name, rank, icon, castTime, minRange, maxRange, spellId = ClassicGetSpellInfo(spellstring, absolute, mode)
+    local name, rank, icon, castTime, minRange, maxRange, sid = C_Spell.GetSpellInfo(spellstring)
+    if type(name) == "table" then
+        -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
+        sid = name.spellID
+        maxRange = name.maxRange
+        minRange = name.minRange
+        castTime = name.castTime
+        icon = name.iconID
+        rank = name.rank and name.rank or nil
+        name = name.name
+    end
     if mode ~= Statics.TranslatorMode.ID then
         if not GSE.isEmpty(rank) then
             returnval = name .. "(" .. rank .. ")"
@@ -373,20 +309,18 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         end
     else
         returnval = spellId
-        if GSE.GameMode > 2 then
-            -- If we are not in classic
-            -- Check for overrides like Crusade and Avenging Wrath.
-            if not absolute and not GSE.isEmpty(returnval) then
-                if FindBaseSpellByID(returnval) then
-                    returnval = FindBaseSpellByID(returnval)
-                    if type(returnval) == "table" then
-                        returnval = returnval.spellID
-                    end
+        -- If we are not in classic
+        -- Check for overrides like Crusade and Avenging Wrath.
+        if not absolute and not GSE.isEmpty(returnval) then
+            if FindBaseSpellByID(returnval) then
+                returnval = FindBaseSpellByID(returnval)
+                if type(returnval) == "table" then
+                    returnval = returnval.spellID
                 end
-                -- Still need Heart of Azeroth overrides.
-                if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-                    returnval = Statics.BaseSpellTable[returnval]
-                end
+            end
+            -- Still need Heart of Azeroth overrides.
+            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
+                returnval = Statics.BaseSpellTable[returnval]
             end
         end
     end
@@ -437,14 +371,7 @@ function GSE.IdentifySpells(tab)
     for k, _ in pairs(foundspells) do
         if not GSE.isEmpty(GSE.GetSpellId(k, Statics.TranslatorMode.Current, false)) then
             local wowheaddata = "spell=" .. k
-            -- local domain = "www"
-            if GSE.GameMode == 1 then
-                --domain = "classic"
-                wowheaddata = wowheaddata .. "?domain=classic"
-            elseif GSE.GameMode == 2 then
-                wowheaddata = wowheaddata .. "?domain=classic"
-            --domain = "tbc"
-            end
+
             returnval =
                 returnval ..
                 '<a href="http://www.wowhead.com/spell=' ..

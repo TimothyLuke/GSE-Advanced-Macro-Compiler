@@ -738,13 +738,7 @@ function GSE:GUIDrawMetadataEditor(container)
     talentseditbox:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(
-                L["Talents"],
-                L[
-                    "What are the preferred talents for this macro?"
-                ],
-                editframe
-            )
+            GSE.CreateToolTip(L["Talents"], L["What are the preferred talents for this macro?"], editframe)
         end
     )
     talentseditbox:SetCallback(
@@ -1256,45 +1250,29 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
 
-    if GSE.GameMode < 4 then
-        -- Classic WoW
-        defgroup1:AddChild(defaultdropdown)
-        defgroup1:AddChild(spacerlabel4)
-        defgroup1:AddChild(partydropdown)
-        defgroup2:AddChild(dungeondropdown)
-        defgroup2:AddChild(spacerlabel5)
-        defgroup2:AddChild(raiddropdown)
-        defgroup3:AddChild(pvpdropdown)
-        defgroup3:AddChild(spacerlabel6)
+    defgroup1:AddChild(defaultdropdown)
+    defgroup1:AddChild(spacerlabel4)
+    defgroup1:AddChild(raiddropdown)
+    defgroup2:AddChild(arenadropdown)
+    defgroup2:AddChild(spacerlabel5)
+    defgroup2:AddChild(pvpdropdown)
+    defgroup3:AddChild(mythicdropdown)
+    defgroup3:AddChild(spacerlabel6)
+    defgroup3:AddChild(mythicplusdropdown)
+    defgroup4:AddChild(heroicdropdown)
+    defgroup4:AddChild(spacerlabel7)
+    defgroup4:AddChild(dungeondropdown)
+    defgroup5:AddChild(Timewalkingdropdown)
+    defgroup5:AddChild(spacerlabel8)
+    defgroup5:AddChild(partydropdown)
+    defgroup6:AddChild(scenariodropdown)
 
-        contentcontainer:AddChild(defgroup1)
-        contentcontainer:AddChild(defgroup2)
-        contentcontainer:AddChild(defgroup3)
-    else
-        defgroup1:AddChild(defaultdropdown)
-        defgroup1:AddChild(spacerlabel4)
-        defgroup1:AddChild(raiddropdown)
-        defgroup2:AddChild(arenadropdown)
-        defgroup2:AddChild(spacerlabel5)
-        defgroup2:AddChild(pvpdropdown)
-        defgroup3:AddChild(mythicdropdown)
-        defgroup3:AddChild(spacerlabel6)
-        defgroup3:AddChild(mythicplusdropdown)
-        defgroup4:AddChild(heroicdropdown)
-        defgroup4:AddChild(spacerlabel7)
-        defgroup4:AddChild(dungeondropdown)
-        defgroup5:AddChild(Timewalkingdropdown)
-        defgroup5:AddChild(spacerlabel8)
-        defgroup5:AddChild(partydropdown)
-        defgroup6:AddChild(scenariodropdown)
-
-        contentcontainer:AddChild(defgroup1)
-        contentcontainer:AddChild(defgroup2)
-        contentcontainer:AddChild(defgroup3)
-        contentcontainer:AddChild(defgroup4)
-        contentcontainer:AddChild(defgroup5)
-        contentcontainer:AddChild(defgroup6)
-    end
+    contentcontainer:AddChild(defgroup1)
+    contentcontainer:AddChild(defgroup2)
+    contentcontainer:AddChild(defgroup3)
+    contentcontainer:AddChild(defgroup4)
+    contentcontainer:AddChild(defgroup5)
+    contentcontainer:AddChild(defgroup6)
 
     container:AddChild(scrollcontainer)
 end

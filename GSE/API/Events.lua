@@ -349,27 +349,18 @@ GSE:RegisterEvent("PLAYER_LEVEL_UP")
 GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 
-if GSE.GameMode > 8 then
-    GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
-end
+GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
 
-if GSE.GameMode >= 10 then
-    GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
-    GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
-    GSE:RegisterEvent("TRAIT_NODE_CHANGED")
-    GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")
-    GSE:RegisterEvent("TRAIT_NODE_ENTRY_UPDATED")
-    GSE:RegisterEvent("TRAIT_TREE_CHANGED")
-    GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
-    GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
-end
-
-if GSE.GameMode <= 3 then
-    GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
-    GSE:RegisterEvent("SPELLS_CHANGED")
-end
+GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
+GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
+GSE:RegisterEvent("TRAIT_NODE_CHANGED")
+GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")
+GSE:RegisterEvent("TRAIT_NODE_ENTRY_UPDATED")
+GSE:RegisterEvent("TRAIT_TREE_CHANGED")
+GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
+GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
 
 function GSE:OnEnable()
     GSE.StartOOCTimer()

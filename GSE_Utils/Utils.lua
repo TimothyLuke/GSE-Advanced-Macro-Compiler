@@ -539,18 +539,14 @@ function GSE:GSSlash(input)
     end
     local command = string.lower(input)
     if command == "showspec" then
-        if GSE.GameMode == 1 then
-            GSE.Print(L["Your ClassID is "] .. currentclassId .. " " .. Statics.SpecIDList[currentclassId], GNOME)
-        else
-            local currentSpec = GetSpecialization()
-            local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
-            local _, specname, _, _, _, _, _ = GetSpecializationInfoByID(currentSpecID)
-            GSE.Print(
-                L["Your current Specialisation is "] ..
-                    currentSpecID .. ":" .. specname .. L["  The Alternative ClassID is "] .. currentclassId,
-                GNOME
-            )
-        end
+        local currentSpec = GetSpecialization()
+        local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+        local _, specname, _, _, _, _, _ = GetSpecializationInfoByID(currentSpecID)
+        GSE.Print(
+            L["Your current Specialisation is "] ..
+                currentSpecID .. ":" .. specname .. L["  The Alternative ClassID is "] .. currentclassId,
+            GNOME
+        )
     elseif command == "help" then
         GSE.PrintGnomeHelp()
     elseif command == "cleanorphans" or command == "clean" then

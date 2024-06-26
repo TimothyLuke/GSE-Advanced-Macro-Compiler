@@ -6,25 +6,15 @@ local Statics = GSE.Static
 
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
-    if GSE.GameMode <= 4 then
-        return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
-    else
-        local currentSpec = GetSpecialization()
-        return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
-    end
+    local currentSpec = GetSpecialization()
+    return currentSpec and select(1, GetSpecializationInfo(currentSpec)) or 0
 end
 
 --- Return the current GCD for the current character
 function GSE.GetGCD()
-    local gcdSpell
-
     local gcd = 1.5
-    -- Classic doesnt have haste.
-    if GSE.GameMode > 3 then
-        local haste = UnitSpellHaste("player")
-        gcd = 1.5 / (1 + 0.01 * haste)
-    --gcd = math.floor(gcd - (750 * haste / 100) + 0.5) / 1000
-    end
+    local haste = UnitSpellHaste("player")
+    gcd = 1.5 / (1 + 0.01 * haste)
 
     return gcd
 end
@@ -42,21 +32,15 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
-    -- Check for Classic WoW
     local classid = 0
-    if GSE.GameMode < 5 then
-        -- Classic WoW
-        classid = Statics.SpecIDClassList[specid]
+    local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
+    if specid <= 13 then
+        classid = specid
     else
-        local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
-        if specid <= 13 then
-            classid = specid
-        else
-            for i = 1, 13, 1 do
-                local _, st, _ = GetClassInfo(i)
-                if class == st then
-                    classid = i
-                end
+        for i = 1, 13, 1 do
+            local _, st, _ = GetClassInfo(i)
+            if class == st then
+                classid = i
             end
         end
     end
@@ -108,55 +92,20 @@ end
 --- Returns the current Talent Selections as a string
 function GSE.GetCurrentTalents()
     local talents = ""
-    -- Need to change this later on to something meaningful
-    if GSE.GameMode <= 4 then
-        local Talented = Talented
-        if not GSE.isEmpty(Talented) then
-            if GSE.isEmpty(Talented.alternates) then
-                Talented:UpdatePlayerSpecs()
-            end
-            local LT = LibStub("AceLocale-3.0"):GetLocale("Talented")
-            local current_spec = Talented.alternates[GetActiveTalentGroup()]
-            talents = Talented.exporters[LT["Wowhead Talent Calculator"]](Talented, current_spec)
-        else
-            if GSE.GameMode == 1 then
-                talents = "CLASSIC"
-            elseif GSE.GameMode == 2 then
-                talents = "BC CLASSIC"
-            else --GSE.GameMode == 3 then
-                talents = "Wrath CLASSIC"
-            end
-        end
-    elseif GSE.GameMode >= 10 then
-        -- force load the addon
-        local addonName = "Blizzard_PlayerSpells"
-        if GSE.GameMode == 10 then
-            addonName = "Blizzard_ClassTalentUI"
-        end
 
-        local loaded, reason = C_AddOns.LoadAddOn(addonName)
+    -- force load the addon
+    local addonName = "Blizzard_PlayerSpells"
 
-        if not loaded then
-            talents = ""
-            GSE.Print(reason)
-        else
-            if GSE.GameMode == 10 then
-                local t = ClassTalentFrame.TalentsTab
-                if t.isAnythingPending ~= nil then
-                    t:UpdateTreeInfo()
-                    talents = t:GetLoadoutExportString()
-                end
-            else
-                PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
-                talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
-            end
-        end
+    local loaded, reason = C_AddOns.LoadAddOn(addonName)
+
+    if not loaded then
+        talents = ""
+        GSE.Print(reason)
     else
-        for talentTier = 1, MAX_TALENT_TIERS do
-            local available, selected = GetTalentTierInfo(talentTier, 1)
-            talents = talents .. (available and selected or "?" .. ",")
-        end
+        PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
+        talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
     end
+
     return talents
 end
 

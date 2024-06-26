@@ -622,19 +622,11 @@ function GSE.GetOptionsTable()
                             if val == false then
                                 setting = 0
                             end
-                            if GSE.GameMode > 7 then
-                                C_CVar.SetCVar("ActionButtonUseKeyDown", setting)
-                            else
-                                SetCVar("ActionButtonUseKeyDown", setting)
-                            end
+                            C_CVar.SetCVar("ActionButtonUseKeyDown", setting)
                         end,
                         get = function(info)
                             local setting
-                            if GSE.GameMode > 7 then
-                                setting = C_CVar.GetCVar("ActionButtonUseKeyDown")
-                            else
-                                setting = GetCVar("ActionButtonUseKeyDown")
-                            end
+                            setting = C_CVar.GetCVar("ActionButtonUseKeyDown")
 
                             if tonumber(setting) == 1 then
                                 return true
@@ -1250,22 +1242,6 @@ function GSE.GetOptionsTable()
             desc = v,
             type = "description",
             order = pos
-        }
-    end
-
-    ord = 210
-    if GSE.GameMode <= 3 then
-        OptionsTable.args.generalTab.args["useMaxRank"] = {
-            name = L["Always use Max Rank"],
-            desc = L["Alwaus use the highest rank of spell available.  This is useful for levelling."],
-            type = "toggle",
-            set = function(info, val)
-                GSEOptions.useMaxRanks = val
-            end,
-            get = function(info)
-                return GSEOptions.useMaxRanks
-            end,
-            order = ord
         }
     end
 
