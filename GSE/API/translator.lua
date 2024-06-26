@@ -290,15 +290,11 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         GSESpellCache[GetLocale()] = {}
     end
     local returnval
-    local name, rank, icon, castTime, minRange, maxRange, sid = C_Spell.GetSpellInfo(spellstring)
+    local name, rank, spellId = C_Spell.GetSpellInfo(spellstring)
     if type(name) == "table" then
         -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
-        sid = name.spellID
-        maxRange = name.maxRange
-        minRange = name.minRange
-        castTime = name.castTime
-        icon = name.iconID
         rank = name.rank and name.rank or nil
+        spellId = name.sid
         name = name.name
     end
     if mode ~= Statics.TranslatorMode.ID then
