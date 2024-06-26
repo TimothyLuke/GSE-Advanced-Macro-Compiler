@@ -934,6 +934,9 @@ function GSE.ManageMacros()
         end
     end
     local char, realm = UnitFullName("player")
+    if GSE.isEmpty(realm) then
+        realm = GetRealmName()
+    end
     for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
         if v.Managed then
             local node = {
