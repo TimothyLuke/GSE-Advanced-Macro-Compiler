@@ -113,19 +113,6 @@ StaticPopupDialogs["GSE_SEQUENCEHELP"] = {
     showAlert = 1
 }
 
-StaticPopupDialogs["GSE-SampleMacroDialog"] = {
-    text = L["There are No Macros Loaded for this class.  Would you like to load the Sample Macro?"],
-    button1 = L["Load"],
-    button2 = L["Close"],
-    OnAccept = function(self, data)
-        GSE.LoadSampleMacros(GSE.GetCurrentClassID())
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
-}
-
 StaticPopupDialogs["GSE-MacroImportSuccess"] = {
     text = L["Macro Import Successful."],
     button1 = L["Close"],

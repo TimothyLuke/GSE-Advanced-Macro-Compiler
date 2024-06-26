@@ -8,7 +8,7 @@ local iconSource = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataobj =
   ldb:NewDataObject(
-  L["GSE"] .. " " .. L["GnomeSequencer-Enhanced"],
+  L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"],
   {
     type = "data source",
     text = "GSE",
@@ -20,7 +20,7 @@ local LibQTip = LibStub("LibQTip-1.0")
 local LibSharedMedia = LibStub("LibSharedMedia-3.0")
 
 local icon = LibStub("LibDBIcon-1.0")
-icon:Register(L["GSE"] .. " " .. L["GnomeSequencer-Enhanced"], dataobj, GSEOptions.showMiniMap)
+icon:Register(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"], dataobj, GSEOptions.showMiniMap)
 
 local LibDBCompartment = LibStub:GetLibrary("LibDBCompartment-1.0")
 LibDBCompartment:Register(L["GSE"], dataobj)
@@ -103,18 +103,6 @@ function dataobj:OnEnter()
     end
   end
 
-  tooltip:AddSeparator()
-  y, _ = tooltip:AddLine()
-  tooltip:SetCell(y, 1, GSE.ReportTargetProtection(), "CENTER", 3)
-  local RequireTargetStatusline = y
-  tooltip:SetLineScript(
-    y,
-    "OnMouseDown",
-    function(obj, button)
-      GSE.ToggleTargetProtection()
-      tooltip:SetCell(RequireTargetStatusline, 1, CheckOOCQueueStatus(), "CENTER", 3)
-    end
-  )
   tooltip:AddSeparator()
   y, _ = tooltip:AddLine()
   tooltip:SetCell(y, 1, string.format("GCD: %ss", GSE.GetGCD()), "CENTER", 3)
@@ -208,11 +196,11 @@ function dataobj:OnClick(button)
 end
 
 function GSE.miniMapShow()
-  icon:Show(L["GSE"] .. " " .. L["GnomeSequencer-Enhanced"])
+  icon:Show(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"])
 end
 
 function GSE.miniMapHide()
-  icon:Hide(L["GSE"] .. " " .. L["GnomeSequencer-Enhanced"])
+  icon:Hide(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"])
 end
 
 --- This shows or hides the minimap icon.

@@ -298,16 +298,6 @@ function GSE.DebugDumpButton(SequenceName)
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
---- Load in the sample macros for the current class.
-function GSE.LoadSampleMacros(classID)
-    if not GSE.isEmpty(Statics.SampleMacros[classID]) then
-        GSE.ImportCompressedMacroCollection(Statics.SampleMacros[classID])
-        GSE.Print(L["The Sample Macros have been reloaded."])
-    else
-        GSE.Print(L["No Sample Macros are available yet for this class."])
-    end
-end
-
 --- Moves Macros hidden in Global Macros to their appropriate class.
 function GSE.MoveMacroToClassFromGlobal()
     for k, v in pairs(GSE.Library[0]) do
@@ -375,16 +365,6 @@ function GSE.ScanMacrosForErrors()
         end
     end
     GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
-end
-
---- This function allows the player to toggle Target Protection from the LDB Plugin.
-function GSE.ToggleTargetProtection()
-    if GSE.isEmpty(GSE.GetRequireTarget()) then
-        GSE.SetRequireTarget(true)
-    else
-        GSE.SetRequireTarget(false)
-    end
-    GSE.ReloadSequences()
 end
 
 --- This creates a pretty export for WLM Forums
@@ -599,9 +579,6 @@ function GSE:GSSlash(input)
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
         StaticPopup_Show("GSE_ConfirmReloadUIDialog")
-    elseif command == "updatemacrostrings" then
-        -- Convert macros to new format in a one off run.
-        GSE.UpdateMacroString()
     elseif command == "movelostmacros" then
         GSE.MoveMacroToClassFromGlobal()
     elseif command == "checkmacrosforerrors" then
@@ -642,14 +619,6 @@ function GSE:GSSlash(input)
             _G["GSE_Menu"]:Show()
         end
     end
-end
-
-function GSE.ReportTargetProtection()
-    local disabledstr = "disabled"
-    if GSEOptions.requireTarget then
-        disabledstr = "enabled"
-    end
-    return string.format(L["Target protection is currently %s"], disabledstr)
 end
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})

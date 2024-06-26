@@ -95,20 +95,6 @@ function GSE.GetOptionsTable()
                         end,
                         order = 300
                     },
-                    deleteOrphanLogout = {
-                        name = L["Delete Orphaned Macros on Logout"],
-                        desc = L[
-                            "As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.deleteOrphansOnLogout = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.deleteOrphansOnLogout
-                        end,
-                        order = 301
-                    },
                     overflowPersonalMacros = {
                         name = L["Use Global Account Macros"],
                         desc = L[
@@ -331,24 +317,6 @@ function GSE.GetOptionsTable()
                             return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
                         end,
                         order = 110
-                    },
-                    requireTarget = {
-                        name = L["Require Target to use"],
-                        desc = L[
-                            "This option prevents macros firing unless you have a target. Helps reduce mistaken targeting of other mobs/groups when your target dies."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSE_C.requireTarget = val
-                            GSE.PerformReloadSequences()
-                        end,
-                        get = function(info)
-                            if GSE.isEmpty(GSE_C) then
-                                GSE_C = {}
-                            end
-                            return GSE_C.requireTarget and GSE_C.requireTarget or GSEOptions.requireTarget
-                        end,
-                        order = 120
                     },
                     MSFiltertitle1 = {
                         type = "header",
@@ -594,17 +562,6 @@ function GSE.GetOptionsTable()
                             GSEOptions.virtualButtonSupport = value
                         end,
                         order = 521
-                    },
-                    updatemacrobuttonstubs = {
-                        name = L["Update Macro Stubs"],
-                        desc = L[
-                            "This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."
-                        ],
-                        type = "execute",
-                        func = function(info, val)
-                            GSE.UpdateMacroString()
-                        end,
-                        order = 522
                     },
                     spellCachetitle = {
                         type = "header",
@@ -1229,7 +1186,7 @@ function GSE.GetOptionsTable()
                         order = 25
                     },
                     printKeyPressModifiers = {
-                        name = L["Print KeyPress Modifiers on Click"],
+                        name = L["Print Active Modifiers on Click"],
                         desc = L[
                             "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
                         ],

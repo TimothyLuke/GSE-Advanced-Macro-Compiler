@@ -211,24 +211,6 @@ function GSE.GetResetOOC()
     return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
 end
 
-function GSE.GetRequireTarget()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.requireTarget and GSE_C.requireTarget or GSEOptions.requireTarget
-end
-
-function GSE.SetRequireTarget(value)
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    if GSE_C.requireTarget then
-        GSE_C.requireTarget = value
-    else
-        GSEOptions.requireTarget = value
-    end
-end
-
 function GSE.GetUse11()
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}

@@ -74,30 +74,6 @@ Statics.SystemVariables = {
     end
 }
 
-Statics.SystemVariableDescriptions = {
-    ["GCD"] = L["Returns your current Global Cooldown value accounting for your haste if that stat is present."],
-    ["LID"] = L["Returns the current Loop Index.  If this is the third action in a loop it will return 3."]
-}
-
-if GSE.GameMode ~= 1 then
-    Statics.SystemVariables["HE"] = function()
-        local itemLink = GetInventoryItemLink("player", 2)
-        if not GSE.isEmpty(itemLink) then
-            local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
-            if GetItemInfo(itemLink) == "Heart of Azeroth" then
-                return "/cast [combat,nochanneling] Heart Essence"
-            else
-                return "-- /cast Heart Essence"
-            end
-        else
-            return "-- /cast Heart Essence"
-        end
-    end
-    Statics.SystemVariableDescriptions["HE"] =
-        L[
-        "Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."
-    ]
-end
 Statics.SpecIDClassList = {
     [0] = 0,
     [1] = 1,

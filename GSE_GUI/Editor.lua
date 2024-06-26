@@ -741,7 +741,7 @@ function GSE:GUIDrawMetadataEditor(container)
             GSE.CreateToolTip(
                 L["Talents"],
                 L[
-                    "What are the preferred talents for this macro?\n'1,2,3,1,2,3,1' means First row choose the first talent, Second row choose the second talent etc"
+                    "What are the preferred talents for this macro?"
                 ],
                 editframe
             )

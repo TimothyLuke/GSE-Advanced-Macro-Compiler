@@ -199,13 +199,6 @@ function GSE.PerformReloadSequences()
     table.insert(GSE.OOCQueue, vals)
 end
 
-function GSE.PrepareLogout(deletenonlocalmacros)
-    GSE.CleanMacroLibrary(deletenonlocalmacros)
-    if GSEOptions.deleteOrphansOnLogout and GSE.Utils then
-        GSE.CleanOrphanSequences()
-    end
-end
-
 --- This function is used to clean the local sequence library
 function GSE.CleanMacroLibrary(forcedelete)
     -- Clean out the sequences database except for the current version
