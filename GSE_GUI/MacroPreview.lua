@@ -25,6 +25,7 @@ PreviewFrame:SetCallback(
   end
 )
 PreviewFrame:SetLayout("List")
+PreviewFrame.frame:SetClampRectInsets(-10, -10, -10, -10)
 PreviewFrame:SetWidth(290)
 PreviewFrame:SetHeight(700)
 PreviewFrame:Hide()
@@ -37,6 +38,8 @@ PreviewLabel:DisableButton(true)
 PreviewFrame.PreviewLabel = PreviewLabel
 PreviewFrame:AddChild(PreviewLabel)
 
+IndentationLib.enable(PreviewLabel.editBox, Statics.IndentationColorTable, 4)
+
 PreviewFrame.frame:SetScript(
   "OnSizeChanged",
   function(self, width, height)
@@ -45,29 +48,25 @@ PreviewFrame.frame:SetScript(
 )
 
 function GSE.GUIShowCompiledMacroGui(spelllist, title)
-  PreviewFrame.text = GSE.Dump(spelllist)
+  PreviewFrame.text = IndentationLib.encode(GSE.Dump(spelllist))
+
   local count = #spelllist
   PreviewLabel:SetLabel(L["Compiled"] .. " " .. count .. " " .. L["Actions"])
   if GSE.GUIEditFrame:IsVisible() then
     local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
     PreviewFrame:ClearAllPoints()
-    PreviewFrame:SetPoint(point, xOfs + 150 + (GSEOptions.menuWidth / 2), yOfs)
-  end
-  if GSE.GUIEditFrame:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
-    PreviewFrame:ClearAllPoints()
-    PreviewFrame:SetPoint(point, xOfs + 150 + (GSEOptions.editorWidth / 2), yOfs)
+    PreviewFrame:SetPoint("TOPLEFT", GSE.GUIEditFrame.frame, GSE.GUIEditFrame.Width + 10, 0)
   end
 
   if not GSE.isEmpty(spelllist) then
     PreviewLabel:SetText(PreviewFrame.text)
   end
-  PreviewLabel:SetCallback(
-    "OnTextChanged",
-    function()
-      PreviewLabel:SetText(PreviewFrame.text)
-    end
-  )
-  PreviewFrame:Show()
+  -- PreviewLabel:SetCallback(
+  --   "OnTextChanged",
+  --   function()
+  --     PreviewLabel:SetText(PreviewFrame.text)
+  --   end
+  -- )
   PreviewFrame:SetStatusText(title)
+  PreviewFrame:Show()
 end
