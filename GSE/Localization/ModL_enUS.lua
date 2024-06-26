@@ -730,3 +730,4 @@ L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out 
     true
 L["Party"] = true
 L["Repeat"] = true
+L["How many times does this action repeat"] = true
