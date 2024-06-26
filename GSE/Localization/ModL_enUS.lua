@@ -724,3 +724,9 @@ L["GSE allows plugins to load Macro Collections as plugins.  You can reload a co
 L["Conditionals Colour"] = true
 L["String Colour"] = true
 L["Command Colour"] = true
+L["When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"] = true
+L["When creating a macro, if there is not a personal character macro space, create an account wide macro."] = true
+L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] =
+    true
+L["Party"] = true
+L["Repeat"] = true
