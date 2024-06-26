@@ -945,7 +945,10 @@ function GSE.ManageMacros()
                     ["name"] = k,
                     ["value"] = v.value,
                     ["icon"] = v.icon,
-                    ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
+                    ["text"] = GSE.CompileMacroText(
+                        (v.managedMacro and v.managedMacro or v.text),
+                        Statics.TranslatorMode.String
+                    )
                 }
                 GSE.UpdateMacro(node)
             end

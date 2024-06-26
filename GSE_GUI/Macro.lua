@@ -408,6 +408,8 @@ local function showMacro(node)
             for k, v in pairs(node) do
                 source[node.name][k] = v
             end
+            source[node.name].managedMacro =
+                (source[node.name].managedMacro and source[node.name].managedMacro or node.text)
             showMacro(node)
         end
     )
