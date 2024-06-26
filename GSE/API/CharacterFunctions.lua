@@ -12,7 +12,7 @@ end
 
 --- Return the current GCD for the current character
 function GSE.GetGCD()
-    local gcd = 1.5
+    local gcd
     local haste = UnitSpellHaste("player")
     gcd = 1.5 / (1 + 0.01 * haste)
 
@@ -91,7 +91,7 @@ end
 
 --- Returns the current Talent Selections as a string
 function GSE.GetCurrentTalents()
-    local talents = ""
+    local talents
 
     -- force load the addon
     local addonName = "Blizzard_PlayerSpells"
