@@ -39,12 +39,7 @@ local function CreateSequenceExport(type)
 
   wlmforumexportcheckbox:SetLabel(L["Format export for WLM Forums"])
   exportframe:AddChild(wlmforumexportcheckbox)
-  wlmforumexportcheckbox:SetCallback(
-    "OnValueChanged",
-    function(sel, object, value)
-      GSE.GUIUpdateExportBox()
-    end
-  )
+
   wlmforumexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
 
   local readOnlyCheckBox = AceGUI:Create("CheckBox")
@@ -87,7 +82,12 @@ local function CreateSequenceExport(type)
       )
     end
   end
-
+  wlmforumexportcheckbox:SetCallback(
+    "OnValueChanged",
+    function(sel, object, value)
+      GUIUpdateExportBox()
+    end
+  )
   readOnlyCheckBox:SetCallback(
     "OnValueChanged",
     function(sel, object, value)
