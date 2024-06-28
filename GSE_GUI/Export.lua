@@ -22,126 +22,151 @@ exportframe:SetCallback(
 exportframe:SetLayout("List")
 
 local exportsequencebox = AceGUI:Create("MultiLineEditBox")
-exportsequencebox:SetLabel(L["Sequence"])
+exportsequencebox:SetLabel(L["Variable"])
 exportsequencebox:SetNumLines(22)
 exportsequencebox:DisableButton(true)
 exportsequencebox:SetFullWidth(true)
-exportframe:AddChild(exportsequencebox)
 
-local wlmforumexportcheckbox = AceGUI:Create("CheckBox")
-wlmforumexportcheckbox:SetType("checkbox")
+local function CreateSequenceExport(type)
+  exportframe:ReleaseChildren()
 
-wlmforumexportcheckbox:SetLabel(L["Format export for WLM Forums"])
-exportframe:AddChild(wlmforumexportcheckbox)
-wlmforumexportcheckbox:SetCallback(
-  "OnValueChanged",
-  function(sel, object, value)
-    GSE.GUIUpdateExportBox()
-  end
-)
-wlmforumexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+  exportsequencebox:SetLabel(L["Sequence"])
 
-local readOnlyCheckBox = AceGUI:Create("CheckBox")
-readOnlyCheckBox:SetType("checkbox")
-readOnlyCheckBox:SetLabel(L["Export Macro Read Only"])
-exportframe:AddChild(readOnlyCheckBox)
+  exportframe:AddChild(exportsequencebox)
 
-local disableEditorCheckBox = AceGUI:Create("CheckBox")
-disableEditorCheckBox:SetType("checkbox")
-disableEditorCheckBox:SetLabel(L["Disable Editor"])
-disableEditorCheckBox:SetDisabled(true)
-exportframe:AddChild(disableEditorCheckBox)
+  local wlmforumexportcheckbox = AceGUI:Create("CheckBox")
+  wlmforumexportcheckbox:SetType("checkbox")
 
-local editVariablesCheckBox = AceGUI:Create("CheckBox")
-editVariablesCheckBox:SetType("checkbox")
-editVariablesCheckBox:SetLabel(L["Allow Variable Editor"])
-editVariablesCheckBox:SetDisabled(true)
-exportframe:AddChild(editVariablesCheckBox)
-
-readOnlyCheckBox:SetCallback(
-  "OnValueChanged",
-  function(sel, object, value)
-    if value then
-      exportframe.sequence.MetaData.ReadOnly = true
-      disableEditorCheckBox:SetDisabled(false)
-    else
-      exportframe.sequence.MetaData.ReadOnly = false
-      exportframe.sequence.MetaData.DisableEditor = false
-      disableEditorCheckBox:SetDisabled(true)
+  wlmforumexportcheckbox:SetLabel(L["Format export for WLM Forums"])
+  exportframe:AddChild(wlmforumexportcheckbox)
+  wlmforumexportcheckbox:SetCallback(
+    "OnValueChanged",
+    function(sel, object, value)
+      GSE.GUIUpdateExportBox()
     end
-    GSE.GUIUpdateExportBox()
-  end
-)
+  )
+  wlmforumexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
 
-disableEditorCheckBox:SetCallback(
-  "OnValueChanged",
-  function(sel, object, value)
-    if value then
-      exportframe.sequence.MetaData.DisableEditor = true
-      editVariablesCheckBox:SetDisabled(false)
+  local readOnlyCheckBox = AceGUI:Create("CheckBox")
+  readOnlyCheckBox:SetType("checkbox")
+  readOnlyCheckBox:SetLabel(L["Export Macro Read Only"])
+  exportframe:AddChild(readOnlyCheckBox)
+
+  local disableEditorCheckBox = AceGUI:Create("CheckBox")
+  disableEditorCheckBox:SetType("checkbox")
+  disableEditorCheckBox:SetLabel(L["Disable Editor"])
+  disableEditorCheckBox:SetDisabled(true)
+  exportframe:AddChild(disableEditorCheckBox)
+
+  local function GUIUpdateExportBox()
+    local exportsequence = GSE.CloneSequence(GSE.GUIExportframe.sequence)
+    exportsequence.objectType = type
+
+    if wlmforumexportcheckbox:GetValue() then
+      local exporttext =
+        "```\n" ..
+        GSE.ExportSequence(
+          GSE.GUIExportframe.sequence,
+          exportframe.sequencename,
+          GSEOptions.UseVerboseExportFormat,
+          "ID",
+          false
+        ) ..
+          "\n```\n\n"
+      exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
+      exportsequencebox:SetText(exporttext)
     else
-      exportframe.sequence.MetaData.DisableEditor = false
-      exportframe.sequence.MetaData.AllowVariables = false
-      editVariablesCheckBox:SetDisabled(true)
-    end
-    GSE.GUIUpdateExportBox()
-  end
-)
-
-editVariablesCheckBox:SetCallback(
-  "OnValueChanged",
-  function(sel, object, value)
-    if value then
-      exportframe.sequence.MetaData.AllowVariables = true
-    else
-      exportframe.sequence.MetaData.AllowVariables = false
-    end
-    GSE.GUIUpdateExportBox()
-  end
-)
-
-GSE.GUIExportframe = exportframe
-
-exportframe.ExportSequenceBox = exportsequencebox
-
-function GSE.GUIUpdateExportBox()
-  if wlmforumexportcheckbox:GetValue() then
-    local exporttext =
-      "```\n" ..
-      GSE.ExportSequence(
-        GSE.GUIExportframe.sequence,
-        exportframe.sequencename,
-        GSEOptions.UseVerboseExportFormat,
-        "ID",
-        false
-      ) ..
-        "\n```\n\n"
-    exporttext = exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
-    GSE.GUIExportframe.ExportSequenceBox:SetText(exporttext)
-  else
-    GSE.GUIExportframe.ExportSequenceBox:SetText(
-      GSE.ExportSequence(
-        GSE.GUIExportframe.sequence,
-        exportframe.sequencename,
-        GSEOptions.UseVerboseExportFormat,
-        "ID",
-        false
+      exportsequencebox:SetText(
+        GSE.ExportSequence(
+          GSE.GUIExportframe.sequence,
+          exportframe.sequencename,
+          GSEOptions.UseVerboseExportFormat,
+          "ID",
+          false
+        )
       )
-    )
+    end
   end
-end
 
-function GSE.GUIExportSequence(classid, sequencename)
-  local _, _, _, tocversion = GetBuildInfo()
-  GSE.GUIExportframe.classid = classid
-  GSE.GUIExportframe.sequencename = sequencename
-  GSE.GUIExportframe.sequence = GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
-  GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
+  readOnlyCheckBox:SetCallback(
+    "OnValueChanged",
+    function(sel, object, value)
+      if value then
+        exportframe.sequence.MetaData.ReadOnly = true
+        disableEditorCheckBox:SetDisabled(false)
+      else
+        exportframe.sequence.MetaData.ReadOnly = false
+        exportframe.sequence.MetaData.DisableEditor = false
+        disableEditorCheckBox:SetDisabled(true)
+      end
+      GUIUpdateExportBox()
+    end
+  )
+
+  disableEditorCheckBox:SetCallback(
+    "OnValueChanged",
+    function(sel, object, value)
+      if value then
+        exportframe.sequence.MetaData.DisableEditor = true
+      else
+        exportframe.sequence.MetaData.DisableEditor = false
+        exportframe.sequence.MetaData.AllowVariables = false
+      end
+      GUIUpdateExportBox()
+    end
+  )
+
   disableEditorCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
   readOnlyCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.ReadOnly)
-  editVariablesCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
-  GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
-  GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
-  GSE.GUIUpdateExportBox()
+  GUIUpdateExportBox()
+end
+GSE.GUIExportframe = exportframe
+
+local function CreateVariableExport(objectname, type)
+  exportframe:ReleaseChildren()
+  exportsequencebox:SetLabel(L["Variable"])
+  exportframe:AddChild(exportsequencebox)
+
+  local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
+  uncompressedVersion.objectType = type
+  exportsequencebox:SetText(GSE.EncodeMessage(uncompressedVersion))
+end
+
+local function CreateMacroExport(classid, objectname, type)
+  local source = GSEMacros
+  if classid == "p" then
+    local char, realm = UnitFullName("player")
+    source = GSEMacros[char .. "-" .. realm]
+  end
+  local exportobject = GSE.CloneSequence(source[objectname])
+  exportobject.objectType = type
+  local exportstring = GSE.EncodeMessage(source[objectname])
+  exportframe:ReleaseChildren()
+  exportsequencebox:SetLabel(L["Macro"])
+  exportframe:AddChild(exportsequencebox)
+  exportsequencebox:SetText(exportstring)
+end
+
+function GSE.GUIExport(category, objectname, type)
+  local _, _, _, tocversion = GetBuildInfo()
+  GSE.GUIExportframe.classid = category
+
+  if GSE.isEmpty(type) then
+    type = "SEQUENCE"
+  end
+  GSE.GUIExportframe.type = type
+  if type == "SEQUENCE" then
+    GSE.GUIExportframe.sequencename = objectname
+    GSE.GUIExportframe.sequence =
+      GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
+    GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
+    GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
+    GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
+    CreateSequenceExport(type)
+  elseif type == "VARIABLE" then
+    CreateVariableExport(objectname, type)
+  elseif type == "MACRO" then
+    CreateMacroExport(category, objectname, type)
+  end
   GSE.GUIExportframe:Show()
 end

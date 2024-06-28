@@ -81,12 +81,12 @@ spacer:SetWidth(10)
 basecontainer:AddChild(spacer)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(macroframe.Width - 250)
+rightContainer:SetWidth(macroframe.Width - 290)
 
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(macroframe.Height - 90)
 basecontainer:AddChild(rightContainer)
-
+macroframe:DoLayout()
 macroframe.frame:SetScript(
     "OnSizeChanged",
     function(self, width, height)
@@ -106,9 +106,9 @@ macroframe.frame:SetScript(
         end
         GSEOptions.macroHeight = macroframe.Height
         GSEOptions.macroWidth = macroframe.Width
-        rightContainer:SetWidth(macroframe.Width - 250)
+        rightContainer:SetWidth(macroframe.Width - 290)
         rightContainer:SetHeight(macroframe.Height - 90)
-
+        leftScrollContainer:SetHeight(macroframe.Height - 90)
         macroframe:DoLayout()
     end
 )
@@ -250,7 +250,8 @@ local function showMacro(node)
             node.text)
         managedMacro:SetText(managedtext)
         managedMacro:SetNumLines(5)
-        managedMacro:SetWidth(macroframe.Width - 200)
+        -- managedMacro:SetWidth(macroframe.Width - 200)
+        managedMacro:SetFullWidth(true)
 
         local compileButton = AceGUI:Create("Button")
         compileButton:SetText(L["Compile"])
@@ -260,7 +261,7 @@ local function showMacro(node)
 
         local heading2 = AceGUI:Create("Heading")
         heading2:SetText(L["Compiled Macro"])
-        heading2:SetWidth(macroframe.Width - 200)
+        heading2:SetFullWidth(true)
 
         local compiledtext =
             (source[node.name].managedMacro and
@@ -413,6 +414,7 @@ local function showMacro(node)
             showMacro(node)
         end
     )
+    rightContainer:SetWidth(macroframe.Width - 290)
 end
 
 local function buildMacroHeader(node)
@@ -445,14 +447,28 @@ local function buildMacroHeader(node)
                         rootDescription:CreateButton(
                             L["New"],
                             function()
-                                GSE.GUILoadEditor()
+                                GSE.Print(
+                                    L[
+                                        "Create a new macro in the /macro interface then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it,"
+                                    ],
+                                    L["Manage Macro"]
+                                )
                             end
                         )
                         rootDescription:CreateButton(
                             L["Import"],
                             function()
-                                macroframe:Hide()
                                 GSE.GUIImportFrame:Show()
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["Export"] .. " " .. node.name,
+                            function()
+                                local category = "a"
+                                if node.value > MAX_ACCOUNT_MACROS then
+                                    category = "p"
+                                end
+                                GSE.GUIExport(category, node.name, "MACRO")
                             end
                         )
                         -- rootDescription:CreateButton(

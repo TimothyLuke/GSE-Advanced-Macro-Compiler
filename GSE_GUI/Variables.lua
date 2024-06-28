@@ -72,7 +72,9 @@ leftScrollContainer:SetLayout("Fill") -- important!
 basecontainer:AddChild(leftScrollContainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
-leftscroll:SetLayout("Flow") -- probably?
+leftscroll:SetLayout("List") -- probably?
+leftscroll:SetWidth(200)
+-- probably?
 leftScrollContainer:AddChild(leftscroll)
 
 local spacer = AceGUI:Create("Label")
@@ -85,6 +87,33 @@ rightContainer:SetWidth(variablesframe.Width - 290)
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(variablesframe.Height - 90)
 basecontainer:AddChild(rightContainer)
+
+variablesframe.frame:SetScript(
+    "OnSizeChanged",
+    function(self, width, height)
+        variablesframe.Height = height
+        variablesframe.Width = width
+        if variablesframe.Height > GetScreenHeight() then
+            variablesframe.Height = GetScreenHeight() - 10
+            variablesframe:SetHeight(variablesframe.Height)
+        end
+        if variablesframe.Height < 500 then
+            variablesframe.Height = 500
+            variablesframe:SetHeight(variablesframe.Height)
+        end
+        if variablesframe.Width < 700 then
+            variablesframe.Width = 700
+            variablesframe:SetWidth(variablesframe.Width)
+        end
+        GSEOptions.menuHeight = variablesframe.Height
+        GSEOptions.menuWidth = variablesframe.Width
+
+        rightContainer:SetWidth(variablesframe.Width - 290)
+        rightContainer:SetHeight(variablesframe.Height - 90)
+        leftscroll:SetHeight(variablesframe.Height - 90)
+        variablesframe:DoLayout()
+    end
+)
 
 local function createVariableHeader(name, variable)
     local selpanel = AceGUI:Create("SelectablePanel")
@@ -108,7 +137,7 @@ local function createVariableHeader(name, variable)
                         rootDescription:CreateButton(
                             L["Export Variable"],
                             function()
-                                print("Coming Soon")
+                                GSE.GUIExport(nil, name, "VARIABLE")
                             end
                         )
                         rootDescription:CreateButton(
@@ -144,6 +173,9 @@ end
 local function listVariables()
     leftscroll:ReleaseChildren()
 
+    local menuRow = AceGUI:Create("SimpleGroup")
+    menuRow:SetLayout("Flow")
+
     local newButton = AceGUI:Create("Button")
     newButton:SetText(L["New"])
     newButton:SetWidth(90)
@@ -160,7 +192,7 @@ local function listVariables()
             GSE.ClearTooltip(variablesframe)
         end
     )
-    leftscroll:AddChild(newButton)
+    menuRow:AddChild(newButton)
 
     local importButton = AceGUI:Create("Button")
     importButton:SetText(L["Import"])
@@ -178,7 +210,8 @@ local function listVariables()
             GSE.ClearTooltip(variablesframe)
         end
     )
-    leftscroll:AddChild(importButton)
+    menuRow:AddChild(importButton)
+    leftscroll:AddChild(menuRow)
 
     for k, _ in pairs(GSEVariables) do
         local header = createVariableHeader(k)
@@ -228,7 +261,7 @@ end]],
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel(L["Help Information"])
     commentsEditBox:SetNumLines(7)
-    commentsEditBox:SetWidth(variablesframe.Width - 250)
+    commentsEditBox:SetFullWidth(true)
     commentsEditBox:DisableButton(true)
     commentsEditBox:SetText(variable.comments)
     commentsEditBox:SetCallback(
@@ -249,7 +282,7 @@ end]],
     local valueEditBox = AceGUI:Create("MultiLineEditBox")
     valueEditBox:SetLabel(L["Variable"])
     valueEditBox:SetNumLines(15)
-    valueEditBox:SetWidth(variablesframe.Width - 250)
+    valueEditBox:SetFullWidth(true)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(variable.funct)
     valueEditBox:SetCallback(
@@ -367,6 +400,7 @@ end]],
     )
     buttonRow:AddChild(savebutton)
     rightContainer:AddChild(buttonRow)
+    rightContainer:SetWidth(variablesframe.Width - 290)
 end
 
 function variablesframe.newVariable()

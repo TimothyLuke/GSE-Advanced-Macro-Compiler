@@ -731,3 +731,6 @@ L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out 
 L["Party"] = true
 L["Repeat"] = true
 L["How many times does this action repeat"] = true
+L[
+        "Create a new macro in the /macro interface then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it,"
+    ] = true

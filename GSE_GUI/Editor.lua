@@ -199,7 +199,7 @@ local function CreateSequencePanels(container, key)
                         rootDescription:CreateButton(
                             L["Export"],
                             function()
-                                GSE.GUIExportSequence(classid, sequencename)
+                                GSE.GUIExport(classid, sequencename, "SEQUENCE")
                             end
                         )
                         rootDescription:CreateButton(
