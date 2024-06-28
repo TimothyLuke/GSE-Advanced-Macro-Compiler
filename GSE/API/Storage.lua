@@ -880,11 +880,11 @@ function GSE.UpdateVariable(variable, name)
     end
 end
 
-function GSE.UpdateMacro(node)
+function GSE.UpdateMacro(node, category)
     if node.value then
         EditMacro(node.value, node.name, node.icon, node.text)
     else
-        node.value = CreateMacro(node.name, node.icon, node.text)
+        node.value = CreateMacro(node.name, node.icon, node.text, category)
     end
     return node
 end
@@ -898,7 +898,8 @@ function GSE.ImportMacro(node)
         source = GSEMacros[char .. "-" .. realm]
     end
     node.category = nil
-    source[node.name] = GSE.UpdateMacro(node)
+
+    source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.ManageMacros()
 end
 
