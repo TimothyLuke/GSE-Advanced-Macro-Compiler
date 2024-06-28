@@ -250,6 +250,7 @@ end]],
         "OnTextChanged",
         function(self, event, text)
             GSEVariables[text] = GSE.CloneSequence(GSEVariables[currentKey])
+            GSEVariables[text].name = text
             GSEVariables[currentKey] = nil
             currentKey = text
             label:SetText(text)

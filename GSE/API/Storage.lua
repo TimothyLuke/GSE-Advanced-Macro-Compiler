@@ -886,6 +886,20 @@ function GSE.UpdateMacro(node)
     else
         node.value = CreateMacro(node.name, node.icon, node.text)
     end
+    return node
+end
+
+function GSE.ImportMacro(node)
+    local characterMacro = false
+    local source = GSEMacros
+    if node.category == "p" then
+        characterMacro = true
+        local char, realm = UnitFullName("player")
+        source = GSEMacros[char .. "-" .. realm]
+    end
+    node.category = nil
+    source[node.name] = GSE.UpdateMacro(node)
+    GSE.ManageMacros()
 end
 
 function GSE.CompileMacroText(text, mode)

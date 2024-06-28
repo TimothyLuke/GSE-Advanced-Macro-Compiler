@@ -234,24 +234,49 @@ end
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, createicon)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
+    print(decompresssuccess, GSE.Dump(actiontable))
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
-    if
-        (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and
-            (type(actiontable[2]) == "table")
-     then
-        GSE.PrintDebugMessage(
-            string.format(
-                "tablerows: %s   type cell1 %s cell2 %s",
-                table.getn(actiontable),
-                type(actiontable[1]),
-                type(actiontable[2])
-            ),
-            Statics.SourceTransmission
-        )
-        local seqName = string.upper(actiontable[1])
-        GSE.AddSequenceToCollection(seqName, actiontable[2])
-        if createicon then
-            GSE.CheckMacroCreated(seqName, true)
+    if decompresssuccess then
+        if actiontable.objectType == "SEQUENCE" then
+            actiontable.objectType = nil
+            GSE.PrintDebugMessage(
+                string.format(
+                    "tablerows: %s   type cell1 %s cell2 %s",
+                    table.getn(actiontable),
+                    type(actiontable[1]),
+                    type(actiontable[2])
+                ),
+                Statics.SourceTransmission
+            )
+            local seqName = string.upper(actiontable[1])
+            GSE.AddSequenceToCollection(seqName, actiontable[2])
+            if createicon then
+                GSE.CheckMacroCreated(seqName, true)
+            end
+            if GSE.GUI and GSE.GUIEditFrame:IsShown() then
+                GSE.ShowSequences()
+            end
+            if GSE.GUI and GSE.GUIVariableFrame:IsShown() then
+                GSE.ShowVariables()
+            end
+            if GSE.GUI and GSE.GUIMacroFrame:IsShown() then
+                GSE.ShowMacros()
+            end
+        elseif actiontable.objectType == "MACRO" then
+            actiontable.objectType = nil
+            local oocaction = {
+                ["action"] = "importmacro",
+                ["node"] = actiontable
+            }
+            table.insert(GSE.OOCQueue, oocaction)
+        elseif actiontable.objectType == "VARIABLE" then
+            actiontable.objectType = nil
+            local oocaction = {
+                ["action"] = "updatevariable",
+                ["variable"] = actiontable,
+                ["name"] = actiontable.name
+            }
+            table.insert(GSE.OOCQueue, oocaction)
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)

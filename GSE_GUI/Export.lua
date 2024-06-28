@@ -129,18 +129,20 @@ local function CreateVariableExport(objectname, type)
 
   local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
   uncompressedVersion.objectType = type
+  uncompressedVersion.name = objectname
   exportsequencebox:SetText(GSE.EncodeMessage(uncompressedVersion))
 end
 
-local function CreateMacroExport(classid, objectname, type)
+local function CreateMacroExport(category, objectname, type)
   local source = GSEMacros
-  if classid == "p" then
+  if category == "p" then
     local char, realm = UnitFullName("player")
     source = GSEMacros[char .. "-" .. realm]
   end
   local exportobject = GSE.CloneSequence(source[objectname])
   exportobject.objectType = type
-  local exportstring = GSE.EncodeMessage(source[objectname])
+  exportobject.category = category
+  local exportstring = GSE.EncodeMessage(exportobject)
   exportframe:ReleaseChildren()
   exportsequencebox:SetLabel(L["Macro"])
   exportframe:AddChild(exportsequencebox)
