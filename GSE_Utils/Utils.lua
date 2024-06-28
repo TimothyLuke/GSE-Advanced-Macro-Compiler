@@ -237,7 +237,22 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
     print(decompresssuccess, GSE.Dump(actiontable))
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
     if decompresssuccess then
-        if actiontable.objectType == "SEQUENCE" then
+        if actiontable.objectType == "MACRO" then
+            actiontable.objectType = nil
+            local oocaction = {
+                ["action"] = "importmacro",
+                ["node"] = actiontable
+            }
+            table.insert(GSE.OOCQueue, oocaction)
+        elseif actiontable.objectType == "VARIABLE" then
+            actiontable.objectType = nil
+            local oocaction = {
+                ["action"] = "updatevariable",
+                ["variable"] = actiontable,
+                ["name"] = actiontable.name
+            }
+            table.insert(GSE.OOCQueue, oocaction)
+        else
             actiontable.objectType = nil
             GSE.PrintDebugMessage(
                 string.format(
@@ -262,21 +277,6 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
             if GSE.GUI and GSE.GUIMacroFrame:IsShown() then
                 GSE.ShowMacros()
             end
-        elseif actiontable.objectType == "MACRO" then
-            actiontable.objectType = nil
-            local oocaction = {
-                ["action"] = "importmacro",
-                ["node"] = actiontable
-            }
-            table.insert(GSE.OOCQueue, oocaction)
-        elseif actiontable.objectType == "VARIABLE" then
-            actiontable.objectType = nil
-            local oocaction = {
-                ["action"] = "updatevariable",
-                ["variable"] = actiontable,
-                ["name"] = actiontable.name
-            }
-            table.insert(GSE.OOCQueue, oocaction)
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)
