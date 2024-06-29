@@ -982,8 +982,10 @@ function GSE.ManageMacros()
             end
         end
     end
-    if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
-        GSE.ShowMacros()
+    if GSE.GUI and GSE.GUIMacroFrame then
+        if GSE.GUIMacroFrame:IsVisible() then
+            GSE.ShowMacros()
+        end
     end
 end
 
