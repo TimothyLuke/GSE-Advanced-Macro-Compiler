@@ -443,13 +443,13 @@ local function buildMacroHeader(node)
                 MenuUtil.CreateContextMenu(
                     selpanel,
                     function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Sequence Editor"])
+                        rootDescription:CreateTitle(L["Manage Macros"])
                         rootDescription:CreateButton(
                             L["New"],
                             function()
                                 GSE.Print(
                                     L[
-                                        "Create a new macro in the /macro interface then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it,"
+                                        "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
                                     ],
                                     L["Manage Macro"]
                                 )

@@ -732,5 +732,5 @@ L["Party"] = true
 L["Repeat"] = true
 L["How many times does this action repeat"] = true
 L[
-        "Create a new macro in the /macro interface then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it,"
+        "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
     ] = true
