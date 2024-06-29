@@ -312,16 +312,12 @@ L[" was updated to new version."] = true
 L["Sequence Name %s is in Use. Please choose a different name."] = true
 L["Timewalking"] = true
 L["Mythic+"] = true
-L["Format export for WLM Forums"] = true
+L["Create Human Readable Export"] = true
 
 -- GSE 2.3.02
 L["Rename New Macro"] = true
 L[" was imported as a new macro."] = true
 L["New Sequence Name"] = true
-
--- GSE 2.3.04
-L["Use WLM Export Sequence Format"] = true
-L["When exporting a sequence create a stub entry to import for WLM's Website."] = true
 
 -- GSE 2.3.09
 L["Mythic+ setting changed to Default."] = true
@@ -734,3 +730,6 @@ L["How many times does this action repeat"] = true
 L[
         "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
     ] = true
+L["Use WLM Export Sequence Format"] = true
+L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
+L["Create Human Readable Exports"] = true

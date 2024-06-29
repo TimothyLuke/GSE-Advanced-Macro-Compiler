@@ -172,8 +172,8 @@ function GSE.GetOptionsTable()
                         order = 320
                     },
                     UseVerboseExportFormat = {
-                        name = L["Use WLM Export Sequence Format"],
-                        desc = L["When exporting a sequence create a stub entry to import for WLM's Website."],
+                        name = L["Create Human Readable Exports"],
+                        desc = L["When exporting from GSE create a descriptive export for Discord/Discource forums."],
                         --            guiHidden = true,
                         type = "toggle",
                         set = function(info, val)
