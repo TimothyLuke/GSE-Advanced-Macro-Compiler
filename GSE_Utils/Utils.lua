@@ -268,13 +268,13 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
             if createicon then
                 GSE.CheckMacroCreated(seqName, true)
             end
-            if GSE.GUI and GSE.GUIEditFrame:IsShown() then
+            if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
                 GSE.ShowSequences()
             end
-            if GSE.GUI and GSE.GUIVariableFrame:IsShown() then
+            if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
                 GSE.ShowVariables()
             end
-            if GSE.GUI and GSE.GUIMacroFrame:IsShown() then
+            if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
                 GSE.ShowMacros()
             end
         end

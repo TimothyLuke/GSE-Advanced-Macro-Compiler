@@ -200,6 +200,7 @@ function GSE:ADDON_LOADED(event, addon)
                 hide = true
             }
         end
+        GSE:RegisterEvent("UPDATE_MACROS")
         GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
     end
 end
@@ -336,6 +337,10 @@ end
 function GSE:GUILD_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck("GUILD")
+end
+
+function GSE:UPDATE_MACROS()
+    GSE.ManageMacros()
 end
 
 GSE:RegisterEvent("GROUP_ROSTER_UPDATE")

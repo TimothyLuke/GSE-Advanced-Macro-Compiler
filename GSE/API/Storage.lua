@@ -881,11 +881,13 @@ function GSE.UpdateVariable(variable, name)
 end
 
 function GSE.UpdateMacro(node, category)
+    GSE:UnregisterEvent("UPDATE_MACROS")
     if node.value then
         EditMacro(node.value, node.name, node.icon, node.text)
     else
         node.value = CreateMacro(node.name, node.icon, node.text, category)
     end
+    GSE:RegisterEvent("UPDATE_MACROS")
     return node
 end
 
@@ -938,14 +940,20 @@ end
 
 function GSE.ManageMacros()
     for k, v in pairs(GSEMacros) do
-        if v.Managed then
-            local node = {
-                ["name"] = k,
-                ["value"] = v.value,
-                ["icon"] = v.icon,
-                ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
-            }
-            GSE.UpdateMacro(node)
+        local macroIndex = GetMacroIndexByName(k)
+        if macroIndex then
+            if v.Managed then
+                local node = {
+                    ["name"] = k,
+                    ["value"] = v.value,
+                    ["icon"] = v.icon,
+                    ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
+                }
+                GSE.UpdateMacro(node)
+            end
+        else
+            -- macro has been deleted
+            GSEMacros[k] = nil
         end
     end
     local char, realm = UnitFullName("player")
@@ -955,19 +963,27 @@ function GSE.ManageMacros()
 
     if GSEMacros[char .. "-" .. realm] then
         for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
-            if v.Managed then
-                local node = {
-                    ["name"] = k,
-                    ["value"] = v.value,
-                    ["icon"] = v.icon,
-                    ["text"] = GSE.CompileMacroText(
-                        (v.managedMacro and v.managedMacro or v.text),
-                        Statics.TranslatorMode.String
-                    )
-                }
-                GSE.UpdateMacro(node)
+            local macroIndex = GetMacroIndexByName(k)
+            if macroIndex then
+                if v.Managed then
+                    local node = {
+                        ["name"] = k,
+                        ["value"] = v.value,
+                        ["icon"] = v.icon,
+                        ["text"] = GSE.CompileMacroText(
+                            (v.managedMacro and v.managedMacro or v.text),
+                            Statics.TranslatorMode.String
+                        )
+                    }
+                    GSE.UpdateMacro(node)
+                end
+            else
+                GSEMacros[char .. "-" .. realm][k] = nil
             end
         end
+    end
+    if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
+        GSE.ShowMacros()
     end
 end
 
