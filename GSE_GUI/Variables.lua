@@ -200,7 +200,7 @@ local function listVariables()
     importButton:SetCallback(
         "OnClick",
         function()
-            variablesframe.newVariable()
+            GSE.GUIImportFrame:Show()
         end
     )
 
@@ -426,7 +426,7 @@ leftscroll.frame:SetScript(
                     rootDescription:CreateButton(
                         L["Import"],
                         function()
-                            print("Coming Soon")
+                            GSE.GUIImportFrame:Show()
                         end
                     )
                 end

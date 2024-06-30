@@ -773,7 +773,7 @@ end
 
 local function PCallCreateGSE3Button(spelllist, name, combatReset)
     if GSE.isEmpty(spelllist) then
-        print("Macro missing for ", name)
+        GSE.Print("Macro missing for " .. name)
         return
     end
     if GSE.isEmpty(combatReset) then
@@ -903,6 +903,11 @@ function GSE.ImportMacro(node)
 
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.ManageMacros()
+    if GSE.GUI and GSE.GUIMacroFrame then
+        if GSE.GUIMacroFrame:IsVisible() then
+            GSE.ShowMacros()
+        end
+    end
 end
 
 function GSE.CompileMacroText(text, mode)

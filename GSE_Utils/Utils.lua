@@ -234,7 +234,6 @@ end
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, createicon)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
-    print(decompresssuccess, GSE.Dump(actiontable))
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
     if decompresssuccess then
         if actiontable.objectType == "MACRO" then

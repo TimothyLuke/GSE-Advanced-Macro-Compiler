@@ -1,5 +1,5 @@
 local GSE = GSE
-
+local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 local libS = LibStub:GetLibrary("AceSerializer-3.0")
@@ -142,6 +142,13 @@ local function CreateMacroExport(category, objectname, type)
   local exportobject = GSE.CloneSequence(source[objectname])
   exportobject.objectType = type
   exportobject.category = category
+  exportobject.name = objectname
+  if GSE.isEmpty(exportobject.managedMacro) then
+    local _, micon, mbody = GetMacroInfo(objectname)
+    exportobject.icon = micon
+    exportobject.text = mbody
+    exportobject.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+  end
   local exportstring = GSE.EncodeMessage(exportobject)
   exportframe:ReleaseChildren()
   exportsequencebox:SetLabel(L["Macro"])
