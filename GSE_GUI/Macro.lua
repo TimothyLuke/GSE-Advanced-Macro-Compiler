@@ -422,7 +422,7 @@ local function showMacro(node)
         macro:SetLabel(L["Macro"])
         macro:SetText(node.text)
         macro:SetNumLines(8)
-        macro:SetWidth(macroframe.Width - 200)
+        macro:SetFullWidth(true)
         macro:SetCallback(
             "OnEnterPressed",
             function(self, _, text)
@@ -574,6 +574,13 @@ local function buildMacroMenu()
                 leftscroll:AddChild(sectionheader)
                 leftscroll:AddChild(AceGUI:Create("Spacer"))
                 accountlabelflag = true
+                if GSE.isEmpty(GSEMacros[mname]) then
+                    GSEMacros[mname] = {}
+                end
+                GSEMacros[mname].name = mname
+                GSEMacros[mname].value = macid
+                GSEMacros[mname].text = mtext
+                GSEMacros[mname].icon = micon
             elseif macid > MAX_ACCOUNT_MACROS and personallabelflag == false then
                 if accountlabelflag then
                     leftscroll:AddChild(AceGUI:Create("Spacer"))
@@ -585,6 +592,17 @@ local function buildMacroMenu()
                 leftscroll:AddChild(sectionheader)
                 leftscroll:AddChild(AceGUI:Create("Spacer"))
                 personallabelflag = true
+                local char, realm = UnitFullName("player")
+                if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+                    GSEMacros[char .. "-" .. realm] = {}
+                end
+                if GSE.isEmpty(GSEMacros[char .. "-" .. realm][mname]) then
+                    GSEMacros[char .. "-" .. realm][mname] = {}
+                end
+                GSEMacros[char .. "-" .. realm][mname].name = mname
+                GSEMacros[char .. "-" .. realm][mname].value = macid
+                GSEMacros[char .. "-" .. realm][mname].text = mtext
+                GSEMacros[char .. "-" .. realm][mname].icon = micon
             end
 
             buildMacroHeader(
