@@ -262,11 +262,11 @@ end
 function GSE.DecodeTimeStamp(stamp)
     local tab = {}
     tab.year = stamp:sub(1, 4)
-    tab.month = stamp:sub(5, 2)
-    tab.day = stamp:sub(7, 2)
-    tab.hour = stamp:sub(9, 2)
-    tab.hour = stamp:sub(11, 2)
-    tab.sec = stamp:sub(13, 2)
+    tab.month = stamp:sub(5, 6)
+    tab.day = stamp:sub(7, 8)
+    tab.hour = stamp:sub(9, 10)
+    tab.minute = stamp:sub(11, 12)
+    tab.sec = stamp:sub(13, 14)
     return tab
 end
 

@@ -734,3 +734,5 @@ L["Use WLM Export Sequence Format"] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
 L["Manage Macros"] = true
+L["The author of this Variable."] = true
+L["Last Updated"] = true

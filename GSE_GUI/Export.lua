@@ -127,10 +127,38 @@ local function CreateVariableExport(objectname, type)
   exportsequencebox:SetLabel(L["Variable"])
   exportframe:AddChild(exportsequencebox)
 
-  local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
-  uncompressedVersion.objectType = type
-  uncompressedVersion.name = objectname
-  exportsequencebox:SetText(GSE.EncodeMessage(uncompressedVersion))
+  local humanexportcheckbox = AceGUI:Create("CheckBox")
+  humanexportcheckbox:SetType("checkbox")
+
+  humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
+  exportframe:AddChild(humanexportcheckbox)
+
+  humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+
+  local function GUIUpdateExportBox()
+    local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
+    uncompressedVersion.objectType = type
+    uncompressedVersion.name = objectname
+    local exportString = GSE.EncodeMessage(uncompressedVersion)
+
+    if humanexportcheckbox:GetValue() then
+      local exporttext =
+        "#" ..
+        objectname ..
+          "```\n#" .. exportString .. "\n```\n\n## Usage Information\n" .. uncompressedVersion.comments .. "\n\n"
+
+      exportsequencebox:SetText(exporttext)
+    else
+      exportsequencebox:SetText(exportString)
+    end
+  end
+  humanexportcheckbox:SetCallback(
+    "OnValueChanged",
+    function(sel, object, value)
+      GUIUpdateExportBox()
+    end
+  )
+  GUIUpdateExportBox()
 end
 
 local function CreateMacroExport(category, objectname, type)

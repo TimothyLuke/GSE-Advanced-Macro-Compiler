@@ -257,7 +257,35 @@ end]],
         end
     )
 
+    local authoreditbox = AceGUI:Create("EditBox")
+    authoreditbox:SetLabel(L["Author"])
+    authoreditbox:SetWidth(250)
+    authoreditbox:DisableButton(true)
+    authoreditbox:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(L["Author"], L["The author of this Variable."], editframe)
+        end
+    )
+    authoreditbox:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(variablesframe)
+        end
+    )
+    if not GSE.isEmpty(GSEVariables[name].Author) then
+        authoreditbox:SetText(GSEVariables[name].Author)
+    else
+        GSE.GetCharacterName()
+    end
+    authoreditbox:SetCallback(
+        "OnTextChanged",
+        function(obj, event, key)
+            GSEVariables[name].Author = key
+        end
+    )
     rightContainer:AddChild(keyEditBox)
+    rightContainer:AddChild(authoreditbox)
 
     local commentsEditBox = AceGUI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel(L["Help Information"])
@@ -268,7 +296,7 @@ end]],
     commentsEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            variable.funct = text
+            variable.comments = text
         end
     )
     commentsEditBox:SetCallback(
@@ -370,6 +398,18 @@ end]],
     spacer3:SetWidth(10)
     buttonRow:AddChild(spacer3)
 
+    local lastSaved = AceGUI:Create("Label")
+    if variable.LastUpdated then
+        print(variable.LastUpdated)
+        local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+        lastSaved:SetText(
+            L["Last Updated"] ..
+                " " ..
+                    updated.month ..
+                        "/" .. updated.day .. "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
+        )
+    end
+
     local savebutton = AceGUI:Create("Button")
     savebutton:SetText(L["Save"])
     savebutton:SetWidth(150)
@@ -377,13 +417,19 @@ end]],
         "OnClick",
         function()
             variable.LastUpdated = GSE.GetTimestamp()
-
+            local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
             local oocaction = {
                 ["action"] = "updatevariable",
                 ["variable"] = variable,
                 ["name"] = keyEditBox:GetText()
             }
             table.insert(GSE.OOCQueue, oocaction)
+            lastSaved:SetText(
+                L["Last Updated"] ..
+                    " " ..
+                        updated.month ..
+                            "/" .. updated.day .. "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
+            )
         end
     )
 
@@ -401,6 +447,7 @@ end]],
     )
     buttonRow:AddChild(savebutton)
     rightContainer:AddChild(buttonRow)
+    rightContainer:AddChild(lastSaved)
     rightContainer:SetWidth(variablesframe.Width - 290)
 end
 
