@@ -410,7 +410,12 @@ local function showMacro(node)
                 source[node.name][k] = v
             end
             source[node.name].managedMacro =
-                (source[node.name].managedMacro and source[node.name].managedMacro or node.text)
+                GSE.TranslateString(
+                (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
+                Statics.TranslatorMode.ID
+            )
+            source[node.name].text =
+                GSE.UnEscapeString(GSE.TranslateString(source[node.name].managedMacro, Statics.TranslatorMode.Current))
             showMacro(node)
         end
     )

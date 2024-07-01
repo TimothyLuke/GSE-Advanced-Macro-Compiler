@@ -710,7 +710,7 @@ L[
 L["Import Macro from Forums"] = true
 L["Gnome Sequencer Enhanced"] = true
 L["GSE: Record your rotation to a macro."] = true
-L["GSE: Export a Sequence String."] = true
+L["GSE: Export"] = true
 L["Print Active Modifiers on Click"] = true
 L["Store output of debug messages in a Global Variable that can be referrenced by other mods."] = true
 L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"] = true
