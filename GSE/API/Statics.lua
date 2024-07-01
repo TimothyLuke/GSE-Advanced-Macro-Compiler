@@ -16,7 +16,25 @@ Statics.CastCmds = {
     toy = true
 }
 
-Statics.MacroCommands = {"petattack", "dismount", "shoot", "startattack", "stopattack", "targetenemy"}
+Statics.MacroCommands = {
+    "petattack",
+    "dismount",
+    "shoot",
+    "startattack",
+    "stopattack",
+    "targetenemy",
+    "click",
+    "castrandom",
+    "cancelqueuedspell",
+    "cqs",
+    "assist",
+    "clearfocus",
+    "cleartarget",
+    "focus",
+    "target",
+    "targetfriend",
+    "targetlasttarget"
+}
 
 Statics.CleanStrings = {
     [1] = "/console Sound_EnableSFX 0%;",
