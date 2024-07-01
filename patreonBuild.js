@@ -47,8 +47,8 @@ function updateToc(path, filename, done) {
 }
 
 function addExtras(done) {
-  const srcDir = `./GSE2`;
-  const destDir = `./.release/GSE2`;
+  const srcDir = `./GSE_QoL`;
+  const destDir = `./.release/GSE_QoL`;
 
   fs.cpSync(srcDir, destDir, { recursive: true });
   return done();
