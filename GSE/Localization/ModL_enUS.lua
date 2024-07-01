@@ -736,3 +736,4 @@ L["Create Human Readable Exports"] = true
 L["Manage Macros"] = true
 L["The author of this Variable."] = true
 L["Last Updated"] = true
+L["The author of this Macro."] = true

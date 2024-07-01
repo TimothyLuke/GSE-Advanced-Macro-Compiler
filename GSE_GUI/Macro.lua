@@ -131,7 +131,7 @@ local function showMacro(node)
     manageGSE:SetTriState(false)
 
     if GSE.isEmpty(source[node.name]) then
-        source[node.name] = {}
+        source[node.name] = node
         manageGSE:SetValue(false)
     else
         if GSE.isEmpty(source[node.name].Managed) then
@@ -239,6 +239,58 @@ local function showMacro(node)
     font:SetJustifyV("MIDDLE")
 
     if managed then
+        local authoreditbox = AceGUI:Create("EditBox")
+        authoreditbox:SetLabel(L["Author"])
+        authoreditbox:SetWidth(250)
+        authoreditbox:DisableButton(true)
+        authoreditbox:SetCallback(
+            "OnEnter",
+            function()
+                GSE.CreateToolTip(L["Author"], L["The author of this Macro."], macroframe)
+            end
+        )
+        authoreditbox:SetCallback(
+            "OnLeave",
+            function()
+                GSE.ClearTooltip(macroframe)
+            end
+        )
+        if not GSE.isEmpty(node.Author) then
+            authoreditbox:SetText(node.Author)
+        else
+            authoreditbox:SetText(GSE.GetCharacterName())
+        end
+        authoreditbox:SetCallback(
+            "OnTextChanged",
+            function(obj, event, key)
+                node.Author = key
+                source[node.name].Author = key
+            end
+        )
+        rightContainer:AddChild(authoreditbox)
+        local commentsEditBox = AceGUI:Create("MultiLineEditBox")
+        commentsEditBox:SetLabel(L["Help Information"])
+        commentsEditBox:SetNumLines(3)
+        commentsEditBox:SetFullWidth(true)
+        commentsEditBox:DisableButton(true)
+        if source[node.name].comments then
+            commentsEditBox:SetText(source[node.name].comments)
+        end
+        commentsEditBox:SetCallback(
+            "OnTextChanged",
+            function(self, event, text)
+                source[node.name].comments = text
+            end
+        )
+        commentsEditBox:SetCallback(
+            "OnEditFocusLost",
+            function()
+                source[node.name].comments = commentsEditBox:GetText()
+            end
+        )
+
+        rightContainer:AddChild(commentsEditBox)
+
         local managedMacro = AceGUI:Create("MultiLineEditBox")
         managedMacro:SetLabel(L["Macro Template"])
         local managedtext =
@@ -249,7 +301,7 @@ local function showMacro(node)
             ) or
             node.text)
         managedMacro:SetText(managedtext)
-        managedMacro:SetNumLines(5)
+        managedMacro:SetNumLines(8)
         -- managedMacro:SetWidth(macroframe.Width - 200)
         managedMacro:SetFullWidth(true)
 
@@ -369,7 +421,7 @@ local function showMacro(node)
         local macro = AceGUI:Create("MultiLineEditBox")
         macro:SetLabel(L["Macro"])
         macro:SetText(node.text)
-        macro:SetNumLines(5)
+        macro:SetNumLines(8)
         macro:SetWidth(macroframe.Width - 200)
         macro:SetCallback(
             "OnEnterPressed",

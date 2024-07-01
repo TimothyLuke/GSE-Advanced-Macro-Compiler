@@ -176,11 +176,36 @@ local function CreateMacroExport(category, objectname, type)
         exportobject.text = mbody
         exportobject.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
     end
-    local exportstring = GSE.EncodeMessage(exportobject)
+    local humanexportcheckbox = AceGUI:Create("CheckBox")
+    humanexportcheckbox:SetType("checkbox")
+    humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
+
+    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+
     exportframe:ReleaseChildren()
     exportsequencebox:SetLabel(L["Macro"])
     exportframe:AddChild(exportsequencebox)
-    exportsequencebox:SetText(exportstring)
+    exportframe:AddChild(humanexportcheckbox)
+
+    local exportstring = GSE.EncodeMessage(exportobject)
+    local function GUIUpdateExportBox()
+        if humanexportcheckbox:GetValue() then
+            local exporttext = "# " .. objectname .. " (" .. L["Macro"] .. ") \n```\n" .. exportstring .. "\n```"
+            if exportobject.comments then
+                exporttext = exporttext .. "\n\n## Usage Information\n" .. exportobject.comments .. "\n\n"
+            end
+            exportsequencebox:SetText(exporttext)
+        else
+            exportsequencebox:SetText(exportstring)
+        end
+    end
+    GUIUpdateExportBox()
+    humanexportcheckbox:SetCallback(
+        "OnValueChanged",
+        function(sel, object, value)
+            GUIUpdateExportBox()
+        end
+    )
 end
 
 function GSE.GUIExport(category, objectname, type)
