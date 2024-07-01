@@ -264,7 +264,7 @@ end]],
     authoreditbox:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(L["Author"], L["The author of this Variable."], editframe)
+            GSE.CreateToolTip(L["Author"], L["The author of this Variable."], variablesframe)
         end
     )
     authoreditbox:SetCallback(
@@ -273,15 +273,15 @@ end]],
             GSE.ClearTooltip(variablesframe)
         end
     )
-    if not GSE.isEmpty(GSEVariables[name].Author) then
-        authoreditbox:SetText(GSEVariables[name].Author)
+    if not GSE.isEmpty(variable.Author) then
+        authoreditbox:SetText(variable.Author)
     else
-        GSE.GetCharacterName()
+        authoreditbox:SetText(GSE.GetCharacterName())
     end
     authoreditbox:SetCallback(
         "OnTextChanged",
         function(obj, event, key)
-            GSEVariables[name].Author = key
+            variable.Author = key
         end
     )
     rightContainer:AddChild(keyEditBox)
@@ -400,7 +400,6 @@ end]],
 
     local lastSaved = AceGUI:Create("Label")
     if variable.LastUpdated then
-        print(variable.LastUpdated)
         local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
         lastSaved:SetText(
             L["Last Updated"] ..
@@ -418,6 +417,7 @@ end]],
         function()
             variable.LastUpdated = GSE.GetTimestamp()
             local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+
             local oocaction = {
                 ["action"] = "updatevariable",
                 ["variable"] = variable,
