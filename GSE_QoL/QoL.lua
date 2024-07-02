@@ -4,33 +4,35 @@ local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
-
+-- local Completing = LibStub("AceGUI-3.0-Spell-EditBox")
 GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
-    -- local playerSpells = {}
+    local playerSpells = {}
 
     -- local function spellFilter(self, spellID)
     --     return playerSpells[spellID]
     -- end
 
-    -- local function loadPlayerSpells(self)
-    --     table.wipe(playerSpells)
+    local function loadPlayerSpells()
+        table.wipe(playerSpells)
 
-    --     for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
-    --         print(GSE.Dump(C_SpellBook.GetSpellBookSkillLineInfo(tab)))
-    --         local offset = C_SpellBook.GetSpellBookSkillLineInfo(tab).itemIndexOffset
-    --         for i = 1, offset do
-    --             print(i)
-    --             print(GSE.Dump(C_SpellBook.GetSpellBookItemDescription(i, 0)))
+        for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
+            local lineinfo = C_SpellBook.GetSpellBookSkillLineInfo(tab)
+            local offset = lineinfo.itemIndexOffset
 
-    --             self.tooltip:SetSpell(i + offset, tab)
+            for i = 0, lineinfo.numSpellBookItems do
+                local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
 
-    --             local spellName, _, spellID = self.tooltip:GetSpell()
-    --             if (spellName) then
-    --                 playerSpells[spellID] = true
-    --             end
-    --         end
-    --     end
-    -- end
+                local spellName = spellinfo.name
+                --local spellID = spellinfo.spellID
+                local offspec = spellinfo.isOffSpec
+                local passive = spellinfo.isPassive
+                if not passive and not offspec and spellName then
+                    table.insert(playerSpells, spellName)
+                end
+            end
+        end
+        table.sort(playerSpells)
+    end
 
     if GSE.isEmpty(action.type) then
         action.type = "spell"
@@ -42,8 +44,8 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
     spellEditBox:SetWidth(250)
     spellEditBox:DisableButton(true)
 
-    -- loadPlayerSpells(spellEditBox)
-    -- print(GSE.Dump(playerSpells))
+    loadPlayerSpells()
+
     if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
         sequence.Macros[version].Actions[keyPath].type = "spell"
     end
@@ -120,6 +122,65 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
         function()
         end
     )
+
+    if GSE.Patron then
+        spellEditBox.editbox:SetScript(
+            "OnTabPressed",
+            function(widget, button, down)
+                -- if button == "RightButton" then
+                MenuUtil.CreateContextMenu(
+                    spellEditBox,
+                    function(ownerRegion, rootDescription)
+                        rootDescription:CreateTitle(L["Insert Spell"])
+                        for _, v in pairs(playerSpells) do
+                            rootDescription:CreateButton(
+                                v,
+                                function()
+                                    spellEditBox:SetText(v)
+                                end
+                            )
+                        end
+
+                        rootDescription:CreateTitle(L["Insert GSE Variable"])
+                        for k, _ in pairs(GSEVariables) do
+                            rootDescription:CreateButton(
+                                k,
+                                function()
+                                    spellEditBox:SetText("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                                end
+                            )
+                        end
+                        -- rootDescription:CreateTitle(L["Insert GSE Sequence"])
+                        -- for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+                        --     rootDescription:CreateButton(
+                        --         k,
+                        --         function()
+                        --             if GSE.GetMacroStringFormat() == "DOWN" then
+                        --                 spellEditBox.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
+                        --             else
+                        --                 spellEditBox.editBox:Insert("\n/click " .. k)
+                        --             end
+                        --         end
+                        --     )
+                        -- end
+                        -- for k, _ in pairs(GSE3Storage[0]) do
+                        --     rootDescription:CreateButton(
+                        --         k,
+                        --         function()
+                        --             if GSE.GetMacroStringFormat() == "DOWN" then
+                        --                 spellEditBox.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
+                        --             else
+                        --                 spellEditBox.editBox:Insert("\n/click " .. k)
+                        --             end
+                        --         end
+                        --     )
+                        -- end
+                    end
+                )
+                -- end
+            end
+        )
+    end
 
     return spellEditBox
 end
