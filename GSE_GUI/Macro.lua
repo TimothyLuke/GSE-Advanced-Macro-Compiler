@@ -336,6 +336,7 @@ local function showMacro(node)
         managedMacro:SetCallback(
             "OnTextChanged",
             function(self, _, text)
+                GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. node.name)
                 source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
                 local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
                 compiledMacro:SetText(compiled)
@@ -426,10 +427,12 @@ local function showMacro(node)
         macro:SetCallback(
             "OnEnterPressed",
             function(self, _, text)
+                GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. node.name)
                 node.text = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
                 local oocaction = {
                     ["action"] = "updatemacro",
-                    ["node"] = node
+                    ["node"] = node,
+                    ["status"] = GSE.GUIEditFrame:SetStatusText()
                 }
                 table.insert(GSE.OOCQueue, oocaction)
             end

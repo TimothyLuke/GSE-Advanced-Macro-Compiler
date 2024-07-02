@@ -55,6 +55,11 @@ end
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
+    if GSE.GUI and GSE.GUIEditFrame then
+        if GSE.GUIEditFrame:IsVisible() then
+            GSE.GUIEditFrame:SetStatusText(sequenceName .. " " .. L["Saved"])
+        end
+    end
 end
 
 --- Load the GSEStorage into a new table.
@@ -266,6 +271,13 @@ function GSE.OOCUpdateSequence(name, sequence)
         )
     end
     GSE.CreateGSE3Button(compiledTemplate, name, combatReset)
+    if GSE.GUI and not GSE.isEmpty(GSE.GUIEditFrame) then
+        if not GSE.isEmpty(GSE.GUIEditFrame.IsVisible) then
+            if GSE.GUIEditFrame:IsVisible() then
+                GSE.GUIEditFrame:SetStatusText(name .. " " .. L["Saved"])
+            end
+        end
+    end
 end
 
 --- Return whether to store the macro in Personal Character Macros or Account Macros
@@ -871,12 +883,17 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
     end
 end
 
-function GSE.UpdateVariable(variable, name)
+function GSE.UpdateVariable(variable, name, status)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
     GSE.V[name] = loadstring(variable.funct)
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["name"] = true
+    end
+    if GSE.GUI and GSE.GUIVariableFrame then
+        if GSE.GUIVariableFrame:IsVisible() then
+            GSE.GUIVariableFrame:SetStatusText(name .. " " .. L["Saved"])
+        end
     end
 end
 
@@ -888,6 +905,11 @@ function GSE.UpdateMacro(node, category)
         node.value = CreateMacro(node.name, node.icon, node.text, category)
     end
     GSE:RegisterEvent("UPDATE_MACROS")
+    if GSE.GUI and GSE.GUIMacroFrame then
+        if GSE.GUIMacroFrame:IsVisible() then
+            GSE.GUIMacroFrame:SetStatusText(node.name .. " " .. L["Saved"])
+        end
+    end
     return node
 end
 

@@ -568,6 +568,7 @@ function GSE.GUIEditorPerformLayout(frame)
         "OnClick",
         function()
             if GSE.isEmpty(editframe.invalidPause) then
+                GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. nameeditbox:GetText())
                 local _, _, _, tocversion = GetBuildInfo()
                 editframe.Sequence.MetaData.ManualIntervention = true
                 editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
@@ -577,12 +578,6 @@ function GSE.GUIEditorPerformLayout(frame)
                 editframe.SequenceName = GSE.UnEscapeString(nameeditbox:GetText())
                 GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
                 editframe.save = true
-                C_Timer.After(
-                    5,
-                    function()
-                        GSE.GUIEditFrame:SetStatusText(editframe.statusText)
-                    end
-                )
             else
                 GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "ERROR")
             end

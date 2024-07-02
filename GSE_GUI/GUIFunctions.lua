@@ -135,7 +135,7 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
         GSE.GUIEditFrame.NewSequence = false
       end
       table.insert(GSE.OOCQueue, vals)
-      GSE.GUIEditFrame:SetStatusText(string.format(L["Sequence %s saved."], SequenceName))
+      GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. SequenceName)
     end
   end
 end

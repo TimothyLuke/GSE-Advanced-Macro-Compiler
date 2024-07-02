@@ -164,7 +164,6 @@ L["Language"] = true
 L["Author"] = true
 L["Combat"] = true
 L["Resets"] = true
-L["Sequence %s saved."] = true
 L["This is the only version of this macro.  Delete the entire macro to delete this version."] = true
 L[
         "You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."
@@ -737,3 +736,5 @@ L["Manage Macros"] = true
 L["The author of this Variable."] = true
 L["Last Updated"] = true
 L["The author of this Macro."] = true
+L["Saved"] = true
+L["Save pending for "] = true

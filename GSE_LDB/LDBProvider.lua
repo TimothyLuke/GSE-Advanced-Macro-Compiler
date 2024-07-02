@@ -50,7 +50,7 @@ local function CheckOOCQueueStatus()
 end
 
 local function prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
-  tooltip:SetCell(row, 1, L[OOCEvent.action], "LEFT", 1)
+  tooltip:SetCell(row, 1, OOCEvent.action, "LEFT", 1)
   if OOCEvent.action == "UpdateSequence" then
     tooltip:SetCell(row, 3, OOCEvent.name, "RIGHT", 1)
   elseif OOCEvent.action == "Save" then

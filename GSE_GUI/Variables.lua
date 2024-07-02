@@ -415,6 +415,7 @@ end]],
     savebutton:SetCallback(
         "OnClick",
         function()
+            variablesframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
             variable.LastUpdated = GSE.GetTimestamp()
             local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
 

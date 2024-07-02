@@ -167,9 +167,6 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
         "Storage"
     )
-    if GSE.GUI then
-        GSE.ShowSequences()
-    end
 end
 
 --- Load a collection of Sequences
