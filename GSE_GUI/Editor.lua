@@ -2234,7 +2234,11 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
         elseif action.item then
             spelltext = action.item
         elseif action.macro then
-            spelltext = action.macro
+            if string.sub(action.macro, 1, 1) == "/" then
+                spelltext = GSE.TranslateString(action.macro, Statics.TranslatorMode.Current)
+            else
+                spelltext = action.macro
+            end
         elseif action.action then
             spelltext = action.action
         else
@@ -2258,7 +2262,12 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
                     sequence.Macros[version].Actions[keyPath].item = nil
                     sequence.Macros[version].Actions[keyPath].toy = nil
                 elseif sequence.Macros[version].Actions[keyPath].type == "macro" then
-                    sequence.Macros[version].Actions[keyPath].macro = value
+                    if string.sub(value, 1, 1) == "/" then
+                        sequence.Macros[version].Actions[keyPath].macro =
+                            GSE.TranslateString(value, Statics.TranslatorMode.Current)
+                    else
+                        sequence.Macros[version].Actions[keyPath].macro = value
+                    end
                     sequence.Macros[version].Actions[keyPath].spell = nil
                     sequence.Macros[version].Actions[keyPath].action = nil
                     sequence.Macros[version].Actions[keyPath].item = nil
