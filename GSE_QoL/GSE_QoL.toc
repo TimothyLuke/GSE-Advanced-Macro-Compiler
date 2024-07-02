@@ -1,11 +1,10 @@
 ## Interface: 110000
 
-## Title: |cff0000ffGSE:|r |cFF00D1FFGSE2 QoL|r
+## Title: |cff0000ffGSE:|r |cFF00D1FFGSE QoL|r
 ## Notes: GSE Quality of Life
 ## Author: TimothyLuke
 ## Version: @project-version@
-## Dependencies: GSE GSE_GUI
-## LoadOnDemand: 1
-
+## Dependencies: GSE_Utils
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 QoL.lua

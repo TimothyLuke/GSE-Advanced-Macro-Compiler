@@ -4,15 +4,46 @@ local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
-local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
 
 GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
+    -- local playerSpells = {}
+
+    -- local function spellFilter(self, spellID)
+    --     return playerSpells[spellID]
+    -- end
+
+    -- local function loadPlayerSpells(self)
+    --     table.wipe(playerSpells)
+
+    --     for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
+    --         print(GSE.Dump(C_SpellBook.GetSpellBookSkillLineInfo(tab)))
+    --         local offset = C_SpellBook.GetSpellBookSkillLineInfo(tab).itemIndexOffset
+    --         for i = 1, offset do
+    --             print(i)
+    --             print(GSE.Dump(C_SpellBook.GetSpellBookItemDescription(i, 0)))
+
+    --             self.tooltip:SetSpell(i + offset, tab)
+
+    --             local spellName, _, spellID = self.tooltip:GetSpell()
+    --             if (spellName) then
+    --                 playerSpells[spellID] = true
+    --             end
+    --         end
+    --     end
+    -- end
+
+    if GSE.isEmpty(action.type) then
+        action.type = "spell"
+    end
+
     local spellEditBox = AceGUI:Create("EditBox")
     spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 
     spellEditBox:SetWidth(250)
     spellEditBox:DisableButton(true)
 
+    -- loadPlayerSpells(spellEditBox)
+    -- print(GSE.Dump(playerSpells))
     if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
         sequence.Macros[version].Actions[keyPath].type = "spell"
     end
