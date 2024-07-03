@@ -18,6 +18,7 @@ function getData(path, params, done) {
       url,
       headers: {
         Authorization: "Bearer " + creator_access_token,
+        "User-Agent": "PostmanRuntime/7.39.0",
       },
     },
     (err, result, body) => {
