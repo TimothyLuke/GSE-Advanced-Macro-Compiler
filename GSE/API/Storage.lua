@@ -587,7 +587,7 @@ local function buildAction(action, metaData, variables)
                 if k == "spell" then
                     spelllist[k] = GSE.GetSpellId(value, Statics.TranslatorMode.String)
                 elseif k == "macro" then
-                    if string.sub(v, 1, 1) == "/" then
+                    if string.sub(GSE.UnEscapeString(v), 1, 1) == "/" then
                         -- we have a line of macrotext
                         spelllist["macrotext"] =
                             GSE.UnEscapeString(GSE.TranslateString(v, Statics.TranslatorMode.String))

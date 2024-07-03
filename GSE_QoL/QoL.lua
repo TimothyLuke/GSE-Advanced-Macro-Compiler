@@ -88,7 +88,7 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
                 sequence.Macros[version].Actions[keyPath].item = nil
                 sequence.Macros[version].Actions[keyPath].toy = nil
             elseif sequence.Macros[version].Actions[keyPath].type == "macro" then
-                if string.sub(value, 1, 1) == "/" then
+                if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
                     sequence.Macros[version].Actions[keyPath].macro =
                         GSE.TranslateString(value, Statics.TranslatorMode.Current)
                 else

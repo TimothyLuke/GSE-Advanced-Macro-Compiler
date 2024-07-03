@@ -2234,7 +2234,7 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
         elseif action.item then
             spelltext = action.item
         elseif action.macro then
-            if string.sub(action.macro, 1, 1) == "/" then
+            if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
                 spelltext = GSE.TranslateString(action.macro, Statics.TranslatorMode.Current)
             else
                 spelltext = action.macro
