@@ -5,7 +5,7 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 -- local Completing = LibStub("AceGUI-3.0-Spell-EditBox")
--- GSE.GUIExport(nil, nil, "ADVANCED")
+-- /run GSE.GUIExport(nil, nil, "ADVANCED")
 GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
     local playerSpells = {}
 
@@ -196,7 +196,43 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
 end
 
 local function compileExport(exportTable, humanReadable)
-    return GSE.Dump(exportTable)
+    local exportstring =
+        GSE.EncodeMessage(
+        {
+            type = "COLLECTION",
+            payload = exportTable
+        }
+    )
+
+    if humanReadable then
+        exportstring = "# UPDATE PACKAGE NAME \n ```\n" .. exportstring .. "\n```\n\n"
+        exportstring = exportstring .. "This package consists of " .. exportTable.ElementCount .. " elements.\n"
+
+        local sequenceString = ""
+        for k, _ in pairs(exportTable.Sequences) do
+            sequenceString = sequenceString .. "- " .. k .. "\n"
+        end
+        if string.len(sequenceString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Sequences"] .. "\n" .. sequenceString
+        end
+
+        local macroString = ""
+        for k, _ in pairs(exportTable.Macros) do
+            macroString = macroString .. "- " .. k .. "\n"
+        end
+        if string.len(macroString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Macros"] .. "\n" .. macroString
+        end
+
+        local variableString = ""
+        for k, _ in pairs(exportTable.Variables) do
+            variableString = variableString .. "- " .. k .. "\n"
+        end
+        if string.len(variableString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Variables"] .. "\n" .. variableString
+        end
+    end
+    return exportstring
 end
 
 GSE.GUIAdvancedExport = function(exportframe)
@@ -205,7 +241,8 @@ GSE.GUIAdvancedExport = function(exportframe)
     local exportTable = {
         ["Sequences"] = {},
         ["Variables"] = {},
-        ["Macros"] = {}
+        ["Macros"] = {},
+        ["ElementCount"] = 0
     }
 
     local HeaderRow = AceGUI:Create("SimpleGroup")
@@ -266,9 +303,14 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                exportTable["Variables"][key] = true
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[key])
+                uncompressedVersion.objectType = "VARIABLE"
+                uncompressedVersion.name = key
+                exportTable["Variables"][key] = GSE.EncodeMessage(uncompressedVersion)
+                exportTable.ElementCount = exportTable.ElementCount + 1
             else
-                exportTable["Variables"][key] = false
+                exportTable["Variables"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
             end
             exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
@@ -277,9 +319,11 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                exportTable["Sequences"][key] = true
+                exportTable["Sequences"][key] = GSE.ExportSequence(key, GSE.FindMacro(key), false)
+                exportTable.ElementCount = exportTable.ElementCount + 1
             else
-                exportTable["Sequences"][key] = false
+                exportTable["Sequences"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
             end
             exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
@@ -288,10 +332,35 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                exportTable["Macros"][key] = true
+                local category = "a"
+                local source = GSEMacros[key]
+                if GSE.isEmpty(source) then
+                    local char, realm = UnitFullName("player")
+                    source = GSEMacros[char .. "-" .. realm][key]
+                    category = "p"
+                end
+                local exportobject = GSE.CloneSequence(source)
+                exportobject.objectType = "MACRO"
+                exportobject.category = category
+                exportobject.name = key
+                if GSE.isEmpty(exportobject.managedMacro) then
+                    local _, micon, mbody = GetMacroInfo(key)
+                    exportobject.icon = micon
+                    exportobject.text = mbody
+                    exportobject.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+                end
+                exportTable["Macros"][key] = GSE.EncodeMessage(exportobject)
+                exportTable.ElementCount = exportTable.ElementCount + 1
             else
-                exportTable["Macros"][key] = false
+                exportTable["Macros"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
             end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
+    humanexportcheckbox:SetCallback(
+        "OnValueChanged",
+        function(sel, object, value)
             exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
     )

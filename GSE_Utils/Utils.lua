@@ -541,7 +541,7 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 -- Functions
 
 --- This function finds a macro by name.  It checks current class first then global
-local function FindMacro(sequenceName)
+function GSE.FindMacro(sequenceName)
     local returnVal = {}
     if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][sequenceName]) then
         returnVal = GSE.Library[GSE.GetCurrentClassID()][sequenceName]
@@ -608,7 +608,7 @@ function GSE:GSSlash(input)
     elseif command == "dumpmacro" then
         GSE_C[params[2]] = {}
         GSE_C[params[2]].name = params[2]
-        GSE_C[params[2]].sequence = FindMacro(params[2])
+        GSE_C[params[2]].sequence = GSE.FindMacro(params[2])
         GSE_C[params[2]].button = _G[params[2]]
     elseif command == "recompilesequences" then
         GSE.ReloadSequences()
