@@ -22,7 +22,11 @@ function getData(path, params, done) {
     },
     (err, result, body) => {
       if (err) return console.log("error trying to update patreon info ", err);
-      body = JSON.parse(body);
+      try {
+        body = JSON.parse(body);
+      } catch (error) {
+        return console.log(error, body);
+      }
       return done(err, body);
     }
   );
