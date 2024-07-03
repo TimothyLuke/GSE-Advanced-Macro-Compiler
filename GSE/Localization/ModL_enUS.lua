@@ -739,3 +739,4 @@ L["The author of this Macro."] = true
 L["Saved"] = true
 L["Save pending for "] = true
 L["Insert Spell"] = true
+L["Advanced Export"] = true

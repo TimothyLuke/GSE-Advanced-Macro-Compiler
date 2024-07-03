@@ -396,8 +396,6 @@ function GSE.SafeConcat(tab, delimiter)
     return output
 end
 
-GSE.DebugProfile("StringFunctions")
-
 function GSE.NewTable()
     return {}
 end
@@ -416,3 +414,5 @@ function GSE.FlattenTable(v)
     flatten(v)
     return res
 end
+
+GSE.DebugProfile("StringFunctions")

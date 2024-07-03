@@ -906,16 +906,18 @@ function GSE.UpdateVariable(variable, name, status)
 end
 
 function GSE.UpdateMacro(node, category)
-    GSE:UnregisterEvent("UPDATE_MACROS")
-    if node.value then
-        EditMacro(node.value, node.name, node.icon, node.text)
-    else
-        node.value = CreateMacro(node.name, node.icon, node.text, category)
-    end
-    GSE:RegisterEvent("UPDATE_MACROS")
-    if GSE.GUI and GSE.GUIMacroFrame then
-        if GSE.GUIMacroFrame:IsVisible() then
-            GSE.GUIMacroFrame:SetStatusText(node.name .. " " .. L["Saved"])
+    if not InCombatLockdown() then
+        GSE:UnregisterEvent("UPDATE_MACROS")
+        if node.value then
+            EditMacro(node.value, node.name, node.icon, node.text)
+        else
+            node.value = CreateMacro(node.name, node.icon, node.text, category)
+        end
+        GSE:RegisterEvent("UPDATE_MACROS")
+        if GSE.GUI and GSE.GUIMacroFrame then
+            if GSE.GUIMacroFrame:IsVisible() then
+                GSE.GUIMacroFrame:SetStatusText(node.name .. " " .. L["Saved"])
+            end
         end
     end
     return node

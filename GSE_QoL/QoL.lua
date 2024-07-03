@@ -5,6 +5,7 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 -- local Completing = LibStub("AceGUI-3.0-Spell-EditBox")
+-- GSE.GUIExport(nil, nil, "ADVANCED")
 GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
     local playerSpells = {}
 
@@ -192,4 +193,106 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
     end
 
     return spellEditBox
+end
+
+local function compileExport(exportTable, humanReadable)
+    return GSE.Dump(exportTable)
+end
+
+GSE.GUIAdvancedExport = function(exportframe)
+    exportframe:ReleaseChildren()
+    exportframe:SetStatusText(L["Advanced Export"])
+    local exportTable = {
+        ["Sequences"] = {},
+        ["Variables"] = {},
+        ["Macros"] = {}
+    }
+
+    local HeaderRow = AceGUI:Create("SimpleGroup")
+    HeaderRow:SetLayout("Flow")
+    HeaderRow:SetFullWidth(true)
+    local SequenceDropDown = AceGUI:Create("Dropdown")
+    for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+        SequenceDropDown:AddItem(k, k)
+    end
+    for k, _ in pairs(GSE3Storage[0]) do
+        SequenceDropDown:AddItem(k, k)
+    end
+    SequenceDropDown:SetMultiselect(true)
+    SequenceDropDown:SetLabel(L["Sequences"])
+
+    local VariableDropDown = AceGUI:Create("Dropdown")
+    if not GSE.isEmpty(GSEVariables) then
+        for k, _ in pairs(GSEVariables) do
+            VariableDropDown:AddItem(k, k)
+        end
+    end
+
+    local MacroDropDown = AceGUI:Create("Dropdown")
+
+    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    for macid = 1, maxmacros do
+        local mname, _, _ = GetMacroInfo(macid)
+        if mname then
+            MacroDropDown:AddItem(mname, mname)
+        end
+    end
+    MacroDropDown:SetMultiselect(true)
+    MacroDropDown:SetLabel(L["Macros"])
+
+    HeaderRow:AddChild(SequenceDropDown)
+    HeaderRow:AddChild(MacroDropDown)
+    HeaderRow:AddChild(VariableDropDown)
+    exportframe:AddChild(HeaderRow)
+
+    local humanexportcheckbox = AceGUI:Create("CheckBox")
+    humanexportcheckbox:SetType("checkbox")
+
+    humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
+    exportframe:AddChild(humanexportcheckbox)
+
+    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+
+    local exportsequencebox = AceGUI:Create("MultiLineEditBox")
+    exportsequencebox:SetLabel(L["Variable"])
+    exportsequencebox:SetNumLines(22)
+    exportsequencebox:DisableButton(true)
+    exportsequencebox:SetFullWidth(true)
+    exportframe:AddChild(exportsequencebox)
+
+    VariableDropDown:SetMultiselect(true)
+    VariableDropDown:SetLabel(L["Variables"])
+    VariableDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                exportTable["Variables"][key] = true
+            else
+                exportTable["Variables"][key] = false
+            end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
+    SequenceDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                exportTable["Sequences"][key] = true
+            else
+                exportTable["Sequences"][key] = false
+            end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
+    MacroDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                exportTable["Macros"][key] = true
+            else
+                exportTable["Macros"][key] = false
+            end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
 end

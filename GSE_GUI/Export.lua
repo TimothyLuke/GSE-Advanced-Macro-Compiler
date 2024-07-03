@@ -226,6 +226,10 @@ function GSE.GUIExport(category, objectname, type)
         CreateSequenceExport(type)
     elseif type == "VARIABLE" then
         CreateVariableExport(objectname, type)
+    elseif type == "ADVANCED" then
+        if GSE.GUIAdvancedExport then
+            GSE.GUIAdvancedExport(exportframe)
+        end
     elseif type == "MACRO" then
         CreateMacroExport(category, objectname, type)
     end
