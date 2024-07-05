@@ -892,7 +892,6 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
 end
 
 function GSE.UpdateVariable(variable, name, status)
-    DevTools_Dump(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
     local actualfunct, error = loadstring("return " .. variable.funct)
