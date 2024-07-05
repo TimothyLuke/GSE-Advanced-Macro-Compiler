@@ -64,6 +64,7 @@ end
 
 --- Load the GSEStorage into a new table.
 function GSE.LoadStorage(destination)
+    GSE.LoadVariables()
     if GSE.isEmpty(destination) then
         destination = {}
     end

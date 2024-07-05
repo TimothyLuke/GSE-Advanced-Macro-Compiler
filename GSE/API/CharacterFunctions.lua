@@ -160,55 +160,6 @@ function GSE.GetResetOOC()
     return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
 end
 
-function GSE.GetUse11()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use11 and GSE_C.use11 or GSEOptions.use11
-end
-
-function GSE.GetUse12()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use12 and GSE_C.use12 or GSEOptions.use12
-end
-
-function GSE.GetUse13()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use13 and GSE_C.use13 or GSEOptions.use13
-end
-
-function GSE.GetUse14()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use14 and GSE_C.use14 or GSEOptions.use14
-end
-
-function GSE.GetUse2()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use2 and GSE_C.use2 or GSEOptions.use2
-end
-
-function GSE.GetUse6()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use6 and GSE_C.use6 or GSEOptions.use6
-end
-
-function GSE.GetUse1()
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    return GSE_C.use1 and GSE_C.use11 or GSEOptions.use1
-end
-
 function GSE.setActionButtonUseKeyDown()
     local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DONTFORCE"
 

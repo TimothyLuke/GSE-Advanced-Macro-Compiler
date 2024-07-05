@@ -100,11 +100,20 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.ReloadSequences()
 end
 
+local function LoadKeyBindings()
+    local char = UnitFullName("player")
+    local realm = GetRealmName()
+    for k, v in pairs(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) do
+        SetBinding(k, v, _G[v])
+    end
+end
+
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformOneOffEvents()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
+    LoadKeyBindings()
     GSE:ZONE_CHANGED_NEW_AREA()
 end
 
@@ -121,14 +130,27 @@ function GSE:ADDON_LOADED(event, addon)
         if GSE.isEmpty(GSE.Library[0]) then
             GSE.Library[0] = {}
         end
-
         if GSE.isEmpty(GSEVariables) then
             GSEVariables = {}
         end
+        local char = UnitFullName("player")
+        local realm = GetRealmName()
         if GSE.isEmpty(GSEMacros) then
             GSEMacros = {}
         end
-        GSE.LoadVariables()
+        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+            GSEMacros[char .. "-" .. realm] = {}
+        end
+        if GSE.isEmpty(GSE_C["KeyBindings"]) then
+            GSE_C["KeyBindings"] = {}
+        end
+        if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm]) then
+            GSE_C["KeyBindings"][char .. "-" .. realm] = {}
+        end
+        if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
+            GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
+        end
+
         GSE.PrintDebugMessage("I am loaded")
 
         GSE:SendMessage(Statics.CoreLoadedMessage)
@@ -200,6 +222,7 @@ function GSE:ADDON_LOADED(event, addon)
                 hide = true
             }
         end
+
         GSE:RegisterEvent("UPDATE_MACROS")
         GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
     end
@@ -245,6 +268,13 @@ function GSE:PLAYER_LOGOUT()
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
+    local char = UnitFullName("player")
+    local realm = GetRealmName()
+
+    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
+        GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
+    end
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 
