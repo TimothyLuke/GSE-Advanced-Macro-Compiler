@@ -233,7 +233,27 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
     if decompresssuccess then
-        if actiontable.objectType == "MACRO" then
+        if actiontable.type == "COLLECTION" then
+            actiontable = actiontable.payload
+            for _, v in pairs(actiontable["Variables"]) do
+                GSE.ImportSerialisedSequence(v)
+            end
+            for _, v in pairs(actiontable["Sequences"]) do
+                GSE.ImportSerialisedSequence(v, false)
+            end
+            for _, v in pairs(actiontable["Macros"]) do
+                GSE.ImportSerialisedSequence(v)
+            end
+            if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
+                GSE.ShowSequences()
+            end
+            if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
+                GSE.ShowVariables()
+            end
+            if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
+                GSE.ShowMacros()
+            end
+        elseif actiontable.objectType == "MACRO" then
             actiontable.objectType = nil
             local oocaction = {
                 ["action"] = "importmacro",
@@ -259,8 +279,9 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
                 ),
                 Statics.SourceTransmission
             )
-            local seqName = string.upper(actiontable[1])
-            GSE.AddSequenceToCollection(seqName, actiontable[2])
+            local k, v = actiontable[1], actiontable[2]
+            local seqName = string.upper(k)
+            GSE.AddSequenceToCollection(seqName, v)
             if createicon then
                 GSE.CheckMacroCreated(seqName, true)
             end

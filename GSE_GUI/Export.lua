@@ -209,26 +209,30 @@ function GSE.GUIExport(category, objectname, type)
     local _, _, _, tocversion = GetBuildInfo()
     GSE.GUIExportframe.classid = category
 
-    if GSE.isEmpty(type) then
-        type = "SEQUENCE"
-    end
-    GSE.GUIExportframe.type = type
-    if type == "SEQUENCE" then
-        GSE.GUIExportframe.sequencename = objectname
-        GSE.GUIExportframe.sequence =
-            GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
-        GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
-        GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
-        GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
-        CreateSequenceExport(type)
-    elseif type == "VARIABLE" then
-        CreateVariableExport(objectname, type)
-    elseif type == "ADVANCED" then
-        if GSE.GUIAdvancedExport then
-            GSE.GUIAdvancedExport(exportframe)
+    if GSE.Patron and GSE.GUIAdvancedExport then
+        GSE.GUIAdvancedExport(exportframe)
+    else
+        if GSE.isEmpty(type) then
+            type = "SEQUENCE"
         end
-    elseif type == "MACRO" then
-        CreateMacroExport(category, objectname, type)
+        GSE.GUIExportframe.type = type
+        if type == "SEQUENCE" then
+            GSE.GUIExportframe.sequencename = objectname
+            GSE.GUIExportframe.sequence =
+                GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
+            GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
+            GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
+            GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
+            CreateSequenceExport(type)
+        elseif type == "VARIABLE" then
+            CreateVariableExport(objectname, type)
+        elseif type == "COLLECTION" then
+            if GSE.GUIAdvancedExport then
+                GSE.GUIAdvancedExport(exportframe)
+            end
+        elseif type == "MACRO" then
+            CreateMacroExport(category, objectname, type)
+        end
     end
     GSE.GUIExportframe:Show()
 end

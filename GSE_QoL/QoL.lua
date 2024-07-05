@@ -4,8 +4,7 @@ local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
--- local Completing = LibStub("AceGUI-3.0-Spell-EditBox")
--- /run GSE.GUIExport(nil, nil, "ADVANCED")
+
 GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
     local playerSpells = {}
 
@@ -319,7 +318,7 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                exportTable["Sequences"][key] = GSE.ExportSequence(key, GSE.FindMacro(key), false)
+                exportTable["Sequences"][key] = GSE.ExportSequence(GSE.FindMacro(key), key, false)
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else
                 exportTable["Sequences"][key] = nil

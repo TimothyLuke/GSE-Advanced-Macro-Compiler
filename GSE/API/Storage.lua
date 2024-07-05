@@ -892,9 +892,16 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
 end
 
 function GSE.UpdateVariable(variable, name, status)
+    DevTools_Dump(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
-    GSE.V[name] = loadstring(variable.funct)
+    local actualfunct, error = loadstring("return " .. variable.funct)
+    if error then
+        print(error)
+    end
+    if type(actualfunct) == "function" then
+        GSE.V[name] = actualfunct()
+    end
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["name"] = true
     end
@@ -929,6 +936,9 @@ function GSE.ImportMacro(node)
     if node.category == "p" then
         characterMacro = true
         local char, realm = UnitFullName("player")
+        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+            GSEMacros[char .. "-" .. realm] = {}
+        end
         source = GSEMacros[char .. "-" .. realm]
     end
     node.category = nil
