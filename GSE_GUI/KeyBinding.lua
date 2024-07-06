@@ -161,7 +161,7 @@ local function showKeybind(bind, button, specialization)
     savebutton:SetCallback(
         "OnClick",
         function()
-            if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(keybind:GetValue()) then
+            if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(keybind:GetKey()) then
                 if GSE.isEmpty(specialization) then
                     specialization = tostring(GetSpecialization())
                 end
