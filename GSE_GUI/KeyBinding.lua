@@ -240,9 +240,9 @@ local function buildKeybindHeader(specialization, bind, button)
 
     local hlabel = AceGUI:Create("Label")
 
-    hlabel:SetText(bind)
+    hlabel:SetText(bind .. " - " .. GSEOptions.KEYWORD .. "(" .. button .. ")" .. Statics.StringReset)
     hlabel:SetWidth(199)
-    hlabel:SetFontObject(font " - " .. GSEOptions.KEYWORD .. "(" .. button .. ")" .. Statics.StringReset)
+    hlabel:SetFontObject(font)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
 
     selpanel:AddChild(hlabel)
