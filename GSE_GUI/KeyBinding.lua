@@ -267,8 +267,8 @@ local function buildKeybindMenu()
         end
     )
     leftscroll:AddChild(newButton)
+    local specid = 0
     for k, v in pairs(GSE_C["KeyBindings"][char .. "-" .. realm]) do
-        local specid
         local currentspecid = tonumber(k)
         if specid ~= currentspecid then
             specid = currentspecid
