@@ -134,8 +134,8 @@ local function showKeybind(bind, button, specialization)
 
     keybind:SetLabel(L["Set Key to Bind"])
     local SequenceListbox = AceGUI:Create("Dropdown")
-    --SequenceListbox:SetLabel(L["Load Sequence"])
-    SequenceListbox:SetWidth(250)
+
+    SequenceListbox:SetWidth(200)
     SequenceListbox:SetLabel(L["Sequence"])
     local names = {}
 
@@ -182,10 +182,36 @@ local function showKeybind(bind, button, specialization)
             end
         end
     )
-    rightContainer:AddChild(keybind)
-    rightContainer:AddChild(SequenceListbox)
-    rightContainer:AddChild(savebutton)
 
+    local delbutton = AceGUI:Create("Button")
+    delbutton:SetText(L["Delete"])
+
+    delbutton:SetCallback(
+        "OnClick",
+        function()
+            SetBinding(initialbind)
+            GSE_C["KeyBindings"][char .. "-" .. realm][specialization][initialbind] = nil
+            rightContainer:ReleaseChildren()
+            GSE.ShowKeyBindings()
+        end
+    )
+
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetFullWidth(true)
+    row:SetLayout("Flow")
+
+    row:AddChild(keybind)
+
+    row:AddChild(SequenceListbox)
+
+    local row2 = AceGUI:Create("SimpleGroup")
+    row2:SetFullWidth(true)
+    row2:SetLayout("Flow")
+
+    row2:AddChild(savebutton)
+    row2:AddChild(delbutton)
+    rightContainer:AddChild(row)
+    rightContainer:AddChild(row2)
     rightContainer:SetWidth(keybindingframe.Width - 290)
 end
 
