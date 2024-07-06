@@ -399,5 +399,6 @@ globals = {
     "GetMaxPlayerLevel",
     "PlayerSpellsFrame",
     "C_SpellBook",
-    "MenuUtil"
+    "MenuUtil",
+    "SetBindingClick"
 }
