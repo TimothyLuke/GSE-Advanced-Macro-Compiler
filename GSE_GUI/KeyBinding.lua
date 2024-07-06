@@ -189,6 +189,8 @@ local function showKeybind(bind, button, specialization)
     delbutton:SetCallback(
         "OnClick",
         function()
+            local char = UnitFullName("player")
+            local realm = GetRealmName()
             SetBinding(initialbind)
             GSE_C["KeyBindings"][char .. "-" .. realm][specialization][initialbind] = nil
             rightContainer:ReleaseChildren()
