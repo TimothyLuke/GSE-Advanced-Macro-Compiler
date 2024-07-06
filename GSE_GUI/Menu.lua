@@ -14,8 +14,8 @@ frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
 frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 frame.text:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
-frame.text:SetText(L["GSE: Sequences, Variables, Macros"])
-frame:SetSize(400, 60)
+frame.text:SetText(L["GSE: Main Menu"])
+frame:SetSize(500, 60)
 if GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
     frame:SetPoint(
         "TOPLEFT",
@@ -73,3 +73,15 @@ keybindButton:SetScript(
     end
 )
 keybindButton:RegisterForClicks("AnyDown", "AnyUp")
+
+local importbutton = CreateFrame("button", nil, frame, "UIPanelButtonTemplate")
+importbutton:SetPoint("BOTTOMLEFT", keybindButton, "BOTTOMLEFT", 100, 0)
+importbutton:SetSize(100, 40)
+importbutton:SetText(L["Import"])
+importbutton:SetScript(
+    "OnClick",
+    function(self, button, down)
+        GSE.GUIImportFrame:Show()
+    end
+)
+importbutton:RegisterForClicks("AnyDown", "AnyUp")
