@@ -21,6 +21,7 @@ Editor.lua
 RemoteMacroBrowser.lua
 Variables.lua
 Macro.lua
+KeyBinding.lua
 GUIFunctions.lua
 CompressSequence.lua
 MacroCompare.lua

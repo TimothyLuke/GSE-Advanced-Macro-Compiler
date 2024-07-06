@@ -15,7 +15,7 @@ frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 frame.text:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
 frame.text:SetText(L["GSE: Sequences, Variables, Macros"])
-frame:SetSize(300, 60)
+frame:SetSize(400, 60)
 if GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
     frame:SetPoint(
         "TOPLEFT",
@@ -61,3 +61,15 @@ macrobutton:SetScript(
     end
 )
 macrobutton:RegisterForClicks("AnyDown", "AnyUp")
+
+local keybindButton = CreateFrame("button", nil, frame, "UIPanelButtonTemplate")
+keybindButton:SetPoint("BOTTOMLEFT", macrobutton, "BOTTOMLEFT", 100, 0)
+keybindButton:SetSize(100, 40)
+keybindButton:SetText(L["Keybindings"])
+keybindButton:SetScript(
+    "OnClick",
+    function(self, button, down)
+        GSE.ShowKeyBindings()
+    end
+)
+keybindButton:RegisterForClicks("AnyDown", "AnyUp")

@@ -103,8 +103,17 @@ end
 local function LoadKeyBindings()
     local char = UnitFullName("player")
     local realm = GetRealmName()
+    if GSE.isEmpty(GSE_C["KeyBindings"]) then
+        GSE_C["KeyBindings"] = {}
+    end
+    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm]) then
+        GSE_C["KeyBindings"][char .. "-" .. realm] = {}
+    end
+    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
+        GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
+    end
     for k, v in pairs(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) do
-        SetBinding(k, v, _G[v])
+        SetBindingClick(k, v, _G[v])
     end
 end
 
@@ -141,16 +150,6 @@ function GSE:ADDON_LOADED(event, addon)
         if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
             GSEMacros[char .. "-" .. realm] = {}
         end
-        if GSE.isEmpty(GSE_C["KeyBindings"]) then
-            GSE_C["KeyBindings"] = {}
-        end
-        if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm]) then
-            GSE_C["KeyBindings"][char .. "-" .. realm] = {}
-        end
-        if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
-            GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
-        end
-
         GSE.PrintDebugMessage("I am loaded")
 
         GSE:SendMessage(Statics.CoreLoadedMessage)

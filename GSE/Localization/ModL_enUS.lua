@@ -740,3 +740,7 @@ L["Saved"] = true
 L["Save pending for "] = true
 L["Insert Spell"] = true
 L["Advanced Export"] = true
+L["Manage Keybinds"] = true
+L["Set Key to Bind"] = true
+L["Keybind"] = true
+L["Keybindings"] = true
