@@ -1007,10 +1007,43 @@ function GSE.GetOptionsTable()
                         end,
                         order = 18
                     },
+                    keybindtitle = {
+                        type = "header",
+                        name = L["Keybindings"],
+                        order = 19
+                    },
+                    keybindHeight = {
+                        name = L["Default Keybinding Height"],
+                        desc = L["How many pixels high should Keybindings start at.  Defaults to 500"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 500 then
+                                GSEOptions.keybindingHeight = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.keybindingHeight and tostring(GSEOptions.keybindingHeight) or "500")
+                        end,
+                        order = 20
+                    },
+                    keybindWidth = {
+                        name = L["Default Keybinding Width"],
+                        desc = L["How many pixels wide should Keybinding start at.  Defaults to 700"],
+                        type = "input",
+                        set = function(info, val)
+                            if tonumber(val) >= 700 then
+                                GSEOptions.keybindingWidth = tonumber(val)
+                            end
+                        end,
+                        get = function(info)
+                            return (GSEOptions.keybindingWidth and tostring(GSEOptions.keybindingWidth) or "500")
+                        end,
+                        order = 21
+                    },
                     debugtitle = {
                         type = "header",
                         name = L["Sequence Debugger"],
-                        order = 19
+                        order = 22
                     },
                     debugHeight = {
                         name = L["Default Debugger Height"],
@@ -1024,7 +1057,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugHeight and tostring(GSEOptions.debugHeight) or "500")
                         end,
-                        order = 20
+                        order = 23
                     },
                     debugWidth = {
                         name = L["Default Debugger Width"],
@@ -1038,7 +1071,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return (GSEOptions.debugWidth and tostring(GSEOptions.debugWidth) or "500")
                         end,
-                        order = 21
+                        order = 24
                     }
                 }
             },

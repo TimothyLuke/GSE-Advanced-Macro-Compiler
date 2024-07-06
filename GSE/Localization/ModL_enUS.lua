@@ -744,3 +744,7 @@ L["Manage Keybinds"] = true
 L["Set Key to Bind"] = true
 L["Keybind"] = true
 L["Keybindings"] = true
+L["Default Keybinding Height"] = true
+L["How many pixels high should Keybindings start at.  Defaults to 500"] = true
+L["Default Keybinding Width"] = true
+L["How many pixels wide should Keybinding start at.  Defaults to 700"] = true

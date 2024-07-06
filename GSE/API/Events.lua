@@ -263,6 +263,11 @@ function GSE:PLAYER_LOGOUT()
         end
         GSEOptions.frameLocations.debug.top = GSE.GUIDebugFrame.frame:GetTop()
         GSEOptions.frameLocations.debug.left = GSE.GUIDebugFrame.frame:GetLeft()
+        if GSE.isEmpty(GSEOptions.frameLocations.keybindingframe) then
+            GSEOptions.frameLocations.keybindingframe = {}
+        end
+        GSEOptions.frameLocations.keybindingframe.top = GSE.GUIkeybindingframe.frame:GetTop()
+        GSEOptions.frameLocations.keybindingframe.left = GSE.GUIkeybindingframe.frame:GetLeft()
     end
 end
 

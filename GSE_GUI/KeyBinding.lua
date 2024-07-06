@@ -41,10 +41,10 @@ if keybindingframe.Width < 700 then
     GSEOptions.keybindingWidth = keybindingframe.Width
 end
 keybindingframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-keybindingframe.frame:SetHeight(GSEOptions.editorHeight)
-keybindingframe.frame:SetWidth(GSEOptions.editorWidth)
+keybindingframe.frame:SetHeight(GSEOptions.keybindingHeight)
+keybindingframe.frame:SetWidth(GSEOptions.keybindingWidth)
 
-keybindingframe:SetTitle(L["Macros"])
+keybindingframe:SetTitle(L["Keybindings"])
 keybindingframe:SetCallback(
     "OnClose",
     function(self)
