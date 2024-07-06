@@ -242,7 +242,7 @@ local function buildKeybindHeader(specialization, bind, button)
 
     hlabel:SetText(bind)
     hlabel:SetWidth(199)
-    hlabel:SetFontObject(font)
+    hlabel:SetFontObject(font " - " .. GSEOptions.KEYWORD .. "(" .. button .. ")" .. Statics.StringReset)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
 
     selpanel:AddChild(hlabel)
