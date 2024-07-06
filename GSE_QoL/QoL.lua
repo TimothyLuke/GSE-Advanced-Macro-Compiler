@@ -146,6 +146,7 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
                                 v,
                                 function()
                                     spellEditBox:SetText(v)
+                                    sequence.Macros[version].Actions[keyPath].spell = v
                                 end
                             )
                         end
@@ -156,6 +157,8 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
                                 k,
                                 function()
                                     spellEditBox:SetText("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                                    sequence.Macros[version].Actions[keyPath].spell =
+                                        "\n" .. [[=GSE.V["]] .. k .. [["]()]]
                                 end
                             )
                         end
