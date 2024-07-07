@@ -191,7 +191,9 @@ local function showKeybind(bind, button, specialization)
         function()
             local char = UnitFullName("player")
             local realm = GetRealmName()
-            SetBinding(initialbind)
+            if initialbind then
+                SetBinding(initialbind)
+            end
             GSE_C["KeyBindings"][char .. "-" .. realm][specialization][initialbind] = nil
             rightContainer:ReleaseChildren()
             GSE.ShowKeyBindings()

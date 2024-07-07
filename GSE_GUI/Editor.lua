@@ -2213,9 +2213,8 @@ local function GetBlockToolbar(
 end
 
 if GSE.isEmpty(GSE.CreateSpellEditBox) then
-    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
+    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
         local spellEditBox = AceGUI:Create("EditBox")
-        spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 
         spellEditBox:SetWidth(250)
         spellEditBox:DisableButton(true)
@@ -2231,8 +2230,10 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
 
         if action.toy then
             spelltext = action.toy
+            spellEditBox:SetLabel(L["Toy"])
         elseif action.item then
             spelltext = action.item
+            spellEditBox:SetLabel(L["Item"])
         elseif action.macro then
             if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
                 spelltext = GSE.TranslateString(action.macro, Statics.TranslatorMode.Current)
@@ -2240,8 +2241,10 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
                 spelltext = action.macro
             end
         elseif action.action then
+            spellEditBox:SetLabel(L["Pet Ability"])
             spelltext = action.action
         else
+            spellEditBox:SetLabel(L["Spell"])
             local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
             if translatedSpell then
                 spelltext = translatedSpell
@@ -2251,6 +2254,7 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
         end
 
         spellEditBox:SetText(spelltext)
+
         --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
         spellEditBox:SetCallback(
             "OnTextChanged",
@@ -2305,7 +2309,40 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
             function()
             end
         )
-        return spellEditBox
+        local macroEditBox = AceGUI:Create("MultiLineEditBox")
+        macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
+        macroEditBox:DisableButton(true)
+        macroEditBox:SetNumLines(5)
+        macroEditBox:SetRelativeWidth(0.5)
+        macroEditBox:SetText(spelltext)
+        macroEditBox:SetCallback(
+            "OnTextChanged",
+            function(sel, object, value)
+                if string.sub(value, 1, 1) == "/" then
+                    sequence.Macros[version].Actions[keyPath].macro =
+                        GSE.TranslateString(value, Statics.TranslatorMode.ID)
+                else
+                    sequence.Macros[version].Actions[keyPath].macro = value
+                end
+                sequence.Macros[version].Actions[keyPath].spell = nil
+                sequence.Macros[version].Actions[keyPath].action = nil
+                sequence.Macros[version].Actions[keyPath].item = nil
+                sequence.Macros[version].Actions[keyPath].toy = nil
+                local compiledmacrotext =
+                    GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
+                local lenMacro = string.len(compiledmacrotext)
+                local compiledmacrotext =
+                    compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+                compiledMacro:SetText(compiledmacrotext)
+            end
+        )
+        macroEditBox:SetCallback(
+            "OnEditFocusLost",
+            function()
+                macroEditBox:SetText(GSE.TranslateString(macroEditBox:GetText(), Statics.TranslatorMode.Current))
+            end
+        )
+        return spellEditBox, macroEditBox
     end
 end
 
@@ -2460,7 +2497,9 @@ local function drawAction(container, action, version, keyPath)
         container:AddChild(linegroup1)
     elseif action.Type == Statics.Actions.Action then
         local macroPanel = AceGUI:Create("KeyGroup")
-
+        if GSE.isEmpty(action.type) then
+            action.type = "spell"
+        end
         macroPanel:SetLayout("List")
         macroPanel:SetFullWidth(true)
         macroPanel:SetAutoAdjustHeight(true)
@@ -2469,7 +2508,11 @@ local function drawAction(container, action, version, keyPath)
 
         macroPanel:AddChild(linegroup1)
 
-        local spellEditBox = GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence)
+        local compiledMacro = AceGUI:Create("Label")
+        compiledMacro:SetRelativeWidth(0.45)
+
+        local spellEditBox, macroeditbox =
+            GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence, compiledMacro)
 
         local unitEditBox = AceGUI:Create("EditBox")
         unitEditBox:SetLabel(L["Unit Name"])
@@ -2496,62 +2539,171 @@ local function drawAction(container, action, version, keyPath)
         -- valueEditBox:SetCallback('OnLeave', function()
         --     GSE.ClearTooltip(editframe)
         -- end)
+        local typegroup = AceGUI:Create("SimpleGroup")
+        typegroup:SetFullWidth(true)
+        typegroup:SetLayout("Flow")
 
-        local satbtype = AceGUI:Create("Dropdown")
-        satbtype:SetLabel(L["Action Type"])
-        satbtype:SetList(
-            {["spell"] = "Spell", ["item"] = "Item", ["macro"] = "Macro", ["pet"] = "Pet", ["toy"] = "Toy"}
-        )
-        satbtype:SetMultiselect(false)
-        satbtype:SetCallback(
+        local spellradio = AceGUI:Create("CheckBox")
+        spellradio:SetType("radio")
+        spellradio:SetLabel(L["Spell"])
+        spellradio:SetValue((action.type and action.type == "spell" or false))
+        local itemradio = AceGUI:Create("CheckBox")
+        itemradio:SetType("radio")
+        itemradio:SetLabel(L["Item"])
+        itemradio:SetValue((action.type and action.type == "item" or false))
+        local macroradio = AceGUI:Create("CheckBox")
+        macroradio:SetType("radio")
+        macroradio:SetLabel(L["Macro"])
+        macroradio:SetValue((action.type and action.type == "macro" or false))
+        local petradio = AceGUI:Create("CheckBox")
+        petradio:SetType("radio")
+        petradio:SetLabel(L["Pet"])
+        petradio:SetValue((action.type and action.type == "pet" or false))
+        local toyradio = AceGUI:Create("CheckBox")
+        toyradio:SetType("radio")
+        toyradio:SetLabel(L["Toy"])
+        toyradio:SetValue((action.type and action.type == "radio" or false))
+        typegroup:AddChild(spellradio)
+        typegroup:AddChild(itemradio)
+        typegroup:AddChild(macroradio)
+        typegroup:AddChild(petradio)
+        typegroup:AddChild(toyradio)
+
+        local spellcontainer = AceGUI:Create("SimpleGroup")
+        spellcontainer:SetLayout("List")
+        spellcontainer:SetFullWidth(true)
+
+        spellradio:SetCallback(
             "OnValueChanged",
             function(sel, object, value)
-                editframe.Sequence.Macros[version].Actions[keyPath].type = value
-                if value == "pet" then
-                    action.action = spellEditBox:GetText()
-                    action.spell = nil
-                    action.macro = nil
-                    action.item = nil
-                    action.toy = nil
-                elseif value == "item" then
-                    action.item = spellEditBox:GetText()
-                    action.spell = nil
-                    action.action = nil
-                    action.macro = nil
-                    action.toy = nil
-                elseif value == "macro" then
-                    action.macro = spellEditBox:GetText()
-                    action.spell = nil
-                    action.action = nil
-                    action.item = nil
-                    action.toy = nil
-                elseif value == "toy" then
-                    action.toy = spellEditBox:GetText()
-                    action.spell = nil
-                    action.action = nil
-                    action.item = nil
-                    action.macro = nil
-                else
+                if value == true then
+                    itemradio:SetValue(false)
+                    macroradio:SetValue(false)
+                    toyradio:SetValue(false)
+                    petradio:SetValue(false)
                     action.spell = spellEditBox:GetText()
-                    action.action = nil
                     action.macro = nil
                     action.item = nil
                     action.toy = nil
+                    action.action = nil
+                    action.type = "spell"
+                    editframe.scrollStatus.scrollvalue = 1
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
-                --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+            end
+        )
+        itemradio:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                if value == true then
+                    spellradio:SetValue(false)
+                    macroradio:SetValue(false)
+                    toyradio:SetValue(false)
+                    petradio:SetValue(false)
+                    action.spell = nil
+                    action.macro = nil
+                    action.item = spellEditBox:GetText()
+                    action.toy = nil
+                    action.action = nil
+                    action.type = "item"
+                    editframe.scrollStatus.scrollvalue = 1
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+                end
+            end
+        )
+        petradio:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                if value == true then
+                    spellradio:SetValue(false)
+                    macroradio:SetValue(false)
+                    toyradio:SetValue(false)
+                    itemradio:SetValue(false)
+                    action.spell = nil
+                    action.macro = nil
+                    action.item = nil
+                    action.action = spellEditBox:GetText()
+                    action.toy = nil
+                    action.type = "pet"
+                    editframe.scrollStatus.scrollvalue = 1
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+                end
+            end
+        )
+        toyradio:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                if value == true then
+                    spellradio:SetValue(false)
+                    macroradio:SetValue(false)
+                    itemradio:SetValue(false)
+                    petradio:SetValue(false)
+                    action.spell = nil
+                    action.macro = nil
+                    action.item = nil
+                    action.action = nil
+                    action.toy = spellEditBox:GetText()
+                    action.type = "toy"
+                    editframe.scrollStatus.scrollvalue = 1
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+                end
+            end
+        )
+        macroradio:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                if value == true then
+                    spellradio:SetValue(false)
+                    toyradio:SetValue(false)
+                    itemradio:SetValue(false)
+                    petradio:SetValue(false)
+                    action.spell = nil
+                    action.macro = macroeditbox:GetText()
+                    action.item = nil
+                    action.action = nil
+                    action.toy = nil
+                    action.type = "macro"
+                    editframe.scrollStatus.scrollvalue = 1
+                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+                end
             end
         )
 
-        satbtype:SetValue((action.type and action.type or "spell"))
+        spellcontainer:AddChild(typegroup)
+        if action.type == "macro" then
+            local macrolayout = AceGUI:Create("SimpleGroup")
+            macrolayout:SetLayout("Flow")
 
-        local spellcontainer = AceGUI:Create("SimpleGroup")
-        spellcontainer:SetLayout("Flow")
-        spellcontainer:SetFullWidth(true)
-        spellcontainer:AddChild(spellEditBox)
-        spellcontainer:AddChild(unitEditBox)
-        spellcontainer:AddChild(satbtype)
+            local compiledmacrotext =
+                GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
+            local lenMacro = string.len(compiledmacrotext)
+            local compiledmacrotext =
+                compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+            compiledMacro:SetText(compiledmacrotext)
+            local feedback = AceGUI:Create("SimpleGroup")
+            feedback:SetRelativeWidth(0.45)
+            feedback:SetFullHeight(true)
+            feedback:AddChild(compiledMacro)
+
+            local spacerm = AceGUI:Create("Icon")
+            spacerm:SetRelativeWidth(0.02)
+            macrolayout:AddChild(macroeditbox)
+            macrolayout:AddChild(spacerm)
+            macrolayout:AddChild(feedback)
+            macrolayout:SetFullWidth(true)
+
+            spellcontainer:AddChild(macrolayout)
+        else
+            local editcontainer = AceGUI:Create("SimpleGroup")
+            editcontainer:SetLayout("Flow")
+            editcontainer:SetFullWidth(true)
+            editcontainer:AddChild(spellEditBox)
+            editcontainer:AddChild(unitEditBox)
+            spellcontainer:AddChild(editcontainer)
+        end
+
+        macroPanel:AddChild(spellcontainer)
         container:AddChild(macroPanel)
-        container:AddChild(spellcontainer)
     elseif action.Type == Statics.Actions.Loop then
         local macroPanel = AceGUI:Create("KeyGroup")
 

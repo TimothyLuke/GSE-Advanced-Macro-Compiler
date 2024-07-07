@@ -5,7 +5,7 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
-GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
+GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
     local playerSpells = {}
 
     -- local function spellFilter(self, spellID)
@@ -57,17 +57,21 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
 
     if action.toy then
         spelltext = action.toy
+        spellEditBox:SetLabel(L["Toy"])
     elseif action.item then
         spelltext = action.item
+        spellEditBox:SetLabel(L["Item"])
     elseif action.macro then
-        if string.sub(action.macro, 1, 1) == "/" then
+        if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
             spelltext = GSE.TranslateString(action.macro, Statics.TranslatorMode.Current)
         else
             spelltext = action.macro
         end
     elseif action.action then
+        spellEditBox:SetLabel(L["Pet Ability"])
         spelltext = action.action
     else
+        spellEditBox:SetLabel(L["Spell"])
         local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
         if translatedSpell then
             spelltext = translatedSpell
@@ -85,17 +89,6 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
                 sequence.Macros[version].Actions[keyPath].action = value
                 sequence.Macros[version].Actions[keyPath].spell = nil
                 sequence.Macros[version].Actions[keyPath].macro = nil
-                sequence.Macros[version].Actions[keyPath].item = nil
-                sequence.Macros[version].Actions[keyPath].toy = nil
-            elseif sequence.Macros[version].Actions[keyPath].type == "macro" then
-                if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
-                    sequence.Macros[version].Actions[keyPath].macro =
-                        GSE.TranslateString(value, Statics.TranslatorMode.Current)
-                else
-                    sequence.Macros[version].Actions[keyPath].macro = value
-                end
-                sequence.Macros[version].Actions[keyPath].spell = nil
-                sequence.Macros[version].Actions[keyPath].action = nil
                 sequence.Macros[version].Actions[keyPath].item = nil
                 sequence.Macros[version].Actions[keyPath].toy = nil
             elseif sequence.Macros[version].Actions[keyPath].type == "item" then
@@ -132,6 +125,39 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
         end
     )
 
+    local macroEditBox = AceGUI:Create("MultiLineEditBox")
+    macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
+    macroEditBox:DisableButton(true)
+    macroEditBox:SetNumLines(5)
+    macroEditBox:SetRelativeWidth(0.5)
+    macroEditBox:SetText(spelltext)
+    macroEditBox:SetCallback(
+        "OnTextChanged",
+        function(sel, object, value)
+            value = GSE.UnEscapeString(value)
+            if string.sub(value, 1, 1) == "/" then
+                sequence.Macros[version].Actions[keyPath].macro = GSE.TranslateString(value, Statics.TranslatorMode.ID)
+            else
+                sequence.Macros[version].Actions[keyPath].macro = value
+            end
+            sequence.Macros[version].Actions[keyPath].spell = nil
+            sequence.Macros[version].Actions[keyPath].action = nil
+            sequence.Macros[version].Actions[keyPath].item = nil
+            sequence.Macros[version].Actions[keyPath].toy = nil
+            local compiledmacrotext =
+                GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
+            local lenMacro = string.len(compiledmacrotext)
+            local compiledmacrotext =
+                compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+            compiledMacro:SetText(compiledmacrotext)
+        end
+    )
+    macroEditBox:SetCallback(
+        "OnEditFocusLost",
+        function()
+            macroEditBox:SetText(GSE.TranslateString(macroEditBox:GetText(), Statics.TranslatorMode.Current))
+        end
+    )
     if GSE.Patron then
         spellEditBox.editbox:SetScript(
             "OnTabPressed",
@@ -162,39 +188,47 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence)
                                 end
                             )
                         end
-                        -- rootDescription:CreateTitle(L["Insert GSE Sequence"])
-                        -- for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
-                        --     rootDescription:CreateButton(
-                        --         k,
-                        --         function()
-                        --             if GSE.GetMacroStringFormat() == "DOWN" then
-                        --                 spellEditBox.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
-                        --             else
-                        --                 spellEditBox.editBox:Insert("\n/click " .. k)
-                        --             end
-                        --         end
-                        --     )
-                        -- end
-                        -- for k, _ in pairs(GSE3Storage[0]) do
-                        --     rootDescription:CreateButton(
-                        --         k,
-                        --         function()
-                        --             if GSE.GetMacroStringFormat() == "DOWN" then
-                        --                 spellEditBox.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
-                        --             else
-                        --                 spellEditBox.editBox:Insert("\n/click " .. k)
-                        --             end
-                        --         end
-                        --     )
-                        -- end
                     end
                 )
-                -- end
+            end
+        )
+
+        macroEditBox.editBox:SetScript(
+            "OnTabPressed",
+            function(widget, button, down)
+                -- if button == "RightButton" then
+                MenuUtil.CreateContextMenu(
+                    spellEditBox,
+                    function(ownerRegion, rootDescription)
+                        rootDescription:CreateTitle(L["Insert Spell"])
+                        for _, v in pairs(playerSpells) do
+                            rootDescription:CreateButton(
+                                v,
+                                function()
+                                    macroEditBox.editBox:Insert(v)
+                                    sequence.Macros[version].Actions[keyPath].spell = v
+                                end
+                            )
+                        end
+
+                        rootDescription:CreateTitle(L["Insert GSE Variable"])
+                        for k, _ in pairs(GSEVariables) do
+                            rootDescription:CreateButton(
+                                k,
+                                function()
+                                    macroEditBox.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                                    sequence.Macros[version].Actions[keyPath].spell =
+                                        "\n" .. [[=GSE.V["]] .. k .. [["]()]]
+                                end
+                            )
+                        end
+                    end
+                )
             end
         )
     end
 
-    return spellEditBox
+    return spellEditBox, macroEditBox
 end
 
 local function compileExport(exportTable, humanReadable)
