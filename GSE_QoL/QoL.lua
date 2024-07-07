@@ -39,7 +39,6 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMa
     end
 
     local spellEditBox = AceGUI:Create("EditBox")
-    spellEditBox:SetLabel(L["Spell/Item/Macro/Toy/Pet Ability"])
 
     spellEditBox:SetWidth(250)
     spellEditBox:DisableButton(true)
@@ -136,7 +135,7 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMa
         function(sel, object, value)
             value = GSE.UnEscapeString(value)
             if string.sub(value, 1, 1) == "/" then
-                sequence.Macros[version].Actions[keyPath].macro = GSE.TranslateString(value, Statics.TranslatorMode.ID)
+                sequence.Macros[version].Actions[keyPath].macro = GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
             else
                 sequence.Macros[version].Actions[keyPath].macro = value
             end
@@ -145,18 +144,13 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMa
             sequence.Macros[version].Actions[keyPath].item = nil
             sequence.Macros[version].Actions[keyPath].toy = nil
             local compiledmacrotext =
-                GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
+                GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
             local lenMacro = string.len(compiledmacrotext)
             compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
             compiledMacro:SetText(compiledmacrotext)
         end
     )
-    macroEditBox:SetCallback(
-        "OnEditFocusLost",
-        function()
-            macroEditBox:SetText(GSE.TranslateString(macroEditBox:GetText(), Statics.TranslatorMode.Current))
-        end
-    )
+
     if GSE.Patron then
         spellEditBox.editbox:SetScript(
             "OnTabPressed",
