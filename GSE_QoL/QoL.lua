@@ -147,8 +147,7 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMa
             local compiledmacrotext =
                 GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
             local lenMacro = string.len(compiledmacrotext)
-            local compiledmacrotext =
-                compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+            compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
             compiledMacro:SetText(compiledmacrotext)
         end
     )

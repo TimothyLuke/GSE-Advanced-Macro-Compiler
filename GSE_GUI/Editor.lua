@@ -2331,8 +2331,7 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
                 local compiledmacrotext =
                     GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
                 local lenMacro = string.len(compiledmacrotext)
-                local compiledmacrotext =
-                    compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+                compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
                 compiledMacro:SetText(compiledmacrotext)
             end
         )
@@ -2677,8 +2676,7 @@ local function drawAction(container, action, version, keyPath)
             local compiledmacrotext =
                 GSE.UnEscapeString(GSE.TranslateString(action.macro, Statics.TranslatorMode.String))
             local lenMacro = string.len(compiledmacrotext)
-            local compiledmacrotext =
-                compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+            compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
             compiledMacro:SetText(compiledmacrotext)
             local feedback = AceGUI:Create("SimpleGroup")
             feedback:SetRelativeWidth(0.45)
