@@ -62,7 +62,7 @@ GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMa
         spellEditBox:SetLabel(L["Item"])
     elseif action.macro then
         if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
-            spelltext = GSE.TranslateString(action.macro, Statics.TranslatorMode.Current)
+            spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
         else
             spelltext = action.macro
         end
