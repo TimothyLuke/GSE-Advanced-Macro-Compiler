@@ -459,6 +459,19 @@ function GSE.UpdateIcon(self, reset)
     local gsebutton = self:GetName()
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
+    if executionseq[step].type == "macro" then
+        for cmd, etc in gmatch(executionseq[step].macro or "", "/(%w+)%s+([^\n]+)") do
+            if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
+                local spell, target = SecureCmdOptionParse(etc)
+                local spellinfo = L
+                C_Spell.GetSpellInfo(spell)
+                if spellinfo then
+                    foundSpell = spellinfo.name
+                end
+            end
+        end
+    end
+
     if foundSpell then
         SetMacroSpell(gsebutton, foundSpell)
     end
@@ -590,8 +603,7 @@ local function buildAction(action, metaData, variables)
                 elseif k == "macro" then
                     if string.sub(GSE.UnEscapeString(v), 1, 1) == "/" then
                         -- we have a line of macrotext
-                        spelllist["macrotext"] =
-                            GSE.UnEscapeString(GSE.TranslateString(v, Statics.TranslatorMode.String))
+                        spelllist["macrotext"] = GSE.CompileMacroText(v, Statics.TranslatorMode.String)
                     else
                         spelllist[k] = value
                     end
