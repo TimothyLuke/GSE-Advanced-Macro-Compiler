@@ -114,12 +114,12 @@ leftscroll.frame:SetScript(
                             GSE.GUIImportFrame:Show()
                         end
                     )
-                    -- rootDescription:CreateButton(
-                    --     L["Delete"],
-                    --     function()
-                    --         GSE.GUIDeleteSequence(viewframe.ClassID, viewframe.SequenceName)
-                    --     end
-                    -- )
+                    rootDescription:CreateButton(
+                        L["Keybindings"],
+                        function()
+                            GSE.ShowKeyBindings()
+                        end
+                    )
                 end
             )
         end
@@ -237,6 +237,12 @@ local function CreateSequencePanels(container, key)
                                 end
                             )
                         end
+                        rootDescription:CreateButton(
+                            L["Keybindings"],
+                            function()
+                                GSE.ShowKeyBindings()
+                            end
+                        )
                         rootDescription:CreateButton(
                             L["Delete"],
                             function()
