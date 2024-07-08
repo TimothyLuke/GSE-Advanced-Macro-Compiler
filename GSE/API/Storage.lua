@@ -58,6 +58,12 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.GUI and GSE.GUIEditFrame then
         if GSE.GUIEditFrame:IsVisible() then
             GSE.GUIEditFrame:SetStatusText(sequenceName .. " " .. L["Saved"])
+            C_Timer.After(
+                5,
+                function()
+                    GSE.GUIEditFrame:SetStatusText("")
+                end
+            )
         end
     end
 end
@@ -276,6 +282,12 @@ function GSE.OOCUpdateSequence(name, sequence)
         if not GSE.isEmpty(GSE.GUIEditFrame.IsVisible) then
             if GSE.GUIEditFrame:IsVisible() then
                 GSE.GUIEditFrame:SetStatusText(name .. " " .. L["Saved"])
+                C_Timer.After(
+                    5,
+                    function()
+                        GSE.GUIEditFrame:SetStatusText("")
+                    end
+                )
             end
         end
     end
@@ -925,6 +937,12 @@ function GSE.UpdateVariable(variable, name, status)
     if GSE.GUI and GSE.GUIVariableFrame then
         if GSE.GUIVariableFrame:IsVisible() then
             GSE.GUIVariableFrame:SetStatusText(name .. " " .. L["Saved"])
+            C_Timer.After(
+                5,
+                function()
+                    GSE.GUIVariableFrame:SetStatusText("")
+                end
+            )
         end
     end
 end
@@ -941,6 +959,12 @@ function GSE.UpdateMacro(node, category)
         if GSE.GUI and GSE.GUIMacroFrame then
             if GSE.GUIMacroFrame:IsVisible() then
                 GSE.GUIMacroFrame:SetStatusText(node.name .. " " .. L["Saved"])
+                C_Timer.After(
+                    5,
+                    function()
+                        GSE.GUIEMacroFrame:SetStatusText("")
+                    end
+                )
             end
         end
     end
