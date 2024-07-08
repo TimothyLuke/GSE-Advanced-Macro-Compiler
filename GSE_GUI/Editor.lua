@@ -2661,6 +2661,7 @@ local function drawAction(container, action, version, keyPath)
                     action.item = nil
                     action.action = nil
                     action.toy = nil
+                    action.unit = nil
                     action.type = "macro"
                     editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
