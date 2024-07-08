@@ -1019,8 +1019,11 @@ function GSE.CompileMacroText(text, mode)
                     value = functionresult()
                 end
             end
-
-            lines[k] = GSE.UnEscapeString(GSE.TranslateString(value, mode, false))
+            if string.sub(value, 1, 2) == "--" then
+                lines[k] = "" -- strip the comments
+            else
+                lines[k] = GSE.UnEscapeString(GSE.TranslateString(value, mode, false))
+            end
         else
             lines[k] = GSE.TranslateString(value, mode, false)
         end

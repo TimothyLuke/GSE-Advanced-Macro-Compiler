@@ -493,9 +493,8 @@ function GSE.Update31Actions(sequence)
     for k, _ in ipairs(seq.Macros) do
         setmetatable(seq.Macros[k].Actions, Statics.TableMetadataFunction)
         local actiontable = {}
-        for i, j in ipairs(seq.Macros[k].Actions) do
+        for _, j in ipairs(seq.Macros[k].Actions) do
             local processed = processAction(j, seq.Macros[k].Variables)
-
             table.insert(actiontable, processed)
         end
         seq.Macros[k].Actions = actiontable
