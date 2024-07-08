@@ -281,6 +281,19 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
             )
             local k, v = actiontable[1], actiontable[2]
             local seqName = string.upper(k)
+
+            if v.MetaData.GSEVersion and v.MetaData.GSEVersion < 3200 then
+                if GSE.Update31Actions then
+                    v = GSE.Update31Actions(v)
+                else
+                    GSE.Print(
+                        L["This macro is not compatible with this version of the game and cannot be imported."],
+                        L["Import"]
+                    )
+                    return
+                end
+            end
+
             GSE.AddSequenceToCollection(seqName, v)
             if createicon then
                 GSE.CheckMacroCreated(seqName, true)

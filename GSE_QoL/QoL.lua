@@ -394,3 +394,115 @@ GSE.GUIAdvancedExport = function(exportframe)
         end
     )
 end
+
+local function ProcessLegacyVariables(lines, variableTable)
+    local returnLines = {}
+    for _, line in ipairs(lines) do
+        if line ~= "/click GSE.Pause" then
+            if not GSE.isEmpty(variableTable) then
+                for key, value in pairs(variableTable) do
+                    if type(value) == "string" then
+                        local functline = value
+                        if string.sub(functline, 1, 10) == "function()" then
+                            functline = string.sub(functline, 11)
+                            functline = functline:sub(1, -4)
+                            local funct = loadstring(functline)
+                            if funct ~= nil then
+                                value = funct
+                            end
+                        end
+                    end
+                    if type(value) == "function" then
+                        if pcall(value) then
+                            value = value()
+                        else
+                            value = ""
+                        end
+                    end
+                    if type(value) == "boolean" then
+                        value = tostring(value)
+                    end
+                    if value == nil then
+                        value = ""
+                    end
+                    if type(value) == "table" then
+                        value = GSE.SafeConcat(value, "\n")
+                    end
+
+                    line = string.gsub(line, string.format("~~%s~~", key), value)
+                end
+            end
+        end
+        table.insert(returnLines, line)
+    end
+    return GSE.SafeConcat(returnLines, "\n")
+end
+
+local function buildAction(action, variables)
+    if action.Type == Statics.Actions.Loop then
+        -- we have a loop within a loop
+        return GSE.processAction(action, variables)
+    else
+        action.type = "macro"
+        local macro = ProcessLegacyVariables(action, variables)
+
+        action.macro = macro
+        action.target = " "
+        return action
+    end
+end
+
+local function processAction(action, variables)
+    if action.Type == Statics.Actions.Loop then
+        local actionList = {}
+        -- setup the interation
+        for _, v in ipairs(action) do
+            local builtaction = processAction(v, variables)
+            table.insert(actionList, builtaction)
+        end
+        -- process repeats for the block
+        for k, v in ipairs(actionList) do
+            action[k] = v
+        end
+        return action
+    elseif action.Type == Statics.Actions.Pause then
+        return action
+    elseif action.Type == Statics.Actions.If then
+        local actionList = {}
+        for _, v in ipairs(action) do
+            table.insert(processAction(v, variables))
+        end
+
+        -- process repeats for the block
+        for k, v in ipairs(actionList) do
+            action[k] = v
+        end
+        return action
+    else
+        local builtstuff = buildAction(action, variables)
+        for k, _ in ipairs(action) do
+            action[k] = nil
+        end
+
+        return builtstuff
+    end
+end
+
+function GSE.Update31Actions(sequence)
+    local seq = GSE.CloneSequence(sequence)
+    for k, _ in ipairs(seq.Macros) do
+        setmetatable(seq.Macros[k].Actions, Statics.TableMetadataFunction)
+        local actiontable = {}
+        for i, j in ipairs(seq.Macros[k].Actions) do
+            local processed = processAction(j, seq.Macros[k].Variables)
+
+            table.insert(actiontable, processed)
+        end
+        seq.Macros[k].Actions = actiontable
+        seq.Macros[k].Variables = nil
+        seq.Macros[k].InbuiltVariables = nil
+    end
+    seq.MetaData.Version = 3200
+    seq.WeakAuras = nil
+    return seq
+end

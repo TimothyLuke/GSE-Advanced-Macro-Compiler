@@ -753,3 +753,4 @@ L["Pet"] = true
 L["Toy"] = true
 L["Macro Name or Macro Commands"] = true
 L["Pet Ability"] = true
+L["This macro is not compatible with this version of the game and cannot be imported."] = true

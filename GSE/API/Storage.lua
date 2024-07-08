@@ -475,9 +475,11 @@ function GSE.UpdateIcon(self, reset)
         for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
             if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
                 local spell, target = SecureCmdOptionParse(etc)
-                local spellinfo = C_Spell.GetSpellInfo(spell)
-                if spellinfo then
-                    foundSpell = spellinfo.name
+                if spell then
+                    local spellinfo = C_Spell.GetSpellInfo(spell)
+                    if spellinfo then
+                        foundSpell = spellinfo.name
+                    end
                 end
             end
         end
