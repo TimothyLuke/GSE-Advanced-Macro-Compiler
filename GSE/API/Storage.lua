@@ -459,12 +459,11 @@ function GSE.UpdateIcon(self, reset)
     local gsebutton = self:GetName()
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
-    if executionseq[step].type == "macro" then
-        for cmd, etc in gmatch(executionseq[step].macro or "", "/(%w+)%s+([^\n]+)") do
+    if executionseq[step].type == "macro" and executionseq[step].macrotext then
+        for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
             if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
                 local spell, target = SecureCmdOptionParse(etc)
-                local spellinfo = L
-                C_Spell.GetSpellInfo(spell)
+                local spellinfo = C_Spell.GetSpellInfo(spell)
                 if spellinfo then
                     foundSpell = spellinfo.name
                 end
@@ -824,11 +823,13 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         gsebutton:SetAttribute("step", 1)
         gsebutton.UpdateIcon = GSE.UpdateIcon
         gsebutton:RegisterForClicks("AnyUp", "AnyDown")
+
         gsebutton:SetAttribute("combatreset", combatReset)
     end
+
     gsebutton:SetAttribute("spell", spelllist[1].spell)
     gsebutton:SetAttribute("unit", spelllist[1].unit)
-
+    gsebutton:SetAttribute("stepped", false)
     local steps = {}
 
     for k, v in ipairs(spelllist) do
@@ -874,14 +875,18 @@ end
     local step = self:GetAttribute('step')
 
     step = tonumber(step)
-    for k,v in pairs(spelllist[step]) do
-        self:SetAttribute(k, v )
+    if self:GetAttribute('stepped') then
+        self:SetAttribute('stepped', false)
+    else
+        for k,v in pairs(spelllist[step]) do
+            self:SetAttribute(k, v )
+        end
+
+        step = step % #spelllist + 1
+        self:SetAttribute('stepped', true)
+        self:SetAttribute('step', step)
+        self:CallMethod('UpdateIcon')
     end
-
-    step = step % #spelllist + 1
-
-    self:SetAttribute('step', step)
-    self:CallMethod('UpdateIcon')
     ]=]
         )
     end
