@@ -103,6 +103,9 @@ end
 local function LoadKeyBindings()
     local char = UnitFullName("player")
     local realm = GetRealmName()
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
