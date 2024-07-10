@@ -400,5 +400,6 @@ globals = {
     "PlayerSpellsFrame",
     "C_SpellBook",
     "MenuUtil",
-    "SetBindingClick"
+    "SetBindingClick",
+    "GSE3Storage"
 }
