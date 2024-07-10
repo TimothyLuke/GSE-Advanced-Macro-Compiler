@@ -8,7 +8,7 @@ local GNOME = "Storage"
 --- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
-    GSE3Storage[tonumber(classid)][sequenceName] = nil
+    GSESequences[tonumber(classid)][sequenceName] = nil
 end
 
 function GSE.CloneSequence(orig, keepcomments)
@@ -53,7 +53,7 @@ end
 
 --- Replace a current version of a Macro
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
-    GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
     if GSE.GUI and GSE.GUIEditFrame then
         if GSE.GUIEditFrame:IsVisible() then
@@ -74,17 +74,17 @@ function GSE.LoadStorage(destination)
     if GSE.isEmpty(destination) then
         destination = {}
     end
-    if GSE.isEmpty(GSE3Storage) then
-        GSE3Storage = {}
+    if GSE.isEmpty(GSESequences) then
+        GSESequences = {}
         for iind = 0, 13 do
-            GSE3Storage[iind] = {}
+            GSESequences[iind] = {}
         end
     end
     for k = 0, 13 do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
         end
-        local v = GSE3Storage[k]
+        local v = GSESequences[k]
         for i, j in pairs(v) do
             local status, err =
                 pcall(
@@ -215,8 +215,8 @@ end
 function GSE.CleanMacroLibrary(forcedelete)
     -- Clean out the sequences database except for the current version
     if forcedelete then
-        GSE3Storage[GSE.GetCurrentClassID()] = nil
-        GSE3Storage[GSE.GetCurrentClassID()] = {}
+        GSESequences[GSE.GetCurrentClassID()] = nil
+        GSESequences[GSE.GetCurrentClassID()] = {}
         GSE.Library[GSE.GetCurrentClassID()] = nil
         GSE.Library[GSE.GetCurrentClassID()] = {}
     end

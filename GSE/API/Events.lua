@@ -121,7 +121,6 @@ local function LoadKeyBindings()
 end
 
 function GSE:PLAYER_ENTERING_WORLD()
-    GSE.PerformOneOffEvents()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
@@ -131,10 +130,11 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
+        GSE.PerformOneOffEvents()
         GSE.LoadStorage(GSE.Library)
 
-        if GSE.isEmpty(GSE3Storage[GSE.GetCurrentClassID()]) then
-            GSE3Storage[GSE.GetCurrentClassID()] = {}
+        if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
+            GSESequences[GSE.GetCurrentClassID()] = {}
         end
         if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
             GSE.Library[GSE.GetCurrentClassID()] = {}
@@ -237,7 +237,7 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
 end
 
 function GSE:PLAYER_LOGOUT()
-    if GSE.UnsavedOptions["GUI"] then
+    if GSE.GUI then
         if GSE.isEmpty(GSEOptions.frameLocations) then
             GSEOptions.frameLocations = {}
         end

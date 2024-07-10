@@ -435,7 +435,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSE3Storage[tonumber(t.ClassID)][t.SequenceName]) then
+                if not GSE.isEmpty(GSESequences[tonumber(t.ClassID)][t.SequenceName]) then
                     GSE.SendSequence(tonumber(t.ClassID), t.SequenceName, sender, "WHISPER")
                 end
             else
@@ -443,7 +443,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSE3Storage[t.ClassID][t.SequenceName]) then
+                if not GSE.isEmpty(GSESequences[t.ClassID][t.SequenceName]) then
                     GSE.SendSequenceMeta(t.ClassID, t.SequenceName, sender, "WHISPER")
                 end
             else
@@ -451,7 +451,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_SEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSE3Storage[t.ClassID][t.SequenceName]) then
+                if not GSE.isEmpty(GSESequences[t.ClassID][t.SequenceName]) then
                     local sequence = GSE.Library[t.ClassID][t.SequenceName]
                     if sequence.MetaData.LastUpdated ~= t.LastUpdated then
                         GSE.RequestSequence(t.ClassID, t.SequenceName, sender, "WHISPER")

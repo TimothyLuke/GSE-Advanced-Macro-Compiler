@@ -366,7 +366,7 @@ local function showMacro(node)
                                 )
                             end
                             rootDescription:CreateTitle(L["Insert GSE Sequence"])
-                            for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+                            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
                                 rootDescription:CreateButton(
                                     k,
                                     function()
@@ -378,7 +378,7 @@ local function showMacro(node)
                                     end
                                 )
                             end
-                            for k, _ in pairs(GSE3Storage[0]) do
+                            for k, _ in pairs(GSESequences[0]) do
                                 rootDescription:CreateButton(
                                     k,
                                     function()

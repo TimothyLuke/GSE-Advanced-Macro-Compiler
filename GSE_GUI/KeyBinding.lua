@@ -139,10 +139,10 @@ local function showKeybind(bind, button, specialization)
     SequenceListbox:SetLabel(L["Sequence"])
     local names = {}
 
-    for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+    for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
         names[k] = k
     end
-    for k, _ in pairs(GSE3Storage[0]) do
+    for k, _ in pairs(GSESequences[0]) do
         names[k] = k
     end
 

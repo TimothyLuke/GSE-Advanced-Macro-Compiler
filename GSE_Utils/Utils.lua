@@ -6,12 +6,12 @@ local L = GSE.L
 local GNOME = "Storage"
 
 function GSE.ImportLegacyStorage(Library)
-    if GSE.isEmpty(GSE3Storage) then
-        GSE3Storage = {}
+    if GSE.isEmpty(GSESequences) then
+        GSESequences = {}
     end
     for i = 0, 13 do
-        if GSE.isEmpty(GSE3Storage[i]) then
-            GSE3Storage[i] = {}
+        if GSE.isEmpty(GSESequences[i]) then
+            GSESequences[i] = {}
         end
     end
 
@@ -19,7 +19,7 @@ function GSE.ImportLegacyStorage(Library)
         for k, v in pairs(Library) do
             for i, j in pairs(v) do
                 local compressedVersion = GSE.EncodeMessage({i, j})
-                GSE3Storage[k][i] = compressedVersion
+                GSESequences[k][i] = compressedVersion
             end
         end
     end
@@ -142,18 +142,18 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         end
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
-        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
-        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
     elseif action == "RENAME" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
-        GSE3Storage[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was imported as a new macro."], "GSE Storage")
         GSE.PrintDebugMessage(
             "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),

@@ -278,10 +278,10 @@ GSE.GUIAdvancedExport = function(exportframe)
     HeaderRow:SetLayout("Flow")
     HeaderRow:SetFullWidth(true)
     local SequenceDropDown = AceGUI:Create("Dropdown")
-    for k, _ in pairs(GSE3Storage[GSE.GetCurrentClassID()]) do
+    for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
         SequenceDropDown:AddItem(k, k)
     end
-    for k, _ in pairs(GSE3Storage[0]) do
+    for k, _ in pairs(GSESequences[0]) do
         SequenceDropDown:AddItem(k, k)
     end
     SequenceDropDown:SetMultiselect(true)
@@ -404,19 +404,8 @@ local function ProcessLegacyVariables(lines, variableTable)
                     if type(value) == "string" then
                         local functline = value
                         if string.sub(functline, 1, 10) == "function()" then
-                            functline = string.sub(functline, 11)
-                            functline = functline:sub(1, -4)
-                            local funct = loadstring(functline)
-                            if funct ~= nil then
-                                value = funct
-                            end
-                        end
-                    end
-                    if type(value) == "function" then
-                        if pcall(value) then
-                            value = value()
-                        else
-                            value = ""
+                            GSE.UpdateVariable(value, key)
+                            value = '=GSE.V["' .. key '"]()'
                         end
                     end
                     if type(value) == "boolean" then

@@ -24,7 +24,7 @@ globals = {
     "GSEOptions",
     "GSELibrary",
     "GSELegacyLibraryBackup",
-    "GSE3Storage",
+    "GSESequences",
     "GSE_C",
     "GSESpellCache",
     "GSEVariables",
