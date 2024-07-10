@@ -109,24 +109,24 @@ function GSE.PerformOneOffEvents()
         GSEOptions.msClickRate = 250
     end
 
-    --if GSE.isEmpty(GSESequences) then
-    GSESequences = {
-        [0] = {},
-        [1] = {},
-        [2] = {},
-        [3] = {},
-        [4] = {},
-        [5] = {},
-        [6] = {},
-        [7] = {},
-        [8] = {},
-        [9] = {},
-        [10] = {},
-        [11] = {},
-        [12] = {},
-        [13] = {}
-    }
-    --end
+    if GSE.isEmpty(GSESequences) then
+        GSESequences = {
+            [0] = {},
+            [1] = {},
+            [2] = {},
+            [3] = {},
+            [4] = {},
+            [5] = {},
+            [6] = {},
+            [7] = {},
+            [8] = {},
+            [9] = {},
+            [10] = {},
+            [11] = {},
+            [12] = {},
+            [13] = {}
+        }
+    end
 
     if GSE.isEmpty(GSEOptions.Updates) then
         GSEOptions.Updates = {}
