@@ -133,34 +133,36 @@ function GSE.PerformOneOffEvents()
     end
 
     if GSE.isEmpty(GSEOptions.Updates["3200"]) then
-        for i, j in ipairs(GSE3Storage) do
-            for k, v in pairs(j) do
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
-                if
-                    localsuccess and uncompressedVersion[2].MetaData.GSEVersion and
-                        tonumber(uncompressedVersion[2].MetaData.GSEVersion) < 3200
-                 then
-                    local updatedseq = GSE.Update31Actions(uncompressedVersion[2])
-                    GSE.AddSequenceToCollection(k, updatedseq)
-                else
-                    GSESequences[i][k] = v
+        if GSE3Storage then
+            for i, j in ipairs(GSE3Storage) do
+                for k, v in pairs(j) do
+                    local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
+                    if
+                        localsuccess and uncompressedVersion[2].MetaData.GSEVersion and
+                            tonumber(uncompressedVersion[2].MetaData.GSEVersion) < 3200
+                     then
+                        local updatedseq = GSE.Update31Actions(uncompressedVersion[2])
+                        GSE.AddSequenceToCollection(k, updatedseq)
+                    else
+                        GSESequences[i][k] = v
+                    end
                 end
             end
-        end
-        for k, v in pairs(GSE3Storage[0]) do
-            local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
-            if localsuccess then
-                if
-                    uncompressedVersion[2].MetaData.GSEVersion and
-                        tonumber(uncompressedVersion[2].MetaData.GSEVersion) < 3200
-                 then
-                    local updatedseq = GSE.Update31Actions(uncompressedVersion[2])
-                    GSE.AddSequenceToCollection(k, updatedseq)
+            for k, v in pairs(GSE3Storage[0]) do
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
+                if localsuccess then
+                    if
+                        uncompressedVersion[2].MetaData.GSEVersion and
+                            tonumber(uncompressedVersion[2].MetaData.GSEVersion) < 3200
+                     then
+                        local updatedseq = GSE.Update31Actions(uncompressedVersion[2])
+                        GSE.AddSequenceToCollection(k, updatedseq)
+                    else
+                        GSESequences[0][k] = v
+                    end
                 else
-                    GSESequences[0][k] = v
+                    print("decom error")
                 end
-            else
-                print("decom error")
             end
         end
         GSE3Storage = nil
