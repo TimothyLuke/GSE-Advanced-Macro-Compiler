@@ -1019,6 +1019,7 @@ function GSE.CompileMacroText(text, mode)
                     value = functionresult()
                 end
             end
+            value = GSE.UnEscapeString(value)
             if string.sub(value, 1, 2) == "--" then
                 lines[k] = "" -- strip the comments
             else
@@ -1028,7 +1029,13 @@ function GSE.CompileMacroText(text, mode)
             lines[k] = GSE.TranslateString(value, mode, false)
         end
     end
-    return table.concat(lines, "\n")
+    local finallines = {}
+    for _, v in ipairs(lines) do
+        if not GSE.isEmpty(v) then
+            table.insert(finallines, v)
+        end
+    end
+    return table.concat(finallines, "\n")
 end
 
 function GSE.ManageMacros()

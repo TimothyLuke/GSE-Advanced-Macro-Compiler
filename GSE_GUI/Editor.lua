@@ -2697,6 +2697,8 @@ local function drawAction(container, action, version, keyPath)
             compiledmacrotext = compiledmacrotext .. "\n\n" .. charcount
 
             compiledMacro:SetText(compiledmacrotext)
+            compiledMacro.label:SetNonSpaceWrap(true)
+
             local feedback = AceGUI:Create("SimpleGroup")
             feedback:SetRelativeWidth(0.45)
             feedback:SetFullHeight(true)
