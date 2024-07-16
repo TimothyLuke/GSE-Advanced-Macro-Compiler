@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110000, 110002
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFSequences - Variables - Macros|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.

@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110000, 110002
 
 ## Title: |cff0000ffGSE:|r |cFF00D1FFGSE QoL|r
 ## Notes: GSE Quality of Life
