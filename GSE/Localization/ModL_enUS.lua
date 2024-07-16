@@ -490,7 +490,6 @@ L["Restricted"] = true
 L["RESTRICTED: Macro specifics disabled by author."] = true
 L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] = true
 L["Support GSE"] = true
-L["Get Help"] = true
 
 -- 3.0.2
 L["Compiled Template"] = true
@@ -754,3 +753,5 @@ L["Toy"] = true
 L["Macro Name or Macro Commands"] = true
 L["Pet Ability"] = true
 L["This macro is not compatible with this version of the game and cannot be imported."] = true
+L["GSE Discord"] = true
+L["Report an Issue"] = true

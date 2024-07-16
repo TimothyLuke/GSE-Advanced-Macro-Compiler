@@ -1114,23 +1114,35 @@ function GSE.GetOptionsTable()
                         name = "GSE: " .. GSE.VersionString,
                         order = 22
                     },
-                    documentation = {
+                    support = {
                         type = "execute",
-                        name = L["Get Help"],
+                        name = L["GSE Discord"],
+                        order = 24,
+                        image = "Interface\\Addons\\GSE_GUI\\Assets\\discord.png",
+                        imageWidth = 120,
+                        imageHeight = 120,
+                        func = function()
+                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url = "https://discord.gg/yUS9R4ZXZA"
+                            StaticPopup_Show("GSE_SEQUENCEHELP")
+                        end
+                    },
+                    issues = {
+                        type = "execute",
+                        name = L["Report an Issue"],
                         order = 25,
                         image = "Interface\\Addons\\GSE_GUI\\Assets\\github.tga",
                         imageWidth = 120,
                         imageHeight = 120,
                         func = function()
                             StaticPopupDialogs["GSE_SEQUENCEHELP"].url =
-                                "https://github.com/TimothyLuke/GnomeSequencer-Enhanced/issues"
+                                "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/issues"
                             StaticPopup_Show("GSE_SEQUENCEHELP")
                         end
                     },
                     patreonlink = {
                         type = "execute",
                         name = L["Support GSE"],
-                        order = 25,
+                        order = 26,
                         image = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.tga",
                         imageWidth = 120,
                         imageHeight = 120,
