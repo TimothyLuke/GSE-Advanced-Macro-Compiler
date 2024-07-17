@@ -131,6 +131,17 @@ end
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
         GSE.PerformOneOffEvents()
+
+        if GSE.isEmpty(GSESpellCache) then
+            GSESpellCache = {
+                ["enUS"] = {}
+            }
+        end
+
+        if GSE.isEmpty(GSESpellCache[GetLocale()]) then
+            GSESpellCache[GetLocale()] = {}
+        end
+
         GSE.LoadStorage(GSE.Library)
 
         if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
