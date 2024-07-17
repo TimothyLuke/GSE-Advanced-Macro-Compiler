@@ -294,7 +294,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     if type(name) == "table" then
         -- in TWW GetSpellInfo was changed to return a table instead of multiple valueStep
         rank = name.rank and name.rank or nil
-        spellId = name.sid
+        spellId = name.spellID
         name = name.name
     end
     if mode ~= Statics.TranslatorMode.ID then
@@ -305,14 +305,13 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         end
     else
         returnval = spellId
-        -- If we are not in classic
         -- Check for overrides like Crusade and Avenging Wrath.
         if not absolute and not GSE.isEmpty(returnval) then
             if FindBaseSpellByID(returnval) then
                 returnval = FindBaseSpellByID(returnval)
-                if type(returnval) == "table" then
-                    returnval = returnval.spellID
-                end
+            -- if type(returnval) == "table" then
+            --     returnval = returnval.spellID
+            -- end
             end
             -- Still need Heart of Azeroth overrides.
             if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then

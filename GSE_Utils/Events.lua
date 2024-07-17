@@ -94,19 +94,11 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
 
         local foundskill = false
         local spell
-        if GetSpellBookItemInfo then
-            local GetSpellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo or GetSpellInfo
-            spell, _, _, _, _, _ = GetSpellInfo(elements[6])
-            local fskilltype, _ = GetSpellBookItemInfo(spell)
-            if not GSE.isEmpty(fskilltype) then
-                foundskill = true
-            end
-        else
-            local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
-            if found then
-                foundskill = true
-                spell = C_Spell.GetSpellInfo(elements[6]).name
-            end
+
+        local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
+        if found then
+            foundskill = true
+            spell = C_Spell.GetSpellInfo(elements[6]).name
         end
         if foundskill then
             if GSE.RecorderActive then
