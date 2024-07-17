@@ -2579,7 +2579,7 @@ local function drawAction(container, action, version, keyPath)
         typegroup:AddChild(toyradio)
 
         local spellcontainer = AceGUI:Create("SimpleGroup")
-        spellcontainer:SetLayout("Fill")
+        spellcontainer:SetLayout("List")
         spellcontainer:SetFullWidth(true)
 
         spellradio:SetCallback(
