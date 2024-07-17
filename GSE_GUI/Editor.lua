@@ -2518,7 +2518,7 @@ local function drawAction(container, action, version, keyPath)
         macroPanel:AddChild(linegroup1)
 
         local compiledMacro = AceGUI:Create("Label")
-        compiledMacro:SetRelativeWidth(0.45)
+        compiledMacro:SetFullHeight(true)
 
         local spellEditBox, macroeditbox =
             GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence, compiledMacro)
@@ -2578,7 +2578,7 @@ local function drawAction(container, action, version, keyPath)
         typegroup:AddChild(petradio)
         typegroup:AddChild(toyradio)
 
-        local spellcontainer = AceGUI:Create("SimpleGroup")
+        local spellcontainer = AceGUI:Create("InlineGroup")
         spellcontainer:SetLayout("List")
         spellcontainer:SetFullWidth(true)
 
@@ -2700,12 +2700,12 @@ local function drawAction(container, action, version, keyPath)
             compiledMacro.label:SetNonSpaceWrap(true)
 
             local feedback = AceGUI:Create("SimpleGroup")
+            feedback:SetFullWidth(true)
             feedback:SetRelativeWidth(0.45)
-            feedback:SetFullHeight(true)
             feedback:AddChild(compiledMacro)
 
             local spacerm = AceGUI:Create("Icon")
-            spacerm:SetRelativeWidth(0.02)
+            spacerm:SetRelativeWidth(0.03)
             macrolayout:AddChild(macroeditbox)
             macrolayout:AddChild(spacerm)
             macrolayout:AddChild(feedback)
