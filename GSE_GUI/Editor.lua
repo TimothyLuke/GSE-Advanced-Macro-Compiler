@@ -2571,7 +2571,7 @@ local function drawAction(container, action, version, keyPath)
         local toyradio = AceGUI:Create("CheckBox")
         toyradio:SetType("radio")
         toyradio:SetLabel(L["Toy"])
-        toyradio:SetValue((action.type and action.type == "radio" or false))
+        toyradio:SetValue((action.type and action.type == "toy" or false))
         typegroup:AddChild(spellradio)
         typegroup:AddChild(itemradio)
         typegroup:AddChild(macroradio)
@@ -2579,7 +2579,7 @@ local function drawAction(container, action, version, keyPath)
         typegroup:AddChild(toyradio)
 
         local spellcontainer = AceGUI:Create("SimpleGroup")
-        spellcontainer:SetLayout("List")
+        spellcontainer:SetLayout("Fill")
         spellcontainer:SetFullWidth(true)
 
         spellradio:SetCallback(
