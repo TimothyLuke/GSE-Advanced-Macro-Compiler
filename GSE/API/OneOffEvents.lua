@@ -166,6 +166,7 @@ function GSE.PerformOneOffEvents()
             end
         end
         GSE3Storage = nil
+        GSEOptions.shownew = true
         GSEOptions.Updates["3200"] = true
     end
 end

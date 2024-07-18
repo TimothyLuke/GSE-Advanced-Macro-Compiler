@@ -755,3 +755,22 @@ L["Pet Ability"] = true
 L["This macro is not compatible with this version of the game and cannot be imported."] = true
 L["GSE Discord"] = true
 L["Report an Issue"] = true
+L["CHanges Left Side, Changes Right Side, Many Changes!!!! Handle It"] = true
+L["GSE: Whats New in "] = true
+L["Show next time you login."] = true
+L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
+L["WhatsNew"] =
+    [[With The War Within a number of changes were made to how GSE needs to operate.
+
+Up until The War Within, Mods like GSE were able to use the MacroText attribute on WoW's SecureActionButtonTemplate. This ability was removed with the War Within Alpha and a limited version has been reinstated for The War Within Beta. What this means for mods is that there are limits on what Macro commands a Mod like GSE can execute. To compensate for this GSE can call upon the remaining capabilities of SecureActionButtonTemplate, GSE can retain its capabilities by using it directly. 
+
+GSE now consists of 4 main sections. Sequences, Variables, Keybindings and Macros. The menu to these is shown when you hit /gse.
+
+|cFFFF0000Keybinding|r
+In order for most GSE Sequences to work you cannot use a /macro stub to "/click" a GSE Sequence.  You have to KeyBind the GSE Sequence directly. This is done via the KeyBindings menu button.
+
+|cFFFF0000Sequences|r
+The updated Sequences replace the actions of GSE 3.1. The old sequence viewer/menu has been merged with the editor and you select the Template you want to work on from the left.  Right Clicking on a Sequence, Variable or Macro will open a popup menu where you can choose to Export.
+
+The full detail on all of these changes is available on the GSE GitHub wiki.
+]]

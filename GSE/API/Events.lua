@@ -236,6 +236,9 @@ function GSE:ADDON_LOADED(event, addon)
             }
         end
 
+        if GSEOptions.shownew then
+            GSE:ShowUpdateNotes()
+        end
         GSE:RegisterEvent("UPDATE_MACROS")
         GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
     end

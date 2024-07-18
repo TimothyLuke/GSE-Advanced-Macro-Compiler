@@ -54,6 +54,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.ActiveSequenceVersions = {}
     GSEOptions.DisabledSequences = {}
     GSEOptions.DebugModules = {}
+    GSEOptions.shownew = true
 
     GSEOptions.DebugModules[Statics.DebugModules["Translator"]] = false
     GSEOptions.DebugModules[Statics.DebugModules["Editor"]] = false
