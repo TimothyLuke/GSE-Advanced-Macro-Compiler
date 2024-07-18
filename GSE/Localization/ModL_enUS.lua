@@ -762,7 +762,7 @@ L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
 L["WhatsNew"] =
     [[With The War Within a number of changes were made to how GSE needs to operate.
 
-Up until The War Within, Mods like GSE were able to use the MacroText attribute on WoW's SecureActionButtonTemplate. This ability was removed with the War Within Alpha and a limited version has been reinstated for The War Within Beta. What this means for mods is that there are limits on what Macro commands a Mod like GSE can execute. To compensate for this GSE can call upon the remaining capabilities of SecureActionButtonTemplate, GSE can retain its capabilities by using it directly. 
+Up until The War Within, Mods like GSE were able to use the MacroText attribute on WoW's SecureActionButtonTemplate. This ability was removed with the War Within Alpha and a limited version has been reinstated for The War Within Beta. What this means for mods is that there are limits on what Macro commands a Mod like GSE can execute. To compensate for this GSE can call upon the remaining capabilities of SecureActionButtonTemplate, GSE can retain its capabilities by using it directly.
 
 GSE now consists of 4 main sections. Sequences, Variables, Keybindings and Macros. The menu to these is shown when you hit /gse.
 
