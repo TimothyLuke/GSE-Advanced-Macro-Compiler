@@ -7,6 +7,7 @@ local L = GSE.L
 local macroframe = AceGUI:Create("Frame")
 macroframe:Hide()
 macroframe.panels = {}
+macroframe.frame:SetClampedToScreen(true)
 
 macroframe.frame:SetFrameStrata("MEDIUM")
 if

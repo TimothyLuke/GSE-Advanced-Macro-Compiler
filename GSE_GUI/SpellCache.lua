@@ -6,6 +6,7 @@ local L = GSE.L
 
 local cacheFrame = AceGUI:Create("Frame")
 cacheFrame.frame:SetFrameStrata("MEDIUM")
+cacheFrame.frame:SetClampedToScreen(true)
 cacheFrame:Hide()
 GSE.GUICacheFrame = cacheFrame
 function GSE.GUICreateCacheTabs()

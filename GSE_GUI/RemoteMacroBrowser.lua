@@ -12,6 +12,7 @@ remoteFrame.frame:SetFrameStrata("MEDIUM")
 remoteFrame:Hide()
 remoteFrame.GSEUser = ""
 remoteFrame.SequenceList = {}
+remoteFrame.frame:SetClampedToScreen(true)
 
 remoteFrame:SetStatusText(L["Select a Sequence"])
 remoteFrame:SetCallback(

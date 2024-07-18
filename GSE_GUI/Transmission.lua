@@ -12,6 +12,7 @@ local transauthorlen = string.len(transauthor)
 
 local transmissionFrame = AceGUI:Create("Frame")
 transmissionFrame.frame:SetFrameStrata("MEDIUM")
+transmissionFrame.frame:SetClampedToScreen(true)
 GSE.GUITransmissionFrame = transmissionFrame
 
 Completing:Register("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)

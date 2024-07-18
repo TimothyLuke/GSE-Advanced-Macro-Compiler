@@ -9,6 +9,7 @@ local libCE = libC:GetAddonEncodeTable()
 local recordframe = AceGUI:Create("Frame")
 recordframe:Hide()
 recordframe.frame:SetFrameStrata("MEDIUM")
+recordframe.frame:SetClampedToScreen(true)
 GSE.GUIRecordFrame = recordframe
 local recbuttontext = L["Record"]
 

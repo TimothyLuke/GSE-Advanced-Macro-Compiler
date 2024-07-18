@@ -7,7 +7,7 @@ frame:EnableMouse(true)
 
 frame:SetPoint("CENTER")
 frame:Hide()
-
+frame:SetClampedToScreen(true)
 frame:RegisterForDrag("LeftButton")
 frame:SetScript("OnDragStart", frame.StartMoving)
 frame:SetScript("OnDragStop", frame.StopMovingOrSizing)

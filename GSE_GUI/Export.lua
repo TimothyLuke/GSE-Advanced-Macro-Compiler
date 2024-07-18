@@ -8,6 +8,7 @@ exportframe:Hide()
 exportframe.classid = 0
 exportframe.sequencename = ""
 exportframe.frame:SetFrameStrata("MEDIUM")
+exportframe.frame:SetClampedToScreen(true)
 exportframe:SetTitle(L["GSE: Export"])
 exportframe:SetStatusText(L["Export a Sequence"])
 exportframe:SetCallback(

@@ -6,6 +6,7 @@ local L = GSE.L
 local compressframe = AceGUI:Create("Frame")
 compressframe.AutoCreateIcon = true
 compressframe.frame:SetFrameStrata("MEDIUM")
+compressframe.frame:SetClampedToScreen(true)
 compressframe:Hide()
 
 compressframe:SetTitle(L["Gnome Sequencer: Compress a Sequence String."])

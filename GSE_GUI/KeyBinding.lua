@@ -6,6 +6,7 @@ local L = GSE.L
 
 local keybindingframe = AceGUI:Create("Frame")
 keybindingframe:Hide()
+keybindingframe.frame:SetClampedToScreen(true)
 keybindingframe.panels = {}
 
 keybindingframe.frame:SetFrameStrata("MEDIUM")

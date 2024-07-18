@@ -3,14 +3,12 @@ local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
-local libS = LibStub:GetLibrary("AceSerializer-3.0")
-local libC = LibStub:GetLibrary("LibCompress")
-local libCE = libC:GetAddonEncodeTable()
 
 local compareframe = AceGUI:Create("Frame")
 compareframe:Hide()
 compareframe.ChosenAction = "MERGE"
 compareframe.frame:SetFrameStrata("MEDIUM")
+compareframe.frame:SetClampedToScreen(true)
 GSE.GUICompareFrame = compareframe
 
 compareframe:SetTitle(L["Sequence Compare"])

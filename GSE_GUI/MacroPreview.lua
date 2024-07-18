@@ -16,7 +16,7 @@ end
 local PreviewFrame = AceGUI:Create("Frame")
 PreviewFrame.frame:SetFrameStrata("MEDIUM")
 GSE.MacroPreviewFrame = PreviewFrame
-
+PreviewFrame.frame:SetClampedToScreen(true)
 PreviewFrame:SetTitle(L["Compiled Template"])
 PreviewFrame:SetCallback(
   "OnClose",

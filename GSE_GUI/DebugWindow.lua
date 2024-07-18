@@ -8,6 +8,7 @@ local onpause = false
 
 local DebugFrame = AceGUI:Create("Frame")
 DebugFrame.frame:SetFrameStrata("MEDIUM")
+DebugFrame.frame:SetClampedToScreen(true)
 GSE.GUIDebugFrame = DebugFrame
 DebugFrame.DebugOutputTextbox = AceGUI:Create("MultiLineEditBox")
 GSE.GUIDebugFrame.DebugEnableViewButton = AceGUI:Create("Button")

@@ -14,6 +14,7 @@ local frame = CreateFrame("frame", "GSE3", UIParent, BackdropTemplateMixin and "
 frame:SetSize(width, height)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("MEDIUM")
+frame:SetClampedToScreen(true)
 frame:SetBackdrop(
 	{
 		bgFile = "Interface/Tooltips/UI-Tooltip-Background",

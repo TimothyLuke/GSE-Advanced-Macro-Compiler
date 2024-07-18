@@ -7,7 +7,7 @@ local L = GSE.L
 local editframe = AceGUI:Create("Frame")
 editframe:Hide()
 editframe.frame:SetFrameStrata("MEDIUM")
-
+editframe.frame:SetClampedToScreen(true)
 editframe.Sequence = {}
 editframe.Sequence.Macros = {}
 editframe.SequenceName = ""

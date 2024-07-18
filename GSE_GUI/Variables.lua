@@ -7,7 +7,7 @@ local L = GSE.L
 local variablesframe = AceGUI:Create("Frame")
 variablesframe:Hide()
 variablesframe.panels = {}
-
+variablesframe.frame:SetClampedToScreen(true)
 variablesframe.frame:SetFrameStrata("MEDIUM")
 if
     GSEOptions.frameLocations and GSEOptions.frameLocations.variablesframe and
