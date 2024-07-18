@@ -894,6 +894,11 @@ end
     else
         for k,v in pairs(spelllist[step]) do
             self:SetAttribute(k, v )
+            if k == "macrotext" then
+                self:SetAttribute("macro", nil )
+            elseif k == "macro" then
+                self:SetAttribute("macrotext", nil )
+            end
         end
 
         step = step % #spelllist + 1
