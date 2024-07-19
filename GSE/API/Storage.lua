@@ -471,18 +471,42 @@ function GSE.UpdateIcon(self, reset)
     local gsebutton = self:GetName()
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
-    local spellinfo
+    local spellinfo = {}
     if executionseq[step].type == "macro" and executionseq[step].macrotext then
-        for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
-            if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
-                local spell, target = SecureCmdOptionParse(etc)
-                if spell then
-                    spellinfo = C_Spell.GetSpellInfo(spell)
-                    if spellinfo then
-                        foundSpell = spellinfo.name
+        local searching = true
+        if string.sub(executionseq[step].macrotext, 12) == "/click GSE.P" then
+            spellinfo.name = "GSE Pause"
+            spellinfo.iconID = Statics.ActionsIcons.Pause
+            foundSpell = spellinfo.name
+        else
+            for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
+                if searching then
+                    if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
+                        local spell, target = SecureCmdOptionParse(etc)
+                        if spell then
+                            spellinfo = C_Spell.GetSpellInfo(spell)
+                            if spellinfo then
+                                foundSpell = spellinfo.name
+                                searching = false
+                            end
+                        end
                     end
                 end
             end
+        end
+    elseif executionseq[step].type == "macro" then
+        local mname, micon = GetMacroInfo(executionseq[step].macro)
+        if mname then
+            spellinfo.name = mname
+            spellinfo.iconID = micon
+            foundSpell = spellinfo.name
+        end
+    elseif executionseq[step].type == "item" then
+        local mname, _, _, _, _, _, _, _, _, micon = C_Item.GetItemInfo(executionseq[step].item)
+        if mname then
+            spellinfo.name = mname
+            spellinfo.iconID = micon
+            foundSpell = spellinfo.name
         end
     end
 
