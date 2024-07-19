@@ -211,32 +211,31 @@ local function CreateSequencePanels(container, key)
                         rootDescription:CreateButton(
                             L["Chat Link"],
                             function()
-                                StaticPopupDialogs["GSE_ChatLink"].link =
-                                    GSE.SequenceChatPattern(elements[2], elements[1])
+                                StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
                                 StaticPopup_Show("GSE_ChatLink")
                             end
                         )
-                        if GSE.OOCCheckMacroCreated(elements[2]) then
-                            rootDescription:CreateButton(
-                                L["Delete Icon"],
-                                function()
-                                    GSE.DeleteMacroStub(elements[2])
-                                    if selected then
-                                        GSE.GUILoadEditor(widget:GetKey())
-                                    end
-                                end
-                            )
-                        else
-                            rootDescription:CreateButton(
-                                L["Create Icon"],
-                                function()
-                                    GSE.OOCCheckMacroCreated(elements[2], true)
-                                    if selected then
-                                        GSE.GUILoadEditor(widget:GetKey())
-                                    end
-                                end
-                            )
-                        end
+                        -- if GSE.OOCCheckMacroCreated(elements[2]) then
+                        --     rootDescription:CreateButton(
+                        --         L["Delete Icon"],
+                        --         function()
+                        --             GSE.DeleteMacroStub(elements[2])
+                        --             if selected then
+                        --                 GSE.GUILoadEditor(widget:GetKey())
+                        --             end
+                        --         end
+                        --     )
+                        -- else
+                        --     rootDescription:CreateButton(
+                        --         L["Create Icon"],
+                        --         function()
+                        --             GSE.OOCCheckMacroCreated(elements[2], true)
+                        --             if selected then
+                        --                 GSE.GUILoadEditor(widget:GetKey())
+                        --             end
+                        --         end
+                        --     )
+                        -- end
                         rootDescription:CreateButton(
                             L["Keybindings"],
                             function()
@@ -252,7 +251,7 @@ local function CreateSequencePanels(container, key)
                     end
                 )
             elseif button == "LeftButton" and IsShiftKeyDown() then
-                StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(elements[2], elements[1])
+                StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
                 StaticPopup_Show("GSE_ChatLink")
             else
                 GSE.GUILoadEditor(widget:GetKey())

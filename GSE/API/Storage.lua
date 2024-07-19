@@ -471,12 +471,13 @@ function GSE.UpdateIcon(self, reset)
     local gsebutton = self:GetName()
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
+    local spellinfo
     if executionseq[step].type == "macro" and executionseq[step].macrotext then
         for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
             if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
                 local spell, target = SecureCmdOptionParse(etc)
                 if spell then
-                    local spellinfo = C_Spell.GetSpellInfo(spell)
+                    spellinfo = C_Spell.GetSpellInfo(spell)
                     if spellinfo then
                         foundSpell = spellinfo.name
                     end
@@ -487,6 +488,9 @@ function GSE.UpdateIcon(self, reset)
 
     if foundSpell then
         SetMacroSpell(gsebutton, foundSpell)
+        if WeakAuras then
+            WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
+        end
     end
     if not reset then
         GSE.UsedSequences[gsebutton] = true
