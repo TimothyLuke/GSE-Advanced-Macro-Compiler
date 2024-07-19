@@ -508,6 +508,9 @@ function GSE.UpdateIcon(self, reset)
             spellinfo.iconID = micon
             foundSpell = spellinfo.name
         end
+    elseif executionseq[step].type == "spell" then
+        spellinfo = C_Spell.GetSpellInfo(executionseq[step].spell)
+        foundSpell = spellinfo.name
     end
 
     if foundSpell then
