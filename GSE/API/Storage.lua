@@ -845,8 +845,15 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         gsebutton:SetAttribute("combatreset", combatReset)
     end
 
-    gsebutton:SetAttribute("spell", spelllist[1].spell)
-    gsebutton:SetAttribute("unit", spelllist[1].unit)
+    for k, v in pairs(spelllist[1]) do
+        if k == "macrotext" then
+            gsebutton:SetAttribute("macro", nil)
+        elseif k == "macro" then
+            gsebutton:SetAttribute("macrotext", nil)
+        end
+        gsebutton:SetAttribute(k, v)
+    end
+
     gsebutton:SetAttribute("stepped", false)
     local steps = {}
 
@@ -891,18 +898,17 @@ end
             "OnClick",
             [=[
     local step = self:GetAttribute('step')
-
     step = tonumber(step)
     if self:GetAttribute('stepped') then
         self:SetAttribute('stepped', false)
     else
         for k,v in pairs(spelllist[step]) do
-            self:SetAttribute(k, v )
             if k == "macrotext" then
                 self:SetAttribute("macro", nil )
             elseif k == "macro" then
                 self:SetAttribute("macrotext", nil )
             end
+            self:SetAttribute(k, v )
         end
 
         step = step % #spelllist + 1
