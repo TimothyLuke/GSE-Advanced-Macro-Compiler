@@ -128,14 +128,21 @@ end
 
 --- This function clears the Shift+n and CTRL+x keybindings.
 function GSE.ClearCommonKeyBinds()
-    local combinators = {"SHIFT-", "CTRL-", "ALT-"}
+    local combinators = {"SHIFT", "CTRL", "ALT"}
     local defaultbuttons = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="}
     for _, p in ipairs(combinators) do
         for _, v in ipairs(defaultbuttons) do
-            SetBinding(p .. v)
+            SetBinding(p .. "-" .. v)
             GSE.PrintDebugMessage("Cleared KeyCombination " .. p .. v)
         end
+        SetBinding(p)
     end
+    local char = UnitFullName("player")
+    local realm = GetRealmName()
+    GSE_C = {}
+    GSE_C["KeyBindings"] = {}
+    GSE_C["KeyBindings"][char .. "-" .. realm] = {}
+    GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
     -- Save for this character
     SaveBindings(2)
     GSE.Print("Common Keybinding combinations cleared for this character.")
