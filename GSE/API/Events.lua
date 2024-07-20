@@ -295,8 +295,10 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
     if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
         GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
     end
-    LoadKeyBindings()
-    GSE.ReloadSequences()
+    if not InCombatLockdown() then
+        LoadKeyBindings()
+        GSE.ReloadSequences()
+    end
 end
 
 function GSE:PLAYER_LEVEL_UP()
