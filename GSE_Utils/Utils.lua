@@ -663,30 +663,14 @@ function GSE:GSSlash(input)
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUICompressFrame:Show()
         end
-    elseif command == "dumpmacro" then
-        GSE_C[params[2]] = {}
-        GSE_C[params[2]].name = params[2]
-        GSE_C[params[2]].sequence = GSE.FindMacro(params[2])
-        GSE_C[params[2]].button = _G[params[2]]
     elseif command == "recompilesequences" then
         GSE.ReloadSequences()
     elseif string.lower(command) == "clearoocqueue" then
         GSE.OOCQueue = {}
-    elseif string.lower(command) == "retro" then
-        local loaded, _ = LoadAddOn("GSE2")
-        if loaded then
-            GSE.Print(
-                string.format(
-                    L[
-                        "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
-                    ],
-                    GSEOptions.CommandColour,
-                    Statics.StringReset,
-                    GSEOptions.CommandColour,
-                    Statics.StringReset
-                ),
-                "GSE2"
-            )
+    elseif string.lower(command) == "import" then
+        GSE.CheckGUI()
+        if GSE.UnsavedOptions["GUI"] then
+            GSE.GUIImportFrame:Show()
         end
     else
         GSE.CheckGUI()
