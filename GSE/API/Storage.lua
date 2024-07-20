@@ -64,6 +64,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
                     GSE.GUIEditFrame:SetStatusText("")
                 end
             )
+            GSE.ShowSequences()
         end
     end
 end
@@ -288,6 +289,7 @@ function GSE.OOCUpdateSequence(name, sequence)
                         GSE.GUIEditFrame:SetStatusText("")
                     end
                 )
+                GSE.ShowSequences()
             end
         end
     end
@@ -987,6 +989,7 @@ function GSE.UpdateVariable(variable, name, status)
                     GSE.GUIVariableFrame:SetStatusText("")
                 end
             )
+            GSE.ShowVariables()
         end
     end
 end
@@ -1009,6 +1012,7 @@ function GSE.UpdateMacro(node, category)
                         GSE.GUIEMacroFrame:SetStatusText("")
                     end
                 )
+                GSE.ShowMacros()
             end
         end
     end
