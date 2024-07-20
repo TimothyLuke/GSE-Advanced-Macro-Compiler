@@ -6,7 +6,6 @@ local L = GSE.L
 local Statics = GSE.Static
 
 local whatsnewframe = AceGUI:Create("Frame")
-whatsnewframe.AutoCreateIcon = true
 
 whatsnewframe:Hide()
 

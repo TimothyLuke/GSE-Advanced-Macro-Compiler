@@ -7,7 +7,6 @@ local libC = LibStub:GetLibrary("LibCompress")
 local importframe = AceGUI:Create("Frame")
 importframe.frame:SetFrameStrata("MEDIUM")
 importframe.frame:SetClampedToScreen(true)
-importframe.AutoCreateIcon = true
 
 importframe:Hide()
 
@@ -27,19 +26,6 @@ importsequencebox:SetNumLines(20)
 importsequencebox:DisableButton(true)
 importsequencebox:SetFullWidth(true)
 importframe:AddChild(importsequencebox)
-
-local createicondropdown = AceGUI:Create("CheckBox")
-createicondropdown:SetLabel(L["Automatically Create Macro Icon"])
-createicondropdown:SetWidth(250)
-createicondropdown:SetType("checkbox")
-createicondropdown:SetValue(true)
-createicondropdown:SetCallback(
-  "OnValueChanged",
-  function(obj, event, key)
-    importframe.AutoCreateIcon = key
-  end
-)
-importframe:AddChild(createicondropdown)
 
 local recButtonGroup = AceGUI:Create("SimpleGroup")
 recButtonGroup:SetLayout("Flow")

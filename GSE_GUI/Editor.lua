@@ -456,40 +456,8 @@ function GSE.GUIEditorPerformLayout(frame)
     local spacerlabel = AceGUI:Create("Label")
     spacerlabel:SetWidth(10)
 
-    local iconpicker = AceGUI:Create("Icon")
-    iconpicker:SetImageSize(40, 40)
-    iconpicker:SetLabel(L["Macro Icon"])
-    iconpicker.frame:RegisterForDrag("LeftButton")
-    iconpicker.frame:SetScript(
-        "OnDragStart",
-        function()
-            if not GSE.isEmpty(editframe.SequenceName) then
-                PickupMacro(editframe.SequenceName)
-            end
-        end
-    )
-    iconpicker:SetImage(GSEOptions.DefaultDisabledMacroIcon)
-    iconpicker:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Macro Icon"],
-                L["Drag this icon to your action bar to use this macro. You can change this icon in the /macro window."],
-                editframe
-            )
-        end
-    )
-    iconpicker:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    headerGroup:AddChild(iconpicker)
     headerGroup:AddChild(spacerlabel)
     headerGroup:AddChild(nameeditbox)
-
-    editframe.iconpicker = iconpicker
 
     frame:AddChild(headerGroup)
 
@@ -644,8 +612,6 @@ end
 
 function GSE:GUIDrawMetadataEditor(container)
     -- Default frame size = 700 w x 500 h
-
-    editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
 
     local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
@@ -3038,7 +3004,6 @@ function GSE.GUISelectEditorTab(container, event, group)
         editframe.SelectedTab = group
 
         editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
-        editframe.iconpicker:SetImage(GSE.GetMacroIcon(editframe.ClassID, editframe.SequenceName))
         if group == "config" then
             GSE:GUIDrawMetadataEditor(container)
         elseif group == "new" then

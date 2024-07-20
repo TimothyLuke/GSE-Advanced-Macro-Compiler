@@ -4,7 +4,6 @@ local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
 local compressframe = AceGUI:Create("Frame")
-compressframe.AutoCreateIcon = true
 compressframe.frame:SetFrameStrata("MEDIUM")
 compressframe.frame:SetClampedToScreen(true)
 compressframe:Hide()

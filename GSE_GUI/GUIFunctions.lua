@@ -131,7 +131,6 @@ function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
           GSE.GUIEditFrame.nameeditbox:SetFocus()
           return
         end
-        vals.checkmacro = true
         GSE.GUIEditFrame.NewSequence = false
       end
       table.insert(GSE.OOCQueue, vals)

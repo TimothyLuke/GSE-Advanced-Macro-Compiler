@@ -453,9 +453,6 @@ function GSE:ProcessOOCQueue()
                     GSE.ReplaceSequence(v.classid, v.sequencename, v.sequence)
                     GSE.UpdateSequence(v.sequencename, v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
                 end
-                if v.checkmacro then
-                    GSE.CheckMacroCreated(v.sequencename, v.checkmacro)
-                end
             elseif v.action == "updatevariable" then
                 GSE.UpdateVariable(v.variable, v.name)
             elseif v.action == "updatemacro" then
