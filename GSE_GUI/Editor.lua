@@ -2506,7 +2506,7 @@ local function drawAction(container, action, version, keyPath)
     elseif action.Type == Statics.Actions.Action then
         local macroPanel = AceGUI:Create("KeyGroup")
         if GSE.isEmpty(action.type) then
-            action.type = "spell"
+            action.type = "macro"
         end
         macroPanel:SetLayout("List")
         macroPanel:SetFullWidth(true)
@@ -2571,9 +2571,9 @@ local function drawAction(container, action, version, keyPath)
         toyradio:SetType("radio")
         toyradio:SetLabel(L["Toy"])
         toyradio:SetValue((action.type and action.type == "toy" or false))
+        typegroup:AddChild(macroradio)
         typegroup:AddChild(spellradio)
         typegroup:AddChild(itemradio)
-        typegroup:AddChild(macroradio)
         typegroup:AddChild(petradio)
         typegroup:AddChild(toyradio)
 
