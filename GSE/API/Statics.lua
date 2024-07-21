@@ -396,6 +396,8 @@ Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.tga"
 Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.tga"
 Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.tga"
 Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.tga"
+Statics.ActionsIcons.Key = "Interface\\Addons\\GSE_GUI\\Assets\\2key.png"
+Statics.ActionsIcons.Settings = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
 
 Statics.GSE3OnClick =
     [=[
