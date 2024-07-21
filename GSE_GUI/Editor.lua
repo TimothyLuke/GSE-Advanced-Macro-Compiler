@@ -2473,6 +2473,7 @@ local function drawAction(container, action, version, keyPath)
         local macroPanel = AceGUI:Create("KeyGroup")
         if GSE.isEmpty(action.type) then
             action.type = "macro"
+            action.macro = ""
         end
         macroPanel:SetLayout("List")
         macroPanel:SetFullWidth(true)
