@@ -54,7 +54,7 @@ frame.frame:SetScript(
 
 local sequencebutton = AceGUI:Create("InteractiveLabel")
 sequencebutton:SetFont(fontName, fontHeight, fontFlags)
-sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":25:25|t " .. L["Sequences"])
+sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t" .. L["Sequences"])
 sequencebutton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -64,20 +64,20 @@ sequencebutton:SetCallback(
 sequencebutton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":25:25|t |cFF13b9b9" .. L["Sequences"])
+        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t|cFF13b9b9" .. L["Sequences"])
     end
 )
 sequencebutton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":25:25|t " .. L["Sequences"])
+        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t" .. L["Sequences"])
     end
 )
 sequencebutton:SetWidth(100)
 
 local variablebutton = AceGUI:Create("InteractiveLabel")
 variablebutton:SetFont(fontName, fontHeight, fontFlags)
-variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":25:25|t " .. L["Variables"])
+variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t" .. L["Variables"])
 variablebutton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -88,19 +88,19 @@ variablebutton:SetWidth(100)
 variablebutton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":25:25|t |cFF13b9b9" .. L["Variables"])
+        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t|cFF13b9b9" .. L["Variables"])
     end
 )
 variablebutton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":25:25|t " .. L["Variables"])
+        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t" .. L["Variables"])
     end
 )
 
 local macrobutton = AceGUI:Create("InteractiveLabel")
 macrobutton:SetFont(fontName, fontHeight, fontFlags)
-macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":25:25|t " .. L["Macros"])
+macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t" .. L["Macros"])
 macrobutton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -111,19 +111,19 @@ macrobutton:SetWidth(100)
 macrobutton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":25:25|t |cFF13b9b9" .. L["Macros"])
+        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t|cFF13b9b9" .. L["Macros"])
     end
 )
 macrobutton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":25:25|t " .. L["Macros"])
+        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t" .. L["Macros"])
     end
 )
 
 local keybindButton = AceGUI:Create("InteractiveLabel")
 keybindButton:SetFont(fontName, fontHeight, fontFlags)
-keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":25:25|t " .. L["Keybindings"])
+keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t" .. L["Keybindings"])
 keybindButton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -134,19 +134,19 @@ keybindButton:SetWidth(100)
 keybindButton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":25:25|t |cFF13b9b9" .. L["Keybindings"])
+        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t|cFF13b9b9" .. L["Keybindings"])
     end
 )
 keybindButton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":25:25|t " .. L["Keybindings"])
+        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t" .. L["Keybindings"])
     end
 )
 
 local importbutton = AceGUI:Create("InteractiveLabel")
 importbutton:SetFont(fontName, fontHeight, fontFlags)
-importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":25:25|t " .. L["Import"])
+importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t" .. L["Import"])
 importbutton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -157,19 +157,19 @@ importbutton:SetWidth(100)
 importbutton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":25:25|t |cFF13b9b9" .. L["Import"])
+        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t|cFF13b9b9" .. L["Import"])
     end
 )
 importbutton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":25:25|t " .. L["Import"])
+        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t" .. L["Import"])
     end
 )
 
 local optionsbutton = AceGUI:Create("InteractiveLabel")
 optionsbutton:SetFont(fontName, fontHeight, fontFlags)
-optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":25:25|t " .. L["Options"])
+optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t" .. L["Options"])
 optionsbutton:SetCallback(
     "OnClick",
     function(self, button, down)
@@ -180,13 +180,13 @@ optionsbutton:SetWidth(100)
 optionsbutton:SetCallback(
     "OnEnter",
     function(self, button, down)
-        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":25:25|t |cFF13b9b9" .. L["Options"])
+        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t|cFF13b9b9" .. L["Options"])
     end
 )
 optionsbutton:SetCallback(
     "OnLeave",
     function(self, button, down)
-        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":25:25|t " .. L["Options"])
+        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t" .. L["Options"])
     end
 )
 
