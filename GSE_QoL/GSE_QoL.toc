@@ -1,6 +1,6 @@
 ## Interface: 110000, 110002
 
-## Title: |cff0000ffGSE:|r |cFF00D1FFGSE QoL|r
+## Title: |cff0000ffGSE:|r |cFF00D1FFQuality of Life Updates|r
 ## Notes: GSE Quality of Life
 ## Author: TimothyLuke
 ## Version: @project-version@

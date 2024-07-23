@@ -87,4 +87,4 @@ ignore:
   - GSE_QoL
 
 wowi-archive-previous: no
-enable-toc-creation: yes
+enable-toc-creation: no
