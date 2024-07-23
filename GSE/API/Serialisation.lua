@@ -583,7 +583,7 @@ hooksecurefunc(
                 local cmd, sequenceName, player, ClassID = strsplit("@", param1)
                 if cmd == "seq" then
                     if player == UnitName("player") then
-                        GSE.GUILoadEditor(ClassID .. "," .. sequenceName, GSE.GUIEditFrame)
+                        GSE.GUILoadEditor(ClassID .. "," .. sequenceName)
                     else
                         GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
                         GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")

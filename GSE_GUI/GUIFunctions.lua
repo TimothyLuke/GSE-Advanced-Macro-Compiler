@@ -33,7 +33,7 @@ function GSE.GUIParseText(editbox)
   end
 end
 
-function GSE.GUILoadEditor(key, incomingframe, recordedstring)
+function GSE.GUILoadEditor(key, recordedstring)
   local classid
   local sequenceName
   local sequence
@@ -92,11 +92,8 @@ function GSE.GUILoadEditor(key, incomingframe, recordedstring)
   GSE.GUIEditFrame.SequenceName = sequenceName
   GSE.GUIEditFrame.Sequence = sequence
   GSE.GUIEditFrame.ClassID = classid
-  GSE.GUIEditorPerformLayout(GSE.GUIEditFrame.rightContainer)
+  GSE.GUIEditorPerformLayout()
   GSE.GUIEditFrame.ContentContainer:SelectTab("config")
-  if incomingframe then
-    incomingframe:Hide()
-  end
   if sequence.ReadOnly then
     GSE.GUIEditFrame.SaveButton:SetDisabled(true)
     GSE.GUIEditFrame:SetStatusText(

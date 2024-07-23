@@ -53,7 +53,8 @@ createmacrobutton:SetWidth(150)
 createmacrobutton:SetCallback(
   "OnClick",
   function()
-    GSE.GUILoadEditor(nil, GSE.GUIRecordFrame, recordsequencebox:GetText())
+    recordframe:Hide()
+    GSE.GUILoadEditor(nil, recordsequencebox:GetText())
   end
 )
 createmacrobutton:SetDisabled(true)

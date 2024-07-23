@@ -215,27 +215,7 @@ local function CreateSequencePanels(container, key)
                                 StaticPopup_Show("GSE_ChatLink")
                             end
                         )
-                        -- if GSE.OOCCheckMacroCreated(elements[2]) then
-                        --     rootDescription:CreateButton(
-                        --         L["Delete Icon"],
-                        --         function()
-                        --             GSE.DeleteMacroStub(elements[2])
-                        --             if selected then
-                        --                 GSE.GUILoadEditor(widget:GetKey())
-                        --             end
-                        --         end
-                        --     )
-                        -- else
-                        --     rootDescription:CreateButton(
-                        --         L["Create Icon"],
-                        --         function()
-                        --             GSE.OOCCheckMacroCreated(elements[2], true)
-                        --             if selected then
-                        --                 GSE.GUILoadEditor(widget:GetKey())
-                        --             end
-                        --         end
-                        --     )
-                        -- end
+
                         rootDescription:CreateButton(
                             L["Keybindings"],
                             function()
@@ -408,8 +388,8 @@ function GSE.GUICreateEditorTabs()
     return tabl
 end
 
-function GSE.GUIEditorPerformLayout(frame)
-    frame:ReleaseChildren()
+function GSE.GUIEditorPerformLayout()
+    rightContainer:ReleaseChildren()
 
     local headerGroup = AceGUI:Create("KeyGroup")
     headerGroup:SetFullWidth(true)
@@ -459,7 +439,7 @@ function GSE.GUIEditorPerformLayout(frame)
     headerGroup:AddChild(spacerlabel)
     headerGroup:AddChild(nameeditbox)
 
-    frame:AddChild(headerGroup)
+    rightContainer:AddChild(headerGroup)
 
     local tabgrp = AceGUI:Create("TabGroup")
     tabgrp:SetLayout("Flow")
@@ -477,7 +457,7 @@ function GSE.GUIEditorPerformLayout(frame)
     tabgrp:SetFullHeight(true)
 
     tabgrp:SelectTab("config")
-    frame:AddChild(tabgrp)
+    rightContainer:AddChild(tabgrp)
 
     local editOptionsbutton = AceGUI:Create("Button")
     editOptionsbutton:SetText(L["Options"])
@@ -598,7 +578,7 @@ function GSE.GUIEditorPerformLayout(frame)
 
     editButtonGroup:AddChild(transbutton)
     editButtonGroup:AddChild(editOptionsbutton)
-    frame:AddChild(editButtonGroup)
+    rightContainer:AddChild(editButtonGroup)
     GSE.GUIEditFrame:SetStatusText(editframe.statusText)
 end
 
@@ -1244,7 +1224,7 @@ function GSE:GUIDrawMetadataEditor(container)
 end
 
 local function ChooseVersionTab(version, scrollpos)
-    GSE.GUIEditorPerformLayout(editframe.rightContainer)
+    GSE.GUIEditorPerformLayout()
     GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
     if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
         editframe.scrollContainer:SetScroll(scrollpos)
@@ -3013,7 +2993,7 @@ function GSE.GUISelectEditorTab(container, event, group)
                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
             )
             GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
-            GSE.GUIEditorPerformLayout(rightContainer)
+            GSE.GUIEditorPerformLayout()
         else
             GSE:GUIDrawMacroEditor(container, group)
         end
@@ -3134,7 +3114,7 @@ function GSE.GUIDeleteVersion(version)
     end
     table.remove(sequence.Macros, version)
     printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
-    GSE.GUIEditorPerformLayout(editframe.rightContainer)
+    GSE.GUIEditorPerformLayout()
     GSE.GUIEditFrame.ContentContainer:SelectTab("config")
     GSE.GUIEditFrame:SetStatusText(string.format(printtext, version))
     C_Timer.After(
