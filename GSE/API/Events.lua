@@ -251,40 +251,54 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
 end
 
 function GSE:PLAYER_LOGOUT()
-    if GSE.GUI then
-        if GSE.isEmpty(GSEOptions.frameLocations) then
-            GSEOptions.frameLocations = {}
+    if not GSE.UnsavedOptions["GUI"] then
+        if GSE["MenuFrame"] then
+            if GSE.isEmpty(GSEOptions.frameLocations) then
+                GSEOptions.frameLocations = {}
+            end
+
+            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
+                GSEOptions.frameLocations.menu = {}
+            end
+            GSEOptions.frameLocations.menu.top = GSE.MenuFrame.frame:GetTop()
+            GSEOptions.frameLocations.menu.left = GSE.MenuFrame.frame:GetLeft()
         end
-        if GSE.isEmpty(GSEOptions.frameLocations.menu) then
-            GSEOptions.frameLocations.menu = {}
+        if GSE["GUIEditFrame"] and GSE.GUIEditFrame.frame then
+            if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+                GSEOptions.frameLocations.sequenceeditor = {}
+            end
+            GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame.frame:GetTop()
+            GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame.frame:GetLeft()
         end
-        GSEOptions.frameLocations.menu.top = GSE.MenuFrame.frame:GetTop()
-        GSEOptions.frameLocations.menu.left = GSE.MenuFrame.frame:GetLeft()
-        if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
-            GSEOptions.frameLocations.sequenceeditor = {}
+        if GSE["GUIVariableFrame"] then
+            if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
+                GSEOptions.frameLocations.variablesframe = {}
+            end
+
+            GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame.frame:GetTop()
+            GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame.frame:GetLeft()
         end
-        GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame.frame:GetTop()
-        GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame.frame:GetLeft()
-        if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
-            GSEOptions.frameLocations.variablesframe = {}
+        if GSE["GUIMacroFrame"] then
+            if GSE.isEmpty(GSEOptions.frameLocations.macroframe) then
+                GSEOptions.frameLocations.macroframe = {}
+            end
+            GSEOptions.frameLocations.macroframe.top = GSE.GUIMacroFrame.frame:GetTop()
+            GSEOptions.frameLocations.macroframe.left = GSE.GUIMacroFrame.frame:GetLeft()
         end
-        GSEOptions.frameLocations.variablesframe.top = GSE.GUIVariableFrame.frame:GetTop()
-        GSEOptions.frameLocations.variablesframe.left = GSE.GUIVariableFrame.frame:GetLeft()
-        if GSE.isEmpty(GSEOptions.frameLocations.macroframe) then
-            GSEOptions.frameLocations.macroframe = {}
+        if GSE["GUIDebugFrame"] then
+            if GSE.isEmpty(GSEOptions.frameLocations.debug) then
+                GSEOptions.frameLocations.debug = {}
+            end
+            GSEOptions.frameLocations.debug.top = GSE.GUIDebugFrame.frame:GetTop()
+            GSEOptions.frameLocations.debug.left = GSE.GUIDebugFrame.frame:GetLeft()
         end
-        GSEOptions.frameLocations.macroframe.top = GSE.GUIMacroFrame.frame:GetTop()
-        GSEOptions.frameLocations.macroframe.left = GSE.GUIMacroFrame.frame:GetLeft()
-        if GSE.isEmpty(GSEOptions.frameLocations.debug) then
-            GSEOptions.frameLocations.debug = {}
+        if GSE["GUIkeybindingframe"] then
+            if GSE.isEmpty(GSEOptions.frameLocations.keybindingframe) then
+                GSEOptions.frameLocations.keybindingframe = {}
+            end
+            GSEOptions.frameLocations.keybindingframe.top = GSE.GUIkeybindingframe.frame:GetTop()
+            GSEOptions.frameLocations.keybindingframe.left = GSE.GUIkeybindingframe.frame:GetLeft()
         end
-        GSEOptions.frameLocations.debug.top = GSE.GUIDebugFrame.frame:GetTop()
-        GSEOptions.frameLocations.debug.left = GSE.GUIDebugFrame.frame:GetLeft()
-        if GSE.isEmpty(GSEOptions.frameLocations.keybindingframe) then
-            GSEOptions.frameLocations.keybindingframe = {}
-        end
-        GSEOptions.frameLocations.keybindingframe.top = GSE.GUIkeybindingframe.frame:GetTop()
-        GSEOptions.frameLocations.keybindingframe.left = GSE.GUIkeybindingframe.frame:GetLeft()
     end
 end
 

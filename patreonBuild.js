@@ -114,8 +114,11 @@ function publishArchive(done) {
 function deleteExistingZips(done) {
   fs.readdir(".release", (err, files) => {
     for (const file of files) {
-      console.log(file);
+      console.log(`Processing File .release/${file}`);
       if (file.endsWith("zip")) {
+        return fs.unlink(`.release/${file}`, done);
+      }
+      if (file.endsWith("json")) {
         return fs.unlink(`.release/${file}`, done);
       }
     }
