@@ -368,16 +368,18 @@ GSE.GUIAdvancedExport = function(exportframe)
                     source = GSEMacros[char .. "-" .. realm][key]
                     category = "p"
                 end
+                if GSE.isEmpty(source) then
+                    -- stil an unmanaged macro
+                    source = {}
+                    local _, micon, mbody = GetMacroInfo(key)
+                    source.icon = micon
+                    source.text = mbody
+                    source.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+                end
                 local exportobject = GSE.CloneSequence(source)
                 exportobject.objectType = "MACRO"
                 exportobject.category = category
                 exportobject.name = key
-                if GSE.isEmpty(exportobject.managedMacro) then
-                    local _, micon, mbody = GetMacroInfo(key)
-                    exportobject.icon = micon
-                    exportobject.text = mbody
-                    exportobject.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
-                end
                 exportTable["Macros"][key] = GSE.EncodeMessage(exportobject)
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else

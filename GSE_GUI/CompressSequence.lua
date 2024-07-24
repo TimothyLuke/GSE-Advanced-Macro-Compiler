@@ -35,7 +35,7 @@ recbutton:SetWidth(150)
 recbutton:SetCallback(
   "OnClick",
   function()
-    importsequencebox:SetText(GSE.CompressSequenceFromString(importsequencebox:GetText()))
+    importsequencebox:SetText(GSE.EncodeMessage(importsequencebox:GetText()))
   end
 )
 local decbutton = AceGUI:Create("Button")
@@ -44,9 +44,11 @@ decbutton:SetWidth(150)
 decbutton:SetCallback(
   "OnClick",
   function()
-    local seq, seqName, success = GSE.DecompressSequenceFromString(importsequencebox:GetText())
+    local success, returnval = GSE.DecodeMessage(importsequencebox:GetText())
     if success then
-      importsequencebox:SetText("SeqName: " .. seqName .. "\n\n" .. seq)
+      importsequencebox:SetText(IndentationLib.encode(GSE.Dump(returnval)))
+    else
+      GSE.Print("Cant interpret that sequence.")
     end
   end
 )
