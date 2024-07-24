@@ -1407,9 +1407,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         "OnClick",
         function()
             local newAction = {
-                ["spell"] = "Need Spell Here",
-                ["unit"] = "target",
-                ["type"] = "spell",
+                ["macro"] = "Need Stuff Here",
+                ["type"] = "macro",
                 ["Type"] = Statics.Actions.Action
             }
             table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
@@ -1440,9 +1439,8 @@ function GSE:GUIDrawMacroEditor(container, version)
         function()
             local newAction = {
                 [1] = {
-                    ["spell"] = "Need Spell Here",
-                    ["unit"] = "target",
-                    ["type"] = "spell",
+                    ["macro"] = "Need Stuff Here",
+                    ["type"] = "macro",
                     ["Type"] = Statics.Actions.Action
                 },
                 ["StepFunction"] = Statics.Sequential,
@@ -1510,17 +1508,15 @@ function GSE:GUIDrawMacroEditor(container, version)
                 local newAction = {
                     [1] = {
                         [1] = {
-                            ["spell"] = "Need True Spell Here",
-                            ["unit"] = "target",
-                            ["type"] = "spell",
+                            ["macro"] = "Need True Stuff Here",
+                            ["type"] = "macro",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
                     [2] = {
                         [1] = {
-                            ["spell"] = "Need False Spell Here",
-                            ["unit"] = "target",
-                            ["type"] = "spell",
+                            ["macro"] = "Need False Stuff Here",
+                            ["type"] = "macro",
                             ["Type"] = Statics.Actions.Action
                         }
                     },
@@ -1806,9 +1802,8 @@ local function GetBlockToolbar(
             "OnClick",
             function()
                 local newAction = {
-                    ["spell"] = "Need Spell Here",
-                    ["unit"] = "target",
-                    ["type"] = "spell",
+                    ["macro"] = "Need Stuff Here",
+                    ["type"] = "macro",
                     ["Type"] = Statics.Actions.Action
                 }
                 if #path > 1 then
@@ -1843,9 +1838,8 @@ local function GetBlockToolbar(
                 local addPath = {}
                 local newAction = {
                     [1] = {
-                        ["spell"] = "Need Spell Here",
-                        ["unit"] = "target",
-                        ["type"] = "spell",
+                        ["macro"] = "Need Stuff Here",
+                        ["type"] = "macro",
                         ["Type"] = Statics.Actions.Action
                     },
                     ["StepFunction"] = Statics.Sequential,
@@ -1921,17 +1915,15 @@ local function GetBlockToolbar(
                     local newAction = {
                         [1] = {
                             {
-                                ["spell"] = "Need True Spell Here",
-                                ["unit"] = "target",
-                                ["type"] = "spell",
+                                ["macro"] = "Need True Stuff Here",
+                                ["type"] = "macro",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
                         [2] = {
                             {
-                                ["spell"] = "Need False Spell Here",
-                                ["unit"] = "target",
-                                ["type"] = "spell",
+                                ["macro"] = "Need False Stuff Here",
+                                ["type"] = "macro",
                                 ["Type"] = Statics.Actions.Action
                             }
                         },
