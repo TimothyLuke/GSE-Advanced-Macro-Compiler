@@ -167,14 +167,12 @@ local function showKeybind(bind, button, specialization)
                     specialization = tostring(GetSpecialization())
                 end
 
-                local char = UnitFullName("player")
-                local realm = GetRealmName()
                 if initialbind and bind ~= initialbind then
                     SetBinding(initialbind)
-                    GSE_C["KeyBindings"][char .. "-" .. realm][specialization][bind] = nil
+                    GSE_C["KeyBindings"][specialization][bind] = nil
                 end
 
-                GSE_C["KeyBindings"][char .. "-" .. realm][specialization][bind] = button
+                GSE_C["KeyBindings"][specialization][bind] = button
                 SetBindingClick(bind, button, _G[button])
                 if bind ~= initialbind then
                     rightContainer:ReleaseChildren()
@@ -190,12 +188,10 @@ local function showKeybind(bind, button, specialization)
     delbutton:SetCallback(
         "OnClick",
         function()
-            local char = UnitFullName("player")
-            local realm = GetRealmName()
             if initialbind then
                 SetBinding(initialbind)
             end
-            GSE_C["KeyBindings"][char .. "-" .. realm][specialization][initialbind] = nil
+            GSE_C["KeyBindings"][specialization][initialbind] = nil
             rightContainer:ReleaseChildren()
             GSE.ShowKeyBindings()
         end
@@ -268,7 +264,7 @@ local function buildKeybindHeader(specialization, bind, button)
                             L["Delete"],
                             function()
                                 SetBinding(bind)
-                                GSE_C["KeyBindings"][char .. "-" .. realm][specialization][bind] = nil
+                                GSE_C["KeyBindings"][specialization][bind] = nil
                                 GSE.ShowKeyBindings()
                             end
                         )
@@ -287,8 +283,6 @@ end
 
 local function buildKeybindMenu()
     leftscroll:ReleaseChildren()
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
     local newButton = AceGUI:Create("Button")
     newButton:SetText(L["New"])
     newButton:SetCallback(
@@ -299,7 +293,7 @@ local function buildKeybindMenu()
     )
     leftscroll:AddChild(newButton)
     local specid = 0
-    for k, v in pairs(GSE_C["KeyBindings"][char .. "-" .. realm]) do
+    for k, v in pairs(GSE_C["KeyBindings"]) do
         local currentspecid = tonumber(k)
         if specid ~= currentspecid then
             specid = currentspecid

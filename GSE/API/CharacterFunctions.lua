@@ -190,4 +190,17 @@ function GSE.setActionButtonUseKeyDown()
     GSE.ReloadSequences()
 end
 
+function GSE.GetSelectedLoadoutConfigID()
+    GSE.GetCurrentTalents()
+    local lastSelected =
+        PlayerUtil.GetCurrentSpecID() and C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID())
+    local selectionID =
+        PlayerSpellsFrame and PlayerSpellsFrame.TalentsFrame and PlayerSpellsFrame.TalentsFrame.LoadoutDropDown and
+        PlayerSpellsFrame.TalentsFrame.LoadoutDropDown.GetSelectionID and
+        PlayerSpellsFrame.TalentsFrame.LoadoutDropDown:GetSelectionID()
+
+    -- the priority in authoritativeness is [default UI's dropdown] > [API] > ['ActiveConfigID'] > nil
+    return selectionID or lastSelected or C_ClassTalents.GetActiveConfigID() or nil -- nil happens when you don't have any spec selected, e.g. on a freshly created character
+end
+
 GSE.DebugProfile("CharacterFuntions")

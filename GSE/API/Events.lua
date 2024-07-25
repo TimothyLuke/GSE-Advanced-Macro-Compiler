@@ -101,21 +101,16 @@ function GSE:ZONE_CHANGED_NEW_AREA()
 end
 
 local function LoadKeyBindings()
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
-    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm]) then
-        GSE_C["KeyBindings"][char .. "-" .. realm] = {}
+    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
+        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end
-    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
-        GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
-    end
-    for k, v in pairs(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) do
+    for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]) do
         SetBindingClick(k, v, _G[v])
     end
 end
@@ -328,10 +323,12 @@ function GSE:SPELLS_CHANGED()
 end
 
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_PVP_TALENT_UPDATE()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 
@@ -340,20 +337,25 @@ function GSE:SPEC_INVOLUNTARILY_CHANGED()
 end
 
 function GSE:PLAYER_TALENT_UPDATE()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 
 function GSE:TRAIT_NODE_CHANGED()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_CHANGED_PARTIAL()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_ENTRY_UPDATED()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_TREE_CHANGED()
     GSE:UnregisterEvent("TRAIT_TREE_CHANGED")
+    LoadKeyBindings()
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_TREE_CHANGED")
 end
@@ -368,10 +370,12 @@ end
 
 function GSE:TRAIT_CONFIG_UPDATED()
     GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
+    LoadKeyBindings()
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
+    LoadKeyBindings()
     GSE.ReloadSequences()
 end
 
