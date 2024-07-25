@@ -401,6 +401,7 @@ globals = {
     "C_SpellBook",
     "MenuUtil",
     "SetBindingClick",
+    "GSE3Storage",
     "C_ClassTalents",
     "PlayerUtil"
 }
