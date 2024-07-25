@@ -978,7 +978,7 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.V[name] = actualfunct()
     end
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
-        GSE.BooleanVariables["name"] = true
+        GSE.BooleanVariables[name] = true
     end
     if GSE.GUI and GSE.GUIVariableFrame then
         if GSE.GUIVariableFrame:IsVisible() then
