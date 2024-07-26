@@ -774,3 +774,7 @@ The updated Sequences replace the actions of GSE 3.1. The old sequence viewer/me
 
 The full detail on all of these changes is available on the GSE GitHub wiki.
 ]]
+
+-- #1524
+L["Enter the implementation link for this variable. Use '= true' or '= false' to test."] = true
+L["Insert Test Case"] = true

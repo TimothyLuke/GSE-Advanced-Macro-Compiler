@@ -117,7 +117,7 @@ function GSE.LoadVariables()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
                 GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
                 if type(GSE.V[k]()) == "boolean" then
-                    table.insert(GSE.BooleanVariables, k)
+                    GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
                 end
             end
         )
@@ -743,53 +743,35 @@ function GSE.processAction(action, metaData, variables)
         -- print(#PauseActions, GSE.Dump(action))
         return PauseActions
     elseif action.Type == Statics.Actions.If then
+        -- process repeats for the block
         if GSE.isEmpty(action.Variable) then
             GSE.Print(L["If Blocks Require a variable."], L["Macro Compile Error"])
             return
         end
-
-        local funcline = GSE.RemoveComments(variables[action.Variable])
-
-        funcline = string.sub(funcline, 11)
-        funcline = funcline:sub(1, -4)
-        funcline = loadstring(funcline)
-        local value
-        if funcline ~= nil then
-            value = funcline
-            value = value()
+        local funct = action.Variable
+        if string.sub(funct, 1, 1) == "=" then
+            funct = string.sub(funct, 2, string.len(funct))
         end
 
+        local val = loadstring("return " .. funct)()
+
         local actions
-        if type(value) == "boolean" then
-            if value == true then
-                actions = action[1]
-            else
-                actions = action[2]
-            end
+        if val then
+            actions = action[1]
         else
-            GSE.Print(
-                string.format(
-                    L["Boolean not found.  There is a problem with %s not returning true or false."],
-                    action.Variable
-                ),
-                L["Macro Compile Error"]
-            )
-            return
+            if action[2] then
+                actions = action[2]
+            else
+                return
+            end
         end
 
         local actionList = {}
         for _, v in ipairs(actions) do
             local builtaction = GSE.processAction(v, metaData, variables)
-            if type(builtaction) == "table" and GSE.isEmpty(builtaction.Interval) then
-                for _, j in ipairs(builtaction) do
-                    table.insert(actionList, j)
-                end
-            else
-                table.insert(actionList, builtaction)
-            end
+            table.insert(actionList, builtaction)
         end
 
-        -- process repeats for the block
         return actionList
     elseif action.Type == Statics.Actions.Action then
         local builtstuff = buildAction(action, metaData)
@@ -978,7 +960,7 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.V[name] = actualfunct()
     end
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
-        GSE.BooleanVariables[name] = true
+        GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
     end
     if GSE.GUI and GSE.GUIVariableFrame then
         if GSE.GUIVariableFrame:IsVisible() then

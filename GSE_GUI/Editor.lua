@@ -2812,38 +2812,79 @@ local function drawAction(container, action, version, keyPath)
         )
         local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
 
-        local booleanDropdown = AceGUI:Create("Dropdown")
-        booleanDropdown:SetLabel(L["Boolean Functions"])
-        booleanDropdown:SetWidth((editframe.Width) * 0.24)
-        booleanDropdown:SetList(GSE.BooleanVariables)
-        booleanDropdown:SetCallback(
+        local booleanEditBox = AceGUI:Create("EditBox")
+        booleanEditBox:SetLabel(L["Variable"])
+        booleanEditBox:SetWidth(editframe.Width * 0.24)
+        booleanEditBox:DisableButton(true)
+        booleanEditBox:SetCallback(
             "OnEnter",
             function()
                 GSE.CreateToolTip(
-                    L["Boolean Functions"],
-                    L["Boolean Functions are GSE variables that return either a true or false value."],
+                    L["Variable"],
+                    L["Enter the implementation link for this variable. Use '= true' or '= false' to test."],
                     editframe
                 )
             end
         )
+
         if not GSE.isEmpty(action.Variable) then
-            booleanDropdown:SetValue(action.Variable)
+            booleanEditBox:SetText(action.Variable)
+        else
+            booleanEditBox:SetText("= true")
+            action.Variable = "= true"
         end
-        booleanDropdown:SetCallback(
+        booleanEditBox:SetCallback(
             "OnLeave",
             function()
                 GSE.ClearTooltip(editframe)
             end
         )
 
-        booleanDropdown:SetCallback(
+        booleanEditBox:SetCallback(
             "OnValueChanged",
             function(sel, object, value)
                 editframe.Sequence.Macros[version].Actions[keyPath].Variable = value
             end
         )
-
-        linegroup1:AddChild(booleanDropdown)
+        if GSE.Patron then
+            booleanEditBox.editbox:SetScript(
+                "OnTabPressed",
+                function(widget, button, down)
+                    MenuUtil.CreateContextMenu(
+                        booleanEditBox,
+                        function(ownerRegion, rootDescription)
+                            rootDescription:CreateTitle(L["Insert GSE Variable"])
+                            for k, _ in pairs(GSEVariables) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        booleanEditBox:SetText([[=GSE.V["]] .. k .. [["]()]])
+                                        editframe.Sequence.Macros[version].Actions[keyPath].Variable =
+                                            [[=GSE.V["]] .. k .. [["]()]]
+                                    end
+                                )
+                            end
+                            rootDescription:CreateTitle(L["Insert Test Case"])
+                            rootDescription:CreateButton(
+                                "True",
+                                function()
+                                    booleanEditBox:SetText([[= true]])
+                                    editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= true]]
+                                end
+                            )
+                            rootDescription:CreateButton(
+                                "False",
+                                function()
+                                    booleanEditBox:SetText([[= false]])
+                                    editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= false]]
+                                end
+                            )
+                        end
+                    )
+                end
+            )
+        end
+        linegroup1:AddChild(booleanEditBox)
 
         local trueKeyPath = GSE.CloneSequence(keyPath)
         table.insert(trueKeyPath, 1)
