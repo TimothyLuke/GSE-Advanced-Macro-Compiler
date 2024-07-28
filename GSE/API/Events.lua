@@ -157,8 +157,6 @@ function GSE:ADDON_LOADED(event, addon)
         if GSE.isEmpty(GSEVariables) then
             GSEVariables = {}
         end
-        local char = UnitFullName("player")
-        local realm = GetRealmName()
         if GSE.isEmpty(GSEMacros) then
             GSEMacros = {}
         end
