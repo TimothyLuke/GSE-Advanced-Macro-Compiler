@@ -125,6 +125,12 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
+        local char = UnitFullName("player")
+        local realm = GetRealmName()
+        if GSE_C and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][char .. "-" .. realm] then
+            GSE_C["KeyBindings"][char .. "-" .. realm] = nil
+        end
+
         GSE.PerformOneOffEvents()
 
         if GSE.isEmpty(GSESpellCache) then
@@ -301,8 +307,8 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
     local char = UnitFullName("player")
     local realm = GetRealmName()
 
-    if GSE.isEmpty(GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())]) then
-        GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
+    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
+        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end
     if not InCombatLockdown() then
         LoadKeyBindings()
