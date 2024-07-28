@@ -1504,28 +1504,26 @@ function GSE:GUIDrawMacroEditor(container, version)
     addIfButton:SetCallback(
         "OnClick",
         function()
-            if GSE.TableLength(editframe.booleanFunctions) > 0 then
-                local newAction = {
+            local newAction = {
+                [1] = {
                     [1] = {
-                        [1] = {
-                            ["macro"] = "Need True Stuff Here",
-                            ["type"] = "macro",
-                            ["Type"] = Statics.Actions.Action
-                        }
-                    },
-                    [2] = {
-                        [1] = {
-                            ["macro"] = "Need False Stuff Here",
-                            ["type"] = "macro",
-                            ["Type"] = Statics.Actions.Action
-                        }
-                    },
-                    ["Type"] = Statics.Actions.If
-                }
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
-                editframe.scrollStatus.scrollvalue = 1
-                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
-            end
+                        ["macro"] = "Need True Stuff Here",
+                        ["type"] = "macro",
+                        ["Type"] = Statics.Actions.Action
+                    }
+                },
+                [2] = {
+                    [1] = {
+                        ["macro"] = "Need False Stuff Here",
+                        ["type"] = "macro",
+                        ["Type"] = Statics.Actions.Action
+                    }
+                },
+                ["Type"] = Statics.Actions.If
+            }
+            table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+            editframe.scrollStatus.scrollvalue = 1
+            ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
         end
     )
     addIfButton:SetCallback(
@@ -1911,31 +1909,29 @@ local function GetBlockToolbar(
         addIfButton:SetCallback(
             "OnClick",
             function()
-                if GSE.TableLength(GSE.BooleanVariables) > 0 then
-                    local newAction = {
-                        [1] = {
-                            {
-                                ["macro"] = "Need True Stuff Here",
-                                ["type"] = "macro",
-                                ["Type"] = Statics.Actions.Action
-                            }
-                        },
-                        [2] = {
-                            {
-                                ["macro"] = "Need False Stuff Here",
-                                ["type"] = "macro",
-                                ["Type"] = Statics.Actions.Action
-                            }
-                        },
-                        ["Type"] = Statics.Actions.If
-                    }
-                    if #path > 1 then
-                        table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
-                    else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                    end
-                    ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
+                local newAction = {
+                    [1] = {
+                        {
+                            ["macro"] = "Need True Stuff Here",
+                            ["type"] = "macro",
+                            ["Type"] = Statics.Actions.Action
+                        }
+                    },
+                    [2] = {
+                        {
+                            ["macro"] = "Need False Stuff Here",
+                            ["type"] = "macro",
+                            ["Type"] = Statics.Actions.Action
+                        }
+                    },
+                    ["Type"] = Statics.Actions.If
+                }
+                if #path > 1 then
+                    table.insert(editframe.Sequence.Macros[version].Actions[parentPath], lastPath + 1, newAction)
+                else
+                    table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
                 end
+                ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
             end
         )
         addIfButton:SetCallback(
@@ -2219,6 +2215,7 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
                     sequence.Macros[version].Actions[keyPath].action = nil
                     sequence.Macros[version].Actions[keyPath].item = nil
                     sequence.Macros[version].Actions[keyPath].toy = nil
+                    sequence.Macros[version].Actions[keyPath].unit = nil
                 elseif sequence.Macros[version].Actions[keyPath].type == "item" then
                     sequence.Macros[version].Actions[keyPath].item = value
                     sequence.Macros[version].Actions[keyPath].spell = nil
@@ -2534,7 +2531,6 @@ local function drawAction(container, action, version, keyPath)
                     action.toy = nil
                     action.action = nil
                     action.type = "spell"
-                    editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
@@ -2553,7 +2549,6 @@ local function drawAction(container, action, version, keyPath)
                     action.toy = nil
                     action.action = nil
                     action.type = "item"
-                    editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
@@ -2572,7 +2567,6 @@ local function drawAction(container, action, version, keyPath)
                     action.action = spellEditBox:GetText()
                     action.toy = nil
                     action.type = "pet"
-                    editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
@@ -2591,7 +2585,6 @@ local function drawAction(container, action, version, keyPath)
                     action.action = nil
                     action.toy = spellEditBox:GetText()
                     action.type = "toy"
-                    editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end
@@ -2611,7 +2604,6 @@ local function drawAction(container, action, version, keyPath)
                     action.toy = nil
                     action.unit = nil
                     action.type = "macro"
-                    editframe.scrollStatus.scrollvalue = 1
                     ChooseVersionTab(version, editframe.scrollStatus.scrollvalue)
                 end
             end

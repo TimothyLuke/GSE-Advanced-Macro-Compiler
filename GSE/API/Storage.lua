@@ -653,6 +653,7 @@ local function buildAction(action, metaData, variables)
                     else
                         spelllist[k] = value
                     end
+                    spelllist["unit"] = nil
                 else
                     spelllist[k] = value
                 end
@@ -916,8 +917,10 @@ end
         for k,v in pairs(spelllist[step]) do
             if k == "macrotext" then
                 self:SetAttribute("macro", nil )
+                self:SetAttribute("unit", nil )
             elseif k == "macro" then
                 self:SetAttribute("macrotext", nil )
+                self:SetAttribute("unit", nil )
             end
             self:SetAttribute(k, v )
         end
