@@ -102,7 +102,7 @@ function GSE.GetCurrentTalents()
 
             if not loaded then
                 talents = ""
-                GSE.DebugPrint(reason, "TALENTS")
+                GSE.PrintDebugMessage(reason, "TALENTS")
             else
                 if PlayerSpellsFrame and PlayerSpellsFrame.TalentsFrame then
                     PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()

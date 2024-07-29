@@ -125,7 +125,12 @@ local function LoadKeyBindings(payload)
             C_Timer.After(
                 2,
                 function()
-                    GSE.DebugPrint("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                    GSE.PrintDebugMessage(
+                        "changing from ",
+                        payload,
+                        tostring(GSE.GetSelectedLoadoutConfigID()),
+                        "EVENTS"
+                    )
                     for k, v in pairs(
                         GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
                             tostring(GSE.GetSelectedLoadoutConfigID())
