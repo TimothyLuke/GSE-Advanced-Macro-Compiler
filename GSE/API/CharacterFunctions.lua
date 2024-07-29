@@ -96,16 +96,21 @@ function GSE.GetCurrentTalents()
     -- force load the addon
     local addonName = "Blizzard_PlayerSpells"
 
-    local loaded, reason = C_AddOns.LoadAddOn(addonName)
+    pcall(
+        function()
+            local loaded, reason = C_AddOns.LoadAddOn(addonName)
 
-    if not loaded then
-        talents = ""
-        GSE.Print(reason)
-    else
-        PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
-        talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
-    end
-
+            if not loaded then
+                talents = ""
+                GSE.DebugPrint(reason, "TALENTS")
+            else
+                if PlayerSpellsFrame and PlayerSpellsFrame.TalentsFrame then
+                    PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
+                    talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
+                end
+            end
+        end
+    )
     return talents
 end
 
