@@ -352,7 +352,7 @@ local function buildKeybindHeader(specialization, bind, button, loadout)
     if loadout then
         key = key .. loadout
     end
-    selpanel:SetKey(loadout)
+    selpanel:SetKey(key)
     selpanel:SetFullWidth(true)
     selpanel:SetHeight(20)
     selpanel:SetAutoAdjustHeight(true)

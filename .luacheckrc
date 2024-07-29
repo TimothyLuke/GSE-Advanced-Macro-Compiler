@@ -403,5 +403,7 @@ globals = {
     "SetBindingClick",
     "GSE3Storage",
     "C_ClassTalents",
-    "PlayerUtil"
+    "PlayerUtil",
+    "GetSpecializationInfoForClassID",
+    "C_Traits"
 }
