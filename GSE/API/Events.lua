@@ -100,7 +100,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.ReloadSequences()
 end
 
-local function LoadKeyBindings()
+local function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
@@ -111,7 +111,31 @@ local function LoadKeyBindings()
         GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end
     for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]) do
-        SetBindingClick(k, v, _G[v])
+        if k ~= "LoadOuts" then
+            SetBindingClick(k, v, _G[v])
+        end
+    end
+    if payload then
+        if
+            GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
+                GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
+                    tostring(GSE.GetSelectedLoadoutConfigID())
+                ]
+         then
+            C_Timer.After(
+                2,
+                function()
+                    GSE.DebugPrint("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                    for k, v in pairs(
+                        GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
+                            tostring(GSE.GetSelectedLoadoutConfigID())
+                        ]
+                    ) do
+                        SetBindingClick(k, v, _G[v])
+                    end
+                end
+            )
+        end
     end
 end
 
@@ -119,7 +143,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE:ZONE_CHANGED_NEW_AREA()
 end
 
@@ -127,11 +151,11 @@ function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
         local char = UnitFullName("player")
         local realm = GetRealmName()
+
+        GSE.PerformOneOffEvents()
         if GSE_C and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][char .. "-" .. realm] then
             GSE_C["KeyBindings"][char .. "-" .. realm] = nil
         end
-
-        GSE.PerformOneOffEvents()
 
         if GSE.isEmpty(GSESpellCache) then
             GSESpellCache = {
@@ -309,7 +333,7 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
         GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end
     if not InCombatLockdown() then
-        LoadKeyBindings()
+        LoadKeyBindings(true)
         GSE.ReloadSequences()
     end
 end
@@ -327,39 +351,39 @@ function GSE:SPELLS_CHANGED()
 end
 
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_PVP_TALENT_UPDATE()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 
 function GSE:SPEC_INVOLUNTARILY_CHANGED()
-    GSE.ReloadSequences()
+    GSE.ReloadSequences(true)
 end
 
 function GSE:PLAYER_TALENT_UPDATE()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 
 function GSE:TRAIT_NODE_CHANGED()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_CHANGED_PARTIAL()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_ENTRY_UPDATED()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_TREE_CHANGED()
     GSE:UnregisterEvent("TRAIT_TREE_CHANGED")
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_TREE_CHANGED")
 end
@@ -372,14 +396,14 @@ function GSE:PLAYER_TARGET_CHANGED()
     GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 end
 
-function GSE:TRAIT_CONFIG_UPDATED()
+function GSE:TRAIT_CONFIG_UPDATED(_, payload)
     GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
-    LoadKeyBindings()
+    LoadKeyBindings(payload)
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
-    LoadKeyBindings()
+    LoadKeyBindings(true)
     GSE.ReloadSequences()
 end
 

@@ -785,3 +785,5 @@ L["Insert Mouse KeyBind"] = true
 L["Left Mouse Button"] = true
 L["Right Mouse Button"] = true
 L["Add Special KeyBinding"] = true
+L["Talent Loadout"] = true
+L["All Talent Loadouts"] = true
