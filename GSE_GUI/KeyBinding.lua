@@ -264,7 +264,7 @@ local function showKeybind(bind, button, specialization, loadout)
                 SetBinding(initialbind)
             end
 
-            if loadout ~= "ALL" then
+            if loadout ~= "ALL" and loadout then
                 GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
                 local empty = true
                 for _, _ in pairs(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) do
@@ -389,7 +389,7 @@ local function buildKeybindHeader(specialization, bind, button, loadout)
                                 SetBinding(bind)
 
                                 local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                                if loadout ~= "ALL" then
+                                if loadout ~= "ALL" and loadout then
                                     destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
                                     destination[bind] = nil
                                     local empty = true
