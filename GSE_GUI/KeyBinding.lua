@@ -230,7 +230,7 @@ local function showKeybind(bind, button, specialization, loadout)
         function()
             if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(keybind:GetKey()) then
                 local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                if loadout ~= "ALL" then
+                if loadout ~= "ALL" and loadout then
                     if GSE.isEmpty(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"]) then
                         GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] = {}
                     end
