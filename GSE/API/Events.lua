@@ -115,7 +115,7 @@ local function LoadKeyBindings(payload)
             SetBindingClick(k, v, _G[v])
         end
     end
-    if payload then
+    if payload and not InCombatLockdown() then
         if
             GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
                 GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
