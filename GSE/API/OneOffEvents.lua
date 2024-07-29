@@ -11,6 +11,9 @@ function GSE.PerformOneOffEvents()
     if GSE.isEmpty(GSEOptions.Updates) then
         GSEOptions.Updates = {}
     end
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
     if GSE.isEmpty(GSE_C.Updates) then
         GSE_C.Updates = {}
     end
