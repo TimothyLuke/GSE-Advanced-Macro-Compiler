@@ -10,6 +10,42 @@ keybindingframe.frame:SetClampedToScreen(true)
 keybindingframe.panels = {}
 
 keybindingframe.frame:SetFrameStrata("MEDIUM")
+
+local specialKeyBindList = {
+    ["PADDUP"] = "PADDUP",
+    ["PADDRIGHT"] = "PADDRIGHT",
+    ["PADDDOWN"] = "PADDDOWN",
+    ["PADDLEFT"] = "PADDLEFT",
+    ["PAD1"] = "PAD1",
+    ["PAD2"] = "PAD2",
+    ["PAD3"] = "PAD3",
+    ["PAD4"] = "PAD4",
+    ["PAD5"] = "PAD5",
+    ["PAD6"] = "PAD6",
+    ["PADLSTICK"] = "PADLSTICK",
+    ["PADRSTICK"] = "PADRSTICK",
+    ["PADLSHOULDER"] = "PADLSHOULDER",
+    ["PADRSHOULDER"] = "PADLSHOULDER",
+    ["PADLTRIGGER"] = "PADLSHOULDER",
+    ["PADRTRIGGER"] = "PADRTRIGGER",
+    ["PADLSTICKUP"] = "PADLSTICKUP",
+    ["PADLSTICKRIGHT"] = "PADLSTICKRIGHT",
+    ["PADLSTICKDOWN"] = "PADLSTICKDOWN",
+    ["PADLSTICKLEFT"] = "PADLSTICKLEFT",
+    ["PADRSTICKUP"] = "PADRSTICKUP",
+    ["PADRSTICKRIGHT"] = "PADRSTICKRIGHT",
+    ["PADRSTICKDOWN"] = "PADRSTICKDOWN",
+    ["PADRSTICKLEFT"] = "PADRSTICKLEFT",
+    ["PADPADDLE1"] = "PADPADDLE1",
+    ["PADPADDLE2"] = "PADPADDLE2",
+    ["PADPADDLE3"] = "PADPADDLE3",
+    ["PADPADDLE4"] = "PADPADDLE4",
+    ["PADFORWARD"] = "PADFORWARD",
+    ["PADBACK"] = "PADBACK",
+    ["PADSYSTEM"] = "PADSYSTEM",
+    ["PADSOCIAL"] = "PADSOCIAL"
+}
+
 if
     GSEOptions.frameLocations and GSEOptions.frameLocations.keybindingframe and
         GSEOptions.frameLocations.keybindingframe.left and
@@ -197,6 +233,42 @@ local function showKeybind(bind, button, specialization)
         end
     )
 
+    local SpecialButton = AceGUI:Create("Button")
+    SpecialButton:SetText(L["Add Special KeyBinding"])
+
+    SpecialButton:SetCallback(
+        "OnClick",
+        function()
+            MenuUtil.CreateContextMenu(
+                rightContainer,
+                function(ownerRegion, rootDescription)
+                    rootDescription:CreateTitle(L["Insert Gamepad KeyBind"])
+                    for k, v in pairs(specialKeyBindList) do
+                        rootDescription:CreateButton(
+                            k,
+                            function()
+                                keybind:SetKey(v)
+                            end
+                        )
+                    end
+                    rootDescription:CreateTitle(L["Insert Mouse KeyBind"])
+                    rootDescription:CreateButton(
+                        L["Left Mouse Button"],
+                        function()
+                            keybind:SetKey("BUTTON:1")
+                        end
+                    )
+                    rootDescription:CreateButton(
+                        L["Right Mouse Button"],
+                        function()
+                            keybind:SetKey("BUTTON:2")
+                        end
+                    )
+                end
+            )
+        end
+    )
+
     local row = AceGUI:Create("SimpleGroup")
     row:SetFullWidth(true)
     row:SetLayout("Flow")
@@ -209,8 +281,10 @@ local function showKeybind(bind, button, specialization)
     row2:SetFullWidth(true)
     row2:SetLayout("Flow")
 
+    row2:AddChild(SpecialButton)
     row2:AddChild(savebutton)
     row2:AddChild(delbutton)
+
     rightContainer:AddChild(row)
     rightContainer:AddChild(row2)
     rightContainer:SetWidth(keybindingframe.Width - 290)
