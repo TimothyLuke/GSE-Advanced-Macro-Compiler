@@ -406,10 +406,7 @@ function GSE.GUIEditorPerformLayout()
             end
         end
     )
-    -- nameeditbox:SetScript("OnEditFocusLost", function()
-    --  editframe:SetText(string.upper(editframe:GetText()))
-    --  editframe.SequenceName = nameeditbox:GetText()
-    -- end)
+
     nameeditbox:SetCallback(
         "OnEnter",
         function()
@@ -527,7 +524,7 @@ function GSE.GUIEditorPerformLayout()
                 editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
                 editframe.Sequence.MetaData.EnforceCompatability = true
                 editframe.Sequence.MetaData.TOC = tocversion
-                nameeditbox:SetText(string.upper(nameeditbox:GetText()))
+                nameeditbox:SetText(nameeditbox:GetText())
                 editframe.SequenceName = GSE.UnEscapeString(nameeditbox:GetText())
                 GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
                 editframe.save = true
