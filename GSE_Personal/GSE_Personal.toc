@@ -1,7 +1,4 @@
-## Interface: 100207
-
-## Interface-Classic: 11501
-## Interface-Cata: 40400
+## Interface: 110000, 110002
 
 ## Title: |cff0000FFGSE:|r |cFF00D1FFUtils|r
 ## Notes: Personal Compiled Templates for GSE
