@@ -904,11 +904,9 @@ end
     if combatReset then
         _G[name]:SetAttribute("step", 1)
     end
-    if buttoncreate then
-        gsebutton:WrapScript(
-            gsebutton,
-            "OnClick",
-            [=[
+
+    local clickexecution =
+        [=[
     local step = self:GetAttribute('step')
     step = tonumber(step)
     if self:GetAttribute('stepped') then
@@ -931,7 +929,12 @@ end
         self:CallMethod('UpdateIcon')
     end
     ]=]
-        )
+
+    if GSEOptions.DebugPrintModConditionsOnKeyPress then
+        clickexecution = Statics.PrintKeyModifiers .. clickexecution
+    end
+    if buttoncreate then
+        gsebutton:WrapScript(gsebutton, "OnClick", clickexecution)
     end
     GSE.UpdateIcon(_G[name], true)
 end
@@ -994,7 +997,7 @@ function GSE.UpdateMacro(node, category)
                 C_Timer.After(
                     5,
                     function()
-                        GSE.GUIEMacroFrame:SetStatusText("")
+                        GSE.GUIMacroFrame:SetStatusText("")
                     end
                 )
                 GSE.ShowMacros()
