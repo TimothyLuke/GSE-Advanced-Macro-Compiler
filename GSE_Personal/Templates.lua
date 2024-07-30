@@ -44,7 +44,6 @@ if GSE.GetCurrentClassID() == 2 then
     GSE.CreateGSE3Button(macro, name, true)
     local key = "2"
     SetBindingClick(key, name, _G[name])
-    
 
 -- to add a second simply repeat changing name, key and sequence
 
