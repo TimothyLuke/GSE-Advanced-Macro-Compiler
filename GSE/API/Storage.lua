@@ -607,7 +607,7 @@ function GSE.DecompressSequenceFromString(importstring)
         (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and
             (type(actiontable[2]) == "table")
      then
-        seqName = string.upper(actiontable[1])
+        seqName = actiontable[1]
         returnstr = GSE.Dump(actiontable[2])
     end
     return returnstr, seqName, decompresssuccess
