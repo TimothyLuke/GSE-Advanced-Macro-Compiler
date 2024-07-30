@@ -468,23 +468,31 @@ local function buildKeybindMenu()
                 GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]
          then
             for i, j in pairs(GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]) do
-                local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-                local sectionspacer3 = AceGUI:Create("Label")
-                sectionspacer3:SetText(" ")
-                sectionspacer3:SetFont(fontName, 4, fontFlags)
-                leftscroll:AddChild(sectionspacer3)
-                local sectionheader2 = AceGUI:Create("Label")
-                local loadout = C_Traits.GetConfigInfo(i)
-                sectionheader2:SetText(loadout.name)
-                sectionheader2:SetFont(fontName, fontHeight, fontFlags)
-                sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
-                leftscroll:AddChild(sectionheader2)
-                local sectionspacer4 = AceGUI:Create("Label")
-                sectionspacer4:SetText(" ")
-                sectionspacer4:SetFont(fontName, 2, fontFlags)
-                leftscroll:AddChild(sectionspacer4)
-                for l, m in pairs(j) do
-                    buildKeybindHeader(currentspecid, l, m, i)
+                local success =
+                    pcall(
+                    function()
+                        local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+                        local sectionspacer3 = AceGUI:Create("Label")
+                        sectionspacer3:SetText(" ")
+                        sectionspacer3:SetFont(fontName, 4, fontFlags)
+                        leftscroll:AddChild(sectionspacer3)
+                        local sectionheader2 = AceGUI:Create("Label")
+                        local loadout = C_Traits.GetConfigInfo(i)
+                        sectionheader2:SetText(loadout.name)
+                        sectionheader2:SetFont(fontName, fontHeight, fontFlags)
+                        sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
+                        leftscroll:AddChild(sectionheader2)
+                        local sectionspacer4 = AceGUI:Create("Label")
+                        sectionspacer4:SetText(" ")
+                        sectionspacer4:SetFont(fontName, 2, fontFlags)
+                        leftscroll:AddChild(sectionspacer4)
+                        for l, m in pairs(j) do
+                            buildKeybindHeader(currentspecid, l, m, i)
+                        end
+                    end
+                )
+                if not success then
+                    GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
                 end
             end
         end
