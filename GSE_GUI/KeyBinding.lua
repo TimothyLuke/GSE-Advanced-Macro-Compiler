@@ -218,7 +218,11 @@ local function showKeybind(bind, button, specialization, loadout)
     TalentLoadOutList:SetCallback(
         "OnValueChanged",
         function(obj, event, key)
-            loadout = key
+            if key == "All" then
+                loadout = nil
+            else
+                loadout = key
+            end
         end
     )
 
