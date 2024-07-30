@@ -395,7 +395,7 @@ function GSE.GetSequenceNames(Library)
                 if j.DisableEditor then
                     disable = 1
                 end
-                local keyLabel = k .. "," .. i .. "," .. disable
+                local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
                 if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
                     keyset[keyLabel] = i
                 elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
@@ -413,7 +413,7 @@ function GSE.GetSequenceNames(Library)
                     if j.DisableEditor then
                         disable = 1
                     end
-                    local keyLabel = k .. "," .. i .. "," .. disable
+                    local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
                     keyset[keyLabel] = i
                 end
             end

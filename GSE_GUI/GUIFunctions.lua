@@ -79,7 +79,7 @@ function GSE.GUILoadEditor(key, recordedstring)
   else
     local elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
-    sequenceName = elements[2]
+    sequenceName = elements[3]
     --sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
     local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
     sequence = seq[2]

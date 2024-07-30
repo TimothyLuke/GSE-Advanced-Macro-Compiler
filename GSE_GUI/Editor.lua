@@ -167,8 +167,8 @@ editframe.frame:SetScript(
 local function CreateSequencePanels(container, key)
     local elements = GSE.split(key, ",")
     local classid = tonumber(elements[1])
-    local sequencename = elements[2]
-    local readonly = elements[3]
+    local sequencename = elements[3]
+    local readonly = elements[4]
 
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
@@ -244,11 +244,7 @@ local function CreateSequencePanels(container, key)
     label:SetFontObject(font)
     selpanel:AddChild(label)
 
-    local headerlabel =
-        sequencename ..
-        " - " ..
-            GSEOptions.KEYWORD ..
-                Statics.SpecIDList[GSE.Library[classid][sequencename].MetaData.SpecID] .. Statics.StringReset
+    local headerlabel = sequencename
     local hlabel = AceGUI:Create("Label")
 
     if readonly == "1" then
@@ -306,12 +302,14 @@ local function listSequences()
     leftscroll:AddChild(toolbarRow)
     local names = GSE.GetSequenceNames()
     local cclassid = tonumber(-1)
+    local cspecid = tonumber(-1)
     for k, _ in GSE.pairsByKeys(names) do
         local elements = GSE.split(k, ",")
         local tclassid = tonumber(elements[1])
+        local specid = tonumber(elements[2])
+        local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
         if tclassid ~= cclassid then
             cclassid = tclassid
-            local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
             local sectionspacer1 = AceGUI:Create("Label")
             sectionspacer1:SetText(" ")
             sectionspacer1:SetFont(fontName, 4, fontFlags)
@@ -325,6 +323,23 @@ local function listSequences()
             sectionspacer2:SetText(" ")
             sectionspacer2:SetFont(fontName, 2, fontFlags)
             leftscroll:AddChild(sectionspacer2)
+        end
+        if cspecid ~= specid then
+            cspecid = specid
+            local specialisationname = select(2, GetSpecializationInfoByID(specid))
+            local sectionspacer3 = AceGUI:Create("Label")
+            sectionspacer3:SetText(" ")
+            sectionspacer3:SetFont(fontName, 4, fontFlags)
+            leftscroll:AddChild(sectionspacer3)
+            local sectionheader2 = AceGUI:Create("Label")
+            sectionheader2:SetText(specialisationname)
+            sectionheader2:SetFont(fontName, fontHeight, fontFlags)
+            sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
+            leftscroll:AddChild(sectionheader2)
+            local sectionspacer4 = AceGUI:Create("Label")
+            sectionspacer4:SetText(" ")
+            sectionspacer4:SetFont(fontName, 2, fontFlags)
+            leftscroll:AddChild(sectionspacer4)
         end
         CreateSequencePanels(leftscroll, k)
     end
