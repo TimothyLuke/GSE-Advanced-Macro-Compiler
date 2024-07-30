@@ -247,8 +247,15 @@ local function showKeybind(bind, button, specialization, loadout)
                     SetBinding(initialbind)
                     destination[bind] = nil
                 end
-                destination[bind] = button
-                SetBindingClick(bind, button, _G[button])
+                if loadout ~= "ALL" and loadout then
+                    if C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()) == loadout then
+                        destination[bind] = button
+                        SetBindingClick(bind, button, _G[button])
+                    end
+                else
+                    destination[bind] = button
+                    SetBindingClick(bind, button, _G[button])
+                end
                 if bind ~= initialbind then
                     rightContainer:ReleaseChildren()
                 end
