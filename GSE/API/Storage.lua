@@ -931,7 +931,7 @@ end
     ]=]
 
     if GSEOptions.DebugPrintModConditionsOnKeyPress then
-        clickexecution = Statics.PrintKeyModifiers .. clickexecution
+        clickexecution = Statics.PrintKeyModifiers .. GSE.GetMacroResetImplementation() .. clickexecution
     end
     if buttoncreate then
         gsebutton:WrapScript(gsebutton, "OnClick", clickexecution)
