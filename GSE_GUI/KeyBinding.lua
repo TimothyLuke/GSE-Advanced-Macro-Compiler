@@ -247,7 +247,6 @@ local function showKeybind(bind, button, specialization, loadout)
                     SetBinding(initialbind)
                     destination[bind] = nil
                 end
-
                 destination[bind] = button
                 SetBindingClick(bind, button, _G[button])
                 if bind ~= initialbind then
@@ -295,11 +294,12 @@ local function showKeybind(bind, button, specialization, loadout)
                 rightContainer,
                 function(ownerRegion, rootDescription)
                     rootDescription:CreateTitle(L["Insert Gamepad KeyBind"])
-                    for k, v in pairs(specialKeyBindList) do
+                    for k, v in GSE.pairsByKeys(specialKeyBindList) do
                         rootDescription:CreateButton(
                             k,
                             function()
                                 keybind:SetKey(v)
+                                bind = v
                             end
                         )
                     end
@@ -308,12 +308,14 @@ local function showKeybind(bind, button, specialization, loadout)
                         L["Left Mouse Button"],
                         function()
                             keybind:SetKey("BUTTON:1")
+                            bind = "BUTTON:1"
                         end
                     )
                     rootDescription:CreateButton(
                         L["Right Mouse Button"],
                         function()
                             keybind:SetKey("BUTTON:2")
+                            bind = "BUTTON:2"
                         end
                     )
                 end
