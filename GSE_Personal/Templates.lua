@@ -42,20 +42,15 @@ if GSE.GetCurrentClassID() == 2 then
     -- This sets up the button in combat.
     local macro = GSE.CompileTemplate(sequence)
     GSE.CreateGSE3Button(macro, name, true)
+    local key = "2"
+    SetBindingClick(key, name, _G[name])
+    
 
--- To use this new macro you still need to create an ingame /macro with the following
---
--- #showtooltip
--- /click NEWMACRO LeftButton t\
---
--- NOTE: The NEWMACRO label needs to match what is in the name variable used in this file.  And also remember that
--- the syntax of click will differ depending on the CVar ActionButtonUseKeyDown
--- in this example it has the Down suntax including LeftButton t which Up doesnt require.
-
--- to add a second simply repeat changing name, and sequence
+-- to add a second simply repeat changing name, key and sequence
 
 -- name = "NEXTNAME"
 -- sequence = {}
 -- macro = GSE.CompileTemplate(sequence)
 -- GSE.CreateGSE3Button(macro, name, true)
+-- SetBindingClick(key, name, _G[name])
 end
