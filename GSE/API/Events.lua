@@ -116,11 +116,15 @@ local function LoadKeyBindings(payload)
         end
     end
     if payload and not InCombatLockdown() then
+        local selected
+        pcall(
+            function()
+                selected = GSE.GetSelectedLoadoutConfigID()
+            end
+        )
         if
-            GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
-                GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
-                    tostring(GSE.GetSelectedLoadoutConfigID())
-                ]
+            selected and GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
+                GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]
          then
             C_Timer.After(
                 2,
@@ -148,7 +152,8 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
-    LoadKeyBindings(true)
+    GSE.PlayerEntered = true
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE:ZONE_CHANGED_NEW_AREA()
 end
 
@@ -338,7 +343,7 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
         GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end
     if not InCombatLockdown() then
-        LoadKeyBindings(true)
+        LoadKeyBindings(GSE.PlayerEntered)
         GSE.ReloadSequences()
     end
 end
@@ -356,39 +361,34 @@ function GSE:SPELLS_CHANGED()
 end
 
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_PVP_TALENT_UPDATE()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 
 function GSE:SPEC_INVOLUNTARILY_CHANGED()
-    GSE.ReloadSequences(true)
-end
-
-function GSE:PLAYER_TALENT_UPDATE()
-    LoadKeyBindings(true)
-    GSE.ReloadSequences()
+    GSE.ReloadSequences(GSE.PlayerEntered)
 end
 
 function GSE:TRAIT_NODE_CHANGED()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_CHANGED_PARTIAL()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_NODE_ENTRY_UPDATED()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 function GSE:TRAIT_TREE_CHANGED()
     GSE:UnregisterEvent("TRAIT_TREE_CHANGED")
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_TREE_CHANGED")
 end
@@ -403,12 +403,12 @@ end
 
 function GSE:TRAIT_CONFIG_UPDATED(_, payload)
     GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
-    LoadKeyBindings(payload)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
-    LoadKeyBindings(true)
+    LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
 
@@ -462,7 +462,6 @@ GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
 
-GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
 GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
 GSE:RegisterEvent("TRAIT_NODE_CHANGED")
 GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")

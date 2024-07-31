@@ -96,7 +96,7 @@ function GSE.GetCurrentTalents()
     -- force load the addon
     local addonName = "Blizzard_PlayerSpells"
 
-    pcall(
+    xpcall(
         function()
             local loaded, reason = C_AddOns.LoadAddOn(addonName)
 
@@ -109,9 +109,12 @@ function GSE.GetCurrentTalents()
                     talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
                 end
             end
+            return talents
+        end,
+        function()
+            return talents
         end
     )
-    return talents
 end
 
 --- Experimental attempt to load a WeakAuras string.
