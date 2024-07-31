@@ -248,12 +248,14 @@ local function showKeybind(bind, button, specialization, loadout)
                     destination[bind] = nil
                 end
                 if loadout ~= "ALL" and loadout then
-                    if C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()) == loadout then
-                        destination[bind] = button
+                    destination[bind] = button
+                    if tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID())) == loadout then
+                        SetBinding(bind)
                         SetBindingClick(bind, button, _G[button])
                     end
                 else
                     destination[bind] = button
+                    SetBinding(bind)
                     SetBindingClick(bind, button, _G[button])
                 end
                 if bind ~= initialbind then

@@ -115,35 +115,21 @@ local function LoadKeyBindings(payload)
             SetBindingClick(k, v, _G[v])
         end
     end
+
     if payload and not InCombatLockdown() then
-        local selected
-        pcall(
-            function()
-                selected = GSE.GetSelectedLoadoutConfigID()
-            end
-        )
+        local selected =
+            PlayerUtil.GetCurrentSpecID() and
+            tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()))
+
         if
             selected and GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
                 GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]
          then
-            C_Timer.After(
-                2,
-                function()
-                    GSE.PrintDebugMessage(
-                        "changing from ",
-                        payload,
-                        tostring(GSE.GetSelectedLoadoutConfigID()),
-                        "EVENTS"
-                    )
-                    for k, v in pairs(
-                        GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][
-                            tostring(GSE.GetSelectedLoadoutConfigID())
-                        ]
-                    ) do
-                        SetBindingClick(k, v, _G[v])
-                    end
-                end
-            )
+            GSE.PrintDebugMessage("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+            for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]) do
+                SetBinding(k)
+                SetBindingClick(k, v, _G[v])
+            end
         end
     end
 end
@@ -412,6 +398,12 @@ function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
     GSE.ReloadSequences()
 end
 
+function GSE:PLAYER_TALENT_UPDATE()
+    LoadKeyBindings(GSE.PlayerEntered)
+    GSE.ReloadSequences()
+    GSE.ReloadSequences(GSE.PlayerEntered)
+end
+
 function GSE:GROUP_ROSTER_UPDATE(...)
     -- Serialisation stuff
     GSE.sendVersionCheck()
@@ -461,7 +453,7 @@ GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
-
+GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
 GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
 GSE:RegisterEvent("TRAIT_NODE_CHANGED")
 GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")
