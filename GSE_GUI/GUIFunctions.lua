@@ -53,8 +53,7 @@ function GSE.GUILoadEditor(key, recordedstring)
         [1] = {
           ["Actions"] = {
             [1] = {
-              ["spell"] = "Need Spell Here",
-              ["unit"] = "target",
+              ["macro"] = "Need Macro Here",
               ["Type"] = Statics.Actions.Action
             }
           }

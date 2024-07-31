@@ -1259,8 +1259,7 @@ function GSE:GUIDrawMacroEditor(container, version)
                 [1] = {
                     ["Actions"] = {
                         [1] = {
-                            ["spell"] = "Need Spell Here",
-                            ["unit"] = "target",
+                            ["macro"] = "Need Macro Here",
                             ["type"] = "spell",
                             ["Type"] = Statics.Actions.Action
                         }
@@ -2989,8 +2988,7 @@ function GSE:DrawSequenceEditor(container, version)
     if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
         editframe.Sequence.Macros[version].Actions = {
             [1] = {
-                ["spell"] = "Need Spell Here",
-                ["unit"] = "target",
+                ["macro"] = "Need Macro Here",
                 ["Type"] = Statics.Actions.Action
             }
         }
