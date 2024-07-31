@@ -98,10 +98,7 @@ nameeditbox:SetCallback(
     compareframe.sequenceName = key
   end
 )
---nameeditbox:SetScript("OnEditFocusLost", function()
---  editframe:SetText(string.upper(editframe:GetText()))
---  editframe.SequenceName = nameeditbox:GetText()
---end)
+
 nameeditbox:SetDisabled(true)
 nameeditbox:DisableButton(true)
 nameeditbox:SetText(compareframe.sequenceName)

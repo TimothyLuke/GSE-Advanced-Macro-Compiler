@@ -58,7 +58,6 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Remove Spaces or commas from SequenceNames and replace with _'s
     sequenceName = string.gsub(sequenceName, " ", "_")
     sequenceName = string.gsub(sequenceName, ",", "_")
-    sequenceName = string.upper(sequenceName)
 
     -- check Sequence TOC matches the current TOC
     local gameversion, build, date, tocversion = GetBuildInfo()
@@ -304,7 +303,7 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
                 Statics.SourceTransmission
             )
             local k, v = actiontable[1], actiontable[2]
-            local seqName = string.upper(k)
+            local seqName = k
 
             if v.MetaData.GSEVersion and v.MetaData.GSEVersion < 3200 then
                 if GSE.Update31Actions then
