@@ -989,6 +989,12 @@ function GSE.UpdateMacro(node, category)
             EditMacro(node.value, node.name, node.icon, node.text)
         else
             node.value = CreateMacro(node.name, node.icon, node.text, category)
+            if category then
+                local char, realm = UnitFullName("player")
+                GSEMacros[char .. "-" .. realm][node.name].value = node.value
+            else
+                GSEMacros[node.name].value = node.value
+            end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
         if GSE.GUI and GSE.GUIMacroFrame then
