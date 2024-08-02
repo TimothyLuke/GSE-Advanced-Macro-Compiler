@@ -686,32 +686,7 @@ function GSE:GUIDrawMetadataEditor(container)
     local spacerlabel1 = AceGUI:Create("Label")
     spacerlabel1:SetWidth(80)
     metaKeyGroup:AddChild(spacerlabel1)
-
-    -- local talentseditbox = AceGUI:Create("EditBox")
-    -- talentseditbox:SetLabel(L["Talents"])
-    -- talentseditbox:SetWidth(250)
-    -- talentseditbox:DisableButton(true)
-    -- -- metaKeyGroup:AddChild(talentseditbox)
-    -- contentcontainer:AddChild(metaKeyGroup)
-    -- talentseditbox:SetText(editframe.Sequence.MetaData.Talents)
-    -- talentseditbox:SetCallback(
-    --     "OnTextChanged",
-    --     function(obj, event, key)
-    --         editframe.Sequence.MetaData.Talents = key
-    --     end
-    -- )
-    -- talentseditbox:SetCallback(
-    --     "OnEnter",
-    --     function()
-    --         GSE.CreateToolTip(L["Talents"], L["What are the preferred talents for this macro?"], editframe)
-    --     end
-    -- )
-    -- talentseditbox:SetCallback(
-    --     "OnLeave",
-    --     function()
-    --         GSE.ClearTooltip(editframe)
-    --     end
-    -- )
+    contentcontainer:AddChild(metaKeyGroup)
 
     -- local updateTalents = AceGUI:Create("Button")
     -- updateTalents:SetText(L["Update Talents"])
