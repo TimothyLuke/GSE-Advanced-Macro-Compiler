@@ -263,7 +263,7 @@ local function showKeybind(bind, button, specialization, loadout)
                 if loadout then
                     widget = widget .. loadout
                 end
-                keybindingframe:clearpanels(widget, false)
+                keybindingframe:clearpanels(nil, false, widget)
                 GSE.ShowKeyBindings()
             end
         end
@@ -513,9 +513,10 @@ local function buildKeybindMenu()
     end
 end
 
-function keybindingframe:clearpanels(widget, selected)
+function keybindingframe:clearpanels(widget, selected, key)
     for k, _ in pairs(keybindingframe.panels) do
-        if k == widget:GetKey() then
+        local widkey = widget and widget:GetKey() or key
+        if k == widkey then
             if selected then
                 --keybindingframe.showMacro(widget.node)
                 keybindingframe.panels[k]:SetClicked(true)
