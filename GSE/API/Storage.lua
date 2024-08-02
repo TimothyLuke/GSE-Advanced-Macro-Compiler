@@ -838,6 +838,13 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         GSE.Print("Macro missing for " .. name)
         return
     end
+
+    for k, v in ipairs(spelllist) do
+        if v.type == "macro" then
+            spelllist[k].unit = nil
+        end
+    end
+
     if GSE.isEmpty(combatReset) then
         combatReset = false
     end
@@ -860,8 +867,10 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     for k, v in pairs(spelllist[1]) do
         if k == "macrotext" then
             gsebutton:SetAttribute("macro", nil)
+            gsebutton:SetAttribute("unit", nil)
         elseif k == "macro" then
             gsebutton:SetAttribute("macrotext", nil)
+            gsebutton:SetAttribute("unit", nil)
         end
         gsebutton:SetAttribute(k, v)
     end
@@ -1080,20 +1089,36 @@ end
 
 function GSE.ManageMacros()
     for k, v in pairs(GSEMacros) do
-        local macroIndex = GetMacroIndexByName(k)
-        if macroIndex then
-            if v.Managed then
-                local node = {
-                    ["name"] = k,
-                    ["value"] = v.value,
-                    ["icon"] = v.icon,
-                    ["text"] = GSE.CompileMacroText(v.managedMacro, Statics.TranslatorMode.String)
-                }
-                GSE.UpdateMacro(node)
+        if v.Managed then
+            local macroIndex = GetMacroIndexByName(k)
+            if macroIndex ~= v.value then
+                v.value = macroIndex
+                GSEMacros[k].value = macroIndex
             end
+            local node = {
+                ["name"] = k,
+                ["value"] = v.value,
+                ["icon"] = v.icon,
+                ["text"] = GSE.CompileMacroText(
+                    (v.managedMacro and v.managedMacro or v.text),
+                    Statics.TranslatorMode.String
+                )
+            }
+            GSE.UpdateMacro(node)
         else
-            -- macro has been deleted
-            GSEMacros[k] = nil
+            if GetMacroIndexByName(k) then
+                GSEMacros[k] = nil
+                local mname, micon, mbody = GetMacroInfo(k)
+                GSEMacros[mname] = {
+                    ["name"] = mname,
+                    ["value"] = GetMacroIndexByName(k),
+                    ["icon"] = micon,
+                    ["text"] = mbody,
+                    ["manageMacro"] = mbody
+                }
+            else
+                GSEMacros[k] = nil
+            end
         end
     end
     local char, realm = UnitFullName("player")
@@ -1103,9 +1128,15 @@ function GSE.ManageMacros()
 
     if GSEMacros[char .. "-" .. realm] then
         for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
-            local macroIndex = GetMacroIndexByName(k)
-            if macroIndex then
+            if k == "value" then
+                GSEMacros[char .. "-" .. realm][k] = nil
+            else
                 if v.Managed then
+                    local macroIndex = GetMacroIndexByName(k)
+                    if macroIndex ~= v.value then
+                        v.value = macroIndex
+                        GSEMacros[char .. "-" .. realm][k].value = macroIndex
+                    end
                     local node = {
                         ["name"] = k,
                         ["value"] = v.value,
@@ -1116,9 +1147,21 @@ function GSE.ManageMacros()
                         )
                     }
                     GSE.UpdateMacro(node)
+                else
+                    if GetMacroIndexByName(k) then
+                        GSEMacros[char .. "-" .. realm][k] = nil
+                        local mname, micon, mbody = GetMacroInfo(k)
+                        GSEMacros[char .. "-" .. realm][mname] = {
+                            ["name"] = mname,
+                            ["value"] = GetMacroIndexByName(k),
+                            ["icon"] = micon,
+                            ["text"] = mbody,
+                            ["manageMacro"] = mbody
+                        }
+                    else
+                        GSEMacros[char .. "-" .. realm][k] = nil
+                    end
                 end
-            else
-                GSEMacros[char .. "-" .. realm][k] = nil
             end
         end
     end
