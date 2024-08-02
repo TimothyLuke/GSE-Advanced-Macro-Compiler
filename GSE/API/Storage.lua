@@ -1108,7 +1108,7 @@ function GSE.ManageMacros()
         else
             if GetMacroIndexByName(k) then
                 GSEMacros[k] = nil
-                local mname, micon, mbody = GetMacroInfo(k)
+                local mname, micon, mbody = GetMacroInfo(GetMacroIndexByName(k))
                 GSEMacros[mname] = {
                     ["name"] = mname,
                     ["value"] = GetMacroIndexByName(k),
