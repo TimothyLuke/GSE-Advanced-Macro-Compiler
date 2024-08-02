@@ -41,7 +41,7 @@ local function processCollection(payload)
     local sequencelabel = AceGUI:Create("Label")
     sequencelabel:SetText(L["Sequences"])
     importframe:AddChild(sequencelabel)
-    for k, v in pairs(payload.Sequences) do
+    for k, _ in pairs(payload.Sequences) do
       local chkbox = AceGUI:Create("CheckBox")
       local label = k
       if GSESequences[0][k] or GSESequences[GSE.GetCurrentClassID()][k] then
@@ -72,7 +72,7 @@ local function processCollection(payload)
     local variablelabel = AceGUI:Create("Label")
     variablelabel:SetText(L["Variables"])
     importframe:AddChild(variablelabel)
-    for k, v in pairs(payload.Variables) do
+    for k, _ in pairs(payload.Variables) do
       local chkbox = AceGUI:Create("CheckBox")
       local label = k
       if GSEVariables[k] then
@@ -105,7 +105,7 @@ local function processCollection(payload)
     macroLabel:SetText(L["Macros"])
     importframe:AddChild(macroLabel)
     local char, realm = UnitFullName("player")
-    for k, v in pairs(payload.Macros) do
+    for k, _ in pairs(payload.Macros) do
       local row = AceGUI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)
