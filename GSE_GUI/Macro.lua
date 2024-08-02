@@ -519,15 +519,24 @@ local function buildMacroHeader(node)
                         rootDescription:CreateButton(
                             L["Import"],
                             function()
-                                GSE.GUIImportFrame:Show()
+                                GSE.ShowImport()
                             end
                         )
                         rootDescription:CreateButton(
                             L["Export"] .. " " .. node.name,
                             function()
                                 local category = "a"
+                                local source = GSEMacros
                                 if node.value > MAX_ACCOUNT_MACROS then
+                                    local char, realm = UnitFullName("player")
                                     category = "p"
+                                    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+                                        GSEMacros[char .. "-" .. realm] = {}
+                                    end
+                                    source = GSEMacros[char .. "-" .. realm]
+                                end
+                                if GSE.isEmpty(source[node.name]) then
+                                    source[node.name] = node
                                 end
                                 GSE.GUIExport(category, node.name, "MACRO")
                             end

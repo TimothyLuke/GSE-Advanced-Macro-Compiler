@@ -669,7 +669,7 @@ function GSE:GSSlash(input)
     elseif string.lower(command) == "import" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
-            GSE.GUIImportFrame:Show()
+            GSE.ShowImport()
         end
     else
         GSE.CheckGUI()

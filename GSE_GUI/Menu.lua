@@ -150,7 +150,7 @@ importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t" .. L["Impor
 importbutton:SetCallback(
     "OnClick",
     function(self, button, down)
-        GSE.GUIImportFrame:Show()
+        GSE.ShowImport()
     end
 )
 importbutton:SetWidth(100)

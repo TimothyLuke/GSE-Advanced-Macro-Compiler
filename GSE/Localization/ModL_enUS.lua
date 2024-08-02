@@ -788,3 +788,6 @@ L["Add Special KeyBinding"] = true
 L["Talent Loadout"] = true
 L["All Talent Loadouts"] = true
 L["Add Talent Loadout"] = true
+
+L["Processing Collection of %s Elements."] = true
+L["Already Known"] = true
