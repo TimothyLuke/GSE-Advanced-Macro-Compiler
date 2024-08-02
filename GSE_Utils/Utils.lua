@@ -451,7 +451,7 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
         "# " ..
         sequencename ..
             "\n\n## Talents: " ..
-                (GSE.isEmpty(sequence["MetaData"].Talents) and "?,?,?,?,?,?,?" or sequence["MetaData"].Talents) ..
+                (GSE.isEmpty(sequence["MetaData"].Talents) and "?,?,?,?,?,?,?" or GSE.Dump(sequence["MetaData"].Talents)) ..
                     "\n\n"
     if not GSE.isEmpty(sequence["MetaData"].Help) then
         returnstring = "\n\n## Usage Information\n" .. sequence["MetaData"].Help .. "\n\n"
