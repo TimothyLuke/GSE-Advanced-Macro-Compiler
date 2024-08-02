@@ -400,6 +400,13 @@ function GSE.GUICreateEditorTabs()
             GSE.VersionString ..
                 " " .. GSEOptions.UNKNOWN .. L["RESTRICTED: Macro specifics disabled by author."] .. Statics.StringReset
     end
+    table.insert(
+        tabl,
+        {
+            text = L["Talents"],
+            value = "talents"
+        }
+    )
     return tabl
 end
 
@@ -680,60 +687,60 @@ function GSE:GUIDrawMetadataEditor(container)
     spacerlabel1:SetWidth(80)
     metaKeyGroup:AddChild(spacerlabel1)
 
-    local talentseditbox = AceGUI:Create("EditBox")
-    talentseditbox:SetLabel(L["Talents"])
-    talentseditbox:SetWidth(250)
-    talentseditbox:DisableButton(true)
-    metaKeyGroup:AddChild(talentseditbox)
-    contentcontainer:AddChild(metaKeyGroup)
-    talentseditbox:SetText(editframe.Sequence.MetaData.Talents)
-    talentseditbox:SetCallback(
-        "OnTextChanged",
-        function(obj, event, key)
-            editframe.Sequence.MetaData.Talents = key
-        end
-    )
-    talentseditbox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Talents"], L["What are the preferred talents for this macro?"], editframe)
-        end
-    )
-    talentseditbox:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
+    -- local talentseditbox = AceGUI:Create("EditBox")
+    -- talentseditbox:SetLabel(L["Talents"])
+    -- talentseditbox:SetWidth(250)
+    -- talentseditbox:DisableButton(true)
+    -- -- metaKeyGroup:AddChild(talentseditbox)
+    -- contentcontainer:AddChild(metaKeyGroup)
+    -- talentseditbox:SetText(editframe.Sequence.MetaData.Talents)
+    -- talentseditbox:SetCallback(
+    --     "OnTextChanged",
+    --     function(obj, event, key)
+    --         editframe.Sequence.MetaData.Talents = key
+    --     end
+    -- )
+    -- talentseditbox:SetCallback(
+    --     "OnEnter",
+    --     function()
+    --         GSE.CreateToolTip(L["Talents"], L["What are the preferred talents for this macro?"], editframe)
+    --     end
+    -- )
+    -- talentseditbox:SetCallback(
+    --     "OnLeave",
+    --     function()
+    --         GSE.ClearTooltip(editframe)
+    --     end
+    -- )
 
-    local updateTalents = AceGUI:Create("Button")
-    updateTalents:SetText(L["Update Talents"])
-    updateTalents:SetWidth(120)
-    metaKeyGroup:AddChild(updateTalents)
-    updateTalents:SetCallback(
-        "OnClick",
-        function()
-            local key = GSE.GetCurrentTalents()
-            talentseditbox:SetText(key)
-            editframe.Sequence.MetaData.Talents = key
-        end
-    )
-    updateTalents:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Update Talents"],
-                L["Update the stored talents to match the current chosen talents."],
-                editframe
-            )
-        end
-    )
-    updateTalents:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
+    -- local updateTalents = AceGUI:Create("Button")
+    -- updateTalents:SetText(L["Update Talents"])
+    -- updateTalents:SetWidth(120)
+    -- metaKeyGroup:AddChild(updateTalents)
+    -- updateTalents:SetCallback(
+    --     "OnClick",
+    --     function()
+    --         local key = GSE.GetCurrentTalents()
+    --         talentseditbox:SetText(key)
+    --         editframe.Sequence.MetaData.Talents = key
+    --     end
+    -- )
+    -- updateTalents:SetCallback(
+    --     "OnEnter",
+    --     function()
+    --         GSE.CreateToolTip(
+    --             L["Update Talents"],
+    --             L["Update the stored talents to match the current chosen talents."],
+    --             editframe
+    --         )
+    --     end
+    -- )
+    -- updateTalents:SetCallback(
+    --     "OnLeave",
+    --     function()
+    --         GSE.ClearTooltip(editframe)
+    --     end
+    -- )
 
     local helpeditbox = AceGUI:Create("MultiLineEditBox")
     helpeditbox:SetLabel(L["Help Information"])
@@ -1250,7 +1257,7 @@ function GSE:GUIDrawMacroEditor(container, version)
         editframe.Sequence = {
             ["MetaData"] = {
                 ["Author"] = GSE.GetCharacterName(),
-                ["Talents"] = GSE.GetCurrentTalents(),
+                ["Talents"] = {},
                 ["Default"] = 1,
                 ["SpecID"] = GSE.GetCurrentSpecID(),
                 ["GSEVersion"] = GSE.VersionString
@@ -3013,6 +3020,131 @@ function GSE:DrawSequenceEditor(container, version)
     end
 end
 
+local function drawTalent(container, name, talent)
+    local row = AceGUI:Create("InlineGroup")
+    local wide = GSEOptions.editorWidth - 210
+    local origname = name
+    if GSE.isEmpty(name) then
+        name = "New Loadout"
+    end
+    if GSE.isEmpty(talent) then
+        talent = {
+            ["TalentSet"] = "",
+            ["Description"] = ""
+        }
+    end
+
+    row:SetLayout("Flow")
+    row:SetFullWidth(true)
+    local txtname = AceGUI:Create("EditBox")
+    txtname:SetLabel(L["Name"])
+    txtname:SetWidth(wide * 0.1)
+    txtname:SetText(name)
+    txtname:SetCallback(
+        "OnTextChanged",
+        function(sel, object, value)
+            name = value
+            editframe.Sequence.MetaData.Talents[name] = talent
+            if editframe.Sequence.MetaData.Talents[origname] then
+                editframe.Sequence.MetaData.Talents[origname] = nil
+            end
+            origname = name
+        end
+    )
+    txtname:DisableButton(true)
+    row:AddChild(txtname)
+
+    local txtloadout = AceGUI:Create("MultiLineEditBox")
+    txtloadout:SetLabel(L["Talent Loadout"])
+    txtloadout:SetWidth(wide * 0.3)
+    txtloadout:SetText(talent.TalentSet)
+    txtloadout:SetNumLines(3)
+    txtloadout:SetCallback(
+        "OnTextChanged",
+        function(sel, object, value)
+            talent.TalentSet = value
+            editframe.Sequence.MetaData.Talents[name] = talent
+        end
+    )
+    txtloadout:DisableButton(true)
+    row:AddChild(txtloadout)
+
+    local txtdescription = AceGUI:Create("MultiLineEditBox")
+    txtdescription:SetLabel(L["Help Information"])
+    txtdescription:SetWidth(wide * 0.3)
+    txtdescription:SetNumLines(3)
+    txtdescription:SetText(talent.Description)
+    txtdescription:SetCallback(
+        "OnTextChanged",
+        function(sel, object, value)
+            talent.Description = value
+            editframe.Sequence.MetaData.Talents[name] = talent
+        end
+    )
+    txtdescription:DisableButton(true)
+    row:AddChild(txtdescription)
+
+    local delete = AceGUI:Create("InteractiveLabel")
+
+    delete:SetImageSize(25, 25)
+    delete:SetImage(Statics.ActionsIcons.Delete)
+    delete:SetCallback(
+        "OnClick",
+        function()
+            editframe.Sequence.MetaData.Talents[name] = nil
+            GSE.GUISelectEditorTab(container, nil, "talents")
+        end
+    )
+    row:AddChild(delete)
+    container:AddChild(row)
+end
+
+local function DrawTalentsEditor(container)
+    local talents = editframe.Sequence.MetaData.Talents
+    if type(talents) == "string" then
+        talents = {
+            ["Legacy"] = {
+                ["TalentSet"] = talents,
+                ["Description"] = "Original Sequence Talent Set"
+            }
+        }
+        editframe.Sequence.MetaData.Talents = talents
+    end
+    container:SetLayout("List")
+    local addtalent = AceGUI:Create("Button")
+    addtalent:SetText(L["Add Talent Loadout"])
+    addtalent:SetCallback(
+        "OnClick",
+        function()
+            drawTalent(container)
+        end
+    )
+    container:AddChild(addtalent)
+    local header = AceGUI:Create("SimpleGroup")
+    header:SetLayout("Flow")
+    header:SetFullWidth(true)
+    local lblname = AceGUI:Create("Heading")
+    local wide = GSEOptions.editorWidth - 210
+    lblname:SetText(L["Name"])
+    lblname:SetWidth(wide * 0.1)
+    header:AddChild(lblname)
+
+    local lbltalentset = AceGUI:Create("Heading")
+    lbltalentset:SetText(L["Talent Loadout"])
+    lbltalentset:SetWidth(wide * 0.3)
+    header:AddChild(lbltalentset)
+
+    local lblDescription = AceGUI:Create("Heading")
+    lblDescription:SetText(L["Help Information"])
+    lblDescription:SetWidth(wide * 0.3)
+    header:AddChild(lblDescription)
+    container:AddChild(header)
+
+    for k, v in pairs(talents) do
+        drawTalent(container, k, v)
+    end
+end
+
 function GSE.GUISelectEditorTab(container, event, group)
     if not GSE.isEmpty(container) then
         editframe.reloading = true
@@ -3029,6 +3161,8 @@ function GSE.GUISelectEditorTab(container, event, group)
             )
             GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
             GSE.GUIEditorPerformLayout()
+        elseif group == "talents" then
+            DrawTalentsEditor(container)
         else
             GSE:GUIDrawMacroEditor(container, group)
         end

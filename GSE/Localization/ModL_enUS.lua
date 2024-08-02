@@ -787,3 +787,4 @@ L["Right Mouse Button"] = true
 L["Add Special KeyBinding"] = true
 L["Talent Loadout"] = true
 L["All Talent Loadouts"] = true
+L["Add Talent Loadout"] = true
