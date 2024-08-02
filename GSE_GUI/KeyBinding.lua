@@ -159,9 +159,7 @@ local function showKeybind(bind, button, specialization, loadout)
     rightContainer:ReleaseChildren()
     local keybind = AceGUI:Create("Keybinding")
     keybind:SetLabel(L["Keybind"])
-    if GSE.isEmpty(bind) then
-        -- new keybindingframe
-    else
+    if not GSE.isEmpty(bind) then
         keybind:SetKey(bind)
     end
 
@@ -259,8 +257,13 @@ local function showKeybind(bind, button, specialization, loadout)
                     SetBindingClick(bind, button, _G[button])
                 end
                 if bind ~= initialbind then
-                    rightContainer:ReleaseChildren()
+                    showKeybind(bind, button, specialization, loadout)
                 end
+                local widget = specialization .. bind
+                if loadout then
+                    widget = widget .. loadout
+                end
+                keybindingframe:clearpanels(widget, false)
                 GSE.ShowKeyBindings()
             end
         end
