@@ -1106,18 +1106,24 @@ function GSE.ManageMacros()
             }
             GSE.UpdateMacro(node)
         else
-            if GetMacroIndexByName(k) then
-                GSEMacros[k] = nil
-                local mname, micon, mbody = GetMacroInfo(GetMacroIndexByName(k))
-                GSEMacros[mname] = {
-                    ["name"] = mname,
-                    ["value"] = GetMacroIndexByName(k),
-                    ["icon"] = micon,
-                    ["text"] = mbody,
-                    ["manageMacro"] = mbody
-                }
+            local slot = GetMacroIndexByName(k)
+            if slot then
+                local mname, micon, mbody = GetMacroInfo(slot)
+                if mname then
+                    GSEMacros[mname] = {
+                        ["name"] = mname,
+                        ["value"] = slot,
+                        ["icon"] = micon,
+                        ["text"] = mbody,
+                        ["manageMacro"] = mbody
+                    }
+                else
+                    GSEMacros[k] = nil
+                end
             else
-                GSEMacros[k] = nil
+                if type(GSEMacros[k]) ~= "table" then
+                    GSEMacros[k] = nil
+                end
             end
         end
     end
@@ -1148,18 +1154,24 @@ function GSE.ManageMacros()
                     }
                     GSE.UpdateMacro(node)
                 else
-                    if GetMacroIndexByName(k) then
-                        GSEMacros[char .. "-" .. realm][k] = nil
-                        local mname, micon, mbody = GetMacroInfo(k)
-                        GSEMacros[char .. "-" .. realm][mname] = {
-                            ["name"] = mname,
-                            ["value"] = GetMacroIndexByName(k),
-                            ["icon"] = micon,
-                            ["text"] = mbody,
-                            ["manageMacro"] = mbody
-                        }
+                    local slot = GetMacroIndexByName(k)
+                    if slot then
+                        local mname, micon, mbody = GetMacroInfo(slot)
+                        if mname then
+                            GSEMacros[char .. "-" .. realm][mname] = {
+                                ["name"] = mname,
+                                ["value"] = slot,
+                                ["icon"] = micon,
+                                ["text"] = mbody,
+                                ["manageMacro"] = mbody
+                            }
+                        else
+                            GSEMacros[char .. "-" .. realm][k] = nil
+                        end
                     else
-                        GSEMacros[char .. "-" .. realm][k] = nil
+                        if type(GSEMacros[char .. "-" .. realm][k]) ~= "table" then
+                            GSEMacros[char .. "-" .. realm][k] = nil
+                        end
                     end
                 end
             end
