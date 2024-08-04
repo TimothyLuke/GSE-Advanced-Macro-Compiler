@@ -76,7 +76,7 @@ StaticPopupDialogs["GSE_UPDATE_AVAILABLE"] = {
 StaticPopupDialogs["GSE_SEQUENCEHELP"] = {
     text = L["Copy this link and open it in a Browser."],
     hasEditBox = 1,
-    url = "https://wowlazymacros.com",
+    url = "https://discord.gg/gseunited",
     OnShow = function(self)
         self.editBox:SetAutoFocus(false)
         self.editBox.width = self.editBox:GetWidth()

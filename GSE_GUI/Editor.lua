@@ -778,9 +778,10 @@ function GSE:GUIDrawMetadataEditor(container)
         end
     )
 
-    if not GSE.isEmpty(editframe.Sequence.MetaData.Helplink) then
-        helplinkeditbox:SetText(editframe.Sequence.MetaData.Helplink)
+    if GSE.isEmpty(editframe.Sequence.MetaData.Helplink) then
+        editframe.Sequence.MetaData.Helplink = "https://discord.gg/gseunited"
     end
+    helplinkeditbox:SetText(editframe.Sequence.MetaData.Helplink)
     helplinkeditbox:SetCallback(
         "OnTextChanged",
         function(obj, event, key)
