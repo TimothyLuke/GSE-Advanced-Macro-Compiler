@@ -65,6 +65,10 @@ local gameversion, _, _, _, _, buildType = GetBuildInfo()
 local majorVersion = GSE.split(gameversion, ".")
 
 GSE.GameMode = tonumber(majorVersion[1])
+if GSE.GameMode <= 10 then
+    print(L["This version of GSE is incompatabile with this version of the game."])
+    return
+end
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
