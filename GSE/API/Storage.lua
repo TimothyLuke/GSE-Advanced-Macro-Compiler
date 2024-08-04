@@ -994,15 +994,17 @@ end
 function GSE.UpdateMacro(node, category)
     if not InCombatLockdown() then
         GSE:UnregisterEvent("UPDATE_MACROS")
-        if node.value then
-            EditMacro(node.value, node.name, node.icon, node.text)
+        local slot = GetMacroIndexByName(node.name)
+        if slot > 0 then
+            print("editing existing")
+            EditMacro(slot, node.name, node.icon, node.text)
         else
             node.value = CreateMacro(node.name, node.icon, node.text, category)
             if category then
                 local char, realm = UnitFullName("player")
-                GSEMacros[char .. "-" .. realm][node.name].value = node.value
+                GSEMacros[char .. "-" .. realm][node.name] = node
             else
-                GSEMacros[node.name].value = node.value
+                GSEMacros[node.name] = node
             end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
