@@ -516,7 +516,6 @@ function GSE.UpdateIcon(self, reset)
     end
 
     if foundSpell then
-        SetMacroSpell(gsebutton, foundSpell)
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
         end
