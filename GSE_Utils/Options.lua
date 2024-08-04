@@ -84,8 +84,8 @@ function GSE.GetOptionsTable()
                         order = 202
                     },
                     resetOOC = {
-                        name = L["Reset Macro when out of combat"],
-                        desc = L["Resets macros back to the initial state when out of combat."],
+                        name = L["Reset Sequences when out of combat"],
+                        desc = L["Resets sequences back to the initial state when out of combat."],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.resetOOC = val
@@ -95,66 +95,10 @@ function GSE.GetOptionsTable()
                         end,
                         order = 300
                     },
-                    overflowPersonalMacros = {
-                        name = L["Use Global Account Macros"],
-                        desc = L[
-                            "When creating a macro, if there is not a personal character macro space, create an account wide macro."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.overflowPersonalMacros = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.overflowPersonalMacros
-                        end,
-                        order = 302
-                    },
-                    autocreateclassstub = {
-                        name = L["Auto Create Class Macro Stubs"],
-                        desc = L[
-                            "When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.autoCreateMacroStubsClass = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.autoCreateMacroStubsClass
-                        end,
-                        order = 303
-                    },
-                    autocreateglobalstub = {
-                        name = L["Auto Create Global Macro Stubs"],
-                        desc = L[
-                            "When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.autoCreateMacroStubsGlobal = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.autoCreateMacroStubsGlobal
-                        end,
-                        order = 304
-                    },
-                    useQuestionMark = {
-                        name = L["Set Default Icon QuestionMark"],
-                        desc = L[
-                            "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.setDefaultIconQuestionMark = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.setDefaultIconQuestionMark
-                        end,
-                        order = 310
-                    },
                     defaultImportAction = {
                         name = L["Default Import Action"],
                         desc = L[
-                            "When GSE imports a macro and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Macro.  Replace - Replace the existing macro with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
+                            "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
                         ],
                         type = "select",
                         style = "radio",
@@ -204,7 +148,7 @@ function GSE.GetOptionsTable()
                     defaultOOCTimerDelay = {
                         name = L["OOC Queue Delay"],
                         desc = L[
-                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates macros.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
+                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
                         ],
                         type = "input",
                         set = function(info, val)
@@ -221,12 +165,12 @@ function GSE.GetOptionsTable()
                     },
                     filtertitle1 = {
                         type = "header",
-                        name = L["Filter Macro Selection"],
+                        name = L["Filter Sequence Selection"],
                         order = 400
                     },
                     showAllMacros = {
-                        name = L["Show All Macros in Editor"],
-                        desc = L["By setting this value the Sequence Editor will show every macro for every class."],
+                        name = L["Show All Sequences in Editor"],
+                        desc = L["By setting this value the Sequence Editor will show every sequence for every class."],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.filterList["All"] = val
@@ -237,9 +181,9 @@ function GSE.GetOptionsTable()
                         order = 410
                     },
                     showClassMacros = {
-                        name = L["Show Class Macros in Editor"],
+                        name = L["Show Class Sequences in Editor"],
                         desc = L[
-                            "By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."
+                            "By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."
                         ],
                         type = "toggle",
                         set = function(info, val)
@@ -251,8 +195,8 @@ function GSE.GetOptionsTable()
                         order = 420
                     },
                     showGlobalMacros = {
-                        name = L["Show Global Macros in Editor"],
-                        desc = L["This shows the Global Macros available as well as those for your class."],
+                        name = L["Show Global Sequences in Editor"],
+                        desc = L["This shows the Global Sequences available as well as those for your class."],
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.filterList["Global"] = val
@@ -261,20 +205,6 @@ function GSE.GetOptionsTable()
                             return GSEOptions.filterList["Global"]
                         end,
                         order = 430
-                    },
-                    createGlobalMacroButtons = {
-                        name = L["Create buttons for Global Macros"],
-                        desc = L[
-                            "Global Macros are those that are valid for all classes.  GSE2 also imports unknown macros as Global.  This option will create a button for these macros so they can be called for any class.  Having all macros in this space is a performance loss hence having them saved with a the right specialisation is important."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.CreateGlobalButtons = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.CreateGlobalButtons
-                        end,
-                        order = 440
                     },
                     showCurrentSpells = {
                         name = L["Show Current Spells"],
@@ -304,8 +234,8 @@ function GSE.GetOptionsTable()
                         order = 100
                     },
                     resetOOC = {
-                        name = L["Reset Macro when out of combat"],
-                        desc = L["Resets macros back to the initial state when out of combat."],
+                        name = L["Reset Sequences when out of combat"],
+                        desc = L["Resets sequences back to the initial state when out of combat."],
                         type = "toggle",
                         set = function(info, val)
                             GSE_C.resetOOC = val
@@ -341,9 +271,9 @@ function GSE.GetOptionsTable()
                 }
             },
             macroResetTab = {
-                name = L["Macro Reset"],
+                name = L["Sequence Reset"],
                 desc = L[
-                    "These options combine to allow you to reset a macro while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
+                    "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
                 ],
                 order = 3,
                 type = "group",
@@ -546,23 +476,6 @@ function GSE.GetOptionsTable()
                         end,
                         order = 501
                     },
-                    enablemacrostubupdatetitle = {
-                        type = "header",
-                        name = L["Update Macro Stubs."],
-                        order = 520
-                    },
-                    virtualButtonSupport = {
-                        name = L["Virtual Button Support"],
-                        desc = L["This is needed for ConsolePort and BindPad."],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.virtualButtonSupport
-                        end,
-                        set = function(key, value)
-                            GSEOptions.virtualButtonSupport = value
-                        end,
-                        order = 521
-                    },
                     spellCachetitle = {
                         type = "header",
                         name = L["Spell Cache Editor"],
@@ -635,32 +548,6 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         order = 541
-                    },
-                    forcecvarsettingstitle = {
-                        type = "header",
-                        name = L["Force ActionButtonUseKeyDown State"],
-                        order = 550
-                    },
-                    CvarActionButtonState = {
-                        type = "select",
-                        name = L["Force CVar State"],
-                        desc = L[
-                            "Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"
-                        ],
-                        values = {
-                            ["DONTFORCE"] = L["Don't Force"],
-                            ["UP"] = L["KeyUp"],
-                            ["DOWN"] = L["KeyDown"]
-                        },
-                        set = function(_, val)
-                            local setting
-                            GSEOptions.CvarActionButtonState = val
-                            GSE.setActionButtonUseKeyDown()
-                        end,
-                        get = function(info)
-                            return GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DOWN"
-                        end,
-                        order = 552
                     }
                 }
             },
@@ -897,7 +784,7 @@ function GSE.GetOptionsTable()
                     plugindesc = {
                         type = "description",
                         name = L[
-                            "GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."
+                            "GSE allows plugins to load Collections as plugins.  You can reload a collection by pressing the button below."
                         ]
                     }
                 }
@@ -1097,7 +984,7 @@ function GSE.GetOptionsTable()
                     aboutDescription = {
                         type = "description",
                         name = L[
-                            "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write macros with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."
+                            "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."
                         ],
                         order = 20,
                         image = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.tga",
@@ -1252,7 +1139,7 @@ function GSE.GetOptionsTable()
             ord = ord + 1
             OptionsTable.args.pluginsTab.args[v.Name] = {
                 name = v.Name,
-                desc = string.format(L["Addin Version %s contained versions for the following macros:"], v.Name) ..
+                desc = string.format(L["Addin Version %s contained versions for the following sequences:"], v.Name) ..
                     string.format("\n%s", FormatSequenceNames(v.SequenceNames)),
                 type = "execute",
                 func = function(info, val)

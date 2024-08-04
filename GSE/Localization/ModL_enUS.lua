@@ -102,15 +102,13 @@ L["Close"] = true
 L["Debug Output Options"] = true
 L["Enable Debug for the following Modules"] = true
 L["Debug"] = true
-L["Filter Macro Selection"] = true
-L["Show All Macros in Editor"] = true
-L["By setting this value the Sequence Editor will show every macro for every class."] = true
-L["Show Class Macros in Editor"] = true
+L["Filter Sequence Selection"] = true
+L["Show All Sequences in Editor"] = true
+L["By setting this value the Sequence Editor will show every sequence for every class."] = true
+L["Show Class Sequences in Editor"] = true
 L["Source Language "] = true
 L[" is not available.  Unable to translate sequence "] = true
 L["Target language "] = true
-L["Auto Create Class Macro Stubs"] = true
-L["Auto Create Global Macro Stubs"] = true
 L[
         "When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"
     ] = true
@@ -133,8 +131,8 @@ L["Received Sequence "] = true
 L[" from "] = true
 L["Ready to Send"] = true
 L[" sent"] = true
-L["Reset Macro when out of combat"] = true
-L["Resets macros back to the initial state when out of combat."] = true
+L["Reset Sequences when out of combat"] = true
+L["Resets sequences back to the initial state when out of combat."] = true
 
 -- 1.4.4
 L["Record Macro"] = true
@@ -177,7 +175,7 @@ L["Delete"] = true
 L["Cancel"] = true
 L["Delete Icon"] = true
 L["Create Icon"] = true
-L["Addin Version %s contained versions for the following macros:"] = true
+L["Addin Version %s contained versions for the following sequences:"] = true
 
 L["GSE"] = true
 L["Export a Sequence"] = true
@@ -186,12 +184,8 @@ L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
 L[" Deleted Orphaned Macro "] = true
 --- GSE2.0.1-2.0.4
-L["Create buttons for Global Macros"] = true
-L[
-        "Global Macros are those that are valid for all classes.  GSE2 also imports unknown macros as Global.  This option will create a button for these macros so they can be called for any class.  Having all macros in this space is a performance loss hence having them saved with a the right specialisation is important."
-    ] = true
-L["Show Global Macros in Editor"] = true
-L["This shows the Global Macros available as well as those for your class."] = true
+L["Show Global Sequences in Editor"] = true
+L["This shows the Global Sequences available as well as those for your class."] = true
 L["Moved %s to class %s."] = true
 L["Options have been reset to defaults."] = true
 L["Hide Login Message"] = true
@@ -211,9 +205,9 @@ L["Print to the chat window if the alt, shift, control modifiers as well as the 
     true
 L["Automatically Create Macro Icon"] = true
 L["Mouse Buttons."] = true
-L["Macro Reset"] = true
+L["Sequence Reset"] = true
 L[
-        "These options combine to allow you to reset a macro while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
+        "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
     ] = true
 L["Left Mouse Button"] = true
 L["Right Mouse Button"] = true
@@ -233,8 +227,6 @@ L["Alt Keys."] = true
 L["Control Keys."] = true
 L["Shift Keys."] = true
 L["To get started "] = true
-L["Update Macro Stubs."] = true
-
 L[
         "This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."
     ] = true
@@ -245,7 +237,7 @@ L[
         "To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"
     ] = true
 L[
-        "By setting this value the Sequence Editor will show every macro for your class.  Turning this off will only show the class macros for your current specialisation."
+        "By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."
     ] = true
 
 -- GSE 2.1.04
@@ -299,7 +291,7 @@ L["Updated Macro"] = true
 L["Sequence Compare"] = true
 L["Default Import Action"] = true
 L[
-        "When GSE imports a macro and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Macro.  Replace - Replace the existing macro with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
+        "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
     ] = true
 L["Merge"] = true
 L["Ignore"] = true
@@ -376,7 +368,7 @@ L["About"] = true
 L["About GSE"] = true
 L["History"] = true
 L[
-        "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write macros with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."
+        "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community."
     ] = true
 L["Supporters"] = true
 L[
@@ -608,12 +600,11 @@ L[
 -- #1209
 L["KeyUp"] = true
 L["KeyDown"] = true
-L["Up forces GSE into ActionButtonUseKeyDown=0 while Down forces GSE into ActionButtonUseKeyDown=1"] = true
 L["State"] = true
 L[
         "This setting forces the ActionButtonUseKeyDown setting one way or another.  It also reconfigures GSE's Macro Stubs to operate in the specified mode."
     ] = true
-L["Force ActionButtonUseKeyDown State"] = true
+
 L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"] =
     true
 L["Force CVar State"] = true
@@ -629,7 +620,7 @@ L[
 
 -- #1210
 L[
-        "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates macros.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
+        "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
     ] = true
 L["OOC Queue Delay"] = true
 
@@ -646,10 +637,6 @@ L["Edit Spell Cache"] = true
 L["Spell Cache Editor"] = true
 L["Spell ID"] = true
 L["Spell Name"] = true
-
---1272
-L["Virtual Button Support"] = true
-L["This is needed for ConsolePort and BindPad."] = true
 
 --1315
 L["Convert"] = true
@@ -712,7 +699,7 @@ L["Print Active Modifiers on Click"] = true
 L["Store output of debug messages in a Global Variable that can be referrenced by other mods."] = true
 L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"] = true
 L["Enable Mod Debug Mode"] = true
-L["GSE allows plugins to load Macro Collections as plugins.  You can reload a collection by pressing the button below."] =
+L["GSE allows plugins to load Collections as plugins.  You can reload a collection by pressing the button below."] =
     true
 L["Conditionals Colour"] = true
 L["String Colour"] = true
