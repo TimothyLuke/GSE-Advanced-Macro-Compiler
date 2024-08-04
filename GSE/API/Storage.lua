@@ -996,7 +996,6 @@ function GSE.UpdateMacro(node, category)
         GSE:UnregisterEvent("UPDATE_MACROS")
         local slot = GetMacroIndexByName(node.name)
         if slot > 0 then
-            print("editing existing")
             EditMacro(slot, node.name, node.icon, node.text)
         else
             node.value = CreateMacro(node.name, node.icon, node.text, category)
