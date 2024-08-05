@@ -2812,7 +2812,6 @@ local function drawAction(container, action, version, keyPath)
                 )
             end
         )
-
         if not GSE.isEmpty(action.Variable) then
             booleanEditBox:SetText(action.Variable)
         else
@@ -2827,9 +2826,10 @@ local function drawAction(container, action, version, keyPath)
         )
 
         booleanEditBox:SetCallback(
-            "OnValueChanged",
+            "OnTextChanged",
             function(sel, object, value)
                 editframe.Sequence.Macros[version].Actions[keyPath].Variable = value
+                action.Variable = value
             end
         )
         if GSE.Patron then
@@ -2847,6 +2847,7 @@ local function drawAction(container, action, version, keyPath)
                                         booleanEditBox:SetText([[=GSE.V["]] .. k .. [["]()]])
                                         editframe.Sequence.Macros[version].Actions[keyPath].Variable =
                                             [[=GSE.V["]] .. k .. [["]()]]
+                                        action.Variable = [[=GSE.V["]] .. k .. [["]()]]
                                     end
                                 )
                             end
@@ -2856,6 +2857,7 @@ local function drawAction(container, action, version, keyPath)
                                 function()
                                     booleanEditBox:SetText([[= true]])
                                     editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= true]]
+                                    action.Variable = [[= true]]
                                 end
                             )
                             rootDescription:CreateButton(
@@ -2863,6 +2865,7 @@ local function drawAction(container, action, version, keyPath)
                                 function()
                                     booleanEditBox:SetText([[= false]])
                                     editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= false]]
+                                    action.Variable = [[= true]]
                                 end
                             )
                         end
