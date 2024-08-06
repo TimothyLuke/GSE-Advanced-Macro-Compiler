@@ -42,6 +42,13 @@ local function processCollection(payload)
     sequencelabel:SetText(L["Sequences"])
     importframe:AddChild(sequencelabel)
     for k, _ in pairs(payload.Sequences) do
+      local row = AceGUI:Create("SimpleGroup")
+      row:SetLayout("Flow")
+      row:SetFullWidth(true)
+      local spacer = AceGUI:Create("Label")
+      spacer:SetText("")
+      spacer:SetWidth(30)
+      row:AddChild(spacer)
       local chkbox = AceGUI:Create("CheckBox")
       local label = k
       if GSESequences[0][k] or GSESequences[GSE.GetCurrentClassID()][k] then
@@ -56,7 +63,8 @@ local function processCollection(payload)
           importset["Sequences"][k] = key
         end
       )
-      importframe:AddChild(chkbox)
+      row:AddChild(chkbox)
+      importframe:AddChild(row)
     end
   end
 
@@ -73,6 +81,13 @@ local function processCollection(payload)
     variablelabel:SetText(L["Variables"])
     importframe:AddChild(variablelabel)
     for k, _ in pairs(payload.Variables) do
+      local row = AceGUI:Create("SimpleGroup")
+      row:SetLayout("Flow")
+      row:SetFullWidth(true)
+      local spacer = AceGUI:Create("Label")
+      spacer:SetText("")
+      spacer:SetWidth(30)
+      row:AddChild(spacer)
       local chkbox = AceGUI:Create("CheckBox")
       local label = k
       if GSEVariables[k] then
@@ -87,7 +102,8 @@ local function processCollection(payload)
           importset["Variables"][k] = key
         end
       )
-      importframe:AddChild(chkbox)
+      row:AddChild(chkbox)
+      importframe:AddChild(row)
     end
   end
 
