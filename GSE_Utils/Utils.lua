@@ -531,7 +531,7 @@ function GSE.ExportSequence(sequence, sequenceName, verbose)
     local returnVal
     if verbose then
         GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
-        returnVal = GSE.Dump(GSE.TranslateSequence(sequence, Statics.TranslatorMode.Current)) .. "\n"
+        returnVal = GSE.Dump(GSE.UnEscapeTable(GSE.TranslateSequence(sequence, Statics.TranslatorMode.Current))) .. "\n"
     else
         returnVal = GSE.EncodeMessage({sequenceName, sequence})
     end
