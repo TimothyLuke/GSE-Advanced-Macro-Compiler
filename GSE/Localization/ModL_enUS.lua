@@ -779,3 +779,4 @@ L["Add Talent Loadout"] = true
 L["Processing Collection of %s Elements."] = true
 L["Already Known"] = true
 L["This version of GSE is incompatabile with this version of the game."] = true
+L[" was imported."] = true

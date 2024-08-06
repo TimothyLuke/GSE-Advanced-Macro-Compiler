@@ -1036,6 +1036,7 @@ function GSE.ImportMacro(node)
     node.category = nil
 
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
+    GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
     GSE.ManageMacros()
     if GSE.GUI and GSE.GUIMacroFrame then
         if GSE.GUIMacroFrame:IsVisible() then
