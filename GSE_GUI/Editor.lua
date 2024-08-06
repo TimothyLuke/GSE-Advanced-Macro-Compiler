@@ -3089,6 +3089,10 @@ local function DrawTalentsEditor(container)
         }
         editframe.Sequence.MetaData.Talents = talents
     end
+    if GSE.isEmpty(talents) then
+        talents = {}
+        editframe.Sequence.MetaData.Talents = talents
+    end
     container:SetLayout("List")
     local addtalent = AceGUI:Create("Button")
     addtalent:SetText(L["Add Talent Loadout"])
