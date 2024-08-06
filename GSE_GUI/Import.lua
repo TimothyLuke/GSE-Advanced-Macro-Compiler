@@ -40,6 +40,7 @@ local function processCollection(payload)
   if sequencesfound then
     local sequencelabel = AceGUI:Create("Label")
     sequencelabel:SetText(L["Sequences"])
+    sequencelabel:SetFontObject(GameFontNormalLarge)
     importframe:AddChild(sequencelabel)
     for k, _ in pairs(payload.Sequences) do
       local row = AceGUI:Create("SimpleGroup")
@@ -79,6 +80,7 @@ local function processCollection(payload)
   if variablesfound then
     local variablelabel = AceGUI:Create("Label")
     variablelabel:SetText(L["Variables"])
+    variablelabel:SetFontObject(GameFontNormalLarge)
     importframe:AddChild(variablelabel)
     for k, _ in pairs(payload.Variables) do
       local row = AceGUI:Create("SimpleGroup")
@@ -119,6 +121,7 @@ local function processCollection(payload)
   if macrosfound then
     local macroLabel = AceGUI:Create("Label")
     macroLabel:SetText(L["Macros"])
+    macroLabel:SetFontObject(GameFontNormalLarge)
     importframe:AddChild(macroLabel)
     local char, realm = UnitFullName("player")
     for k, _ in pairs(payload.Macros) do
