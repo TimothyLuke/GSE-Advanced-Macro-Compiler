@@ -731,8 +731,7 @@ Statics.IndentationColorTable = colorTable
 
 --- Replace a current version of a Sequence.  This isnt used by GSE but is used by some GSE Addons
 function GSE.ReplaceMacro(classid, sequenceName, sequence)
-    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
-    GSE.Library[classid][sequenceName] = sequence
+    GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
 end
 
 GSE.Utils = true
