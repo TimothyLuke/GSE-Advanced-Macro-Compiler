@@ -12,6 +12,7 @@
 Ace3_Extensions\AceGUI-3.0-Selectable-Panel.lua
 Ace3_Extensions\AceGUIContainer-KeyGroup.lua
 Ace3_Extensions\AceGUI-3.0-Spacer.lua
+Ace3_Extensions\AceGUI-3.0-Controller_KeyBind.lua
 Import.lua
 Export.lua
 DebugWindow.lua

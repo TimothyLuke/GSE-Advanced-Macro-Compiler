@@ -8,43 +8,8 @@ local keybindingframe = AceGUI:Create("Frame")
 keybindingframe:Hide()
 keybindingframe.frame:SetClampedToScreen(true)
 keybindingframe.panels = {}
-
+keybindingframe.frame:EnableGamePadButton(true)
 keybindingframe.frame:SetFrameStrata("MEDIUM")
-
-local specialKeyBindList = {
-    ["PADDUP"] = "PADDUP",
-    ["PADDRIGHT"] = "PADDRIGHT",
-    ["PADDDOWN"] = "PADDDOWN",
-    ["PADDLEFT"] = "PADDLEFT",
-    ["PAD1"] = "PAD1",
-    ["PAD2"] = "PAD2",
-    ["PAD3"] = "PAD3",
-    ["PAD4"] = "PAD4",
-    ["PAD5"] = "PAD5",
-    ["PAD6"] = "PAD6",
-    ["PADLSTICK"] = "PADLSTICK",
-    ["PADRSTICK"] = "PADRSTICK",
-    ["PADLSHOULDER"] = "PADLSHOULDER",
-    ["PADRSHOULDER"] = "PADRSHOULDER",
-    ["PADLTRIGGER"] = "PADLTRIGGER",
-    ["PADRTRIGGER"] = "PADRTRIGGER",
-    ["PADLSTICKUP"] = "PADLSTICKUP",
-    ["PADLSTICKRIGHT"] = "PADLSTICKRIGHT",
-    ["PADLSTICKDOWN"] = "PADLSTICKDOWN",
-    ["PADLSTICKLEFT"] = "PADLSTICKLEFT",
-    ["PADRSTICKUP"] = "PADRSTICKUP",
-    ["PADRSTICKRIGHT"] = "PADRSTICKRIGHT",
-    ["PADRSTICKDOWN"] = "PADRSTICKDOWN",
-    ["PADRSTICKLEFT"] = "PADRSTICKLEFT",
-    ["PADPADDLE1"] = "PADPADDLE1",
-    ["PADPADDLE2"] = "PADPADDLE2",
-    ["PADPADDLE3"] = "PADPADDLE3",
-    ["PADPADDLE4"] = "PADPADDLE4",
-    ["PADFORWARD"] = "PADFORWARD",
-    ["PADBACK"] = "PADBACK",
-    ["PADSYSTEM"] = "PADSYSTEM",
-    ["PADSOCIAL"] = "PADSOCIAL"
-}
 
 if
     GSEOptions.frameLocations and GSEOptions.frameLocations.keybindingframe and
@@ -157,7 +122,7 @@ local function showKeybind(bind, button, specialization, loadout)
     end
     local initialbind = bind
     rightContainer:ReleaseChildren()
-    local keybind = AceGUI:Create("Keybinding")
+    local keybind = AceGUI:Create("ControllerKeybinding")
     keybind:SetLabel(L["Keybind"])
     if not GSE.isEmpty(bind) then
         keybind:SetKey(bind)
@@ -296,51 +261,11 @@ local function showKeybind(bind, button, specialization, loadout)
         end
     )
 
-    local SpecialButton = AceGUI:Create("Button")
-    SpecialButton:SetText(L["Add Special KeyBinding"])
-
-    SpecialButton:SetCallback(
-        "OnClick",
-        function()
-            MenuUtil.CreateContextMenu(
-                rightContainer,
-                function(ownerRegion, rootDescription)
-                    rootDescription:CreateTitle(L["Insert Gamepad KeyBind"])
-                    for k, v in GSE.pairsByKeys(specialKeyBindList) do
-                        rootDescription:CreateButton(
-                            k,
-                            function()
-                                keybind:SetKey(v)
-                                bind = v
-                            end
-                        )
-                    end
-                    rootDescription:CreateTitle(L["Insert Mouse KeyBind"])
-                    rootDescription:CreateButton(
-                        L["Left Mouse Button"],
-                        function()
-                            keybind:SetKey("BUTTON:1")
-                            bind = "BUTTON:1"
-                        end
-                    )
-                    rootDescription:CreateButton(
-                        L["Right Mouse Button"],
-                        function()
-                            keybind:SetKey("BUTTON:2")
-                            bind = "BUTTON:2"
-                        end
-                    )
-                end
-            )
-        end
-    )
-
     local row = AceGUI:Create("SimpleGroup")
     row:SetFullWidth(true)
     row:SetLayout("Flow")
 
     row:AddChild(keybind)
-    row:AddChild(SpecialButton)
     row:AddChild(SequenceListbox)
     row:AddChild(TalentLoadOutList)
 
