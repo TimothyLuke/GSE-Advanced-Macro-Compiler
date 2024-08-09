@@ -252,20 +252,20 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
 end
 
 --- Load a serialised Sequence
-function GSE.ImportSerialisedSequence(importstring, createicon)
+function GSE.ImportSerialisedSequence(importstring, forcereplace)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
     if decompresssuccess then
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload
             for _, v in pairs(actiontable["Variables"]) do
-                GSE.ImportSerialisedSequence(v)
+                GSE.ImportSerialisedSequence(v, forcereplace)
             end
             for _, v in pairs(actiontable["Sequences"]) do
-                GSE.ImportSerialisedSequence(v, false)
+                GSE.ImportSerialisedSequence(v, forcereplace)
             end
             for _, v in pairs(actiontable["Macros"]) do
-                GSE.ImportSerialisedSequence(v)
+                GSE.ImportSerialisedSequence(v, forcereplace)
             end
             if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
                 GSE.ShowSequences()
@@ -316,11 +316,12 @@ function GSE.ImportSerialisedSequence(importstring, createicon)
                     return
                 end
             end
-
-            GSE.AddSequenceToCollection(seqName, v)
-            if createicon then
-                GSE.CheckMacroCreated(seqName, true)
+            if forcereplace then
+                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
+            else
+                GSE.AddSequenceToCollection(seqName, v)
             end
+
             if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
                 GSE.ShowSequences()
             end
@@ -728,10 +729,5 @@ colorTable["/cast"] = castColor
 colorTable[0] = "|r"
 
 Statics.IndentationColorTable = colorTable
-
---- Replace a current version of a Sequence.  This isnt used by GSE but is used by some GSE Addons
-function GSE.ReplaceMacro(classid, sequenceName, sequence)
-    GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
-end
 
 GSE.Utils = true
