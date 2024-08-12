@@ -52,23 +52,6 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     GSE.PrintDebugMessage("output: " .. output .. " mods: " .. mods .. " etc: " .. etc, GNOME)
 
                     output = output .. GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
-                elseif Statics.CastCmds[string.lower(cmd)] then
-                    -- Check for cast Sequences
-                    if not cleanNewLines then
-                        etc = string.match(etc, "^%s*(.-)%s*$")
-                    end
-                    if string.sub(etc, 1, 1) == "!" then
-                        etc = string.sub(etc, 2)
-                        output = output .. "!"
-                    end
-                    local foundspell, returnval =
-                        GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false), absolute)
-                    if foundspell then
-                        output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset
-                    else
-                        GSE.PrintDebugMessage("Did not find : " .. etc, GNOME)
-                        output = output .. etc
-                    end
                 elseif string.lower(cmd) == "castsequence" then
                     GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
                     for _, y in ipairs(GSE.split(etc, ";")) do
@@ -109,6 +92,23 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                         end
                     end
                     output = output .. " " .. etc
+                elseif Statics.CastCmds[string.lower(cmd)] then
+                    -- Check for cast Sequences
+                    if not cleanNewLines then
+                        etc = string.match(etc, "^%s*(.-)%s*$")
+                    end
+                    if string.sub(etc, 1, 1) == "!" then
+                        etc = string.sub(etc, 2)
+                        output = output .. "!"
+                    end
+                    local foundspell, returnval =
+                        GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false), absolute)
+                    if foundspell then
+                        output = output .. GSEOptions.KEYWORD .. returnval .. Statics.StringReset
+                    else
+                        GSE.PrintDebugMessage("Did not find : " .. etc, GNOME)
+                        output = output .. etc
+                    end
                 else
                     -- Pass it through
                     output = output .. " " .. etc
