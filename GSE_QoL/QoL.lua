@@ -365,16 +365,26 @@ GSE.GUIAdvancedExport = function(exportframe)
                 local source = GSEMacros[key]
                 if GSE.isEmpty(source) then
                     local char, realm = UnitFullName("player")
-                    source = GSEMacros[char .. "-" .. realm][key]
-                    category = "p"
-                end
-                if GSE.isEmpty(source) then
-                    -- stil an unmanaged macro
-                    source = {}
-                    local _, micon, mbody = GetMacroInfo(key)
-                    source.icon = micon
-                    source.text = mbody
-                    source.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+                    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+                        GSEMacros[char .. "-" .. realm] = {}
+                    end
+                    if GSE.isEmpty(GSEMacros[char .. "-" .. realm][key]) then
+                        -- need to find the macro as its not managed by GSE
+                        source = {}
+                        local mslot = GetMacroIndexByName(key)
+                        local _, micon, mbody = GetMacroInfo(mslot)
+                        source.name = key
+                        source.icon = micon
+                        source.text = mbody
+                        source.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+                        if mslot > MAX_ACCOUNT_MACROS then
+                            category = "p"
+                        end
+                        print("made new")
+                    else
+                        source = GSEMacros[char .. "-" .. realm][key]
+                        category = "p"
+                    end
                 end
                 local exportobject = GSE.CloneSequence(source)
                 exportobject.objectType = "MACRO"
