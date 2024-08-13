@@ -13,8 +13,7 @@ GSE.Static = {}
 
 GSE.WagoAnalytics = LibStub("WagoAnalytics"):Register("kGr0YY6y")
 
-local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
-GSE.VersionString = GetAddOnMetadata("GSE", "Version")
+GSE.VersionString = C_AddOns.GetAddOnMetadata("GSE", "Version")
 
 --@debug@
 if GSE.VersionString:find("version") then
