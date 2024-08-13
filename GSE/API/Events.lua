@@ -134,6 +134,10 @@ local function LoadKeyBindings(payload)
     end
 end
 
+function GSE.ReloadKeyBindings()
+    LoadKeyBindings(true)
+end
+
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
@@ -322,9 +326,6 @@ function GSE:PLAYER_LOGOUT()
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
-
     if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
         GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     end

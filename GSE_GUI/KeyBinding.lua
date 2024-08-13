@@ -230,6 +230,8 @@ local function showKeybind(bind, button, specialization, loadout)
                 end
                 keybindingframe:clearpanels(nil, false, widget)
                 GSE.ShowKeyBindings()
+                -- trigger a reload of KeyBindings
+                GSE.ReloadKeyBindings()
             end
         end
     )
