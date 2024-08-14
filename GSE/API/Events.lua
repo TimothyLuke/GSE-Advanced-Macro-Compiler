@@ -137,7 +137,6 @@ end
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
-
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
@@ -365,20 +364,6 @@ function GSE:TRAIT_NODE_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
     GSE.ReloadSequences()
 end
-function GSE:TRAIT_NODE_CHANGED_PARTIAL()
-    LoadKeyBindings(GSE.PlayerEntered)
-    GSE.ReloadSequences()
-end
-function GSE:TRAIT_NODE_ENTRY_UPDATED()
-    LoadKeyBindings(GSE.PlayerEntered)
-    GSE.ReloadSequences()
-end
-function GSE:TRAIT_TREE_CHANGED()
-    GSE:UnregisterEvent("TRAIT_TREE_CHANGED")
-    LoadKeyBindings(GSE.PlayerEntered)
-    GSE.ReloadSequences()
-    GSE:RegisterEvent("TRAIT_TREE_CHANGED")
-end
 
 function GSE:PLAYER_TARGET_CHANGED()
     GSE:UnregisterEvent("PLAYER_TARGET_CHANGED")
@@ -456,11 +441,8 @@ GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
 GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
 GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
-GSE:RegisterEvent("TRAIT_NODE_CHANGED")
-GSE:RegisterEvent("TRAIT_NODE_CHANGED_PARTIAL")
-GSE:RegisterEvent("TRAIT_NODE_ENTRY_UPDATED")
-GSE:RegisterEvent("TRAIT_TREE_CHANGED")
 GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
+
 GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
 
 function GSE:OnEnable()
