@@ -521,6 +521,7 @@ function GSE.UpdateIcon(self, reset)
             local a, b = strsplit("=", j)
             modlist[a] = b
         end
+        DevTools_Dump(modlist)
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
         end
@@ -934,6 +935,7 @@ end
     "ACTRL=" .. tostring(IsControlKeyDown()) .. "|" ..
     "RSHIFT=" .. tostring(IsRightShiftKeyDown()) .. "|" ..
     "LSHIFT=" .. tostring(IsLeftShiftKeyDown()) .. "|" ..
+    "ASHIFT=" .. tostring(IsShiftKeyDown())) .. "|" ..
     "AMOD=" .. tostring(IsModifierKeyDown()) .. "|" ..
     "MOUSEBUTTON=" .. GetMouseButtonClicked()
     self:SetAttribute('localmods', mods)
