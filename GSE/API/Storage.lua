@@ -471,6 +471,7 @@ end
 function GSE.UpdateIcon(self, reset)
     local step = self:GetAttribute("step") or 1
     local gsebutton = self:GetName()
+    local mods = self:GetAttribute("localmods") or nil
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
     local spellinfo = {}
@@ -514,7 +515,16 @@ function GSE.UpdateIcon(self, reset)
         spellinfo = C_Spell.GetSpellInfo(executionseq[step].spell)
         foundSpell = spellinfo.name
     end
-
+    if mods then
+        local modlist = {}
+        for _, j in ipairs(strsplittable("|", mods)) do
+            local a, b = strsplit("=", j)
+            modlist[a] = b
+        end
+        if WeakAuras then
+            WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
+        end
+    end
     if foundSpell then
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
@@ -914,7 +924,19 @@ end
     end
 
     local clickexecution =
+        GSE.GetMacroResetImplementation() ..
         [=[
+    local mods = "RALT=" .. tostring(IsRightAltKeyDown()) .. "|" ..
+    "LALT=".. tostring(IsLeftAltKeyDown()) .. "|" ..
+    "AALT=" .. tostring(IsAltKeyDown()) .. "|" ..
+    "RCTRL=" .. tostring(IsRightControlKeyDown()) .. "|" ..
+    "LCTRL=" .. tostring(IsLeftControlKeyDown()) .. "|" ..
+    "ACTRL=" .. tostring(IsControlKeyDown()) .. "|" ..
+    "RSHIFT=" .. tostring(IsRightShiftKeyDown()) .. "|" ..
+    "LSHIFT=" .. tostring(IsLeftShiftKeyDown()) .. "|" ..
+    "AMOD=" .. tostring(IsModifierKeyDown()) .. "|" ..
+    "MOUSEBUTTON=" .. GetMouseButtonClicked()
+    self:SetAttribute('localmods', mods)
     local step = self:GetAttribute('step')
     step = tonumber(step)
     if self:GetAttribute('stepped') then
@@ -939,7 +961,7 @@ end
     ]=]
 
     if GSEOptions.DebugPrintModConditionsOnKeyPress then
-        clickexecution = Statics.PrintKeyModifiers .. GSE.GetMacroResetImplementation() .. clickexecution
+        clickexecution = Statics.PrintKeyModifiers .. clickexecution
     end
     if buttoncreate then
         gsebutton:WrapScript(gsebutton, "OnClick", clickexecution)
