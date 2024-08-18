@@ -512,10 +512,8 @@ function GSE.ToggleOOCQueue()
     end
 end
 
-local loadAddon = C_AddOns and C_AddOns.LoadAddOn or LoadAddOn
-
 function GSE.CheckGUI()
-    local loaded, reason = loadAddon("GSE_GUI")
+    local loaded, reason = C_AddOns.LoadAddOn("GSE_GUI")
     if not loaded then
         if reason == "DISABLED" then
             GSE.PrintDebugMessage("GSE GUI Disabled", "GSE_GUI")

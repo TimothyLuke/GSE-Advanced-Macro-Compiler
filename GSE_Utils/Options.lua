@@ -515,6 +515,20 @@ function GSE.GetOptionsTable()
                         end,
                         order = 532
                     },
+                    printKeyPressModifiers = {
+                        name = L["Print Active Modifiers on Click"],
+                        desc = L[
+                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
+                        end,
+                        get = function(info)
+                            return GSEOptions.DebugPrintModConditionsOnKeyPress
+                        end,
+                        order = 533
+                    },
                     cvarsettingstitle = {
                         type = "header",
                         name = L["CVar Settings"],
@@ -1051,87 +1065,92 @@ function GSE.GetOptionsTable()
                         order = 31
                     }
                 }
-            },
-            debugTab = {
-                name = L["Debug"],
-                desc = L["Debug Mode Options"],
-                type = "group",
-                order = -1,
-                args = {
-                    title4 = {
-                        type = "header",
-                        name = L["Debug Mode Options"],
-                        order = 1
-                    },
-                    debug = {
-                        name = L["Enable Mod Debug Mode"],
-                        desc = L[
-                            "This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.debug = val
-                            GSE.PrintDebugMessage("Debug Mode Enabled", GNOME)
-                        end,
-                        get = function(info)
-                            return GSEOptions.debug
-                        end,
-                        order = 10
-                    },
-                    title5 = {
-                        type = "header",
-                        name = L["Debug Output Options"],
-                        order = 20
-                    },
-                    debugchat = {
-                        name = L["Display debug messages in Chat Window"],
-                        desc = L["This will display debug messages in the Chat window."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.sendDebugOutputToChatWindow = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.sendDebugOutputToChatWindow
-                        end,
-                        order = 21
-                    },
-                    sendDebugOutputToDebugOutput = {
-                        name = L["Store Debug Messages"],
-                        desc = L[
-                            "Store output of debug messages in a Global Variable that can be referrenced by other mods."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.sendDebugOutputToDebugOutput = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.sendDebugOutputToDebugOutput
-                        end,
-                        order = 25
-                    },
-                    printKeyPressModifiers = {
-                        name = L["Print Active Modifiers on Click"],
-                        desc = L[
-                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.DebugPrintModConditionsOnKeyPress
-                        end,
-                        order = 26
-                    },
-                    title6 = {
-                        type = "header",
-                        name = L["Enable Debug for the following Modules"],
-                        order = 30
-                    }
-                }
             }
         }
     }
+
+    if GSE.Developer then
+        OptionsTable.args.debugTab = {
+            name = L["Debug"],
+            desc = L["Debug Mode Options"],
+            type = "group",
+            order = -1,
+            args = {
+                title4 = {
+                    type = "header",
+                    name = L["Debug Mode Options"],
+                    order = 1
+                },
+                debug = {
+                    name = L["Enable Mod Debug Mode"],
+                    desc = L[
+                        "This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"
+                    ],
+                    type = "toggle",
+                    set = function(info, val)
+                        GSEOptions.debug = val
+                        GSE.PrintDebugMessage("Debug Mode Enabled", GNOME)
+                    end,
+                    get = function(info)
+                        return GSEOptions.debug
+                    end,
+                    order = 10
+                },
+                title5 = {
+                    type = "header",
+                    name = L["Debug Output Options"],
+                    order = 20
+                },
+                debugchat = {
+                    name = L["Display debug messages in Chat Window"],
+                    desc = L["This will display debug messages in the Chat window."],
+                    type = "toggle",
+                    set = function(info, val)
+                        GSEOptions.sendDebugOutputToChatWindow = val
+                    end,
+                    get = function(info)
+                        return GSEOptions.sendDebugOutputToChatWindow
+                    end,
+                    order = 21
+                },
+                sendDebugOutputToDebugOutput = {
+                    name = L["Store Debug Messages"],
+                    desc = L[
+                        "Store output of debug messages in a Global Variable that can be referrenced by other mods."
+                    ],
+                    type = "toggle",
+                    set = function(info, val)
+                        GSEOptions.sendDebugOutputToDebugOutput = val
+                    end,
+                    get = function(info)
+                        return GSEOptions.sendDebugOutputToDebugOutput
+                    end,
+                    order = 25
+                },
+                title6 = {
+                    type = "header",
+                    name = L["Enable Debug for the following Modules"],
+                    order = 30
+                }
+            }
+        }
+        local ord = 30
+        for k, _ in pairs(Statics.DebugModules) do
+            ord = ord + 1
+            OptionsTable.args.debugTab.args[k] = {
+                name = k,
+                desc = L["This will display debug messages for the "] .. k,
+                type = "toggle",
+                set = function(info, val)
+                    GSEOptions.DebugModules[k] = val
+                end,
+                get = function(info)
+                    return GSEOptions.DebugModules[k]
+                end,
+                order = ord
+            }
+        end
+    end
     local ord = 900
     -- Add Dynamic Content Container
     if not GSE.isEmpty(GSE.AddInPacks) then
@@ -1149,23 +1168,6 @@ function GSE.GetOptionsTable()
             }
         end
     end
-    ord = 30
-    for k, _ in pairs(Statics.DebugModules) do
-        ord = ord + 1
-        OptionsTable.args.debugTab.args[k] = {
-            name = k,
-            desc = L["This will display debug messages for the "] .. k,
-            type = "toggle",
-            set = function(info, val)
-                GSEOptions.DebugModules[k] = val
-            end,
-            get = function(info)
-                return GSEOptions.DebugModules[k]
-            end,
-            order = ord
-        }
-    end
-
     ord = 31
     for k, v in ipairs(Statics.Patrons) do
         local pos = ord + k
