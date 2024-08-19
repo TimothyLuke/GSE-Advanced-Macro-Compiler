@@ -334,7 +334,7 @@ end]],
     local implementation = AceGUI:Create("EditBox")
     implementation:SetLabel(L["Implementation Link"])
     implementation:DisableButton(true)
-    local implementationText = [[=GSE.V["]] .. name .. [["]()]]
+    local implementationText = [[=GSE.V.]] .. name .. [[()]]
     implementation:SetText(implementationText)
     implementation:SetCallback(
         "OnTextChanged",
