@@ -519,7 +519,11 @@ function GSE.UpdateIcon(self, reset)
         local modlist = {}
         for _, j in ipairs(strsplittable("|", mods)) do
             local a, b = strsplit("=", j)
-            modlist[a] = b == "true" and true or false
+            if a == "MOUSEBUTTON" then
+                modlist[a] = b
+            else
+                modlist[a] = b == "true" and true or false
+            end
         end
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
