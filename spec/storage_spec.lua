@@ -4,7 +4,6 @@ describe(
   function()
     setup(
       function()
-        StaticPopupDialogs = {}
         require("../spec/mockGSE")
         require("../GSE/API/Statics")
         require("../GSE/API/InitialOptions")

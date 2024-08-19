@@ -24,7 +24,7 @@ GSEStorage[12] = {}
 GSEStorage[13] = {}
 
 GSE.Library = {}
-
+StaticPopupDialogs = {}
 -- Mock Character Functions
 function GetTalentTierInfo(tier, ...)
   return 1
