@@ -521,7 +521,6 @@ function GSE.UpdateIcon(self, reset)
             local a, b = strsplit("=", j)
             modlist[a] = b
         end
-        DevTools_Dump(modlist)
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
         end

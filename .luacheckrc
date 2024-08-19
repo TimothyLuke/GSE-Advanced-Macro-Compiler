@@ -408,5 +408,6 @@ globals = {
     "C_Traits",
     "IsControlKeyDown",
     "IsAltKeyDown",
-    "NOT_BOUND"
+    "NOT_BOUND",
+    "strsplittable"
 }
