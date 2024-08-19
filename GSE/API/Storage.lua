@@ -934,7 +934,7 @@ end
     "ACTRL=" .. tostring(IsControlKeyDown()) .. "|" ..
     "RSHIFT=" .. tostring(IsRightShiftKeyDown()) .. "|" ..
     "LSHIFT=" .. tostring(IsLeftShiftKeyDown()) .. "|" ..
-    "ASHIFT=" .. tostring(IsShiftKeyDown())) .. "|" ..
+    "ASHIFT=" .. tostring(IsShiftKeyDown()) .. "|" ..
     "AMOD=" .. tostring(IsModifierKeyDown()) .. "|" ..
     "MOUSEBUTTON=" .. GetMouseButtonClicked()
     self:SetAttribute('localmods', mods)
