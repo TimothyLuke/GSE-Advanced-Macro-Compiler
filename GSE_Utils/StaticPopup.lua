@@ -4,19 +4,6 @@ local Statics = GSE.Static
 
 GSE.GUIEditFrame = {}
 
-StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
-    text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],
-    button1 = L["Yes"],
-    button2 = L["No"],
-    OnAccept = function()
-        ReloadUI()
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
-}
-
 StaticPopupDialogs["GS-DebugOutput"] = {
     text = "Dump of GS Debug messages",
     button1 = L["Update"],

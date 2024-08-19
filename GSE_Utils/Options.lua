@@ -523,6 +523,7 @@ function GSE.GetOptionsTable()
                         type = "toggle",
                         set = function(info, val)
                             GSEOptions.DebugPrintModConditionsOnKeyPress = val
+                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
                         end,
                         get = function(info)
                             return GSEOptions.DebugPrintModConditionsOnKeyPress
