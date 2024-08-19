@@ -519,7 +519,7 @@ function GSE.UpdateIcon(self, reset)
         local modlist = {}
         for _, j in ipairs(strsplittable("|", mods)) do
             local a, b = strsplit("=", j)
-            modlist[a] = b
+            modlist[a] = b == "true" and true or false
         end
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
