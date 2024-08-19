@@ -656,9 +656,10 @@ local function buildAction(action, metaData, variables)
                 if k == "spell" then
                     spelllist[k] = GSE.GetSpellId(value, Statics.TranslatorMode.String)
                 elseif k == "macro" then
-                    if string.sub(GSE.UnEscapeString(v), 1, 1) == "/" then
+                    if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
                         -- we have a line of macrotext
-                        spelllist["macrotext"] = GSE.CompileMacroText(v, Statics.TranslatorMode.String)
+                        spelllist["macrotext"] =
+                            GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
                     else
                         spelllist[k] = value
                     end
@@ -1075,7 +1076,7 @@ function GSE.CompileMacroText(text, mode)
     local lines = GSE.SplitMeIntolines(text)
     for k, v in ipairs(lines) do
         local value = v
-
+        v = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
                 local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
@@ -1092,11 +1093,10 @@ function GSE.CompileMacroText(text, mode)
                     value = functionresult()
                 end
             end
-            value = GSE.UnEscapeString(value)
             if string.sub(value, 1, 2) == "--" then
                 lines[k] = "" -- strip the comments
             else
-                lines[k] = GSE.UnEscapeString(GSE.TranslateString(value, mode, false))
+                lines[k] = GSE.TranslateString(value, mode, false)
             end
         else
             lines[k] = GSE.TranslateString(value, mode, false)
