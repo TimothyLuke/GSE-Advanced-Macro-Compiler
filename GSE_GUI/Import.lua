@@ -173,18 +173,27 @@ local function processCollection(payload)
       }
       if importset["Sequences"] then
         for k, _ in pairs(importset["Sequences"]) do
+          if type(payload["Sequences"][k]) == "table" then
+            payload["Sequences"][k] = GSE.EncodeMessage(payload["Sequences"][k])
+          end
           filteredpayload["Sequences"][k] = payload["Sequences"][k]
           filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
         end
       end
       if importset["Variables"] then
         for k, _ in pairs(importset["Variables"]) do
+          if type(payload["Variables"][k]) == "table" then
+            payload["Variables"][k] = GSE.EncodeMessage(payload["Variables"][k])
+          end
           filteredpayload["Variables"][k] = payload["Variables"][k]
           filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
         end
       end
       if importset["Macros"] then
         for k, _ in pairs(importset["Macros"]) do
+          if type(payload["Macros"][k]) == "table" then
+            payload["Macros"][k] = GSE.EncodeMessage(payload["Macros"][k])
+          end
           filteredpayload["Macros"][k] = payload["Macros"][k]
           filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
         end
