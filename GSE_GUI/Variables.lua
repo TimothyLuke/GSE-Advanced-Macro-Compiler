@@ -249,8 +249,8 @@ end]],
     keyEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            GSEVariables[text] = GSE.CloneSequence(GSEVariables[currentKey])
-            GSEVariables[text].name = text
+            local orig = GSEVariables[currentKey]
+            GSEVariables[text] = orig
             GSEVariables[currentKey] = nil
             currentKey = text
             label:SetText(text)
