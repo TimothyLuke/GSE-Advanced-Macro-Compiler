@@ -654,24 +654,20 @@ local function buildAction(action, metaData, variables)
                 -- we dont want to do anything here
             elseif k ~= "Type" then
                 if string.sub(value, 1, 1) == "=" then
-                    value = loadstring("return " .. string.sub(value, 2, string.len(value) - 1))
+                    value = loadstring("return " .. string.sub(value, 2, string.len(value)))()
                 end
 
                 if k == "spell" then
                     spelllist[k] = GSE.GetSpellId(value, Statics.TranslatorMode.String)
                 elseif k == "macro" then
-                    if value then
-                        if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
-                            -- we have a line of macrotext
-                            spelllist["macrotext"] =
-                                GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
-                        else
-                            spelllist[k] = value
-                        end
-                        spelllist["unit"] = nil
+                    if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
+                        -- we have a line of macrotext
+                        spelllist["macrotext"] =
+                            GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
                     else
                         spelllist[k] = value
                     end
+                    spelllist["unit"] = nil
                 else
                     spelllist[k] = value
                 end
