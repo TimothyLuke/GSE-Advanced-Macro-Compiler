@@ -215,20 +215,15 @@ GSE itself wouldn't be what it is without the efforts of the people who write se
 
 GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community.]=]
 L["GSE: Advanced Macro Compiler loaded.|r  Type "] = "GSE: Erweiterter Makro-Compiler geladen.|r Typ "
---[[Translation missing --]]
-L["GSE: Export"] = "GSE: Export"
+L["GSE: Export"] = "GSE: Exportieren"
 L["GSE: Import a Macro String."] = "GSE: Importieren einer Makrozeichenfolge."
 L["GSE: Left Click to open the Sequence Editor"] = "GSE: Linksklick um den Sequenz Editor zu öffnen."
---[[Translation missing --]]
-L["GSE: Main Menu"] = "GSE: Main Menu"
+L["GSE: Main Menu"] = "GSE: Hauptmenü"
 L["GSE: Middle Click to open the Transmission Interface"] = "GSE: Mittelklick zum Öffnen der Übertragungsschnittstelle"
---[[Translation missing --]]
-L["GSE: Record your rotation to a macro."] = "GSE: Record your rotation to a macro."
+L["GSE: Record your rotation to a macro."] = "GSE: Zeichne Deine Rotation in einem Makro auf."
 L["GSE: Right Click to open the Sequence Debugger"] = "GSE: Rechtsklick zum Öffnen des Sequenz-Debuggers"
---[[Translation missing --]]
-L["GSE: Whats New in "] = "GSE: Whats New in "
---[[Translation missing --]]
-L["GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."] = "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
+L["GSE: Whats New in "] = "GSE: Was ist neu in"
+L["GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."] = "GSE2 Retro-Schnittstelle geladen. Gebe `%s/gse2 import%s` ein, um eine alte GSE2-Zeichenfolge zu importieren, oder `%s/gse2 edit%s`, um mit dem GSE2-Editor eine neue Vorlage zu erstellen."
 L["Help Colour"] = "Hilfsfarbe"
 L["Help Information"] = "Hilfsinformation"
 L["Help Link"] = "Hilfslink"
@@ -241,13 +236,11 @@ L["Hides the message that GSE is loaded."] = "Versteckt die Nachricht das GSE ge
 L["History"] = "Historie"
 L["How many macro Clicks to pause for?"] = "Für wie viele Makro-Klicks soll die Pause eingelegt werden?"
 L["How many milliseconds to pause for?"] = "Wie viele Millisekunden lang soll die Pause sein?"
---[[Translation missing --]]
-L["How many pixels high should Keybindings start at.  Defaults to 500"] = "How many pixels high should Keybindings start at.  Defaults to 500"
+L["How many pixels high should Keybindings start at.  Defaults to 500"] = "Bei welcher Höhe sollten Tastenkombinationen beginnen? Der Standardwert ist 500."
 L["How many pixels high should the Debuger start at.  Defaults to 500"] = "Mit wie vielen Pixeln Höhe soll der Debuger beginnen. Standardwert ist 500"
 L["How many pixels high should the Editor start at.  Defaults to 700"] = "Bei wie welcher Pixelhöhe soll der Editor starten. Standardmäßig 700 "
 L["How many pixels high should the Menu start at.  Defaults to 500"] = "Bei wie welcher Pixelnhöhe soll das Menü beginnen. Standardmäßig auf 500 "
---[[Translation missing --]]
-L["How many pixels wide should Keybinding start at.  Defaults to 700"] = "How many pixels wide should Keybinding start at.  Defaults to 700"
+L["How many pixels wide should Keybinding start at.  Defaults to 700"] = "Bei welcher Breite soll die Tastenkombination beginnen? Der Standardwert ist 700"
 L["How many pixels wide should the Debugger start at.  Defaults to 700"] = "Bei wie welcher Pixelbreite soll der Debugger starten. Standardmäßig 700 "
 L["How many pixels wide should the Editor start at.  Defaults to 700"] = "Mit wie welcher Pixelbreite soll der Editor beginnen. Standardmäßig 700 "
 L["How many pixels wide should the Menu start at.  Defaults to 700"] = "Mit wie welcher Pixelnbreite soll das Menü beginnen. Standardmäßig 700"
@@ -257,18 +250,13 @@ L["Icon Colour"] = "Icon Farbe"
 L["If Blocks require a variable that returns either true or false.  Create the variable first."] = "If-Blöcke erfordern eine Variable, die entweder true oder false zurück gibt. Erstelle zuerst die Variable."
 L["If Blocks Require a variable."] = "Wenn Blöcke eine Variable erfordern."
 L["Ignore"] = "Ignorieren"
---[[Translation missing --]]
-L["Implementation Link"] = "Implementation Link"
+L["Implementation Link"] = "Implementierungslink"
 L["Import"] = "Importieren"
 L["Import Macro from Forums"] = "Makros aus dem Forum importieren"
---[[Translation missing --]]
-L["Insert Gamepad KeyBind"] = "Insert Gamepad KeyBind"
---[[Translation missing --]]
-L["Insert GSE Sequence"] = "Insert GSE Sequence"
---[[Translation missing --]]
-L["Insert GSE Variable"] = "Insert GSE Variable"
---[[Translation missing --]]
-L["Insert Mouse KeyBind"] = "Insert Mouse KeyBind"
+L["Insert Gamepad KeyBind"] = "Gamepad-Tastenbelegung einfügen"
+L["Insert GSE Sequence"] = "GSE-Sequenz einfügen"
+L["Insert GSE Variable"] = "GSE-Variable einfügen"
+L["Insert Mouse KeyBind"] = "Maus-Tastenbelegung einfügen"
 L["Insert Spell"] = "Zauber einfügen"
 L["Insert Test Case"] = "Testfall einfügen"
 L["Interval"] = "Intervall"
