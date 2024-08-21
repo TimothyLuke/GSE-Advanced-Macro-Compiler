@@ -4,7 +4,6 @@ end
 
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "deDE", false)
 
--- Options translation
 L["  The Alternative ClassID is "] = "Die alternative ClassID ist"
 L[" Deleted Orphaned Macro "] = "Unbenutztes Makro gelöscht"
 L[" from "] = "von"
@@ -193,27 +192,18 @@ L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out 
 L["GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."] = "GSE ist eine komplette Neufassung dieses Addons, mit dem Sie eine Reihe von Makros erstellen können, die auf Knopfdruck ausgeführt werden."
 L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = [=[
 GSE ist nicht mehr aktuell. Die neuste Version kann von https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros herunterladen werden.]=]
---[[Translation missing --]]
-L["GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)"] = "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)"
---[[Translation missing --]]
-L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"] = "GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"
+L["GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)"] = "GSE-Makro-Stubs wurden auf die TasteRunter-Konfiguration zurückgesetzt. Der /click-Befehl muss `/click TEMPLATENAME LeftButton t` sein (Beachten Sie, dass das „t“ hier zusammen mit dem LeftButton erforderlich ist.)"
+L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"] = "GSE Macro Stubs wurden auf die Taste Hinauf-Konfiguration zurückgesetzt. Der /click-Befehl muss `/click TEMPLATENAME` sein."
 L["GSE Plugins"] = "GSE-Plugins"
 L["GSE Raw Editor"] = "GSE Raw Editor"
 L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."] = "GSE speichert den Basiszauber und bittet WoW, diese Fähigkeit zu verwenden. WoW wird dann die aktuelle Version des Zaubers wählen. Dieser Schalter schaltet zwischen der Anzeige des Basiszaubers und des aktuellen Zaubers um."
 L["GSE Users"] = "GSE Benutzer"
 L["GSE Version: %s"] = "GSE VErsion: %s"
---[[Translation missing --]]
 L[ [=[GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.
 
-GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community.]=] ] = [=[GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.
+GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community.]=] ] = [=[GSE wurde ursprünglich aus dem von semlar geschriebenen GnomeSequencer abgeleitet. Es wurde von TImothyLuke erweitert, um viele Konfigurations- und Boilerplate-Funktionen mit einer hinzugefügten GUI zu integrieren.  Die Verbesserungen gingen an die Grenzen dessen, was der ursprüngliche Code verarbeiten konnte, und wurden von Grund auf in GSE neu geschrieben.
 
-GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community.]=]
---[[Translation missing --]]
-L[ [=[GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.
-
-GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community.]=] ] = [=[GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.
-
-GSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://wowlazymacros.com for the things that make this mod work.  Special thanks to Lutechi for creating this community.]=]
+GSE selbst wäre nicht das, was es ist, ohne die Anstrengungen der Menschen, die damit Sequenzen schreiben.  Unter https://discord.gg/gseunited erfährst du, was dieses Mod ausmacht. Besonderer Dank geht an Lutechi für die Gründung der ursprünglichen WowLazyMacros-Community.]=]
 L["GSE: Advanced Macro Compiler loaded.|r  Type "] = "GSE: Erweiterter Makro-Compiler geladen.|r Typ "
 L["GSE: Export"] = "GSE: Exportieren"
 L["GSE: Import a Macro String."] = "GSE: Importieren einer Makrozeichenfolge."
