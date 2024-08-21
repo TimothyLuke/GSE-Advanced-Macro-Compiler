@@ -21,6 +21,47 @@ importframe:SetCallback(
 )
 importframe:SetLayout("List")
 importframe:AddChild(AceGUI:Create("Label"))
+
+local function fixContainer(v)
+  local fixedTable = {}
+  for k, val in pairs(v) do
+    if type(v[k]) == "table" then
+      if tonumber(k) then
+        fixedTable[tonumber(k)] = {}
+        fixedTable[tonumber(k)] = fixContainer(val)
+      else
+        fixedTable[k] = fixContainer(val)
+      end
+    else
+      fixedTable[k] = val
+    end
+  end
+  for k, val in ipairs(v) do
+    if type(v[k]) == "table" then
+      fixedTable[k] = fixContainer(val)
+    else
+      fixedTable[k] = val
+    end
+  end
+  return fixedTable
+end
+
+local function processWAGOImport(input)
+  for k, v in ipairs(input) do
+    if type(v) == "table" then
+      print("fixing ipair " .. k)
+      input[k] = fixContainer(v)
+    end
+  end
+  for k, v in pairs(input) do
+    if type(v) == "table" then
+      print("fixing pair " .. k)
+      input[k] = fixContainer(v)
+    end
+  end
+  return GSE.EncodeMessage(input)
+end
+
 local function processCollection(payload)
   importframe:ReleaseChildren()
   importframe:SetLayout("List")
@@ -175,7 +216,7 @@ local function processCollection(payload)
         for k, v in pairs(importset["Sequences"]) do
           if v then
             if type(payload["Sequences"][k]) == "table" then
-              payload["Sequences"][k] = GSE.EncodeMessage(payload["Sequences"][k])
+              payload["Sequences"][k] = processWAGOImport(payload["Sequences"][k])
             end
             filteredpayload["Sequences"][k] = payload["Sequences"][k]
             filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
@@ -186,7 +227,7 @@ local function processCollection(payload)
         for k, v in pairs(importset["Variables"]) do
           if v then
             if type(payload["Variables"][k]) == "table" then
-              payload["Variables"][k] = GSE.EncodeMessage(payload["Variables"][k])
+              payload["Variables"][k] = processWAGOImport(payload["Variables"][k])
             end
             filteredpayload["Variables"][k] = payload["Variables"][k]
             filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
@@ -197,7 +238,7 @@ local function processCollection(payload)
         for k, v in pairs(importset["Macros"]) do
           if v then
             if type(payload["Macros"][k]) == "table" then
-              payload["Macros"][k] = GSE.EncodeMessage(payload["Macros"][k])
+              payload["Macros"][k] = processWAGOImport(payload["Macros"][k])
             end
             filteredpayload["Macros"][k] = payload["Macros"][k]
             filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
