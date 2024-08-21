@@ -1,4 +1,4 @@
-if GetLocale() ~= "deDE" then
+﻿if GetLocale() ~= "deDE" then
     return
 end
 
@@ -135,11 +135,11 @@ L["Delete"] = "Löschen"
 L["Delete Block"] = "Block löschen"
 L["Delete Icon"] = "Lösche Bild"
 L[ [=[Delete this Block from the sequence.  
-WARNING: If this is a loop this will delete all the blocks inside the loop as well.]=] ] = "Löschen Sie diesen Block aus der Sequenz. WARNUNG: Wenn dies eine Schleife ist, werden auch alle Blöcke innerhalb der Schleife gelöscht."
-L["Delete this macro.  This is not able to be undone."] = "Löschen Sie dieses Makro. Dies kann nicht rückgängig gemacht werden."
-L["Delete this variable from the sequence."] = "Löschen Sie diese Variable aus der Sequenz."
+WARNING: If this is a loop this will delete all the blocks inside the loop as well.]=] ] = "Lösche diesen Block aus der Sequenz. WARNUNG: Wenn dies eine Schleife ist, werden auch alle Blöcke innerhalb der Schleife gelöscht."
+L["Delete this macro.  This is not able to be undone."] = "Lösche dieses Makro. Dies kann nicht rückgängig gemacht werden."
+L["Delete this variable from the sequence."] = "Lösche diese Variable aus der Sequenz."
 L[ [=[Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  
-This is different to the Delete button below which will delete this entire macro.]=] ] = "Löschen Sie diese Version des Makros. Dies kann rückgängig gemacht werden, indem dieses Fenster geschlossen und die Änderung nicht gespeichert wird. Dies unterscheidet sich von der Schaltfläche Löschen unten, mit der dieses gesamte Makro gelöscht wird."
+This is different to the Delete button below which will delete this entire macro.]=] ] = "Lösche diese Version des Makros. Dies kann rückgängig gemacht werden, indem dieses Fenster geschlossen und die Änderung nicht gespeichert wird. Dies unterscheidet sich von der Schaltfläche Löschen unten, mit der dieses gesamte Makro gelöscht wird."
 L["Delete Variable"] = "Variable löschen"
 L["Delete Version"] = "Lösche Version"
 L["Disable"] = "Ausschalten"
@@ -544,5 +544,3 @@ L["You cannot delete the Default version of this macro.  Please choose another v
 L["You need to reload the User Interface to complete this task.  Would you like to do this now?"] = "Um diese Aufgabe zu vervollständigen, muss das Benutzerinterface neu geladen werden. Möchtest Du dies nun tun?"
 L["Your ClassID is "] = "Deine ClassID ist"
 L["Your current Specialisation is "] = "Deine aktuelle Spezialisierung ist"
-
-
