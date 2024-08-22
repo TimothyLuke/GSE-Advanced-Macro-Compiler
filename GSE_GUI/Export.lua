@@ -61,9 +61,7 @@ local function CreateSequenceExport(type)
                 GSE.ExportSequence(
                     GSE.GUIExportframe.sequence,
                     exportframe.sequencename,
-                    GSEOptions.UseVerboseExportFormat,
-                    "ID",
-                    false
+                    GSEOptions.UseVerboseExportFormat
                 ) ..
                     "\n```\n\n"
             exporttext =
@@ -74,9 +72,7 @@ local function CreateSequenceExport(type)
                 GSE.ExportSequence(
                     GSE.GUIExportframe.sequence,
                     exportframe.sequencename,
-                    GSEOptions.UseVerboseExportFormat,
-                    "ID",
-                    false
+                    GSEOptions.UseVerboseExportFormat
                 )
             )
         end
