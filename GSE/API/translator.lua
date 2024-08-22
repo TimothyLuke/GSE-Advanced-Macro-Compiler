@@ -124,18 +124,28 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                 end
                 -- look for single line commands and mark them up
                 for _, v in ipairs(Statics.MacroCommands) do
-                    output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
+                    output =
+                        string.gsub(
+                        output,
+                        "/" .. v .. " ",
+                        GSEOptions.WOWSHORTCUTS .. "/" .. v .. " " .. Statics.StringReset
+                    )
                 end
             else
                 GSE.PrintDebugMessage("Detected Comment " .. string.find(instring, "--", 1, true), GNOME)
                 output = output .. GSEOptions.CONCAT .. instring .. Statics.StringReset
             end
             -- If nothing was found, pass through
-            if output == "" then
+            if GSE.isEmpty(output) then
                 output = instring
                 -- look for single line commands and mark them up
                 for _, v in ipairs(Statics.MacroCommands) do
-                    output = string.gsub(output, "/" .. v, GSEOptions.WOWSHORTCUTS .. "/" .. v .. Statics.StringReset)
+                    output =
+                        string.gsub(
+                        output,
+                        "/" .. v .. " ",
+                        GSEOptions.WOWSHORTCUTS .. "/" .. v .. " " .. Statics.StringReset
+                    )
                 end
             end
 
