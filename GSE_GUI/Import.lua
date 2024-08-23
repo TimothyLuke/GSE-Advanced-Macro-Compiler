@@ -49,13 +49,11 @@ end
 local function processWAGOImport(input)
   for k, v in ipairs(input) do
     if type(v) == "table" then
-      print("fixing ipair " .. k)
       input[k] = fixContainer(v)
     end
   end
   for k, v in pairs(input) do
     if type(v) == "table" then
-      print("fixing pair " .. k)
       input[k] = fixContainer(v)
     end
   end
