@@ -251,6 +251,48 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
     end
 end
 
+local function fixContainer(v)
+    local fixedTable = {}
+    for k, val in pairs(v) do
+        if type(v[k]) == "table" then
+            if tonumber(k) then
+                fixedTable[tonumber(k)] = {}
+                fixedTable[tonumber(k)] = fixContainer(val)
+            else
+                fixedTable[k] = fixContainer(val)
+            end
+        else
+            fixedTable[k] = val
+        end
+    end
+    for k, val in ipairs(v) do
+        if type(v[k]) == "table" then
+            fixedTable[k] = fixContainer(val)
+        else
+            fixedTable[k] = val
+        end
+    end
+    return fixedTable
+end
+
+function GSE.processWAGOImport(input, dontencode)
+    for k, v in ipairs(input) do
+        if type(v) == "table" then
+            input[k] = fixContainer(v)
+        end
+    end
+    for k, v in pairs(input) do
+        if type(v) == "table" then
+            input[k] = fixContainer(v)
+        end
+    end
+    if dontencode then
+        return input
+    else
+        return GSE.EncodeMessage(input)
+    end
+end
+
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, forcereplace)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
@@ -304,6 +346,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             )
             local k, v = actiontable[1], actiontable[2]
             local seqName = k
+            v = GSE.processWAGOImport(v, true)
 
             if v.MetaData.GSEVersion and v.MetaData.GSEVersion < 3200 then
                 if GSE.Update31Actions then
