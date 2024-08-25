@@ -143,9 +143,7 @@ function GSE.PrintDebugMessage(message, module)
         DebugModules[module] = false
     else
         DebugModules[module] = GSEOptions.DebugModules[module]
-        if GSEOptions.debug then
-            Debug = GSEOptions.debug
-        end
+        Debug = GSEOptions.debug
         if GSEOptions.AuthorColour then
             AuthorColour = GSEOptions.AuthorColour
             CommandColour = GSEOptions.CommandColour
