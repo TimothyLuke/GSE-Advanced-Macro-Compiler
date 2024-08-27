@@ -113,9 +113,9 @@ local function overrideActionButton(Button, Sequence)
 		local at, id = GetActionInfo(action)
 		if at == "spell" then
             self:SetAttribute("type", "action")
-           	self:SetAttribute('action', action)
+self:SetAttribute('action', action)
 		else
-   			self:SetAttribute("type", "click")
+self:SetAttribute("type", "click")
 		end
 	end
 ]]
@@ -197,7 +197,7 @@ function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
 function GSE:PLAYER_ENTERING_WORLD()
-    GSE.PrintAvailable = true2
+    GSE.PrintAvailable = true
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true

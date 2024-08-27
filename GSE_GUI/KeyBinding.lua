@@ -307,7 +307,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
             "MultiBarRightButton"
         }
         local buttonlist = {}
-        for k, v in ipairs(buttonnames) do
+        for _, v in ipairs(buttonnames) do
             for i = 1, 12 do
                 if _G[v .. i] then
                     buttonlist[v .. i] = v .. i
