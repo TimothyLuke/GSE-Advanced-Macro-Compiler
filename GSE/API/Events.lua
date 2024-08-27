@@ -101,7 +101,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
 end
 
 local function overrideActionButton(Button, Sequence)
-    local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate")
+    local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
     SHBT:WrapScript(
         _G[Button],
         "OnClick",
