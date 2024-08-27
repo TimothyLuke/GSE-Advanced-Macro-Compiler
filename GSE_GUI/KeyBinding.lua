@@ -116,174 +116,354 @@ keybindingframe.frame:SetScript(
     end
 )
 
-local function showKeybind(bind, button, specialization, loadout)
-    if not specialization then
-        specialization = GetSpecialization()
-    end
-    local initialbind = bind
-    rightContainer:ReleaseChildren()
-    local keybind = AceGUI:Create("ControllerKeybinding")
-    keybind:SetLabel(L["Keybind"])
-    if not GSE.isEmpty(bind) then
-        keybind:SetKey(bind)
-    end
-
-    keybind:SetCallback(
-        "OnKeyChanged",
-        function(self, _, key)
-            bind = key
+local function showKeybind(bind, button, specialization, loadout, type)
+    if type == "KB" then
+        if not specialization then
+            specialization = GetSpecialization()
         end
-    )
-
-    keybind:SetLabel(L["Set Key to Bind"])
-    local SequenceListbox = AceGUI:Create("Dropdown")
-
-    SequenceListbox:SetWidth(200)
-    SequenceListbox:SetLabel(L["Sequence"])
-    local names = {}
-
-    for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-        names[k] = k
-    end
-    for k, _ in pairs(GSESequences[0]) do
-        names[k] = k
-    end
-
-    SequenceListbox:SetList(names)
-    SequenceListbox:SetValue(button)
-    SequenceListbox:SetCallback(
-        "OnValueChanged",
-        function(obj, event, key)
-            button = key
+        local initialbind = bind
+        rightContainer:ReleaseChildren()
+        local keybind = AceGUI:Create("ControllerKeybinding")
+        keybind:SetLabel(L["Keybind"])
+        if not GSE.isEmpty(bind) then
+            keybind:SetKey(bind)
         end
-    )
 
-    local TalentLoadOutList = AceGUI:Create("Dropdown")
-
-    TalentLoadOutList:SetWidth(200)
-    TalentLoadOutList:SetLabel(L["Talent Loadout"])
-    local loadouts = {
-        ["All"] = L["All Talent Loadouts"]
-    }
-    for _, v in ipairs(
-        C_ClassTalents.GetConfigIDsBySpecID(GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization))
-    ) do
-        local loadoutinfo = C_Traits.GetConfigInfo(v)
-        loadouts[tostring(v)] = loadoutinfo.name
-    end
-    TalentLoadOutList:SetList(loadouts)
-
-    if loadout then
-        TalentLoadOutList:SetValue(loadout)
-    else
-        TalentLoadOutList:SetValue("All")
-    end
-    TalentLoadOutList:SetCallback(
-        "OnValueChanged",
-        function(obj, event, key)
-            if key == "All" then
-                loadout = nil
-            else
-                loadout = key
+        keybind:SetCallback(
+            "OnKeyChanged",
+            function(self, _, key)
+                bind = key
             end
+        )
+
+        keybind:SetLabel(L["Set Key to Bind"])
+        local SequenceListbox = AceGUI:Create("Dropdown")
+
+        SequenceListbox:SetWidth(200)
+        SequenceListbox:SetLabel(L["Sequence"])
+        local names = {}
+
+        for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
+            names[k] = k
         end
-    )
+        for k, _ in pairs(GSESequences[0]) do
+            names[k] = k
+        end
 
-    local savebutton = AceGUI:Create("Button")
-    savebutton:SetText(L["Save"])
+        SequenceListbox:SetList(names)
+        SequenceListbox:SetValue(button)
+        SequenceListbox:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                button = key
+            end
+        )
 
-    savebutton:SetCallback(
-        "OnClick",
-        function()
-            if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(keybind:GetKey()) then
-                local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                if loadout ~= "ALL" and loadout then
-                    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"]) then
-                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] = {}
-                    end
-                    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) then
-                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = {}
-                    end
-                    destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+        local TalentLoadOutList = AceGUI:Create("Dropdown")
+
+        TalentLoadOutList:SetWidth(200)
+        TalentLoadOutList:SetLabel(L["Talent Loadout"])
+        local loadouts = {
+            ["All"] = L["All Talent Loadouts"]
+        }
+        for _, v in ipairs(
+            C_ClassTalents.GetConfigIDsBySpecID(
+                GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
+            )
+        ) do
+            local loadoutinfo = C_Traits.GetConfigInfo(v)
+            loadouts[tostring(v)] = loadoutinfo.name
+        end
+        TalentLoadOutList:SetList(loadouts)
+
+        if loadout then
+            TalentLoadOutList:SetValue(loadout)
+        else
+            TalentLoadOutList:SetValue("All")
+        end
+        TalentLoadOutList:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                if key == "All" then
+                    loadout = nil
+                else
+                    loadout = key
                 end
-                if initialbind and bind ~= initialbind then
-                    SetBinding(initialbind)
-                    destination[bind] = nil
-                end
-                if loadout ~= "ALL" and loadout then
-                    destination[bind] = button
-                    if tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID())) == loadout then
+            end
+        )
+
+        local savebutton = AceGUI:Create("Button")
+        savebutton:SetText(L["Save"])
+
+        savebutton:SetCallback(
+            "OnClick",
+            function()
+                if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(keybind:GetKey()) then
+                    local destination = GSE_C["KeyBindings"][tostring(specialization)]
+                    if loadout ~= "ALL" and loadout then
+                        if GSE.isEmpty(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"]) then
+                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] = {}
+                        end
+                        if GSE.isEmpty(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) then
+                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = {}
+                        end
+                        destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+                    end
+                    if initialbind and bind ~= initialbind then
+                        SetBinding(initialbind)
+                        destination[bind] = nil
+                    end
+                    if loadout ~= "ALL" and loadout then
+                        destination[bind] = button
+                        if
+                            tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID())) ==
+                                loadout
+                         then
+                            SetBinding(bind)
+                            SetBindingClick(bind, button, _G[button])
+                        end
+                    else
+                        destination[bind] = button
                         SetBinding(bind)
                         SetBindingClick(bind, button, _G[button])
                     end
+                    if bind ~= initialbind then
+                        showKeybind(bind, button, specialization, loadout)
+                    end
+                    local widget = specialization .. bind
+                    if loadout then
+                        widget = widget .. loadout
+                    end
+                    keybindingframe:clearpanels(nil, false, widget)
+                    GSE.ShowKeyBindings()
+                    -- trigger a reload of KeyBindings
+                    GSE.ReloadKeyBindings()
+                end
+            end
+        )
+
+        local delbutton = AceGUI:Create("Button")
+        delbutton:SetText(L["Delete"])
+
+        delbutton:SetCallback(
+            "OnClick",
+            function()
+                if initialbind then
+                    SetBinding(initialbind)
+                end
+
+                if loadout ~= "ALL" and loadout then
+                    GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
+                    local empty = true
+                    for _, _ in pairs(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) do
+                        empty = false
+                    end
+                    if empty then
+                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
+                    end
                 else
-                    destination[bind] = button
-                    SetBinding(bind)
-                    SetBindingClick(bind, button, _G[button])
+                    GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
                 end
-                if bind ~= initialbind then
-                    showKeybind(bind, button, specialization, loadout)
-                end
-                local widget = specialization .. bind
-                if loadout then
-                    widget = widget .. loadout
-                end
-                keybindingframe:clearpanels(nil, false, widget)
+                rightContainer:ReleaseChildren()
                 GSE.ShowKeyBindings()
-                -- trigger a reload of KeyBindings
-                GSE.ReloadKeyBindings()
+            end
+        )
+
+        local row = AceGUI:Create("SimpleGroup")
+        row:SetFullWidth(true)
+        row:SetLayout("Flow")
+
+        row:AddChild(keybind)
+        row:AddChild(SequenceListbox)
+        row:AddChild(TalentLoadOutList)
+
+        local row2 = AceGUI:Create("SimpleGroup")
+        row2:SetFullWidth(true)
+        row2:SetLayout("Flow")
+
+        row2:AddChild(savebutton)
+        row2:AddChild(delbutton)
+        rightContainer:AddChild(row)
+        rightContainer:AddChild(row2)
+    elseif type == "AO" then
+        if not specialization then
+            specialization = GetSpecialization()
+        end
+        local initialbind = bind
+        rightContainer:ReleaseChildren()
+
+        local ActionButtonList = AceGUI:Create("Dropdown")
+
+        ActionButtonList:SetWidth(200)
+        ActionButtonList:SetLabel(L["Actionbar Buttons"])
+        local buttonnames = {
+            "ActionButton",
+            "MultiBarBottomLeftButton",
+            "MultiBarBottomRightButton",
+            "MultiBar5Button",
+            "MultiBar6Button",
+            "MultiBar7Button",
+            "MultiBarLeftButton",
+            "MultiBarRightButton"
+        }
+        local buttonlist = {}
+        for k, v in ipairs(buttonnames) do
+            for i = 1, 12 do
+                if _G[v .. i] then
+                    buttonlist[v .. i] = v .. i
+                end
             end
         end
-    )
 
-    local delbutton = AceGUI:Create("Button")
-    delbutton:SetText(L["Delete"])
-
-    delbutton:SetCallback(
-        "OnClick",
-        function()
-            if initialbind then
-                SetBinding(initialbind)
+        ActionButtonList:SetList(buttonlist)
+        ActionButtonList:SetValue(bind)
+        ActionButtonList:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                bind = key
             end
+        )
 
-            if loadout ~= "ALL" and loadout then
-                GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
-                local empty = true
-                for _, _ in pairs(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) do
-                    empty = false
-                end
-                if empty then
-                    GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
-                end
-            else
-                GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
-            end
-            rightContainer:ReleaseChildren()
-            GSE.ShowKeyBindings()
+        local SequenceListbox = AceGUI:Create("Dropdown")
+
+        SequenceListbox:SetWidth(200)
+        SequenceListbox:SetLabel(L["Sequence"])
+        local names = {}
+
+        for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
+            names[k] = k
         end
-    )
+        for k, _ in pairs(GSESequences[0]) do
+            names[k] = k
+        end
 
-    local row = AceGUI:Create("SimpleGroup")
-    row:SetFullWidth(true)
-    row:SetLayout("Flow")
+        SequenceListbox:SetList(names)
+        SequenceListbox:SetValue(button)
+        SequenceListbox:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                button = key
+            end
+        )
 
-    row:AddChild(keybind)
-    row:AddChild(SequenceListbox)
-    row:AddChild(TalentLoadOutList)
+        local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-    local row2 = AceGUI:Create("SimpleGroup")
-    row2:SetFullWidth(true)
-    row2:SetLayout("Flow")
+        TalentLoadOutList:SetWidth(200)
+        TalentLoadOutList:SetLabel(L["Talent Loadout"])
+        local loadouts = {
+            ["All"] = L["All Talent Loadouts"]
+        }
+        for _, v in ipairs(
+            C_ClassTalents.GetConfigIDsBySpecID(
+                GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
+            )
+        ) do
+            local loadoutinfo = C_Traits.GetConfigInfo(v)
+            loadouts[tostring(v)] = loadoutinfo.name
+        end
+        TalentLoadOutList:SetList(loadouts)
 
-    row2:AddChild(savebutton)
-    row2:AddChild(delbutton)
+        if loadout then
+            TalentLoadOutList:SetValue(loadout)
+        else
+            TalentLoadOutList:SetValue("All")
+        end
+        TalentLoadOutList:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                if key == "All" then
+                    loadout = nil
+                else
+                    loadout = key
+                end
+            end
+        )
 
-    rightContainer:AddChild(row)
-    rightContainer:AddChild(row2)
+        local savebutton = AceGUI:Create("Button")
+        savebutton:SetText(L["Save"])
+
+        savebutton:SetCallback(
+            "OnClick",
+            function()
+                if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(ActionButtonList:GetValue()) then
+                    local destination = GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
+                    if loadout ~= "ALL" and loadout then
+                        if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)]) then
+                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)] = {}
+                        end
+                        if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]) then
+                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = {}
+                        end
+                        destination = GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
+                    end
+                    if loadout ~= "ALL" and loadout then
+                        destination[bind] = button
+                    else
+                        destination[bind] = button
+                    end
+                    if bind ~= initialbind then
+                        showKeybind(bind, button, specialization, loadout)
+                    end
+                    local widget = specialization .. bind
+                    if loadout then
+                        widget = widget .. loadout
+                    end
+                    keybindingframe:clearpanels(nil, false, widget)
+                    GSE.ShowKeyBindings()
+                    -- trigger a reload of KeyBindings
+                    GSE.ReloadKeyBindings()
+                end
+            end
+        )
+
+        local delbutton = AceGUI:Create("Button")
+        delbutton:SetText(L["Delete"])
+
+        delbutton:SetCallback(
+            "OnClick",
+            function()
+                if loadout ~= "ALL" and loadout then
+                    GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout][bind] = nil
+                    local empty = true
+                    for _, _ in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]) do
+                        empty = false
+                    end
+                    if empty then
+                        GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = nil
+                    end
+                else
+                    GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][bind] = nil
+                end
+                rightContainer:ReleaseChildren()
+                GSE.ShowKeyBindings()
+            end
+        )
+
+        local row = AceGUI:Create("SimpleGroup")
+        row:SetFullWidth(true)
+        row:SetLayout("Flow")
+
+        row:AddChild(ActionButtonList)
+        row:AddChild(SequenceListbox)
+        row:AddChild(TalentLoadOutList)
+
+        local row2 = AceGUI:Create("SimpleGroup")
+        row2:SetFullWidth(true)
+        row2:SetLayout("Flow")
+
+        row2:AddChild(savebutton)
+        row2:AddChild(delbutton)
+        rightContainer:AddChild(row)
+        rightContainer:AddChild(row2)
+    end
+
     rightContainer:SetWidth(keybindingframe.Width - 290)
 end
 
-local function buildKeybindHeader(specialization, bind, button, loadout)
+local function buildKeybindHeader(specialization, bind, button, loadout, type)
+    if GSE.isEmpty(type) then
+        type = "KB"
+    end
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
 
@@ -323,31 +503,59 @@ local function buildKeybindHeader(specialization, bind, button, loadout)
                     function(ownerRegion, rootDescription)
                         rootDescription:CreateTitle(L["Manage Macros"])
                         rootDescription:CreateButton(
-                            L["New"],
+                            L["New KeyBind"],
                             function()
-                                showKeybind()
+                                showKeybind(nil, nil, nil, nil, "KB")
+                            end
+                        )
+                        rootDescription:CreateButton(
+                            L["New Actionbar Override"],
+                            function()
+                                showKeybind(nil, nil, nil, nil, "AO")
                             end
                         )
                         rootDescription:CreateButton(
                             L["Delete"],
                             function()
-                                SetBinding(bind)
+                                if type == "KB" then
+                                    SetBinding(bind)
 
-                                local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                                if loadout ~= "ALL" and loadout then
-                                    destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                                    destination[bind] = nil
-                                    local empty = true
-                                    for _, _ in pairs(
-                                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                                    ) do
-                                        empty = false
+                                    local destination = GSE_C["KeyBindings"][tostring(specialization)]
+                                    if loadout ~= "ALL" and loadout then
+                                        destination =
+                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+                                        destination[bind] = nil
+                                        local empty = true
+                                        for _, _ in pairs(
+                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+                                        ) do
+                                            empty = false
+                                        end
+                                        if empty then
+                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
+                                        end
+                                    else
+                                        destination[bind] = nil
                                     end
-                                    if empty then
-                                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
+                                elseif type == "AO" then
+                                    local destination =
+                                        GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
+                                    if loadout ~= "ALL" and loadout then
+                                        destination =
+                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout]
+                                        destination[bind] = nil
+                                        local empty = true
+                                        for _, _ in pairs(
+                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout]
+                                        ) do
+                                            empty = false
+                                        end
+                                        if empty then
+                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout] = nil
+                                        end
+                                    else
+                                        destination[bind] = nil
                                     end
-                                else
-                                    destination[bind] = nil
                                 end
                                 GSE.ShowKeyBindings()
                             end
@@ -355,7 +563,7 @@ local function buildKeybindHeader(specialization, bind, button, loadout)
                     end
                 )
             else
-                showKeybind(bind, button, specialization, loadout)
+                showKeybind(bind, button, specialization, loadout, type)
             end
         end
     )
@@ -368,21 +576,36 @@ end
 local function buildKeybindMenu()
     leftscroll:ReleaseChildren()
     local newButton = AceGUI:Create("Button")
-    newButton:SetText(L["New"])
+    newButton:SetText(L["New KeyBind"])
     newButton:SetCallback(
         "OnClick",
         function()
-            showKeybind()
+            showKeybind(nil, nil, nil, nil, "KB")
         end
     )
     leftscroll:AddChild(newButton)
+    local newActionButton = AceGUI:Create("Button")
+    newActionButton:SetText(L["New Actionbar Override"])
+    newActionButton:SetCallback(
+        "OnClick",
+        function()
+            showKeybind(nil, nil, nil, nil, "AO")
+        end
+    )
+    leftscroll:AddChild(newActionButton)
+    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+    local KeyBindheader = AceGUI:Create("Label")
+    KeyBindheader:SetText(L["Keybindings"])
+    KeyBindheader:SetFont(fontName, fontHeight + 6, fontFlags)
+    KeyBindheader:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
+    leftscroll:AddChild(KeyBindheader)
     local specid = 0
     for k, v in pairs(GSE_C["KeyBindings"]) do
         local currentspecid = tonumber(k)
         if specid ~= currentspecid then
             specid = currentspecid
             local _, speclabel = GetSpecializationInfo(currentspecid)
-            local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+
             local sectionspacer1 = AceGUI:Create("Label")
             sectionspacer1:SetText(" ")
             sectionspacer1:SetFont(fontName, 4, fontFlags)
@@ -436,6 +659,63 @@ local function buildKeybindMenu()
                     GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
                 end
             end
+        end
+    end
+    local actionHeader = AceGUI:Create("Label")
+    actionHeader:SetText(L["Actionbar Overrides"])
+    actionHeader:SetFont(fontName, fontHeight + 6, fontFlags)
+    actionHeader:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
+    leftscroll:AddChild(actionHeader)
+
+    for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
+        local currentspecid = tonumber(k)
+        if specid ~= currentspecid then
+            specid = currentspecid
+            local _, speclabel = GetSpecializationInfo(currentspecid)
+
+            local sectionspacer1 = AceGUI:Create("Label")
+            sectionspacer1:SetText(" ")
+            sectionspacer1:SetFont(fontName, 4, fontFlags)
+            leftscroll:AddChild(sectionspacer1)
+            local sectionheader = AceGUI:Create("Label")
+            sectionheader:SetText(speclabel)
+            sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
+            sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
+            leftscroll:AddChild(sectionheader)
+            local sectionspacer2 = AceGUI:Create("Label")
+            sectionspacer2:SetText(" ")
+            sectionspacer2:SetFont(fontName, 2, fontFlags)
+            leftscroll:AddChild(sectionspacer2)
+        end
+
+        for i, j in pairs(v) do
+            buildKeybindHeader(k, i, j, nil, "AO")
+        end
+
+        for i, j in pairs(GSE_C["ActionBarBinds"]["Loadouts"][tostring(currentspecid)]) do
+            local success =
+                pcall(
+                function()
+                    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+                    local sectionspacer3 = AceGUI:Create("Label")
+                    sectionspacer3:SetText(" ")
+                    sectionspacer3:SetFont(fontName, 4, fontFlags)
+                    leftscroll:AddChild(sectionspacer3)
+                    local sectionheader2 = AceGUI:Create("Label")
+                    local loadout = C_Traits.GetConfigInfo(i)
+                    sectionheader2:SetText(loadout.name)
+                    sectionheader2:SetFont(fontName, fontHeight, fontFlags)
+                    sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
+                    leftscroll:AddChild(sectionheader2)
+                    local sectionspacer4 = AceGUI:Create("Label")
+                    sectionspacer4:SetText(" ")
+                    sectionspacer4:SetFont(fontName, 2, fontFlags)
+                    leftscroll:AddChild(sectionspacer4)
+                    for l, m in pairs(j) do
+                        buildKeybindHeader(currentspecid, l, m, i, "AO")
+                    end
+                end
+            )
         end
     end
 end

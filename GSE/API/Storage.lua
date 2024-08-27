@@ -533,6 +533,20 @@ function GSE.UpdateIcon(self, reset)
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
         end
+        if GSE.ButtonOverrides and GSE.ButtonOverrides[gsebutton] then
+            local parent, slot =
+                _G[GSE.ButtonOverrides[gsebutton]] and _G[GSE.ButtonOverrides[gsebutton]]:GetParent():GetParent(),
+                _G[GSE.ButtonOverrides[gsebutton]] and _G[GSE.ButtonOverrides[gsebutton]]:GetID()
+            local page = parent and parent:GetAttribute("actionpage")
+            local action = page and slot and slot > 0 and (slot + page * 12 - 12)
+            if action then
+                local at = GetActionInfo(action)
+                if at ~= "spell" then
+                    _G[GSE.ButtonOverrides[gsebutton]].icon:SetTexture(spellinfo.iconID)
+                    _G[GSE.ButtonOverrides[gsebutton]].icon:Show()
+                end
+            end
+        end
     end
     if not reset then
         GSE.UsedSequences[gsebutton] = true

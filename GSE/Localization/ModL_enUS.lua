@@ -780,3 +780,8 @@ L["Processing Collection of %s Elements."] = true
 L["Already Known"] = true
 L["This version of GSE is incompatabile with this version of the game."] = true
 L[" was imported."] = true
+
+L["Actionbar Overrides"] = true
+L["Actionbar Buttons"] = true
+L["New KeyBind"] = true
+L["New Actionbar Override"] = true
