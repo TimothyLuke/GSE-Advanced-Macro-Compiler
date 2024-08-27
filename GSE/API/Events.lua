@@ -102,10 +102,11 @@ end
 
 local function overrideActionButton(Button, Sequence)
     local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
-    SHBT:WrapScript(
-        _G[Button],
-        "OnClick",
-        [[
+    if not InCombatLockdown() then
+        SHBT:WrapScript(
+            _G[Button],
+            "OnClick",
+            [[
 	local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
 	local page = parent and parent:GetAttribute("actionpage")
 	local action = page and slot and slot > 0 and (slot + page*12 - 12)
@@ -119,9 +120,10 @@ self:SetAttribute("type", "click")
 		end
 	end
 ]]
-    )
-    _G[Button]:SetAttribute("type", "click")
-    _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+        )
+        _G[Button]:SetAttribute("type", "click")
+        _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+    end
 end
 
 local function LoadKeyBindings(payload)
