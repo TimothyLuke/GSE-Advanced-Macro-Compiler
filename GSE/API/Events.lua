@@ -114,15 +114,18 @@ local function overrideActionButton(Button, Sequence)
 		local at, id = GetActionInfo(action)
 		if at == "spell" then
             self:SetAttribute("type", "action")
-self:SetAttribute('action', action)
+            self:SetAttribute('action', action)
+            self:SetAttribute('typerelease', 'actionrelease')
 		else
-self:SetAttribute("type", "click")
+            self:SetAttribute("type", "click")
+            self:SetAttribute('typerelease', 'click')
 		end
 	end
 ]]
         )
         _G[Button]:SetAttribute("type", "click")
         _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+        _G[Button]:SetAttribute("typerelease", "click")
     end
 end
 
