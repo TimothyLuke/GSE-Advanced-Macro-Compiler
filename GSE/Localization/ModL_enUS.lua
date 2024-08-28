@@ -781,6 +781,7 @@ L["Already Known"] = true
 L["This version of GSE is incompatabile with this version of the game."] = true
 L[" was imported."] = true
 
+-- #1617
 L["Actionbar Overrides"] = true
 L["Actionbar Buttons"] = true
 L["New KeyBind"] = true
