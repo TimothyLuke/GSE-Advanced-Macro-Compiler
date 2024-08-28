@@ -410,5 +410,6 @@ globals = {
     "IsAltKeyDown",
     "NOT_BOUND",
     "strsplittable",
-    "GetActionInfo"
+    "GetActionInfo",
+    "GetBindingByKey"
 }

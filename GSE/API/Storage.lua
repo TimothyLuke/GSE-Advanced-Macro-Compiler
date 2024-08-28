@@ -541,7 +541,7 @@ function GSE.UpdateIcon(self, reset)
             local action = page and slot and slot > 0 and (slot + page * 12 - 12)
             if action then
                 local at = GetActionInfo(action)
-                if at ~= "spell" then
+                if GSE.isEmpty(at) then
                     _G[GSE.ButtonOverrides[gsebutton]].icon:SetTexture(spellinfo.iconID)
                     _G[GSE.ButtonOverrides[gsebutton]].icon:Show()
                 end

@@ -111,21 +111,35 @@ local function overrideActionButton(Button, Sequence)
 	local page = parent and parent:GetAttribute("actionpage")
 	local action = page and slot and slot > 0 and (slot + page*12 - 12)
     if action then
-		local at, id = GetActionInfo(action)
-		if at == "spell" then
+        local at, id = GetActionInfo(action)
+		if at and id then
             self:SetAttribute("type", "action")
             self:SetAttribute('action', action)
-            self:SetAttribute('typerelease', 'actionrelease')
 		else
             self:SetAttribute("type", "click")
-            self:SetAttribute('typerelease', 'click')
 		end
 	end
 ]]
         )
         _G[Button]:SetAttribute("type", "click")
         _G[Button]:SetAttribute("clickbutton", _G[Sequence])
-        _G[Button]:SetAttribute("typerelease", "click")
+        local number
+
+        for numbers in string.gmatch(Button, "%d+") do
+            number = tostring(numbers)
+            if number == "10" then
+                number = "0"
+            elseif number == "11" then
+                number = "-"
+            elseif number == "12" then
+                number = "="
+            end
+        end
+
+        if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
+            SetBindingClick(number, Button, _G[Button])
+            _G[Button .. "HotKey"]:SetText(number)
+        end
     end
 end
 
