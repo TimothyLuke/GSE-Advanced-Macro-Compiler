@@ -40,17 +40,6 @@ local function CreateSequenceExport(type)
 
     humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
 
-    local readOnlyCheckBox = AceGUI:Create("CheckBox")
-    readOnlyCheckBox:SetType("checkbox")
-    readOnlyCheckBox:SetLabel(L["Export Macro Read Only"])
-    exportframe:AddChild(readOnlyCheckBox)
-
-    local disableEditorCheckBox = AceGUI:Create("CheckBox")
-    disableEditorCheckBox:SetType("checkbox")
-    disableEditorCheckBox:SetLabel(L["Disable Editor"])
-    disableEditorCheckBox:SetDisabled(true)
-    exportframe:AddChild(disableEditorCheckBox)
-
     local function GUIUpdateExportBox()
         local exportsequence = GSE.CloneSequence(GSE.GUIExportframe.sequence)
         exportsequence.objectType = type
@@ -83,36 +72,7 @@ local function CreateSequenceExport(type)
             GUIUpdateExportBox()
         end
     )
-    readOnlyCheckBox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            if value then
-                exportframe.sequence.MetaData.ReadOnly = true
-                disableEditorCheckBox:SetDisabled(false)
-            else
-                exportframe.sequence.MetaData.ReadOnly = false
-                exportframe.sequence.MetaData.DisableEditor = false
-                disableEditorCheckBox:SetDisabled(true)
-            end
-            GUIUpdateExportBox()
-        end
-    )
 
-    disableEditorCheckBox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            if value then
-                exportframe.sequence.MetaData.DisableEditor = true
-            else
-                exportframe.sequence.MetaData.DisableEditor = false
-                exportframe.sequence.MetaData.AllowVariables = false
-            end
-            GUIUpdateExportBox()
-        end
-    )
-
-    disableEditorCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.DisableEditor)
-    readOnlyCheckBox:SetDisabled(GSE.GUIExportframe.sequence.MetaData.ReadOnly)
     GUIUpdateExportBox()
 end
 GSE.GUIExportframe = exportframe

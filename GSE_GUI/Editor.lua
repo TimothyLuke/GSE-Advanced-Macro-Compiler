@@ -168,7 +168,6 @@ local function CreateSequencePanels(container, key)
     local elements = GSE.split(key, ",")
     local classid = tonumber(elements[1])
     local sequencename = elements[3]
-    local readonly = elements[4]
 
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
@@ -247,9 +246,6 @@ local function CreateSequencePanels(container, key)
     local headerlabel = sequencename
     local hlabel = AceGUI:Create("Label")
 
-    if readonly == "1" then
-        headerlabel = headerlabel .. GSEOptions.UNKNOWN .. " ( " .. L["Restricted"] .. ")" .. Statics.StringReset
-    end
     hlabel:SetText(headerlabel)
     hlabel:SetWidth(200)
     hlabel:SetFontObject(font)
@@ -372,34 +368,20 @@ function GSE.GUICreateEditorTabs()
         }
     }
     -- If disabled editor then dont show the internal tabs
-    if not editframe.Sequence.MetaData.DisableEditor or editframe.Sequence.MetaData.AllowVariables then
-        for k, _ in ipairs(editframe.Sequence.Macros) do
-            local insline = {}
-            insline.text = tostring(k)
-            insline.value = tostring(k)
-            table.insert(tabl, insline)
-        end
-        table.insert(
-            tabl,
-            {
-                text = L["New"],
-                value = "new"
-            }
-        )
-        if editframe.Sequence.MetaData.ReadOnly then
-            editframe.statusText =
-                "GSE: " ..
-                GSE.VersionString ..
-                    " " ..
-                        GSEOptions.UNKNOWN ..
-                            L["This sequence is Read Only and unable to be edited."] .. Statics.StringReset
-        end
-    else
-        editframe.statusText =
-            "GSE: " ..
-            GSE.VersionString ..
-                " " .. GSEOptions.UNKNOWN .. L["RESTRICTED: Macro specifics disabled by author."] .. Statics.StringReset
+    for k, _ in ipairs(editframe.Sequence.Macros) do
+        local insline = {}
+        insline.text = tostring(k)
+        insline.value = tostring(k)
+        table.insert(tabl, insline)
     end
+    table.insert(
+        tabl,
+        {
+            text = L["New"],
+            value = "new"
+        }
+    )
+
     table.insert(
         tabl,
         {
