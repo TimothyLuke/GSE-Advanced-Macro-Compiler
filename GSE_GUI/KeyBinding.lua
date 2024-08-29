@@ -411,7 +411,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
                     keybindingframe:clearpanels(nil, false, widget)
                     GSE.ShowKeyBindings()
                     -- trigger a reload of KeyBindings
-                    GSE.ReloadKeyBindings()
+                    GSE.ReloadOverrides()
                 end
             end
         )
@@ -434,6 +434,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
                 else
                     GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][bind] = nil
                 end
+                GSE.ButtonOverrides[bind] = nil
                 rightContainer:ReleaseChildren()
                 GSE.ShowKeyBindings()
             end
@@ -556,6 +557,7 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
                                     else
                                         destination[bind] = nil
                                     end
+                                    GSE.ButtonOverrides[bind] = nil
                                 end
                                 GSE.ShowKeyBindings()
                             end

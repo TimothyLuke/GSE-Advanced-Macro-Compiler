@@ -99,60 +99,45 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.UnsavedOptions.ReloadQueued = nil
     GSE.ReloadSequences()
 end
+local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
-local function overrideActionButton(Button, Sequence)
-    local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
-    if not InCombatLockdown() then
+local function overrideActionButton(Button, Sequence, force)
+    if GSE.isEmpty(GSE.ButtonOverrides) then
+        GSE.ButtonOverrides = {}
+    end
+
+    if not InCombatLockdown() and (not GSE.ButtonOverrides[Button] or force) then
         SHBT:WrapScript(
             _G[Button],
             "OnClick",
             [[
-	local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
-	local page = parent and parent:GetAttribute("actionpage")
-	local action = page and slot and slot > 0 and (slot + page*12 - 12)
+    local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
+    local page = parent and parent:GetAttribute("actionpage")
+    local action = page and slot and slot > 0 and (slot + page*12 - 12)
     if action then
         local at, id = GetActionInfo(action)
-		if at and id then
+        if at and id then
             self:SetAttribute("type", "action")
             self:SetAttribute('action', action)
-		else
+        else
             self:SetAttribute("type", "click")
-		end
-	end
+        end
+    end
 ]]
         )
         _G[Button]:SetAttribute("type", "click")
+
+        GSE.ButtonOverrides[Button] = Sequence
+
+    --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
+    --SetBindingClick(number, Button, _G[Button])
+    --end
+    end
+    if not InCombatLockdown() then
         _G[Button]:SetAttribute("clickbutton", _G[Sequence])
-        local number
-
-        for numbers in string.gmatch(Button, "%d+") do
-            number = tostring(numbers)
-            if number == "10" then
-                number = "0"
-            elseif number == "11" then
-                number = "-"
-            elseif number == "12" then
-                number = "="
-            end
-        end
-
-        if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
-            SetBindingClick(number, Button, _G[Button])
-            _G[Button .. "HotKey"]:SetText(number)
-        end
     end
 end
-
-local function LoadKeyBindings(payload)
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    if GSE.isEmpty(GSE_C["KeyBindings"]) then
-        GSE_C["KeyBindings"] = {}
-    end
-    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
-        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
-    end
+local function LoadOverrides(force)
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
     end
@@ -169,17 +154,7 @@ local function LoadKeyBindings(payload)
         GSE_C["ActionBarBinds"]["Loadouts"][tostring(GetSpecialization())] = {}
     end
     for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][tostring(GetSpecialization())]) do
-        overrideActionButton(k, v)
-        if GSE.isEmpty(GSE.ButtonOverrides) then
-            GSE.ButtonOverrides = {}
-        end
-        GSE.ButtonOverrides[v] = k
-    end
-
-    for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]) do
-        if k ~= "LoadOuts" and not InCombatLockdown() then
-            SetBindingClick(k, v, _G[v])
-        end
+        overrideActionButton(k, v, force)
     end
 
     if payload and not InCombatLockdown() then
@@ -199,6 +174,29 @@ local function LoadKeyBindings(payload)
                 GSE.ButtonOverrides[v] = k
             end
         end
+    end
+end
+local function LoadKeyBindings(payload)
+    if GSE.isEmpty(GSE_C) then
+        GSE_C = {}
+    end
+    if GSE.isEmpty(GSE_C["KeyBindings"]) then
+        GSE_C["KeyBindings"] = {}
+    end
+    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
+        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
+    end
+
+    for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]) do
+        if k ~= "LoadOuts" and not InCombatLockdown() then
+            SetBindingClick(k, v, _G[v])
+        end
+    end
+
+    if payload and not InCombatLockdown() then
+        local selected =
+            PlayerUtil.GetCurrentSpecID() and
+            tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()))
         if
             selected and GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
                 GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]
@@ -211,9 +209,12 @@ local function LoadKeyBindings(payload)
         end
     end
 end
+function GSE.ReloadOverrides(force)
+    LoadKeyBindings(force)
+end
 
 function GSE.ReloadKeyBindings()
-    LoadKeyBindings(true)
+    LoadOverrides(true)
 end
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
@@ -222,7 +223,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PlayerEntered = true
     LoadKeyBindings(GSE.PlayerEntered)
     GSE:ZONE_CHANGED_NEW_AREA()
-    C_Timer.After(10, GSE.ReloadKeyBindings)
+    C_Timer.After(10, LoadOverrides)
 end
 
 function GSE:ADDON_LOADED(event, addon)
