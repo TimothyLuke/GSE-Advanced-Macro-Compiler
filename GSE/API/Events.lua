@@ -64,7 +64,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     else
         GSE.inArena = false
     end
-    if type == "scenario" or difficulty == 167 or difficulty == 152 then
+    if type == "scenario" or difficulty == 167 or difficulty == 152 or difficulty == 208 then
         GSE.inScenario = true
     else
         GSE.inScenario = false
