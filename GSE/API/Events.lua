@@ -157,7 +157,7 @@ local function LoadOverrides(force)
         overrideActionButton(k, v, force)
     end
 
-    if payload and not InCombatLockdown() then
+    if not InCombatLockdown() then
         local selected =
             PlayerUtil.GetCurrentSpecID() and
             tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()))
@@ -166,11 +166,12 @@ local function LoadOverrides(force)
             selected and GSE_C["ActionBarBinds"]["Loadouts"][tostring(GetSpecialization())] and
                 GSE_C["ActionBarBinds"]["Loadouts"][tostring(GetSpecialization())][selected]
          then
-            GSE.PrintDebugMessage("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
-            for k, v in pairs(GSE_C["ActionBarBinds"]["Loadouts"][tostring(GetSpecialization())]) do
+            GSE.PrintDebugMessage("changing from ", tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+            for k, v in pairs(GSE_C["ActionBarBinds"]["Loadouts"][tostring(GetSpecialization())][selected]) do
                 if GSE.isEmpty(GSE.ButtonOverrides) then
                     GSE.ButtonOverrides = {}
                 end
+                overrideActionButton(k, v, force)
                 GSE.ButtonOverrides[v] = k
             end
         end
