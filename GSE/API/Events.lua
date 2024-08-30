@@ -211,11 +211,11 @@ local function LoadKeyBindings(payload)
     end
 end
 function GSE.ReloadOverrides(force)
-    LoadKeyBindings(force)
+    LoadOverrides(force)
 end
 
 function GSE.ReloadKeyBindings()
-    LoadOverrides(true)
+    LoadKeyBindings(true)
 end
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
@@ -411,6 +411,7 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
     end
     if not InCombatLockdown() then
         LoadKeyBindings(GSE.PlayerEntered)
+        LoadOverrides()
         GSE.ReloadSequences()
     end
 end
@@ -429,20 +430,24 @@ end
 
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_PVP_TALENT_UPDATE()
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
 end
 
 function GSE:SPEC_INVOLUNTARILY_CHANGED()
     GSE.ReloadSequences(GSE.PlayerEntered)
+    LoadOverrides()
 end
 
 function GSE:TRAIT_NODE_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
 end
 
@@ -457,16 +462,19 @@ end
 function GSE:TRAIT_CONFIG_UPDATED(_, payload)
     GSE:UnregisterEvent("TRAIT_CONFIG_UPDATED")
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
 end
 
 function GSE:PLAYER_TALENT_UPDATE()
     LoadKeyBindings(GSE.PlayerEntered)
+    LoadOverrides()
     GSE.ReloadSequences()
     GSE.ReloadSequences(GSE.PlayerEntered)
 end

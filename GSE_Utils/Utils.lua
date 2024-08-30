@@ -777,26 +777,3 @@ colorTable[0] = "|r"
 Statics.IndentationColorTable = colorTable
 
 GSE.Utils = true
---------
---------
----
--- _G["ActionButton2"]:SetAttribute("type", "click")
--- _G["ActionButton2"]:SetAttribute("clickbutton", _G["OUTLAW"])
--- CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate"):WrapScript(
---     _G["ActionButton2"],
---     "OnClick",
---     [[
--- 	local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
--- 	local page = parent and parent:GetAttribute("actionpage")
--- 	local action = page and slot and slot > 0 and (slot + page*12 - 12)
---     if action then
--- 		local at, id = GetActionInfo(action)
--- 		if at == "spell" then
---             self:SetAttribute("type", "action")
---            	self:SetAttribute('action', action)
--- 		else
---    			self:SetAttribute("type", "click")
--- 		end
--- 	end
--- ]]
--- )
