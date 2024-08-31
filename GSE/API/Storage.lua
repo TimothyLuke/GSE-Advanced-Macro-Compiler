@@ -668,7 +668,12 @@ local function buildAction(action, metaData, variables)
                 -- we dont want to do anything here
             elseif k ~= "Type" then
                 if string.sub(value, 1, 1) == "=" then
-                    value = loadstring("return " .. string.sub(value, 2, string.len(value)))()
+                    local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
+                    if tempval then
+                        value = tempval
+                    else
+                        GSE.Print("Error processing Variable value. " .. value, Statics.DebugModules["API"])
+                    end
                 end
 
                 if k == "spell" then
