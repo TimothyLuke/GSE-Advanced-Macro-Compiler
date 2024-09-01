@@ -502,7 +502,11 @@ function GSE:GROUP_ROSTER_UPDATE(...)
         GSE.SendSpellCache(channel)
     end
     -- Group Team stuff
-    GSE:ZONE_CHANGED_NEW_AREA()
+    local _, _, difficulty, _, _, _, _, _, _ = GetInstanceInfo()
+    -- dont trigger the normal things if in a delve
+    if difficulty ~= 208 then
+        GSE:ZONE_CHANGED_NEW_AREA()
+    end
 end
 
 function GSE:GUILD_ROSTER_UPDATE(...)
