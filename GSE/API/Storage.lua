@@ -545,6 +545,8 @@ function GSE.UpdateIcon(self, reset)
                         if GSE.isEmpty(at) then
                             _G[k].icon:SetTexture(spellinfo.iconID)
                             _G[k].icon:Show()
+                            _G[k].TextOverlayContainer.Count:SetText(gsebutton)
+                            _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
                         end
                     end
                     break
