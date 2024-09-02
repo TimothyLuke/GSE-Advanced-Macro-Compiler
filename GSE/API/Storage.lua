@@ -533,17 +533,21 @@ function GSE.UpdateIcon(self, reset)
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
         end
-        if GSE.ButtonOverrides and GSE.ButtonOverrides[gsebutton] then
-            local parent, slot =
-                _G[GSE.ButtonOverrides[gsebutton]] and _G[GSE.ButtonOverrides[gsebutton]]:GetParent():GetParent(),
-                _G[GSE.ButtonOverrides[gsebutton]] and _G[GSE.ButtonOverrides[gsebutton]]:GetID()
-            local page = parent and parent:GetAttribute("actionpage")
-            local action = page and slot and slot > 0 and (slot + page * 12 - 12)
-            if action then
-                local at = GetActionInfo(action)
-                if GSE.isEmpty(at) then
-                    _G[GSE.ButtonOverrides[gsebutton]].icon:SetTexture(spellinfo.iconID)
-                    _G[GSE.ButtonOverrides[gsebutton]].icon:Show()
+
+        if GSE.ButtonOverrides then
+            for k, v in pairs(GSE.ButtonOverrides) do
+                if v == gsebutton and _G[k] then
+                    local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
+                    local page = parent and parent:GetAttribute("actionpage")
+                    local action = page and slot and slot > 0 and (slot + page * 12 - 12)
+                    if action then
+                        local at = GetActionInfo(action)
+                        if GSE.isEmpty(at) then
+                            _G[k].icon:SetTexture(spellinfo.iconID)
+                            _G[k].icon:Show()
+                        end
+                    end
+                    break
                 end
             end
         end
