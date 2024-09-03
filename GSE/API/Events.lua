@@ -475,7 +475,6 @@ end
 function GSE:PLAYER_TALENT_UPDATE()
     LoadKeyBindings(GSE.PlayerEntered)
     LoadOverrides()
-    GSE.ReloadSequences()
     GSE.ReloadSequences(GSE.PlayerEntered)
 end
 
