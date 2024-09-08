@@ -57,6 +57,11 @@ function GSE.PerformOneOffEvents()
         end
         GSE_C.Updates["3202"] = true
     end
+    if GSE.isEmpty(GSE_C.Updates["3212"]) then
+        GSE_C["ActionBarBinds"]["LoadOuts"] = GSE.CloneSequence(GSE_C["ActionBarBinds"]["Loadouts"])
+        GSE_C["ActionBarBinds"]["Loadouts"] = nil
+        GSE_C.Updates["3212"] = true
+    end
 end
 
 GSE.DebugProfile("OneOffEvents")

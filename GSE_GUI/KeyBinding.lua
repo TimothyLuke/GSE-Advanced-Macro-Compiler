@@ -395,7 +395,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
                     local destination = GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
                     if loadout ~= "ALL" and loadout then
                         if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)]) then
-                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)] = {}
+                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)] = {}
                         end
                         if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]) then
                             GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = {}
@@ -549,16 +549,16 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
                                         GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
                                     if loadout ~= "ALL" and loadout then
                                         destination =
-                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout]
+                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
                                         destination[bind] = nil
                                         local empty = true
                                         for _, _ in pairs(
-                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout]
+                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
                                         ) do
                                             empty = false
                                         end
                                         if empty then
-                                            GSE_C["ActionBarBinds"]["Loadouts"][tostring(specialization)][loadout] = nil
+                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = nil
                                         end
                                     else
                                         destination[bind] = nil
@@ -700,7 +700,7 @@ local function buildKeybindMenu()
             buildKeybindHeader(k, i, j, nil, "AO")
         end
 
-        for i, j in pairs(GSE_C["ActionBarBinds"]["Loadouts"][tostring(currentspecid)]) do
+        for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
             local success =
                 pcall(
                 function()

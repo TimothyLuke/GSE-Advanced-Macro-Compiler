@@ -11,7 +11,7 @@ function GSE.DeleteSequence(classid, sequenceName)
     GSESequences[tonumber(classid)][sequenceName] = nil
 end
 
-function GSE.CloneSequence(orig, keepcomments)
+function GSE.CloneSequence(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == "table" then
@@ -23,11 +23,7 @@ function GSE.CloneSequence(orig, keepcomments)
     else -- number, string, boolean, etc
         copy = orig
     end
-    -- if not GSE.isEmpty(keepcomments) then
-    --     for k,v in ipairs(copy.Macros) do
-    --         -- TODO Strip COmments
-    --     end
-    -- end
+
     return copy
 end
 
