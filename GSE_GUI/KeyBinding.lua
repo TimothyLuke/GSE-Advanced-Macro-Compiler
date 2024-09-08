@@ -128,7 +128,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         if not GSE.isEmpty(bind) then
             keybind:SetKey(bind)
         end
-
+        keybind:SetWidth(400)
         keybind:SetCallback(
             "OnKeyChanged",
             function(self, _, key)
@@ -139,7 +139,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         keybind:SetLabel(L["Set Key to Bind"])
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(200)
+        SequenceListbox:SetWidth(400)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -161,7 +161,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(200)
+        TalentLoadOutList:SetWidth(400)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
@@ -294,7 +294,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local ActionButtonList = AceGUI:Create("Dropdown")
 
-        ActionButtonList:SetWidth(200)
+        ActionButtonList:SetWidth(400)
         ActionButtonList:SetLabel(L["Actionbar Buttons"])
         local buttonnames = {
             "ActionButton",
@@ -332,7 +332,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(200)
+        SequenceListbox:SetWidth(400)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -354,7 +354,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(200)
+        TalentLoadOutList:SetWidth(400)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
