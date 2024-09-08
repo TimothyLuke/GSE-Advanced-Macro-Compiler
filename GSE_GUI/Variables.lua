@@ -351,8 +351,7 @@ end]],
     if GSE.V[name] and type(GSE.V[name]) == "function" then
         outputText = GSE.V[name]()
     end
-
-    currentOutput:SetText(outputText)
+    currentOutput:SetText(tostring(outputText))
     currentOutput:SetCallback(
         "OnTextChanged",
         function(self, event, text)
