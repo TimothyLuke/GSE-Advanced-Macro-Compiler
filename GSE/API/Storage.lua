@@ -665,11 +665,18 @@ local function buildAction(action, metaData, variables)
                 -- we dont want to do anything here
             elseif k ~= "Type" then
                 if string.sub(value, 1, 1) == "=" then
-                    local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
-                    if tempval then
-                        value = tempval
+                    if
+                        GSE.V[string.sub(value, 2, string.len(value))] and
+                            type(GSE.V[string.sub(value, 2, string.len(value))]) == "function"
+                     then
+                        local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
+                        if tempval then
+                            value = tempval
+                        else
+                            GSE.Print(L["There was an error processing "] .. value, Statics.DebugModules["API"])
+                        end
                     else
-                        GSE.Print("Error processing Variable value. " .. value, Statics.DebugModules["API"])
+                        GSE.Print(L["Missing Variable "] .. value, "GSE " .. Statics.DebugModules["API"])
                     end
                 end
 
@@ -1099,18 +1106,38 @@ function GSE.CompileMacroText(text, mode)
         v = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
-                local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
+                if
+                    GSE.V[string.sub(value, 2, string.len(value))] and
+                        type(GSE.V[string.sub(value, 2, string.len(value))]) == "function"
+                 then
+                    local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
 
-                if error then
-                    GSE.Print(L["There was an error processing "] .. v, L["Variables"])
-                    GSE.Print(error, L["Variables"])
-                end
+                    if error then
+                        GSE.Print(L["There was an error processing "] .. v, L["Variables"])
+                        GSE.Print(error, L["Variables"])
+                    end
 
-                if GSE.isEmpty(functionresult) then
+                    if GSE.isEmpty(functionresult) then
+                        value = " "
+                    else
+                        if functionresult and type(functionresult) == "function" then
+                            if
+                                xpcall(
+                                    functionresult(),
+                                    function()
+                                        return false
+                                    end
+                                )
+                             then
+                                value = functionresult()
+                            else
+                                value = " "
+                            end
+                        end
+                    end
+                else
+                    GSE.Print(L["Missing Variable "] .. value, "GSE " .. Statics.DebugModules["API"])
                     value = " "
-                end
-                if functionresult and type(functionresult) == "function" then
-                    value = functionresult()
                 end
             end
             if string.sub(value, 1, 2) == "--" then

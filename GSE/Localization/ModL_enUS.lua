@@ -781,3 +781,5 @@ L["Actionbar Overrides"] = true
 L["Actionbar Buttons"] = true
 L["New KeyBind"] = true
 L["New Actionbar Override"] = true
+
+L["Missing Variable "] = true
