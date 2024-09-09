@@ -394,6 +394,9 @@ local function showKeybind(bind, button, specialization, loadout, type)
                 if not GSE.isEmpty(SequenceListbox:GetValue()) and not GSE.isEmpty(ActionButtonList:GetValue()) then
                     local destination = GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
                     if loadout ~= "ALL" and loadout then
+                        if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
+                            GSE_C["ActionBarBinds"]["LoadOuts"] = {}
+                        end
                         if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)]) then
                             GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)] = {}
                         end
