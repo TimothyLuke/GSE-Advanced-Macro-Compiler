@@ -11,6 +11,19 @@ function GSE.DeleteSequence(classid, sequenceName)
     GSESequences[tonumber(classid)][sequenceName] = nil
 end
 
+local missingVariables = {}
+local function manageMissingVariable(varname)
+    if not missingVariables[varname] then
+        GSE.Print(L["Missing Variable "] .. varname, "GSE " .. Statics.DebugModules["API"])
+        missingVariables[varname] = 0
+    end
+    missingVariables[varname] = missingVariables[varname] + 1
+    if missingVariables[varname] > 100 then
+        GSE.Print(L["Missing Variable "] .. varname, "GSE " .. Statics.DebugModules["API"])
+        missingVariables[varname] = 0
+    end
+end
+
 function GSE.CloneSequence(orig)
     local orig_type = type(orig)
     local copy
@@ -676,7 +689,7 @@ local function buildAction(action, metaData, variables)
                             GSE.Print(L["There was an error processing "] .. value, Statics.DebugModules["API"])
                         end
                     else
-                        GSE.Print(L["Missing Variable "] .. value, "GSE " .. Statics.DebugModules["API"])
+                        manageMissingVariable(string.sub(value, 2, string.len(value)))
                     end
                 end
 
@@ -1136,7 +1149,7 @@ function GSE.CompileMacroText(text, mode)
                         end
                     end
                 else
-                    GSE.Print(L["Missing Variable "] .. value, "GSE " .. Statics.DebugModules["API"])
+                    manageMissingVariable(string.sub(value, 2, string.len(value)))
                     value = " "
                 end
             end
