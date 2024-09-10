@@ -674,9 +674,9 @@ local function buildAction(action, metaData, variables)
         local spelllist = {}
         for k, v in pairs(action) do
             local value = v
-            if k == "Disabled" or type(value) == "boolean" then
+            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" then
                 -- we dont want to do anything here
-            elseif k ~= "Type" then
+            else
                 if string.sub(value, 1, 1) == "=" then
                     if
                         GSE.V[string.sub(value, 2, string.len(value))] and
@@ -711,6 +711,37 @@ local function buildAction(action, metaData, variables)
         end
         return spelllist
     end
+end
+
+local function processRepeats(actionList)
+    local inserts = {}
+    local removes = {}
+    for k, v in ipairs(actionList) do
+        if type(v) == "table" and v.Action and v.Interval then
+            table.insert(inserts, {Action = v.Action, Interval = v.Interval + 1, Start = k})
+            table.insert(removes, k)
+        end
+    end
+
+    for i = #removes, 1, -1 do
+        table.remove(actionList, removes[i])
+    end
+
+    for _, v in ipairs(inserts) do
+        local startInterval = v["Interval"]
+        if startInterval == 1 then
+            startInterval = 2
+        end
+        local insertcount = math.ceil((#actionList - v["Start"]) / startInterval)
+        insertcount = math.ceil((#actionList + insertcount - v["Start"]) / startInterval)
+        local interval = v["Interval"]
+        table.insert(actionList, v["Start"], v["Action"])
+        for i = 1, insertcount do
+            local insertpos = v["Start"] + i * interval
+            table.insert(actionList, insertpos, v["Action"])
+        end
+    end
+    return actionList
 end
 
 function GSE.processAction(action, metaData, variables)
@@ -773,7 +804,7 @@ function GSE.processAction(action, metaData, variables)
             end
         end
         -- process repeats for the block
-        return returnActions
+        return processRepeats(GSE.FlattenTable(returnActions))
     elseif action.Type == Statics.Actions.Pause then
         local PauseActions = {}
         local clicks = action.Clicks and action.Clicks or 0
@@ -827,6 +858,20 @@ function GSE.processAction(action, metaData, variables)
     elseif action.Type == Statics.Actions.Action then
         local builtstuff = buildAction(action, metaData)
         return builtstuff
+    elseif action.Type == Statics.Actions.Repeat then
+        if GSE.isEmpty(action.Interval) then
+            if not GSE.isEmpty(action.Repeat) then
+                action.Interval = action.Repeat
+                action.Repeat = nil
+            else
+                action.Interval = 2
+            end
+        end
+        local returnAction = {
+            ["Action"] = buildAction(action, metaData),
+            ["Interval"] = action.Interval
+        }
+        return returnAction
     end
 end
 
@@ -880,7 +925,7 @@ function GSE.CompileTemplate(macro)
     end
     local compiledMacro = GSE.processAction(actions, template.InbuiltVariables, template.Variables)
 
-    return GSE.FlattenTable(compiledMacro), template
+    return processRepeats(GSE.FlattenTable(compiledMacro)), template
 end
 
 local function PCallCreateGSE3Button(spelllist, name, combatReset)

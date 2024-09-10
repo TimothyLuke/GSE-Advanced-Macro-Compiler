@@ -407,6 +407,10 @@ function GSE.FlattenTable(v)
             table.insert(res, v)
             return
         end
+        if v.Interval then
+            table.insert(res, v)
+            return
+        end
         for _, v2 in ipairs(v) do
             flatten(v2)
         end

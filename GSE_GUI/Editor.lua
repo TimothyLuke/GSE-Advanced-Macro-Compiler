@@ -27,6 +27,7 @@ editframe.SelectedTab = "group"
 editframe.AdvancedEditor = false
 editframe.statusText = "GSE: " .. GSE.VersionString
 editframe.booleanFunctions = {}
+editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
 if
     GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and
         GSEOptions.frameLocations.sequenceeditor.left and
@@ -58,7 +59,7 @@ if editframe.Width < 700 then
     editframe.Width = 700
     GSEOptions.editorWidth = editframe.Width
 end
-editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
+
 editframe.frame:SetHeight(GSEOptions.editorHeight)
 editframe.frame:SetWidth(GSEOptions.editorWidth)
 editframe:SetTitle(L["Sequence Editor"])
@@ -2414,8 +2415,8 @@ local function drawAction(container, action, version, keyPath)
 
         container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
         container:AddChild(linegroup1)
-    elseif action.Type == Statics.Actions.Action then
-        local macroPanel = AceGUI:Create("KeyGroup")
+    elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
+        local macroPanel = AceGUI:Create("InlineGroup")
         if GSE.isEmpty(action.type) then
             action.type = "macro"
             action.macro = ""
@@ -2467,22 +2468,27 @@ local function drawAction(container, action, version, keyPath)
         spellradio:SetType("radio")
         spellradio:SetLabel(L["Spell"])
         spellradio:SetValue((action.type and action.type == "spell" or false))
+        spellradio:SetWidth(70)
         local itemradio = AceGUI:Create("CheckBox")
         itemradio:SetType("radio")
         itemradio:SetLabel(L["Item"])
         itemradio:SetValue((action.type and action.type == "item" or false))
+        itemradio:SetWidth(70)
         local macroradio = AceGUI:Create("CheckBox")
         macroradio:SetType("radio")
         macroradio:SetLabel(L["Macro"])
         macroradio:SetValue((action.type and action.type == "macro" or false))
+        macroradio:SetWidth(70)
         local petradio = AceGUI:Create("CheckBox")
         petradio:SetType("radio")
         petradio:SetLabel(L["Pet"])
         petradio:SetValue((action.type and action.type == "pet" or false))
+        petradio:SetWidth(70)
         local toyradio = AceGUI:Create("CheckBox")
         toyradio:SetType("radio")
         toyradio:SetLabel(L["Toy"])
         toyradio:SetValue((action.type and action.type == "toy" or false))
+        toyradio:SetWidth(70)
         typegroup:AddChild(macroradio)
         typegroup:AddChild(spellradio)
         typegroup:AddChild(itemradio)
@@ -2628,6 +2634,42 @@ local function drawAction(container, action, version, keyPath)
         end
 
         macroPanel:AddChild(spellcontainer)
+        local typerow = AceGUI:Create("SimpleGroup")
+        typerow:SetLayout("Flow")
+        typerow:SetFullWidth(true)
+        local actiontype = AceGUI:Create("CheckBox")
+        actiontype:SetType("checkbox")
+        actiontype:SetLabel(L["Repeat"])
+        actiontype:SetValue(action.Type == Statics.Actions.Repeat and true or false)
+        actiontype:SetWidth(70)
+
+        local interval = AceGUI:Create("EditBox")
+        interval:SetWidth(30)
+        interval:SetText(action.Interval and action.Interval or 3)
+        interval:SetDisabled(action.Type == Statics.Actions.Action and true or false)
+        interval:DisableButton(true)
+        interval:SetCallback(
+            "OnTextChanged",
+            function(sel, object, value)
+                editframe.Sequence.Macros[version].Actions[keyPath].Interval = value
+                --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+            end
+        )
+        actiontype:SetCallback(
+            "OnValueChanged",
+            function(sel, object, value)
+                if value == true then
+                    editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Repeat
+                    interval:SetDisabled(false)
+                else
+                    editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Action
+                    interval:SetDisabled(true)
+                end
+            end
+        )
+        typerow:AddChild(actiontype)
+        typerow:AddChild(interval)
+        macroPanel:AddChild(typerow)
         container:AddChild(macroPanel)
     elseif action.Type == Statics.Actions.Loop then
         local macroPanel = AceGUI:Create("KeyGroup")
