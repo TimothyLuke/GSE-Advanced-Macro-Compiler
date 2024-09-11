@@ -678,19 +678,19 @@ local function buildAction(action, metaData, variables)
                 -- we dont want to do anything here
             else
                 if string.sub(value, 1, 1) == "=" then
-                    if
-                        GSE.V[string.sub(value, 2, string.len(value))] and
-                            type(GSE.V[string.sub(value, 2, string.len(value))]) == "function"
-                     then
-                        local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
-                        if tempval then
-                            value = tempval
-                        else
-                            GSE.Print(L["There was an error processing "] .. value, Statics.DebugModules["API"])
+                    xpcall(
+                        function()
+                            local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
+                            if tempval then
+                                value = tostring(tempval)
+                            else
+                                GSE.Print(L["There was an error processing "] .. value, Statics.DebugModules["API"])
+                            end
+                        end,
+                        function()
+                            manageMissingVariable(string.sub(value, 2, string.len(value)))
                         end
-                    else
-                        manageMissingVariable(string.sub(value, 2, string.len(value)))
-                    end
+                    )
                 end
 
                 if k == "spell" then
@@ -1164,38 +1164,30 @@ function GSE.CompileMacroText(text, mode)
         v = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
-                if
-                    GSE.V[string.sub(value, 2, string.len(value))] and
-                        type(GSE.V[string.sub(value, 2, string.len(value))]) == "function"
-                 then
-                    local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
+                local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
 
-                    if error then
-                        GSE.Print(L["There was an error processing "] .. v, L["Variables"])
-                        GSE.Print(error, L["Variables"])
-                    end
+                if error then
+                    GSE.Print(L["There was an error processing "] .. v, L["Variables"])
+                    GSE.Print(error, L["Variables"])
+                end
 
-                    if GSE.isEmpty(functionresult) then
-                        value = " "
-                    else
-                        if functionresult and type(functionresult) == "function" then
-                            if
-                                xpcall(
-                                    functionresult(),
-                                    function()
-                                        return false
-                                    end
-                                )
-                             then
-                                value = functionresult()
-                            else
-                                value = " "
-                            end
+                if GSE.isEmpty(functionresult) then
+                    value = " "
+                else
+                    if functionresult and type(functionresult) == "function" then
+                        if
+                            xpcall(
+                                functionresult(),
+                                function()
+                                    return false
+                                end
+                            )
+                         then
+                            value = functionresult()
+                        else
+                            value = " "
                         end
                     end
-                else
-                    manageMissingVariable(string.sub(value, 2, string.len(value)))
-                    value = " "
                 end
             end
             if string.sub(value, 1, 2) == "--" then
