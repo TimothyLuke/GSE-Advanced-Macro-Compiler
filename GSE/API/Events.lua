@@ -106,7 +106,7 @@ local function overrideActionButton(Button, Sequence, force)
         GSE.ButtonOverrides = {}
     end
 
-    if string.sub(Button, 1, 5) == "ElvUI" then
+    if string.sub(Button, 1, 5) == "ElvUI" or string.sub(Button, 1, 4) == "CPB_" then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetState(
                 _G[Button]:GetAttribute("state"),

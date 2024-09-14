@@ -306,12 +306,14 @@ local function showKeybind(bind, button, specialization, loadout, type)
             "MultiBarLeftButton",
             "MultiBarRightButton"
         }
+        local buttonlist = {}
+
         if ElvUI then
             for i = 15, 1, -1 do
                 table.insert(buttonnames, 1, "ElvUI_Bar" .. i .. "Button")
             end
         end
-        local buttonlist = {}
+
         for _, v in ipairs(buttonnames) do
             for i = 1, 12 do
                 if _G[v .. i] then
@@ -319,7 +321,52 @@ local function showKeybind(bind, button, specialization, loadout, type)
                 end
             end
         end
-
+        if ConsolePort then
+            buttonlist["CPB_PADDUP"] = "CPB_PADDUP"
+            buttonlist["CPB_PADDUP_SHIFT"] = "CPB_PADDUP_SHIFT"
+            buttonlist["CPB_PADDUP_CTRL_SHIFT"] = "CPB_PADDUP_CTRL_SHIFT"
+            buttonlist["CPB_PADDUP_CTRL"] = "CPB_PADDUP_CTRL"
+            buttonlist["CPB_PADDLEFT"] = "CPB_PADDLEFT"
+            buttonlist["CPB_PADDLEFT_SHIFT"] = "CPB_PADDLEFT_SHIFT"
+            buttonlist["CPB_PADDLEFT_CTRL_SHIFT"] = "CPB_PADDLEFT_CTRL_SHIFT"
+            buttonlist["CPB_PADDLEFT_CTRL"] = "CPB_PADDLEFT_CTRL"
+            buttonlist["CPB_PADDDOWN"] = "CPB_PADDDOWN"
+            buttonlist["CPB_PADDDOWN_SHIFT"] = "CPB_PADDDOWN_SHIFT"
+            buttonlist["CPB_PADDDOWN_CTRL_SHIFT"] = "CPB_PADDDOWN_CTRL_SHIFT"
+            buttonlist["CPB_PADDDOWN_CTRL"] = "CPB_PADDDOWN_CTRL"
+            buttonlist["CPB_PADLSHOULDER"] = "CPB_PADLSHOULDER"
+            buttonlist["CPB_PADLSHOULDER_SHIFT"] = "CPB_PADLSHOULDER_SHIFT"
+            buttonlist["CPB_PADLSHOULDER_CTRL_SHIFT"] = "CPB_PADLSHOULDER_CTRL_SHIFT"
+            buttonlist["CPB_PADLSHOULDER_CTRL"] = "CPB_PADLSHOULDER_CTRL"
+            buttonlist["CPB_PADRSHOULDER"] = "CPB_PADRSHOULDER"
+            buttonlist["CPB_PADRSHOULDER_SHIFT"] = "CPB_PADRSHOULDER_SHIFT"
+            buttonlist["CPB_PADRSHOULDER_CTRL_SHIFT"] = "CPB_PADRSHOULDER_CTRL_SHIFT"
+            buttonlist["CPB_PADRSHOULDER_CTRL"] = "CPB_PADRSHOULDER_CTRL"
+            buttonlist["CPB_PADRTRIGGER"] = "CPB_PADRTRIGGER"
+            buttonlist["CPB_PADRTRIGGER_SHIFT"] = "CPB_PADRTRIGGER_SHIFT"
+            buttonlist["CPB_PADRTRIGGER_CTRL_SHIFT"] = "CPB_PADRTRIGGER_CTRL_SHIFT"
+            buttonlist["CPB_PADRTRIGGER_CTRL"] = "CPB_PADRTRIGGER_CTRL"
+            buttonlist["CPB_PADLTRIGGER"] = "CPB_PADLTRIGGER"
+            buttonlist["CPB_PADLTRIGGER_SHIFT"] = "CPB_PADLTRIGGER_SHIFT"
+            buttonlist["CPB_PADLTRIGGER_CTRL_SHIFT"] = "CPB_PADLTRIGGER_CTRL_SHIFT"
+            buttonlist["CPB_PADLTRIGGER_CTRL"] = "CPB_PADLTRIGGER_CTRL"
+            buttonlist["CPB_PAD1"] = "CPB_PAD1"
+            buttonlist["CPB_PAD1_SHIFT"] = "CPB_PAD1_SHIFT"
+            buttonlist["CPB_PAD1_CTRL_SHIFT"] = "CPB_PAD1_CTRL_SHIFT"
+            buttonlist["CPB_PAD1_CTRL"] = "CPB_PAD1_CTRL"
+            buttonlist["CPB_PAD2"] = "CPB_PAD2"
+            buttonlist["CPB_PAD2_SHIFT"] = "CPB_PAD2_SHIFT"
+            buttonlist["CPB_PAD2_CTRL_SHIFT"] = "CPB_PAD2_CTRL_SHIFT"
+            buttonlist["CPB_PAD2_CTRL"] = "CPB_PAD2_CTRL"
+            buttonlist["CPB_PAD3"] = "CPB_PAD3"
+            buttonlist["CPB_PAD3_SHIFT"] = "CPB_PAD3_SHIFT"
+            buttonlist["CPB_PAD3_CTRL_SHIFT"] = "CPB_PAD3_CTRL_SHIFT"
+            buttonlist["CPB_PAD3_CTRL"] = "CPB_PAD3_CTRL"
+            buttonlist["CPB_PAD4"] = "CPB_PAD4"
+            buttonlist["CPB_PAD4_SHIFT"] = "CPB_PAD4_SHIFT"
+            buttonlist["CPB_PAD4_CTRL_SHIFT"] = "CPB_PAD4_CTRL_SHIFT"
+            buttonlist["CPB_PAD4_CTRL"] = "CPB_PAD4_CTRL"
+        end
         ActionButtonList:SetList(buttonlist)
         ActionButtonList:SetValue(bind)
         ActionButtonList:SetCallback(

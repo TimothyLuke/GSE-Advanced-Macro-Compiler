@@ -411,5 +411,6 @@ globals = {
     "NOT_BOUND",
     "strsplittable",
     "GetActionInfo",
-    "GetBindingByKey"
+    "GetBindingByKey",
+    "ConsolePort"
 }
