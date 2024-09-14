@@ -114,8 +114,10 @@ local function overrideActionButton(Button, Sequence, force)
                 "custom",
                 {
                     func = function(self)
-                        self:SetAttribute("type", "click")
-                        self:SetAttribute("clickbutton", _G[Sequence])
+                        if not InCombatLockdown() then
+                            self:SetAttribute("type", "click")
+                            self:SetAttribute("clickbutton", _G[Sequence])
+                        end
                     end,
                     tooltip = "GSE: " .. Sequence,
                     texture = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
