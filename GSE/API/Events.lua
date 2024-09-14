@@ -106,35 +106,58 @@ local function overrideActionButton(Button, Sequence, force)
         GSE.ButtonOverrides = {}
     end
 
-    if not InCombatLockdown() and (not GSE.ButtonOverrides[Button] or force) then
-        SHBT:WrapScript(
-            _G[Button],
-            "OnClick",
-            [[
+    if string.sub(Button, 1, 5) == "ElvUI" then
+        if _G[Button] and _G[Button].SetState then
+            _G[Button]:SetState(
+                _G[Button]:GetAttribute("state"),
+                "custom",
+                {
+                    func = function(self)
+                        self:SetAttribute("type", "click")
+                        self:SetAttribute("clickbutton", _G[Sequence])
+                    end,
+                    tooltip = "GSE: " .. Sequence,
+                    texture = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+                }
+            )
+            GSE.ButtonOverrides[Button] = Sequence
+        end
+    else
+        if not InCombatLockdown() then
+            if (not GSE.ButtonOverrides[Button] or force) then
+                SHBT:WrapScript(
+                    _G[Button],
+                    "OnClick",
+                    [[
     local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
     local page = parent and parent:GetAttribute("actionpage")
     local action = page and slot and slot > 0 and (slot + page*12 - 12)
-    if action then
-        local at, id = GetActionInfo(action)
-        if at and id then
-            self:SetAttribute("type", "action")
-            self:SetAttribute('action', action)
+    if action or HasOverrideActionBar() then
+        if HasOverrideActionBar() then
+            _G["OverrideActionBarButton2"]:Click()
         else
-            self:SetAttribute("type", "click")
+            local at, id = GetActionInfo(action)
+            if at and id then
+                self:SetAttribute("type", "action")
+                self:SetAttribute('action', action)
+            else
+                self:SetAttribute("type", "click")
+            end
         end
     end
 ]]
-        )
-        _G[Button]:SetAttribute("type", "click")
+                )
+                _G[Button]:SetAttribute("type", "click")
 
-        GSE.ButtonOverrides[Button] = Sequence
+                GSE.ButtonOverrides[Button] = Sequence
 
-    --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
-    --SetBindingClick(number, Button, _G[Button])
-    --end
-    end
-    if not InCombatLockdown() then
-        _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+            --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
+            --SetBindingClick(number, Button, _G[Button])
+            --end
+            end
+
+            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+        end
     end
 end
 local function LoadOverrides(force)

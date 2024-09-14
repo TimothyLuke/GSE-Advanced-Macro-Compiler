@@ -541,16 +541,20 @@ function GSE.UpdateIcon(self, reset)
         if GSE.ButtonOverrides then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
-                    local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
-                    local page = parent and parent:GetAttribute("actionpage")
-                    local action = page and slot and slot > 0 and (slot + page * 12 - 12)
-                    if action then
-                        local at = GetActionInfo(action)
-                        if GSE.isEmpty(at) then
-                            _G[k].icon:SetTexture(spellinfo.iconID)
-                            _G[k].icon:Show()
-                            _G[k].TextOverlayContainer.Count:SetText(gsebutton)
-                            _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
+                    if string.sub(k, 1, 5) == "ElvUI" then
+                        _G[k].icon:SetTexture(spellinfo.iconID)
+                    else
+                        local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
+                        local page = parent and parent:GetAttribute("actionpage")
+                        local action = page and slot and slot > 0 and (slot + page * 12 - 12)
+                        if action then
+                            local at = GetActionInfo(action)
+                            if GSE.isEmpty(at) then
+                                _G[k].icon:SetTexture(spellinfo.iconID)
+                                _G[k].icon:Show()
+                                _G[k].TextOverlayContainer.Count:SetText(gsebutton)
+                                _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
+                            end
                         end
                     end
                     break

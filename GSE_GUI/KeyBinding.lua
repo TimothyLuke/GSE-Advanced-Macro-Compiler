@@ -306,12 +306,11 @@ local function showKeybind(bind, button, specialization, loadout, type)
             "MultiBarLeftButton",
             "MultiBarRightButton"
         }
-        -- if ElvUI then
-        --     buttonnames = {}
-        --     for i = 1, 15 do
-        --         table.insert(buttonnames, "ElvUI_Bar" .. i .. "Button")
-        --     end
-        -- end
+        if ElvUI then
+            for i = 15, 1, -1 do
+                table.insert(buttonnames, 1, "ElvUI_Bar" .. i .. "Button")
+            end
+        end
         local buttonlist = {}
         for _, v in ipairs(buttonnames) do
             for i = 1, 12 do
