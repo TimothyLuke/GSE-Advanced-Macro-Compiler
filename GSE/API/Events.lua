@@ -109,7 +109,8 @@ local function overrideActionButton(Button, Sequence, force)
     if string.sub(Button, 1, 5) == "ElvUI" or string.sub(Button, 1, 4) == "CPB_" then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetState(
-                _G[Button]:GetAttribute("state"),
+                --_G[Button]:GetAttribute("state"),
+                "1",
                 "custom",
                 {
                     func = function(self)
