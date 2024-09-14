@@ -248,7 +248,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PlayerEntered = true
     LoadKeyBindings(GSE.PlayerEntered)
     GSE:ZONE_CHANGED_NEW_AREA()
-    C_Timer.After(10, LoadOverrides)
+    C_Timer.After(1, LoadOverrides)
 end
 
 function GSE:ADDON_LOADED(event, addon)
