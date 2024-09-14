@@ -254,7 +254,11 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PlayerEntered = true
     LoadKeyBindings(GSE.PlayerEntered)
     GSE:ZONE_CHANGED_NEW_AREA()
-    C_Timer.After(1, LoadOverrides)
+    if Bartender4 or ElvUI or ConsolePort then
+        LoadOverrides()
+    else
+        C_Timer.After(5, LoadOverrides)
+    end
 end
 
 function GSE:ADDON_LOADED(event, addon)
