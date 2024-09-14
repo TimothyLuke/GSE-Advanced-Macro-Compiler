@@ -168,6 +168,9 @@ local function overrideActionButton(Button, Sequence, force)
     end
 end
 local function LoadOverrides(force)
+    if GSE.isEmpty(GSE.ButtonOverrides) then
+        GSE.ButtonOverrides = {}
+    end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
     end
@@ -184,6 +187,21 @@ local function LoadOverrides(force)
         GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())] = {}
     end
     if not InCombatLockdown() then
+        for k, _ in pairs(GSE.ButtonOverrides) do
+            -- revert all buttons
+            if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" then
+                local state = "1"
+                --_G[Button]:GetAttribute("state"),
+                if string.sub(k, 1, 3) == "BT4" then
+                    state = "0"
+                end
+                _G[k]:SetState(state, "action", tonumber(string.match(k, "%d+$")))
+            else
+                _G[k]:SetAttribute("type", "action")
+            end
+        end
+        GSE.ButtonOverrides = {}
+
         for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][tostring(GetSpecialization())]) do
             overrideActionButton(k, v, force)
         end
@@ -198,9 +216,6 @@ local function LoadOverrides(force)
          then
             GSE.PrintDebugMessage("changing from ", tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
             for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())][selected]) do
-                if GSE.isEmpty(GSE.ButtonOverrides) then
-                    GSE.ButtonOverrides = {}
-                end
                 overrideActionButton(k, v, force)
                 GSE.ButtonOverrides[v] = k
             end
