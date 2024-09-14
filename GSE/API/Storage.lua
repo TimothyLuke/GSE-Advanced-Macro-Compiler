@@ -541,7 +541,7 @@ function GSE.UpdateIcon(self, reset)
         if GSE.ButtonOverrides then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
-                    if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" then
+                    if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" then
                         _G[k].icon:SetTexture(spellinfo.iconID)
                     else
                         local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()

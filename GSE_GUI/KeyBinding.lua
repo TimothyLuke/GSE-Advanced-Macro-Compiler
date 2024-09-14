@@ -367,6 +367,15 @@ local function showKeybind(bind, button, specialization, loadout, type)
             buttonlist["CPB_PAD4_CTRL_SHIFT"] = "CPB_PAD4_CTRL_SHIFT"
             buttonlist["CPB_PAD4_CTRL"] = "CPB_PAD4_CTRL"
         end
+
+        if Bartender4 then
+            local v = "BT4Button"
+            for i = 1, 180 do
+                if _G[v .. i] and _G[v .. i]:IsShown() then
+                    buttonlist[v .. i] = v .. i
+                end
+            end
+        end
         ActionButtonList:SetList(buttonlist)
         ActionButtonList:SetValue(bind)
         ActionButtonList:SetCallback(

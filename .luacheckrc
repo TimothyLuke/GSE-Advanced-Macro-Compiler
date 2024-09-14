@@ -412,5 +412,6 @@ globals = {
     "strsplittable",
     "GetActionInfo",
     "GetBindingByKey",
-    "ConsolePort"
+    "ConsolePort",
+    "Bartender4"
 }
