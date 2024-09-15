@@ -272,7 +272,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     if Bartender4 or ElvUI or ConsolePort then
         LoadOverrides()
     else
-        C_Timer.After(5, LoadOverrides)
+        C_Timer.After(8, LoadOverrides)
     end
 end
 
