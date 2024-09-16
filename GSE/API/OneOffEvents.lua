@@ -19,7 +19,6 @@ function GSE.PerformOneOffEvents()
     end
     if GSE.isEmpty(GSEOptions.Updates["3200"]) then
         GSE3Storage = nil
-        GSEOptions.shownew = true
         GSEOptions.Updates["3200"] = true
     end
 
@@ -63,6 +62,10 @@ function GSE.PerformOneOffEvents()
             GSE_C["ActionBarBinds"]["Loadouts"] = nil
         end
         GSE_C.Updates["3212"] = true
+    end
+    if GSE.isEmpty(GSE_C.Updates["3214"]) then
+        GSEOptions.shownew = true
+        GSE_C.Updates["3214"] = true
     end
 end
 
