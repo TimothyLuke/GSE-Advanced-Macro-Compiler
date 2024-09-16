@@ -750,11 +750,11 @@ L["WhatsNew"] =
 
 |cFFFF0000Consequence:|r This affects two fights - Dawnbreaker's first boss and T-Swift in Amardrassil.  The big affect here of the two is Dawnbreaker. After you land after the first explodie bubble the GSE Sequence will no longer fire.
 
-|cFFFF0000Workaround:|r It is possible to work around by 
+|cFFFF0000Workaround:|r It is possible to work around by
 - The preferred workaround is to switch to Steady Flight for the dungeon.
 - The alternative is having a backup bind either as a keybind (This will at least still change the icon) OR another override on a non changing actionbar.  Both solutions require changing physical keys for the second half of the fight. Personally I dont use Shift+2 so have bound my backup sequence as Shift+2 but this is a personal thing and people would need to find what works for them.
 
-The full detail on all of these changes is available on the GSE GitHub wiki - https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki 
+The full detail on all of these changes is available on the GSE GitHub wiki - https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
 ]]
 
 -- #1524
