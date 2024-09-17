@@ -63,9 +63,9 @@ function GSE.PerformOneOffEvents()
         end
         GSE_C.Updates["3212"] = true
     end
-    if GSE.isEmpty(GSE_C.Updates["3214"]) then
+    if GSE.isEmpty(GSEOptions.Updates["3214"]) then
         GSEOptions.shownew = true
-        GSE_C.Updates["3214"] = true
+        GSEOptions.Updates["3214"] = true
     end
 end
 
