@@ -196,18 +196,21 @@ function GSE.ReloadSequences()
     GSE.ManageMacros()
 end
 
-function GSE.PerformReloadSequences()
+function GSE.PerformReloadSequences(force)
     GSE.PrintDebugMessage("Reloading Sequences", Statics.DebugModules["Storage"])
-
+    local func = GSE.UpdateSequence
+    if force then
+        func = GSE.OOCUpdateSequence
+    end
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         if not sequence.MetaData.Disabled then
-            GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+            func(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
         end
     end
     if not GSE.isEmpty(GSE.Library[0]) then
         for name, sequence in pairs(GSE.Library[0]) do
             if GSE.isEmpty(sequence.MetaData.Disabled) then
-                GSE.UpdateSequence(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+                func(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
             end
         end
     end
@@ -557,7 +560,6 @@ function GSE.UpdateIcon(self, reset)
                             end
                         end
                     end
-                    break
                 end
             end
         end

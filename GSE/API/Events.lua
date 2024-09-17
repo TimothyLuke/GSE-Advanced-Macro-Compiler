@@ -113,14 +113,19 @@ local function overrideActionButton(Button, Sequence, force)
             if string.sub(Button, 1, 3) == "BT4" then
                 state = "0"
             end
+            _G[Button]:SetAttribute("gse-button", Sequence)
+            _G[Button]:SetAttribute("gse-state", state)
             _G[Button]:SetState(
                 state,
                 "custom",
                 {
                     func = function(self)
-                        if not InCombatLockdown() then
+                        local gsestate = self:GetAttribute("gse-state")
+                        local bstate = self:GetAttribute("state")
+                        if gsestate == bstate then
                             self:SetAttribute("type", "click")
-                            self:SetAttribute("clickbutton", _G[Sequence])
+                            self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
+                            print("state updated")
                         end
                     end,
                     tooltip = "GSE: " .. Sequence,
@@ -128,6 +133,8 @@ local function overrideActionButton(Button, Sequence, force)
                 }
             )
             GSE.ButtonOverrides[Button] = Sequence
+            _G[Button]:SetAttribute("type", "click")
+            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
     else
         if not InCombatLockdown() then
@@ -268,12 +275,10 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
     LoadKeyBindings(GSE.PlayerEntered)
+    GSE.PerformReloadSequences(true)
+
+    LoadOverrides()
     GSE:ZONE_CHANGED_NEW_AREA()
-    if Bartender4 or ElvUI or ConsolePort then
-        LoadOverrides()
-    else
-        C_Timer.After(8, LoadOverrides)
-    end
 end
 
 function GSE:ADDON_LOADED(event, addon)
@@ -460,8 +465,8 @@ function GSE:PLAYER_SPECIALIZATION_CHANGED()
     end
     if not InCombatLockdown() then
         LoadKeyBindings(GSE.PlayerEntered)
-        LoadOverrides()
         GSE.ReloadSequences()
+        LoadOverrides()
     end
 end
 
