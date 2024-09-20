@@ -69,20 +69,32 @@ local function prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
   )
 end
 
+local function handleLeave(self)
+  -- Dont close the tooltip if mouseover
+  if self.tooltip and not self.tooltip:IsMouseOver() then
+    self.tooltip:Release()
+    self.tooltip = nil
+  end
+  return true
+end
+
 function dataobj:OnEnter()
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
   --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
   local tooltip = LibQTip:Acquire("GSE", 3, "LEFT", "CENTER", "RIGHT")
   self.tooltip = tooltip
   tooltip:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
-
+  tooltip:EnableMouse(true)
+  tooltip:SmartAnchorTo(self)
+  tooltip.OnRelease = handleLeave
+  tooltip:SetAutoHideDelay(1, self)
   tooltip:Clear()
   tooltip:SetFont(baseFont)
   --tooltip:SetHeaderFont(red17font)
   local y, _ = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Left Click to open the Sequence Editor"], "CENTER", 3)
   y, _ = tooltip:AddLine()
-  tooltip:SetCell(y, 1, L["GSE: Middle Click to open the Transmission Interface"], "CENTER", 3)
+  tooltip:SetCell(y, 1, L["GSE: Middle Click to open the Keybinding Interface"], "CENTER", 3)
   y, _ = tooltip:AddLine()
   tooltip:SetCell(y, 1, L["GSE: Right Click to open the Sequence Debugger"], "CENTER", 3)
 
@@ -164,16 +176,6 @@ function dataobj:OnEnter()
   tooltip:Show()
 end
 
-local function handleLeave(self)
-  -- Dont close the tooltip if mouseover
-  if not MouseIsOver(self.tooltip) then
-    -- Release the tooltip
-    LibQTip:Release(self.tooltip)
-    self.tooltip = nil
-  end
-  return true
-end
-
 local function dataObject_OnLeave(self)
   -- this may throw an error - capture the error silently
   pcall(handleLeave, self)
@@ -188,7 +190,7 @@ function dataobj:OnClick(button)
     if button == "LeftButton" then
       GSE.ShowSequences()
     elseif button == "MiddleButton" then
-      GSE.GUIShowTransmissionGui()
+      GSE.ShowKeyBindings()
     elseif button == "RightButton" then
       GSE.GUIShowDebugWindow()
     end

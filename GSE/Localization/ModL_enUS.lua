@@ -257,7 +257,6 @@ L["There are no events in out of combat queue"] = true
 L["There are %i events in out of combat queue"] = true
 L["GSE Version: %s"] = true
 L["GSE: Left Click to open the Sequence Editor"] = true
-L["GSE: Middle Click to open the Transmission Interface"] = true
 L["GSE: Right Click to open the Sequence Debugger"] = true
 L["Finished scanning for errors.  If no other messages then no errors were found."] = true
 L["Replace"] = true
@@ -783,3 +782,6 @@ L["New KeyBind"] = true
 L["New Actionbar Override"] = true
 
 L["Missing Variable "] = true
+
+-- #1648
+L["GSE: Middle Click to open the Keybinding Interface"] = true
