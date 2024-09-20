@@ -1221,6 +1221,8 @@ function GSE:CreateConfigPanels()
     if not registered then
         modoptions.args.about.args.patrons = {
             type = "description",
+            name = table.concat(Statics.Patrons, ", "),
+            order = 32
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
         dialog:AddToBlizOptions(addonName, addonName)
