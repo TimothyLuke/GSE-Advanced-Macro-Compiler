@@ -1,6 +1,5 @@
 local GSE = GSE
 local Statics = GSE.Static
-
 local L = GSE.L
 
 local GNOME = "Storage"
@@ -726,8 +725,6 @@ function GSE:GSSlash(input)
     end
 end
 
-LibStub("AceConfig-3.0"):RegisterOptionsTable("GSE", GSE.GetOptionsTable(), {"gseo"})
-
 local colorTable = {}
 
 local tokens = IndentationLib.tokens
@@ -775,5 +772,6 @@ colorTable["/cast"] = castColor
 colorTable[0] = "|r"
 
 Statics.IndentationColorTable = colorTable
+GSE:CreateConfigPanels()
 
 GSE.Utils = true

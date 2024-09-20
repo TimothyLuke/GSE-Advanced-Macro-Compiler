@@ -1,6 +1,6 @@
 ## Interface: 110002, 110005
 
-## Title: |cff0000FFGSE:|r |cFF00D1FFSequences - Variables - Macros|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
 ## Version: @project-version@

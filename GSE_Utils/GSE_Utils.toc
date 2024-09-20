@@ -1,6 +1,6 @@
 ## Interface: 110002, 110005
 
-## Title: |cff0000FFGSE:|r |cFF00D1FFUtils|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
 ## Notes: Optional Utilities for GSE
 ## Author: TimothyLuke
 ## Version: @project-version@

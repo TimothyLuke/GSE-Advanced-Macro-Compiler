@@ -1,6 +1,6 @@
 ## Interface: 110002, 110005
 
-## Title: |cff0000FFGSE:|r |cFF00D1FFLDB|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Data Feeds and Minimap|r
 ## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke
 ## Version: @project-version@

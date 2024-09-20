@@ -1,6 +1,6 @@
 ## Interface: 110002, 110005
 
-## Title: |cff0000ffGSE:|r |cFF00D1FFGUI|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
 ## Version: @project-version@

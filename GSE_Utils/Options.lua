@@ -17,7 +17,7 @@ function GSE.GetOptionsTable()
         type = "group",
         name = "|cffff0000GSE:|r " .. L["Options"],
         args = {
-            generalTab = {
+            general = {
                 name = L["General"],
                 desc = L["General Options"],
                 type = "group",
@@ -222,7 +222,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            characterOptionsTab = {
+            character = {
                 name = L["Character"],
                 desc = L["Character Specific Options which override the normal account settings."],
                 type = "group",
@@ -270,7 +270,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            macroResetTab = {
+            sequenceReset = {
                 name = L["Sequence Reset"],
                 desc = L[
                     "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
@@ -454,7 +454,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            troubleshootingTab = {
+            troubleshooting = {
                 name = L["Troubleshooting"],
                 desc = L["Common Solutions to game quirks that seem to affect some people."],
                 type = "group",
@@ -566,7 +566,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            colourTab = {
+            colour = {
                 name = L["Colour"],
                 desc = L["Colour and Accessibility Options"],
                 type = "group",
@@ -785,7 +785,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            pluginsTab = {
+            plugins = {
                 name = L["Plugins"],
                 desc = L["GSE Plugins"],
                 type = "group",
@@ -804,7 +804,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            windowsizeTab = {
+            windowSize = {
                 name = L["Window Sizes"],
                 desc = L["The default sizes of each window."],
                 type = "group",
@@ -977,7 +977,7 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            aboutTab = {
+            about = {
                 name = L["About"],
                 desc = L["About GSE"],
                 type = "group",
@@ -1071,7 +1071,7 @@ function GSE.GetOptionsTable()
     }
 
     if GSE.Developer then
-        OptionsTable.args.debugTab = {
+        OptionsTable.args.debug = {
             name = L["Debug"],
             desc = L["Debug Mode Options"],
             type = "group",
@@ -1138,7 +1138,7 @@ function GSE.GetOptionsTable()
         local ord = 30
         for k, _ in pairs(Statics.DebugModules) do
             ord = ord + 1
-            OptionsTable.args.debugTab.args[k] = {
+            OptionsTable.args.debug.args[k] = {
                 name = k,
                 desc = L["This will display debug messages for the "] .. k,
                 type = "toggle",
@@ -1157,7 +1157,7 @@ function GSE.GetOptionsTable()
     if not GSE.isEmpty(GSE.AddInPacks) then
         for _, v in pairs(GSE.AddInPacks) do
             ord = ord + 1
-            OptionsTable.args.pluginsTab.args[v.Name] = {
+            OptionsTable.args.plugins.args[v.Name] = {
                 name = v.Name,
                 desc = string.format(L["Addin Version %s contained versions for the following sequences:"], v.Name) ..
                     string.format("\n%s", FormatSequenceNames(v.SequenceNames)),
@@ -1169,16 +1169,62 @@ function GSE.GetOptionsTable()
             }
         end
     end
-    ord = 31
-    for k, v in ipairs(Statics.Patrons) do
-        local pos = ord + k
-        OptionsTable.args.aboutTab.args[v .. k] = {
-            name = v,
-            desc = v,
-            type = "description",
-            order = pos
-        }
-    end
 
     return OptionsTable
+end
+
+local addonName = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
+local config = LibStub("AceConfig-3.0")
+local dialog = LibStub("AceConfigDialog-3.0")
+local modoptions = GSE.GetOptionsTable()
+
+local registered = false
+
+local function createBlizzOptions()
+    -- General
+    config:RegisterOptionsTable(addonName .. "-General", modoptions.args.general)
+    local blizzPanel = dialog:AddToBlizOptions(addonName .. "-General", modoptions.args.general.name, addonName)
+
+    -- Character
+    config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
+    dialog:AddToBlizOptions(addonName .. "-Character", modoptions.args.character.name, addonName)
+
+    -- sequenceReset
+    config:RegisterOptionsTable(addonName .. "-SequenceReset", modoptions.args.sequenceReset)
+    dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, addonName)
+
+    -- Troubleshooting
+    config:RegisterOptionsTable(addonName .. "-Troubleshooting", modoptions.args.troubleshooting)
+    dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, addonName)
+
+    -- colour
+    config:RegisterOptionsTable(addonName .. "-Colour", modoptions.args.colour)
+    dialog:AddToBlizOptions(addonName .. "-Colour", modoptions.args.colour.name, addonName)
+
+    -- Plugins
+    config:RegisterOptionsTable(addonName .. "-Plugins", modoptions.args.plugins)
+    dialog:AddToBlizOptions(addonName .. "-Plugins", modoptions.args.plugins.name, addonName)
+
+    config:RegisterOptionsTable(addonName .. "-WindowSizes", modoptions.args.windowSize)
+    dialog:AddToBlizOptions(addonName .. "-WindowSizes", modoptions.args.windowSize.name, addonName)
+
+    if GSE.Developer then
+        -- about
+        config:RegisterOptionsTable(addonName .. "-Debug", modoptions.args.debug)
+        dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, addonName)
+    end
+
+    return blizzPanel
+end
+
+function GSE:CreateConfigPanels()
+    if not registered then
+        modoptions.args.about.args.patrons = {
+            type = "description",
+        }
+        config:RegisterOptionsTable(addonName, modoptions.args.about)
+        dialog:AddToBlizOptions(addonName, addonName)
+        createBlizzOptions()
+        registered = true
+    end
 end

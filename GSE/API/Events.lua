@@ -326,18 +326,6 @@ function GSE:ADDON_LOADED(event, addon)
         GSE:SendMessage(Statics.CoreLoadedMessage)
 
         -- Register the Sample Macros
-        local seqnames = {}
-        -- table.insert(seqnames, "Assorted Sample Macros")
-        -- GSE.RegisterAddon("Samples", GSE.VersionString, seqnames)
-
-        -- GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
-
-        -- table.insert(seqnames, "GSE2 Macros")
-        -- GSE.RegisterAddon("GSE2Library", GSE.VersionString, seqnames)
-
-        -- GSE:RegisterMessage(Statics.ReloadMessage, "processReload")
-
-        LibStub("AceConfigDialog-3.0"):AddToBlizOptions("GSE", "|cffff0000GSE:|r Advanced Macro Compiler")
         if not GSEOptions.HideLoginMessage then
             GSE.Print(
                 GSEOptions.AuthorColour ..
