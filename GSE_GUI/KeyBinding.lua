@@ -376,7 +376,12 @@ local function showKeybind(bind, button, specialization, loadout, type)
                 end
             end
         end
-        ActionButtonList:SetList(buttonlist)
+        local striplist = {}
+        for k, _ in pairs(buttonlist) do
+            table.insert(striplist, k)
+        end
+
+        ActionButtonList:SetList(buttonlist, GSE.SortTableAlphabetical(striplist))
         ActionButtonList:SetValue(bind)
         ActionButtonList:SetCallback(
             "OnValueChanged",

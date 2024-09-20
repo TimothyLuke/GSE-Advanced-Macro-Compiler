@@ -31,9 +31,10 @@
     "sequence",
     "CastingInfo",
     "StaticPopupDialogs",
-    "StaticPopup_Show"
+    "StaticPopup_Show",
+    "MenuUtil"
   ],
-  "Lua.diagnostics.disable": ["undefined-field"],
+  "Lua.diagnostics.disable": ["undefined-field", "inject-field", "invisible"],
   "luahelper.Warn.CheckLocalNoUse": true,
   "luahelper.Warn.CheckNoUseAssign": true
 }
