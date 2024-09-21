@@ -413,5 +413,6 @@ globals = {
     "GetActionInfo",
     "GetBindingByKey",
     "ConsolePort",
-    "Bartender4"
+    "Bartender4",
+    "Settings"
 }

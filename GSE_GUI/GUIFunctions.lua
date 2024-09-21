@@ -145,8 +145,7 @@ function GSE:OnInitialize()
 end
 
 function GSE.OpenOptionsPanel()
-  local config = LibStub:GetLibrary("AceConfigDialog-3.0")
-  config:Open("GSE")
+  Settings.OpenToCategory("|cFFFFFFFFGS|r|cFF00FFFFE|r")
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
