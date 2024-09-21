@@ -1179,14 +1179,18 @@ function GSE.CompileMacroText(text, mode)
                     if pcall(functionresult) then
                         value = functionresult()
                     else
-                        value = " "
+                        value = ""
                     end
                 end
             end
-            if string.sub(value, 1, 2) == "--" then
+            if value and string.len(value) > 2 and string.sub(value, 1, 2) == "--" then
                 lines[k] = "" -- strip the comments
             else
-                lines[k] = GSE.TranslateString(value, mode, false)
+                if value then
+                    lines[k] = GSE.TranslateString(value, mode, false)
+                else
+                    lines[k] = ""
+                end
             end
         else
             lines[k] = GSE.TranslateString(value, mode, false)
