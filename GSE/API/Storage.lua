@@ -693,7 +693,7 @@ local function buildAction(action, metaData, variables)
                                 GSE.Print(L["There was an error processing "] .. value, Statics.DebugModules["API"])
                             end
                         end,
-                        function()
+                        function(err)
                             manageMissingVariable(string.sub(value, 2, string.len(value)))
                         end
                     )
@@ -1166,8 +1166,7 @@ function GSE.CompileMacroText(text, mode)
     end
     local lines = GSE.SplitMeIntolines(text)
     for k, v in ipairs(lines) do
-        local value = v
-        v = GSE.UnEscapeString(v)
+        local value = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
                 local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
@@ -1176,23 +1175,11 @@ function GSE.CompileMacroText(text, mode)
                     GSE.Print(L["There was an error processing "] .. v, L["Variables"])
                     GSE.Print(error, L["Variables"])
                 end
-
-                if GSE.isEmpty(functionresult) then
-                    value = " "
-                else
-                    if functionresult and type(functionresult) == "function" then
-                        if
-                            xpcall(
-                                functionresult(),
-                                function()
-                                    return false
-                                end
-                            )
-                         then
-                            value = functionresult()
-                        else
-                            value = " "
-                        end
+                if functionresult and type(functionresult) == "function" then
+                    if pcall(functionresult) then
+                        value = functionresult()
+                    else
+                        value = " "
                     end
                 end
             end
