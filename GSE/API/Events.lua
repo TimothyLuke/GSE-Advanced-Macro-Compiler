@@ -113,19 +113,14 @@ local function overrideActionButton(Button, Sequence, force)
             if string.sub(Button, 1, 3) == "BT4" then
                 state = "0"
             end
-            _G[Button]:SetAttribute("gse-button", Sequence)
-            _G[Button]:SetAttribute("gse-state", state)
             _G[Button]:SetState(
                 state,
                 "custom",
                 {
                     func = function(self)
-                        local gsestate = self:GetAttribute("gse-state")
-                        local bstate = self:GetAttribute("state")
-                        if gsestate == bstate then
+                        if not InCombatLockdown() then
                             self:SetAttribute("type", "click")
                             self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
-                            print("state updated")
                         end
                     end,
                     tooltip = "GSE: " .. Sequence,
