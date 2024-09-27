@@ -113,6 +113,7 @@ local function overrideActionButton(Button, Sequence, force)
             if string.sub(Button, 1, 3) == "BT4" then
                 state = "0"
             end
+            _G[Button]:SetAttribute("gse-button", Sequence)
             _G[Button]:SetState(
                 state,
                 "custom",
