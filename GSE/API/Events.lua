@@ -131,6 +131,16 @@ local function overrideActionButton(Button, Sequence, force)
             GSE.ButtonOverrides[Button] = Sequence
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+            SHBT:WrapScript(
+                _G[Button],
+                "OnClick",
+                [[
+                    type = self:GetAttribute("type")
+                    if type == "custom" then
+                        self:SetAttribute("type", "click")
+                    end
+                ]]
+            )
         end
     else
         if not InCombatLockdown() then
