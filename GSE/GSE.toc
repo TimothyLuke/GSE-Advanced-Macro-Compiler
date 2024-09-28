@@ -38,8 +38,8 @@ API\InitialOptions.lua
 # Storage and core
 API\StringFunctions.lua
 API\CharacterFunctions.lua
-API\Storage.lua
 API\Translator.lua
+API\Storage.lua
 API\Plugins.lua
 API\Serialisation.lua
 API\OneOffEvents.lua

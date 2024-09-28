@@ -2266,6 +2266,39 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
     end
 end
 
+if GSE.isEmpty(GSE.CreateIconControl) then
+    GSE.CreateIconControl = function(action)
+        local lbl = AceGUI:Create("Label")
+        lbl:SetFontObject(GameFontNormal)
+        lbl:SetWidth(15)
+        lbl:SetHeight(15)
+
+        if action.Icon then
+            lbl:SetText("|T" .. action.Icon .. ":0|t")
+            return lbl
+        end
+        local spellinfo = {}
+
+        if action.type == "macro" then
+            local macro = GSE.UnEscapeString(action.macro)
+            if string.sub(macro, 1, 1) == "/" then
+                spellinfo = GSE.GetSpellsFromString(macro, true)
+            else
+                spellinfo.name = action.macro
+                local macindex = GetMacroIndexByName(spellinfo.name)
+                local _, iconid, _ = GetMacroInfo(macindex)
+                spellinfo.iconID = iconid
+            end
+        elseif action.type == "Spell" then
+            spellinfo = C_Spell.GetSpellInfo(action.spell)
+        end
+        if spellinfo.iconID then
+            lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
+        end
+        return lbl
+    end
+end
+
 local function drawAction(container, action, version, keyPath)
     local maxWidth = container.frame:GetWidth() - 10
     container:SetCallback(
@@ -2463,7 +2496,8 @@ local function drawAction(container, action, version, keyPath)
         local typegroup = AceGUI:Create("SimpleGroup")
         typegroup:SetFullWidth(true)
         typegroup:SetLayout("Flow")
-
+        local actionicon = GSE.CreateIconControl(action)
+        typegroup:AddChild(actionicon)
         local spellradio = AceGUI:Create("CheckBox")
         spellradio:SetType("radio")
         spellradio:SetLabel(L["Spell"])

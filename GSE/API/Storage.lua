@@ -473,6 +473,40 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
     end
 end
 
+function GSE.GetSpellsFromString(str)
+    local spellinfo = {}
+    if string.sub(str, 12) == "/click GSE.P" then
+        spellinfo.name = "GSE Pause"
+        spellinfo.iconID = Statics.ActionsIcons.Pause
+    else
+        local searching = true
+        for cmd, oetc in gmatch(str or "", "/(%w+)%s+([^\n]+)") do
+            if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
+                if searching then
+                    local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
+                    if string.sub(etc, 1, 1) == "/" then
+                        etc = oetc
+                    end
+                    if strlower(cmd) == "use" and tonumber(etc) <= 16 then
+                        -- we have a trinket
+                    else
+                        local spell, _ = SecureCmdOptionParse(etc)
+                        if spell then
+                            spellinfo = C_Spell.GetSpellInfo(spell)
+                            if spellinfo then
+                                searching = false
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if spellinfo.name then
+        return spellinfo
+    end
+end
+
 function GSE.UpdateIcon(self, reseticon)
     local step = self:GetAttribute("step") or 1
     local gsebutton = self:GetName()
@@ -487,26 +521,9 @@ function GSE.UpdateIcon(self, reseticon)
         spellinfo.iconID = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
         foundSpell = gsebutton
     elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
-        local searching = true
-        if string.sub(executionseq[step].macrotext, 12) == "/click GSE.P" then
-            spellinfo.name = "GSE Pause"
-            spellinfo.iconID = Statics.ActionsIcons.Pause
+        spellinfo = GSE.GetSpellsFromString(executionseq[step].macrotext)
+        if spellinfo.name then
             foundSpell = spellinfo.name
-        else
-            for cmd, etc in gmatch(executionseq[step].macrotext or "", "/(%w+)%s+([^\n]+)") do
-                if searching then
-                    if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
-                        local spell, target = SecureCmdOptionParse(etc)
-                        if spell then
-                            spellinfo = C_Spell.GetSpellInfo(spell)
-                            if spellinfo then
-                                foundSpell = spellinfo.name
-                                searching = false
-                            end
-                        end
-                    end
-                end
-            end
         end
     elseif executionseq[step].type == "macro" then
         local mname, micon = GetMacroInfo(executionseq[step].macro)
@@ -684,7 +701,7 @@ local function buildAction(action, metaData, variables)
         local spelllist = {}
         for k, v in pairs(action) do
             local value = v
-            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" then
+            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" or k == "Icon" then
                 -- we dont want to do anything here
             else
                 if string.sub(value, 1, 1) == "=" then
