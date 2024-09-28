@@ -1062,7 +1062,7 @@ end
                 self:SetAttribute("macrotext", nil )
                 self:SetAttribute("unit", nil )
             elseif k == "Icon" then
-                -- skip                
+                -- skip
             end
             self:SetAttribute(k, v )
         end

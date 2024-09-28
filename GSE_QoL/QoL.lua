@@ -562,8 +562,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
             end
         end
     elseif action.type == "Spell" then
-        local spellinfo = {}
-        spellinfo = C_Spell.GetSpellInfo(action.spell)
+        local spellinfo = C_Spell.GetSpellInfo(action.spell)
         if spellinfo and spellinfo.iconID then
             table.insert(spellinfolist, spellinfo)
         end
