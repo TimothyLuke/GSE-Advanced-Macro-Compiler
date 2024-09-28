@@ -502,7 +502,7 @@ function GSE.GetSpellsFromString(str)
             end
         end
     end
-    if spellinfo.name then
+    if spellinfo and spellinfo.name then
         return spellinfo
     end
 end
