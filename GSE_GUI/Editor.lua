@@ -2282,7 +2282,10 @@ if GSE.isEmpty(GSE.CreateIconControl) then
         if action.type == "macro" then
             local macro = GSE.UnEscapeString(action.macro)
             if string.sub(macro, 1, 1) == "/" then
-                spellinfo = GSE.GetSpellsFromString(macro, true)
+                local spellstuff = GSE.GetSpellsFromString(macro)
+                if spellstuff then
+                    spellinfo = spellstuff
+                end
             else
                 spellinfo.name = action.macro
                 local macindex = GetMacroIndexByName(spellinfo.name)
