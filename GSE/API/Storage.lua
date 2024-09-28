@@ -522,7 +522,7 @@ function GSE.UpdateIcon(self, reseticon)
         foundSpell = gsebutton
     elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
         spellinfo = GSE.GetSpellsFromString(executionseq[step].macrotext)
-        if spellinfo.name then
+        if spellinfo and spellinfo.name then
             foundSpell = spellinfo.name
         end
     elseif executionseq[step].type == "macro" then
