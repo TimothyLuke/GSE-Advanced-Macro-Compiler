@@ -482,21 +482,16 @@ function GSE.GetSpellsFromString(str)
         local searching = true
         for cmd, oetc in gmatch(str or "", "/(%w+)%s+([^\n]+)") do
             if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
-                if searching then
-                    local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
-                    if string.sub(etc, 1, 1) == "/" then
-                        etc = oetc
-                    end
-                    if strlower(cmd) == "use" and tonumber(etc) <= 16 then
-                        -- we have a trinket
-                    else
-                        local spell, _ = SecureCmdOptionParse(etc)
-                        if spell then
-                            spellinfo = C_Spell.GetSpellInfo(spell)
-                            if spellinfo then
-                                searching = false
-                            end
-                        end
+                local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
+                if string.sub(etc, 1, 1) == "/" then
+                    etc = oetc
+                end
+                if strlower(cmd) == "use" and tonumber(etc) <= 16 then
+                    -- we have a trinket
+                else
+                    local spell, _ = SecureCmdOptionParse(etc)
+                    if spell then
+                        spellinfo = C_Spell.GetSpellInfo(spell)
                     end
                 end
             end
