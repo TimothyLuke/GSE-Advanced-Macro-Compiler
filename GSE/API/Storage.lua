@@ -234,11 +234,9 @@ end
 function GSE.ResetButtons()
     for k, _ in pairs(GSE.UsedSequences) do
         local gsebutton = _G[k]
-        if gsebutton:GetAttribute("combatreset") == true then
-            gsebutton:SetAttribute("step", 1)
-            GSE.UpdateIcon(gsebutton, true)
-            GSE.UsedSequences[k] = nil
-        end
+        gsebutton:SetAttribute("step", 1)
+        GSE.UpdateIcon(gsebutton, true)
+        GSE.UsedSequences[k] = nil
     end
 end
 
@@ -475,14 +473,20 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
     end
 end
 
-function GSE.UpdateIcon(self, reset)
+function GSE.UpdateIcon(self, reseticon)
     local step = self:GetAttribute("step") or 1
     local gsebutton = self:GetName()
     local mods = self:GetAttribute("localmods") or nil
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
     local spellinfo = {}
-    if executionseq[step].type == "macro" and executionseq[step].macrotext then
+
+    local reset = self:GetAttribute("combatreset") and self:GetAttribute("combatreset") or false
+    if reseticon == true then
+        spellinfo.name = gsebutton
+        spellinfo.iconID = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+        foundSpell = gsebutton
+    elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
         local searching = true
         if string.sub(executionseq[step].macrotext, 12) == "/click GSE.P" then
             spellinfo.name = "GSE Pause"
