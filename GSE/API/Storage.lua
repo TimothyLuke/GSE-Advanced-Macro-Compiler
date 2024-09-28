@@ -543,6 +543,9 @@ function GSE.UpdateIcon(self, reseticon)
         spellinfo = C_Spell.GetSpellInfo(executionseq[step].spell)
         foundSpell = spellinfo.name
     end
+    if executionseq[step].Icon then
+        spellinfo.iconID = executionseq[step].Icon
+    end
     if mods then
         local modlist = {}
         for _, j in ipairs(strsplittable("|", mods)) do
@@ -557,7 +560,7 @@ function GSE.UpdateIcon(self, reseticon)
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
         end
     end
-    if foundSpell then
+    if spellinfo.iconID then
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
         end
@@ -701,7 +704,7 @@ local function buildAction(action, metaData, variables)
         local spelllist = {}
         for k, v in pairs(action) do
             local value = v
-            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" or k == "Icon" then
+            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" then
                 -- we dont want to do anything here
             else
                 if string.sub(value, 1, 1) == "=" then
@@ -1063,6 +1066,8 @@ end
             elseif k == "macro" then
                 self:SetAttribute("macrotext", nil )
                 self:SetAttribute("unit", nil )
+            elseif k == "Icon" then
+                -- skip                
             end
             self:SetAttribute(k, v )
         end
