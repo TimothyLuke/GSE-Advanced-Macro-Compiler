@@ -2267,9 +2267,9 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
 end
 
 if GSE.isEmpty(GSE.CreateIconControl) then
-    GSE.CreateIconControl = function(action)
+    GSE.CreateIconControl = function(action, version, keyPath, sequence)
         local lbl = AceGUI:Create("Label")
-        lbl:SetFontObject(GameFontNormal)
+        lbl:SetFontObject(GameFontNormalLarge)
         lbl:SetWidth(15)
         lbl:SetHeight(15)
 
@@ -2499,7 +2499,7 @@ local function drawAction(container, action, version, keyPath)
         local typegroup = AceGUI:Create("SimpleGroup")
         typegroup:SetFullWidth(true)
         typegroup:SetLayout("Flow")
-        local actionicon = GSE.CreateIconControl(action)
+        local actionicon = GSE.CreateIconControl(action, version, keyPath, editframe.Sequence)
         typegroup:AddChild(actionicon)
         local spellradio = AceGUI:Create("CheckBox")
         spellradio:SetType("radio")

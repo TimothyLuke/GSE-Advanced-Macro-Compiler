@@ -785,3 +785,6 @@ L["Missing Variable "] = true
 
 -- #1648
 L["GSE: Middle Click to open the Keybinding Interface"] = true
+
+-- #1621
+L["Select Icon"] = true

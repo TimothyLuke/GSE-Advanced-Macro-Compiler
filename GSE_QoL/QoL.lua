@@ -506,3 +506,89 @@ function GSE.Update31Actions(sequence)
     seq.WeakAuras = nil
     return seq
 end
+
+function GSE.CreateIconControl(action, version, keyPath, sequence)
+    local lbl = AceGUI:Create("InteractiveLabel")
+    lbl:SetFontObject(GameFontNormalLarge)
+    lbl:SetWidth(25)
+    lbl:SetHeight(25)
+
+    if action.Icon then
+        lbl:SetText("|T" .. action.Icon .. ":0|t")
+        return lbl
+    else
+        local spellinfo = {}
+
+        if action.type == "macro" then
+            local macro = GSE.UnEscapeString(action.macro)
+            if string.sub(macro, 1, 1) == "/" then
+                local spellstuff = GSE.GetSpellsFromString(macro)
+                if spellstuff then
+                    spellinfo = spellstuff
+                end
+            else
+                spellinfo.name = action.macro
+                local macindex = GetMacroIndexByName(spellinfo.name)
+                local _, iconid, _ = GetMacroInfo(macindex)
+                spellinfo.iconID = iconid
+            end
+        elseif action.type == "Spell" then
+            spellinfo = C_Spell.GetSpellInfo(action.spell)
+        end
+        if spellinfo.iconID then
+            lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
+        end
+    end
+    local spellinfolist = {}
+
+    if action.type == "macro" then
+        local macro = GSE.UnEscapeString(action.macro)
+        if string.sub(macro, 1, 1) == "/" then
+            local lines = GSE.SplitMeIntolines(macro)
+            for _, v in ipairs(lines) do
+                local spellinfo = GSE.GetSpellsFromString(v)
+                if spellinfo and spellinfo.iconID then
+                    table.insert(spellinfolist, spellinfo)
+                end
+            end
+        else
+            local spellinfo = {}
+            spellinfo.name = action.macro
+            local macindex = GetMacroIndexByName(spellinfo.name)
+            local _, iconid, _ = GetMacroInfo(macindex)
+            if macindex and iconid then
+                spellinfo.iconID = iconid
+                table.insert(spellinfolist, spellinfo)
+            end
+        end
+    elseif action.type == "Spell" then
+        local spellinfo = {}
+        spellinfo = C_Spell.GetSpellInfo(action.spell)
+        if spellinfo and spellinfo.iconID then
+            table.insert(spellinfolist, spellinfo)
+        end
+    end
+
+    lbl:SetCallback(
+        "OnClick",
+        function(widget, button)
+            -- if button == "RightButton" then
+            MenuUtil.CreateContextMenu(
+                lbl,
+                function(ownerRegion, rootDescription)
+                    rootDescription:CreateTitle(L["Select Icon"])
+                    for _, v in pairs(spellinfolist) do
+                        rootDescription:CreateButton(
+                            "|T" .. v.iconID .. ":0|t " .. v.name,
+                            function()
+                                lbl:SetText("|T" .. v.iconID .. ":0|t")
+                                sequence.Macros[version].Actions[keyPath].Icon = v.iconID
+                            end
+                        )
+                    end
+                end
+            )
+        end
+    )
+    return lbl
+end
