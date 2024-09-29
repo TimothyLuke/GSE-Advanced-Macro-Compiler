@@ -486,7 +486,7 @@ function GSE.GetSpellsFromString(str)
                 if string.sub(etc, 1, 1) == "/" then
                     etc = oetc
                 end
-                if strlower(cmd) == "use" and tonumber(etc) <= 16 then
+                if cmd and etc and strlower(cmd) == "use" and tonumber(etc) and tonumber(etc) <= 16 then
                     -- we have a trinket
                 else
                     local spell, _ = SecureCmdOptionParse(etc)
@@ -555,7 +555,7 @@ function GSE.UpdateIcon(self, reseticon)
             WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
         end
     end
-    if spellinfo.iconID then
+    if spellinfo and spellinfo.iconID then
         if WeakAuras then
             WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
         end
