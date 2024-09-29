@@ -300,7 +300,7 @@ local function listSequences()
     local names = GSE.GetSequenceNames()
     local cclassid = tonumber(-1)
     local cspecid = tonumber(-1)
-    for k, _ in GSE.pairsByKeys(names) do
+    for k, _ in GSE.pairsByKeys(names, GSE.AlphabeticalTableSortAlgorithm) do
         local elements = GSE.split(k, ",")
         local tclassid = tonumber(elements[1])
         local specid = tonumber(elements[2])
