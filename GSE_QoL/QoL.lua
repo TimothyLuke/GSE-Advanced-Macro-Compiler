@@ -278,8 +278,27 @@ GSE.GUIAdvancedExport = function(exportframe)
     HeaderRow:SetLayout("Flow")
     HeaderRow:SetFullWidth(true)
     local SequenceDropDown = AceGUI:Create("Dropdown")
-    for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-        SequenceDropDown:AddItem(k, k)
+    local sid, cid = GSE.GetCurrentClassID(), GSE.GetCurrentClassID()
+    for k, v in GSE.pairsByKeys(GSE.GetSequenceNames(), GSE.AlphabeticalTableSortAlgorithm) do
+        local elements = GSE.split(k, ",")
+        local classid, specid = tonumber(elements[1]), tonumber(elements[2])
+        if cid ~= classid then
+            local val = GSE.GetClassName(classid)
+            local key = classid .. val
+
+            SequenceDropDown:AddItem(key, val)
+            SequenceDropDown:SetItemDisabled(key, true)
+            cid = classid
+        end
+        if sid ~= specid then
+            local val = select(2, GetSpecializationInfoByID(specid))
+            local key = specid .. val
+
+            SequenceDropDown:AddItem(key, val)
+            SequenceDropDown:SetItemDisabled(key, true)
+            sid = specid
+        end
+        SequenceDropDown:AddItem(v, v)
     end
     for k, _ in pairs(GSESequences[0]) do
         SequenceDropDown:AddItem(k, k)
