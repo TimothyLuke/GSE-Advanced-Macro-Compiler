@@ -37,7 +37,7 @@ GSE.PlayerEntered = false
 GSE.WagoAnalytics:Switch("Patron", GSE.Patron)
 local L = GSE.L
 local Statics = GSE.Static
-local GNOME = "GSE"
+local GNOME = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 
 -- Initialisation Functions
 --- Checks for nil or empty variables.
@@ -64,10 +64,6 @@ local gameversion, _, _, _, _, buildType = GetBuildInfo()
 local majorVersion = GSE.split(gameversion, ".")
 
 GSE.GameMode = tonumber(majorVersion[1])
-if GSE.GameMode <= 10 then
-    print(L["This version of GSE is incompatabile with this version of the game."])
-    return
-end
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
@@ -150,14 +146,11 @@ function GSE.PrintDebugMessage(message, module)
         end
     end
     if module == Statics.SequenceDebug then
-        determinationOutputDestination(
-            message,
-            CommandColour .. GNOME .. ":|r " .. AuthorColour .. L["<SEQUENCEDEBUG> |r "]
-        )
+        determinationOutputDestination(message, GNOME .. ":|r " .. AuthorColour .. L["<SEQUENCEDEBUG> |r "])
     elseif Debug and module ~= Statics.SequenceDebug and DebugModules[module] == true then
         determinationOutputDestination(
-            CommandColour ..
-                (GSE.isEmpty(module) and GNOME or module) .. ":|r " .. AuthorColour .. L["<DEBUG> |r "] .. message
+            (GSE.isEmpty(module) and GNOME or GNOME .. ": " .. CommandColour .. module) ..
+                "|r " .. AuthorColour .. L["<DEBUG> |r "] .. message
         )
     end
 end

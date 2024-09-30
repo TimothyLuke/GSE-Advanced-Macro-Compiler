@@ -93,18 +93,30 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
         local elements = GSE.split(action, "-")
 
         local foundskill = false
-        local spell
+        if GSE.GameMode > 10 then
+            local spell
 
-        local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
-        if found then
-            foundskill = true
-            spell = C_Spell.GetSpellInfo(elements[6]).name
-        end
-        if foundskill then
-            if GSE.RecorderActive then
-                GSE.GUIRecordFrame.RecordSequenceBox:SetText(
-                    GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. spell .. "\n"
-                )
+            local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
+            if found then
+                foundskill = true
+                spell = C_Spell.GetSpellInfo(elements[6]).name
+            end
+            if foundskill then
+                if GSE.RecorderActive then
+                    GSE.GUIRecordFrame.RecordSequenceBox:SetText(
+                        GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. spell .. "\n"
+                    )
+                end
+            end
+        else
+            local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
+            local fskilltype, fspellid = GetSpellBookItemInfo(spell)
+            if not GSE.isEmpty(fskilltype) then
+                if GSE.RecorderActive then
+                    GSE.GUIRecordFrame.RecordSequenceBox:SetText(
+                        GSE.GUIRecordFrame.RecordSequenceBox:GetText() .. "/cast " .. spell .. "\n"
+                    )
+                end
             end
         end
     end

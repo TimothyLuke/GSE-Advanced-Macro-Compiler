@@ -32,15 +32,21 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
+    -- Check for Classic WoW
     local classid = 0
-    local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
-    if specid <= 13 then
-        classid = specid
+    if GSE.GameMode < 5 then
+        -- Classic WoW
+        classid = Statics.SpecIDClassList[specid]
     else
-        for i = 1, 13, 1 do
-            local _, st, _ = GetClassInfo(i)
-            if class == st then
-                classid = i
+        local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
+        if specid <= 13 then
+            classid = specid
+        else
+            for i = 1, 13, 1 do
+                local _, st, _ = GetClassInfo(i)
+                if class == st then
+                    classid = i
+                end
             end
         end
     end

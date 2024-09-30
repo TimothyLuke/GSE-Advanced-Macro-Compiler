@@ -82,7 +82,7 @@ Statics.CleanStrings = {
     -- [54] = "/use 5",
     [101] = "\n\n"
 }
-
+Statics.GSEString = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GS-CoreLoaded"
 
@@ -92,7 +92,7 @@ Statics.SystemVariables = {
     end
 }
 
-Statics.SpecIDClassList = {
+GSE.SpecIDClassList = {
     [0] = 0,
     [1] = 1,
     [2] = 2,
@@ -149,14 +149,16 @@ Statics.SpecIDClassList = {
 }
 
 local function determineSpecializationName(specID)
-    local _, specname = GetSpecializationInfoByID(specID)
-    return specname
+    if GSE.GameMode < 7 then
+        return GSE.SpecIDClassList[specID]
+    else
+        local _, specname = GetSpecializationInfoByID(specID)
+        return specname
+    end
 end
 
 local function determineClassName(specID)
-    local specname
-    specname = GetClassInfo(specID)
-    return specname
+    return C_CreatureInfo.GetClassInfo(specID) and C_CreatureInfo.GetClassInfo(specID).className or nil
 end
 
 function GSE.GetClassName(classID)
@@ -165,61 +167,94 @@ end
 
 Statics.SpecIDList = {}
 
-Statics.SpecIDList = {
-    [0] = L["Global"],
-    [1] = determineClassName(1),
-    [2] = determineClassName(2),
-    [3] = determineClassName(3),
-    [4] = determineClassName(4),
-    [5] = determineClassName(5),
-    [6] = determineClassName(6),
-    [7] = determineClassName(7),
-    [8] = determineClassName(8),
-    [9] = determineClassName(9),
-    [10] = determineClassName(10),
-    [11] = determineClassName(11),
-    [12] = determineClassName(12),
-    [13] = determineClassName(13),
-    [62] = determineSpecializationName(62),
-    [63] = determineSpecializationName(63),
-    [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
-    [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
-    [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
-    [70] = determineSpecializationName(70),
-    [71] = determineSpecializationName(71),
-    [72] = determineSpecializationName(72),
-    [73] = determineSpecializationName(73),
-    [102] = determineSpecializationName(102),
-    [103] = determineSpecializationName(103),
-    [104] = determineSpecializationName(104),
-    [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
-    [250] = determineSpecializationName(250),
-    [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
-    [252] = determineSpecializationName(252),
-    [253] = determineSpecializationName(253),
-    [254] = determineSpecializationName(254),
-    [255] = determineSpecializationName(255),
-    [256] = determineSpecializationName(256),
-    [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
-    [258] = determineSpecializationName(258),
-    [259] = determineSpecializationName(259),
-    [260] = determineSpecializationName(260),
-    [261] = determineSpecializationName(261),
-    [262] = determineSpecializationName(262),
-    [263] = determineSpecializationName(263),
-    [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
-    [265] = determineSpecializationName(265),
-    [266] = determineSpecializationName(266),
-    [267] = determineSpecializationName(267),
-    [268] = determineSpecializationName(268),
-    [269] = determineSpecializationName(269),
-    [270] = determineSpecializationName(270),
-    [577] = determineSpecializationName(577),
-    [581] = determineSpecializationName(581),
-    [1467] = determineSpecializationName(1467),
-    [1468] = determineSpecializationName(1468),
-    [1473] = determineSpecializationName(1473)
-}
+if GSE.GameMode <= 4 then
+    Statics.SpecIDClassList = {
+        [0] = 0,
+        [1] = 1,
+        [2] = 2,
+        [3] = 3,
+        [4] = 4,
+        [5] = 5,
+        [6] = 6,
+        [7] = 7,
+        [8] = 8,
+        [9] = 9,
+        --[10] = 10,
+        [11] = 11
+    }
+    Statics.SpecIDList = {
+        [0] = L["Global"],
+        [1] = determineClassName(1),
+        [2] = determineClassName(2),
+        [3] = determineClassName(3),
+        [4] = determineClassName(4),
+        [5] = determineClassName(5),
+        [6] = determineClassName(6),
+        [7] = determineClassName(7),
+        [8] = determineClassName(8),
+        [9] = determineClassName(9),
+        [11] = determineClassName(11)
+    }
+    if GSE.GameMode >= 3 then
+        Statics.SpecIDList[6] = determineClassName(6)
+    end
+else
+    Statics.SpecIDList = {
+        [0] = L["Global"],
+        [1] = determineClassName(1),
+        [2] = determineClassName(2),
+        [3] = determineClassName(3),
+        [4] = determineClassName(4),
+        [5] = determineClassName(5),
+        [6] = determineClassName(6),
+        [7] = determineClassName(7),
+        [8] = determineClassName(8),
+        [9] = determineClassName(9),
+        [10] = determineClassName(10),
+        [11] = determineClassName(11),
+        [12] = determineClassName(12),
+        [13] = determineClassName(13),
+        [62] = determineSpecializationName(62),
+        [63] = determineSpecializationName(63),
+        [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
+        [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
+        [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
+        [70] = determineSpecializationName(70),
+        [71] = determineSpecializationName(71),
+        [72] = determineSpecializationName(72),
+        [73] = determineSpecializationName(73),
+        [102] = determineSpecializationName(102),
+        [103] = determineSpecializationName(103),
+        [104] = determineSpecializationName(104),
+        [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
+        [250] = determineSpecializationName(250),
+        [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
+        [252] = determineSpecializationName(252),
+        [253] = determineSpecializationName(253),
+        [254] = determineSpecializationName(254),
+        [255] = determineSpecializationName(255),
+        [256] = determineSpecializationName(256),
+        [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
+        [258] = determineSpecializationName(258),
+        [259] = determineSpecializationName(259),
+        [260] = determineSpecializationName(260),
+        [261] = determineSpecializationName(261),
+        [262] = determineSpecializationName(262),
+        [263] = determineSpecializationName(263),
+        [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
+        [265] = determineSpecializationName(265),
+        [266] = determineSpecializationName(266),
+        [267] = determineSpecializationName(267),
+        [268] = determineSpecializationName(268),
+        [269] = determineSpecializationName(269),
+        [270] = determineSpecializationName(270),
+        [577] = determineSpecializationName(577),
+        [581] = determineSpecializationName(581),
+        [1467] = determineSpecializationName(1467),
+        [1468] = determineSpecializationName(1468),
+        [1473] = determineSpecializationName(1473)
+    }
+end
 
 Statics.SpecIDHashList = {}
 for k, v in pairs(Statics.SpecIDList) do

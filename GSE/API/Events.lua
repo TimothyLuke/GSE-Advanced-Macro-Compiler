@@ -99,6 +99,23 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.UnsavedOptions.ReloadQueued = nil
     GSE.ReloadSequences()
 end
+
+local function GetSpec()
+    if GSE.GameMode < 3 then
+        return "1"
+    else
+        return tostring(GetSpecialization())
+    end
+end
+
+local function playerSpec()
+    if GSE.GameMode < 3 then
+        return 1
+    else
+        return PlayerUtil.GetCurrentSpecID()
+    end
+end
+
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
 local function overrideActionButton(Button, Sequence, force)
@@ -190,14 +207,14 @@ local function LoadOverrides(force)
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
         GSE_C["ActionBarBinds"]["Specialisations"] = {}
     end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][tostring(GetSpecialization())]) then
-        GSE_C["ActionBarBinds"]["Specialisations"][tostring(GetSpecialization())] = {}
+    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
+        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
         GSE_C["ActionBarBinds"]["LoadOuts"] = {}
     end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())]) then
-        GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())] = {}
+    if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()]) then
+        GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] = {}
     end
     if not InCombatLockdown() then
         for k, _ in pairs(GSE.ButtonOverrides) do
@@ -215,26 +232,26 @@ local function LoadOverrides(force)
         end
         GSE.ButtonOverrides = {}
 
-        for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][tostring(GetSpecialization())]) do
+        for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
             overrideActionButton(k, v, force)
         end
+        if C_CLassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+            local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
 
-        local selected =
-            PlayerUtil.GetCurrentSpecID() and
-            tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()))
-
-        if
-            selected and GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())] and
-                GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())][selected]
-         then
-            GSE.PrintDebugMessage("changing from ", tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
-            for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(GetSpecialization())][selected]) do
-                overrideActionButton(k, v, force)
-                GSE.ButtonOverrides[v] = k
+            if
+                selected and GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] and
+                    GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]
+             then
+                GSE.PrintDebugMessage("changing from ", tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
+                    overrideActionButton(k, v, force)
+                    GSE.ButtonOverrides[v] = k
+                end
             end
         end
     end
 end
+
 local function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
@@ -242,28 +259,29 @@ local function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
-    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
-        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
+
+    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
+        GSE_C["KeyBindings"][GetSpec()] = {}
     end
 
-    for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]) do
+    for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
             SetBindingClick(k, v, _G[v])
         end
     end
 
     if payload and not InCombatLockdown() then
-        local selected =
-            PlayerUtil.GetCurrentSpecID() and
-            tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID()))
-        if
-            selected and GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"] and
-                GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]
-         then
-            GSE.PrintDebugMessage("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
-            for k, v in pairs(GSE_C["KeyBindings"][tostring(GetSpecialization())]["LoadOuts"][selected]) do
-                SetBinding(k)
-                SetBindingClick(k, v, _G[v])
+        if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+            local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
+            if
+                selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
+                    GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
+             then
+                GSE.PrintDebugMessage("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
+                    SetBinding(k)
+                    SetBindingClick(k, v, _G[v])
+                end
             end
         end
     end
@@ -334,10 +352,9 @@ function GSE:ADDON_LOADED(event, addon)
         -- Register the Sample Macros
         if not GSEOptions.HideLoginMessage then
             GSE.Print(
-                GSEOptions.AuthorColour ..
-                    L["GSE: Advanced Macro Compiler loaded.|r  Type "] ..
-                        GSEOptions.CommandColour .. L["/gse help|r to get started."],
-                GNOME
+                L["Advanced Macro Compiler loaded.|r  Type "] ..
+                    GSEOptions.CommandColour .. L["/gse help|r to get started."],
+                Statics.GSEString
             )
         end
 
@@ -454,8 +471,8 @@ function GSE:PLAYER_LOGOUT()
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
-    if GSE.isEmpty(GSE_C["KeyBindings"][tostring(GetSpecialization())]) then
-        GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
+    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
+        GSE_C["KeyBindings"][GetSpec()] = {}
     end
     if not InCombatLockdown() then
         LoadKeyBindings(GSE.PlayerEntered)
@@ -576,15 +593,24 @@ GSE:RegisterEvent("PLAYER_LEVEL_UP")
 GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 
-GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
-GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
-GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
-GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
+if GSE.GameMode > 8 then
+    GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    GSE:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+    GSE:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
+end
 
-GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
+if GSE.GameMode > 10 then
+    GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
+    GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
+    GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
+    GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
+end
+
+if GSE.GameMode <= 3 then
+    GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
+    GSE:RegisterEvent("SPELLS_CHANGED")
+end
 function GSE:OnEnable()
     GSE.StartOOCTimer()
 end

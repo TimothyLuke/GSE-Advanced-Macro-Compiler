@@ -5,225 +5,227 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
-GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
-    local playerSpells = {}
+if GSE.GameMode > 10 then
+    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
+        local playerSpells = {}
 
-    -- local function spellFilter(self, spellID)
-    --     return playerSpells[spellID]
-    -- end
+        -- local function spellFilter(self, spellID)
+        --     return playerSpells[spellID]
+        -- end
 
-    local function loadPlayerSpells()
-        table.wipe(playerSpells)
+        local function loadPlayerSpells()
+            table.wipe(playerSpells)
 
-        for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
-            local lineinfo = C_SpellBook.GetSpellBookSkillLineInfo(tab)
-            local offset = lineinfo.itemIndexOffset
+            for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
+                local lineinfo = C_SpellBook.GetSpellBookSkillLineInfo(tab)
+                local offset = lineinfo.itemIndexOffset
 
-            for i = 0, lineinfo.numSpellBookItems do
-                local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
+                for i = 0, lineinfo.numSpellBookItems do
+                    local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
 
-                local spellName = spellinfo.name
-                --local spellID = spellinfo.spellID
-                local offspec = spellinfo.isOffSpec
-                local passive = spellinfo.isPassive
-                if not passive and not offspec and spellName then
-                    table.insert(playerSpells, spellName)
+                    local spellName = spellinfo.name
+                    --local spellID = spellinfo.spellID
+                    local offspec = spellinfo.isOffSpec
+                    local passive = spellinfo.isPassive
+                    if not passive and not offspec and spellName then
+                        table.insert(playerSpells, spellName)
+                    end
                 end
             end
+            table.sort(playerSpells)
         end
-        table.sort(playerSpells)
-    end
 
-    if GSE.isEmpty(action.type) then
-        action.type = "spell"
-    end
-
-    local spellEditBox = AceGUI:Create("EditBox")
-
-    spellEditBox:SetWidth(250)
-    spellEditBox:DisableButton(true)
-
-    loadPlayerSpells()
-
-    if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
-        sequence.Macros[version].Actions[keyPath].type = "spell"
-    end
-    if GSE.isEmpty(action.type) then
-        action.type = "spell"
-    end
-
-    local spelltext
-
-    if action.toy then
-        spelltext = action.toy
-        spellEditBox:SetLabel(L["Toy"])
-    elseif action.item then
-        spelltext = action.item
-        spellEditBox:SetLabel(L["Item"])
-    elseif action.macro then
-        if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
-            spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
-        else
-            spelltext = action.macro
+        if GSE.isEmpty(action.type) then
+            action.type = "spell"
         end
-    elseif action.action then
-        spellEditBox:SetLabel(L["Pet Ability"])
-        spelltext = action.action
-    else
-        spellEditBox:SetLabel(L["Spell"])
-        local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
-        if translatedSpell then
-            spelltext = translatedSpell
-        else
-            spelltext = action.spell
-        end
-    end
 
-    spellEditBox:SetText(spelltext)
-    --local compiledAction = GSE.CompileAction(action, sequence.Macros[version])
-    spellEditBox:SetCallback(
-        "OnTextChanged",
-        function(sel, object, value)
-            if sequence.Macros[version].Actions[keyPath].type == "pet" then
-                sequence.Macros[version].Actions[keyPath].action = value
-                sequence.Macros[version].Actions[keyPath].spell = nil
-                sequence.Macros[version].Actions[keyPath].macro = nil
-                sequence.Macros[version].Actions[keyPath].item = nil
-                sequence.Macros[version].Actions[keyPath].toy = nil
-            elseif sequence.Macros[version].Actions[keyPath].type == "item" then
-                sequence.Macros[version].Actions[keyPath].item = value
-                sequence.Macros[version].Actions[keyPath].spell = nil
-                sequence.Macros[version].Actions[keyPath].action = nil
-                sequence.Macros[version].Actions[keyPath].macro = nil
-                sequence.Macros[version].Actions[keyPath].toy = nil
-            elseif sequence.Macros[version].Actions[keyPath].type == "toy" then
-                sequence.Macros[version].Actions[keyPath].toy = value
-                sequence.Macros[version].Actions[keyPath].spell = nil
-                sequence.Macros[version].Actions[keyPath].action = nil
-                sequence.Macros[version].Actions[keyPath].macro = nil
-                sequence.Macros[version].Actions[keyPath].item = nil
+        local spellEditBox = AceGUI:Create("EditBox")
+
+        spellEditBox:SetWidth(250)
+        spellEditBox:DisableButton(true)
+
+        loadPlayerSpells()
+
+        if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
+            sequence.Macros[version].Actions[keyPath].type = "spell"
+        end
+        if GSE.isEmpty(action.type) then
+            action.type = "spell"
+        end
+
+        local spelltext
+
+        if action.toy then
+            spelltext = action.toy
+            spellEditBox:SetLabel(L["Toy"])
+        elseif action.item then
+            spelltext = action.item
+            spellEditBox:SetLabel(L["Item"])
+        elseif action.macro then
+            if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
+                spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
             else
-                local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
-                if storedValue then
-                    sequence.Macros[version].Actions[keyPath].spell = storedValue
+                spelltext = action.macro
+            end
+        elseif action.action then
+            spellEditBox:SetLabel(L["Pet Ability"])
+            spelltext = action.action
+        else
+            spellEditBox:SetLabel(L["Spell"])
+            local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
+            if translatedSpell then
+                spelltext = translatedSpell
+            else
+                spelltext = action.spell
+            end
+        end
+
+        spellEditBox:SetText(spelltext)
+        --local compiledAction = GSE.CompileAction(action, sequence.Macros[version])
+        spellEditBox:SetCallback(
+            "OnTextChanged",
+            function(sel, object, value)
+                if sequence.Macros[version].Actions[keyPath].type == "pet" then
+                    sequence.Macros[version].Actions[keyPath].action = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif sequence.Macros[version].Actions[keyPath].type == "item" then
+                    sequence.Macros[version].Actions[keyPath].item = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
+                elseif sequence.Macros[version].Actions[keyPath].type == "toy" then
+                    sequence.Macros[version].Actions[keyPath].toy = value
+                    sequence.Macros[version].Actions[keyPath].spell = nil
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
                 else
-                    sequence.Macros[version].Actions[keyPath].spell = value
+                    local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
+                    if storedValue then
+                        sequence.Macros[version].Actions[keyPath].spell = storedValue
+                    else
+                        sequence.Macros[version].Actions[keyPath].spell = value
+                    end
+                    sequence.Macros[version].Actions[keyPath].action = nil
+                    sequence.Macros[version].Actions[keyPath].macro = nil
+                    sequence.Macros[version].Actions[keyPath].item = nil
+                    sequence.Macros[version].Actions[keyPath].toy = nil
                 end
+
+                --compiledAction = GSE.CompileAction(returnAction, sequence.Macros[version])
+            end
+        )
+        spellEditBox:SetCallback(
+            "OnEditFocusLost",
+            function()
+            end
+        )
+
+        local macroEditBox = AceGUI:Create("MultiLineEditBox")
+        macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
+        macroEditBox:DisableButton(true)
+        macroEditBox:SetNumLines(5)
+        macroEditBox:SetRelativeWidth(0.5)
+        macroEditBox:SetText(spelltext)
+        macroEditBox:SetCallback(
+            "OnTextChanged",
+            function(sel, object, value)
+                value = GSE.UnEscapeString(value)
+                if string.sub(value, 1, 1) == "/" then
+                    sequence.Macros[version].Actions[keyPath].macro =
+                        GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
+                else
+                    sequence.Macros[version].Actions[keyPath].macro = value
+                end
+                sequence.Macros[version].Actions[keyPath].spell = nil
                 sequence.Macros[version].Actions[keyPath].action = nil
-                sequence.Macros[version].Actions[keyPath].macro = nil
                 sequence.Macros[version].Actions[keyPath].item = nil
                 sequence.Macros[version].Actions[keyPath].toy = nil
-            end
-
-            --compiledAction = GSE.CompileAction(returnAction, sequence.Macros[version])
-        end
-    )
-    spellEditBox:SetCallback(
-        "OnEditFocusLost",
-        function()
-        end
-    )
-
-    local macroEditBox = AceGUI:Create("MultiLineEditBox")
-    macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
-    macroEditBox:DisableButton(true)
-    macroEditBox:SetNumLines(5)
-    macroEditBox:SetRelativeWidth(0.5)
-    macroEditBox:SetText(spelltext)
-    macroEditBox:SetCallback(
-        "OnTextChanged",
-        function(sel, object, value)
-            value = GSE.UnEscapeString(value)
-            if string.sub(value, 1, 1) == "/" then
-                sequence.Macros[version].Actions[keyPath].macro = GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
-            else
-                sequence.Macros[version].Actions[keyPath].macro = value
-            end
-            sequence.Macros[version].Actions[keyPath].spell = nil
-            sequence.Macros[version].Actions[keyPath].action = nil
-            sequence.Macros[version].Actions[keyPath].item = nil
-            sequence.Macros[version].Actions[keyPath].toy = nil
-            local compiledmacrotext =
-                GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-            local lenMacro = string.len(compiledmacrotext)
-            compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
-            compiledMacro:SetText(compiledmacrotext)
-        end
-    )
-
-    if GSE.Patron then
-        spellEditBox.editbox:SetScript(
-            "OnTabPressed",
-            function(widget, button, down)
-                -- if button == "RightButton" then
-                MenuUtil.CreateContextMenu(
-                    spellEditBox,
-                    function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Insert Spell"])
-                        for _, v in pairs(playerSpells) do
-                            rootDescription:CreateButton(
-                                v,
-                                function()
-                                    spellEditBox:SetText(v)
-                                    sequence.Macros[version].Actions[keyPath].spell = v
-                                end
-                            )
-                        end
-
-                        rootDescription:CreateTitle(L["Insert GSE Variable"])
-                        for k, _ in pairs(GSEVariables) do
-                            rootDescription:CreateButton(
-                                k,
-                                function()
-                                    spellEditBox:SetText("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                                    sequence.Macros[version].Actions[keyPath].spell =
-                                        "\n" .. [[=GSE.V["]] .. k .. [["]()]]
-                                end
-                            )
-                        end
-                    end
-                )
+                local compiledmacrotext =
+                    GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                local lenMacro = string.len(compiledmacrotext)
+                compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
+                compiledMacro:SetText(compiledmacrotext)
             end
         )
 
-        macroEditBox.editBox:SetScript(
-            "OnTabPressed",
-            function(widget, button, down)
-                -- if button == "RightButton" then
-                MenuUtil.CreateContextMenu(
-                    spellEditBox,
-                    function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Insert Spell"])
-                        for _, v in pairs(playerSpells) do
-                            rootDescription:CreateButton(
-                                v,
-                                function()
-                                    macroEditBox.editBox:Insert(v)
-                                    sequence.Macros[version].Actions[keyPath].spell = v
-                                end
-                            )
-                        end
+        if GSE.Patron then
+            spellEditBox.editbox:SetScript(
+                "OnTabPressed",
+                function(widget, button, down)
+                    -- if button == "RightButton" then
+                    MenuUtil.CreateContextMenu(
+                        spellEditBox,
+                        function(ownerRegion, rootDescription)
+                            rootDescription:CreateTitle(L["Insert Spell"])
+                            for _, v in pairs(playerSpells) do
+                                rootDescription:CreateButton(
+                                    v,
+                                    function()
+                                        spellEditBox:SetText(v)
+                                        sequence.Macros[version].Actions[keyPath].spell = v
+                                    end
+                                )
+                            end
 
-                        rootDescription:CreateTitle(L["Insert GSE Variable"])
-                        for k, _ in pairs(GSEVariables) do
-                            rootDescription:CreateButton(
-                                k,
-                                function()
-                                    macroEditBox.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                                    sequence.Macros[version].Actions[keyPath].spell =
-                                        "\n" .. [[=GSE.V["]] .. k .. [["]()]]
-                                end
-                            )
+                            rootDescription:CreateTitle(L["Insert GSE Variable"])
+                            for k, _ in pairs(GSEVariables) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        spellEditBox:SetText("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                                        sequence.Macros[version].Actions[keyPath].spell =
+                                            "\n" .. [[=GSE.V["]] .. k .. [["]()]]
+                                    end
+                                )
+                            end
                         end
-                    end
-                )
-            end
-        )
+                    )
+                end
+            )
+
+            macroEditBox.editBox:SetScript(
+                "OnTabPressed",
+                function(widget, button, down)
+                    -- if button == "RightButton" then
+                    MenuUtil.CreateContextMenu(
+                        spellEditBox,
+                        function(ownerRegion, rootDescription)
+                            rootDescription:CreateTitle(L["Insert Spell"])
+                            for _, v in pairs(playerSpells) do
+                                rootDescription:CreateButton(
+                                    v,
+                                    function()
+                                        macroEditBox.editBox:Insert(v)
+                                        sequence.Macros[version].Actions[keyPath].spell = v
+                                    end
+                                )
+                            end
+
+                            rootDescription:CreateTitle(L["Insert GSE Variable"])
+                            for k, _ in pairs(GSEVariables) do
+                                rootDescription:CreateButton(
+                                    k,
+                                    function()
+                                        macroEditBox.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                                        sequence.Macros[version].Actions[keyPath].spell =
+                                            "\n" .. [[=GSE.V["]] .. k .. [["]()]]
+                                    end
+                                )
+                            end
+                        end
+                    )
+                end
+            )
+        end
+
+        return spellEditBox, macroEditBox
     end
-
-    return spellEditBox, macroEditBox
 end
-
 local function compileExport(exportTable, humanReadable)
     local exportstring =
         GSE.EncodeMessage(
@@ -290,13 +292,15 @@ GSE.GUIAdvancedExport = function(exportframe)
             SequenceDropDown:SetItemDisabled(key, true)
             cid = classid
         end
-        if sid ~= specid then
-            local val = select(2, GetSpecializationInfoByID(specid))
-            local key = specid .. val
+        if GetSpecializationInfoByID then
+            if sid ~= specid then
+                local val = select(2, GetSpecializationInfoByID(specid))
+                local key = specid .. val
 
-            SequenceDropDown:AddItem(key, val)
-            SequenceDropDown:SetItemDisabled(key, true)
-            sid = specid
+                SequenceDropDown:AddItem(key, val)
+                SequenceDropDown:SetItemDisabled(key, true)
+                sid = specid
+            end
         end
         SequenceDropDown:AddItem(v, v)
     end

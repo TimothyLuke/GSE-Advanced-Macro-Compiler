@@ -119,7 +119,11 @@ keybindingframe.frame:SetScript(
 local function showKeybind(bind, button, specialization, loadout, type)
     if type == "KB" then
         if not specialization then
-            specialization = GetSpecialization()
+            if GSE.GameMode > 10 then
+                specialization = GetSpecialization()
+            else
+                specialization = 1
+            end
         end
         local initialbind = bind
         rightContainer:ReleaseChildren()
@@ -166,13 +170,15 @@ local function showKeybind(bind, button, specialization, loadout, type)
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
         }
-        for _, v in ipairs(
-            C_ClassTalents.GetConfigIDsBySpecID(
-                GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
-            )
-        ) do
-            local loadoutinfo = C_Traits.GetConfigInfo(v)
-            loadouts[tostring(v)] = loadoutinfo.name
+        if C_ClassTalents then
+            for _, v in ipairs(
+                C_ClassTalents.GetConfigIDsBySpecID(
+                    GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
+                )
+            ) do
+                local loadoutinfo = C_Traits.GetConfigInfo(v)
+                loadouts[tostring(v)] = loadoutinfo.name
+            end
         end
         TalentLoadOutList:SetList(loadouts)
 
@@ -287,7 +293,11 @@ local function showKeybind(bind, button, specialization, loadout, type)
         rightContainer:AddChild(row2)
     elseif type == "AO" then
         if not specialization then
-            specialization = GetSpecialization()
+            if GSE.GameMode > 10 then
+                specialization = GetSpecialization()
+            else
+                specialization = 1
+            end
         end
         local initialbind = bind
         rightContainer:ReleaseChildren()
@@ -419,13 +429,15 @@ local function showKeybind(bind, button, specialization, loadout, type)
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
         }
-        for _, v in ipairs(
-            C_ClassTalents.GetConfigIDsBySpecID(
-                GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
-            )
-        ) do
-            local loadoutinfo = C_Traits.GetConfigInfo(v)
-            loadouts[tostring(v)] = loadoutinfo.name
+        if C_ClassTalents then
+            for _, v in ipairs(
+                C_ClassTalents.GetConfigIDsBySpecID(
+                    GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specialization)
+                )
+            ) do
+                local loadoutinfo = C_Traits.GetConfigInfo(v)
+                loadouts[tostring(v)] = loadoutinfo.name
+            end
         end
         TalentLoadOutList:SetList(loadouts)
 
@@ -673,25 +685,26 @@ local function buildKeybindMenu()
     local specid = 0
     for k, v in pairs(GSE_C["KeyBindings"]) do
         local currentspecid = tonumber(k)
-        if specid ~= currentspecid then
-            specid = currentspecid
-            local _, speclabel = GetSpecializationInfo(currentspecid)
+        if GetSpecializationInfo then
+            if specid ~= currentspecid then
+                specid = currentspecid
+                local _, speclabel = GetSpecializationInfo(currentspecid)
 
-            local sectionspacer1 = AceGUI:Create("Label")
-            sectionspacer1:SetText(" ")
-            sectionspacer1:SetFont(fontName, 4, fontFlags)
-            leftscroll:AddChild(sectionspacer1)
-            local sectionheader = AceGUI:Create("Label")
-            sectionheader:SetText(speclabel)
-            sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
-            sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
-            leftscroll:AddChild(sectionheader)
-            local sectionspacer2 = AceGUI:Create("Label")
-            sectionspacer2:SetText(" ")
-            sectionspacer2:SetFont(fontName, 2, fontFlags)
-            leftscroll:AddChild(sectionspacer2)
+                local sectionspacer1 = AceGUI:Create("Label")
+                sectionspacer1:SetText(" ")
+                sectionspacer1:SetFont(fontName, 4, fontFlags)
+                leftscroll:AddChild(sectionspacer1)
+                local sectionheader = AceGUI:Create("Label")
+                sectionheader:SetText(speclabel)
+                sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
+                sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
+                leftscroll:AddChild(sectionheader)
+                local sectionspacer2 = AceGUI:Create("Label")
+                sectionspacer2:SetText(" ")
+                sectionspacer2:SetFont(fontName, 2, fontFlags)
+                leftscroll:AddChild(sectionspacer2)
+            end
         end
-
         for i, j in pairs(v) do
             if i ~= "LoadOuts" then
                 buildKeybindHeader(k, i, j)
@@ -740,25 +753,26 @@ local function buildKeybindMenu()
 
     for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
         local currentspecid = tonumber(k)
-        if specid ~= currentspecid then
-            specid = currentspecid
-            local _, speclabel = GetSpecializationInfo(currentspecid)
+        if GetSpecializationInfo then
+            if specid ~= currentspecid then
+                specid = currentspecid
+                local _, speclabel = GetSpecializationInfo(currentspecid)
 
-            local sectionspacer1 = AceGUI:Create("Label")
-            sectionspacer1:SetText(" ")
-            sectionspacer1:SetFont(fontName, 4, fontFlags)
-            leftscroll:AddChild(sectionspacer1)
-            local sectionheader = AceGUI:Create("Label")
-            sectionheader:SetText(speclabel)
-            sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
-            sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
-            leftscroll:AddChild(sectionheader)
-            local sectionspacer2 = AceGUI:Create("Label")
-            sectionspacer2:SetText(" ")
-            sectionspacer2:SetFont(fontName, 2, fontFlags)
-            leftscroll:AddChild(sectionspacer2)
+                local sectionspacer1 = AceGUI:Create("Label")
+                sectionspacer1:SetText(" ")
+                sectionspacer1:SetFont(fontName, 4, fontFlags)
+                leftscroll:AddChild(sectionspacer1)
+                local sectionheader = AceGUI:Create("Label")
+                sectionheader:SetText(speclabel)
+                sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
+                sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
+                leftscroll:AddChild(sectionheader)
+                local sectionspacer2 = AceGUI:Create("Label")
+                sectionspacer2:SetText(" ")
+                sectionspacer2:SetFont(fontName, 2, fontFlags)
+                leftscroll:AddChild(sectionspacer2)
+            end
         end
-
         for i, j in pairs(v) do
             buildKeybindHeader(k, i, j, nil, "AO")
         end

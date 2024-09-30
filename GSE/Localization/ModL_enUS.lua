@@ -546,7 +546,7 @@ L[
         "/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
     ] = true
 L["/gse help|r to get started."] = true
-L["GSE: Advanced Macro Compiler loaded.|r  Type "] = true
+L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["/gse|r to get started."] = true
 L[
         "/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
