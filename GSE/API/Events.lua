@@ -235,7 +235,7 @@ local function LoadOverrides(force)
         for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
             overrideActionButton(k, v, force)
         end
-        if C_CLassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+        if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
             local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
 
             if
