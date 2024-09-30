@@ -223,3 +223,12 @@ function GSE.DebugProfile(event)
   end
   GSE.ProfileStop = currentTimeStop
 end
+
+C_CreatureInfo = {}
+function C_CreatureInfo.GetClassInfo()
+  return {
+    className = "Druid",
+    classFile = "DRUID",
+    classID = 11
+  }
+end
