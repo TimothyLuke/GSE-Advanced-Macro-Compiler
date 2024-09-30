@@ -68,9 +68,8 @@ function GSE.GUILoadEditor(key, recordedstring)
         if spellid then
           local action = {
             ["Type"] = Statics.Actions.Action,
-            ["type"] = "spell",
-            ["spell"] = spellid,
-            ["unit"] = "target"
+            ["type"] = "macro",
+            ["macro"] = "/cast " .. spellid
           }
           table.insert(recordedMacro, action)
         end
