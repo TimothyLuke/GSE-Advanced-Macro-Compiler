@@ -278,7 +278,7 @@ local function LoadKeyBindings(payload)
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
              then
                 GSE.PrintDebugMessage(
-                    "changing from " .. payload .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
+                    "changing from " .. tostring(payload) .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
                     "EVENTS"
                 )
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
