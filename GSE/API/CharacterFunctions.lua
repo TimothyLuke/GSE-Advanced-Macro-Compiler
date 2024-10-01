@@ -129,7 +129,7 @@ end
 
 --- Experimental attempt to load a WeakAuras string.
 function GSE.LoadWeakAura(str)
-    if IsAddOnLoaded("WeakAuras") then
+    if C_AddOns.IsAddOnLoaded("WeakAuras") then
         WeakAuras.OpenOptions()
         WeakAuras.OpenOptions()
         WeakAuras.Import(str)

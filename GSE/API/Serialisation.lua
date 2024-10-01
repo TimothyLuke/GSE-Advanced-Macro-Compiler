@@ -405,7 +405,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
         end
     end
     local success, t = GSE.DecodeMessage(message)
-    if success then
+    if success and t then
         if t.Command == "GS-E_VERSIONCHK" then
             if not GSE.old then
                 GSE.performVersionCheck(t.Version)
@@ -467,7 +467,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                         ["enUS"] = {}
                     }
                 end
-                if not GSE.isEmpty(t.cache) and table.getn(t.cache) > 0 then
+                if not GSE.isEmpty(t.cache) and #t.cache > 0 then
                     for locale, spells in pairs(t.cache) do
                         GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
                         for k, v in pairs(spells) do
@@ -534,7 +534,10 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
                     local toon = C_BattleNet.GetFriendNumGameAccounts(i)
                     for j = 1, toon do
                         local gameAccountInfo = C_BattleNet.GetFriendGameAccountInfo(i, j)
-                        if gameAccountInfo.characterName == trimmedPlayer and gameAccountInfo.clientProgram == "WoW" then
+                        if
+                            gameAccountInfo and gameAccountInfo.characterName == trimmedPlayer and
+                                gameAccountInfo.clientProgram == "WoW"
+                         then
                             return false, newMsg, player, l, cs, t, flag, channelId, ... -- Player is a real id friend, allow it
                         end
                     end

@@ -84,8 +84,10 @@ function GSE.GUILoadEditor(key, recordedstring)
     sequenceName = elements[3]
     --sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
     local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
-    sequence = seq[2]
-    GSE.GUIEditFrame.NewSequence = false
+    if seq then
+      sequence = seq[2]
+      GSE.GUIEditFrame.NewSequence = false
+    end
   end
   if GSE.isEmpty(sequence.WeakAuras) then
     sequence.WeakAuras = {}

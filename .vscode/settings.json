@@ -32,9 +32,22 @@
     "CastingInfo",
     "StaticPopupDialogs",
     "StaticPopup_Show",
-    "MenuUtil"
+    "MenuUtil",
+    "NOT_BOUND",
+    "Settings",
+    "PlayerUtil",
+    "ConsolePort",
+    "Bartender4",
+    "GetSpellBookItemInfo",
+    "PlayerSpellsFrame",
+    "GSE"
   ],
-  "Lua.diagnostics.disable": ["undefined-field", "inject-field", "invisible"],
+  "Lua.diagnostics.disable": [
+    "undefined-field",
+    "inject-field",
+    "invisible",
+    "param-type-mismatch"
+  ],
   "luahelper.Warn.CheckLocalNoUse": true,
   "luahelper.Warn.CheckNoUseAssign": true
 }

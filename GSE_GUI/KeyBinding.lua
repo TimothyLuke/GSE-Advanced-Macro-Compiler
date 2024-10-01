@@ -682,7 +682,7 @@ local function buildKeybindMenu()
     KeyBindheader:SetFont(fontName, fontHeight + 6, fontFlags)
     KeyBindheader:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
     leftscroll:AddChild(KeyBindheader)
-    local specid = 0
+    local specid = tonumber(0)
     for k, v in pairs(GSE_C["KeyBindings"]) do
         local currentspecid = tonumber(k)
         if GetSpecializationInfo then

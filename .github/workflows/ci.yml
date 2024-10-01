@@ -47,7 +47,8 @@ jobs:
           luarocks install busted
           luarocks install luacov
           luarocks install luacov-coveralls
-          luarocks install luadoc
+          luarocks install penlight
+          luarocks install ldoc
         # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
 
       - name: Run Busted UnitTests
@@ -90,7 +91,7 @@ jobs:
       - name: Parse and generate documentation
         run: |
           mkdir .pages
-          luadoc -d .pages/docs GSE/API/*.lua
+          ldoc -d .pages/docs GSE/API/*.lua
           cp pages/* .pages
 
       - name: Deploy API to GitHuib Pages🚀

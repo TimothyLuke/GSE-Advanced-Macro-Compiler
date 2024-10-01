@@ -296,7 +296,7 @@ end
 function GSE.ImportSerialisedSequence(importstring, forcereplace)
     local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
-    if decompresssuccess then
+    if decompresssuccess and actiontable then
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload
             for _, v in pairs(actiontable["Variables"]) do
@@ -337,7 +337,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             GSE.PrintDebugMessage(
                 string.format(
                     "tablerows: %s   type cell1 %s cell2 %s",
-                    table.getn(actiontable),
+                    #actiontable,
                     type(actiontable[1]),
                     type(actiontable[2])
                 ),
@@ -502,10 +502,9 @@ function GSE.ExportSequenceWLMFormat(sequence, sequencename)
     returnstring =
         returnstring ..
         "This macro contains " ..
-            (table.getn(sequence.Macros) > 1 and table.getn(sequence.Macros) .. " macro templates. " or
-                "1 macro template. ") ..
+            (#sequence.Macros > 1 and #sequence.Macros .. " macro templates. " or "1 macro template. ") ..
                 string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
-    if (table.getn(sequence.Macros) > 1) then
+    if (#sequence.Macros > 1) then
         for k, _ in pairs(sequence.Macros) do
             if not GSE.isEmpty(sequence["MetaData"].Default) then
                 if sequence["MetaData"].Default == k then
@@ -658,7 +657,7 @@ end
 function GSE:GSSlash(input)
     local _, _, currentclassId = UnitClass("player")
     local params = GSE.split(input, " ")
-    if table.getn(params) > 1 then
+    if #params > 1 then
         input = params[1]
     end
     local command = string.lower(input)

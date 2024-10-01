@@ -1508,7 +1508,7 @@ function GSE:GUIDrawMacroEditor(container, version)
     addIfButton:SetCallback(
         "OnEnter",
         function()
-            if table.getn(editframe.booleanFunctions) > 0 then
+            if #editframe.booleanFunctions > 0 then
                 GSE.CreateToolTip(
                     L["Add If"],
                     L[
@@ -1637,12 +1637,12 @@ local function GetBlockToolbar(
     local blocksThisLevel
 
     if #parentPath == 1 then
-        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions)
+        blocksThisLevel = #editframe.Sequence.Macros[version].Actions
     else
         if GSE.isEmpty(dontDeleteLastParent) then
             parentPath[#parentPath] = nil
         end
-        blocksThisLevel = table.getn(editframe.Sequence.Macros[version].Actions[parentPath])
+        blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
     end
     layoutcontainer:SetLayout("Flow")
     layoutcontainer:SetWidth(width)
@@ -3205,7 +3205,7 @@ function GSE.GUISelectEditorTab(container, event, group)
                 editframe.Sequence.Macros,
                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
             )
-            GSE.GUISelectEditorTab(container, event, table.getn(editframe.Sequence.Macros))
+            GSE.GUISelectEditorTab(container, event, #editframe.Sequence.Macros)
             GSE.GUIEditorPerformLayout()
         elseif group == "talents" then
             DrawTalentsEditor(container)
@@ -3219,7 +3219,7 @@ end
 function GSE.GUIDeleteVersion(version)
     version = tonumber(version)
     local sequence = editframe.Sequence
-    if table.getn(sequence.Macros) <= 1 then
+    if #sequence.Macros <= 1 then
         GSE.Print(L["This is the only version of this macro.  Delete the entire macro to delete this version."])
         return
     end

@@ -270,7 +270,7 @@ function GSE.OOCUpdateSequence(name, sequence)
     end
 
     local compiledTemplate = GSE.CompileTemplate(sequence)
-    local actionCount = table.getn(compiledTemplate)
+    local actionCount = #compiledTemplate
     if actionCount > 255 then
         GSE.Print(
             string.format(
@@ -303,7 +303,8 @@ end
 --- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSE.SetMacroLocation()
     local numAccountMacros, numCharacterMacros = GetNumMacros()
-    local returnval = 1
+    local returnval
+    returnval = 1
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSEOptions.overflowPersonalMacros then
         returnval = nil
     end
@@ -666,7 +667,7 @@ function GSE.DecompressSequenceFromString(importstring)
     local returnstr = ""
     local seqName = ""
     if
-        (decompresssuccess) and (table.getn(actiontable) == 2) and (type(actiontable[1]) == "string") and
+        (decompresssuccess) and (#actiontable == 2) and (type(actiontable[1]) == "string") and
             (type(actiontable[2]) == "table")
      then
         seqName = actiontable[1]
@@ -790,7 +791,7 @@ function GSE.processAction(action, metaData, variables)
                 local limit = 1
                 local step = 1
                 local looplimit = 0
-                for x = 1, table.getn(actionList) do
+                for x = 1, #actionList do
                     looplimit = looplimit + x
                 end
                 if action.StepFunction == Statics.Priority then

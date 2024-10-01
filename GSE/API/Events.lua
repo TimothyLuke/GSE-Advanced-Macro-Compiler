@@ -242,7 +242,7 @@ local function LoadOverrides(force)
                 selected and GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] and
                     GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]
              then
-                GSE.PrintDebugMessage("changing from ", tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                GSE.PrintDebugMessage("changing from " .. tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
                 for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
                     overrideActionButton(k, v, force)
                     GSE.ButtonOverrides[v] = k
@@ -277,7 +277,10 @@ local function LoadKeyBindings(payload)
                 selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
              then
-                GSE.PrintDebugMessage("changing from ", payload, tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                GSE.PrintDebugMessage(
+                    "changing from " .. payload .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
+                    "EVENTS"
+                )
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     SetBinding(k)
                     SetBindingClick(k, v, _G[v])

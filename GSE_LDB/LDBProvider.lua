@@ -141,14 +141,8 @@ function dataobj:OnEnter()
     )
     tooltip:AddSeparator()
     y, _ = tooltip:AddLine()
-    if table.getn(GSE.OOCQueue) > 0 then
-      tooltip:SetCell(
-        y,
-        1,
-        string.format(L["There are %i events in out of combat queue"], table.getn(GSE.OOCQueue)),
-        "CENTER",
-        3
-      )
+    if #GSE.OOCQueue > 0 then
+      tooltip:SetCell(y, 1, string.format(L["There are %i events in out of combat queue"], #GSE.OOCQueue), "CENTER", 3)
       tooltip:SetLineScript(
         y,
         "OnMouseDown",

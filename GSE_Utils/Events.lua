@@ -76,6 +76,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
         if C_Spell.GetSpellCooldown then
             GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
         else
+            ---@diagnostic disable-next-line: deprecated
             local _, gtime = GetSpellCooldown(61304)
             GCD_Timer = gtime
         end
@@ -109,8 +110,9 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
                 end
             end
         else
+            ---@diagnostic disable-next-line: deprecated
             local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
-            local fskilltype, fspellid = GetSpellBookItemInfo(spell)
+            local fskilltype, _ = GetSpellBookItemInfo(spell)
             if not GSE.isEmpty(fskilltype) then
                 if GSE.RecorderActive then
                     GSE.GUIRecordFrame.RecordSequenceBox:SetText(

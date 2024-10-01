@@ -77,7 +77,7 @@ function GSE.ParseVersion(version)
     if GSE.isEmpty(numbers) and type(version) == "number" then
         returnVal = version
     else
-        if table.getn(numbers) > 1 then
+        if #numbers > 1 then
             returnVal = (tonumber(numbers[1]) * 1000) + (tonumber(numbers[2]) * 100) + (tonumber(numbers[3]))
         else
             returnVal = tonumber(version)
