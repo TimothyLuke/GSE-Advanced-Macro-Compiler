@@ -64,12 +64,13 @@ function GSE.GUILoadEditor(key, recordedstring)
       sequence.Macros[1]["Actions"] = nil
       local recordedMacro = {}
       for _, v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
-        local spellid = GSE.GetSpellId(v, Statics.TranslatorMode.ID)
+        print(v)
+        local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
         if spellid then
           local action = {
             ["Type"] = Statics.Actions.Action,
             ["type"] = "macro",
-            ["macro"] = "/cast " .. spellid
+            ["macro"] = spellid
           }
           table.insert(recordedMacro, action)
         end
