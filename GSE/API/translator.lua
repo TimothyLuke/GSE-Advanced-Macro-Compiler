@@ -228,6 +228,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
                 if test then
                     local currentSpell = FindSpellOverrideByID(test)
                     if currentSpell then
+                        ---@diagnostic disable-next-line: cast-local-type
                         etc = currentSpell
                     end
                 end
@@ -329,6 +330,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     local spellinfo = C_Spell.GetSpellInfo(spellstring)
     if not spellinfo then
         if type(spellstring) == "string" then
+            ---@diagnostic disable-next-line: missing-fields
             spellinfo = {}
             spellinfo.name = spellstring
             if GSESpellCache[GetLocale()][spellinfo] then
