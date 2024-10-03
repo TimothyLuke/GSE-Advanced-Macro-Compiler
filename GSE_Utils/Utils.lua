@@ -662,7 +662,7 @@ function GSE:GSSlash(input)
     end
     local command = string.lower(input)
     if command == "showspec" then
-        if GSE.GameMode == 1 then
+        if GSE.GameMode < 7 then
             GSE.Print(L["Your ClassID is "] .. currentclassId .. " " .. Statics.SpecIDList[currentclassId], GNOME)
         else
             local currentSpec = GetSpecialization()

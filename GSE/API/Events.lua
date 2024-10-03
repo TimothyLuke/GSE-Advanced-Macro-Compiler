@@ -101,7 +101,7 @@ function GSE:ZONE_CHANGED_NEW_AREA()
 end
 
 local function GetSpec()
-    if GSE.GameMode < 3 then
+    if GSE.GameMode < 7 then
         return "1"
     else
         return tostring(GetSpecialization())
