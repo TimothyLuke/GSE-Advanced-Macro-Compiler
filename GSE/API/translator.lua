@@ -61,7 +61,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                             output = output .. GSEOptions.KEYWORD .. trinketstuff .. Statics.StringReset
                         else
                             if not cleanNewLines then
-                                etc = string.match(trinketstuff, "^%s*(.-)%s*$")
+                                trinketstuff = string.match(trinketstuff, "^%s*(.-)%s*$")
                             end
                             if string.sub(trinketstuff, 1, 1) == "!" then
                                 trinketstuff = string.sub(trinketstuff, 2)
