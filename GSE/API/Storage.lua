@@ -490,9 +490,9 @@ function GSE.GetSpellsFromString(str)
                         local elements = GSE.split(etc, ",")
 
                         for _, v1 in ipairs(elements) do
-                            local spellinfo = C_Spell.GetSpellInfo(string.trim(v1))
-                            if spellinfo and spellinfo.name and not processed[v1] then
-                                table.insert(returnspells, spellinfo)
+                            local spellstuff = C_Spell.GetSpellInfo(string.trim(v1))
+                            if spellstuff and spellstuff.name and not processed[v1] then
+                                table.insert(returnspells, spellstuff)
                                 processed[v1] = true
                             end
                         end

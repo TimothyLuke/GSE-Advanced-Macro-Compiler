@@ -47,6 +47,7 @@ globals = {
     "bit.lshift",
     "bit.rshift",
     "string.split",
+    "string.trim",
     "table.wipe",
     "table.getn",
     "time",
