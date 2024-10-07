@@ -480,9 +480,26 @@ function GSE.GetSpellsFromString(str)
         spellinfo.name = "GSE Pause"
         spellinfo.iconID = Statics.ActionsIcons.Pause
     else
-        local searching = true
         for cmd, oetc in gmatch(str or "", "/(%w+)%s+([^\n]+)") do
-            if Statics.CastCmds[strlower(cmd)] or strlower(cmd) == "castsequence" then
+            if strlower(cmd) == "castsequence" then
+                local returnspells = {}
+                local processed = {}
+                for _, y in ipairs(GSE.split(oetc, ";")) do
+                    for _, v in ipairs(GSE.SplitCastSequence(y)) do
+                        local _, _, etc = GSE.GetConditionalsFromString(v)
+                        local elements = GSE.split(etc, ",")
+
+                        for _, v1 in ipairs(elements) do
+                            local spellinfo = C_Spell.GetSpellInfo(string.trim(v1))
+                            if spellinfo and spellinfo.name and not processed[v1] then
+                                table.insert(returnspells, spellinfo)
+                                processed[v1] = true
+                            end
+                        end
+                    end
+                end
+                return returnspells
+            elseif Statics.CastCmds[strlower(cmd)] then
                 local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
                 if string.sub(etc, 1, 1) == "/" then
                     etc = oetc
@@ -518,6 +535,9 @@ function GSE.UpdateIcon(self, reseticon)
         foundSpell = gsebutton
     elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
         spellinfo = GSE.GetSpellsFromString(executionseq[step].macrotext)
+        if spellinfo and #spellinfo > 1 then
+            spellinfo = spellinfo[1]
+        end
         if spellinfo and spellinfo.name then
             foundSpell = spellinfo.name
         end

@@ -546,6 +546,9 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
             local macro = GSE.UnEscapeString(action.macro)
             if string.sub(macro, 1, 1) == "/" then
                 local spellstuff = GSE.GetSpellsFromString(macro)
+                if spellstuff and #spellstuff > 1 then
+                    spellstuff = spellstuff[1]
+                end
                 if spellstuff then
                     spellinfo = spellstuff
                 end
@@ -570,8 +573,16 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
             local lines = GSE.SplitMeIntolines(macro)
             for _, v in ipairs(lines) do
                 local spellinfo = GSE.GetSpellsFromString(v)
-                if spellinfo and spellinfo.iconID then
-                    table.insert(spellinfolist, spellinfo)
+                if spellinfo and #spellinfo > 1 then
+                    for _, j in ipairs(spellinfo) do
+                        if j and j.iconID then
+                            table.insert(spellinfolist, j)
+                        end
+                    end
+                else
+                    if spellinfo and spellinfo.iconID then
+                        table.insert(spellinfolist, spellinfo)
+                    end
                 end
             end
         else

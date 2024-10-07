@@ -79,7 +79,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                     elseif string.lower(cmd) == "castsequence" then
                         GSE.PrintDebugMessage("attempting to split : " .. etc, GNOME)
                         for _, y in ipairs(GSE.split(etc, ";")) do
-                            for _, w in ipairs(GSE.SplitCastSequence(y, ",")) do
+                            for _, w in ipairs(GSE.SplitCastSequence(y)) do
                                 -- Look for conditionals at the startattack
                                 local conditionals, mods, uetc = GSE.GetConditionalsFromString(w)
                                 if conditionals then
