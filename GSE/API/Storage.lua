@@ -540,6 +540,9 @@ function GSE.UpdateIcon(self, reseticon)
         foundSpell = spellinfo.name
     end
     if executionseq[step].Icon then
+        if not spellinfo then
+            spellinfo = {}
+        end
         spellinfo.iconID = executionseq[step].Icon
     end
     if mods then
