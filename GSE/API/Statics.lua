@@ -322,7 +322,7 @@ Statics.Global = "Global"
 
 Statics.SampleMacros = {}
 Statics.QuestionMark = "INV_MISC_QUESTIONMARK"
-
+Statics.QuestionMarkIconID = 134400
 Statics.ReloadMessage = "Reload"
 Statics.CommPrefix = "GSE"
 

@@ -541,7 +541,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
         return lbl
     else
         local spellinfo = {}
-
+        spellinfo.iconID = Statics.QuestionMarkIconID
         if action.type == "macro" then
             local macro = GSE.UnEscapeString(action.macro)
             if string.sub(macro, 1, 1) == "/" then

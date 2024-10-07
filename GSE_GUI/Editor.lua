@@ -2280,6 +2280,7 @@ if GSE.isEmpty(GSE.CreateIconControl) then
             return lbl
         end
         local spellinfo = {}
+        spellinfo.iconID = Statics.QuestionMarkIconID
 
         if action.type == "macro" then
             local macro = GSE.UnEscapeString(action.macro)

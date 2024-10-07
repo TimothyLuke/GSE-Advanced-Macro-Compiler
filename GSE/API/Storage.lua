@@ -476,7 +476,7 @@ end
 
 function GSE.GetSpellsFromString(str)
     local spellinfo = {}
-    if string.sub(str, 12) == "/click GSE.P" then
+    if string.sub(str, 14) == "/click GSE.Pau" then
         spellinfo.name = "GSE Pause"
         spellinfo.iconID = Statics.ActionsIcons.Pause
     else
@@ -527,6 +527,7 @@ function GSE.UpdateIcon(self, reseticon)
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
     local spellinfo = {}
+    spellinfo.iconID = Statics.QuestionMarkIconID
 
     local reset = self:GetAttribute("combatreset") and self:GetAttribute("combatreset") or false
     if reseticon == true then
