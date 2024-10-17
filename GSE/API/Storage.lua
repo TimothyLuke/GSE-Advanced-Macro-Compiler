@@ -1003,6 +1003,7 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         gsebutton = CreateFrame("Button", name, nil, "SecureActionButtonTemplate,SecureHandlerBaseTemplate")
         gsebutton:SetAttribute("type", "spell")
         gsebutton:SetAttribute("step", 1)
+        gsebutton:SetAttribute("name", name)
         gsebutton.UpdateIcon = GSE.UpdateIcon
         gsebutton:RegisterForClicks("AnyUp", "AnyDown")
 

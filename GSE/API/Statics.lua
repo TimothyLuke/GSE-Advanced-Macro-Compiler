@@ -54,7 +54,7 @@ Statics.CleanStrings = {
     [17] = "/console Sound_EnableErrorSpeech 1%;",
     [18] = "/console Sound_EnableErrorSpeech 0%;",
     [19] = [[""]],
-    [20] = "/stopmacro [@playertarget, noexists]",
+    -- [20] = "/stopmacro [@playertarget, noexists]",
     -- [30] = "/use 2",
     -- [31] = "/use [combat] 11",
     -- [32] = "/use [combat] 12",
@@ -291,10 +291,11 @@ Statics.StringFormatEscapes = {
     ["{.-}"] = "" -- Raid target icons
 }
 
-Statics.MacroResetSkeleton = [[
+Statics.MacroResetSkeleton =
+    [[
 if %s then
 	self:SetAttribute('step', 1)
-	self:SetAttribute('loopiter', 1)
+	print("|cFFFFFFFFGS|r|cFF00FFFFE|r Resetting " .. self:GetAttribute("name") .. " to step 1.")
 end
 ]]
 
