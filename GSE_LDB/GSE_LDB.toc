@@ -1,4 +1,4 @@
-## Interface: 110002, 110005, 11504
+## Interface: 110005, 11504
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Data Feeds and Minimap|r
 ## Notes: LibDataBroker Plugin for GSE
