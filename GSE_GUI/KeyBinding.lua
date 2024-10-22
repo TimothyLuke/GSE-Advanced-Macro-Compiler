@@ -66,7 +66,7 @@ basecontainer:SetFullWidth(true)
 keybindingframe:AddChild(basecontainer)
 
 local leftScrollContainer = AceGUI:Create("SimpleGroup")
-leftScrollContainer:SetWidth(200)
+leftScrollContainer:SetWidth(300)
 
 leftScrollContainer:SetHeight(keybindingframe.Height - 90)
 leftScrollContainer:SetLayout("Fill") -- important!
@@ -75,7 +75,7 @@ basecontainer:AddChild(leftScrollContainer)
 
 local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("List") -- probably?
-leftscroll:SetWidth(200)
+leftscroll:SetWidth(300)
 leftscroll:SetHeight(keybindingframe.Height - 90)
 leftScrollContainer:AddChild(leftscroll)
 
@@ -84,7 +84,7 @@ spacer:SetWidth(10)
 basecontainer:AddChild(spacer)
 
 local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(keybindingframe.Width - 290)
+rightContainer:SetWidth(keybindingframe.Width - 390)
 
 rightContainer:SetLayout("List")
 rightContainer:SetHeight(keybindingframe.Height - 90)
@@ -109,7 +109,7 @@ keybindingframe.frame:SetScript(
         end
         GSEOptions.keybindingHeight = keybindingframe.Height
         GSEOptions.keybindingWidth = keybindingframe.Width
-        rightContainer:SetWidth(keybindingframe.Width - 290)
+        rightContainer:SetWidth(keybindingframe.Width - 390)
         rightContainer:SetHeight(keybindingframe.Height - 90)
         leftScrollContainer:SetHeight(keybindingframe.Height - 90)
         keybindingframe:DoLayout()
@@ -132,7 +132,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         if not GSE.isEmpty(bind) then
             keybind:SetKey(bind)
         end
-        keybind:SetWidth(400)
+        keybind:SetWidth(300)
         keybind:SetCallback(
             "OnKeyChanged",
             function(self, _, key)
@@ -143,7 +143,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         keybind:SetLabel(L["Set Key to Bind"])
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(400)
+        SequenceListbox:SetWidth(300)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -165,7 +165,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(400)
+        TalentLoadOutList:SetWidth(300)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
@@ -304,7 +304,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local ActionButtonList = AceGUI:Create("Dropdown")
 
-        ActionButtonList:SetWidth(400)
+        ActionButtonList:SetWidth(300)
         ActionButtonList:SetLabel(L["Actionbar Buttons"])
         local buttonnames = {
             "ActionButton",
@@ -402,7 +402,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(400)
+        SequenceListbox:SetWidth(300)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -424,7 +424,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(400)
+        TalentLoadOutList:SetWidth(300)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
@@ -539,7 +539,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         rightContainer:AddChild(row2)
     end
 
-    rightContainer:SetWidth(keybindingframe.Width - 290)
+    rightContainer:SetWidth(keybindingframe.Width - 390)
 end
 
 local function buildKeybindHeader(specialization, bind, button, loadout, type)
@@ -570,7 +570,7 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
     local hlabel = AceGUI:Create("Label")
 
     hlabel:SetText(bind .. " - " .. GSEOptions.KEYWORD .. "(" .. button .. ")" .. Statics.StringReset)
-    hlabel:SetWidth(199)
+    hlabel:SetWidth(299)
     hlabel:SetFontObject(font)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
 
@@ -705,7 +705,7 @@ local function buildKeybindMenu()
                 leftscroll:AddChild(sectionspacer2)
             end
         end
-        for i, j in pairs(v) do
+        for i, j in GSE.pairsByKeys(v) do
             if i ~= "LoadOuts" then
                 buildKeybindHeader(k, i, j)
             end
@@ -734,7 +734,7 @@ local function buildKeybindMenu()
                         sectionspacer4:SetText(" ")
                         sectionspacer4:SetFont(fontName, 2, fontFlags)
                         leftscroll:AddChild(sectionspacer4)
-                        for l, m in pairs(j) do
+                        for l, m in GSE.pairsByKeys(j) do
                             buildKeybindHeader(currentspecid, l, m, i)
                         end
                     end
@@ -773,7 +773,7 @@ local function buildKeybindMenu()
                 leftscroll:AddChild(sectionspacer2)
             end
         end
-        for i, j in pairs(v) do
+        for i, j in GSE.pairsByKeys(v) do
             buildKeybindHeader(k, i, j, nil, "AO")
         end
         if
@@ -799,7 +799,7 @@ local function buildKeybindMenu()
                         sectionspacer4:SetText(" ")
                         sectionspacer4:SetFont(fontName, 2, fontFlags)
                         leftscroll:AddChild(sectionspacer4)
-                        for l, m in pairs(j) do
+                        for l, m in GSE.pairsByKeys(j) do
                             buildKeybindHeader(currentspecid, l, m, i, "AO")
                         end
                     end
