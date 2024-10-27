@@ -788,3 +788,6 @@ L["GSE: Middle Click to open the Keybinding Interface"] = true
 
 -- #1621
 L["Select Icon"] = true
+
+-- #1683
+L["There is an error in the sequence that needs to be corrected before it can be saved."] = true

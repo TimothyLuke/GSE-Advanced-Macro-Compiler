@@ -221,6 +221,7 @@ end
 
 function variablesframe.showVariable(name, label)
     rightContainer:ReleaseChildren()
+    local implementation = AceGUI:Create("EditBox")
     local variable = {
         ["funct"] = [[function()
     return true
@@ -254,6 +255,8 @@ end]],
             GSEVariables[currentKey] = nil
             currentKey = text
             label:SetText(text)
+            local implementationText = [[=GSE.V.]] .. text .. [[()]]
+            implementation:SetText(implementationText)
         end
     )
 
@@ -331,7 +334,6 @@ end]],
 
     rightContainer:AddChild(valueEditBox)
 
-    local implementation = AceGUI:Create("EditBox")
     implementation:SetLabel(L["Implementation Link"])
     implementation:DisableButton(true)
     local implementationText = [[=GSE.V.]] .. name .. [[()]]
@@ -414,22 +416,32 @@ end]],
     savebutton:SetCallback(
         "OnClick",
         function()
-            variablesframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
-            variable.LastUpdated = GSE.GetTimestamp()
-            local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+            local checkvariable, error = GSE.CheckVariable(valueEditBox:GetText())
+            if checkvariable then
+                variablesframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
+                variable.LastUpdated = GSE.GetTimestamp()
+                local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
 
-            local oocaction = {
-                ["action"] = "updatevariable",
-                ["variable"] = variable,
-                ["name"] = keyEditBox:GetText()
-            }
-            table.insert(GSE.OOCQueue, oocaction)
-            lastSaved:SetText(
-                L["Last Updated"] ..
-                    " " ..
-                        updated.month ..
-                            "/" .. updated.day .. "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
-            )
+                local oocaction = {
+                    ["action"] = "updatevariable",
+                    ["variable"] = variable,
+                    ["name"] = keyEditBox:GetText()
+                }
+                table.insert(GSE.OOCQueue, oocaction)
+                lastSaved:SetText(
+                    L["Last Updated"] ..
+                        " " ..
+                            updated.month ..
+                                "/" ..
+                                    updated.day .. "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
+                )
+            else
+                GSE.Print(
+                    L["There is an error in the sequence that needs to be corrected before it can be saved."],
+                    Statics.DebugModules["Editor"]
+                )
+                GSE.Print(error, Statics.DebugModules["Editor"])
+            end
         end
     )
 

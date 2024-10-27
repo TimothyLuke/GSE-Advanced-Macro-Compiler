@@ -1349,4 +1349,9 @@ function GSE.ManageMacros()
     end
 end
 
+function GSE.CheckVariable(vartext)
+    local actualfunct, error = loadstring("return " .. vartext)
+    return actualfunct, error
+end
+
 GSE.DebugProfile("Storage")
