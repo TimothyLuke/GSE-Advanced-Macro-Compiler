@@ -138,7 +138,7 @@ local function processCollection(payload)
       if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
         GSEMacros[char .. "-" .. realm] = {}
       end
-      if GSEMacros[k] or GSEMacros[char .. "-" .. realm][k] then
+      if GSEMacros[k] or GSEMacros[char .. "-" .. realm][k] or GetMacroIndexByName(k) then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
