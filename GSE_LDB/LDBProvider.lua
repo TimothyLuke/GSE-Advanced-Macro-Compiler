@@ -59,6 +59,14 @@ local function prepareTooltipOOCLine(tooltip, OOCEvent, row, oockey)
     tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
   elseif OOCEvent.action == "CheckMacroCreated" then
     tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
+  elseif OOCEvent.action == "updatemacro" then
+    tooltip:SetCell(row, 3, OOCEvent.node.name, "RIGHT", 1)
+  elseif OOCEvent.action == "updatevariable" then
+    tooltip:SetCell(row, 3, OOCEvent.name, "RIGHT", 1)
+  elseif OOCEvent.action == "importmacro" then
+    tooltip:SetCell(row, 3, OOCEvent.node.name, "RIGHT", 1)
+  elseif OOCEvent.action == "MergeSequence" then
+    tooltip:SetCell(row, 3, OOCEvent.sequencename, "RIGHT", 1)
   end
   tooltip:SetLineScript(
     row,
