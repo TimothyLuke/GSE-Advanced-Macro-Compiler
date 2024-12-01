@@ -49,6 +49,6 @@ shownew:SetCallback(
 scroll:AddChild(shownew)
 
 function GSE.ShowUpdateNotes()
-  label:SetText(L["WhatsNew"])
+  label:SetText(L["WhatsNew"] .. "\n\n")
   whatsnewframe:Show()
 end

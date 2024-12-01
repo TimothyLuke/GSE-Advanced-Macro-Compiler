@@ -1,5 +1,13 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
+L["WhatsNew"] =
+    [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.18 updates the Actionbar Overrides for Bartender4 and ConsolePort.  This solves the issue of being in flight and not being able to use the GSE Sequence until you left combat.  ElvUI support for this will come in a later update.
+
+|cffff6666Note|r: The paging function has to be turned off for druids and potentially rogues.  The issue is when Bartender4 pages, the bar is replaces with the contents of another hidden bar.  Even if I bind a button to that bar the "click" state is not transferred to the new bar.
+
+The full detail on all of these changes is available on the GSE GitHub wiki - https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
+]]
+
 L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
@@ -740,21 +748,6 @@ L["CHanges Left Side, Changes Right Side, Many Changes!!!! Handle It"] = true
 L["GSE: Whats New in "] = true
 L["Show next time you login."] = true
 L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
-L["WhatsNew"] =
-    [[This version introduces Actionbar Overrides for Elvui, Bartender4 and ConsolePort.  There is one issue that affects this function in these mods that you need to be aware of.
-
-|cFFFF0000Issue:|r When you are mounted and enter combat, Overrides on the shared action bar (eg Main Actionbar + SkyRiding) cannot reset to GSE buttons until combat ends.
-
-|cFFFF0000Affects:|r This issue affects ElvUI, ConsolePort and Bartender4 users using Actionbar Overrides in Dawnbreaker fight.  It can also happen in the world when mining or landing on a mob to hit it hard.
-
-|cFFFF0000Consequence:|r This affects two fights - Dawnbreaker's first boss and T-Swift in Amardrassil.  The big affect here of the two is Dawnbreaker. After you land after the first explodie bubble the GSE Sequence will no longer fire.
-
-|cFFFF0000Workaround:|r It is possible to work around by
-- The preferred workaround is to switch to Steady Flight for the dungeon.
-- The alternative is having a backup bind either as a keybind (This will at least still change the icon) OR another override on a non changing actionbar.  Both solutions require changing physical keys for the second half of the fight. Personally I dont use Shift+2 so have bound my backup sequence as Shift+2 but this is a personal thing and people would need to find what works for them.
-
-The full detail on all of these changes is available on the GSE GitHub wiki - https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
-]]
 
 -- #1524
 L["Enter the implementation link for this variable. Use '= true' or '= false' to test."] = true

@@ -123,7 +123,33 @@ local function overrideActionButton(Button, Sequence, force)
         GSE.ButtonOverrides = {}
     end
 
-    if string.sub(Button, 1, 5) == "ElvUI" or string.sub(Button, 1, 4) == "CPB_" or string.sub(Button, 1, 3) == "BT4" then
+    if string.sub(Button, 1, 4) == "CPB_" or string.sub(Button, 1, 3) == "BT4" then
+        if _G[Button] and _G[Button].SetState then
+            local state = "1"
+            --_G[Button]:GetAttribute("state"),
+            if string.sub(Button, 1, 3) == "BT4" then
+                state = "0"
+            end
+            _G[Button]:SetAttribute("gse-button", Sequence)
+            _G[Button]:SetState(
+                state,
+                "click",
+                {
+                    func = function(self)
+                        if not InCombatLockdown() then
+                            self:SetAttribute("type", "click")
+                            self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
+                        end
+                    end,
+                    tooltip = "GSE: " .. Sequence,
+                    texture = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+                }
+            )
+            GSE.ButtonOverrides[Button] = Sequence
+            _G[Button]:SetAttribute("type", "click")
+            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+        end
+    elseif string.sub(Button, 1, 5) == "ElvUI" then
         if _G[Button] and _G[Button].SetState then
             local state = "1"
             --_G[Button]:GetAttribute("state"),
@@ -148,15 +174,16 @@ local function overrideActionButton(Button, Sequence, force)
             GSE.ButtonOverrides[Button] = Sequence
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+
             SHBT:WrapScript(
                 _G[Button],
                 "OnClick",
                 [[
-                    type = self:GetAttribute("type")
-                    if type == "custom" then
-                        self:SetAttribute("type", "click")
-                    end
-                ]]
+                type = self:GetAttribute("type")
+                if type == "custom" then
+                    self:SetAttribute("type", "click")
+                end
+            ]]
             )
         end
     else
