@@ -31,7 +31,7 @@ Localization\ModL_zhTW.lua
 
 # Startup
 API\Init.lua
-Lib\libactionbutton-1.0\LibActionButton-1.0.lua
+API\LibActionButton-1.0.lua
 API\Statics.lua
 API\InitialOptions.lua
 
