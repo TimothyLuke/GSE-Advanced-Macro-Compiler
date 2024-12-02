@@ -92,6 +92,8 @@ globals = {
     "FindSpellBookSlotBySpellID",
     "C_Container",
     "ActionButton_HideOverlayGlow",
+    "GameFontHighlightSmallOutline",
+    "GetBindingText",
     -- end LAB
     -- Saved Variables
     "GSEStorage",
