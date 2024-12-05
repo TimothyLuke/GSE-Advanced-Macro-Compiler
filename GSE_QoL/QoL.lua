@@ -280,7 +280,7 @@ GSE.GUIAdvancedExport = function(exportframe)
     HeaderRow:SetLayout("Flow")
     HeaderRow:SetFullWidth(true)
     local SequenceDropDown = AceGUI:Create("Dropdown")
-    local sid, cid = GSE.GetCurrentClassID(), GSE.GetCurrentClassID()
+    local cid, sid = GSE.GetCurrentClassID(), GSE.GetCurrentSpecID()
     for k, v in GSE.pairsByKeys(GSE.GetSequenceNames(), GSE.AlphabeticalTableSortAlgorithm) do
         local elements = GSE.split(k, ",")
         local classid, specid = tonumber(elements[1]), tonumber(elements[2])
@@ -293,7 +293,7 @@ GSE.GUIAdvancedExport = function(exportframe)
             cid = classid
         end
         if GetSpecializationInfoByID then
-            if sid ~= specid then
+            if sid ~= specid and sid > 13 and specid > 13 then
                 local val = select(2, GetSpecializationInfoByID(specid))
                 local key = specid .. val
 
