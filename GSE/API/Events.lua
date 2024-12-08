@@ -123,7 +123,10 @@ local function overrideActionButton(Button, Sequence, force)
         GSE.ButtonOverrides = {}
     end
 
-    if string.sub(Button, 1, 4) == "CPB_" or string.sub(Button, 1, 3) == "BT4" then
+    if
+        (string.sub(Button, 1, 4) == "CPB_" or string.sub(Button, 1, 3) == "BT4") and
+            not GSEOptions.DisableExperimentalLAB
+     then
         if _G[Button] and _G[Button].SetState then
             local state = "1"
             --_G[Button]:GetAttribute("state"),
@@ -149,7 +152,7 @@ local function overrideActionButton(Button, Sequence, force)
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
-    elseif string.sub(Button, 1, 5) == "ElvUI" then
+    elseif string.sub(Button, 1, 5) == "ElvUI" or GSEOptions.DisableExperimentalLAB then
         if _G[Button] and _G[Button].SetState then
             local state = "1"
             --_G[Button]:GetAttribute("state"),
@@ -337,6 +340,7 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
+        GSE.setupLAB()
         local char = UnitFullName("player")
         local realm = GetRealmName()
 

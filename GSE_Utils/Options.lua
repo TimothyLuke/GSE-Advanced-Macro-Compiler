@@ -547,6 +547,26 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         order = 541
+                    },
+                    disableExeperimental = {
+                        type = "header",
+                        name = L["Experimental Features"],
+                        order = 550
+                    },
+                    disableLAB = {
+                        name = L["Disable inbuilt LibActionButton"],
+                        desc = L[
+                            "LibActionButton is used by ConsolePort and Bartender.  Disabling this will use the standard version of this library."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.DisableExperimentalLAB = val
+                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                        end,
+                        get = function(info)
+                            return GSEOptions.DisableExperimentalLAB
+                        end,
+                        order = 551
                     }
                 }
             },
