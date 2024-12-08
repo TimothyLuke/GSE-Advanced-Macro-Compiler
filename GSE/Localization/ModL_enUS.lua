@@ -785,7 +785,7 @@ L["Select Icon"] = true
 -- #1683
 L["There is an error in the sequence that needs to be corrected before it can be saved."] = true
 
--- #1712
+-- #1713
 L["Experimental Features"] = true
 L["Disable inbuilt LibActionButton"] = true
 L["LibActionButton is used by ConsolePort and Bartender.  Disabling this will use the standard version of this library."] =
