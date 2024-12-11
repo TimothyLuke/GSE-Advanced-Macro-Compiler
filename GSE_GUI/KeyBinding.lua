@@ -413,10 +413,13 @@ local function showKeybind(bind, button, specialization, loadout, type)
             end
         end
         local striplist = {}
+        if bind then
+            buttonlist[bind] = bind
+        end
         for k, _ in pairs(buttonlist) do
             table.insert(striplist, k)
         end
-        buttonlist[bind] = bind
+
         ActionButtonList:SetList(buttonlist, GSE.SortTableAlphabetical(striplist))
         ActionButtonList:SetValue(bind)
         ActionButtonList:SetCallback(
