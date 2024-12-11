@@ -265,7 +265,7 @@ local function LoadOverrides(force)
         end
         GSE.ButtonOverrides = {}
 
-        for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
+        for _, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
             overrideActionButton(v, force)
         end
         if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
