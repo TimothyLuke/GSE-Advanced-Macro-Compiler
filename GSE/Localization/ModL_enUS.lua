@@ -790,3 +790,4 @@ L["Experimental Features"] = true
 L["Disable inbuilt LibActionButton"] = true
 L["LibActionButton is used by ConsolePort and Bartender.  Disabling this will use the standard version of this library."] =
     true
+L["Button State"] = true

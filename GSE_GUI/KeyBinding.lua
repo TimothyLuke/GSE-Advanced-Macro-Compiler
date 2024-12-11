@@ -292,6 +292,13 @@ local function showKeybind(bind, button, specialization, loadout, type)
         rightContainer:AddChild(row)
         rightContainer:AddChild(row2)
     elseif type == "AO" then
+        if not button then
+            button = {}
+        end
+        if button.Bind then
+            bind = button.Bind
+        end
+
         if not specialization then
             if GSE.GameMode > 10 then
                 specialization = GetSpecialization()
@@ -301,7 +308,26 @@ local function showKeybind(bind, button, specialization, loadout, type)
         end
         local initialbind = bind
         rightContainer:ReleaseChildren()
-
+        local LABButtonState = AceGUI:Create("Dropdown")
+        LABButtonState:SetWidth(300)
+        LABButtonState:SetLabel(L["Button State"])
+        LABButtonState:SetDisabled(true)
+        if bind and _G[bind].state_types then
+            local states = {["Default"] = "Default"}
+            local default = string.sub(bind, 1, 3) == "BT4" and "0" or string.sub(bind, 1, 4) == "CPB_" and "" or "1"
+            for k, _ in pairs(_G[bind].state_types) do
+                if k ~= default and k ~= bind then
+                    states[k] = k
+                end
+            end
+            LABButtonState:SetList(states)
+            LABButtonState:SetDisabled(false)
+        end
+        if button and button.State then
+            LABButtonState:SetValue(tostring(button.State))
+        else
+            LABButtonState:SetValue("Default")
+        end
         local ActionButtonList = AceGUI:Create("Dropdown")
 
         ActionButtonList:SetWidth(300)
@@ -333,49 +359,49 @@ local function showKeybind(bind, button, specialization, loadout, type)
         end
         if ConsolePort then
             buttonlist["CPB_PADDUP"] = "CPB_PADDUP"
-            buttonlist["CPB_PADDUP_SHIFT"] = "CPB_PADDUP_SHIFT"
-            buttonlist["CPB_PADDUP_CTRL_SHIFT"] = "CPB_PADDUP_CTRL_SHIFT"
-            buttonlist["CPB_PADDUP_CTRL"] = "CPB_PADDUP_CTRL"
+            -- buttonlist["CPB_PADDUP_SHIFT"] = "CPB_PADDUP_SHIFT"
+            -- buttonlist["CPB_PADDUP_CTRL_SHIFT"] = "CPB_PADDUP_CTRL_SHIFT"
+            -- buttonlist["CPB_PADDUP_CTRL"] = "CPB_PADDUP_CTRL"
             buttonlist["CPB_PADDLEFT"] = "CPB_PADDLEFT"
-            buttonlist["CPB_PADDLEFT_SHIFT"] = "CPB_PADDLEFT_SHIFT"
-            buttonlist["CPB_PADDLEFT_CTRL_SHIFT"] = "CPB_PADDLEFT_CTRL_SHIFT"
-            buttonlist["CPB_PADDLEFT_CTRL"] = "CPB_PADDLEFT_CTRL"
+            -- buttonlist["CPB_PADDLEFT_SHIFT"] = "CPB_PADDLEFT_SHIFT"
+            -- buttonlist["CPB_PADDLEFT_CTRL_SHIFT"] = "CPB_PADDLEFT_CTRL_SHIFT"
+            -- buttonlist["CPB_PADDLEFT_CTRL"] = "CPB_PADDLEFT_CTRL"
             buttonlist["CPB_PADDDOWN"] = "CPB_PADDDOWN"
-            buttonlist["CPB_PADDDOWN_SHIFT"] = "CPB_PADDDOWN_SHIFT"
-            buttonlist["CPB_PADDDOWN_CTRL_SHIFT"] = "CPB_PADDDOWN_CTRL_SHIFT"
-            buttonlist["CPB_PADDDOWN_CTRL"] = "CPB_PADDDOWN_CTRL"
+            -- buttonlist["CPB_PADDDOWN_SHIFT"] = "CPB_PADDDOWN_SHIFT"
+            -- buttonlist["CPB_PADDDOWN_CTRL_SHIFT"] = "CPB_PADDDOWN_CTRL_SHIFT"
+            -- buttonlist["CPB_PADDDOWN_CTRL"] = "CPB_PADDDOWN_CTRL"
             buttonlist["CPB_PADLSHOULDER"] = "CPB_PADLSHOULDER"
-            buttonlist["CPB_PADLSHOULDER_SHIFT"] = "CPB_PADLSHOULDER_SHIFT"
-            buttonlist["CPB_PADLSHOULDER_CTRL_SHIFT"] = "CPB_PADLSHOULDER_CTRL_SHIFT"
-            buttonlist["CPB_PADLSHOULDER_CTRL"] = "CPB_PADLSHOULDER_CTRL"
+            -- buttonlist["CPB_PADLSHOULDER_SHIFT"] = "CPB_PADLSHOULDER_SHIFT"
+            -- buttonlist["CPB_PADLSHOULDER_CTRL_SHIFT"] = "CPB_PADLSHOULDER_CTRL_SHIFT"
+            -- buttonlist["CPB_PADLSHOULDER_CTRL"] = "CPB_PADLSHOULDER_CTRL"
             buttonlist["CPB_PADRSHOULDER"] = "CPB_PADRSHOULDER"
-            buttonlist["CPB_PADRSHOULDER_SHIFT"] = "CPB_PADRSHOULDER_SHIFT"
-            buttonlist["CPB_PADRSHOULDER_CTRL_SHIFT"] = "CPB_PADRSHOULDER_CTRL_SHIFT"
-            buttonlist["CPB_PADRSHOULDER_CTRL"] = "CPB_PADRSHOULDER_CTRL"
+            -- buttonlist["CPB_PADRSHOULDER_SHIFT"] = "CPB_PADRSHOULDER_SHIFT"
+            -- buttonlist["CPB_PADRSHOULDER_CTRL_SHIFT"] = "CPB_PADRSHOULDER_CTRL_SHIFT"
+            -- buttonlist["CPB_PADRSHOULDER_CTRL"] = "CPB_PADRSHOULDER_CTRL"
             buttonlist["CPB_PADRTRIGGER"] = "CPB_PADRTRIGGER"
-            buttonlist["CPB_PADRTRIGGER_SHIFT"] = "CPB_PADRTRIGGER_SHIFT"
-            buttonlist["CPB_PADRTRIGGER_CTRL_SHIFT"] = "CPB_PADRTRIGGER_CTRL_SHIFT"
-            buttonlist["CPB_PADRTRIGGER_CTRL"] = "CPB_PADRTRIGGER_CTRL"
+            -- buttonlist["CPB_PADRTRIGGER_SHIFT"] = "CPB_PADRTRIGGER_SHIFT"
+            -- buttonlist["CPB_PADRTRIGGER_CTRL_SHIFT"] = "CPB_PADRTRIGGER_CTRL_SHIFT"
+            -- buttonlist["CPB_PADRTRIGGER_CTRL"] = "CPB_PADRTRIGGER_CTRL"
             buttonlist["CPB_PADLTRIGGER"] = "CPB_PADLTRIGGER"
-            buttonlist["CPB_PADLTRIGGER_SHIFT"] = "CPB_PADLTRIGGER_SHIFT"
-            buttonlist["CPB_PADLTRIGGER_CTRL_SHIFT"] = "CPB_PADLTRIGGER_CTRL_SHIFT"
-            buttonlist["CPB_PADLTRIGGER_CTRL"] = "CPB_PADLTRIGGER_CTRL"
+            -- buttonlist["CPB_PADLTRIGGER_SHIFT"] = "CPB_PADLTRIGGER_SHIFT"
+            -- buttonlist["CPB_PADLTRIGGER_CTRL_SHIFT"] = "CPB_PADLTRIGGER_CTRL_SHIFT"
+            -- buttonlist["CPB_PADLTRIGGER_CTRL"] = "CPB_PADLTRIGGER_CTRL"
             buttonlist["CPB_PAD1"] = "CPB_PAD1"
-            buttonlist["CPB_PAD1_SHIFT"] = "CPB_PAD1_SHIFT"
-            buttonlist["CPB_PAD1_CTRL_SHIFT"] = "CPB_PAD1_CTRL_SHIFT"
-            buttonlist["CPB_PAD1_CTRL"] = "CPB_PAD1_CTRL"
+            -- buttonlist["CPB_PAD1_SHIFT"] = "CPB_PAD1_SHIFT"
+            -- buttonlist["CPB_PAD1_CTRL_SHIFT"] = "CPB_PAD1_CTRL_SHIFT"
+            -- buttonlist["CPB_PAD1_CTRL"] = "CPB_PAD1_CTRL"
             buttonlist["CPB_PAD2"] = "CPB_PAD2"
-            buttonlist["CPB_PAD2_SHIFT"] = "CPB_PAD2_SHIFT"
-            buttonlist["CPB_PAD2_CTRL_SHIFT"] = "CPB_PAD2_CTRL_SHIFT"
-            buttonlist["CPB_PAD2_CTRL"] = "CPB_PAD2_CTRL"
+            -- buttonlist["CPB_PAD2_SHIFT"] = "CPB_PAD2_SHIFT"
+            -- buttonlist["CPB_PAD2_CTRL_SHIFT"] = "CPB_PAD2_CTRL_SHIFT"
+            -- buttonlist["CPB_PAD2_CTRL"] = "CPB_PAD2_CTRL"
             buttonlist["CPB_PAD3"] = "CPB_PAD3"
-            buttonlist["CPB_PAD3_SHIFT"] = "CPB_PAD3_SHIFT"
-            buttonlist["CPB_PAD3_CTRL_SHIFT"] = "CPB_PAD3_CTRL_SHIFT"
-            buttonlist["CPB_PAD3_CTRL"] = "CPB_PAD3_CTRL"
+            -- buttonlist["CPB_PAD3_SHIFT"] = "CPB_PAD3_SHIFT"
+            -- buttonlist["CPB_PAD3_CTRL_SHIFT"] = "CPB_PAD3_CTRL_SHIFT"
+            -- buttonlist["CPB_PAD3_CTRL"] = "CPB_PAD3_CTRL"
             buttonlist["CPB_PAD4"] = "CPB_PAD4"
-            buttonlist["CPB_PAD4_SHIFT"] = "CPB_PAD4_SHIFT"
-            buttonlist["CPB_PAD4_CTRL_SHIFT"] = "CPB_PAD4_CTRL_SHIFT"
-            buttonlist["CPB_PAD4_CTRL"] = "CPB_PAD4_CTRL"
+        -- buttonlist["CPB_PAD4_SHIFT"] = "CPB_PAD4_SHIFT"
+        -- buttonlist["CPB_PAD4_CTRL_SHIFT"] = "CPB_PAD4_CTRL_SHIFT"
+        -- buttonlist["CPB_PAD4_CTRL"] = "CPB_PAD4_CTRL"
         end
 
         if Bartender4 then
@@ -397,6 +423,45 @@ local function showKeybind(bind, button, specialization, loadout, type)
             "OnValueChanged",
             function(obj, event, key)
                 bind = key
+
+                button.Bind = key
+                if button.State then
+                    bind = key .. "-" .. button.State
+                end
+                if _G[key].state_types then
+                    local states = {["Default"] = "Default"}
+
+                    local default =
+                        string.sub(bind, 1, 3) == "BT4" and "0" or string.sub(bind, 1, 4) == "CPB_" and "" or "1"
+                    for k, _ in pairs(_G[bind].state_types) do
+                        if k ~= default and k ~= bind then
+                            states[k] = k
+                        end
+                    end
+
+                    LABButtonState:SetList(states)
+                    LABButtonState:SetDisabled(false)
+                else
+                    LABButtonState:SetDisabled(true)
+                    button.State = nil
+                end
+            end
+        )
+
+        LABButtonState:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key)
+                local default =
+                    string.sub(ActionButtonList:GetValue(), 1, 3) == "BT4" and "0" or
+                    string.sub(ActionButtonList:GetValue(), 1, 4) == "CPB_" and "" or
+                    "1"
+                if key == default or key == "Default" then
+                    button["State"] = nil
+                    bind = button["Bind"]
+                else
+                    button["State"] = key
+                    bind = button["Bind"] .. "-" .. button["State"]
+                end
             end
         )
 
@@ -414,11 +479,13 @@ local function showKeybind(bind, button, specialization, loadout, type)
         end
 
         SequenceListbox:SetList(names)
-        SequenceListbox:SetValue(button)
+        if button and button.Sequence then
+            SequenceListbox:SetValue(button.Sequence)
+        end
         SequenceListbox:SetCallback(
             "OnValueChanged",
             function(obj, event, key)
-                button = key
+                button.Sequence = key
             end
         )
 
@@ -528,6 +595,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         row:AddChild(ActionButtonList)
         row:AddChild(SequenceListbox)
         row:AddChild(TalentLoadOutList)
+        row:AddChild(LABButtonState)
 
         local row2 = AceGUI:Create("SimpleGroup")
         row2:SetFullWidth(true)
@@ -565,11 +633,10 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
     selpanel:SetAutoAdjustHeight(true)
     selpanel:SetLayout("List")
 
-    keybindingframe.panels[specialization .. bind] = selpanel
+    keybindingframe.panels[key] = selpanel
 
     local hlabel = AceGUI:Create("Label")
-
-    hlabel:SetText(bind .. " - " .. GSEOptions.KEYWORD .. "(" .. button .. ")" .. Statics.StringReset)
+    hlabel:SetText(bind .. " " .. GSEOptions.KEYWORD .. "(" .. button.Sequence .. ")" .. Statics.StringReset)
     hlabel:SetWidth(299)
     hlabel:SetFontObject(font)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)

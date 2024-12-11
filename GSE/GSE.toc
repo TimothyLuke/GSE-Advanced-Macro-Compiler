@@ -6,7 +6,7 @@
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
-## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics ConsolePort Bartender4
+## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 
 ## X-WoWI-ID: 23921
