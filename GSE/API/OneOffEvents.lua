@@ -68,15 +68,17 @@ function GSE.PerformOneOffEvents()
         GSEOptions.Updates["3218"] = true
     end
     if GSE.isEmpty(GSE_C.Updates["3218"]) then
-        for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
-            for i, j in pairs(v) do
-                GSE_C["ActionBarBinds"]["Specialisations"][k][i] = {["Sequence"] = j, ["Bind"] = i}
+        if GSE_C["ActionBarBinds"] then
+            for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
+                for i, j in pairs(v) do
+                    GSE_C["ActionBarBinds"]["Specialisations"][k][i] = {["Sequence"] = j, ["Bind"] = i}
+                end
             end
-        end
-        for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
-            for i, j in pairs(v) do
-                for m, l in pairs(j) do
-                    GSE_C["ActionBarBinds"]["LoadOuts"][k][i][m] = {["Sequence"] = l, ["Bind"] = m}
+            for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
+                for i, j in pairs(v) do
+                    for m, l in pairs(j) do
+                        GSE_C["ActionBarBinds"]["LoadOuts"][k][i][m] = {["Sequence"] = l, ["Bind"] = m}
+                    end
                 end
             end
         end
