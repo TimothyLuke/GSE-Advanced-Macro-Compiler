@@ -73,10 +73,10 @@ function GSE.PerformOneOffEvents()
                 GSE_C["ActionBarBinds"]["Specialisations"][k][i] = {["Sequence"] = j, ["Bind"] = i}
             end
         end
-        for k, v in pairs(GSE_C["ActionBarBinds"]["Loadouts"]) do
+        for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
             for i, j in pairs(v) do
                 for m, l in pairs(j) do
-                    GSE_C["ActionBarBinds"]["Loadouts"][k][i][m] = {["Sequence"] = l, ["Bind"] = m}
+                    GSE_C["ActionBarBinds"]["LoadOuts"][k][i][m] = {["Sequence"] = l, ["Bind"] = m}
                 end
             end
         end
