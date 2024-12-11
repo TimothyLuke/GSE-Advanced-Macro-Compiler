@@ -312,7 +312,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         LABButtonState:SetWidth(300)
         LABButtonState:SetLabel(L["Button State"])
         LABButtonState:SetDisabled(true)
-        if bind and _G[bind].state_types then
+        if bind and _G[bind] and _G[bind].state_types then
             local states = {["Default"] = "Default"}
             local default = string.sub(bind, 1, 3) == "BT4" and "0" or string.sub(bind, 1, 4) == "CPB_" and "" or "1"
             for k, _ in pairs(_G[bind].state_types) do
@@ -416,7 +416,7 @@ local function showKeybind(bind, button, specialization, loadout, type)
         for k, _ in pairs(buttonlist) do
             table.insert(striplist, k)
         end
-
+        buttonlist[bind] = bind
         ActionButtonList:SetList(buttonlist, GSE.SortTableAlphabetical(striplist))
         ActionButtonList:SetValue(bind)
         ActionButtonList:SetCallback(
