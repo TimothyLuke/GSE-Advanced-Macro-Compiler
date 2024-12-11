@@ -636,7 +636,8 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
     keybindingframe.panels[key] = selpanel
 
     local hlabel = AceGUI:Create("Label")
-    hlabel:SetText(bind .. " " .. GSEOptions.KEYWORD .. "(" .. button.Sequence .. ")" .. Statics.StringReset)
+    local blabel = (button and button.Sequence) and button.Sequence or button
+    hlabel:SetText(bind .. " " .. GSEOptions.KEYWORD .. "(" .. blabel .. ")" .. Statics.StringReset)
     hlabel:SetWidth(299)
     hlabel:SetFontObject(font)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
