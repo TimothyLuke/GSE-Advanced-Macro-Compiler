@@ -132,10 +132,7 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "CPB_" and "" or
         "1"
 
-    if
-        (string.sub(Button, 1, 4) == "CPB_" or string.sub(Button, 1, 3) == "BT4") and
-            not GSEOptions.DisableExperimentalLAB
-     then
+    if (string.sub(Button, 1, 3) == "BT4") and not GSEOptions.DisableExperimentalLAB then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetAttribute("gse-button", Sequence)
             _G[Button]:SetState(
@@ -156,7 +153,9 @@ local function overrideActionButton(savedBind, force)
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
-    elseif string.sub(Button, 1, 5) == "ElvUI" or GSEOptions.DisableExperimentalLAB then
+    elseif
+        string.sub(Button, 1, 5) == "ElvUI" or string.sub(Button, 1, 4) == "CPB_" or GSEOptions.DisableExperimentalLAB
+     then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetAttribute("gse-button", Sequence)
             _G[Button]:SetState(

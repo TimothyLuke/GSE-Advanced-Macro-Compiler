@@ -1,4 +1,4 @@
-## Interface: 110005, 11505, 40401
+## Interface: 110007, 11505, 40401
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
