@@ -106,7 +106,7 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  embed.files = [
+  embed.payload.files = [
     {
       attachment: `./GSE-${BuildNumber}.zip`,
       name: `GSE-${BuildNumber}.zip`,
