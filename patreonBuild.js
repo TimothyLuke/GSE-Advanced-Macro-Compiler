@@ -108,10 +108,11 @@ function publishArchive(done) {
 
   embed.files = [
     {
-      attachment: `GSE-${BuildNumber}.zip`,
+      attachment: `./GSE-${BuildNumber}.zip`,
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
+  console.log(embed);
   try {
     hook.send(embed).then(done);
     //hook.sendFile(`GSE-${BuildNumber}.zip`);
