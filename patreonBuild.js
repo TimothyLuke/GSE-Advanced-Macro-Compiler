@@ -106,9 +106,15 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  hook.send(embed);
-  hook.sendFile(`GSE-${BuildNumber}.zip`);
-  return done();
+  try {
+    hook.send(embed);
+    hook.sendFile(`GSE-${BuildNumber}.zip`);
+
+    return done();
+  } catch (err) {
+    console.log(err);
+    return done(err);
+  }
 }
 
 function deleteExistingZips(done) {
