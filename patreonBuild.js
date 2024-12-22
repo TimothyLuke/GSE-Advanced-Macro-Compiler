@@ -1,5 +1,6 @@
 let _ = require("lodash");
 let async = require("async");
+const util = require("util");
 const fs = require("fs");
 var BuildVersion = false;
 var BuildNumber = "";
@@ -112,7 +113,7 @@ function publishArchive(done) {
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
-  console.dir(embed);
+  console.log(util.inspect(embed));
   try {
     hook.send(embed).then(done);
     //hook.sendFile(`GSE-${BuildNumber}.zip`);
