@@ -1,6 +1,5 @@
 let _ = require("lodash");
 let async = require("async");
-const util = require("util");
 const fs = require("fs");
 var BuildVersion = false;
 var BuildNumber = "";
@@ -107,23 +106,15 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  const fileEmbed = {
-    contentType: "application/x-zip-compressed",
-    name: `GSE-${BuildNumber}.zip`,
-    url: `attachment://GSE-${BuildNumber}.zip`,
-  };
-  embed.payload.embeds[0].attachment = fileEmbed;
-
-  embed.payload.files = [
+  embed.files = [
     {
-      attachment: `./GSE-${BuildNumber}.zip`,
+      attachment: `GSE-${BuildNumber}.zip`,
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
-  console.log(util.inspect(embed, { depth: null }));
   try {
-    hook.send(embed).then(done);
-    //hook.sendFile(`GSE-${BuildNumber}.zip`);
+    hook.send(embed);
+    hook.sendFile(`GSE-${BuildNumber}.zip`).then(done);
   } catch (err) {
     console.log(err);
     return done(err);
@@ -156,7 +147,7 @@ async.waterfall(
     async.apply(updateToc, "GSE_GUI", "GSE_GUI"),
     async.apply(updateToc, "GSE_LDB", "GSE_LDB"),
     async.apply(updateToc, "GSE_Utils", "GSE_Utils"),
-    //async.apply(updateToc, "GSE_QoL", "GSE_QoL"),
+    async.apply(updateToc, "GSE_QoL", "GSE_QoL"),
     deleteExistingZips,
     addExtras,
     createArchive,
