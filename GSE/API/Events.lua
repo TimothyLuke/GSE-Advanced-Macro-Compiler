@@ -132,7 +132,10 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "CPB_" and "" or
         "1"
 
-    if (string.sub(Button, 1, 3) == "BT4") and not GSEOptions.DisableExperimentalLAB then
+    if
+        (string.sub(Button, 1, 3) == "BT4") or
+            (string.sub(Button, 1, 3) == "CPB_" and not GSEOptions.DisableExperimentalLAB)
+     then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetAttribute("gse-button", Sequence)
             _G[Button]:SetState(
@@ -154,7 +157,8 @@ local function overrideActionButton(savedBind, force)
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
     elseif
-        string.sub(Button, 1, 5) == "ElvUI" or string.sub(Button, 1, 4) == "CPB_" or GSEOptions.DisableExperimentalLAB
+        string.sub(Button, 1, 5) == "ElvUI" or (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 4) == "CPB_" or
+            GSEOptions.DisableExperimentalLAB
      then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetAttribute("gse-button", Sequence)
@@ -350,7 +354,9 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
-        GSE.setupLAB()
+        if not ConsolePort then
+            GSE.setupLAB()
+        end
         local char = UnitFullName("player")
         local realm = GetRealmName()
 
