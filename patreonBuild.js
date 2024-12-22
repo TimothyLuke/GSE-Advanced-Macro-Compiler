@@ -107,6 +107,10 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
+  const fileEmbed = {
+    url: `attachment://GSE-${BuildNumber}.zip`,
+  };
+  embed.payload.embeds.push(fileEmbed);
   embed.payload.files = [
     {
       attachment: `./GSE-${BuildNumber}.zip`,
