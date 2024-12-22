@@ -113,7 +113,7 @@ function publishArchive(done) {
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
-  console.log(util.inspect(embed));
+  console.log(util.inspect(embed, { depth: null }));
   try {
     hook.send(embed).then(done);
     //hook.sendFile(`GSE-${BuildNumber}.zip`);
