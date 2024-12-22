@@ -128,23 +128,22 @@ function deleteExistingZips(done) {
         return fs.unlink(`.release/${file}`, done);
       }
     }
+    return done();
   });
+}
+
+function closeMessage(done) {
+  console.log("Patron Build Complete");
+  return done();
 }
 
 async.waterfall(
   [
     async.apply(updateToc, "GSE", "GSE"),
-    // async.apply(updateToc, "GSE", "GSE_Vanilla"),
-    //async.apply(updateToc, "GSE", "GSE_Cata"),
     async.apply(updateToc, "GSE_GUI", "GSE_GUI"),
-    //async.apply(updateToc, "GSE_GUI", "GSE_GUI_Vanilla"),
-    //async.apply(updateToc, "GSE_GUI", "GSE_GUI_Cata"),
     async.apply(updateToc, "GSE_LDB", "GSE_LDB"),
-    //async.apply(updateToc, "GSE_LDB", "GSE_LDB_Vanilla"),
-    //async.apply(updateToc, "GSE_LDB", "GSE_LDB_Cata"),
     async.apply(updateToc, "GSE_Utils", "GSE_Utils"),
-    //async.apply(updateToc, "GSE_Utils", "GSE_Utils_Vanilla"),
-    //async.apply(updateToc, "GSE_Utils", "GSE_Utils_Cata"),
+    async.apply(updateToc, "GSE_QoL", "GSE_QoL"),
     deleteExistingZips,
     addExtras,
     createArchive,
