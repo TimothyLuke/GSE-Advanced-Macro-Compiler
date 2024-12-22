@@ -112,7 +112,7 @@ function publishArchive(done) {
     name: `GSE-${BuildNumber}.zip`,
     url: `attachment://GSE-${BuildNumber}.zip`,
   };
-  embed.payload.embeds[1].attachment = fileEmbed;
+  embed.payload.embeds[0].attachment = fileEmbed;
 
   embed.payload.files = [
     {
