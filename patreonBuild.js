@@ -106,13 +106,13 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  embed.payload.embeds.files = [
+  embed.payload.files = [
     {
       attachment: `./GSE-${BuildNumber}.zip`,
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
-  console.log(embed);
+  console.dir(embed);
   try {
     hook.send(embed).then(done);
     //hook.sendFile(`GSE-${BuildNumber}.zip`);
