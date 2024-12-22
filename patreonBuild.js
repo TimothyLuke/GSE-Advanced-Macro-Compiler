@@ -106,11 +106,15 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
+  embed.files = [
+    {
+      attachment: `GSE-${BuildNumber}.zip`,
+      name: `GSE-${BuildNumber}.zip`,
+    },
+  ];
   try {
-    hook.send(embed);
-    hook.sendFile(`GSE-${BuildNumber}.zip`);
-
-    return done();
+    hook.send(embed).then(done);
+    //hook.sendFile(`GSE-${BuildNumber}.zip`);
   } catch (err) {
     console.log(err);
     return done(err);
@@ -148,6 +152,7 @@ async.waterfall(
     addExtras,
     createArchive,
     publishArchive,
+    closeMessage,
   ],
   function (err) {
     console.log(err);
