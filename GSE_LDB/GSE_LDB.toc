@@ -6,5 +6,18 @@
 ## Version: @project-version@
 ## Dependencies: GSE GSE_Utils
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Group: GSE 
+
 
 LDBProvider.lua

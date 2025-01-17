@@ -578,12 +578,12 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
 hooksecurefunc(
     "SetItemRef",
     function(link)
-        local linkType, addon, param1 = strsplit(":", link)
+        local linkType, addon, param1 = string.split(":", link)
         if linkType == "garrmission" and addon == "GSE" then
             if param1 == "foo" then
                 print("Processed test link foo")
             else
-                local cmd, sequenceName, player, ClassID = strsplit("@", param1)
+                local cmd, sequenceName, player, ClassID = string.split("@", param1)
                 if cmd == "seq" then
                     if player == UnitName("player") then
                         GSE.GUILoadEditor(ClassID .. "," .. sequenceName)

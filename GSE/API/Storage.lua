@@ -569,7 +569,7 @@ function GSE.UpdateIcon(self, reseticon)
     if mods then
         local modlist = {}
         for _, j in ipairs(strsplittable("|", mods)) do
-            local a, b = strsplit("=", j)
+            local a, b = string.split("=", j)
             if a == "MOUSEBUTTON" then
                 modlist[a] = b
             else
@@ -1035,12 +1035,12 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
 
     local compressedsteps = {}
     for _, v in ipairs(steps) do
-        table.insert(compressedsteps, strjoin("|", unpack(v)))
+        table.insert(compressedsteps, string.join("|", unpack(v)))
     end
 
     local executestring =
         "compressedspelllist = newtable([=======[" ..
-        strjoin("]=======],[=======[", unpack(compressedsteps)) ..
+        string.join("]=======],[=======[", unpack(compressedsteps)) ..
             "]=======])" ..
                 [==[
 

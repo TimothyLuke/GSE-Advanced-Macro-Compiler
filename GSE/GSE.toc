@@ -8,6 +8,18 @@
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Group: GSE 
 
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161
@@ -31,7 +43,6 @@ Localization\ModL_zhTW.lua
 
 # Startup
 API\Init.lua
-API\LibActionButton-1.0.lua
 API\Statics.lua
 API\InitialOptions.lua
 

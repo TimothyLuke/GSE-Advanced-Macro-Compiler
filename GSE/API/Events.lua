@@ -133,32 +133,9 @@ local function overrideActionButton(savedBind, force)
         "1"
 
     if
-        (string.sub(Button, 1, 3) == "BT4") or
-            (string.sub(Button, 1, 3) == "CPB_" and not GSEOptions.DisableExperimentalLAB)
-     then
-        if _G[Button] and _G[Button].SetState then
-            _G[Button]:SetAttribute("gse-button", Sequence)
-            _G[Button]:SetState(
-                state,
-                "click",
-                {
-                    func = function(self)
-                        if not InCombatLockdown() then
-                            self:SetAttribute("type", "click")
-                            self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
-                        end
-                    end,
-                    tooltip = "GSE: " .. Sequence,
-                    texture = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
-                }
-            )
-            GSE.ButtonOverrides[Button] = Sequence
-            _G[Button]:SetAttribute("type", "click")
-            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
-        end
-    elseif
-        string.sub(Button, 1, 5) == "ElvUI" or (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 4) == "CPB_" or
-            GSEOptions.DisableExperimentalLAB
+        (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
+            (string.sub(Button, 1, 3) == "BT4") or
+            string.sub(Button, 1, 4) == "CPB_"
      then
         if _G[Button] and _G[Button].SetState then
             _G[Button]:SetAttribute("gse-button", Sequence)
@@ -354,9 +331,6 @@ end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
-        if not ConsolePort then
-            GSE.setupLAB()
-        end
         local char = UnitFullName("player")
         local realm = GetRealmName()
 
