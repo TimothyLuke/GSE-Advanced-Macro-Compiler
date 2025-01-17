@@ -124,6 +124,7 @@ globals = {
     "bit.rshift",
     "string.split",
     "string.trim",
+    "string.join",
     "table.wipe",
     "table.getn",
     "time",
