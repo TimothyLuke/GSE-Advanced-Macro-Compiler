@@ -606,7 +606,9 @@ function GSE.UpdateIcon(self, reseticon)
                             end
                         else
                             if _G[k] then
-                                _G[k]:Show()
+                                if not InCombatLockdown() then
+                                    _G[k]:Show()
+                                end
                                 _G[k].icon:SetTexture(spellinfo.iconID)
                                 _G[k].icon:Show()
                             -- _G[k].TextOverlayContainer.Count:SetText(gsebutton)
