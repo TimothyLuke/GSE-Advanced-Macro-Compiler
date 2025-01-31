@@ -44,6 +44,7 @@ function GSE.RegisterAddon(name, version, sequencenames)
         GSEOptions.AddInPacks[name].Version = version
     elseif GSEOptions.AddInPacks[name].Version ~= version then
         updateflag = true
+        GSEOptions.AddInPacks[name].Version = version
     end
     GSE.AddInPacks[name].SequenceNames = sequencenames
     return updateflag
