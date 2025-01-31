@@ -1,9 +1,9 @@
-## Interface: 90001
+## Interface: 110007
 ## Title: |cffff0000GSE|r |cFF00D1FFPlugin Shell|r
-## Notes: Sample of a plugin for GSE2
+## Notes: Sample of a plugin for GSE3
 ## Author: TimothyLuke
 ## Version: v2
-## RequiredDeps: GSE
+## RequiredDeps: GSE_Utils
 
 macrosamplefile.lua
 loaded.lua
