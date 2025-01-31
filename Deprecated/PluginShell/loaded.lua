@@ -49,6 +49,6 @@ GSEPlugin:RegisterMessage(Statics.ReloadMessage, loadSequences)
 -- or pvp version.
 
 -- Note: You could change the loadSequences function to load specific updated sequence
-if GSE.RegisterAddon(ModName, GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(Sequences)) then
+if GSE.RegisterAddon(ModName, C_AddOns.GetAddOnMetadata(ModName, "Version"), GSE.GetSequenceNamesFromLibrary(Sequences)) then
   loadSequences("Load", ModName)
 end
