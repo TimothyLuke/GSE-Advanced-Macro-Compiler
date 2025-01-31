@@ -1,9 +1,21 @@
 ## Interface: 110007
-## Title: |cffff0000GSE|r |cFF00D1FFPlugin Shell|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Plugin Shell|r
 ## Notes: Sample of a plugin for GSE3
 ## Author: TimothyLuke
 ## Version: v2
 ## RequiredDeps: GSE_Utils
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Group: GSE 
 
 macrosamplefile.lua
 loaded.lua
