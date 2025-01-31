@@ -1162,10 +1162,13 @@ function GSE.GetOptionsTable()
         for _, v in pairs(GSE.AddInPacks) do
             ord = ord + 1
             OptionsTable.args.plugins.args[v.Name] = {
-                name = C_AddOns.GetAddOnMetadata(v.Name, "Version") and C_AddOns.GetAddOnMetadata(v.Name, "Version") or
+                name = C_AddOns.GetAddOnMetadata(v.Name, "Title") and C_AddOns.GetAddOnMetadata(v.Name, "Title") or
                     v.Name,
                 desc = C_AddOns.GetAddOnMetadata(v.Name, "Notes") and
-                    C_AddOns.GetAddOnMetadata(v.Name, "Notes") .. "\n\n" .. C_AddOns.GetAddOnMetadata(v.Name, "Author") or
+                    C_AddOns.GetAddOnMetadata(v.Name, "Notes") ..
+                        "\n\n" ..
+                            C_AddOns.GetAddOnMetadata(v.Name, "Author") ..
+                                "\n" .. C_AddOns.GetAddOnMetadata(v.Name, "Version") or
                     string.format(L["Addin Version %s contained versions for the following sequences:"], v.Name) ..
                         string.format("\n%s", FormatSequenceNames(v.SequenceNames)),
                 type = "execute",
