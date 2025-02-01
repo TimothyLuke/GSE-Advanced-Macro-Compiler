@@ -1240,3 +1240,5 @@ function GSE:CreateConfigPanels()
         registered = true
     end
 end
+
+GSE:CreateConfigPanels()

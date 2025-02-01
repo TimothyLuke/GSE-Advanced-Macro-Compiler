@@ -117,8 +117,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
                 end
             end
         else
-            ---@diagnostic disable-next-line: deprecated
-            local spell, _, _, _, _, _ = GetSpellInfo(elements[6])
+            local spell, _, _, _, _, _ = C_Spell.GetSpellInfo(elements[6])
             local fskilltype, _ = GetSpellBookItemInfo(spell)
             if not GSE.isEmpty(fskilltype) then
                 if GSE.RecorderActive then

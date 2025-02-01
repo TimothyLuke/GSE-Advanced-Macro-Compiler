@@ -1,10 +1,10 @@
 ## Interface: 110007, 40401, 11506, 110100
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
-## Notes: Optional Utilities for GSE
+## Notes: GSE Configuration Options
 ## Author: TimothyLuke
 ## Version: @project-version@
-## Dependencies: GSE
+## Dependencies: GSE_Utils
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
@@ -20,15 +20,4 @@
 ## Group: GSE 
 
 
-embeds.xml
-Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Lib\LibQTip-1.0\LibQTip-1.0.lua
-Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
-Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
-
-
-Patrons.lua
-Indent.lua
-Events.lua
-StaticPopup.lua
-Utils.lua
+Options.lua

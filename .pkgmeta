@@ -57,6 +57,7 @@ move-folders:
   GSE/GSE_Utils: GSE_Utils
   GSE/GSE_Personal: GSE_Personal
   GSE/GSE_QoL: GSE_QoL
+  GSE/GSE_Options: GSE_Options
 
 enable-nolib-creation: no
 

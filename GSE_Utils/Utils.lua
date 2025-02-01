@@ -294,8 +294,14 @@ end
 
 --- Load a serialised Sequence
 function GSE.ImportSerialisedSequence(importstring, forcereplace)
-    local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
+    local decompresssuccess, actiontable
+    if type(importstring) == "table" then
+        decompresssuccess, actiontable = true, importstring
+    else
+        decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
+    end
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
+
     if decompresssuccess and actiontable then
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload
@@ -775,6 +781,5 @@ colorTable["/cast"] = castColor
 colorTable[0] = "|r"
 
 Statics.IndentationColorTable = colorTable
-GSE:CreateConfigPanels()
 
 GSE.Utils = true
