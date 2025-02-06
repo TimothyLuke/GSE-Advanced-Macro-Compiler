@@ -58,6 +58,8 @@ function GSE.TraceSequence(button, step, spell)
                     ",",
                     step,
                     ",",
+                    tostring(GetServerTime()),
+                    ",",
                     (spell and GSE.GetSpellId(spell, Statics.TranslatorMode.Current) or "nil"),
                     ",",
                     foundOutput,

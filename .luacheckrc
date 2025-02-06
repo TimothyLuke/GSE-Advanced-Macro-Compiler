@@ -492,5 +492,7 @@ globals = {
     "GetBindingByKey",
     "ConsolePort",
     "Bartender4",
-    "Settings"
+    "Settings",
+    "C_DateAndTime",
+    "GetServerTime"
 }
