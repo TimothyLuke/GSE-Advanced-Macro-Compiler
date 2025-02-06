@@ -1,6 +1,6 @@
 ## Interface: 110007, 40401, 11506, 110100
 
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Configuration Options|r
 ## Notes: GSE Configuration Options
 ## Author: TimothyLuke
 ## Version: @project-version@
