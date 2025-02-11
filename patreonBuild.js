@@ -79,21 +79,30 @@ function createArchive(done) {
 }
 
 function publishArchive(done) {
-  const { EmbedBuilder, WebhookClient } = require("discord.js");
-  // const { Webhook, MessageBuilder } = require("discord-webhook-node");
+  const {
+    EmbedBuilder,
+    WebhookClient,
+    AttachmentBuilder,
+  } = require("discord.js");
+
   const hook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK });
 
   const embed = new EmbedBuilder()
     // .setTitle(`GSE ${BuildVersion}`)
-    .setAuthor(
-      "GSE Updater",
-      "https://media.forgecdn.net/attachments/372/575/gse2-logo-dark-2x.png",
-      "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler.com"
-    )
+    .setAuthor({
+      name: "GSE Updater",
+      iconURL:
+        "https://media.forgecdn.net/attachments/372/575/gse2-logo-dark-2x.png",
+      url: "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler.com",
+    })
     //   .setURL(
     //     "https://www.https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler.com"
     //   )
-    .addField("New GSE Update", `${BuildNumber} Released`, true)
+    .addFields({
+      name: "New GSE Update",
+      value: `${BuildNumber} Released`,
+      inline: true,
+    })
     //   .addField("Second field", "this is not inline")
     .setColor("#00b0f4")
     .setThumbnail(
@@ -107,14 +116,13 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  var embedFiles = [
-    {
-      attachment: `GSE-${BuildNumber}.zip`,
-      name: `GSE-${BuildNumber}.zip`,
-    },
-  ];
+  var file = new AttachmentBuilder(`./GSE-${BuildNumber}.zip`);
+
   try {
-    hook.send({ embeds: [embed], files: embedFiles });
+    hook.send({
+      embeds: [embed],
+      files: [file],
+    });
     //hook.sendFile(`GSE-${BuildNumber}.zip`).then(done);
   } catch (err) {
     console.log(err);
