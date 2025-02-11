@@ -79,10 +79,11 @@ function createArchive(done) {
 }
 
 function publishArchive(done) {
-  const { Webhook, MessageBuilder } = require("discord-webhook-node");
-  const hook = new Webhook(process.env.DISCORD_WEBHOOK);
+  const { EmbedBuilder, WebhookClient } = require("discord.js");
+  // const { Webhook, MessageBuilder } = require("discord-webhook-node");
+  const hook = new Webhook({ url: process.env.DISCORD_WEBHOOK });
 
-  const embed = new MessageBuilder()
+  const embed = new EmbedBuilder()
     // .setTitle(`GSE ${BuildVersion}`)
     .setAuthor(
       "GSE Updater",
@@ -106,15 +107,15 @@ function publishArchive(done) {
     //   )
     .setTimestamp();
 
-  embed.files = [
+  var embedFiles = [
     {
       attachment: `GSE-${BuildNumber}.zip`,
       name: `GSE-${BuildNumber}.zip`,
     },
   ];
   try {
-    hook.send(embed);
-    hook.sendFile(`GSE-${BuildNumber}.zip`).then(done);
+    hook.send({ embeds: [embed], files: embedFiles });
+    //hook.sendFile(`GSE-${BuildNumber}.zip`).then(done);
   } catch (err) {
     console.log(err);
     return done(err);
