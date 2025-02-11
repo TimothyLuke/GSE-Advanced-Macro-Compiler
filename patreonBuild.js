@@ -81,7 +81,7 @@ function createArchive(done) {
 function publishArchive(done) {
   const { EmbedBuilder, WebhookClient } = require("discord.js");
   // const { Webhook, MessageBuilder } = require("discord-webhook-node");
-  const hook = new Webhook({ url: process.env.DISCORD_WEBHOOK });
+  const hook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK });
 
   const embed = new EmbedBuilder()
     // .setTitle(`GSE ${BuildVersion}`)
