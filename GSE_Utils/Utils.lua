@@ -687,6 +687,14 @@ function GSE:GSSlash(input)
     elseif command == "forceclean" then
         GSE.CleanOrphanSequences()
         GSE.CleanMacroLibrary(true)
+    elseif command == "export" then
+        if GSE.Patron then
+            GSE.CheckGUI()
+            if GSE.UnsavedOptions["GUI"] and GSE.GUIAdvancedExport then
+                GSE.GUIAdvancedExport(GSE.GUIExportframe)
+                GSE.GUIExportframe:Show()
+            end
+        end
     elseif command == "showdebugoutput" then
         StaticPopup_Show("GS-DebugOutput")
     elseif command == "record" then
