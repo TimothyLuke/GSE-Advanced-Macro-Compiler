@@ -95,6 +95,10 @@ local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("List") -- probably?
 leftScrollContainer:AddChild(leftscroll)
 leftscroll:SetFullWidth(true)
+if not leftscroll.GetWindow then
+    leftscroll.GetWindow = function()
+    end
+end
 leftscroll.frame:SetScript(
     "OnMouseDown",
     function(Self, button)
@@ -181,6 +185,10 @@ local function CreateSequencePanels(container, key)
     selpanel:SetAutoAdjustHeight(false)
     selpanel:SetLayout("Flow")
     editframe.panels[key] = selpanel
+    if not selpanel.GetWindow then
+        selpanel.GetWindow = function()
+        end
+    end
     selpanel:SetCallback(
         "OnClick",
         function(widget, _, selected, button)
@@ -2900,6 +2908,10 @@ local function drawAction(container, action, version, keyPath)
             end
         )
         if GSE.Patron then
+            if not booleanEditBox.GetWindow then
+                booleanEditBox.GetWindow = function()
+                end
+            end
             booleanEditBox.editbox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)

@@ -154,6 +154,10 @@ if GSE.GameMode > 10 then
         )
 
         if GSE.Patron then
+            if not spellEditBox.GetWindow then
+                spellEditBox.GetWindow = function()
+                end
+            end
             spellEditBox.editbox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
@@ -187,13 +191,16 @@ if GSE.GameMode > 10 then
                     )
                 end
             )
-
+            if not macroEditBox.GetWindow then
+                macroEditBox.GetWindow = function()
+                end
+            end
             macroEditBox.editBox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
                     -- if button == "RightButton" then
                     MenuUtil.CreateContextMenu(
-                        spellEditBox,
+                        macroEditBox,
                         function(ownerRegion, rootDescription)
                             rootDescription:CreateTitle(L["Insert Spell"])
                             for _, v in pairs(playerSpells) do
@@ -601,7 +608,10 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
             table.insert(spellinfolist, spellinfo)
         end
     end
-
+    if not lbl.GetWindow then
+        lbl.GetWindow = function()
+        end
+    end
     lbl:SetCallback(
         "OnClick",
         function(widget, button)

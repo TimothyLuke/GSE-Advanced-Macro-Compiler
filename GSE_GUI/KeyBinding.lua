@@ -644,7 +644,10 @@ local function buildKeybindHeader(specialization, bind, button, loadout, type)
     hlabel:SetWidth(299)
     hlabel:SetFontObject(font)
     hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
-
+    if not selpanel.GetWindow then
+        selpanel.GetWindow = function()
+        end
+    end
     selpanel:AddChild(hlabel)
     selpanel:SetCallback(
         "OnClick",

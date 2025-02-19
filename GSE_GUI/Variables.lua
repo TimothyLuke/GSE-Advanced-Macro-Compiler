@@ -125,6 +125,10 @@ local function createVariableHeader(name, variable)
     label:SetFontObject(font)
     label:SetText(name)
     selpanel.label = label
+    if not selpanel.GetWindow then
+        selpanel.GetWindow = function()
+        end
+    end
     selpanel:SetCallback(
         "OnClick",
         function(widget, _, selected, button)
@@ -467,7 +471,10 @@ function variablesframe.newVariable()
     local header = createVariableHeader("MyNewVar" .. math.random(100))
     leftscroll:AddChild(header)
 end
-
+if not leftscroll.GetWindow then
+    leftscroll.GetWindow = function()
+    end
+end
 leftscroll.frame:SetScript(
     "OnMouseDown",
     function(Self, button)

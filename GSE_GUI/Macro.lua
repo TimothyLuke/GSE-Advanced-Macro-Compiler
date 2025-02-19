@@ -350,6 +350,10 @@ local function showMacro(node)
             end
         )
         if GSE.Patron then
+            if not managedMacro.editBox.GetWindow then
+                managedMacro.editBox.GetWindow = function()
+                end
+            end
             managedMacro.editBox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
@@ -496,6 +500,10 @@ local function buildMacroHeader(node)
     selpanel:SetLayout("List")
 
     macroframe.panels[node.value] = selpanel
+    if not selpanel.GetWindow then
+        selpanel.GetWindow = function()
+        end
+    end
     selpanel:SetCallback(
         "OnClick",
         function(widget, _, selected, button)
