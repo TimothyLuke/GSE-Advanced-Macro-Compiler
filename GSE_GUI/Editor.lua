@@ -95,16 +95,13 @@ local leftscroll = AceGUI:Create("ScrollFrame")
 leftscroll:SetLayout("List") -- probably?
 leftScrollContainer:AddChild(leftscroll)
 leftscroll:SetFullWidth(true)
-if not leftscroll.GetWindow then
-    leftscroll.GetWindow = function()
-    end
-end
+
 leftscroll.frame:SetScript(
     "OnMouseDown",
     function(Self, button)
         if button == "RightButton" then
             MenuUtil.CreateContextMenu(
-                leftscroll,
+                editframe.frame,
                 function(ownerRegion, rootDescription)
                     rootDescription:CreateTitle(L["Sequence Editor"])
                     rootDescription:CreateButton(
@@ -185,17 +182,14 @@ local function CreateSequencePanels(container, key)
     selpanel:SetAutoAdjustHeight(false)
     selpanel:SetLayout("Flow")
     editframe.panels[key] = selpanel
-    if not selpanel.GetWindow then
-        selpanel.GetWindow = function()
-        end
-    end
+
     selpanel:SetCallback(
         "OnClick",
         function(widget, _, selected, button)
             editframe:clearpanels(widget, selected)
             if button == "RightButton" then
                 MenuUtil.CreateContextMenu(
-                    selpanel,
+                    editframe.frame,
                     function(ownerRegion, rootDescription)
                         rootDescription:CreateTitle(L["Sequence Editor"])
                         rootDescription:CreateButton(
@@ -2139,7 +2133,7 @@ local function GetBlockToolbar(
 end
 
 if GSE.isEmpty(GSE.CreateSpellEditBox) then
-    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
+    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro, frame)
         local spellEditBox = AceGUI:Create("EditBox")
 
         spellEditBox:SetWidth(250)
@@ -2277,7 +2271,7 @@ if GSE.isEmpty(GSE.CreateSpellEditBox) then
 end
 
 if GSE.isEmpty(GSE.CreateIconControl) then
-    GSE.CreateIconControl = function(action, version, keyPath, sequence)
+    GSE.CreateIconControl = function(action, version, keyPath, sequence, frame)
         local lbl = AceGUI:Create("Label")
         lbl:SetFontObject(GameFontNormalLarge)
         lbl:SetWidth(15)
@@ -2483,7 +2477,7 @@ local function drawAction(container, action, version, keyPath)
         compiledMacro:SetFullHeight(true)
 
         local spellEditBox, macroeditbox =
-            GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence, compiledMacro)
+            GSE.CreateSpellEditBox(action, version, keyPath, editframe.Sequence, compiledMacro, editframe.frame)
 
         local unitEditBox = AceGUI:Create("EditBox")
         unitEditBox:SetLabel(L["Unit Name"])
@@ -2513,7 +2507,7 @@ local function drawAction(container, action, version, keyPath)
         local typegroup = AceGUI:Create("SimpleGroup")
         typegroup:SetFullWidth(true)
         typegroup:SetLayout("Flow")
-        local actionicon = GSE.CreateIconControl(action, version, keyPath, editframe.Sequence)
+        local actionicon = GSE.CreateIconControl(action, version, keyPath, editframe.Sequence, editframe.frame)
         typegroup:AddChild(actionicon)
         local spellradio = AceGUI:Create("CheckBox")
         spellradio:SetType("radio")
@@ -2908,15 +2902,11 @@ local function drawAction(container, action, version, keyPath)
             end
         )
         if GSE.Patron then
-            if not booleanEditBox.GetWindow then
-                booleanEditBox.GetWindow = function()
-                end
-            end
             booleanEditBox.editbox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
                     MenuUtil.CreateContextMenu(
-                        booleanEditBox,
+                        editframe.frame,
                         function(ownerRegion, rootDescription)
                             rootDescription:CreateTitle(L["Insert GSE Variable"])
                             for k, _ in pairs(GSEVariables) do

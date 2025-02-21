@@ -6,7 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
 if GSE.GameMode > 10 then
-    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro)
+    GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro, frame)
         local playerSpells = {}
 
         -- local function spellFilter(self, spellID)
@@ -154,16 +154,12 @@ if GSE.GameMode > 10 then
         )
 
         if GSE.Patron then
-            if not spellEditBox.GetWindow then
-                spellEditBox.GetWindow = function()
-                end
-            end
             spellEditBox.editbox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
                     -- if button == "RightButton" then
                     MenuUtil.CreateContextMenu(
-                        spellEditBox,
+                        frame,
                         function(ownerRegion, rootDescription)
                             rootDescription:CreateTitle(L["Insert Spell"])
                             for _, v in pairs(playerSpells) do
@@ -191,16 +187,13 @@ if GSE.GameMode > 10 then
                     )
                 end
             )
-            if not macroEditBox.GetWindow then
-                macroEditBox.GetWindow = function()
-                end
-            end
+
             macroEditBox.editBox:SetScript(
                 "OnTabPressed",
                 function(widget, button, down)
                     -- if button == "RightButton" then
                     MenuUtil.CreateContextMenu(
-                        macroEditBox,
+                        frame,
                         function(ownerRegion, rootDescription)
                             rootDescription:CreateTitle(L["Insert Spell"])
                             for _, v in pairs(playerSpells) do
@@ -537,7 +530,7 @@ function GSE.Update31Actions(sequence)
     return seq
 end
 
-function GSE.CreateIconControl(action, version, keyPath, sequence)
+function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     local lbl = AceGUI:Create("InteractiveLabel")
     lbl:SetFontObject(GameFontNormalLarge)
     lbl:SetWidth(25)
@@ -608,16 +601,13 @@ function GSE.CreateIconControl(action, version, keyPath, sequence)
             table.insert(spellinfolist, spellinfo)
         end
     end
-    if not lbl.GetWindow then
-        lbl.GetWindow = function()
-        end
-    end
+
     lbl:SetCallback(
         "OnClick",
         function(widget, button)
             -- if button == "RightButton" then
             MenuUtil.CreateContextMenu(
-                lbl,
+                frame,
                 function(ownerRegion, rootDescription)
                     rootDescription:CreateTitle(L["Select Icon"])
                     for _, v in pairs(spellinfolist) do
