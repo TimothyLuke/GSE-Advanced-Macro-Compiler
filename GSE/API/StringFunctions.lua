@@ -198,7 +198,12 @@ function GSE.Dump(node)
                         cache[node] = cur_index + 1
                         break
                     else
-                        output_str = output_str .. string.rep("\t", depth) .. key .. ' = "' .. tostring(v) .. '"'
+                        if #GSE.SplitMeIntolines(v) > 1 then
+                            output_str =
+                                output_str .. string.rep("\t", depth) .. key .. " = [[\n" .. tostring(v) .. "\n]]"
+                        else
+                            output_str = output_str .. string.rep("\t", depth) .. key .. ' = "' .. tostring(v) .. '"'
+                        end
                     end
 
                     if (cur_index == size) then

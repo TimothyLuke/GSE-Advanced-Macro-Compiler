@@ -76,6 +76,39 @@ editframe.panels = {}
 
 GSE.GUIEditFrame = editframe
 
+local function GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
+    sequence.LastUpdated = GSE.GetTimestamp()
+
+    if not GSE.isEmpty(SequenceName) then
+        if GSE.isEmpty(classid) then
+            classid = GSE.GetCurrentClassID()
+        end
+        sequence.MetaData.Name = SequenceName
+        if not GSE.isEmpty(SequenceName) then
+            local vals = {}
+            vals.action = "Replace"
+            vals.sequencename = SequenceName
+            vals.sequence = sequence
+            vals.classid = classid
+            if editframe.NewSequence then
+                if GSE.ObjectExists(SequenceName) then
+                    editframe:SetStatusText(
+                        string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
+                    )
+                    editframe.nameeditbox:SetText(
+                        GSEOptions.UNKNOWN .. editframe.nameeditbox:GetText() .. Statics.StringReset
+                    )
+                    editframe.nameeditbox:SetFocus()
+                    return
+                end
+                editframe.NewSequence = false
+            end
+            table.insert(GSE.OOCQueue, vals)
+            editframe:SetStatusText(L["Save pending for "] .. SequenceName)
+        end
+    end
+end
+
 local basecontainer = AceGUI:Create("SimpleGroup")
 basecontainer:SetLayout("Flow")
 basecontainer:SetAutoAdjustHeight(false)
@@ -527,7 +560,7 @@ function GSE.GUIEditorPerformLayout()
         "OnClick",
         function()
             if GSE.isEmpty(editframe.invalidPause) then
-                GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. nameeditbox:GetText())
+                editframe:SetStatusText(L["Save pending for "] .. nameeditbox:GetText())
                 local _, _, _, tocversion = GetBuildInfo()
                 editframe.Sequence.MetaData.ManualIntervention = true
                 editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
@@ -535,7 +568,7 @@ function GSE.GUIEditorPerformLayout()
                 editframe.Sequence.MetaData.TOC = tocversion
                 nameeditbox:SetText(nameeditbox:GetText())
                 editframe.SequenceName = GSE.UnEscapeString(nameeditbox:GetText())
-                GSE.GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
+                GUIUpdateSequenceDefinition(editframe.ClassID, editframe.SequenceName, editframe.Sequence)
                 editframe.save = true
             else
                 GSE.Print(L["Error processing Custom Pause Value.  You will need to recheck your macros."], "ERROR")
@@ -585,7 +618,7 @@ function GSE.GUIEditorPerformLayout()
     editButtonGroup:AddChild(transbutton)
     editButtonGroup:AddChild(editOptionsbutton)
     rightContainer:AddChild(editButtonGroup)
-    GSE.GUIEditFrame:SetStatusText(editframe.statusText)
+    editframe:SetStatusText(editframe.statusText)
 end
 
 function GSE.GetVersionList()
@@ -1207,7 +1240,7 @@ end
 
 local function ChooseVersionTab(version, scrollpos)
     GSE.GUIEditorPerformLayout()
-    GSE.GUIEditFrame.ContentContainer:SelectTab(tostring(version))
+    editframe.ContentContainer:SelectTab(tostring(version))
     if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
         editframe.scrollContainer:SetScroll(scrollpos)
     end
@@ -2420,7 +2453,7 @@ local function drawAction(container, action, version, keyPath)
                     returnAction["MS"] = tonumber(text)
                 end
                 editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
-                GSE.GUIEditFrame:SetStatusText(editframe.statusText)
+                editframe:SetStatusText(editframe.statusText)
             end
         )
 
@@ -3203,7 +3236,7 @@ function GSE.GUISelectEditorTab(container, event, group)
         container:ReleaseChildren()
         editframe.SelectedTab = group
 
-        editframe.nameeditbox:SetText(GSE.GUIEditFrame.SequenceName)
+        editframe.nameeditbox:SetText(editframe.SequenceName)
         if group == "config" then
             GSE:GUIDrawMetadataEditor(container)
         elseif group == "new" then
@@ -3336,12 +3369,12 @@ function GSE.GUIDeleteVersion(version)
     table.remove(sequence.Macros, version)
     printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
     GSE.GUIEditorPerformLayout()
-    GSE.GUIEditFrame.ContentContainer:SelectTab("config")
-    GSE.GUIEditFrame:SetStatusText(string.format(printtext, version))
+    editframe.ContentContainer:SelectTab("config")
+    editframe:SetStatusText(string.format(printtext, version))
     C_Timer.After(
         5,
         function()
-            GSE.GUIEditFrame:SetStatusText(editframe.statusText)
+            editframe:SetStatusText(editframe.statusText)
         end
     )
 end

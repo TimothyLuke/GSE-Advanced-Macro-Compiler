@@ -107,39 +107,6 @@ function GSE.GUILoadEditor(key, recordedstring)
   GSE.GUIEditFrame:Show()
 end
 
-function GSE.GUIUpdateSequenceDefinition(classid, SequenceName, sequence)
-  sequence.LastUpdated = GSE.GetTimestamp()
-
-  if not GSE.isEmpty(SequenceName) then
-    if GSE.isEmpty(classid) then
-      classid = GSE.GetCurrentClassID()
-    end
-    sequence.MetaData.Name = SequenceName
-    if not GSE.isEmpty(SequenceName) then
-      local vals = {}
-      vals.action = "Replace"
-      vals.sequencename = SequenceName
-      vals.sequence = sequence
-      vals.classid = classid
-      if GSE.GUIEditFrame.NewSequence then
-        if GSE.ObjectExists(SequenceName) then
-          GSE.GUIEditFrame:SetStatusText(
-            string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
-          )
-          GSE.GUIEditFrame.nameeditbox:SetText(
-            GSEOptions.UNKNOWN .. GSE.GUIEditFrame.nameeditbox:GetText() .. Statics.StringReset
-          )
-          GSE.GUIEditFrame.nameeditbox:SetFocus()
-          return
-        end
-        GSE.GUIEditFrame.NewSequence = false
-      end
-      table.insert(GSE.OOCQueue, vals)
-      GSE.GUIEditFrame:SetStatusText(L["Save pending for "] .. SequenceName)
-    end
-  end
-end
-
 function GSE:OnInitialize()
   GSE.GUIRecordFrame:Hide()
   GSE.GUIVersionFrame:Hide()
