@@ -130,11 +130,12 @@ local function overrideActionButton(savedBind, force)
     local state =
         savedBind.State and savedBind.State or string.sub(Button, 1, 3) == "BT4" and "0" or
         string.sub(Button, 1, 4) == "CPB_" and "" or
+        string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
 
     if
         (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
-            (string.sub(Button, 1, 3) == "BT4") or
+            (string.sub(Button, 1, 4) == "NDui") or
             string.sub(Button, 1, 4) == "CPB_"
      then
         if _G[Button] and _G[Button].SetState then

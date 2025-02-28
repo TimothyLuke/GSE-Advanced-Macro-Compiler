@@ -114,6 +114,7 @@ globals = {
     -- Libraries
     "LibStub",
     "ElvUI",
+    "NDui",
     "IndentationLib",
     "WeakAuras",
     "ElvPrivateDB",

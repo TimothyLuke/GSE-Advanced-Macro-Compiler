@@ -588,7 +588,10 @@ function GSE.UpdateIcon(self, reseticon)
         if GSE.ButtonOverrides then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
-                    if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" then
+                    if
+                        string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
+                            string.sub(k, 1, 4) == "NDui"
+                     then
                         _G[k].icon:SetTexture(spellinfo.iconID)
                     else
                         if GSE.GameMode == 11 then
