@@ -121,7 +121,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
         else
             local spellInfo = C_Spell.GetSpellInfo(elements[6])
             local spell = spellInfo and spellInfo.name
-            local fskilltype, _ = spell and GetSpellBookItemInfo(spell)
+            local fskilltype = spell and GetSpellBookItemInfo(spell)
             if not GSE.isEmpty(fskilltype) then
                 if GSE.RecorderActive then
                     GSE.GUIRecordFrame.RecordSequenceBox:SetText(

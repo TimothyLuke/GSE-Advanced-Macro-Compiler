@@ -31,7 +31,7 @@ end
 
 function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
     instring = GSE.UnEscapeString(instring)
-    local lines = GSE.SplitMeIntolines(instring)
+    local lines = GSE.SplitMeIntoLines(instring)
     if #lines > 1 then
         local output = {}
         for k, v in ipairs(lines) do

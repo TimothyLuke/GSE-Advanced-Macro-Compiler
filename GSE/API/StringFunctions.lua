@@ -49,8 +49,8 @@ function GSE.lines(tab, str)
 end
 
 --- Convert a string to an array of lines.
-function GSE.SplitMeIntolines(str)
-    --GSE.PrintDebugMessage("Entering GSTRSplitMeIntolines with : \n" .. str, GNOME)
+function GSE.SplitMeIntoLines(str)
+    --GSE.PrintDebugMessage("Entering GSTRSplitMeIntoLines with : \n" .. str, GNOME)
     local t = {}
     local function helper(line)
         table.insert(t, line)
@@ -198,7 +198,7 @@ function GSE.Dump(node)
                         cache[node] = cur_index + 1
                         break
                     else
-                        if #GSE.SplitMeIntolines(v) > 1 then
+                        if #GSE.SplitMeIntoLines(v) > 1 then
                             output_str =
                                 output_str .. string.rep("\t", depth) .. key .. " = [[\n" .. tostring(v) .. "\n]]"
                         else
@@ -349,7 +349,7 @@ function GSE.RemoveComments(str)
     end
     local tab = str
     if type(str) ~= "table" then
-        tab = GSE.SplitMeIntolines(str)
+        tab = GSE.SplitMeIntoLines(str)
     end
 
     for i = #tab, 1, -1 do

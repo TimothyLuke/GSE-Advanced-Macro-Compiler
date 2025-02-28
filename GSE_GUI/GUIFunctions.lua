@@ -63,7 +63,7 @@ function GSE.GUILoadEditor(key, recordedstring)
     if not GSE.isEmpty(recordedstring) then
       sequence.Macros[1]["Actions"] = nil
       local recordedMacro = {}
-      for _, v in ipairs(GSE.SplitMeIntolines(recordedstring)) do
+      for _, v in ipairs(GSE.SplitMeIntoLines(recordedstring)) do
         print(v)
         local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
         if spellid then

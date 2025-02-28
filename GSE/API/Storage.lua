@@ -1223,7 +1223,7 @@ function GSE.CompileMacroText(text, mode)
     if GSE.isEmpty(mode) then
         mode = Statics.TranslatorMode.ID
     end
-    local lines = GSE.SplitMeIntolines(text)
+    local lines = GSE.SplitMeIntoLines(text)
     for k, v in ipairs(lines) do
         local value = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then

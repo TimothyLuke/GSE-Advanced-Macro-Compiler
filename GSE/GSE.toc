@@ -1,4 +1,4 @@
-## Interface: 110007, 40401, 11506, 110100
+## Interface: 40402, 11506, 110100
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
@@ -19,7 +19,7 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE 
+## Group: GSE
 
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161

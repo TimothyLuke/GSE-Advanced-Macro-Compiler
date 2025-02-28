@@ -570,7 +570,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     if action.type == "macro" then
         local macro = GSE.UnEscapeString(action.macro)
         if string.sub(macro, 1, 1) == "/" then
-            local lines = GSE.SplitMeIntolines(macro)
+            local lines = GSE.SplitMeIntoLines(macro)
             for _, v in ipairs(lines) do
                 local spellinfo = GSE.GetSpellsFromString(v)
                 if spellinfo and #spellinfo > 1 then

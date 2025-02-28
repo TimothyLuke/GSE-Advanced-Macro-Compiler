@@ -24,7 +24,6 @@ editframe.Scenario = 1
 editframe.ClassID = GSE.GetCurrentClassID()
 editframe.save = false
 editframe.SelectedTab = "group"
-editframe.AdvancedEditor = false
 editframe.statusText = "GSE: " .. GSE.VersionString
 editframe.booleanFunctions = {}
 editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
@@ -1246,6 +1245,116 @@ local function ChooseVersionTab(version, scrollpos)
     end
 end
 
+local function drawRawEditor(container, version, tablestring)
+    container:ReleaseChildren()
+
+    local seqTableEditbox = AceGUI:Create("MultiLineEditBox")
+    seqTableEditbox:SetLabel(L["Sequence"])
+    seqTableEditbox:DisableButton(true)
+    seqTableEditbox:SetNumLines(#GSE.SplitMeIntoLines(tablestring))
+    seqTableEditbox:SetRelativeWidth(0.9)
+    seqTableEditbox:SetHeight(editframe.Height - 320)
+    seqTableEditbox:SetText(tablestring)
+    --         seqTableEditbox:SetCallback(
+    --     "OnTextChanged",
+    --     function(self, event, text)
+    --         tablestring = IndentationLib.encode(text)
+    --     end
+    -- )
+    -- seqTableEditbox:SetCallback(
+    --     "OnEditFocusLost",
+    --     function()
+    --         local variabletext = IndentationLib.decode(seqTableEditbox:GetText())
+    --         tablestring = variabletext
+    --     end
+    -- )
+    IndentationLib.enable(seqTableEditbox.editBox, Statics.IndentationColorTable, 4)
+
+    local compileButton = AceGUI:Create("Button")
+    compileButton:SetText(L["Compile"])
+    compileButton:SetWidth(130)
+    compileButton:SetCallback(
+        "OnClick",
+        function()
+            local tab
+            local load = "return " .. seqTableEditbox:GetText()
+            local func, err = loadstring(load)
+            if err then
+                GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+                GSE.Print(err, L["GSE Raw Editor"])
+            else
+                tab = func()
+                if not GSE.isEmpty(tab) then
+                    editframe.Sequence.Macros[version] = tab
+                    GSE.GUIEditorPerformLayout()
+                    editframe.ContentContainer:SelectTab(version)
+                else
+                    GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+                end
+            end
+        end
+    )
+    -- compileButton:SetCallback(
+    --     "OnEnter",
+    --     function()
+    --         GSE.CreateToolTip(
+    --             L["Delete Version"],
+    --             L[
+    --                 "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
+    --             ],
+    --             editframe
+    --         )
+    --     end
+    -- )
+    compileButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+
+    local cancelButton = AceGUI:Create("Button")
+    cancelButton:SetText(L["Cancel"])
+    cancelButton:SetWidth(130)
+    cancelButton:SetCallback(
+        "OnClick",
+        function()
+            GSE.GUIEditorPerformLayout()
+            editframe.ContentContainer:SelectTab(version)
+        end
+    )
+    -- cancelButton:SetCallback(
+    --     "OnEnter",
+    --     function()
+    --         GSE.CreateToolTip(
+    --             L["Delete Version"],
+    --             L[
+    --                 "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
+    --             ],
+    --             editframe
+    --         )
+    --     end
+    -- )
+    cancelButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+    container:AddChild(seqTableEditbox)
+
+    local toolcontainer = AceGUI:Create("InlineGroup")
+    toolcontainer:SetLayout("Flow")
+
+    toolcontainer:SetWidth(container.frame:GetWidth() - 50)
+    toolcontainer:AddChild(compileButton)
+    toolcontainer:AddChild(cancelButton)
+    container:AddChild(toolcontainer)
+    -- _G["GSE3"].TextBox:SetText(tablestring)
+    -- _G["GSE3"].Version = version
+    -- _G["GSE3"]:Show()
+end
+
 function GSE:GUIDrawMacroEditor(container, version)
     version = tonumber(version)
 
@@ -1348,12 +1457,12 @@ function GSE:GUIDrawMacroEditor(container, version)
     raweditbutton:SetCallback(
         "OnClick",
         function()
-            local GSE3Macro = GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version])
-            _G["GSE3"].TextBox:SetText(GSE.Dump(GSE3Macro))
-            _G["GSE3"].Version = version
-            _G["GSE3"]:Show()
-            editframe.AdvancedEditor = true
-            editframe:Hide()
+            drawRawEditor(
+                contentcontainer,
+                version,
+                GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version]))
+            )
+
             GSE.WagoAnalytics:Switch("Raw Edit", true)
         end
     )
