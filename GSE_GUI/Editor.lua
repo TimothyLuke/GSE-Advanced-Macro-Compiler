@@ -44,7 +44,13 @@ function GSE.CreateEditor()
         local editorleft = GSEOptions.frameLocations.sequenceeditor.left
         local editortop = GSEOptions.frameLocations.sequenceeditor.top
         if #GSE.GUI.editors > 1 then
-            editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft + 10, editortop - 10)
+            editframe:SetPoint(
+                "TOPLEFT",
+                UIParent,
+                "BOTTOMLEFT",
+                editorleft + 10 * #GSE.GUI.editors,
+                editortop - 10 * #GSE.GUI.editors
+            )
         else
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
@@ -3366,6 +3372,8 @@ function GSE.CreateEditor()
                 editframe.GUIEditorPerformLayout()
             elseif group == "talents" then
                 DrawTalentsEditor(container)
+            elseif group == "resize" then
+                -- do nothing further
             else
                 GSE:GUIDrawMacroEditor(container, group)
             end
