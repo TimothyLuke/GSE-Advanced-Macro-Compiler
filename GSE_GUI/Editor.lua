@@ -35,15 +35,35 @@ function GSE.CreateEditor()
     editframe.statusText = "GSE: " .. GSE.VersionString
     editframe.booleanFunctions = {}
     editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-    local editorleft = GSEOptions.frameLocations.sequenceeditor.left
-    local editortop = GSEOptions.frameLocations.sequenceeditor.top
+    editframe.frame:SetScript(
+        "OnDragStop",
+        function(self)
+            if GSE.isEmpty(GSEOptions.frameLocations) then
+                GSEOptions.frameLocations = {}
+            end
+            if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+                GSEOptions.frameLocations.sequenceeditor = {}
+            end
+            local left = self:GetRect()
+            print(left)
+            GSEOptions.frameLocations.sequenceeditor.left = left
+            GSEOptions.frameLocations.sequenceeditor.top = self:GetTop()
+            self:StopMovingOrSizing()
+        end
+    )
     if
         GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and
             GSEOptions.frameLocations.sequenceeditor.left and
             GSEOptions.frameLocations.sequenceeditor.top
      then
+        local editorleft = GSEOptions.frameLocations.sequenceeditor.left
+        local editortop = GSEOptions.frameLocations.sequenceeditor.top
         if #GSE.GUI.editors > 1 then
-            editframe:SetPoint("TOPLEFT", GSE.GUI.editors[#GSE.GUI.editors - 1].frame, "TOPLEFT", 10, -10)
+            local editor = GSE.GUI.editors[#GSE.GUI.editors - 1]
+            if editor == editframe then
+                editor = GSE.GUI.editors[#GSE.GUI.editors]
+            end
+            editframe:SetPoint("TOPLEFT", editor.frame, "TOPLEFT", 10, -10)
         else
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
