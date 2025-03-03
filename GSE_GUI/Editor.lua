@@ -44,11 +44,7 @@ function GSE.CreateEditor()
         local editorleft = GSEOptions.frameLocations.sequenceeditor.left
         local editortop = GSEOptions.frameLocations.sequenceeditor.top
         if #GSE.GUI.editors > 1 then
-            local editor = GSE.GUI.editors[#GSE.GUI.editors - 1]
-            if editor == editframe then
-                editor = GSE.GUI.editors[#GSE.GUI.editors]
-            end
-            editframe:SetPoint("TOPLEFT", editor.frame, "TOPLEFT", 10, -10)
+            editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft + 10, editortop - 10)
         else
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
@@ -78,17 +74,18 @@ function GSE.CreateEditor()
         "OnClose",
         function(self)
             GSE.ClearTooltip(editframe)
-            editframe:Hide()
             if GSE.isEmpty(GSEOptions.frameLocations) then
                 GSEOptions.frameLocations = {}
             end
             if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
                 GSEOptions.frameLocations.sequenceeditor = {}
             end
-            local left = self:GetRect()
+            local left, bottom, w, h = self.frame:GetRect()
             GSEOptions.frameLocations.sequenceeditor.left = left
-            GSEOptions.frameLocations.sequenceeditor.top = self:GetTop()
-
+            GSEOptions.frameLocations.sequenceeditor.top = bottom + h
+            GSEOptions.editorHeight = h
+            GSEOptions.editorWidth = w
+            editframe:Hide()
             editframe:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
