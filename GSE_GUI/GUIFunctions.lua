@@ -33,7 +33,7 @@ function GSE.GUIParseText(editbox)
   end
 end
 
-function GSE.GUILoadEditor(key, recordedstring)
+function GSE.GUILoadEditor(editor, key, recordedstring)
   local classid
   local sequenceName
   local sequence
@@ -77,7 +77,7 @@ function GSE.GUILoadEditor(key, recordedstring)
       end
       sequence.Macros[1]["Actions"] = recordedMacro
     end
-    GSE.GUIEditFrame.NewSequence = true
+    editor.NewSequence = true
   else
     local elements = GSE.split(key, ",")
     classid = tonumber(elements[1])
@@ -86,31 +86,30 @@ function GSE.GUILoadEditor(key, recordedstring)
     local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
     if seq then
       sequence = seq[2]
-      GSE.GUIEditFrame.NewSequence = false
+      editor.NewSequence = false
     end
   end
   if GSE.isEmpty(sequence.WeakAuras) then
     sequence.WeakAuras = {}
   end
-  GSE.GUIEditFrame:SetStatusText("GSE: " .. GSE.VersionString)
-  GSE.GUIEditFrame.SequenceName = sequenceName
-  GSE.GUIEditFrame.Sequence = sequence
-  GSE.GUIEditFrame.ClassID = classid
-  GSE.GUIEditorPerformLayout()
-  GSE.GUIEditFrame.ContentContainer:SelectTab("config")
+  editor:SetStatusText("GSE: " .. GSE.VersionString)
+  editor.SequenceName = sequenceName
+  editor.Sequence = sequence
+  editor.ClassID = classid
+  editor.GUIEditorPerformLayout()
+  editor.ContentContainer:SelectTab("config")
   if sequence.ReadOnly then
-    GSE.GUIEditFrame.SaveButton:SetDisabled(true)
-    GSE.GUIEditFrame:SetStatusText(
+    editor.SaveButton:SetDisabled(true)
+    editor:SetStatusText(
       "GSE: " .. GSE.VersionString .. " " .. L["This sequence is Read Only and unable to be edited."]
     )
   end
-  GSE.GUIEditFrame:Show()
+  editor:Show()
 end
 
 function GSE:OnInitialize()
   GSE.GUIRecordFrame:Hide()
   GSE.GUIVersionFrame:Hide()
-  GSE.GUIEditFrame:Hide()
 end
 
 function GSE.OpenOptionsPanel()

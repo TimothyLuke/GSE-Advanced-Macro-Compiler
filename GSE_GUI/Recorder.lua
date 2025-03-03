@@ -54,7 +54,9 @@ createmacrobutton:SetCallback(
   "OnClick",
   function()
     recordframe:Hide()
-    GSE.GUILoadEditor(nil, recordsequencebox:GetText())
+    local editor = GSE.CreateEditor()
+    editor.listSequences()
+    GSE.GUILoadEditor(editor, nil, recordsequencebox:GetText())
   end
 )
 createmacrobutton:SetDisabled(true)

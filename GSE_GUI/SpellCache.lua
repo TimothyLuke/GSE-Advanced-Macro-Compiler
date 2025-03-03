@@ -211,7 +211,7 @@ cacheFrame.frame:SetScript(
         end
         GSEOptions.editorHeight = cacheFrame.Height
         GSEOptions.editorWidth = cacheFrame.Width
-        GSE.GUISelectEditorTab(cacheFrame.ContentContainer, "Resize", cacheFrame.SelectedTab)
+        GSE.GUISelectCacheTab(cacheFrame.ContentContainer, "Resize", cacheFrame.SelectedTab)
         cacheFrame:DoLayout()
     end
 )

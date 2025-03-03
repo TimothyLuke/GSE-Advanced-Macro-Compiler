@@ -2,8 +2,6 @@ local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
 
-GSE.GUIEditFrame = {}
-
 StaticPopupDialogs["GS-DebugOutput"] = {
     text = "Dump of GS Debug messages",
     button1 = L["Update"],

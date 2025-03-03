@@ -456,13 +456,6 @@ function GSE:PLAYER_LOGOUT()
             GSEOptions.frameLocations.menu.top = GSE.MenuFrame.frame:GetTop()
             GSEOptions.frameLocations.menu.left = GSE.MenuFrame.frame:GetLeft()
         end
-        if GSE["GUIEditFrame"] and GSE.GUIEditFrame.frame then
-            if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
-                GSEOptions.frameLocations.sequenceeditor = {}
-            end
-            GSEOptions.frameLocations.sequenceeditor.top = GSE.GUIEditFrame.frame:GetTop()
-            GSEOptions.frameLocations.sequenceeditor.left = GSE.GUIEditFrame.frame:GetLeft()
-        end
         if GSE["GUIVariableFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
                 GSEOptions.frameLocations.variablesframe = {}

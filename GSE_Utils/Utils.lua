@@ -113,18 +113,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
         GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.MetaData.Default])
     end
-    if GSE.GUI and GSE.GUIEditFrame then
-        if GSE.GUIEditFrame:IsVisible() then
-            GSE.GUIEditFrame:SetStatusText(sequenceName .. " " .. L["Saved"])
-            C_Timer.After(
-                5,
-                function()
-                    GSE.GUIEditFrame:SetStatusText("")
-                end
-            )
-            GSE.ShowSequences()
-        end
-    end
+    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
 end
 
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
@@ -177,18 +166,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
         "Storage"
     )
-    if GSE.GUI and GSE.GUIEditFrame then
-        if GSE.GUIEditFrame:IsVisible() then
-            GSE.GUIEditFrame:SetStatusText(sequenceName .. " " .. L["Saved"])
-            C_Timer.After(
-                5,
-                function()
-                    GSE.GUIEditFrame:SetStatusText("")
-                end
-            )
-            GSE.ShowSequences()
-        end
-    end
+    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load a collection of Sequences
@@ -314,9 +292,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             for _, v in pairs(actiontable["Macros"]) do
                 GSE.ImportSerialisedSequence(v, forcereplace)
             end
-            if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
-                GSE.ShowSequences()
-            end
+            GSE:SendMessage(Statics.COLLECTION_IMPORTED)
             if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
                 GSE.ShowVariables()
             end
@@ -370,9 +346,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 GSE.AddSequenceToCollection(seqName, v)
             end
 
-            if GSE.GUI and GSE.GUIEditFrame:IsVisible() then
-                GSE.ShowSequences()
-            end
+            GSE:SendMessage(Statics.SEQUENCE_UPDATED, seqName)
             if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
                 GSE.ShowVariables()
             end

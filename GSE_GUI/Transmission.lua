@@ -4,78 +4,77 @@ local Statics = GSE.Static
 
 local L = GSE.L
 
-local AceGUI = LibStub("AceGUI-3.0")
-local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
+function GSE.GUIShowTransmissionGui(inckey, editframe)
+  local AceGUI = LibStub("AceGUI-3.0")
+  local Completing = LibStub("AceGUI-3.0-Completing-EditBox")
 
-local transauthor = GetUnitName("player", true) .. "@" .. GetRealmName()
-local transauthorlen = string.len(transauthor)
+  local transauthor = GetUnitName("player", true) .. "@" .. GetRealmName()
+  local transauthorlen = string.len(transauthor)
 
-local transmissionFrame = AceGUI:Create("Frame")
-transmissionFrame.frame:SetFrameStrata("MEDIUM")
-transmissionFrame.frame:SetClampedToScreen(true)
-GSE.GUITransmissionFrame = transmissionFrame
+  local transmissionFrame = AceGUI:Create("Frame")
+  transmissionFrame.frame:SetFrameStrata("MEDIUM")
+  transmissionFrame.frame:SetClampedToScreen(true)
 
-Completing:Register("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
+  Completing:Register("ExampleAll", AUTOCOMPLETE_LIST.WHISPER)
 
-GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmission)
+  GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmission)
 
-local transSequencevalue = ""
+  local transSequencevalue = ""
 
-transmissionFrame:SetTitle(L["Send To"])
-transmissionFrame:SetCallback(
-  "OnClose",
-  function(widget)
-    transmissionFrame:Hide()
-  end
-)
-transmissionFrame:SetLayout("List")
-transmissionFrame:SetWidth(290)
-transmissionFrame:SetHeight(190)
-transmissionFrame:Hide()
+  transmissionFrame:SetTitle(L["Send To"])
+  transmissionFrame:SetCallback(
+    "OnClose",
+    function(widget)
+      transmissionFrame:Hide()
+    end
+  )
+  transmissionFrame:SetLayout("List")
+  transmissionFrame:SetWidth(290)
+  transmissionFrame:SetHeight(190)
+  transmissionFrame:Hide()
 
-local SequenceListbox = AceGUI:Create("Dropdown")
---SequenceListbox:SetLabel(L["Load Sequence"])
-SequenceListbox:SetWidth(250)
-SequenceListbox:SetCallback(
-  "OnValueChanged",
-  function(obj, event, key)
-    transSequencevalue = key
-  end
-)
-transmissionFrame.SequenceListbox = SequenceListbox
-transmissionFrame:AddChild(SequenceListbox)
+  local SequenceListbox = AceGUI:Create("Dropdown")
+  --SequenceListbox:SetLabel(L["Load Sequence"])
+  SequenceListbox:SetWidth(250)
+  SequenceListbox:SetCallback(
+    "OnValueChanged",
+    function(obj, event, key)
+      transSequencevalue = key
+    end
+  )
+  transmissionFrame.SequenceListbox = SequenceListbox
+  transmissionFrame:AddChild(SequenceListbox)
 
-local playereditbox = AceGUI:Create("EditBoxExampleAll")
-playereditbox:SetLabel(L["Send To"])
-playereditbox:SetWidth(250)
-playereditbox:DisableButton(true)
-transmissionFrame:AddChild(playereditbox)
+  local playereditbox = AceGUI:Create("EditBoxExampleAll")
+  playereditbox:SetLabel(L["Send To"])
+  playereditbox:SetWidth(250)
+  playereditbox:DisableButton(true)
+  transmissionFrame:AddChild(playereditbox)
 
-local sendbutton = AceGUI:Create("Button")
-sendbutton:SetText(L["Send"])
-sendbutton:SetWidth(250)
-sendbutton:SetCallback(
-  "OnClick",
-  function()
-    GSE.TransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText())
-  end
-)
-transmissionFrame:AddChild(sendbutton)
+  local sendbutton = AceGUI:Create("Button")
+  sendbutton:SetText(L["Send"])
+  sendbutton:SetWidth(250)
+  sendbutton:SetCallback(
+    "OnClick",
+    function()
+      GSE.TransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText(), transmissionFrame)
+    end
+  )
+  transmissionFrame:AddChild(sendbutton)
 
-function GSE.GUIShowTransmissionGui(inckey)
-  if GSE.GUIEditFrame:IsVisible() then
-    local point, relativeTo, relativePoint, xOfs, yOfs = GSE.GUIEditFrame:GetPoint()
-    --	GSE.GUITransmissionFrame:SetPoint("CENTRE" , (left/2)+(width/2), bottom )
-    GSE.GUITransmissionFrame:ClearAllPoints()
-    GSE.GUITransmissionFrame:SetPoint("TOPLEFT", GSE.GUIEditFrame.frame, GSE.GUIEditFrame.Width + 10, 0)
+  if editframe then
+    local point, relativeTo, relativePoint, xOfs, yOfs = editframe:GetPoint()
+
+    transmissionFrame:ClearAllPoints()
+    transmissionFrame:SetPoint("TOPLEFT", editframe.frame, editframe.Width + 10, 0)
   end
 
   local names = GSE.GetSequenceNames()
-  GSE.GUITransmissionFrame.SequenceListbox:SetList(names)
+  transmissionFrame.SequenceListbox:SetList(names)
   if not GSE.isEmpty(inckey) then
-    GSE.GUITransmissionFrame.SequenceListbox:SetValue(inckey)
+    transmissionFrame.SequenceListbox:SetValue(inckey)
     transSequencevalue = inckey
   end
   transmissionFrame:Show()
-  GSE.GUITransmissionFrame:SetStatusText(L["Ready to Send"])
+  transmissionFrame:SetStatusText(L["Ready to Send"])
 end

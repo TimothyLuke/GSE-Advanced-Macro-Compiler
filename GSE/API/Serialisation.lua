@@ -231,7 +231,7 @@ function GSE.DecodeMessage(data)
     return success, final
 end
 
-function GSE.TransmitSequence(key, channel, target)
+function GSE.TransmitSequence(key, channel, target, transmissionFrame)
     local t = {}
     t.Command = "GS-E_TRANSMITSEQUENCE"
     local elements = GSE.split(key, ",")
@@ -242,7 +242,9 @@ function GSE.TransmitSequence(key, channel, target)
     t.SequenceName = SequenceName
     t.Sequence = GSE.Library[classid][SequenceName]
     GSE.sendMessage(t, channel, target)
-    GSE.GUITransmissionFrame:SetStatusText(SequenceName .. L[" sent"])
+    if transmissionFrame then
+        transmissionFrame:SetStatusText(SequenceName .. L[" sent"])
+    end
 end
 
 function GSE.sendMessage(tab, channel, target, priority)
@@ -586,7 +588,9 @@ hooksecurefunc(
                 local cmd, sequenceName, player, ClassID = string.split("@", param1)
                 if cmd == "seq" then
                     if player == UnitName("player") then
-                        GSE.GUILoadEditor(ClassID .. "," .. sequenceName)
+                        local editor = GSE.CreateEditor()
+                        editor.listSequences()
+                        GSE.GUILoadEditor(editor, ClassID .. "," .. sequenceName)
                     else
                         GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
                         GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")

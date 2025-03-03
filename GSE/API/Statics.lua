@@ -510,4 +510,6 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
     preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
+Statics.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
+Statics.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
 GSE.DebugProfile("Statics")

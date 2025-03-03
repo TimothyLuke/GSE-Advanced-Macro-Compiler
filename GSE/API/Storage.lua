@@ -64,18 +64,7 @@ end
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
-    if GSE.GUI and GSE.GUIEditFrame then
-        if GSE.GUIEditFrame:IsVisible() then
-            GSE.GUIEditFrame:SetStatusText(sequenceName .. " " .. L["Saved"])
-            C_Timer.After(
-                5,
-                function()
-                    GSE.GUIEditFrame:SetStatusText("")
-                end
-            )
-            GSE.ShowSequences()
-        end
-    end
+    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load the GSEStorage into a new table.
