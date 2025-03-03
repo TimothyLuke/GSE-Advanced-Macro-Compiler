@@ -48,18 +48,18 @@ function GSE.CreateEditor()
                 "TOPLEFT",
                 UIParent,
                 "BOTTOMLEFT",
-                editorleft + 10 * #GSE.GUI.editors,
-                editortop - 10 * #GSE.GUI.editors
+                editorleft + (10 * #GSE.GUI.editors),
+                editortop - (10 * #GSE.GUI.editors)
             )
         else
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
     end
 
-    if GSE.isEmpty(GSEOptions.editorHeight) then
+    if not GSE.isEmpty(GSEOptions.editorHeight) then
         GSEOptions.editorHeight = 500
     end
-    if GSE.isEmpty(GSEOptions.editorWidth) then
+    if not GSE.isEmpty(GSEOptions.editorWidth) then
         GSEOptions.editorWidth = 700
     end
     editframe.Height = GSEOptions.editorHeight
@@ -223,10 +223,12 @@ function GSE.CreateEditor()
             end
             GSEOptions.editorHeight = editframe.Height
             GSEOptions.editorWidth = editframe.Width
+            basecontainer:SetHeight(editframe.Height - 100)
+            leftScrollContainer:SetHeight(editframe.Height - 100)
             rightContainer:SetWidth(editframe.Width - 250)
             rightContainer:SetHeight(editframe.Height - 90)
-
             GSE.GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
+
             editframe:DoLayout()
         end
     )
@@ -3372,10 +3374,10 @@ function GSE.CreateEditor()
                 editframe.GUIEditorPerformLayout()
             elseif group == "talents" then
                 DrawTalentsEditor(container)
-            elseif group == "resize" then
-                -- do nothing further
             else
-                GSE:GUIDrawMacroEditor(container, group)
+                if not GSE.isEmpty(group) then
+                    GSE:GUIDrawMacroEditor(container, group)
+                end
             end
             editframe.nameeditbox:SetText(editframe.SequenceName)
 
@@ -3536,9 +3538,18 @@ function GSE.CreateEditor()
 end
 
 function GSE.ShowSequences()
-    local editframe = GSE.CreateEditor()
-    editframe.listSequences()
-    editframe:Show()
+    if not InCombatLockdown() then
+        local editframe = GSE.CreateEditor()
+        editframe.listSequences()
+        editframe:Show()
+    else
+        GSE.Print(
+            L[
+                "You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."
+            ],
+            Statics.DebugModules["Editor"]
+        )
+    end
 end
 
 local function remoteSeqences(message, seqName)
