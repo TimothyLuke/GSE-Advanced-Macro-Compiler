@@ -35,22 +35,7 @@ function GSE.CreateEditor()
     editframe.statusText = "GSE: " .. GSE.VersionString
     editframe.booleanFunctions = {}
     editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-    editframe.frame:SetScript(
-        "OnDragStop",
-        function(self)
-            if GSE.isEmpty(GSEOptions.frameLocations) then
-                GSEOptions.frameLocations = {}
-            end
-            if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
-                GSEOptions.frameLocations.sequenceeditor = {}
-            end
-            local left = self:GetRect()
-            print(left)
-            GSEOptions.frameLocations.sequenceeditor.left = left
-            GSEOptions.frameLocations.sequenceeditor.top = self:GetTop()
-            self:StopMovingOrSizing()
-        end
-    )
+
     if
         GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and
             GSEOptions.frameLocations.sequenceeditor.left and
@@ -94,13 +79,23 @@ function GSE.CreateEditor()
         function(self)
             GSE.ClearTooltip(editframe)
             editframe:Hide()
+            if GSE.isEmpty(GSEOptions.frameLocations) then
+                GSEOptions.frameLocations = {}
+            end
+            if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+                GSEOptions.frameLocations.sequenceeditor = {}
+            end
+            local left = self:GetRect()
+            GSEOptions.frameLocations.sequenceeditor.left = left
+            GSEOptions.frameLocations.sequenceeditor.top = self:GetTop()
+
             editframe:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
                     table.remove(GSE.GUI.editors, k)
                 end
             end
-            editframe = nil
+            AceGUI:Release(self)
         end
     )
 
