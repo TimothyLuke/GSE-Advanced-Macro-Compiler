@@ -41,8 +41,8 @@ if macroframe.Width < 700 then
     GSEOptions.macroWidth = macroframe.Width
 end
 macroframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-macroframe.frame:SetHeight(GSEOptions.editorHeight)
-macroframe.frame:SetWidth(GSEOptions.editorWidth)
+macroframe.frame:SetHeight(macroframe.Height)
+macroframe.frame:SetWidth(macroframe.Width)
 
 macroframe:SetTitle(L["Macros"])
 macroframe:SetCallback(

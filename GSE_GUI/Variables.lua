@@ -41,8 +41,8 @@ if variablesframe.Width < 700 then
     GSEOptions.menuWidth = variablesframe.Width
 end
 variablesframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-variablesframe.frame:SetHeight(GSEOptions.editorHeight)
-variablesframe.frame:SetWidth(GSEOptions.editorWidth)
+variablesframe.frame:SetHeight(variablesframe.Height)
+variablesframe.frame:SetWidth(variablesframe.Width)
 
 variablesframe:SetTitle(L["Variables"])
 variablesframe:SetCallback(

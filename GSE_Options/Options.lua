@@ -843,7 +843,7 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         get = function(info)
-                            return tostring(GSEOptions.editorWidth)
+                            return tostring(GSEOptions.editorWidth) and tostring(GSEOptions.editorWidth) or "700"
                         end,
                         order = 12
                     },

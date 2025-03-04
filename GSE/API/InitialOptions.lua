@@ -88,8 +88,8 @@ function GSE.SetDefaultOptions()
     GSEOptions.showMiniMap = {
         hide = true
     }
-    GSEOptions.editorHeight = 700
-    GSEOptions.editorWidth = 700
+    -- GSEOptions.editorHeight = 500
+    -- GSEOptions.editorWidth = 700
     GSEOptions.showCurrentSpells = true
     GSEOptions.OOCQueueDelay = 7
     GSE.resetMacroResetModifiers()

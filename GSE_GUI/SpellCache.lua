@@ -165,25 +165,19 @@ function GSE:GUIDrawSpellCacheEditor(container, language)
     container:AddChild(scrollcontainer)
 end
 
-if GSE.isEmpty(GSEOptions.editorHeight) then
-    GSEOptions.editorHeight = 500
-end
-if GSE.isEmpty(GSEOptions.editorWidth) then
-    GSEOptions.editorWidth = 700
-end
-cacheFrame.Height = GSEOptions.editorHeight
-cacheFrame.Width = GSEOptions.editorWidth
+cacheFrame.Height = GSEOptions.cacheHeight and GSEOptions.cacheHeight or 700
+cacheFrame.Width = GSEOptions.cacheWidth and GSEOptions.cacheWidth or 700
 if cacheFrame.Height < 500 then
     cacheFrame.Height = 500
-    GSEOptions.editorHeight = cacheFrame.Height
+    GSEOptions.cacheHeight = cacheFrame.Height
 end
 if cacheFrame.Width < 700 then
     cacheFrame.Width = 700
-    GSEOptions.editorWidth = cacheFrame.Width
+    GSEOptions.cacheWidth = cacheFrame.Width
 end
 cacheFrame.frame:SetClampRectInsets(-10, -10, -10, -10)
-cacheFrame.frame:SetHeight(GSEOptions.editorHeight)
-cacheFrame.frame:SetWidth(GSEOptions.editorWidth)
+cacheFrame.frame:SetHeight(cacheFrame.Height)
+cacheFrame.frame:SetWidth(cacheFrame.Width)
 cacheFrame:SetTitle(L["Spell Cache Editor"])
 cacheFrame:SetCallback(
     "OnClose",
@@ -209,8 +203,8 @@ cacheFrame.frame:SetScript(
             cacheFrame.Width = 700
             cacheFrame:SetWidth(cacheFrame.Width)
         end
-        GSEOptions.editorHeight = cacheFrame.Height
-        GSEOptions.editorWidth = cacheFrame.Width
+        GSEOptions.cacheHeight = cacheFrame.Height
+        GSEOptions.cacheWidth = cacheFrame.Width
         GSE.GUISelectCacheTab(cacheFrame.ContentContainer, "Resize", cacheFrame.SelectedTab)
         cacheFrame:DoLayout()
     end
