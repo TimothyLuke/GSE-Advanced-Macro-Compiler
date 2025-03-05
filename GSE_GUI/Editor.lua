@@ -199,7 +199,7 @@ function GSE.CreateEditor()
     local rightContainer = AceGUI:Create("SimpleGroup")
     editframe.rightContainer = rightContainer
     rightContainer:SetLayout("List")
-    rightContainer:SetWidth(editframe.Width - 260)
+    rightContainer:SetWidth(editframe.Width - 250)
     rightContainer:SetHeight(editframe.Height - 90)
     basecontainer:AddChild(rightContainer)
     local function ChooseVersionTab(version, scrollpos)
@@ -2409,7 +2409,7 @@ function GSE.CreateEditor()
                 local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
                 -- scrollcontainer:SetFullWidth(true)
                 -- scrollcontainer:SetFullHeight(true) -- Probably?
-                scrollcontainer:SetWidth(editframe.Width - 260)
+                scrollcontainer:SetWidth(editframe.Width - 250)
                 scrollcontainer:SetHeight(editframe.Height - 255)
                 scrollcontainer:SetLayout("Fill") -- Important!
                 editframe.scrollStatus = {}
@@ -2423,7 +2423,7 @@ function GSE.CreateEditor()
 
                 local linegroup1 = AceGUI:Create("KeyGroup")
                 linegroup1:SetLayout("Flow")
-                linegroup1:SetWidth(editframe.Width)
+                linegroup1:SetWidth(contentcontainer:GetWidth())
 
                 local spacerlabel1 = AceGUI:Create("Label")
                 spacerlabel1:SetWidth(5)
@@ -2666,7 +2666,7 @@ function GSE.CreateEditor()
 
                 local linegroup2 = AceGUI:Create("KeyGroup")
                 linegroup2:SetLayout("Flow")
-                linegroup2:SetWidth(editframe.Width)
+                linegroup2:SetWidth(contentcontainer:GetWidth())
 
                 local spacerlabel2 = AceGUI:Create("Label")
                 spacerlabel2:SetWidth(6)
@@ -2839,7 +2839,7 @@ function GSE.CreateEditor()
 
                 local linegroup3 = AceGUI:Create("KeyGroup")
                 linegroup3:SetLayout("Flow")
-                linegroup3:SetWidth(editframe.Width)
+                linegroup3:SetWidth(contentcontainer:GetWidth())
 
                 local spacerlabel3 = AceGUI:Create("Label")
                 spacerlabel3:SetWidth(6)
@@ -2966,7 +2966,7 @@ function GSE.CreateEditor()
             GSEOptions.editorWidth = editframe.Width
             basecontainer:SetHeight(editframe.Height - 100)
             leftScrollContainer:SetHeight(editframe.Height - 100)
-            rightContainer:SetWidth(editframe.Width - 260)
+            rightContainer:SetWidth(editframe.Width - 250)
             rightContainer:SetHeight(editframe.Height - 90)
             GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
 
