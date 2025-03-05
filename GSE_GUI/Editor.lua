@@ -199,7 +199,7 @@ function GSE.CreateEditor()
     local rightContainer = AceGUI:Create("SimpleGroup")
     editframe.rightContainer = rightContainer
     rightContainer:SetLayout("List")
-    rightContainer:SetWidth(editframe.Width - 250)
+    rightContainer:SetWidth(editframe.Width - 260)
     rightContainer:SetHeight(editframe.Height - 90)
     basecontainer:AddChild(rightContainer)
     local function ChooseVersionTab(version, scrollpos)
@@ -2409,7 +2409,7 @@ function GSE.CreateEditor()
                 local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
                 -- scrollcontainer:SetFullWidth(true)
                 -- scrollcontainer:SetFullHeight(true) -- Probably?
-                scrollcontainer:SetWidth(editframe.Width - 250)
+                scrollcontainer:SetWidth(editframe.Width - 260)
                 scrollcontainer:SetHeight(editframe.Height - 255)
                 scrollcontainer:SetLayout("Fill") -- Important!
                 editframe.scrollStatus = {}
@@ -2966,7 +2966,7 @@ function GSE.CreateEditor()
             GSEOptions.editorWidth = editframe.Width
             basecontainer:SetHeight(editframe.Height - 100)
             leftScrollContainer:SetHeight(editframe.Height - 100)
-            rightContainer:SetWidth(editframe.Width - 250)
+            rightContainer:SetWidth(editframe.Width - 260)
             rightContainer:SetHeight(editframe.Height - 90)
             GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
 
