@@ -2423,7 +2423,7 @@ function GSE.CreateEditor()
 
                 local linegroup1 = AceGUI:Create("KeyGroup")
                 linegroup1:SetLayout("Flow")
-                linegroup1:SetWidth(contentcontainer:GetWidth())
+                linegroup1:SetWidth(editframe.Width - 250)
 
                 local spacerlabel1 = AceGUI:Create("Label")
                 spacerlabel1:SetWidth(5)
@@ -2666,7 +2666,7 @@ function GSE.CreateEditor()
 
                 local linegroup2 = AceGUI:Create("KeyGroup")
                 linegroup2:SetLayout("Flow")
-                linegroup2:SetWidth(contentcontainer:GetWidth())
+                linegroup2:SetWidth(editframe.Width - 250)
 
                 local spacerlabel2 = AceGUI:Create("Label")
                 spacerlabel2:SetWidth(6)
@@ -2839,7 +2839,7 @@ function GSE.CreateEditor()
 
                 local linegroup3 = AceGUI:Create("KeyGroup")
                 linegroup3:SetLayout("Flow")
-                linegroup3:SetWidth(contentcontainer:GetWidth())
+                linegroup3:SetWidth(editframe.Width - 250)
 
                 local spacerlabel3 = AceGUI:Create("Label")
                 spacerlabel3:SetWidth(6)
