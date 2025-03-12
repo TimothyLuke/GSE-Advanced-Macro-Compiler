@@ -36,6 +36,31 @@ function GSE.CreateEditor()
     editframe.booleanFunctions = {}
     editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
 
+    local function GUIConfirmDeleteSequence(classid, sequenceName)
+        GSE.DeleteSequence(classid, sequenceName)
+        for _, v in ipairs(GSE.GUI.editors) do
+            v.listSequences()
+        end
+    end
+
+    --- This function pops up a confirmation dialog.
+    local function GUIDeleteSequence(classid, sequenceName)
+        StaticPopupDialogs["GSE-DeleteMacroDialog"].text =
+            string.format(
+            L[
+                "Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."
+            ],
+            sequenceName
+        )
+        StaticPopupDialogs["GSE-DeleteMacroDialog"].OnAccept = function(self, data)
+            GUIConfirmDeleteSequence(classid, sequenceName)
+        end
+
+        StaticPopup_Show("GSE-DeleteMacroDialog")
+    end
+
+    --- This function then deletes the macro.
+
     if
         GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and
             GSEOptions.frameLocations.sequenceeditor.left and
@@ -144,7 +169,7 @@ function GSE.CreateEditor()
     basecontainer:SetLayout("Flow")
     basecontainer:SetAutoAdjustHeight(false)
     basecontainer:SetHeight(editframe.Height - 100)
-    basecontainer:SetFullWidth(true)
+    basecontainer:SetWidth(editframe.Width)
     editframe:AddChild(basecontainer)
 
     local leftScrollContainer = AceGUI:Create("SimpleGroup")
@@ -3046,7 +3071,7 @@ function GSE.CreateEditor()
                             rootDescription:CreateButton(
                                 L["Delete"],
                                 function()
-                                    GSE.GUIDeleteSequence(classid, sequencename)
+                                    GUIDeleteSequence(classid, sequencename)
                                 end
                             )
                         end
@@ -3380,7 +3405,7 @@ function GSE.CreateEditor()
             "OnClick",
             function()
                 editframe:Hide()
-                GSE.GUIDeleteSequence(editframe.ClassID, editframe.SequenceName)
+                GUIDeleteSequence(editframe.ClassID, editframe.SequenceName)
             end
         )
         delbutton:SetCallback(

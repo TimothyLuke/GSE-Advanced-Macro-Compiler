@@ -3,26 +3,6 @@ local L = GSE.L
 local Statics = GSE.Static
 local LibQTip = LibStub("LibQTip-1.0")
 
---- This function pops up a confirmation dialog.
-function GSE.GUIDeleteSequence(classid, sequenceName)
-  StaticPopupDialogs["GSE-DeleteMacroDialog"].text =
-    string.format(
-    L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."],
-    sequenceName
-  )
-  StaticPopupDialogs["GSE-DeleteMacroDialog"].OnAccept = function(self, data)
-    GSE.GUIConfirmDeleteSequence(classid, sequenceName)
-  end
-
-  StaticPopup_Show("GSE-DeleteMacroDialog")
-end
-
---- This function then deletes the macro.
-function GSE.GUIConfirmDeleteSequence(classid, sequenceName)
-  GSE.DeleteSequence(classid, sequenceName)
-  GSE.ShowSequences()
-end
-
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
