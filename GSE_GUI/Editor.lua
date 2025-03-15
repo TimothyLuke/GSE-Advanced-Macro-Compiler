@@ -68,20 +68,20 @@ function GSE.CreateEditor()
      then
         local editorleft = GSEOptions.frameLocations.sequenceeditor.left
         local editortop = GSEOptions.frameLocations.sequenceeditor.top
-        if #GSE.GUI.editors > 1 then
-            editframe:SetPoint(
-                "TOPLEFT",
-                UIParent,
-                "BOTTOMLEFT",
-                editorleft + (10 * #GSE.GUI.editors),
-                editortop - (10 * #GSE.GUI.editors)
-            )
+
+        if #GSE.GUI.editors > 0 then
+            editorleft = editorleft + 30
+            editortop = editortop - 30
+            editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
+            GSEOptions.frameLocations.sequenceeditor.left = editorleft
+            GSEOptions.frameLocations.sequenceeditor.top = editortop
         else
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
     end
     editframe.Height = GSEOptions.editorHeight and GSEOptions.editorHeight or 500
     editframe.Width = GSEOptions.editorWidth and GSEOptions.editorWidth or 700
+
     if editframe.Height < 500 then
         editframe.Height = 500
         GSEOptions.editorHeight = editframe.Height
