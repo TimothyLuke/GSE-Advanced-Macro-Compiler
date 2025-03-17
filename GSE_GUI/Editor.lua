@@ -2998,16 +2998,16 @@ function GSE.CreateEditor()
             GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
             editframe:ResumeLayout()
             --editframe:DoLayout()
-            print(
-                "W-",
-                width,
-                "  EFW-",
-                editframe.Width,
-                " RCW-",
-                rightContainer.frame:GetWidth(),
-                " SANITY-",
-                editframe.Width - rightContainer.frame:GetWidth()
-            )
+            -- print(
+            --     "W-",
+            --     width,
+            --     "  EFW-",
+            --     editframe.Width,
+            --     " RCW-",
+            --     rightContainer.frame:GetWidth(),
+            --     " SANITY-",
+            --     editframe.Width - rightContainer.frame:GetWidth()
+            -- )
         end
     )
 
