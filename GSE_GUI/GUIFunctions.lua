@@ -44,7 +44,6 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
       sequence.Macros[1]["Actions"] = nil
       local recordedMacro = {}
       for _, v in ipairs(GSE.SplitMeIntoLines(recordedstring)) do
-        print(v)
         local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
         if spellid then
           local action = {

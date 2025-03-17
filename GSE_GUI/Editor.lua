@@ -183,7 +183,7 @@ function GSE.CreateEditor()
     local leftscroll = AceGUI:Create("ScrollFrame")
     leftscroll:SetLayout("List") -- probably?
     leftScrollContainer:AddChild(leftscroll)
-    leftscroll:SetFullWidth(true)
+    leftscroll:SetWidth(200)
 
     leftscroll.frame:SetScript(
         "OnMouseDown",
@@ -429,7 +429,7 @@ function GSE.CreateEditor()
             local defaultdropdown = AceGUI:Create("Dropdown")
             defaultdropdown:SetLabel(L["Default Version"])
             defaultdropdown:SetWidth(250)
-            defaultdropdown:SetList(GSE.GetVersionList())
+            defaultdropdown:SetList(editframe.GetVersionList())
             defaultdropdown:SetValue(tostring(editframe.Sequence.MetaData.Default))
             defaultdropdown:SetCallback(
                 "OnValueChanged",
@@ -460,7 +460,7 @@ function GSE.CreateEditor()
             local raiddropdown = AceGUI:Create("Dropdown")
             raiddropdown:SetLabel(L["Raid"])
             raiddropdown:SetWidth(250)
-            raiddropdown:SetList(GSE.GetVersionList())
+            raiddropdown:SetList(editframe.GetVersionList())
             raiddropdown:SetValue(tostring(editframe.Sequence.MetaData.Raid))
             raiddropdown:SetCallback(
                 "OnValueChanged",
@@ -496,7 +496,7 @@ function GSE.CreateEditor()
             local arenadropdown = AceGUI:Create("Dropdown")
             arenadropdown:SetLabel(L["Arena"])
             arenadropdown:SetWidth(250)
-            arenadropdown:SetList(GSE.GetVersionList())
+            arenadropdown:SetList(editframe.GetVersionList())
             arenadropdown:SetValue(tostring(editframe.Sequence.MetaData.Arena))
             arenadropdown:SetCallback(
                 "OnEnter",
@@ -530,7 +530,7 @@ function GSE.CreateEditor()
             local mythicdropdown = AceGUI:Create("Dropdown")
             mythicdropdown:SetLabel(L["Mythic"])
             mythicdropdown:SetWidth(250)
-            mythicdropdown:SetList(GSE.GetVersionList())
+            mythicdropdown:SetList(editframe.GetVersionList())
             mythicdropdown:SetValue(tostring(editframe.Sequence.MetaData.Mythic))
             mythicdropdown:SetCallback(
                 "OnValueChanged",
@@ -561,7 +561,7 @@ function GSE.CreateEditor()
             local pvpdropdown = AceGUI:Create("Dropdown")
             pvpdropdown:SetLabel(L["PVP"])
             pvpdropdown:SetWidth(250)
-            pvpdropdown:SetList(GSE.GetVersionList())
+            pvpdropdown:SetList(editframe.GetVersionList())
             pvpdropdown:SetValue(tostring(editframe.Sequence.MetaData.PVP))
 
             pvpdropdown:SetCallback(
@@ -595,7 +595,7 @@ function GSE.CreateEditor()
             local dungeondropdown = AceGUI:Create("Dropdown")
             dungeondropdown:SetLabel(L["Dungeon"])
             dungeondropdown:SetWidth(250)
-            dungeondropdown:SetList(GSE.GetVersionList())
+            dungeondropdown:SetList(editframe.GetVersionList())
             dungeondropdown:SetValue(tostring(editframe.Sequence.MetaData.Dungeon))
 
             dungeondropdown:SetCallback(
@@ -631,7 +631,7 @@ function GSE.CreateEditor()
             local heroicdropdown = AceGUI:Create("Dropdown")
             heroicdropdown:SetLabel(L["Heroic"])
             heroicdropdown:SetWidth(250)
-            heroicdropdown:SetList(GSE.GetVersionList())
+            heroicdropdown:SetList(editframe.GetVersionList())
             heroicdropdown:SetValue(tostring(editframe.Sequence.MetaData.Heroic))
             heroicdropdown:SetCallback(
                 "OnValueChanged",
@@ -663,7 +663,7 @@ function GSE.CreateEditor()
             local partydropdown = AceGUI:Create("Dropdown")
             partydropdown:SetLabel(L["Party"])
             partydropdown:SetWidth(250)
-            partydropdown:SetList(GSE.GetVersionList())
+            partydropdown:SetList(editframe.GetVersionList())
             partydropdown:SetValue(tostring(editframe.Sequence.MetaData.Party))
             partydropdown:SetCallback(
                 "OnValueChanged",
@@ -706,7 +706,7 @@ function GSE.CreateEditor()
             local Timewalkingdropdown = AceGUI:Create("Dropdown")
             Timewalkingdropdown:SetLabel(L["Timewalking"])
             Timewalkingdropdown:SetWidth(250)
-            Timewalkingdropdown:SetList(GSE.GetVersionList())
+            Timewalkingdropdown:SetList(editframe.GetVersionList())
             Timewalkingdropdown:SetValue(tostring(editframe.Sequence.MetaData.Timewalking))
             Timewalkingdropdown:SetCallback(
                 "OnValueChanged",
@@ -741,7 +741,7 @@ function GSE.CreateEditor()
             local mythicplusdropdown = AceGUI:Create("Dropdown")
             mythicplusdropdown:SetLabel(L["Mythic+"])
             mythicplusdropdown:SetWidth(250)
-            mythicplusdropdown:SetList(GSE.GetVersionList())
+            mythicplusdropdown:SetList(editframe.GetVersionList())
             mythicplusdropdown:SetValue(tostring(editframe.Sequence.MetaData.MythicPlus))
             mythicplusdropdown:SetCallback(
                 "OnValueChanged",
@@ -773,7 +773,7 @@ function GSE.CreateEditor()
             local scenariodropdown = AceGUI:Create("Dropdown")
             scenariodropdown:SetLabel(L["Scenario"])
             scenariodropdown:SetWidth(250)
-            scenariodropdown:SetList(GSE.GetVersionList())
+            scenariodropdown:SetList(editframe.GetVersionList())
             scenariodropdown:SetValue(tostring(editframe.Sequence.MetaData.Scenario))
             scenariodropdown:SetCallback(
                 "OnValueChanged",
@@ -2987,15 +2987,27 @@ function GSE.CreateEditor()
                 editframe.Width = 700
                 editframe:SetWidth(editframe.Width)
             end
+            editframe:PauseLayout()
             GSEOptions.editorHeight = editframe.Height
             GSEOptions.editorWidth = editframe.Width
             basecontainer:SetHeight(editframe.Height - 100)
             leftScrollContainer:SetHeight(editframe.Height - 100)
             rightContainer:SetWidth(editframe.Width - 250)
-            rightContainer:SetHeight(editframe.Height - 90)
-            GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
+            rightContainer:SetHeight(height - 90)
 
-            editframe:DoLayout()
+            GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
+            editframe:ResumeLayout()
+            --editframe:DoLayout()
+            print(
+                "W-",
+                width,
+                "  EFW-",
+                editframe.Width,
+                " RCW-",
+                rightContainer.frame:GetWidth(),
+                " SANITY-",
+                editframe.Width - rightContainer.frame:GetWidth()
+            )
         end
     )
 
@@ -3205,7 +3217,7 @@ function GSE.CreateEditor()
         end
     end
 
-    function GSE.GUICreateEditorTabs()
+    function editframe.GUICreateEditorTabs()
         local tabl = {
             {
                 text = L["Configuration"],
@@ -3289,7 +3301,7 @@ function GSE.CreateEditor()
 
         local tabgrp = AceGUI:Create("TabGroup")
         tabgrp:SetLayout("Flow")
-        tabgrp:SetTabs(GSE.GUICreateEditorTabs())
+        tabgrp:SetTabs(editframe.GUICreateEditorTabs())
         editframe.ContentContainer = tabgrp
 
         tabgrp:SetCallback(
@@ -3428,7 +3440,7 @@ function GSE.CreateEditor()
         editframe:SetStatusText(editframe.statusText)
     end
 
-    function GSE.GetVersionList()
+    function editframe.GetVersionList()
         local tabl = {}
         for k, _ in ipairs(editframe.Sequence.Macros) do
             tabl[tostring(k)] = tostring(k)
