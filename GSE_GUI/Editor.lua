@@ -1945,10 +1945,6 @@ function GSE.CreateEditor()
                         compiledMacro:SetText(compiledmacrotext)
                         compiledMacro.label:SetNonSpaceWrap(true)
                         compiledMacro:SetRelativeWidth(0.45)
-                        -- local feedback = AceGUI:Create("SimpleGroup")
-
-                        -- feedback:SetRelativeWidth(0.45)
-                        -- feedback:AddChild(compiledMacro)
 
                         local spacerm = AceGUI:Create("Icon")
                         spacerm:SetRelativeWidth(0.03)
