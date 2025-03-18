@@ -216,6 +216,14 @@ function GSE.CleanMacroLibrary(forcedelete)
         GSESequences[GSE.GetCurrentClassID()] = {}
         GSE.Library[GSE.GetCurrentClassID()] = nil
         GSE.Library[GSE.GetCurrentClassID()] = {}
+        if GSE.GUI and GSE.GUI.Editors then
+            for k, _ in GSE.GUI.Editors do
+                k:Hide()
+                k:ReleaseChildren()
+                k:Release()
+            end
+            GSE.GUI.Editors = {}
+        end
     end
 end
 

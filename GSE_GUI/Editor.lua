@@ -109,8 +109,25 @@ function GSE.CreateEditor()
             GSEOptions.frameLocations.sequenceeditor.top = bottom + h
             GSEOptions.editorHeight = h
             GSEOptions.editorWidth = w
-            editframe:Hide()
-            editframe:ReleaseChildren()
+            self:Hide()
+            self.Sequence = nil
+            self.SequenceName = nil
+            self.Raid = nil
+            self.PVP = nil
+            self.Mythic = nil
+            self.Dungeon = nil
+            self.Heroic = nil
+            self.Party = nil
+            self.Arena = nil
+            self.Timewalking = nil
+            self.MythicPlus = nil
+            self.Scenario = nil
+            self.ClassID = nil
+            self.save = nil
+            self.SelectedTab = nil
+            self.statusText = nil
+            self.booleanFunctions = nil
+            self:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
                     table.remove(GSE.GUI.editors, k)
