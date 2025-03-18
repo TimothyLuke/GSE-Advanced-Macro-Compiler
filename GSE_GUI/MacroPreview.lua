@@ -19,7 +19,7 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
   )
   PreviewFrame:SetLayout("List")
   PreviewFrame.frame:SetClampRectInsets(-10, -10, -10, -10)
-  PreviewFrame:SetWidth(290)
+  PreviewFrame:SetWidth(280)
   PreviewFrame:SetHeight(700)
   PreviewFrame:Hide()
 
@@ -36,7 +36,8 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
   PreviewFrame.frame:SetScript(
     "OnSizeChanged",
     function(self, width, height)
-      PreviewLabel:SetWidth(width - 20)
+      PreviewLabel:SetWidth(width - 30)
+      PreviewLabel:SetHeight(height - 80)
     end
   )
 
