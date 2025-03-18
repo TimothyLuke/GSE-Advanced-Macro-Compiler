@@ -1946,7 +1946,7 @@ function GSE.CreateEditor()
                         compiledMacro.label:SetNonSpaceWrap(true)
                         compiledMacro:SetRelativeWidth(0.45)
 
-                        local spacerm = AceGUI:Create("Icon")
+                        local spacerm = AceGUI:Create("Label")
                         spacerm:SetRelativeWidth(0.03)
                         macrolayout:AddChild(macroeditbox)
                         macrolayout:AddChild(spacerm)
@@ -2913,16 +2913,15 @@ function GSE.CreateEditor()
                 editframe.Width = 700
                 editframe:SetWidth(editframe.Width)
             end
-            editframe:PauseLayout()
             GSEOptions.editorHeight = editframe.Height
             GSEOptions.editorWidth = editframe.Width
             basecontainer:SetHeight(editframe.Height - 100)
             leftScrollContainer:SetHeight(editframe.Height - 100)
             rightContainer:SetWidth(editframe.Width - 250)
             rightContainer:SetHeight(height - 90)
-            editframe:ResumeLayout()
-            editframe:DoLayout()
+
             GUISelectEditorTab(editframe.ContentContainer, "Resize", editframe.SelectedTab)
+
             --
 
             -- print(
