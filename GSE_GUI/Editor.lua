@@ -1926,7 +1926,7 @@ function GSE.CreateEditor()
                     if action.type == "macro" then
                         local macrolayout = AceGUI:Create("SimpleGroup")
                         macrolayout:SetLayout("Flow")
-
+                        macrolayout:SetFullWidth(true)
                         local compiledmacrotext =
                             GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
                         local lenMacro = string.len(compiledmacrotext)
@@ -1944,18 +1944,17 @@ function GSE.CreateEditor()
 
                         compiledMacro:SetText(compiledmacrotext)
                         compiledMacro.label:SetNonSpaceWrap(true)
+                        compiledMacro:SetRelativeWidth(0.45)
+                        -- local feedback = AceGUI:Create("SimpleGroup")
 
-                        local feedback = AceGUI:Create("SimpleGroup")
-
-                        feedback:SetRelativeWidth(0.45)
-                        feedback:AddChild(compiledMacro)
+                        -- feedback:SetRelativeWidth(0.45)
+                        -- feedback:AddChild(compiledMacro)
 
                         local spacerm = AceGUI:Create("Icon")
                         spacerm:SetRelativeWidth(0.03)
                         macrolayout:AddChild(macroeditbox)
                         macrolayout:AddChild(spacerm)
-                        macrolayout:AddChild(feedback)
-                        macrolayout:SetFullWidth(true)
+                        macrolayout:AddChild(compiledMacro)
 
                         spellcontainer:AddChild(macrolayout)
                     else
@@ -2097,12 +2096,6 @@ function GSE.CreateEditor()
                     linegroup2:SetLayout("Flow")
                     linegroup2:SetWidth(maxWidth)
 
-                    -- local testRowButton = AceGUI:Create("Icon")
-                    -- testRowButton:SetImageSize(20, 20)
-                    -- testRowButton:SetWidth(20)
-                    -- testRowButton:SetHeight(20)
-                    -- testRowButton:SetImage("Interface\\Icons\\spell_nature_cyclone")
-
                     -- TODO: Change this to a graphic
                     local spacerlabel3 = AceGUI:Create("Label")
                     spacerlabel3:SetWidth(45)
@@ -2118,8 +2111,7 @@ function GSE.CreateEditor()
                         table.insert(newKeyPath, key)
                         drawAction(macroGroup, act, version, newKeyPath)
                     end
-                    -- testRowButton:SetHeight(macroGroup.frame:GetHeight())
-                    -- linegroup2:AddChild(testRowButton)
+
                     linegroup2:AddChild(spacerlabel3)
                     linegroup2:AddChild(macroGroup)
                     macroPanel:AddChild(linegroup2)
