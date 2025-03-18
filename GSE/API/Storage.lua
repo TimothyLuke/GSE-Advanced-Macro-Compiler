@@ -512,6 +512,9 @@ end
 function GSE.UpdateIcon(self, reseticon)
     local step = self:GetAttribute("step") or 1
     local gsebutton = self:GetName()
+    if not reseticon and self:GetAttribute("combatreset") == true then
+        GSE.UsedSequences[gsebutton] = true
+    end
     local mods = self:GetAttribute("localmods") or nil
     local executionseq = GSE.SequencesExec[gsebutton]
     local foundSpell = executionseq[step].spell
@@ -591,6 +594,7 @@ function GSE.UpdateIcon(self, reseticon)
                                 local at = GetActionInfo(action)
                                 if GSE.isEmpty(at) then
                                     _G[k].icon:SetTexture(spellinfo.iconID)
+
                                     _G[k].icon:Show()
                                     _G[k].TextOverlayContainer.Count:SetText(gsebutton)
                                     _G[k].TextOverlayContainer.Count:SetTextScale(0.6)

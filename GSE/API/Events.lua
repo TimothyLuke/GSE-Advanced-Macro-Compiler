@@ -132,14 +132,13 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "CPB_" and "" or
         string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
-
+    _G[Button]:SetAttribute("gse-button", Sequence)
     if
         (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
             (string.sub(Button, 1, 4) == "NDui") or
             string.sub(Button, 1, 4) == "CPB_"
      then
         if _G[Button] and _G[Button].SetState then
-            _G[Button]:SetAttribute("gse-button", Sequence)
             _G[Button]:SetState(
                 state,
                 "custom",
