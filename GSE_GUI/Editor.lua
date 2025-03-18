@@ -3650,7 +3650,7 @@ function GSE.CreateEditor()
 end
 
 function GSE.ShowSequences()
-    if not InCombatLockdown() then
+    if not InCombatLockdown() or (GSE.PlayerSpellsLoaded and GSE.PlayerSpellsLoaded()) then
         local editframe = GSE.CreateEditor()
         editframe.listSequences()
         editframe:Show()

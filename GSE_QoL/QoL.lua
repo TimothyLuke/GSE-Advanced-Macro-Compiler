@@ -6,8 +6,13 @@ local AceGUI = LibStub("AceGUI-3.0")
 local AceEvent = LibStub("AceEvent-3.0")
 local L = GSE.L
 
+local playerSpells = {}
+
+function GSE.PlayerSpellsLoaded()
+    return #playerSpells > 0
+end
+
 if GSE.GameMode > 10 then
-    local playerSpells = {}
     local function loadPlayerSpells()
         table.wipe(playerSpells)
 
