@@ -544,7 +544,6 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
 
     if action.Icon then
         lbl:SetText("|T" .. action.Icon .. ":0|t")
-        return lbl
     else
         local spellinfo = {}
         spellinfo.iconID = Statics.QuestionMarkIconID
@@ -611,7 +610,6 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     lbl:SetCallback(
         "OnClick",
         function(widget, button)
-            -- if button == "RightButton" then
             MenuUtil.CreateContextMenu(
                 frame,
                 function(ownerRegion, rootDescription)

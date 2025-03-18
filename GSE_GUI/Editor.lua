@@ -4,6 +4,46 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
+if GSE.isEmpty(GSE.CreateIconControl) then
+    GSE.CreateIconControl = function(action, version, keyPath, sequence, frame)
+        local lbl = AceGUI:Create("Label")
+        lbl:SetFontObject(GameFontNormalLarge)
+        lbl:SetWidth(15)
+        lbl:SetHeight(15)
+
+        if action.Icon then
+            lbl:SetText("|T" .. action.Icon .. ":0|t")
+            return lbl
+        end
+        local spellinfo = {}
+        spellinfo.iconID = Statics.QuestionMarkIconID
+
+        if action.type == "macro" then
+            local macro = GSE.UnEscapeString(action.macro)
+            if string.sub(macro, 1, 1) == "/" then
+                local spellstuff = GSE.GetSpellsFromString(macro)
+                if spellstuff and #spellstuff > 1 then
+                    spellstuff = spellstuff[1]
+                end
+                if spellstuff then
+                    spellinfo = spellstuff
+                end
+            else
+                spellinfo.name = action.macro
+                local macindex = GetMacroIndexByName(spellinfo.name)
+                local _, iconid, _ = GetMacroInfo(macindex)
+                spellinfo.iconID = iconid
+            end
+        elseif action.type == "Spell" then
+            spellinfo = C_Spell.GetSpellInfo(action.spell)
+        end
+        if spellinfo.iconID then
+            lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
+        end
+        return lbl
+    end
+end
+
 function GSE.CreateEditor()
     if GSE.isEmpty(GSE.GUI.editors) then
         GSE.GUI.editors = {}
@@ -1810,7 +1850,7 @@ function GSE.CreateEditor()
                     typegroup:SetFullWidth(true)
                     typegroup:SetLayout("Flow")
                     local actionicon =
-                        GSE.CreateIconControl(action, version, keyPath, editframe.Sequence, editframe.frame)
+                        GSE.CreateIconControl(action, version, keyPath, editframe.Sequence, macroPanel.frame)
                     typegroup:AddChild(actionicon)
                     local spellradio = AceGUI:Create("CheckBox")
                     spellradio:SetType("radio")
@@ -3526,46 +3566,6 @@ function GSE.CreateEditor()
                 end
             )
             return spellEditBox, macroEditBox
-        end
-    end
-
-    if GSE.isEmpty(GSE.CreateIconControl) then
-        GSE.CreateIconControl = function(action, version, keyPath, sequence, frame)
-            local lbl = AceGUI:Create("Label")
-            lbl:SetFontObject(GameFontNormalLarge)
-            lbl:SetWidth(15)
-            lbl:SetHeight(15)
-
-            if action.Icon then
-                lbl:SetText("|T" .. action.Icon .. ":0|t")
-                return lbl
-            end
-            local spellinfo = {}
-            spellinfo.iconID = Statics.QuestionMarkIconID
-
-            if action.type == "macro" then
-                local macro = GSE.UnEscapeString(action.macro)
-                if string.sub(macro, 1, 1) == "/" then
-                    local spellstuff = GSE.GetSpellsFromString(macro)
-                    if spellstuff and #spellstuff > 1 then
-                        spellstuff = spellstuff[1]
-                    end
-                    if spellstuff then
-                        spellinfo = spellstuff
-                    end
-                else
-                    spellinfo.name = action.macro
-                    local macindex = GetMacroIndexByName(spellinfo.name)
-                    local _, iconid, _ = GetMacroInfo(macindex)
-                    spellinfo.iconID = iconid
-                end
-            elseif action.type == "Spell" then
-                spellinfo = C_Spell.GetSpellInfo(action.spell)
-            end
-            if spellinfo.iconID then
-                lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
-            end
-            return lbl
         end
     end
 
