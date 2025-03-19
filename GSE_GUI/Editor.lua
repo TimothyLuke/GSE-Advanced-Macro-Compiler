@@ -1605,14 +1605,6 @@ function GSE.CreateEditor()
                     return layoutcontainer
                 end
 
-                container:SetCallback(
-                    "OnClick",
-                    function(widget, _, selected, button)
-                        --   if button == "RightButton" then
-                        --   end
-                    end
-                )
-
                 -- Workaround for vanishing label ace3 bug
                 local label = AceGUI:Create("Label")
                 label:SetFontObject(GameFontNormalLarge)
@@ -1629,7 +1621,11 @@ function GSE.CreateEditor()
                 -- end
 
                 if action.Type == Statics.Actions.Pause then
-                    local linegroup1 = AceGUI:Create("InlineGroup")
+                    local block = AceGUI:Create("InlineGroup")
+
+                    block:SetLayout("List")
+                    block:SetFullWidth(true)
+                    local linegroup1 = AceGUI:Create("SimpleGroup")
 
                     linegroup1:SetLayout("Flow")
                     linegroup1:SetFullWidth(true)
@@ -1750,8 +1746,9 @@ function GSE.CreateEditor()
                     end
                     linegroup1:AddChild(msvalueeditbox)
 
-                    container:AddChild(GetBlockToolbar(version, keyPath, includeAdd, hlabel, linegroup1))
-                    container:AddChild(linegroup1)
+                    block:AddChild(GetBlockToolbar(version, keyPath, includeAdd, hlabel, linegroup1))
+                    block:AddChild(linegroup1)
+                    container:AddChild(block)
                 elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
                     local macroPanel = AceGUI:Create("InlineGroup")
                     if GSE.isEmpty(action.type) then
@@ -2287,6 +2284,21 @@ function GSE.CreateEditor()
                 font:SetFontObject(GameFontNormal)
                 font:SetJustifyV("BOTTOM")
 
+                -- local versionLabel = AceGUI:Create("EditBox")
+                -- versionLabel:SetWidth(200)
+                -- versionLabel:SetLabel(L["Name"])
+                -- versionLabel:SetText(
+                --     editframe.Sequence.Macros[version].Label and editframe.Sequence.Macros[version].Label or ""
+                -- )
+                -- versionLabel:SetCallback(
+                --     "OnTextChanged",
+                --     function(self, event, text)
+                --         -- editframe.Sequence.Macros[version].Label = text
+                --         DevTools_Dump(editframe.ContentContainer)
+                --     end
+                -- )
+                -- versionLabel:DisableButton(true)
+                -- container:AddChild(versionLabel)
                 for key, action in ipairs(macro) do
                     local macroPanel = AceGUI:Create("SimpleGroup")
                     macroPanel:SetFullWidth(true)
@@ -3086,9 +3098,9 @@ function GSE.CreateEditor()
             }
         }
         -- If disabled editor then dont show the internal tabs
-        for k, _ in ipairs(editframe.Sequence.Macros) do
+        for k, v in ipairs(editframe.Sequence.Macros) do
             local insline = {}
-            insline.text = tostring(k)
+            insline.text = v.Label and tostring(k) .. " - " .. v.Label or tostring(k)
             insline.value = tostring(k)
             table.insert(tabl, insline)
         end
@@ -3111,6 +3123,10 @@ function GSE.CreateEditor()
     end
 
     function editframe.GUIEditorPerformLayout(rightContainer)
+        if not rightContainer then
+            rightContainer = editframe.rightContainer
+            rightContainer:ReleaseChildren()
+        end
         local headerGroup = AceGUI:Create("KeyGroup")
         headerGroup:SetFullWidth(true)
         headerGroup:SetLayout("Flow")
@@ -3585,5 +3601,6 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
 
     editor.loaded = true
     editor:Show()
+    editor.rightContainer = rightContainer
     return rightContainer
 end
