@@ -71,6 +71,7 @@ function GSE.GetClassIcon(classid)
     classicon[10] = "Interface\\Icons\\Spell_Holy_FistOfJustice" -- Monk
     classicon[11] = "Interface\\Icons\\inv_misc_monsterclaw_04" -- Druid
     classicon[12] = "Interface\\Icons\\INV_Weapon_Glave_01" -- DEMONHUNTER
+    classicon[13] = 4574311 -- DEMONHUNTER
     return classicon[classid]
 end
 
