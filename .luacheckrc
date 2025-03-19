@@ -496,5 +496,7 @@ globals = {
     "Bartender4",
     "Settings",
     "C_DateAndTime",
-    "GetServerTime"
+    "GetServerTime",
+    "GetSpecializationInfoForSpecID",
+    "GetMouseButtonClicked"
 }
