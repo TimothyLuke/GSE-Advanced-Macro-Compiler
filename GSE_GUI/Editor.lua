@@ -235,6 +235,7 @@ function GSE.CreateEditor()
     treeContainer:SetFullHeight(true)
     treeContainer:SetFullWidth(true)
 
+    editframe.treeContainer = treeContainer
     local spacer = AceGUI:Create("Label")
     spacer:SetWidth(10)
     --basecontainer:AddChild(spacer)
@@ -1060,7 +1061,7 @@ function GSE.CreateEditor()
                 local toolcontainer = AceGUI:Create("InlineGroup")
                 toolcontainer:SetLayout("Flow")
 
-                toolcontainer:SetWidth(container.frame:GetWidth() - 50)
+                toolcontainer:SetFullWidth(true)
                 toolcontainer:AddChild(compileButton)
                 toolcontainer:AddChild(cancelButton)
                 container:AddChild(toolcontainer)
@@ -1070,7 +1071,6 @@ function GSE.CreateEditor()
                 local function GetBlockToolbar(
                     version,
                     path,
-                    width,
                     includeAdd,
                     headingLabel,
                     container,
@@ -1093,7 +1093,7 @@ function GSE.CreateEditor()
                         blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
                     end
                     layoutcontainer:SetLayout("Flow")
-                    layoutcontainer:SetWidth(width)
+                    layoutcontainer:SetFullWidth(true)
                     layoutcontainer:SetHeight(30)
                     local moveUpButton = AceGUI:Create("Icon")
                     local moveDownButton = AceGUI:Create("Icon")
@@ -1604,7 +1604,7 @@ function GSE.CreateEditor()
                     end
                     return layoutcontainer
                 end
-                local maxWidth = container.frame:GetWidth() - 15
+
                 container:SetCallback(
                     "OnClick",
                     function(widget, _, selected, button)
@@ -1629,14 +1629,14 @@ function GSE.CreateEditor()
                 -- end
 
                 if action.Type == Statics.Actions.Pause then
-                    local linegroup1 = AceGUI:Create("KeyGroup")
+                    local linegroup1 = AceGUI:Create("InlineGroup")
 
                     linegroup1:SetLayout("Flow")
                     linegroup1:SetFullWidth(true)
 
                     local clicksdropdown = AceGUI:Create("Dropdown")
                     clicksdropdown:SetLabel(L["Measure"])
-                    clicksdropdown:SetWidth(maxWidth * 0.24)
+                    clicksdropdown:SetRelativeWidth(0.24)
                     local clickdroplist = {
                         [L["Clicks"]] = L["How many macro Clicks to pause for?"],
                         [L["Milliseconds"]] = L["How many milliseconds to pause for?"],
@@ -1750,7 +1750,7 @@ function GSE.CreateEditor()
                     end
                     linegroup1:AddChild(msvalueeditbox)
 
-                    container:AddChild(GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, linegroup1))
+                    container:AddChild(GetBlockToolbar(version, keyPath, includeAdd, hlabel, linegroup1))
                     container:AddChild(linegroup1)
                 elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
                     local macroPanel = AceGUI:Create("InlineGroup")
@@ -1759,10 +1759,10 @@ function GSE.CreateEditor()
                         action.macro = ""
                     end
                     macroPanel:SetLayout("List")
-                    macroPanel:SetWidth(maxWidth)
+                    macroPanel:SetFullWidth(true)
                     macroPanel:SetAutoAdjustHeight(true)
 
-                    local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
+                    local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
 
                     macroPanel:AddChild(linegroup1)
 
@@ -1841,7 +1841,7 @@ function GSE.CreateEditor()
                     typegroup:AddChild(petradio)
                     typegroup:AddChild(toyradio)
 
-                    local spellcontainer = AceGUI:Create("InlineGroup")
+                    local spellcontainer = AceGUI:Create("SimpleGroup")
                     spellcontainer:SetLayout("List")
                     spellcontainer:SetFullWidth(true)
 
@@ -1980,7 +1980,7 @@ function GSE.CreateEditor()
                     macroPanel:AddChild(spellcontainer)
                     local typerow = AceGUI:Create("SimpleGroup")
                     typerow:SetLayout("Flow")
-                    typerow:SetWidth(maxWidth)
+                    typerow:SetFullWidth(true)
                     local actiontype = AceGUI:Create("CheckBox")
                     actiontype:SetType("checkbox")
                     actiontype:SetLabel(L["Repeat"])
@@ -2016,12 +2016,12 @@ function GSE.CreateEditor()
                     macroPanel:AddChild(typerow)
                     container:AddChild(macroPanel)
                 elseif action.Type == Statics.Actions.Loop then
-                    local macroPanel = AceGUI:Create("InlineGroup")
+                    local macroPanel = AceGUI:Create("SimpleGroup")
 
-                    macroPanel:SetWidth(maxWidth)
+                    macroPanel:SetFullWidth(true)
                     macroPanel:SetLayout("List")
                     macroPanel:SetAutoAdjustHeight(true)
-                    local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, includeAdd, hlabel, macroPanel)
+                    local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
 
                     local stepdropdown = AceGUI:Create("Dropdown")
                     stepdropdown:SetLabel(L["Step Function"])
@@ -2103,16 +2103,8 @@ function GSE.CreateEditor()
                     linegroup1:AddChild(looplimit)
                     container:AddChild(linegroup1)
 
-                    local linegroup2 = AceGUI:Create("SimpleGroup")
-                    linegroup2:SetLayout("Flow")
-                    linegroup2:SetWidth(maxWidth)
-
-                    -- TODO: Change this to a graphic
-                    local spacerlabel3 = AceGUI:Create("Label")
-                    spacerlabel3:SetWidth(45)
-
                     local macroGroup = AceGUI:Create("SimpleGroup")
-                    macroGroup:SetWidth(maxWidth - 45)
+                    macroGroup:SetFullWidth(true)
                     macroGroup:SetLayout("List")
                     for key, act in ipairs(action) do
                         local newKeyPath = {}
@@ -2123,14 +2115,12 @@ function GSE.CreateEditor()
                         drawAction(macroGroup, act, version, newKeyPath)
                     end
 
-                    linegroup2:AddChild(spacerlabel3)
-                    linegroup2:AddChild(macroGroup)
-                    macroPanel:AddChild(linegroup2)
+                    macroPanel:AddChild(macroGroup)
 
                     container:AddChild(macroPanel)
                 elseif action.Type == Statics.Actions.If then
                     local macroPanel = AceGUI:Create("InlineGroup")
-                    macroPanel:SetWidth(maxWidth)
+                    macroPanel:SetFullWidth(true)
                     macroPanel:SetLayout("List")
                     macroPanel:SetCallback(
                         "OnRelease",
@@ -2138,7 +2128,7 @@ function GSE.CreateEditor()
                             macroPanel.frame:SetBackdrop(nil)
                         end
                     )
-                    local linegroup1 = GetBlockToolbar(version, keyPath, maxWidth, false, hlabel, macroPanel)
+                    local linegroup1 = GetBlockToolbar(version, keyPath, false, hlabel, macroPanel)
 
                     local booleanEditBox = AceGUI:Create("EditBox")
                     booleanEditBox:SetLabel(L["Variable"])
@@ -2222,7 +2212,7 @@ function GSE.CreateEditor()
                     local trueKeyPath = GSE.CloneSequence(keyPath)
                     table.insert(trueKeyPath, 1)
                     local trueGroup = AceGUI:Create("InlineGroup")
-                    trueGroup:SetWidth(maxWidth - 55)
+                    trueGroup:SetFullWidth(true)
                     trueGroup:SetLayout("List")
 
                     local tlabel = AceGUI:Create("Label")
@@ -2233,20 +2223,9 @@ function GSE.CreateEditor()
 
                     local trueContainer = AceGUI:Create("SimpleGroup")
                     trueContainer:SetLayout("Flow")
-                    trueContainer:SetWidth(maxWidth - 15)
+                    trueContainer:SetFullWidth(true)
 
-                    local toolbar =
-                        GetBlockToolbar(
-                        version,
-                        trueKeyPath,
-                        maxWidth - 55,
-                        true,
-                        tlabel,
-                        trueContainer,
-                        true,
-                        true,
-                        true
-                    )
+                    local toolbar = GetBlockToolbar(version, trueKeyPath, true, tlabel, trueContainer, true, true, true)
                     trueGroup:AddChild(toolbar)
 
                     for key, act in ipairs(action[1]) do
@@ -2257,10 +2236,6 @@ function GSE.CreateEditor()
 
                     macroPanel:AddChild(linegroup1)
 
-                    local trueindentlabel = AceGUI:Create("Label")
-                    trueindentlabel:SetWidth(40)
-                    trueContainer:AddChild(trueindentlabel)
-
                     trueContainer:AddChild(trueGroup)
                     macroPanel:AddChild(trueContainer)
 
@@ -2268,7 +2243,7 @@ function GSE.CreateEditor()
                     local falseKeyPath = GSE.CloneSequence(keyPath)
                     table.insert(falseKeyPath, 2)
                     local falsegroup = AceGUI:Create("InlineGroup")
-                    falsegroup:SetWidth(maxWidth - 55)
+                    falsegroup:SetFullWidth(true)
                     falsegroup:SetLayout("List")
 
                     local flabel = AceGUI:Create("Label")
@@ -2277,21 +2252,11 @@ function GSE.CreateEditor()
                     flabel:SetFontObject(GameFontNormalLarge)
                     flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
                     local falsecontainer = AceGUI:Create("SimpleGroup")
-                    falsecontainer:SetWidth(maxWidth - 15)
+                    falsecontainer:SetFullWidth(true)
                     falsecontainer:SetLayout("Flow")
 
                     local toolbar2 =
-                        GetBlockToolbar(
-                        version,
-                        falseKeyPath,
-                        maxWidth - 55,
-                        true,
-                        flabel,
-                        falsecontainer,
-                        true,
-                        true,
-                        true
-                    )
+                        GetBlockToolbar(version, falseKeyPath, true, flabel, falsecontainer, true, true, true)
                     falsegroup:AddChild(toolbar2)
 
                     for key, act in ipairs(action[2]) do
@@ -2300,9 +2265,6 @@ function GSE.CreateEditor()
                         drawAction(falsegroup, act, version, newKeyPath)
                     end
 
-                    local falseindentlabel = AceGUI:Create("Label")
-                    falseindentlabel:SetWidth(40)
-                    falsecontainer:AddChild(falseindentlabel)
                     falsecontainer:AddChild(falsegroup)
                     macroPanel:AddChild(falsecontainer)
                     container:AddChild(macroPanel)
@@ -2310,7 +2272,6 @@ function GSE.CreateEditor()
             end
 
             local function DrawSequenceEditor(container, version)
-                local maxWidth = container.frame:GetWidth() - 15
                 if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
                     editframe.Sequence.Macros[version].Actions = {
                         [1] = {
@@ -2327,8 +2288,8 @@ function GSE.CreateEditor()
                 font:SetJustifyV("BOTTOM")
 
                 for key, action in ipairs(macro) do
-                    local macroPanel = AceGUI:Create("KeyGroup")
-                    macroPanel:SetWidth(maxWidth)
+                    local macroPanel = AceGUI:Create("SimpleGroup")
+                    macroPanel:SetFullWidth(true)
                     macroPanel:SetLayout("List")
                     local keyPath = {
                         [1] = key
@@ -3034,7 +2995,12 @@ function GSE.CreateEditor()
                             rootDescription:CreateButton(
                                 L["New"],
                                 function()
-                                    GSE.GUILoadEditor(editframe)
+                                    if editframe.loaded then
+                                        container:ReleaseChildren()
+                                        editframe.loaded = nil
+                                    end
+                                    local rightContainer = GSE.GUILoadEditor(editframe)
+                                    container:AddChild(rightContainer)
                                 end
                             )
                             if not GSE.isEmpty(sequencename) then
@@ -3056,7 +3022,7 @@ function GSE.CreateEditor()
                                         function()
                                             local editor = GSE.CreateEditor()
                                             editor.listSequences()
-                                            GSE.GUILoadEditor(editor, key)
+                                            editor.treeContainer:SelectByValue(group)
                                         end
                                     )
                                 end
@@ -3309,8 +3275,10 @@ function GSE.CreateEditor()
         delbutton:SetCallback(
             "OnClick",
             function()
-                editframe:Hide()
-                GUIDeleteSequence(editframe.ClassID, editframe.SequenceName)
+                local seqname = editframe.SequenceName
+                local classid = editframe.ClassID
+                GUIDeleteSequence(classid, seqname)
+                editframe.listSequences()
             end
         )
         delbutton:SetCallback(
@@ -3497,6 +3465,14 @@ function GSE.CreateEditor()
             end
         end
         editframe.listSequences()
+        -- if editframe.OrigSequenceName ~= seqName then
+        --     if editframe.Sequence.MetaData.SpecID and editframe.ClassID then
+        --         print(editframe.ClassID .. "," .. editframe.Sequence.MetaData.SpecID .. "," .. seqName)
+        --         editframe.treeContainer:SelectByValue(
+        --             editframe.ClassID .. "," .. editframe.Sequence.MetaData.SpecID .. "," .. seqName
+        --         )
+        --     end
+        -- end
     end
 
     return editframe
@@ -3596,6 +3572,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     end
     editor:SetStatusText("GSE: " .. GSE.VersionString)
     editor.SequenceName = sequenceName
+    editor.OrigSequenceName = sequenceName
     editor.Sequence = sequence
     editor.ClassID = classid
     local rightContainer = AceGUI:Create("SimpleGroup")

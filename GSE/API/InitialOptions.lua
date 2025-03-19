@@ -69,7 +69,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.filterList = {}
     GSEOptions.filterList[Statics.Spec] = true
     GSEOptions.filterList[Statics.Class] = true
-    GSEOptions.filterList[Statics.All] = false
+    GSEOptions.filterList[Statics.All] = true
     GSEOptions.filterList[Statics.Global] = true
     GSEOptions.autoCreateMacroStubsClass = true
     GSEOptions.autoCreateMacroStubsGlobal = false
