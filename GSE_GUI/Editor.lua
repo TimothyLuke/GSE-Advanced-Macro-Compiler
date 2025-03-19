@@ -2284,21 +2284,6 @@ function GSE.CreateEditor()
                 font:SetFontObject(GameFontNormal)
                 font:SetJustifyV("BOTTOM")
 
-                -- local versionLabel = AceGUI:Create("EditBox")
-                -- versionLabel:SetWidth(200)
-                -- versionLabel:SetLabel(L["Name"])
-                -- versionLabel:SetText(
-                --     editframe.Sequence.Macros[version].Label and editframe.Sequence.Macros[version].Label or ""
-                -- )
-                -- versionLabel:SetCallback(
-                --     "OnTextChanged",
-                --     function(self, event, text)
-                --         -- editframe.Sequence.Macros[version].Label = text
-                --         DevTools_Dump(editframe.ContentContainer)
-                --     end
-                -- )
-                -- versionLabel:DisableButton(true)
-                -- container:AddChild(versionLabel)
                 for key, action in ipairs(macro) do
                     local macroPanel = AceGUI:Create("SimpleGroup")
                     macroPanel:SetFullWidth(true)
@@ -2780,6 +2765,20 @@ function GSE.CreateEditor()
                 linegroup3:SetLayout("Flow")
                 linegroup3:SetFullWidth(true)
 
+                local versionLabel = AceGUI:Create("EditBox")
+                versionLabel:SetWidth(200)
+                versionLabel:SetLabel(L["Name"])
+                versionLabel:SetText(
+                    editframe.Sequence.Macros[version].Label and editframe.Sequence.Macros[version].Label or ""
+                )
+                versionLabel:SetCallback(
+                    "OnTextChanged",
+                    function(self, event, text)
+                        editframe.Sequence.Macros[version].Label = text
+                    end
+                )
+                versionLabel:DisableButton(true)
+
                 local spacerlabel3 = AceGUI:Create("Label")
                 spacerlabel3:SetWidth(6)
 
@@ -2787,7 +2786,7 @@ function GSE.CreateEditor()
                 linegroup1:AddChild(addLoopButton)
                 linegroup1:AddChild(addPauseButton)
                 linegroup1:AddChild(addIfButton)
-
+                linegroup1:AddChild(versionLabel)
                 linegroup1:AddChild(spacerlabel1)
                 linegroup1:AddChild(basespellspacer)
                 linegroup1:AddChild(previewMacro)
@@ -3319,8 +3318,8 @@ function GSE.CreateEditor()
 
     function editframe.GetVersionList()
         local tabl = {}
-        for k, _ in ipairs(editframe.Sequence.Macros) do
-            tabl[tostring(k)] = tostring(k)
+        for k, v in ipairs(editframe.Sequence.Macros) do
+            tabl[tostring(k)] = v.Label and tostring(k) .. " - " .. v.Label or tostring(k)
         end
         return tabl
     end
