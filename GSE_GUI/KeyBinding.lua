@@ -4,6 +4,8 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
+local loaded
+
 local keybindingframe = AceGUI:Create("Frame")
 keybindingframe:Hide()
 keybindingframe.frame:SetClampedToScreen(true)
@@ -71,24 +73,13 @@ leftScrollContainer:SetWidth(300)
 leftScrollContainer:SetHeight(keybindingframe.Height - 90)
 leftScrollContainer:SetLayout("Fill") -- important!
 
-basecontainer:AddChild(leftScrollContainer)
+local treeContainer = AceGUI:Create("TreeGroup")
+treeContainer:SetFullHeight(true)
+treeContainer:SetFullWidth(true)
+keybindingframe.treeContainer = treeContainer
 
-local leftscroll = AceGUI:Create("ScrollFrame")
-leftscroll:SetLayout("List") -- probably?
-leftscroll:SetWidth(300)
-leftscroll:SetHeight(keybindingframe.Height - 90)
-leftScrollContainer:AddChild(leftscroll)
+basecontainer:AddChild(treeContainer)
 
-local spacer = AceGUI:Create("Label")
-spacer:SetWidth(10)
-basecontainer:AddChild(spacer)
-
-local rightContainer = AceGUI:Create("SimpleGroup")
-rightContainer:SetWidth(keybindingframe.Width - 390)
-
-rightContainer:SetLayout("List")
-rightContainer:SetHeight(keybindingframe.Height - 90)
-basecontainer:AddChild(rightContainer)
 keybindingframe:DoLayout()
 keybindingframe.frame:SetScript(
     "OnSizeChanged",
@@ -116,7 +107,7 @@ keybindingframe.frame:SetScript(
     end
 )
 
-local function showKeybind(bind, button, specialization, loadout, type)
+local function showKeybind(bind, button, specialization, loadout, type, rightContainer)
     if type == "KB" then
         if not specialization then
             if GSE.GameMode > 10 then
@@ -623,277 +614,203 @@ local function showKeybind(bind, button, specialization, loadout, type)
         rightContainer:AddChild(row2)
     end
 
-    rightContainer:SetWidth(keybindingframe.Width - 390)
+    loaded = true
 end
 
-local function buildKeybindHeader(specialization, bind, button, loadout, type)
-    if GSE.isEmpty(type) then
-        type = "KB"
-    end
-    local font = CreateFont("seqPanelFont")
-    font:SetFontObject(GameFontNormal)
-
-    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-    local origjustificationH = font:GetJustifyH()
-    local origjustificationV = font:GetJustifyV()
-    font:SetJustifyH("LEFT")
-    font:SetJustifyV("MIDDLE")
-    local selpanel = AceGUI:Create("SelectablePanel")
-    local key = specialization .. bind
-    if loadout then
-        key = key .. loadout
-    end
-    selpanel:SetKey(key)
-    selpanel:SetFullWidth(true)
-    selpanel:SetHeight(20)
-    selpanel:SetAutoAdjustHeight(true)
-    selpanel:SetLayout("List")
-
-    keybindingframe.panels[key] = selpanel
-
-    local hlabel = AceGUI:Create("Label")
-    local blabel = (button and button.Sequence) and button.Sequence or button
-    hlabel:SetText(bind .. " " .. GSEOptions.KEYWORD .. "(" .. blabel .. ")" .. Statics.StringReset)
-    hlabel:SetWidth(299)
-    hlabel:SetFontObject(font)
-    hlabel:SetFont(fontName, fontHeight + 2, fontFlags)
-    if not selpanel.GetWindow then
-        selpanel.GetWindow = function()
+treeContainer:SetCallback(
+    "OnGroupSelected",
+    function(container, event, group, ...)
+        if loaded then
+            container:ReleaseChildren()
+            loaded = nil
         end
-    end
-    selpanel:AddChild(hlabel)
-    selpanel:SetCallback(
-        "OnClick",
-        function(widget, _, selected, callbutton)
-            keybindingframe:clearpanels(widget, selected)
-            if callbutton == "RightButton" then
-                MenuUtil.CreateContextMenu(
-                    selpanel,
-                    function(ownerRegion, rootDescription)
-                        rootDescription:CreateTitle(L["Manage Macros"])
-                        rootDescription:CreateButton(
-                            L["New KeyBind"],
-                            function()
-                                showKeybind(nil, nil, nil, nil, "KB")
-                            end
-                        )
-                        rootDescription:CreateButton(
-                            L["New Actionbar Override"],
-                            function()
-                                showKeybind(nil, nil, nil, nil, "AO")
-                            end
-                        )
-                        rootDescription:CreateButton(
-                            L["Delete"],
-                            function()
-                                if type == "KB" then
-                                    SetBinding(bind)
+        local unique = {("\001"):split(group)}
+        local bind, specialization, loadout, type, button
+        type = unique[1]
 
-                                    local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                                    if loadout ~= "ALL" and loadout then
-                                        destination =
-                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                                        destination[bind] = nil
-                                        local empty = true
-                                        for _, _ in pairs(
-                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                                        ) do
-                                            empty = false
-                                        end
-                                        if empty then
-                                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
-                                        end
-                                    else
-                                        destination[bind] = nil
-                                    end
-                                elseif type == "AO" then
-                                    local destination =
-                                        GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
-                                    if loadout ~= "ALL" and loadout then
-                                        destination =
-                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
-                                        destination[bind] = nil
-                                        local empty = true
-                                        for _, _ in pairs(
-                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
-                                        ) do
-                                            empty = false
-                                        end
-                                        if empty then
-                                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = nil
-                                        end
-                                    else
-                                        destination[bind] = nil
-                                    end
-                                    GSE.ButtonOverrides[bind] = nil
-                                end
-                                GSE.ShowKeyBindings()
-                            end
-                        )
-                    end
-                )
+        specialization = unique[2]
+        local mbutton = GetMouseButtonClicked()
+        if mbutton == "RightButton" then
+        else
+            if specialization == "NKB" then
+                local rightContainer = AceGUI:Create("SimpleGroup")
+                rightContainer:SetFullWidth(true)
+                rightContainer:SetLayout("List")
+                showKeybind(nil, nil, nil, nil, "KB", rightContainer)
+                container:AddChild(rightContainer)
+            elseif specialization == "NAO" then
+                local rightContainer = AceGUI:Create("SimpleGroup")
+                rightContainer:SetFullWidth(true)
+                rightContainer:SetLayout("List")
+                showKeybind(nil, nil, nil, nil, "AO", rightContainer)
+                container:AddChild(rightContainer)
             else
-                showKeybind(bind, button, specialization, loadout, type)
-            end
-        end
-    )
+                local key
 
-    leftscroll:AddChild(selpanel)
-    font:SetJustifyH(origjustificationH)
-    font:SetJustifyV(origjustificationV)
-end
+                if #unique == 4 then
+                    key = GSE.split(unique[4], "-")
+                    bind = key[1]
+                    button = key[2]
+                else
+                    key = GSE.split(unique[3], "-")
+                    bind = key[1]
+                    button = key[2]
+                end
 
-local function buildKeybindMenu()
-    leftscroll:ReleaseChildren()
-    local newButton = AceGUI:Create("Button")
-    newButton:SetText(L["New KeyBind"])
-    newButton:SetCallback(
-        "OnClick",
-        function()
-            showKeybind(nil, nil, nil, nil, "KB")
-        end
-    )
-    leftscroll:AddChild(newButton)
-    local newActionButton = AceGUI:Create("Button")
-    newActionButton:SetText(L["New Actionbar Override"])
-    newActionButton:SetCallback(
-        "OnClick",
-        function()
-            showKeybind(nil, nil, nil, nil, "AO")
-        end
-    )
-    leftscroll:AddChild(newActionButton)
-    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-    local KeyBindheader = AceGUI:Create("Label")
-    KeyBindheader:SetText(L["Keybindings"])
-    KeyBindheader:SetFont(fontName, fontHeight + 6, fontFlags)
-    KeyBindheader:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
-    leftscroll:AddChild(KeyBindheader)
-    local specid = tonumber(0)
-    for k, v in pairs(GSE_C["KeyBindings"]) do
-        local currentspecid = tonumber(k)
-        if GetSpecializationInfo then
-            if specid ~= currentspecid then
-                specid = currentspecid
-                local _, speclabel = GetSpecializationInfo(currentspecid)
-
-                local sectionspacer1 = AceGUI:Create("Label")
-                sectionspacer1:SetText(" ")
-                sectionspacer1:SetFont(fontName, 4, fontFlags)
-                leftscroll:AddChild(sectionspacer1)
-                local sectionheader = AceGUI:Create("Label")
-                sectionheader:SetText(speclabel)
-                sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
-                sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
-                leftscroll:AddChild(sectionheader)
-                local sectionspacer2 = AceGUI:Create("Label")
-                sectionspacer2:SetText(" ")
-                sectionspacer2:SetFont(fontName, 2, fontFlags)
-                leftscroll:AddChild(sectionspacer2)
-            end
-        end
-        for i, j in GSE.pairsByKeys(v) do
-            if i ~= "LoadOuts" then
-                buildKeybindHeader(k, i, j)
-            end
-        end
-
-        if
-            GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(currentspecid)] and
-                GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]
-         then
-            for i, j in pairs(GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]) do
-                local success =
-                    pcall(
-                    function()
-                        local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-                        local sectionspacer3 = AceGUI:Create("Label")
-                        sectionspacer3:SetText(" ")
-                        sectionspacer3:SetFont(fontName, 4, fontFlags)
-                        leftscroll:AddChild(sectionspacer3)
-                        local sectionheader2 = AceGUI:Create("Label")
-                        local loadout = C_Traits.GetConfigInfo(i)
-                        sectionheader2:SetText(loadout.name)
-                        sectionheader2:SetFont(fontName, fontHeight, fontFlags)
-                        sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
-                        leftscroll:AddChild(sectionheader2)
-                        local sectionspacer4 = AceGUI:Create("Label")
-                        sectionspacer4:SetText(" ")
-                        sectionspacer4:SetFont(fontName, 2, fontFlags)
-                        leftscroll:AddChild(sectionspacer4)
-                        for l, m in GSE.pairsByKeys(j) do
-                            buildKeybindHeader(currentspecid, l, m, i)
-                        end
-                    end
-                )
-                if not success then
-                    GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
+                if bind and button and specialization and type then
+                    local rightContainer = AceGUI:Create("SimpleGroup")
+                    rightContainer:SetFullWidth(true)
+                    rightContainer:SetLayout("List")
+                    showKeybind(bind, button, specialization, loadout, type, rightContainer)
+                    container:AddChild(rightContainer)
                 end
             end
         end
     end
-    local actionHeader = AceGUI:Create("Label")
-    actionHeader:SetText(L["Actionbar Overrides"])
-    actionHeader:SetFont(fontName, fontHeight + 6, fontFlags)
-    actionHeader:SetColor(GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS))
-    leftscroll:AddChild(actionHeader)
-
+)
+local function buildKeybindMenu()
+    local tree = {
+        {
+            value = "AO",
+            text = L["Actionbar Overrides"],
+            icon = Statics.ActionsIcons.Down,
+            children = {
+                {
+                    value = "NAO",
+                    text = L["New Actionbar Override"]
+                }
+            }
+        },
+        {
+            value = "KB",
+            text = L["Keybindings"],
+            icon = Statics.ActionsIcons.Down,
+            children = {
+                {
+                    value = "NKB",
+                    text = L["New KeyBind"]
+                }
+            }
+        }
+    }
     for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
         local currentspecid = tonumber(k)
         if GetSpecializationInfo then
-            if specid ~= currentspecid then
-                specid = currentspecid
-                local _, speclabel = GetSpecializationInfo(currentspecid)
+            local _, speclabel, _, specIcon = GetSpecializationInfo(currentspecid)
+            local node = {
+                value = k,
+                text = speclabel,
+                icon = specIcon,
+                children = {}
+            }
 
-                local sectionspacer1 = AceGUI:Create("Label")
-                sectionspacer1:SetText(" ")
-                sectionspacer1:SetFont(fontName, 4, fontFlags)
-                leftscroll:AddChild(sectionspacer1)
-                local sectionheader = AceGUI:Create("Label")
-                sectionheader:SetText(speclabel)
-                sectionheader:SetFont(fontName, fontHeight + 4, fontFlags)
-                sectionheader:SetColor(GSE.GUIGetColour(GSEOptions.COMMENT))
-                leftscroll:AddChild(sectionheader)
-                local sectionspacer2 = AceGUI:Create("Label")
-                sectionspacer2:SetText(" ")
-                sectionspacer2:SetFont(fontName, 2, fontFlags)
-                leftscroll:AddChild(sectionspacer2)
-            end
-        end
-        for i, j in GSE.pairsByKeys(v) do
-            buildKeybindHeader(k, i, j, nil, "AO")
-        end
-        if
-            GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"] and
-                GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]
-         then
-            for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
-                local success =
-                    pcall(
-                    function()
-                        local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-                        local sectionspacer3 = AceGUI:Create("Label")
-                        sectionspacer3:SetText(" ")
-                        sectionspacer3:SetFont(fontName, 4, fontFlags)
-                        leftscroll:AddChild(sectionspacer3)
-                        local sectionheader2 = AceGUI:Create("Label")
-                        local loadout = C_Traits.GetConfigInfo(i)
-                        sectionheader2:SetText(loadout.name)
-                        sectionheader2:SetFont(fontName, fontHeight, fontFlags)
-                        sectionheader2:SetColor(GSE.GUIGetColour(GSEOptions.STANDARDFUNCS))
-                        leftscroll:AddChild(sectionheader2)
-                        local sectionspacer4 = AceGUI:Create("Label")
-                        sectionspacer4:SetText(" ")
-                        sectionspacer4:SetFont(fontName, 2, fontFlags)
-                        leftscroll:AddChild(sectionspacer4)
-                        for l, m in GSE.pairsByKeys(j) do
-                            buildKeybindHeader(currentspecid, l, m, i, "AO")
-                        end
-                    end
+            for i, j in GSE.pairsByKeys(v) do
+                table.insert(
+                    node["children"],
+                    {
+                        value = i .. "-" .. j["Sequence"],
+                        text = j["Bind"] ..
+                            " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
+                    }
                 )
             end
+
+            if
+                GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"] and
+                    GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]
+             then
+                for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
+                    local success =
+                        pcall(
+                        function()
+                            local loadout = C_Traits.GetConfigInfo(i)
+                            local specnode = {
+                                value = i,
+                                text = loadout.name,
+                                children = {}
+                            }
+
+                            for l, m in GSE.pairsByKeys(j) do
+                                DevTools_Dump(m)
+                                table.insert(
+                                    specnode["children"],
+                                    {
+                                        value = l .. "-" .. m,
+                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                    }
+                                )
+                            end
+                            table.insert(node["children"], specnode)
+                        end
+                    )
+                    if not success then
+                        GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
+                    end
+                end
+            end
+            table.insert(tree[1]["children"], node)
         end
     end
+    for k, v in pairs(GSE_C["KeyBindings"]) do
+        local currentspecid = tonumber(k)
+        if GetSpecializationInfo then
+            local _, speclabel, _, specIcon = GetSpecializationInfo(currentspecid)
+            local node = {
+                value = k,
+                text = speclabel,
+                icon = specIcon,
+                children = {}
+            }
+
+            for i, j in GSE.pairsByKeys(v) do
+                if i ~= "LoadOuts" then
+                    table.insert(
+                        node["children"],
+                        {
+                            value = i .. "-" .. j,
+                            text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
+                        }
+                    )
+                end
+            end
+
+            if
+                GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(currentspecid)] and
+                    GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]
+             then
+                for i, j in pairs(GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]) do
+                    local success =
+                        pcall(
+                        function()
+                            local loadout = C_Traits.GetConfigInfo(i)
+                            local specnode = {
+                                value = i,
+                                text = loadout.name,
+                                children = {}
+                            }
+
+                            for l, m in GSE.pairsByKeys(j) do
+                                table.insert(
+                                    specnode["children"],
+                                    {
+                                        value = l .. "-" .. m,
+                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                    }
+                                )
+                            end
+                            table.insert(node["children"], specnode)
+                        end
+                    )
+                    if not success then
+                        GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
+                    end
+                end
+            end
+            table.insert(tree[2]["children"], node)
+        end
+    end
+
+    treeContainer:SetTree(tree)
 end
 
 function keybindingframe:clearpanels(widget, selected, key)
