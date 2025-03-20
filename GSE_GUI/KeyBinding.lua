@@ -644,16 +644,11 @@ treeContainer:SetCallback(
                 container:AddChild(rightContainer)
             else
                 local key
+                bind = unique[3]
+                button = unique[4]
 
-                if #unique == 4 then
-                    key = GSE.split(unique[4], "-")
-                    bind = key[1]
-                    button = key[2]
-                    loadout = unique[3]
-                else
-                    key = GSE.split(unique[3], "-")
-                    bind = key[1]
-                    button = key[2]
+                if #unique == 5 then
+                    loadout = unique[5]
                 end
 
                 if bind and button and specialization and type then
@@ -707,7 +702,7 @@ local function buildKeybindMenu()
                 table.insert(
                     node["children"],
                     {
-                        value = i .. "-" .. j["Sequence"],
+                        value = i .. "\001" .. j["Sequence"],
                         text = j["Bind"] ..
                             " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
                     }
@@ -733,7 +728,7 @@ local function buildKeybindMenu()
                                 table.insert(
                                     specnode["children"],
                                     {
-                                        value = l .. "-" .. m,
+                                        value = l .. "\001" .. m,
                                         text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
                                     }
                                 )
@@ -765,7 +760,7 @@ local function buildKeybindMenu()
                     table.insert(
                         node["children"],
                         {
-                            value = i .. "-" .. j,
+                            value = i .. "\001" .. j,
                             text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
                         }
                     )
@@ -791,7 +786,7 @@ local function buildKeybindMenu()
                                 table.insert(
                                     specnode["children"],
                                     {
-                                        value = l .. "-" .. m,
+                                        value = l .. "\001" .. m,
                                         text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
                                     }
                                 )
