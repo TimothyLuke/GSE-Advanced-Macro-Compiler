@@ -100,8 +100,6 @@ keybindingframe.frame:SetScript(
         end
         GSEOptions.keybindingHeight = keybindingframe.Height
         GSEOptions.keybindingWidth = keybindingframe.Width
-        rightContainer:SetWidth(keybindingframe.Width - 390)
-        rightContainer:SetHeight(keybindingframe.Height - 90)
         leftScrollContainer:SetHeight(keybindingframe.Height - 90)
         keybindingframe:DoLayout()
     end
@@ -651,6 +649,7 @@ treeContainer:SetCallback(
                     key = GSE.split(unique[4], "-")
                     bind = key[1]
                     button = key[2]
+                    loadout = unique[3]
                 else
                     key = GSE.split(unique[3], "-")
                     bind = key[1]
@@ -731,7 +730,6 @@ local function buildKeybindMenu()
                             }
 
                             for l, m in GSE.pairsByKeys(j) do
-                                DevTools_Dump(m)
                                 table.insert(
                                     specnode["children"],
                                     {
