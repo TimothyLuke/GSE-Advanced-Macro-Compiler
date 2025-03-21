@@ -642,12 +642,12 @@ treeContainer:SetCallback(
 
             if #unique == 5 then
                 loadout = unique[5]
-                if type == "AO" then
+                if type == "AO" and bind then
                     button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
                 end
             else
                 button = unique[4]
-                if type == "AO" then
+                if type == "AO" and bind then
                     button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
                 end
             end
@@ -656,14 +656,14 @@ treeContainer:SetCallback(
             if #unique == 4 then
                 loadout = unique[4]
                 bind = unique[3]
-                if type == "AO" then
+                if type == "AO" and bind then
                     button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
                 end
             else
                 bind = unique[2]
                 button = unique[3]
 
-                if type == "AO" then
+                if type == "AO" and bind then
                     button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
                 end
             end
