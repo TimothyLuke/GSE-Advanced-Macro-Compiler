@@ -2912,7 +2912,7 @@ function GSE.CreateEditor()
             {
                 value = "NewSequence",
                 text = L["New"],
-                icon = Statics.ActionsIcons.Repeat
+                icon = Statics.ActionsIcons.Add
             },
             {
                 value = "Import",

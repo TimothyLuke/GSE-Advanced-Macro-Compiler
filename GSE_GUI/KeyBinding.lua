@@ -67,12 +67,6 @@ basecontainer:SetHeight(keybindingframe.Height - 100)
 basecontainer:SetFullWidth(true)
 keybindingframe:AddChild(basecontainer)
 
-local leftScrollContainer = AceGUI:Create("SimpleGroup")
-leftScrollContainer:SetWidth(300)
-
-leftScrollContainer:SetHeight(keybindingframe.Height - 90)
-leftScrollContainer:SetLayout("Fill") -- important!
-
 local treeContainer = AceGUI:Create("TreeGroup")
 treeContainer:SetFullHeight(true)
 treeContainer:SetFullWidth(true)
@@ -100,7 +94,6 @@ keybindingframe.frame:SetScript(
         end
         GSEOptions.keybindingHeight = keybindingframe.Height
         GSEOptions.keybindingWidth = keybindingframe.Width
-        leftScrollContainer:SetHeight(keybindingframe.Height - 90)
         keybindingframe:DoLayout()
     end
 )
@@ -121,7 +114,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
         if not GSE.isEmpty(bind) then
             keybind:SetKey(bind)
         end
-        keybind:SetWidth(300)
+        keybind:SetFullWidth(true)
         keybind:SetCallback(
             "OnKeyChanged",
             function(self, _, key)
@@ -132,7 +125,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
         keybind:SetLabel(L["Set Key to Bind"])
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(300)
+        SequenceListbox:SetFullWidth(true)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -154,7 +147,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(300)
+        TalentLoadOutList:SetFullWidth(true)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
@@ -229,10 +222,23 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
                     if loadout then
                         widget = widget .. loadout
                     end
-                    keybindingframe:clearpanels(nil, false, widget)
+
                     GSE.ShowKeyBindings()
                     -- trigger a reload of KeyBindings
                     GSE.ReloadKeyBindings()
+                    if loadout ~= "ALL" and loadout then
+                        if GetSpecialization then
+                            treeContainer:SelectByPath("KB", specialization, loadout, bind, button)
+                        else
+                            treeContainer:SelectByPath("KB", loadout, bind, button)
+                        end
+                    else
+                        if GetSpecialization then
+                            treeContainer:SelectByPath("KB", specialization, bind, button)
+                        else
+                            treeContainer:SelectByPath("KB", bind, button)
+                        end
+                    end
                 end
             end
         )
@@ -298,7 +304,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
         local initialbind = bind
         rightContainer:ReleaseChildren()
         local LABButtonState = AceGUI:Create("Dropdown")
-        LABButtonState:SetWidth(300)
+        LABButtonState:SetFullWidth(true)
         LABButtonState:SetLabel(L["Button State"])
         LABButtonState:SetDisabled(true)
         if bind and _G[bind] and _G[bind].state_types then
@@ -322,7 +328,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
         end
         local ActionButtonList = AceGUI:Create("Dropdown")
 
-        ActionButtonList:SetWidth(300)
+        ActionButtonList:SetFullWidth(true)
         ActionButtonList:SetLabel(L["Actionbar Buttons"])
         local buttonnames = {
             "ActionButton",
@@ -472,7 +478,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
 
         local SequenceListbox = AceGUI:Create("Dropdown")
 
-        SequenceListbox:SetWidth(300)
+        SequenceListbox:SetFullWidth(true)
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
 
@@ -496,7 +502,7 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
 
         local TalentLoadOutList = AceGUI:Create("Dropdown")
 
-        TalentLoadOutList:SetWidth(300)
+        TalentLoadOutList:SetFullWidth(true)
         TalentLoadOutList:SetLabel(L["Talent Loadout"])
         local loadouts = {
             ["All"] = L["All Talent Loadouts"]
@@ -561,10 +567,23 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
                     if loadout then
                         widget = widget .. loadout
                     end
-                    keybindingframe:clearpanels(nil, false, widget)
+
                     GSE.ShowKeyBindings()
                     -- trigger a reload of KeyBindings
                     GSE.ReloadOverrides()
+                    if loadout ~= "ALL" and loadout then
+                        if GetSpecialization then
+                            treeContainer:SelectByPath("AO", specialization, loadout, bind, button)
+                        else
+                            treeContainer:SelectByPath("AO", loadout, bind, button)
+                        end
+                    else
+                        if GetSpecialization then
+                            treeContainer:SelectByPath("AO", specialization, bind, button)
+                        else
+                            treeContainer:SelectByPath("AO", bind, button)
+                        end
+                    end
                 end
             end
         )
@@ -625,33 +644,122 @@ treeContainer:SetCallback(
         local unique = {("\001"):split(group)}
         local bind, specialization, loadout, type, button
         type = unique[1]
-
         specialization = unique[2]
+        if GetSpecialization then
+            bind = unique[3]
+
+            if #unique == 5 then
+                loadout = unique[5]
+                if type == "AO" then
+                    button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
+                end
+            else
+                button = unique[4]
+                if type == "AO" then
+                    button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
+                end
+            end
+        else
+            specialization = "1"
+            if #unique == 4 then
+                loadout = unique[4]
+                bind = unique[3]
+                if type == "AO" then
+                    button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
+                end
+            else
+                bind = unique[2]
+                button = unique[3]
+
+                if type == "AO" then
+                    button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
+                end
+            end
+        end
         local mbutton = GetMouseButtonClicked()
         if mbutton == "RightButton" then
+            MenuUtil.CreateContextMenu(
+                keybindingframe,
+                function(ownerRegion, rootDescription)
+                    rootDescription:CreateButton(
+                        L["New KeyBind"],
+                        function()
+                            local rightContainer = AceGUI:Create("SimpleGroup")
+                            rightContainer:SetFullWidth(true)
+                            rightContainer:SetLayout("List")
+                            showKeybind(nil, nil, nil, nil, "KB", rightContainer)
+                        end
+                    )
+                    rootDescription:CreateButton(
+                        L["New Actionbar Override"],
+                        function()
+                            local rightContainer = AceGUI:Create("SimpleGroup")
+                            rightContainer:SetFullWidth(true)
+                            rightContainer:SetLayout("List")
+                            showKeybind(nil, nil, nil, nil, "AO", rightContainer)
+                        end
+                    )
+                    rootDescription:CreateButton(
+                        L["Delete"],
+                        function()
+                            if type == "KB" then
+                                SetBinding(bind)
+
+                                local destination = GSE_C["KeyBindings"][tostring(specialization)]
+                                if loadout ~= "ALL" and loadout then
+                                    destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+                                    destination[bind] = nil
+                                    local empty = true
+                                    for _, _ in pairs(
+                                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
+                                    ) do
+                                        empty = false
+                                    end
+                                    if empty then
+                                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
+                                    end
+                                else
+                                    destination[bind] = nil
+                                end
+                            elseif type == "AO" then
+                                local destination = GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
+                                if loadout ~= "ALL" and loadout then
+                                    destination = GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
+                                    destination[bind] = nil
+                                    local empty = true
+                                    for _, _ in pairs(
+                                        GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]
+                                    ) do
+                                        empty = false
+                                    end
+                                    if empty then
+                                        GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = nil
+                                    end
+                                else
+                                    destination[bind] = nil
+                                end
+                                GSE.ButtonOverrides[bind] = nil
+                            end
+                            GSE.ShowKeyBindings()
+                        end
+                    )
+                end
+            )
         else
-            if specialization == "NKB" then
+            if unique[#unique] == "NKB" then
                 local rightContainer = AceGUI:Create("SimpleGroup")
                 rightContainer:SetFullWidth(true)
                 rightContainer:SetLayout("List")
                 showKeybind(nil, nil, nil, nil, "KB", rightContainer)
                 container:AddChild(rightContainer)
-            elseif specialization == "NAO" then
+            elseif unique[#unique] == "NAO" then
                 local rightContainer = AceGUI:Create("SimpleGroup")
                 rightContainer:SetFullWidth(true)
                 rightContainer:SetLayout("List")
                 showKeybind(nil, nil, nil, nil, "AO", rightContainer)
                 container:AddChild(rightContainer)
             else
-                local key
-                bind = unique[3]
-                button = unique[4]
-
-                if #unique == 5 then
-                    loadout = unique[5]
-                end
-
-                if bind and button and specialization and type then
+                if bind and button and type then
                     local rightContainer = AceGUI:Create("SimpleGroup")
                     rightContainer:SetFullWidth(true)
                     rightContainer:SetLayout("List")
@@ -667,159 +775,149 @@ local function buildKeybindMenu()
         {
             value = "AO",
             text = L["Actionbar Overrides"],
-            icon = Statics.ActionsIcons.Down,
+            icon = Statics.ActionsIcons.Repeat,
             children = {
                 {
                     value = "NAO",
-                    text = L["New Actionbar Override"]
+                    text = L["New Actionbar Override"],
+                    icon = Statics.ActionsIcons.Add
                 }
             }
         },
         {
             value = "KB",
             text = L["Keybindings"],
-            icon = Statics.ActionsIcons.Down,
+            icon = Statics.ActionsIcons.Key,
             children = {
                 {
                     value = "NKB",
-                    text = L["New KeyBind"]
+                    text = L["New KeyBind"],
+                    icon = Statics.ActionsIcons.Add
                 }
             }
         }
     }
     for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
         local currentspecid = tonumber(k)
+        local node
         if GetSpecializationInfo then
             local _, speclabel, _, specIcon = GetSpecializationInfo(currentspecid)
-            local node = {
+            node = {
                 value = k,
                 text = speclabel,
                 icon = specIcon,
                 children = {}
             }
+        else
+            node = tree[1]
+        end
+        for i, j in GSE.pairsByKeys(v) do
+            table.insert(
+                node["children"],
+                {
+                    value = i .. "\001" .. j["Sequence"],
+                    text = j["Bind"] .. " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
+                }
+            )
+        end
 
-            for i, j in GSE.pairsByKeys(v) do
-                table.insert(
-                    node["children"],
-                    {
-                        value = i .. "\001" .. j["Sequence"],
-                        text = j["Bind"] ..
-                            " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
-                    }
+        if
+            GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"] and
+                GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]
+         then
+            for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
+                local success =
+                    pcall(
+                    function()
+                        local loadout = C_Traits.GetConfigInfo(i)
+                        local specnode = {
+                            value = i,
+                            text = loadout.name,
+                            children = {}
+                        }
+
+                        for l, m in GSE.pairsByKeys(j) do
+                            table.insert(
+                                specnode["children"],
+                                {
+                                    value = l .. "\001" .. m,
+                                    text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                }
+                            )
+                        end
+                        table.insert(node["children"], specnode)
+                    end
                 )
             end
-
-            if
-                GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"] and
-                    GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]
-             then
-                for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
-                    local success =
-                        pcall(
-                        function()
-                            local loadout = C_Traits.GetConfigInfo(i)
-                            local specnode = {
-                                value = i,
-                                text = loadout.name,
-                                children = {}
-                            }
-
-                            for l, m in GSE.pairsByKeys(j) do
-                                table.insert(
-                                    specnode["children"],
-                                    {
-                                        value = l .. "\001" .. m,
-                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
-                                    }
-                                )
-                            end
-                            table.insert(node["children"], specnode)
-                        end
-                    )
-                    if not success then
-                        GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
-                    end
-                end
-            end
+        end
+        if GetSpecializationInfo then
             table.insert(tree[1]["children"], node)
         end
     end
     for k, v in pairs(GSE_C["KeyBindings"]) do
         local currentspecid = tonumber(k)
+        local node
         if GetSpecializationInfo then
             local _, speclabel, _, specIcon = GetSpecializationInfo(currentspecid)
-            local node = {
+            node = {
                 value = k,
                 text = speclabel,
                 icon = specIcon,
                 children = {}
             }
+        else
+            node = tree[2]
+        end
+        for i, j in GSE.pairsByKeys(v) do
+            if i ~= "LoadOuts" then
+                table.insert(
+                    node["children"],
+                    {
+                        value = i .. "\001" .. j,
+                        text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
+                    }
+                )
+            end
+        end
 
-            for i, j in GSE.pairsByKeys(v) do
-                if i ~= "LoadOuts" then
-                    table.insert(
-                        node["children"],
-                        {
-                            value = i .. "\001" .. j,
-                            text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
+        if
+            GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(currentspecid)] and
+                GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]
+         then
+            for i, j in pairs(GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]) do
+                local success =
+                    pcall(
+                    function()
+                        local loadout = C_Traits.GetConfigInfo(i)
+                        local specnode = {
+                            value = i,
+                            text = loadout.name,
+                            children = {}
                         }
-                    )
-                end
-            end
 
-            if
-                GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(currentspecid)] and
-                    GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]
-             then
-                for i, j in pairs(GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"]) do
-                    local success =
-                        pcall(
-                        function()
-                            local loadout = C_Traits.GetConfigInfo(i)
-                            local specnode = {
-                                value = i,
-                                text = loadout.name,
-                                children = {}
-                            }
-
-                            for l, m in GSE.pairsByKeys(j) do
-                                table.insert(
-                                    specnode["children"],
-                                    {
-                                        value = l .. "\001" .. m,
-                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
-                                    }
-                                )
-                            end
-                            table.insert(node["children"], specnode)
+                        for l, m in GSE.pairsByKeys(j) do
+                            table.insert(
+                                specnode["children"],
+                                {
+                                    value = l .. "\001" .. m,
+                                    text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                }
+                            )
                         end
-                    )
-                    if not success then
-                        GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
+                        table.insert(node["children"], specnode)
                     end
+                )
+                if not success then
+                    GSE_C["KeyBindings"][tostring(currentspecid)]["LoadOuts"][i] = nil
                 end
             end
+        end
+        if GetSpecializationInfo then
             table.insert(tree[2]["children"], node)
         end
     end
 
     treeContainer:SetTree(tree)
-end
-
-function keybindingframe:clearpanels(widget, selected, key)
-    for k, _ in pairs(keybindingframe.panels) do
-        local widkey = widget and widget:GetKey() or key
-        if k == widkey then
-            if selected then
-                --keybindingframe.showMacro(widget.node)
-                keybindingframe.panels[k]:SetClicked(true)
-            else
-                keybindingframe.panels[k]:SetClicked(false)
-            end
-        else
-            keybindingframe.panels[k]:SetClicked(false)
-        end
-    end
 end
 
 function GSE.ShowKeyBindings()
