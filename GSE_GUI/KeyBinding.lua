@@ -218,10 +218,6 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
                     if bind ~= initialbind then
                         showKeybind(bind, button, specialization, loadout)
                     end
-                    local widget = specialization .. bind
-                    if loadout then
-                        widget = widget .. loadout
-                    end
 
                     GSE.ShowKeyBindings()
                     -- trigger a reload of KeyBindings
@@ -562,10 +558,6 @@ local function showKeybind(bind, button, specialization, loadout, type, rightCon
                     end
                     if bind ~= initialbind then
                         showKeybind(bind, button, specialization, loadout)
-                    end
-                    local widget = specialization .. bind
-                    if loadout then
-                        widget = widget .. loadout
                     end
 
                     GSE.ShowKeyBindings()
