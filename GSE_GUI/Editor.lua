@@ -1989,6 +1989,7 @@ function GSE.CreateEditor()
                     interval:SetText(action.Interval and action.Interval or 3)
                     interval:SetDisabled(action.Type == Statics.Actions.Action and true or false)
                     interval:DisableButton(true)
+                    interval.editbox:SetNumeric(true)
                     interval:SetCallback(
                         "OnTextChanged",
                         function(sel, object, value)

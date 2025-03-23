@@ -40,7 +40,8 @@
     "Bartender4",
     "GetSpellBookItemInfo",
     "PlayerSpellsFrame",
-    "GSE"
+    "GSE",
+    "NDui"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
