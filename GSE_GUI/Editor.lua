@@ -991,9 +991,11 @@ function GSE.CreateEditor()
                         local tab
                         local load = "return " .. seqTableEditbox:GetText()
                         local func, err = loadstring(load)
-                        if err then
+                        if err or not func then
                             GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
-                            GSE.Print(err, L["GSE Raw Editor"])
+                            if err then
+                                GSE.Print(err, L["GSE Raw Editor"])
+                            end
                         else
                             tab = func()
                             if not GSE.isEmpty(tab) then
@@ -3703,8 +3705,8 @@ function GSE.CreateEditor()
                         sequencename = elements[3]
                     end
                 end
-                local button = GetMouseButtonClicked()
-                if button == "RightButton" then
+                local mbutton = GetMouseButtonClicked()
+                if mbutton == "RightButton" then
                     if area == "KEYBINDINGS" then
                         MenuUtil.CreateContextMenu(
                             editframe,
@@ -3730,7 +3732,7 @@ function GSE.CreateEditor()
                                 rootDescription:CreateButton(
                                     L["Delete"],
                                     function()
-                                        local bind, specialization, loadout, type, button
+                                        local bind, specialization, loadout, type
                                         type = unique[2]
                                         specialization = unique[3]
                                         if GetSpecialization then
@@ -3738,38 +3740,14 @@ function GSE.CreateEditor()
 
                                             if #unique == 6 then
                                                 loadout = unique[6]
-                                                if type == "AO" and bind then
-                                                    button =
-                                                        GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][
-                                                        bind
-                                                    ]
-                                                end
-                                            else
-                                                button = unique[5]
-                                                if type == "AO" and bind then
-                                                    button =
-                                                        GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
-                                                end
                                             end
                                         else
                                             specialization = "1"
                                             if #unique == 5 then
                                                 loadout = unique[5]
                                                 bind = unique[4]
-                                                if type == "AO" and bind then
-                                                    button =
-                                                        GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][
-                                                        bind
-                                                    ]
-                                                end
                                             else
                                                 bind = unique[3]
-                                                button = unique[4]
-
-                                                if type == "AO" and bind then
-                                                    button =
-                                                        GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
-                                                end
                                             end
                                         end
                                         if type == "KB" then
@@ -3890,7 +3868,7 @@ function GSE.CreateEditor()
                             end
                         )
                     end
-                elseif button == "LeftButton" and IsShiftKeyDown() then
+                elseif mbutton == "LeftButton" and IsShiftKeyDown() then
                     StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
                     StaticPopup_Show("GSE_ChatLink")
                 else
