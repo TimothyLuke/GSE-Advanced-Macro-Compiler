@@ -333,10 +333,10 @@ function GSE.CreateEditor()
             editframe.Sequence.MetaData.Talents = talents
         end
 
-        local header = AceGUI:Create("Heading")
-        header:SetText(L["Talents"])
-        header:SetFullWidth(true)
-        container:AddChild(header)
+        local talentsheader = AceGUI:Create("Heading")
+        talentsheader:SetText(L["Talents"])
+        talentsheader:SetFullWidth(true)
+        container:AddChild(talentsheader)
         local addtalent = AceGUI:Create("Button")
         addtalent:SetText(L["Add Talent Loadout"])
         addtalent:SetCallback(
