@@ -965,6 +965,7 @@ function GSE.CreateEditor()
         if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
             editframe.scrollContainer:SetScroll(scrollpos)
         end
+        editframe.scrollContainer:DoLayout()
     end
     local function drawRawEditor(container, version, tablestring)
         container:ReleaseChildren()
@@ -2303,7 +2304,9 @@ function GSE.CreateEditor()
                 }
             }
         end
-
+        local macrocontainer = AceGUI:Create("InlineGroup")
+        macrocontainer:SetTitle(L["Sequence"])
+        macrocontainer:SetFullWidth(true)
         setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
         editframe.booleanFunctions = {}
         editframe.numericFunctions = {}
@@ -2500,7 +2503,7 @@ function GSE.CreateEditor()
             "OnClick",
             function()
                 drawRawEditor(
-                    layoutcontainer,
+                    macrocontainer,
                     version,
                     GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version]))
                 )
@@ -2574,7 +2577,7 @@ function GSE.CreateEditor()
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
-                ChooseVersion(layoutcontainer, version, editframe.scrollStatus.scrollvalue, path)
+                ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
         )
         addActionButton:SetCallback(
@@ -2610,8 +2613,11 @@ function GSE.CreateEditor()
                 }
                 -- setmetatable(newAction, Statics.TableMetadataFunction)
                 table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                if not editframe.scrollstatus then
+                    editframe.scrollStatus = {}
+                end
                 editframe.scrollStatus.scrollvalue = 1
-                ChooseVersion(layoutcontainer, version, editframe.scrollStatus.scrollvalue, path)
+                ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
         )
         addLoopButton:SetCallback(
@@ -2641,7 +2647,7 @@ function GSE.CreateEditor()
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
-                ChooseVersion(layoutcontainer, version, editframe.scrollStatus.scrollvalue, path)
+                ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
         )
         addPauseButton:SetCallback(
@@ -2684,7 +2690,7 @@ function GSE.CreateEditor()
                 }
                 table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
-                ChooseVersion(layoutcontainer, version, editframe.scrollStatus.scrollvalue, path)
+                ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
         )
         addIfButton:SetCallback(
@@ -2752,9 +2758,6 @@ function GSE.CreateEditor()
         linegroup1:AddChild(delversionbutton)
         layoutcontainer:AddChild(linegroup1)
 
-        local macrocontainer = AceGUI:Create("InlineGroup")
-        macrocontainer:SetTitle(L["Sequence"])
-        macrocontainer:SetFullWidth(true)
         DrawSequenceEditor(macrocontainer, version, path)
         if not editframe.Sequence.MetaData.DisableEditor then
             layoutcontainer:AddChild(macrocontainer)
