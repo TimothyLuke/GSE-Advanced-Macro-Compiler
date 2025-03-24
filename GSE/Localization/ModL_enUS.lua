@@ -799,3 +799,7 @@ L["modified in other window.  This view is now behind the current sequence."] = 
 -- #1742
 L["You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."] =
     true
+
+-- #1762
+L["New Sequence"] = true
+L["Default"] = true

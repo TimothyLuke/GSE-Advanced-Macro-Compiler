@@ -43,7 +43,21 @@ if GSE.isEmpty(GSE.CreateIconControl) then
         return lbl
     end
 end
-
+local function BuildVersionLabel(version, label, excludekey)
+    version = tostring(version)
+    if not label then
+        if version == "1" then
+            label = L["Default"]
+        else
+            label = L["Version"]
+        end
+    end
+    if excludekey then
+        return label
+    else
+        return version .. " - " .. label
+    end
+end
 function GSE.CreateEditor()
     if GSE.isEmpty(GSE.GUI.editors) then
         GSE.GUI.editors = {}
@@ -135,11 +149,15 @@ function GSE.CreateEditor()
     editframe:SetCallback(
         "OnClose",
         function(self)
-            if GSE.Library[self.ClassID] and GSE.Library[self.ClassID][editframe.OrigSequenceName] then
-                GSE.Library[self.ClassID][editframe.OrigSequenceName] = nil
-            end
-            if GSESequences[self.ClassID] and GSESequences[self.ClassID][editframe.OrigSequenceName] then
-                GSESequences[self.ClassID][editframe.OrigSequenceName] = nil
+            if self.NewSequences then
+                for _, v in ipairs(self.NewSequences) do
+                    if GSE.Library[v.class] and GSE.Library[v.class][v.name] then
+                        GSE.Library[v.class][v.name] = nil
+                    end
+                    if GSESequences[v.class] and GSESequences[v.class][v.name] then
+                        GSESequences[v.class][v.name] = nil
+                    end
+                end
             end
             self.OrigSequenceName = nil
             GSE.ClearTooltip(editframe)
@@ -172,6 +190,7 @@ function GSE.CreateEditor()
             self.save = nil
             self.statusText = nil
             self.booleanFunctions = nil
+            self.NewSequences = nil
             self:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
@@ -179,7 +198,7 @@ function GSE.CreateEditor()
                 end
             end
             -- need to clear the onSizeChanged else the old OnSizeChanged method will reapplu when we recreate the frame.
-            editframe.frame:SetScript(
+            self.frame:SetScript(
                 "OnSizeChanged",
                 function(self, width, height)
                 end
@@ -206,29 +225,18 @@ function GSE.CreateEditor()
                 vals.sequencename = SequenceName
                 vals.sequence = sequence
                 vals.classid = classid
-                if editframe.NewSequence then
-                    if GSE.ObjectExists(SequenceName) then
-                        editframe:SetStatusText(
-                            string.format(
-                                L["Sequence Name %s is in Use. Please choose a different name."],
-                                SequenceName
-                            )
-                        )
-                        editframe.nameeditbox:SetText(
-                            GSEOptions.UNKNOWN .. editframe.nameeditbox:GetText() .. Statics.StringReset
-                        )
-                        editframe.nameeditbox:SetFocus()
-                        return
-                    end
-                    editframe.NewSequence = false
-                    if GSE.Library[classid] and GSE.Library[classid][editframe.OrigSequenceName] then
-                        GSE.Library[classid][editframe.OrigSequenceName] = nil
-                    end
-                    if GSESequences[classid] and GSESequences[classid][editframe.OrigSequenceName] then
-                        GSESequences[classid][editframe.OrigSequenceName] = nil
-                    end
-                    editframe.listSequences()
+                if GSE.ObjectExists(SequenceName) then
+                    editframe:SetStatusText(
+                        string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
+                    )
+                    editframe.nameeditbox:SetText(
+                        GSEOptions.UNKNOWN .. editframe.nameeditbox:GetText() .. Statics.StringReset
+                    )
+                    editframe.nameeditbox:SetFocus()
+                    return
                 end
+
+                editframe.listSequences()
 
                 table.insert(GSE.OOCQueue, vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
@@ -967,7 +975,7 @@ function GSE.CreateEditor()
         end
         editframe.scrollContainer:DoLayout()
     end
-    local function drawRawEditor(container, version, tablestring)
+    local function drawRawEditor(container, version, tablestring, path)
         container:ReleaseChildren()
 
         local seqTableEditbox = AceGUI:Create("MultiLineEditBox")
@@ -998,8 +1006,7 @@ function GSE.CreateEditor()
                     tab = func()
                     if not GSE.isEmpty(tab) then
                         editframe.Sequence.Macros[version] = tab
-                        editframe.GUIEditorPerformLayout()
-                        editframe.ContentContainer:SelectTab(version)
+                        treeContainer:SelectByValue(path .. "\001" .. version)
                     else
                         GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
                     end
@@ -1588,7 +1595,7 @@ function GSE.CreateEditor()
                         end
                     )
 
-                    -- patheditbox:DisableButton(true)
+                    patheditbox:DisableButton(true)
 
                     patheditbox:SetText(textpath)
                     layoutcontainer:AddChild(patheditbox)
@@ -2505,7 +2512,8 @@ function GSE.CreateEditor()
                 drawRawEditor(
                     macrocontainer,
                     version,
-                    GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version]))
+                    GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version])),
+                    table.concat(path, "\001")
                 )
 
                 GSE.WagoAnalytics:Switch("Raw Edit", true)
@@ -2727,9 +2735,7 @@ function GSE.CreateEditor()
         local versionLabel = AceGUI:Create("EditBox")
         versionLabel:SetWidth(200)
         versionLabel:SetLabel(L["Version"] .. " " .. L["Name"])
-        versionLabel:SetText(
-            editframe.Sequence.Macros[version].Label and editframe.Sequence.Macros[version].Label or ""
-        )
+        versionLabel:SetText(BuildVersionLabel(version, editframe.Sequence.Macros[version].Label, true))
         versionLabel:SetCallback(
             "OnTextChanged",
             function(self, event, text)
@@ -3524,7 +3530,7 @@ function GSE.CreateEditor()
         local tree = {
             {
                 value = "NewSequence",
-                text = L["New"] .. " " .. L["Sequence"],
+                text = L["New Sequence"],
                 icon = Statics.ActionsIcons.Add
             },
             {
@@ -3566,7 +3572,7 @@ function GSE.CreateEditor()
                     node.children,
                     {
                         value = i,
-                        text = j.Label and tostring(i) .. " - " .. j.Label or tostring(i)
+                        text = BuildVersionLabel(tostring(i), j.Label)
                     }
                 )
             end
@@ -3635,13 +3641,22 @@ function GSE.CreateEditor()
                 local key = unique[#unique]
                 local elements, classid, sequencename
                 local area = unique[1]
-                if unique[4] then
+                local specialization = unique[3]
+                if GetSpecialization and unique[4] and #unique >= 4 then
                     elements = GSE.split(unique[4], ",")
                     if #elements >= 3 then
                         classid = elements[1]
                         sequencename = elements[3]
                     end
+                elseif unique[3] and #unique >= 3 then
+                    elements = GSE.split(unique[3], ",")
+                    if #elements >= 3 then
+                        classid = elements[1]
+                        specialization = elements[2]
+                        sequencename = elements[3]
+                    end
                 end
+
                 local mbutton = GetMouseButtonClicked()
                 if mbutton == "RightButton" then
                     if area == "KEYBINDINGS" then
@@ -3752,7 +3767,10 @@ function GSE.CreateEditor()
                                             container:ReleaseChildren()
                                             editframe.loaded = nil
                                         end
-                                        local rightContainer = GSE.GUILoadEditor(editframe)
+                                        local rightContainer = AceGUI:Create("SimpleGroup")
+                                        rightContainer:SetFullWidth(true)
+                                        rightContainer:SetLayout("List")
+                                        GSE.GUILoadEditor(editframe)
                                         container:AddChild(rightContainer)
                                     end
                                 )
@@ -3809,12 +3827,12 @@ function GSE.CreateEditor()
                     StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
                     StaticPopup_Show("GSE_ChatLink")
                 else
-                    if group == "NewSequence" then
+                    if area == "NewSequence" then
                         GSE.GUILoadEditor(editframe)
-                    elseif group == "Import" then
+                    elseif area == "Import" then
                         GSE.ShowImport()
                     elseif area == "KEYBINDINGS" then
-                        local bind, specialization, loadout, type, button
+                        local bind, loadout, type, button
                         type = unique[2]
                         specialization = unique[3]
                         if GetSpecialization then
@@ -4050,7 +4068,11 @@ function GSE.CreateEditor()
 
                         editframe.SequenceName = sequencename
 
-                        if #unique == 4 then
+                        if unique[1] == "Sequences" and GetSpecialization and #unique == 4 then
+                            container:ReleaseChildren()
+                            treeContainer:SelectByValue(group .. "\001config")
+                            return
+                        elseif unique[1] == "Sequences" and #unique == 3 then
                             container:ReleaseChildren()
                             treeContainer:SelectByValue(group .. "\001config")
                             return
@@ -4058,6 +4080,9 @@ function GSE.CreateEditor()
                             local nameeditbox = AceGUI:Create("EditBox")
                             nameeditbox:SetLabel(L["Sequence Name"])
                             nameeditbox:SetWidth(250)
+                            nameeditbox:DisableButton(true)
+                            nameeditbox:SetText(sequencename)
+
                             nameeditbox:SetCallback(
                                 "OnTextChanged",
                                 function()
@@ -4087,13 +4112,11 @@ function GSE.CreateEditor()
                                 end
                             )
 
-                            nameeditbox:DisableButton(true)
-                            nameeditbox:SetText(sequencename)
                             local headerGroup = AceGUI:Create("SimpleGroup")
                             headerGroup:SetFullWidth(true)
                             headerGroup:SetLayout("Flow")
                             contentcontainer:AddChild(headerGroup)
-                            GSE.GUILoadEditor(editframe, unique[4])
+                            GSE.GUILoadEditor(editframe, path[#path])
 
                             headerGroup:AddChild(nameeditbox)
                             GUIDrawMetadataEditor(contentcontainer)
@@ -4101,6 +4124,7 @@ function GSE.CreateEditor()
                                 L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Configuration"] .. ")"
                             )
                         elseif key == "newversion" then
+                            GSE.GUILoadEditor(editframe, path[#path])
                             table.insert(
                                 editframe.Sequence.Macros,
                                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
@@ -4111,6 +4135,7 @@ function GSE.CreateEditor()
                                     ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
                             )
                         else
+                            GSE.GUILoadEditor(editframe, path[#path])
                             GUIDrawMacroEditor(contentcontainer, key, table.concat(path, "\001"))
                             editframe:SetTitle(
                                 L["Sequence Editor"] ..
@@ -4335,6 +4360,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     local classid
     local sequenceName
     local sequence
+    local newsequence = false
     if GSE.isEmpty(key) then
         classid = GSE.GetCurrentClassID()
         sequenceName = "NEW_SEQUENCE" .. tostring(math.random(20))
@@ -4374,9 +4400,14 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
             end
             sequence.Macros[1]["Actions"] = recordedMacro
         end
-        editor.NewSequence = true
+        if GSE.isEmpty(editor.NewSequences) then
+            editor.NewSequences = {}
+        end
+
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
         GSE.Library[classid][sequenceName] = sequence
+        table.insert(editor.NewSequences, {["class"] = classid, ["name"] = sequenceName})
+        newsequence = true
     else
         local elements = GSE.split(key, ",")
         classid = tonumber(elements[1])
@@ -4385,7 +4416,6 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
         local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
         if seq then
             sequence = seq[2]
-            editor.NewSequence = false
         end
     end
     if GSE.isEmpty(sequence.WeakAuras) then
@@ -4396,31 +4426,31 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.OrigSequenceName = sequenceName
     editor.Sequence = sequence
     editor.ClassID = classid
-    if editor.NewSequence then
+    if newsequence == true then
         editor.listSequences()
-        editor.treeContainer:SelectByValue(
+        local selpath =
             table.concat(
+            {
+                "Sequences",
+                classid,
+                GSE.GetCurrentSpecID(),
+                classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
+                "config"
+            },
+            "\001"
+        )
+        if not GetSpecialization then
+            selpath =
+                table.concat(
                 {
                     "Sequences",
                     classid,
-                    GSE.GetCurrentSpecID(),
                     classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
                     "config"
                 },
                 "\001"
             )
-        )
+        end
+        editor.treeContainer:SelectByValue(selpath)
     end
-    -- local rightContainer = AceGUI:Create("SimpleGroup")
-
-    -- rightContainer:SetLayout("List")
-    -- rightContainer:SetFullWidth(true)
-    -- rightContainer:SetFullHeight(true)
-    -- editor.GUIEditorPerformLayout(rightContainer)
-    -- editor.ContentContainer:SelectTab("config")
-
-    -- editor.loaded = true
-    -- editor:Show()
-    -- editor.rightContainer = rightContainer
-    -- return rightContainer
 end
