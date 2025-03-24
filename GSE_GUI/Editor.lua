@@ -135,6 +135,13 @@ function GSE.CreateEditor()
     editframe:SetCallback(
         "OnClose",
         function(self)
+            if GSE.Library[self.ClassID] and GSE.Library[self.ClassID][editframe.OrigSequenceName] then
+                GSE.Library[self.ClassID][editframe.OrigSequenceName] = nil
+            end
+            if GSESequences[self.ClassID] and GSESequences[self.ClassID][editframe.OrigSequenceName] then
+                GSESequences[self.ClassID][editframe.OrigSequenceName] = nil
+            end
+            self.OrigSequenceName = nil
             GSE.ClearTooltip(editframe)
             if GSE.isEmpty(GSEOptions.frameLocations) then
                 GSEOptions.frameLocations = {}
@@ -177,6 +184,7 @@ function GSE.CreateEditor()
                 function(self, width, height)
                 end
             )
+
             AceGUI:Release(self)
         end
     )
@@ -213,7 +221,15 @@ function GSE.CreateEditor()
                         return
                     end
                     editframe.NewSequence = false
+                    if GSE.Library[classid] and GSE.Library[classid][editframe.OrigSequenceName] then
+                        GSE.Library[classid][editframe.OrigSequenceName] = nil
+                    end
+                    if GSESequences[classid] and GSESequences[classid][editframe.OrigSequenceName] then
+                        GSESequences[classid][editframe.OrigSequenceName] = nil
+                    end
+                    editframe.listSequences()
                 end
+
                 table.insert(GSE.OOCQueue, vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
             end
@@ -3614,6 +3630,7 @@ function GSE.CreateEditor()
         treeContainer:SetCallback(
             "OnGroupSelected",
             function(container, event, group, ...)
+                print(group)
                 local unique = {("\001"):split(group)}
                 local key = unique[#unique]
                 local elements, classid, sequencename
@@ -3793,17 +3810,7 @@ function GSE.CreateEditor()
                     StaticPopup_Show("GSE_ChatLink")
                 else
                     if group == "NewSequence" then
-                        if editframe.loaded then
-                            container:ReleaseChildren()
-                            editframe.loaded = nil
-                        end
                         GSE.GUILoadEditor(editframe)
-                        local rightContainer = AceGUI:Create("SimpleGroup")
-                        rightContainer:SetFullWidth(true)
-                        rightContainer:SetLayout("List")
-                        container:AddChild(rightContainer)
-                        editframe.loaded = true
-                        editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New"] .. " " .. L["Sequence"])
                     elseif group == "Import" then
                         GSE.ShowImport()
                     elseif area == "KEYBINDINGS" then
@@ -4338,7 +4345,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     local sequence
     if GSE.isEmpty(key) then
         classid = GSE.GetCurrentClassID()
-        sequenceName = "NEW_SEQUENCE"
+        sequenceName = "NEW_SEQUENCE" .. tostring(math.random(20))
         sequence = {
             ["MetaData"] = {
                 ["Author"] = GSE.GetCharacterName(),
@@ -4376,6 +4383,8 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
             sequence.Macros[1]["Actions"] = recordedMacro
         end
         editor.NewSequence = true
+        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+        GSE.Library[classid][sequenceName] = sequence
     else
         local elements = GSE.split(key, ",")
         classid = tonumber(elements[1])
@@ -4395,6 +4404,21 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.OrigSequenceName = sequenceName
     editor.Sequence = sequence
     editor.ClassID = classid
+    if editor.NewSequence then
+        editor.listSequences()
+        editor.treeContainer:SelectByValue(
+            table.concat(
+                {
+                    "Sequences",
+                    classid,
+                    GSE.GetCurrentSpecID(),
+                    classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
+                    "config"
+                },
+                "\001"
+            )
+        )
+    end
     -- local rightContainer = AceGUI:Create("SimpleGroup")
 
     -- rightContainer:SetLayout("List")
