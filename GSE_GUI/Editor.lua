@@ -3641,7 +3641,7 @@ function GSE.CreateEditor()
                 local key = unique[#unique]
                 local elements, classid, sequencename
                 local area = unique[1]
-                local specialization = unique[3]
+                local specialization
                 if GetSpecialization and unique[4] and #unique >= 4 then
                     elements = GSE.split(unique[4], ",")
                     if #elements >= 3 then
