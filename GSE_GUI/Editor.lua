@@ -1500,8 +1500,6 @@ function GSE.CreateEditor()
                         "OnEnterPressed",
                         function(obj, event, key)
                             if not editframe.reloading then
-                                -- put the move stuff here.
-                                --print("moving from " .. textpath .. " to " .. key)
                                 local destinationPath = GSE.split(key, ".")
                                 for k, v in ipairs(destinationPath) do
                                     destinationPath[k] = tonumber(v)
@@ -3630,7 +3628,6 @@ function GSE.CreateEditor()
         treeContainer:SetCallback(
             "OnGroupSelected",
             function(container, event, group, ...)
-                print(group)
                 local unique = {("\001"):split(group)}
                 local key = unique[#unique]
                 local elements, classid, sequencename
@@ -4292,14 +4289,6 @@ function GSE.CreateEditor()
             end
         end
         editframe.listSequences()
-        -- if editframe.OrigSequenceName ~= seqName then
-        --     if editframe.Sequence.MetaData.SpecID and editframe.ClassID then
-        --         print(editframe.ClassID .. "," .. editframe.Sequence.MetaData.SpecID .. "," .. seqName)
-        --         editframe.treeContainer:SelectByValue(
-        --             editframe.ClassID .. "," .. editframe.Sequence.MetaData.SpecID .. "," .. seqName
-        --         )
-        --     end
-        -- end
     end
 
     return editframe
