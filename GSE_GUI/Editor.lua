@@ -3652,7 +3652,6 @@ function GSE.CreateEditor()
                     elements = GSE.split(unique[3], ",")
                     if #elements >= 3 then
                         classid = elements[1]
-                        specialization = elements[2]
                         sequencename = elements[3]
                     end
                 end
