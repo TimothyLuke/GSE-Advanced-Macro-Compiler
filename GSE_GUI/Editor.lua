@@ -225,7 +225,8 @@ function GSE.CreateEditor()
                 vals.sequencename = SequenceName
                 vals.sequence = sequence
                 vals.classid = classid
-                if GSE.ObjectExists(SequenceName) then
+
+                if GSE.ObjectExists(SequenceName) and editframe.newname then
                     editframe:SetStatusText(
                         string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
                     )
@@ -236,7 +237,7 @@ function GSE.CreateEditor()
                     return
                 end
 
-                editframe.listSequences()
+                -- editframe.listSequences()
 
                 table.insert(GSE.OOCQueue, vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
@@ -1980,6 +1981,12 @@ function GSE.CreateEditor()
                 interval:SetDisabled(action.Type == Statics.Actions.Action and true or false)
                 interval:DisableButton(true)
                 interval.editbox:SetNumeric(true)
+                interval:SetCallback(
+                    "OnRelease",
+                    function(self, event, text)
+                        interval.editbox:SetNumeric(false)
+                    end
+                )
                 interval:SetCallback(
                     "OnTextChanged",
                     function(sel, object, value)
@@ -3972,13 +3979,14 @@ function GSE.CreateEditor()
                             "OnClick",
                             function()
                                 if GSE.isEmpty(editframe.invalidPause) then
-                                    editframe:SetStatusText(L["Save pending for "] .. sequencename)
+                                    editframe:SetStatusText(L["Save pending for "] .. editframe.SequenceName)
                                     local _, _, _, tocversion = GetBuildInfo()
                                     editframe.Sequence.MetaData.ManualIntervention = true
                                     editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
                                     editframe.Sequence.MetaData.EnforceCompatability = true
                                     editframe.Sequence.MetaData.TOC = tocversion
-                                    editframe.SequenceName = GSE.UnEscapeString(sequencename)
+                                    editframe.SequenceName = GSE.UnEscapeString(editframe.SequenceName)
+
                                     GUIUpdateSequenceDefinition(
                                         editframe.ClassID,
                                         editframe.SequenceName,
@@ -3987,9 +3995,9 @@ function GSE.CreateEditor()
                                     editframe.save = true
                                     if editframe.newname then
                                         editframe.newname = nil
-                                        treeContainer:SelectByValue(
-                                            table.concat(path, "\001") .. "\001" .. sequencename
-                                        )
+                                    -- treeContainer:SelectByValue(
+                                    --     table.concat(path, "\001") .. "\001" .. sequencename
+                                    -- )
                                     end
                                 else
                                     GSE.Print(
@@ -4085,10 +4093,8 @@ function GSE.CreateEditor()
                             nameeditbox:SetCallback(
                                 "OnTextChanged",
                                 function()
-                                    if not editframe.reloading then
-                                        editframe.SequenceName = nameeditbox:GetText()
-                                        editframe.newname = true
-                                    end
+                                    editframe.SequenceName = nameeditbox:GetText()
+                                    editframe.newname = true
                                 end
                             )
 
