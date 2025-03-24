@@ -933,10 +933,12 @@ function GSE.processAction(action, metaData, variables)
                 action.Interval = 2
             end
         end
+
         local returnAction = {
             ["Action"] = buildAction(action, metaData),
-            ["Interval"] = action.Interval
+            ["Interval"] = tonumber(action.Interval)
         }
+
         return returnAction
     end
 end
