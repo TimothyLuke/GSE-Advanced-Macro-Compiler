@@ -3797,8 +3797,12 @@ function GSE.CreateEditor()
                             container:ReleaseChildren()
                             editframe.loaded = nil
                         end
-                        local rightContainer = GSE.GUILoadEditor(editframe)
+                        GSE.GUILoadEditor(editframe)
+                        local rightContainer = AceGUI:Create("SimpleGroup")
+                        rightContainer:SetFullWidth(true)
+                        rightContainer:SetLayout("List")
                         container:AddChild(rightContainer)
+                        editframe.loaded = true
                         editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New"] .. " " .. L["Sequence"])
                     elseif group == "Import" then
                         GSE.ShowImport()
