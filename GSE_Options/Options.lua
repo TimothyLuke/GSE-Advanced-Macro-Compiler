@@ -1006,7 +1006,7 @@ function GSE.GetOptionsTable()
                             "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community."
                         ],
                         order = 20,
-                        image = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.tga",
+                        image = Statics.Icons.Logo,
                         imageWidth = 120,
                         imageHeight = 120
                     },
@@ -1024,7 +1024,7 @@ function GSE.GetOptionsTable()
                         type = "execute",
                         name = L["GSE Discord"],
                         order = 24,
-                        image = "Interface\\Addons\\GSE_GUI\\Assets\\discord.png",
+                        image = Statics.Icons.Discord,
                         imageWidth = 120,
                         imageHeight = 120,
                         func = function()
@@ -1036,7 +1036,7 @@ function GSE.GetOptionsTable()
                         type = "execute",
                         name = L["Report an Issue"],
                         order = 25,
-                        image = "Interface\\Addons\\GSE_GUI\\Assets\\github.tga",
+                        image = Statics.Icons.GitHub,
                         imageWidth = 120,
                         imageHeight = 120,
                         func = function()
@@ -1049,7 +1049,7 @@ function GSE.GetOptionsTable()
                         type = "execute",
                         name = L["Support GSE"],
                         order = 26,
-                        image = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.tga",
+                        image = Statics.Icons.Patreon,
                         imageWidth = 120,
                         imageHeight = 120,
                         func = function()

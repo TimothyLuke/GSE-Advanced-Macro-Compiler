@@ -3378,7 +3378,7 @@ function GSE.CreateEditor()
             {
                 value = "AO",
                 text = L["Actionbar Overrides"],
-                icon = Statics.ActionsIcons.Repeat,
+                icon = Statics.Icons.Button,
                 children = {
                     {
                         value = "NAO",
@@ -3524,7 +3524,7 @@ function GSE.CreateEditor()
         local returntree = {
             value = "KEYBINDINGS",
             text = L["Keybindings"],
-            icon = Statics.ActionsIcons.Key,
+            icon = Statics.Icons.Keybindings,
             children = tree
         }
         ---table.insert(returntree.children, tree)
@@ -3540,7 +3540,7 @@ function GSE.CreateEditor()
             {
                 value = "Import",
                 text = L["Import"],
-                icon = Statics.ActionsIcons.Down
+                icon = Statics.Icons.Import
             }
         }
 
@@ -3593,7 +3593,7 @@ function GSE.CreateEditor()
         local subtree = {
             value = "Sequences",
             text = L["Sequences"],
-            icon = Statics.ActionsIcons.Repeat,
+            icon = Statics.Icons.Sequences,
             children = {}
         }
         for k, v in pairs(classtree) do
@@ -4458,4 +4458,11 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
         end
         editor.treeContainer:SelectByValue(selpath)
     end
+end
+
+function GSE.ShowKeyBindings()
+    local editor = GSE.CreateEditor()
+    editor.listSequences()
+    editor.treeContainer:SelectByValue("KEYBINDINGS")
+    editor:Show()
 end

@@ -1,41 +1,114 @@
 local GSE = GSE
 local L = GSE.L
-local AceGUI = LibStub("AceGUI-3.0")
 local Statics = GSE.Static
 
-local frame = AceGUI:Create("Frame")
-local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
-local font = CreateFont("seqPanelFont")
-font:SetFontObject(GameFontNormal)
-local origjustificationH = font:GetJustifyH()
-local origjustificationV = font:GetJustifyV()
-font:SetJustifyH("LEFT")
-font:SetJustifyV("MIDDLE")
-if GSE.isEmpty(fontFlags) then
-    fontFlags = "OUTLINE"
-end
-frame:SetLayout("Flow")
-frame:SetTitle(L["GSE: Main Menu"])
+-- Create the main frame
+local frame = CreateFrame("Frame", "GSEMenuFrame", UIParent, "BackdropTemplate")
+frame:SetSize(38, 265)
+frame:SetPoint("CENTER")
+frame:SetFrameStrata("MEDIUM")
+frame:SetClampedToScreen(true)
+frame:SetMovable(true)
+frame:EnableMouse(true)
+frame:RegisterForDrag("LeftButton")
+frame:SetScript("OnDragStart", frame.StartMoving)
+frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+frame:SetBackdrop(
+    {
+        bgFile = "Interface/CHARACTERFRAME/UI-Party-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = {left = 4, right = 4, top = 4, bottom = 4}
+    }
+)
+frame:SetBackdropColor(0, 0, 0, 1)
 frame:Hide()
-frame.frame:SetFrameStrata("MEDIUM")
-frame.frame:SetClampedToScreen(true)
-frame:SetCallback(
-    "OnClose",
-    function(widget)
-        frame:Hide()
+
+-- Title image
+local logo = CreateFrame("Button", nil, frame)
+logo:SetSize(50, 50)
+logo:SetPoint("TOP", frame, "TOP", 0, 25)
+
+local logoTex = logo:CreateTexture(nil, "OVERLAY")
+logoTex:SetAllPoints()
+logoTex:SetTexture(Statics.Icons.MenuLogo)
+
+logo:RegisterForDrag("LeftButton")
+logo:SetScript(
+    "OnDragStart",
+    function()
+        frame:StartMoving()
     end
 )
-frame:SetStatusText(GSE.VersionString)
+logo:SetScript(
+    "OnDragStop",
+    function()
+        frame:StopMovingOrSizing()
+    end
+)
 
-frame:SetWidth(650)
-frame:SetHeight(100)
+-- Tooltip for logo showing version and shift-right-click to copy
+logo:SetScript(
+    "OnEnter",
+    function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("GSE v" .. (GSE.VersionString or "Unknown"))
+        GameTooltip:AddLine("Shift + Right-Click to copy version", 0.75, 0.75, 0.75)
+        GameTooltip:Show()
+    end
+)
 
-local texture = frame.frame:CreateTexture(nil, "BACKGROUND")
-texture:SetTexture("Interface\\Addons\\GSE_GUI\\Assets\\menubackground.png")
-texture:SetAllPoints()
+logo:SetScript(
+    "OnLeave",
+    function()
+        GameTooltip:Hide()
+    end
+)
 
+logo:SetScript(
+    "OnMouseUp",
+    function(self, button)
+        if IsShiftKeyDown() and button == "RightButton" then
+            local versionText = GSE.VersionString or "Unknown"
+            local popup = CreateFrame("Frame", "GSEVersionPopup", UIParent, "DialogBoxFrame")
+            popup:SetPoint("CENTER")
+            popup:SetSize(300, 100)
+            popup:SetBackdrop(
+                {
+                    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+                    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+                    tile = true,
+                    tileSize = 16,
+                    edgeSize = 16,
+                    insets = {left = 4, right = 4, top = 4, bottom = 4}
+                }
+            )
+            popup:SetBackdropColor(0, 0, 0, 1)
+            popup:SetFrameStrata("DIALOG")
+
+            local editBox = CreateFrame("EditBox", nil, popup, "InputBoxTemplate")
+            editBox:SetSize(250, 30)
+            editBox:SetPoint("CENTER", 0, 20)
+            editBox:SetAutoFocus(true)
+            editBox:SetText("GSE v" .. versionText)
+            editBox:HighlightText()
+            editBox:SetScript(
+                "OnEscapePressed",
+                function()
+                    popup:Hide()
+                end
+            )
+
+            popup:Show()
+        end
+    end
+)
+
+-- Restore saved position if available
 if GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
-    frame.frame:SetPoint(
+    frame:SetPoint(
         "TOPLEFT",
         UIParent,
         "BOTTOMLEFT",
@@ -44,158 +117,58 @@ if GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
     )
 end
 
-frame.frame:SetScript(
-    "OnSizeChanged",
-    function(self, width, height)
-        frame:SetWidth(650)
-        frame:SetHeight(100)
-    end
-)
+-- Utility function to create a button
+local function createIconButton(parent, icon, labelText, onClickFunc, offsetY)
+    local button = CreateFrame("Button", nil, parent)
+    button:SetSize(20, 20)
+    button:SetPoint("TOP", 0, offsetY)
 
-local sequencebutton = AceGUI:Create("InteractiveLabel")
-sequencebutton:SetFont(fontName, fontHeight, fontFlags)
-sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t" .. L["Sequences"])
-sequencebutton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.ShowSequences()
-    end
-)
-sequencebutton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t|cFF13b9b9" .. L["Sequences"])
-    end
-)
-sequencebutton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        sequencebutton:SetText("|T" .. Statics.ActionsIcons.Repeat .. ":15:15|t" .. L["Sequences"])
-    end
-)
-sequencebutton:SetWidth(100)
+    local texture = button:CreateTexture(nil, "ARTWORK")
+    texture:SetAllPoints()
+    texture:SetTexture(icon)
 
-local variablebutton = AceGUI:Create("InteractiveLabel")
-variablebutton:SetFont(fontName, fontHeight, fontFlags)
-variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t" .. L["Variables"])
-variablebutton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.ShowVariables()
-    end
-)
-variablebutton:SetWidth(100)
-variablebutton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t|cFF13b9b9" .. L["Variables"])
-    end
-)
-variablebutton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        variablebutton:SetText("|T" .. Statics.ActionsIcons.If .. ":15:15|t" .. L["Variables"])
-    end
-)
+    button:SetScript("OnClick", onClickFunc)
 
-local macrobutton = AceGUI:Create("InteractiveLabel")
-macrobutton:SetFont(fontName, fontHeight, fontFlags)
-macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t" .. L["Macros"])
-macrobutton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.ShowMacros()
-    end
-)
-macrobutton:SetWidth(100)
-macrobutton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t|cFF13b9b9" .. L["Macros"])
-    end
-)
-macrobutton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        macrobutton:SetText("|T" .. Statics.ActionsIcons.Action .. ":15:15|t" .. L["Macros"])
-    end
-)
+    button:SetScript(
+        "OnEnter",
+        function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(labelText, 1, 1, 1)
+            GameTooltip:Show()
+            button:SetSize(25, 25)
+        end
+    )
 
-local keybindButton = AceGUI:Create("InteractiveLabel")
-keybindButton:SetFont(fontName, fontHeight, fontFlags)
-keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t" .. L["Keybindings"])
-keybindButton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.ShowKeyBindings()
-    end
-)
-keybindButton:SetWidth(100)
-keybindButton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t|cFF13b9b9" .. L["Keybindings"])
-    end
-)
-keybindButton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        keybindButton:SetText("|T" .. Statics.ActionsIcons.Key .. ":15:15|t" .. L["Keybindings"])
-    end
-)
+    button:SetScript(
+        "OnLeave",
+        function()
+            GameTooltip:Hide()
+            button:SetSize(20, 20)
+        end
+    )
 
-local importbutton = AceGUI:Create("InteractiveLabel")
-importbutton:SetFont(fontName, fontHeight, fontFlags)
-importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t" .. L["Import"])
-importbutton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.ShowImport()
-    end
-)
-importbutton:SetWidth(100)
-importbutton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t|cFF13b9b9" .. L["Import"])
-    end
-)
-importbutton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        importbutton:SetText("|T" .. Statics.ActionsIcons.Down .. ":15:15|t" .. L["Import"])
-    end
-)
+    return button
+end
 
-local optionsbutton = AceGUI:Create("InteractiveLabel")
-optionsbutton:SetFont(fontName, fontHeight, fontFlags)
-optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t" .. L["Options"])
-optionsbutton:SetCallback(
-    "OnClick",
-    function(self, button, down)
-        GSE.OpenOptionsPanel()
-    end
-)
-optionsbutton:SetWidth(100)
-optionsbutton:SetCallback(
-    "OnEnter",
-    function(self, button, down)
-        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t|cFF13b9b9" .. L["Options"])
-    end
-)
-optionsbutton:SetCallback(
-    "OnLeave",
-    function(self, button, down)
-        optionsbutton:SetText("|T" .. Statics.ActionsIcons.Settings .. ":15:15|t" .. L["Options"])
-    end
-)
+-- Create and add buttons
+local iconData = {
+    {Statics.Icons.Sequences, L["Sequences"], GSE.ShowSequences},
+    {Statics.Icons.Variables, L["Variables"], GSE.ShowVariables},
+    {Statics.Icons.Keybindings, L["Keybindings"], GSE.ShowKeyBindings},
+    {Statics.Icons.Import, L["Import"], GSE.ShowImport},
+    {Statics.Icons.Macros, L["Macros"], GSE.ShowMacros},
+    {Statics.Icons.Options, L["Options"], GSE.OpenOptionsPanel},
+    {Statics.Icons.Close, L["Close"], function()
+            frame:Hide()
+        end}
+}
 
-frame:AddChild(sequencebutton)
-frame:AddChild(variablebutton)
-frame:AddChild(keybindButton)
-frame:AddChild(importbutton)
-frame:AddChild(macrobutton)
-frame:AddChild(optionsbutton)
+local startY = -40
+local spacing = -31
+
+for i, data in ipairs(iconData) do
+    createIconButton(frame, data[1], data[2], data[3], startY + (i - 1) * spacing)
+end
 
 function GSE.ShowMenu()
     frame:Show()
