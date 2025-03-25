@@ -92,7 +92,7 @@ function GSE.CreateEditor()
     local function GUIConfirmDeleteSequence(classid, sequenceName)
         GSE.DeleteSequence(classid, sequenceName)
         for _, v in ipairs(GSE.GUI.editors) do
-            v.listSequences()
+            v.ManageTree()
         end
     end
 
@@ -4354,7 +4354,7 @@ end
 local function collectionImported(message)
     if message == Statics.COLLECTION_IMPORTED then
         for _, v in ipairs(GSE.GUI.editors) do
-            v.listSequences()
+            v.ManageTree()
         end
     end
 end
