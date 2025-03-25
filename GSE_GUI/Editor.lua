@@ -4138,7 +4138,7 @@ function GSE.CreateEditor()
                                     ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
                             )
                         else
-                            if not editframe.Sequence then
+                            if editframe.OrigSequenceName ~= sequencename then
                                 GSE.GUILoadEditor(editframe, path[#path])
                             end
                             GUIDrawMacroEditor(contentcontainer, key, table.concat(path, "\001"))
