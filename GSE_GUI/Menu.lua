@@ -153,14 +153,18 @@ end
 -- Create and add buttons
 local iconData = {
     {Statics.Icons.Sequences, L["Sequences"], GSE.ShowSequences},
-    {Statics.Icons.Variables, L["Variables"], GSE.ShowVariables},
     {Statics.Icons.Keybindings, L["Keybindings"], GSE.ShowKeyBindings},
+    {Statics.Icons.Variables, L["Variables"], GSE.ShowVariables},
     {Statics.Icons.Import, L["Import"], GSE.ShowImport},
     {Statics.Icons.Macros, L["Macros"], GSE.ShowMacros},
     {Statics.Icons.Options, L["Options"], GSE.OpenOptionsPanel},
-    {Statics.Icons.Close, L["Close"], function()
+    {
+        Statics.Icons.Close,
+        L["Close"],
+        function()
             frame:Hide()
-        end}
+        end
+    }
 }
 
 local startY = -40
