@@ -3984,7 +3984,6 @@ function GSE.CreateEditor()
                                     editframe.Sequence.MetaData.EnforceCompatability = true
                                     editframe.Sequence.MetaData.TOC = tocversion
                                     editframe.SequenceName = GSE.UnEscapeString(editframe.SequenceName)
-
                                     GUIUpdateSequenceDefinition(
                                         editframe.ClassID,
                                         editframe.SequenceName,
@@ -4083,6 +4082,9 @@ function GSE.CreateEditor()
                             treeContainer:SelectByValue(group .. "\001config")
                             return
                         elseif key == "config" then
+                            if editframe.OrigSequenceName ~= sequencename then
+                                GSE.GUILoadEditor(editframe, path[#path])
+                            end
                             local nameeditbox = AceGUI:Create("EditBox")
                             nameeditbox:SetLabel(L["Sequence Name"])
                             nameeditbox:SetWidth(250)
@@ -4115,12 +4117,12 @@ function GSE.CreateEditor()
                                     GSE.ClearTooltip(editframe)
                                 end
                             )
-
+                            editframe.nameeditbox = nameeditbox
                             local headerGroup = AceGUI:Create("SimpleGroup")
                             headerGroup:SetFullWidth(true)
                             headerGroup:SetLayout("Flow")
                             contentcontainer:AddChild(headerGroup)
-                            GSE.GUILoadEditor(editframe, path[#path])
+                            --GSE.GUILoadEditor(editframe, path[#path])
 
                             headerGroup:AddChild(nameeditbox)
                             GUIDrawMetadataEditor(contentcontainer)
@@ -4128,7 +4130,9 @@ function GSE.CreateEditor()
                                 L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Configuration"] .. ")"
                             )
                         elseif key == "newversion" then
-                            GSE.GUILoadEditor(editframe, path[#path])
+                            if editframe.OrigSequenceName ~= sequencename then
+                                GSE.GUILoadEditor(editframe, path[#path])
+                            end
                             table.insert(
                                 editframe.Sequence.Macros,
                                 GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
@@ -4418,7 +4422,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
         local elements = GSE.split(key, ",")
         classid = tonumber(elements[1])
         sequenceName = elements[3]
-        --sequence = GSE.CloneSequence(GSE.Library[classid][sequenceName], true)
+
         local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
         if seq then
             sequence = seq[2]
