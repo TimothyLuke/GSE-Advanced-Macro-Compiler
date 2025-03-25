@@ -3663,9 +3663,9 @@ function GSE.CreateEditor()
 
                 local mbutton = GetMouseButtonClicked()
                 if mbutton == "RightButton" then
-                    if area == "KEYBINDINGS" then
+                    if area == "KEYBINDINGS" and #unique >= 3 then
                         MenuUtil.CreateContextMenu(
-                            editframe,
+                            editframe.frame,
                             function(ownerRegion, rootDescription)
                                 rootDescription:CreateButton(
                                     L["New KeyBind"],
@@ -3754,12 +3754,12 @@ function GSE.CreateEditor()
                                             end
                                             GSE.ButtonOverrides[bind] = nil
                                         end
-                                        GSE.ShowKeyBindings()
+                                        GSE.ManageTree()
                                     end
                                 )
                             end
                         )
-                    else
+                    elseif area == "Sequences" then
                         MenuUtil.CreateContextMenu(
                             editframe.frame,
                             function(ownerRegion, rootDescription)
@@ -3796,7 +3796,7 @@ function GSE.CreateEditor()
                                             string.format(L["Open %s in New Window"], sequencename),
                                             function()
                                                 local editor = GSE.CreateEditor()
-                                                editor.listSequences()
+                                                editor.ManageTree()
                                                 editor.treeContainer:SelectByValue(group)
                                             end
                                         )
@@ -4433,7 +4433,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.Sequence = sequence
     editor.ClassID = classid
     if newsequence == true then
-        editor.listSequences()
+        editor.ManageTree()
         local selpath =
             table.concat(
             {
@@ -4463,7 +4463,7 @@ end
 
 function GSE.ShowKeyBindings()
     local editor = GSE.CreateEditor()
-    editor.listSequences()
+    editor.ManageTree()
     editor.treeContainer:SelectByValue("KEYBINDINGS")
     editor:Show()
 end
