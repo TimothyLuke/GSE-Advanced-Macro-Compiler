@@ -2011,12 +2011,10 @@ function GSE.CreateEditor()
                 macroPanel:AddChild(typerow)
                 pcontainer:AddChild(macroPanel)
             elseif action.Type == Statics.Actions.Loop then
-                local macroPanel = AceGUI:Create("SimpleGroup")
-
-                macroPanel:SetFullWidth(true)
-                macroPanel:SetLayout("List")
-                macroPanel:SetAutoAdjustHeight(true)
-                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
+                local layout3 = AceGUI:Create("InlineGroup")
+                layout3:SetFullWidth(true)
+                layout3:SetLayout("List")
+                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, layout3)
 
                 local stepdropdown = AceGUI:Create("Dropdown")
                 stepdropdown:SetLabel(L["Step Function"])
@@ -2096,8 +2094,8 @@ function GSE.CreateEditor()
                 spacerlabel2:SetWidth(5)
                 linegroup1:AddChild(spacerlabel2)
                 linegroup1:AddChild(looplimit)
-                pcontainer:AddChild(linegroup1)
 
+                layout3:AddChild(linegroup1)
                 local macroGroup = AceGUI:Create("SimpleGroup")
                 macroGroup:SetFullWidth(true)
                 macroGroup:SetLayout("List")
@@ -2110,9 +2108,8 @@ function GSE.CreateEditor()
                     drawAction(macroGroup, act, version, newKeyPath)
                 end
 
-                macroPanel:AddChild(macroGroup)
-
-                pcontainer:AddChild(macroPanel)
+                layout3:AddChild(macroGroup)
+                pcontainer:AddChild(layout3)
             elseif action.Type == Statics.Actions.If then
                 local macroPanel = AceGUI:Create("InlineGroup")
                 macroPanel:SetFullWidth(true)
@@ -2520,7 +2517,7 @@ function GSE.CreateEditor()
                     macrocontainer,
                     version,
                     GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version])),
-                    table.concat(path, "\001")
+                    path
                 )
 
                 GSE.WagoAnalytics:Switch("Raw Edit", true)
@@ -4064,11 +4061,12 @@ function GSE.CreateEditor()
                         scrollcontainer:SetFullWidth(true)
                         scrollcontainer:SetHeight(editframe.Height - 100)
                         scrollcontainer:SetLayout("Fill") -- Important!
-
+                        editframe.scrollStatus = {}
                         local contentcontainer = AceGUI:Create("ScrollFrame")
                         scrollcontainer:AddChild(contentcontainer)
                         contentcontainer:SetFullWidth(true)
                         contentcontainer:SetFullHeight(true)
+                        contentcontainer:SetStatusTable(editframe.scrollStatus)
                         editframe.scroller = scrollcontainer
                         editframe.scrollContainer = contentcontainer
                         container:AddChild(scrollcontainer)
@@ -4140,7 +4138,9 @@ function GSE.CreateEditor()
                                     ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
                             )
                         else
-                            GSE.GUILoadEditor(editframe, path[#path])
+                            if not editframe.Sequence then
+                                GSE.GUILoadEditor(editframe, path[#path])
+                            end
                             GUIDrawMacroEditor(contentcontainer, key, table.concat(path, "\001"))
                             editframe:SetTitle(
                                 L["Sequence Editor"] ..
