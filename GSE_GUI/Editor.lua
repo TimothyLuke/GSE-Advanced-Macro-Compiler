@@ -3754,7 +3754,7 @@ function GSE.CreateEditor()
                                             end
                                             GSE.ButtonOverrides[bind] = nil
                                         end
-                                        GSE.ManageTree()
+                                        editframe.ManageTree()
                                     end
                                 )
                             end
@@ -3906,7 +3906,7 @@ function GSE.CreateEditor()
                                 showKeybind(bind, button, specialization, loadout, type, rightContainer)
                                 container:AddChild(rightContainer)
                                 editframe.loaded = true
-                                editframe:SetTitle(L["Sequence Editor:"] .. " " .. L["Keybind"])
+                                editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["Keybind"])
                             end
                         end
                     elseif classid and sequencename then
