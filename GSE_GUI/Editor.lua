@@ -237,7 +237,7 @@ function GSE.CreateEditor()
                     return
                 end
 
-                -- editframe.listSequences()
+                -- editframe.ManageTree()
 
                 table.insert(GSE.OOCQueue, vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
@@ -2474,7 +2474,7 @@ function GSE.CreateEditor()
                 end
                 table.remove(sequence.Macros, version)
                 printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
-                editframe.listSequences()
+                editframe.ManageTree()
                 treeContainer:SelectByValue(path)
                 editframe:SetStatusText(string.format(printtext, version))
                 C_Timer.After(
@@ -2968,9 +2968,7 @@ function GSE.CreateEditor()
                             showKeybind(bind, button, specialization, loadout)
                         end
 
-                        GSE.ShowKeyBindings()
-                        -- trigger a reload of KeyBindings
-                        GSE.ReloadKeyBindings()
+                        editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
                                 treeContainer:SelectByPath("KB", specialization, loadout, bind, button)
@@ -3008,10 +3006,15 @@ function GSE.CreateEditor()
                             GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
                         end
                     else
-                        GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
+                        if
+                            GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
+                                GSE_C["KeyBindings"][tostring(specialization)][initialbind]
+                         then
+                            GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
+                        end
                     end
                     rightContainer:ReleaseChildren()
-                    GSE.ShowKeyBindings()
+                    editframe.ManageTree()
                 end
             )
 
@@ -3309,9 +3312,7 @@ function GSE.CreateEditor()
                             showKeybind(bind, button, specialization, loadout)
                         end
 
-                        GSE.ShowKeyBindings()
-                        -- trigger a reload of KeyBindings
-                        GSE.ReloadOverrides()
+                        editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
                                 treeContainer:SelectByPath("AO", specialization, loadout, bind, button)
@@ -3349,7 +3350,7 @@ function GSE.CreateEditor()
                     end
                     GSE.ButtonOverrides[bind] = nil
                     rightContainer:ReleaseChildren()
-                    GSE.ShowKeyBindings()
+                    editframe.ManageTree()
                 end
             )
 
@@ -3530,7 +3531,7 @@ function GSE.CreateEditor()
         ---table.insert(returntree.children, tree)
         return returntree
     end
-    function editframe.listSequences()
+    function editframe.ManageTree()
         local tree = {
             {
                 value = "NewSequence",
@@ -3880,7 +3881,7 @@ function GSE.CreateEditor()
                             showKeybind(nil, nil, nil, nil, "KB", rightContainer)
                             container:AddChild(rightContainer)
                             editframe.loaded = true
-                            editframe:SetTitle(L["Sequence Editor:"] .. " " .. L["New KeyBind"])
+                            editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New KeyBind"])
                         elseif unique[#unique] == "NAO" then
                             if editframe.loaded then
                                 container:ReleaseChildren()
@@ -3892,7 +3893,7 @@ function GSE.CreateEditor()
                             showKeybind(nil, nil, nil, nil, "AO", rightContainer)
                             container:AddChild(rightContainer)
                             editframe.loaded = true
-                            editframe:SetTitle(L["Sequence Editor:"] .. " " .. L["New Actionbar Override"])
+                            editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New Actionbar Override"])
                         else
                             if bind and button and type then
                                 if editframe.loaded then
@@ -4029,7 +4030,7 @@ function GSE.CreateEditor()
                                 local seqname = editframe.SequenceName
                                 local classid = editframe.ClassID
                                 GUIDeleteSequence(classid, seqname)
-                                editframe.listSequences()
+                                editframe.ManageTree()
                             end
                         )
                         delbutton:SetCallback(
@@ -4321,7 +4322,7 @@ function GSE.CreateEditor()
                 )
             end
         end
-        editframe.listSequences()
+        editframe.ManageTree()
     end
 
     return editframe
@@ -4330,7 +4331,7 @@ end
 function GSE.ShowSequences()
     if not InCombatLockdown() or (GSE.PlayerSpellsLoaded and GSE.PlayerSpellsLoaded()) then
         local editframe = GSE.CreateEditor()
-        editframe.listSequences()
+        editframe.ManageTree()
         editframe:Show()
     else
         GSE.Print(
