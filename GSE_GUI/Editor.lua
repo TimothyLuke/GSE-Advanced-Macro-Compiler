@@ -2949,6 +2949,7 @@ function GSE.CreateEditor()
                         if initialbind and bind ~= initialbind then
                             SetBinding(initialbind)
                             destination[bind] = nil
+                            SaveBindings(0)
                         end
                         if loadout ~= "ALL" and loadout then
                             destination[bind] = button
@@ -2994,6 +2995,7 @@ function GSE.CreateEditor()
                 function()
                     if initialbind then
                         SetBinding(initialbind)
+                        SaveBindings(0)
                     end
 
                     if loadout ~= "ALL" and loadout then
@@ -3559,7 +3561,6 @@ function GSE.CreateEditor()
             if specid and GSE.isEmpty(classtree[tclassid][specid]) then
                 classtree[tclassid][specid] = {}
             end
-
             local node = {
                 value = k,
                 text = elements[3],
@@ -3571,6 +3572,13 @@ function GSE.CreateEditor()
                     }
                 }
             }
+
+            local id, _, _, sicon = GetSpecializationInfoForSpecID(specid)
+            if id then
+                node.icon = sicon
+            else
+                node.icon = GSE.GetClassIcon(tclassid)
+            end
 
             for i, j in ipairs(GSE.Library[tclassid][elements[3]]["Macros"]) do
                 table.insert(
@@ -3616,21 +3624,8 @@ function GSE.CreateEditor()
             for i, j in pairs(v) do
                 local id, sname, _, sicon = GetSpecializationInfoForSpecID(i)
 
-                local specnode = {
-                    value = i,
-                    text = sname,
-                    icon = sicon,
-                    children = {}
-                }
-                if id then
-                    for _, h in ipairs(j) do
-                        table.insert(specnode.children, h)
-                    end
-                    table.insert(tnode.children, specnode)
-                else
-                    for _, h in ipairs(j) do
-                        table.insert(tnode.children, h)
-                    end
+                for _, h in ipairs(j) do
+                    table.insert(tnode.children, h)
                 end
             end
 
@@ -3646,14 +3641,8 @@ function GSE.CreateEditor()
                 local key = unique[#unique]
                 local elements, classid, sequencename
                 local area = unique[1]
-                local specialization
-                if GetSpecialization and unique[4] and #unique >= 4 then
-                    elements = GSE.split(unique[4], ",")
-                    if #elements >= 3 then
-                        classid = elements[1]
-                        sequencename = elements[3]
-                    end
-                elseif unique[3] and #unique >= 3 then
+
+                if area == "Sequences" then
                     elements = GSE.split(unique[3], ",")
                     if #elements >= 3 then
                         classid = elements[1]
@@ -3708,7 +3697,7 @@ function GSE.CreateEditor()
                                         end
                                         if type == "KB" then
                                             SetBinding(bind)
-
+                                            SaveBindings(0)
                                             local destination = GSE_C["KeyBindings"][tostring(specialization)]
                                             if loadout ~= "ALL" and loadout then
                                                 destination =
@@ -3838,7 +3827,7 @@ function GSE.CreateEditor()
                     elseif area == "KEYBINDINGS" then
                         local bind, loadout, type, button
                         type = unique[2]
-                        specialization = unique[3]
+                        local specialization = unique[3]
                         if GetSpecialization then
                             bind = unique[4]
 
@@ -3909,7 +3898,7 @@ function GSE.CreateEditor()
                                 editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["Keybind"])
                             end
                         end
-                    elseif classid and sequencename then
+                    elseif area == "Sequences" then
                         local path = GSE.CloneSequence(unique)
                         table.remove(path, #path)
                         local editOptionsbutton = AceGUI:Create("Button")
@@ -4073,11 +4062,7 @@ function GSE.CreateEditor()
 
                         editframe.SequenceName = sequencename
 
-                        if unique[1] == "Sequences" and GetSpecialization and #unique == 4 then
-                            container:ReleaseChildren()
-                            treeContainer:SelectByValue(group .. "\001config")
-                            return
-                        elseif unique[1] == "Sequences" and #unique == 3 then
+                        if unique[1] == "Sequences" and #unique == 3 then
                             container:ReleaseChildren()
                             treeContainer:SelectByValue(group .. "\001config")
                             return
