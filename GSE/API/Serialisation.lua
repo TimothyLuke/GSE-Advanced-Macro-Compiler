@@ -589,7 +589,7 @@ hooksecurefunc(
                 if cmd == "seq" then
                     if player == UnitName("player") then
                         local editor = GSE.CreateEditor()
-                        editor.listSequences()
+                        editor.ManageTree()
                         GSE.GUILoadEditor(editor, ClassID .. "," .. sequenceName)
                     else
                         GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)

@@ -55,7 +55,7 @@ createmacrobutton:SetCallback(
   function()
     recordframe:Hide()
     local editor = GSE.CreateEditor()
-    editor.listSequences()
+    editor.ManageTree()
     GSE.GUILoadEditor(editor, nil, recordsequencebox:GetText())
   end
 )

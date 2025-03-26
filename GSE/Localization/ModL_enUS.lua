@@ -803,3 +803,4 @@ L["You cannot open a new Sequence Editor window while you are in combat.  Please
 -- #1762
 L["New Sequence"] = true
 L["Default"] = true
+L["New Variable"] = true

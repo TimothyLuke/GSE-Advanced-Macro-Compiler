@@ -1156,18 +1156,7 @@ function GSE.UpdateVariable(variable, name, status)
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
     end
-    if GSE.GUI and GSE.GUIVariableFrame then
-        if GSE.GUIVariableFrame:IsVisible() then
-            GSE.GUIVariableFrame:SetStatusText(name .. " " .. L["Saved"])
-            C_Timer.After(
-                5,
-                function()
-                    GSE.GUIVariableFrame:SetStatusText("")
-                end
-            )
-            GSE.ShowVariables()
-        end
-    end
+    GSE:SendMessage(Statics.VARIABLE_UPDATED, name)
 end
 
 function GSE.UpdateMacro(node, category)

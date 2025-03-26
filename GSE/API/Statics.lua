@@ -439,6 +439,9 @@ Statics.ActionsIcons.Add = 135769
 Statics.Icons = {}
 Statics.Icons.Sequences = 133737
 Statics.Icons.Variables = 4200128
+if GSE.GameMode < 9 then
+    Statics.Icons.Variables = "Interface/AddOns/GSE_GUI/Assets/misc_rnrwrenchbuttonright.jpg"
+end
 Statics.Icons.Keybindings = "Interface/AddOns/GSE_GUI/Assets/key.png"
 Statics.Icons.Import = 134390
 Statics.Icons.Macros = "Interface\\MacroFrame\\MacroFrame-Icon"
@@ -528,5 +531,7 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
 }
 
 Statics.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
+Statics.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
+Statics.MACRO_UPDATED = "GSE_MACRO_UPDATED"
 Statics.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
 GSE.DebugProfile("Statics")
