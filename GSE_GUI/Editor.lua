@@ -4662,7 +4662,7 @@ local function collectionImported(message)
     if message == Statics.COLLECTION_IMPORTED then
         if GSE.GUI.editors and #GSE.GUI.editors then
             for _, v in ipairs(GSE.GUI.editors) do
-                v:remoteSequenceUpdated(seqName)
+                v.ManageTree()
             end
         end
     end
