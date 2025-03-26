@@ -498,5 +498,8 @@ globals = {
     "C_DateAndTime",
     "GetServerTime",
     "GetSpecializationInfoForSpecID",
-    "GetMouseButtonClicked"
+    "GetMouseButtonClicked",
+    "WrapTextInColorCode",
+    "C_ClassColor",
+    "C_ClassColor.GetClassColor"
 }

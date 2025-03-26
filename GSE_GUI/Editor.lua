@@ -3608,9 +3608,10 @@ function GSE.CreateEditor()
         for k, v in pairs(classtree) do
             local tnode = {}
             if k > 0 then
+                local classinfo, classfile = GetClassInfo(k)
                 tnode = {
                     value = k,
-                    text = GetClassInfo(k),
+                    text = WrapTextInColorCode(classinfo, C_ClassColor.GetClassColor(classfile):GenerateHexColor()),
                     icon = GSE.GetClassIcon(k),
                     children = {}
                 }

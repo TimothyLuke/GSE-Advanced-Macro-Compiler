@@ -41,7 +41,8 @@
     "GetSpellBookItemInfo",
     "PlayerSpellsFrame",
     "GSE",
-    "NDui"
+    "NDui",
+    "WrapTextInColor"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
