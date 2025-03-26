@@ -4640,24 +4640,30 @@ end
 
 local function remoteSeqences(message, seqName)
     if message == Statics.SEQUENCE_UPDATED then
-        for _, v in ipairs(GSE.GUI.editors) do
-            v:remoteSequenceUpdated(seqName)
+        if GSE.GUI.editors and #GSE.GUI.editors then
+            for _, v in ipairs(GSE.GUI.editors) do
+                v:remoteSequenceUpdated(seqName)
+            end
         end
     end
 end
 
 local function remoteVariables(message, seqName)
     if message == Statics.SEQUENCE_UPDATED then
-        for _, v in ipairs(GSE.GUI.editors) do
-            v:remoteSequenceUpdated(seqName)
+        if GSE.GUI.editors and #GSE.GUI.editors then
+            for _, v in ipairs(GSE.GUI.editors) do
+                v:remoteSequenceUpdated(seqName)
+            end
         end
     end
 end
 
 local function collectionImported(message)
     if message == Statics.COLLECTION_IMPORTED then
-        for _, v in ipairs(GSE.GUI.editors) do
-            v.ManageTree()
+        if GSE.GUI.editors and #GSE.GUI.editors then
+            for _, v in ipairs(GSE.GUI.editors) do
+                v:remoteSequenceUpdated(seqName)
+            end
         end
     end
 end

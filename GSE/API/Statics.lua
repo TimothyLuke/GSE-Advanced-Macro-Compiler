@@ -455,6 +455,10 @@ Statics.Icons.MenuLogo = "Interface/AddOns/GSE_GUI/Assets/GSE_Menu_Logo.png"
 Statics.Icons.Export = 4419478
 Statics.Icons.Button = 4200123
 
+if GSE.GameMode < 9 then
+    Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/misc_rnrgreengobutton.jpg"
+end
+
 Statics.GSE3OnClick =
     [=[
 local step = self:GetAttribute('step')

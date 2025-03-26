@@ -293,9 +293,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 GSE.ImportSerialisedSequence(v, forcereplace)
             end
             GSE:SendMessage(Statics.COLLECTION_IMPORTED)
-            if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
-                GSE.ShowVariables()
-            end
             if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
                 GSE.ShowMacros()
             end
@@ -347,9 +344,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             end
 
             GSE:SendMessage(Statics.SEQUENCE_UPDATED, seqName)
-            if GSE.GUI and GSE.GUIVariableFrame:IsVisible() then
-                GSE.ShowVariables()
-            end
             if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
                 GSE.ShowMacros()
             end
