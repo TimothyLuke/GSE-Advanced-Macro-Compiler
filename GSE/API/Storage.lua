@@ -1046,7 +1046,7 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         local line
         steps[k] = {}
         for i, j in pairs(v) do
-            line = i .. "=" .. j
+            line = i .. "\002" .. j
             tinsert(steps[k], line)
         end
     end
@@ -1067,7 +1067,7 @@ for k,v in ipairs(compressedspelllist) do
     tinsert(spelllist, newtable())
 
     for _,j in ipairs(newtable(strsplit("|",v))) do
-        local a,b = strsplit("=",j)
+        local a,b = strsplit("\002",j)
         spelllist[k][a] = b
     end
 end
