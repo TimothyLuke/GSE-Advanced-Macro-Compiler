@@ -4307,7 +4307,7 @@ end]],
 
                 local mbutton = GetMouseButtonClicked()
                 if mbutton == "RightButton" then
-                    if area == "KEYBINDINGS" and #unique >= 3 then
+                    if area == "KEYBINDINGS" and #unique > 3 then
                         MenuUtil.CreateContextMenu(
                             editframe.frame,
                             function(ownerRegion, rootDescription)
@@ -4504,7 +4504,7 @@ end]],
                         GSE.GUILoadEditor(editframe)
                     elseif area == "Import" then
                         GSE.ShowImport()
-                    elseif area == "KEYBINDINGS" and #unique > 3 then
+                    elseif area == "KEYBINDINGS" and #unique >= 2 then
                         local bind, loadout, type, button
                         type = unique[2]
                         local specialization = unique[3]
