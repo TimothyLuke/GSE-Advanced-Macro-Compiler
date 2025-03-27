@@ -2,7 +2,7 @@
 GSE-TreeGroup based on TreeGroup Container
 Container that uses a tree control to switch between groups.  Idenitcal to TreeGroup but with Bigger fonts.
 -------------------------------------------------------------------------------]]
-local Type, Version = "GSE-TreeGroup", 1
+local Type, Version = "GSE-TreeGroup", 3
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then
     return
@@ -193,6 +193,7 @@ local function Button_OnClick(frame)
         self:SetSelected(frame.uniquevalue)
         frame.selected = true
         frame:LockHighlight()
+        Expand_OnClick(frame.toggle)
         self:RefreshTree()
     end
     AceGUI:ClearFocus()

@@ -4296,10 +4296,12 @@ end]],
                 local area = unique[1]
 
                 if area == "Sequences" then
-                    elements = GSE.split(unique[3], ",")
-                    if #elements >= 3 then
-                        classid = elements[1]
-                        sequencename = elements[3]
+                    if unique[3] then
+                        elements = GSE.split(unique[3], ",")
+                        if #elements >= 3 then
+                            classid = elements[1]
+                            sequencename = elements[3]
+                        end
                     end
                 end
 
@@ -4502,7 +4504,7 @@ end]],
                         GSE.GUILoadEditor(editframe)
                     elseif area == "Import" then
                         GSE.ShowImport()
-                    elseif area == "KEYBINDINGS" then
+                    elseif area == "KEYBINDINGS" and #unique > 2 then
                         local bind, loadout, type, button
                         type = unique[2]
                         local specialization = unique[3]
@@ -4576,7 +4578,7 @@ end]],
                                 editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["Keybind"])
                             end
                         end
-                    elseif area == "Sequences" then
+                    elseif area == "Sequences" and #unique >= 3 then
                         local path = GSE.CloneSequence(unique)
                         table.remove(path, #path)
                         local editOptionsbutton = AceGUI:Create("Button")
@@ -5046,6 +5048,7 @@ function GSE.ShowSequences()
     if not InCombatLockdown() or (GSE.PlayerSpellsLoaded and GSE.PlayerSpellsLoaded()) then
         local editframe = GSE.CreateEditor()
         editframe.ManageTree()
+        editframe.treeContainer:SelectByValue("Sequences\001" .. GSE.GetCurrentClassID())
         editframe:Show()
     else
         GSE.Print(
@@ -5168,24 +5171,11 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
             {
                 "Sequences",
                 classid,
-                GSE.GetCurrentSpecID(),
                 classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
                 "config"
             },
             "\001"
         )
-        if not GetSpecialization then
-            selpath =
-                table.concat(
-                {
-                    "Sequences",
-                    classid,
-                    classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
-                    "config"
-                },
-                "\001"
-            )
-        end
         editor.treeContainer:SelectByValue(selpath)
     end
 end
