@@ -503,7 +503,7 @@ function GSE.CreateEditor()
         )
         container:AddChild(helpeditbox)
 
-        local helpgroup1 = AceGUI:Create("KeyGroup")
+        local helpgroup1 = AceGUI:Create("SimpleGroup")
         helpgroup1:SetLayout("Flow")
         helpgroup1:SetFullWidth(true)
 
@@ -573,7 +573,7 @@ function GSE.CreateEditor()
 
         container:AddChild(helpgroup1)
 
-        local defgroup1 = AceGUI:Create("KeyGroup")
+        local defgroup1 = AceGUI:Create("SimpleGroup")
         defgroup1:SetLayout("Flow")
         defgroup1:SetFullWidth(true)
 
@@ -640,7 +640,7 @@ function GSE.CreateEditor()
             end
         )
 
-        local defgroup2 = AceGUI:Create("KeyGroup")
+        local defgroup2 = AceGUI:Create("SimpleGroup")
         defgroup2:SetLayout("Flow")
         defgroup2:SetFullWidth(true)
 
@@ -739,7 +739,7 @@ function GSE.CreateEditor()
             end
         )
 
-        local defgroup3 = AceGUI:Create("KeyGroup")
+        local defgroup3 = AceGUI:Create("SimpleGroup")
         defgroup3:SetLayout("Flow")
         defgroup3:SetFullWidth(true)
 
@@ -803,7 +803,7 @@ function GSE.CreateEditor()
             end
         )
 
-        local defgroup4 = AceGUI:Create("KeyGroup")
+        local defgroup4 = AceGUI:Create("SimpleGroup")
         defgroup4:SetLayout("Flow")
         defgroup4:SetFullWidth(true)
 
@@ -842,11 +842,11 @@ function GSE.CreateEditor()
         local spacerlabel7 = AceGUI:Create("Label")
         spacerlabel7:SetWidth(100)
 
-        local defgroup5 = AceGUI:Create("KeyGroup")
+        local defgroup5 = AceGUI:Create("SimpleGroup")
         defgroup5:SetLayout("Flow")
         defgroup5:SetFullWidth(true)
 
-        local defgroup6 = AceGUI:Create("KeyGroup")
+        local defgroup6 = AceGUI:Create("SimpleGroup")
         defgroup6:SetLayout("Flow")
         defgroup6:SetFullWidth(true)
 
@@ -2732,7 +2732,7 @@ function GSE.CreateEditor()
             end
         )
 
-        local linegroup3 = AceGUI:Create("KeyGroup")
+        local linegroup3 = AceGUI:Create("SimpleGroup")
         linegroup3:SetLayout("Flow")
         linegroup3:SetFullWidth(true)
 
@@ -2773,11 +2773,11 @@ function GSE.CreateEditor()
             layoutcontainer:AddChild(macrocontainer)
         end
 
-        local toolbarcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
+        local toolbarcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
         toolbarcontainer:SetFullWidth(true)
         toolbarcontainer:SetLayout("list")
 
-        local toolbarrow1 = AceGUI:Create("KeyGroup")
+        local toolbarrow1 = AceGUI:Create("SimpleGroup")
         toolbarrow1:SetLayout("Flow")
         toolbarrow1:SetFullWidth(true)
 
@@ -3835,7 +3835,7 @@ end]],
             managed = source[node.name].Managed
         end
 
-        local headerGroup = AceGUI:Create("KeyGroup")
+        local headerGroup = AceGUI:Create("SimpleGroup")
         headerGroup:SetFullWidth(true)
         headerGroup:SetLayout("Flow")
 
@@ -4324,7 +4324,6 @@ end]],
         treeContainer:SetCallback(
             "OnGroupSelected",
             function(container, event, group, ...)
-                print(group)
                 local unique = {("\001"):split(group)}
                 local key = unique[#unique]
                 local elements, classid, sequencename
@@ -4663,7 +4662,7 @@ end]],
                             end
                         )
 
-                        local editButtonGroup = AceGUI:Create("KeyGroup")
+                        local editButtonGroup = AceGUI:Create("SimpleGroup")
 
                         -- editButtonGroup:SetWidth(602)
                         editButtonGroup:SetFullWidth(true)
@@ -4756,10 +4755,13 @@ end]],
                             container:ReleaseChildren()
                             editframe.loaded = nil
                         end
-
+                        local basecontainer = AceGUI:Create("SimpleGroup")
+                        basecontainer:SetLayout("List")
+                        basecontainer:SetFullWidth(true)
+                        basecontainer:SetHeight(editframe.Height - 100)
                         local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
                         scrollcontainer:SetFullWidth(true)
-                        scrollcontainer:SetHeight(editframe.Height - 100)
+                        scrollcontainer:SetHeight(editframe.Height - 130)
                         scrollcontainer:SetLayout("Fill") -- Important!
                         editframe.scrollStatus = {}
                         local contentcontainer = AceGUI:Create("ScrollFrame")
@@ -4769,8 +4771,8 @@ end]],
                         contentcontainer:SetStatusTable(editframe.scrollStatus)
                         editframe.scroller = scrollcontainer
                         editframe.scrollContainer = contentcontainer
-                        container:AddChild(scrollcontainer)
-
+                        container:AddChild(basecontainer)
+                        basecontainer:AddChild(scrollcontainer)
                         editframe.SequenceName = sequencename
 
                         if unique[1] == "Sequences" and #unique == 3 then
@@ -4848,7 +4850,7 @@ end]],
                                     ": " .. sequencename .. " (" .. L["Version"] .. ":" .. key .. ")"
                             )
                         end
-                        contentcontainer:AddChild(editButtonGroup)
+                        basecontainer:AddChild(editButtonGroup)
 
                         editframe.loaded = true
                     elseif area == "VARIABLES" then

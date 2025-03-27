@@ -50,7 +50,7 @@ local function addKeyPairRow(container, rowWidth, key, value, language)
         return
     end
 
-    local linegroup1 = AceGUI:Create("KeyGroup")
+    local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
@@ -121,7 +121,7 @@ end
 
 function GSE:GUIDrawSpellCacheEditor(container, language)
     local maxWidth = container.frame:GetWidth()
-    local scrollcontainer = AceGUI:Create("KeyGroup") -- "InlineGroup" is also good
+    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetHeight(cacheFrame.Height - 110)
     scrollcontainer:SetLayout("Fill") -- Important!
@@ -130,7 +130,7 @@ function GSE:GUIDrawSpellCacheEditor(container, language)
     contentcontainer:SetWidth(maxWidth)
     contentcontainer:SetAutoAdjustHeight(true)
     scrollcontainer:AddChild(contentcontainer)
-    local linegroup1 = AceGUI:Create("KeyGroup")
+    local linegroup1 = AceGUI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     local columnWidth = maxWidth - 55
 
