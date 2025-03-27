@@ -59,19 +59,19 @@ end
 
 function GSE.GetClassIcon(classid)
     local classicon = {}
-    classicon[1] = "Interface\\Icons\\inv_sword_27" -- Warrior
-    classicon[2] = "Interface\\Icons\\ability_thunderbolt" -- Paladin
-    classicon[3] = "Interface\\Icons\\inv_weapon_bow_07" -- Hunter
-    classicon[4] = "Interface\\Icons\\inv_throwingknife_04" -- Rogue
-    classicon[5] = "Interface\\Icons\\inv_staff_30" -- Priest
+    classicon[1] = 626008 -- Warrior
+    classicon[2] = 626003 -- Paladin
+    classicon[3] = 626000 -- Hunter
+    classicon[4] = 626005 -- Rogue
+    classicon[5] = 626004 -- Priest
     classicon[6] = 135771 -- Death Knight
-    classicon[7] = "Interface\\Icons\\inv_jewelry_talisman_04" -- SWhaman
-    classicon[8] = "Interface\\Icons\\inv_staff_13" -- Mage
-    classicon[9] = "Interface\\Icons\\spell_nature_drowsy" -- Warlock
-    classicon[10] = "Interface\\Icons\\Spell_Holy_FistOfJustice" -- Monk
-    classicon[11] = "Interface\\Icons\\inv_misc_monsterclaw_04" -- Druid
-    classicon[12] = "Interface\\Icons\\INV_Weapon_Glave_01" -- DEMONHUNTER
-    classicon[13] = 4574311 -- DEMONHUNTER
+    classicon[7] = 626006 -- SWhaman
+    classicon[8] = 626001 -- Mage
+    classicon[9] = 626007 -- Warlock
+    classicon[10] = 626002 -- Monk
+    classicon[11] = 625999 -- Druid
+    classicon[12] = 1260827 -- DEMONHUNTER
+    classicon[13] = 4574311 --Evoker
     return classicon[classid]
 end
 
