@@ -64,7 +64,7 @@ function GSE.GetClassIcon(classid)
     classicon[3] = "Interface\\Icons\\inv_weapon_bow_07" -- Hunter
     classicon[4] = "Interface\\Icons\\inv_throwingknife_04" -- Rogue
     classicon[5] = "Interface\\Icons\\inv_staff_30" -- Priest
-    classicon[6] = "Interface\\Icons\\Spell_deathknight_frozenruneweapon" -- Death Knight
+    classicon[6] = 135771 -- Death Knight
     classicon[7] = "Interface\\Icons\\inv_jewelry_talisman_04" -- SWhaman
     classicon[8] = "Interface\\Icons\\inv_staff_13" -- Mage
     classicon[9] = "Interface\\Icons\\spell_nature_drowsy" -- Warlock
