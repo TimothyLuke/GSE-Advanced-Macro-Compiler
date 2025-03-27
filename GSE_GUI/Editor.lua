@@ -254,7 +254,7 @@ function GSE.CreateEditor()
     -- basecontainer:SetWidth(editframe.Width)
     editframe:AddChild(basecontainer)
 
-    local treeContainer = AceGUI:Create("TreeGroup")
+    local treeContainer = AceGUI:Create("GSE-TreeGroup")
     treeContainer:SetFullHeight(true)
     treeContainer:SetFullWidth(true)
 
@@ -4761,7 +4761,7 @@ end]],
                         basecontainer:SetHeight(editframe.Height - 100)
                         local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
                         scrollcontainer:SetFullWidth(true)
-                        scrollcontainer:SetHeight(editframe.Height - 130)
+                        scrollcontainer:SetHeight(editframe.Height - 120)
                         scrollcontainer:SetLayout("Fill") -- Important!
                         editframe.scrollStatus = {}
                         local contentcontainer = AceGUI:Create("ScrollFrame")
