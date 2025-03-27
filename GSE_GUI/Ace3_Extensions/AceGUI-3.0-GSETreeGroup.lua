@@ -125,7 +125,7 @@ end
 
 local function ShouldDisplayLevel(tree)
     local result = false
-    for k, v in ipairs(tree) do
+    for _, v in ipairs(tree) do
         if v.children == nil and v.visible ~= false then
             result = true
         elseif v.children then
@@ -375,7 +375,7 @@ local methods = {
     ["BuildLevel"] = function(self, tree, level, parent)
         local groups = (self.status or self.localstatus).groups
 
-        for i, v in ipairs(tree) do
+        for _, v in ipairs(tree) do
             if v.children then
                 if not self.filter or ShouldDisplayLevel(v.children) then
                     local line = addLine(self, v, tree, level, parent)
@@ -392,7 +392,7 @@ local methods = {
         local buttons = self.buttons
         local lines = self.lines
 
-        for i, v in ipairs(buttons) do
+        for _, v in ipairs(buttons) do
             v:Hide()
         end
         while lines[1] do

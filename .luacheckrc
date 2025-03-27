@@ -501,5 +501,6 @@ globals = {
     "GetMouseButtonClicked",
     "WrapTextInColorCode",
     "C_ClassColor",
-    "C_ClassColor.GetClassColor"
+    "C_ClassColor.GetClassColor",
+    "FONT_COLOR_CODE_CLOSE"
 }

@@ -42,7 +42,8 @@
     "PlayerSpellsFrame",
     "GSE",
     "NDui",
-    "WrapTextInColor"
+    "WrapTextInColor",
+    "FONT_COLOR_CODE_CLOSE"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
