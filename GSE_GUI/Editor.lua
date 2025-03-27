@@ -2949,7 +2949,6 @@ function GSE.CreateEditor()
                         if initialbind and bind ~= initialbind then
                             SetBinding(initialbind)
                             destination[bind] = nil
-                            SaveBindings(0)
                         end
                         if loadout ~= "ALL" and loadout then
                             destination[bind] = button
@@ -2995,7 +2994,6 @@ function GSE.CreateEditor()
                 function()
                     if initialbind then
                         SetBinding(initialbind)
-                        SaveBindings(0)
                     end
 
                     if loadout ~= "ALL" and loadout then
@@ -3113,49 +3111,17 @@ function GSE.CreateEditor()
             end
             if ConsolePort then
                 buttonlist["CPB_PADDUP"] = "CPB_PADDUP"
-                -- buttonlist["CPB_PADDUP_SHIFT"] = "CPB_PADDUP_SHIFT"
-                -- buttonlist["CPB_PADDUP_CTRL_SHIFT"] = "CPB_PADDUP_CTRL_SHIFT"
-                -- buttonlist["CPB_PADDUP_CTRL"] = "CPB_PADDUP_CTRL"
                 buttonlist["CPB_PADDLEFT"] = "CPB_PADDLEFT"
-                -- buttonlist["CPB_PADDLEFT_SHIFT"] = "CPB_PADDLEFT_SHIFT"
-                -- buttonlist["CPB_PADDLEFT_CTRL_SHIFT"] = "CPB_PADDLEFT_CTRL_SHIFT"
-                -- buttonlist["CPB_PADDLEFT_CTRL"] = "CPB_PADDLEFT_CTRL"
                 buttonlist["CPB_PADDDOWN"] = "CPB_PADDDOWN"
-                -- buttonlist["CPB_PADDDOWN_SHIFT"] = "CPB_PADDDOWN_SHIFT"
-                -- buttonlist["CPB_PADDDOWN_CTRL_SHIFT"] = "CPB_PADDDOWN_CTRL_SHIFT"
-                -- buttonlist["CPB_PADDDOWN_CTRL"] = "CPB_PADDDOWN_CTRL"
+                buttonlist["CPB_PADDRIGHT"] = "CPB_PADDRIGHT"
                 buttonlist["CPB_PADLSHOULDER"] = "CPB_PADLSHOULDER"
-                -- buttonlist["CPB_PADLSHOULDER_SHIFT"] = "CPB_PADLSHOULDER_SHIFT"
-                -- buttonlist["CPB_PADLSHOULDER_CTRL_SHIFT"] = "CPB_PADLSHOULDER_CTRL_SHIFT"
-                -- buttonlist["CPB_PADLSHOULDER_CTRL"] = "CPB_PADLSHOULDER_CTRL"
                 buttonlist["CPB_PADRSHOULDER"] = "CPB_PADRSHOULDER"
-                -- buttonlist["CPB_PADRSHOULDER_SHIFT"] = "CPB_PADRSHOULDER_SHIFT"
-                -- buttonlist["CPB_PADRSHOULDER_CTRL_SHIFT"] = "CPB_PADRSHOULDER_CTRL_SHIFT"
-                -- buttonlist["CPB_PADRSHOULDER_CTRL"] = "CPB_PADRSHOULDER_CTRL"
                 buttonlist["CPB_PADRTRIGGER"] = "CPB_PADRTRIGGER"
-                -- buttonlist["CPB_PADRTRIGGER_SHIFT"] = "CPB_PADRTRIGGER_SHIFT"
-                -- buttonlist["CPB_PADRTRIGGER_CTRL_SHIFT"] = "CPB_PADRTRIGGER_CTRL_SHIFT"
-                -- buttonlist["CPB_PADRTRIGGER_CTRL"] = "CPB_PADRTRIGGER_CTRL"
                 buttonlist["CPB_PADLTRIGGER"] = "CPB_PADLTRIGGER"
-                -- buttonlist["CPB_PADLTRIGGER_SHIFT"] = "CPB_PADLTRIGGER_SHIFT"
-                -- buttonlist["CPB_PADLTRIGGER_CTRL_SHIFT"] = "CPB_PADLTRIGGER_CTRL_SHIFT"
-                -- buttonlist["CPB_PADLTRIGGER_CTRL"] = "CPB_PADLTRIGGER_CTRL"
                 buttonlist["CPB_PAD1"] = "CPB_PAD1"
-                -- buttonlist["CPB_PAD1_SHIFT"] = "CPB_PAD1_SHIFT"
-                -- buttonlist["CPB_PAD1_CTRL_SHIFT"] = "CPB_PAD1_CTRL_SHIFT"
-                -- buttonlist["CPB_PAD1_CTRL"] = "CPB_PAD1_CTRL"
                 buttonlist["CPB_PAD2"] = "CPB_PAD2"
-                -- buttonlist["CPB_PAD2_SHIFT"] = "CPB_PAD2_SHIFT"
-                -- buttonlist["CPB_PAD2_CTRL_SHIFT"] = "CPB_PAD2_CTRL_SHIFT"
-                -- buttonlist["CPB_PAD2_CTRL"] = "CPB_PAD2_CTRL"
                 buttonlist["CPB_PAD3"] = "CPB_PAD3"
-                -- buttonlist["CPB_PAD3_SHIFT"] = "CPB_PAD3_SHIFT"
-                -- buttonlist["CPB_PAD3_CTRL_SHIFT"] = "CPB_PAD3_CTRL_SHIFT"
-                -- buttonlist["CPB_PAD3_CTRL"] = "CPB_PAD3_CTRL"
                 buttonlist["CPB_PAD4"] = "CPB_PAD4"
-            -- buttonlist["CPB_PAD4_SHIFT"] = "CPB_PAD4_SHIFT"
-            -- buttonlist["CPB_PAD4_CTRL_SHIFT"] = "CPB_PAD4_CTRL_SHIFT"
-            -- buttonlist["CPB_PAD4_CTRL"] = "CPB_PAD4_CTRL"
             end
 
             if Bartender4 then
@@ -4368,28 +4334,26 @@ end]],
                                         type = unique[2]
                                         specialization = unique[3]
                                         if GetSpecialization then
-                                            bind = unique[3]
+                                            bind = unique[4]
 
-                                            if #unique == 6 then
+                                            if unique[6] then
                                                 loadout = unique[6]
                                             end
                                         else
                                             specialization = "1"
-                                            if #unique == 5 then
+                                            if unique[5] then
                                                 loadout = unique[5]
                                                 bind = unique[4]
                                             else
+                                                loadout = unique[4]
                                                 bind = unique[3]
                                             end
                                         end
                                         if type == "KB" then
                                             SetBinding(bind)
-                                            SaveBindings(0)
-                                            local destination = GSE_C["KeyBindings"][tostring(specialization)]
-                                            if loadout ~= "ALL" and loadout then
-                                                destination =
-                                                    GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                                                destination[bind] = nil
+                                            if loadout then
+                                                GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] =
+                                                    nil
                                                 local empty = true
                                                 for _, _ in pairs(
                                                     GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
@@ -4401,17 +4365,19 @@ end]],
                                                         nil
                                                 end
                                             else
-                                                destination[bind] = nil
+                                                if
+                                                    GSE_C["KeyBindings"] and
+                                                        GSE_C["KeyBindings"][tostring(specialization)] and
+                                                        GSE_C["KeyBindings"][tostring(specialization)][bind]
+                                                 then
+                                                    GSE_C["KeyBindings"][tostring(specialization)][bind] = nil
+                                                end
                                             end
                                         elseif type == "AO" then
-                                            local destination =
-                                                GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)]
-                                            if loadout ~= "ALL" and loadout then
-                                                destination =
-                                                    GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][
-                                                    loadout
-                                                ]
-                                                destination[bind] = nil
+                                            if loadout then
+                                                GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout][
+                                                        bind
+                                                    ] = nil
                                                 local empty = true
                                                 for _, _ in pairs(
                                                     GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][
@@ -4426,7 +4392,9 @@ end]],
                                                         ] = nil
                                                 end
                                             else
-                                                destination[bind] = nil
+                                                GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][
+                                                        bind
+                                                    ] = nil
                                             end
                                             GSE.ButtonOverrides[bind] = nil
                                         end

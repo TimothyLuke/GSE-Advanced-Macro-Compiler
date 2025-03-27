@@ -1,13 +1,5 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
-L["WhatsNew"] =
-    [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.18 updates the Actionbar Overrides for Bartender4 and ConsolePort.  This solves the issue of being in flight and not being able to use the GSE Sequence until you left combat.  ElvUI support for this will come in a later update.
-
-|cffff6666Note|r: The paging function has to be turned off for druids and potentially rogues.  The issue is when Bartender4 pages, the bar is replaces with the contents of another hidden bar.  Even if I bind a button to that bar the "click" state is not transferred to the new bar.
-
-The full detail on all of these changes is available on the GSE GitHub wiki - https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
-]]
-
 L["Update"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
@@ -804,3 +796,6 @@ L["You cannot open a new Sequence Editor window while you are in combat.  Please
 L["New Sequence"] = true
 L["Default"] = true
 L["New Variable"] = true
+
+L["WhatsNew"] =
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.25 has finally fixed being able to use castsequences and their resets within GSE.\n\nThe GUI Menu and the Editor have been redesigned.  Details are in Discord."
