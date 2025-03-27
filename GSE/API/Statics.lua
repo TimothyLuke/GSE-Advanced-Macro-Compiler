@@ -431,19 +431,17 @@ Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action.png"
 Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.png"
 Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.png"
 Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.png"
-Statics.ActionsIcons.Delete = 135768
+Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.png"
 Statics.ActionsIcons.Key = "Interface\\Addons\\GSE_GUI\\Assets\\key.png"
-Statics.ActionsIcons.Settings = 136243
-Statics.ActionsIcons.Add = 135769
+Statics.ActionsIcons.Settings = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
+Statics.ActionsIcons.Add = "Interface\\Addons\\GSE_GUI\\Assets\\add.png"
 
 Statics.Icons = {}
-Statics.Icons.Sequences = 133737
-Statics.Icons.Variables = 4200128
-if GSE.GameMode < 9 then
-    Statics.Icons.Variables = "Interface/AddOns/GSE_GUI/Assets/misc_rnrwrenchbuttonright.jpg"
-end
+Statics.Icons.Sequences = "Interface/Addons/GSE_GUI/Assets/sequences.png"
+Statics.Icons.Variables = "Interface/Addons/GSE_GUI/Assets/variables.png"
+
 Statics.Icons.Keybindings = "Interface/AddOns/GSE_GUI/Assets/key.png"
-Statics.Icons.Import = 134390
+Statics.Icons.Import = "Interface/AddOns/GSE_GUI/Assets/import.png"
 Statics.Icons.Macros = "Interface\\MacroFrame\\MacroFrame-Icon"
 Statics.Icons.Options = Statics.ActionsIcons.Settings
 Statics.Icons.Close = "Interface/AddOns/GSE_GUI/Assets/power.png"
@@ -453,12 +451,9 @@ Statics.Icons.Github = "Interface\\Addons\\GSE_GUI\\Assets\\github.png"
 Statics.Icons.Patreon = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.png"
 Statics.Icons.MenuLogo = "Interface/AddOns/GSE_GUI/Assets/GSE_Menu_Logo.png"
 Statics.Icons.Export = 4419478
-Statics.Icons.Button = 4200123
+Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/ActionORide.png"
 Statics.Icons.Account = 133784
 Statics.Icons.Personal = 236448
-if GSE.GameMode < 9 then
-    Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/misc_rnrgreengobutton.jpg"
-end
 
 Statics.GSE3OnClick =
     [=[
