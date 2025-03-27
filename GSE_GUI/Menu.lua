@@ -4,7 +4,7 @@ local Statics = GSE.Static
 
 -- Create the main frame
 local frame = CreateFrame("Frame", "GSEMenuFrame", UIParent, "BackdropTemplate")
-frame:SetSize(38, 265)
+frame:SetSize(38, 235)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("MEDIUM")
 frame:SetClampedToScreen(true)
@@ -176,8 +176,8 @@ local iconData = {
     }
 }
 
-local startY = -40
-local spacing = -31
+local startY = -30
+local spacing = -29
 
 for i, data in ipairs(iconData) do
     createIconButton(frame, data[1], data[2], data[3], startY + (i - 1) * spacing)
