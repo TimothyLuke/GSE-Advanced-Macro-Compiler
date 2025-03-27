@@ -293,9 +293,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 GSE.ImportSerialisedSequence(v, forcereplace)
             end
             GSE:SendMessage(Statics.COLLECTION_IMPORTED)
-            if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
-                GSE.ShowMacros()
-            end
         elseif actiontable.objectType == "MACRO" then
             actiontable.objectType = nil
             local oocaction = {
@@ -344,9 +341,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             end
 
             GSE:SendMessage(Statics.SEQUENCE_UPDATED, seqName)
-            if GSE.GUI and GSE.GUIMacroFrame:IsVisible() then
-                GSE.ShowMacros()
-            end
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)

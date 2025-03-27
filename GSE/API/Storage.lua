@@ -1175,18 +1175,7 @@ function GSE.UpdateMacro(node, category)
             end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
-        if GSE.GUI and GSE.GUIMacroFrame then
-            if GSE.GUIMacroFrame:IsVisible() then
-                GSE.GUIMacroFrame:SetStatusText(node.name .. " " .. L["Saved"])
-                C_Timer.After(
-                    5,
-                    function()
-                        GSE.GUIMacroFrame:SetStatusText("")
-                    end
-                )
-                GSE.ShowMacros()
-            end
-        end
+        GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
     end
     return node
 end
@@ -1207,11 +1196,7 @@ function GSE.ImportMacro(node)
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
     GSE.ManageMacros()
-    if GSE.GUI and GSE.GUIMacroFrame then
-        if GSE.GUIMacroFrame:IsVisible() then
-            GSE.ShowMacros()
-        end
-    end
+    GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
 end
 
 function GSE.CompileMacroText(text, mode)
@@ -1347,11 +1332,6 @@ function GSE.ManageMacros()
                     end
                 end
             end
-        end
-    end
-    if GSE.GUI and GSE.GUIMacroFrame then
-        if GSE.GUIMacroFrame:IsVisible() then
-            GSE.ShowMacros()
         end
     end
 end

@@ -162,6 +162,15 @@ local iconData = {
         Statics.Icons.Close,
         L["Close"],
         function()
+            local left, bottom, _, h = frame:GetRect()
+            if GSE.isEmpty(GSEOptions.frameLocations) then
+                GSEOptions.frameLocations = {}
+            end
+            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
+                GSEOptions.frameLocations.menu = {}
+            end
+            GSEOptions.frameLocations.menu.left = left
+            GSEOptions.frameLocations.menu.top = bottom + h
             frame:Hide()
         end
     }

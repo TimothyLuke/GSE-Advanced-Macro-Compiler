@@ -454,7 +454,8 @@ Statics.Icons.Patreon = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.png"
 Statics.Icons.MenuLogo = "Interface/AddOns/GSE_GUI/Assets/GSE_Menu_Logo.png"
 Statics.Icons.Export = 4419478
 Statics.Icons.Button = 4200123
-
+Statics.Icons.Account = 133784
+Statics.Icons.Personal = 236448
 if GSE.GameMode < 9 then
     Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/misc_rnrgreengobutton.jpg"
 end
