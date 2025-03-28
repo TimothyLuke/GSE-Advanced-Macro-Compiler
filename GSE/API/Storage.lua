@@ -1095,6 +1095,41 @@ end
     self:SetAttribute('localmods', mods)
     local step = self:GetAttribute('step')
     step = tonumber(step)
+    for k,v in pairs(spelllist[step]) do
+        if k == "macrotext" then
+            self:SetAttribute("macro", nil )
+            self:SetAttribute("unit", nil )
+        elseif k == "macro" then
+            self:SetAttribute("macrotext", nil )
+            self:SetAttribute("unit", nil )
+        elseif k == "Icon" then
+            -- skip
+        end
+        self:SetAttribute(k, v )
+    end
+
+    step = step % #spelllist + 1
+    self:SetAttribute('step', step)
+    self:CallMethod('UpdateIcon')
+    ]=]
+    if GSEOptions.Multiclick then
+        clickexecution =
+            GSE.GetMacroResetImplementation() ..
+            [=[
+    local mods = "RALT=" .. tostring(IsRightAltKeyDown()) .. "|" ..
+    "LALT=".. tostring(IsLeftAltKeyDown()) .. "|" ..
+    "AALT=" .. tostring(IsAltKeyDown()) .. "|" ..
+    "RCTRL=" .. tostring(IsRightControlKeyDown()) .. "|" ..
+    "LCTRL=" .. tostring(IsLeftControlKeyDown()) .. "|" ..
+    "ACTRL=" .. tostring(IsControlKeyDown()) .. "|" ..
+    "RSHIFT=" .. tostring(IsRightShiftKeyDown()) .. "|" ..
+    "LSHIFT=" .. tostring(IsLeftShiftKeyDown()) .. "|" ..
+    "ASHIFT=" .. tostring(IsShiftKeyDown()) .. "|" ..
+    "AMOD=" .. tostring(IsModifierKeyDown()) .. "|" ..
+    "MOUSEBUTTON=" .. GetMouseButtonClicked()
+    self:SetAttribute('localmods', mods)
+    local step = self:GetAttribute('step')
+    step = tonumber(step)
     if self:GetAttribute('stepped') then
         self:SetAttribute('stepped', false)
     else
@@ -1117,7 +1152,7 @@ end
         self:CallMethod('UpdateIcon')
     end
     ]=]
-
+    end
     if GSEOptions.DebugPrintModConditionsOnKeyPress then
         clickexecution = Statics.PrintKeyModifiers .. clickexecution
     end

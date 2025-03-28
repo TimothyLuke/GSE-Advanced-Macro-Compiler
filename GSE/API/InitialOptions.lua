@@ -94,6 +94,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.OOCQueueDelay = 7
     GSE.resetMacroResetModifiers()
     GSEOptions.frameLocations = {}
+    GSEOptions.Multiclick = true
 end
 
 GSE.SetDefaultOptions()

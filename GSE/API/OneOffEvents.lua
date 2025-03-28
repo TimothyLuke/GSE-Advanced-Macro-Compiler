@@ -71,6 +71,10 @@ function GSE.PerformOneOffEvents()
         GSEOptions.shownew = true
         GSEOptions.Updates["3225"] = true
     end
+    if GSE.isEmpty(GSEOptions.Updates["3225-d"]) then
+        GSEOptions.Multiclick = true
+        GSEOptions.Updates["3225-d"] = true
+    end
     if GSE.isEmpty(GSE_C.Updates["3218"]) then
         if GSE_C["ActionBarBinds"] then
             for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
