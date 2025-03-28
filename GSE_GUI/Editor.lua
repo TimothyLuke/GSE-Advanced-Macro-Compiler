@@ -4525,7 +4525,6 @@ end]],
                                     button = unique[6]
                                 end
                             else
-                                button = unique[4]
                                 if unique[2] == "AO" and bind then
                                     button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
                                 else
