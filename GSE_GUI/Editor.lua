@@ -2946,7 +2946,7 @@ function GSE.CreateEditor()
                             end
                             destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
                         end
-                        if initialbind and bind ~= initialbind then
+                        if initialbind and bind ~= initialbind and not InCombatLockdown() then
                             SetBinding(initialbind)
                             destination[bind] = nil
                         end
@@ -2969,18 +2969,22 @@ function GSE.CreateEditor()
                         end
 
                         editframe.ManageTree()
+                        local keypath
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
-                                treeContainer:SelectByPath("KB", specialization, loadout, bind, button)
+                                keypath = table.concat({"KEYBINDINGS", "KB", specialization, loadout, bind}, "\001")
                             else
-                                treeContainer:SelectByPath("KB", loadout, bind, button)
+                                keypath = table.concat({"KEYBINDINGS", "KB", loadout, bind}, "\001")
                             end
                         else
                             if GetSpecialization then
-                                treeContainer:SelectByPath("KB", specialization, bind, button)
+                                keypath = table.concat({"KEYBINDINGS", "KB", specialization, bind}, "\001")
                             else
-                                treeContainer:SelectByPath("KB", bind, button)
+                                keypath = table.concat({"KEYBINDINGS", "KB", bind}, "\001")
                             end
+                        end
+                        if keypath then
+                            treeContainer:SelectByValue(keypath)
                         end
                     end
                 end
@@ -2992,7 +2996,7 @@ function GSE.CreateEditor()
             delbutton:SetCallback(
                 "OnClick",
                 function()
-                    if initialbind then
+                    if initialbind and not InCombatLockdown() then
                         SetBinding(initialbind)
                     end
 
@@ -3283,15 +3287,15 @@ function GSE.CreateEditor()
                         editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
-                                treeContainer:SelectByPath("AO", specialization, loadout, bind, button)
+                                treeContainer:SelectByPath("Sequences", "AO", specialization, loadout, bind)
                             else
-                                treeContainer:SelectByPath("AO", loadout, bind, button)
+                                treeContainer:SelectByPath("Sequences", "AO", loadout, bind)
                             end
                         else
                             if GetSpecialization then
-                                treeContainer:SelectByPath("AO", specialization, bind, button)
+                                treeContainer:SelectByPath("Sequences", "AO", specialization, bind)
                             else
-                                treeContainer:SelectByPath("AO", bind, button)
+                                treeContainer:SelectByPath("Sequences", "AO", bind)
                             end
                         end
                     end
