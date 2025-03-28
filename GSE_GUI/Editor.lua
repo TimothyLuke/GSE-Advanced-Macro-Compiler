@@ -3655,8 +3655,9 @@ end]],
                             local loadout = C_Traits.GetConfigInfo(i)
                             local specnode = {
                                 value = i,
-                                text = loadout.name,
-                                children = {}
+                                text = "|cff808080" .. loadout.name .. Statics.StringReset,
+                                children = {},
+                                icon = Statics.Icons.Talents
                             }
 
                             for l, m in GSE.pairsByKeys(j) do
@@ -3714,8 +3715,9 @@ end]],
                             local loadout = C_Traits.GetConfigInfo(i)
                             local specnode = {
                                 value = i,
-                                text = loadout.name,
-                                children = {}
+                                text = "|cffffcc00" .. loadout.name .. Statics.StringReset,
+                                children = {},
+                                icon = Statics.Icons.Talents
                             }
 
                             for l, m in GSE.pairsByKeys(j) do
@@ -3766,7 +3768,7 @@ end]],
         for k, _ in pairs(GSEVariables) do
             local node = {
                 value = k,
-                text = k
+                text = "|CFFFFFFFF" .. k .. Statics.StringReset
             }
             table.insert(tree.children, node)
         end
@@ -4514,33 +4516,29 @@ end]],
                         local specialization = unique[3]
                         if GetSpecialization then
                             bind = unique[4]
-
                             if #unique == 6 then
-                                loadout = unique[6]
-                                if type == "AO" and bind then
+                                loadout = unique[4]
+                                bind = unique[5]
+                                if unique[2] == "AO" and bind then
                                     button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
+                                else
+                                    button = unique[6]
                                 end
                             else
-                                button = unique[5]
-                                if type == "AO" and bind then
+                                button = unique[4]
+                                if unique[2] == "AO" and bind then
                                     button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
+                                else
+                                    button = unique[5]
                                 end
                             end
                         else
                             specialization = "1"
-                            if #unique == 5 then
-                                loadout = unique[5]
-                                bind = unique[4]
-                                if type == "AO" and bind then
-                                    button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
-                                end
-                            else
-                                bind = unique[3]
-                                button = unique[4]
+                            bind = unique[3]
+                            button = unique[4]
 
-                                if type == "AO" and bind then
-                                    button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
-                                end
+                            if type == "AO" and bind then
+                                button = GSE_C["ActionBarBinds"]["Specialisations"][specialization][bind]
                             end
                         end
                         if unique[#unique] == "NKB" then

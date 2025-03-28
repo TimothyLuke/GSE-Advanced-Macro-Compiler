@@ -454,6 +454,7 @@ Statics.Icons.Export = 4419478
 Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/ActionORide.png"
 Statics.Icons.Account = 133784
 Statics.Icons.Personal = 236448
+Statics.Icons.Talents = 134327
 
 Statics.GSE3OnClick =
     [=[
