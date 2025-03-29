@@ -3287,15 +3287,15 @@ function GSE.CreateEditor()
                         editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
-                                treeContainer:SelectByPath("Sequences", "AO", specialization, loadout, bind)
+                                treeContainer:SelectByPath("KEYBINDINGS", "AO", specialization, loadout, bind)
                             else
-                                treeContainer:SelectByPath("Sequences", "AO", loadout, bind)
+                                treeContainer:SelectByPath("KEYBINDINGS", "AO", loadout, bind)
                             end
                         else
                             if GetSpecialization then
-                                treeContainer:SelectByPath("Sequences", "AO", specialization, bind)
+                                treeContainer:SelectByPath("KEYBINDINGS", "AO", specialization, bind)
                             else
-                                treeContainer:SelectByPath("Sequences", "AO", bind)
+                                treeContainer:SelectByPath("KEYBINDINGS", "AO", bind)
                             end
                         end
                     end
