@@ -3649,29 +3649,38 @@ end]],
                     GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]
              then
                 for i, j in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(currentspecid)]) do
-                    local success =
+                    local success, result =
                         pcall(
                         function()
                             local loadout = C_Traits.GetConfigInfo(i)
                             local specnode = {
                                 value = i,
-                                text = "|cff808080" .. loadout.name .. Statics.StringReset,
+                                text = "|cffffcc00" .. loadout.name .. Statics.StringReset,
                                 children = {},
                                 icon = Statics.Icons.Talents
                             }
 
                             for l, m in GSE.pairsByKeys(j) do
+                                local nodelabel = l .. " " .. GSEOptions.KEYWORD .. "(" .. m.Sequence
+                                if m and m.State then
+                                    nodelabel = nodelabel .. " - " .. L["Button State"] .. ": " .. m.State
+                                end
+                                nodelabel = nodelabel .. "" .. ")" .. Statics.StringReset
+
                                 table.insert(
                                     specnode["children"],
                                     {
-                                        value = l .. "\001" .. m,
-                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                        value = l .. "\001" .. m.Sequence,
+                                        text = nodelabel
                                     }
                                 )
                             end
                             table.insert(node["children"], specnode)
                         end
                     )
+                    if not success then
+                        GSE.PrintDebugMessage(result, "ACTIONBAR OVERRIDES MENU")
+                    end
                 end
             end
             if GetSpecializationInfo then
@@ -4573,6 +4582,7 @@ end]],
                                 local rightContainer = AceGUI:Create("SimpleGroup")
                                 rightContainer:SetFullWidth(true)
                                 rightContainer:SetLayout("List")
+
                                 showKeybind(bind, button, specialization, loadout, type, rightContainer)
                                 container:AddChild(rightContainer)
                                 editframe.loaded = true
