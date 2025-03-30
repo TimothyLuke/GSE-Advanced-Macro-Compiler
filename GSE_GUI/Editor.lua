@@ -3283,7 +3283,8 @@ function GSE.CreateEditor()
                         if bind ~= initialbind then
                             showKeybind(bind, button, specialization, loadout)
                         end
-
+                        -- trigger a reload of KeyBindings
+                        GSE.ReloadOverrides()
                         editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
@@ -3321,6 +3322,8 @@ function GSE.CreateEditor()
                         GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][bind] = nil
                     end
                     GSE.ButtonOverrides[bind] = nil
+                    _G[bind]:SetAttribute("type", "action")
+                    SecureHandlerUnwrapScript(_G[bind], "OnClick")
                     rightContainer:ReleaseChildren()
                     editframe.ManageTree()
                 end
