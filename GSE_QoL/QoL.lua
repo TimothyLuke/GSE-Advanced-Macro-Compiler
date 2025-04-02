@@ -291,7 +291,7 @@ GSE.GUIAdvancedExport = function(exportframe)
         local elements = GSE.split(k, ",")
         local classid, specid = tonumber(elements[1]), tonumber(elements[2])
         if cid ~= classid then
-            local val = GSE.GetClassName(classid)
+            local val = GSE.GetClassName(classid) and GSE.GetClassName(classid) or L["Global"]
             local key = classid .. val
 
             SequenceDropDown:AddItem(key, val)
