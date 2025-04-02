@@ -236,7 +236,7 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
     t.Command = "GS-E_TRANSMITSEQUENCE"
     local elements = GSE.split(key, ",")
     local classid = tonumber(elements[1])
-    local SequenceName = elements[2]
+    local SequenceName = elements[3]
     GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission)
     t.ClassID = classid
     t.SequenceName = SequenceName
@@ -418,10 +418,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                 GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
             else
                 GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
-                GSE.PrintDebugMessage(
-                    GSE.ExportSequence(t.Sequence, t.SequenceName, false, "ID", false),
-                    Statics.SourceTransmission
-                )
+                GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false), Statics.SourceTransmission)
             end
         elseif t.Command == "GSE_LISTSEQUENCES" then
             if sender ~= GetUnitName("player", true) then
