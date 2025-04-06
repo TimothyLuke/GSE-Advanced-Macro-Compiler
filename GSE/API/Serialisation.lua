@@ -199,17 +199,22 @@ end
 
 -- This encodes a LUA Table for transmission
 function GSE.EncodeMessage(tab)
-    local one = libS:Serialize(tab)
-    GSE.PrintDebugMessage("Compress Stage 1: " .. one, Statics.SourceTransmission)
-    local two = libC:Compress(one)
-    GSE.PrintDebugMessage("Compress Stage 2: " .. two, Statics.SourceTransmission)
-    local final = GSE.encodeB64(two)
-    GSE.PrintDebugMessage("Compress Stage Result: " .. final, Statics.SourceTransmission)
-    return final
+    if C_EncodingUtil and GSEOptions.useInternalEncoder then
+        local result =
+            "!GSE3!" .. C_EncodingUtil.EncodeBase64(C_EncodingUtil.CompressString(C_EncodingUtil.SerializeCBOR(tab)))
+        return result
+    else
+        local one = libS:Serialize(tab)
+        GSE.PrintDebugMessage("Compress Stage 1: " .. one, Statics.SourceTransmission)
+        local two = libC:Compress(one)
+        GSE.PrintDebugMessage("Compress Stage 2: " .. two, Statics.SourceTransmission)
+        local final = GSE.encodeB64(two)
+        GSE.PrintDebugMessage("Compress Stage Result: " .. final, Statics.SourceTransmission)
+        return final
+    end
 end
 
--- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
-function GSE.DecodeMessage(data)
+local function oldDecode(data)
     -- Decode the compressed data
     local one = GSE.decodeB64(data)
 
@@ -229,6 +234,24 @@ function GSE.DecodeMessage(data)
 
     GSE.PrintDebugMessage("Data Finalised", Statics.SourceTransmission)
     return success, final
+end
+
+-- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
+function GSE.DecodeMessage(data)
+    if C_EncodingUtil and GSEOptions.useInternalEncoder then
+        if string.sub(data, 1, 6) == "!GSE3!" then
+            local message = string.sub(data, 6, #data)
+            local baseDecode = C_EncodingUtil.DecodeBase64(message)
+            local decomString = C_EncodingUtil.DecompressString(baseDecode)
+            local deserializeCBOR = C_EncodingUtil.DeserializeCBOR(decomString)
+            return true, deserializeCBOR
+        else
+            GSE.PrintDebugMessage("Error decompressing - Not valid GSE3 import: " .. data, Statics.SourceTransmission)
+            return oldDecode(data)
+        end
+    else
+        return oldDecode(data)
+    end
 end
 
 function GSE.TransmitSequence(key, channel, target, transmissionFrame)
