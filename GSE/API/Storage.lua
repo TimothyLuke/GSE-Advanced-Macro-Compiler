@@ -524,8 +524,10 @@ function GSE.UpdateIcon(self, reseticon)
         GSE.UsedSequences[gsebutton] = true
     end
     local mods = self:GetAttribute("localmods") or nil
+
     local executionseq = GSE.SequencesExec[gsebutton]
-    local foundSpell = executionseq[step].spell
+    local foundSpell =
+        executionseq and executionseq[step] and executionseq[step].spell and executionseq[step].spell or ""
     local spellinfo = {}
     spellinfo.iconID = Statics.QuestionMarkIconID
 

@@ -3285,7 +3285,8 @@ function GSE.CreateEditor()
                         end
                         -- trigger a reload of KeyBindings
                         GSE.ReloadOverrides()
-                        GSE.UpdateIcon(_G[bind])
+
+                        GSE.UpdateIcon(_G[button.Sequence])
                         editframe.ManageTree()
                         if loadout ~= "ALL" and loadout then
                             if GetSpecialization then
