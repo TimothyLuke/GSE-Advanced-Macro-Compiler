@@ -86,6 +86,7 @@ ignore:
   - GSE/package-lock.*
   - GSE_Personal
   - GSE_QoL
+  - mklinks.bat
 
 wowi-archive-previous: no
 enable-toc-creation: no
