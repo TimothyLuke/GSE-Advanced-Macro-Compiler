@@ -737,7 +737,7 @@ L["This macro is not compatible with this version of the game and cannot be impo
 L["GSE Discord"] = true
 L["Report an Issue"] = true
 L["CHanges Left Side, Changes Right Side, Many Changes!!!! Handle It"] = true
-L["GSE: Whats New in "] = true
+L["GSE: Whats New in "] = "GSE: What's new in "
 L["Show next time you login."] = true
 L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
 
@@ -798,7 +798,7 @@ L["Default"] = true
 L["New Variable"] = true
 
 L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.25 has finally fixed being able to use castsequences and their resets within GSE.\n\nThe GUI Menu and the Editor have been redesigned.  Details are in Discord."
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.28 changes the import and export strings.  Each GSE import will now start with !GSEx! where the x shows the version number going forward.  https://wago.io/gse has been updated toi handle these new import strings and wago.io exports will switch to exporting these style strings around 11.2.  As always details are in Discord."
 
 -- #1773
 L[
