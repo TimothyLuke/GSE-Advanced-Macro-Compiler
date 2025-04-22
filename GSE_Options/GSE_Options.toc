@@ -1,4 +1,4 @@
-## Interface: 40402, 11507, 110100
+## Interface: 40402, 11507, 110105
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Configuration Options|r
 ## Notes: GSE Configuration Options
