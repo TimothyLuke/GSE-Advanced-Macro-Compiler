@@ -199,7 +199,7 @@ end
 
 -- This encodes a LUA Table for transmission
 function GSE.EncodeMessage(tab)
-    if C_EncodingUtil and GSEOptions.useInternalEncoder then
+    if C_EncodingUtil then
         local result =
             "!GSE3!" .. C_EncodingUtil.EncodeBase64(C_EncodingUtil.CompressString(C_EncodingUtil.SerializeCBOR(tab)))
         return result
@@ -238,7 +238,7 @@ end
 
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
 function GSE.DecodeMessage(data)
-    if C_EncodingUtil and GSEOptions.useInternalEncoder then
+    if C_EncodingUtil then
         if string.sub(data, 1, 6) == "!GSE3!" then
             local message = string.sub(data, 6, #data)
             local baseDecode = C_EncodingUtil.DecodeBase64(message)
