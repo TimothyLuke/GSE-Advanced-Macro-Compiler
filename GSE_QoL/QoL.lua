@@ -377,7 +377,10 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                exportTable["Sequences"][key] = GSE.ExportSequence(GSE.FindMacro(key), key, false)
+                exportTable["Sequences"][key] =
+                    GSE.UnEscapeTable(
+                    GSE.TranslateSequence(GSE.CloneSequence(GSE.FindMacro(key)), Statics.TranslatorMode.ID)
+                )
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else
                 exportTable["Sequences"][key] = nil
@@ -419,7 +422,7 @@ GSE.GUIAdvancedExport = function(exportframe)
                 exportobject.objectType = "MACRO"
                 exportobject.category = category
                 exportobject.name = key
-                exportTable["Macros"][key] = GSE.EncodeMessage(exportobject)
+                exportTable["Macros"][key] = exportobject
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else
                 exportTable["Macros"][key] = nil

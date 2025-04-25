@@ -45,7 +45,8 @@
     "WrapTextInColor",
     "FONT_COLOR_CODE_CLOSE",
     "SecureHandlerUnwrapScript",
-    "C_EncodingUtil"
+    "C_EncodingUtil",
+    "GetUnitName"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",

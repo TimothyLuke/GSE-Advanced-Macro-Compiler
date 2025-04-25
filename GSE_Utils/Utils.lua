@@ -320,6 +320,10 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 Statics.SourceTransmission
             )
             local k, v = actiontable[1], actiontable[2]
+            if actiontable.MetaData and actiontable.MetaData.Name then
+                k = actiontable.MetaData.Name
+                v = actiontable
+            end
             local seqName = k
             v = GSE.processWAGOImport(v, true)
 
