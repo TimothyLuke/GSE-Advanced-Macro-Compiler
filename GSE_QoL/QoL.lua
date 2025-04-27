@@ -377,9 +377,10 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
+                print(key)
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
-                    GSE.TranslateSequence(GSE.CloneSequence(GSE.FindMacro(key)), Statics.TranslatorMode.ID)
+                    GSE.TranslateSequence(GSE.CloneSequence(GSE.FindSequence(key)), Statics.TranslatorMode.ID)
                 )
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else

@@ -615,12 +615,23 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 -- Functions
 
 --- This function finds a macro by name.  It checks current class first then global
-function GSE.FindMacro(sequenceName)
-    local returnVal = {}
+function GSE.FindSequence(sequenceName)
+    local returnVal
     if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][sequenceName]) then
         returnVal = GSE.Library[GSE.GetCurrentClassID()][sequenceName]
     elseif not GSE.isEmpty(GSE.Library[0][sequenceName]) then
         returnVal = GSE.Library[0][sequenceName]
+    end
+    if GSE.isEmpty(returnVal) then
+        -- Thius is a sequence for another class
+        for i = 1, 14, 1 do
+            if GSESequences[i] and GSESequences[i][sequenceName] then
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[i][sequenceName])
+                if localsuccess then
+                    returnVal = uncompressedVersion
+                end
+            end
+        end
     end
     return returnVal
 end
