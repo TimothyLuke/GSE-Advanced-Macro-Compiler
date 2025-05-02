@@ -258,7 +258,7 @@ local function LoadOverrides(force)
                 GSE.PrintDebugMessage("changing from " .. tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
                 for k, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
                     overrideActionButton(v, force)
-                    GSE.ButtonOverrides[v.Sequence] = k
+                    --GSE.ButtonOverrides[v.Sequence] = k
                 end
             end
         end

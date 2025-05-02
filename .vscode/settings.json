@@ -46,7 +46,8 @@
     "FONT_COLOR_CODE_CLOSE",
     "SecureHandlerUnwrapScript",
     "C_EncodingUtil",
-    "GetUnitName"
+    "GetUnitName",
+    "Auctionator"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
