@@ -504,5 +504,6 @@ globals = {
     "C_ClassColor.GetClassColor",
     "FONT_COLOR_CODE_CLOSE",
     "SecureHandlerUnwrapScript",
-    "C_EncodingUtil"
+    "C_EncodingUtil",
+    "C_SpelializationInfo"
 }
