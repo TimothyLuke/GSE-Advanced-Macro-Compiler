@@ -12,19 +12,20 @@ function GSE.TraceSequence(button, step, spell)
         local isUsable, notEnoughMana = C_Spell.IsSpellUsable(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
         local spellid = GSE.GetSpellId(spell, Statics.TranslatorMode.ID)
-        local foundOutput
-        if spellid then
-            local FoundInSpellBook = C_SpellBook.FindSpellBookSlotForSpell(spellid)
-            if FoundInSpellBook > 0 then
-                foundOutput =
-                    GSEOptions.CommandColour .. "(" .. spellid .. ") Found in Spell Book" .. Statics.StringReset
+        local foundOutput, FoundInSpellBook
+        if GSE.GameMode > 5 then
+            if spellid then
+                FoundInSpellBook = C_SpellBook.FindSpellBookSlotForSpell(spellid)
+                if FoundInSpellBook > 0 then
+                    foundOutput =
+                        GSEOptions.CommandColour .. "(" .. spellid .. ") Found in Spell Book" .. Statics.StringReset
+                else
+                    foundOutput = GSEOptions.UNKNOWN .. spell .. " Not Found In Spell Book" .. Statics.StringReset
+                end
             else
                 foundOutput = GSEOptions.UNKNOWN .. spell .. " Not Found In Spell Book" .. Statics.StringReset
             end
-        else
-            foundOutput = GSEOptions.UNKNOWN .. spell .. " Not Found In Spell Book" .. Statics.StringReset
         end
-
         if isUsable then
             usableOutput = GSEOptions.CommandColour .. "Able To Cast" .. Statics.StringReset
         else
@@ -62,8 +63,7 @@ function GSE.TraceSequence(button, step, spell)
                     ",",
                     (spell and GSE.GetSpellId(spell, Statics.TranslatorMode.Current) or "nil"),
                     ",",
-                    foundOutput,
-                    ",",
+                    foundOutput and foundOutput .. "," or "",
                     usableOutput,
                     ",",
                     manaOutput,
