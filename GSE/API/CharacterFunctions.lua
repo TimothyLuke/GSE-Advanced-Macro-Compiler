@@ -10,9 +10,10 @@ function GSE.GetCurrentSpecID()
         return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
     else
         local currentSpec =
-            C_SpecializationInfo.GetSpecialization() and C_SpecializationInfo.GetSpecialization() or GetSpecialization()
+            C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization() or
+            GetSpecialization()
         local currentSpecInfo =
-            C_SpecializationInfo.GetSpecializationInfo(currentSpec) and
+            C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo and
             C_SpecializationInfo.GetSpecializationInfo(currentSpec) or
             GetSpecializationInfo(currentSpec)
         return currentSpec and select(1, currentSpecInfo) or 0
