@@ -505,5 +505,6 @@ globals = {
     "FONT_COLOR_CODE_CLOSE",
     "SecureHandlerUnwrapScript",
     "C_EncodingUtil",
-    "C_SpecializationInfo"
+    "C_SpecializationInfo",
+    "C_AssistedCombat"
 }

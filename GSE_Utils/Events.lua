@@ -71,6 +71,7 @@ function GSE.TraceSequence(button, step, spell)
                     GCDOutput,
                     ",",
                     CastingOutput,
+                    C_AssistedCombat and C_Spell.GetSpellInfo(C_AssistedCombat.GetNextCastSpell()).name .. "," or "",
                     fullBlock
                 }
             ),
