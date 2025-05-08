@@ -155,7 +155,6 @@ local function overrideActionButton(savedBind, force)
                     clickbutton = _G[Sequence]
                 }
             )
-            GSE.ButtonOverrides[Button] = Sequence
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
 
@@ -170,6 +169,7 @@ local function overrideActionButton(savedBind, force)
             ]]
             )
         end
+        GSE.ButtonOverrides[Button] = Sequence
     else
         if not InCombatLockdown() then
             if (not GSE.ButtonOverrides[Button] or force) then
@@ -197,8 +197,6 @@ local function overrideActionButton(savedBind, force)
                 )
                 _G[Button]:SetAttribute("type", "click")
 
-                GSE.ButtonOverrides[Button] = Sequence
-
             --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
             --SetBindingClick(number, Button, _G[Button])
             --end
@@ -206,6 +204,7 @@ local function overrideActionButton(savedBind, force)
 
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
+        GSE.ButtonOverrides[Button] = Sequence
     end
 end
 local function LoadOverrides(force)
