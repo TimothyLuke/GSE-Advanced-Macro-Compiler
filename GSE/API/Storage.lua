@@ -1166,7 +1166,7 @@ end
     if self:GetAttribute('stepped') then
         self:SetAttribute('stepped', false)
     else
-        for k,v in pairs(spelllist[step]) do
+        for k,v in pairs(spelllist[iteration][step]) do
             if k == "macrotext" then
                 self:SetAttribute("macro", nil )
                 self:SetAttribute("unit", nil )
@@ -1179,7 +1179,6 @@ end
             self:SetAttribute(k, v )
         end
 
-        step = step % #spelllist + 1
         self:SetAttribute('stepped', true)
         if step < #spelllist[iteration] then
             step = step % #spelllist[iteration] + 1
