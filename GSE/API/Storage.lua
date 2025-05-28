@@ -1084,14 +1084,12 @@ maxsequences = 1
 spelllist = newtable()
 for k,v in ipairs(compressedspelllist) do
     tinsert(spelllist, newtable())
-    for x, y in ipairs(newtable(strsplit("\001",v))) do  
-        tinsert(spelllist[k], newtable())       
+    for x, y in ipairs(newtable(strsplit("\001",v))) do
+        tinsert(spelllist[k], newtable())
         for _,j in ipairs(newtable(strsplit("|",y))) do
-        
             local a,b = strsplit("\002",j)
             spelllist[k][x][a] = b
         end
-        
     end
     maxsequences = k
 end
@@ -1134,13 +1132,13 @@ end
         end
         self:SetAttribute(k, v )
     end
-    
+
     if step < #spelllist[iteration] then
         step = step % #spelllist[iteration] + 1
     else
         iteration = iteration % maxsequences + 1
         step = 1
-    end 
+    end
     self:SetAttribute('step', step)
     self:SetAttribute('iteration', iteration)
     self:CallMethod('UpdateIcon')
@@ -1188,7 +1186,7 @@ end
         else
             iteration = iteration % maxsequences + 1
             step = 1
-        end 
+        end
 
         self:SetAttribute('step', step)
         self:SetAttribute('iteration', iteration)
