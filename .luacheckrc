@@ -506,5 +506,7 @@ globals = {
     "SecureHandlerUnwrapScript",
     "C_EncodingUtil",
     "C_SpecializationInfo",
-    "C_AssistedCombat"
+    "C_AssistedCombat",
+    "SetOverrideBindingClick",
+    "SetOverrideBinding"
 }
