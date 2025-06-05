@@ -263,12 +263,13 @@ local function LoadOverrides(force)
     end
 end
 
+local keybindingframe
+if GSE.GameMode == 5 then
+    keybindingframe = CreateFrame("Frame", "GSEKeyBinds", UIParent)
+    keybindingframe:Hide()
+end
+
 local function LoadKeyBindings(payload)
-    local frame
-    if GSE.GameMode == 5 then
-        frame = CreateFrame("Frame", "GSEKeyBinds", UIParent)
-        frame:Hide()
-    end
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
@@ -284,7 +285,7 @@ local function LoadKeyBindings(payload)
         if k ~= "LoadOuts" and not InCombatLockdown() then
             SetBindingClick(k, v)
             if GSE.GameMode == 5 then
-                SetOverrideBindingClick(frame, false, k, v)
+                SetOverrideBindingClick(keybindingframe, false, k, v)
             end
         -- print("Bound", k, v)
         end
@@ -305,7 +306,7 @@ local function LoadKeyBindings(payload)
                     SetBinding(k)
                     SetBindingClick(k, v)
                     if GSE.GameMode == 5 then
-                        SetOverrideBindingClick(frame, false, k, v)
+                        SetOverrideBindingClick(keybindingframe, false, k, v)
                     end
                 end
             end

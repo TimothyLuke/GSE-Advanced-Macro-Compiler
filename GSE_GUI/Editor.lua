@@ -2950,20 +2950,7 @@ function GSE.CreateEditor()
                             SetBinding(initialbind)
                             destination[bind] = nil
                         end
-                        if loadout ~= "ALL" and loadout then
-                            destination[bind] = button
-                            if
-                                tostring(C_ClassTalents.GetLastSelectedSavedConfigID(PlayerUtil.GetCurrentSpecID())) ==
-                                    loadout
-                             then
-                                SetBinding(bind)
-                                SetBindingClick(bind, button, _G[button])
-                            end
-                        else
-                            destination[bind] = button
-                            SetBinding(bind)
-                            SetBindingClick(bind, button, _G[button])
-                        end
+                        GSE.ReloadKeyBindings()
                         if bind ~= initialbind then
                             showKeybind(bind, button, specialization, loadout)
                         end
