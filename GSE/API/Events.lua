@@ -198,7 +198,7 @@ local function overrideActionButton(savedBind, force)
                 _G[Button]:SetAttribute("type", "click")
 
             --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
-            --SetBindingClick(number, Button, _G[Button])
+            --SetBindingClick(number, Button, "LeftButton")
             --end
             end
 
@@ -283,7 +283,7 @@ local function LoadKeyBindings(payload)
 
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
-            SetBindingClick(k, v)
+            SetBindingClick(k, v, "LeftButton")
             if GSE.GameMode == 5 then
                 SetOverrideBindingClick(keybindingframe, false, k, v)
             end
@@ -304,7 +304,7 @@ local function LoadKeyBindings(payload)
                 )
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     SetBinding(k)
-                    SetBindingClick(k, v)
+                    SetBindingClick(k, v, "LeftButton")
                     if GSE.GameMode == 5 then
                         SetOverrideBindingClick(keybindingframe, false, k, v)
                     end

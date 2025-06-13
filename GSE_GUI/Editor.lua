@@ -2950,11 +2950,14 @@ function GSE.CreateEditor()
                             SetBinding(initialbind)
                             destination[bind] = nil
                         end
-                        GSE.ReloadKeyBindings()
-                        if bind ~= initialbind then
-                            showKeybind(bind, button, specialization, loadout)
+                        if destination then
+                            destination[bind] = button
+                        else
+                            GSE.PrintDebugMessage(
+                                "Error Saving Keybind " .. bind .. " " .. button,
+                                Statics.DebugModules.Storage
+                            )
                         end
-
                         editframe.ManageTree()
                         local keypath
                         if loadout ~= "ALL" and loadout then
@@ -2973,6 +2976,10 @@ function GSE.CreateEditor()
                         if keypath then
                             treeContainer:SelectByValue(keypath)
                         end
+                        GSE.ReloadKeyBindings()
+                    -- if bind ~= initialbind then
+                    --     showKeybind(bind, button, specialization, loadout)
+                    -- end
                     end
                 end
             )
