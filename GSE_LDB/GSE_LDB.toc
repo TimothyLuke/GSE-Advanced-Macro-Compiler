@@ -1,4 +1,4 @@
-## Interface: 40402, 11507, 110200, 110107, 50500 
+## Interface: 11507, 110200, 110107, 50500 
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Data Feeds and Minimap|r
 ## Notes: LibDataBroker Plugin for GSE
