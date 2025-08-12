@@ -1039,8 +1039,7 @@ function GSE.CreateEditor()
         cancelButton:SetCallback(
             "OnClick",
             function()
-                editframe.GUIEditorPerformLayout()
-                editframe.ContentContainer:SelectTab(version)
+                treeContainer:SelectByValue(path .. "\001" .. version)
             end
         )
         -- cancelButton:SetCallback(
