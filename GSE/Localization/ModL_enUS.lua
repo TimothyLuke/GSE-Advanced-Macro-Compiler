@@ -809,3 +809,8 @@ L[
         "GSE Sequences are converted to a button that responds to 'Clicks' or Keyboard keypresses (WoW calls these Hardware Events).  \n\nWhen you use a KeyBind with a sequence, WoW sends two hardware events each time. With this setting on, GSE then interprets these two clicks as one and advances your sequence one step.  With this off it would advance two steps.  \n\nIn comparison Actionbar Overrides and '/click SEQUENCE' macros only sends one hardware Event.  If you primarily use Keybinds over Actionbar Overrides over Keybinds you want this set to false."
     ] = true
 L["Button Settings"] = true
+
+-- #1806
+L["Skyriding / Vehicle Keybinds"] = true
+L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"] = true
+L["Skyriding Button"] = true

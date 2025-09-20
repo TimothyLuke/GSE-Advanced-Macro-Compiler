@@ -633,3 +633,174 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     )
     return lbl
 end
+
+-- Skyriding Bind Bar for Retail
+if GSE.GameMode >= 11 then
+    local config = LibStub("AceConfig-3.0")
+    local dialog = LibStub("AceConfigDialog-3.0")
+    local addonName = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
+    local OptionsTable = {
+        type = "group",
+        args = {
+            title = {
+                name = L["Skyriding / Vehicle Keybinds"],
+                desc = L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"],
+                order = 1,
+                type = "header"
+            }
+        }
+    }
+
+    for i = 1, 12 do
+        OptionsTable.args["Skyriding" .. tostring(i)] = {
+            name = L["Skyriding Button"] .. " " .. tostring(i),
+            type = "keybinding",
+            set = function(info, val)
+                if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
+                    GSEOptions.SkyRidingBinds = {}
+                end
+                GSEOptions.SkyRidingBinds[tostring(i)] = val
+                GSE.UpdateVehicleBar()
+            end,
+            get = function(info)
+                return GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(i)] and
+                    GSEOptions.SkyRidingBinds[tostring(i)] or
+                    ""
+            end,
+            order = i + 1
+        }
+    end
+    config:RegisterOptionsTable(addonName .. "-Skyriding", OptionsTable)
+    dialog:AddToBlizOptions(addonName .. "-Skyriding", OptionsTable.args.title.name, addonName) -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
+    ----------------------------------------------------------------------------------------------------------
+
+    -- Pet battle buttons
+    local PetBattleButton = {}
+    for i = 1, 6 do
+        PetBattleButton[i] = CreateFrame("Button", "GSE_PetBattleButton" .. i, nil, "SecureActionButtonTemplate")
+        PetBattleButton[i]:RegisterForClicks("AnyDown")
+        PetBattleButton[i]:SetAttribute("type", "macro")
+        if i <= 3 then
+            PetBattleButton[i]:SetAttribute(
+                "macrotext",
+                "/run PetBattleFrame.BottomFrame.abilityButtons[" .. i .. "]:Click()"
+            )
+        end
+    end
+
+    PetBattleButton[4]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.SwitchPetButton:Click()")
+    PetBattleButton[5]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.CatchButton:Click()")
+    PetBattleButton[6]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.ForfeitButton:Click()") -- Hidden action bar to click on its buttons when the player enters a vehicle or -- skyriding mount, with the binds assigned by the user in the vehicle binds panel
+    -------------------------------------------------------------------------------------------------------
+
+    -- Vehicle/Skyriding bar
+    local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
+    VehicleBar:SetAttribute("actionpage", 1)
+    VehicleBar:Hide()
+
+    -- Creating buttons
+    local VehicleButton = {}
+    for i = 1, 12 do
+        VehicleButton[i] = CreateFrame("Button", "GSE_VehicleButton" .. i, VehicleBar, "SecureActionButtonTemplate")
+        local B = VehicleButton[i]
+        B:Hide()
+        B:SetID(i)
+        B:SetAttribute("type", "action")
+        B:SetAttribute("action", i)
+        B:SetAttribute("useparent-actionpage", true)
+        B:RegisterForClicks("AnyDown")
+    end
+
+    -- Table that will store the keybinds for vehicles desired by the user
+
+    function GSE.UpdateVehicleBar()
+        local tableval = {}
+        for k, v in pairs(GSEOptions.SkyRidingBinds) do
+            table.insert(tableval, k .. "\001" .. v)
+        end
+
+        local executionString =
+            "VehicleKeybindTable = newtable([=======[" ..
+            string.join("]=======],[=======[", unpack(tableval)) ..
+                "]=======])" ..
+                    [[
+            VehicleKeybind = newtable()
+            for _,v in ipairs(VehicleKeybindTable) do
+                local x, y = strsplit("\001",v)
+                VehicleKeybind[tonumber(x)] = y
+            end
+
+            ]]
+        VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
+    end
+
+    GSE.UpdateVehicleBar()
+    -- Triggers
+    VehicleBar:SetAttribute(
+        "_onattributechanged",
+        [[
+  -- Actionpage update
+  if name == "page" then
+    if HasVehicleActionBar() then self:SetAttribute("actionpage", GetVehicleBarIndex())
+    elseif HasOverrideActionBar() then self:SetAttribute("actionpage", GetOverrideBarIndex())
+    elseif HasBonusActionBar() then self:SetAttribute("actionpage", GetBonusBarIndex())
+    else self:SetAttribute("actionpage", GetActionBarPage()) end
+
+  -- Settings binds of higher priority than the normal ones when the player enters a vehicle, to be able to use it
+  elseif name == "vehicletype" then
+    if value == "vehicle" then -- Vehicles/Skyriding
+      for i = 1, 12 do
+        if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_VehicleButton"..i) end
+      end
+
+    elseif value == "petbattle" then -- Pet battle
+      for i = 1, 6 do
+        if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_PetBattleButton"..i) end
+      end
+
+    elseif value == "none" then -- No vehicle, deleting vehicle binds
+      self:ClearBindings()
+    end
+  end
+]]
+    )
+
+    -- Actionpage trigger
+    RegisterAttributeDriver(
+        VehicleBar,
+        "page",
+        "[vehicleui] A;" ..
+            "[possessbar] B;" ..
+                "[overridebar] C;" ..
+                    "[bonusbar:5] D;" .. -- Skyriding
+                        "E"
+    )
+
+    -- Vehicle trigger
+    RegisterAttributeDriver(
+        VehicleBar,
+        "vehicletype",
+        "[vehicleui][possessbar][overridebar][bonusbar:5] vehicle;" .. "[petbattle] petbattle;" .. "none"
+    ) -- Event PET_BATTLE_OPENING_START -- Triggers when a pet battle starts. Used only in MoP because it doesn't have the [petbattle] -- macro condition to detect pet battles from the Restricted Environment like post-MoP expansions.
+    ----------------------------------------------------------------------------------------------------------------------
+
+    --[[ Events ]]
+    function GSE:PET_BATTLE_OPENING_START()
+        VehicleBar:Execute(
+            [[
+    for i = 1, 6 do
+      if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_PetBattleButton"..i) end
+    end
+  ]]
+        )
+    end
+
+    -- Event PET_BATTLE_CLOSE
+    -- Triggers when a pet battle starts. Used only in MoP because it doesn't have the [petbattle]
+    -- macro condition to detect pet battles from the Restricted Environment like post-MoP expansions.
+    function GSE:PET_BATTLE_CLOSE()
+        VehicleBar:Execute([[ self:ClearBindings() ]])
+    end
+    GSE:RegisterEvent("PET_BATTLE_OPENING_START")
+    GSE:RegisterEvent("PET_BATTLE_CLOSE")
+end
