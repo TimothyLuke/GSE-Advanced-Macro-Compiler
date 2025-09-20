@@ -7,7 +7,10 @@ local L = GSE.L
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   local compareframe = AceGUI:Create("Frame")
   compareframe:Hide()
-  compareframe.ChosenAction = "MERGE"
+  if GSE.isEmpty(GSEOptions.DefaultImportAction) then
+    GSEOptions.DefaultImportAction = "MERGE"
+  end
+  compareframe.ChosenAction = GSEOptions.DefaultImportAction
   compareframe.frame:SetFrameStrata("MEDIUM")
   compareframe.frame:SetClampedToScreen(true)
 
@@ -60,10 +63,6 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   actionLabel:SetText(L["Choose import action:"] .. "   ")
 
   actionButtonGroup:AddChild(actionLabel)
-
-  if GSE.isEmpty(GSEOptions.DefaultImportAction) then
-    GSEOptions.DefaultImportAction = "MERGE"
-  end
 
   local actionChoiceRadio = AceGUI:Create("Dropdown")
   actionChoiceRadio:SetList(
