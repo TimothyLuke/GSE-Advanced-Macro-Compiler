@@ -508,5 +508,6 @@ globals = {
     "C_SpecializationInfo",
     "C_AssistedCombat",
     "SetOverrideBindingClick",
-    "SetOverrideBinding"
+    "SetOverrideBinding",
+    "RegosterAttributeDriver"
 }
