@@ -715,6 +715,9 @@ if GSE.GameMode >= 11 then
 
     function GSE.UpdateVehicleBar()
         local tableval = {}
+        if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
+            GSEOptions.SkyRidingBinds = {}
+        end
         for k, v in pairs(GSEOptions.SkyRidingBinds) do
             table.insert(tableval, k .. "\001" .. v)
         end
