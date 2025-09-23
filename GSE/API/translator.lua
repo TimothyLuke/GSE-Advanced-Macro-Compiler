@@ -181,7 +181,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
         end
         output = string.gsub(output, ", ;", "; ")
 
-        output = string.gsub(output, "  ", " ")
+        output = string.gsub(output, "%s+", " ")
         return output
     end
 end
