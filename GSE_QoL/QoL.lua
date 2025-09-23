@@ -718,15 +718,17 @@ if GSE.GameMode >= 11 then
         if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
             GSEOptions.SkyRidingBinds = {}
         end
+        local tablevals = false
         for k, v in pairs(GSEOptions.SkyRidingBinds) do
             table.insert(tableval, k .. "\001" .. v)
+            tablevals = true
         end
-
-        local executionString =
-            "VehicleKeybindTable = newtable([=======[" ..
-            string.join("]=======],[=======[", unpack(tableval)) ..
-                "]=======])" ..
-                    [[
+        if tablevals then
+            local executionString =
+                "VehicleKeybindTable = newtable([=======[" ..
+                string.join("]=======],[=======[", unpack(tableval)) ..
+                    "]=======])" ..
+                        [[
             VehicleKeybind = newtable()
             for _,v in ipairs(VehicleKeybindTable) do
                 local x, y = strsplit("\001",v)
@@ -734,7 +736,8 @@ if GSE.GameMode >= 11 then
             end
 
             ]]
-        VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
+            VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
+        end
     end
 
     GSE.UpdateVehicleBar()
