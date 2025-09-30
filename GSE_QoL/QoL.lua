@@ -723,12 +723,11 @@ if GSE.GameMode >= 11 then
             table.insert(tableval, k .. "\001" .. v)
             tablevals = true
         end
-        if tablevals then
-            local executionString =
-                "VehicleKeybindTable = newtable([=======[" ..
-                string.join("]=======],[=======[", unpack(tableval)) ..
-                    "]=======])" ..
-                        [[
+        local executionString =
+            "VehicleKeybindTable = newtable([=======[" ..
+            string.join("]=======],[=======[", unpack(tableval)) ..
+                "]=======])" ..
+                    [[
             VehicleKeybind = newtable()
             for _,v in ipairs(VehicleKeybindTable) do
                 local x, y = strsplit("\001",v)
@@ -736,8 +735,10 @@ if GSE.GameMode >= 11 then
             end
 
             ]]
-            VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
+        if not tablevals then
+            executionString = "VehicleKeybind = newtable()"
         end
+        VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
     end
 
     GSE.UpdateVehicleBar()
@@ -772,15 +773,7 @@ if GSE.GameMode >= 11 then
     )
 
     -- Actionpage trigger
-    RegisterAttributeDriver(
-        VehicleBar,
-        "page",
-        "[vehicleui] A;" ..
-            "[possessbar] B;" ..
-                "[overridebar] C;" ..
-                    "[bonusbar:5] D;" .. -- Skyriding
-                        "E"
-    )
+    RegisterAttributeDriver(VehicleBar, "page", "[vehicleui] A; [possessbar] B; [overridebar] C; [bonusbar:5] D; E")
 
     -- Vehicle trigger
     RegisterAttributeDriver(
