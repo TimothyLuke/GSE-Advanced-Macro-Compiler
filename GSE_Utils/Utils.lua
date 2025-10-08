@@ -711,6 +711,17 @@ function GSE:GSSlash(input)
         if GSE.UnsavedOptions["GUI"] then
             GSE.ShowImport()
         end
+    elseif string.lower(command) == "bind" then
+        -- /gse bind spec sequence key
+        local spec = tostring(params[2])
+        local sequence = tostring(params[3])
+        local physicalkey = tostring(params[4])
+        if spec and sequence and physicalkey then
+            GSE_C["KeyBindings"][tostring(spec)][physicalkey] = sequence
+            GSE.ReloadKeyBindings()
+        else
+           GSE.Print("Invalid Bind - /gse bind spec sequence key")
+        end
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
