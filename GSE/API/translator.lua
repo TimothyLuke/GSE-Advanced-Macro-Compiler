@@ -226,7 +226,7 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
                 if test then
-                    local currentSpell = FindSpellOverrideByID(test)
+                    local currentSpell = C_SpellBook.FindSpellOverrideByID(test)
                     if currentSpell then
                         ---@diagnostic disable-next-line: cast-local-type
                         etc = currentSpell
@@ -351,8 +351,8 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         returnval = spellId
         -- Check for overrides like Crusade and Avenging Wrath.
         if not absolute and not GSE.isEmpty(returnval) then
-            if FindBaseSpellByID(returnval) then
-                returnval = FindBaseSpellByID(returnval)
+            if C_SpellBook.FindBaseSpellByID(returnval) then
+                returnval = C_SpellBook.FindBaseSpellByID(returnval)
             -- if type(returnval) == "table" then
             --     returnval = returnval.spellID
             -- end

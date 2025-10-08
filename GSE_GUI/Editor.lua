@@ -2850,7 +2850,7 @@ function GSE.CreateEditor()
         if type == "KB" then
             if not specialization then
                 if GSE.GameMode > 10 then
-                    specialization = GetSpecialization()
+                    specialization = C_Specialization.GetSpecialization()
                 else
                     specialization = 1
                 end
@@ -3041,7 +3041,7 @@ function GSE.CreateEditor()
 
             if not specialization then
                 if GSE.GameMode > 10 then
-                    specialization = GetSpecialization()
+                    specialization = C_Specialization.GetSpecialization()
                 else
                     specialization = 1
                 end

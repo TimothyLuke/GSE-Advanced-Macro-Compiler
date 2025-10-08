@@ -208,7 +208,7 @@ function GSE.DecodeMessage(tab)
   return tab
 end
 
-function FindBaseSpellByID(stuff)
+function C_SpellBook.FindBaseSpellByID(stuff)
   return stuff
 end
 

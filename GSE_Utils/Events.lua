@@ -134,4 +134,4 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     end
 end
 
-GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+-- GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")

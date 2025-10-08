@@ -104,8 +104,12 @@ local function GetSpec()
     if GSE.GameMode < 7 then
         return "1"
     else
+    if GSE.GameMode < 12 then
         return tostring(GetSpecialization())
+    else
+        return tostring(C_SpecializationInfo.GetSpecialization())
     end
+end
 end
 
 local function playerSpec()
