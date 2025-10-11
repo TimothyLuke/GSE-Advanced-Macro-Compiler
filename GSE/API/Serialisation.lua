@@ -527,78 +527,78 @@ end
 -- This filter function courtesy of WeakAuras -- https://github.com/WeakAuras/WeakAuras2/blob/main/WeakAuras/Transmission.lua#L147
 
 -- #1830 Not compatible with Midnight
--- local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
---     if flag == "GM" or flag == "DEV" or (event == "CHAT_MSG_CHANNEL" and type(channelId) == "number" and channelId > 0) then
---         return
---     end
+local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
+    if flag == "GM" or flag == "DEV" or (event == "CHAT_MSG_CHANNEL" and type(channelId) == "number" and channelId > 0) then
+        return
+    end
 
---     local newMsg = ""
---     local remaining = msg
---     local done
---     repeat
---         local start, finish, characterName, sequenceName, classID =
---             remaining:find("%[GSE: ([^%s]+) %- ([^%s]+) %- ([^]]+)")
---         if (characterName and sequenceName and classID) then
---             characterName = characterName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
---             sequenceName = sequenceName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
---             classID = classID:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
---             newMsg = newMsg .. remaining:sub(1, start - 1)
---             newMsg = newMsg .. GSE.CreateSequenceLink(sequenceName, classID, characterName)
---             remaining = remaining:sub(finish + 1)
---         else
---             done = true
---         end
---     until (done)
---     if newMsg ~= "" then
---         local trimmedPlayer = Ambiguate(player, "none")
---         if event == "CHAT_MSG_WHISPER" and not UnitInRaid(trimmedPlayer) and not UnitInParty(trimmedPlayer) then -- XXX: Need a guild check
---             local _, num = BNGetNumFriends()
---             for i = 1, num do
---                 if C_BattleNet then -- introduced in 8.2.5 PTR
---                     local toon = C_BattleNet.GetFriendNumGameAccounts(i)
---                     for j = 1, toon do
---                         local gameAccountInfo = C_BattleNet.GetFriendGameAccountInfo(i, j)
---                         if
---                             gameAccountInfo and gameAccountInfo.characterName == trimmedPlayer and
---                                 gameAccountInfo.clientProgram == "WoW"
---                          then
---                             return false, newMsg, player, l, cs, t, flag, channelId, ... -- Player is a real id friend, allow it
---                         end
---                     end
---                 else -- keep old method for 8.2 and Classic
---                     local toon = BNGetNumFriendGameAccounts(i)
---                     for j = 1, toon do
---                         local _, rName, rGame = BNGetFriendGameAccountInfo(i, j)
---                         if rName == trimmedPlayer and rGame == "WoW" then
---                             return false, newMsg, player, l, cs, t, flag, channelId, ... -- Player is a real id friend, allow it
---                         end
---                     end
---                 end
---             end
---             return true -- Filter strangers
---         else
---             return false, newMsg, player, l, cs, t, flag, channelId, ...
---         end
---     end
--- end
-
+    local newMsg = ""
+    local remaining = msg
+    local done
+    repeat
+        local start, finish, characterName, sequenceName, classID =
+            remaining:find("%[GSE: ([^%s]+) %- ([^%s]+) %- ([^]]+)")
+        if (characterName and sequenceName and classID) then
+            characterName = characterName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
+            sequenceName = sequenceName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
+            classID = classID:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
+            newMsg = newMsg .. remaining:sub(1, start - 1)
+            newMsg = newMsg .. GSE.CreateSequenceLink(sequenceName, classID, characterName)
+            remaining = remaining:sub(finish + 1)
+        else
+            done = true
+        end
+    until (done)
+    if newMsg ~= "" then
+        local trimmedPlayer = Ambiguate(player, "none")
+        if event == "CHAT_MSG_WHISPER" and not UnitInRaid(trimmedPlayer) and not UnitInParty(trimmedPlayer) then -- XXX: Need a guild check
+            local _, num = BNGetNumFriends()
+            for i = 1, num do
+                if C_BattleNet then -- introduced in 8.2.5 PTR
+                    local toon = C_BattleNet.GetFriendNumGameAccounts(i)
+                    for j = 1, toon do
+                        local gameAccountInfo = C_BattleNet.GetFriendGameAccountInfo(i, j)
+                        if
+                            gameAccountInfo and gameAccountInfo.characterName == trimmedPlayer and
+                                gameAccountInfo.clientProgram == "WoW"
+                         then
+                            return false, newMsg, player, l, cs, t, flag, channelId, ... -- Player is a real id friend, allow it
+                        end
+                    end
+                else -- keep old method for 8.2 and Classic
+                    local toon = BNGetNumFriendGameAccounts(i)
+                    for j = 1, toon do
+                        local _, rName, rGame = BNGetFriendGameAccountInfo(i, j)
+                        if rName == trimmedPlayer and rGame == "WoW" then
+                            return false, newMsg, player, l, cs, t, flag, channelId, ... -- Player is a real id friend, allow it
+                        end
+                    end
+                end
+            end
+            return true -- Filter strangers
+        else
+            return false, newMsg, player, l, cs, t, flag, channelId, ...
+        end
+    end
+end
 -- #1830 Not compatible with Midnight
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filterFunc)
--- ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
-
+if GSE.GameMode < 12 then
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
+end
 -- process chatlinks
 hooksecurefunc(
     "SetItemRef",

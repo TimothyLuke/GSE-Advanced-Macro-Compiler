@@ -2849,13 +2849,17 @@ function GSE.CreateEditor()
     local function showKeybind(bind, button, specialization, loadout, type, rightContainer)
         if type == "KB" then
             if not specialization then
-                if GSE.GameMode > 10 then
-                    specialization = C_Specialization.GetSpecialization()
-                else
+                if GSE.GameMode < 10 then
                     specialization = 1
+                else
+                    if GSE.GameMode < 12 then
+                        specialization = GetSpecialization()
+                    else
+                        specialization = C_SpecializationInfo.GetSpecialization()
+                    end
                 end
             end
-            local initialbind = bind
+            local initialbind = bind 
             rightContainer:ReleaseChildren()
             local keybind = AceGUI:Create("ControllerKeybinding")
             keybind:SetLabel(L["Keybind"])
@@ -3032,18 +3036,22 @@ function GSE.CreateEditor()
             rightContainer:AddChild(row)
             rightContainer:AddChild(row2)
         elseif type == "AO" then
+
             if not button then
                 button = {}
             end
             if button.Bind then
                 bind = button.Bind
             end
-
             if not specialization then
-                if GSE.GameMode > 10 then
-                    specialization = C_Specialization.GetSpecialization()
-                else
+                if GSE.GameMode < 10 then
                     specialization = 1
+                else
+                    if GSE.GameMode < 12 then
+                        specialization = GetSpecialization()
+                    else
+                        specialization = C_SpecializationInfo.GetSpecialization()
+                    end
                 end
             end
             local initialbind = bind
@@ -4521,7 +4529,7 @@ end]],
                         local bind, loadout, type, button
                         type = unique[2]
                         local specialization = unique[3]
-                        if GetSpecialization then
+                        if C_SpecializationInfo or GetSpecialization then
                             bind = unique[4]
                             if #unique == 6 then
                                 loadout = unique[4]

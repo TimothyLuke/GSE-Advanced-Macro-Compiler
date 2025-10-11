@@ -134,4 +134,6 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     end
 end
 
--- GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+if GSE.GameMode < 12 then
+    GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+end
