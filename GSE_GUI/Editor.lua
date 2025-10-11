@@ -2859,7 +2859,7 @@ function GSE.CreateEditor()
                     end
                 end
             end
-            local initialbind = bind 
+            local initialbind = bind
             rightContainer:ReleaseChildren()
             local keybind = AceGUI:Create("ControllerKeybinding")
             keybind:SetLabel(L["Keybind"])
