@@ -30,8 +30,15 @@ function GetTalentTierInfo(tier, ...)
   return 1
 end
 
-function GetSpecialization()
+C_SpellBook = {}
+C_SpecializationInfo = {}
+
+function C_SpecializationInfo.GetSpecialization()
   return 11
+end
+
+function GetSpecialization()
+  return C_SpecializationInfo.GetSpecialization()
 end
 
 function GetClassInfo(i)
