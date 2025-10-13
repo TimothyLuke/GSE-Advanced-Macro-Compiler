@@ -383,7 +383,7 @@ local methods = {
 	["BuildLevel"] = function(self, tree, level, parent)
 		local groups = (self.status or self.localstatus).groups
 
-		for i, v in ipairs(tree) do
+		for _, v in ipairs(tree) do
 			if v.children then
 				if not self.filter or ShouldDisplayLevel(v.children) then
 					local line = addLine(self, v, tree, level, parent)
