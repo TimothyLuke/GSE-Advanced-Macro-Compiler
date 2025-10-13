@@ -94,16 +94,3 @@ jobs:
       run: npm run-script pat
       env: 
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK }}
-
-    - name: Parse and generate documentation
-      run: |
-        mkdir .pages
-        luadoc -d .pages/docs GSE/API/*.lua
-        cp pages/* .pages
-        
-
-    - name: Deploy API to GitHub Pages🚀
-      uses: JamesIves/github-pages-deploy-action@4.1.4
-      with:
-        branch: gh-pages # The branch the action should deploy to.
-        folder: .pages # The folder the action should deploy.
