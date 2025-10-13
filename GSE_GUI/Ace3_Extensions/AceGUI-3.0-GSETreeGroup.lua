@@ -1,12 +1,10 @@
 --[[-----------------------------------------------------------------------------
 GSE-TreeGroup based on TreeGroup Container
-Container that uses a tree control to switch between groups.  Idenitcal to TreeGroup but with Bigger fonts.
+Container that uses a tree control to switch between groups.  Idenitcal to TreeGroup but with Bigger fonts. From v48
 -------------------------------------------------------------------------------]]
-local Type, Version = "GSE-TreeGroup", 3
+local Type, Version = "GSE-TreeGroup", 4
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
-if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then
-    return
-end
+if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local next, pairs, ipairs, assert, type = next, pairs, ipairs, assert, type
@@ -302,438 +300,434 @@ end
 Methods
 -------------------------------------------------------------------------------]]
 local methods = {
-    ["OnAcquire"] = function(self)
-        self:SetTreeWidth(DEFAULT_TREE_WIDTH, DEFAULT_TREE_SIZABLE)
-        self:EnableButtonTooltips(true)
-        self.frame:SetScript("OnUpdate", FirstFrameUpdate)
-    end,
-    ["OnRelease"] = function(self)
-        self.status = nil
-        self.tree = nil
-        self.frame:SetScript("OnUpdate", nil)
-        for k, v in pairs(self.localstatus) do
-            if k == "groups" then
-                for k2 in pairs(v) do
-                    v[k2] = nil
-                end
-            else
-                self.localstatus[k] = nil
-            end
-        end
-        self.localstatus.scrollvalue = 0
-        self.localstatus.treewidth = DEFAULT_TREE_WIDTH
-        self.localstatus.treesizable = DEFAULT_TREE_SIZABLE
-    end,
-    ["EnableButtonTooltips"] = function(self, enable)
-        self.enabletooltips = enable
-    end,
-    ["CreateButton"] = function(self)
-        local num = AceGUI:GetNextWidgetNum("TreeGroupButton")
-        local button =
-            CreateFrame("Button", ("AceGUI30TreeButton%d"):format(num), self.treeframe, "OptionsListButtonTemplate")
-        button.obj = self
+	["OnAcquire"] = function(self)
+		self:SetTreeWidth(DEFAULT_TREE_WIDTH, DEFAULT_TREE_SIZABLE)
+		self:EnableButtonTooltips(true)
+		self.frame:SetScript("OnUpdate", FirstFrameUpdate)
+	end,
 
-        local icon = button:CreateTexture(nil, "OVERLAY")
-        icon:SetWidth(14)
-        icon:SetHeight(14)
-        button.icon = icon
+	["OnRelease"] = function(self)
+		self.status = nil
+		self.tree = nil
+		self.frame:SetScript("OnUpdate", nil)
+		for k, v in pairs(self.localstatus) do
+			if k == "groups" then
+				for k2 in pairs(v) do
+					v[k2] = nil
+				end
+			else
+				self.localstatus[k] = nil
+			end
+		end
+		self.localstatus.scrollvalue = 0
+		self.localstatus.treewidth = DEFAULT_TREE_WIDTH
+		self.localstatus.treesizable = DEFAULT_TREE_SIZABLE
+	end,
 
-        button:SetScript("OnClick", Button_OnClick)
-        button:SetScript("OnDoubleClick", Button_OnDoubleClick)
-        button:SetScript("OnEnter", Button_OnEnter)
-        button:SetScript("OnLeave", Button_OnLeave)
+	["EnableButtonTooltips"] = function(self, enable)
+		self.enabletooltips = enable
+	end,
 
-        button.toggle.button = button
-        button.toggle:SetScript("OnClick", Expand_OnClick)
+	["CreateButton"] = function(self)
+		local num = AceGUI:GetNextWidgetNum("TreeGroupButton")
+		local button = CreateFrame("Button", ("AceGUI30TreeButton%d"):format(num), self.treeframe, "OptionsListButtonTemplate")
+		button.obj = self
 
-        button.text:SetHeight(14) -- Prevents text wrapping
+		local icon = button:CreateTexture(nil, "OVERLAY")
+		icon:SetWidth(14)
+		icon:SetHeight(14)
+		button.icon = icon
 
-        return button
-    end,
-    ["SetStatusTable"] = function(self, status)
-        assert(type(status) == "table")
-        self.status = status
-        if not status.groups then
-            status.groups = {}
-        end
-        if not status.scrollvalue then
-            status.scrollvalue = 0
-        end
-        if not status.treewidth then
-            status.treewidth = DEFAULT_TREE_WIDTH
-        end
-        if status.treesizable == nil then
-            status.treesizable = DEFAULT_TREE_SIZABLE
-        end
-        self:SetTreeWidth(status.treewidth, status.treesizable)
-        self:RefreshTree()
-    end,
-    --sets the tree to be displayed
-    ["SetTree"] = function(self, tree, filter)
-        self.filter = filter
-        if tree then
-            assert(type(tree) == "table")
-        end
-        self.tree = tree
-        self:RefreshTree()
-    end,
-    ["BuildLevel"] = function(self, tree, level, parent)
-        local groups = (self.status or self.localstatus).groups
+		button:SetScript("OnClick",Button_OnClick)
+		button:SetScript("OnDoubleClick", Button_OnDoubleClick)
+		button:SetScript("OnEnter",Button_OnEnter)
+		button:SetScript("OnLeave",Button_OnLeave)
 
-        for _, v in ipairs(tree) do
-            if v.children then
-                if not self.filter or ShouldDisplayLevel(v.children) then
-                    local line = addLine(self, v, tree, level, parent)
-                    if groups[line.uniquevalue] then
-                        self:BuildLevel(v.children, level + 1, line)
-                    end
-                end
-            elseif v.visible ~= false or not self.filter then
-                addLine(self, v, tree, level, parent)
-            end
-        end
-    end,
-    ["RefreshTree"] = function(self, scrollToSelection, fromOnUpdate)
-        local buttons = self.buttons
-        local lines = self.lines
+		button.toggle.button = button
+		button.toggle:SetScript("OnClick",Expand_OnClick)
 
-        for _, v in ipairs(buttons) do
-            v:Hide()
-        end
-        while lines[1] do
-            local t = tremove(lines)
-            for k in pairs(t) do
-                t[k] = nil
-            end
-            del(t)
-        end
+		button.text:SetHeight(14) -- Prevents text wrapping
 
-        if not self.tree then
-            return
-        end
-        --Build the list of visible entries from the tree and status tables
-        local status = self.status or self.localstatus
-        local groupstatus = status.groups
-        local tree = self.tree
+		return button
+	end,
 
-        local treeframe = self.treeframe
+	["SetStatusTable"] = function(self, status)
+		assert(type(status) == "table")
+		self.status = status
+		if not status.groups then
+			status.groups = {}
+		end
+		if not status.scrollvalue then
+			status.scrollvalue = 0
+		end
+		if not status.treewidth then
+			status.treewidth = DEFAULT_TREE_WIDTH
+		end
+		if status.treesizable == nil then
+			status.treesizable = DEFAULT_TREE_SIZABLE
+		end
+		self:SetTreeWidth(status.treewidth,status.treesizable)
+		self:RefreshTree()
+	end,
 
-        status.scrollToSelection = status.scrollToSelection or scrollToSelection -- needs to be cached in case the control hasn't been drawn yet (code bails out below)
+	--sets the tree to be displayed
+	["SetTree"] = function(self, tree, filter)
+		self.filter = filter
+		if tree then
+			assert(type(tree) == "table")
+		end
+		self.tree = tree
+		self:RefreshTree()
+	end,
 
-        self:BuildLevel(tree, 1)
+	["BuildLevel"] = function(self, tree, level, parent)
+		local groups = (self.status or self.localstatus).groups
 
-        local numlines = #lines
+		for i, v in ipairs(tree) do
+			if v.children then
+				if not self.filter or ShouldDisplayLevel(v.children) then
+					local line = addLine(self, v, tree, level, parent)
+					if groups[line.uniquevalue] then
+						self:BuildLevel(v.children, level+1, line)
+					end
+				end
+			elseif v.visible ~= false or not self.filter then
+				addLine(self, v, tree, level, parent)
+			end
+		end
+	end,
 
-        local maxlines = (floor(((self.treeframe:GetHeight() or 0) - 20) / 18))
-        if maxlines <= 0 then
-            return
-        end
+	["RefreshTree"] = function(self,scrollToSelection,fromOnUpdate)
+		local buttons = self.buttons
+		local lines = self.lines
+		while lines[1] do
+			local t = tremove(lines)
+			for k in pairs(t) do
+				t[k] = nil
+			end
+			del(t)
+		end
 
-        if self.frame:GetParent() == UIParent and not fromOnUpdate then
-            self.frame:SetScript("OnUpdate", FirstFrameUpdate)
-            return
-        end
+		if not self.tree then return end
+		--Build the list of visible entries from the tree and status tables
+		local status = self.status or self.localstatus
+		local groupstatus = status.groups
+		local tree = self.tree
 
-        local first, last
+		local treeframe = self.treeframe
 
-        scrollToSelection = status.scrollToSelection
-        status.scrollToSelection = nil
+		status.scrollToSelection = status.scrollToSelection or scrollToSelection	-- needs to be cached in case the control hasn't been drawn yet (code bails out below)
 
-        if numlines <= maxlines then
-            --the whole tree fits in the frame
-            status.scrollvalue = 0
-            self:ShowScroll(false)
-            first, last = 1, numlines
-        else
-            self:ShowScroll(true)
-            --scrolling will be needed
-            self.noupdate = true
-            self.scrollbar:SetMinMaxValues(0, numlines - maxlines)
-            --check if we are scrolled down too far
-            if numlines - status.scrollvalue < maxlines then
-                status.scrollvalue = numlines - maxlines
-            end
-            self.noupdate = nil
-            first, last = status.scrollvalue + 1, status.scrollvalue + maxlines
-            --show selection?
-            if scrollToSelection and status.selected then
-                local show
-                for i, line in ipairs(lines) do -- find the line number
-                    if line.uniquevalue == status.selected then
-                        show = i
-                    end
-                end
-                if not show then
-                    -- selection was deleted or something?
-                elseif show >= first and show <= last then
-                    -- all good
-                else
-                    -- scrolling needed!
-                    if show < first then
-                        status.scrollvalue = show - 1
-                    else
-                        status.scrollvalue = show - maxlines
-                    end
-                    first, last = status.scrollvalue + 1, status.scrollvalue + maxlines
-                end
-            end
-            if self.scrollbar:GetValue() ~= status.scrollvalue then
-                self.scrollbar:SetValue(status.scrollvalue)
-            end
-        end
+		self:BuildLevel(tree, 1)
 
-        local buttonnum = 1
-        for i = first, last do
-            local line = lines[i]
-            local button = buttons[buttonnum]
-            if not button then
-                button = self:CreateButton()
+		local numlines = #lines
 
-                buttons[buttonnum] = button
-                button:SetParent(treeframe)
-                button:SetFrameLevel(treeframe:GetFrameLevel() + 1)
-                button:ClearAllPoints()
-                if buttonnum == 1 then
-                    if self.showscroll then
-                        button:SetPoint("TOPRIGHT", -22, -10)
-                        button:SetPoint("TOPLEFT", 0, -10)
-                    else
-                        button:SetPoint("TOPRIGHT", 0, -10)
-                        button:SetPoint("TOPLEFT", 0, -10)
-                    end
-                else
-                    button:SetPoint("TOPRIGHT", buttons[buttonnum - 1], "BOTTOMRIGHT", 0, 0)
-                    button:SetPoint("TOPLEFT", buttons[buttonnum - 1], "BOTTOMLEFT", 0, 0)
-                end
-            end
+		local maxlines = (floor(((self.treeframe:GetHeight()or 0) - 20 ) / 18))
+		if maxlines <= 0 then return end
 
-            UpdateButton(
-                button,
-                line,
-                status.selected == line.uniquevalue,
-                line.hasChildren,
-                groupstatus[line.uniquevalue]
-            )
-            button:Show()
-            buttonnum = buttonnum + 1
-        end
-    end,
-    ["SetSelected"] = function(self, value)
-        local status = self.status or self.localstatus
-        if status.selected ~= value then
-            status.selected = value
-            self:Fire("OnGroupSelected", value)
-        end
-    end,
-    ["Select"] = function(self, uniquevalue, ...)
-        self.filter = false
-        local status = self.status or self.localstatus
-        local groups = status.groups
-        local path = {...}
-        for i = 1, #path do
-            groups[tconcat(path, "\001", 1, i)] = true
-        end
-        status.selected = uniquevalue
-        self:RefreshTree(true)
-        self:Fire("OnGroupSelected", uniquevalue)
-    end,
-    ["SelectByPath"] = function(self, ...)
-        self:Select(BuildUniqueValue(...), ...)
-    end,
-    ["SelectByValue"] = function(self, uniquevalue)
-        self:Select(uniquevalue, ("\001"):split(uniquevalue))
-    end,
-    ["ShowScroll"] = function(self, show)
-        self.showscroll = show
-        if show then
-            self.scrollbar:Show()
-            if self.buttons[1] then
-                self.buttons[1]:SetPoint("TOPRIGHT", self.treeframe, "TOPRIGHT", -22, -10)
-            end
-        else
-            self.scrollbar:Hide()
-            if self.buttons[1] then
-                self.buttons[1]:SetPoint("TOPRIGHT", self.treeframe, "TOPRIGHT", 0, -10)
-            end
-        end
-    end,
-    ["OnWidthSet"] = function(self, width)
-        local content = self.content
-        local treeframe = self.treeframe
-        local status = self.status or self.localstatus
-        status.fullwidth = width
+		if self.frame:GetParent() == UIParent and not fromOnUpdate then
+			self.frame:SetScript("OnUpdate", FirstFrameUpdate)
+			return
+		end
 
-        local contentwidth = width - status.treewidth - 20
-        if contentwidth < 0 then
-            contentwidth = 0
-        end
-        content:SetWidth(contentwidth)
-        content.width = contentwidth
+		local first, last
 
-        local maxtreewidth = math_min(400, width - 50)
+		scrollToSelection = status.scrollToSelection
+		status.scrollToSelection = nil
 
-        if maxtreewidth > 100 and status.treewidth > maxtreewidth then
-            self:SetTreeWidth(maxtreewidth, status.treesizable)
-        end
-        if treeframe.SetResizeBounds then
-            treeframe:SetResizeBounds(100, 1, maxtreewidth, 1600)
-        else
-            treeframe:SetMaxResize(maxtreewidth, 1600)
-        end
-    end,
-    ["OnHeightSet"] = function(self, height)
-        local content = self.content
-        local contentheight = height - 20
-        if contentheight < 0 then
-            contentheight = 0
-        end
-        content:SetHeight(contentheight)
-        content.height = contentheight
-    end,
-    ["SetTreeWidth"] = function(self, treewidth, resizable)
-        if not resizable then
-            if type(treewidth) == "number" then
-                resizable = false
-            elseif type(treewidth) == "boolean" then
-                resizable = treewidth
-                treewidth = DEFAULT_TREE_WIDTH
-            else
-                resizable = false
-                treewidth = DEFAULT_TREE_WIDTH
-            end
-        end
-        self.treeframe:SetWidth(treewidth)
-        self.dragger:EnableMouse(resizable)
+		if numlines <= maxlines then
+			--the whole tree fits in the frame
+			status.scrollvalue = 0
+			self:ShowScroll(false)
+			first, last = 1, numlines
+		else
+			self:ShowScroll(true)
+			--scrolling will be needed
+			self.noupdate = true
+			self.scrollbar:SetMinMaxValues(0, numlines - maxlines)
+			--check if we are scrolled down too far
+			if numlines - status.scrollvalue < maxlines then
+				status.scrollvalue = numlines - maxlines
+			end
+			self.noupdate = nil
+			first, last = status.scrollvalue+1, status.scrollvalue + maxlines
+			--show selection?
+			if scrollToSelection and status.selected then
+				local show
+				for i,line in ipairs(lines) do	-- find the line number
+					if line.uniquevalue==status.selected then
+						show=i
+					end
+				end
+				if not show then
+					-- selection was deleted or something?
+				elseif show>=first and show<=last then
+					-- all good
+				else
+					-- scrolling needed!
+					if show<first then
+						status.scrollvalue = show-1
+					else
+						status.scrollvalue = show-maxlines
+					end
+					first, last = status.scrollvalue+1, status.scrollvalue + maxlines
+				end
+			end
+			if self.scrollbar:GetValue() ~= status.scrollvalue then
+				self.scrollbar:SetValue(status.scrollvalue)
+			end
+		end
 
-        local status = self.status or self.localstatus
-        status.treewidth = treewidth
-        status.treesizable = resizable
+		local buttonnum = 1
+		for i = first, last do
+			local line = lines[i]
+			local button = buttons[buttonnum]
+			if not button then
+				button = self:CreateButton()
 
-        -- recalculate the content width
-        if status.fullwidth then
-            self:OnWidthSet(status.fullwidth)
-        end
-    end,
-    ["GetTreeWidth"] = function(self)
-        local status = self.status or self.localstatus
-        return status.treewidth or DEFAULT_TREE_WIDTH
-    end,
-    ["LayoutFinished"] = function(self, width, height)
-        if self.noAutoHeight then
-            return
-        end
-        self:SetHeight((height or 0) + 20)
-    end
+				buttons[buttonnum] = button
+				button:SetParent(treeframe)
+				button:SetFrameLevel(treeframe:GetFrameLevel()+1)
+				button:ClearAllPoints()
+				if buttonnum == 1 then
+					if self.showscroll then
+						button:SetPoint("TOPRIGHT", -22, -10)
+						button:SetPoint("TOPLEFT", 0, -10)
+					else
+						button:SetPoint("TOPRIGHT", 0, -10)
+						button:SetPoint("TOPLEFT", 0, -10)
+					end
+				else
+					button:SetPoint("TOPRIGHT", buttons[buttonnum-1], "BOTTOMRIGHT",0,0)
+					button:SetPoint("TOPLEFT", buttons[buttonnum-1], "BOTTOMLEFT",0,0)
+				end
+			end
+
+			UpdateButton(button, line, status.selected == line.uniquevalue, line.hasChildren, groupstatus[line.uniquevalue] )
+			button:Show()
+			buttonnum = buttonnum + 1
+		end
+
+		-- We hide the remaining buttons after updating others to avoid a blizzard bug that keeps them interactable even if hidden when hidden before updating the buttons.
+		for i = buttonnum, #buttons do
+			buttons[i]:Hide()
+		end
+	end,
+
+	["SetSelected"] = function(self, value)
+		local status = self.status or self.localstatus
+		if status.selected ~= value then
+			status.selected = value
+			self:Fire("OnGroupSelected", value)
+		end
+	end,
+
+	["Select"] = function(self, uniquevalue, ...)
+		self.filter = false
+		local status = self.status or self.localstatus
+		local groups = status.groups
+		local path = {...}
+		for i = 1, #path do
+			groups[tconcat(path, "\001", 1, i)] = true
+		end
+		status.selected = uniquevalue
+		self:RefreshTree(true)
+		self:Fire("OnGroupSelected", uniquevalue)
+	end,
+
+	["SelectByPath"] = function(self, ...)
+		self:Select(BuildUniqueValue(...), ...)
+	end,
+
+	["SelectByValue"] = function(self, uniquevalue)
+		self:Select(uniquevalue, ("\001"):split(uniquevalue))
+	end,
+
+	["ShowScroll"] = function(self, show)
+		self.showscroll = show
+		if show then
+			self.scrollbar:Show()
+			if self.buttons[1] then
+				self.buttons[1]:SetPoint("TOPRIGHT", self.treeframe,"TOPRIGHT",-22,-10)
+			end
+		else
+			self.scrollbar:Hide()
+			if self.buttons[1] then
+				self.buttons[1]:SetPoint("TOPRIGHT", self.treeframe,"TOPRIGHT",0,-10)
+			end
+		end
+	end,
+
+	["OnWidthSet"] = function(self, width)
+		local content = self.content
+		local treeframe = self.treeframe
+		local status = self.status or self.localstatus
+		status.fullwidth = width
+
+		local contentwidth = width - status.treewidth - 20
+		if contentwidth < 0 then
+			contentwidth = 0
+		end
+		content:SetWidth(contentwidth)
+		content.width = contentwidth
+
+		local maxtreewidth = math_min(400, width - 50)
+
+		if maxtreewidth > 100 and status.treewidth > maxtreewidth then
+			self:SetTreeWidth(maxtreewidth, status.treesizable)
+		end
+		if treeframe.SetResizeBounds then
+			treeframe:SetResizeBounds(100, 1, maxtreewidth, 1600)
+		else
+			treeframe:SetMaxResize(maxtreewidth, 1600)
+		end
+	end,
+
+	["OnHeightSet"] = function(self, height)
+		local content = self.content
+		local contentheight = height - 20
+		if contentheight < 0 then
+			contentheight = 0
+		end
+		content:SetHeight(contentheight)
+		content.height = contentheight
+	end,
+
+	["SetTreeWidth"] = function(self, treewidth, resizable)
+		if not resizable then
+			if type(treewidth) == 'number' then
+				resizable = false
+			elseif type(treewidth) == 'boolean' then
+				resizable = treewidth
+				treewidth = DEFAULT_TREE_WIDTH
+			else
+				resizable = false
+				treewidth = DEFAULT_TREE_WIDTH
+			end
+		end
+		self.treeframe:SetWidth(treewidth)
+		self.dragger:EnableMouse(resizable)
+
+		local status = self.status or self.localstatus
+		status.treewidth = treewidth
+		status.treesizable = resizable
+
+		-- recalculate the content width
+		if status.fullwidth then
+			self:OnWidthSet(status.fullwidth)
+		end
+	end,
+
+	["GetTreeWidth"] = function(self)
+		local status = self.status or self.localstatus
+		return status.treewidth or DEFAULT_TREE_WIDTH
+	end,
+
+	["LayoutFinished"] = function(self, width, height)
+		if self.noAutoHeight then return end
+		self:SetHeight((height or 0) + 20)
+	end
 }
+
 
 --[[-----------------------------------------------------------------------------
 Constructor
 -------------------------------------------------------------------------------]]
-local PaneBackdrop = {
-    bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true,
-    tileSize = 16,
-    edgeSize = 16,
-    insets = {left = 3, right = 3, top = 5, bottom = 3}
+local PaneBackdrop  = {
+	bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+	tile = true, tileSize = 16, edgeSize = 16,
+	insets = { left = 3, right = 3, top = 5, bottom = 3 }
 }
 
-local DraggerBackdrop = {
-    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    edgeFile = nil,
-    tile = true,
-    tileSize = 16,
-    edgeSize = 1,
-    insets = {left = 3, right = 3, top = 7, bottom = 7}
+local DraggerBackdrop  = {
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+	edgeFile = nil,
+	tile = true, tileSize = 16, edgeSize = 1,
+	insets = { left = 3, right = 3, top = 7, bottom = 7 }
 }
 
 local function Constructor()
-    local num = AceGUI:GetNextWidgetNum(Type)
-    local frame = CreateFrame("Frame", nil, UIParent)
+	local num = AceGUI:GetNextWidgetNum(Type)
+	local frame = CreateFrame("Frame", nil, UIParent)
 
-    local treeframe = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    treeframe:SetPoint("TOPLEFT")
-    treeframe:SetPoint("BOTTOMLEFT")
-    treeframe:SetWidth(DEFAULT_TREE_WIDTH)
-    treeframe:EnableMouseWheel(true)
-    treeframe:SetBackdrop(PaneBackdrop)
-    treeframe:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
-    treeframe:SetBackdropBorderColor(0.4, 0.4, 0.4)
-    treeframe:SetResizable(true)
-    if treeframe.SetResizeBounds then -- WoW 10.0
-        treeframe:SetResizeBounds(100, 1, 400, 1600)
-    else
-        treeframe:SetMinResize(100, 1)
-        treeframe:SetMaxResize(400, 1600)
-    end
-    treeframe:SetScript("OnUpdate", FirstFrameUpdate)
-    treeframe:SetScript("OnSizeChanged", Tree_OnSizeChanged)
-    treeframe:SetScript("OnMouseWheel", Tree_OnMouseWheel)
+	local treeframe = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+	treeframe:SetPoint("TOPLEFT")
+	treeframe:SetPoint("BOTTOMLEFT")
+	treeframe:SetWidth(DEFAULT_TREE_WIDTH)
+	treeframe:EnableMouseWheel(true)
+	treeframe:SetBackdrop(PaneBackdrop)
+	treeframe:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
+	treeframe:SetBackdropBorderColor(0.4, 0.4, 0.4)
+	treeframe:SetResizable(true)
+	if treeframe.SetResizeBounds then -- WoW 10.0
+		treeframe:SetResizeBounds(100, 1, 400, 1600)
+	else
+		treeframe:SetMinResize(100, 1)
+		treeframe:SetMaxResize(400, 1600)
+	end
+	treeframe:SetScript("OnUpdate", FirstFrameUpdate)
+	treeframe:SetScript("OnSizeChanged", Tree_OnSizeChanged)
+	treeframe:SetScript("OnMouseWheel", Tree_OnMouseWheel)
 
-    local dragger = CreateFrame("Frame", nil, treeframe, "BackdropTemplate")
-    dragger:SetWidth(8)
-    dragger:SetPoint("TOP", treeframe, "TOPRIGHT")
-    dragger:SetPoint("BOTTOM", treeframe, "BOTTOMRIGHT")
-    dragger:SetBackdrop(DraggerBackdrop)
-    dragger:SetBackdropColor(1, 1, 1, 0)
-    dragger:SetScript("OnEnter", Dragger_OnEnter)
-    dragger:SetScript("OnLeave", Dragger_OnLeave)
-    dragger:SetScript("OnMouseDown", Dragger_OnMouseDown)
-    dragger:SetScript("OnMouseUp", Dragger_OnMouseUp)
+	local dragger = CreateFrame("Frame", nil, treeframe, "BackdropTemplate")
+	dragger:SetWidth(8)
+	dragger:SetPoint("TOP", treeframe, "TOPRIGHT")
+	dragger:SetPoint("BOTTOM", treeframe, "BOTTOMRIGHT")
+	dragger:SetBackdrop(DraggerBackdrop)
+	dragger:SetBackdropColor(1, 1, 1, 0)
+	dragger:SetScript("OnEnter", Dragger_OnEnter)
+	dragger:SetScript("OnLeave", Dragger_OnLeave)
+	dragger:SetScript("OnMouseDown", Dragger_OnMouseDown)
+	dragger:SetScript("OnMouseUp", Dragger_OnMouseUp)
 
-    local scrollbar =
-        CreateFrame(
-        "Slider",
-        ("AceConfigDialogTreeGroup%dScrollBar"):format(num),
-        treeframe,
-        "UIPanelScrollBarTemplate"
-    )
-    scrollbar:SetScript("OnValueChanged", nil)
-    scrollbar:SetPoint("TOPRIGHT", -10, -26)
-    scrollbar:SetPoint("BOTTOMRIGHT", -10, 26)
-    scrollbar:SetMinMaxValues(0, 0)
-    scrollbar:SetValueStep(1)
-    scrollbar:SetValue(0)
-    scrollbar:SetWidth(16)
-    scrollbar:SetScript("OnValueChanged", OnScrollValueChanged)
+	local scrollbar = CreateFrame("Slider", ("AceConfigDialogTreeGroup%dScrollBar"):format(num), treeframe, "UIPanelScrollBarTemplate")
+	scrollbar:SetScript("OnValueChanged", nil)
+	scrollbar:SetPoint("TOPRIGHT", -10, -26)
+	scrollbar:SetPoint("BOTTOMRIGHT", -10, 26)
+	scrollbar:SetMinMaxValues(0,0)
+	scrollbar:SetValueStep(1)
+	scrollbar:SetValue(0)
+	scrollbar:SetWidth(16)
+	scrollbar:SetScript("OnValueChanged", OnScrollValueChanged)
 
-    local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND")
-    scrollbg:SetAllPoints(scrollbar)
-    scrollbg:SetColorTexture(0, 0, 0, 0.4)
+	local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND")
+	scrollbg:SetAllPoints(scrollbar)
+	scrollbg:SetColorTexture(0,0,0,0.4)
 
-    local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    border:SetPoint("TOPLEFT", treeframe, "TOPRIGHT")
-    border:SetPoint("BOTTOMRIGHT")
-    border:SetBackdrop(PaneBackdrop)
-    border:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
-    border:SetBackdropBorderColor(0.4, 0.4, 0.4)
+	local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+	border:SetPoint("TOPLEFT", treeframe, "TOPRIGHT")
+	border:SetPoint("BOTTOMRIGHT")
+	border:SetBackdrop(PaneBackdrop)
+	border:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
+	border:SetBackdropBorderColor(0.4, 0.4, 0.4)
 
-    --Container Support
-    local content = CreateFrame("Frame", nil, border)
-    content:SetPoint("TOPLEFT", 10, -10)
-    content:SetPoint("BOTTOMRIGHT", -10, 10)
+	--Container Support
+	local content = CreateFrame("Frame", nil, border)
+	content:SetPoint("TOPLEFT", 10, -10)
+	content:SetPoint("BOTTOMRIGHT", -10, 10)
 
-    local widget = {
-        frame = frame,
-        lines = {},
-        levels = {},
-        buttons = {},
-        hasChildren = {},
-        localstatus = {groups = {}, scrollvalue = 0},
-        filter = false,
-        treeframe = treeframe,
-        dragger = dragger,
-        scrollbar = scrollbar,
-        border = border,
-        content = content,
-        type = Type
-    }
-    for method, func in pairs(methods) do
-        widget[method] = func
-    end
-    treeframe.obj, dragger.obj, scrollbar.obj = widget, widget, widget
+	local widget = {
+		frame        = frame,
+		lines        = {},
+		levels       = {},
+		buttons      = {},
+		hasChildren  = {},
+		localstatus  = { groups = {}, scrollvalue = 0 },
+		filter       = false,
+		treeframe    = treeframe,
+		dragger      = dragger,
+		scrollbar    = scrollbar,
+		border       = border,
+		content      = content,
+		type         = Type
+	}
+	for method, func in pairs(methods) do
+		widget[method] = func
+	end
+	treeframe.obj, dragger.obj, scrollbar.obj = widget, widget, widget
 
-    return AceGUI:RegisterAsContainer(widget)
+	return AceGUI:RegisterAsContainer(widget)
 end
 
 AceGUI:RegisterWidgetType(Type, Constructor, Version)
