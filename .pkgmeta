@@ -2,16 +2,16 @@ package-as: GSE
 
 externals:
   GSE/Lib/LibStub: https://repos.wowace.com/wow/libstub/trunk
-  GSE/Lib/AceAddon-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceAddon-3.0
-  GSE/Lib/AceLocale-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceLocale-3.0
-  GSE/Lib/AceEvent-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceEvent-3.0
+  GSE/Lib/AceAddon-3.0: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
+  GSE/Lib/AceLocale-3.0: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
+  GSE/Lib/AceEvent-3.0: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
   GSE/Lib/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
-  GSE/Lib/AceConfig-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceConfig-3.0
-  GSE/Lib/AceConsole-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceConsole-3.0
-  GSE/Lib/AceSerializer-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceSerializer-3.0
-  GSE/Lib/AceComm-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceComm-3.0
-  GSE/Lib/AceGUI-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceGUI-3.0
-  GSE/Lib/AceTimer-3.0: https://repos.wowace.com/wow/callbackhandler/trunk/AceTimer-3.0
+  GSE/Lib/AceConfig-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
+  GSE/Lib/AceConsole-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
+  GSE/Lib/AceSerializer-3.0: https://repos.wowace.com/wow/ace3/trunk/AceSerializer-3.0
+  GSE/Lib/AceComm-3.0: https://repos.wowace.com/wow/ace3/trunk/AceComm-3.0
+  GSE/Lib/AceGUI-3.0: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
+  GSE/Lib/AceTimer-3.0: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
   GSE/Lib/LibCompress:
     url: svn://svn.wowace.com/wow/libcompress/mainline/trunk
     tag: latest
