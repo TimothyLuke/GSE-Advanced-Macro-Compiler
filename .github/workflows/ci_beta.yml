@@ -54,16 +54,7 @@ jobs:
     - name: Run Busted UnitTests
       run: |
         busted -o utfTerminal --verbose --coverage
-   
-    - name: Log coverage to coveralls.io
-      if: success()
-      continue-on-error: true
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        export LUA_PATH="./GSE/API/?.lua;$LUA_PATH"
-        luacov-coveralls -v -e .luarocks
-    
+
     - name: Setup Node
       uses: actions/setup-node@v3
     - name: Install Dependencies
@@ -80,16 +71,6 @@ jobs:
       env:
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
         
-#    # Runs a set of commands using the runners shell
-#    - name: Create Package Classic
-#      uses: BigWigsMods/packager@master
-#      if: ${{ github.event_name != 'pull_request' }}
-#      env:
-#        CF_API_KEY: ${{ secrets.CF_API_KEY }}
-#        GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-#        WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
-#      with:
-#        args: -m .pkgmeta -w 25155
     - name: Publish Patreon
       run: npm run-script pat
       env: 
