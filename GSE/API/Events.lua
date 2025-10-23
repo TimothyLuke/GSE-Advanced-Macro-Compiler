@@ -177,6 +177,20 @@ local function overrideActionButton(savedBind, force)
     else
         if not InCombatLockdown() then
             if (not GSE.ButtonOverrides[Button] or force) then
+                local tempButtons = {
+                    ["ActionButton1"] = "OverrideActionBarButton1",
+                    ["ActionButton2"] = "OverrideActionBarButton2",
+                    ["ActionButton3"] = "OverrideActionBarButton3",
+                    ["ActionButton4"] = "OverrideActionBarButton4",
+                    ["ActionButton5"] = "OverrideActionBarButton5",
+                    ["ActionButton6"] = "OverrideActionBarButton6",
+                    ["ActionButton7"] = "OverrideActionBarButton7",
+                    ["ActionButton8"] = "OverrideActionBarButton8",
+                    ["ActionButton9"] = "OverrideActionBarButton9",
+                    ["ActionButton10"] = "OverrideActionBarButton10",
+                    ["ActionButton11"] = "OverrideActionBarButton11",
+                    ["ActionButton12"] = "OverrideActionBarButton12",
+                }
                 SHBT:WrapScript(
                     _G[Button],
                     "OnClick",
@@ -184,9 +198,9 @@ local function overrideActionButton(savedBind, force)
     local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
     local page = parent and parent:GetAttribute("actionpage")
     local action = page and slot and slot > 0 and (slot + page*12 - 12)
-    if action or HasOverrideActionBar() then
-        if HasOverrideActionBar() then
-            _G["OverrideActionBarButton2"]:Click()
+    if action or C_ActionBar.HasOverrideActionBar() then
+        if C_ActionBar.HasOverrideActionBar() then
+            ]] .. tempButtons[Button] .. [[:Click()
         else
             local at, id = GetActionInfo(action)
             if at and id then
