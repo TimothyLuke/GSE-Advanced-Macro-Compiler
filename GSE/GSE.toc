@@ -21,6 +21,8 @@
 ## Category-zhTW: 戰鬥
 ## Group: GSE
 
+## OnlyBetaAndPTR: 1
+
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161
 ## X-Wago-ID: kGr0YY6y
