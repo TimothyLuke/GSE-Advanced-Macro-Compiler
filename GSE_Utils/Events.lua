@@ -83,12 +83,16 @@ end
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action)
     if unit == "player" then
         local GCD_Timer
-        if C_Spell.GetSpellCooldown then
-            GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
+        if GSE.GameMode > 1 then
+            if C_Spell.GetSpellCooldown then
+                GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
+            else
+                ---@diagnostic disable-next-line: deprecated
+                local _, gtime = GetSpellCooldown(61304)
+                GCD_Timer = gtime
+            end
         else
-            ---@diagnostic disable-next-line: deprecated
-            local _, gtime = GetSpellCooldown(61304)
-            GCD_Timer = gtime
+            GCD_Timer = 1.5
         end
         GCD = true
         C_Timer.After(
