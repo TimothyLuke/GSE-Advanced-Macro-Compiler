@@ -17,7 +17,7 @@ GSE.VersionString = C_AddOns.GetAddOnMetadata("GSE", "Version")
 
 --@debug@
 if GSE.VersionString:find("version") then
-    GSE.VersionString = "3.2.00-development"
+    GSE.VersionString = "3.3.00-development"
     GSE.Developer = true
 end
 --@end-debug@
