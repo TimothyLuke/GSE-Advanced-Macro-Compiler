@@ -68,10 +68,10 @@ jobs:
     - name: Create Package Retail
       uses: BigWigsMods/packager@master
       if: ${{ github.event_name != 'pull_request' }}
-      with:
-        args: -n "{package-name}-midnight-alpha-{project-abbreviated-hash}"
       env:
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: -n "{package-name}-midnight-alpha-{project-abbreviated-hash}"
         
     - name: Publish Patreon
       run: npm run-script pat
