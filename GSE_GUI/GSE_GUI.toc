@@ -1,4 +1,4 @@
-## Interface: 11507, 50500, 110205, 120000
+## Interface: 11508, 50502, 110205, 110207, 120000
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
 ## Notes: GSE GUI
