@@ -212,15 +212,15 @@ local function Button_OnEnter(frame)
     local self = frame.obj
     self:Fire("OnButtonEnter", frame.uniquevalue, frame)
 
-    if self.enabletooltips then
-        local tooltip = AceGUI.tooltip
-        tooltip:SetOwner(frame, "ANCHOR_NONE")
-        tooltip:ClearAllPoints()
-        tooltip:SetPoint("LEFT", frame, "RIGHT")
-        tooltip:SetText(frame.text:GetText() or "", 1, .82, 0, true)
+    -- if self.enabletooltips then
+    --     local tooltip = AceGUI.tooltip
+    --     tooltip:SetOwner(frame, "ANCHOR_NONE")
+    --     tooltip:ClearAllPoints()
+    --     tooltip:SetPoint("LEFT", frame, "RIGHT")
+    --     tooltip:SetText(frame.text:GetText() or "", 1, .82, true)
 
-        tooltip:Show()
-    end
+    --     tooltip:Show()
+    -- end
 end
 
 local function Button_OnLeave(frame)
