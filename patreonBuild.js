@@ -24,9 +24,9 @@ function updateToc(path, filename, done) {
       ""
     );
     
-    version = version.replace("3.2", "3.3")
+    version = version.replace("3.2", "3.3.0")
     version = version.replace("PatronBuild", "midnight-alpha-PatronBuild")
-    
+
     tocLines[tocIndex] = version;
     if (!BuildVersion) {
       BuildVersion = version;
