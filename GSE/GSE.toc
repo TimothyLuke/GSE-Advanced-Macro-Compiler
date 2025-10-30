@@ -6,6 +6,8 @@
 ## Version: @project-version@
 ## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
+## LoadSavedVariablesFirst: 1
+
 ## OptionalDeps: WeakAuras Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4 NDui
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Menu_Logo.png
 ## Category-enUS: Combat

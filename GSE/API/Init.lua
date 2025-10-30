@@ -1,4 +1,4 @@
--- GLOBALS: GSE
+-- Initialization
 GSE =
     LibStub("AceAddon-3.0"):NewAddon(
     "GSE",
@@ -8,6 +8,23 @@ GSE =
     "AceSerializer-3.0",
     "AceTimer-3.0"
 )
+
+
+-- Variables
+GSE_C  = GSE_C or {}
+GSELegacyLibraryBackup = GSELegacyLibraryBackup or {}
+GSEOptions = GSEOptions or {}
+GSESequences = GSESequences or {}
+GSESpellCache = GSESpellCache or {}
+GSEVariables = GSEVariables or {}
+GSEMacros = GSEMacros or {}
+GSE.VariablesLoaded = false
+
+if GSESequences and GSESequences[0] then
+    GSE.VariablesLoaded = true
+end
+
+-- GLOBALS: GSE
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 

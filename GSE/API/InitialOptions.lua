@@ -2,7 +2,6 @@ local GSE = GSE
 local Statics = GSE.Static
 GSE.DebugProfile("End Patrons")
 -- These are overridden when the saved variables are loaded in
-GSEOptions = {}
 
 function GSE.resetMacroResetModifiers()
     GSEOptions.MacroResetModifiers = {}
@@ -97,7 +96,9 @@ function GSE.SetDefaultOptions()
     GSEOptions.Multiclick = true
 end
 
-GSE.SetDefaultOptions()
+if GSE.isEmpty(GSEOptions) then
+    GSE.SetDefaultOptions()
+end
 
 GSE.OOCQueue = {}
 GSE.UnsavedOptions = {}
