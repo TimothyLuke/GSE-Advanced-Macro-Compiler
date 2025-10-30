@@ -325,10 +325,11 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
-    LoadKeyBindings(GSE.PlayerEntered)
-    GSE.PerformReloadSequences(true)
-
-    LoadOverrides()
+    if not GSE.VariablesLoaded then
+        LoadKeyBindings(GSE.PlayerEntered)
+        GSE.PerformReloadSequences(true)
+        LoadOverrides()
+    end
     GSE:ZONE_CHANGED_NEW_AREA()
     if ConsolePort then
         C_Timer.After(
@@ -338,113 +339,121 @@ function GSE:PLAYER_ENTERING_WORLD()
             end
         )
     end
+    GSE:RegisterEvent("UPDATE_MACROS")
+    if GSEOptions.shownew then
+        GSE:ShowUpdateNotes()
+    end
+end
+
+local function startup()
+    local char = UnitFullName("player")
+    local realm = GetRealmName()
+    GSE.PerformOneOffEvents()
+    if GSE_C and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][char .. "-" .. realm] then
+        GSE_C["KeyBindings"][char .. "-" .. realm] = nil
+    end
+
+    if GSE.isEmpty(GSESpellCache) then
+        GSESpellCache = {
+            ["enUS"] = {}
+        }
+    end
+
+    if GSE.isEmpty(GSESpellCache[GetLocale()]) then
+        GSESpellCache[GetLocale()] = {}
+    end
+
+    GSE.LoadStorage(GSE.Library)
+
+    if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
+        GSESequences[GSE.GetCurrentClassID()] = {}
+    end
+    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
+        GSE.Library[GSE.GetCurrentClassID()] = {}
+    end
+    if GSE.isEmpty(GSE.Library[0]) then
+        GSE.Library[0] = {}
+    end
+    if GSE.isEmpty(GSEVariables) then
+        GSEVariables = {}
+    end
+    if GSE.isEmpty(GSEMacros) then
+        GSEMacros = {}
+    end
+    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+        GSEMacros[char .. "-" .. realm] = {}
+    end
+    GSE.PrintDebugMessage("I am loaded")
+
+    GSE:SendMessage(Statics.CoreLoadedMessage)
+
+    -- Register the Sample Macros
+    if not GSEOptions.HideLoginMessage then
+        GSE.Print(
+            L["Advanced Macro Compiler loaded.|r  Type "] ..
+                GSEOptions.CommandColour .. L["/gse help|r to get started."],
+            Statics.GSEString
+        )
+    end
+
+
+    -- Added in 2.1.0
+    if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
+        GSEOptions.MacroResetModifiers = {}
+        GSEOptions.MacroResetModifiers["LeftButton"] = false
+        GSEOptions.MacroResetModifiers["RighttButton"] = false
+        GSEOptions.MacroResetModifiers["MiddleButton"] = false
+        GSEOptions.MacroResetModifiers["Button4"] = false
+        GSEOptions.MacroResetModifiers["Button5"] = false
+        GSEOptions.MacroResetModifiers["LeftAlt"] = false
+        GSEOptions.MacroResetModifiers["RightAlt"] = false
+        GSEOptions.MacroResetModifiers["Alt"] = false
+        GSEOptions.MacroResetModifiers["LeftControl"] = false
+        GSEOptions.MacroResetModifiers["RightControl"] = false
+        GSEOptions.MacroResetModifiers["Control"] = false
+        GSEOptions.MacroResetModifiers["LeftShift"] = false
+        GSEOptions.MacroResetModifiers["RightShift"] = false
+        GSEOptions.MacroResetModifiers["Shift"] = false
+        GSEOptions.MacroResetModifiers["LeftAlt"] = false
+        GSEOptions.MacroResetModifiers["RightAlt"] = false
+        GSEOptions.MacroResetModifiers["AnyMod"] = false
+    end
+
+    -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
+    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
+        GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
+        GSEOptions.MacroResetModifiers["AnyShift"] = nil
+    end
+    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
+        GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
+        GSEOptions.MacroResetModifiers["AnyControl"] = nil
+    end
+    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
+        GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
+        GSEOptions.MacroResetModifiers["AnyAlt"] = nil
+    end
+
+    if GSE.isEmpty(GSEOptions.showMiniMap) then
+        GSEOptions.showMiniMap = {
+            hide = true
+        }
+    end
+  
+    GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
 end
 
 function GSE:ADDON_LOADED(event, addon)
     if addon == GNOME then
-        local char = UnitFullName("player")
-        local realm = GetRealmName()
-
-        GSE.PerformOneOffEvents()
-        if GSE_C and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][char .. "-" .. realm] then
-            GSE_C["KeyBindings"][char .. "-" .. realm] = nil
-        end
-
-        if GSE.isEmpty(GSESpellCache) then
-            GSESpellCache = {
-                ["enUS"] = {}
-            }
-        end
-
-        if GSE.isEmpty(GSESpellCache[GetLocale()]) then
-            GSESpellCache[GetLocale()] = {}
-        end
-
-        GSE.LoadStorage(GSE.Library)
-
-        if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
-            GSESequences[GSE.GetCurrentClassID()] = {}
-        end
-        if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
-            GSE.Library[GSE.GetCurrentClassID()] = {}
-        end
-        if GSE.isEmpty(GSE.Library[0]) then
-            GSE.Library[0] = {}
-        end
-        if GSE.isEmpty(GSEVariables) then
-            GSEVariables = {}
-        end
-        if GSE.isEmpty(GSEMacros) then
-            GSEMacros = {}
-        end
-        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-            GSEMacros[char .. "-" .. realm] = {}
-        end
-        GSE.PrintDebugMessage("I am loaded")
-
-        GSE:SendMessage(Statics.CoreLoadedMessage)
-
-        -- Register the Sample Macros
-        if not GSEOptions.HideLoginMessage then
-            GSE.Print(
-                L["Advanced Macro Compiler loaded.|r  Type "] ..
-                    GSEOptions.CommandColour .. L["/gse help|r to get started."],
-                Statics.GSEString
-            )
-        end
-
-        if GSE.isEmpty(GSEOptions) then
-            GSE.SetDefaultOptions()
-        end
-
-        -- Added in 2.1.0
-        if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
-            GSEOptions.MacroResetModifiers = {}
-            GSEOptions.MacroResetModifiers["LeftButton"] = false
-            GSEOptions.MacroResetModifiers["RighttButton"] = false
-            GSEOptions.MacroResetModifiers["MiddleButton"] = false
-            GSEOptions.MacroResetModifiers["Button4"] = false
-            GSEOptions.MacroResetModifiers["Button5"] = false
-            GSEOptions.MacroResetModifiers["LeftAlt"] = false
-            GSEOptions.MacroResetModifiers["RightAlt"] = false
-            GSEOptions.MacroResetModifiers["Alt"] = false
-            GSEOptions.MacroResetModifiers["LeftControl"] = false
-            GSEOptions.MacroResetModifiers["RightControl"] = false
-            GSEOptions.MacroResetModifiers["Control"] = false
-            GSEOptions.MacroResetModifiers["LeftShift"] = false
-            GSEOptions.MacroResetModifiers["RightShift"] = false
-            GSEOptions.MacroResetModifiers["Shift"] = false
-            GSEOptions.MacroResetModifiers["LeftAlt"] = false
-            GSEOptions.MacroResetModifiers["RightAlt"] = false
-            GSEOptions.MacroResetModifiers["AnyMod"] = false
-        end
-
-        -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
-        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
-            GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
-            GSEOptions.MacroResetModifiers["AnyShift"] = nil
-        end
-        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
-            GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
-            GSEOptions.MacroResetModifiers["AnyControl"] = nil
-        end
-        if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
-            GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
-            GSEOptions.MacroResetModifiers["AnyAlt"] = nil
-        end
-
-        if GSE.isEmpty(GSEOptions.showMiniMap) then
-            GSEOptions.showMiniMap = {
-                hide = true
-            }
-        end
-
-        if GSEOptions.shownew then
-            GSE:ShowUpdateNotes()
-        end
-        GSE:RegisterEvent("UPDATE_MACROS")
-        GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
+        startup()
     end
+end
+
+if GSE.VariablesLoaded then
+    startup()
+    LoadKeyBindings(GSE.PlayerEntered)
+    GSE.PerformReloadSequences(true)
+
+    LoadOverrides()
 end
 
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
@@ -614,7 +623,9 @@ GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_LOGOUT")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
-GSE:RegisterEvent("ADDON_LOADED")
+if not GSE.VariablesLoaded then
+    GSE:RegisterEvent("ADDON_LOADED")
+end
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
