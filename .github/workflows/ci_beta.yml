@@ -70,8 +70,6 @@ jobs:
       if: ${{ github.event_name != 'pull_request' }}
       env:
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        args: -n "GSE-3.3.0-midnight-alpha-{project-abbreviated-hash}:GSE-3.3.0-midnight-alpha-{project-abbreviated-hash}"
         
     - name: Publish Patreon
       run: npm run-script pat
