@@ -185,9 +185,8 @@ local function overrideActionButton(savedBind, force)
     local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
     local page = parent and parent:GetAttribute("actionpage")
     local action = page and slot and slot > 0 and (slot + page*12 - 12)
-    
+
     if action then
-    
         local at, id = GetActionInfo(action)
         if at and id then
             self:SetAttribute("type", "action")

@@ -118,8 +118,6 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
         GSE.PrintDebugMessage("GCD Delay:" .. " " .. GCD_Timer)
         GSE.CurrentGCD = GCD_Timer
 
-        
-
         local foundskill = false
         if GSE.GameMode > 10 then
             local spell
