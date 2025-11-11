@@ -88,7 +88,13 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
             if C_Spell.GetSpellCooldown then
                 if GSE.GameMode > 11 then
                     local spellid = elements[6]
-                    GCD_Timer = C_Spell.GetSpellCooldown(spellid)["duration"]
+                    local potentialGCD = C_Spell.GetSpellCooldown(spellid)["duration"]
+                    if issecretvalue(potentialGCD)then
+                        -- TODO replace this with the characters GCD based on their haste
+                        GCD_Timer = 1.5
+                    else
+                        GCD_Timer = potentialGCD
+                    end
                 else
                     GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
                 end
@@ -101,10 +107,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
             GCD_Timer = 1.5
         end
         GCD = true
-        DevTools_Dump(event)
-        DevTools_Dump(unit)
-        DevTools_Dump(action)
-        DevTools_Dump(GCD_Timer)
+
         C_Timer.After(
             GCD_Timer,
             function()
@@ -147,5 +150,4 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
         end
     end
 end
-
 GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
