@@ -24,7 +24,7 @@ function updateToc(path, filename, done) {
       ""
     );
     
-    version = version.replace("3.2", "3.3.0-midnight-alpha-0")
+    version = version.replace("3.2", "3.3.0-midnight-beta-0")
     
 
     tocLines[tocIndex] = version;
