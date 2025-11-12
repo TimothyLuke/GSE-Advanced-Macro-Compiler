@@ -97,6 +97,10 @@ function GSE.SetDefaultOptions()
 end
 
 if GSE.isEmpty(GSEOptions) then
+    GSEOptions = {}
+end
+
+if not GSEOptions.DebugModules then
     GSE.SetDefaultOptions()
 end
 
