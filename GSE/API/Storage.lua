@@ -86,7 +86,7 @@ function GSE.LoadStorage(destination)
         if GSE.isEmpty(GSESequences[k]) then
             GSESequences[k] = {}
         end
-        
+
         local v = GSESequences[k]
         for i, j in pairs(v) do
             local status, err =
