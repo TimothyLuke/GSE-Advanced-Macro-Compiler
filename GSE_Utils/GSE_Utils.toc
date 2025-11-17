@@ -32,3 +32,4 @@ Indent.lua
 Events.lua
 StaticPopup.lua
 Utils.lua
+Tracker.lua

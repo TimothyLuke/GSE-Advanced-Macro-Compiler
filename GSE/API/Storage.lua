@@ -591,14 +591,15 @@ function GSE.UpdateIcon(self, reseticon)
             end
         end
         if WeakAuras then
-            WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
+            WeakAuras.ScanEvents(Statics.Messages.GSE_MODS_VISIBLE, gsebutton, modlist)
         end
+        GSE:SendMessage(Statics.Messages.GSE_MODS_VISIBLE, {gsebutton, modlist})
     end
     if spellinfo and spellinfo.iconID then
         if WeakAuras then
-            WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
+            WeakAuras.ScanEvents(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, gsebutton, spellinfo)
         end
-
+        GSE:SendMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, {gsebutton, spellinfo})
         if GSE.ButtonOverrides then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
