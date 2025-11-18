@@ -12,7 +12,8 @@ if GSE.isEmpty(GSEOptions.SequenceIconFrame) then
         IconSize = 64,
         Orientation = "HORIZONTAL"
     }
-end        
+end
+
 local SequenceIconFrame = GSE.SequenceIconFrame
 
 if not GSEOptions.SequenceIconFrame.Enabled then
