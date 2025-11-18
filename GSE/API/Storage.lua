@@ -64,7 +64,7 @@ end
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load the GSEStorage into a new table.
@@ -590,13 +590,13 @@ function GSE.UpdateIcon(self, reseticon)
                 modlist[a] = b == "true" and true or false
             end
         end
-        if WeakAuras then
+        if WeakAuras and WeakAuras.ScanEvents then
             WeakAuras.ScanEvents(Statics.Messages.GSE_MODS_VISIBLE, gsebutton, modlist)
         end
         GSE:SendMessage(Statics.Messages.GSE_MODS_VISIBLE, {gsebutton, modlist})
     end
     if spellinfo and spellinfo.iconID then
-        if WeakAuras then
+        if WeakAuras and WeakAuras.ScanEvents then
             WeakAuras.ScanEvents(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, gsebutton, spellinfo)
         end
         GSE:SendMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, {gsebutton, spellinfo})
@@ -1240,7 +1240,7 @@ function GSE.UpdateVariable(variable, name, status)
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
     end
-    GSE:SendMessage(Statics.VARIABLE_UPDATED, name)
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
 end
 
 function GSE.UpdateMacro(node, category)
@@ -1259,7 +1259,7 @@ function GSE.UpdateMacro(node, category)
             end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
-        GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
+        GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)
     end
     return node
 end
@@ -1280,7 +1280,7 @@ function GSE.ImportMacro(node)
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
     GSE.ManageMacros()
-    GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)
 end
 
 function GSE.CompileMacroText(text, mode)

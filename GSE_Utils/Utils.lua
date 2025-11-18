@@ -113,7 +113,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
         GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.MetaData.Default])
     end
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
@@ -166,7 +166,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
         "Storage"
     )
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load a collection of Sequences
@@ -292,7 +292,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             for _, v in pairs(actiontable["Macros"]) do
                 GSE.ImportSerialisedSequence(v, forcereplace)
             end
-            GSE:SendMessage(Statics.COLLECTION_IMPORTED)
+            GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
             actiontable.objectType = nil
             local oocaction = {
@@ -344,7 +344,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 GSE.AddSequenceToCollection(seqName, v)
             end
 
-            GSE:SendMessage(Statics.SEQUENCE_UPDATED, seqName)
+            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)

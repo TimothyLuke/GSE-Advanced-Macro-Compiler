@@ -254,7 +254,6 @@ else
         [1468] = determineSpecializationName(1468),
         [1473] = determineSpecializationName(1473),
         [1480] = determineSpecializationName(1480)
-
     }
 end
 
@@ -533,12 +532,11 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
     preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
-Statics.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
-Statics.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
-Statics.MACRO_UPDATED = "GSE_MACRO_UPDATED"
-Statics.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
-
 Statics.Messages = {}
 Statics.Messages.GSE_SEQUENCE_ICON_UPDATE = "GSE_SEQUENCE_ICON_UPDATE"
 Statics.Messages.GSE_MODS_VISIBLE = "GSE_MODS_VISIBLE"
+Statics.Messages.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
+Statics.Messages.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
+Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
+
 GSE.DebugProfile("Statics")

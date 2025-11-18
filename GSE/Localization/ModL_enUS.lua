@@ -797,9 +797,6 @@ L["New Sequence"] = true
 L["Default"] = true
 L["New Variable"] = true
 
-L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.28 changes the import and export strings.  Each GSE import will now start with !GSEx! where the x shows the version number going forward.  https://wago.io/gse has been updated toi handle these new import strings and wago.io exports will switch to exporting these style strings around 11.2.  These new strings will be picked up by the classic variants when they are next updated by Blizzard.  As always details are in Discord."
-
 -- #1773
 L[
         "This setting is a common setting used by all WoW mods.  If affects how your action buttons respond.  With this on the react when you hit the button.  With them off they react when you let them go.  In GSE's case this setting has to be off for Actionbar Overrides to work."
@@ -814,3 +811,17 @@ L["Button Settings"] = true
 L["Skyriding / Vehicle Keybinds"] = true
 L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"] = true
 L["Skyriding Button"] = true
+
+-- #1835
+L["Keybinding Tools"] = true
+L["Show Sequence Icons"] = true
+L["Show the Sequence Icon Preview Frame"] = true
+L["Preview Icon Size"] = true
+L["Default is 64 pixels."] = true
+L["Icon Preview Orientation"] = true
+L["Horizontal or Vertical Layout"] = true
+L["Horizontal"] = true
+L["Vertical"] = true
+L["WhatsNew"] =
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight Beta continues and we are hopeful that we will be able to continue.\n\nIn this build is a new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time and show mod keys etc."
+

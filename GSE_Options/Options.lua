@@ -487,21 +487,6 @@ function GSE.GetOptionsTable()
                         end,
                         order = 532
                     },
-                    printKeyPressModifiers = {
-                        name = L["Print Active Modifiers on Click"],
-                        desc = L[
-                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
-                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
-                        end,
-                        get = function(info)
-                            return GSEOptions.DebugPrintModConditionsOnKeyPress
-                        end,
-                        order = 533
-                    },
                     cvarsettingstitle = {
                         type = "header",
                         name = L["CVar Settings"],
@@ -555,6 +540,74 @@ function GSE.GetOptionsTable()
                             return GSEOptions.Multiclick
                         end,
                         order = 551
+                    },
+                    disableExeperimental = {
+                        type = "header",
+                        name = L["Keybinding Tools"],
+                        order = 560
+                    },
+                    printKeyPressModifiers = {
+                        name = L["Print Active Modifiers on Click"],
+                        desc = L[
+                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
+                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                        end,
+                        get = function(info)
+                            return GSEOptions.DebugPrintModConditionsOnKeyPress
+                        end,
+                        order = 561
+                    },
+                    showSequenceIcons = {
+                        name = L["Show Sequence Icons"],
+                        desc = L["Show the Sequence Icon Preview Frame"],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.Enabled = val
+                            if not val then
+                                GSE.SequenceIconFrame:Hide()
+                            else
+                                GSE.SequenceIconFrame:Show()
+                            end
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.Enabled or false
+                        end,
+                        order = 562
+                    },
+                    IconSize = {
+                        name = L["Preview Icon Size"],
+                        desc = L["Default is 64 pixels."],
+                        type = "input",
+                        set = function(info, val)
+                            val = tonumber(val)
+                            GSEOptions.SequenceIconFrame.IconSize = val
+                            GSE.IconFrameResize(val)
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.IconSize and tostring(GSEOptions.SequenceIconFrame.IconSize) or "64"
+                        end,
+                        order = 563
+                    },
+                    defaultImportAction = {
+                        name = L["Icon Preview Orientation"],
+                        desc = L["Horizontal or Vertical Layout"],
+                        type = "select",
+                        style = "radio",
+                        values = {
+                            ["HORIZONTAL"] = L["Horizontal"],
+                            ["VERTICAL"] = L["Vertical"]
+                        },
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.Orientation = val
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.Orientation or "HORIZONTAL"
+                        end,
+                        order = 564
                     }
                     -- disableExeperimental = {
                     --     type = "header",
