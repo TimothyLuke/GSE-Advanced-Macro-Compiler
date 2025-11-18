@@ -12,8 +12,8 @@ if GSE.isEmpty(GSEOptions.SequenceIconFrame) then
         IconSize = 64,
         Orientation = "HORIZONTAL"
     }
-end          
-local SequenceIconFrame = GSE.SequenceIconFrame 
+end        
+local SequenceIconFrame = GSE.SequenceIconFrame
 
 if not GSEOptions.SequenceIconFrame.Enabled then
     SequenceIconFrame:Hide()
@@ -39,7 +39,7 @@ local function showSequenceIcon(event, payload)
 
     local sequence = payload[1]
     local spellinfo = payload[2]
-    
+
     if not SequenceIcons[sequence] then
         SequenceIcons[sequence] = SequenceIconFrame:CreateTexture()
         SequenceIcons[sequence]:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize)
@@ -53,10 +53,7 @@ local function showSequenceIcon(event, payload)
         end
     else
         SequenceIcons[sequence]:SetTexture(spellinfo.iconID)
-        
     end
- 
-    
 end
 
 local function showModKeys(event, payload)
@@ -64,17 +61,17 @@ local function showModKeys(event, payload)
 end
 
 function GSE.IconFrameResize(newSize)
-        if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
-            SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)), GSEOptions.SequenceIconFrame.IconSize)
-            for _, v in pairs(SequenceIcons) do
-                v:SetPoint("LEFT", SequenceIconFrame, nil, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1), 0)
-            end
-        else
-            SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)))
-            for _, v in pairs(SequenceIcons) do
-                v:SetPoint("LEFT", SequenceIconFrame, nil, 0, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
-            end
+    if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
+        SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)), GSEOptions.SequenceIconFrame.IconSize)
+        for _, v in pairs(SequenceIcons) do
+            v:SetPoint("LEFT", SequenceIconFrame, nil, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1), 0)
         end
+    else
+        SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)))
+        for _, v in pairs(SequenceIcons) do
+            v:SetPoint("LEFT", SequenceIconFrame, nil, 0, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
+        end
+    end
 end
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
 GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
