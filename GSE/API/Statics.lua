@@ -252,7 +252,9 @@ else
         [581] = determineSpecializationName(581),
         [1467] = determineSpecializationName(1467),
         [1468] = determineSpecializationName(1468),
-        [1473] = determineSpecializationName(1473)
+        [1473] = determineSpecializationName(1473),
+        [1480] = determineSpecializationName(1480)
+
     }
 end
 
