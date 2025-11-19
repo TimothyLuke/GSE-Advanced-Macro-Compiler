@@ -90,8 +90,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
                     local spellid = elements[6]
                     local potentialGCD = C_Spell.GetSpellCooldown(spellid)["duration"]
                     if issecretvalue(potentialGCD)then
-                        -- TODO replace this with the characters GCD based on their haste
-                        GCD_Timer = 1.5
+                        GCD_Timer = GSE.GetGCD()
                     else
                         GCD_Timer = potentialGCD
                     end
