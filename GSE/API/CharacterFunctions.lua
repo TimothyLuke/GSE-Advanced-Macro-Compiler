@@ -25,7 +25,6 @@ function GSE.GetGCD()
     local gcd
     local haste = UnitSpellHaste("player")
     gcd = 1.5 / (1 + 0.01 * haste)
-
     return gcd
 end
 
