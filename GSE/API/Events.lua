@@ -438,7 +438,7 @@ local function startup()
             hide = true
         }
     end
-
+  
     GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
 end
 
