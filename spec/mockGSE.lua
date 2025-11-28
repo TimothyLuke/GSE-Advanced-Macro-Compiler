@@ -5,13 +5,6 @@ GSE.Static = {}
 GSE.VersionString = "2.0.00-18-g95ecb41"
 
 GNOME = "UnitTest"
-GSE_C  = GSE_C or {}
-GSELegacyLibraryBackup = GSELegacyLibraryBackup or {}
-GSEOptions = GSEOptions or {}
-GSESequences = GSESequences or {}
-GSESpellCache = GSESpellCache or {}
-GSEVariables = GSEVariables or {}
-GSEMacros = GSEMacros or {}
 
 GSELibrary = {}
 GSEStorage = {}
