@@ -2,7 +2,7 @@
 GSE-TreeGroup based on TreeGroup Container
 Container that uses a tree control to switch between groups.  Idenitcal to TreeGroup but with Bigger fonts. From v48
 -------------------------------------------------------------------------------]]
-local Type, Version = "GSE-TreeGroup", 4
+local Type, Version = "GSE-TreeGroup", 5
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -212,15 +212,15 @@ local function Button_OnEnter(frame)
     local self = frame.obj
     self:Fire("OnButtonEnter", frame.uniquevalue, frame)
 
-    -- if self.enabletooltips then
-    --     local tooltip = AceGUI.tooltip
-    --     tooltip:SetOwner(frame, "ANCHOR_NONE")
-    --     tooltip:ClearAllPoints()
-    --     tooltip:SetPoint("LEFT", frame, "RIGHT")
-    --     tooltip:SetText(frame.text:GetText() or "", 1, .82, true)
+    if self.enabletooltips then
+        local tooltip = AceGUI.tooltip
+        tooltip:SetOwner(frame, "ANCHOR_NONE")
+        tooltip:ClearAllPoints()
+        tooltip:SetPoint("LEFT", frame, "RIGHT")
+        tooltip:SetText(frame.text:GetText() or "", 1, .82, 0, 1, true)
 
-    --     tooltip:Show()
-    -- end
+        tooltip:Show()
+    end
 end
 
 local function Button_OnLeave(frame)
