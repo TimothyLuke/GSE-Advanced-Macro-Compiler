@@ -100,7 +100,7 @@ local function showModKeys(event, payload)
             outputstring = outputstring .. L["Right Control Key"] .. " "
         end
         if mods.ACTRL then
-            outputstring = outputstring .. L["Any Control Key"] 
+            outputstring = outputstring .. L["Any Control Key"]
         end
 
         fs:SetText(outputstring)
