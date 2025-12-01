@@ -214,11 +214,11 @@ function setRetail()
   currentver = retail
 end
 
-function GSE.EncodeMessage(tab)
+GSE.EncodeMessage = function(tab)
   return tab
 end
 
-function GSE.DecodeMessage(tab)
+GSE.DecodeMessage = function (tab)
   return tab
 end
 
