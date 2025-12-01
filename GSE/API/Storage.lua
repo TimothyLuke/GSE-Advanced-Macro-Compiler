@@ -542,7 +542,7 @@ function GSE.UpdateIcon(self, reseticon)
     local reset = self:GetAttribute("combatreset") and self:GetAttribute("combatreset") or false
     if reseticon == true then
         spellinfo.name = gsebutton
-        spellinfo.iconID = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+        spellinfo.iconID = Statics.Icons.GSE_Logo_Dark
         foundSpell = gsebutton
     elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
         spellinfo = GSE.GetSpellsFromString(executionseq[step].macrotext)

@@ -154,7 +154,7 @@ local function overrideActionButton(savedBind, force)
                         end
                     end,
                     tooltip = "GSE: " .. Sequence,
-                    texture = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp",
+                    texture = Statics.Icons.GSE_Logo_Dark,
                     type = "click",
                     clickbutton = _G[Sequence]
                 }

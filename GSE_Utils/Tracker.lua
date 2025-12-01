@@ -15,11 +15,15 @@ if GSE.isEmpty(GSEOptions.SequenceIconFrame) then
 end
 
 local SequenceIconFrame = GSE.SequenceIconFrame
+local SequenceIconFrameHeight = GSEOptions.SequenceIconFrame.IconSize
+local SequenceIconFrameWidth = GSEOptions.SequenceIconFrame.IconSize
+
+local fs = UIParent:CreateFontString(nil, "OVERLAY", "GameTooltipText")
 
 if not GSEOptions.SequenceIconFrame.Enabled then
     SequenceIconFrame:Hide()
 end
-SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize)
+SequenceIconFrame:SetSize(SequenceIconFrameWidth, SequenceIconFrameHeight)
 
 SequenceIconFrame:SetPoint("CENTER")
 SequenceIconFrame:SetMovable(true)
@@ -44,29 +48,75 @@ local function showSequenceIcon(event, payload)
         SequenceIcons[sequence]:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize)
         SequenceIcons[sequence]:SetTexture(spellinfo.iconID)
         if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
-            SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)), GSEOptions.SequenceIconFrame.IconSize)
-            SequenceIcons[sequence]:SetPoint("LEFT", SequenceIconFrame, nil, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1), 0)
+            SequenceIconFrameWidth = GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
+            SequenceIconFrame:SetSize(SequenceIconFrameWidth, GSEOptions.SequenceIconFrame.IconSize)
+            SequenceIcons[sequence]:SetPoint("LEFT", SequenceIconFrame, nil, SequenceIconFrameWidth, 0)
         else
-            SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)))
-            SequenceIcons[sequence]:SetPoint("LEFT", SequenceIconFrame, nil, 0, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
+            SequenceIconFrameHeight = GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)
+            SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, SequenceIconFrameHeight)
+            SequenceIcons[sequence]:SetPoint("LEFT", SequenceIconFrame, nil, 0, SequenceIconFrameHeight)
         end
     else
         SequenceIcons[sequence]:SetTexture(spellinfo.iconID)
     end
+    if spellinfo.iconID == Statics.Icons.GSE_Logo_Dark then
+        fs:SetText(sequence)
+    end
 end
 
 local function showModKeys(event, payload)
-    --DevTools_Dump(payload)
+    if GSEOptions.SequenceIconFrame.Enabled then
+        local sequence = payload[1]
+        local mods = payload[2]
+
+        if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
+            fs:SetPoint("TOPLEFT", SequenceIconFrame, 0, -SequenceIconFrameHeight - 10)
+        else
+            fs:SetPoint("TOPLEFT", SequenceIconFrame, SequenceIconFrameWidth + 10, 0)
+        end
+        local outputstring = sequence .. "\n" .. mods.MOUSEBUTTON .. "\n"
+        if mods.LALT then
+            outputstring = outputstring .. L["Left Alt Key"] .. " "
+        end
+        if mods.RALT then
+            outputstring = outputstring .. L["Right Alt Key"] .. " "
+        end
+        if mods.AALT then
+            outputstring = outputstring .. L["Any Alt Key"] .. "\n"
+        end
+        if mods.LSHIFT then
+            outputstring = outputstring .. L["Left Shift Key"] .. " "
+        end
+        if mods.RSHIFT then
+            outputstring = outputstring .. L["Right Shift Key"] .. " "
+        end
+        if mods.ASHIFT then
+            outputstring = outputstring .. L["Any Shift Key"] .. "\n"
+        end
+        if mods.LCTRL then
+            outputstring = outputstring .. L["Left Control Key"] .. " "
+        end
+        if mods.RCTRL then
+            outputstring = outputstring .. L["Right Control Key"] .. " "
+        end
+        if mods.ACTRL then
+            outputstring = outputstring .. L["Any Control Key"] 
+        end
+
+        fs:SetText(outputstring)
+    end
 end
 
 function GSE.IconFrameResize(newSize)
     if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
-        SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)), GSEOptions.SequenceIconFrame.IconSize)
+        SequenceIconFrameWidth = GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
+        SequenceIconFrame:SetSize(SequenceIconFrameWidth, GSEOptions.SequenceIconFrame.IconSize)
         for _, v in pairs(SequenceIcons) do
             v:SetPoint("LEFT", SequenceIconFrame, nil, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1), 0)
         end
     else
-        SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1)))
+        SequenceIconFrameHeight = GSEOptions.SequenceIconFrame.IconSize + (GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
+        SequenceIconFrame:SetSize(GSEOptions.SequenceIconFrame.IconSize, SequenceIconFrameHeight)
         for _, v in pairs(SequenceIcons) do
             v:SetPoint("LEFT", SequenceIconFrame, nil, 0, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
         end

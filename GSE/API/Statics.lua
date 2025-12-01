@@ -456,7 +456,7 @@ Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/ActionORide.png"
 Statics.Icons.Account = 133784
 Statics.Icons.Personal = 236448
 Statics.Icons.Talents = 134327
-
+Statics.Icons.GSE_Logo_Dark = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
 Statics.GSE3OnClick =
     [=[
 local step = self:GetAttribute('step')
