@@ -596,11 +596,11 @@ function GSE.GetOptionsTable()
                         desc = L["Show the Name of the Sequence"],
                         type = "toggle",
                         set = function(info, val)
-                            GSEOptions.SequenceIconFrame.ShowIconModifiers = val
+                            GSEOptions.SequenceIconFrame.ShowSequenceName = val
                             
                         end,
                         get = function(info)
-                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowIconModifiers or true
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowSequenceName or true
                         end,
                         order = 563
                     },
