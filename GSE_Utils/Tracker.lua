@@ -10,7 +10,9 @@ if GSE.isEmpty(GSEOptions.SequenceIconFrame) then
     GSEOptions.SequenceIconFrame = {
         Enabled = false,
         IconSize = 64,
-        Orientation = "HORIZONTAL"
+        Orientation = "HORIZONTAL",
+        ShowIconModifiers = true,
+        ShowSequenceName = true
     }
 end
 
@@ -60,7 +62,11 @@ local function showSequenceIcon(event, payload)
         SequenceIcons[sequence]:SetTexture(spellinfo.iconID)
     end
     if spellinfo.iconID == Statics.Icons.GSE_Logo_Dark then
-        fs:SetText(sequence)
+        if GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowSequenceName then
+            fs:SetText(sequence)
+        else
+            fs:SetText("")
+        end
     end
 end
 
@@ -74,35 +80,37 @@ local function showModKeys(event, payload)
         else
             fs:SetPoint("TOPLEFT", SequenceIconFrame, SequenceIconFrameWidth + 10, 0)
         end
-        local outputstring = sequence .. "\n" .. mods.MOUSEBUTTON .. "\n"
-        if mods.LALT then
-            outputstring = outputstring .. L["Left Alt Key"] .. " "
+        local outputstring = sequence
+        if GSEOptions.SequenceIconFrame.ShowIconModifiers then
+            outputstring = outputstring .. "\n" .. mods.MOUSEBUTTON .. "\n"
+            if mods.LALT then
+                outputstring = outputstring .. L["Left Alt Key"] .. " "
+            end
+            if mods.RALT then
+                outputstring = outputstring .. L["Right Alt Key"] .. " "
+            end
+            if mods.AALT then
+                outputstring = outputstring .. L["Any Alt Key"] .. "\n"
+            end
+            if mods.LSHIFT then
+                outputstring = outputstring .. L["Left Shift Key"] .. " "
+            end
+            if mods.RSHIFT then
+                outputstring = outputstring .. L["Right Shift Key"] .. " "
+            end
+            if mods.ASHIFT then
+                outputstring = outputstring .. L["Any Shift Key"] .. "\n"
+            end
+            if mods.LCTRL then
+                outputstring = outputstring .. L["Left Control Key"] .. " "
+            end
+            if mods.RCTRL then
+                outputstring = outputstring .. L["Right Control Key"] .. " "
+            end
+            if mods.ACTRL then
+                outputstring = outputstring .. L["Any Control Key"]
+            end
         end
-        if mods.RALT then
-            outputstring = outputstring .. L["Right Alt Key"] .. " "
-        end
-        if mods.AALT then
-            outputstring = outputstring .. L["Any Alt Key"] .. "\n"
-        end
-        if mods.LSHIFT then
-            outputstring = outputstring .. L["Left Shift Key"] .. " "
-        end
-        if mods.RSHIFT then
-            outputstring = outputstring .. L["Right Shift Key"] .. " "
-        end
-        if mods.ASHIFT then
-            outputstring = outputstring .. L["Any Shift Key"] .. "\n"
-        end
-        if mods.LCTRL then
-            outputstring = outputstring .. L["Left Control Key"] .. " "
-        end
-        if mods.RCTRL then
-            outputstring = outputstring .. L["Right Control Key"] .. " "
-        end
-        if mods.ACTRL then
-            outputstring = outputstring .. L["Any Control Key"]
-        end
-
         fs:SetText(outputstring)
     end
 end
@@ -120,6 +128,11 @@ function GSE.IconFrameResize(newSize)
         for _, v in pairs(SequenceIcons) do
             v:SetPoint("LEFT", SequenceIconFrame, nil, 0, GSEOptions.SequenceIconFrame.IconSize*(GSE.CountTableLength(SequenceIcons) - 1))
         end
+    end
+    if GSEOptions.SequenceIconFrame.Orientation == "HORIZONTAL" then
+        fs:SetPoint("TOPLEFT", SequenceIconFrame, 0, -SequenceIconFrameHeight - 10)
+    else
+        fs:SetPoint("TOPLEFT", SequenceIconFrame, SequenceIconFrameWidth + 10, 0)
     end
 end
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)

@@ -822,6 +822,9 @@ L["Icon Preview Orientation"] = true
 L["Horizontal or Vertical Layout"] = true
 L["Horizontal"] = true
 L["Vertical"] = true
+L["Show Sequence Modifiers"] = true
+L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."] = true
+L["Show Sequence Name"] = true
+L["Show the Name of the Sequence"] = true
 L["WhatsNew"] =
     "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight Beta continues and we are hopeful that we will be able to continue.\n\nIn this build is a new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time and show mod keys etc."
-

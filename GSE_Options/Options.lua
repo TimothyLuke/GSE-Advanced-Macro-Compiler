@@ -578,6 +578,32 @@ function GSE.GetOptionsTable()
                         end,
                         order = 562
                     },
+                    showSequenceModifiers = {
+                        name = L["Show Sequence Modifiers"],
+                        desc = L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.ShowIconModifiers = val
+                            
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowIconModifiers or true
+                        end,
+                        order = 563
+                    },
+                    showSequenceName = {
+                        name = L["Show Sequence Name"],
+                        desc = L["Show the Name of the Sequence"],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.ShowIconModifiers = val
+                            
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowIconModifiers or true
+                        end,
+                        order = 563
+                    },
                     IconSize = {
                         name = L["Preview Icon Size"],
                         desc = L["Default is 64 pixels."],
@@ -590,7 +616,7 @@ function GSE.GetOptionsTable()
                         get = function(info)
                             return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.IconSize and tostring(GSEOptions.SequenceIconFrame.IconSize) or "64"
                         end,
-                        order = 563
+                        order = 565
                     },
                     defaultImportAction = {
                         name = L["Icon Preview Orientation"],
