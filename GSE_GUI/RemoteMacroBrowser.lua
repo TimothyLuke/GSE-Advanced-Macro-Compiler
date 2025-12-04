@@ -3,9 +3,6 @@ local Statics = GSE.Static
 
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
-local libS = LibStub:GetLibrary("AceSerializer-3.0")
-local libC = LibStub:GetLibrary("LibCompress")
-local libCE = libC:GetAddonEncodeTable()
 
 local remoteFrame = AceGUI:Create("Frame")
 remoteFrame.frame:SetFrameStrata("MEDIUM")

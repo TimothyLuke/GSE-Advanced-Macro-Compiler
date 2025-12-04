@@ -81,7 +81,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.showGSEoocqueue = true
     GSEOptions.UseVerboseExportFormat = false
     GSEOptions.DefaultImportAction = "MERGE"
-    GSEOptions.UseWLMExportFormat = true
+    GSEOptions.DefaultHumanReadableExportFormat = true
     GSEOptions.PromptSample = true
     GSEOptions.msClickRate = 250
     GSEOptions.showMiniMap = {

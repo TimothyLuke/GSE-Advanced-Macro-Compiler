@@ -147,9 +147,7 @@ L["Load"] = true
 L[
         "GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."
     ] = true
-L["Macro unable to be imported."] = true
-L["Macro Import Successful."] = true
-L["Macro Collection to Import."] = true
+
 L["Configuration"] = true
 L["Talents"] = true
 L["Help Information"] = true
@@ -708,7 +706,6 @@ L["How many times does this action repeat"] = true
 L[
         "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
     ] = true
-L["Use WLM Export Sequence Format"] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
 L["Manage Macros"] = true
@@ -828,3 +825,9 @@ L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
 L["WhatsNew"] =
     "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight Beta continues and we are hopeful that we will be able to continue.\n\nIn this build is a new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time and show mod keys etc."
+
+-- #1846
+L["GSE Options Not Enabled"] = true
+L["Import String Not Recognised."] = true
+L["GSE Import Successful."] = true
+L["GSE Collection to Import."] = true

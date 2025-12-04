@@ -99,7 +99,7 @@ StaticPopupDialogs["GSE_SEQUENCEHELP"] = {
 }
 
 StaticPopupDialogs["GSE-MacroImportSuccess"] = {
-    text = L["Macro Import Successful."],
+    text = L["GSE Import Successful."],
     button1 = L["Close"],
     timeout = 0,
     whileDead = true,
@@ -108,7 +108,7 @@ StaticPopupDialogs["GSE-MacroImportSuccess"] = {
 }
 
 StaticPopupDialogs["GSE-GenericMessage"] = {
-    text = L["Macro Import Successful."],
+    text = L["GSE Import Successful."],
     button1 = L["Close"],
     timeout = 0,
     whileDead = true,
@@ -117,7 +117,7 @@ StaticPopupDialogs["GSE-GenericMessage"] = {
 }
 
 StaticPopupDialogs["GSE-MacroImportFailure"] = {
-    text = L["Macro unable to be imported."],
+    text = L["Import String Not Recognised."],
     button1 = L["Close"],
     timeout = 0,
     whileDead = true,

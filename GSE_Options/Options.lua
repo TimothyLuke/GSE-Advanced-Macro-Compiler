@@ -121,10 +121,10 @@ function GSE.GetOptionsTable()
                         --            guiHidden = true,
                         type = "toggle",
                         set = function(info, val)
-                            GSEOptions.UseWLMExportFormat = val
+                            GSEOptions.DefaultHumanReadableExportFormat = val
                         end,
                         get = function(info)
-                            return GSEOptions.UseWLMExportFormat
+                            return GSEOptions.DefaultHumanReadableExportFormat
                         end,
                         order = 300
                     },
@@ -1276,7 +1276,7 @@ local registered = false
 local function createBlizzOptions()
     -- General
     config:RegisterOptionsTable(addonName .. "-General", modoptions.args.general)
-    local blizzPanel = dialog:AddToBlizOptions(addonName .. "-General", modoptions.args.general.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-General", modoptions.args.general.name, addonName)
 
     -- Character
     config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
@@ -1307,7 +1307,6 @@ local function createBlizzOptions()
         dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, addonName)
     end
 
-    return blizzPanel
 end
 
 function GSE:CreateConfigPanels()
@@ -1318,7 +1317,12 @@ function GSE:CreateConfigPanels()
             order = 32
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
-        dialog:AddToBlizOptions(addonName, addonName)
+        local ref, catid = dialog:AddToBlizOptions(addonName, addonName)
+        -- DevTools_Dump(ref)
+        -- DevTools_Dump(catid)
+        -- DevTools_Dump(ref:GetID())
+        GSE.MenuCategoryID = catid
+        
         createBlizzOptions()
         registered = true
     end

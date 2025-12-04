@@ -461,7 +461,7 @@ function GSE.ScanMacrosForErrors()
 end
 
 --- This creates a pretty export for WLM Forums
-function GSE.ExportSequenceWLMFormat(sequence, sequencename)
+function GSE.ExportSequenceHumanReadableFormat(sequence, sequencename)
     local returnstring =
         "# " ..
         sequencename ..

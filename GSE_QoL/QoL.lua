@@ -346,7 +346,7 @@ GSE.GUIAdvancedExport = function(exportframe)
     humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
     exportframe:AddChild(humanexportcheckbox)
 
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+    humanexportcheckbox:SetValue(GSEOptions.DefaultHumanReadableExportFormat)
 
     local exportsequencebox = AceGUI:Create("MultiLineEditBox")
     exportsequencebox:SetLabel(L["Variable"])

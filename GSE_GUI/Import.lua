@@ -229,7 +229,7 @@ local function LandingPage()
   local importsequencebox = AceGUI:Create("MultiLineEditBox")
   local recbutton = AceGUI:Create("Button")
 
-  importsequencebox:SetLabel(L["Macro Collection to Import."])
+  importsequencebox:SetLabel(L["GSE Collection to Import."])
   importsequencebox:SetNumLines(20)
   importsequencebox:DisableButton(true)
   importsequencebox:SetFullWidth(true)

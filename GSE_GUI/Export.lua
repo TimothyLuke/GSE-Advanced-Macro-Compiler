@@ -38,7 +38,7 @@ local function CreateSequenceExport(type)
     humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
     exportframe:AddChild(humanexportcheckbox)
 
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+    humanexportcheckbox:SetValue(GSEOptions.DefaultHumanReadableExportFormat)
 
     local function GUIUpdateExportBox()
         local exportsequence = GSE.CloneSequence(GSE.GUIExportframe.sequence)
@@ -54,7 +54,7 @@ local function CreateSequenceExport(type)
                 ) ..
                     "\n```\n\n"
             exporttext =
-                exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
+                exporttext .. GSE.ExportSequenceHumanReadableFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
             exportsequencebox:SetText(exporttext)
         else
             exportsequencebox:SetText(
@@ -88,7 +88,7 @@ local function CreateVariableExport(objectname, type)
     humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
     exportframe:AddChild(humanexportcheckbox)
 
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+    humanexportcheckbox:SetValue(GSEOptions.DefaultHumanReadableExportFormat)
 
     local function GUIUpdateExportBox()
         local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
@@ -134,7 +134,7 @@ local function CreateMacroExport(category, objectname, type)
     humanexportcheckbox:SetType("checkbox")
     humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
 
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+    humanexportcheckbox:SetValue(GSEOptions.DefaultHumanReadableExportFormat)
 
     exportframe:ReleaseChildren()
     exportsequencebox:SetLabel(L["Macro"])
