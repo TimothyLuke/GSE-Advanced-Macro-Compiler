@@ -1318,11 +1318,7 @@ function GSE:CreateConfigPanels()
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
         local ref, catid = dialog:AddToBlizOptions(addonName, addonName)
-        -- DevTools_Dump(ref)
-        -- DevTools_Dump(catid)
-        -- DevTools_Dump(ref:GetID())
         GSE.MenuCategoryID = catid
-        
         createBlizzOptions()
         registered = true
     end

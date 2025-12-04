@@ -12,13 +12,12 @@ end
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
 function GSE.DecodeMessage(data)
     if string.sub(data, 1, 6) == "!GSE3!" then
-        return  pcall( function()  
+        return  pcall(function()
             local message = string.sub(data, 6, #data)
             local baseDecode = C_EncodingUtil.DecodeBase64(message)
             local decomString = C_EncodingUtil.DecompressString(baseDecode)
             return  C_EncodingUtil.DeserializeCBOR(decomString)
         end)
-                
     else
         return false
     end
