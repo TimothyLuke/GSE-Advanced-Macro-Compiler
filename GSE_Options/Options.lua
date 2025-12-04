@@ -586,7 +586,7 @@ function GSE.GetOptionsTable()
                             GSEOptions.SequenceIconFrame.ShowIconModifiers = val
                         end,
                         get = function(info)
-                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowIconModifiers or true
+                            return GSEOptions.SequenceIconFrame.ShowIconModifiers
                         end,
                         order = 563
                     },
@@ -598,7 +598,7 @@ function GSE.GetOptionsTable()
                             GSEOptions.SequenceIconFrame.ShowSequenceName = val
                         end,
                         get = function(info)
-                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.ShowSequenceName or true
+                            return GSEOptions.SequenceIconFrame.ShowSequenceName
                         end,
                         order = 563
                     },
@@ -612,7 +612,7 @@ function GSE.GetOptionsTable()
                             GSE.IconFrameResize(val)
                         end,
                         get = function(info)
-                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.IconSize and tostring(GSEOptions.SequenceIconFrame.IconSize) or "64"
+                            return GSEOptions.SequenceIconFrame.IconSize or "64"
                         end,
                         order = 565
                     },
@@ -1318,6 +1318,9 @@ function GSE:CreateConfigPanels()
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
         local ref, catid = dialog:AddToBlizOptions(addonName, addonName)
+        -- DevTools_Dump(ref)
+        -- DevTools_Dump(catid)
+        -- DevTools_Dump(ref:GetID())
         GSE.MenuCategoryID = catid
         createBlizzOptions()
         registered = true
