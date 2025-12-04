@@ -17,7 +17,7 @@ function GSE.DecodeMessage(data)
         local decomString = C_EncodingUtil.DecompressString(baseDecode)
         local deserializeCBOR = C_EncodingUtil.DeserializeCBOR(decomString)
         return true, deserializeCBOR
-    else 
+    else
         return false
     end
 end
