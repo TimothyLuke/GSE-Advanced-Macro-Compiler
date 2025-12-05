@@ -1071,32 +1071,34 @@ local function createBlizzOptions()
 
     -- Character
     config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
-    dialog:AddToBlizOptions(addonName .. "-Character", modoptions.args.character.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Character", modoptions.args.character.name, GSE.MenuCategoryID)
 
     -- sequenceReset
     config:RegisterOptionsTable(addonName .. "-SequenceReset", modoptions.args.sequenceReset)
-    dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, GSE.MenuCategoryID)
 
     -- Troubleshooting
     config:RegisterOptionsTable(addonName .. "-Troubleshooting", modoptions.args.troubleshooting)
-    dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, GSE.MenuCategoryID)
 
     -- colour
     config:RegisterOptionsTable(addonName .. "-Colour", modoptions.args.colour)
-    dialog:AddToBlizOptions(addonName .. "-Colour", modoptions.args.colour.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Colour", modoptions.args.colour.name, GSE.MenuCategoryID)
 
     -- Plugins
     config:RegisterOptionsTable(addonName .. "-Plugins", modoptions.args.plugins)
-    dialog:AddToBlizOptions(addonName .. "-Plugins", modoptions.args.plugins.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Plugins", modoptions.args.plugins.name, GSE.MenuCategoryID)
 
     config:RegisterOptionsTable(addonName .. "-WindowSizes", modoptions.args.windowSize)
-    dialog:AddToBlizOptions(addonName .. "-WindowSizes", modoptions.args.windowSize.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-WindowSizes", modoptions.args.windowSize.name, GSE.MenuCategoryID)
 
     if GSE.Developer then
         -- about
         config:RegisterOptionsTable(addonName .. "-Debug", modoptions.args.debug)
-        dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, addonName)
+        dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, GSE.MenuCategoryID)
     end
+    config:RegisterOptionsTable(addonName .. "-About", modoptions.args.about)
+    dialog:AddToBlizOptions(addonName .. "-About", modoptions.args.about.name, GSE.MenuCategoryID)
 
 end
 
@@ -1107,8 +1109,6 @@ function GSE:CreateConfigPanels()
             name = table.concat(Statics.Patrons, ", "),
             order = 32
         }
-        config:RegisterOptionsTable(addonName, modoptions.args.about)
-        local _, catid = dialog:AddToBlizOptions(addonName, addonName)
 
         createBlizzOptions()
         registered = true
@@ -1117,8 +1117,16 @@ end
 
 local function createGeneralSettings()
     local category = Settings.RegisterVerticalLayoutCategory(addonName)
-
-    local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General Options"])
+    -- do
+    --     local layout = SettingsPanel:GetLayout(category);
+    --     layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Supporters"], ["tooltip"]= L["Supporters"]}))
+    -- end
+    local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General"])
+   
+    do
+        local layout = SettingsPanel:GetLayout(generalOptions);
+        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["General Options"] , ["tooltip"]= L["General"] }))
+    end
     -- Hide Minimap icon
     do 
         local setting = Settings.RegisterAddOnSetting(generalOptions, "minimapIcon", "hide", GSEOptions.showMiniMap, Settings.VarType.Boolean, L["Hide Minimap Icon"], true)
@@ -1188,26 +1196,31 @@ local function createGeneralSettings()
             Settings.CreateSlider(generalOptions, setting, options, L["The milliseconds being used in key click delay."])
         end 
     end
-    local filterOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Filter Sequence Selection"])
+    do
+        local layout = SettingsPanel:GetLayout(generalOptions);
+        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Filter Sequence Selection"], ["tooltip"]= L["Filter Sequence Selection"]}))
+    end
+
+    
      -- Show All Sequences
     do 
         local setting = Settings.RegisterAddOnSetting(generalOptions, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
-        Settings.CreateCheckbox(filterOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
     end
     -- showClassMacros
     do 
         local setting = Settings.RegisterAddOnSetting(generalOptions, "showClassMacros", Statics.Class, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Class Sequences in Editor"], true)
-        Settings.CreateCheckbox(filterOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
+        Settings.CreateCheckbox(generalOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
     end
     -- HshowGlobalMacros
     do 
         local setting = Settings.RegisterAddOnSetting(generalOptions, "showGlobalMacros", Statics.Global, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Global Sequences in Editor"], true)
-        Settings.CreateCheckbox(filterOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
+        Settings.CreateCheckbox(generalOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
     end   
     -- showCurrentSpells
     do 
         local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
-        Settings.CreateCheckbox(filterOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
+        Settings.CreateCheckbox(generalOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
     end  
 
 

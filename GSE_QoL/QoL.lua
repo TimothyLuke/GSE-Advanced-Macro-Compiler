@@ -571,7 +571,7 @@ if GSE.GameMode >= 11 then
         }
     end
     config:RegisterOptionsTable(addonName .. "-Skyriding", OptionsTable)
-    dialog:AddToBlizOptions(addonName .. "-Skyriding", OptionsTable.args.title.name, addonName) -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
+    dialog:AddToBlizOptions(addonName .. "-Skyriding", OptionsTable.args.title.name, GSE.MenuCategoryID) -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
     ----------------------------------------------------------------------------------------------------------
 
     -- Pet battle buttons

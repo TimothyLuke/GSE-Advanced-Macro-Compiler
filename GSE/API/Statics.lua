@@ -84,7 +84,7 @@ Statics.CleanStrings = {
 }
 Statics.GSEString = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 Statics.StringReset = "|r"
-Statics.CoreLoadedMessage = "GS-CoreLoaded"
+Statics.CoreLoadedMessage = "GSE-CoreLoaded"
 
 Statics.SystemVariables = {
     ["GCD"] = function()
