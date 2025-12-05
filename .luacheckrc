@@ -510,5 +510,7 @@ globals = {
     "SetOverrideBindingClick",
     "SetOverrideBinding",
     "RegisterAttributeDriver",
-    "issecretvalue"
+    "issecretvalue",
+    "SettingsPanel",
+    "MinimalSliderWithSteppersMixin"
 }
