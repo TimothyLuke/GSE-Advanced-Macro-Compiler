@@ -17,199 +17,6 @@ function GSE.GetOptionsTable()
         type = "group",
         name = "|cffff0000GSE:|r " .. L["Options"],
         args = {
-            general = {
-                name = L["General"],
-                desc = L["General Options"],
-                type = "group",
-                order = 1,
-                args = {
-                    title1 = {
-                        type = "header",
-                        name = L["General Options"],
-                        order = 100
-                    },
-                    minimapIcon = {
-                        name = L["Hide Minimap Icon"],
-                        desc = L["Hide Minimap Icon for LibDataBroker (LDB) data text."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showMiniMap.hide = val
-                            if GSE.LDB then
-                                GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
-                            end
-                        end,
-                        get = function(info)
-                            return GSEOptions.showMiniMap.hide
-                        end,
-                        order = 199
-                    },
-                    showothergseusersintooltip = {
-                        name = L["Show GSE Users in LDB"],
-                        desc = L[
-                            "GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showGSEUsers = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showGSEUsers
-                        end,
-                        order = 200
-                    },
-                    showoocqueueintooltip = {
-                        name = L["Show OOC Queue in LDB"],
-                        desc = L[
-                            "GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showGSEoocqueue = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showGSEoocqueue
-                        end,
-                        order = 201
-                    },
-                    hideLogin = {
-                        name = L["Hide Login Message"],
-                        desc = L["Hides the message that GSE is loaded."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.HideLoginMessage = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.HideLoginMessage
-                        end,
-                        order = 202
-                    },
-                    resetOOC = {
-                        name = L["Reset Sequences when out of combat"],
-                        desc = L["Resets sequences back to the initial state when out of combat."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.resetOOC = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.resetOOC
-                        end,
-                        order = 300
-                    },
-                    defaultImportAction = {
-                        name = L["Default Import Action"],
-                        desc = L[
-                            "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
-                        ],
-                        type = "select",
-                        style = "radio",
-                        values = {
-                            ["MERGE"] = L["Merge"],
-                            ["REPLACE"] = L["Replace"],
-                            ["IGNORE"] = L["Ignore"]
-                        },
-                        set = function(info, val)
-                            GSEOptions.DefaultImportAction = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.DefaultImportAction
-                        end,
-                        order = 320
-                    },
-                    UseVerboseExportFormat = {
-                        name = L["Create Human Readable Exports"],
-                        desc = L["When exporting from GSE create a descriptive export for Discord/Discource forums."],
-                        --            guiHidden = true,
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.DefaultHumanReadableExportFormat = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.DefaultHumanReadableExportFormat
-                        end,
-                        order = 300
-                    },
-                    MSFiltertitle1 = {
-                        type = "header",
-                        name = L["Millisecond click settings"],
-                        order = 380
-                    },
-                    defaultOOCTimerDelay = {
-                        name = L["OOC Queue Delay"],
-                        desc = L[
-                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
-                        ],
-                        type = "input",
-                        set = function(info, val)
-                            val = tonumber(val)
-                            if val < 1 then
-                                val = 7
-                            end
-                            GSEOptions.OOCQueueDelay = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.OOCQueueDelay and tostring(GSEOptions.OOCQueueDelay) or "7"
-                        end,
-                        order = 386
-                    },
-                    filtertitle1 = {
-                        type = "header",
-                        name = L["Filter Sequence Selection"],
-                        order = 400
-                    },
-                    showAllMacros = {
-                        name = L["Show All Sequences in Editor"],
-                        desc = L["By setting this value the Sequence Editor will show every sequence for every class."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["All"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["All"]
-                        end,
-                        order = 410
-                    },
-                    showClassMacros = {
-                        name = L["Show Class Sequences in Editor"],
-                        desc = L[
-                            "By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["Class"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["Class"]
-                        end,
-                        order = 420
-                    },
-                    showGlobalMacros = {
-                        name = L["Show Global Sequences in Editor"],
-                        desc = L["This shows the Global Sequences available as well as those for your class."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["Global"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["Global"]
-                        end,
-                        order = 430
-                    },
-                    showCurrentSpells = {
-                        name = L["Show Current Spells"],
-                        desc = L[
-                            "GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showCurrentSpells = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showCurrentSpells
-                        end,
-                        order = 441
-                    }
-                }
-            },
             character = {
                 name = L["Character"],
                 desc = L["Character Specific Options which override the normal account settings."],
@@ -1143,20 +950,6 @@ function GSE.GetOptionsTable()
             }
         }
     }
-    if GSE.Patron or GSE.Developer then
-        OptionsTable.args.general.args.externalMillisecondClickRate = {
-            name = L["MS Click Rate"],
-            desc = L["The milliseconds being used in key click delay."],
-            type = "input",
-            set = function(info, val)
-                GSEOptions.msClickRate = tonumber(val)
-            end,
-            get = function(info)
-                return GSEOptions.msClickRate and tostring(GSEOptions.msClickRate) or "250"
-            end,
-            order = 385
-        }
-    end
     if GSE.Developer then
         OptionsTable.args.debug = {
             name = L["Debug"],
@@ -1275,8 +1068,6 @@ local registered = false
 
 local function createBlizzOptions()
     -- General
-    config:RegisterOptionsTable(addonName .. "-General", modoptions.args.general)
-    dialog:AddToBlizOptions(addonName .. "-General", modoptions.args.general.name, addonName)
 
     -- Character
     config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
@@ -1317,14 +1108,111 @@ function GSE:CreateConfigPanels()
             order = 32
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
-        local ref, catid = dialog:AddToBlizOptions(addonName, addonName)
-        -- DevTools_Dump(ref)
-        -- DevTools_Dump(catid)
-        -- DevTools_Dump(ref:GetID())
-        GSE.MenuCategoryID = catid
+        local _, catid = dialog:AddToBlizOptions(addonName, addonName)
+
         createBlizzOptions()
         registered = true
     end
 end
 
+local function createGeneralSettings()
+    local category = Settings.RegisterVerticalLayoutCategory(addonName)
+
+    local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General Options"])
+    -- Hide Minimap icon
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "minimapIcon", "hide", GSEOptions.showMiniMap, Settings.VarType.Boolean, L["Hide Minimap Icon"], true)
+        setting:SetValueChangedCallback(function () 
+            if GSE.LDB then
+                GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+            end
+        end)
+        Settings.CreateCheckbox(generalOptions, setting, L["Hide Minimap Icon for LibDataBroker (LDB) data text."])
+    end
+    -- Show Other Users
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showothergseusersintooltip", "showGSEUsers", GSEOptions, Settings.VarType.Boolean, L["Show GSE Users in LDB"], true)
+        Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."])
+    end
+    -- Show OOC Queue 
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
+        Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
+    end
+    -- Reset OOC Queue
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "resetOOC", "resetOOC", GSEOptions, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+        Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+    end
+    -- Hide Login Message
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "hideLogin", "HideLoginMessage", GSEOptions, Settings.VarType.Boolean, L["Hide Login Message"], true)
+        Settings.CreateCheckbox(generalOptions, setting, L["Hides the message that GSE is loaded."])
+    end
+    -- Hide Login Message
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)
+        Settings.CreateCheckbox(generalOptions, setting, L["When exporting from GSE create a descriptive export for Discord/Discource forums."])
+    end
+    ---- OOC Queue Delay
+    do
+        local function GetValue()
+		    return GSEOptions.OOCQueueDelay or 7
+	    end
+
+        local function SetValue(value)
+            GSEOptions.OOCQueueDelay = value
+        end
+
+        local setting = Settings.RegisterProxySetting(generalOptions, "defaultOOCTimerDelay", Settings.VarType.Number, L["OOC Queue Delay"], 7, GetValue, SetValue)
+        local options = Settings.CreateSliderOptions(1, 60, 1)
+        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+        Settings.CreateSlider(generalOptions, setting, options, L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."])
+    end 
+
+    ---- externalMillisecondClickRate
+    
+    do
+        if GSE.Patron or GSE.Developer then
+            local function GetValue()
+                return GSEOptions.msClickRate or 250
+            end
+
+            local function SetValue(value)
+                GSEOptions.msClickRate = value
+            end
+
+            local setting = Settings.RegisterProxySetting(generalOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+            local options = Settings.CreateSliderOptions(100, 1000, 1)
+            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+            Settings.CreateSlider(generalOptions, setting, options, L["The milliseconds being used in key click delay."])
+        end 
+    end
+    local filterOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Filter Sequence Selection"])
+     -- Show All Sequences
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
+        Settings.CreateCheckbox(filterOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+    end
+    -- showClassMacros
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showClassMacros", Statics.Class, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Class Sequences in Editor"], true)
+        Settings.CreateCheckbox(filterOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
+    end
+    -- HshowGlobalMacros
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showGlobalMacros", Statics.Global, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Global Sequences in Editor"], true)
+        Settings.CreateCheckbox(filterOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
+    end   
+    -- showCurrentSpells
+    do 
+        local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
+        Settings.CreateCheckbox(filterOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
+    end  
+
+
+    Settings.RegisterAddOnCategory(category)
+    GSE.MenuCategoryID = category:GetID()
+end
+createGeneralSettings()
 GSE:CreateConfigPanels()
