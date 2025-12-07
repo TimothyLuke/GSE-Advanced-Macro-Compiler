@@ -1097,9 +1097,7 @@ local function createBlizzOptions()
         config:RegisterOptionsTable(addonName .. "-Debug", modoptions.args.debug)
         dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, GSE.MenuCategoryID)
     end
-    config:RegisterOptionsTable(addonName .. "-About", modoptions.args.about)
-    dialog:AddToBlizOptions(addonName .. "-About", modoptions.args.about.name, GSE.MenuCategoryID)
-
+    
 end
 
 function GSE:CreateConfigPanels()
@@ -1109,120 +1107,116 @@ function GSE:CreateConfigPanels()
             name = table.concat(Statics.Patrons, ", "),
             order = 32
         }
+        config:RegisterOptionsTable(addonName, modoptions.args.about)
+        local _, catid = dialog:AddToBlizOptions(addonName, addonName)
 
-        createBlizzOptions()
         registered = true
-    end
-end
+        GSE.MenuCategoryID = catid
+        local category = Settings.GetCategory(catid)
 
-local function createGeneralSettings()
-    local category = Settings.RegisterVerticalLayoutCategory(addonName)
-    -- do
-    --     local layout = SettingsPanel:GetLayout(category);
-    --     layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Supporters"], ["tooltip"]= L["Supporters"]}))
-    -- end
-    local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General"])
+        local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General"])
 
-    do
-        local layout = SettingsPanel:GetLayout(generalOptions)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["General Options"] , ["tooltip"]= L["General"] }))
-    end
-    -- Hide Minimap icon
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "minimapIcon", "hide", GSEOptions.showMiniMap, Settings.VarType.Boolean, L["Hide Minimap Icon"], true)
-        setting:SetValueChangedCallback(function ()
-            if GSE.LDB then
-                GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
-            end
-        end)
-        Settings.CreateCheckbox(generalOptions, setting, L["Hide Minimap Icon for LibDataBroker (LDB) data text."])
-    end
-    -- Show Other Users
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showothergseusersintooltip", "showGSEUsers", GSEOptions, Settings.VarType.Boolean, L["Show GSE Users in LDB"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."])
-    end
-    -- Show OOC Queue
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
-    end
-    -- Reset OOC Queue
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "resetOOC", "resetOOC", GSEOptions, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
-    end
-    -- Hide Login Message
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "hideLogin", "HideLoginMessage", GSEOptions, Settings.VarType.Boolean, L["Hide Login Message"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["Hides the message that GSE is loaded."])
-    end
-    -- Hide Login Message
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["When exporting from GSE create a descriptive export for Discord/Discource forums."])
-    end
-    ---- OOC Queue Delay
-    do
-        local function GetValue()
-		    return GSEOptions.OOCQueueDelay or 7
-	    end
-
-        local function SetValue(value)
-            GSEOptions.OOCQueueDelay = value
+        do
+            local layout = SettingsPanel:GetLayout(generalOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["General Options"] , ["tooltip"]= L["General"] }))
         end
-
-        local setting = Settings.RegisterProxySetting(generalOptions, "defaultOOCTimerDelay", Settings.VarType.Number, L["OOC Queue Delay"], 7, GetValue, SetValue)
-        local options = Settings.CreateSliderOptions(1, 60, 1)
-        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-        Settings.CreateSlider(generalOptions, setting, options, L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."])
-    end
-
-    ---- externalMillisecondClickRate
-    do
-        if GSE.Patron or GSE.Developer then
+        -- Hide Minimap icon
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "minimapIcon", "hide", GSEOptions.showMiniMap, Settings.VarType.Boolean, L["Hide Minimap Icon"], true)
+            setting:SetValueChangedCallback(function ()
+                if GSE.LDB then
+                    GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+                end
+            end)
+            Settings.CreateCheckbox(generalOptions, setting, L["Hide Minimap Icon for LibDataBroker (LDB) data text."])
+        end
+        -- Show Other Users
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showothergseusersintooltip", "showGSEUsers", GSEOptions, Settings.VarType.Boolean, L["Show GSE Users in LDB"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."])
+        end
+        -- Show OOC Queue
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
+        end
+        -- Reset OOC Queue
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "resetOOC", "resetOOC", GSEOptions, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        end
+        -- Hide Login Message
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "hideLogin", "HideLoginMessage", GSEOptions, Settings.VarType.Boolean, L["Hide Login Message"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Hides the message that GSE is loaded."])
+        end
+        -- Hide Login Message
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["When exporting from GSE create a descriptive export for Discord/Discource forums."])
+        end
+        ---- OOC Queue Delay
+        do
             local function GetValue()
-                return GSEOptions.msClickRate or 250
+                return GSEOptions.OOCQueueDelay or 7
             end
 
             local function SetValue(value)
-                GSEOptions.msClickRate = value
+                GSEOptions.OOCQueueDelay = value
             end
 
-            local setting = Settings.RegisterProxySetting(generalOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
-            local options = Settings.CreateSliderOptions(100, 1000, 1)
+            local setting = Settings.RegisterProxySetting(generalOptions, "defaultOOCTimerDelay", Settings.VarType.Number, L["OOC Queue Delay"], 7, GetValue, SetValue)
+            local options = Settings.CreateSliderOptions(1, 60, 1)
             options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-            Settings.CreateSlider(generalOptions, setting, options, L["The milliseconds being used in key click delay."])
+            Settings.CreateSlider(generalOptions, setting, options, L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."])
         end
-    end
-    do
-        local layout = SettingsPanel:GetLayout(generalOptions)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Filter Sequence Selection"], ["tooltip"]= L["Filter Sequence Selection"]}))
-    end
-     -- Show All Sequences
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
-    end
-    -- showClassMacros
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showClassMacros", Statics.Class, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Class Sequences in Editor"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
-    end
-    -- HshowGlobalMacros
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showGlobalMacros", Statics.Global, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Global Sequences in Editor"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
-    end
-    -- showCurrentSpells
-    do
-        local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
-        Settings.CreateCheckbox(generalOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
+
+        ---- externalMillisecondClickRate
+        do
+            if GSE.Patron or GSE.Developer then
+                local function GetValue()
+                    return GSEOptions.msClickRate or 250
+                end
+
+                local function SetValue(value)
+                    GSEOptions.msClickRate = value
+                end
+
+                local setting = Settings.RegisterProxySetting(generalOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                local options = Settings.CreateSliderOptions(100, 1000, 1)
+                options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+                Settings.CreateSlider(generalOptions, setting, options, L["The milliseconds being used in key click delay."])
+            end
+        end
+        do
+            local layout = SettingsPanel:GetLayout(generalOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Filter Sequence Selection"], ["tooltip"]= L["Filter Sequence Selection"]}))
+        end
+        -- Show All Sequences
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        end
+        -- showClassMacros
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showClassMacros", Statics.Class, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Class Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
+        end
+        -- HshowGlobalMacros
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showGlobalMacros", Statics.Global, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Global Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
+        end
+        -- showCurrentSpells
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
+        end
+
+        createBlizzOptions()
+        
     end
 
-
-    Settings.RegisterAddOnCategory(category)
-    GSE.MenuCategoryID = category:GetID()
 end
-createGeneralSettings()
 GSE:CreateConfigPanels()
+
