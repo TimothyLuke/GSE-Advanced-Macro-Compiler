@@ -1097,7 +1097,6 @@ local function createBlizzOptions()
         config:RegisterOptionsTable(addonName .. "-Debug", modoptions.args.debug)
         dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, GSE.MenuCategoryID)
     end
-    
 end
 
 function GSE:CreateConfigPanels()
@@ -1214,7 +1213,7 @@ function GSE:CreateConfigPanels()
         end
 
         createBlizzOptions()
-        
+
     end
 
 end
