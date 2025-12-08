@@ -17,54 +17,6 @@ function GSE.GetOptionsTable()
         type = "group",
         name = "|cffff0000GSE:|r " .. L["Options"],
         args = {
-            character = {
-                name = L["Character"],
-                desc = L["Character Specific Options which override the normal account settings."],
-                type = "group",
-                order = 2,
-                args = {
-                    title1 = {
-                        type = "header",
-                        name = L["General Options"],
-                        order = 100
-                    },
-                    resetOOC = {
-                        name = L["Reset Sequences when out of combat"],
-                        desc = L["Resets sequences back to the initial state when out of combat."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSE_C.resetOOC = val
-                        end,
-                        get = function(info)
-                            if GSE.isEmpty(GSE_C) then
-                                GSE_C = {}
-                            end
-                            return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
-                        end,
-                        order = 110
-                    },
-                    MSFiltertitle1 = {
-                        type = "header",
-                        name = L["Millisecond click settings"],
-                        order = 380
-                    },
-                    externalMillisecondClickRate = {
-                        name = L["MS Click Rate"],
-                        desc = L["The milliseconds being used in key click delay."],
-                        type = "input",
-                        set = function(info, val)
-                            GSE_C.msClickRate = val
-                        end,
-                        get = function(info)
-                            if GSE.isEmpty(GSE_C) then
-                                GSE_C = {}
-                            end
-                            return GSE_C.msClickRate and GSE_C.msClickRate or ""
-                        end,
-                        order = 385
-                    }
-                }
-            },
             sequenceReset = {
                 name = L["Sequence Reset"],
                 desc = L[
@@ -1067,12 +1019,7 @@ local modoptions = GSE.GetOptionsTable()
 local registered = false
 
 local function createBlizzOptions()
-    -- General
-
-    -- Character
-    config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
-    dialog:AddToBlizOptions(addonName .. "-Character", modoptions.args.character.name, GSE.MenuCategoryID)
-
+    
     -- sequenceReset
     config:RegisterOptionsTable(addonName .. "-SequenceReset", modoptions.args.sequenceReset)
     dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, GSE.MenuCategoryID)
@@ -1211,6 +1158,34 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
         end
+
+        -- Character Specific Settings
+        local CharOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
+
+        -- Reset OOC Queue
+        do
+            local setting = Settings.RegisterAddOnSetting(CharOptions, "charresetOOC", "resetOOC", GSE_C, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+            Settings.CreateCheckbox(CharOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        end
+
+        ---- externalMillisecondClickRate
+        do
+            if GSE.Patron or GSE.Developer then
+                local function GetValue()
+                    return GSE_C.msClickRate or 250
+                end
+
+                local function SetValue(value)
+                    GSE_C.msClickRate = value
+                end
+
+                local setting = Settings.RegisterProxySetting(CharOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                local options = Settings.CreateSliderOptions(100, 1000, 1)
+                options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+                Settings.CreateSlider(CharOptions, setting, options, L["The milliseconds being used in key click delay."])
+            end
+        end
+
 
         createBlizzOptions()
 
