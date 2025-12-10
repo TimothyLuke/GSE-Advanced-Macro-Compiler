@@ -17,190 +17,6 @@ function GSE.GetOptionsTable()
         type = "group",
         name = "|cffff0000GSE:|r " .. L["Options"],
         args = {
-            sequenceReset = {
-                name = L["Sequence Reset"],
-                desc = L[
-                    "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
-                ],
-                order = 3,
-                type = "group",
-                args = {
-                    resetbuttontitle = {
-                        type = "header",
-                        name = L["Mouse Buttons."],
-                        order = 550
-                    },
-                    resetLeftButton = {
-                        name = L["Left Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftButton"] = value
-                        end,
-                        order = 551
-                    },
-                    resetRightButton = {
-                        name = L["Right Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightButton"] = value
-                        end,
-                        order = 552
-                    },
-                    resetMiddleButton = {
-                        name = L["Middle Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["MiddleButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["MiddleButton"] = value
-                        end,
-                        order = 553
-                    },
-                    resetButton4 = {
-                        name = L["Mouse Button 4"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Button4"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Button4"] = value
-                        end,
-                        order = 554
-                    },
-                    resetButton5 = {
-                        name = L["Mouse Button 5"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Button5"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Button5"] = value
-                        end,
-                        order = 555
-                    },
-                    resetalttitle = {
-                        type = "header",
-                        name = L["Alt Keys."],
-                        order = 560
-                    },
-                    resetAnyAltKey = {
-                        name = L["Any Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Alt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Alt"] = value
-                        end,
-                        order = 561
-                    },
-                    resetLeftAltKey = {
-                        name = L["Left Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftAlt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftAlt"] = value
-                        end,
-                        order = 562
-                    },
-                    resetRightAltKey = {
-                        name = L["Right Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightAlt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightAlt"] = value
-                        end,
-                        order = 563
-                    },
-                    resetcontroltitle = {
-                        type = "header",
-                        name = L["Control Keys."],
-                        order = 570
-                    },
-                    resetAnyControlKey = {
-                        name = L["Any Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Control"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Control"] = value
-                        end,
-                        order = 571
-                    },
-                    resetLeftControlKey = {
-                        name = L["Left Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftControl"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftControl"] = value
-                        end,
-                        order = 572
-                    },
-                    resetRightControlKey = {
-                        name = L["Right Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightControl"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightControl"] = value
-                        end,
-                        order = 573
-                    },
-                    resetshifttitle = {
-                        type = "header",
-                        name = L["Shift Keys."],
-                        order = 580
-                    },
-                    resetAnyShiftKey = {
-                        name = L["Any Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Shift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Shift"] = value
-                        end,
-                        order = 581
-                    },
-                    resetLeftShiftKey = {
-                        name = L["Left Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftShift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftShift"] = value
-                        end,
-                        order = 582
-                    },
-                    resetRightShiftKey = {
-                        name = L["Right Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightShift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightShift"] = value
-                        end,
-                        order = 583
-                    }
-                }
-            },
             troubleshooting = {
                 name = L["Troubleshooting"],
                 desc = L["Common Solutions to game quirks that seem to affect some people."],
@@ -1020,10 +836,6 @@ local registered = false
 
 local function createBlizzOptions()
     
-    -- sequenceReset
-    config:RegisterOptionsTable(addonName .. "-SequenceReset", modoptions.args.sequenceReset)
-    dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, GSE.MenuCategoryID)
-
     -- Troubleshooting
     config:RegisterOptionsTable(addonName .. "-Troubleshooting", modoptions.args.troubleshooting)
     dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, GSE.MenuCategoryID)
@@ -1160,32 +972,113 @@ function GSE:CreateConfigPanels()
         end
 
         -- Character Specific Settings
-        local CharOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
-
-        -- Reset OOC Queue
+            
         do
-            local setting = Settings.RegisterAddOnSetting(CharOptions, "charresetOOC", "resetOOC", GSE_C, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
-            Settings.CreateCheckbox(CharOptions, setting, L["Resets sequences back to the initial state when out of combat."])
-        end
+            local CharOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
 
-        ---- externalMillisecondClickRate
-        do
-            if GSE.Patron or GSE.Developer then
-                local function GetValue()
-                    return GSE_C.msClickRate or 250
+
+            -- Reset OOC Queue
+            do
+                local setting = Settings.RegisterAddOnSetting(CharOptions, "charresetOOC", "resetOOC", GSE_C, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+                Settings.CreateCheckbox(CharOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+            end
+
+            ---- externalMillisecondClickRate
+            do
+                if GSE.Patron or GSE.Developer then
+                    local function GetValue()
+                        return GSE_C.msClickRate or 250
+                    end
+
+                    local function SetValue(value)
+                        GSE_C.msClickRate = value
+                    end
+
+                    local setting = Settings.RegisterProxySetting(CharOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                    local options = Settings.CreateSliderOptions(100, 1000, 1)
+                    options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+                    Settings.CreateSlider(CharOptions, setting, options, L["The milliseconds being used in key click delay."])
                 end
-
-                local function SetValue(value)
-                    GSE_C.msClickRate = value
-                end
-
-                local setting = Settings.RegisterProxySetting(CharOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
-                local options = Settings.CreateSliderOptions(100, 1000, 1)
-                options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-                Settings.CreateSlider(CharOptions, setting, options, L["The milliseconds being used in key click delay."])
             end
         end
 
+        do
+            local ResetOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
+
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Mouse Buttons."] , ["tooltip"]= L["These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."] }))
+            end
+            -- Reset OOC Queue
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftButton", "LeftButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightButton", "RightButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetMiddleButton", "MiddleButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Middle Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton4", "Button4", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 4"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton4", "Button5", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 5"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Alt Keys."], ["tooltip"]= L["Alt Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyAltKey", "Alt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftAltKey", "LeftAlt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightAltKey", "RightAlt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Control Keys."], ["tooltip"]= L["Control Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyControlKey", "Control", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftControlKey", "LeftControl", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightControlKey", "RightControl", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Shift Keys."], ["tooltip"]= L["Shift Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyShiftKey", "Shift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftShiftKey", "LeftShift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightShiftKey", "RightShift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+        end
 
         createBlizzOptions()
 
