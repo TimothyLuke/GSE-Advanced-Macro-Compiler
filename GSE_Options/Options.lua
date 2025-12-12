@@ -835,7 +835,7 @@ local modoptions = GSE.GetOptionsTable()
 local registered = false
 
 local function createBlizzOptions()
-    
+
     -- Troubleshooting
     config:RegisterOptionsTable(addonName .. "-Troubleshooting", modoptions.args.troubleshooting)
     dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, GSE.MenuCategoryID)
@@ -972,7 +972,7 @@ function GSE:CreateConfigPanels()
         end
 
         -- Character Specific Settings
-            
+
         do
             local CharOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
 
