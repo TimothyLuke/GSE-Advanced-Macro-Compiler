@@ -1093,10 +1093,34 @@ maxsequences = 1
 spelllist = newtable()
 for k,v in ipairs(compressedspelllist) do
     tinsert(spelllist, newtable())
-    for x, y in ipairs(newtable(strsplit("\001",v))) do
+    local splitA = newtable()
+    local startA = 1
+    while true do
+        local sa, ea = string.find(v, "\001", startA, true)
+        if not sa then
+            tinsert(splitA, string.sub(v, startA))
+            break
+        end
+        tinsert(splitA, string.sub(v, startA, sa - 1))
+        startA = ea + 1
+    end
+    for x, y in ipairs(splitA) do
         tinsert(spelllist[k], newtable())
-        for _,j in ipairs(newtable(strsplit("|",y))) do
-            local a,b = strsplit("\002",j)
+        local splitB = newtable()
+        local startB = 1
+        while true do
+            local sb, eb = string.find(y, "|", startB, true)
+            if not sb then
+                tinsert(splitB, string.sub(y, startB))
+                break
+            end
+            tinsert(splitB, string.sub(y, startB, sb - 1))
+            startB = eb + 1
+        end
+        for _, j in ipairs(splitB) do
+            local sa, ea = string.find(j, "\002", 1, true)
+            local a = string.sub(j, 1, sa - 1)
+            local b = string.sub(j, ea + 1)
             spelllist[k][x][a] = b
         end
     end
