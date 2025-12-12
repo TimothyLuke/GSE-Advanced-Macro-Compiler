@@ -994,7 +994,7 @@ function GSE:CreateConfigPanels()
                         GSE_C.msClickRate = value
                     end
 
-                    local setting = Settings.RegisterProxySetting(CharOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                    local setting = Settings.RegisterProxySetting(CharOptions, "charmsClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
                     local options = Settings.CreateSliderOptions(100, 1000, 1)
                     options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
                     Settings.CreateSlider(CharOptions, setting, options, L["The milliseconds being used in key click delay."])
@@ -1003,7 +1003,7 @@ function GSE:CreateConfigPanels()
         end
 
         do
-            local ResetOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
+            local ResetOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Sequence Reset"])
 
             do
                 local layout = SettingsPanel:GetLayout(ResetOptions)
@@ -1027,7 +1027,7 @@ function GSE:CreateConfigPanels()
                 Settings.CreateCheckbox(ResetOptions, setting, "")
             end
             do
-                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton4", "Button5", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 5"], false)
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton5", "Button5", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 5"], false)
                 Settings.CreateCheckbox(ResetOptions, setting, "")
             end
             do
