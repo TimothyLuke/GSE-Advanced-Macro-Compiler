@@ -1,4 +1,4 @@
-## Interface: 11508, 50502, 110205, 110207, 120000
+## Interface: 11508, 20505, 50502, 120000, 120001
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
@@ -23,7 +23,7 @@
 ## Category-zhTW: 戰鬥
 ## Group: GSE
 
-## OnlyBetaAndPTR: 1
+
 
 ## X-WoWI-ID: 23921
 ## X-Curse-Project-ID: 101161
