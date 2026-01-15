@@ -1,4 +1,4 @@
-## Interface: 11508, 50502, 110205, 110207, 120000
+## Interface: 11508, 20505, 50502, 120000, 120001
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Configuration Options|r
 ## Notes: GSE Configuration Options
