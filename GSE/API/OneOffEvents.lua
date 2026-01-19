@@ -97,7 +97,10 @@ function GSE.PerformOneOffEvents()
             -- only do this for retail not classics
             for iter = 0, 13 do
                 for k,v in GSE.Library[iter] do
-                    if not v.MetaData.GSEVersion or v.MetaData.GSEVersion < 3300 then
+                    if not v.MetaData then
+                        v.MetaData = {}
+                    end
+                    if not v.MetaData.GSEVersion or v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
                         v.MetaData.Disabled = true
                         local vals = {}
                         vals.action = "Replace"
