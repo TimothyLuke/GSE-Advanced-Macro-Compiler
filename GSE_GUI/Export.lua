@@ -59,7 +59,7 @@ local function compileExport(exportTable, humanReadable)
     return exportstring
 end
 
-GSE.GUIAdvancedExport = function(exportframe)
+GSE.GUIAdvancedExport = function(exportframe, objectname, type)
     exportframe:ReleaseChildren()
     exportframe:SetStatusText(L["Advanced Export"])
     local exportTable = {
@@ -164,7 +164,6 @@ GSE.GUIAdvancedExport = function(exportframe)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                print(key)
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(GSE.FindSequence(key)), Statics.TranslatorMode.ID)
@@ -200,7 +199,6 @@ GSE.GUIAdvancedExport = function(exportframe)
                         if mslot > MAX_ACCOUNT_MACROS then
                             category = "p"
                         end
-                        print("made new")
                     else
                         source = GSEMacros[char .. "-" .. realm][key]
                         category = "p"
@@ -229,8 +227,7 @@ end
 
 
 function GSE.GUIExport(category, objectname, type)
-    local _, _, _, tocversion = GetBuildInfo()
-    GSE.GUIExportframe.classid = category
-    GSE.GUIAdvancedExport(exportframe)
-    GSE.GUIExportframe:Show()
+    exportframe.classid = category
+    GSE.GUIAdvancedExport(exportframe, objectname, type)
+    exportframe:Show()
 end
