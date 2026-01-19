@@ -328,8 +328,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             v = GSE.processWAGOImport(v, true)
 
             if v.MetaData.GSEVersion and v.MetaData.GSEVersion > 3200 then
-                DevTools_Dump(v.MetaData.GSEVersion)
-                DevTools_Dump(math.floor(GSE.VersionNumber/ 100) * 100)
                 if v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
                     v.MetaData.Disabled = true
                 end

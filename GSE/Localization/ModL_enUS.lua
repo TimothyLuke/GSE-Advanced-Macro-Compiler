@@ -824,8 +824,7 @@ L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) th
 L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
 L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight Beta continues and we are hopeful that we will be able to continue.\n\nIn this build is a new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time and show mod keys etc."
-
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight has arrived.  There is not a lot of change on the surface however a humber of changes have been made to make GSE compatible with Midnight.  \n\nA new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time.\n\nExporting has changed with the formerly patron collection export mode not incorported into all versions."
 -- #1846
 L["GSE Options Not Enabled"] = true
 L["Import String Not Recognised."] = true
