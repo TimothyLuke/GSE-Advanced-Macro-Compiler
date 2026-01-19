@@ -112,6 +112,7 @@ function GSE.PerformOneOffEvents()
                 end
             end
         end
+        GSEOptions.shownew = true
         GSE_C.Updates["3300"] = true
     end
 end
