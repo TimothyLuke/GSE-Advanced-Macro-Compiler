@@ -327,16 +327,18 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             local seqName = k
             v = GSE.processWAGOImport(v, true)
 
-            if v.MetaData.GSEVersion and v.MetaData.GSEVersion < 3200 then
-                if GSE.Update31Actions then
-                    v = GSE.Update31Actions(v)
-                else
-                    GSE.Print(
+            if v.MetaData.GSEVersion and v.MetaData.GSEVersion > 3200 then
+                DevTools_Dump(v.MetaData.GSEVersion)
+                DevTools_Dump(math.floor(GSE.VersionNumber/ 100) * 100)
+                if v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
+                    v.MetaData.Disabled = true
+                end
+            else
+                GSE.Print(
                         L["This macro is not compatible with this version of the game and cannot be imported."],
                         L["Import"]
                     )
-                    return
-                end
+                return
             end
             if forcereplace then
                 GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
