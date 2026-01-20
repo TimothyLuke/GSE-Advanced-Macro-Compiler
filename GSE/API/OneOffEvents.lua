@@ -92,29 +92,6 @@ function GSE.PerformOneOffEvents()
         end
         GSE_C.Updates["3218"] = true
     end
-    if GSE.isEmpty(GSE_C.Updates["3300"]) then
-        if GSE.GameMode == 12 then
-            -- only do this for retail not classics
-            for iter = 0, 13 do
-                for k,v in GSE.Library[iter] do
-                    if not v.MetaData then
-                        v.MetaData = {}
-                    end
-                    if not v.MetaData.GSEVersion or v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
-                        v.MetaData.Disabled = true
-                        local vals = {}
-                        vals.action = "Replace"
-                        vals.sequencename = k
-                        vals.sequence = v
-                        vals.classid = iter
-                        table.insert(GSE.OOCQueue, vals)
-                    end
-                end
-            end
-        end
-        GSEOptions.shownew = true
-        GSE_C.Updates["3300"] = true
-    end
 end
 
 GSE.DebugProfile("OneOffEvents")
