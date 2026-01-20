@@ -386,7 +386,27 @@ local function startup()
         GSEMacros[char .. "-" .. realm] = {}
     end
     GSE.PrintDebugMessage("I am loaded")
-
+    if GSE.GameMode >= 12 then
+        -- only do this for retail not classics
+        for iter = 0, 13 do
+            if GSE.Library[iter] then
+                for k,v in ipairs(GSE.Library[iter]) do
+                    if not v.MetaData then
+                        v.MetaData = {}
+                    end
+                    if not v.MetaData.GSEVersion or v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
+                        v.MetaData.Disabled = true
+                        local vals = {}
+                        vals.action = "Replace"
+                        vals.sequencename = k
+                        vals.sequence = v
+                        vals.classid = iter
+                        table.insert(GSE.OOCQueue, vals)
+                    end
+                end
+            end
+        end
+    end
     GSE:SendMessage(Statics.CoreLoadedMessage)
 
     -- Register the Sample Macros
@@ -739,3 +759,4 @@ function GSE.CheckGUI()
 end
 
 GSE.DebugProfile("Events")
+

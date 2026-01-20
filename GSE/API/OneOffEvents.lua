@@ -93,5 +93,10 @@ function GSE.PerformOneOffEvents()
         GSE_C.Updates["3218"] = true
     end
 end
+if GSE.isEmpty(GSE_C.Updates["3300"]) then
+    GSEOptions.shownew = true
+    GSE_C.Updates["3300"] = true
+end
+
 
 GSE.DebugProfile("OneOffEvents")
