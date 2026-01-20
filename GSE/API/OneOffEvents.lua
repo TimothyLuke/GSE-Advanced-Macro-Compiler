@@ -3,6 +3,13 @@ local Statics = GSE.Static
 
 local L = GSE.L
 
+if not GSE_C then
+    GSE_C = {}
+end
+if not GSE_C.Updates then
+    GSE_C.Updates = {}
+end
+
 function GSE.PerformOneOffEvents()
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
@@ -93,9 +100,7 @@ function GSE.PerformOneOffEvents()
         GSE_C.Updates["3218"] = true
     end
 end
-if not GSE_C then
-    GSE_C = {}
-end
+
 if GSE.isEmpty(GSE_C.Updates["3300"]) then
     GSEOptions.shownew = true
     GSE_C.Updates["3300"] = true
