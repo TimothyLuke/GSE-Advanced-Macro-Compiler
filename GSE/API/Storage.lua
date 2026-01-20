@@ -64,7 +64,7 @@ end
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load the GSEStorage into a new table.
@@ -83,6 +83,10 @@ function GSE.LoadStorage(destination)
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
         end
+        if GSE.isEmpty(GSESequences[k]) then
+            GSESequences[k] = {}
+        end
+
         local v = GSESequences[k]
         for i, j in pairs(v) do
             local status, err =
@@ -538,7 +542,7 @@ function GSE.UpdateIcon(self, reseticon)
     local reset = self:GetAttribute("combatreset") and self:GetAttribute("combatreset") or false
     if reseticon == true then
         spellinfo.name = gsebutton
-        spellinfo.iconID = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+        spellinfo.iconID = Statics.Icons.GSE_Logo_Dark
         foundSpell = gsebutton
     elseif executionseq[step].type == "macro" and executionseq[step].macrotext then
         spellinfo = GSE.GetSpellsFromString(executionseq[step].macrotext)
@@ -556,15 +560,19 @@ function GSE.UpdateIcon(self, reseticon)
             foundSpell = spellinfo.name
         end
     elseif executionseq[step].type == "item" then
-        local mname, _, _, _, _, _, _, _, _, micon = C_Item.GetItemInfo(executionseq[step].item)
+        local mname, _, _, _, _, _, _, _, _, micon = C_Item.GetItemInfo(GSE.UnEscapeString(executionseq[step].item))
         if mname then
             spellinfo.name = mname
             spellinfo.iconID = micon
             foundSpell = spellinfo.name
         end
     elseif executionseq[step].type == "spell" then
-        spellinfo = C_Spell.GetSpellInfo(executionseq[step].spell)
-        foundSpell = spellinfo.name
+        spellinfo = C_Spell.GetSpellInfo(GSE.UnEscapeString(executionseq[step].spell))
+        if spellinfo then
+            foundSpell = spellinfo.name
+        else
+            GSE.Print("Unable to find spell: " .. GSE.UnEscapeString(executionseq[step].spell) .. " from " .. self:GetName() .. " - Compiled Step " .. step)
+        end
     end
     if executionseq[step].Icon then
         if not spellinfo then
@@ -582,15 +590,16 @@ function GSE.UpdateIcon(self, reseticon)
                 modlist[a] = b == "true" and true or false
             end
         end
-        if WeakAuras then
-            WeakAuras.ScanEvents("GSE_MODS_VISIBLE", gsebutton, modlist)
+        if WeakAuras and WeakAuras.ScanEvents then
+            WeakAuras.ScanEvents(Statics.Messages.GSE_MODS_VISIBLE, gsebutton, modlist)
         end
+        GSE:SendMessage(Statics.Messages.GSE_MODS_VISIBLE, {gsebutton, modlist})
     end
     if spellinfo and spellinfo.iconID then
-        if WeakAuras then
-            WeakAuras.ScanEvents("GSE_SEQUENCE_ICON_UPDATE", gsebutton, spellinfo)
+        if WeakAuras and WeakAuras.ScanEvents then
+            WeakAuras.ScanEvents(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, gsebutton, spellinfo)
         end
-
+        GSE:SendMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, {gsebutton, spellinfo})
         if GSE.ButtonOverrides then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
@@ -1084,10 +1093,34 @@ maxsequences = 1
 spelllist = newtable()
 for k,v in ipairs(compressedspelllist) do
     tinsert(spelllist, newtable())
-    for x, y in ipairs(newtable(strsplit("\001",v))) do
+    local splitA = newtable()
+    local startA = 1
+    while true do
+        local sa, ea = string.find(v, "\001", startA, true)
+        if not sa then
+            tinsert(splitA, string.sub(v, startA))
+            break
+        end
+        tinsert(splitA, string.sub(v, startA, sa - 1))
+        startA = ea + 1
+    end
+    for x, y in ipairs(splitA) do
         tinsert(spelllist[k], newtable())
-        for _,j in ipairs(newtable(strsplit("|",y))) do
-            local a,b = strsplit("\002",j)
+        local splitB = newtable()
+        local startB = 1
+        while true do
+            local sb, eb = string.find(y, "|", startB, true)
+            if not sb then
+                tinsert(splitB, string.sub(y, startB))
+                break
+            end
+            tinsert(splitB, string.sub(y, startB, sb - 1))
+            startB = eb + 1
+        end
+        for _, j in ipairs(splitB) do
+            local sa, ea = string.find(j, "\002", 1, true)
+            local a = string.sub(j, 1, sa - 1)
+            local b = string.sub(j, ea + 1)
             spelllist[k][x][a] = b
         end
     end
@@ -1231,7 +1264,7 @@ function GSE.UpdateVariable(variable, name, status)
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
     end
-    GSE:SendMessage(Statics.VARIABLE_UPDATED, name)
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
 end
 
 function GSE.UpdateMacro(node, category)
@@ -1250,7 +1283,7 @@ function GSE.UpdateMacro(node, category)
             end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
-        GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
+        GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)
     end
     return node
 end
@@ -1271,7 +1304,7 @@ function GSE.ImportMacro(node)
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
     GSE.ManageMacros()
-    GSE:SendMessage(Statics.VARIABLE_UPDATED, node.name)
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)
 end
 
 function GSE.CompileMacroText(text, mode)

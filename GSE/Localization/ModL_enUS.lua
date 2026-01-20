@@ -147,9 +147,7 @@ L["Load"] = true
 L[
         "GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."
     ] = true
-L["Macro unable to be imported."] = true
-L["Macro Import Successful."] = true
-L["Macro Collection to Import."] = true
+
 L["Configuration"] = true
 L["Talents"] = true
 L["Help Information"] = true
@@ -708,7 +706,6 @@ L["How many times does this action repeat"] = true
 L[
         "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
     ] = true
-L["Use WLM Export Sequence Format"] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
 L["Manage Macros"] = true
@@ -797,9 +794,6 @@ L["New Sequence"] = true
 L["Default"] = true
 L["New Variable"] = true
 
-L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.2.28 changes the import and export strings.  Each GSE import will now start with !GSEx! where the x shows the version number going forward.  https://wago.io/gse has been updated toi handle these new import strings and wago.io exports will switch to exporting these style strings around 11.2.  These new strings will be picked up by the classic variants when they are next updated by Blizzard.  As always details are in Discord."
-
 -- #1773
 L[
         "This setting is a common setting used by all WoW mods.  If affects how your action buttons respond.  With this on the react when you hit the button.  With them off they react when you let them go.  In GSE's case this setting has to be off for Actionbar Overrides to work."
@@ -814,3 +808,25 @@ L["Button Settings"] = true
 L["Skyriding / Vehicle Keybinds"] = true
 L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"] = true
 L["Skyriding Button"] = true
+
+-- #1835
+L["Keybinding Tools"] = true
+L["Show Sequence Icons"] = true
+L["Show the Sequence Icon Preview Frame"] = true
+L["Preview Icon Size"] = true
+L["Default is 64 pixels."] = true
+L["Icon Preview Orientation"] = true
+L["Horizontal or Vertical Layout"] = true
+L["Horizontal"] = true
+L["Vertical"] = true
+L["Show Sequence Modifiers"] = true
+L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."] = true
+L["Show Sequence Name"] = true
+L["Show the Name of the Sequence"] = true
+L["WhatsNew"] =
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight has arrived.  There is not a lot of change on the surface however a humber of changes have been made to make GSE compatible with Midnight.  \n\nA new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time.\n\nExporting has changed with the formerly patron collection export mode not incorported into all versions."
+-- #1846
+L["GSE Options Not Enabled"] = true
+L["Import String Not Recognised."] = true
+L["GSE Import Successful."] = true
+L["GSE Collection to Import."] = true

@@ -2849,10 +2849,14 @@ function GSE.CreateEditor()
     local function showKeybind(bind, button, specialization, loadout, type, rightContainer)
         if type == "KB" then
             if not specialization then
-                if GSE.GameMode > 10 then
-                    specialization = GetSpecialization()
-                else
+                if GSE.GameMode < 10 then
                     specialization = 1
+                else
+                    if GSE.GameMode < 12 then
+                        specialization = GetSpecialization()
+                    else
+                        specialization = C_SpecializationInfo.GetSpecialization()
+                    end
                 end
             end
             local initialbind = bind
@@ -3032,18 +3036,22 @@ function GSE.CreateEditor()
             rightContainer:AddChild(row)
             rightContainer:AddChild(row2)
         elseif type == "AO" then
+
             if not button then
                 button = {}
             end
             if button.Bind then
                 bind = button.Bind
             end
-
             if not specialization then
-                if GSE.GameMode > 10 then
-                    specialization = GetSpecialization()
-                else
+                if GSE.GameMode < 10 then
                     specialization = 1
+                else
+                    if GSE.GameMode < 12 then
+                        specialization = GetSpecialization()
+                    else
+                        specialization = C_SpecializationInfo.GetSpecialization()
+                    end
                 end
             end
             local initialbind = bind
@@ -4414,7 +4422,7 @@ end]],
                                             GSE.ButtonOverrides[bind] = nil
                                         end
                                         editframe.ManageTree()
-                                        GSE:SendMessage(Statics.VARIABLE_UPDATED, bind)
+                                        GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, bind)
                                     end
                                 )
                             end
@@ -4521,7 +4529,7 @@ end]],
                         local bind, loadout, type, button
                         type = unique[2]
                         local specialization = unique[3]
-                        if GetSpecialization then
+                        if C_SpecializationInfo or GetSpecialization then
                             bind = unique[4]
                             if #unique == 6 then
                                 loadout = unique[4]
@@ -5070,7 +5078,7 @@ function GSE.ShowSequences()
 end
 
 local function remoteSeqences(message, seqName)
-    if message == Statics.SEQUENCE_UPDATED then
+    if message == Statics.Messages.SEQUENCE_UPDATED then
         if GSE.GUI.editors and #GSE.GUI.editors then
             for _, v in ipairs(GSE.GUI.editors) do
                 v:remoteSequenceUpdated(seqName)
@@ -5080,7 +5088,7 @@ local function remoteSeqences(message, seqName)
 end
 
 local function remoteVariables(message, seqName)
-    if message == Statics.SEQUENCE_UPDATED then
+    if message == Statics.Messages.SEQUENCE_UPDATED then
         if GSE.GUI.editors and #GSE.GUI.editors then
             for _, v in ipairs(GSE.GUI.editors) do
                 v:remoteSequenceUpdated(seqName)
@@ -5090,7 +5098,7 @@ local function remoteVariables(message, seqName)
 end
 
 local function collectionImported(message)
-    if message == Statics.COLLECTION_IMPORTED then
+    if message == Statics.Messages.COLLECTION_IMPORTED then
         if GSE.GUI.editors and #GSE.GUI.editors then
             for _, v in ipairs(GSE.GUI.editors) do
                 v.ManageTree()
@@ -5099,9 +5107,9 @@ local function collectionImported(message)
     end
 end
 
-GSE:RegisterMessage(Statics.SEQUENCE_UPDATED, remoteSeqences)
-GSE:RegisterMessage(Statics.VARIABLE_UPDATED, remoteVariables)
-GSE:RegisterMessage(Statics.COLLECTION_IMPORTED, collectionImported)
+GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, remoteSeqences)
+GSE:RegisterMessage(Statics.Messages.VARIABLE_UPDATED, remoteVariables)
+GSE:RegisterMessage(Statics.Messages.COLLECTION_IMPORTED, collectionImported)
 
 function GSE.GUILoadEditor(editor, key, recordedstring)
     local classid

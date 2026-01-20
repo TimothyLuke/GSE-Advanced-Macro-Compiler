@@ -19,7 +19,11 @@ function GSE:OnInitialize()
 end
 
 function GSE.OpenOptionsPanel()
-  Settings.OpenToCategory("|cFFFFFFFFGS|r|cFF00FFFFE|r")
+  if GSE.MenuCategoryID then
+    Settings.OpenToCategory(GSE.MenuCategoryID)
+  else
+    GSE.Print(L["GSE Options Not Enabled"])
+  end
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)

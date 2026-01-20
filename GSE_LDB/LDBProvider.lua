@@ -3,7 +3,7 @@ local GSE = GSE
 local Statics = GSE.Static
 local L = GSE.L
 
-local iconSource = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
+local iconSource = Statics.Icons.GSE_Logo_Dark
 
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataobj =

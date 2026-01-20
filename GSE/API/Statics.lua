@@ -84,7 +84,7 @@ Statics.CleanStrings = {
 }
 Statics.GSEString = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 Statics.StringReset = "|r"
-Statics.CoreLoadedMessage = "GS-CoreLoaded"
+Statics.CoreLoadedMessage = "GSE-CoreLoaded"
 
 Statics.SystemVariables = {
     ["GCD"] = function()
@@ -252,7 +252,8 @@ else
         [581] = determineSpecializationName(581),
         [1467] = determineSpecializationName(1467),
         [1468] = determineSpecializationName(1468),
-        [1473] = determineSpecializationName(1473)
+        [1473] = determineSpecializationName(1473),
+        [1480] = determineSpecializationName(1480)
     }
 end
 
@@ -455,7 +456,7 @@ Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/ActionORide.png"
 Statics.Icons.Account = 133784
 Statics.Icons.Personal = 236448
 Statics.Icons.Talents = 134327
-
+Statics.Icons.GSE_Logo_Dark = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.blp"
 Statics.GSE3OnClick =
     [=[
 local step = self:GetAttribute('step')
@@ -531,8 +532,11 @@ StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
     preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
-Statics.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
-Statics.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
-Statics.MACRO_UPDATED = "GSE_MACRO_UPDATED"
-Statics.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
+Statics.Messages = {}
+Statics.Messages.GSE_SEQUENCE_ICON_UPDATE = "GSE_SEQUENCE_ICON_UPDATE"
+Statics.Messages.GSE_MODS_VISIBLE = "GSE_MODS_VISIBLE"
+Statics.Messages.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
+Statics.Messages.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
+Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
+
 GSE.DebugProfile("Statics")

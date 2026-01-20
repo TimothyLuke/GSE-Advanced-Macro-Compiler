@@ -179,6 +179,12 @@ local function processCollection(payload)
               payload["Sequences"][k] = GSE.processWAGOImport(payload["Sequences"][k])
             end
             filteredpayload["Sequences"][k] = payload["Sequences"][k]
+            if not filteredpayload["Sequences"][k].MetaData then
+              filteredpayload["Sequences"][k].MetaData = {}
+            end
+            if not filteredpayload["Sequences"][k].MetaData.GSEVersion or filteredpayload["Sequences"][k].MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
+              filteredpayload["Sequences"][k].MetaData.Disabled = true
+            end
             filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
           end
         end
@@ -229,7 +235,7 @@ local function LandingPage()
   local importsequencebox = AceGUI:Create("MultiLineEditBox")
   local recbutton = AceGUI:Create("Button")
 
-  importsequencebox:SetLabel(L["Macro Collection to Import."])
+  importsequencebox:SetLabel(L["GSE Collection to Import."])
   importsequencebox:SetNumLines(20)
   importsequencebox:DisableButton(true)
   importsequencebox:SetFullWidth(true)

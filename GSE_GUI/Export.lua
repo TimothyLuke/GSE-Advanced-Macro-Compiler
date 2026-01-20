@@ -19,18 +19,113 @@ exportframe:SetCallback(
 )
 exportframe:SetLayout("List")
 
-local exportsequencebox = AceGUI:Create("MultiLineEditBox")
-exportsequencebox:SetLabel(L["Variable"])
-exportsequencebox:SetNumLines(22)
-exportsequencebox:DisableButton(true)
-exportsequencebox:SetFullWidth(true)
+local function compileExport(exportTable, humanReadable)
+    local exportstring =
+        GSE.EncodeMessage(
+        {
+            type = "COLLECTION",
+            payload = exportTable
+        }
+    )
 
-local function CreateSequenceExport(type)
+    if humanReadable then
+        exportstring = "# UPDATE PACKAGE NAME \n ```\n" .. exportstring .. "\n```\n\n"
+        exportstring = exportstring .. "This package consists of " .. exportTable.ElementCount .. " elements.\n"
+
+        local sequenceString = ""
+        for k, _ in pairs(exportTable.Sequences) do
+            sequenceString = sequenceString .. "- " .. k .. "\n"
+        end
+        if string.len(sequenceString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Sequences"] .. "\n" .. sequenceString
+        end
+
+        local macroString = ""
+        for k, _ in pairs(exportTable.Macros) do
+            macroString = macroString .. "- " .. k .. "\n"
+        end
+        if string.len(macroString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Macros"] .. "\n" .. macroString
+        end
+
+        local variableString = ""
+        for k, _ in pairs(exportTable.Variables) do
+            variableString = variableString .. "- " .. k .. "\n"
+        end
+        if string.len(variableString) > 0 then
+            exportstring = exportstring .. "\n## " .. L["Variables"] .. "\n" .. variableString
+        end
+    end
+    return exportstring
+end
+
+GSE.GUIAdvancedExport = function(exportframe, objectname, type)
     exportframe:ReleaseChildren()
+    exportframe:SetStatusText(L["Advanced Export"])
+    local exportTable = {
+        ["Sequences"] = {},
+        ["Variables"] = {},
+        ["Macros"] = {},
+        ["ElementCount"] = 0
+    }
 
-    exportsequencebox:SetLabel(L["Sequence"])
+    local HeaderRow = AceGUI:Create("SimpleGroup")
+    HeaderRow:SetLayout("Flow")
+    HeaderRow:SetFullWidth(true)
+    local SequenceDropDown = AceGUI:Create("Dropdown")
+    local cid, sid = GSE.GetCurrentClassID(), GSE.GetCurrentSpecID()
+    for k, v in GSE.pairsByKeys(GSE.GetSequenceNames(), GSE.AlphabeticalTableSortAlgorithm) do
+        local elements = GSE.split(k, ",")
+        local classid, specid = tonumber(elements[1]), tonumber(elements[2])
+        if cid ~= classid then
+            local val = GSE.GetClassName(classid) and GSE.GetClassName(classid) or L["Global"]
+            local key = classid .. val
 
-    exportframe:AddChild(exportsequencebox)
+            SequenceDropDown:AddItem(key, val)
+            SequenceDropDown:SetItemDisabled(key, true)
+            cid = classid
+        end
+        if GetSpecializationInfoByID then
+            if sid ~= specid and sid > 13 and specid > 13 then
+                local val = select(2, GetSpecializationInfoByID(specid))
+                local key = specid .. val
+
+                SequenceDropDown:AddItem(key, val)
+                SequenceDropDown:SetItemDisabled(key, true)
+                sid = specid
+            end
+        end
+        SequenceDropDown:AddItem(v, v)
+    end
+    for k, _ in pairs(GSESequences[0]) do
+        SequenceDropDown:AddItem(k, k)
+    end
+    SequenceDropDown:SetMultiselect(true)
+    SequenceDropDown:SetLabel(L["Sequences"])
+
+    local VariableDropDown = AceGUI:Create("Dropdown")
+    if not GSE.isEmpty(GSEVariables) then
+        for k, _ in pairs(GSEVariables) do
+            VariableDropDown:AddItem(k, k)
+        end
+    end
+
+    local MacroDropDown = AceGUI:Create("Dropdown")
+
+    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    for macid = 1, maxmacros do
+        local mname, _, _ = GetMacroInfo(macid)
+        if mname then
+            MacroDropDown:AddItem(mname, mname)
+        end
+    end
+    MacroDropDown:SetMultiselect(true)
+    MacroDropDown:SetLabel(L["Macros"])
+
+    HeaderRow:AddChild(SequenceDropDown)
+    HeaderRow:AddChild(MacroDropDown)
+    HeaderRow:AddChild(VariableDropDown)
+    exportframe:AddChild(HeaderRow)
 
     local humanexportcheckbox = AceGUI:Create("CheckBox")
     humanexportcheckbox:SetType("checkbox")
@@ -38,158 +133,101 @@ local function CreateSequenceExport(type)
     humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
     exportframe:AddChild(humanexportcheckbox)
 
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
+    humanexportcheckbox:SetValue(GSEOptions.DefaultHumanReadableExportFormat)
 
-    local function GUIUpdateExportBox()
-        local exportsequence = GSE.CloneSequence(GSE.GUIExportframe.sequence)
-        exportsequence.objectType = type
-
-        if humanexportcheckbox:GetValue() then
-            local exporttext =
-                "```\n" ..
-                GSE.ExportSequence(
-                    GSE.GUIExportframe.sequence,
-                    exportframe.sequencename,
-                    GSEOptions.UseVerboseExportFormat
-                ) ..
-                    "\n```\n\n"
-            exporttext =
-                exporttext .. GSE.ExportSequenceWLMFormat(GSE.GUIExportframe.sequence, exportframe.sequencename)
-            exportsequencebox:SetText(exporttext)
-        else
-            exportsequencebox:SetText(
-                GSE.ExportSequence(
-                    GSE.GUIExportframe.sequence,
-                    exportframe.sequencename,
-                    GSEOptions.UseVerboseExportFormat
-                )
-            )
-        end
-    end
-    humanexportcheckbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            GUIUpdateExportBox()
-        end
-    )
-
-    GUIUpdateExportBox()
-end
-GSE.GUIExportframe = exportframe
-
-local function CreateVariableExport(objectname, type)
-    exportframe:ReleaseChildren()
+    local exportsequencebox = AceGUI:Create("MultiLineEditBox")
     exportsequencebox:SetLabel(L["Variable"])
+    exportsequencebox:SetNumLines(22)
+    exportsequencebox:DisableButton(true)
+    exportsequencebox:SetFullWidth(true)
     exportframe:AddChild(exportsequencebox)
 
-    local humanexportcheckbox = AceGUI:Create("CheckBox")
-    humanexportcheckbox:SetType("checkbox")
-
-    humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
-    exportframe:AddChild(humanexportcheckbox)
-
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
-
-    local function GUIUpdateExportBox()
-        local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[objectname])
-        uncompressedVersion.objectType = type
-        uncompressedVersion.name = objectname
-        local exportString = GSE.EncodeMessage(uncompressedVersion)
-        if humanexportcheckbox:GetValue() then
-            local exporttext = "# " .. objectname .. " (" .. L["Variable"] .. ") \n```\n" .. exportString .. "\n```"
-            if uncompressedVersion.comments then
-                exporttext = exporttext .. "\n\n## Usage Information\n" .. uncompressedVersion.comments .. "\n\n"
+    VariableDropDown:SetMultiselect(true)
+    VariableDropDown:SetLabel(L["Variables"])
+    VariableDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[key])
+                uncompressedVersion.objectType = "VARIABLE"
+                uncompressedVersion.name = key
+                exportTable["Variables"][key] = GSE.EncodeMessage(uncompressedVersion)
+                exportTable.ElementCount = exportTable.ElementCount + 1
+            else
+                exportTable["Variables"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
             end
-            exportsequencebox:SetText(exporttext)
-        else
-            exportsequencebox:SetText(exportString)
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
-    end
+    )
+    SequenceDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                exportTable["Sequences"][key] =
+                    GSE.UnEscapeTable(
+                    GSE.TranslateSequence(GSE.CloneSequence(GSE.FindSequence(key)), Statics.TranslatorMode.ID)
+                )
+                exportTable.ElementCount = exportTable.ElementCount + 1
+            else
+                exportTable["Sequences"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
+            end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
+    MacroDropDown:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key, checked)
+            if checked then
+                local category = "a"
+                local source = GSEMacros[key]
+                if GSE.isEmpty(source) then
+                    local char, realm = UnitFullName("player")
+                    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
+                        GSEMacros[char .. "-" .. realm] = {}
+                    end
+                    if GSE.isEmpty(GSEMacros[char .. "-" .. realm][key]) then
+                        -- need to find the macro as its not managed by GSE
+                        source = {}
+                        local mslot = GetMacroIndexByName(key)
+                        local _, micon, mbody = GetMacroInfo(mslot)
+                        source.name = key
+                        source.icon = micon
+                        source.text = mbody
+                        source.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
+                        if mslot > MAX_ACCOUNT_MACROS then
+                            category = "p"
+                        end
+                    else
+                        source = GSEMacros[char .. "-" .. realm][key]
+                        category = "p"
+                    end
+                end
+                local exportobject = GSE.CloneSequence(source)
+                exportobject.objectType = "MACRO"
+                exportobject.category = category
+                exportobject.name = key
+                exportTable["Macros"][key] = exportobject
+                exportTable.ElementCount = exportTable.ElementCount + 1
+            else
+                exportTable["Macros"][key] = nil
+                exportTable.ElementCount = exportTable.ElementCount - 1
+            end
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
+        end
+    )
     humanexportcheckbox:SetCallback(
         "OnValueChanged",
         function(sel, object, value)
-            GUIUpdateExportBox()
-        end
-    )
-    GUIUpdateExportBox()
-end
-
-local function CreateMacroExport(category, objectname, type)
-    local source = GSEMacros
-    if category == "p" then
-        local char, realm = UnitFullName("player")
-        source = GSEMacros[char .. "-" .. realm]
-    end
-    local exportobject = GSE.CloneSequence(source[objectname])
-    exportobject.objectType = type
-    exportobject.category = category
-    exportobject.name = objectname
-    if GSE.isEmpty(exportobject.managedMacro) then
-        local _, micon, mbody = GetMacroInfo(objectname)
-        exportobject.icon = micon
-        exportobject.text = mbody
-        exportobject.managedMacro = GSE.CompileMacroText(mbody, Statics.TranslatorMode.ID)
-    end
-    local humanexportcheckbox = AceGUI:Create("CheckBox")
-    humanexportcheckbox:SetType("checkbox")
-    humanexportcheckbox:SetLabel(L["Create Human Readable Export"])
-
-    humanexportcheckbox:SetValue(GSEOptions.UseWLMExportFormat)
-
-    exportframe:ReleaseChildren()
-    exportsequencebox:SetLabel(L["Macro"])
-    exportframe:AddChild(exportsequencebox)
-    exportframe:AddChild(humanexportcheckbox)
-
-    local exportstring = GSE.EncodeMessage(exportobject)
-    local function GUIUpdateExportBox()
-        if humanexportcheckbox:GetValue() then
-            local exporttext = "# " .. objectname .. " (" .. L["Macro"] .. ") \n```\n" .. exportstring .. "\n```"
-            if exportobject.comments then
-                exporttext = exporttext .. "\n\n## Usage Information\n" .. exportobject.comments .. "\n\n"
-            end
-            exportsequencebox:SetText(exporttext)
-        else
-            exportsequencebox:SetText(exportstring)
-        end
-    end
-    GUIUpdateExportBox()
-    humanexportcheckbox:SetCallback(
-        "OnValueChanged",
-        function(sel, object, value)
-            GUIUpdateExportBox()
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
     )
 end
+
 
 function GSE.GUIExport(category, objectname, type)
-    local _, _, _, tocversion = GetBuildInfo()
-    GSE.GUIExportframe.classid = category
-
-    if GSE.Patron and GSE.GUIAdvancedExport then
-        GSE.GUIAdvancedExport(exportframe)
-    else
-        if GSE.isEmpty(type) then
-            type = "SEQUENCE"
-        end
-        GSE.GUIExportframe.type = type
-        if type == "SEQUENCE" then
-            GSE.GUIExportframe.sequencename = objectname
-            GSE.GUIExportframe.sequence =
-                GSE.CloneSequence(GSE.Library[tonumber(exportframe.classid)][exportframe.sequencename])
-            GSE.GUIExportframe.sequence.MetaData.GSEVersion = GSE.VersionNumber
-            GSE.GUIExportframe.sequence.MetaData.EnforceCompatability = true
-            GSE.GUIExportframe.sequence.MetaData.TOC = tocversion
-            CreateSequenceExport(type)
-        elseif type == "VARIABLE" then
-            CreateVariableExport(objectname, type)
-        elseif type == "COLLECTION" then
-            if GSE.GUIAdvancedExport then
-                GSE.GUIAdvancedExport(exportframe)
-            end
-        elseif type == "MACRO" then
-            CreateMacroExport(category, objectname, type)
-        end
-    end
-    GSE.GUIExportframe:Show()
+    exportframe.classid = category
+    GSE.GUIAdvancedExport(exportframe, objectname, type)
+    exportframe:Show()
 end

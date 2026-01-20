@@ -65,13 +65,11 @@ jobs:
           NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
           
     # Runs a set of commands using the runners shell
-    - name: Create Package Retail
+    - name: Create Package
       uses: BigWigsMods/packager@master
       if: ${{ github.event_name != 'pull_request' }}
       env:
         GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        args: -n "{package-name}-midnight-alpha-{project-abbreviated-hash}"
         
     - name: Publish Patreon
       run: npm run-script pat

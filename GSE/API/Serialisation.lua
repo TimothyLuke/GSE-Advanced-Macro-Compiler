@@ -1,256 +1,25 @@
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
-local libS = LibStub:GetLibrary("AceSerializer-3.0")
-local libC = LibStub:GetLibrary("LibCompress")
-local libCE = libC:GetAddonEncodeTable()
-
-local bytetoB64 = {
-    [0] = "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z",
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "O",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "T",
-    "U",
-    "V",
-    "W",
-    "X",
-    "Y",
-    "Z",
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "(",
-    ")"
-}
-
-local B64tobyte = {
-    a = 0,
-    b = 1,
-    c = 2,
-    d = 3,
-    e = 4,
-    f = 5,
-    g = 6,
-    h = 7,
-    i = 8,
-    j = 9,
-    k = 10,
-    l = 11,
-    m = 12,
-    n = 13,
-    o = 14,
-    p = 15,
-    q = 16,
-    r = 17,
-    s = 18,
-    t = 19,
-    u = 20,
-    v = 21,
-    w = 22,
-    x = 23,
-    y = 24,
-    z = 25,
-    A = 26,
-    B = 27,
-    C = 28,
-    D = 29,
-    E = 30,
-    F = 31,
-    G = 32,
-    H = 33,
-    I = 34,
-    J = 35,
-    K = 36,
-    L = 37,
-    M = 38,
-    N = 39,
-    O = 40,
-    P = 41,
-    Q = 42,
-    R = 43,
-    S = 44,
-    T = 45,
-    U = 46,
-    V = 47,
-    W = 48,
-    X = 49,
-    Y = 50,
-    Z = 51,
-    ["0"] = 52,
-    ["1"] = 53,
-    ["2"] = 54,
-    ["3"] = 55,
-    ["4"] = 56,
-    ["5"] = 57,
-    ["6"] = 58,
-    ["7"] = 59,
-    ["8"] = 60,
-    ["9"] = 61,
-    ["("] = 62,
-    [")"] = 63
-}
-
--- This code is based on the Encode7Bit algorithm from LibCompress
--- Credit goes to Galmok of European Stormrage (Horde), galmok@gmail.com
--- This version was lifted straight from WeakAuras 2
-local encodeB64Table = {}
-
-function GSE.encodeB64(str)
-    local B64 = encodeB64Table
-    local remainder = 0
-    local remainder_length = 0
-    local encoded_size = 0
-    local l = #str
-    local code
-    for i = 1, l do
-        code = string.byte(str, i)
-        remainder = remainder + bit.lshift(code, remainder_length)
-        remainder_length = remainder_length + 8
-        while (remainder_length) >= 6 do
-            encoded_size = encoded_size + 1
-            B64[encoded_size] = bytetoB64[bit.band(remainder, 63)]
-            remainder = bit.rshift(remainder, 6)
-            remainder_length = remainder_length - 6
-        end
-    end
-    if remainder_length > 0 then
-        encoded_size = encoded_size + 1
-        B64[encoded_size] = bytetoB64[remainder]
-    end
-    return table.concat(B64, "", 1, encoded_size)
-end
-
-local decodeB64Table = {}
-
-function GSE.decodeB64(str)
-    local bit8 = decodeB64Table
-    local decoded_size = 0
-    local ch
-    local i = 1
-    local bitfield_len = 0
-    local bitfield = 0
-    local l = #str
-    while true do
-        if bitfield_len >= 8 then
-            decoded_size = decoded_size + 1
-            bit8[decoded_size] = string.char(bit.band(bitfield, 255))
-            bitfield = bit.rshift(bitfield, 8)
-            bitfield_len = bitfield_len - 8
-        end
-        ch = B64tobyte[str:sub(i, i)]
-        bitfield = bitfield + bit.lshift(ch or 0, bitfield_len)
-        bitfield_len = bitfield_len + 6
-        if i > l then
-            break
-        end
-        i = i + 1
-    end
-    return table.concat(bit8, "", 1, decoded_size)
-end
 
 -- This encodes a LUA Table for transmission
 function GSE.EncodeMessage(tab)
-    if C_EncodingUtil then
         local result =
             "!GSE3!" .. C_EncodingUtil.EncodeBase64(C_EncodingUtil.CompressString(C_EncodingUtil.SerializeCBOR(tab)))
         return result
-    else
-        local one = libS:Serialize(tab)
-        GSE.PrintDebugMessage("Compress Stage 1: " .. one, Statics.SourceTransmission)
-        local two = libC:Compress(one)
-        GSE.PrintDebugMessage("Compress Stage 2: " .. two, Statics.SourceTransmission)
-        local final = GSE.encodeB64(two)
-        GSE.PrintDebugMessage("Compress Stage Result: " .. final, Statics.SourceTransmission)
-        return final
-    end
-end
-
-local function oldDecode(data)
-    -- Decode the compressed data
-    local one = GSE.decodeB64(data)
-
-    -- Decompress the decoded data
-    local two, message = libC:Decompress(one)
-    if (not two) then
-        GSE.PrintDebugMessage("Error decompressing: " .. message, Statics.SourceTransmission)
-        return
-    end
-
-    -- Deserialize the decompressed data
-    local success, final = libS:Deserialize(two)
-    if (not success) then
-        GSE.PrintDebugMessage("Error deserializing " .. final, Statics.SourceTransmission)
-        return
-    end
-
-    GSE.PrintDebugMessage("Data Finalised", Statics.SourceTransmission)
-    return success, final
 end
 
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
 function GSE.DecodeMessage(data)
-    if C_EncodingUtil then
-        if string.sub(data, 1, 6) == "!GSE3!" then
+    if string.sub(data, 1, 6) == "!GSE3!" then
+        return  pcall(function()
             local message = string.sub(data, 6, #data)
             local baseDecode = C_EncodingUtil.DecodeBase64(message)
             local decomString = C_EncodingUtil.DecompressString(baseDecode)
-            local deserializeCBOR = C_EncodingUtil.DeserializeCBOR(decomString)
-            return true, deserializeCBOR
-        else
-            GSE.PrintDebugMessage("Error decompressing - Not valid GSE3 import: " .. data, Statics.SourceTransmission)
-            return oldDecode(data)
-        end
+            return  C_EncodingUtil.DeserializeCBOR(decomString)
+        end)
     else
-        return oldDecode(data)
+        return false
     end
 end
 
@@ -525,6 +294,8 @@ function GSE.CreateSequenceLink(sequenceName, classID, playerName)
 end
 
 -- This filter function courtesy of WeakAuras -- https://github.com/WeakAuras/WeakAuras2/blob/main/WeakAuras/Transmission.lua#L147
+
+-- #1830 Not compatible with Midnight
 local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
     if flag == "GM" or flag == "DEV" or (event == "CHAT_MSG_CHANNEL" and type(channelId) == "number" and channelId > 0) then
         return
@@ -579,23 +350,24 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
         end
     end
 end
-
-ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filterFunc)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
-
+-- #1830 Not compatible with Midnight
+if GSE.GameMode < 12 then
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filterFunc)
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", filterFunc)
+end
 -- process chatlinks
 hooksecurefunc(
     "SetItemRef",

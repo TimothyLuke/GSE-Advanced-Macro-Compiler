@@ -113,7 +113,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
         GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.MetaData.Default])
     end
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
@@ -166,7 +166,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
         "Storage"
     )
-    GSE:SendMessage(Statics.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load a collection of Sequences
@@ -292,7 +292,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             for _, v in pairs(actiontable["Macros"]) do
                 GSE.ImportSerialisedSequence(v, forcereplace)
             end
-            GSE:SendMessage(Statics.COLLECTION_IMPORTED)
+            GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
             actiontable.objectType = nil
             local oocaction = {
@@ -327,16 +327,16 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             local seqName = k
             v = GSE.processWAGOImport(v, true)
 
-            if v.MetaData.GSEVersion and v.MetaData.GSEVersion < 3200 then
-                if GSE.Update31Actions then
-                    v = GSE.Update31Actions(v)
-                else
-                    GSE.Print(
+            if v.MetaData.GSEVersion and v.MetaData.GSEVersion > 3200 then
+                if v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
+                    v.MetaData.Disabled = true
+                end
+            else
+                GSE.Print(
                         L["This macro is not compatible with this version of the game and cannot be imported."],
                         L["Import"]
                     )
-                    return
-                end
+                return
             end
             if forcereplace then
                 GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
@@ -344,7 +344,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 GSE.AddSequenceToCollection(seqName, v)
             end
 
-            GSE:SendMessage(Statics.SEQUENCE_UPDATED, seqName)
+            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)
@@ -461,7 +461,7 @@ function GSE.ScanMacrosForErrors()
 end
 
 --- This creates a pretty export for WLM Forums
-function GSE.ExportSequenceWLMFormat(sequence, sequencename)
+function GSE.ExportSequenceHumanReadableFormat(sequence, sequencename)
     local returnstring =
         "# " ..
         sequencename ..
@@ -710,6 +710,17 @@ function GSE:GSSlash(input)
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.ShowImport()
+        end
+    elseif string.lower(command) == "bind" then
+        -- /gse bind spec sequence key
+        local spec = tostring(params[2])
+        local sequence = tostring(params[3])
+        local physicalkey = tostring(params[4])
+        if spec and sequence and physicalkey then
+            GSE_C["KeyBindings"][tostring(spec)][physicalkey] = sequence
+            GSE.ReloadKeyBindings()
+        else
+           GSE.Print("Invalid Bind - /gse bind spec sequence key")
         end
     else
         GSE.CheckGUI()

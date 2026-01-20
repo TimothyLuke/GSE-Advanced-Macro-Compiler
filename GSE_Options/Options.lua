@@ -17,431 +17,6 @@ function GSE.GetOptionsTable()
         type = "group",
         name = "|cffff0000GSE:|r " .. L["Options"],
         args = {
-            general = {
-                name = L["General"],
-                desc = L["General Options"],
-                type = "group",
-                order = 1,
-                args = {
-                    title1 = {
-                        type = "header",
-                        name = L["General Options"],
-                        order = 100
-                    },
-                    minimapIcon = {
-                        name = L["Hide Minimap Icon"],
-                        desc = L["Hide Minimap Icon for LibDataBroker (LDB) data text."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showMiniMap.hide = val
-                            if GSE.LDB then
-                                GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
-                            end
-                        end,
-                        get = function(info)
-                            return GSEOptions.showMiniMap.hide
-                        end,
-                        order = 199
-                    },
-                    showothergseusersintooltip = {
-                        name = L["Show GSE Users in LDB"],
-                        desc = L[
-                            "GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showGSEUsers = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showGSEUsers
-                        end,
-                        order = 200
-                    },
-                    showoocqueueintooltip = {
-                        name = L["Show OOC Queue in LDB"],
-                        desc = L[
-                            "GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showGSEoocqueue = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showGSEoocqueue
-                        end,
-                        order = 201
-                    },
-                    hideLogin = {
-                        name = L["Hide Login Message"],
-                        desc = L["Hides the message that GSE is loaded."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.HideLoginMessage = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.HideLoginMessage
-                        end,
-                        order = 202
-                    },
-                    resetOOC = {
-                        name = L["Reset Sequences when out of combat"],
-                        desc = L["Resets sequences back to the initial state when out of combat."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.resetOOC = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.resetOOC
-                        end,
-                        order = 300
-                    },
-                    defaultImportAction = {
-                        name = L["Default Import Action"],
-                        desc = L[
-                            "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
-                        ],
-                        type = "select",
-                        style = "radio",
-                        values = {
-                            ["MERGE"] = L["Merge"],
-                            ["REPLACE"] = L["Replace"],
-                            ["IGNORE"] = L["Ignore"]
-                        },
-                        set = function(info, val)
-                            GSEOptions.DefaultImportAction = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.DefaultImportAction
-                        end,
-                        order = 320
-                    },
-                    UseVerboseExportFormat = {
-                        name = L["Create Human Readable Exports"],
-                        desc = L["When exporting from GSE create a descriptive export for Discord/Discource forums."],
-                        --            guiHidden = true,
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.UseWLMExportFormat = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.UseWLMExportFormat
-                        end,
-                        order = 300
-                    },
-                    MSFiltertitle1 = {
-                        type = "header",
-                        name = L["Millisecond click settings"],
-                        order = 380
-                    },
-                    defaultOOCTimerDelay = {
-                        name = L["OOC Queue Delay"],
-                        desc = L[
-                            "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
-                        ],
-                        type = "input",
-                        set = function(info, val)
-                            val = tonumber(val)
-                            if val < 1 then
-                                val = 7
-                            end
-                            GSEOptions.OOCQueueDelay = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.OOCQueueDelay and tostring(GSEOptions.OOCQueueDelay) or "7"
-                        end,
-                        order = 386
-                    },
-                    filtertitle1 = {
-                        type = "header",
-                        name = L["Filter Sequence Selection"],
-                        order = 400
-                    },
-                    showAllMacros = {
-                        name = L["Show All Sequences in Editor"],
-                        desc = L["By setting this value the Sequence Editor will show every sequence for every class."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["All"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["All"]
-                        end,
-                        order = 410
-                    },
-                    showClassMacros = {
-                        name = L["Show Class Sequences in Editor"],
-                        desc = L[
-                            "By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["Class"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["Class"]
-                        end,
-                        order = 420
-                    },
-                    showGlobalMacros = {
-                        name = L["Show Global Sequences in Editor"],
-                        desc = L["This shows the Global Sequences available as well as those for your class."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.filterList["Global"] = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.filterList["Global"]
-                        end,
-                        order = 430
-                    },
-                    showCurrentSpells = {
-                        name = L["Show Current Spells"],
-                        desc = L[
-                            "GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.showCurrentSpells = val
-                        end,
-                        get = function(info)
-                            return GSEOptions.showCurrentSpells
-                        end,
-                        order = 441
-                    }
-                }
-            },
-            character = {
-                name = L["Character"],
-                desc = L["Character Specific Options which override the normal account settings."],
-                type = "group",
-                order = 2,
-                args = {
-                    title1 = {
-                        type = "header",
-                        name = L["General Options"],
-                        order = 100
-                    },
-                    resetOOC = {
-                        name = L["Reset Sequences when out of combat"],
-                        desc = L["Resets sequences back to the initial state when out of combat."],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSE_C.resetOOC = val
-                        end,
-                        get = function(info)
-                            if GSE.isEmpty(GSE_C) then
-                                GSE_C = {}
-                            end
-                            return GSE_C.resetOOC and GSE_C.resetOOC or GSEOptions.resetOOC
-                        end,
-                        order = 110
-                    },
-                    MSFiltertitle1 = {
-                        type = "header",
-                        name = L["Millisecond click settings"],
-                        order = 380
-                    },
-                    externalMillisecondClickRate = {
-                        name = L["MS Click Rate"],
-                        desc = L["The milliseconds being used in key click delay."],
-                        type = "input",
-                        set = function(info, val)
-                            GSE_C.msClickRate = val
-                        end,
-                        get = function(info)
-                            if GSE.isEmpty(GSE_C) then
-                                GSE_C = {}
-                            end
-                            return GSE_C.msClickRate and GSE_C.msClickRate or ""
-                        end,
-                        order = 385
-                    }
-                }
-            },
-            sequenceReset = {
-                name = L["Sequence Reset"],
-                desc = L[
-                    "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
-                ],
-                order = 3,
-                type = "group",
-                args = {
-                    resetbuttontitle = {
-                        type = "header",
-                        name = L["Mouse Buttons."],
-                        order = 550
-                    },
-                    resetLeftButton = {
-                        name = L["Left Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftButton"] = value
-                        end,
-                        order = 551
-                    },
-                    resetRightButton = {
-                        name = L["Right Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightButton"] = value
-                        end,
-                        order = 552
-                    },
-                    resetMiddleButton = {
-                        name = L["Middle Mouse Button"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["MiddleButton"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["MiddleButton"] = value
-                        end,
-                        order = 553
-                    },
-                    resetButton4 = {
-                        name = L["Mouse Button 4"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Button4"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Button4"] = value
-                        end,
-                        order = 554
-                    },
-                    resetButton5 = {
-                        name = L["Mouse Button 5"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Button5"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Button5"] = value
-                        end,
-                        order = 555
-                    },
-                    resetalttitle = {
-                        type = "header",
-                        name = L["Alt Keys."],
-                        order = 560
-                    },
-                    resetAnyAltKey = {
-                        name = L["Any Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Alt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Alt"] = value
-                        end,
-                        order = 561
-                    },
-                    resetLeftAltKey = {
-                        name = L["Left Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftAlt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftAlt"] = value
-                        end,
-                        order = 562
-                    },
-                    resetRightAltKey = {
-                        name = L["Right Alt Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightAlt"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightAlt"] = value
-                        end,
-                        order = 563
-                    },
-                    resetcontroltitle = {
-                        type = "header",
-                        name = L["Control Keys."],
-                        order = 570
-                    },
-                    resetAnyControlKey = {
-                        name = L["Any Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Control"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Control"] = value
-                        end,
-                        order = 571
-                    },
-                    resetLeftControlKey = {
-                        name = L["Left Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftControl"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftControl"] = value
-                        end,
-                        order = 572
-                    },
-                    resetRightControlKey = {
-                        name = L["Right Control Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightControl"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightControl"] = value
-                        end,
-                        order = 573
-                    },
-                    resetshifttitle = {
-                        type = "header",
-                        name = L["Shift Keys."],
-                        order = 580
-                    },
-                    resetAnyShiftKey = {
-                        name = L["Any Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["Shift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["Shift"] = value
-                        end,
-                        order = 581
-                    },
-                    resetLeftShiftKey = {
-                        name = L["Left Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["LeftShift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["LeftShift"] = value
-                        end,
-                        order = 582
-                    },
-                    resetRightShiftKey = {
-                        name = L["Right Shift Key"],
-                        type = "toggle",
-                        get = function()
-                            return GSEOptions.MacroResetModifiers["RightShift"]
-                        end,
-                        set = function(key, value)
-                            GSEOptions.MacroResetModifiers["RightShift"] = value
-                        end,
-                        order = 583
-                    }
-                }
-            },
             troubleshooting = {
                 name = L["Troubleshooting"],
                 desc = L["Common Solutions to game quirks that seem to affect some people."],
@@ -486,21 +61,6 @@ function GSE.GetOptionsTable()
                             end
                         end,
                         order = 532
-                    },
-                    printKeyPressModifiers = {
-                        name = L["Print Active Modifiers on Click"],
-                        desc = L[
-                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
-                        ],
-                        type = "toggle",
-                        set = function(info, val)
-                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
-                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
-                        end,
-                        get = function(info)
-                            return GSEOptions.DebugPrintModConditionsOnKeyPress
-                        end,
-                        order = 533
                     },
                     cvarsettingstitle = {
                         type = "header",
@@ -555,6 +115,98 @@ function GSE.GetOptionsTable()
                             return GSEOptions.Multiclick
                         end,
                         order = 551
+                    },
+                    disableExeperimental = {
+                        type = "header",
+                        name = L["Keybinding Tools"],
+                        order = 560
+                    },
+                    printKeyPressModifiers = {
+                        name = L["Print Active Modifiers on Click"],
+                        desc = L[
+                            "Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."
+                        ],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.DebugPrintModConditionsOnKeyPress = val
+                            StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                        end,
+                        get = function(info)
+                            return GSEOptions.DebugPrintModConditionsOnKeyPress
+                        end,
+                        order = 561
+                    },
+                    showSequenceIcons = {
+                        name = L["Show Sequence Icons"],
+                        desc = L["Show the Sequence Icon Preview Frame"],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.Enabled = val
+                            if not val then
+                                GSE.SequenceIconFrame:Hide()
+                            else
+                                GSE.SequenceIconFrame:Show()
+                            end
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.Enabled or false
+                        end,
+                        order = 562
+                    },
+                    showSequenceModifiers = {
+                        name = L["Show Sequence Modifiers"],
+                        desc = L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.ShowIconModifiers = val
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame.ShowIconModifiers
+                        end,
+                        order = 563
+                    },
+                    showSequenceName = {
+                        name = L["Show Sequence Name"],
+                        desc = L["Show the Name of the Sequence"],
+                        type = "toggle",
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.ShowSequenceName = val
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame.ShowSequenceName
+                        end,
+                        order = 563
+                    },
+                    IconSize = {
+                        name = L["Preview Icon Size"],
+                        desc = L["Default is 64 pixels."],
+                        type = "input",
+                        set = function(info, val)
+                            val = tonumber(val)
+                            GSEOptions.SequenceIconFrame.IconSize = val
+                            GSE.IconFrameResize(val)
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame.IconSize or "64"
+                        end,
+                        order = 565
+                    },
+                    defaultImportAction = {
+                        name = L["Icon Preview Orientation"],
+                        desc = L["Horizontal or Vertical Layout"],
+                        type = "select",
+                        style = "radio",
+                        values = {
+                            ["HORIZONTAL"] = L["Horizontal"],
+                            ["VERTICAL"] = L["Vertical"]
+                        },
+                        set = function(info, val)
+                            GSEOptions.SequenceIconFrame.Orientation = val
+                        end,
+                        get = function(info)
+                            return GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.Orientation or "HORIZONTAL"
+                        end,
+                        order = 564
                     }
                     -- disableExeperimental = {
                     --     type = "header",
@@ -1066,20 +718,6 @@ function GSE.GetOptionsTable()
             }
         }
     }
-    if GSE.Patron or GSE.Developer then
-        OptionsTable.args.general.args.externalMillisecondClickRate = {
-            name = L["MS Click Rate"],
-            desc = L["The milliseconds being used in key click delay."],
-            type = "input",
-            set = function(info, val)
-                GSEOptions.msClickRate = tonumber(val)
-            end,
-            get = function(info)
-                return GSEOptions.msClickRate and tostring(GSEOptions.msClickRate) or "250"
-            end,
-            order = 385
-        }
-    end
     if GSE.Developer then
         OptionsTable.args.debug = {
             name = L["Debug"],
@@ -1197,40 +835,27 @@ local modoptions = GSE.GetOptionsTable()
 local registered = false
 
 local function createBlizzOptions()
-    -- General
-    config:RegisterOptionsTable(addonName .. "-General", modoptions.args.general)
-    local blizzPanel = dialog:AddToBlizOptions(addonName .. "-General", modoptions.args.general.name, addonName)
-
-    -- Character
-    config:RegisterOptionsTable(addonName .. "-Character", modoptions.args.character)
-    dialog:AddToBlizOptions(addonName .. "-Character", modoptions.args.character.name, addonName)
-
-    -- sequenceReset
-    config:RegisterOptionsTable(addonName .. "-SequenceReset", modoptions.args.sequenceReset)
-    dialog:AddToBlizOptions(addonName .. "-SequenceReset", modoptions.args.sequenceReset.name, addonName)
 
     -- Troubleshooting
     config:RegisterOptionsTable(addonName .. "-Troubleshooting", modoptions.args.troubleshooting)
-    dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Troubleshooting", modoptions.args.troubleshooting.name, GSE.MenuCategoryID)
 
     -- colour
     config:RegisterOptionsTable(addonName .. "-Colour", modoptions.args.colour)
-    dialog:AddToBlizOptions(addonName .. "-Colour", modoptions.args.colour.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Colour", modoptions.args.colour.name, GSE.MenuCategoryID)
 
     -- Plugins
     config:RegisterOptionsTable(addonName .. "-Plugins", modoptions.args.plugins)
-    dialog:AddToBlizOptions(addonName .. "-Plugins", modoptions.args.plugins.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-Plugins", modoptions.args.plugins.name, GSE.MenuCategoryID)
 
     config:RegisterOptionsTable(addonName .. "-WindowSizes", modoptions.args.windowSize)
-    dialog:AddToBlizOptions(addonName .. "-WindowSizes", modoptions.args.windowSize.name, addonName)
+    dialog:AddToBlizOptions(addonName .. "-WindowSizes", modoptions.args.windowSize.name, GSE.MenuCategoryID)
 
     if GSE.Developer then
         -- about
         config:RegisterOptionsTable(addonName .. "-Debug", modoptions.args.debug)
-        dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, addonName)
+        dialog:AddToBlizOptions(addonName .. "-Debug", modoptions.args.debug.name, GSE.MenuCategoryID)
     end
-
-    return blizzPanel
 end
 
 function GSE:CreateConfigPanels()
@@ -1241,10 +866,224 @@ function GSE:CreateConfigPanels()
             order = 32
         }
         config:RegisterOptionsTable(addonName, modoptions.args.about)
-        dialog:AddToBlizOptions(addonName, addonName)
-        createBlizzOptions()
-        registered = true
-    end
-end
+        local _, catid = dialog:AddToBlizOptions(addonName, addonName)
 
+        registered = true
+        GSE.MenuCategoryID = catid
+        local category = Settings.GetCategory(catid)
+
+        local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General"])
+
+        do
+            local layout = SettingsPanel:GetLayout(generalOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["General Options"] , ["tooltip"]= L["General"] }))
+        end
+        -- Hide Minimap icon
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "minimapIcon", "hide", GSEOptions.showMiniMap, Settings.VarType.Boolean, L["Hide Minimap Icon"], true)
+            setting:SetValueChangedCallback(function ()
+                if GSE.LDB then
+                    GSE.MiniMapControl(GSEOptions.showMiniMap.hide)
+                end
+            end)
+            Settings.CreateCheckbox(generalOptions, setting, L["Hide Minimap Icon for LibDataBroker (LDB) data text."])
+        end
+        -- Show Other Users
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showothergseusersintooltip", "showGSEUsers", GSEOptions, Settings.VarType.Boolean, L["Show GSE Users in LDB"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."])
+        end
+        -- Show OOC Queue
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
+        end
+        -- Reset OOC Queue
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "resetOOC", "resetOOC", GSEOptions, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        end
+        -- Hide Login Message
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "hideLogin", "HideLoginMessage", GSEOptions, Settings.VarType.Boolean, L["Hide Login Message"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Hides the message that GSE is loaded."])
+        end
+        -- Hide Login Message
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["When exporting from GSE create a descriptive export for Discord/Discource forums."])
+        end
+        ---- OOC Queue Delay
+        do
+            local function GetValue()
+                return GSEOptions.OOCQueueDelay or 7
+            end
+
+            local function SetValue(value)
+                GSEOptions.OOCQueueDelay = value
+            end
+
+            local setting = Settings.RegisterProxySetting(generalOptions, "defaultOOCTimerDelay", Settings.VarType.Number, L["OOC Queue Delay"], 7, GetValue, SetValue)
+            local options = Settings.CreateSliderOptions(1, 60, 1)
+            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+            Settings.CreateSlider(generalOptions, setting, options, L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."])
+        end
+
+        ---- externalMillisecondClickRate
+        do
+            if GSE.Patron or GSE.Developer then
+                local function GetValue()
+                    return GSEOptions.msClickRate or 250
+                end
+
+                local function SetValue(value)
+                    GSEOptions.msClickRate = value
+                end
+
+                local setting = Settings.RegisterProxySetting(generalOptions, "msClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                local options = Settings.CreateSliderOptions(100, 1000, 1)
+                options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+                Settings.CreateSlider(generalOptions, setting, options, L["The milliseconds being used in key click delay."])
+            end
+        end
+        do
+            local layout = SettingsPanel:GetLayout(generalOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Filter Sequence Selection"], ["tooltip"]= L["Filter Sequence Selection"]}))
+        end
+        -- Show All Sequences
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+        end
+        -- showClassMacros
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showClassMacros", Statics.Class, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Class Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."])
+        end
+        -- HshowGlobalMacros
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showGlobalMacros", Statics.Global, GSEOptions.filterList, Settings.VarType.Boolean, L["Show Global Sequences in Editor"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["This shows the Global Sequences available as well as those for your class."])
+        end
+        -- showCurrentSpells
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "showCurrentSpells", "showCurrentSpells", GSEOptions, Settings.VarType.Boolean, L["Show Current Spells"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
+        end
+
+        -- Character Specific Settings
+
+        do
+            local CharOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Character"])
+
+
+            -- Reset OOC Queue
+            do
+                local setting = Settings.RegisterAddOnSetting(CharOptions, "charresetOOC", "resetOOC", GSE_C, Settings.VarType.Boolean, L["Reset Sequences when out of combat"], true)
+                Settings.CreateCheckbox(CharOptions, setting, L["Resets sequences back to the initial state when out of combat."])
+            end
+
+            ---- externalMillisecondClickRate
+            do
+                if GSE.Patron or GSE.Developer then
+                    local function GetValue()
+                        return GSE_C.msClickRate or 250
+                    end
+
+                    local function SetValue(value)
+                        GSE_C.msClickRate = value
+                    end
+
+                    local setting = Settings.RegisterProxySetting(CharOptions, "charmsClickRate", Settings.VarType.Number, L["MS Click Rate"], 250, GetValue, SetValue)
+                    local options = Settings.CreateSliderOptions(100, 1000, 1)
+                    options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+                    Settings.CreateSlider(CharOptions, setting, options, L["The milliseconds being used in key click delay."])
+                end
+            end
+        end
+
+        do
+            local ResetOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Sequence Reset"])
+
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Mouse Buttons."] , ["tooltip"]= L["These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."] }))
+            end
+            -- Reset OOC Queue
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftButton", "LeftButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightButton", "RightButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetMiddleButton", "MiddleButton", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Middle Mouse Button"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton4", "Button4", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 4"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetButton5", "Button5", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Mouse Button 5"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Alt Keys."], ["tooltip"]= L["Alt Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyAltKey", "Alt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftAltKey", "LeftAlt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightAltKey", "RightAlt", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Alt Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Control Keys."], ["tooltip"]= L["Control Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyControlKey", "Control", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftControlKey", "LeftControl", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightControlKey", "RightControl", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Control Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local layout = SettingsPanel:GetLayout(ResetOptions)
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Shift Keys."], ["tooltip"]= L["Shift Keys."] }))
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetAnyShiftKey", "Shift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Any Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetLeftShiftKey", "LeftShift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Left Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+            do
+                local setting = Settings.RegisterAddOnSetting(ResetOptions, "resetRightShiftKey", "RightShift", GSEOptions.MacroResetModifiers, Settings.VarType.Boolean, L["Right Shift Key"], false)
+                Settings.CreateCheckbox(ResetOptions, setting, "")
+            end
+        end
+
+        createBlizzOptions()
+
+    end
+
+end
 GSE:CreateConfigPanels()
+

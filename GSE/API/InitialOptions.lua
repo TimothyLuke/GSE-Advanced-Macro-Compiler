@@ -2,7 +2,6 @@ local GSE = GSE
 local Statics = GSE.Static
 GSE.DebugProfile("End Patrons")
 -- These are overridden when the saved variables are loaded in
-GSEOptions = {}
 
 function GSE.resetMacroResetModifiers()
     GSEOptions.MacroResetModifiers = {}
@@ -82,7 +81,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.showGSEoocqueue = true
     GSEOptions.UseVerboseExportFormat = false
     GSEOptions.DefaultImportAction = "MERGE"
-    GSEOptions.UseWLMExportFormat = true
+    GSEOptions.DefaultHumanReadableExportFormat = true
     GSEOptions.PromptSample = true
     GSEOptions.msClickRate = 250
     GSEOptions.showMiniMap = {
@@ -97,7 +96,13 @@ function GSE.SetDefaultOptions()
     GSEOptions.Multiclick = true
 end
 
-GSE.SetDefaultOptions()
+if GSE.isEmpty(GSEOptions) then
+    GSEOptions = {}
+end
+
+if not GSEOptions.DebugModules then
+    GSE.SetDefaultOptions()
+end
 
 GSE.OOCQueue = {}
 GSE.UnsavedOptions = {}

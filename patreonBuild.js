@@ -23,6 +23,10 @@ function updateToc(path, filename, done) {
       /(\r\n|\n|\r)/gm,
       ""
     );
+    
+    version = version.replace("3.2", "3.3.0-midnight-beta-0")
+    
+
     tocLines[tocIndex] = version;
     if (!BuildVersion) {
       BuildVersion = version;
