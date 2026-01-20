@@ -226,7 +226,8 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
                 if test then
-                    local currentSpell = C_SpellBook.FindSpellOverrideByID(test)
+                    local FindSpellOverrideByID = FindSpellOverrideByID or C_SpellBook.FindSpellOverrideByID
+                    local currentSpell = FindSpellOverrideByID(test)
                     if currentSpell then
                         ---@diagnostic disable-next-line: cast-local-type
                         etc = currentSpell
