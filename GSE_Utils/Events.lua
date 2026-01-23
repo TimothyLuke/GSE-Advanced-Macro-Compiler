@@ -95,7 +95,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
                         GCD_Timer = potentialGCD
                     end
                 else
-                    GCD_Timer = C_Spell.GetSpellCooldown(61304)["duration"]
+                    GCD_Timer = GSE.GetGCD()
                 end
             else
                 ---@diagnostic disable-next-line: deprecated

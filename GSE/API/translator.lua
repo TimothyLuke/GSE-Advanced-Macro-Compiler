@@ -352,8 +352,9 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         returnval = spellId
         -- Check for overrides like Crusade and Avenging Wrath.
         if not absolute and not GSE.isEmpty(returnval) then
-            if C_SpellBook.FindBaseSpellByID(returnval) then
-                returnval = C_SpellBook.FindBaseSpellByID(returnval)
+            local FindBaseSpellByID =  C_SpellBook.FindBaseSpellByID or  FindBaseSpellByID
+            if FindBaseSpellByID(returnval) then
+                returnval = FindBaseSpellByID(returnval)
             -- if type(returnval) == "table" then
             --     returnval = returnval.spellID
             -- end
