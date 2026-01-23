@@ -4374,9 +4374,10 @@ end]],
                                         end
                                         if type == "KB" then
                                             SetBinding(bind)
-                                            if loadout then
-                                                GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] =
-                                                    nil
+                                            if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] then
+                                                if GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] then
+                                                    GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
+                                                end
                                                 local empty = true
                                                 for _, _ in pairs(
                                                     GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
