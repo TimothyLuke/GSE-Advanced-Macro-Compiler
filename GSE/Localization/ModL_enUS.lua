@@ -540,15 +540,9 @@ L["/gse showspec|r will show your current Specialisation and the SPECID needed t
 L[
         "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
     ] = true
-L[
-        "/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
-    ] = true
 L["/gse help|r to get started."] = true
 L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["/gse|r to get started."] = true
-L[
-        "/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
-    ] = true
 L["GSE Plugins"] = true
 L["This will display debug messages for the GSE Ingame Transmission and transfer"] = true
 L[
@@ -830,3 +824,9 @@ L["GSE Options Not Enabled"] = true
 L["Import String Not Recognised."] = true
 L["GSE Import Successful."] = true
 L["GSE Collection to Import."] = true
+
+-- #1860
+L["Removed unreadable sequence "] = true
+L[
+        "/gse checksequencesforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
+    ] = true

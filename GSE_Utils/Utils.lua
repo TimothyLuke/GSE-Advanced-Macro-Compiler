@@ -457,6 +457,14 @@ function GSE.ScanMacrosForErrors()
             end
         end
     end
+    for classlibid, classlib in ipairs(GSESequences) do
+        for k,v in pairs(classlib) do
+            if string.sub(v, 1, 6) ~= "!GSE3!" then
+                GSESequences[classlibid][k] = nil
+                GSE.Print(L["Removed unreadable sequence "] .. k,  Statics.DebugModules["Storage"])
+            end
+        end
+    end
     GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
 end
 
@@ -604,7 +612,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse checkmacrosforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
+                    "/gse checksequencesforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
                 ],
         GNOME
     )
@@ -695,7 +703,7 @@ function GSE:GSSlash(input)
         StaticPopup_Show("GSE_ConfirmReloadUIDialog")
     elseif command == "movelostmacros" then
         GSE.MoveMacroToClassFromGlobal()
-    elseif command == "checkmacrosforerrors" then
+    elseif command == "checksequencesforerrors" then
         GSE.ScanMacrosForErrors()
     elseif command == "compressstring" then
         GSE.CheckGUI()
