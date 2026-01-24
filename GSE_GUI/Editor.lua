@@ -4398,7 +4398,7 @@ end]],
                                                 end
                                             end
                                         elseif type == "AO" then
-                                            if loadout then
+                                            if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] then
                                                 GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout][
                                                         bind
                                                     ] = nil
