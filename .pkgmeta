@@ -31,8 +31,7 @@ move-folders:
   GSE/GSE_Personal: GSE_Personal
   GSE/GSE_QoL: GSE_QoL
   GSE/GSE_Options: GSE_Options
-  GSE/GSE/Lib/LibQTip-2.0/LibQTip-2.0: GSE/GSE_Utils/Lib/LibQTip-2.0
-
+ 
 enable-nolib-creation: no
 
 ignore:
