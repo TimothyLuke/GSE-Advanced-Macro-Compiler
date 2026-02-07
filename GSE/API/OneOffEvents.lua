@@ -105,6 +105,9 @@ if GSE.isEmpty(GSE_C.Updates["3300"]) then
     GSEOptions.shownew = true
     GSE_C.Updates["3300"] = true
 end
-
+if GSE.isEmpty(GSEOptions.Updates["3301"]) then
+    GSEOptions.shownew = true
+    GSEOptions.Updates["3301"] = true
+end
 
 GSE.DebugProfile("OneOffEvents")

@@ -423,11 +423,12 @@ Statics.Actions.If = "If"
 Statics.Actions.Repeat = "Repeat"
 Statics.Actions.Action = "Action"
 Statics.Actions.Pause = "Pause"
+Statics.Actions.Embed = "Embed"
 
 Statics.ActionsIcons = {}
 Statics.ActionsIcons.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop.png"
 Statics.ActionsIcons.If = "Interface\\Addons\\GSE_GUI\\Assets\\if.png"
-Statics.ActionsIcons.Repeat = "Interface\\Addons\\GSE_GUI\\Assets\\repeat.png"
+Statics.ActionsIcons.Embed = "Interface\\Addons\\GSE_GUI\\Assets\\repeat.png"
 Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action.png"
 Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.png"
 Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.png"

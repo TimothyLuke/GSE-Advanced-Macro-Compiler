@@ -1221,6 +1221,7 @@ function GSE.CreateEditor()
                 local addActionButton = AceGUI:Create("Icon")
                 local addPauseButton = AceGUI:Create("Icon")
                 local addIfButton = AceGUI:Create("Icon")
+                local addEmbedButton = AceGUI:Create("Icon")
                 if includeAdd then
                     addActionButton:SetImageSize(20, 20)
                     addActionButton:SetWidth(20)
@@ -1409,6 +1410,48 @@ function GSE.CreateEditor()
                             GSE.ClearTooltip(editframe)
                         end
                     )
+
+                    addEmbedButton:SetImageSize(20, 20)
+                    addEmbedButton:SetWidth(20)
+                    addEmbedButton:SetHeight(20)
+                    addEmbedButton:SetImage(Statics.ActionsIcons.Embed)
+
+                    addEmbedButton:SetCallback(
+                        "OnClick",
+                        function()
+                            local newAction = {
+                                ["Type"] = Statics.Actions.Embed
+                            }
+                            if #path > 1 then
+                                table.insert(
+                                    editframe.Sequence.Macros[version].Actions[parentPath],
+                                    lastPath + 1,
+                                    newAction
+                                )
+                            else
+                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            end
+                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                        end
+                    )
+                    addEmbedButton:SetCallback(
+                        "OnEnter",
+                        function()
+                            GSE.CreateToolTip(
+                                L["Add Embed"],
+                                L[
+                                    "Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."
+                                ],
+                                editframe
+                            )
+                        end
+                    )
+                    addEmbedButton:SetCallback(
+                        "OnLeave",
+                        function()
+                            GSE.ClearTooltip(editframe)
+                        end
+                    )
                 end
 
                 if GSE.isEmpty(disableMove) then
@@ -1432,6 +1475,7 @@ function GSE.CreateEditor()
                     layoutcontainer:AddChild(addLoopButton)
                     layoutcontainer:AddChild(addPauseButton)
                     layoutcontainer:AddChild(addIfButton)
+                    layoutcontainer:AddChild(addEmbedButton)
                 end
                 local spacerlabel3 = AceGUI:Create("Label")
                 spacerlabel3:SetWidth(30)
@@ -2256,6 +2300,70 @@ function GSE.CreateEditor()
                 falsecontainer:AddChild(falsegroup)
                 macroPanel:AddChild(falsecontainer)
                 pcontainer:AddChild(macroPanel)
+            elseif action.Type == Statics.Actions.Embed then
+                local macroPanel = AceGUI:Create("InlineGroup")
+                macroPanel:SetFullWidth(true)
+                macroPanel:SetLayout("List")
+                macroPanel:SetCallback(
+                    "OnRelease",
+                    function(self, obj, value)
+                        macroPanel.frame:SetBackdrop(nil)
+                    end
+                )
+                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
+                macroPanel:AddChild(linegroup1)
+                local SequenceDropDown = AceGUI:Create("Dropdown")
+                SequenceDropDown:SetFullWidth(true)
+
+                local cid, sid = GSE.GetCurrentClassID(), GSE.GetCurrentSpecID()
+                for k, v in GSE.pairsByKeys(GSE.GetSequenceNames(), GSE.AlphabeticalTableSortAlgorithm) do
+                    if v ~= editframe.Sequence.MetaData.Name then
+                        local elements = GSE.split(k, ",")
+                        local classid, specid = tonumber(elements[1]), tonumber(elements[2])
+
+                        if cid ~= classid then
+                            local classinfo, classfile = GetClassInfo(cid)
+                            local val = C_ClassColor and WrapTextInColorCode(classinfo, C_ClassColor.GetClassColor(classfile):GenerateHexColor()) or L["Global"]
+                            local key = classid .. val
+
+                            SequenceDropDown:AddItem(key, val)
+                            SequenceDropDown:SetItemDisabled(key, true)
+                            cid = classid
+                        end
+                        if GetSpecializationInfoByID then
+                            if sid ~= specid and sid > 13 and specid > 13 then
+                                local val = select(2, GetSpecializationInfoByID(specid))
+                                local key = specid .. val
+
+                                SequenceDropDown:AddItem(key, val)
+                                SequenceDropDown:SetItemDisabled(key, true)
+                                sid = specid
+                            end
+                        end
+                        SequenceDropDown:AddItem(v, v)
+                    end
+                end
+                for k, _ in pairs(GSESequences[0]) do
+                    SequenceDropDown:AddItem(k, k)
+                end
+                SequenceDropDown:SetMultiselect(false)
+                SequenceDropDown:SetLabel(L["Sequence"])
+                if action.Sequence then
+                    SequenceDropDown:SetValue(action.Sequence)
+                end
+                SequenceDropDown:SetCallback(
+                    "OnValueChanged",
+                    function(obj, event, key, checked)
+                        editframe.Sequence.Macros[version].Actions[keyPath] = {
+                            ["Type"] = Statics.Actions.Embed,
+                            ["Sequence"] = key
+                        }
+                    end
+                )
+
+
+                macroPanel:AddChild(SequenceDropDown)
+                pcontainer:AddChild(macroPanel)
             end
         end
         if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
@@ -2572,6 +2680,7 @@ function GSE.CreateEditor()
         local addActionButton = AceGUI:Create("Icon")
         local addPauseButton = AceGUI:Create("Icon")
         local addIfButton = AceGUI:Create("Icon")
+        local addEmbedButton = AceGUI:Create("Icon")
 
         addActionButton:SetImageSize(20, 20)
         addActionButton:SetWidth(20)
@@ -2731,6 +2840,40 @@ function GSE.CreateEditor()
             end
         )
 
+        
+        addEmbedButton:SetImageSize(20, 20)
+        addEmbedButton:SetWidth(20)
+        addEmbedButton:SetHeight(20)
+        addEmbedButton:SetImage(Statics.ActionsIcons.Embed)
+
+        addEmbedButton:SetCallback(
+            "OnClick",
+            function()
+                local newAction = {
+                    ["Type"] = Statics.Actions.Embed
+                }
+                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
+            end
+        )
+        addEmbedButton:SetCallback(
+            "OnEnter",
+            function()
+                GSE.CreateToolTip(
+                    L["Add Embed"],
+                    L[
+                        "Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."
+                    ],
+                    editframe
+                )
+            end
+        )
+        addEmbedButton:SetCallback(
+            "OnLeave",
+            function()
+                GSE.ClearTooltip(editframe)
+            end
+        )
         local linegroup3 = AceGUI:Create("SimpleGroup")
         linegroup3:SetLayout("Flow")
         linegroup3:SetFullWidth(true)
@@ -2754,6 +2897,7 @@ function GSE.CreateEditor()
         linegroup1:AddChild(addLoopButton)
         linegroup1:AddChild(addPauseButton)
         linegroup1:AddChild(addIfButton)
+        linegroup1:AddChild(addEmbedButton)
         linegroup1:AddChild(versionLabel)
         linegroup1:AddChild(spacerlabel1)
         linegroup1:AddChild(basespellspacer)

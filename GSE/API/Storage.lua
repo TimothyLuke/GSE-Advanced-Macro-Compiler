@@ -955,6 +955,16 @@ function GSE.processAction(action, metaData, variables)
         }
 
         return returnAction
+    elseif action.Type == Statics.Actions.Embed then
+        -- Get the sequence and its setup version then compile the actions
+        if action.Sequence then
+            local sequence = GSE.FindSequence(action.Sequence)
+        
+            if sequence then
+                return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Macros[GSE.GetActiveSequenceVersion(action.Sequence)], Statics.TranslatorMode.String)))
+            end
+        end
+        return
     end
 end
 

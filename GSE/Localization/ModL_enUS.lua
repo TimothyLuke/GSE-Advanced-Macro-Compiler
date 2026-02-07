@@ -817,8 +817,6 @@ L["Show Sequence Modifiers"] = true
 L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."] = true
 L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
-L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight has arrived.  There is not a lot of change on the surface however a humber of changes have been made to make GSE compatible with Midnight.  \n\nA new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time.\n\nExporting has changed with the formerly patron collection export mode not incorported into all versions."
 -- #1846
 L["GSE Options Not Enabled"] = true
 L["Import String Not Recognised."] = true
@@ -830,3 +828,10 @@ L["Removed unreadable sequence "] = true
 L[
         "/gse checksequencesforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
     ] = true
+
+-- #1854
+L["Add Embed"] = true
+L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
+
+L["WhatsNew"] =
+    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight has arrived.  There is not a lot of change on the surface however a humber of changes have been made to make GSE compatible with Midnight.  \n\nA new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time.\n\nExporting has changed with the formerly patron collection export mode not incorported into all versions.\n\nThe new command /gse checksequencesforerrors will remove sequences that are corrupt at the file storage level. \n\nGSE 3.3.01 adds the ability to embed sequences.  Use this option for classic variants of the game where you can add each sequence into an IF block and use a variable to determine which sequence to use based on your talents or specialisation."
