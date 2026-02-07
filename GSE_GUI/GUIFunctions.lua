@@ -1,7 +1,7 @@
 local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
-local LibQTip = LibStub("LibQTip-1.0")
+local LibQTip = LibStub("LibQTip-2.0")
 
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
@@ -28,7 +28,7 @@ end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
   GSE.ClearTooltip(GSEFrame)
-  local tooltip = LibQTip:Acquire("GSE", 1, "CENTER")
+  local tooltip = LibQTip:AcquireTooltip("GSE", 1, "CENTER")
 
   GSEFrame.tooltip = tooltip
   tooltip:AddHeader(GSEOptions.TitleColour .. title .. Statics.StringReset)
@@ -39,7 +39,7 @@ function GSE.CreateToolTip(title, tip, GSEFrame)
 end
 
 function GSE.ClearTooltip(GSEFrame)
-  LibQTip:Release(GSEFrame.tooltip)
+  GSEFrame.tooltip:Release()
   GSEFrame.tooltip = nil
 end
 
