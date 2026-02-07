@@ -2840,7 +2840,6 @@ function GSE.CreateEditor()
             end
         )
 
-        
         addEmbedButton:SetImageSize(20, 20)
         addEmbedButton:SetWidth(20)
         addEmbedButton:SetHeight(20)
