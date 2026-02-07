@@ -167,7 +167,7 @@ function dataobj:OnEnter()
   x:SetColSpan(3)
   x:SetFormattedText("GCD: %ss", GSE.GetGCD())
   x:SetJustifyH("CENTER")
-  
+
   -- Show GSE OOCQueue Information
   if GSEOptions.showGSEoocqueue then
     tooltip:AddSeparator()
@@ -210,7 +210,7 @@ function dataobj:OnEnter()
   end
 
   tooltip:AddSeparator()
-  y, _ = tooltip:AddRow()
+  y = tooltip:AddRow()
   x = y:GetCell(1)
   x:SetColSpan(3)
   x:SetFormattedText(L["GSE Version: %s"], GSE.VersionString)
