@@ -13,7 +13,7 @@ externals:
   GSE/Lib/AceTimer-3.0: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
   GSE/Lib/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1.git
   GSE/Lib/AceGUI-3.0-Completing-EditBox: https://repos.wowace.com/wow/acegui-3-0-completing-editbox/trunk
-  tmp/LibQTip-2.0: https://github.com/Torhal/LibQTip-2.0.git
+  GSE/Lib/LibQTip-2.0: https://github.com/Torhal/LibQTip-2.0.git
   GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
   GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
   GSE/Lib/LibDBCompartment: https://github.com/Meorawr/LibDBCompartment.git
@@ -31,7 +31,7 @@ move-folders:
   GSE/GSE_Personal: GSE_Personal
   GSE/GSE_QoL: GSE_QoL
   GSE/GSE_Options: GSE_Options
-  tmp/LibQTip-2.0/LibQTip-2.0: GSE/GSE_Utils/Lib/LibQTip-2.0
+  GSE/GSE/Lib/LibQTip-2.0/LibQTip-2.0: GSE/GSE_Utils/Lib/LibQTip-2.0
 
 enable-nolib-creation: no
 
