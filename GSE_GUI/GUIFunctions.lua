@@ -31,15 +31,17 @@ function GSE.CreateToolTip(title, tip, GSEFrame)
   local tooltip = LibQTip:AcquireTooltip("GSE", 1, "CENTER")
 
   GSEFrame.tooltip = tooltip
-  tooltip:AddHeader(GSEOptions.TitleColour .. title .. Statics.StringReset)
-  tooltip:AddLine(tip)
+  tooltip:AddHeadingRow(GSEOptions.TitleColour .. title .. Statics.StringReset)
+  tooltip:AddRow(tip)
   tooltip:SmartAnchorTo(GSEFrame.frame)
 
   tooltip:Show()
 end
 
 function GSE.ClearTooltip(GSEFrame)
-  GSEFrame.tooltip:Release()
+  if GSEFrame.tooltip then
+    GSEFrame.tooltip:Release()
+  end
   GSEFrame.tooltip = nil
 end
 
