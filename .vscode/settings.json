@@ -45,9 +45,11 @@
     "WrapTextInColor",
     "FONT_COLOR_CODE_CLOSE",
     "SecureHandlerUnwrapScript",
-    "C_EncodingUtil",
     "GetUnitName",
-    "Auctionator"
+    "Auctionator",
+    "SettingsPanel",
+    "MinimalSliderWithSteppersMixin",
+    "RegisterAttributeDriver"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
@@ -56,5 +58,20 @@
     "param-type-mismatch"
   ],
   "luahelper.Warn.CheckLocalNoUse": true,
-  "luahelper.Warn.CheckNoUseAssign": true
+  "luahelper.Warn.CheckNoUseAssign": true,
+  "Lua.runtime.version": "Lua 5.1",
+  "Lua.runtime.builtin": {
+    "basic": "disable",
+    "debug": "disable",
+    "io": "disable",
+    "math": "disable",
+    "os": "disable",
+    "package": "disable",
+    "string": "disable",
+    "table": "disable",
+    "utf8": "disable"
+  },
+  "Lua.workspace.library": [
+    "~/.vscode/extensions/ketho.wow-api-0.22.1/Annotations/Core"
+  ]
 }
