@@ -1,4 +1,4 @@
-## Interface: 11508, 20505, 50503, 120000, 120001
+## Interface: 11508, 20505, 50503, 120001
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
 ## Notes: Optional Utilities for GSE
 ## Author: TimothyLuke
