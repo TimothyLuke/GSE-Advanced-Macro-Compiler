@@ -2396,7 +2396,7 @@ function GSE.CreateEditor()
         local layoutcontainer = AceGUI:Create("SimpleGroup")
 
         layoutcontainer:SetFullWidth(true)
-        layoutcontainer:SetLayout("Flow") 
+        layoutcontainer:SetLayout("Flow")
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
@@ -4849,10 +4849,10 @@ end]],
                         basecontainer:SetLayout("List")
                         basecontainer:SetFullWidth(true)
                         basecontainer:SetHeight(editframe.Height - TOOLBAR_OFFSET)
-                        local scrollcontainer = AceGUI:Create("SimpleGroup") 
+                        local scrollcontainer = AceGUI:Create("SimpleGroup")
                         scrollcontainer:SetFullWidth(true)
                         scrollcontainer:SetHeight(editframe.Height - SCROLLCONTAINER_OFFSET)
-                        scrollcontainer:SetLayout("Fill") 
+                        scrollcontainer:SetLayout("Fill")
                         editframe.scrollStatus = {}
                         local contentcontainer = AceGUI:Create("ScrollFrame")
                         scrollcontainer:AddChild(contentcontainer)
