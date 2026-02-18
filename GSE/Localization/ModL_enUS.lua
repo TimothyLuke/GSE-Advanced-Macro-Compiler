@@ -350,7 +350,7 @@ L[
     ] = true
 L["The author of this macro."] = true
 L[
-        "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
+        "Delete this version of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
     ] = true
 L["Reset this macro when you exit combat."] = true
 L["Delete this macro.  This is not able to be undone."] = true

@@ -4,6 +4,13 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
+local FRAME_DISPLACEMENT = 30
+local DEFAULT_HEIGHT = 500
+local DEFAULT_WIDTH = 700
+local TOOLBAR_OFFSET = 100
+local SCROLLCONTAINER_OFFSET = 120
+
+
 if GSE.isEmpty(GSE.CreateIconControl) then
     GSE.CreateIconControl = function(action, version, keyPath, sequence, frame)
         local lbl = AceGUI:Create("Label")
@@ -123,8 +130,8 @@ function GSE.CreateEditor()
         local editortop = GSEOptions.frameLocations.sequenceeditor.top
 
         if #GSE.GUI.editors > 0 then
-            editorleft = editorleft + 30
-            editortop = editortop - 30
+            editorleft = editorleft + FRAME_DISPLACEMENT
+            editortop = editortop - FRAME_DISPLACEMENT
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
             GSEOptions.frameLocations.sequenceeditor.left = editorleft
             GSEOptions.frameLocations.sequenceeditor.top = editortop
@@ -135,12 +142,12 @@ function GSE.CreateEditor()
     editframe.Height = GSEOptions.editorHeight and GSEOptions.editorHeight or 500
     editframe.Width = GSEOptions.editorWidth and GSEOptions.editorWidth or 700
 
-    if editframe.Height < 500 then
-        editframe.Height = 500
+    if editframe.Height < DEFAULT_HEIGHT then
+        editframe.Height = DEFAULT_HEIGHT
         GSEOptions.editorHeight = editframe.Height
     end
-    if editframe.Width < 700 then
-        editframe.Width = 700
+    if editframe.Width < DEFAULT_WIDTH then
+        editframe.Width = DEFAULT_WIDTH
         GSEOptions.editorWidth = editframe.Width
     end
     editframe.frame:SetHeight(editframe.Height)
@@ -236,9 +243,6 @@ function GSE.CreateEditor()
                     editframe.nameeditbox:SetFocus()
                     return
                 end
-
-                -- editframe.ManageTree()
-
                 table.insert(GSE.OOCQueue, vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
             end
@@ -249,9 +253,6 @@ function GSE.CreateEditor()
     basecontainer:SetLayout("Fill")
     basecontainer:SetFullHeight(true)
     basecontainer:SetFullWidth(true)
-    -- basecontainer:SetAutoAdjustHeight(false)
-    -- basecontainer:SetHeight(editframe.Height - 100)
-    -- basecontainer:SetWidth(editframe.Width)
     editframe:AddChild(basecontainer)
 
     local treeContainer = AceGUI:Create("GSE-TreeGroup")
@@ -984,7 +985,6 @@ function GSE.CreateEditor()
         seqTableEditbox:DisableButton(true)
         seqTableEditbox:SetNumLines(35)
         seqTableEditbox:SetRelativeWidth(0.95)
-        --seqTableEditbox:SetHeight(editframe.Height - 250)
         seqTableEditbox:SetText(tablestring)
 
         IndentationLib.enable(seqTableEditbox.editBox, Statics.IndentationColorTable, 4)
@@ -1014,18 +1014,6 @@ function GSE.CreateEditor()
                 end
             end
         )
-        -- compileButton:SetCallback(
-        --     "OnEnter",
-        --     function()
-        --         GSE.CreateToolTip(
-        --             L["Delete Version"],
-        --             L[
-        --                 "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
-        --             ],
-        --             editframe
-        --         )
-        --     end
-        -- )
         compileButton:SetCallback(
             "OnLeave",
             function()
@@ -1042,18 +1030,6 @@ function GSE.CreateEditor()
                 treeContainer:SelectByValue(path .. "\001" .. version)
             end
         )
-        -- cancelButton:SetCallback(
-        --     "OnEnter",
-        --     function()
-        --         GSE.CreateToolTip(
-        --             L["Delete Version"],
-        --             L[
-        --                 "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
-        --             ],
-        --             editframe
-        --         )
-        --     end
-        -- )
         cancelButton:SetCallback(
             "OnLeave",
             function()
@@ -1071,581 +1047,580 @@ function GSE.CreateEditor()
         container:AddChild(toolcontainer)
     end
     local function DrawSequenceEditor(tcontainer, version, path)
-        local function drawAction(pcontainer, action, version, keyPath, treepath)
-            local function GetBlockToolbar(
-                version,
-                path,
-                includeAdd,
-                headingLabel,
-                container,
-                disableMove,
-                disableDelete,
-                dontDeleteLastParent)
-                local layoutcontainer = AceGUI:Create("SimpleGroup")
+    local function GetBlockToolbar(
+            version,
+            path,
+            treepath,
+            includeAdd,
+            headingLabel,
+            container,
+            disableMove,
+            disableDelete,
+            dontDeleteLastParent)
+            local layoutcontainer = AceGUI:Create("SimpleGroup")
 
-                local lastPath = path[#path]
+            local lastPath = path[#path]
 
-                local parentPath = GSE.CloneSequence(path)
-                local blocksThisLevel
+            local parentPath = GSE.CloneSequence(path)
+            local blocksThisLevel
 
-                if #parentPath == 1 then
-                    blocksThisLevel = #editframe.Sequence.Macros[version].Actions
-                else
-                    if GSE.isEmpty(dontDeleteLastParent) then
-                        parentPath[#parentPath] = nil
-                    end
-                    blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
+            if #parentPath == 1 then
+                blocksThisLevel = #editframe.Sequence.Macros[version].Actions
+            else
+                if GSE.isEmpty(dontDeleteLastParent) then
+                    parentPath[#parentPath] = nil
                 end
-                layoutcontainer:SetLayout("Flow")
-                layoutcontainer:SetFullWidth(true)
-                layoutcontainer:SetHeight(30)
-                local moveUpButton = AceGUI:Create("Icon")
-                local moveDownButton = AceGUI:Create("Icon")
+                blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
+            end
+            layoutcontainer:SetLayout("Flow")
+            layoutcontainer:SetFullWidth(true)
+            layoutcontainer:SetHeight(30)
+            local moveUpButton = AceGUI:Create("Icon")
+            local moveDownButton = AceGUI:Create("Icon")
 
-                if GSE.isEmpty(disableMove) then
-                    moveUpButton:SetImageSize(20, 20)
-                    moveUpButton:SetWidth(20)
-                    moveUpButton:SetHeight(20)
-                    moveUpButton:SetImage(Statics.ActionsIcons.Up)
+            if GSE.isEmpty(disableMove) then
+                moveUpButton:SetImageSize(20, 20)
+                moveUpButton:SetWidth(20)
+                moveUpButton:SetHeight(20)
+                moveUpButton:SetImage(Statics.ActionsIcons.Up)
 
-                    moveUpButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
-                            local destinationPath = {}
-                            for k, v in ipairs(path) do
-                                if k == #path then
-                                    v = v - 1
-                                end
-                                table.insert(destinationPath, v)
-                            end
-
-                            editframe.Sequence.Macros[version].Actions[path] =
-                                GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                            editframe.Sequence.Macros[version].Actions[destinationPath] = original
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    moveUpButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
-                        end
-                    )
-                    moveUpButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-
-                    moveDownButton:SetImageSize(20, 20)
-                    moveDownButton:SetWidth(20)
-                    moveDownButton:SetHeight(20)
-                    moveDownButton:SetImage(Statics.ActionsIcons.Down)
-
-                    moveDownButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
-                            local destinationPath = {}
-                            for k, v in ipairs(path) do
-                                if k == #path then
-                                    v = v + 1
-                                end
-                                table.insert(destinationPath, v)
-                            end
-
-                            editframe.Sequence.Macros[version].Actions[path] =
-                                GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                            editframe.Sequence.Macros[version].Actions[destinationPath] = original
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    moveDownButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(L["Move Down"], L["Move this block down one block."], editframe)
-                        end
-                    )
-                    moveDownButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-                end
-
-                local deleteBlockButton = AceGUI:Create("Icon")
-                deleteBlockButton:SetImageSize(20, 20)
-                deleteBlockButton:SetWidth(20)
-                deleteBlockButton:SetHeight(20)
-                deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
-
-                deleteBlockButton:SetCallback(
+                moveUpButton:SetCallback(
                     "OnClick",
                     function()
-                        local delPath = {}
-                        local delObj
+                        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                        local destinationPath = {}
                         for k, v in ipairs(path) do
                             if k == #path then
-                                delObj = v
-                            else
-                                table.insert(delPath, v)
+                                v = v - 1
                             end
+                            table.insert(destinationPath, v)
                         end
-                        table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
+
+                        editframe.Sequence.Macros[version].Actions[path] =
+                            GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
+                        editframe.Sequence.Macros[version].Actions[destinationPath] = original
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
                 )
-                deleteBlockButton:SetCallback(
+                moveUpButton:SetCallback(
                     "OnEnter",
                     function()
-                        GSE.CreateToolTip(
-                            L["Delete Block"],
-                            L[
-                                "Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."
-                            ],
-                            editframe
-                        )
+                        GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
                     end
                 )
-                deleteBlockButton:SetCallback(
+                moveUpButton:SetCallback(
                     "OnLeave",
                     function()
                         GSE.ClearTooltip(editframe)
                     end
                 )
 
-                local addLoopButton = AceGUI:Create("Icon")
-                local addActionButton = AceGUI:Create("Icon")
-                local addPauseButton = AceGUI:Create("Icon")
-                local addIfButton = AceGUI:Create("Icon")
-                local addEmbedButton = AceGUI:Create("Icon")
-                if includeAdd then
-                    addActionButton:SetImageSize(20, 20)
-                    addActionButton:SetWidth(20)
-                    addActionButton:SetHeight(20)
-                    addActionButton:SetImage(Statics.ActionsIcons.Action)
+                moveDownButton:SetImageSize(20, 20)
+                moveDownButton:SetWidth(20)
+                moveDownButton:SetHeight(20)
+                moveDownButton:SetImage(Statics.ActionsIcons.Down)
 
-                    addActionButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local newAction = {
+                moveDownButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                        local destinationPath = {}
+                        for k, v in ipairs(path) do
+                            if k == #path then
+                                v = v + 1
+                            end
+                            table.insert(destinationPath, v)
+                        end
+
+                        editframe.Sequence.Macros[version].Actions[path] =
+                            GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
+                        editframe.Sequence.Macros[version].Actions[destinationPath] = original
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                    end
+                )
+                moveDownButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(L["Move Down"], L["Move this block down one block."], editframe)
+                    end
+                )
+                moveDownButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+            end
+
+            local deleteBlockButton = AceGUI:Create("Icon")
+            deleteBlockButton:SetImageSize(20, 20)
+            deleteBlockButton:SetWidth(20)
+            deleteBlockButton:SetHeight(20)
+            deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
+
+            deleteBlockButton:SetCallback(
+                "OnClick",
+                function()
+                    local delPath = {}
+                    local delObj
+                    for k, v in ipairs(path) do
+                        if k == #path then
+                            delObj = v
+                        else
+                            table.insert(delPath, v)
+                        end
+                    end
+                    table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
+                    ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                end
+            )
+            deleteBlockButton:SetCallback(
+                "OnEnter",
+                function()
+                    GSE.CreateToolTip(
+                        L["Delete Block"],
+                        L[
+                            "Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."
+                        ],
+                        editframe
+                    )
+                end
+            )
+            deleteBlockButton:SetCallback(
+                "OnLeave",
+                function()
+                    GSE.ClearTooltip(editframe)
+                end
+            )
+
+            local addLoopButton = AceGUI:Create("Icon")
+            local addActionButton = AceGUI:Create("Icon")
+            local addPauseButton = AceGUI:Create("Icon")
+            local addIfButton = AceGUI:Create("Icon")
+            local addEmbedButton = AceGUI:Create("Icon")
+            if includeAdd then
+                addActionButton:SetImageSize(20, 20)
+                addActionButton:SetWidth(20)
+                addActionButton:SetHeight(20)
+                addActionButton:SetImage(Statics.ActionsIcons.Action)
+
+                addActionButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local newAction = {
+                            ["macro"] = "Need Stuff Here",
+                            ["type"] = "macro",
+                            ["Type"] = Statics.Actions.Action
+                        }
+                        if #path > 1 then
+                            table.insert(
+                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                lastPath + 1,
+                                newAction
+                            )
+                        else
+                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        end
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                    end
+                )
+                addActionButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
+                    end
+                )
+                addActionButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+
+                addLoopButton:SetImageSize(20, 20)
+                addLoopButton:SetWidth(20)
+                addLoopButton:SetHeight(20)
+                addLoopButton:SetImage(Statics.ActionsIcons.Loop)
+
+                addLoopButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local newAction = {
+                            [1] = {
                                 ["macro"] = "Need Stuff Here",
                                 ["type"] = "macro",
                                 ["Type"] = Statics.Actions.Action
-                            }
-                            if #path > 1 then
-                                table.insert(
-                                    editframe.Sequence.Macros[version].Actions[parentPath],
-                                    lastPath + 1,
-                                    newAction
-                                )
-                            else
-                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                            end
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    addActionButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(L["Add Action"], L["Add an Action Block."], editframe)
-                        end
-                    )
-                    addActionButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
+                            },
+                            ["StepFunction"] = Statics.Sequential,
+                            ["Type"] = Statics.Actions.Loop,
+                            ["Repeat"] = 2
+                        }
 
-                    addLoopButton:SetImageSize(20, 20)
-                    addLoopButton:SetWidth(20)
-                    addLoopButton:SetHeight(20)
-                    addLoopButton:SetImage(Statics.ActionsIcons.Loop)
+                        -- setmetatable(newAction, Statics.TableMetadataFunction)
+                        if #path > 1 then
+                            table.insert(
+                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                lastPath + 1,
+                                newAction
+                            )
+                        else
+                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        end
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                    end
+                )
+                addLoopButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(L["Add Loop"], L["Add a Loop Block."], editframe)
+                    end
+                )
+                addLoopButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
 
-                    addLoopButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local addPath = {}
-                            local newAction = {
-                                [1] = {
-                                    ["macro"] = "Need Stuff Here",
+                addPauseButton:SetImageSize(20, 20)
+                addPauseButton:SetWidth(20)
+                addPauseButton:SetHeight(20)
+                addPauseButton:SetImage(Statics.ActionsIcons.Pause)
+
+                addPauseButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local newAction = {
+                            ["Variable"] = "GCD",
+                            ["Type"] = Statics.Actions.Pause
+                        }
+                        if #path > 1 then
+                            table.insert(
+                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                lastPath + 1,
+                                newAction
+                            )
+                        else
+                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        end
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                    end
+                )
+                addPauseButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(L["Add Pause"], L["Add a Pause Block."], editframe)
+                    end
+                )
+                addPauseButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+
+                addIfButton:SetImageSize(20, 20)
+                addIfButton:SetWidth(20)
+                addIfButton:SetHeight(20)
+                addIfButton:SetImage(Statics.ActionsIcons.If)
+
+                addIfButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local newAction = {
+                            [1] = {
+                                {
+                                    ["macro"] = "Need True Stuff Here",
                                     ["type"] = "macro",
                                     ["Type"] = Statics.Actions.Action
-                                },
-                                ["StepFunction"] = Statics.Sequential,
-                                ["Type"] = Statics.Actions.Loop,
-                                ["Repeat"] = 2
-                            }
-
-                            -- setmetatable(newAction, Statics.TableMetadataFunction)
-                            if #path > 1 then
-                                table.insert(
-                                    editframe.Sequence.Macros[version].Actions[parentPath],
-                                    lastPath + 1,
-                                    newAction
-                                )
-                            else
-                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                            end
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    addLoopButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(L["Add Loop"], L["Add a Loop Block."], editframe)
-                        end
-                    )
-                    addLoopButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-
-                    addPauseButton:SetImageSize(20, 20)
-                    addPauseButton:SetWidth(20)
-                    addPauseButton:SetHeight(20)
-                    addPauseButton:SetImage(Statics.ActionsIcons.Pause)
-
-                    addPauseButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local addPath = {}
-                            local newAction = {
-                                ["Variable"] = "GCD",
-                                ["Type"] = Statics.Actions.Pause
-                            }
-                            if #path > 1 then
-                                table.insert(
-                                    editframe.Sequence.Macros[version].Actions[parentPath],
-                                    lastPath + 1,
-                                    newAction
-                                )
-                            else
-                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                            end
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    addPauseButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(L["Add Pause"], L["Add a Pause Block."], editframe)
-                        end
-                    )
-                    addPauseButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-
-                    addIfButton:SetImageSize(20, 20)
-                    addIfButton:SetWidth(20)
-                    addIfButton:SetHeight(20)
-                    addIfButton:SetImage(Statics.ActionsIcons.If)
-
-                    addIfButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local newAction = {
-                                [1] = {
-                                    {
-                                        ["macro"] = "Need True Stuff Here",
-                                        ["type"] = "macro",
-                                        ["Type"] = Statics.Actions.Action
-                                    }
-                                },
-                                [2] = {
-                                    {
-                                        ["macro"] = "Need False Stuff Here",
-                                        ["type"] = "macro",
-                                        ["Type"] = Statics.Actions.Action
-                                    }
-                                },
-                                ["Type"] = Statics.Actions.If
-                            }
-                            if #path > 1 then
-                                table.insert(
-                                    editframe.Sequence.Macros[version].Actions[parentPath],
-                                    lastPath + 1,
-                                    newAction
-                                )
-                            else
-                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                            end
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    addIfButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            if GSE.TableLength(editframe.booleanFunctions) > 0 then
-                                GSE.CreateToolTip(
-                                    L["Add If"],
-                                    L[
-                                        "Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."
-                                    ],
-                                    editframe
-                                )
-                            else
-                                GSE.CreateToolTip(
-                                    L["Add If"],
-                                    L[
-                                        "If Blocks require a variable that returns either true or false.  Create the variable first."
-                                    ],
-                                    editframe
-                                )
-                            end
-                        end
-                    )
-                    addIfButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-
-                    addEmbedButton:SetImageSize(20, 20)
-                    addEmbedButton:SetWidth(20)
-                    addEmbedButton:SetHeight(20)
-                    addEmbedButton:SetImage(Statics.ActionsIcons.Embed)
-
-                    addEmbedButton:SetCallback(
-                        "OnClick",
-                        function()
-                            local newAction = {
-                                ["Type"] = Statics.Actions.Embed
-                            }
-                            if #path > 1 then
-                                table.insert(
-                                    editframe.Sequence.Macros[version].Actions[parentPath],
-                                    lastPath + 1,
-                                    newAction
-                                )
-                            else
-                                table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
-                            end
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    )
-                    addEmbedButton:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(
-                                L["Add Embed"],
-                                L[
-                                    "Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."
-                                ],
-                                editframe
+                                }
+                            },
+                            [2] = {
+                                {
+                                    ["macro"] = "Need False Stuff Here",
+                                    ["type"] = "macro",
+                                    ["Type"] = Statics.Actions.Action
+                                }
+                            },
+                            ["Type"] = Statics.Actions.If
+                        }
+                        if #path > 1 then
+                            table.insert(
+                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                lastPath + 1,
+                                newAction
                             )
+                        else
+                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
                         end
-                    )
-                    addEmbedButton:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
-                end
-
-                if GSE.isEmpty(disableMove) then
-                    layoutcontainer:AddChild(moveUpButton)
-                    layoutcontainer:AddChild(moveDownButton)
-                    local spacerlabel1 = AceGUI:Create("Label")
-                    spacerlabel1:SetWidth(5)
-                    layoutcontainer:AddChild(spacerlabel1)
-                end
-                layoutcontainer:AddChild(headingLabel)
-                if lastPath == 1 then
-                    moveUpButton:SetDisabled(true)
-                elseif lastPath == blocksThisLevel then
-                    moveDownButton:SetDisabled(true)
-                end
-                if includeAdd then
-                    local spacerlabel2 = AceGUI:Create("Label")
-                    spacerlabel2:SetWidth(5)
-                    layoutcontainer:AddChild(spacerlabel2)
-                    layoutcontainer:AddChild(addActionButton)
-                    layoutcontainer:AddChild(addLoopButton)
-                    layoutcontainer:AddChild(addPauseButton)
-                    layoutcontainer:AddChild(addIfButton)
-                    layoutcontainer:AddChild(addEmbedButton)
-                end
-                local spacerlabel3 = AceGUI:Create("Label")
-                spacerlabel3:SetWidth(30)
-                layoutcontainer:AddChild(spacerlabel3)
-                if GSE.isEmpty(disableMove) then
-                    local disableBlock = AceGUI:Create("CheckBox")
-                    disableBlock:SetType("checkbox")
-                    disableBlock:SetWidth(130)
-                    disableBlock:SetTriState(false)
-                    disableBlock:SetLabel(L["Disable Block"])
-                    layoutcontainer:AddChild(disableBlock)
-                    disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
-                    local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
-                    highlightTexture:SetAllPoints(true)
-
-                    disableBlock:SetCallback(
-                        "OnValueChanged",
-                        function(sel, object, value)
-                            editframe.Sequence.Macros[version].Actions[path].Disabled = value
-                            if value == true then
-                                highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-                            else
-                                highlightTexture:SetColorTexture(1, 0, 0, 0)
-                            end
-                        end
-                    )
-                    if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
-                        highlightTexture:SetColorTexture(1, 0, 0, 0.15)
-                    else
-                        highlightTexture:SetColorTexture(1, 0, 0, 0)
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
-
-                    container:SetCallback(
-                        "OnRelease",
-                        function(self, obj, value)
-                            highlightTexture:SetColorTexture(0, 0, 0, 0)
-                        end
-                    )
-                    disableBlock:SetCallback(
-                        "OnEnter",
-                        function()
+                )
+                addIfButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        if GSE.TableLength(editframe.booleanFunctions) > 0 then
                             GSE.CreateToolTip(
-                                L["Disable Block"],
+                                L["Add If"],
                                 L[
-                                    "Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."
+                                    "Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."
+                                ],
+                                editframe
+                            )
+                        else
+                            GSE.CreateToolTip(
+                                L["Add If"],
+                                L[
+                                    "If Blocks require a variable that returns either true or false.  Create the variable first."
                                 ],
                                 editframe
                             )
                         end
-                    )
-                    disableBlock:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
+                    end
+                )
+                addIfButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+
+                addEmbedButton:SetImageSize(20, 20)
+                addEmbedButton:SetWidth(20)
+                addEmbedButton:SetHeight(20)
+                addEmbedButton:SetImage(Statics.ActionsIcons.Embed)
+
+                addEmbedButton:SetCallback(
+                    "OnClick",
+                    function()
+                        local newAction = {
+                            ["Type"] = Statics.Actions.Embed
+                        }
+                        if #path > 1 then
+                            table.insert(
+                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                lastPath + 1,
+                                newAction
+                            )
+                        else
+                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
                         end
-                    )
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                    end
+                )
+                addEmbedButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(
+                            L["Add Embed"],
+                            L[
+                                "Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."
+                            ],
+                            editframe
+                        )
+                    end
+                )
+                addEmbedButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+            end
+
+            if GSE.isEmpty(disableMove) then
+                layoutcontainer:AddChild(moveUpButton)
+                layoutcontainer:AddChild(moveDownButton)
+                local spacerlabel1 = AceGUI:Create("Label")
+                spacerlabel1:SetWidth(5)
+                layoutcontainer:AddChild(spacerlabel1)
+            end
+            layoutcontainer:AddChild(headingLabel)
+            if lastPath == 1 then
+                moveUpButton:SetDisabled(true)
+            elseif lastPath == blocksThisLevel then
+                moveDownButton:SetDisabled(true)
+            end
+            if includeAdd then
+                local spacerlabel2 = AceGUI:Create("Label")
+                spacerlabel2:SetWidth(5)
+                layoutcontainer:AddChild(spacerlabel2)
+                layoutcontainer:AddChild(addActionButton)
+                layoutcontainer:AddChild(addLoopButton)
+                layoutcontainer:AddChild(addPauseButton)
+                layoutcontainer:AddChild(addIfButton)
+                layoutcontainer:AddChild(addEmbedButton)
+            end
+            local spacerlabel3 = AceGUI:Create("Label")
+            spacerlabel3:SetWidth(30)
+            layoutcontainer:AddChild(spacerlabel3)
+            if GSE.isEmpty(disableMove) then
+                local disableBlock = AceGUI:Create("CheckBox")
+                disableBlock:SetType("checkbox")
+                disableBlock:SetWidth(130)
+                disableBlock:SetTriState(false)
+                disableBlock:SetLabel(L["Disable Block"])
+                layoutcontainer:AddChild(disableBlock)
+                disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
+                local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+                highlightTexture:SetAllPoints(true)
+
+                disableBlock:SetCallback(
+                    "OnValueChanged",
+                    function(sel, object, value)
+                        editframe.Sequence.Macros[version].Actions[path].Disabled = value
+                        if value == true then
+                            highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+                        else
+                            highlightTexture:SetColorTexture(1, 0, 0, 0)
+                        end
+                    end
+                )
+                if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+                    highlightTexture:SetColorTexture(1, 0, 0, 0.15)
+                else
+                    highlightTexture:SetColorTexture(1, 0, 0, 0)
                 end
-                local spacerlabel4 = AceGUI:Create("Label")
-                spacerlabel4:SetWidth(15)
-                layoutcontainer:AddChild(spacerlabel4)
-                if not disableDelete then
-                    layoutcontainer:AddChild(deleteBlockButton)
-                end
-                local spacerlabel5 = AceGUI:Create("Label")
-                spacerlabel5:SetWidth(15)
-                layoutcontainer:AddChild(spacerlabel5)
 
-                local textpath = GSE.SafeConcat(path, ".")
-                local patheditbox = AceGUI:Create("EditBox")
-                if GSE.isEmpty(disableMove) then
-                    patheditbox:SetLabel(L["Block Path"])
-                    patheditbox:SetWidth(80)
-                    patheditbox:SetCallback(
-                        "OnEnterPressed",
-                        function(obj, event, key)
-                            if not editframe.reloading then
-                                local destinationPath = GSE.split(key, ".")
-                                for k, v in ipairs(destinationPath) do
-                                    destinationPath[k] = tonumber(v)
-                                end
-                                local testpath = GSE.CloneSequence(destinationPath)
-                                table.remove(testpath, #testpath)
-                                local sourcepath = GSE.CloneSequence(path)
-                                for k, v in ipairs(sourcepath) do
-                                    sourcepath[k] = tonumber(v)
-                                end
-                                table.remove(sourcepath, #sourcepath)
-                                if #testpath > 0 then
-                                    -- check that the path exists
-                                    if
-                                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
-                                            type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
-                                     then
-                                        GSE.Print(L["Error: Destination path not found."])
-                                        return
-                                    end
-                                end
+                container:SetCallback(
+                    "OnRelease",
+                    function(self, obj, value)
+                        highlightTexture:SetColorTexture(0, 0, 0, 0)
+                    end
+                )
+                disableBlock:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(
+                            L["Disable Block"],
+                            L[
+                                "Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."
+                            ],
+                            editframe
+                        )
+                    end
+                )
+                disableBlock:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+            end
+            local spacerlabel4 = AceGUI:Create("Label")
+            spacerlabel4:SetWidth(15)
+            layoutcontainer:AddChild(spacerlabel4)
+            if not disableDelete then
+                layoutcontainer:AddChild(deleteBlockButton)
+            end
+            local spacerlabel5 = AceGUI:Create("Label")
+            spacerlabel5:SetWidth(15)
+            layoutcontainer:AddChild(spacerlabel5)
 
-                                if #sourcepath > 0 then
-                                    -- check that the path exists  If this has happened we have a big problem
-                                    if
-                                        GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
-                                            type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
-                                     then
-                                        GSE.Print(L["Error: Source path not found."])
-                                        return
-                                    end
-                                end
-
-                                if string.sub(key, 1, string.len(textpath)) == textpath then
-                                    GSE.Print(L["Error: You cannot move a container to be a child within itself."])
+            local textpath = GSE.SafeConcat(path, ".")
+            local patheditbox = AceGUI:Create("EditBox")
+            if GSE.isEmpty(disableMove) then
+                patheditbox:SetLabel(L["Block Path"])
+                patheditbox:SetWidth(80)
+                patheditbox:SetCallback(
+                    "OnEnterPressed",
+                    function(obj, event, key)
+                        if not editframe.reloading then
+                            local destinationPath = GSE.split(key, ".")
+                            for k, v in ipairs(destinationPath) do
+                                destinationPath[k] = tonumber(v)
+                            end
+                            local testpath = GSE.CloneSequence(destinationPath)
+                            table.remove(testpath, #testpath)
+                            local sourcepath = GSE.CloneSequence(path)
+                            for k, v in ipairs(sourcepath) do
+                                sourcepath[k] = tonumber(v)
+                            end
+                            table.remove(sourcepath, #sourcepath)
+                            if #testpath > 0 then
+                                -- check that the path exists
+                                if
+                                    GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
+                                        type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
+                                    then
+                                    GSE.Print(L["Error: Destination path not found."])
                                     return
                                 end
-
-                                local insertActions =
-                                    GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
-                                local endPoint = tonumber(destinationPath[#destinationPath])
-
-                                local pathPoint = tonumber(path[#path])
-
-                                if #sourcepath > 0 then
-                                    table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
-                                else
-                                    table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
-                                end
-                                if #testpath > 0 then
-                                    if endPoint > #testpath + 1 then
-                                        endPoint = #testpath + 1
-                                    end
-                                    table.insert(
-                                        editframe.Sequence.Macros[version].Actions[testpath],
-                                        endPoint,
-                                        insertActions
-                                    )
-                                else
-                                    if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
-                                        endPoint = #editframe.Sequence.Macros[version].Actions + 1
-                                    end
-                                    table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
-                                end
-                                ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                             end
-                        end
-                    )
-                    patheditbox:SetCallback(
-                        "OnEnter",
-                        function()
-                            GSE.CreateToolTip(
-                                L["Block Path"],
-                                L[
-                                    "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
-                                ],
-                                editframe
-                            )
-                        end
-                    )
-                    patheditbox:SetCallback(
-                        "OnLeave",
-                        function()
-                            GSE.ClearTooltip(editframe)
-                        end
-                    )
 
-                    patheditbox:DisableButton(true)
+                            if #sourcepath > 0 then
+                                -- check that the path exists  If this has happened we have a big problem
+                                if
+                                    GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
+                                        type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
+                                    then
+                                    GSE.Print(L["Error: Source path not found."])
+                                    return
+                                end
+                            end
 
-                    patheditbox:SetText(textpath)
-                    layoutcontainer:AddChild(patheditbox)
-                end
-                return layoutcontainer
+                            if string.sub(key, 1, string.len(textpath)) == textpath then
+                                GSE.Print(L["Error: You cannot move a container to be a child within itself."])
+                                return
+                            end
+
+                            local insertActions =
+                                GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                            local endPoint = tonumber(destinationPath[#destinationPath])
+
+                            local pathPoint = tonumber(path[#path])
+
+                            if #sourcepath > 0 then
+                                table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
+                            else
+                                table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
+                            end
+                            if #testpath > 0 then
+                                if endPoint > #testpath + 1 then
+                                    endPoint = #testpath + 1
+                                end
+                                table.insert(
+                                    editframe.Sequence.Macros[version].Actions[testpath],
+                                    endPoint,
+                                    insertActions
+                                )
+                            else
+                                if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
+                                    endPoint = #editframe.Sequence.Macros[version].Actions + 1
+                                end
+                                table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
+                            end
+                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                        end
+                    end
+                )
+                patheditbox:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(
+                            L["Block Path"],
+                            L[
+                                "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
+                            ],
+                            editframe
+                        )
+                    end
+                )
+                patheditbox:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+
+                patheditbox:DisableButton(true)
+
+                patheditbox:SetText(textpath)
+                layoutcontainer:AddChild(patheditbox)
             end
+            return layoutcontainer
+        end
+        local function drawAction(pcontainer, action, version, keyPath, treepath)
 
             -- Workaround for vanishing label ace3 bug
             local label = AceGUI:Create("Label")
@@ -1654,13 +1629,9 @@ function GSE.CreateEditor()
 
             local hlabel = AceGUI:Create("Label")
             hlabel:SetText(string.format(L["Block Type: %s"], Statics.Actions[action.Type]))
-            --hlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
             hlabel:SetFontObject(GameFontNormalLarge)
             hlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
             local includeAdd = true
-            -- if action.Type == Statics.Actions.Loop then
-            --     includeAdd = true
-            -- end
 
             if action.Type == Statics.Actions.Pause then
                 local block = AceGUI:Create("InlineGroup")
@@ -1679,7 +1650,6 @@ function GSE.CreateEditor()
                     [L["Clicks"]] = L["How many macro Clicks to pause for?"],
                     [L["Milliseconds"]] = L["How many milliseconds to pause for?"],
                     ["GCD"] = L["Pause for the GCD."]
-                    --["Random"] = L["Random - It will select .... a spell, any spell"]
                 }
                 for k, _ in pairs(editframe.numericFunctions) do
                     clickdroplist[k] = L["Local Function: "] .. k
@@ -1788,7 +1758,7 @@ function GSE.CreateEditor()
                 end
                 linegroup1:AddChild(msvalueeditbox)
 
-                block:AddChild(GetBlockToolbar(version, keyPath, includeAdd, hlabel, linegroup1))
+                block:AddChild(GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, linegroup1))
                 block:AddChild(linegroup1)
                 pcontainer:AddChild(block)
             elseif action.Type == Statics.Actions.Action or action.Type == Statics.Actions.Repeat then
@@ -1801,7 +1771,7 @@ function GSE.CreateEditor()
                 macroPanel:SetFullWidth(true)
                 macroPanel:SetAutoAdjustHeight(true)
 
-                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
+                local linegroup1 = GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
 
                 macroPanel:AddChild(linegroup1)
 
@@ -1830,12 +1800,6 @@ function GSE.CreateEditor()
                     function()
                     end
                 )
-                -- valueEditBox:SetCallback('OnEnter', function()
-                --     GSE.CreateToolTip(L["Compiled Action"], compiledAction, editframe)
-                -- end)
-                -- valueEditBox:SetCallback('OnLeave', function()
-                --     GSE.ClearTooltip(editframe)
-                -- end)
                 local typegroup = AceGUI:Create("SimpleGroup")
                 typegroup:SetFullWidth(true)
                 typegroup:SetLayout("Flow")
@@ -2057,7 +2021,7 @@ function GSE.CreateEditor()
                 local layout3 = AceGUI:Create("InlineGroup")
                 layout3:SetFullWidth(true)
                 layout3:SetLayout("List")
-                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, layout3)
+                local linegroup1 = GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, layout3)
 
                 local stepdropdown = AceGUI:Create("Dropdown")
                 stepdropdown:SetLabel(L["Step Function"])
@@ -2163,7 +2127,7 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
-                local linegroup1 = GetBlockToolbar(version, keyPath, false, hlabel, macroPanel)
+                local linegroup1 = GetBlockToolbar(version, keyPath, treepath, false, hlabel, macroPanel)
 
                 local booleanEditBox = AceGUI:Create("EditBox")
                 booleanEditBox:SetLabel(L["Variable"])
@@ -2258,7 +2222,7 @@ function GSE.CreateEditor()
                 trueContainer:SetLayout("Flow")
                 trueContainer:SetFullWidth(true)
 
-                local toolbar = GetBlockToolbar(version, trueKeyPath, true, tlabel, trueContainer, true, true, true)
+                local toolbar = GetBlockToolbar(version, trueKeyPath, treepath, true, tlabel, trueContainer, true, true, true)
                 trueGroup:AddChild(toolbar)
 
                 for key, act in ipairs(action[1]) do
@@ -2288,7 +2252,7 @@ function GSE.CreateEditor()
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")
 
-                local toolbar2 = GetBlockToolbar(version, falseKeyPath, true, flabel, falsecontainer, true, true, true)
+                local toolbar2 = GetBlockToolbar(version, falseKeyPath, treepath, true, flabel, falsecontainer, true, true, true)
                 falsegroup:AddChild(toolbar2)
 
                 for key, act in ipairs(action[2]) do
@@ -2310,7 +2274,7 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
-                local linegroup1 = GetBlockToolbar(version, keyPath, includeAdd, hlabel, macroPanel)
+                local linegroup1 = GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
                 macroPanel:AddChild(linegroup1)
                 local SequenceDropDown = AceGUI:Create("Dropdown")
                 SequenceDropDown:SetFullWidth(true)
@@ -2432,8 +2396,7 @@ function GSE.CreateEditor()
         local layoutcontainer = AceGUI:Create("SimpleGroup")
 
         layoutcontainer:SetFullWidth(true)
-        --layoutcontainer:SetHeight(editframe.Height - 220)
-        layoutcontainer:SetLayout("Flow") -- Important!
+        layoutcontainer:SetLayout("Flow") 
 
         local linegroup1 = AceGUI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
@@ -2598,7 +2561,7 @@ function GSE.CreateEditor()
                 GSE.CreateToolTip(
                     L["Delete Version"],
                     L[
-                        "Delete this verion of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
+                        "Delete this version of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
                     ],
                     editframe
                 )
@@ -2984,7 +2947,7 @@ function GSE.CreateEditor()
             GSEOptions.editorHeight = editframe.Height
             GSEOptions.editorWidth = editframe.Width
             if editframe.scroller then
-                editframe.scroller:SetHeight(editframe.Height - 100)
+                editframe.scroller:SetHeight(editframe.Height - TOOLBAR_OFFSET)
                 editframe.scroller:DoLayout()
             end
         end
@@ -3906,7 +3869,6 @@ end]],
             icon = Statics.Icons.Keybindings,
             children = tree
         }
-        ---table.insert(returntree.children, tree)
         return returntree
     end
 
@@ -4124,7 +4086,6 @@ end]],
                 node.text)
             managedMacro:SetText(managedtext)
             managedMacro:SetNumLines(8)
-            -- managedMacro:SetWidth(macroframe.Width - 200)
             managedMacro:SetFullWidth(true)
 
             local compileButton = AceGUI:Create("Button")
@@ -4175,7 +4136,6 @@ end]],
                 managedMacro.editBox:SetScript(
                     "OnTabPressed",
                     function(widget, button, down)
-                        -- if button == "RightButton" then
                         MenuUtil.CreateContextMenu(
                             editframe.frame,
                             function(ownerRegion, rootDescription)
@@ -4341,7 +4301,7 @@ end]],
         end
         return tree
     end
-    function editframe.ManageTree()
+    local function ManageTree()
         local tree = {
             {
                 value = "NewSequence",
@@ -4795,7 +4755,6 @@ end]],
 
                         local editButtonGroup = AceGUI:Create("SimpleGroup")
 
-                        -- editButtonGroup:SetWidth(602)
                         editButtonGroup:SetFullWidth(true)
                         editButtonGroup:SetLayout("Flow")
                         editButtonGroup:SetHeight(15)
@@ -4889,11 +4848,11 @@ end]],
                         local basecontainer = AceGUI:Create("SimpleGroup")
                         basecontainer:SetLayout("List")
                         basecontainer:SetFullWidth(true)
-                        basecontainer:SetHeight(editframe.Height - 100)
-                        local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+                        basecontainer:SetHeight(editframe.Height - TOOLBAR_OFFSET)
+                        local scrollcontainer = AceGUI:Create("SimpleGroup") 
                         scrollcontainer:SetFullWidth(true)
-                        scrollcontainer:SetHeight(editframe.Height - 120)
-                        scrollcontainer:SetLayout("Fill") -- Important!
+                        scrollcontainer:SetHeight(editframe.Height - SCROLLCONTAINER_OFFSET)
+                        scrollcontainer:SetLayout("Fill") 
                         editframe.scrollStatus = {}
                         local contentcontainer = AceGUI:Create("ScrollFrame")
                         scrollcontainer:AddChild(contentcontainer)
@@ -4951,7 +4910,6 @@ end]],
                             headerGroup:SetFullWidth(true)
                             headerGroup:SetLayout("Flow")
                             contentcontainer:AddChild(headerGroup)
-                            --GSE.GUILoadEditor(editframe, path[#path])
 
                             headerGroup:AddChild(nameeditbox)
                             GUIDrawMetadataEditor(contentcontainer)
@@ -5035,14 +4993,15 @@ end]],
             end
         )
     end
-
-    function editframe.GetVersionList()
+    editframe.ManageTree = ManageTree
+    local function GetVersionList()
         local tabl = {}
         for k, v in ipairs(editframe.Sequence.Macros) do
             tabl[tostring(k)] = v.Label and tostring(k) .. " - " .. v.Label or tostring(k)
         end
         return tabl
     end
+    editframe.GetVersionList = GetVersionList()
 
     if GSE.isEmpty(GSE.CreateSpellEditBox) then
         GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro, frame)
@@ -5087,7 +5046,6 @@ end]],
 
             spellEditBox:SetText(spelltext)
 
-            --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
             spellEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
@@ -5134,7 +5092,6 @@ end]],
                         sequence.Macros[version].Actions[keyPath].toy = nil
                     end
 
-                    --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
                 end
             )
             spellEditBox:SetCallback(
@@ -5223,7 +5180,7 @@ end
 
 local function remoteSeqences(message, seqName)
     if message == Statics.Messages.SEQUENCE_UPDATED then
-        if GSE.GUI.editors and #GSE.GUI.editors then
+        if GSE.GUI.editors and #GSE.GUI.editors > 0 then
             for _, v in ipairs(GSE.GUI.editors) do
                 v:remoteSequenceUpdated(seqName)
             end
@@ -5232,8 +5189,8 @@ local function remoteSeqences(message, seqName)
 end
 
 local function remoteVariables(message, seqName)
-    if message == Statics.Messages.SEQUENCE_UPDATED then
-        if GSE.GUI.editors and #GSE.GUI.editors then
+    if message == Statics.Messages.VARIABLE_UPDATED then
+        if GSE.GUI.editors and #GSE.GUI.editors > 0 then
             for _, v in ipairs(GSE.GUI.editors) do
                 v:remoteSequenceUpdated(seqName)
             end
@@ -5243,7 +5200,7 @@ end
 
 local function collectionImported(message)
     if message == Statics.Messages.COLLECTION_IMPORTED then
-        if GSE.GUI.editors and #GSE.GUI.editors then
+        if GSE.GUI.editors and #GSE.GUI.editors > 0 then
             for _, v in ipairs(GSE.GUI.editors) do
                 v.ManageTree()
             end
