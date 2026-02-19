@@ -95,7 +95,7 @@ function GSE.CreateEditor()
     editframe.statusText = "GSE: " .. GSE.VersionString
     editframe.booleanFunctions = {}
     editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
-    
+
     local function GetVersionList()
         if not #editframe.Sequence.Macros then
             return {}
@@ -593,8 +593,7 @@ function GSE.CreateEditor()
         local defaultdropdown = AceGUI:Create("Dropdown")
         defaultdropdown:SetLabel(L["Default Version"])
         defaultdropdown:SetWidth(250)
-        DevTools_Dump(editframe.GetVersionList)
-        DevTools_Dump(editframe.GetVersionList())
+
         defaultdropdown:SetList(editframe.GetVersionList())
         defaultdropdown:SetValue(tostring(editframe.Sequence.MetaData.Default))
         defaultdropdown:SetCallback(
@@ -5008,7 +5007,7 @@ end]],
         )
     end
     editframe.ManageTree = ManageTree
-    
+
     if GSE.isEmpty(GSE.CreateSpellEditBox) then
         GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro, frame)
             local spellEditBox = AceGUI:Create("EditBox")
