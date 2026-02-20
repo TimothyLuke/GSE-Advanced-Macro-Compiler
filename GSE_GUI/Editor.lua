@@ -5034,7 +5034,7 @@ end]],
                 if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
                     spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
                 else
-                    spelltext = action.macro
+                    spelltext = GSE.UnEscapeString(action.macro)
                 end
             elseif action.action then
                 spellEditBox:SetLabel(L["Pet Ability"])
