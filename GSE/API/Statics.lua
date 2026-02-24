@@ -540,4 +540,120 @@ Statics.Messages.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
 Statics.Messages.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
 Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
 
+-- Lookup set: keys in this set are Ace messages → use RegisterMessage/UnregisterMessage
+-- All other keys in VariableEventList are WoW events → use RegisterEvent/UnregisterEvent
+Statics.AceMessages = {
+    ["GSE_SEQUENCE_UPDATED"]     = true,
+    ["GSE_VARIABLE_UPDATED"]     = true,
+    ["GSE_COLLECTION_IMPORTED"]  = true,
+    ["GSE_SEQUENCE_ICON_UPDATE"] = true,
+    ["GSE_MODS_VISIBLE"]         = true,
+}
+
+-- Full event list for variable event callbacks.
+-- Flat key=value table for AceGUI Dropdown:SetList() / SetMultiselect().
+-- GSE internal Ace messages are prefixed with "[GSE] " in the display value.
+Statics.VariableEventList = {
+    -- GSE Internal Messages
+    ["GSE_SEQUENCE_UPDATED"]              = "[GSE] GSE_SEQUENCE_UPDATED",
+    ["GSE_VARIABLE_UPDATED"]              = "[GSE] GSE_VARIABLE_UPDATED",
+    ["GSE_COLLECTION_IMPORTED"]           = "[GSE] GSE_COLLECTION_IMPORTED",
+    ["GSE_SEQUENCE_ICON_UPDATE"]          = "[GSE] GSE_SEQUENCE_ICON_UPDATE",
+    ["GSE_MODS_VISIBLE"]                  = "[GSE] GSE_MODS_VISIBLE",
+    -- ActionBar
+    ["ACTION_RANGE_CHECK_UPDATE"]         = "ACTION_RANGE_CHECK_UPDATE",
+    ["ACTIONBAR_PAGE_CHANGED"]            = "ACTIONBAR_PAGE_CHANGED",
+    ["ACTIONBAR_SLOT_CHANGED"]            = "ACTIONBAR_SLOT_CHANGED",
+    ["ACTIONBAR_UPDATE_COOLDOWN"]         = "ACTIONBAR_UPDATE_COOLDOWN",
+    ["ACTIONBAR_UPDATE_STATE"]            = "ACTIONBAR_UPDATE_STATE",
+    ["ACTIONBAR_UPDATE_USABLE"]           = "ACTIONBAR_UPDATE_USABLE",
+    ["UPDATE_BONUS_ACTIONBAR"]            = "UPDATE_BONUS_ACTIONBAR",
+    -- AddOns
+    ["ADDON_LOADED"]                      = "ADDON_LOADED",
+    -- ChallengeModeInfo
+    ["CHALLENGE_MODE_COMPLETED"]          = "CHALLENGE_MODE_COMPLETED",
+    ["CHALLENGE_MODE_RESET"]              = "CHALLENGE_MODE_RESET",
+    ["CHALLENGE_MODE_START"]              = "CHALLENGE_MODE_START",
+    -- ClassTalents
+    ["ACTIVE_COMBAT_CONFIG_CHANGED"]      = "ACTIVE_COMBAT_CONFIG_CHANGED",
+    ["SELECTED_LOADOUT_CHANGED"]          = "SELECTED_LOADOUT_CHANGED",
+    -- CombatLog
+    ["COMBAT_LOG_EVENT_UNFILTERED"]       = "COMBAT_LOG_EVENT_UNFILTERED",
+    -- CombatText
+    ["COMBAT_TEXT_UPDATE"]                = "COMBAT_TEXT_UPDATE",
+    -- CurrencySystem
+    ["CURRENCY_DISPLAY_UPDATE"]           = "CURRENCY_DISPLAY_UPDATE",
+    ["PLAYER_MONEY"]                      = "PLAYER_MONEY",
+    -- DeathInfo
+    ["PLAYER_ALIVE"]                      = "PLAYER_ALIVE",
+    ["PLAYER_DEAD"]                       = "PLAYER_DEAD",
+    ["PLAYER_UNGHOST"]                    = "PLAYER_UNGHOST",
+    ["RESURRECT_REQUEST"]                 = "RESURRECT_REQUEST",
+    -- EncounterInfo
+    ["BOSS_KILL"]                         = "BOSS_KILL",
+    ["ENCOUNTER_END"]                     = "ENCOUNTER_END",
+    ["ENCOUNTER_START"]                   = "ENCOUNTER_START",
+    ["RAID_TARGET_UPDATE"]                = "RAID_TARGET_UPDATE",
+    ["UPDATE_INSTANCE_INFO"]              = "UPDATE_INSTANCE_INFO",
+    -- EquipmentSet
+    ["EQUIPMENT_SETS_CHANGED"]            = "EQUIPMENT_SETS_CHANGED",
+    ["EQUIPMENT_SWAP_FINISHED"]           = "EQUIPMENT_SWAP_FINISHED",
+    -- FriendList
+    ["FRIENDLIST_UPDATE"]                 = "FRIENDLIST_UPDATE",
+    -- Group / Party / Raid
+    ["GROUP_ROSTER_UPDATE"]               = "GROUP_ROSTER_UPDATE",
+    ["PARTY_LEADER_CHANGED"]              = "PARTY_LEADER_CHANGED",
+    ["PARTY_MEMBERS_CHANGED"]             = "PARTY_MEMBERS_CHANGED",
+    ["RAID_ROSTER_UPDATE"]                = "RAID_ROSTER_UPDATE",
+    -- GuildInfo
+    ["GUILD_ROSTER_UPDATE"]               = "GUILD_ROSTER_UPDATE",
+    -- Item / Bag
+    ["BAG_UPDATE"]                        = "BAG_UPDATE",
+    ["BAG_UPDATE_COOLDOWN"]               = "BAG_UPDATE_COOLDOWN",
+    ["ITEM_LOCK_CHANGED"]                 = "ITEM_LOCK_CHANGED",
+    -- Map / Zone
+    ["ZONE_CHANGED"]                      = "ZONE_CHANGED",
+    ["ZONE_CHANGED_NEW_AREA"]             = "ZONE_CHANGED_NEW_AREA",
+    ["PLAYER_DIFFICULTY_CHANGED"]         = "PLAYER_DIFFICULTY_CHANGED",
+    -- Player State
+    ["PLAYER_ENTERING_WORLD"]             = "PLAYER_ENTERING_WORLD",
+    ["PLAYER_LEAVING_WORLD"]              = "PLAYER_LEAVING_WORLD",
+    ["PLAYER_LEVEL_UP"]                   = "PLAYER_LEVEL_UP",
+    ["PLAYER_LOGIN"]                      = "PLAYER_LOGIN",
+    ["PLAYER_LOGOUT"]                     = "PLAYER_LOGOUT",
+    ["PLAYER_XP_UPDATE"]                  = "PLAYER_XP_UPDATE",
+    -- Player Combat
+    ["PLAYER_REGEN_DISABLED"]             = "PLAYER_REGEN_DISABLED",
+    ["PLAYER_REGEN_ENABLED"]              = "PLAYER_REGEN_ENABLED",
+    -- Player Faction / PVP
+    ["UNIT_FACTION"]                      = "UNIT_FACTION",
+    ["PLAYER_PVP_KILLS_CHANGED"]          = "PLAYER_PVP_KILLS_CHANGED",
+    ["PLAYER_PVP_RANK_CHANGED"]           = "PLAYER_PVP_RANK_CHANGED",
+    -- Player Spec / Talents
+    ["ACTIVE_TALENT_GROUP_CHANGED"]       = "ACTIVE_TALENT_GROUP_CHANGED",
+    ["CHARACTER_POINTS_CHANGED"]          = "CHARACTER_POINTS_CHANGED",
+    ["PLAYER_PVP_TALENT_UPDATE"]          = "PLAYER_PVP_TALENT_UPDATE",
+    ["PLAYER_SPECIALIZATION_CHANGED"]     = "PLAYER_SPECIALIZATION_CHANGED",
+    ["PLAYER_TALENT_UPDATE"]              = "PLAYER_TALENT_UPDATE",
+    ["SPEC_INVOLUNTARILY_CHANGED"]        = "SPEC_INVOLUNTARILY_CHANGED",
+    ["TRAIT_CONFIG_UPDATED"]              = "TRAIT_CONFIG_UPDATED",
+    -- Spells / Cooldowns
+    ["SPELL_UPDATE_CHARGES"]              = "SPELL_UPDATE_CHARGES",
+    ["SPELL_UPDATE_COOLDOWN"]             = "SPELL_UPDATE_COOLDOWN",
+    ["SPELLS_CHANGED"]                    = "SPELLS_CHANGED",
+    ["UNIT_SPELLCAST_FAILED"]             = "UNIT_SPELLCAST_FAILED",
+    ["UNIT_SPELLCAST_INTERRUPTED"]        = "UNIT_SPELLCAST_INTERRUPTED",
+    ["UNIT_SPELLCAST_START"]              = "UNIT_SPELLCAST_START",
+    ["UNIT_SPELLCAST_STOP"]               = "UNIT_SPELLCAST_STOP",
+    ["UNIT_SPELLCAST_SUCCEEDED"]          = "UNIT_SPELLCAST_SUCCEEDED",
+    -- Target
+    ["PLAYER_TARGET_CHANGED"]             = "PLAYER_TARGET_CHANGED",
+    -- Unit
+    ["UNIT_AURA"]                         = "UNIT_AURA",
+    ["UNIT_HEALTH"]                       = "UNIT_HEALTH",
+    ["UNIT_MAXHEALTH"]                    = "UNIT_MAXHEALTH",
+    ["UNIT_POWER_UPDATE"]                 = "UNIT_POWER_UPDATE",
+    ["UNIT_DISPLAYPOWER"]                 = "UNIT_DISPLAYPOWER",
+}
+
 GSE.DebugProfile("Statics")

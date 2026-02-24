@@ -121,6 +121,10 @@ function GSE.LoadVariables()
                 if type(GSE.V[k]()) == "boolean" then
                     GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
                 end
+                -- Register event callbacks if configured
+                if uncompressedVersion.eventEnabled and not GSE.isEmpty(uncompressedVersion.eventNames) then
+                    GSE.RegisterVariableEvents(k, uncompressedVersion.eventNames)
+                end
             end
         )
         if err then
@@ -131,6 +135,54 @@ function GSE.LoadVariables()
             )
         end
     end
+end
+
+-- Track active variable event registrations, keyed by variable name
+GSE.VariableEventHandlers = GSE.VariableEventHandlers or {}
+
+--- Register one or more WoW events or Ace messages as callbacks for a variable.
+-- Each event/message will call GSE.V[name] with (eventName, ...) when fired.
+-- Always unregisters any prior bindings for this variable first.
+-- @param name string  The variable name (key in GSEVariables)
+-- @param eventNames table  Array of event/message name strings
+function GSE.RegisterVariableEvents(name, eventNames)
+    GSE.UnregisterVariableEvents(name)
+    if GSE.isEmpty(eventNames) then return end
+
+    local selfKey = "GSEVar_" .. name
+    GSE.VariableEventHandlers[name] = {selfKey = selfKey, events = {}}
+
+    for _, eventName in ipairs(eventNames) do
+        local isMessage = Statics.AceMessages[eventName] == true
+        local handler = function(evt, ...)
+            if GSE.V[name] and type(GSE.V[name]) == "function" then
+                pcall(GSE.V[name], evt, ...)
+            end
+        end
+        if isMessage then
+            GSE:RegisterMessage(eventName, selfKey, handler)
+        else
+            GSE:RegisterEvent(eventName, selfKey, handler)
+        end
+        table.insert(GSE.VariableEventHandlers[name].events, {name = eventName, isMessage = isMessage})
+    end
+end
+
+--- Unregister all event/message callbacks previously registered for a variable.
+-- @param name string  The variable name
+function GSE.UnregisterVariableEvents(name)
+    if not GSE.VariableEventHandlers or not GSE.VariableEventHandlers[name] then
+        return
+    end
+    local binding = GSE.VariableEventHandlers[name]
+    for _, entry in ipairs(binding.events) do
+        if entry.isMessage then
+            GSE:UnregisterMessage(entry.name, binding.selfKey)
+        else
+            GSE:UnregisterEvent(entry.name, binding.selfKey)
+        end
+    end
+    GSE.VariableEventHandlers[name] = nil
 end
 --- Load a collection of Sequences
 function GSE.ImportCompressedMacroCollection(Sequences)
@@ -1272,6 +1324,12 @@ function GSE.UpdateVariable(variable, name, status)
     end
     if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
         GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
+    end
+    -- Re-register or remove event/message callbacks based on updated variable config
+    if variable.eventEnabled and not GSE.isEmpty(variable.eventNames) then
+        GSE.RegisterVariableEvents(name, variable.eventNames)
+    else
+        GSE.UnregisterVariableEvents(name)
     end
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
 end

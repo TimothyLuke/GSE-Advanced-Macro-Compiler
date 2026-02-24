@@ -3543,7 +3543,7 @@ end]],
 
         local commentsEditBox = AceGUI:Create("MultiLineEditBox")
         commentsEditBox:SetLabel(L["Help Information"])
-        commentsEditBox:SetNumLines(7)
+        commentsEditBox:SetNumLines(3)
         commentsEditBox:SetFullWidth(true)
         commentsEditBox:DisableButton(true)
         commentsEditBox:SetText(variable.comments)
@@ -3561,6 +3561,100 @@ end]],
         )
 
         container:AddChild(commentsEditBox)
+
+        -- Event Callback Section ─────────────────────────────────────────────
+        local eventCallbackGroup = AceGUI:Create("SimpleGroup")
+        eventCallbackGroup:SetLayout("Flow")
+        eventCallbackGroup:SetFullWidth(true)
+
+        local eventToggle = AceGUI:Create("CheckBox")
+        eventToggle:SetLabel(L["Execute on Event"])
+        eventToggle:SetWidth(180)
+        local isEventEnabled = variable.eventEnabled or false
+        eventToggle:SetValue(isEventEnabled)
+        eventToggle:SetCallback(
+            "OnEnter",
+            function()
+                GSE.CreateToolTip(
+                    L["Execute on Event"],
+                    L["When enabled, this variable's function will be called automatically when the selected WoW events or GSE messages fire."],
+                    editframe
+                )
+            end
+        )
+        eventToggle:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+        local eventDropdown = AceGUI:Create("Dropdown")
+        eventDropdown:SetLabel(L["Trigger Events"])
+        eventDropdown:SetRelativeWidth(0.75)
+        eventDropdown:SetMultiselect(true)
+        eventDropdown:SetList(Statics.VariableEventList)
+        eventDropdown:SetDisabled(not isEventEnabled)
+
+        -- Pre-populate checkbox state from saved variable.eventNames
+        if not GSE.isEmpty(variable.eventNames) then
+            for _, evtName in ipairs(variable.eventNames) do
+                eventDropdown:SetItemValue(evtName, true)
+            end
+        end
+
+        eventToggle:SetCallback(
+            "OnValueChanged",
+            function(obj, event, val)
+                variable.eventEnabled = val
+                eventDropdown:SetDisabled(not val)
+                if not val then
+                    variable.eventNames = {}
+                    for key, _ in pairs(Statics.VariableEventList) do
+                        eventDropdown:SetItemValue(key, false)
+                    end
+                end
+            end
+        )
+
+        eventDropdown:SetCallback(
+            "OnValueChanged",
+            function(obj, event, key, checked)
+                if GSE.isEmpty(variable.eventNames) then
+                    variable.eventNames = {}
+                end
+                if checked then
+                    local found = false
+                    for _, v in ipairs(variable.eventNames) do
+                        if v == key then
+                            found = true
+                            break
+                        end
+                    end
+                    if not found then
+                        table.insert(variable.eventNames, key)
+                    end
+                else
+                    for i, v in ipairs(variable.eventNames) do
+                        if v == key then
+                            table.remove(variable.eventNames, i)
+                            break
+                        end
+                    end
+                end
+            end
+        )
+        eventDropdown:SetCallback(
+            "OnEnter",
+            function()
+                GSE.CreateToolTip(
+                    L["Trigger Events"],
+                    L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."],
+                    editframe
+                )
+            end
+        )
+        eventDropdown:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+        eventCallbackGroup:AddChild(eventToggle)
+        eventCallbackGroup:AddChild(eventDropdown)
+        container:AddChild(eventCallbackGroup)
+        -- ─────────────────────────────────────────────────────────────────────
 
         local valueEditBox = AceGUI:Create("MultiLineEditBox")
         valueEditBox:SetLabel(L["Variable"])
