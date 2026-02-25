@@ -529,7 +529,7 @@ local function ManageTree(editframe)
                 children = {}
             }
         end
-        for i, j in pairs(v) do
+        for _, j in pairs(v) do
             for _, h in ipairs(j) do
                 table.insert(tnode.children, h)
             end

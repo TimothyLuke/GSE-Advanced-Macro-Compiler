@@ -386,9 +386,6 @@ local function GUIDrawMetadataEditor(editframe, container)
     -- spacerlabel7 between Heroic/Dungeon, spacerlabel8 between Timewalking/MythicPlus.
     -- We reproduce these by inserting a width-100 spacer between items when spacer=false but next item exists.
 
-    -- Keep track of dropdowns by key so we can wire OnValueChanged (they need editframe.Sequence.MetaData.Default)
-    local dropdowns = {}
-
     -- Build dropdowns from contextVersionConfigs, inserting into the right group with spacers.
     -- Original layout per group:
     --   grp1: defaultdropdown, spacer, raiddropdown
@@ -441,7 +438,6 @@ local function GUIDrawMetadataEditor(editframe, container)
                         GSE.ClearTooltip(editframe)
                     end
                 )
-                dropdowns[metaKey] = dd
                 defgroups[grpIdx]:AddChild(dd)
 
                 -- Insert spacer between items in the same group row (matching original layout)
