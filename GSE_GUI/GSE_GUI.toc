@@ -31,6 +31,12 @@ Export.lua
 DebugWindow.lua
 Transmission.lua
 Recorder.lua
+Editor_Utils.lua
+Editor_Metadata.lua
+Editor_Variable.lua
+Editor_Keybind.lua
+Editor_Macro.lua
+Editor_Tree.lua
 Editor.lua
 RemoteMacroBrowser.lua
 GUIFunctions.lua
