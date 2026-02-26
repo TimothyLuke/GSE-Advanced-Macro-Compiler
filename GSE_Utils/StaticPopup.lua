@@ -7,10 +7,10 @@ StaticPopupDialogs["GS-DebugOutput"] = {
     button1 = L["Update"],
     button2 = L["Close"],
     OnAccept = function(self, data)
-        self.editBox:SetText(GSE.DebugOutput)
+        self.EditBox:SetText(GSE.DebugOutput)
     end,
     OnShow = function(self, data)
-        self.editBox:SetText(GSE.DebugOutput)
+        self.EditBox:SetText(GSE.DebugOutput)
     end,
     timeout = 0,
     whileDead = true,
@@ -25,14 +25,14 @@ StaticPopupDialogs["GSE_UPDATE_AVAILABLE"] = {
     ],
     hasEditBox = 1,
     OnShow = function(self)
-        self.editBox:SetAutoFocus(false)
-        self.editBox:SetWidth(220)
-        self.editBox:SetText("https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros")
-        self.editBox:HighlightText()
+        self.EditBox:SetAutoFocus(false)
+        self.EditBox:SetWidth(220)
+        self.EditBox:SetText("https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros")
+        self.EditBox:HighlightText()
         ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
-        self.editBox:SetWidth(self.editBox.width or 50)
+        self.EditBox:SetWidth(self.EditBox.width or 50)
     end,
     hideOnEscape = 1,
     button1 = OKAY,
@@ -63,16 +63,16 @@ StaticPopupDialogs["GSE_SEQUENCEHELP"] = {
     hasEditBox = 1,
     url = "https://discord.gg/gseunited",
     OnShow = function(self)
-        self.editBox:SetAutoFocus(false)
-        self.editBox.width = self.editBox:GetWidth()
-        self.editBox:SetWidth(220)
-        self.editBox:SetText(StaticPopupDialogs["GSE_SEQUENCEHELP"].url)
-        self.editBox:HighlightText()
+        self.EditBox:SetAutoFocus(false)
+        self.EditBox.width = self.EditBox:GetWidth()
+        self.EditBox:SetWidth(220)
+        self.EditBox:SetText(StaticPopupDialogs["GSE_SEQUENCEHELP"].url)
+        self.EditBox:HighlightText()
         ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
-        self.editBox:SetWidth(self.editBox.width or 50)
-        self.editBox.width = nil
+        self.EditBox:SetWidth(self.EditBox.width or 50)
+        self.EditBox.width = nil
     end,
     hideOnEscape = 1,
     button1 = OKAY,
@@ -132,7 +132,7 @@ StaticPopupDialogs["GSE_NEW_SEQUENCE_NAME"] = {
     hasEditBox = 1,
     maxLetters = 60,
     OnShow = function(self)
-        self.editBox:SetFocus()
+        self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
         local name = strtrim(self.EditBox:GetText())
@@ -164,7 +164,7 @@ StaticPopupDialogs["GSE_NEW_VARIABLE_NAME"] = {
     hasEditBox = 1,
     maxLetters = 60,
     OnShow = function(self)
-        self.editBox:SetFocus()
+        self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
         local name = strtrim(self.EditBox:GetText())
@@ -206,16 +206,16 @@ StaticPopupDialogs["GSE_ChatLink"] = {
     hasEditBox = 1,
     link = "",
     OnShow = function(self)
-        self.editBox:SetAutoFocus(false)
-        self.editBox.width = self.editBox:GetWidth()
-        self.editBox:SetWidth(220)
-        self.editBox:SetText(StaticPopupDialogs["GSE_ChatLink"].link)
-        self.editBox:HighlightText()
+        self.EditBox:SetAutoFocus(false)
+        self.EditBox.width = self.EditBox:GetWidth()
+        self.EditBox:SetWidth(220)
+        self.EditBox:SetText(StaticPopupDialogs["GSE_ChatLink"].link)
+        self.EditBox:HighlightText()
         ChatEdit_FocusActiveWindow()
     end,
     OnHide = function(self)
-        self.editBox:SetWidth(self.editBox.width or 50)
-        self.editBox.width = nil
+        self.EditBox:SetWidth(self.EditBox.width or 50)
+        self.EditBox.width = nil
     end,
     hideOnEscape = 1,
     button1 = OKAY,
