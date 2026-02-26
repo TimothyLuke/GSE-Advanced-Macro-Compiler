@@ -512,5 +512,7 @@ globals = {
     "RegisterAttributeDriver",
     "issecretvalue",
     "SettingsPanel",
-    "MinimalSliderWithSteppersMixin"
+    "MinimalSliderWithSteppersMixin",
+    "strtrim",
+    "C_EventUtils"
 }

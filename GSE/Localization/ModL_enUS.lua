@@ -843,7 +843,7 @@ L["When enabled, this variable's function will be called automatically when the 
 L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."] = true
 
 L["WhatsNew"] =
-[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.03 Midnight has arrived.  
+[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.03 Midnight has arrived.
 
 |cFFFFD100Editor Changes — Variables & Sequences|r
   - Editor Icons have been updated for consistent look and feel.
