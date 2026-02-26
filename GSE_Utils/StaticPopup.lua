@@ -125,6 +125,70 @@ StaticPopupDialogs["GSE-MacroImportFailure"] = {
     preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
 }
 
+StaticPopupDialogs["GSE_NEW_SEQUENCE_NAME"] = {
+    text = L["Enter a name for the new sequence:"],
+    button1 = L["Create"],
+    button2 = CANCEL,
+    hasEditBox = 1,
+    maxLetters = 60,
+    OnShow = function(self)
+        self.editBox:SetFocus()
+    end,
+    OnAccept = function(self, data)
+        local name = strtrim(self.EditBox:GetText())
+        if not GSE.isEmpty(name) then
+            GSE.GUICreateNewSequence(data.editor, name, data.recordedstring)
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        local name = strtrim(self.EditBox:GetText())
+        if not GSE.isEmpty(name) then
+            GSE.GUICreateNewSequence(parent.data.editor, name, parent.data.recordedstring)
+        end
+        parent:Hide()
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+StaticPopupDialogs["GSE_NEW_VARIABLE_NAME"] = {
+    text = L["Enter a name for the new variable:"],
+    button1 = L["Create"],
+    button2 = CANCEL,
+    hasEditBox = 1,
+    maxLetters = 60,
+    OnShow = function(self)
+        self.editBox:SetFocus()
+    end,
+    OnAccept = function(self, data)
+        local name = strtrim(self.EditBox:GetText())
+        if not GSE.isEmpty(name) then
+            GSE.GUICreateNewVariable(data.editor, name)
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        local name = strtrim(self.EditBox:GetText())
+        if not GSE.isEmpty(name) then
+            GSE.GUICreateNewVariable(parent.data.editor, name)
+        end
+        parent:Hide()
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
     text = "",
     button1 = L["Delete"],

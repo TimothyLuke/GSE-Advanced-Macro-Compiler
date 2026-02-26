@@ -169,16 +169,6 @@ function GSE.CreateEditor()
     editframe:SetCallback(
         "OnClose",
         function(self)
-            if self.NewSequences then
-                for _, v in ipairs(self.NewSequences) do
-                    if GSE.Library[v.class] and GSE.Library[v.class][v.name] then
-                        GSE.Library[v.class][v.name] = nil
-                    end
-                    if GSESequences[v.class] and GSESequences[v.class][v.name] then
-                        GSESequences[v.class][v.name] = nil
-                    end
-                end
-            end
             self.OrigSequenceName = nil
             GSE.ClearTooltip(editframe)
             if GSE.isEmpty(GSEOptions.frameLocations) then
@@ -210,7 +200,6 @@ function GSE.CreateEditor()
             self.save = nil
             self.statusText = nil
             self.booleanFunctions = nil
-            self.NewSequences = nil
             self:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
@@ -2425,68 +2414,81 @@ GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, remoteSeqences)
 GSE:RegisterMessage(Statics.Messages.VARIABLE_UPDATED, remoteVariables)
 GSE:RegisterMessage(Statics.Messages.COLLECTION_IMPORTED, collectionImported)
 
-function GSE.GUILoadEditor(editor, key, recordedstring)
-    local classid
-    local sequenceName
-    local sequence
-    local newsequence = false
-    if GSE.isEmpty(key) then
-        classid = GSE.GetCurrentClassID()
-        sequenceName = "NEW_SEQUENCE" .. tostring(math.random(20))
-        sequence = {
-            ["MetaData"] = {
-                ["Author"] = GSE.GetCharacterName(),
-                ["Talents"] = GSE.GetCurrentTalents(),
-                ["Default"] = 1,
-                ["SpecID"] = GSE.GetCurrentSpecID(),
-                ["GSEVersion"] = GSE.VersionString,
-                ["Name"] = sequenceName
-            },
-            ["Macros"] = {
-                [1] = {
-                    ["Actions"] = {
-                        [1] = {
-                            ["macro"] = "Need Macro Here",
-                            ["Type"] = Statics.Actions.Action
-                        }
-                    }
+--- Create a brand-new sequence with the given name and navigate to it.
+-- Called by the GSE_NEW_SEQUENCE_NAME StaticPopup OnAccept / Enter handler.
+function GSE.GUICreateNewSequence(editor, name, recordedstring)
+    local classid = GSE.GetCurrentClassID()
+    local sequence = {
+        ["MetaData"] = {
+            ["Author"]     = GSE.GetCharacterName(),
+            ["Talents"]    = GSE.GetCurrentTalents(),
+            ["Default"]    = 1,
+            ["SpecID"]     = GSE.GetCurrentSpecID(),
+            ["GSEVersion"] = GSE.VersionString,
+            ["Name"]       = name,
+        },
+        ["Macros"] = {
+            [1] = {
+                ["Actions"] = {
+                    [1] = { ["macro"] = "Need Macro Here", ["Type"] = Statics.Actions.Action }
                 }
             }
         }
-        if not GSE.isEmpty(recordedstring) then
-            sequence.Macros[1]["Actions"] = nil
-            local recordedMacro = {}
-            for _, v in ipairs(GSE.SplitMeIntoLines(recordedstring)) do
-                local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
-                if spellid then
-                    local action = {
-                        ["Type"] = Statics.Actions.Action,
-                        ["type"] = "macro",
-                        ["macro"] = spellid
-                    }
-                    table.insert(recordedMacro, action)
-                end
+    }
+    if not GSE.isEmpty(recordedstring) then
+        sequence.Macros[1]["Actions"] = nil
+        local recordedMacro = {}
+        for _, v in ipairs(GSE.SplitMeIntoLines(recordedstring)) do
+            local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
+            if spellid then
+                table.insert(recordedMacro, { ["Type"] = Statics.Actions.Action, ["type"] = "macro", ["macro"] = spellid })
             end
-            sequence.Macros[1]["Actions"] = recordedMacro
         end
-        if GSE.isEmpty(editor.NewSequences) then
-            editor.NewSequences = {}
-        end
-
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
-        GSE.Library[classid][sequenceName] = sequence
-        table.insert(editor.NewSequences, {["class"] = classid, ["name"] = sequenceName})
-        newsequence = true
-    else
-        local elements = GSE.split(key, ",")
-        classid = tonumber(elements[1])
-        sequenceName = elements[3]
-
-        local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
-        if seq then
-            sequence = seq[2]
-        end
+        sequence.Macros[1]["Actions"] = recordedMacro
     end
+    if GSE.isEmpty(sequence.WeakAuras) then sequence.WeakAuras = {} end
+    GSESequences[classid][name] = GSE.EncodeMessage({name, sequence})
+    GSE.Library[classid][name]  = sequence
+    editor:SetStatusText("GSE: " .. GSE.VersionString)
+    editor.SequenceName     = name
+    editor.OrigSequenceName = name
+    editor.Sequence         = sequence
+    editor.ClassID          = classid
+    editor.ManageTree()
+    editor.treeContainer:SelectByValue(
+        table.concat({"Sequences", classid, classid .. "," .. GSE.GetCurrentSpecID() .. "," .. name .. ",0", "config"}, "\001")
+    )
+end
+
+--- Create a brand-new variable with the given name and navigate to it.
+-- Called by the GSE_NEW_VARIABLE_NAME StaticPopup OnAccept / Enter handler.
+function GSE.GUICreateNewVariable(editor, name)
+    local defaultVariable = {
+        ["funct"]    = "function()\n    return true\nend",
+        ["comments"] = "",
+        ["Author"]   = GSE.GetCharacterName(),
+    }
+    GSE.UpdateVariable(defaultVariable, name)
+    editor.ManageTree()
+    editor.treeContainer:SelectByValue("VARIABLES\001" .. name)
+end
+
+function GSE.GUILoadEditor(editor, key, recordedstring)
+    if GSE.isEmpty(key) then
+        StaticPopup_Show("GSE_NEW_SEQUENCE_NAME", nil, nil, {editor = editor, recordedstring = recordedstring})
+        return
+    end
+
+    local elements = GSE.split(key, ",")
+    local classid = tonumber(elements[1])
+    local sequenceName = elements[3]
+
+    local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
+    local sequence
+    if seq then
+        sequence = seq[2]
+    end
+
     if GSE.isEmpty(sequence.WeakAuras) then
         sequence.WeakAuras = {}
     end
@@ -2495,20 +2497,6 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.OrigSequenceName = sequenceName
     editor.Sequence = sequence
     editor.ClassID = classid
-    if newsequence == true then
-        editor.ManageTree()
-        local selpath =
-            table.concat(
-            {
-                "Sequences",
-                classid,
-                classid .. "," .. GSE.GetCurrentSpecID() .. "," .. sequenceName .. ",0",
-                "config"
-            },
-            "\001"
-        )
-        editor.treeContainer:SelectByValue(selpath)
-    end
 end
 
 function GSE.ShowKeyBindings()

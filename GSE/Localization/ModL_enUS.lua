@@ -1,6 +1,9 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
+L["Enter a name for the new sequence:"] = true
+L["Enter a name for the new variable:"] = true
+L["Create"] = true
 L["<SEQUENCEDEBUG> |r "] = true
 L["<DEBUG> |r "] = true
 
@@ -833,11 +836,33 @@ L[
 L["Add Embed"] = true
 L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
 
--- Variable Event Callback
+-- #1850 Variable Event Callback
 L["Execute on Event"] = true
 L["Trigger Events"] = true
 L["When enabled, this variable's function will be called automatically when the selected WoW events or GSE messages fire."] = true
 L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."] = true
 
 L["WhatsNew"] =
-    "|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.00 Midnight has arrived.  There is not a lot of change on the surface however a humber of changes have been made to make GSE compatible with Midnight.  \n\nA new Sequence Icon Preview function accessible from the troubleshooting tab.  This is a remake of the original WeakAura from TWW.  This will improve over time.\n\nExporting has changed with the formerly patron collection export mode not incorported into all versions.\n\nThe new command /gse checksequencesforerrors will remove sequences that are corrupt at the file storage level. \n\nGSE 3.3.01 adds the ability to embed sequences.  Use this option for classic variants of the game where you can add each sequence into an IF block and use a variable to determine which sequence to use based on your talents or specialisation."
+[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.03 Midnight has arrived.  
+
+|cFFFFD100Editor Changes — Variables & Sequences|r
+  - Editor Icons have been updated for consistent look and feel.
+
+|cFFFFD100New Sequence Creation|r
+|cFFFF8C00Before:|r Clicking New Sequence immediately created a sequence with a random placeholder name. You then had to rename it, find it manually in the tree, and if you closed the editor without renaming it the sequence was silently deleted.
+
+|cFF4DBD33After:|r Clicking |cFF00BFFFNew Sequence|r opens a name prompt before anything is created. Once confirmed, the sequence is created with that name and the editor navigates to it automatically. Closing the editor without saving no longer deletes anything — what you created is what you keep.
+
+|cFFFFD100New Variable Creation|r
+|cFFFF8C00Before:|r The same random-name behaviour applied to variables.
+
+|cFF4DBD33After:|r Clicking |cFF00BFFFNew Variable|r in the tree now opens the same name prompt. Enter the name, confirm, and the editor opens the new variable ready to edit.
+
+|cFFFFD100Variable Event Callback UI|r
+|cFFFF8C00Before:|r Event names were chosen from a multi-select dropdown. You could only pick from the pre-populated list with no way to type a custom event name.
+
+|cFF4DBD33After:|r The event field is now a text box combined with an |cFF00BFFFAdd from List|r dropdown.
+ - Type any event name directly (comma-separated for multiple events).
+ - Selecting from the dropdown appends to the box rather than replacing it.
+ - On leaving the box, each name is validated and the status bar shows whether it is a |cFFFFD100[WoW Event]|r, a |cFF00FF96[GSE Message]|r, or a |cFF79A2FF[AceMsg]|r.
+]]

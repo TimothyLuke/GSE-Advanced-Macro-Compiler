@@ -399,6 +399,10 @@ end
 
 local function onClick_VARIABLES(editframe, container, group, unique, key)
     if #unique <= 1 then return end
+    if key == "NEWVARIABLES" then
+        StaticPopup_Show("GSE_NEW_VARIABLE_NAME", nil, nil, {editor = editframe})
+        return
+    end
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
     editframe.showVariable(key, container)
     editframe.loaded = true
