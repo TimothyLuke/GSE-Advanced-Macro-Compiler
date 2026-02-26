@@ -53,7 +53,7 @@ end]],
             end
         )
         if err then
-            print(err)
+            GSE.Print(err, Statics.DebugModules["Editor"])
         end
     end
 

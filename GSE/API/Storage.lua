@@ -4,6 +4,7 @@ local Statics = GSE.Static
 local L = GSE.L
 
 local GNOME = "Storage"
+local VARIABLE_SELFKEY_PREFIX = "GSEVar_"  -- AceEvent self-key prefix for variable event handlers
 
 --- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
@@ -149,11 +150,22 @@ function GSE.RegisterVariableEvents(name, eventNames)
     GSE.UnregisterVariableEvents(name)
     if GSE.isEmpty(eventNames) then return end
 
-    local selfKey = "GSEVar_" .. name
+    local selfKey = VARIABLE_SELFKEY_PREFIX .. name
     GSE.VariableEventHandlers[name] = {selfKey = selfKey, events = {}}
 
     for _, eventName in ipairs(eventNames) do
-        local isMessage = Statics.AceMessages[eventName] == true
+        -- Routing priority:
+        --   1. Known GSE AceEvent message (Statics.AceMessages)  → RegisterMessage
+        --   2. Valid WoW API event (C_EventUtils.IsEventValid)    → RegisterEvent
+        --   3. Anything else (custom addon AceMessage)            → RegisterMessage
+        local isMessage
+        if Statics.AceMessages[eventName] then
+            isMessage = true
+        elseif C_EventUtils and C_EventUtils.IsEventValid then
+            isMessage = not C_EventUtils.IsEventValid(eventName)
+        else
+            isMessage = false  -- C_EventUtils unavailable: assume WoW event (legacy fallback)
+        end
         local handler = function(evt, ...)
             if GSE.V[name] and type(GSE.V[name]) == "function" then
                 pcall(GSE.V[name], evt, ...)
@@ -190,47 +202,41 @@ function GSE.ImportCompressedMacroCollection(Sequences)
         GSE.ImportSerialisedSequence(v)
     end
 end
+-- Priority-ordered context → MetaData version mapping.
+-- Evaluated in order by GetActiveSequenceVersion; first matching entry wins.
+-- Each entry: { metaKey = field to check not-empty, flag = GSE boolean, valueKey = field to read }
+local contextVersionPriority = {
+    { metaKey = "Scenario",    flag = "inScenario",   valueKey = "Scenario"    },
+    { metaKey = "Arena",       flag = "inArena",       valueKey = "Arena"       },
+    { metaKey = "PVP",         flag = "inArena",       valueKey = "Arena"       }, -- PVP set + inArena → Arena version (original behaviour)
+    { metaKey = "PVP",         flag = "PVPFlag",       valueKey = "PVP"         },
+    { metaKey = "Raid",        flag = "inRaid",        valueKey = "Raid"        },
+    { metaKey = "Mythic",      flag = "inMythic",      valueKey = "Mythic"      },
+    { metaKey = "MythicPlus",  flag = "inMythicPlus",  valueKey = "MythicPlus"  },
+    { metaKey = "Heroic",      flag = "inHeroic",      valueKey = "Heroic"      },
+    { metaKey = "Dungeon",     flag = "inDungeon",     valueKey = "Dungeon"     },
+    { metaKey = "Timewalking", flag = "inTimeWalking", valueKey = "Timewalking" },
+    { metaKey = "Party",       flag = "inParty",       valueKey = "Party"       },
+}
+
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
     local classid = GSE.GetCurrentClassID()
-    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][sequenceName]) then
+    if GSE.isEmpty(GSE.Library[classid][sequenceName]) then
         classid = 0
     end
-    -- Set to default or 1 if no default
-    local vers = 1
     if GSE.isEmpty(GSE.Library[classid][sequenceName]) then
         return
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Default) then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Default
+    local meta = GSE.Library[classid][sequenceName]["MetaData"]
+    local vers = (not GSE.isEmpty(meta.Default)) and meta.Default or 1
+    for _, ctx in ipairs(contextVersionPriority) do
+        if not GSE.isEmpty(meta[ctx.metaKey]) and GSE[ctx.flag] then
+            vers = meta[ctx.valueKey]
+            break
+        end
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Scenario) and GSE.inScenario then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Scenario
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Arena) and GSE.inArena then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.inArena then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Arena
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].PVP) and GSE.PVPFlag then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].PVP
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Raid) and GSE.inRaid then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Raid
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Mythic) and GSE.inMythic then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Mythic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].MythicPlus) and GSE.inMythicPlus then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].MythicPlus
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Heroic) and GSE.inHeroic then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Heroic
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Dungeon) and GSE.inDungeon then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Dungeon
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Timewalking) and GSE.inTimeWalking then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Timewalking
-    elseif not GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].Party) and GSE.inParty then
-        vers = GSE.Library[classid][sequenceName]["MetaData"].Party
-    end
-    if vers == 0 then
-        vers = 1
-    end
-    return vers
+    return (vers == 0) and 1 or vers
 end
 
 function GSE.ReloadSequences()

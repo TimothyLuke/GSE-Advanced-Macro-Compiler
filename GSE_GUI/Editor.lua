@@ -1147,97 +1147,40 @@ function GSE.CreateEditor()
                 spellcontainer:SetLayout("List")
                 spellcontainer:SetFullWidth(true)
 
-                spellradio:SetCallback(
-                    "OnValueChanged",
-                    function(sel, object, value)
-                        if value == true then
-                            itemradio:SetValue(false)
-                            macroradio:SetValue(false)
-                            toyradio:SetValue(false)
-                            petradio:SetValue(false)
-                            action.spell = spellEditBox:GetText()
-                            action.macro = nil
-                            action.item = nil
-                            action.toy = nil
-                            action.action = nil
-                            action.type = "spell"
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                -- Callback factory for action-type radio buttons.
+                -- Each entry: which radio widget, which action.type string, which action
+                -- field receives the text value, and which edit box to read it from.
+                -- macroradio also clears action.unit (original behaviour preserved).
+                local radioConfigs = {
+                    { radio = spellradio, type = "spell", actionField = "spell",  sourceBox = spellEditBox  },
+                    { radio = itemradio,  type = "item",  actionField = "item",   sourceBox = spellEditBox  },
+                    { radio = petradio,   type = "pet",   actionField = "action", sourceBox = spellEditBox  },
+                    { radio = toyradio,   type = "toy",   actionField = "toy",    sourceBox = spellEditBox  },
+                    { radio = macroradio, type = "macro", actionField = "macro",  sourceBox = macroeditbox, clearUnit = true },
+                }
+                local actionTypeFields = {"spell", "macro", "item", "toy", "action"}
+
+                local function makeRadioCallback(cfg)
+                    return function(sel, object, value)
+                        if value ~= true then return end
+                        for _, other in ipairs(radioConfigs) do
+                            if other.radio ~= cfg.radio then
+                                other.radio:SetValue(false)
+                            end
                         end
-                    end
-                )
-                itemradio:SetCallback(
-                    "OnValueChanged",
-                    function(sel, object, value)
-                        if value == true then
-                            spellradio:SetValue(false)
-                            macroradio:SetValue(false)
-                            toyradio:SetValue(false)
-                            petradio:SetValue(false)
-                            action.spell = nil
-                            action.macro = nil
-                            action.item = spellEditBox:GetText()
-                            action.toy = nil
-                            action.action = nil
-                            action.type = "item"
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                        for _, field in ipairs(actionTypeFields) do
+                            action[field] = nil
                         end
+                        if cfg.clearUnit then action.unit = nil end
+                        action[cfg.actionField] = cfg.sourceBox:GetText()
+                        action.type = cfg.type
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
-                )
-                petradio:SetCallback(
-                    "OnValueChanged",
-                    function(sel, object, value)
-                        if value == true then
-                            spellradio:SetValue(false)
-                            macroradio:SetValue(false)
-                            toyradio:SetValue(false)
-                            itemradio:SetValue(false)
-                            action.spell = nil
-                            action.macro = nil
-                            action.item = nil
-                            action.action = spellEditBox:GetText()
-                            action.toy = nil
-                            action.type = "pet"
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    end
-                )
-                toyradio:SetCallback(
-                    "OnValueChanged",
-                    function(sel, object, value)
-                        if value == true then
-                            spellradio:SetValue(false)
-                            macroradio:SetValue(false)
-                            itemradio:SetValue(false)
-                            petradio:SetValue(false)
-                            action.spell = nil
-                            action.macro = nil
-                            action.item = nil
-                            action.action = nil
-                            action.toy = spellEditBox:GetText()
-                            action.type = "toy"
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    end
-                )
-                macroradio:SetCallback(
-                    "OnValueChanged",
-                    function(sel, object, value)
-                        if value == true then
-                            spellradio:SetValue(false)
-                            toyradio:SetValue(false)
-                            itemradio:SetValue(false)
-                            petradio:SetValue(false)
-                            action.spell = nil
-                            action.macro = macroeditbox:GetText()
-                            action.item = nil
-                            action.action = nil
-                            action.toy = nil
-                            action.unit = nil
-                            action.type = "macro"
-                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                        end
-                    end
-                )
+                end
+
+                for _, cfg in ipairs(radioConfigs) do
+                    cfg.radio:SetCallback("OnValueChanged", makeRadioCallback(cfg))
+                end
 
                 spellcontainer:AddChild(typegroup)
                 if action.type == "macro" then
