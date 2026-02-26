@@ -126,14 +126,28 @@ end]],
     container:AddChild(commentsEditBox)
 
     -- Event Callback Section ─────────────────────────────────────────────────
-    local eventCallbackGroup = AceGUI:Create("SimpleGroup")
-    eventCallbackGroup:SetLayout("Flow")
-    eventCallbackGroup:SetFullWidth(true)
+    -- Helpers: convert between the array stored in variable.eventNames and the
+    -- comma-separated string shown in the edit box.
+    local function parseEventNames(text)
+        local names = {}
+        for token in text:gmatch("[^,%s]+") do
+            if token ~= "" then
+                table.insert(names, token)
+            end
+        end
+        return names
+    end
+
+    local function formatEventNames(names)
+        if GSE.isEmpty(names) then return "" end
+        return table.concat(names, ", ")
+    end
+
+    local isEventEnabled = variable.eventEnabled or false
 
     local eventToggle = AceGUI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
-    eventToggle:SetWidth(180)
-    local isEventEnabled = variable.eventEnabled or false
+    eventToggle:SetFullWidth(true)
     eventToggle:SetValue(isEventEnabled)
     eventToggle:SetCallback(
         "OnEnter",
@@ -147,57 +161,72 @@ end]],
     )
     eventToggle:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
-    local eventDropdown = AceGUI:Create("Dropdown")
-    eventDropdown:SetLabel(L["Trigger Events"])
-    eventDropdown:SetRelativeWidth(0.75)
-    eventDropdown:SetMultiselect(true)
-    eventDropdown:SetList(Statics.VariableEventList)
-    eventDropdown:SetDisabled(not isEventEnabled)
-
-    if not GSE.isEmpty(variable.eventNames) then
-        for _, evtName in ipairs(variable.eventNames) do
-            eventDropdown:SetItemValue(evtName, true)
+    -- Text box: editable, comma-separated list of event names.
+    local eventEditBox = AceGUI:Create("EditBox")
+    eventEditBox:SetLabel(L["Trigger Events"])
+    eventEditBox:SetRelativeWidth(0.65)
+    eventEditBox:DisableButton(true)
+    eventEditBox:SetDisabled(not isEventEnabled)
+    eventEditBox:SetText(formatEventNames(variable.eventNames))
+    eventEditBox:SetCallback(
+        "OnTextChanged",
+        function(obj, event, text)
+            variable.eventNames = parseEventNames(text)
         end
-    end
-
-    eventToggle:SetCallback(
-        "OnValueChanged",
-        function(obj, event, val)
-            variable.eventEnabled = val
-            eventDropdown:SetDisabled(not val)
-            if not val then
-                variable.eventNames = {}
-                for key, _ in pairs(Statics.VariableEventList) do
-                    eventDropdown:SetItemValue(key, false)
+    )
+    eventEditBox:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(
+                L["Trigger Events"],
+                L["Comma-separated list of WoW events or GSE messages that trigger this variable. You can type names directly or pick from the list on the right."],
+                editframe
+            )
+        end
+    )
+    eventEditBox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    eventEditBox:SetCallback(
+        "OnEditFocusLost",
+        function()
+            -- Validate each manually entered event name and show type hints in the
+            -- status bar: WoW events → RegisterEvent, everything else → RegisterMessage.
+            local names = parseEventNames(eventEditBox:GetText())
+            if GSE.isEmpty(names) then return end
+            local parts = {}
+            for _, evtName in ipairs(names) do
+                local tag
+                if Statics.AceMessages[evtName] then
+                    tag = "[GSE Msg]"
+                elseif C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(evtName) then
+                    tag = "[WoW Event]"
+                else
+                    tag = "[AceMsg]"
                 end
+                table.insert(parts, evtName .. " " .. tag)
             end
+            editframe:SetStatusText(table.concat(parts, "  |  "))
         end
     )
 
+    -- Dropdown: single-select, appends the chosen event to the text box.
+    local eventDropdown = AceGUI:Create("Dropdown")
+    eventDropdown:SetLabel(L["Add from List"])
+    eventDropdown:SetRelativeWidth(0.33)
+    eventDropdown:SetList(Statics.VariableEventList)
+    eventDropdown:SetDisabled(not isEventEnabled)
     eventDropdown:SetCallback(
         "OnValueChanged",
-        function(obj, event, key, checked)
-            if GSE.isEmpty(variable.eventNames) then
-                variable.eventNames = {}
+        function(obj, event, key)
+            if GSE.isEmpty(key) then return end
+            local current = parseEventNames(eventEditBox:GetText())
+            local found = false
+            for _, v in ipairs(current) do
+                if v == key then found = true; break end
             end
-            if checked then
-                local found = false
-                for _, v in ipairs(variable.eventNames) do
-                    if v == key then
-                        found = true
-                        break
-                    end
-                end
-                if not found then
-                    table.insert(variable.eventNames, key)
-                end
-            else
-                for i, v in ipairs(variable.eventNames) do
-                    if v == key then
-                        table.remove(variable.eventNames, i)
-                        break
-                    end
-                end
+            if not found then
+                table.insert(current, key)
+                variable.eventNames = current
+                eventEditBox:SetText(formatEventNames(current))
             end
         end
     )
@@ -205,15 +234,32 @@ end]],
         "OnEnter",
         function()
             GSE.CreateToolTip(
-                L["Trigger Events"],
-                L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."],
+                L["Add from List"],
+                L["Select a known WoW event or GSE message to append it to the Trigger Events box."],
                 editframe
             )
         end
     )
     eventDropdown:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
+    eventToggle:SetCallback(
+        "OnValueChanged",
+        function(obj, event, val)
+            variable.eventEnabled = val
+            eventEditBox:SetDisabled(not val)
+            eventDropdown:SetDisabled(not val)
+            if not val then
+                variable.eventNames = {}
+                eventEditBox:SetText("")
+            end
+        end
+    )
+
+    local eventCallbackGroup = AceGUI:Create("SimpleGroup")
+    eventCallbackGroup:SetLayout("Flow")
+    eventCallbackGroup:SetFullWidth(true)
     eventCallbackGroup:AddChild(eventToggle)
+    eventCallbackGroup:AddChild(eventEditBox)
     eventCallbackGroup:AddChild(eventDropdown)
     container:AddChild(eventCallbackGroup)
     -- ────────────────────────────────────────────────────────────────────────
