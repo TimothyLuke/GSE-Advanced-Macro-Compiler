@@ -18,17 +18,19 @@ if GSE.GameMode > 10 then
 
         for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
             local lineinfo = C_SpellBook.GetSpellBookSkillLineInfo(tab)
+            if not lineinfo then break end  -- <-- add this line
+
             local offset = lineinfo.itemIndexOffset
 
             for i = 0, lineinfo.numSpellBookItems do
                 local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
-
-                local spellName = spellinfo.name
-                --local spellID = spellinfo.spellID
-                local offspec = spellinfo.isOffSpec
-                local passive = spellinfo.isPassive
-                if not passive and not offspec and spellName then
-                    table.insert(playerSpells, spellName)
+                if spellinfo then  -- <-- also guard this
+                    local spellName = spellinfo.name
+                    local offspec = spellinfo.isOffSpec
+                    local passive = spellinfo.isPassive
+                    if not passive and not offspec and spellName then
+                        table.insert(playerSpells, spellName)
+                    end
                 end
             end
         end
