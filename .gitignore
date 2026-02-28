@@ -8,3 +8,6 @@ App/node_modules/
 node_modules/
 GSE_Utils/Lib
 .DS_Store
+/.claude
+/.vscode
+/.vscode
