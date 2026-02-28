@@ -4,6 +4,7 @@ L["Update"] = true
 L["Enable Actionbar Override Popup"] = true
 L["Assign GSE Sequence"] = true
 L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
+L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."] = true
 
 L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."] = true
 L["Enter a name for the new sequence:"] = true
