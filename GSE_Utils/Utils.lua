@@ -672,6 +672,23 @@ function GSE:GSSlash(input)
     elseif command == "forceclean" then
         GSE.CleanOrphanSequences()
         GSE.CleanMacroLibrary(true)
+        if not InCombatLockdown() then
+            if not GSE.isEmpty(GSE_C["KeyBindings"]) then
+                for _, specData in pairs(GSE_C["KeyBindings"]) do
+                    for key, _ in pairs(specData) do
+                        if key ~= "LoadOuts" then SetBinding(key) end
+                    end
+                    if not GSE.isEmpty(specData["LoadOuts"]) then
+                        for _, loadoutData in pairs(specData["LoadOuts"]) do
+                            for key, _ in pairs(loadoutData) do SetBinding(key) end
+                        end
+                    end
+                end
+            end
+            GSE_C["KeyBindings"] = {}
+            GSE_C["ActionBarBinds"] = {}
+            GSE.ReloadOverrides()
+        end
     elseif command == "export" then
         if GSE.Patron then
             GSE.CheckGUI()

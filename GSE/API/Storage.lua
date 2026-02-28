@@ -10,6 +10,74 @@ local VARIABLE_SELFKEY_PREFIX = "GSEVar_"  -- AceEvent self-key prefix for varia
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
     GSESequences[tonumber(classid)][sequenceName] = nil
+
+    -- Remove any actionbar overrides that reference this sequence
+    local overrideChanged = false
+    if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
+        if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
+            for _, buttons in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
+                local toDelete = {}
+                for buttonName, bind in pairs(buttons) do
+                    if bind.Sequence == sequenceName then
+                        table.insert(toDelete, buttonName)
+                    end
+                end
+                for _, buttonName in ipairs(toDelete) do
+                    buttons[buttonName] = nil
+                    overrideChanged = true
+                end
+            end
+        end
+        if not GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
+            for _, loadouts in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
+                for _, buttons in pairs(loadouts) do
+                    local toDelete = {}
+                    for buttonName, bind in pairs(buttons) do
+                        if bind.Sequence == sequenceName then
+                            table.insert(toDelete, buttonName)
+                        end
+                    end
+                    for _, buttonName in ipairs(toDelete) do
+                        buttons[buttonName] = nil
+                        overrideChanged = true
+                    end
+                end
+            end
+        end
+    end
+    if overrideChanged then
+        GSE.ReloadOverrides()
+    end
+
+    -- Remove any keybindings that reference this sequence
+    if not InCombatLockdown() and not GSE.isEmpty(GSE_C["KeyBindings"]) then
+        for _, specData in pairs(GSE_C["KeyBindings"]) do
+            local toDelete = {}
+            for key, seqName in pairs(specData) do
+                if key ~= "LoadOuts" and seqName == sequenceName then
+                    table.insert(toDelete, key)
+                end
+            end
+            for _, key in ipairs(toDelete) do
+                SetBinding(key)
+                specData[key] = nil
+            end
+            if not GSE.isEmpty(specData["LoadOuts"]) then
+                for _, loadoutData in pairs(specData["LoadOuts"]) do
+                    local toDeleteLO = {}
+                    for key, seqName in pairs(loadoutData) do
+                        if seqName == sequenceName then
+                            table.insert(toDeleteLO, key)
+                        end
+                    end
+                    for _, key in ipairs(toDeleteLO) do
+                        SetBinding(key)
+                        loadoutData[key] = nil
+                    end
+                end
+            end
+        end
+    end
 end
 
 local missingVariables = {}

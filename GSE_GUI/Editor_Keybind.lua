@@ -5,6 +5,13 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
+local function sequenceExists(seqName)
+    for _, classLib in pairs(GSE.Library or {}) do
+        if classLib[seqName] then return true end
+    end
+    return false
+end
+
 -- ---------------------------------------------------------------------------
 -- buildKeybindMenu()  →  full KEYBINDINGS tree node
 -- ---------------------------------------------------------------------------
@@ -51,16 +58,22 @@ local function buildKeybindMenu()
         else
             node = tree[1]
         end
+        local aoOrphans = {}
         for i, j in GSE.pairsByKeys(v) do
-            table.insert(
-                node["children"],
-                {
-                    value = i .. "\001" .. j["Sequence"],
-                    text = j["Bind"] ..
-                        " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
-                }
-            )
+            if not sequenceExists(j["Sequence"]) then
+                table.insert(aoOrphans, i)
+            else
+                table.insert(
+                    node["children"],
+                    {
+                        value = i .. "\001" .. j["Sequence"],
+                        text = j["Bind"] ..
+                            " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
+                    }
+                )
+            end
         end
+        for _, i in ipairs(aoOrphans) do v[i] = nil end
 
         if
             GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"] and
@@ -77,20 +90,26 @@ local function buildKeybindMenu()
                             children = {},
                             icon = Statics.Icons.Talents
                         }
+                        local loOrphans = {}
                         for l, m in GSE.pairsByKeys(j) do
-                            local nodelabel = l .. " " .. GSEOptions.KEYWORD .. "(" .. m.Sequence
-                            if m and m.State then
-                                nodelabel = nodelabel .. " - " .. L["Button State"] .. ": " .. m.State
+                            if not sequenceExists(m.Sequence) then
+                                table.insert(loOrphans, l)
+                            else
+                                local nodelabel = l .. " " .. GSEOptions.KEYWORD .. "(" .. m.Sequence
+                                if m and m.State then
+                                    nodelabel = nodelabel .. " - " .. L["Button State"] .. ": " .. m.State
+                                end
+                                nodelabel = nodelabel .. "" .. ")" .. Statics.StringReset
+                                table.insert(
+                                    specnode["children"],
+                                    {
+                                        value = l .. "\001" .. m.Sequence,
+                                        text = nodelabel
+                                    }
+                                )
                             end
-                            nodelabel = nodelabel .. "" .. ")" .. Statics.StringReset
-                            table.insert(
-                                specnode["children"],
-                                {
-                                    value = l .. "\001" .. m.Sequence,
-                                    text = nodelabel
-                                }
-                            )
                         end
+                        for _, l in ipairs(loOrphans) do j[l] = nil end
                         table.insert(node["children"], specnode)
                     end
                 )
@@ -119,16 +138,25 @@ local function buildKeybindMenu()
         else
             node = tree[2]
         end
+        local kbOrphans = {}
         for i, j in GSE.pairsByKeys(v) do
             if i ~= "LoadOuts" then
-                table.insert(
-                    node["children"],
-                    {
-                        value = i .. "\001" .. j,
-                        text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
-                    }
-                )
+                if not sequenceExists(j) then
+                    table.insert(kbOrphans, i)
+                else
+                    table.insert(
+                        node["children"],
+                        {
+                            value = i .. "\001" .. j,
+                            text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
+                        }
+                    )
+                end
             end
+        end
+        for _, i in ipairs(kbOrphans) do
+            if not InCombatLockdown() then SetBinding(i) end
+            v[i] = nil
         end
 
         if
@@ -146,14 +174,23 @@ local function buildKeybindMenu()
                             children = {},
                             icon = Statics.Icons.Talents
                         }
+                        local loKbOrphans = {}
                         for l, m in GSE.pairsByKeys(j) do
-                            table.insert(
-                                specnode["children"],
-                                {
-                                    value = l .. "\001" .. m,
-                                    text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
-                                }
-                            )
+                            if not sequenceExists(m) then
+                                table.insert(loKbOrphans, l)
+                            else
+                                table.insert(
+                                    specnode["children"],
+                                    {
+                                        value = l .. "\001" .. m,
+                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                    }
+                                )
+                            end
+                        end
+                        for _, l in ipairs(loKbOrphans) do
+                            if not InCombatLockdown() then SetBinding(l) end
+                            j[l] = nil
                         end
                         table.insert(node["children"], specnode)
                     end
@@ -452,6 +489,30 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
             for i = 1, 180 do
                 if _G[v .. i] and _G[v .. i]:IsShown() then
                     buttonlist[v .. i] = v .. i
+                end
+            end
+        end
+
+        -- Add any buttons referenced in saved AO data that exist in _G but weren't auto-detected
+        if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
+            if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
+                for _, buttons in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
+                    for buttonName, _ in pairs(buttons) do
+                        if _G[buttonName] and not buttonlist[buttonName] then
+                            buttonlist[buttonName] = buttonName
+                        end
+                    end
+                end
+            end
+            if not GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
+                for _, loadouts in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
+                    for _, buttons in pairs(loadouts) do
+                        for buttonName, _ in pairs(buttons) do
+                            if _G[buttonName] and not buttonlist[buttonName] then
+                                buttonlist[buttonName] = buttonName
+                            end
+                        end
+                    end
                 end
             end
         end

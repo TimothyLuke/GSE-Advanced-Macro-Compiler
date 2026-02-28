@@ -496,3 +496,36 @@ if GSE.GameMode >= 11 then
     GSE:RegisterEvent("PET_BATTLE_OPENING_START")
     GSE:RegisterEvent("PET_BATTLE_CLOSE")
 end
+
+if GSE.GameMode > 10 then
+    hooksecurefunc("ActionButton_OnClick", function(self, mousebutton, down)
+        if InCombatLockdown() then return end
+        if not down then return end
+        if mousebutton ~= "RightButton" then return end
+        if self:GetAttribute("gse-button") then return end
+        if not self.action or self.action == 0 then return end
+        if HasAction(self.action) then return end
+
+        local names = {}
+        if GSESequences then
+            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()] or {}) do
+                table.insert(names, k)
+            end
+            for k, _ in pairs(GSESequences[0] or {}) do
+                table.insert(names, k)
+            end
+        end
+        if #names == 0 then return end
+        table.sort(names)
+
+        local buttonName = self:GetName()
+        MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Assign GSE Sequence"])
+            for _, k in ipairs(names) do
+                rootDescription:CreateButton(k, function()
+                    GSE.CreateActionBarOverride(buttonName, k)
+                end)
+            end
+        end)
+    end)
+end

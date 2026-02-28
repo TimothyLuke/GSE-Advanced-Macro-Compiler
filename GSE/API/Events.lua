@@ -332,6 +332,25 @@ function GSE.ReloadOverrides(force)
     LoadOverrides(force)
 end
 
+function GSE.CreateActionBarOverride(buttonName, sequenceName)
+    if InCombatLockdown() then return end
+    if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
+        GSE_C["ActionBarBinds"] = {}
+    end
+    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
+        GSE_C["ActionBarBinds"]["Specialisations"] = {}
+    end
+    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
+        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
+    end
+    local bind = {
+        Bind = buttonName,
+        Sequence = sequenceName
+    }
+    GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()][buttonName] = bind
+    GSE.ReloadOverrides()
+end
+
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
