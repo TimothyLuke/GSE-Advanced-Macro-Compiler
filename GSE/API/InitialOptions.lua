@@ -25,6 +25,7 @@ function GSE.resetMacroResetModifiers()
 end
 
 function GSE.SetDefaultOptions()
+    GSEOptions.actionBarOverridePopup = true
     GSEOptions.saveAllMacrosLocal = true
     GSEOptions.initialised = true
     GSEOptions.deleteOrphansOnLogout = false

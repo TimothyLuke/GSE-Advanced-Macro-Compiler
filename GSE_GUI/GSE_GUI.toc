@@ -5,7 +5,7 @@
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE GSE_Utils
-## OptionalDeps: GSE2
+## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos
 ## LoadOnDemand: 1
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat

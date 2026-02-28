@@ -137,7 +137,36 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
     _G[Button]:SetAttribute("gse-button", Sequence)
-    if
+    if string.sub(Button, 1, 7) == "Dominos" then
+        -- Dominos uses ActionBarButtonTemplate; action slot is a secure attribute only,
+        -- not a page/slot hierarchy.  Use simplified WrapScript (no GetActionInfo lookup).
+        if not InCombatLockdown() then
+            if (not GSE.ButtonOverrides[Button] or force) then
+                SHBT:WrapScript(
+                    _G[Button],
+                    "OnClick",
+                    [[
+    if self:GetAttribute("gse-button") then
+        self:SetAttribute("type", "click")
+    end
+]]
+                )
+                SHBT:WrapScript(
+                    _G[Button],
+                    "OnEnter",
+                    nil,
+                    [[
+    if self:GetAttribute("gse-button") then
+        self:SetAttribute("type", "click")
+    end
+]]
+                )
+                _G[Button]:SetAttribute("type", "click")
+            end
+            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+        end
+        GSE.ButtonOverrides[Button] = Sequence
+    elseif
         (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
             (string.sub(Button, 1, 4) == "NDui") or
             string.sub(Button, 1, 4) == "CPB_"

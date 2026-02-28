@@ -506,8 +506,10 @@ if GSE.GameMode > 10 then
         if not down then return end
         if mousebutton ~= "RightButton" then return end
         if self:GetAttribute("gse-button") then return end   -- already has a GSE override
-        if not self.action or self.action == 0 then return end
-        if HasAction(self.action) then return end            -- slot is not empty
+        -- Dominos stores action as a secure attribute only; other addons use self.action
+        local action = self.action or self:GetAttribute("action")
+        if not action or action == 0 then return end
+        if HasAction(action) then return end                 -- slot is not empty
 
         local names = {}
         if GSESequences then
@@ -565,6 +567,19 @@ if GSE.GameMode > 10 then
                     local btn = _G["NDui_ActionBar" .. bar .. "Button" .. slot]
                     if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
                 end
+            end
+        end
+
+        if Dominos then
+            -- IDs 1-24 and 73-132 are Dominos-owned frames; the rest reuse Blizzard names
+            -- already covered by the hooksecurefunc above.
+            for i = 1, 24 do
+                local btn = _G["DominosActionButton" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+            for i = 73, 132 do
+                local btn = _G["DominosActionButton" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
             end
         end
     end)

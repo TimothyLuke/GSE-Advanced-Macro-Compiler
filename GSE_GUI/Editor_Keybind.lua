@@ -492,6 +492,20 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                 end
             end
         end
+        if Dominos then
+            -- IDs 1-24 and 73-132 are Dominos-owned frames; the other ID ranges
+            -- reuse standard Blizzard frame names already captured above.
+            for i = 1, 24 do
+                if _G["DominosActionButton" .. i] then
+                    buttonlist["DominosActionButton" .. i] = "DominosActionButton" .. i
+                end
+            end
+            for i = 73, 132 do
+                if _G["DominosActionButton" .. i] then
+                    buttonlist["DominosActionButton" .. i] = "DominosActionButton" .. i
+                end
+            end
+        end
 
         -- Add any buttons referenced in saved AO data that exist in _G but weren't auto-detected
         if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
