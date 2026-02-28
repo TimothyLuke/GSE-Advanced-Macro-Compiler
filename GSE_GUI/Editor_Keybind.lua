@@ -623,8 +623,10 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                     GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][bind] = nil
                 end
                 GSE.ButtonOverrides[bind] = nil
+                _G[bind]:SetAttribute("gse-button", nil)
                 _G[bind]:SetAttribute("type", "action")
                 SecureHandlerUnwrapScript(_G[bind], "OnClick")
+                SecureHandlerUnwrapScript(_G[bind], "OnEnter")
                 rightContainer:ReleaseChildren()
                 editframe.ManageTree()
             end

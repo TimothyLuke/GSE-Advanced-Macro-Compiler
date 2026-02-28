@@ -197,6 +197,16 @@ local function overrideActionButton(savedBind, force)
     end
 ]]
                 )
+                SHBT:WrapScript(
+                    _G[Button],
+                    "OnEnter",
+                    nil,
+                    [[
+    if self:GetAttribute("gse-button") then
+        self:SetAttribute("type", "click")
+    end
+]]
+                )
                 _G[Button]:SetAttribute("type", "click")
 
             --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
@@ -241,7 +251,10 @@ local function LoadOverrides(force)
                 end
                 _G[k]:SetState(state, "action", tonumber(string.match(k, "%d+$")))
             else
+                _G[k]:SetAttribute("gse-button", nil)
                 _G[k]:SetAttribute("type", "action")
+                SecureHandlerUnwrapScript(_G[k], "OnClick")
+                SecureHandlerUnwrapScript(_G[k], "OnEnter")
             end
         end
         GSE.ButtonOverrides = {}
