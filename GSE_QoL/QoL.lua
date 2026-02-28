@@ -498,13 +498,16 @@ if GSE.GameMode >= 11 then
 end
 
 if GSE.GameMode > 10 then
-    hooksecurefunc("ActionButton_OnClick", function(self, mousebutton, down)
+    -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
+    -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
+    local function gseEmptyButtonHandler(self, mousebutton, down)
+        if not GSEOptions.actionBarOverridePopup then return end
         if InCombatLockdown() then return end
         if not down then return end
         if mousebutton ~= "RightButton" then return end
-        if self:GetAttribute("gse-button") then return end
+        if self:GetAttribute("gse-button") then return end   -- already has a GSE override
         if not self.action or self.action == 0 then return end
-        if HasAction(self.action) then return end
+        if HasAction(self.action) then return end            -- slot is not empty
 
         local names = {}
         if GSESequences then
@@ -527,5 +530,42 @@ if GSE.GameMode > 10 then
                 end)
             end
         end)
+    end
+
+    -- Standard Blizzard action bars hook via the global function
+    hooksecurefunc("ActionButton_OnClick", gseEmptyButtonHandler)
+
+    -- Third-party action bar addons use their own OnClick handlers, so we install
+    -- HookScript directly on each button after PLAYER_ENTERING_WORLD, by which
+    -- point all addon frames are guaranteed to exist.
+    local gseBarHookFrame = CreateFrame("Frame")
+    gseBarHookFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    gseBarHookFrame:SetScript("OnEvent", function(self)
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+
+        if Bartender4 then
+            for i = 1, 180 do
+                local btn = _G["BT4Button" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+        end
+
+        if ElvUI then
+            for bar = 1, 15 do
+                for slot = 1, 12 do
+                    local btn = _G["ElvUI_Bar" .. bar .. "Button" .. slot]
+                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                end
+            end
+        end
+
+        if NDui then
+            for bar = 1, 15 do
+                for slot = 1, 12 do
+                    local btn = _G["NDui_ActionBar" .. bar .. "Button" .. slot]
+                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                end
+            end
+        end
     end)
 end
