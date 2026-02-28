@@ -514,5 +514,6 @@ globals = {
     "SettingsPanel",
     "MinimalSliderWithSteppersMixin",
     "strtrim",
-    "C_EventUtils"
+    "C_EventUtils",
+    "Dominos"
 }

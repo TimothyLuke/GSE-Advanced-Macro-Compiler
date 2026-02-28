@@ -49,13 +49,15 @@
     "Auctionator",
     "SettingsPanel",
     "MinimalSliderWithSteppersMixin",
-    "RegisterAttributeDriver"
+    "RegisterAttributeDriver",
+    "CANCEL"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
     "inject-field",
     "invisible",
-    "param-type-mismatch"
+    "param-type-mismatch",
+    "assign-type-mismatch"
   ],
   "luahelper.Warn.CheckLocalNoUse": true,
   "luahelper.Warn.CheckNoUseAssign": true,
@@ -72,6 +74,6 @@
     "utf8": "disable"
   },
   "Lua.workspace.library": [
-    "~/.vscode/extensions/ketho.wow-api-0.22.1/Annotations/Core"
+    "~/.vscode/extensions/ketho.wow-api-0.22.3/Annotations/Core"
   ]
 }
