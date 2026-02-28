@@ -3,6 +3,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 L["Update"] = true
 L["Enable Actionbar Override Popup"] = true
 L["Assign GSE Sequence"] = true
+L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
 
 L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."] = true
 L["Enter a name for the new sequence:"] = true

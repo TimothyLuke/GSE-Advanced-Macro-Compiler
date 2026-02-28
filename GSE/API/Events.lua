@@ -122,6 +122,26 @@ end
 
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
+-- Fired once per session when overrides are loaded.  Corrects CVars that interfere
+-- with actionbar overrides and tells the player what was changed.
+local actionBarCVarCheckedThisSession = false
+local function ensureActionBarCVars()
+    if actionBarCVarCheckedThisSession then return end
+    actionBarCVarCheckedThisSession = true
+    local fixed = {}
+    if GetCVar("ActionButtonUseKeyDown") == "1" then
+        SetCVar("ActionButtonUseKeyDown", 0)
+        table.insert(fixed, "ActionButtonUseKeyDown")
+    end
+    if GetCVar("MultiClickButtons") == "1" then
+        SetCVar("MultiClickButtons", 0)
+        table.insert(fixed, "MultiClickButtons")
+    end
+    if #fixed > 0 then
+        GSE.Print(L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] .. table.concat(fixed, ", "))
+    end
+end
+
 local function overrideActionButton(savedBind, force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -157,7 +177,7 @@ local function overrideActionButton(savedBind, force)
                 _G[Button]:HookScript(
                     "OnEnter",
                     function(self)
-                        if self:GetAttribute("gse-button") then
+                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
                             self:SetAttribute("type", "click")
                         end
                     end
@@ -204,6 +224,9 @@ local function overrideActionButton(savedBind, force)
                     string.sub(Button, 1, 12) == "ActionButton" or
                     string.sub(Button, 1, 22) == "MultiBarBottomLeftButton" or
                     string.sub(Button, 1, 23) == "MultiBarBottomRightButton" or
+                    string.sub(Button, 1, 13) == "MultiBar5Button" or
+                    string.sub(Button, 1, 13) == "MultiBar6Button" or
+                    string.sub(Button, 1, 13) == "MultiBar7Button" or
                     string.sub(Button, 1, 18) == "MultiBarRightButton" or
                     string.sub(Button, 1, 17) == "MultiBarLeftButton"
 
@@ -225,7 +248,7 @@ local function overrideActionButton(savedBind, force)
                     _G[Button]:HookScript(
                         "OnEnter",
                         function(self)
-                            if self:GetAttribute("gse-button") then
+                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
                                 self:SetAttribute("type", "click")
                             end
                         end
@@ -281,6 +304,11 @@ local function LoadOverrides(force)
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()]) then
         GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] = {}
+    end
+    -- If any overrides are configured, ensure the CVars that block them are off.
+    -- SetCVar is not combat-restricted so this runs regardless of lockdown state.
+    if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
+        ensureActionBarCVars()
     end
     if not InCombatLockdown() then
         for k, _ in pairs(GSE.ButtonOverrides) do

@@ -503,6 +503,7 @@ if GSE.GameMode > 10 then
     -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
     -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
     local function gseEmptyButtonHandler(self, mousebutton, down)
+        if not (GSE.Patron or GSE.Developer) then return end
         if not GSEOptions.actionBarOverridePopup then return end
         if InCombatLockdown() then return end
         if not down then return end
@@ -513,24 +514,46 @@ if GSE.GameMode > 10 then
         if not action or action == 0 then return end
         if HasAction(action) then return end                 -- slot is not empty
 
+        -- Build name list, tracking whether each sequence is class-specific or global.
+        -- isSpec=true  → class-specific (GSESequences[classID]) → labelled with current spec icon
+        -- isSpec=false → global         (GSESequences[0])        → labelled with class icon
         local names = {}
         if GSESequences then
             for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()] or {}) do
-                table.insert(names, k)
+                table.insert(names, {name = k, isSpec = true})
             end
             for k, _ in pairs(GSESequences[0] or {}) do
-                table.insert(names, k)
+                table.insert(names, {name = k, isSpec = false})
             end
         end
         if #names == 0 then return end
-        table.sort(names)
+        table.sort(names, function(a, b) return a.name < b.name end)
+
+        -- Build icon prefix strings -------------------------------------------------
+        -- Spec icon: for class-specific sequences (they belong to this class/spec)
+        local specIconText = ""
+        local specIndex = GetSpecialization and GetSpecialization()
+        if specIndex then
+            local _, _, _, specIconID = GetSpecializationInfo(specIndex)
+            if specIconID then
+                specIconText = "|T" .. specIconID .. ":16:16|t "
+            end
+        end
+        -- Class icon: for global sequences (available to all classes)
+        local classIconText = ""
+        local classInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
+        if classInfo and classInfo.classFile then
+            classIconText = "|A:classicon-" .. classInfo.classFile:lower() .. ":16:16|a "
+        end
+        ---------------------------------------------------------------------------
 
         local buttonName = self:GetName()
         MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Assign GSE Sequence"])
-            for _, k in ipairs(names) do
-                rootDescription:CreateButton(k, function()
-                    GSE.CreateActionBarOverride(buttonName, k)
+            for _, entry in ipairs(names) do
+                local label = (entry.isSpec and specIconText or classIconText) .. entry.name
+                rootDescription:CreateButton(label, function()
+                    GSE.CreateActionBarOverride(buttonName, entry.name)
                 end)
             end
         end)
@@ -543,6 +566,9 @@ if GSE.GameMode > 10 then
         "ActionButton",
         "MultiBarBottomLeftButton",
         "MultiBarBottomRightButton",
+        "MultiBar5Button",
+        "MultiBar6Button",
+        "MultiBar7Button",
         "MultiBarRightButton",
         "MultiBarLeftButton",
     }
@@ -590,7 +616,7 @@ if GSE.GameMode > 10 then
 
         if Dominos then
             -- IDs 1-24 and 73-132 are Dominos-owned frames; the rest reuse Blizzard names
-            -- already covered by the hooksecurefunc above.
+            -- already covered by the buttonPrefixes loop above.
             for i = 1, 24 do
                 local btn = _G["DominosActionButton" .. i]
                 if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end

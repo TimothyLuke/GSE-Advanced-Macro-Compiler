@@ -908,8 +908,8 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "hideLogin", "HideLoginMessage", GSEOptions, Settings.VarType.Boolean, L["Hide Login Message"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Hides the message that GSE is loaded."])
         end
-        -- Actionbar Override Popup
-        do
+        -- Actionbar Override Popup (Patron only, requires GSE_QoL)
+        if (GSE.Patron or GSE.Developer) and C_AddOns.IsAddOnLoaded("GSE_QoL") then
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Actionbar Override Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
