@@ -146,20 +146,21 @@ local function overrideActionButton(savedBind, force)
                     _G[Button],
                     "OnClick",
                     [[
-    if self:GetAttribute("gse-button") then
-        self:SetAttribute("type", "click")
+    local gseButton = self:GetAttribute('gse-button')
+    if gseButton then
+        self:SetAttribute('type', 'click')
+    else
+        self:SetAttribute('type', 'action')
     end
 ]]
                 )
-                SHBT:WrapScript(
-                    _G[Button],
+                _G[Button]:HookScript(
                     "OnEnter",
-                    nil,
-                    [[
-    if self:GetAttribute("gse-button") then
-        self:SetAttribute("type", "click")
-    end
-]]
+                    function(self)
+                        if self:GetAttribute("gse-button") then
+                            self:SetAttribute("type", "click")
+                        end
+                    end
                 )
                 _G[Button]:SetAttribute("type", "click")
             end
@@ -190,64 +191,78 @@ local function overrideActionButton(savedBind, force)
             )
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
-
-            SHBT:WrapScript(
-                _G[Button],
-                "OnClick",
-                [[
-                type = self:GetAttribute("type")
-                if type == "custom" then
-                    self:SetAttribute("type", "click")
-                end
-            ]]
-            )
+            -- WrapScript removed: SetState handles type management for these button addons
         end
         GSE.ButtonOverrides[Button] = Sequence
     else
         if not InCombatLockdown() then
             if (not GSE.ButtonOverrides[Button] or force) then
+                -- Detect Blizzard native action buttons - WrapScript is restricted on these
+                -- in recent patches. Use SetAttribute directly for OnClick type control,
+                -- and HookScript (non-secure) for OnEnter tooltip/type correction.
+                local isBlizzardButton =
+                    string.sub(Button, 1, 12) == "ActionButton" or
+                    string.sub(Button, 1, 22) == "MultiBarBottomLeftButton" or
+                    string.sub(Button, 1, 23) == "MultiBarBottomRightButton" or
+                    string.sub(Button, 1, 18) == "MultiBarRightButton" or
+                    string.sub(Button, 1, 17) == "MultiBarLeftButton"
 
-                SHBT:WrapScript(
-                    _G[Button],
-                    "OnClick",
-                    [[
-    local parent, slot = self and self:GetParent():GetParent(), self and self:GetID()
-    local page = parent and parent:GetAttribute("actionpage")
-    local action = page and slot and slot > 0 and (slot + page*12 - 12)
-
-    if action then
-        local at, id = GetActionInfo(action)
-        if at and id then
-            self:SetAttribute("type", "action")
-            self:SetAttribute('action', action)
-        else
-            self:SetAttribute("type", "click")
-        end
+                if isBlizzardButton then
+                    -- For Blizzard bars: WrapScript on OnClick is still allowed,
+                    -- but OnEnter WrapScript is blocked. Use HookScript for OnEnter.
+                    SHBT:WrapScript(
+                        _G[Button],
+                        "OnClick",
+                        [[
+    local gseButton = self:GetAttribute('gse-button')
+    if gseButton then
+        self:SetAttribute('type', 'click')
+    else
+        self:SetAttribute('type', 'action')
     end
 ]]
-                )
-                SHBT:WrapScript(
-                    _G[Button],
-                    "OnEnter",
-                    nil,
-                    [[
-    if self:GetAttribute("gse-button") then
-        self:SetAttribute("type", "click")
+                    )
+                    _G[Button]:HookScript(
+                        "OnEnter",
+                        function(self)
+                            if self:GetAttribute("gse-button") then
+                                self:SetAttribute("type", "click")
+                            end
+                        end
+                    )
+                else
+                    -- For other (third-party) buttons: full WrapScript on both
+                    SHBT:WrapScript(
+                        _G[Button],
+                        "OnClick",
+                        [[
+    local gseButton = self:GetAttribute('gse-button')
+    if gseButton then
+        self:SetAttribute('type', 'click')
+    else
+        self:SetAttribute('type', 'action')
     end
 ]]
-                )
+                    )
+                    SHBT:WrapScript(
+                        _G[Button],
+                        "OnEnter",
+                        nil,
+                        [[
+    if self:GetAttribute('gse-button') then
+        self:SetAttribute('type', 'click')
+    end
+]]
+                    )
+                end
                 _G[Button]:SetAttribute("type", "click")
-
-            --if number and GetBindingByKey(number) and string.upper(GetBindingByKey(number)) == string.upper(Button) then
-            --SetBindingClick(number, Button, "LeftButton")
-            --end
             end
-
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
         GSE.ButtonOverrides[Button] = Sequence
     end
 end
+
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -357,6 +372,7 @@ local function LoadKeyBindings(payload)
         end
     end
 end
+
 function GSE.ReloadOverrides(force)
     LoadOverrides(force)
 end
@@ -383,6 +399,7 @@ end
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
+
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
@@ -479,7 +496,6 @@ local function startup()
         )
     end
 
-
     -- Added in 2.1.0
     if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
         GSEOptions.MacroResetModifiers = {}
@@ -535,7 +551,6 @@ if GSE.VariablesLoaded then
     startup()
     LoadKeyBindings(GSE.PlayerEntered)
     GSE.PerformReloadSequences(true)
-
     LoadOverrides()
 end
 
@@ -651,6 +666,7 @@ function GSE:TRAIT_CONFIG_UPDATED(_, payload)
     GSE.ReloadSequences()
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
 end
+
 function GSE:ACTIVE_COMBAT_CONFIG_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
     LoadOverrides()
@@ -725,7 +741,6 @@ if GSE.GameMode > 10 then
     GSE:RegisterEvent("PLAYER_TALENT_UPDATE")
     GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
-
     GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
 end
 
@@ -733,6 +748,7 @@ if GSE.GameMode <= 3 then
     GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
     GSE:RegisterEvent("SPELLS_CHANGED")
 end
+
 function GSE:OnEnable()
     GSE.StartOOCTimer()
 end
@@ -820,4 +836,3 @@ function GSE.CheckGUI()
 end
 
 GSE.DebugProfile("Events")
-

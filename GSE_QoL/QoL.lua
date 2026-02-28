@@ -535,7 +535,23 @@ if GSE.GameMode > 10 then
     end
 
     -- Standard Blizzard action bars hook via the global function
-    hooksecurefunc("ActionButton_OnClick", gseEmptyButtonHandler)
+    --
+    -- Hook the method on the ActionButton metatable instead
+    local buttonPrefixes = {
+        "ActionButton",
+        "MultiBarBottomLeftButton",
+        "MultiBarBottomRightButton",
+        "MultiBarRightButton",
+        "MultiBarLeftButton",
+    }
+    for _, prefix in ipairs(buttonPrefixes) do
+        for i = 1, 12 do
+            local button = _G[prefix..i]
+            if button then
+                button:HookScript("OnClick", gseEmptyButtonHandler)
+            end
+        end
+    end
 
     -- Third-party action bar addons use their own OnClick handlers, so we install
     -- HookScript directly on each button after PLAYER_ENTERING_WORLD, by which
