@@ -39,7 +39,7 @@ local Statics = GSE.Static
 local GNOME = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 
 -- Initialisation Functions
---- Checks for nil or empty variables.
+--- Checks for nil or empty string.
 function GSE.isEmpty(s)
     return s == nil or s == ""
 end

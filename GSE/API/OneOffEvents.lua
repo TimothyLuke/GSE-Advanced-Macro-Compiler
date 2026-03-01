@@ -82,6 +82,36 @@ function GSE.PerformOneOffEvents()
         GSEOptions.Multiclick = true
         GSEOptions.Updates["3225-d"] = true
     end
+    -- One-off: set the actionBarOverridePopup default based on what the user already has configured.
+    -- Keybind-only users default to disabled (they don't use actionbar overrides).
+    -- New users (nothing configured) and actionbar override users default to enabled.
+    if GSE.isEmpty(GSEOptions.Updates["actionBarOverridePopupDefault"]) then
+        local hasOverrides = false
+        if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
+            for _, specData in pairs(GSE_C["ActionBarBinds"]["Specialisations"] or {}) do
+                if not GSE.isEmpty(specData) then hasOverrides = true; break end
+            end
+            if not hasOverrides then
+                for _, specData in pairs(GSE_C["ActionBarBinds"]["LoadOuts"] or {}) do
+                    for _, loadoutData in pairs(specData) do
+                        if not GSE.isEmpty(loadoutData) then hasOverrides = true; break end
+                    end
+                    if hasOverrides then break end
+                end
+            end
+        end
+        local hasKeybinds = false
+        if not GSE.isEmpty(GSE_C["KeyBindings"]) then
+            for specKey, specData in pairs(GSE_C["KeyBindings"]) do
+                if specKey ~= "LoadOuts" and not GSE.isEmpty(specData) then
+                    hasKeybinds = true; break
+                end
+            end
+        end
+        -- Keybind-only existing users get popup disabled; everyone else gets it enabled.
+        GSEOptions.actionBarOverridePopup = not (hasKeybinds and not hasOverrides)
+        GSEOptions.Updates["actionBarOverridePopupDefault"] = true
+    end
     if GSE.isEmpty(GSE_C.Updates["3218"]) then
         if GSE_C["ActionBarBinds"] then
             for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
