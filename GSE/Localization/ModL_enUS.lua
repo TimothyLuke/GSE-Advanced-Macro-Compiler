@@ -2,6 +2,37 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
 L["Enable Actionbar Override Popup"] = true
+
+-- checksequencesforerrors / FixSequenceStructure strings
+L["Scanning GSE.Library for structural and content issues..."] = true
+L["Sequence is not a table"] = true
+L["Missing MetaData table"] = true
+L["Missing or invalid Macros table"] = true
+L["MetaData.SpecID is missing"] = true
+L["Macros array is empty (no versions defined)"] = true
+L["Macros array has gaps: %d version(s) reachable of %d total (max index %d)"] = true
+L["MetaData.%s = %d references a non-existent Macros version (max valid index: %d)"] = true
+L["Macros[%d] is not a table"] = true
+L["Macros[%d].Actions is missing or not a table"] = true
+L["Macros[%d].Actions has gaps: %d reachable of %d total (max index %d)"] = true
+L["Macros[%d].Actions[%d] is missing Type field"] = true
+L["Macros[%d].Actions[%d] has unrecognized Type: '%s'"] = true
+L["Macros[%d].Actions[%d] (If) is missing the Variable field"] = true
+L["Macros[%d].Actions[%d] (Embed) is missing the Sequence field"] = true
+L["Macros[%d].Actions[%d] (Pause) has neither Clicks nor MS"] = true
+L["Macros[%d].Actions[%d] macro text exceeds 255 characters (%d chars)"] = true
+L["Macros[%d].Actions[%d] macro text has unbalanced brackets (%d '[' vs %d ']')"] = true
+L["Macros[%d].Actions[%d] uses unrecognized slash command: /%s"] = true
+L["Issues found in '%s' (class library %d):"] = true
+L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"] = true
+L["Compile error in Macros[%d] of '%s': %s"] = true
+L["%d issue(s) found.  See above for details and fix commands."] = true
+L["Invalid class library ID: %s"] = true
+L["Sequence '%s' not found in class library %d."] = true
+L["Cleared %d pending queue entries for '%s'."] = true
+L["MetaData.%s remapped from non-existent version %d to %d."] = true
+L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."] = true
+L["'%s' repaired. Sequence is for class %d; button will update when that class is played."] = true
 L["Assign GSE Sequence"] = true
 L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
 L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."] = true

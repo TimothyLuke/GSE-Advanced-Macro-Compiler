@@ -411,19 +411,255 @@ function GSE.MoveMacroToClassFromGlobal()
     GSE.ReloadSequences()
 end
 
---- This function scans all macros in the library and reports on corrupt macros.
+-- ============================================================
+-- Sequence error checker: module-level helpers
+-- ============================================================
+
+--- MetaData keys that store Macros array index references.
+local seqContextKeys = {
+    "Default", "Scenario", "Arena", "PVP", "Raid",
+    "Normal", "Mythic", "Timewalking", "Party"
+}
+
+--- Set of valid WoW macro slash commands (warcraft.wiki.gg/wiki/Macro_commands).
+-- Built once at load time from Statics + comprehensive wiki list.
+local validMacroSlashCmds = (function()
+    local s = {}
+    for cmd in pairs(Statics.CastCmds or {}) do s[cmd] = true end
+    for _, cmd in ipairs(Statics.MacroCommands or {}) do s[cmd] = true end
+    for _, cmd in ipairs({
+        -- Combat / casting
+        "castrandom", "castsequence", "changeactionbar", "stopcasting",
+        "stopspelltarget", "swapactionbar", "userandom", "spell",
+        -- Targeting
+        "tar", "targetexact", "targetenemyplayer", "targetfriendplayer",
+        "targetparty", "targetraid", "targetlastenemy", "targetlastfriend",
+        "targetlasttarget",
+        -- Pet
+        "petassist", "petautocasttoggle", "petdefensive", "petdismiss",
+        "petfollow", "petmoveto", "petpassive", "petstay",
+        -- System
+        "console", "click", "disableaddons", "enableaddons", "help",
+        "logout", "macrohelp", "played", "quit", "random", "reload",
+        "run", "script", "stopmacro", "time", "timetest", "who",
+        -- Character / inventory
+        "equip", "equipset", "equipslot", "friend", "follow", "ignore",
+        "inspect", "leavevehicle", "randompet", "removefriend", "settitle",
+        "trade", "unignore", "summonpet", "dismisspet", "randomfavoritepet",
+        -- UI / Blizzard frames
+        "achievements", "calendar", "guildfinder", "dungeonfinder", "loot",
+        "macro", "raidfinder", "share", "stopwatch",
+        -- Chat (full names and abbreviations)
+        "afk", "announce", "battleground", "emote", "dnd", "guild",
+        "join", "leave", "party", "raid", "rw", "reply", "say",
+        "whisper", "yell", "s", "y", "g", "p", "bg", "i", "o", "me",
+        -- Party / Raid
+        "clearworldmarker", "invite", "readycheck", "requestinvite",
+        "targetmarker", "uninvite", "worldmarker", "raidinfo", "promote",
+        "ffa", "master", "mainassist", "mainassistoff", "maintank",
+        "maintankoff",
+        -- Guild
+        "guilddemote", "guilddisband", "guildinfo", "guildinvite",
+        "guildleader", "guildquit", "guildmotd", "guildpromote",
+        "guildroster", "guildremove",
+        -- PvP
+        "duel", "forfeit", "pvp", "wargame",
+        -- Miscellaneous
+        "in", "showtooltip", "show",
+    }) do
+        s[cmd] = true
+    end
+    return s
+end)()
+
+--- Returns (ipairsCount, totalNumericCount, maxNumericIndex) for a table.
+-- Reveals array gaps: if totalNumericCount > ipairsCount, there are unreachable entries.
+local function arrayStats(t)
+    local ipCount = 0
+    for _ in ipairs(t) do ipCount = ipCount + 1 end
+    local numCount, maxIdx = 0, 0
+    for k in pairs(t) do
+        if type(k) == "number" and k >= 1 then
+            numCount = numCount + 1
+            if k > maxIdx then maxIdx = k end
+        end
+    end
+    return ipCount, numCount, maxIdx
+end
+
+--- Inspects one sequence for structural and content issues.
+-- Returns a list of human-readable issue strings (empty = no problems).
+local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore classlibid seqname
+    local issues = {}
+
+    if type(seq) ~= "table" then
+        table.insert(issues, L["Sequence is not a table"])
+        return issues
+    end
+
+    -- Top-level required tables
+    if GSE.isEmpty(seq.MetaData) or type(seq.MetaData) ~= "table" then
+        table.insert(issues, L["Missing MetaData table"])
+        return issues
+    end
+    if type(seq.Macros) ~= "table" then
+        table.insert(issues, L["Missing or invalid Macros table"])
+        return issues
+    end
+
+    -- Required MetaData fields
+    if GSE.isEmpty(seq.MetaData.SpecID) then
+        table.insert(issues, L["MetaData.SpecID is missing"])
+    end
+
+    -- Macros array analysis
+    local macIp, macNum, macMax = arrayStats(seq.Macros)
+    if macNum == 0 then
+        table.insert(issues, L["Macros array is empty (no versions defined)"])
+        return issues
+    end
+    if macNum > macIp then
+        table.insert(issues, string.format(
+            L["Macros array has gaps: %d version(s) reachable of %d total (max index %d)"],
+            macIp, macNum, macMax))
+    end
+
+    -- MetaData context version references must point to existing Macros entries
+    for _, ctxKey in ipairs(seqContextKeys) do
+        local val = seq.MetaData[ctxKey]
+        if not GSE.isEmpty(val) then
+            local idx = tonumber(val)
+            if idx and (idx < 1 or idx > macMax or seq.Macros[idx] == nil) then
+                table.insert(issues, string.format(
+                    L["MetaData.%s = %d references a non-existent Macros version (max valid index: %d)"],
+                    ctxKey, idx, macMax))
+            end
+        end
+    end
+
+    -- Valid Action types
+    local validTypes = {
+        [Statics.Actions.Loop]   = true,
+        [Statics.Actions.If]     = true,
+        [Statics.Actions.Repeat] = true,
+        [Statics.Actions.Action] = true,
+        [Statics.Actions.Pause]  = true,
+        [Statics.Actions.Embed]  = true,
+    }
+
+    -- Inspect every Macro version (including those beyond array gaps)
+    for macIdx, macVer in pairs(seq.Macros) do
+        if type(macIdx) == "number" then
+            if type(macVer) ~= "table" then
+                table.insert(issues, string.format(L["Macros[%d] is not a table"], macIdx))
+            elseif type(macVer.Actions) ~= "table" then
+                table.insert(issues, string.format(
+                    L["Macros[%d].Actions is missing or not a table"], macIdx))
+            else
+                -- Actions array gap detection
+                local actIp, actNum, actMax = arrayStats(macVer.Actions)
+                if actNum > actIp then
+                    table.insert(issues, string.format(
+                        L["Macros[%d].Actions has gaps: %d reachable of %d total (max index %d)"],
+                        macIdx, actIp, actNum, actMax))
+                end
+
+                -- Inspect every Action (including those beyond gaps)
+                for actIdx, action in pairs(macVer.Actions) do
+                    if type(actIdx) == "number" and type(action) == "table" then
+                        if GSE.isEmpty(action.Type) then
+                            table.insert(issues, string.format(
+                                L["Macros[%d].Actions[%d] is missing Type field"],
+                                macIdx, actIdx))
+                        elseif not validTypes[action.Type] then
+                            table.insert(issues, string.format(
+                                L["Macros[%d].Actions[%d] has unrecognized Type: '%s'"],
+                                macIdx, actIdx, tostring(action.Type)))
+                        else
+                            -- Type-specific required fields
+                            if action.Type == Statics.Actions.If then
+                                if GSE.isEmpty(action.Variable) then
+                                    table.insert(issues, string.format(
+                                        L["Macros[%d].Actions[%d] (If) is missing the Variable field"],
+                                        macIdx, actIdx))
+                                end
+                            elseif action.Type == Statics.Actions.Embed then
+                                if GSE.isEmpty(action.Sequence) then
+                                    table.insert(issues, string.format(
+                                        L["Macros[%d].Actions[%d] (Embed) is missing the Sequence field"],
+                                        macIdx, actIdx))
+                                end
+                            elseif action.Type == Statics.Actions.Pause then
+                                if GSE.isEmpty(action.Clicks) and GSE.isEmpty(action.MS) then
+                                    table.insert(issues, string.format(
+                                        L["Macros[%d].Actions[%d] (Pause) has neither Clicks nor MS"],
+                                        macIdx, actIdx))
+                                end
+                            elseif action.Type == Statics.Actions.Action then
+                                if not GSE.isEmpty(action.macro) then
+                                    local raw = tostring(action.macro)
+                                    if raw:sub(1, 1) == "/" then
+                                        -- 255-character WoW macro block limit
+                                        local unesc = GSE.UnEscapeString(raw)
+                                        if #unesc > 255 then
+                                            table.insert(issues, string.format(
+                                                L["Macros[%d].Actions[%d] macro text exceeds 255 characters (%d chars)"],
+                                                macIdx, actIdx, #unesc))
+                                        end
+                                        -- Unbalanced conditional bracket check
+                                        local opens, closes = 0, 0
+                                        for _ in raw:gmatch("%[") do opens  = opens  + 1 end
+                                        for _ in raw:gmatch("%]") do closes = closes + 1 end
+                                        if opens ~= closes then
+                                            table.insert(issues, string.format(
+                                                L["Macros[%d].Actions[%d] macro text has unbalanced brackets (%d '[' vs %d ']')"],
+                                                macIdx, actIdx, opens, closes))
+                                        end
+                                        -- Unknown slash command check
+                                        local cmd = raw:match("^/(%a+)")
+                                        if cmd and not validMacroSlashCmds[cmd:lower()] then
+                                            table.insert(issues, string.format(
+                                                L["Macros[%d].Actions[%d] uses unrecognized slash command: /%s"],
+                                                macIdx, actIdx, cmd))
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return issues
+end
+
+--- Scans all sequences in GSE.Library for structural and content issues,
+-- then checks GSESequences entries for valid encoding.
 function GSE.ScanMacrosForErrors()
-    for classlibid, classlib in ipairs(GSE.Library) do
-        for seqname, seq in pairs(classlib) do
-            for macroversionid, macroversion in ipairs(seq) do
-                local status, error = pcall(GSE.CheckSequence, macroversion)
-                if not status then
-                    GSE.Print(string.format(L["Error found in version %i of %s."], macroversionid, seqname), "Error")
+    GSE.Print(L["Scanning GSE.Library for structural and content issues..."])
+    local totalIssues = 0
+
+    -- 1. Structural / content checks on GSE.Library (all class IDs, including 0 = global)
+    for classlibid = 0, 13 do
+        local classlib = GSE.Library[classlibid]
+        if classlib and type(classlib) == "table" then
+            for seqname, seq in pairs(classlib) do
+                local issues = checkSeqStructure(classlibid, seqname, seq)
+
+                if #issues > 0 then
+                    totalIssues = totalIssues + #issues
+                    GSE.Print(
+                        string.format(L["Issues found in '%s' (class library %d):"], seqname, classlibid),
+                        "Error"
+                    )
+                    for _, issue in ipairs(issues) do
+                        GSE.Print("  - " .. issue)
+                    end
                     GSE.Print(
                         string.format(
-                            L[
-                                "To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"
-                            ],
+                            L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"],
                             GSEOptions.CommandColour,
                             classlibid,
                             seqname,
@@ -431,41 +667,186 @@ function GSE.ScanMacrosForErrors()
                         )
                     )
                 end
-            end
-            if seqname == "WW" then
-                GSE.Print(
-                    string.format(
-                        L[
-                            "Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."
-                        ],
-                        GSEOptions.CommandColour,
-                        Statics.StringReset
-                    ),
-                    "Error"
-                )
-            elseif seqname == "PVP" then
-                GSE.Print(
-                    string.format(
-                        L[
-                            "Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."
-                        ],
-                        GSEOptions.CommandColour,
-                        Statics.StringReset
-                    ),
-                    "Error"
-                )
+
+                -- Runtime compile check for each reachable Macro version
+                if type(seq) == "table" and type(seq.Macros) == "table" then
+                    for macvidx, macroversion in ipairs(seq.Macros) do
+                        if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
+                            local ok, err = pcall(GSE.CompileTemplate, macroversion)
+                            if not ok then
+                                totalIssues = totalIssues + 1
+                                GSE.Print(
+                                    string.format(
+                                        L["Compile error in Macros[%d] of '%s': %s"],
+                                        macvidx, seqname, tostring(err)
+                                    ),
+                                    "Error"
+                                )
+                            end
+                        end
+                    end
+                end
             end
         end
     end
+
+    -- 2. Name collision checks (WW / PVP clash with WoW built-ins)
+    for classlibid = 0, 13 do
+        local classlib = GSE.Library[classlibid]
+        if classlib and type(classlib) == "table" then
+            for seqname, _ in pairs(classlib) do
+                if seqname == "WW" then
+                    GSE.Print(
+                        string.format(
+                            L[
+                                "Macro found by the name %sWW%s. Rename this macro to a different name to be able to use it.  WOW has a hidden button called WW that is executed instead of this macro."
+                            ],
+                            GSEOptions.CommandColour,
+                            Statics.StringReset
+                        ),
+                        "Error"
+                    )
+                elseif seqname == "PVP" then
+                    GSE.Print(
+                        string.format(
+                            L[
+                                "Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."
+                            ],
+                            GSEOptions.CommandColour,
+                            Statics.StringReset
+                        ),
+                        "Error"
+                    )
+                end
+            end
+        end
+    end
+
+    -- 3. GSESequences encoding check (existing behaviour: remove malformed entries)
     for classlibid, classlib in ipairs(GSESequences) do
-        for k,v in pairs(classlib) do
+        for k, v in pairs(classlib) do
             if string.sub(v, 1, 6) ~= "!GSE3!" then
                 GSESequences[classlibid][k] = nil
-                GSE.Print(L["Removed unreadable sequence "] .. k,  Statics.DebugModules["Storage"])
+                GSE.Print(L["Removed unreadable sequence "] .. k, Statics.DebugModules["Storage"])
             end
         end
     end
-    GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
+
+    if totalIssues == 0 then
+        GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
+    else
+        GSE.Print(string.format(L["%d issue(s) found.  See above for details and fix commands."], totalIssues))
+    end
+end
+
+--- Repairs structural issues in a sequence in GSE.Library:
+-- 1. Clears OOC queue entries for the sequence
+-- 2. Re-indexes the Macros array to remove numeric gaps
+-- 3. Re-indexes each Macro version's Actions array to remove gaps
+-- 4. Updates MetaData context version references to match the new indices
+-- 5. Saves the repaired sequence and queues a recompile
+-- Usage: /run GSE.FixSequenceStructure(classLibraryID, "SequenceName")
+function GSE.FixSequenceStructure(classlibid, seqname)
+    classlibid = tonumber(classlibid)
+    if not classlibid or not GSE.Library[classlibid] then
+        GSE.Print(string.format(L["Invalid class library ID: %s"], tostring(classlibid)))
+        return
+    end
+    local seq = GSE.Library[classlibid][seqname]
+    if GSE.isEmpty(seq) then
+        GSE.Print(string.format(L["Sequence '%s' not found in class library %d."], seqname, classlibid))
+        return
+    end
+
+    -- 1. Remove any pending OOC queue entries for this sequence
+    local kept = {}
+    for _, entry in ipairs(GSE.OOCQueue) do
+        local entryName = entry.sequencename or entry.name
+        if entryName ~= seqname then
+            table.insert(kept, entry)
+        end
+    end
+    local removed = #GSE.OOCQueue - #kept
+    GSE.OOCQueue = kept
+    if removed > 0 then
+        GSE.Print(string.format(L["Cleared %d pending queue entries for '%s'."], removed, seqname))
+    end
+
+    -- 2. Re-index Macros array (compact gaps into a clean 1..n sequence)
+    if type(seq.Macros) == "table" then
+        local oldMacroKeys = {}
+        for k in pairs(seq.Macros) do
+            if type(k) == "number" and k >= 1 then
+                table.insert(oldMacroKeys, k)
+            end
+        end
+        table.sort(oldMacroKeys)
+
+        -- Build old→new index mapping and compacted Macros table
+        local macroIndexMap = {}
+        local newMacros = {}
+        for newIdx, oldIdx in ipairs(oldMacroKeys) do
+            macroIndexMap[oldIdx] = newIdx
+            newMacros[newIdx] = seq.Macros[oldIdx]
+        end
+        seq.Macros = newMacros
+
+        -- 3. Re-index Actions arrays within each Macro version
+        for _, macroversion in ipairs(seq.Macros) do
+            if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
+                local oldActKeys = {}
+                for k in pairs(macroversion.Actions) do
+                    if type(k) == "number" and k >= 1 then
+                        table.insert(oldActKeys, k)
+                    end
+                end
+                table.sort(oldActKeys)
+
+                local newActions = {}
+                for newIdx, oldIdx in ipairs(oldActKeys) do
+                    newActions[newIdx] = macroversion.Actions[oldIdx]
+                end
+                macroversion.Actions = newActions
+            end
+        end
+
+        -- 4. Update MetaData context version references using the old→new mapping
+        local maxNewIdx = #seq.Macros
+        for _, ctxKey in ipairs(seqContextKeys) do
+            local val = seq.MetaData[ctxKey]
+            if not GSE.isEmpty(val) then
+                local oldIdx = tonumber(val)
+                if oldIdx then
+                    if macroIndexMap[oldIdx] then
+                        seq.MetaData[ctxKey] = macroIndexMap[oldIdx]
+                    else
+                        -- Was pointing to a gap or beyond the end; clamp to max valid index
+                        local clamped = maxNewIdx > 0 and maxNewIdx or nil
+                        GSE.Print(string.format(
+                            L["MetaData.%s remapped from non-existent version %d to %d."],
+                            ctxKey, oldIdx, clamped or 0
+                        ))
+                        seq.MetaData[ctxKey] = clamped
+                    end
+                end
+            end
+        end
+    end
+
+    -- 5. Save repaired sequence and trigger recompile
+    GSE.ReplaceSequence(classlibid, seqname, seq)
+    if classlibid == GSE.GetCurrentClassID() or classlibid == 0 then
+        GSE.ReloadSequences()
+        GSE.Print(string.format(
+            L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."],
+            seqname
+        ))
+    else
+        GSE.Print(string.format(
+            L["'%s' repaired. Sequence is for class %d; button will update when that class is played."],
+            seqname, classlibid
+        ))
+    end
 end
 
 --- This creates a pretty export for WLM Forums
