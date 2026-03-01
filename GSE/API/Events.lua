@@ -312,7 +312,10 @@ local function LoadOverrides(force)
     end
     -- If any overrides are configured, ensure the CVars that block them are off.
     -- SetCVar is not combat-restricted so this runs regardless of lockdown state.
-    if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
+    -- Note: GSE.isEmpty only tests for nil/"" and returns false for an empty table {},
+    -- so use next() to correctly detect whether the table has any entries.
+    local specOverrides = GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]
+    if specOverrides and next(specOverrides) ~= nil then
         ensureActionBarCVars()
     end
     if not InCombatLockdown() then
