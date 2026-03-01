@@ -129,18 +129,19 @@ function GSE.PerformOneOffEvents()
         end
         GSE_C.Updates["3218"] = true
     end
+
+    if GSE.isEmpty(GSE_C.Updates["3300"]) then
+        GSEOptions.shownew = true
+        GSE_C.Updates["3300"] = true
+    end
+    if GSE.isEmpty(GSEOptions.Updates["3301"]) then
+        GSEOptions.shownew = true
+        GSEOptions.Updates["3301"] = true
+    end
+    if GSE.isEmpty(GSEOptions.Updates["3303"]) then
+        GSEOptions.shownew = true
+        GSEOptions.Updates["3303"] = true
+    end
 end
 
-if GSE.isEmpty(GSE_C.Updates["3300"]) then
-    GSEOptions.shownew = true
-    GSE_C.Updates["3300"] = true
-end
-if GSE.isEmpty(GSEOptions.Updates["3301"]) then
-    GSEOptions.shownew = true
-    GSEOptions.Updates["3301"] = true
-end
-if GSE.isEmpty(GSEOptions.Updates["3303"]) then
-    GSEOptions.shownew = true
-    GSEOptions.Updates["3303"] = true
-end
 GSE.DebugProfile("OneOffEvents")
