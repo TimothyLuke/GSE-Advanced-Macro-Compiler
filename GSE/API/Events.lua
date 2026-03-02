@@ -469,8 +469,7 @@ local function startup()
     if not GSEOptions.HideLoginMessage then
         GSE.Print(
             L["Advanced Macro Compiler loaded.|r  Type "] ..
-                GSEOptions.CommandColour .. L["/gse help|r to get started."],
-            Statics.GSEString
+                GSEOptions.CommandColour .. L["/gse help|r to get started."]
         )
     end
 
