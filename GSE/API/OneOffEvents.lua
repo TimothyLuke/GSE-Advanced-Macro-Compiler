@@ -18,12 +18,6 @@ function GSE.PerformOneOffEvents()
     if GSE.isEmpty(GSEOptions.Updates) then
         GSEOptions.Updates = {}
     end
-    if GSE.isEmpty(GSE_C) then
-        GSE_C = {}
-    end
-    if GSE.isEmpty(GSE_C.Updates) then
-        GSE_C.Updates = {}
-    end
     if GSE.isEmpty(GSEOptions.Updates["3200"]) then
         GSE3Storage = nil
         GSEOptions.Updates["3200"] = true
@@ -141,6 +135,38 @@ function GSE.PerformOneOffEvents()
     if GSE.isEmpty(GSEOptions.Updates["3303"]) then
         GSEOptions.shownew = true
         GSEOptions.Updates["3303"] = true
+    end
+
+    if GSE.isEmpty(GSEOptions.Updates["showMiniMap"]) then
+        if GSE.isEmpty(GSEOptions.showMiniMap) then
+            GSEOptions.showMiniMap = {
+                hide = true
+            }
+        end
+        GSEOptions.Updates["showMiniMap"] = true
+    end
+
+    if GSE.isEmpty(GSEOptions.Updates["MacroResetModifiers"]) then
+        if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
+            GSEOptions.MacroResetModifiers = {
+                ["LeftButton"] = false,
+                ["RighttButton"] = false,
+                ["MiddleButton"] = false,
+                ["Button4"] = false,
+                ["Button5"] = false,
+                ["LeftAlt"] = false,
+                ["RightAlt"] = false,
+                ["Alt"] = false,
+                ["LeftControl"] = false,
+                ["RightControl"] = false,
+                ["Control"] = false,
+                ["LeftShift"] = false,
+                ["RightShift"] = false,
+                ["Shift"] = false,
+                ["AnyMod"] = false,
+            }
+        end
+        GSEOptions.Updates["MacroResetModifiers"] = true
     end
 end
 

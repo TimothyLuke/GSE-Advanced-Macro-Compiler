@@ -16,86 +16,38 @@ function GSE:UNIT_FACTION()
     GSE.ReloadSequences()
 end
 
-function GSE:ZONE_CHANGED_NEW_AREA()
+function GSE.UpdateZoneFlags()
     local _, type, difficulty, _, _, _, _, _, _ = GetInstanceInfo()
-    if type == "pvp" then
-        GSE.PVPFlag = true
-    else
-        GSE.PVPFlag = false
-    end
-    if difficulty == 23 then -- Mythic 5 player
-        GSE.inMythic = true
-    else
-        GSE.inMythic = false
-    end
-    if difficulty == 1 then -- Normal
-        GSE.inDungeon = true
-    else
-        GSE.inDungeon = false
-    end
-    if difficulty == 2 then -- Heroic
-        GSE.inHeroic = true
-    else
-        GSE.inHeroic = false
-    end
-    if difficulty == 8 then -- Mythic+
-        GSE.inMythicPlus = true
-    else
-        GSE.inMythicPlus = false
-    end
-
-    if difficulty == 24 or difficulty == 33 then -- Timewalking  24 Dungeon, 33 raid
-        GSE.inTimeWalking = true
-    else
-        GSE.inTimeWalking = false
-    end
-    if type == "raid" then
-        GSE.inRaid = true
-    else
-        GSE.inRaid = false
-    end
-    if IsInGroup() then
-        GSE.inParty = true
-    else
-        GSE.inParty = false
-    end
-    if type == "arena" then
-        GSE.inArena = true
-    else
-        GSE.inArena = false
-    end
-    if type == "scenario" or difficulty == 167 or difficulty == 152 or difficulty == 208 then
-        GSE.inScenario = true
-    else
-        GSE.inScenario = false
-    end
-
+    GSE.PVPFlag      = (type == "pvp")
+    GSE.inMythic     = (difficulty == 23)
+    GSE.inDungeon    = (difficulty == 1)
+    GSE.inHeroic     = (difficulty == 2)
+    GSE.inMythicPlus = (difficulty == 8)
+    GSE.inTimeWalking = (difficulty == 24 or difficulty == 33)
+    GSE.inRaid       = (type == "raid")
+    GSE.inParty      = IsInGroup() and true or false
+    GSE.inArena      = (type == "arena")
+    GSE.inScenario   = (type == "scenario" or difficulty == 167 or difficulty == 152 or difficulty == 208)
     GSE.PrintDebugMessage(
         table.concat(
             {
-                "PVP: ",
-                tostring(GSE.PVPFlag),
-                " inMythic: ",
-                tostring(GSE.inMythic),
-                " inRaid: ",
-                tostring(GSE.inRaid),
-                " inDungeon ",
-                tostring(GSE.inDungeon),
-                " inHeroic ",
-                tostring(GSE.inHeroic),
-                " inArena ",
-                tostring(GSE.inArena),
-                " inTimeWalking ",
-                tostring(GSE.inTimeWalking),
-                " inMythicPlus ",
-                tostring(GSE.inMythicPlus),
-                " inScenario ",
-                tostring(GSE.inScenario)
+                "PVP: ",        tostring(GSE.PVPFlag),
+                " inMythic: ",  tostring(GSE.inMythic),
+                " inRaid: ",    tostring(GSE.inRaid),
+                " inDungeon ",  tostring(GSE.inDungeon),
+                " inHeroic ",   tostring(GSE.inHeroic),
+                " inArena ",    tostring(GSE.inArena),
+                " inTimeWalking ", tostring(GSE.inTimeWalking),
+                " inMythicPlus ",  tostring(GSE.inMythicPlus),
+                " inScenario ",    tostring(GSE.inScenario)
             }
         ),
         Statics.DebugModules["API"]
     )
-    -- Force Reload of all Sequences
+end
+
+function GSE:ZONE_CHANGED_NEW_AREA()
+    GSE.UpdateZoneFlags()
     GSE.UnsavedOptions.ReloadQueued = nil
     GSE.ReloadSequences()
 end
@@ -140,7 +92,7 @@ local function ensureActionBarCVars()
         needsReload = true
     end
     if #fixed > 0 then
-        GSE.Print(L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] .. table.concat(fixed, ", "))
+        GSE.Print(L["Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] .. table.concat(fixed, ", "))
         if needsReload then
             GSE.Print(L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."])
         end
@@ -440,19 +392,13 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformPrint()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
-    if not GSE.VariablesLoaded then
-        LoadKeyBindings(GSE.PlayerEntered)
-        GSE.PerformReloadSequences(true)
-        LoadOverrides()
-    end
-    GSE:ZONE_CHANGED_NEW_AREA()
+    GSE.UpdateZoneFlags()
+    LoadKeyBindings(true)
+    GSE.PerformReloadSequences(true)
+    LoadOverrides()
+    GSE.ManageMacros()
     if ConsolePort then
-        C_Timer.After(
-            10,
-            function()
-                LoadOverrides()
-            end
-        )
+        C_Timer.After(10, LoadOverrides)
     end
     GSE:RegisterEvent("UPDATE_MACROS")
     if GSEOptions.shownew then
@@ -464,9 +410,6 @@ local function startup()
     local char = UnitFullName("player")
     local realm = GetRealmName()
     GSE.PerformOneOffEvents()
-    if GSE_C and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][char .. "-" .. realm] then
-        GSE_C["KeyBindings"][char .. "-" .. realm] = nil
-    end
 
     if GSE.isEmpty(GSESpellCache) then
         GSESpellCache = {
@@ -514,7 +457,7 @@ local function startup()
                         vals.sequencename = k
                         vals.sequence = v
                         vals.classid = iter
-                        table.insert(GSE.OOCQueue, vals)
+                        GSE.EnqueueOOC(vals)
                     end
                 end
             end
@@ -531,63 +474,10 @@ local function startup()
         )
     end
 
-    -- Added in 2.1.0
-    if GSE.isEmpty(GSEOptions.MacroResetModifiers) then
-        GSEOptions.MacroResetModifiers = {}
-        GSEOptions.MacroResetModifiers["LeftButton"] = false
-        GSEOptions.MacroResetModifiers["RighttButton"] = false
-        GSEOptions.MacroResetModifiers["MiddleButton"] = false
-        GSEOptions.MacroResetModifiers["Button4"] = false
-        GSEOptions.MacroResetModifiers["Button5"] = false
-        GSEOptions.MacroResetModifiers["LeftAlt"] = false
-        GSEOptions.MacroResetModifiers["RightAlt"] = false
-        GSEOptions.MacroResetModifiers["Alt"] = false
-        GSEOptions.MacroResetModifiers["LeftControl"] = false
-        GSEOptions.MacroResetModifiers["RightControl"] = false
-        GSEOptions.MacroResetModifiers["Control"] = false
-        GSEOptions.MacroResetModifiers["LeftShift"] = false
-        GSEOptions.MacroResetModifiers["RightShift"] = false
-        GSEOptions.MacroResetModifiers["Shift"] = false
-        GSEOptions.MacroResetModifiers["LeftAlt"] = false
-        GSEOptions.MacroResetModifiers["RightAlt"] = false
-        GSEOptions.MacroResetModifiers["AnyMod"] = false
-    end
-
-    -- Fix issue where IsAnyShiftKeyDown() was referenced instead of IsShiftKeyDown() #327
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyShift"]) then
-        GSEOptions.MacroResetModifiers["Shift"] = GSEOptions.MacroResetModifiers["AnyShift"]
-        GSEOptions.MacroResetModifiers["AnyShift"] = nil
-    end
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyControl"]) then
-        GSEOptions.MacroResetModifiers["Control"] = GSEOptions.MacroResetModifiers["AnyControl"]
-        GSEOptions.MacroResetModifiers["AnyControl"] = nil
-    end
-    if not GSE.isEmpty(GSEOptions.MacroResetModifiers["AnyAlt"]) then
-        GSEOptions.MacroResetModifiers["Alt"] = GSEOptions.MacroResetModifiers["AnyAlt"]
-        GSEOptions.MacroResetModifiers["AnyAlt"] = nil
-    end
-
-    if GSE.isEmpty(GSEOptions.showMiniMap) then
-        GSEOptions.showMiniMap = {
-            hide = true
-        }
-    end
-
     GSE.WagoAnalytics:Switch("minimapIcon", GSEOptions.showMiniMap.hide)
 end
 
-function GSE:ADDON_LOADED(event, addon)
-    if addon == GNOME then
-        startup()
-    end
-end
-
-if GSE.VariablesLoaded then
-    startup()
-    LoadKeyBindings(GSE.PlayerEntered)
-    GSE.PerformReloadSequences(true)
-    LoadOverrides()
-end
+startup()
 
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     GSE:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -757,9 +647,6 @@ GSE:RegisterEvent("GROUP_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_LOGOUT")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
-if not GSE.VariablesLoaded then
-    GSE:RegisterEvent("ADDON_LOADED")
-end
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")

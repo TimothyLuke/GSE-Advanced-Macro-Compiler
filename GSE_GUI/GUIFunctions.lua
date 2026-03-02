@@ -22,7 +22,7 @@ function GSE.OpenOptionsPanel()
   if GSE.MenuCategoryID then
     Settings.OpenToCategory(GSE.MenuCategoryID)
   else
-    GSE.Print(L["GSE Options Not Enabled"])
+    GSE.Print(L["Options Not Enabled"])
   end
 end
 

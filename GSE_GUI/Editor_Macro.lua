@@ -247,7 +247,7 @@ local function showMacro(editframe, node, container)
                     ["node"] = source[node.name],
                     ["status"] = editframe:SetStatusText()
                 }
-                table.insert(GSE.OOCQueue, oocaction)
+                GSE.EnqueueOOC(oocaction)
             end
         )
 
@@ -324,7 +324,7 @@ local function showMacro(editframe, node, container)
                     ["node"] = node,
                     ["status"] = editframe:SetStatusText()
                 }
-                table.insert(GSE.OOCQueue, oocaction)
+                GSE.EnqueueOOC(oocaction)
             end
         )
         macro:SetCallback(

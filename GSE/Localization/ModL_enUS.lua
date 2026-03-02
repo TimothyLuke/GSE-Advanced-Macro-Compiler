@@ -34,7 +34,7 @@ L["MetaData.%s remapped from non-existent version %d to %d."] = true
 L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."] = true
 L["'%s' repaired. Sequence is for class %d; button will update when that class is played."] = true
 L["Assign GSE Sequence"] = true
-L["GSE Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
+L["Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
 L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."] = true
 
 L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."] = true
@@ -495,6 +495,7 @@ L[
 L["Compile"] = true
 L["Unable to process content.  Fix table and try again."] = true
 L["GSE Raw Editor"] = true
+L["Raw Editor"] = true
 L["Global"] = true
 L["Move Up"] = true
 L["Move this block up one block."] = true
@@ -859,6 +860,7 @@ L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
 -- #1846
 L["GSE Options Not Enabled"] = true
+L["Options Not Enabled"] = true
 L["Import String Not Recognised."] = true
 L["GSE Import Successful."] = true
 L["GSE Collection to Import."] = true

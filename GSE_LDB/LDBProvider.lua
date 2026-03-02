@@ -106,7 +106,19 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey)
   row:SetScript(
     "OnMouseDown",
     function()
+      local label = OOCEvent.action
+      if OOCEvent.action == "UpdateSequence" then
+        label = label .. " (" .. (OOCEvent.name or "?") .. ")"
+      elseif OOCEvent.action == "Save" or OOCEvent.action == "Replace"
+          or OOCEvent.action == "MergeSequence" or OOCEvent.action == "CheckMacroCreated" then
+        label = label .. " (" .. (OOCEvent.sequencename or "?") .. ")"
+      elseif OOCEvent.action == "updatemacro" or OOCEvent.action == "importmacro" then
+        label = label .. " (" .. (OOCEvent.node and OOCEvent.node.name or "?") .. ")"
+      elseif OOCEvent.action == "updatevariable" then
+        label = label .. " (" .. (OOCEvent.name or "?") .. ")"
+      end
       table.remove(GSE.OOCQueue, oockey)
+      GSE.Print("OOC queue: manually removed " .. label)
     end
   )
 end

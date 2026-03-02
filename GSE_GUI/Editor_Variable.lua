@@ -381,7 +381,7 @@ end]],
                     ["variable"] = variable,
                     ["name"] = keyEditBox:GetText()
                 }
-                table.insert(GSE.OOCQueue, oocaction)
+                GSE.EnqueueOOC(oocaction)
                 lastSaved:SetText(
                     L["Last Updated"] ..
                         " " ..

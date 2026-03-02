@@ -83,12 +83,12 @@ end
 local missingVariables = {}
 local function manageMissingVariable(varname)
     if not missingVariables[varname] then
-        GSE.Print(L["Missing Variable "] .. varname, "GSE " .. Statics.DebugModules["API"])
+        GSE.Print(L["Missing Variable "] .. varname, Statics.DebugModules["API"])
         missingVariables[varname] = 0
     end
     missingVariables[varname] = missingVariables[varname] + 1
     if missingVariables[varname] > 100 then
-        GSE.Print(L["Missing Variable "] .. varname, "GSE " .. Statics.DebugModules["API"])
+        GSE.Print(L["Missing Variable "] .. varname, Statics.DebugModules["API"])
         missingVariables[varname] = 0
     end
 end
@@ -109,6 +109,117 @@ function GSE.CloneSequence(orig)
     return copy
 end
 
+--- Smart OOC queue insertion with deduplication and priority hierarchy.
+--
+-- Sequence priority (highest → lowest): MergeSequence > Save/Replace > UpdateSequence
+--   MergeSequence: removes all Save/Replace/UpdateSequence/MergeSequence for same name, then enqueues.
+--   Save/Replace:  skipped if MergeSequence queued for same name; otherwise replaces existing
+--                  Save/Replace and removes any UpdateSequence for same name.
+--   UpdateSequence: skipped if any of MergeSequence/Save/Replace/UpdateSequence already queued for same name.
+--
+-- Macro priority: importmacro > updatemacro
+--   importmacro:   removes existing importmacro/updatemacro for same node.name, then enqueues.
+--   updatemacro:   skipped if importmacro or updatemacro already queued for same node.name.
+--
+-- updatevariable: replaces existing entry for same variable name.
+-- FinishReload/managemacros/CheckMacroCreated: skipped if already present.
+function GSE.EnqueueOOC(vals)
+    local action = vals.action
+
+    if action == "MergeSequence" then
+        -- Remove all sequence operations for the same name; we supersede them.
+        local k = 1
+        while k <= #GSE.OOCQueue do
+            local v = GSE.OOCQueue[k]
+            if (v.action == "MergeSequence" or v.action == "Save" or v.action == "Replace" or v.action == "UpdateSequence")
+                    and v.sequencename == vals.sequencename then
+                table.remove(GSE.OOCQueue, k)
+            else
+                k = k + 1
+            end
+        end
+
+    elseif action == "Save" or action == "Replace" then
+        -- Skip if a MergeSequence for the same name is already queued.
+        for _, v in ipairs(GSE.OOCQueue) do
+            if v.action == "MergeSequence" and v.sequencename == vals.sequencename then
+                return
+            end
+        end
+        -- Replace existing Save/Replace and strip any UpdateSequence for the same name.
+        local replaced = false
+        local k = 1
+        while k <= #GSE.OOCQueue do
+            local v = GSE.OOCQueue[k]
+            if v.action == "UpdateSequence" and v.name == vals.sequencename then
+                table.remove(GSE.OOCQueue, k)
+            elseif (v.action == "Save" or v.action == "Replace") and v.sequencename == vals.sequencename then
+                GSE.OOCQueue[k] = vals
+                replaced = true
+                k = k + 1
+            else
+                k = k + 1
+            end
+        end
+        if replaced then return end
+
+    elseif action == "UpdateSequence" then
+        -- Skip if any higher-priority sequence op for the same name is already queued.
+        for _, v in ipairs(GSE.OOCQueue) do
+            if (v.action == "MergeSequence" or v.action == "Save" or v.action == "Replace" or v.action == "UpdateSequence")
+                    and (v.sequencename == vals.name or v.name == vals.name) then
+                return
+            end
+        end
+
+    elseif action == "importmacro" then
+        -- importmacro supersedes any existing importmacro/updatemacro for the same macro name.
+        local k = 1
+        while k <= #GSE.OOCQueue do
+            local v = GSE.OOCQueue[k]
+            if (v.action == "importmacro" or v.action == "updatemacro")
+                    and v.node and vals.node and v.node.name == vals.node.name then
+                table.remove(GSE.OOCQueue, k)
+            else
+                k = k + 1
+            end
+        end
+
+    elseif action == "updatemacro" then
+        -- Skip if importmacro or updatemacro for same macro is already queued.
+        for _, v in ipairs(GSE.OOCQueue) do
+            if (v.action == "importmacro" or v.action == "updatemacro")
+                    and v.node and vals.node and v.node.name == vals.node.name then
+                return
+            end
+        end
+
+    elseif action == "updatevariable" then
+        for k, v in ipairs(GSE.OOCQueue) do
+            if v.action == "updatevariable" and v.name == vals.name then
+                GSE.OOCQueue[k] = vals
+                return
+            end
+        end
+
+    elseif action == "FinishReload" or action == "managemacros" then
+        for _, v in ipairs(GSE.OOCQueue) do
+            if v.action == action then
+                return
+            end
+        end
+
+    elseif action == "CheckMacroCreated" then
+        for _, v in ipairs(GSE.OOCQueue) do
+            if v.action == "CheckMacroCreated" and v.sequencename == vals.sequencename then
+                return
+            end
+        end
+    end
+
+    table.insert(GSE.OOCQueue, vals)
+end
+
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
     local vals = {}
@@ -116,7 +227,7 @@ function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
     vals.sequencename = sequenceName
     vals.sequence = sequence
     vals.classid = classid
-    table.insert(GSE.OOCQueue, vals)
+    GSE.EnqueueOOC(vals)
 end
 
 function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
@@ -126,7 +237,7 @@ function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
     vals.newSequence = newSequence
     vals.classid = classid
     vals.mergeaction = action
-    table.insert(GSE.OOCQueue, vals)
+    GSE.EnqueueOOC(vals)
 end
 
 --- Replace a current version of a Macro
@@ -317,9 +428,21 @@ end
 
 function GSE.PerformReloadSequences(force)
     GSE.PrintDebugMessage("Reloading Sequences", Statics.DebugModules["Storage"])
-    local func = GSE.UpdateSequence
+    local func
     if force then
         func = GSE.OOCUpdateSequence
+    else
+        -- Remove any individual UpdateSequence items already in the queue —
+        -- the full reload about to be queued will cover all of them.
+        local k = 1
+        while k <= #GSE.OOCQueue do
+            if GSE.OOCQueue[k].action == "UpdateSequence" then
+                table.remove(GSE.OOCQueue, k)
+            else
+                k = k + 1
+            end
+        end
+        func = GSE.UpdateSequence
     end
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         if not sequence.MetaData.Disabled then
@@ -335,7 +458,7 @@ function GSE.PerformReloadSequences(force)
     end
     local vals = {}
     vals.action = "FinishReload"
-    table.insert(GSE.OOCQueue, vals)
+    GSE.EnqueueOOC(vals)
 end
 
 --- This function is used to clean the local sequence library
@@ -373,7 +496,7 @@ function GSE.UpdateSequence(name, sequence)
     vals.action = "UpdateSequence"
     vals.name = name
     vals.macroversion = sequence
-    table.insert(GSE.OOCQueue, vals)
+    GSE.EnqueueOOC(vals)
 end
 
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
@@ -472,7 +595,7 @@ function GSE.CheckMacroCreated(SequenceName, create)
     vals.action = "CheckMacroCreated"
     vals.sequencename = SequenceName
     vals.create = create
-    table.insert(GSE.OOCQueue, vals)
+    GSE.EnqueueOOC(vals)
 end
 
 --- Check if a macro has been created and if the create flag is true and the macro hasn't been created, then create it.

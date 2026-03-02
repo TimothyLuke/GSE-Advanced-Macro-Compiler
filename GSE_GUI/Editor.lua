@@ -245,7 +245,7 @@ function GSE.CreateEditor()
                     editframe.nameeditbox:SetFocus()
                     return
                 end
-                table.insert(GSE.OOCQueue, vals)
+                GSE.EnqueueOOC(vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
             end
         end
@@ -295,9 +295,9 @@ function GSE.CreateEditor()
                 local load = "return " .. seqTableEditbox:GetText()
                 local func, err = loadstring(load)
                 if err or not func then
-                    GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+                    GSE.Print(L["Unable to process content.  Fix table and try again."], L["Raw Editor"])
                     if err then
-                        GSE.Print(err, L["GSE Raw Editor"])
+                        GSE.Print(err, L["Raw Editor"])
                     end
                 else
                     tab = func()
@@ -305,7 +305,7 @@ function GSE.CreateEditor()
                         editframe.Sequence.Macros[version] = tab
                         treeContainer:SelectByValue(path .. "\001" .. version)
                     else
-                        GSE.Print(L["Unable to process content.  Fix table and try again."], L["GSE Raw Editor"])
+                        GSE.Print(L["Unable to process content.  Fix table and try again."], L["Raw Editor"])
                     end
                 end
             end

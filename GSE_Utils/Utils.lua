@@ -148,12 +148,12 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
-        GSE.Print(sequenceName .. L[" was updated to new version."], "GSE Storage")
+        GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
     elseif action == "RENAME" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
-        GSE.Print(sequenceName .. L[" was imported as a new macro."], "GSE Storage")
+        GSE.Print(sequenceName .. L[" was imported as a new macro."], "Storage")
         GSE.PrintDebugMessage(
             "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
             "Storage"
@@ -299,7 +299,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 ["action"] = "importmacro",
                 ["node"] = actiontable
             }
-            table.insert(GSE.OOCQueue, oocaction)
+            GSE.EnqueueOOC(oocaction)
         elseif actiontable.objectType == "VARIABLE" then
             actiontable.objectType = nil
             local oocaction = {
@@ -307,7 +307,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 ["variable"] = actiontable,
                 ["name"] = actiontable.name
             }
-            table.insert(GSE.OOCQueue, oocaction)
+            GSE.EnqueueOOC(oocaction)
         else
             actiontable.objectType = nil
             GSE.PrintDebugMessage(
@@ -1187,5 +1187,136 @@ colorTable["/cast"] = castColor
 colorTable[0] = "|r"
 
 Statics.IndentationColorTable = colorTable
+
+if GSE.GameMode > 10 then
+    -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
+    -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
+    local function gseEmptyButtonHandler(self, mousebutton, down)
+        if not (GSE.Patron or GSE.Developer) then return end
+        if not GSEOptions.actionBarOverridePopup then return end
+        if InCombatLockdown() then return end
+        if not down then return end
+        if mousebutton ~= "RightButton" then return end
+        if self:GetAttribute("gse-button") then return end
+        local action = self.action or self:GetAttribute("action")
+        if not action or action == 0 then return end
+        if HasAction(action) then return end
+
+        local classIconText = ""
+        local classInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
+        if classInfo and classInfo.classFile then
+            classIconText = "|A:classicon-" .. classInfo.classFile:lower() .. ":16:16|a "
+        end
+
+        local names = {}
+        local function addSequences(classID)
+            for k, seq in pairs(GSE.Library[classID] or {}) do
+                local specID = seq and seq.MetaData and seq.MetaData.SpecID
+                local disabled = seq and seq.MetaData and seq.MetaData.Disabled
+                table.insert(names, { name = k, specID = specID, disabled = disabled })
+            end
+        end
+        addSequences(GSE.GetCurrentClassID())
+        addSequences(0)
+
+        if #names == 0 then return end
+        table.sort(names, function(a, b) return a.name < b.name end)
+
+        local buttonName = self:GetName()
+        MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Assign GSE Sequence"])
+            for _, entry in ipairs(names) do
+                local iconText = classIconText
+                local specID = entry.specID
+                if specID and specID >= 15 and GetSpecializationInfoByID then
+                    local _, _, _, specIconID = GetSpecializationInfoByID(specID)
+                    if specIconID then
+                        iconText = "|T" .. specIconID .. ":16:16|t "
+                    end
+                end
+                local label = iconText .. entry.name
+                if entry.disabled then
+                    local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
+                    element:SetTooltip(function(tooltip, elementDescription)
+                        GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
+                    end)
+                else
+                    rootDescription:CreateButton(label, function()
+                        GSE.CreateActionBarOverride(buttonName, entry.name)
+                    end)
+                end
+            end
+        end)
+    end
+
+    -- Standard Blizzard action bars hook via the global function
+    --
+    -- Hook the method on the ActionButton metatable instead
+    local buttonPrefixes = {
+        "ActionButton",
+        "MultiBarBottomLeftButton",
+        "MultiBarBottomRightButton",
+        "MultiBar5Button",
+        "MultiBar6Button",
+        "MultiBar7Button",
+        "MultiBarRightButton",
+        "MultiBarLeftButton",
+    }
+    for _, prefix in ipairs(buttonPrefixes) do
+        for i = 1, 12 do
+            local button = _G[prefix..i]
+            if button then
+                button:HookScript("OnClick", gseEmptyButtonHandler)
+            end
+        end
+    end
+
+    -- Third-party action bar addons use their own OnClick handlers, so we install
+    -- HookScript directly on each button after PLAYER_ENTERING_WORLD, by which
+    -- point all addon frames are guaranteed to exist.
+    local gseBarHookFrame = CreateFrame("Frame")
+    gseBarHookFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    gseBarHookFrame:SetScript("OnEvent", function(self)
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+
+        if Bartender4 then
+            for i = 1, 180 do
+                local btn = _G["BT4Button" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+        end
+
+        if ElvUI then
+            for bar = 1, 15 do
+                for slot = 1, 12 do
+                    local btn = _G["ElvUI_Bar" .. bar .. "Button" .. slot]
+                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                end
+            end
+        end
+
+        if NDui then
+            for bar = 1, 15 do
+                for slot = 1, 12 do
+                    local btn = _G["NDui_ActionBar" .. bar .. "Button" .. slot]
+                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                end
+            end
+        end
+
+        if Dominos then
+            -- IDs 1-24 and 73-132 are Dominos-owned frames; the rest reuse Blizzard names
+            -- already covered by the buttonPrefixes loop above.
+            for i = 1, 24 do
+                local btn = _G["DominosActionButton" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+            for i = 73, 132 do
+                local btn = _G["DominosActionButton" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+        end
+    end)
+end
 
 GSE.Utils = true
