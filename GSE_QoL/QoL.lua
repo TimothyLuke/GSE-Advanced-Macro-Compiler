@@ -508,53 +508,54 @@ if GSE.GameMode > 10 then
         if InCombatLockdown() then return end
         if not down then return end
         if mousebutton ~= "RightButton" then return end
-        if self:GetAttribute("gse-button") then return end   -- already has a GSE override
-        -- Dominos stores action as a secure attribute only; other addons use self.action
+        if self:GetAttribute("gse-button") then return end
         local action = self.action or self:GetAttribute("action")
         if not action or action == 0 then return end
-        if HasAction(action) then return end                 -- slot is not empty
+        if HasAction(action) then return end
 
-        -- Build name list, tracking whether each sequence is class-specific or global.
-        -- isSpec=true  → class-specific (GSESequences[classID]) → labelled with current spec icon
-        -- isSpec=false → global         (GSESequences[0])        → labelled with class icon
-        local names = {}
-        if GSESequences then
-            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()] or {}) do
-                table.insert(names, {name = k, isSpec = true})
-            end
-            for k, _ in pairs(GSESequences[0] or {}) do
-                table.insert(names, {name = k, isSpec = false})
-            end
-        end
-        if #names == 0 then return end
-        table.sort(names, function(a, b) return a.name < b.name end)
-
-        -- Build icon prefix strings -------------------------------------------------
-        -- Spec icon: for class-specific sequences (they belong to this class/spec)
-        local specIconText = ""
-        local specIndex = GetSpecialization and GetSpecialization()
-        if specIndex then
-            local _, _, _, specIconID = GetSpecializationInfo(specIndex)
-            if specIconID then
-                specIconText = "|T" .. specIconID .. ":16:16|t "
-            end
-        end
-        -- Class icon: for global sequences (available to all classes)
         local classIconText = ""
         local classInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
         if classInfo and classInfo.classFile then
             classIconText = "|A:classicon-" .. classInfo.classFile:lower() .. ":16:16|a "
         end
-        ---------------------------------------------------------------------------
+
+        local names = {}
+        local function addSequences(classID)
+            for k, seq in pairs(GSE.Library[classID] or {}) do
+                local specID = seq and seq.MetaData and seq.MetaData.SpecID
+                local disabled = seq and seq.MetaData and seq.MetaData.Disabled
+                table.insert(names, { name = k, specID = specID, disabled = disabled })
+            end
+        end
+        addSequences(GSE.GetCurrentClassID())
+        addSequences(0)
+
+        if #names == 0 then return end
+        table.sort(names, function(a, b) return a.name < b.name end)
 
         local buttonName = self:GetName()
         MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Assign GSE Sequence"])
             for _, entry in ipairs(names) do
-                local label = (entry.isSpec and specIconText or classIconText) .. entry.name
-                rootDescription:CreateButton(label, function()
-                    GSE.CreateActionBarOverride(buttonName, entry.name)
-                end)
+                local iconText = classIconText
+                local specID = entry.specID
+                if specID and specID >= 15 and GetSpecializationInfoByID then
+                    local _, _, _, specIconID = GetSpecializationInfoByID(specID)
+                    if specIconID then
+                        iconText = "|T" .. specIconID .. ":16:16|t "
+                    end
+                end
+                local label = iconText .. entry.name
+                if entry.disabled then
+                    local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
+                    element:SetTooltip(function(tooltip, elementDescription)
+                        GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
+                    end)
+                else
+                    rootDescription:CreateButton(label, function()
+                        GSE.CreateActionBarOverride(buttonName, entry.name)
+                    end)
+                end
             end
         end)
     end

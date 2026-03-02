@@ -275,7 +275,7 @@ local function overrideActionButton(savedBind, force)
                     SHBT:WrapScript(
                         _G[Button],
                         "OnEnter",
-                        nil,
+                        "",
                         [[
     if self:GetAttribute('gse-button') then
         self:SetAttribute('type', 'click')
