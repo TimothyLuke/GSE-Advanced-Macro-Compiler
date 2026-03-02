@@ -239,3 +239,18 @@ function C_CreatureInfo.GetClassInfo()
     classID = 11
   }
 end
+
+-- IndentationLib is a WoW syntax-highlighting addon required at module level by
+-- GSE_Utils/Utils.lua.  The mock provides the minimum structure needed to load.
+IndentationLib = {
+  tokens = {
+    TOKEN_SPECIAL       = "special",
+    TOKEN_KEYWORD       = "keyword",
+    TOKEN_UNKNOWN       = "unknown",
+    TOKEN_COMMENT_SHORT = "comment_short",
+    TOKEN_COMMENT_LONG  = "comment_long",
+    TOKEN_STRING        = "string",
+    TOKEN_NUMBER        = "number",
+  },
+  encode = function(text) return text end,
+}

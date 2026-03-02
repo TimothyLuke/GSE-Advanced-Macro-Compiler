@@ -723,11 +723,15 @@ function GSE.ScanMacrosForErrors()
     end
 
     -- 3. GSESequences encoding check (existing behaviour: remove malformed entries)
-    for classlibid, classlib in ipairs(GSESequences) do
-        for k, v in pairs(classlib) do
-            if string.sub(v, 1, 6) ~= "!GSE3!" then
-                GSESequences[classlibid][k] = nil
-                GSE.Print(L["Removed unreadable sequence "] .. k, Statics.DebugModules["Storage"])
+    if type(GSESequences) == "table" then
+        for classlibid, classlib in ipairs(GSESequences) do
+            if type(classlib) == "table" then
+                for k, v in pairs(classlib) do
+                    if type(v) == "string" and string.sub(v, 1, 6) ~= "!GSE3!" then
+                        GSESequences[classlibid][k] = nil
+                        GSE.Print(L["Removed unreadable sequence "] .. k, Statics.DebugModules["Storage"])
+                    end
+                end
             end
         end
     end
