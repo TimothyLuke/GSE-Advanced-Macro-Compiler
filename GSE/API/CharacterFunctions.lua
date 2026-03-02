@@ -201,7 +201,7 @@ function GSE.setActionButtonUseKeyDown()
             L[
                 "The UI has been set to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME` You will need to check your macros and adjust your click commands."
             ],
-            L["GSE"] .. " " .. L["Troubleshooting"]
+            L["Troubleshooting"]
         )
     elseif state == "DOWN" then
         C_CVar.SetCVar("ActionButtonUseKeyDown", 1)
@@ -209,7 +209,7 @@ function GSE.setActionButtonUseKeyDown()
             L[
                 "The UI has been set to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)  You will need to check your macros and adjust your click commands."
             ],
-            L["GSE"] .. " " .. L["Troubleshooting"]
+            L["Troubleshooting"]
         )
     end
     GSE.ReloadSequences()
