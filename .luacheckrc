@@ -515,5 +515,6 @@ globals = {
     "MinimalSliderWithSteppersMixin",
     "strtrim",
     "C_EventUtils",
-    "Dominos"
+    "Dominos",
+    "GameTooltip_SetTitle"
 }
