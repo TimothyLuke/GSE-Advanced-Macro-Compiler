@@ -64,18 +64,7 @@ function GSE.PerformOneOffEvents()
         end
         GSE_C.Updates["3212"] = true
     end
-    if GSE.isEmpty(GSEOptions.Updates["3218"]) then
-        GSEOptions.shownew = true
-        GSEOptions.Updates["3218"] = true
-    end
-    if GSE.isEmpty(GSEOptions.Updates["3225"]) then
-        GSEOptions.shownew = true
-        GSEOptions.Updates["3225"] = true
-    end
-    if GSE.isEmpty(GSEOptions.Updates["3225-d"]) then
-        GSEOptions.Multiclick = true
-        GSEOptions.Updates["3225-d"] = true
-    end
+
     -- One-off: set the actionBarOverridePopup default based on what the user already has configured.
     -- Keybind-only users default to disabled (they don't use actionbar overrides).
     -- New users (nothing configured) and actionbar override users default to enabled.
@@ -124,18 +113,6 @@ function GSE.PerformOneOffEvents()
         GSE_C.Updates["3218"] = true
     end
 
-    if GSE.isEmpty(GSE_C.Updates["3300"]) then
-        GSEOptions.shownew = true
-        GSE_C.Updates["3300"] = true
-    end
-    if GSE.isEmpty(GSEOptions.Updates["3301"]) then
-        GSEOptions.shownew = true
-        GSEOptions.Updates["3301"] = true
-    end
-    if GSE.isEmpty(GSEOptions.Updates["3303"]) then
-        GSEOptions.shownew = true
-        GSEOptions.Updates["3303"] = true
-    end
 
     if GSE.isEmpty(GSEOptions.Updates["showMiniMap"]) then
         if GSE.isEmpty(GSEOptions.showMiniMap) then
@@ -168,6 +145,12 @@ function GSE.PerformOneOffEvents()
         end
         GSEOptions.Updates["MacroResetModifiers"] = true
     end
+
+    if GSE.isEmpty(GSEOptions.Updates["3304"]) then
+        GSEOptions.shownew = true
+        GSEOptions.Updates["3304"] = true
+    end
+
 end
 
 GSE.DebugProfile("OneOffEvents")
