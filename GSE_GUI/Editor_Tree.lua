@@ -336,10 +336,14 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     basecontainer:AddChild(scrollcontainer)
     editframe.SequenceName = sequencename
 
-    -- Navigate to class-level node → auto-select config
+    -- Navigate to class-level node → auto-select config.
+    -- Defer SelectByValue to the next frame so that Button_OnClick's Expand_OnClick
+    -- fires on the still-valid frame before RefreshTree recycles the button pool.
     if unique[1] == "Sequences" and #unique == 3 then
-        container:ReleaseChildren()
-        editframe.treeContainer:SelectByValue(group .. "\001config")
+        C_Timer.After(0, function()
+            container:ReleaseChildren()
+            editframe.treeContainer:SelectByValue(group .. "\001config")
+        end)
         return
     elseif key == "config" then
         if editframe.OrigSequenceName ~= sequencename then

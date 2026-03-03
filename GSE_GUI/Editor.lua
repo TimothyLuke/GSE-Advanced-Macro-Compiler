@@ -183,6 +183,9 @@ function GSE.CreateEditor()
             GSEOptions.frameLocations.sequenceeditor.top = bottom + h
             GSEOptions.editorHeight = h
             GSEOptions.editorWidth = w
+            if self.treeContainer then
+                GSEOptions.editorTreeWidth = self.treeContainer:GetTreeWidth()
+            end
             self:Hide()
             self.Sequence = nil
             self.SequenceName = nil
@@ -200,6 +203,10 @@ function GSE.CreateEditor()
             self.save = nil
             self.statusText = nil
             self.booleanFunctions = nil
+            if self.PreviewFrame then
+                self.PreviewFrame:Hide()
+                self.PreviewFrame = nil
+            end
             self:ReleaseChildren()
             for k, v in ipairs(GSE.GUI.editors) do
                 if editframe == v then
@@ -261,6 +268,9 @@ function GSE.CreateEditor()
     local treeContainer = AceGUI:Create("GSE-TreeGroup")
     treeContainer:SetFullHeight(true)
     treeContainer:SetFullWidth(true)
+    if GSEOptions.editorTreeWidth then
+        treeContainer:SetTreeWidth(GSEOptions.editorTreeWidth, true)
+    end
 
     editframe.treeContainer = treeContainer
 

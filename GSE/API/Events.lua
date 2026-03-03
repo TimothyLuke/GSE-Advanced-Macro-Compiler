@@ -692,7 +692,11 @@ function GSE:ProcessOOCQueue()
         GSE:ZONE_CHANGED_NEW_AREA()
         GSE.currentZone = GetRealZoneText()
     end
-    for k, v in ipairs(GSE.OOCQueue) do
+    -- Swap the queue atomically: items enqueued during processing land in the
+    -- new table, and combat-blocked items are re-inserted cleanly with no holes.
+    local queue = GSE.OOCQueue
+    GSE.OOCQueue = {}
+    for _, v in ipairs(queue) do
         if not InCombatLockdown() then
             if v.action == "UpdateSequence" then
                 GSE.OOCUpdateSequence(v.name, v.macroversion)
@@ -720,7 +724,9 @@ function GSE:ProcessOOCQueue()
             elseif v.action == "FinishReload" then
                 GSE.UnsavedOptions.ReloadQueued = nil
             end
-            GSE.OOCQueue[k] = nil
+        else
+            -- Still in combat; put the item back so it's processed next tick.
+            table.insert(GSE.OOCQueue, v)
         end
     end
     if not GSE.isEmpty(GSE.GCDLDB) then

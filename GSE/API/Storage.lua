@@ -423,7 +423,7 @@ function GSE.ReloadSequences()
         GSE.PerformReloadSequences()
         GSE.UnsavedOptions.ReloadQueued = true
     end
-    GSE.ManageMacros()
+    GSE.EnqueueOOC({action = "managemacros"})
 end
 
 function GSE.PerformReloadSequences(force)
