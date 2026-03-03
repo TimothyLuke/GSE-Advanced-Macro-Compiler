@@ -1192,7 +1192,6 @@ if GSE.GameMode > 10 then
     -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
     -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
     local function gseEmptyButtonHandler(self, mousebutton, down)
-        if not (GSE.Patron or GSE.Developer) then return end
         if not GSEOptions.actionBarOverridePopup then return end
         if InCombatLockdown() then return end
         if not down then return end
