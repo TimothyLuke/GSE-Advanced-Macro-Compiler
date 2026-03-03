@@ -169,6 +169,10 @@ function GSE.CreateEditor()
     editframe:SetCallback(
         "OnClose",
         function(self)
+            -- When minimizing we hide the frame which triggers OnHide→OnClose.
+            -- Skip all cleanup so the frame stays usable for restore.
+            if self.isMinimizing then return end
+
             self.OrigSequenceName = nil
             GSE.ClearTooltip(editframe)
             if GSE.isEmpty(GSEOptions.frameLocations) then
@@ -203,6 +207,11 @@ function GSE.CreateEditor()
             self.save = nil
             self.statusText = nil
             self.booleanFunctions = nil
+            if self.minimizedWidget then
+                self.minimizedWidget.editframe = nil
+                self.minimizedWidget:Hide()
+                self.minimizedWidget = nil
+            end
             if self.PreviewFrame then
                 self.PreviewFrame:Hide()
                 self.PreviewFrame = nil
@@ -223,6 +232,88 @@ function GSE.CreateEditor()
             AceGUI:Release(self)
         end
     )
+
+    -- Small draggable widget shown when the editor is minimized
+    local minimizedWidget = CreateFrame("Button", nil, UIParent, "BackdropTemplate")
+    minimizedWidget:SetSize(220, 34)
+    minimizedWidget:SetFrameStrata("HIGH")
+    minimizedWidget:SetMovable(true)
+    minimizedWidget:EnableMouse(true)
+    minimizedWidget:RegisterForDrag("LeftButton")
+    minimizedWidget:SetClampedToScreen(true)
+    minimizedWidget:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = {left = 4, right = 4, top = 4, bottom = 4},
+    })
+    minimizedWidget:SetBackdropColor(0, 0, 0, 0.85)
+    minimizedWidget:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    minimizedWidget:Hide()
+
+    local minWidgetIcon = minimizedWidget:CreateTexture(nil, "ARTWORK")
+    minWidgetIcon:SetSize(22, 22)
+    minWidgetIcon:SetPoint("LEFT", minimizedWidget, "LEFT", 6, 0)
+    minWidgetIcon:SetTexture(Statics.Icons.GSE_Logo_Dark)
+
+    local minWidgetTitle = minimizedWidget:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    minWidgetTitle:SetPoint("LEFT", minWidgetIcon, "RIGHT", 6, 0)
+    minWidgetTitle:SetPoint("RIGHT", minimizedWidget, "RIGHT", -6, 0)
+    minWidgetTitle:SetJustifyH("LEFT")
+    minWidgetTitle:SetWordWrap(false)
+
+    minimizedWidget.editframe = editframe
+    minimizedWidget:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    minimizedWidget:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
+    minimizedWidget:SetScript("OnClick", function(self)
+        self:Hide()
+        if self.editframe then
+            self.editframe:Show()
+            if self.previewWasVisible and self.editframe.PreviewFrame then
+                self.editframe.PreviewFrame:Show()
+            end
+        end
+        self.previewWasVisible = nil
+    end)
+    editframe.minimizedWidget = minimizedWidget
+
+    -- Minimize button at the top-right corner of the editor frame
+    local minimizeBtn = CreateFrame("Button", nil, editframe.frame, "UIPanelButtonTemplate")
+    minimizeBtn:SetSize(26, 22)
+    minimizeBtn:SetText("\226\136\146") -- Unicode minus sign (−)
+    minimizeBtn:SetPoint("TOPRIGHT", editframe.frame, "TOPRIGHT", -5, -5)
+    minimizeBtn:SetScript("OnClick", function()
+        minWidgetTitle:SetText(editframe.SequenceName or "")
+        minimizedWidget.previewWasVisible = editframe.PreviewFrame and editframe.PreviewFrame:IsVisible()
+        if editframe.PreviewFrame then
+            editframe.PreviewFrame:Hide()
+        end
+        minimizedWidget:ClearAllPoints()
+        local x = editframe.frame:GetLeft()
+        local y = editframe.frame:GetTop()
+        if x and y then
+            minimizedWidget:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+        else
+            minimizedWidget:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        end
+        -- Set flag so OnClose (fired by AceGUI's OnHide→OnClose chain) skips cleanup
+        editframe.isMinimizing = true
+        editframe:Hide()
+        editframe.isMinimizing = nil
+        minimizedWidget:Show()
+    end)
+
+    -- If the editor is re-shown via any path (e.g. minimap button re-click) always
+    -- dismiss the minimized widget so they never appear simultaneously.
+    editframe.frame:HookScript("OnShow", function()
+        minimizedWidget:Hide()
+    end)
 
     editframe:SetLayout("Flow")
     editframe.panels = {}
