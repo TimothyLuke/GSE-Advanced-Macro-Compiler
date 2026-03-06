@@ -136,6 +136,9 @@ L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"] 
 L["Plugins"] = true
 
 L["Registered Addons"] = true
+L["No plugins are currently registered."] = true
+L["Default Tree Panel Width"] = true
+L["How many pixels wide should the sequence list panel on the left of the Editor be.  Defaults to 150"] = true
 
 L["Import"] = true
 L["Close"] = true
