@@ -114,15 +114,21 @@ local BAR_SWAP_OAC = [[
     -- Fall back to GetEffectiveAttribute("action") when actionpage is absent.
     local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
                             or (page and (slot + page * 12 - 12)) or nil
+    local swapped = 0
     if effectiveAction then
         local at = GetActionInfo(effectiveAction)
         if at == "macro" then
             self:SetAttribute("type", "click")
         else
             self:SetAttribute("type", "action")
+            swapped = effectiveAction
         end
     else
         self:SetAttribute("type", "action")
+    end
+    -- Signal the non-secure icon hook only when the swapped state actually changes.
+    if self:GetAttribute("gse-eff-action") ~= swapped then
+        self:SetAttribute("gse-eff-action", swapped)
     end
 ]]
 
@@ -137,20 +143,51 @@ local BAR_SWAP_ONCLICK = [[
         local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
         local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
                                 or (page and (slot + page * 12 - 12)) or nil
+        local swapped = 0
         if effectiveAction then
             local at = GetActionInfo(effectiveAction)
             if at == "macro" then
                 self:SetAttribute('type', 'click')
             else
                 self:SetAttribute('type', 'action')
+                swapped = effectiveAction
             end
         else
             self:SetAttribute('type', 'action')
+        end
+        if self:GetAttribute("gse-eff-action") ~= swapped then
+            self:SetAttribute("gse-eff-action", swapped)
         end
     else
         self:SetAttribute('type', 'action')
     end
 ]]
+
+-- Track which buttons already have the icon-update hook to avoid duplicate hooks.
+local iconHookedButtons = {}
+
+-- Non-secure hook that watches the 'gse-eff-action' attribute written by BAR_SWAP_OAC /
+-- BAR_SWAP_ONCLICK.  When > 0 the bar has swapped (vehicle/skyriding/possession) and we
+-- show the override action's icon; when 0 we restore the normal button display.
+local function hookButtonIconUpdates(Button)
+    if iconHookedButtons[Button] then return end
+    iconHookedButtons[Button] = true
+    _G[Button]:HookScript("OnAttributeChanged", function(self, name, value)
+        if name ~= "gse-eff-action" then return end
+        if not self:GetAttribute("gse-button") then return end
+        local btnName = self:GetName()
+        local icon = self.icon or (btnName and _G[btnName .. "Icon"])
+        if not icon then return end
+        if value and value > 0 then
+            -- Bar has swapped – show the current override/vehicle action icon.
+            local texture = GetActionTexture(value)
+            if texture then icon:SetTexture(texture) end
+        else
+            -- Back to normal GSE state – let WoW restore the standard icon.
+            if ActionButton_Update then ActionButton_Update(self) end
+        end
+    end)
+end
 
 local function overrideActionButton(savedBind, force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
@@ -186,6 +223,7 @@ local function overrideActionButton(savedBind, force)
             end
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
+        hookButtonIconUpdates(Button)
         GSE.ButtonOverrides[Button] = Sequence
     elseif
         (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
@@ -262,6 +300,7 @@ local function overrideActionButton(savedBind, force)
             end
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
+        hookButtonIconUpdates(Button)
         GSE.ButtonOverrides[Button] = Sequence
     end
 end
