@@ -99,6 +99,59 @@ local function ensureActionBarCVars()
     end
 end
 
+-- Secure OnAttributeChanged handler shared by all native/Dominos/third-party button paths.
+-- When WoW swaps the action bar (vehicle, skyriding, possession, override bar) it changes
+-- the 'action' or 'pressandholdaction' attribute on the button.  We catch that here,
+-- recalculate the effective action slot (accounting for the current bar page), and ask
+-- GetActionInfo whether the slot still holds a macro.  If it doesn't (vehicle spell, etc.)
+-- we revert type to 'action' so the bar-swap controls work normally.
+local BAR_SWAP_OAC = [[
+    if name ~= "action" and name ~= "pressandholdaction" then return end
+    if not self:GetAttribute("gse-button") then return end
+    local slot = self:GetID()
+    local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
+    -- Dominos and some third-party bars store the action directly (no page hierarchy).
+    -- Fall back to GetEffectiveAttribute("action") when actionpage is absent.
+    local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
+                            or (page and (slot + page * 12 - 12)) or nil
+    if effectiveAction then
+        local at = GetActionInfo(effectiveAction)
+        if at == "macro" then
+            self:SetAttribute("type", "click")
+        else
+            self:SetAttribute("type", "action")
+        end
+    else
+        self:SetAttribute("type", "action")
+    end
+]]
+
+-- OnClick pre-handler: same bar-swap check applied at mouse-click time.
+-- Without this, the pre-click handler would unconditionally re-assert type='click'
+-- (overriding BAR_SWAP_OAC) so mouse clicks during vehicle/skyriding/possession
+-- would still redirect to the GSE sequence instead of the override-bar action.
+local BAR_SWAP_ONCLICK = [[
+    local gseButton = self:GetAttribute('gse-button')
+    if gseButton then
+        local slot = self:GetID()
+        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
+        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
+                                or (page and (slot + page * 12 - 12)) or nil
+        if effectiveAction then
+            local at = GetActionInfo(effectiveAction)
+            if at == "macro" then
+                self:SetAttribute('type', 'click')
+            else
+                self:SetAttribute('type', 'action')
+            end
+        else
+            self:SetAttribute('type', 'action')
+        end
+    else
+        self:SetAttribute('type', 'action')
+    end
+]]
+
 local function overrideActionButton(savedBind, force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -119,18 +172,7 @@ local function overrideActionButton(savedBind, force)
         -- not a page/slot hierarchy.  Use simplified WrapScript (no GetActionInfo lookup).
         if not InCombatLockdown() then
             if (not GSE.ButtonOverrides[Button] or force) then
-                SHBT:WrapScript(
-                    _G[Button],
-                    "OnClick",
-                    [[
-    local gseButton = self:GetAttribute('gse-button')
-    if gseButton then
-        self:SetAttribute('type', 'click')
-    else
-        self:SetAttribute('type', 'action')
-    end
-]]
-                )
+                SHBT:WrapScript(_G[Button], "OnClick", BAR_SWAP_ONCLICK)
                 _G[Button]:HookScript(
                     "OnEnter",
                     function(self)
@@ -139,6 +181,7 @@ local function overrideActionButton(savedBind, force)
                         end
                     end
                 )
+                SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
                 _G[Button]:SetAttribute("type", "click")
             end
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
@@ -190,18 +233,7 @@ local function overrideActionButton(savedBind, force)
                 if isBlizzardButton then
                     -- For Blizzard bars: WrapScript on OnClick is still allowed,
                     -- but OnEnter WrapScript is blocked. Use HookScript for OnEnter.
-                    SHBT:WrapScript(
-                        _G[Button],
-                        "OnClick",
-                        [[
-    local gseButton = self:GetAttribute('gse-button')
-    if gseButton then
-        self:SetAttribute('type', 'click')
-    else
-        self:SetAttribute('type', 'action')
-    end
-]]
-                    )
+                    SHBT:WrapScript(_G[Button], "OnClick", BAR_SWAP_ONCLICK)
                     _G[Button]:HookScript(
                         "OnEnter",
                         function(self)
@@ -210,20 +242,10 @@ local function overrideActionButton(savedBind, force)
                             end
                         end
                     )
+                    SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
                 else
                     -- For other (third-party) buttons: full WrapScript on both
-                    SHBT:WrapScript(
-                        _G[Button],
-                        "OnClick",
-                        [[
-    local gseButton = self:GetAttribute('gse-button')
-    if gseButton then
-        self:SetAttribute('type', 'click')
-    else
-        self:SetAttribute('type', 'action')
-    end
-]]
-                    )
+                    SHBT:WrapScript(_G[Button], "OnClick", BAR_SWAP_ONCLICK)
                     SHBT:WrapScript(
                         _G[Button],
                         "OnEnter",
@@ -234,6 +256,7 @@ local function overrideActionButton(savedBind, force)
     end
 ]]
                     )
+                    SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
                 end
                 _G[Button]:SetAttribute("type", "click")
             end
@@ -286,6 +309,7 @@ local function LoadOverrides(force)
                 _G[k]:SetAttribute("type", "action")
                 SecureHandlerUnwrapScript(_G[k], "OnClick")
                 SecureHandlerUnwrapScript(_G[k], "OnEnter")
+                SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
             end
         end
         GSE.ButtonOverrides = {}
