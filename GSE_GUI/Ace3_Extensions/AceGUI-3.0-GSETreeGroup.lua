@@ -179,8 +179,19 @@ Scripts
 local function Expand_OnClick(frame)
     local button = frame.button
     local self = button.obj
-    local status = (self.status or self.localstatus).groups
-    status[button.uniquevalue] = not status[button.uniquevalue]
+    local status = self.status or self.localstatus
+    local groups = status.groups
+    local wasExpanded = groups[button.uniquevalue]
+    groups[button.uniquevalue] = not wasExpanded
+    -- When manually collapsing, if the currently selected item is a child of this
+    -- node, promote selection to this node. This prevents the click from propagating
+    -- to Button_OnClick, seeing frame.selected=false, and re-triggering auto-expand.
+    if wasExpanded and status.selected then
+        local prefix = button.uniquevalue .. "\001"
+        if status.selected:sub(1, #prefix) == prefix then
+            status.selected = button.uniquevalue
+        end
+    end
     self:RefreshTree()
 end
 

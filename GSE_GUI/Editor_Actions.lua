@@ -781,9 +781,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         local moveDownButton = AceGUI:Create("Icon")
 
         if GSE.isEmpty(disableMove) then
-            moveUpButton:SetImageSize(20, 20)
-            moveUpButton:SetWidth(20)
-            moveUpButton:SetHeight(20)
+            moveUpButton:SetImageSize(30, 30)
+            moveUpButton:SetWidth(30)
+            moveUpButton:SetHeight(30)
             moveUpButton:SetImage(Statics.ActionsIcons.Up)
 
             moveUpButton:SetCallback(
@@ -817,9 +817,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 end
             )
 
-            moveDownButton:SetImageSize(20, 20)
-            moveDownButton:SetWidth(20)
-            moveDownButton:SetHeight(20)
+            moveDownButton:SetImageSize(30, 30)
+            moveDownButton:SetWidth(30)
+            moveDownButton:SetHeight(30)
             moveDownButton:SetImage(Statics.ActionsIcons.Down)
 
             moveDownButton:SetCallback(
@@ -855,9 +855,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         end
 
         local deleteBlockButton = AceGUI:Create("Icon")
-        deleteBlockButton:SetImageSize(20, 20)
-        deleteBlockButton:SetWidth(20)
-        deleteBlockButton:SetHeight(20)
+        deleteBlockButton:SetImageSize(30, 30)
+        deleteBlockButton:SetWidth(30)
+        deleteBlockButton:SetHeight(30)
         deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
 
         deleteBlockButton:SetCallback(
@@ -901,9 +901,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         local addIfButton = AceGUI:Create("Icon")
         local addEmbedButton = AceGUI:Create("Icon")
         if includeAdd then
-            addActionButton:SetImageSize(20, 20)
-            addActionButton:SetWidth(20)
-            addActionButton:SetHeight(20)
+            addActionButton:SetImageSize(30, 30)
+            addActionButton:SetWidth(30)
+            addActionButton:SetHeight(30)
             addActionButton:SetImage(Statics.ActionsIcons.Action)
 
             addActionButton:SetCallback(
@@ -939,9 +939,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 end
             )
 
-            addLoopButton:SetImageSize(20, 20)
-            addLoopButton:SetWidth(20)
-            addLoopButton:SetHeight(20)
+            addLoopButton:SetImageSize(30, 30)
+            addLoopButton:SetWidth(30)
+            addLoopButton:SetHeight(30)
             addLoopButton:SetImage(Statics.ActionsIcons.Loop)
 
             addLoopButton:SetCallback(
@@ -983,9 +983,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 end
             )
 
-            addPauseButton:SetImageSize(20, 20)
-            addPauseButton:SetWidth(20)
-            addPauseButton:SetHeight(20)
+            addPauseButton:SetImageSize(30, 30)
+            addPauseButton:SetWidth(30)
+            addPauseButton:SetHeight(30)
             addPauseButton:SetImage(Statics.ActionsIcons.Pause)
 
             addPauseButton:SetCallback(
@@ -1020,9 +1020,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 end
             )
 
-            addIfButton:SetImageSize(20, 20)
-            addIfButton:SetWidth(20)
-            addIfButton:SetHeight(20)
+            addIfButton:SetImageSize(30, 30)
+            addIfButton:SetWidth(30)
+            addIfButton:SetHeight(30)
             addIfButton:SetImage(Statics.ActionsIcons.If)
 
             addIfButton:SetCallback(
@@ -1086,9 +1086,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 end
             )
 
-            addEmbedButton:SetImageSize(20, 20)
-            addEmbedButton:SetWidth(20)
-            addEmbedButton:SetHeight(20)
+            addEmbedButton:SetImageSize(30, 30)
+            addEmbedButton:SetWidth(30)
+            addEmbedButton:SetHeight(30)
             addEmbedButton:SetImage(Statics.ActionsIcons.Embed)
 
             addEmbedButton:SetCallback(
