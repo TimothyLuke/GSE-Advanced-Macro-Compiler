@@ -714,6 +714,8 @@ GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
 GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
+GSE:RegisterEvent("CINEMATIC_STOP")
+GSE:RegisterEvent("MOVIE_FINISHED")
 
 if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
@@ -731,6 +733,14 @@ end
 if GSE.GameMode <= 3 then
     GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
     GSE:RegisterEvent("SPELLS_CHANGED")
+end
+
+function GSE:CINEMATIC_STOP()
+    LoadOverrides()
+end
+
+function GSE:MOVIE_FINISHED()
+    LoadOverrides()
 end
 
 function GSE:OnEnable()
