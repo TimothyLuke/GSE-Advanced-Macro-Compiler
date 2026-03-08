@@ -117,14 +117,14 @@ local BAR_SWAP_OAC = [[
     local swapped = 0
     if effectiveAction then
         local at = GetActionInfo(effectiveAction)
-        if at == "macro" then
+        -- at == nil means the slot is empty; treat empty slots same as macros so
+        -- the GSE click-button binding is preserved rather than reset to type="action".
+        if at == nil or at == "macro" then
             self:SetAttribute("type", "click")
         else
             self:SetAttribute("type", "action")
             swapped = effectiveAction
         end
-    else
-        self:SetAttribute("type", "action")
     end
     -- Signal the non-secure icon hook only when the swapped state actually changes.
     if self:GetAttribute("gse-eff-action") ~= swapped then
@@ -146,14 +146,14 @@ local BAR_SWAP_ONCLICK = [[
         local swapped = 0
         if effectiveAction then
             local at = GetActionInfo(effectiveAction)
-            if at == "macro" then
+            -- at == nil means the slot is empty; preserve type='click' so the GSE
+            -- sequence still fires instead of resetting to a bare action button.
+            if at == nil or at == "macro" then
                 self:SetAttribute('type', 'click')
             else
                 self:SetAttribute('type', 'action')
                 swapped = effectiveAction
             end
-        else
-            self:SetAttribute('type', 'action')
         end
         if self:GetAttribute("gse-eff-action") ~= swapped then
             self:SetAttribute("gse-eff-action", swapped)
