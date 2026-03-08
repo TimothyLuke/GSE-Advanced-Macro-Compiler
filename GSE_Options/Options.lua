@@ -236,6 +236,66 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
+            menu = {
+                name = L["Menu"],
+                desc = L["Menu Options"],
+                type = "group",
+                order = 6,
+                args = {
+                    menuHeader = {
+                        type  = "header",
+                        name  = L["Menu Options"],
+                        order = 10,
+                    },
+                    menuDirection = {
+                        type   = "select",
+                        name   = L["Growth Direction"],
+                        desc   = L["Direction the menu grows from the logo button."],
+                        order  = 20,
+                        values = {
+                            UP    = L["Up"]    or "Up",
+                            DOWN  = L["Down"]  or "Down",
+                            LEFT  = L["Left"]  or "Left",
+                            RIGHT = L["Right"] or "Right",
+                        },
+                        sorting = { "UP", "DOWN", "LEFT", "RIGHT" },
+                        get = function()
+                            local d = GSEOptions.frameLocations and
+                                      GSEOptions.frameLocations.menu and
+                                      GSEOptions.frameLocations.menu.direction
+                            return (d and d ~= "") and d or "DOWN"
+                        end,
+                        set = function(_, val)
+                            if GSE.UpdateMenuDirection then
+                                GSE.UpdateMenuDirection(val)
+                            end
+                        end,
+                    },
+                    menuLocked = {
+                        type  = "toggle",
+                        name  = L["Lock Menu Position"],
+                        desc  = L["Prevent the menu from being dragged to a new position."],
+                        order = 30,
+                        get = function()
+                            return GSEOptions.frameLocations and
+                                   GSEOptions.frameLocations.menu and
+                                   GSEOptions.frameLocations.menu.locked == true
+                        end,
+                        set = function(_, val)
+                            if GSE.isEmpty(GSEOptions.frameLocations) then
+                                GSEOptions.frameLocations = {}
+                            end
+                            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
+                                GSEOptions.frameLocations.menu = {}
+                            end
+                            GSEOptions.frameLocations.menu.locked = val
+                            if GSE.MenuFrame then
+                                GSE.MenuFrame:SetMovable(not val)
+                            end
+                        end,
+                    },
+                },
+            },
             about = {
                 name = L["About"],
                 desc = L["About GSE"],

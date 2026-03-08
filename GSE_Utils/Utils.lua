@@ -1188,7 +1188,7 @@ colorTable[0] = "|r"
 
 Statics.IndentationColorTable = colorTable
 
-if GSE.GameMode > 10 then
+do
     -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
     -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
     local function gseEmptyButtonHandler(self, mousebutton, down)

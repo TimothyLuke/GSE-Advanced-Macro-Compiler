@@ -890,6 +890,22 @@ L["Trigger Events"] = true
 L["When enabled, this variable's function will be called automatically when the selected WoW events or GSE messages fire."] = true
 L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."] = true
 
+-- Menu orientation & lock
+L["Menu"] = true
+L["Menu Options"] = true
+L["Growth Direction"] = true
+L["Direction the menu grows from the logo button."] = true
+L["Up"] = true
+L["Down"] = true
+L["Left"] = true
+L["Right"] = true
+L["Lock Position"] = true
+L["Lock Menu Position"] = true
+L["Prevent the menu from being dragged to a new position."] = true
+L["Right-Click for Options"] = true
+L["Shift + Right-Click to copy version"] = true
+L["Position Locked"] = true
+
 L["WhatsNew"] =
 [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.04
 
