@@ -472,10 +472,11 @@ function GSE.CreateEditor()
             layoutcontainer:SetLayout("Flow")
             layoutcontainer:SetFullWidth(true)
             layoutcontainer:SetHeight(30)
-            local moveUpButton = AceGUI:Create("Icon")
-            local moveDownButton = AceGUI:Create("Icon")
+            local moveUpButton, moveDownButton
 
             if GSE.isEmpty(disableMove) then
+                moveUpButton = AceGUI:Create("Icon")
+                moveDownButton = AceGUI:Create("Icon")
                 moveUpButton:SetImageSize(30, 30)
                 moveUpButton:SetWidth(30)
                 moveUpButton:SetHeight(30)
@@ -558,6 +559,7 @@ function GSE.CreateEditor()
             deleteBlockButton:SetCallback(
                 "OnClick",
                 function()
+                    container:ReleaseChildren()
                     local delPath = {}
                     local delObj
                     for k, v in ipairs(path) do
@@ -590,12 +592,13 @@ function GSE.CreateEditor()
                 end
             )
 
-            local addLoopButton = AceGUI:Create("Icon")
-            local addActionButton = AceGUI:Create("Icon")
-            local addPauseButton = AceGUI:Create("Icon")
-            local addIfButton = AceGUI:Create("Icon")
-            local addEmbedButton = AceGUI:Create("Icon")
+            local addLoopButton, addActionButton, addPauseButton, addIfButton, addEmbedButton
             if includeAdd then
+                addLoopButton = AceGUI:Create("Icon")
+                addActionButton = AceGUI:Create("Icon")
+                addPauseButton = AceGUI:Create("Icon")
+                addIfButton = AceGUI:Create("Icon")
+                addEmbedButton = AceGUI:Create("Icon")
                 addActionButton:SetImageSize(30, 30)
                 addActionButton:SetWidth(30)
                 addActionButton:SetHeight(30)
@@ -827,8 +830,9 @@ function GSE.CreateEditor()
 
             -- Build patheditbox widget up front so it can be inserted early in the layout
             local textpath = GSE.SafeConcat(path, ".")
-            local patheditbox = AceGUI:Create("EditBox")
+            local patheditbox
             if GSE.isEmpty(disableMove) then
+                patheditbox = AceGUI:Create("EditBox")
                 patheditbox:SetWidth(40)
                 patheditbox:SetCallback(
                     "OnEnterPressed",
@@ -981,16 +985,13 @@ function GSE.CreateEditor()
 
             -- 1. Up / Down
             if GSE.isEmpty(disableMove) then
+                moveUpButton:SetDisabled(lastPath == 1)
+                moveDownButton:SetDisabled(lastPath == blocksThisLevel)
                 layoutcontainer:AddChild(moveUpButton)
                 layoutcontainer:AddChild(moveDownButton)
                 local spacerlabel1 = AceGUI:Create("Label")
                 spacerlabel1:SetWidth(5)
                 layoutcontainer:AddChild(spacerlabel1)
-            end
-            if lastPath == 1 then
-                moveUpButton:SetDisabled(true)
-            elseif lastPath == blocksThisLevel then
-                moveDownButton:SetDisabled(true)
             end
 
             -- 2. Block path
@@ -1055,6 +1056,11 @@ function GSE.CreateEditor()
             hlabelIcon.image:ClearAllPoints()
             hlabelIcon.image:SetPoint("BOTTOMLEFT", hlabelIcon.frame, "BOTTOMLEFT", 0, 3)
             hlabelIcon.frame:EnableMouse(false)
+            hlabelIcon:SetCallback("OnRelease", function(self)
+                self.image:SetDesaturated(false)
+                self.image:ClearAllPoints()
+                self.image:SetPoint("TOP", 0, -5)
+            end)
 
             local hlabelText = AceGUI:Create("Label")
             hlabelText:SetText(action.Type == Statics.Actions.Repeat and Statics.Actions.Action or Statics.Actions[action.Type])
