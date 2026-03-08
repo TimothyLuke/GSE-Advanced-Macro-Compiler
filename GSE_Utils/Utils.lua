@@ -1273,6 +1273,7 @@ do
     -- Third-party action bar addons use their own OnClick handlers, so we install
     -- HookScript directly on each button after PLAYER_ENTERING_WORLD, by which
     -- point all addon frames are guaranteed to exist.
+    if not CreateFrame then return end
     local gseBarHookFrame = CreateFrame("Frame")
     gseBarHookFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     gseBarHookFrame:SetScript("OnEvent", function(self)
