@@ -6,6 +6,75 @@ local L = GSE.L
 local GNOME = "Storage"
 local VARIABLE_SELFKEY_PREFIX = "GSEVar_"  -- AceEvent self-key prefix for variable event handlers
 
+-- Track which class libraries have been decompressed into GSE.Library.
+GSE.LoadedClasses = GSE.LoadedClasses or {}
+
+--- Decompress a single class from GSESequences into GSE.Library (internal).
+local function loadOneClass(classid)
+    if GSE.LoadedClasses[classid] then return end
+    GSE.LoadedClasses[classid] = true
+    if GSE.isEmpty(GSE.Library[classid]) then
+        GSE.Library[classid] = {}
+    end
+    if GSE.isEmpty(GSESequences) or GSE.isEmpty(GSESequences[classid]) then
+        return
+    end
+    for i, j in pairs(GSESequences[classid]) do
+        local status, err =
+            pcall(
+            function()
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
+                GSE.Library[classid][i] = uncompressedVersion[2]
+            end
+        )
+        if err then
+            GSE.Print(
+                "There was an error processing " ..
+                    i .. ", You will need to reimport this macro from another source.",
+                err
+            )
+        end
+    end
+end
+
+--- Ensure a full class library is decompressed into GSE.Library (lazy load on first access).
+-- Use this only when you need every sequence for a class (e.g. ScanMacrosForErrors).
+-- For single-sequence access use GSE.EnsureSequenceLoaded instead.
+function GSE.EnsureClassLoaded(classid)
+    loadOneClass(classid)
+end
+
+--- Decompress a single sequence from GSESequences into GSE.Library on demand.
+-- No-op if the sequence is already loaded or does not exist in the compressed store.
+function GSE.EnsureSequenceLoaded(classid, sequenceName)
+    if GSE.isEmpty(classid) or GSE.isEmpty(sequenceName) then return end
+    if not GSE.isEmpty(GSE.Library[classid] and GSE.Library[classid][sequenceName]) then return end
+    if GSE.isEmpty(GSESequences) or GSE.isEmpty(GSESequences[classid]) then return end
+    if GSE.isEmpty(GSESequences[classid][sequenceName]) then return end
+    if GSE.isEmpty(GSE.Library[classid]) then
+        GSE.Library[classid] = {}
+    end
+    local status, err =
+        pcall(
+        function()
+            local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
+            if localsuccess then
+                GSE.Library[classid][sequenceName] = uncompressedVersion[2]
+            end
+        end
+    )
+    if not err and not GSE.isEmpty(GSE.Library[classid][sequenceName]) then
+        GSE.EnsureSequenceVariablesLoaded(GSE.Library[classid][sequenceName])
+    end
+    if err then
+        GSE.Print(
+            "There was an error processing " ..
+                sequenceName .. ", You will need to reimport this macro from another source.",
+            err
+        )
+    end
+end
+
 --- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
@@ -242,14 +311,16 @@ end
 
 --- Replace a current version of a Macro
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
+    GSE.ComputeSequenceDependencies(sequence)
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
 --- Load the GSEStorage into a new table.
+-- Sequences are loaded first so their dependency data is available when
+-- LoadVariables() decides which variables to compile.
 function GSE.LoadStorage(destination)
-    GSE.LoadVariables()
     if GSE.isEmpty(destination) then
         destination = {}
     end
@@ -259,6 +330,7 @@ function GSE.LoadStorage(destination)
             GSESequences[iind] = {}
         end
     end
+    -- Pre-initialise all class slots so GSE.Library[k] is never nil.
     for k = 0, 13 do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
@@ -266,53 +338,174 @@ function GSE.LoadStorage(destination)
         if GSE.isEmpty(GSESequences[k]) then
             GSESequences[k] = {}
         end
+    end
+    -- Decompress sequences first so dependency data is readable.
+    loadOneClass(0)
+    local currentClass = GSE.GetCurrentClassID()
+    if currentClass and currentClass ~= 0 then
+        loadOneClass(currentClass)
+    end
+    -- Now load only the variables these sequences depend on.
+    GSE.LoadVariables()
+end
 
-        local v = GSESequences[k]
-        for i, j in pairs(v) do
-            local status, err =
-                pcall(
-                function()
-                    local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-                    destination[k][i] = uncompressedVersion[2]
-                end
-            )
-            if err then
-                GSE.Print(
-                    "There was an error processing " ..
-                        i .. ", You will need to reimport this macro from another source.",
-                    err
-                )
+--- Compile and register a single variable from its compressed store entry.
+-- Shared by LoadVariables and EnsureSequenceVariablesLoaded.
+local function loadOneVariable(k, v)
+    local status, err =
+        pcall(
+        function()
+            local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
+            if not localsuccess then return end
+            GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
+            if type(GSE.V[k]()) == "boolean" then
+                GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
+            end
+            if uncompressedVersion.eventEnabled and not GSE.isEmpty(uncompressedVersion.eventNames) then
+                GSE.RegisterVariableEvents(k, uncompressedVersion.eventNames)
             end
         end
+    )
+    if err then
+        GSE.Print(
+            "There was an error processing " ..
+                k .. ", You will need to correct errors in this variable from another source.",
+            err
+        )
     end
 end
 
---- Load the GSEVariables
+--- Walk loaded Library entries to collect the set of variable names directly
+-- required by current sequences, then resolve the transitive closure by reading
+-- each variable's stored Dependencies from GSEVariables.
+-- Returns a set {name=true} of all needed variable names, or nil if any loaded
+-- sequence lacks dependency data (meaning we must fall back to loading everything).
+-- Must be self-contained: called before GSE_Utils is loaded.
+local function collectNeededVariables()
+    local needed = {}
+    local needAll = false
+
+    for classid = 0, 13 do
+        local classlib = GSE.Library[classid]
+        if classlib then
+            for _, seq in pairs(classlib) do
+                if type(seq) == "table" and type(seq.MetaData) == "table" then
+                    local deps = seq.MetaData.Dependencies
+                    if deps and type(deps.Variables) == "table" then
+                        for _, vname in ipairs(deps.Variables) do
+                            needed[vname] = true
+                        end
+                    else
+                        -- Sequence pre-dates dependency tracking; must load all.
+                        needAll = true
+                    end
+                else
+                    needAll = true
+                end
+            end
+        end
+    end
+
+    if needAll then return nil end
+
+    -- BFS transitive resolution entirely within Storage.lua.
+    -- Reads each variable's stored Dependencies directly from GSEVariables.
+    local queue = {}
+    for vname in pairs(needed) do
+        table.insert(queue, vname)
+    end
+    local i = 1
+    while i <= #queue do
+        local vname = queue[i]
+        i = i + 1
+        if not GSE.isEmpty(GSEVariables[vname]) then
+            local ok, decoded = GSE.DecodeMessage(GSEVariables[vname])
+            if ok and decoded and decoded.Dependencies and type(decoded.Dependencies.Variables) == "table" then
+                for _, depname in ipairs(decoded.Dependencies.Variables) do
+                    if not needed[depname] then
+                        needed[depname] = true
+                        table.insert(queue, depname)
+                    end
+                end
+            end
+        end
+    end
+
+    return needed
+end
+
+--- Load the GSEVariables.
+-- If all loaded sequences carry dependency data, only the transitively required
+-- variables are compiled via loadstring().  Any sequence that pre-dates
+-- dependency tracking triggers a full load so nothing is silently missing.
 function GSE.LoadVariables()
     if GSE.isEmpty(GSEVariables) then
         GSEVariables = {}
+        return
     end
+
+    local needed = collectNeededVariables()
+
+    if needed == nil then
+        -- Fallback: at least one sequence has no dep data; load everything.
+        for k, v in pairs(GSEVariables) do
+            loadOneVariable(k, v)
+        end
+        return
+    end
+
+    -- Selective load: only compile variables the current sequences need.
+    local deferred = 0
     for k, v in pairs(GSEVariables) do
-        local status, err =
-            pcall(
-            function()
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
-                GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
-                if type(GSE.V[k]()) == "boolean" then
-                    GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
-                end
-                -- Register event callbacks if configured
-                if uncompressedVersion.eventEnabled and not GSE.isEmpty(uncompressedVersion.eventNames) then
-                    GSE.RegisterVariableEvents(k, uncompressedVersion.eventNames)
+        if needed[k] then
+            loadOneVariable(k, v)
+        else
+            deferred = deferred + 1
+        end
+    end
+    if deferred > 0 then
+        GSE.PrintDebugMessage(
+            string.format("%d variable(s) deferred (not needed by current sequences).", deferred),
+            GNOME
+        )
+    end
+end
+
+--- Ensure all variables required by a sequence are compiled into GSE.V.
+-- Called when a lazy-loaded foreign-class sequence is accessed, so its
+-- variables are ready before it is compiled or executed.
+function GSE.EnsureSequenceVariablesLoaded(sequence)
+    if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return end
+    local deps = sequence.MetaData.Dependencies
+    if not deps or type(deps.Variables) ~= "table" or #deps.Variables == 0 then return end
+
+    -- Resolve transitive deps and load any not yet in GSE.V.
+    local queue = {}
+    local seen = {}
+    for _, vname in ipairs(deps.Variables) do
+        if not seen[vname] then
+            seen[vname] = true
+            table.insert(queue, vname)
+        end
+    end
+    local i = 1
+    while i <= #queue do
+        local vname = queue[i]
+        i = i + 1
+        if GSE.isEmpty(GSE.V[vname]) and not GSE.isEmpty(GSEVariables[vname]) then
+            loadOneVariable(vname, GSEVariables[vname])
+        end
+        -- Walk transitive deps from the stored variable data.
+        if not GSE.isEmpty(GSEVariables[vname]) then
+            local ok, decoded = GSE.DecodeMessage(GSEVariables[vname])
+            if ok and decoded and decoded.Dependencies and type(decoded.Dependencies.Variables) == "table" then
+                for _, depname in ipairs(decoded.Dependencies.Variables) do
+                    if not seen[depname] then
+                        seen[depname] = true
+                        table.insert(queue, depname)
+                    end
                 end
             end
-        )
-        if err then
-            GSE.Print(
-                "There was an error processing " ..
-                    k .. ", You will need to correct errors in this variable from another source.",
-                err
-            )
         end
     end
 end
@@ -643,23 +836,35 @@ function GSE.GetSequenceNames(Library)
         GSEOptions.filterList[Statics.All] = false
         GSEOptions.filterList[Statics.Global] = true
     end
+    local currentClassID = GSE.GetCurrentClassID()
     local keyset = {}
     for k, _ in pairs(Library) do
-        if GSEOptions.filterList[Statics.All] or k == GSE.GetCurrentClassID() then
-            for i, j in pairs(Library[k]) do
-                local disable = 0
-                if j.DisableEditor then
-                    disable = 1
-                end
-                local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
-                if k == GSE.GetCurrentClassID() and GSEOptions.filterList["Class"] then
-                    keyset[keyLabel] = i
-                elseif k == GSE.GetCurrentClassID() and not GSEOptions.filterList["Class"] then
-                    if j.MetaData.SpecID == GSE.GetCurrentSpecID() or j.MetaData.SpecID == GSE.GetCurrentClassID() then
+        if GSEOptions.filterList[Statics.All] or k == currentClassID then
+            if k == currentClassID or k == 0 then
+                -- Library already loaded for these classes — full metadata available.
+                for i, j in pairs(Library[k]) do
+                    local disable = 0
+                    if j.DisableEditor then
+                        disable = 1
+                    end
+                    local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
+                    if k == currentClassID and GSEOptions.filterList["Class"] then
+                        keyset[keyLabel] = i
+                    elseif k == currentClassID and not GSEOptions.filterList["Class"] then
+                        if j.MetaData.SpecID == GSE.GetCurrentSpecID() or j.MetaData.SpecID == currentClassID then
+                            keyset[keyLabel] = i
+                        end
+                    else
                         keyset[keyLabel] = i
                     end
-                else
-                    keyset[keyLabel] = i
+                end
+            else
+                -- Foreign class under All filter: enumerate names from the compressed store
+                -- without decompressing. SpecID and disable are unknown until opened.
+                if not GSE.isEmpty(GSESequences[k]) then
+                    for i, _ in pairs(GSESequences[k]) do
+                        keyset[k .. ",0," .. i .. ",0"] = i
+                    end
                 end
             end
         else
@@ -682,6 +887,7 @@ end
 --- Return the Macro Icon for the specified Sequence
 function GSE.GetMacroIcon(classid, sequenceIndex)
     classid = tonumber(classid)
+    GSE.EnsureSequenceLoaded(classid, sequenceIndex)
     GSE.PrintDebugMessage("sequenceIndex: " .. (GSE.isEmpty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
     classid = tonumber(classid)
     local macindex = GetMacroIndexByName(sequenceIndex)
@@ -1510,6 +1716,7 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
 end
 
 function GSE.UpdateVariable(variable, name, status)
+    GSE.ComputeVariableDependencies(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
     local actualfunct, error = loadstring("return " .. variable.funct)

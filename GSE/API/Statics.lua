@@ -165,102 +165,111 @@ function GSE.GetClassName(classID)
     return determineClassName(classID)
 end
 
-Statics.SpecIDList = {}
+-- Spec/class name tables built lazily on first access.
+-- The 70+ WoW API calls are deferred until the editor is actually opened.
+local specListBuilt = false
 
-if GSE.GameMode <= 4 then
-    Statics.SpecIDClassList = {
-        [0] = 0,
-        [1] = 1,
-        [2] = 2,
-        [3] = 3,
-        [4] = 4,
-        [5] = 5,
-        [6] = 6,
-        [7] = 7,
-        [8] = 8,
-        [9] = 9,
-        --[10] = 10,
-        [11] = 11
-    }
-    Statics.SpecIDList = {
-        [0] = L["Global"],
-        [1] = determineClassName(1),
-        [2] = determineClassName(2),
-        [3] = determineClassName(3),
-        [4] = determineClassName(4),
-        [5] = determineClassName(5),
-        [6] = determineClassName(6),
-        [7] = determineClassName(7),
-        [8] = determineClassName(8),
-        [9] = determineClassName(9),
-        [11] = determineClassName(11)
-    }
-    if GSE.GameMode >= 3 then
-        Statics.SpecIDList[6] = determineClassName(6)
+local function buildSpecList()
+    if specListBuilt then return end
+    specListBuilt = true
+
+    if GSE.GameMode <= 4 then
+        Statics.SpecIDClassList = {
+            [0] = 0,
+            [1] = 1,
+            [2] = 2,
+            [3] = 3,
+            [4] = 4,
+            [5] = 5,
+            [6] = 6,
+            [7] = 7,
+            [8] = 8,
+            [9] = 9,
+            --[10] = 10,
+            [11] = 11
+        }
+        Statics.SpecIDList[0] = L["Global"]
+        Statics.SpecIDList[1] = determineClassName(1)
+        Statics.SpecIDList[2] = determineClassName(2)
+        Statics.SpecIDList[3] = determineClassName(3)
+        Statics.SpecIDList[4] = determineClassName(4)
+        Statics.SpecIDList[5] = determineClassName(5)
+        Statics.SpecIDList[7] = determineClassName(7)
+        Statics.SpecIDList[8] = determineClassName(8)
+        Statics.SpecIDList[9] = determineClassName(9)
+        Statics.SpecIDList[11] = determineClassName(11)
+        if GSE.GameMode >= 3 then
+            Statics.SpecIDList[6] = determineClassName(6)
+        end
+    else
+        Statics.SpecIDList[0]    = L["Global"]
+        Statics.SpecIDList[1]    = determineClassName(1)
+        Statics.SpecIDList[2]    = determineClassName(2)
+        Statics.SpecIDList[3]    = determineClassName(3)
+        Statics.SpecIDList[4]    = determineClassName(4)
+        Statics.SpecIDList[5]    = determineClassName(5)
+        Statics.SpecIDList[6]    = determineClassName(6)
+        Statics.SpecIDList[7]    = determineClassName(7)
+        Statics.SpecIDList[8]    = determineClassName(8)
+        Statics.SpecIDList[9]    = determineClassName(9)
+        Statics.SpecIDList[10]   = determineClassName(10)
+        Statics.SpecIDList[11]   = determineClassName(11)
+        Statics.SpecIDList[12]   = determineClassName(12)
+        Statics.SpecIDList[13]   = determineClassName(13)
+        Statics.SpecIDList[62]   = determineSpecializationName(62)
+        Statics.SpecIDList[63]   = determineSpecializationName(63)
+        Statics.SpecIDList[64]   = determineSpecializationName(64) .. " - " .. determineClassName(8)
+        Statics.SpecIDList[65]   = determineSpecializationName(65) .. " - " .. determineClassName(2)
+        Statics.SpecIDList[66]   = determineSpecializationName(66) .. " - " .. determineClassName(2)
+        Statics.SpecIDList[70]   = determineSpecializationName(70)
+        Statics.SpecIDList[71]   = determineSpecializationName(71)
+        Statics.SpecIDList[72]   = determineSpecializationName(72)
+        Statics.SpecIDList[73]   = determineSpecializationName(73)
+        Statics.SpecIDList[102]  = determineSpecializationName(102)
+        Statics.SpecIDList[103]  = determineSpecializationName(103)
+        Statics.SpecIDList[104]  = determineSpecializationName(104)
+        Statics.SpecIDList[105]  = determineSpecializationName(105) .. " - " .. determineClassName(11)
+        Statics.SpecIDList[250]  = determineSpecializationName(250)
+        Statics.SpecIDList[251]  = determineSpecializationName(251) .. " - " .. determineClassName(6)
+        Statics.SpecIDList[252]  = determineSpecializationName(252)
+        Statics.SpecIDList[253]  = determineSpecializationName(253)
+        Statics.SpecIDList[254]  = determineSpecializationName(254)
+        Statics.SpecIDList[255]  = determineSpecializationName(255)
+        Statics.SpecIDList[256]  = determineSpecializationName(256)
+        Statics.SpecIDList[257]  = determineSpecializationName(257) .. " - " .. determineClassName(5)
+        Statics.SpecIDList[258]  = determineSpecializationName(258)
+        Statics.SpecIDList[259]  = determineSpecializationName(259)
+        Statics.SpecIDList[260]  = determineSpecializationName(260)
+        Statics.SpecIDList[261]  = determineSpecializationName(261)
+        Statics.SpecIDList[262]  = determineSpecializationName(262)
+        Statics.SpecIDList[263]  = determineSpecializationName(263)
+        Statics.SpecIDList[264]  = determineSpecializationName(264) .. " - " .. determineClassName(7)
+        Statics.SpecIDList[265]  = determineSpecializationName(265)
+        Statics.SpecIDList[266]  = determineSpecializationName(266)
+        Statics.SpecIDList[267]  = determineSpecializationName(267)
+        Statics.SpecIDList[268]  = determineSpecializationName(268)
+        Statics.SpecIDList[269]  = determineSpecializationName(269)
+        Statics.SpecIDList[270]  = determineSpecializationName(270)
+        Statics.SpecIDList[577]  = determineSpecializationName(577)
+        Statics.SpecIDList[581]  = determineSpecializationName(581)
+        Statics.SpecIDList[1467] = determineSpecializationName(1467)
+        Statics.SpecIDList[1468] = determineSpecializationName(1468)
+        Statics.SpecIDList[1473] = determineSpecializationName(1473)
+        Statics.SpecIDList[1480] = determineSpecializationName(1480)
     end
-else
-    Statics.SpecIDList = {
-        [0] = L["Global"],
-        [1] = determineClassName(1),
-        [2] = determineClassName(2),
-        [3] = determineClassName(3),
-        [4] = determineClassName(4),
-        [5] = determineClassName(5),
-        [6] = determineClassName(6),
-        [7] = determineClassName(7),
-        [8] = determineClassName(8),
-        [9] = determineClassName(9),
-        [10] = determineClassName(10),
-        [11] = determineClassName(11),
-        [12] = determineClassName(12),
-        [13] = determineClassName(13),
-        [62] = determineSpecializationName(62),
-        [63] = determineSpecializationName(63),
-        [64] = determineSpecializationName(64) .. " - " .. determineClassName(8),
-        [65] = determineSpecializationName(65) .. " - " .. determineClassName(2),
-        [66] = determineSpecializationName(66) .. " - " .. determineClassName(2),
-        [70] = determineSpecializationName(70),
-        [71] = determineSpecializationName(71),
-        [72] = determineSpecializationName(72),
-        [73] = determineSpecializationName(73),
-        [102] = determineSpecializationName(102),
-        [103] = determineSpecializationName(103),
-        [104] = determineSpecializationName(104),
-        [105] = determineSpecializationName(105) .. " - " .. determineClassName(11),
-        [250] = determineSpecializationName(250),
-        [251] = determineSpecializationName(251) .. " - " .. determineClassName(6),
-        [252] = determineSpecializationName(252),
-        [253] = determineSpecializationName(253),
-        [254] = determineSpecializationName(254),
-        [255] = determineSpecializationName(255),
-        [256] = determineSpecializationName(256),
-        [257] = determineSpecializationName(257) .. " - " .. determineClassName(5),
-        [258] = determineSpecializationName(258),
-        [259] = determineSpecializationName(259),
-        [260] = determineSpecializationName(260),
-        [261] = determineSpecializationName(261),
-        [262] = determineSpecializationName(262),
-        [263] = determineSpecializationName(263),
-        [264] = determineSpecializationName(264) .. " - " .. determineClassName(7),
-        [265] = determineSpecializationName(265),
-        [266] = determineSpecializationName(266),
-        [267] = determineSpecializationName(267),
-        [268] = determineSpecializationName(268),
-        [269] = determineSpecializationName(269),
-        [270] = determineSpecializationName(270),
-        [577] = determineSpecializationName(577),
-        [581] = determineSpecializationName(581),
-        [1467] = determineSpecializationName(1467),
-        [1468] = determineSpecializationName(1468),
-        [1473] = determineSpecializationName(1473),
-        [1480] = determineSpecializationName(1480)
-    }
+
+    -- Build the reverse lookup once all names are known.
+    for k, v in pairs(Statics.SpecIDList) do
+        Statics.SpecIDHashList[v] = k
+    end
 end
 
-Statics.SpecIDHashList = {}
-for k, v in pairs(Statics.SpecIDList) do
-    Statics.SpecIDHashList[v] = k
-end
+-- Both tables start empty. The __index metamethod fires on any key miss,
+-- triggering buildSpecList() which populates both tables in one pass.
+-- After that, keys are present in the tables and __index is not called again.
+local lazyMeta = {__index = function(_, _) buildSpecList() end}
+Statics.SpecIDList     = setmetatable({}, lazyMeta)
+Statics.SpecIDHashList = setmetatable({}, lazyMeta)
 
 Statics.SequenceDebug = "SEQUENCEDEBUG"
 

@@ -414,6 +414,58 @@ end]],
     buttonRow:AddChild(savebutton)
     container:AddChild(buttonRow)
     container:AddChild(lastSaved)
+
+    -- Dependencies section
+    local varDeps = variable.Dependencies
+    local dependents = GSE.GetVariableDependents(name)
+    local hasDeps = varDeps and type(varDeps.Variables) == "table" and #varDeps.Variables > 0
+    local hasUsedBy = #dependents.sequences > 0 or #dependents.variables > 0
+    if hasDeps or hasUsedBy then
+        local depHeading = AceGUI:Create("Heading")
+        depHeading:SetText(L["Dependencies"])
+        depHeading:SetFullWidth(true)
+        container:AddChild(depHeading)
+
+        local depGroup = AceGUI:Create("SimpleGroup")
+        depGroup:SetLayout("Flow")
+        depGroup:SetFullWidth(true)
+
+        if hasDeps then
+            local depsLabel = AceGUI:Create("Label")
+            depsLabel:SetRelativeWidth(0.33)
+            local lines = {L["Requires Variables:"]}
+            for _, vname in ipairs(varDeps.Variables) do
+                local exists = not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname])
+                lines[#lines + 1] = (exists and "  " or "  |cFFFF0000") .. vname .. (exists and "" or " (!)|r")
+            end
+            depsLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(depsLabel)
+        end
+
+        if #dependents.variables > 0 then
+            local usedByVarLabel = AceGUI:Create("Label")
+            usedByVarLabel:SetRelativeWidth(0.33)
+            local lines = {L["Used by Variables:"]}
+            for _, vname in ipairs(dependents.variables) do
+                lines[#lines + 1] = "  " .. vname
+            end
+            usedByVarLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(usedByVarLabel)
+        end
+
+        if #dependents.sequences > 0 then
+            local usedBySeqLabel = AceGUI:Create("Label")
+            usedBySeqLabel:SetRelativeWidth(0.33)
+            local lines = {L["Used by Sequences:"]}
+            for _, entry in ipairs(dependents.sequences) do
+                lines[#lines + 1] = "  " .. entry.name .. " (" .. L["Class"] .. " " .. entry.classid .. ")"
+            end
+            usedBySeqLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(usedBySeqLabel)
+        end
+
+        container:AddChild(depGroup)
+    end
 end
 
 -- ---------------------------------------------------------------------------

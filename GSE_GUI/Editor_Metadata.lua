@@ -458,6 +458,68 @@ local function GUIDrawMetadataEditor(editframe, container)
     container:AddChild(defgroups[6])
 
     DrawTalentsEditor(editframe, container)
+
+    -- Dependencies section
+    local deps = editframe.Sequence.MetaData and editframe.Sequence.MetaData.Dependencies
+    local hasDeps = deps and
+        ((type(deps.Variables) == "table" and #deps.Variables > 0) or
+         (type(deps.Sequences) == "table" and #deps.Sequences > 0))
+    local usedBy = GSE.GetSequenceDependents(editframe.SequenceName)
+    if hasDeps or #usedBy > 0 then
+        local depHeading = AceGUI:Create("Heading")
+        depHeading:SetText(L["Dependencies"])
+        depHeading:SetFullWidth(true)
+        container:AddChild(depHeading)
+    end
+
+    if hasDeps then
+        local depGroup = AceGUI:Create("SimpleGroup")
+        depGroup:SetLayout("Flow")
+        depGroup:SetFullWidth(true)
+
+        if deps.Variables and #deps.Variables > 0 then
+            local varLabel = AceGUI:Create("Label")
+            varLabel:SetRelativeWidth(0.5)
+            local lines = {L["Requires Variables:"]}
+            for _, vname in ipairs(deps.Variables) do
+                local exists = not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname])
+                lines[#lines + 1] = (exists and "  " or "  |cFFFF0000") .. vname .. (exists and "" or " (!)|r")
+            end
+            varLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(varLabel)
+        end
+
+        if deps.Sequences and #deps.Sequences > 0 then
+            local seqLabel = AceGUI:Create("Label")
+            seqLabel:SetRelativeWidth(0.5)
+            local lines = {L["Embeds Sequences:"]}
+            for _, sname in ipairs(deps.Sequences) do
+                local exists = false
+                for chkclass = 0, 13 do
+                    if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][sname]) then
+                        exists = true
+                        break
+                    end
+                end
+                lines[#lines + 1] = (exists and "  " or "  |cFFFF0000") .. sname .. (exists and "" or " (!)|r")
+            end
+            seqLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(seqLabel)
+        end
+
+        container:AddChild(depGroup)
+    end
+
+    if #usedBy > 0 then
+        local usedByLabel = AceGUI:Create("Label")
+        usedByLabel:SetFullWidth(true)
+        local lines = {L["Embedded by:"]}
+        for _, entry in ipairs(usedBy) do
+            lines[#lines + 1] = "  " .. entry.name .. " (" .. L["Class"] .. " " .. entry.classid .. ")"
+        end
+        usedByLabel:SetText(table.concat(lines, "\n"))
+        container:AddChild(usedByLabel)
+    end
 end
 
 function GSE.GUI.SetupMetadata(editframe)

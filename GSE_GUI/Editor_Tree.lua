@@ -496,6 +496,7 @@ local function ManageTree(editframe)
             node.icon = GSE.GetClassIcon(tclassid)
         end
 
+        GSE.EnsureSequenceLoaded(tclassid, elements[3])
         for i, j in ipairs(GSE.Library[tclassid][elements[3]]["Macros"]) do
             table.insert(node.children, {
                 value = i,

@@ -164,11 +164,88 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
+                local seq = GSE.FindSequence(key)
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
-                    GSE.TranslateSequence(GSE.CloneSequence(GSE.FindSequence(key)), Statics.TranslatorMode.ID)
+                    GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
                 )
                 exportTable.ElementCount = exportTable.ElementCount + 1
+
+                -- Auto-include transitive variable dependencies
+                local deps = seq and seq.MetaData and seq.MetaData.Dependencies
+                if deps and type(deps.Variables) == "table" and #deps.Variables > 0 then
+                    local allDeps = GSE.GetTransitiveVariableDeps(deps.Variables)
+                    local missing, included = {}, {}
+                    for vname in pairs(allDeps) do
+                        if not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname]) then
+                            if not exportTable["Variables"][vname] then
+                                local ok, decoded = GSE.DecodeMessage(GSEVariables[vname])
+                                if ok and decoded then
+                                    exportTable["Variables"][vname] = decoded
+                                    exportTable.ElementCount = exportTable.ElementCount + 1
+                                    table.insert(included, vname)
+                                end
+                            end
+                        else
+                            table.insert(missing, vname)
+                        end
+                    end
+                    if #included > 0 then
+                        table.sort(included)
+                        GSE.Print(
+                            string.format(
+                                L["Auto-included %d variable(s) required by %s: %s"],
+                                #included, key, table.concat(included, ", ")
+                            )
+                        )
+                    end
+                    if #missing > 0 then
+                        table.sort(missing)
+                        GSE.Print(
+                            string.format(
+                                L["WARNING: %s depends on variable(s) that do not exist and cannot be exported: %s"],
+                                key, table.concat(missing, ", ")
+                            ),
+                            "Error"
+                        )
+                    end
+                end
+
+                -- Warn about missing embedded sequence dependencies
+                if deps and type(deps.Sequences) == "table" and #deps.Sequences > 0 then
+                    local missingSeqs = {}
+                    for _, sname in ipairs(deps.Sequences) do
+                        if not exportTable["Sequences"][sname] then
+                            local found = false
+                            for chkclass = 0, 13 do
+                                if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][sname]) then
+                                    found = true
+                                    break
+                                end
+                            end
+                            if not found then
+                                table.insert(missingSeqs, sname)
+                            else
+                                GSE.Print(
+                                    string.format(
+                                        L["%s embeds sequence '%s' — add it to the export if needed."],
+                                        key, sname
+                                    )
+                                )
+                            end
+                        end
+                    end
+                    if #missingSeqs > 0 then
+                        table.sort(missingSeqs)
+                        GSE.Print(
+                            string.format(
+                                L["WARNING: %s embeds sequence(s) that do not exist: %s"],
+                                key, table.concat(missingSeqs, ", ")
+                            ),
+                            "Error"
+                        )
+                    end
+                end
             else
                 exportTable["Sequences"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1

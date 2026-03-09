@@ -32,6 +32,7 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
     GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission)
     t.ClassID = classid
     t.SequenceName = SequenceName
+    GSE.EnsureSequenceLoaded(classid, SequenceName)
     t.Sequence = GSE.Library[classid][SequenceName]
     GSE.sendMessage(t, channel, target)
     if transmissionFrame then
@@ -110,6 +111,7 @@ function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser, channel)
     t.Command = "GSE_SEQUENCEMETA"
     t.ClassID = ClassID
     t.SequenceName = SequenceName
+    GSE.EnsureSequenceLoaded(ClassID, SequenceName)
     t.LastUpdated = GSE.Library[ClassID][SequenceName].MetaData.LastUpdated
     t.Help = GSE.Library[ClassID][SequenceName].MetaData.Help
     GSE.sendMessage(t, channel, gseuser)

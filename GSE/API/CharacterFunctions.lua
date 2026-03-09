@@ -95,6 +95,7 @@ end
 
 function GSE.GetSpecNames()
     local keyset = {}
+    local _ = Statics.SpecIDList[0]  -- trigger lazy build before pairs() iteration
     for _, v in pairs(Statics.SpecIDList) do
         keyset[v] = v
     end

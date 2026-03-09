@@ -27,6 +27,22 @@ L["Issues found in '%s' (class library %d):"] = true
 L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"] = true
 L["Compile error in Macros[%d] of '%s': %s"] = true
 L["%d issue(s) found.  See above for details and fix commands."] = true
+-- Dependency UI labels
+L["Dependencies"] = true
+L["Requires Variables:"] = true
+L["Embeds Sequences:"] = true
+L["Embedded by:"] = true
+L["Used by Variables:"] = true
+L["Used by Sequences:"] = true
+-- Dependency tracking
+L["Sequence '%s' (class %d) depends on variable '%s' which does not exist."] = true
+L["Sequence '%s' (class %d) embeds sequence '%s' which does not exist."] = true
+L["Variable '%s' depends on variable '%s' which does not exist."] = true
+-- Export dependency auto-include
+L["Auto-included %d variable(s) required by %s: %s"] = true
+L["WARNING: %s depends on variable(s) that do not exist and cannot be exported: %s"] = true
+L["%s embeds sequence '%s' — add it to the export if needed."] = true
+L["WARNING: %s embeds sequence(s) that do not exist: %s"] = true
 L["Invalid class library ID: %s"] = true
 L["Sequence '%s' not found in class library %d."] = true
 L["Cleared %d pending queue entries for '%s'."] = true

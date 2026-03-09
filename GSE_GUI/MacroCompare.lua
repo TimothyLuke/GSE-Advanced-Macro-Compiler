@@ -128,6 +128,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
 
   compareframe.NewSequence = newsequence
 
+  GSE.EnsureSequenceLoaded(classid, sequenceName)
   if newsequence.MetaData.DisableEditor or GSE.Library[classid][sequenceName].MetaData.DisableEditor then
     GSE.PerformMergeAction("REPLACE", classid, sequenceName, newsequence)
   else
