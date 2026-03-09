@@ -223,6 +223,14 @@ function debugprofilestop()
   return os.clock()
 end
 
+--- Lazy-load stub: in tests GSE.Library is populated directly, nothing to decompress.
+function GSE.EnsureClassLoaded(classid)
+end
+
+--- Lazy-load stub: in tests GSE.Library is populated directly, nothing to decompress.
+function GSE.EnsureSequenceLoaded(classid, sequenceName)
+end
+
 function GSE.DebugProfile(event)
   local currentTimeStop = debugprofilestop()
   if GSE.ProfileStop and GSE.Developer then
