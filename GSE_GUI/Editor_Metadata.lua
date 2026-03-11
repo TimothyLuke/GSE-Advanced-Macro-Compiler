@@ -463,7 +463,8 @@ local function GUIDrawMetadataEditor(editframe, container)
     local deps = editframe.Sequence.MetaData and editframe.Sequence.MetaData.Dependencies
     local hasDeps = deps and
         ((type(deps.Variables) == "table" and #deps.Variables > 0) or
-         (type(deps.Sequences) == "table" and #deps.Sequences > 0))
+         (type(deps.Sequences) == "table" and #deps.Sequences > 0) or
+         (type(deps.Macros)    == "table" and #deps.Macros    > 0))
     local usedBy = GSE.GetSequenceDependents(editframe.SequenceName)
     if hasDeps or #usedBy > 0 then
         local depHeading = AceGUI:Create("Heading")
@@ -505,6 +506,22 @@ local function GUIDrawMetadataEditor(editframe, container)
             end
             seqLabel:SetText(table.concat(lines, "\n"))
             depGroup:AddChild(seqLabel)
+        end
+
+        if deps.Macros and #deps.Macros > 0 then
+            local macLabel = AceGUI:Create("Label")
+            macLabel:SetRelativeWidth(0.5)
+            local lines = {L["Requires Macros:"]}
+            for _, mname in ipairs(deps.Macros) do
+                local slot = GetMacroIndexByName and GetMacroIndexByName(mname)
+                local onChar = slot and slot > 0
+                local inStore = not GSE.isEmpty(GSEMacros) and not GSE.isEmpty(GSEMacros[mname])
+                local colour = onChar and "  " or (inStore and "  |cFFFFFF00" or "  |cFFFF0000")
+                local suffix = onChar and "" or (inStore and " (stored)|r" or " (!)|r")
+                lines[#lines + 1] = colour .. mname .. suffix
+            end
+            macLabel:SetText(table.concat(lines, "\n"))
+            depGroup:AddChild(macLabel)
         end
 
         container:AddChild(depGroup)

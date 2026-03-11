@@ -31,13 +31,17 @@ L["%d issue(s) found.  See above for details and fix commands."] = true
 L["Dependencies"] = true
 L["Requires Variables:"] = true
 L["Embeds Sequences:"] = true
+L["Requires Macros:"] = true
 L["Embedded by:"] = true
 L["Used by Variables:"] = true
 L["Used by Sequences:"] = true
 -- Dependency tracking
 L["Sequence '%s' (class %d) depends on variable '%s' which does not exist."] = true
 L["Sequence '%s' (class %d) embeds sequence '%s' which does not exist."] = true
+L["Sequence '%s' (class %d) depends on macro '%s' which does not exist."] = true
 L["Variable '%s' depends on variable '%s' which does not exist."] = true
+-- Macro restore
+L["Restored macro '%s' required by sequence '%s'."] = true
 -- Export dependency auto-include
 L["Auto-included %d variable(s) required by %s: %s"] = true
 L["WARNING: %s depends on variable(s) that do not exist and cannot be exported: %s"] = true

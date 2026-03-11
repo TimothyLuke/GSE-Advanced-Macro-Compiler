@@ -247,6 +247,10 @@ end
 
 frame:SetMovable(not isLocked())
 
+if loc.open then
+    frame:Show()
+end
+
 function GSE.ShowMenu()
     frame:Show()
 end

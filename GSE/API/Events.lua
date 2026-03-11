@@ -544,6 +544,7 @@ startup()
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     GSE:UnregisterEvent("PLAYER_REGEN_ENABLED")
     GSE.ResetButtons()
+    LoadOverrides()
     GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
@@ -557,8 +558,9 @@ function GSE:PLAYER_LOGOUT()
             if GSE.isEmpty(GSEOptions.frameLocations.menu) then
                 GSEOptions.frameLocations.menu = {}
             end
-            GSEOptions.frameLocations.menu.top = GSE.MenuFrame.frame:GetTop()
-            GSEOptions.frameLocations.menu.left = GSE.MenuFrame.frame:GetLeft()
+            GSEOptions.frameLocations.menu.top  = GSE.MenuFrame:GetTop()
+            GSEOptions.frameLocations.menu.left = GSE.MenuFrame:GetLeft()
+            GSEOptions.frameLocations.menu.open = GSE.MenuFrame:IsShown()
         end
         if GSE["GUIVariableFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then

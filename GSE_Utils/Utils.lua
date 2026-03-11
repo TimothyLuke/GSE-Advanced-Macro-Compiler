@@ -654,35 +654,56 @@ local function scanStringForVarRefs(str, found)
     end
 end
 
---- Recursively walk a table collecting variable refs and Embed sequence names.
-local function walkTableForDeps(t, vars, seqs)
+--- Scan a string for WoW macro API references, accumulating macro names into `found`.
+-- Matches GetMacroBody("name"), GetMacroIndexByName("name"), GetMacroSpell("name"),
+-- GetMacroItem("name"), and any other GetMacro*(name) Lua API call.
+local function scanStringForMacroRefs(str, found)
+    for name in str:gmatch('GetMacro%a*%s*%(%s*["\']([^"\']+)["\']') do
+        found[name] = true
+    end
+end
+
+--- Recursively walk a table collecting variable refs, Embed sequence names, and macro refs.
+local function walkTableForDeps(t, vars, seqs, macros)
     for _, v in pairs(t) do
         if type(v) == "string" then
             scanStringForVarRefs(v, vars)
+            scanStringForMacroRefs(v, macros)
         elseif type(v) == "table" then
             if v.Type == "Embed" and type(v.Sequence) == "string" then
                 seqs[v.Sequence] = true
             end
-            walkTableForDeps(v, vars, seqs)
+            -- Action block with type="macro": if the macro field does not start with
+            -- "/" or "#" it is a plain WoW macro name reference, not command text.
+            if v.Type == "Action" and v.type == "macro" and type(v.macro) == "string" then
+                local text = GSE.UnEscapeString(v.macro)
+                local first = string.sub(text, 1, 1)
+                if #text > 0 and first ~= "/" and first ~= "#" then
+                    macros[text] = true
+                end
+            end
+            walkTableForDeps(v, vars, seqs, macros)
         end
     end
 end
 
 --- Compute the direct dependencies of a sequence by scanning its Macros.
 -- Mutates sequence.MetaData.Dependencies in place and returns it.
--- {Variables = {"v1","v2",...}, Sequences = {"s1",...}}  (sorted arrays)
+-- {Variables = {"v1",...}, Sequences = {"s1",...}, Macros = {"m1",...}}  (sorted arrays)
 function GSE.ComputeSequenceDependencies(sequence)
     if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return end
-    local vars, seqs = {}, {}
+    local vars, seqs, macros = {}, {}, {}
     if type(sequence.Macros) == "table" then
-        walkTableForDeps(sequence.Macros, vars, seqs)
+        walkTableForDeps(sequence.Macros, vars, seqs, macros)
     end
-    local varList, seqList = {}, {}
+    local varList, seqList, macroList = {}, {}, {}
     for k in pairs(vars) do table.insert(varList, k) end
     for k in pairs(seqs) do table.insert(seqList, k) end
+    for k in pairs(macros) do table.insert(macroList, k) end
     table.sort(varList)
     table.sort(seqList)
-    local deps = {Variables = varList, Sequences = seqList}
+    table.sort(macroList)
+    local deps = {Variables = varList, Sequences = seqList, Macros = macroList}
     sequence.MetaData.Dependencies = deps
     return deps
 end
@@ -943,6 +964,23 @@ function GSE.ScanMacrosForErrors()
                                         string.format(
                                             L["Sequence '%s' (class %d) embeds sequence '%s' which does not exist."],
                                             seqname, classlibid, depseq
+                                        ),
+                                        "Error"
+                                    )
+                                end
+                            end
+                        end
+                        -- Check WoW macro dependencies (only if WoW API is available)
+                        if type(deps.Macros) == "table" and GetMacroIndexByName then
+                            for _, macname in ipairs(deps.Macros) do
+                                local slot = GetMacroIndexByName(macname)
+                                local inStore = not GSE.isEmpty(GSEMacros) and not GSE.isEmpty(GSEMacros[macname])
+                                if (not slot or slot == 0) and not inStore then
+                                    totalIssues = totalIssues + 1
+                                    GSE.Print(
+                                        string.format(
+                                            L["Sequence '%s' (class %d) depends on macro '%s' which does not exist."],
+                                            seqname, classlibid, macname
                                         ),
                                         "Error"
                                     )

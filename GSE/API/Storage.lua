@@ -309,9 +309,37 @@ function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
     GSE.EnqueueOOC(vals)
 end
 
+--- Snapshot any WoW macros listed in sequence.MetaData.Dependencies.Macros to the
+-- account-level GSEMacros store.  Called after saving/replacing a sequence so that
+-- character-specific macros are preserved and available to other characters.
+function GSE.SnapshotDependentMacros(sequence)
+    if not GetMacroIndexByName then return end          -- guard for unit-test context
+    if type(sequence) ~= "table" then return end
+    local deps = type(sequence.MetaData) == "table" and sequence.MetaData.Dependencies
+    if not deps or type(deps.Macros) ~= "table" then return end
+    if GSE.isEmpty(GSEMacros) then GSEMacros = {} end
+    for _, macname in ipairs(deps.Macros) do
+        local slot = GetMacroIndexByName(macname)
+        if slot and slot > 0 then
+            local mname, micon, mbody = GetMacroInfo(slot)
+            if mname then
+                -- Always overwrite so the account-level copy stays current.
+                GSEMacros[macname] = {
+                    name     = mname,
+                    value    = slot,
+                    icon     = micon,
+                    text     = mbody,
+                    manageMacro = mbody,
+                }
+            end
+        end
+    end
+end
+
 --- Replace a current version of a Macro
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE.ComputeSequenceDependencies(sequence)
+    GSE.SnapshotDependentMacros(sequence)
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
@@ -1907,6 +1935,58 @@ function GSE.ManageMacros()
                     else
                         if type(GSEMacros[char .. "-" .. realm][k]) ~= "table" then
                             GSEMacros[char .. "-" .. realm][k] = nil
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Snapshot and restore WoW macros required by active sequences.
+    -- Iterates global (0) and current-class libraries only; other classes are not
+    -- loaded at runtime and their sequences are not executing.
+    if GSE.isEmpty(GSEMacros) then GSEMacros = {} end
+    local currentClass = GSE.GetCurrentClassID()
+    for _, classid in ipairs({0, currentClass}) do
+        local classlib = GSE.Library[classid]
+        if classlib then
+            for seqname, seq in pairs(classlib) do
+                if type(seq) == "table" and type(seq.MetaData) == "table" then
+                    local deps = seq.MetaData.Dependencies
+                    if deps and type(deps.Macros) == "table" then
+                        for _, macname in ipairs(deps.Macros) do
+                            local slot = GetMacroIndexByName(macname)
+                            if slot and slot > 0 then
+                                -- Macro exists on this character: refresh the account-level snapshot.
+                                local mname, micon, mbody = GetMacroInfo(slot)
+                                if mname then
+                                    GSEMacros[macname] = {
+                                        name        = mname,
+                                        value       = slot,
+                                        icon        = micon,
+                                        text        = mbody,
+                                        manageMacro = mbody,
+                                    }
+                                end
+                            else
+                                -- Macro missing on this character: restore from account-level store.
+                                local stored = GSEMacros[macname]
+                                if stored and not GSE.isEmpty(stored.text) then
+                                    CreateMacro(
+                                        macname,
+                                        stored.icon or Statics.QuestionMark,
+                                        stored.text,
+                                        GSE.SetMacroLocation()
+                                    )
+                                    GSE.Print(
+                                        string.format(
+                                            L["Restored macro '%s' required by sequence '%s'."],
+                                            macname, seqname
+                                        ),
+                                        L["Macros"]
+                                    )
+                                end
+                            end
                         end
                     end
                 end
