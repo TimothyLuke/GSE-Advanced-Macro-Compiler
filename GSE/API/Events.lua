@@ -467,6 +467,14 @@ function GSE:PLAYER_ENTERING_WORLD()
     if GSEOptions.shownew then
         GSE:ShowUpdateNotes()
     end
+    local menuOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.menu
+    if menuOpts and menuOpts.open then
+        C_Timer.After(0, function()
+            if GSE.CheckGUI() and GSE.ShowMenu then
+                GSE.ShowMenu()
+            end
+        end)
+    end
 end
 
 local function startup()
