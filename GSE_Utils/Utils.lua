@@ -670,13 +670,19 @@ local function walkTableForDeps(t, vars, seqs, macros)
             scanStringForVarRefs(v, vars)
             scanStringForMacroRefs(v, macros)
         elseif type(v) == "table" then
-            if v.Type == "Embed" and type(v.Sequence) == "string" then
-                seqs[v.Sequence] = true
+            -- Use rawget to avoid triggering Statics.TableMetadataFunction __index,
+            -- which expects array path keys and errors on plain string keys.
+            local vType     = rawget(v, "Type")
+            local vtype     = rawget(v, "type")
+            local vSequence = rawget(v, "Sequence")
+            local vmacro    = rawget(v, "macro")
+            if vType == "Embed" and type(vSequence) == "string" then
+                seqs[vSequence] = true
             end
             -- Action block with type="macro": if the macro field does not start with
             -- "/" or "#" it is a plain WoW macro name reference, not command text.
-            if v.Type == "Action" and v.type == "macro" and type(v.macro) == "string" then
-                local text = GSE.UnEscapeString(v.macro)
+            if vType == "Action" and vtype == "macro" and type(vmacro) == "string" then
+                local text = GSE.UnEscapeString(vmacro)
                 local first = string.sub(text, 1, 1)
                 if #text > 0 and first ~= "/" and first ~= "#" then
                     macros[text] = true
