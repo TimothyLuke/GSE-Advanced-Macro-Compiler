@@ -135,8 +135,9 @@ local iconData = {
         L["Close"],
         function()
             local opts = getMenuOpts()
-            opts.left = frame:GetLeft()
-            opts.top  = frame:GetTop()
+            opts.left  = frame:GetLeft()
+            opts.top   = frame:GetTop()
+            opts.open  = false
             frame:Hide()
         end
     },
@@ -252,6 +253,7 @@ if loc.open then
 end
 
 function GSE.ShowMenu()
+    getMenuOpts().open = true
     frame:Show()
 end
 

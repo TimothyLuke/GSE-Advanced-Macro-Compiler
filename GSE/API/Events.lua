@@ -560,7 +560,6 @@ function GSE:PLAYER_LOGOUT()
             end
             GSEOptions.frameLocations.menu.top  = GSE.MenuFrame:GetTop()
             GSEOptions.frameLocations.menu.left = GSE.MenuFrame:GetLeft()
-            GSEOptions.frameLocations.menu.open = GSE.MenuFrame:IsShown()
         end
         if GSE["GUIVariableFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
