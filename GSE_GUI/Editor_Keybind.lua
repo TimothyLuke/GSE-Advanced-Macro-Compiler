@@ -12,6 +12,25 @@ local function sequenceExists(seqName)
     return false
 end
 
+local function sequenceIsDisabled(seqName)
+    for _, classLib in pairs(GSE.Library or {}) do
+        local seq = classLib[seqName]
+        if seq then
+            return seq.MetaData and seq.MetaData.Disabled == true
+        end
+    end
+    return false
+end
+
+-- Append a disabled warning to a tree node label when the sequence is disabled.
+local function keybindNodeText(bindLabel, seqName)
+    local base = bindLabel .. " " .. GSEOptions.KEYWORD .. "(" .. seqName .. ")" .. Statics.StringReset
+    if sequenceIsDisabled(seqName) then
+        base = base .. " |cFFFF6600" .. L["Sequence Disabled"] .. "|r"
+    end
+    return base
+end
+
 -- ---------------------------------------------------------------------------
 -- buildKeybindMenu()  →  full KEYBINDINGS tree node
 -- ---------------------------------------------------------------------------
@@ -67,8 +86,7 @@ local function buildKeybindMenu()
                     node["children"],
                     {
                         value = i .. "\001" .. j["Sequence"],
-                        text = j["Bind"] ..
-                            " " .. GSEOptions.KEYWORD .. "(" .. j["Sequence"] .. ")" .. Statics.StringReset
+                        text = keybindNodeText(j["Bind"], j["Sequence"])
                     }
                 )
             end
@@ -99,7 +117,10 @@ local function buildKeybindMenu()
                                 if m and m.State then
                                     nodelabel = nodelabel .. " - " .. L["Button State"] .. ": " .. m.State
                                 end
-                                nodelabel = nodelabel .. "" .. ")" .. Statics.StringReset
+                                nodelabel = nodelabel .. ")" .. Statics.StringReset
+                                if sequenceIsDisabled(m.Sequence) then
+                                    nodelabel = nodelabel .. " |cFFFF6600" .. L["Sequence Disabled"] .. "|r"
+                                end
                                 table.insert(
                                     specnode["children"],
                                     {
@@ -148,7 +169,7 @@ local function buildKeybindMenu()
                         node["children"],
                         {
                             value = i .. "\001" .. j,
-                            text = i .. " " .. GSEOptions.KEYWORD .. "(" .. j .. ")" .. Statics.StringReset
+                            text = keybindNodeText(i, j)
                         }
                     )
                 end
@@ -183,7 +204,7 @@ local function buildKeybindMenu()
                                     specnode["children"],
                                     {
                                         value = l .. "\001" .. m,
-                                        text = l .. " " .. GSEOptions.KEYWORD .. "(" .. m .. ")" .. Statics.StringReset
+                                        text = keybindNodeText(l, m)
                                     }
                                 )
                             end
@@ -251,12 +272,17 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
         for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-            names[k] = k
+            names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
         end
         for k, _ in pairs(GSESequences[0]) do
-            names[k] = k
+            names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
         end
         SequenceListbox:SetList(names)
+        for k in pairs(names) do
+            if sequenceIsDisabled(k) then
+                SequenceListbox:SetItemDisabled(k, true)
+            end
+        end
         SequenceListbox:SetValue(button)
         SequenceListbox:SetCallback(
             "OnValueChanged",
@@ -590,12 +616,17 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
         SequenceListbox:SetLabel(L["Sequence"])
         local names = {}
         for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-            names[k] = k
+            names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
         end
         for k, _ in pairs(GSESequences[0]) do
-            names[k] = k
+            names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
         end
         SequenceListbox:SetList(names)
+        for k in pairs(names) do
+            if sequenceIsDisabled(k) then
+                SequenceListbox:SetItemDisabled(k, true)
+            end
+        end
         if button and button.Sequence then
             SequenceListbox:SetValue(button.Sequence)
         end

@@ -166,26 +166,74 @@ local BAR_SWAP_ONCLICK = [[
 -- Track which buttons already have the icon-update hook to avoid duplicate hooks.
 local iconHookedButtons = {}
 
--- Non-secure hook that watches the 'gse-eff-action' attribute written by BAR_SWAP_OAC /
--- BAR_SWAP_ONCLICK.  When > 0 the bar has swapped (vehicle/skyriding/possession) and we
--- show the override action's icon; when 0 we restore the normal button display.
+-- Return the icon texture for the GSE macro backing this button, or nil.
+-- Uses GetMacroIndexByName so it works across all WoW versions.
+local function getGSEButtonIcon(self)
+    if not GetMacroIndexByName then return nil end
+    local seq = self:GetAttribute("gse-button")
+    if not seq then return nil end
+    local idx = GetMacroIndexByName(seq)
+    if not idx or idx == 0 then return nil end
+    local _, texture = GetMacroInfo(idx)
+    return texture
+end
+
+-- Restore the GSE macro icon on a button, deferring one frame so WoW's own
+-- ActionButton_Update pass (triggered by type/attribute changes) runs first.
+local function scheduleIconRestore(self, icon)
+    C_Timer.After(0, function()
+        if not self:GetAttribute("gse-button") then return end
+        local texture = getGSEButtonIcon(self)
+        if texture then icon:SetTexture(texture) end
+    end)
+end
+
+-- Non-secure hook that watches attributes written by BAR_SWAP_OAC / BAR_SWAP_ONCLICK.
+-- gse-eff-action > 0  → bar has swapped (vehicle/skyriding), show the override icon.
+-- gse-eff-action == 0 → back to normal GSE state, restore the macro icon.
+-- type == "click"     → WoW just reset the type (OnEnter / post-combat), restore icon.
 local function hookButtonIconUpdates(Button)
     if iconHookedButtons[Button] then return end
     iconHookedButtons[Button] = true
     _G[Button]:HookScript("OnAttributeChanged", function(self, name, value)
-        if name ~= "gse-eff-action" then return end
         if not self:GetAttribute("gse-button") then return end
         local btnName = self:GetName()
         local icon = self.icon or (btnName and _G[btnName .. "Icon"])
         if not icon then return end
-        if value and value > 0 then
-            -- Bar has swapped – show the current override/vehicle action icon.
-            local texture = GetActionTexture(value)
-            if texture then icon:SetTexture(texture) end
-        else
-            -- Back to normal GSE state – let WoW restore the standard icon.
-            if ActionButton_Update then ActionButton_Update(self) end
+        if name == "gse-eff-action" then
+            if value and value > 0 then
+                local texture = GetActionTexture(value)
+                if texture then icon:SetTexture(texture) end
+            else
+                scheduleIconRestore(self, icon)
+            end
+        elseif name == "type" and value == "click" then
+            -- type was set back to "click" – WoW's own update will run this frame
+            -- and clear the icon; restore it on the next frame.
+            scheduleIconRestore(self, icon)
         end
+    end)
+end
+
+-- Intercept every ActionButton_Update call for GSE-overridden buttons.
+-- WoW fires this on ACTIONBAR_SLOT_CHANGED, page turns, bar events, etc.
+-- For type="click" buttons WoW has no icon to show, so we supply it ourselves.
+-- Deferred to PLAYER_ENTERING_WORLD so ActionButton_Update is guaranteed to
+-- exist, and guarded in case it is absent in a given game version.
+local actionButtonUpdateHooked = false
+local function hookActionButtonUpdate()
+    if actionButtonUpdateHooked then return end
+    if not ActionButton_Update then return end
+    actionButtonUpdateHooked = true
+    hooksecurefunc("ActionButton_Update", function(self)
+        if not self or not self.GetAttribute then return end
+        local seq = self:GetAttribute("gse-button")
+        if not seq or self:GetAttribute("type") ~= "click" then return end
+        local btnName = self:GetName()
+        local icon = self.icon or (btnName and _G[btnName .. "Icon"])
+        if not icon then return end
+        local texture = getGSEButtonIcon(self)
+        if texture then icon:SetTexture(texture) end
     end)
 end
 
@@ -446,6 +494,26 @@ function GSE.CreateActionBarOverride(buttonName, sequenceName)
     GSE.ReloadOverrides()
 end
 
+function GSE.RemoveActionBarOverride(buttonName)
+    if InCombatLockdown() then return end
+    local spec = GetSpec()
+    if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
+        local specs = GSE_C["ActionBarBinds"]["Specialisations"]
+        if specs and specs[spec] then
+            specs[spec][buttonName] = nil
+        end
+        local loadouts = GSE_C["ActionBarBinds"]["LoadOuts"]
+        if loadouts and loadouts[spec] then
+            for _, loadout in pairs(loadouts[spec]) do
+                if type(loadout) == "table" then
+                    loadout[buttonName] = nil
+                end
+            end
+        end
+    end
+    GSE.ReloadOverrides()
+end
+
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
@@ -463,6 +531,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     if ConsolePort then
         C_Timer.After(10, LoadOverrides)
     end
+    hookActionButtonUpdate()
     GSE:RegisterEvent("UPDATE_MACROS")
     if GSEOptions.shownew then
         GSE:ShowUpdateNotes()

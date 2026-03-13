@@ -1488,17 +1488,22 @@ colorTable[0] = "|r"
 Statics.IndentationColorTable = colorTable
 
 do
-    -- Shared handler: right-click on an empty action button shows the GSE sequence picker.
-    -- Fires for standard Blizzard bars immediately, and for third-party bars after they load.
+    -- Shared handler: right-click on a GSE-overridden button shows change/clear options;
+    -- right-click on an empty action button shows the sequence picker to assign one.
     local function gseEmptyButtonHandler(self, mousebutton, down)
         if not GSEOptions.actionBarOverridePopup then return end
         if InCombatLockdown() then return end
         if not down then return end
         if mousebutton ~= "RightButton" then return end
-        if self:GetAttribute("gse-button") then return end
-        local action = self.action or self:GetAttribute("action")
-        if not action or action == 0 then return end
-        if HasAction(action) then return end
+
+        local existingSequence = self:GetAttribute("gse-button")
+
+        if not existingSequence then
+            -- Only show the picker on genuinely empty slots.
+            local action = self.action or self:GetAttribute("action")
+            if not action or action == 0 then return end
+            if HasAction(action) then return end
+        end
 
         local classIconText = ""
         local classInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
@@ -1517,12 +1522,22 @@ do
         addSequences(GSE.GetCurrentClassID())
         addSequences(0)
 
-        if #names == 0 then return end
         table.sort(names, function(a, b) return a.name < b.name end)
 
         local buttonName = self:GetName()
         MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
-            rootDescription:CreateTitle(L["Assign GSE Sequence"])
+            if existingSequence then
+                rootDescription:CreateTitle(L["GSE"] .. ": " .. existingSequence)
+                rootDescription:CreateButton(L["Clear Override"], function()
+                    GSE.RemoveActionBarOverride(buttonName)
+                end)
+                if #names > 0 then
+                    rootDescription:CreateDivider()
+                    rootDescription:CreateTitle(L["Change Sequence"])
+                end
+            else
+                rootDescription:CreateTitle(L["Assign GSE Sequence"])
+            end
             for _, entry in ipairs(names) do
                 local iconText = classIconText
                 local specID = entry.specID

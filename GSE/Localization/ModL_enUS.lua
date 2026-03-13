@@ -54,6 +54,9 @@ L["MetaData.%s remapped from non-existent version %d to %d."] = true
 L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."] = true
 L["'%s' repaired. Sequence is for class %d; button will update when that class is played."] = true
 L["Assign GSE Sequence"] = true
+L["Change Sequence"] = true
+L["Clear Override"] = true
+L["Sequence Disabled"] = true
 L["Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] = true
 L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."] = true
 
