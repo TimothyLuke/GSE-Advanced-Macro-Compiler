@@ -1761,7 +1761,6 @@ function GSE.CreateEditor()
             editframe.Sequence = {
                 ["MetaData"] = {
                     ["Author"] = GSE.GetCharacterName(),
-                    ["Talents"] = {},
                     ["Default"] = 1,
                     ["SpecID"] = GSE.GetCurrentSpecID(),
                     ["GSEVersion"] = GSE.VersionString
@@ -2576,7 +2575,6 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     local sequence = {
         ["MetaData"] = {
             ["Author"]     = GSE.GetCharacterName(),
-            ["Talents"]    = GSE.GetCurrentTalents(),
             ["Default"]    = 1,
             ["SpecID"]     = GSE.GetCurrentSpecID(),
             ["GSEVersion"] = GSE.VersionString,
