@@ -21,7 +21,6 @@ whatsnewframe:SetCallback(
 local scrollContainer = AceGUI:Create("SimpleGroup")
 scrollContainer:SetFullWidth(true)
 
-scrollContainer:SetHeight(whatsnewframe.frame:GetHeight() - 120)
 scrollContainer:SetLayout("Fill") -- important!
 
 whatsnewframe:AddChild(scrollContainer)
@@ -50,5 +49,6 @@ scroll:AddChild(shownew)
 
 function GSE.ShowUpdateNotes()
   label:SetText(L["WhatsNew"] .. "\n\n")
+  scrollContainer:SetHeight(whatsnewframe.frame:GetHeight() - 120)
   whatsnewframe:Show()
 end

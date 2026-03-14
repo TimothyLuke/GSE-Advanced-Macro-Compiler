@@ -712,7 +712,8 @@ function GSE:PLAYER_ENTERING_WORLD()
     end
     hookActionButtonUpdate()
     GSE:RegisterEvent("UPDATE_MACROS")
-    if GSEOptions.shownew then
+    if GSEOptions.shownew and not GSE.UnsavedOptions.UpdateNotesShown then
+        GSE.UnsavedOptions.UpdateNotesShown = true
         GSE:ShowUpdateNotes()
     end
     local menuOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.menu
