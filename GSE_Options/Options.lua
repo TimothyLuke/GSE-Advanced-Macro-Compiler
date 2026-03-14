@@ -236,66 +236,6 @@ function GSE.GetOptionsTable()
                     }
                 }
             },
-            menu = {
-                name = L["Menu"],
-                desc = L["Menu Options"],
-                type = "group",
-                order = 6,
-                args = {
-                    menuHeader = {
-                        type  = "header",
-                        name  = L["Menu Options"],
-                        order = 10,
-                    },
-                    menuDirection = {
-                        type   = "select",
-                        name   = L["Growth Direction"],
-                        desc   = L["Direction the menu grows from the logo button."],
-                        order  = 20,
-                        values = {
-                            UP    = L["Up"]    or "Up",
-                            DOWN  = L["Down"]  or "Down",
-                            LEFT  = L["Left"]  or "Left",
-                            RIGHT = L["Right"] or "Right",
-                        },
-                        sorting = { "UP", "DOWN", "LEFT", "RIGHT" },
-                        get = function()
-                            local d = GSEOptions.frameLocations and
-                                      GSEOptions.frameLocations.menu and
-                                      GSEOptions.frameLocations.menu.direction
-                            return (d and d ~= "") and d or "DOWN"
-                        end,
-                        set = function(_, val)
-                            if GSE.UpdateMenuDirection then
-                                GSE.UpdateMenuDirection(val)
-                            end
-                        end,
-                    },
-                    menuLocked = {
-                        type  = "toggle",
-                        name  = L["Lock Menu Position"],
-                        desc  = L["Prevent the menu from being dragged to a new position."],
-                        order = 30,
-                        get = function()
-                            return GSEOptions.frameLocations and
-                                   GSEOptions.frameLocations.menu and
-                                   GSEOptions.frameLocations.menu.locked == true
-                        end,
-                        set = function(_, val)
-                            if GSE.isEmpty(GSEOptions.frameLocations) then
-                                GSEOptions.frameLocations = {}
-                            end
-                            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
-                                GSEOptions.frameLocations.menu = {}
-                            end
-                            GSEOptions.frameLocations.menu.locked = val
-                            if GSE.MenuFrame then
-                                GSE.MenuFrame:SetMovable(not val)
-                            end
-                        end,
-                    },
-                },
-            },
             about = {
                 name = L["About"],
                 desc = L["About GSE"],
@@ -409,33 +349,37 @@ local function createBlizzOptions(category)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = L["Spell Cache Editor"], tooltip = L["Common Solutions to game quirks that seem to affect some people."]}))
         end
         do
-            local function GetValue() return false end
-            local function SetValue(val)
-                if val then
+            local layout = SettingsPanel:GetLayout(troubleOptions)
+            layout:AddInitializer(CreateSettingsButtonInitializer(
+                L["Clear Spell Cache"],
+                L["Clear"],
+                function()
                     GSESpellCache = {}
                     GSESpellCache["enUS"] = {}
                     if GSE.isEmpty(GSESpellCache[GetLocale()]) then
                         GSESpellCache[GetLocale()] = {}
                     end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "clearSpellCache", Settings.VarType.Boolean, L["Clear Spell Cache"], false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames.."])
+                end,
+                L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames."],
+                true
+            ))
         end
         do
-            local function GetValue() return false end
-            local function SetValue(val)
-                if val then
+            local layout = SettingsPanel:GetLayout(troubleOptions)
+            layout:AddInitializer(CreateSettingsButtonInitializer(
+                L["Edit Spell Cache"],
+                L["Edit"],
+                function()
                     GSE.CheckGUI()
                     if GSE.UnsavedOptions["GUI"] then
                         GSE.GUIShowSpellCacheWindow()
                     else
                         GSE.Print(L["The GSE_GUI Module needs to be enabled to edit the spell cache."], L["Options"])
                     end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "editSpellCache", Settings.VarType.Boolean, L["Edit Spell Cache"], false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, L["This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames.."])
+                end,
+                L["This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames."],
+                true
+            ))
         end
 
         do
@@ -611,6 +555,43 @@ local function createBlizzOptions(category)
             local options = Settings.CreateSliderOptions(50, 500, 10)
             options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
             Settings.CreateSlider(windowOptions, setting, options, L["How many pixels wide should the sequence list panel on the left of the Editor be.  Defaults to 150"])
+        end
+
+        do
+            local layout = SettingsPanel:GetLayout(windowOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = L["Menu"], tooltip = L["Menu Options"]}))
+        end
+        do
+            local function GetValue()
+                local d = GSEOptions.frameLocations and GSEOptions.frameLocations.menu and GSEOptions.frameLocations.menu.direction
+                return (d and d ~= "") and d or "DOWN"
+            end
+            local function SetValue(_, val)
+                if GSE.UpdateMenuDirection then GSE.UpdateMenuDirection(val) end
+            end
+            local setting = Settings.RegisterProxySetting(windowOptions, "menuDirection", Settings.VarType.String, L["Growth Direction"], "DOWN", GetValue, SetValue)
+            local function GetOptions()
+                local container = Settings.CreateControlTextContainer()
+                container:Add("UP",    L["Up"])
+                container:Add("DOWN",  L["Down"])
+                container:Add("LEFT",  L["Left"])
+                container:Add("RIGHT", L["Right"])
+                return container:GetData()
+            end
+            Settings.CreateDropdown(windowOptions, setting, GetOptions, L["Direction the menu grows from the logo button."])
+        end
+        do
+            local function GetValue()
+                return GSEOptions.frameLocations and GSEOptions.frameLocations.menu and GSEOptions.frameLocations.menu.locked == true
+            end
+            local function SetValue(_, val)
+                if GSE.isEmpty(GSEOptions.frameLocations) then GSEOptions.frameLocations = {} end
+                if GSE.isEmpty(GSEOptions.frameLocations.menu) then GSEOptions.frameLocations.menu = {} end
+                GSEOptions.frameLocations.menu.locked = val
+                if GSE.MenuFrame then GSE.MenuFrame:SetMovable(not val) end
+            end
+            local setting = Settings.RegisterProxySetting(windowOptions, "menuLocked", Settings.VarType.Boolean, L["Lock Menu Position"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(windowOptions, setting, L["Prevent the menu from being dragged to a new position."])
         end
 
         do
