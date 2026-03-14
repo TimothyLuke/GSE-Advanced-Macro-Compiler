@@ -77,7 +77,6 @@ L["Close to Maximum Macros.|r  You can have a maximum of "] = true
 L["|r.  You can also have a  maximum of "] = true
 L[" macros per Account.  You currently have "] = true
 L["No Help Information "] = true
-L["Two sequences with unknown sources found."] = true
 
 -- Setup and Help Output from Core
 L["GnomeSequencer was originally written by semlar of wowinterface.com."] = true
@@ -89,9 +88,6 @@ L[
     ] = true
 L["The command "] = true
 L["  The Alternative ClassID is "] = true
-L["No Help Information Available"] = true
-L[" was imported with the following errors."] = true
-
 -- Sequence Editor Stuff
 L["Sequence"] = true
 L["New"] = true
@@ -115,8 +111,6 @@ L["No"] = true
 L["General"] = true
 L["General Options"] = true
 
-L["Use Global Account Macros"] = true
-L["Set Default Icon QuestionMark"] = true
 L[
         "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit."
     ] = true
@@ -175,11 +169,7 @@ L["Enable Debug for the following Modules"] = true
 L["Debug"] = true
 L["Filter Sequence Selection"] = true
 L["Show All Sequences in Editor"] = true
-L["By setting this value the Sequence Editor will show every sequence for every class."] = true
 L["Show Class Sequences in Editor"] = true
-L["Source Language "] = true
-L[" is not available.  Unable to translate sequence "] = true
-L["Target language "] = true
 L[
         "When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"
     ] = true
@@ -214,20 +204,17 @@ L["Create Macro"] = true
 L["Stop"] = true
 
 -- 2.0
-L["Load"] = true
 L[
         "GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."
     ] = true
 
 L["Configuration"] = true
-L["Talents"] = true
 L["Help Information"] = true
 L["Help Link"] = true
 L["Default Version"] = true
 L["Raid"] = true
 L["Mythic"] = true
 L["PVP"] = true
-L["Language"] = true
 L["Author"] = true
 L["Combat"] = true
 L["Resets"] = true
@@ -238,12 +225,8 @@ L[
 L["Macro Version %d deleted."] = true
 L["This change will not come into effect until you save this macro."] = true
 L["PVP setting changed to Default."] = true
-L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] =
-    true
 L["Delete"] = true
 L["Cancel"] = true
-L["Delete Icon"] = true
-L["Create Icon"] = true
 L["Addin Version %s contained versions for the following sequences:"] = true
 
 L["GSE"] = true
@@ -272,7 +255,6 @@ L[
 
 L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."] =
     true
-L["Automatically Create Macro Icon"] = true
 L["Mouse Buttons."] = true
 L["Sequence Reset"] = true
 L[
@@ -301,7 +283,6 @@ L[
     ] = true
 
 -- GSE 2.1.01
-L["Error found in version %i of %s."] = true
 L[
         "To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"
     ] = true
@@ -357,7 +338,6 @@ L["Arena"] = true
 L["Local Macro"] = true
 L["Updated Macro"] = true
 L["Sequence Compare"] = true
-L["Default Import Action"] = true
 L[
         "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
     ] = true
@@ -399,7 +379,6 @@ L["Opens the GSE Options window"] = true
 L["Send this macro to another GSE player who is on the same server as you are."] = true
 L["Save the changes made to this macro"] = true
 L["What class or spec is this macro for?  If it is for all classes choose Global."] = true
-L["What are the preferred talents for this macro?"] = true
 L[
         "Notes and help on how this macro works.  What things to remember.  This information is shown in the sequence browser."
     ] = true
@@ -425,7 +404,6 @@ L[
     ] = true
 L["Reset this macro when you exit combat."] = true
 L["Delete this macro.  This is not able to be undone."] = true
-L["Export this Macro."] = true
 L["Decompress"] = true
 
 -- GSE 2.4.11
@@ -446,17 +424,9 @@ L["Hide Minimap Icon for LibDataBroker (LDB) data text."] = true
 L["Raid setting changed to Default."] = true
 L["Mythic setting changed to Default."] = true
 
--- GSE 2.4.23
-L["Clear Keybindings"] = true
-L[
-        "This function will remove the SHIFT+N, ALT+N and CTRL+N keybindings for this character.  Useful if [mod:shift] etc conditions don't work in game."
-    ] = true
-L["Clear Common Keybindings"] = true
-
 -- GSE 2.5.0
 L["MS Click Rate"] = true
 L["The milliseconds being used in key click delay."] = true
-L["Millisecond click settings"] = true
 
 -- 2.5.3
 L["Scenario"] = true
@@ -472,7 +442,6 @@ L["The version of this macro to use in Scenarios."] = true
 L["Scenario setting changed to Default."] = true
 
 -- 2.6.01
-L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."] = true
 L["Variables"] = true
 L["Name"] = true
 L["Delete Variable"] = true
@@ -486,13 +455,11 @@ L["How many pixels wide should the Editor start at.  Defaults to 700"] = true
 L["WARNING ONLY"] = true
 
 -- 2.6.11
-L["Returns your current Global Cooldown value accounting for your haste if that stat is present."] = true
 L[
         "Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."
     ] = true
 
 -- 2.6.19
-L["Current GCD: %s"] = true
 L["Current GCD"] = true
 
 -- 2.6.21
@@ -512,9 +479,7 @@ L["Select a Sequence"] = true
 --3.0.0
 L["Block Type: %s"] = true
 L["How many macro Clicks to pause for?"] = true
-L["How many seconds to pause for?"] = true
 L["Clicks"] = true
-L["Seconds"] = true
 L["Measure"] = true
 L[
         "A pause can be measured in either clicks or seconds.  It will either wait 5 clicks or 1.5 seconds.\nIf using seconds, you can also wait for the GCD by entering ~~GCD~~ into the box."
@@ -525,7 +490,6 @@ L[
     ] = true
 L["Compile"] = true
 L["Unable to process content.  Fix table and try again."] = true
-L["GSE Raw Editor"] = true
 L["Raw Editor"] = true
 L["Global"] = true
 L["Move Up"] = true
@@ -544,7 +508,6 @@ L["Add Pause"] = true
 L["Add a Pause Block."] = true
 L["Pause for the GCD."] = true
 L["Error processing Custom Pause Value.  You will need to recheck your macros."] = true
-L["Invalid value entered into pause block. Needs to be 'GCD' or a Number."] = true
 L["Support GSE"] = true
 
 -- 3.0.2
@@ -558,7 +521,6 @@ L[
     ] = true
 
 --3.0.13
-L["Interval"] = true
 L["Compiled"] = true
 
 --3.0.16
@@ -573,21 +535,13 @@ L["Add If"] = true
 L[
         "Add an If Block.  If Blocks allow you to shoose between blocks based on the result of a variable that returns a true or false value."
     ] = true
-L["Boolean Functions"] = true
-L["Boolean Functions are GSE variables that return either a true or false value."] = true
 
 --3.0.20
-L["Boolean not found.  There is a problem with %s not returning true or false."] = true
 L["Macro Compile Error"] = true
 L["If Blocks Require a variable."] = true
 
 --3.0.35
 L["Window Sizes"] = true
-L["The default sizes of each window."] = true
-L["Default Menu Height"] = true
-L["How many pixels high should the Menu start at.  Defaults to 500"] = true
-L["Default Menu Width"] = true
-L["How many pixels wide should the Menu start at.  Defaults to 700"] = true
 L["Default Debugger Height"] = true
 L["How many pixels high should the Debuger start at.  Defaults to 500"] = true
 L["Default Debugger Width"] = true
@@ -608,22 +562,18 @@ L["Copy this link and paste it into a chat window."] = true
 L[
         "/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."
     ] = true
-L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
 L[
         "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
     ] = true
 L["/gse help|r to get started."] = true
 L["Advanced Macro Compiler loaded.|r  Type "] = true
-L["/gse|r to get started."] = true
 L["GSE Plugins"] = true
-L["This will display debug messages for the GSE Ingame Transmission and transfer"] = true
 L[
         "As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"
     ] = true
 
 -- #1087
 L["Character"] = true
-L["Character Specific Options which override the normal account settings."] = true
 
 -- #1114
 L["The GUI is missing.  Please ensure that your GSE install is complete."] = true
@@ -643,8 +593,6 @@ L["was unable to be interpreted."] = true
 L["Unrecognised Import"] = true
 
 -- #1161
-L["Update Talents"] = true
-L["Update the stored talents to match the current chosen talents."] = true
 
 -- #1202
 L["Troubleshooting"] = true
@@ -656,19 +604,11 @@ L[
     ] = true
 
 -- #1209
-L["KeyUp"] = true
-L["KeyDown"] = true
-L["State"] = true
 L[
         "This setting forces the ActionButtonUseKeyDown setting one way or another.  It also reconfigures GSE's Macro Stubs to operate in the specified mode."
     ] = true
 
-L["GSE Macro Stubs have been reset to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME`"] =
-    true
-L["Force CVar State"] = true
-
 -- #1215
-L["Don't Force"] = true
 L[
         "Dragonflight has changed how the /click command operates.  As a result all your macro stubs (found in /macro) have been updated to match the value of the CVar ActionButtonUseKeyDown.  This is a one off configuration change that needs to be done for each character.  You can change this configuration in GSE's Options."
     ] = true
@@ -688,7 +628,6 @@ L["/gse|r again."] = true
 --1248
 L["Clear Spell Cache"] = true
 L["Clear"] = true
-L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames.."] = true
 L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames."] = true
 L[
         "This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames.."
@@ -701,21 +640,11 @@ L["Spell ID"] = true
 L["Spell Name"] = true
 
 --1315
-L["Convert"] = true
-L["Convert this to a GSE3 Template"] = true
 L[
         "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
     ] = true
 
 -- 1377
-L["Always use Max Rank"] = true
-L["Alwaus use the highest rank of spell available.  This is useful for levelling."] = true
-
--- 1389
-L["Allow Variable Editor"] = true
-
--- 1410
-L["Specialisation"] = true
 
 -------------------------
 L["Unit Name"] = true
@@ -723,12 +652,9 @@ L["Disable Sequence"] = true
 L["Do not compile this Sequence at startup."] = true
 L["Action Type"] = true
 L["There was an error processing "] = true
-L[", You will need to correct errors in this variable from another source."] = true
-L["Variable Menu"] = true
 L["Export Variable"] = true
 L["Save the changes made to this variable."] = true
 L["Variable"] = true
-L["GSE: Main Menu"] = true
 L["Sequences"] = true
 L["Macros"] = true
 L["Implementation Link"] = true
@@ -739,7 +665,6 @@ L["Account Macros"] = true
 L["Character Macros"] = true
 L["Macro Name"] = true
 L["Manage Macro with GSE"] = true
-L["Manage Macro"] = true
 L["%s/255 Characters Used"] = true
 L["Macro"] = true
 L["Macro Template"] = true
@@ -761,13 +686,9 @@ L["Print Active Modifiers on Click"] = true
 L["Store output of debug messages in a Global Variable that can be referrenced by other mods."] = true
 L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"] = true
 L["Enable Mod Debug Mode"] = true
-L["GSE allows plugins to load Collections as plugins.  You can reload a collection by pressing the button below."] =
-    true
 L["Conditionals Colour"] = true
 L["String Colour"] = true
 L["Command Colour"] = true
-L["When loading or creating a sequence, if it is a macro of the same class automatically create the Macro Stub"] = true
-L["When creating a macro, if there is not a personal character macro space, create an account wide macro."] = true
 L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] =
     true
 L["Party"] = true
@@ -778,7 +699,6 @@ L[
     ] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
-L["Manage Macros"] = true
 L["The author of this Variable."] = true
 L["Last Updated"] = true
 L["The author of this Macro."] = true
@@ -786,14 +706,9 @@ L["Saved"] = true
 L["Save pending for "] = true
 L["Insert Spell"] = true
 L["Advanced Export"] = true
-L["Manage Keybinds"] = true
 L["Set Key to Bind"] = true
 L["Keybind"] = true
 L["Keybindings"] = true
-L["Default Keybinding Height"] = true
-L["How many pixels high should Keybindings start at.  Defaults to 500"] = true
-L["Default Keybinding Width"] = true
-L["How many pixels wide should Keybinding start at.  Defaults to 700"] = true
 L["Spell"] = true
 L["Item"] = true
 L["Pet"] = true
@@ -803,7 +718,6 @@ L["Pet Ability"] = true
 L["This macro is not compatible with this version of the game and cannot be imported."] = true
 L["GSE Discord"] = true
 L["Report an Issue"] = true
-L["CHanges Left Side, Changes Right Side, Many Changes!!!! Handle It"] = true
 L["GSE: Whats New in "] = "GSE: What's new in "
 L["Show next time you login."] = true
 L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
@@ -813,18 +727,13 @@ L["Enter the implementation link for this variable. Use '= true' or '= false' to
 L["Insert Test Case"] = true
 
 -- #1525
-L["Insert Gamepad KeyBind"] = true
-L["Insert Mouse KeyBind"] = true
 L["Left Mouse Button"] = true
 L["Right Mouse Button"] = true
-L["Add Special KeyBinding"] = true
 L["Talent Loadout"] = true
 L["All Talent Loadouts"] = true
-L["Add Talent Loadout"] = true
 
 L["Processing Collection of %s Elements."] = true
 L["Already Known"] = true
-L["This version of GSE is incompatabile with this version of the game."] = true
 L[" was imported."] = true
 
 -- #1617
@@ -845,19 +754,11 @@ L["Select Icon"] = true
 L["There is an error in the sequence that needs to be corrected before it can be saved."] = true
 
 -- #1713
-L["Experimental Features"] = true
-L["Disable inbuilt LibActionButton"] = true
-L["LibActionButton is used by ConsolePort and Bartender.  Disabling this will use the standard version of this library."] =
-    true
 L["Button State"] = true
 
 -- #1738
 L["Open %s in New Window"] = true
 L["modified in other window.  This view is now behind the current sequence."] = true
-
--- #1742
-L["You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."] =
-    true
 
 -- #1762
 L["New Sequence"] = true
@@ -885,10 +786,6 @@ L["Show Sequence Icons"] = true
 L["Show the Sequence Icon Preview Frame"] = true
 L["Preview Icon Size"] = true
 L["Default is 64 pixels."] = true
-L["Icon Preview Orientation"] = true
-L["Horizontal or Vertical Layout"] = true
-L["Horizontal"] = true
-L["Vertical"] = true
 L["Horizontal Layout"] = true
 L["Icon Preview Orientation: Horizontal"] = true
 L["Vertical Layout"] = true
@@ -898,7 +795,6 @@ L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) th
 L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
 -- #1846
-L["GSE Options Not Enabled"] = true
 L["Options Not Enabled"] = true
 L["Import String Not Recognised."] = true
 L["GSE Import Successful."] = true
@@ -912,14 +808,13 @@ L[
 
 -- #1854
 L["Add Embed"] = true
-L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
 
 -- #1850 Variable Event Callback
 L["Execute on Event"] = true
 L["Trigger Events"] = true
 L["When enabled, this variable's function will be called automatically when the selected WoW events or GSE messages fire."] = true
-L["The WoW events or GSE messages that will trigger this variable's function. Multiple events can be selected."] = true
-
+L["Add from List"] = true
+L["Select a known WoW event or GSE message to append it to the Trigger Events box."] = true
 -- Menu orientation & lock
 L["Menu"] = true
 L["Menu Options"] = true
