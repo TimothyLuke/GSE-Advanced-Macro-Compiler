@@ -518,5 +518,6 @@ globals = {
     "Dominos",
     "GameTooltip_SetTitle",
     "ActionButton_Update",
-    "CreateSettingsButtonInitializer"
+    "CreateSettingsButtonInitializer",
+    "ActionButton_SetTooltip"
 }
