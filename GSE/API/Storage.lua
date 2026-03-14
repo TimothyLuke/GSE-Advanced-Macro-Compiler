@@ -1083,7 +1083,9 @@ function GSE.UpdateIcon(self, reseticon)
             WeakAuras.ScanEvents(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, gsebutton, spellinfo)
         end
         GSE:SendMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, {gsebutton, spellinfo})
-        if GSE.ButtonOverrides then
+        -- When resetting (reseticon=true), override buttons keep their spell icon.
+        -- The GSE logo reset visual is for the sequence button only, not the bar.
+        if GSE.ButtonOverrides and not reseticon then
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
                     if

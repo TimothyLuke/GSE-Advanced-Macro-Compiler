@@ -736,6 +736,14 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Actionbar Override Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
+        -- Actionbar Override Watermark
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionBarWatermark", "showActionBarWatermark", GSEOptions, Settings.VarType.Boolean, L["Show Actionbar Override Watermark"], true)
+            setting:SetValueChangedCallback(function()
+                GSE.SetActionBarWatermarkEnabled(GSEOptions.showActionBarWatermark ~= false)
+            end)
+            Settings.CreateCheckbox(generalOptions, setting, L["Show the GSE logo as a small watermark on actionbar override buttons."])
+        end
         -- Hide Login Message
         do
             local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)

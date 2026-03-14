@@ -166,9 +166,27 @@ local BAR_SWAP_ONCLICK = [[
 -- Track which buttons already have the icon-update hook to avoid duplicate hooks.
 local iconHookedButtons = {}
 
--- Return the icon texture for the GSE macro backing this button, or nil.
--- Uses GetMacroIndexByName so it works across all WoW versions.
+-- Compute the effective action slot for a button from non-secure code.
+-- For standard bars: slot index + (page-1)*12.  For Dominos/slot-0: reads "action" attr.
+local function getButtonEffectiveSlot(btn)
+    local slot = btn:GetID()
+    if not slot or slot == 0 then
+        return tonumber(btn:GetAttribute("action"))
+    end
+    local page = tonumber(btn:GetAttribute("actionpage")) or 1
+    return slot + (page - 1) * 12
+end
+
+-- Return the display icon for a GSE-overridden button.
+-- Prefers GetActionTexture(effectiveSlot) which returns the smart/spell icon WoW
+-- derives from the compiled macro (e.g. the Fireball icon for /cast Fireball).
+-- Falls back to the registered macro icon if the slot lookup fails.
 local function getGSEButtonIcon(self)
+    local effectiveSlot = getButtonEffectiveSlot(self)
+    if effectiveSlot and GetActionTexture then
+        local texture = GetActionTexture(effectiveSlot)
+        if texture then return texture end
+    end
     if not GetMacroIndexByName then return nil end
     local seq = self:GetAttribute("gse-button")
     if not seq then return nil end
@@ -178,13 +196,62 @@ local function getGSEButtonIcon(self)
     return texture
 end
 
+-- Small GSE logo overlaid in the bottom-right corner of overridden buttons.
+local watermarkedButtons = {}
+
+local function addGSEWatermark(Button)
+    if watermarkedButtons[Button] then return end
+    local btn = _G[Button]
+    if not btn then return end
+    local wm = btn:CreateTexture(nil, "OVERLAY", nil, 7)
+    wm:SetTexture(Statics.Icons.GSE_Logo_Dark)
+    wm:SetSize(14, 14)
+    wm:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 2)
+    wm:SetAlpha(0.85)
+    if GSEOptions.showActionBarWatermark == false then wm:Hide() end
+    watermarkedButtons[Button] = wm
+end
+
+local function removeGSEWatermark(Button)
+    local wm = watermarkedButtons[Button]
+    if not wm then return end
+    wm:Hide()
+    watermarkedButtons[Button] = nil
+end
+
+local function setWatermarkVisible(Button, visible)
+    if GSEOptions.showActionBarWatermark == false then return end
+    local wm = watermarkedButtons[Button]
+    if not wm then return end
+    if visible then wm:Show() else wm:Hide() end
+end
+
+function GSE.SetActionBarWatermarkEnabled(enabled)
+    for _, wm in pairs(watermarkedButtons) do
+        if enabled then wm:Show() else wm:Hide() end
+    end
+end
+
+
 -- Restore the GSE macro icon on a button, deferring one frame so WoW's own
 -- ActionButton_Update pass (triggered by type/attribute changes) runs first.
+-- If GetActionTexture is not yet populated (e.g. at startup), falls back to
+-- GSE.UpdateIcon which reads the icon directly from the compiled SequencesExec.
 local function scheduleIconRestore(self, icon)
     C_Timer.After(0, function()
         if not self:GetAttribute("gse-button") then return end
         local texture = getGSEButtonIcon(self)
-        if texture then icon:SetTexture(texture) end
+        if texture then
+            icon:SetTexture(texture)
+            icon:Show()
+            return
+        end
+        -- Action bar slot not yet populated – delegate to UpdateIcon which
+        -- resolves the spell icon from the compiled sequence execution table.
+        local seq = self:GetAttribute("gse-button")
+        if seq and _G[seq] and GSE.UpdateIcon then
+            GSE.UpdateIcon(_G[seq], false)
+        end
     end)
 end
 
@@ -195,6 +262,35 @@ end
 local function hookButtonIconUpdates(Button)
     if iconHookedButtons[Button] then return end
     iconHookedButtons[Button] = true
+
+    -- WoW hides the icon and shows the empty-slot look on hover for type="click" buttons.
+    -- Restore the icon immediately after WoW's own OnEnter/OnLeave processing.
+    local function restoreIconNow(self)
+        if not self:GetAttribute("gse-button") then return end
+        local btnName = self:GetName()
+        local icon = self.icon or (btnName and _G[btnName .. "Icon"])
+        if not icon then return end
+        local texture = getGSEButtonIcon(self)
+        if texture then
+            icon:SetTexture(texture)
+            icon:Show()
+        end
+    end
+    _G[Button]:HookScript("OnEnter", function(self)
+        restoreIconNow(self)
+        if not self:GetAttribute("gse-button") then return end
+        -- Show the spell tooltip for the action in this slot.
+        -- GameTooltip functions are non-secure and work in combat.
+        -- SetAction uses WoW's smart tooltip which resolves macros to their current spell.
+        local effectiveSlot = getButtonEffectiveSlot(self)
+        if effectiveSlot and effectiveSlot > 0 then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetAction(effectiveSlot)
+            GameTooltip:Show()
+        end
+    end)
+    _G[Button]:HookScript("OnLeave", restoreIconNow)
+
     _G[Button]:HookScript("OnAttributeChanged", function(self, name, value)
         if not self:GetAttribute("gse-button") then return end
         local btnName = self:GetName()
@@ -202,10 +298,14 @@ local function hookButtonIconUpdates(Button)
         if not icon then return end
         if name == "gse-eff-action" then
             if value and value > 0 then
+                -- Bar swapped (vehicle/skyriding) – show override icon, hide watermark.
                 local texture = GetActionTexture(value)
                 if texture then icon:SetTexture(texture) end
+                setWatermarkVisible(btnName, false)
             else
+                -- Returned to normal GSE state – restore spell icon, show watermark.
                 scheduleIconRestore(self, icon)
+                setWatermarkVisible(btnName, true)
             end
         elseif name == "type" and value == "click" then
             -- type was set back to "click" – WoW's own update will run this frame
@@ -233,7 +333,10 @@ local function hookActionButtonUpdate()
         local icon = self.icon or (btnName and _G[btnName .. "Icon"])
         if not icon then return end
         local texture = getGSEButtonIcon(self)
-        if texture then icon:SetTexture(texture) end
+        if texture then
+            icon:SetTexture(texture)
+            icon:Show()
+        end
     end)
 end
 
@@ -272,6 +375,8 @@ local function overrideActionButton(savedBind, force)
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
         hookButtonIconUpdates(Button)
+        addGSEWatermark(Button)
+        scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
         GSE.ButtonOverrides[Button] = Sequence
     elseif
         (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
@@ -299,6 +404,9 @@ local function overrideActionButton(savedBind, force)
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
             -- WrapScript removed: SetState handles type management for these button addons
         end
+        hookButtonIconUpdates(Button)
+        addGSEWatermark(Button)
+        scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
         GSE.ButtonOverrides[Button] = Sequence
     else
         if not InCombatLockdown() then
@@ -349,6 +457,8 @@ local function overrideActionButton(savedBind, force)
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
         end
         hookButtonIconUpdates(Button)
+        addGSEWatermark(Button)
+        scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
         GSE.ButtonOverrides[Button] = Sequence
     end
 end
@@ -391,12 +501,14 @@ local function LoadOverrides(force)
                     state = ""
                 end
                 _G[k]:SetState(state, "action", tonumber(string.match(k, "%d+$")))
+                removeGSEWatermark(k)
             else
                 _G[k]:SetAttribute("gse-button", nil)
                 _G[k]:SetAttribute("type", "action")
                 SecureHandlerUnwrapScript(_G[k], "OnClick")
                 SecureHandlerUnwrapScript(_G[k], "OnEnter")
                 SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+                removeGSEWatermark(k)
             end
         end
         GSE.ButtonOverrides = {}
