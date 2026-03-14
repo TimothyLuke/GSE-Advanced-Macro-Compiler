@@ -167,12 +167,14 @@ local BAR_SWAP_ONCLICK = [[
 local iconHookedButtons = {}
 
 -- Compute the effective action slot for a button from non-secure code.
--- For standard bars: slot index + (page-1)*12.  For Dominos/slot-0: reads "action" attr.
+-- WoW's RegisterAttributeDriver writes the final computed slot into the "action"
+-- attribute on every button (Blizzard, Dominos, etc.), so prefer that first.
+-- Fall back to GetID()+actionpage for bars that don't use the driver.
 local function getButtonEffectiveSlot(btn)
+    local action = tonumber(btn:GetAttribute("action"))
+    if action and action > 0 then return action end
     local slot = btn:GetID()
-    if not slot or slot == 0 then
-        return tonumber(btn:GetAttribute("action"))
-    end
+    if not slot or slot == 0 then return nil end
     local page = tonumber(btn:GetAttribute("actionpage")) or 1
     return slot + (page - 1) * 12
 end
@@ -255,6 +257,69 @@ local function scheduleIconRestore(self, icon)
     end)
 end
 
+-- Resolve and display the tooltip for a GSE-overridden action button.
+-- Reads the current step's spell from GSE.SequencesExec (the action bar slot is
+-- empty for GSE overrides, so GetActionInfo is not useful here).
+-- Safe to call in combat — all APIs used are non-secure reads.
+local function showGSEButtonTooltip(btn)
+    if not btn or not btn.GetAttribute then return end
+    if not btn:GetAttribute("gse-button") then return end
+    local seqName = btn:GetAttribute("gse-button")
+    local seqFrame = seqName and _G[seqName]
+    if not seqFrame or not GSE.SequencesExec then return end
+    local step = seqFrame:GetAttribute("step") or 1
+    local executionseq = GSE.SequencesExec[seqName]
+    if not executionseq or not executionseq[step] then return end
+    local entry = executionseq[step]
+    local spellID
+    if entry.type == "spell" and entry.spell and C_Spell and C_Spell.GetSpellInfo then
+        local info = C_Spell.GetSpellInfo(GSE.UnEscapeString(entry.spell))
+        spellID = info and info.spellID
+    elseif entry.type == "macro" and entry.macrotext then
+        local info = GSE.GetSpellsFromString(entry.macrotext)
+        if info then
+            if info.spellID then
+                spellID = info.spellID
+            elseif info[1] and info[1].spellID then
+                -- castsequence returns an array; use the first spell
+                spellID = info[1].spellID
+            end
+        end
+        -- Fallback: scan each line with SecureCmdOptionParse so that
+        -- conditionals like [known:X] are evaluated for the current state.
+        if not spellID and C_Spell and C_Spell.GetSpellInfo then
+            for line in string.gmatch(entry.macrotext .. "\n", "([^\n]+)\n") do
+                local rest = line:match("^/%a+%s+(.*)")
+                if rest then
+                    local spell = SecureCmdOptionParse and SecureCmdOptionParse(rest)
+                    if spell and spell ~= "" then
+                        local si = C_Spell.GetSpellInfo(spell)
+                        if si and si.spellID then
+                            spellID = si.spellID
+                            break
+                        end
+                    end
+                end
+            end
+        end
+    elseif entry.type == "macro" and entry.macro and GetMacroIndexByName then
+        local idx = GetMacroIndexByName(entry.macro)
+        if idx and idx > 0 then spellID = GetMacroSpell(idx) end
+    end
+    GameTooltip_SetDefaultAnchor(GameTooltip, btn)
+    if spellID then
+        if GameTooltip.SetSpellByID then
+            GameTooltip:SetSpellByID(spellID)
+        else
+            GameTooltip:SetHyperlink("spell:" .. spellID)
+        end
+    else
+        GameTooltip:SetText(seqName, 1, 1, 1)
+        GameTooltip:AddLine(L["GSE Sequence"], 0.6, 0.6, 0.6)
+    end
+    GameTooltip:Show()
+end
+
 -- Non-secure hook that watches attributes written by BAR_SWAP_OAC / BAR_SWAP_ONCLICK.
 -- gse-eff-action > 0  → bar has swapped (vehicle/skyriding), show the override icon.
 -- gse-eff-action == 0 → back to normal GSE state, restore the macro icon.
@@ -278,16 +343,7 @@ local function hookButtonIconUpdates(Button)
     end
     _G[Button]:HookScript("OnEnter", function(self)
         restoreIconNow(self)
-        if not self:GetAttribute("gse-button") then return end
-        -- Show the spell tooltip for the action in this slot.
-        -- GameTooltip functions are non-secure and work in combat.
-        -- SetAction uses WoW's smart tooltip which resolves macros to their current spell.
-        local effectiveSlot = getButtonEffectiveSlot(self)
-        if effectiveSlot and effectiveSlot > 0 then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetAction(effectiveSlot)
-            GameTooltip:Show()
-        end
+        showGSEButtonTooltip(self)
     end)
     _G[Button]:HookScript("OnLeave", restoreIconNow)
 
@@ -325,6 +381,17 @@ local function hookActionButtonUpdate()
     if actionButtonUpdateHooked then return end
     if not ActionButton_Update then return end
     actionButtonUpdateHooked = true
+    -- ActionButton_OnEnter registers a per-frame UpdateTooltip which calls
+    -- ActionButton_SetTooltip repeatedly.  For type="click" buttons this clears
+    -- the tooltip each frame.  Intercept and restore the GSE spell tooltip.
+    if ActionButton_SetTooltip then
+        hooksecurefunc("ActionButton_SetTooltip", function(self)
+            if not self or not self.GetAttribute then return end
+            if not self:GetAttribute("gse-button") then return end
+            showGSEButtonTooltip(self)
+        end)
+    end
+
     hooksecurefunc("ActionButton_Update", function(self)
         if not self or not self.GetAttribute then return end
         local seq = self:GetAttribute("gse-button")

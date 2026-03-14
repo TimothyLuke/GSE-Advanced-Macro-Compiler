@@ -2,6 +2,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
 L["Enable Actionbar Override Popup"] = true
+L["GSE Sequence"] = true
 L["Show Actionbar Override Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
 
