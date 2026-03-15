@@ -566,7 +566,7 @@ local function createBlizzOptions(category)
                 local d = GSEOptions.frameLocations and GSEOptions.frameLocations.menu and GSEOptions.frameLocations.menu.direction
                 return (d and d ~= "") and d or "DOWN"
             end
-            local function SetValue(_, val)
+            local function SetValue(val)
                 if GSE.UpdateMenuDirection then GSE.UpdateMenuDirection(val) end
             end
             local setting = Settings.RegisterProxySetting(windowOptions, "menuDirection", Settings.VarType.String, L["Growth Direction"], "DOWN", GetValue, SetValue)
@@ -584,7 +584,7 @@ local function createBlizzOptions(category)
             local function GetValue()
                 return GSEOptions.frameLocations and GSEOptions.frameLocations.menu and GSEOptions.frameLocations.menu.locked == true
             end
-            local function SetValue(_, val)
+            local function SetValue(val)
                 if GSE.isEmpty(GSEOptions.frameLocations) then GSEOptions.frameLocations = {} end
                 if GSE.isEmpty(GSEOptions.frameLocations.menu) then GSEOptions.frameLocations.menu = {} end
                 GSEOptions.frameLocations.menu.locked = val
