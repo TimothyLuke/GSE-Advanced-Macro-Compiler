@@ -387,8 +387,8 @@ if GSE.GameMode >= 11 then
                 L["Skyriding Button"] .. " " .. i,
                 (GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(i)]) or L["Unassigned"],
                 function(btnArg)
-                    local btn = btnArg or (GetMouseFoci and GetMouseFoci()[1])
-                    if not btn then return end
+                    if not btnArg then return end
+                    local btn = btnArg
                     btn.gseSlot = slotIndex
                     btn:SetText(L["Press a key..."])
                     btn:SetPropagateKeyboardInput(false)

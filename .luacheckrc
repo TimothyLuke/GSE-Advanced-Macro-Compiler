@@ -520,5 +520,6 @@ globals = {
     "ActionButton_Update",
     "CreateSettingsButtonInitializer",
     "ActionButton_SetTooltip",
-    "BFButton"
+    "BFButton",
+    "ColorPickerFrame"
 }

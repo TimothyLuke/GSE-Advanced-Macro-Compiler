@@ -512,6 +512,12 @@ function GSE.CreateEditor()
                         GSE.ClearTooltip(editframe)
                     end
                 )
+                moveUpButton:SetCallback(
+                    "OnRelease",
+                    function(self)
+                        self:SetDisabled(false)
+                    end
+                )
 
                 moveDownButton:SetImageSize(30, 30)
                 moveDownButton:SetWidth(30)
@@ -546,6 +552,12 @@ function GSE.CreateEditor()
                     "OnLeave",
                     function()
                         GSE.ClearTooltip(editframe)
+                    end
+                )
+                moveDownButton:SetCallback(
+                    "OnRelease",
+                    function(self)
+                        self:SetDisabled(false)
                     end
                 )
             end

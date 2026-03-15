@@ -345,7 +345,7 @@ local function createBlizzOptions(category)
                         colouredLabel(colEntry.label, r, g, b),
                         L["Change"],
                         function(btnArg)
-                            local btn = btnArg or (GetMouseFoci and GetMouseFoci()[1])
+                            local btn = btnArg
                             if not btn then return end
                             local cr, cg, cb = colEntry.get()
                             local function updateLabel(nr, ng, nb)

@@ -157,7 +157,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
                 exportTable["Variables"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end
-            C_Timer.After(0, function() exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue())) end)
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
     )
     SequenceDropDown:SetCallback(
@@ -250,7 +250,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
                 exportTable["Sequences"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end
-            C_Timer.After(0, function() exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue())) end)
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
     )
     MacroDropDown:SetCallback(
@@ -291,7 +291,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
                 exportTable["Macros"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end
-            C_Timer.After(0, function() exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue())) end)
+            exportsequencebox:SetText(compileExport(exportTable, humanexportcheckbox:GetValue()))
         end
     )
     humanexportcheckbox:SetCallback(
