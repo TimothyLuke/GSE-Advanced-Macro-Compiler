@@ -532,6 +532,17 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                 end
             end
         end
+        if BFButton then
+            -- ButtonForge names both bar frames and action buttons as "ButtonForge" .. N
+            -- using separate sequential counters, so bar and button frames are interspersed.
+            -- Filter by IsObjectType("CheckButton") to include only action buttons.
+            for i = 1, 1000 do
+                local f = _G["ButtonForge" .. i]
+                if f and f:IsObjectType("CheckButton") then
+                    buttonlist["ButtonForge" .. i] = "ButtonForge" .. i
+                end
+            end
+        end
 
         -- Add any buttons referenced in saved AO data that exist in _G but weren't auto-detected
         if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
