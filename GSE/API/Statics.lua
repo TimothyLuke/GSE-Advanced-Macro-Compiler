@@ -450,8 +450,8 @@ Statics.ActionsIcons.Settings = "Interface\\Icons\\trade_engineering"
 Statics.Icons = {}
 Statics.Icons.Sequences = "Interface\\Icons\\inv_misc_book_09"
 Statics.Icons.Keybindings = Statics.ActionsIcons.Key
-Statics.Icons.Variables = "Interface\\Icons\\spell_mekkatorque_bot_redwrench"
-Statics.Icons.Import = "Interface\\Icons\\inv_misc_scrollunrolled01b"
+Statics.Icons.Variables = GSE.GameMode <= 4 and "Interface\\Icons\\inv_misc_note_01" or "Interface\\Icons\\spell_mekkatorque_bot_redwrench"
+Statics.Icons.Import = GSE.GameMode <= 4 and "Interface\\Icons\\inv_misc_scrollunrolled01" or "Interface\\Icons\\inv_misc_scrollunrolled01b"
 Statics.Icons.Macros = "Interface\\MacroFrame\\MacroFrame-Icon"
 Statics.Icons.Options = Statics.ActionsIcons.Settings
 Statics.Icons.Close = "Interface\\Addons\\GSE_GUI\\Assets\\close.png"
