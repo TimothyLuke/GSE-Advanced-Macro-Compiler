@@ -331,42 +331,77 @@ end
 
 -- Skyriding Bind Bar for Retail
 if GSE.GameMode >= 11 then
-    local config = LibStub("AceConfig-3.0")
-    local dialog = LibStub("AceConfigDialog-3.0")
-    local addonName = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
-    local OptionsTable = {
-        type = "group",
-        args = {
-            title = {
-                name = L["Skyriding / Vehicle Keybinds"],
-                desc = L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"],
-                order = 1,
-                type = "header"
-            }
-        }
-    }
+    local skyOptions = Settings.RegisterVerticalLayoutSubcategory(
+        Settings.GetCategory(GSE.MenuCategoryID),
+        L["Skyriding / Vehicle Keybinds"]
+    )
+
+    do
+        local layout = SettingsPanel:GetLayout(skyOptions)
+        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
+            name = L["Skyriding / Vehicle Keybinds"],
+            tooltip = L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"],
+        }))
+    end
+
+    local slotInits = {}
+
+    local function onKeyDown(self, key)
+        if key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" or
+           key == "LSHIFT" or key == "RSHIFT" or key == "LMETA" or key == "RMETA" then
+            return
+        end
+        local slotIndex = self.gseSlot
+        local binding
+        if key == "ESCAPE" then
+            if GSE.isEmpty(GSEOptions.SkyRidingBinds) then GSEOptions.SkyRidingBinds = {} end
+            GSEOptions.SkyRidingBinds[tostring(slotIndex)] = nil
+            binding = L["Unassigned"]
+        else
+            local mods = ""
+            if IsControlKeyDown() then mods = "CTRL-" .. mods end
+            if IsAltKeyDown()     then mods = "ALT-"  .. mods end
+            if IsShiftKeyDown()   then mods = "SHIFT-".. mods end
+            binding = mods .. key
+            if GSE.isEmpty(GSEOptions.SkyRidingBinds) then GSEOptions.SkyRidingBinds = {} end
+            GSEOptions.SkyRidingBinds[tostring(slotIndex)] = binding
+            GSE.UpdateVehicleBar()
+        end
+        self:SetText(binding)
+        self:SetScript("OnKeyDown", nil)
+        self:EnableKeyboard(false)
+        self:SetPropagateKeyboardInput(true)
+        -- keep initializer data in sync so button text is correct on panel re-open
+        local init = slotInits[slotIndex]
+        if init then
+            local d = init:GetData()
+            if d then d.buttonText = binding end
+        end
+    end
 
     for i = 1, 12 do
-        OptionsTable.args["Skyriding" .. tostring(i)] = {
-            name = L["Skyriding Button"] .. " " .. tostring(i),
-            type = "keybinding",
-            set = function(info, val)
-                if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
-                    GSEOptions.SkyRidingBinds = {}
-                end
-                GSEOptions.SkyRidingBinds[tostring(i)] = val
-                GSE.UpdateVehicleBar()
-            end,
-            get = function(info)
-                return GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(i)] and
-                    GSEOptions.SkyRidingBinds[tostring(i)] or
-                    ""
-            end,
-            order = i + 1
-        }
-    end
-    config:RegisterOptionsTable(addonName .. "-Skyriding", OptionsTable)
-    dialog:AddToBlizOptions(addonName .. "-Skyriding", OptionsTable.args.title.name, GSE.MenuCategoryID) -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
+        local slotIndex = i
+        do
+            local layout = SettingsPanel:GetLayout(skyOptions)
+            local init = CreateSettingsButtonInitializer(
+                L["Skyriding Button"] .. " " .. i,
+                (GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(i)]) or L["Unassigned"],
+                function(btnArg)
+                    local btn = btnArg or (GetMouseFoci and GetMouseFoci()[1])
+                    if not btn then return end
+                    btn.gseSlot = slotIndex
+                    btn:SetText(L["Press a key..."])
+                    btn:SetPropagateKeyboardInput(false)
+                    btn:EnableKeyboard(true)
+                    btn:SetScript("OnKeyDown", onKeyDown)
+                end,
+                "",
+                false
+            )
+            slotInits[i] = init
+            layout:AddInitializer(init)
+        end
+    end -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
     ----------------------------------------------------------------------------------------------------------
 
     -- Pet battle buttons

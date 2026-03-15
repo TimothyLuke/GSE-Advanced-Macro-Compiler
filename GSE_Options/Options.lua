@@ -12,331 +12,116 @@ local function FormatSequenceNames(names)
     return returnstring
 end
 
-function GSE.GetOptionsTable()
-    local OptionsTable = {
-        type = "group",
-        name = "|cffff0000GSE:|r " .. L["Options"],
-        args = {
-            colour = {
-                name = L["Colour"],
-                desc = L["Colour and Accessibility Options"],
-                type = "group",
-                order = 5,
-                args = {
-                    ctitle1 = {
-                        type = "header",
-                        name = L["General Options"],
-                        order = 100
-                    },
-                    titleColour = {
-                        type = "color",
-                        name = L["Title Colour"],
-                        desc = L["Picks a Custom Colour for the Mod Names."],
-                        order = 101,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.TitleColour)
-                        end,
-                        set = function(info, r, g, b, a)
-                            GSEOptions.TitleColour =
-                                string.format("|c%02x%02x%02x%02x", a * 255, r * 255, g * 255, b * 255)
-                        end
-                    },
-                    authorColour = {
-                        type = "color",
-                        name = L["Author Colour"],
-                        desc = L["Picks a Custom Colour for the Author."],
-                        order = 110,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.AuthorColour)
-                        end,
-                        set = function(info, r, g, b)
-                            GSEOptions.AuthorColour =
-                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
-                        end
-                    },
-                    commandColour = {
-                        type = "color",
-                        name = L["Command Colour"],
-                        desc = L["Picks a Custom Colour for the Commands."],
-                        order = 120,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.CommandColour)
-                        end,
-                        set = function(info, r, g, b)
-                            GSEOptions.CommandColour =
-                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
-                        end
-                    },
-                    emphasisColour = {
-                        type = "color",
-                        name = L["Emphasis Colour"],
-                        desc = L["Picks a Custom Colour for emphasis."],
-                        order = 130,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.EmphasisColour)
-                        end,
-                        set = function(info, r, g, b)
-                            GSEOptions.EmphasisColour =
-                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
-                        end
-                    },
-                    normalColour = {
-                        type = "color",
-                        name = L["Normal Colour"],
-                        desc = L["Picks a Custom Colour to be used normally."],
-                        order = 140,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.NormalColour)
-                        end,
-                        set = function(info, r, g, b)
-                            GSEOptions.NormalColour =
-                                string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
-                        end
-                    },
-                    ctitle2 = {
-                        type = "header",
-                        name = L["Editor Colours"],
-                        order = 200
-                    },
-                    keywordColour = {
-                        type = "color",
-                        name = L["Spell Colour"],
-                        desc = L["Picks a Custom Colour to be used for Spells and Abilities."],
-                        order = 210,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.KEYWORD)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.KEYWORD, r, g, b)
-                        end
-                    },
-                    unknownColour = {
-                        type = "color",
-                        name = L["Unknown Colour"],
-                        desc = L["Picks a Custom Colour to be used for unknown terms."],
-                        order = 220,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.UNKNOWN)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.UNKNOWN, r, g, b)
-                        end
-                    },
-                    iconColour = {
-                        type = "color",
-                        name = L["Icon Colour"],
-                        desc = L["Picks a Custom Colour to be used for Icons."],
-                        order = 230,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.CONCAT)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.CONCAT, r, g, b)
-                        end
-                    },
-                    numberColour = {
-                        type = "color",
-                        name = L["SpecID/ClassID Colour"],
-                        desc = L["Picks a Custom Colour to be used for numbers."],
-                        order = 240,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.NUMBER)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.NUMBER, r, g, b)
-                        end
-                    },
-                    stringColour = {
-                        type = "color",
-                        name = L["String Colour"],
-                        desc = L["Picks a Custom Colour to be used for strings."],
-                        hidden = true,
-                        order = 250,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.STRING)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.STRING, r, g, b)
-                        end
-                    },
-                    conditionalColour = {
-                        type = "color",
-                        name = L["Conditionals Colour"],
-                        desc = L["Picks a Custom Colour to be used for macro conditionals eg [mod:shift]"],
-                        order = 260,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.COMMENT)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.COMMENT, r, g, b)
-                        end
-                    },
-                    helpColour = {
-                        type = "color",
-                        name = L["Help Colour"],
-                        desc = L["Picks a Custom Colour to be used for braces and indents."],
-                        order = 270,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.INDENT)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.INDENT, r, g, b)
-                        end
-                    },
-                    stepColour = {
-                        type = "color",
-                        name = L["Step Functions"],
-                        desc = L["Picks a Custom Colour to be used for StepFunctions."],
-                        order = 280,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.EQUALS)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.EQUALS, r, g, b)
-                        end
-                    },
-                    languageColour = {
-                        type = "color",
-                        name = L["Language Colour"],
-                        desc = L["Picks a Custom Colour to be used for language descriptors"],
-                        order = 290,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.STANDARDFUNCS)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.STANDARDFUNCS, r, g, b)
-                        end
-                    },
-                    shortcutsColour = {
-                        type = "color",
-                        name = L["Blizzard Functions Colour"],
-                        desc = L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"],
-                        order = 300,
-                        hasAlpha = false,
-                        get = function(info)
-                            return GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS)
-                        end,
-                        set = function(info, r, g, b)
-                            GSE.GUISetColour(GSEOptions.WOWSHORTCUTS, r, g, b)
-                        end
-                    }
-                }
-            },
-            about = {
-                name = L["About"],
-                desc = L["About GSE"],
-                type = "group",
-                order = 8,
-                args = {
-                    -- aboutIcon = {
-                    --   type = "description",
-                    --   name = "",
-                    --   image = "Interface\\Addons\\GSE_GUI\\GSE2_Logo_Dark_512.tga",
-                    --   imageWidth = 100;
-                    --   imageHeight = 100;
-                    --   order = 5
-                    -- },
-                    title4 = {
-                        type = "header",
-                        name = L["History"],
-                        order = 10
-                    },
-                    aboutDescription = {
-                        type = "description",
-                        name = L[
-                            "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community."
-                        ],
-                        order = 20,
-                        image = Statics.Icons.Logo,
-                        imageWidth = 120,
-                        imageHeight = 120
-                    },
-                    versionHeader = {
-                        type = "header",
-                        name = L["Version"],
-                        order = 21
-                    },
-                    versionDescription = {
-                        type = "description",
-                        name = "GSE: " .. GSE.VersionString,
-                        order = 22
-                    },
-                    support = {
-                        type = "execute",
-                        name = L["GSE Discord"],
-                        order = 24,
-                        image = Statics.Icons.Discord,
-                        imageWidth = 120,
-                        imageHeight = 120,
-                        func = function()
-                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url = "https://discord.gg/yUS9R4ZXZA"
-                            StaticPopup_Show("GSE_SEQUENCEHELP")
-                        end
-                    },
-                    issues = {
-                        type = "execute",
-                        name = L["Report an Issue"],
-                        order = 25,
-                        image = Statics.Icons.GitHub,
-                        imageWidth = 120,
-                        imageHeight = 120,
-                        func = function()
-                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url =
-                                "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/issues"
-                            StaticPopup_Show("GSE_SEQUENCEHELP")
-                        end
-                    },
-                    patreonlink = {
-                        type = "execute",
-                        name = L["Support GSE"],
-                        order = 26,
-                        image = Statics.Icons.Patreon,
-                        imageWidth = 120,
-                        imageHeight = 120,
-                        func = function()
-                            StaticPopupDialogs["GSE_SEQUENCEHELP"].url = "https://www.patreon.com/TimothyLuke"
-                            StaticPopup_Show("GSE_SEQUENCEHELP")
-                        end
-                    },
-                    title5 = {
-                        type = "header",
-                        name = L["Supporters"],
-                        order = 30
-                    },
-                    supportersDescription = {
-                        type = "description",
-                        name = L[
-                            "The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."
-                        ],
-                        order = 31
-                    }
-                }
-            }
-        }
-    }
-    return OptionsTable
-end
-
 local addonName = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
-local config = LibStub("AceConfig-3.0")
-local dialog = LibStub("AceConfigDialog-3.0")
-local modoptions = GSE.GetOptionsTable()
 
 local registered = false
+
+local function createAboutPanel()
+    local panel = CreateFrame("Frame")
+    panel.OnCommit = function() end
+    panel.OnDefault = function() end
+    panel.OnRefresh = function() end
+
+    local built = false
+    panel:SetScript("OnShow", function(self)
+        if built then return end
+        built = true
+
+        local padding = 20
+        local pw = self:GetWidth()
+        if pw < 100 then pw = 600 end
+
+        -- ScrollFrame fills the panel, leaving room for the scrollbar
+        local scrollFrame = CreateFrame("ScrollFrame", nil, self, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
+        scrollFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -26, 0)
+
+        local cw = pw - 26  -- content width (panel minus scrollbar)
+        local content = CreateFrame("Frame", nil, scrollFrame)
+        content:SetWidth(cw)
+        content:SetHeight(2000)  -- large enough; scroll handles overflow
+        scrollFrame:SetScrollChild(content)
+
+        -- Logo (top-left of content)
+        local logo = content:CreateTexture(nil, "ARTWORK")
+        logo:SetTexture(Statics.Icons.Logo)
+        logo:SetSize(120, 120)
+        logo:SetPoint("TOPLEFT", content, "TOPLEFT", padding, -padding)
+
+        -- History header (right of logo, aligned to top)
+        local histHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
+        histHeader:SetPoint("TOPLEFT", logo, "TOPRIGHT", padding, 0)
+        histHeader:SetText(L["History"])
+
+        -- About description text (beside logo)
+        local textWidth = cw - 120 - padding * 3
+        local aboutDesc = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        aboutDesc:SetWidth(textWidth)
+        aboutDesc:SetJustifyH("LEFT")
+        aboutDesc:SetWordWrap(true)
+        aboutDesc:SetPoint("TOPLEFT", histHeader, "BOTTOMLEFT", 0, -6)
+        aboutDesc:SetText(L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community."])
+
+        -- Version (anchored below logo)
+        local versionHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
+        versionHeader:SetPoint("TOPLEFT", logo, "BOTTOMLEFT", 0, -padding)
+        versionHeader:SetText(L["Version"])
+
+        local versionText = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        versionText:SetPoint("TOPLEFT", versionHeader, "BOTTOMLEFT", 0, -6)
+        versionText:SetText("GSE: " .. GSE.VersionString)
+
+        -- Link buttons row
+        local linkData = {
+            { name = L["GSE Discord"],     icon = Statics.Icons.Discord, url = "https://discord.gg/yUS9R4ZXZA" },
+            { name = L["Report an Issue"], icon = Statics.Icons.Github,  url = "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/issues" },
+            { name = L["Support GSE"],     icon = Statics.Icons.Patreon, url = "https://www.patreon.com/TimothyLuke" },
+        }
+        local firstBtn, prevBtn = nil, nil
+        for _, bdata in ipairs(linkData) do
+            local btn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+            btn:SetSize(170, 36)
+            if prevBtn then
+                btn:SetPoint("LEFT", prevBtn, "RIGHT", 12, 0)
+            else
+                btn:SetPoint("TOPLEFT", versionText, "BOTTOMLEFT", 0, -padding)
+                firstBtn = btn
+            end
+            local tex = btn:CreateTexture(nil, "OVERLAY")
+            tex:SetTexture(bdata.icon)
+            tex:SetSize(22, 22)
+            tex:SetPoint("LEFT", btn, "LEFT", 8, 0)
+            btn:SetText("  " .. bdata.name)
+            local capturedUrl = bdata.url
+            btn:SetScript("OnClick", function()
+                StaticPopupDialogs["GSE_SEQUENCEHELP"].url = capturedUrl
+                StaticPopup_Show("GSE_SEQUENCEHELP")
+            end)
+            prevBtn = btn
+        end
+
+        -- Supporters section (anchored to first button's bottom-left, not last)
+        local supHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
+        supHeader:SetPoint("TOPLEFT", firstBtn, "BOTTOMLEFT", 0, -padding)
+        supHeader:SetText(L["Supporters"])
+
+        local supDesc = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        supDesc:SetWidth(cw - padding * 2)
+        supDesc:SetJustifyH("LEFT")
+        supDesc:SetWordWrap(true)
+        supDesc:SetPoint("TOPLEFT", supHeader, "BOTTOMLEFT", 0, -8)
+        supDesc:SetText(L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."])
+
+        local patronList = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        patronList:SetWidth(cw - padding * 2)
+        patronList:SetJustifyH("LEFT")
+        patronList:SetWordWrap(true)
+        patronList:SetPoint("TOPLEFT", supDesc, "BOTTOMLEFT", 0, -6)
+        patronList:SetText(table.concat(Statics.Patrons, ", "))
+    end)
+
+    return panel
+end
 
 local function createBlizzOptions(category)
 
@@ -482,17 +267,121 @@ local function createBlizzOptions(category)
 
     -- Colour
     do
-        config:RegisterOptionsTable(addonName .. "-Colour", modoptions.args.colour)
         local colourOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Colour"])
-        local layout = SettingsPanel:GetLayout(colourOptions)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = L["Colour and Accessibility Options"], tooltip = L["Colour and Accessibility Options"]}))
-        layout:AddInitializer(CreateSettingsButtonInitializer(
-            L["Open Colour Settings"],
-            L["Open Colour Settings"],
-            function() dialog:Open(addonName .. "-Colour") end,
-            L["Click to open the colour picker for GSE text and editor colours."],
-            true
-        ))
+
+        -- r,g,b (0-1) → |cffRRGGBB
+        local function toHex(r, g, b)
+            return string.format("|c%02x%02x%02x%02x", 255, r * 255, g * 255, b * 255)
+        end
+
+        -- Label text rendered in its own colour — acts as the swatch
+        local function colouredLabel(label, r, g, b)
+            return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, label)
+        end
+
+        local colours = {
+            { header = L["General Options"] },
+            { label = L["Title Colour"],              desc = L["Picks a Custom Colour for the Mod Names."],
+              get = function() return GSE.GUIGetColour(GSEOptions.TitleColour) end,
+              set = function(r,g,b) GSEOptions.TitleColour    = toHex(r,g,b) end },
+            { label = L["Info Colour"],               desc = L["Picks a Custom Colour for informational and debug output."],
+              get = function() return GSE.GUIGetColour(GSEOptions.AuthorColour) end,
+              set = function(r,g,b) GSEOptions.AuthorColour   = toHex(r,g,b) end },
+            { label = L["Command Colour"],            desc = L["Picks a Custom Colour for the Commands."],
+              get = function() return GSE.GUIGetColour(GSEOptions.CommandColour) end,
+              set = function(r,g,b) GSEOptions.CommandColour  = toHex(r,g,b) end },
+            { label = L["Emphasis Colour"],           desc = L["Picks a Custom Colour for emphasis."],
+              get = function() return GSE.GUIGetColour(GSEOptions.EmphasisColour) end,
+              set = function(r,g,b) GSEOptions.EmphasisColour = toHex(r,g,b) end },
+            { label = L["Normal Colour"],             desc = L["Picks a Custom Colour to be used normally."],
+              get = function() return GSE.GUIGetColour(GSEOptions.NormalColour) end,
+              set = function(r,g,b) GSEOptions.NormalColour   = toHex(r,g,b) end },
+            { header = L["Editor Colours"] },
+            { label = L["Slash Commands"],            desc = L["Picks a Custom Colour for WoW macro slash commands like /cast and /use."],
+              get = function() return GSE.GUIGetColour(GSEOptions.WOWSHORTCUTS) end,
+              set = function(r,g,b) GSEOptions.WOWSHORTCUTS   = toHex(r,g,b) end },
+            { label = L["Modifiers & Functions"],     desc = L["Picks a Custom Colour for conditional modifiers and standard functions."],
+              get = function() return GSE.GUIGetColour(GSEOptions.STANDARDFUNCS) end,
+              set = function(r,g,b) GSEOptions.STANDARDFUNCS  = toHex(r,g,b) end },
+            { label = L["Conditionals & Comments"],   desc = L["Picks a Custom Colour for macro conditionals eg [mod:shift] and comments."],
+              get = function() return GSE.GUIGetColour(GSEOptions.COMMENT) end,
+              set = function(r,g,b) GSEOptions.COMMENT        = toHex(r,g,b) end },
+            { label = L["Spells & Action Labels"],    desc = L["Picks a Custom Colour for spell names and action block type labels."],
+              get = function() return GSE.GUIGetColour(GSEOptions.KEYWORD) end,
+              set = function(r,g,b) GSEOptions.KEYWORD        = toHex(r,g,b) end },
+            { label = L["Logic & Comparison"],        desc = L["Picks a Custom Colour for logic and comparison operators such as == and or."],
+              get = function() return GSE.GUIGetColour(GSEOptions.EQUALS) end,
+              set = function(r,g,b) GSEOptions.EQUALS         = toHex(r,g,b) end },
+            { label = L["Table Operators"],           desc = L["Picks a Custom Colour for table operators such as { } and ..."],
+              get = function() return GSE.GUIGetColour(GSEOptions.CONCAT) end,
+              set = function(r,g,b) GSEOptions.CONCAT         = toHex(r,g,b) end },
+            { label = L["Numbers & Operators"],       desc = L["Picks a Custom Colour for numbers and arithmetic operators."],
+              get = function() return GSE.GUIGetColour(GSEOptions.NUMBER) end,
+              set = function(r,g,b) GSEOptions.NUMBER         = toHex(r,g,b) end },
+            { label = L["Bracket Operators"],         desc = L["Picks a Custom Colour for array bracket operators [ ]."],
+              get = function() return GSE.GUIGetColour(GSEOptions.STRING) end,
+              set = function(r,g,b) GSEOptions.STRING         = toHex(r,g,b) end },
+            { label = L["Unknown Colour"],            desc = L["Picks a Custom Colour to be used for unknown terms."],
+              get = function() return GSE.GUIGetColour(GSEOptions.UNKNOWN) end,
+              set = function(r,g,b) GSEOptions.UNKNOWN        = toHex(r,g,b) end },
+        }
+
+        local colourInits = {}
+
+        for _, entry in ipairs(colours) do
+            if entry.header then
+                do
+                    local layout = SettingsPanel:GetLayout(colourOptions)
+                    layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
+                        name = entry.header, tooltip = "",
+                    }))
+                end
+            else
+                local colEntry = entry
+                do
+                    local layout = SettingsPanel:GetLayout(colourOptions)
+                    local r, g, b = colEntry.get()
+                    local init = CreateSettingsButtonInitializer(
+                        colouredLabel(colEntry.label, r, g, b),
+                        L["Change"],
+                        function(btnArg)
+                            local btn = btnArg or (GetMouseFoci and GetMouseFoci()[1])
+                            if not btn then return end
+                            local cr, cg, cb = colEntry.get()
+                            local function updateLabel(nr, ng, nb)
+                                local newName = colouredLabel(colEntry.label, nr, ng, nb)
+                                local ci = colourInits[colEntry]
+                                if ci then
+                                    local d = ci:GetData()
+                                    if d then d.name = newName end
+                                end
+                                local labelFrame = btn:GetParent()
+                                if labelFrame and labelFrame.Text then
+                                    labelFrame.Text:SetText(newName)
+                                end
+                            end
+                            ColorPickerFrame:SetupColorPickerAndShow({
+                                swatchFunc = function()
+                                    local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+                                    colEntry.set(nr, ng, nb)
+                                    updateLabel(nr, ng, nb)
+                                end,
+                                cancelFunc = function(prev)
+                                    colEntry.set(prev.r, prev.g, prev.b)
+                                    updateLabel(prev.r, prev.g, prev.b)
+                                end,
+                                r = cr, g = cg, b = cb,
+                                hasOpacity = false,
+                            })
+                        end,
+                        colEntry.desc,
+                        false
+                    )
+                    colourInits[colEntry] = init
+                    layout:AddInitializer(init)
+                end
+            end
+        end
     end
 
     -- Plugins
@@ -664,17 +553,12 @@ end
 
 function GSE:CreateConfigPanels()
     if not registered then
-        modoptions.args.about.args.patrons = {
-            type = "description",
-            name = table.concat(Statics.Patrons, ", "),
-            order = 32
-        }
-        config:RegisterOptionsTable(addonName, modoptions.args.about)
-        local _, catid = dialog:AddToBlizOptions(addonName, addonName)
-
         registered = true
-        GSE.MenuCategoryID = catid
-        local category = Settings.GetCategory(catid)
+
+        local aboutPanel = createAboutPanel()
+        local category = Settings.RegisterCanvasLayoutCategory(aboutPanel, addonName)
+        Settings.RegisterAddOnCategory(category)
+        GSE.MenuCategoryID = category:GetID()
 
         local generalOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["General"])
 

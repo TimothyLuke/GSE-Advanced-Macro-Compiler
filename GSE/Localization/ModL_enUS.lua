@@ -127,34 +127,33 @@ L["Open Colour Settings"] = true
 L["Click to open the colour picker for GSE text and editor colours."] = true
 L["Title Colour"] = true
 L["Picks a Custom Colour for the Mod Names."] = true
-L["Author Colour"] = true
-L["Picks a Custom Colour for the Author."] = true
-
+L["Info Colour"] = true
+L["Picks a Custom Colour for informational and debug output."] = true
+L["Command Colour"] = true
 L["Picks a Custom Colour for the Commands."] = true
 L["Emphasis Colour"] = true
 L["Picks a Custom Colour for emphasis."] = true
 L["Normal Colour"] = true
 L["Picks a Custom Colour to be used normally."] = true
 L["Editor Colours"] = true
-L["Spell Colour"] = true
-L["Picks a Custom Colour to be used for Spells and Abilities."] = true
+L["Spells & Action Labels"] = true
+L["Picks a Custom Colour for spell names and action block type labels."] = true
 L["Unknown Colour"] = true
 L["Picks a Custom Colour to be used for unknown terms."] = true
-L["Icon Colour"] = true
-L["Picks a Custom Colour to be used for Icons."] = true
-L["SpecID/ClassID Colour"] = true
-L["Picks a Custom Colour to be used for numbers."] = true
-
-L["Picks a Custom Colour to be used for strings."] = true
-L["Picks a Custom Colour to be used for macro conditionals eg [mod:shift]"] = true
-L["Help Colour"] = true
-L["Picks a Custom Colour to be used for braces and indents."] = true
-L["Step Functions"] = true
-L["Picks a Custom Colour to be used for StepFunctions."] = true
-L["Language Colour"] = true
-L["Picks a Custom Colour to be used for language descriptors"] = true
-L["Blizzard Functions Colour"] = true
-L["Picks a Custom Colour to be used for Macro Keywords like /cast and /target"] = true
+L["Table Operators"] = true
+L["Picks a Custom Colour for table operators such as { } and ..."] = true
+L["Numbers & Operators"] = true
+L["Picks a Custom Colour for numbers and arithmetic operators."] = true
+L["Bracket Operators"] = true
+L["Picks a Custom Colour for array bracket operators [ ]."] = true
+L["Conditionals & Comments"] = true
+L["Picks a Custom Colour for macro conditionals eg [mod:shift] and comments."] = true
+L["Logic & Comparison"] = true
+L["Picks a Custom Colour for logic and comparison operators such as == and or."] = true
+L["Modifiers & Functions"] = true
+L["Picks a Custom Colour for conditional modifiers and standard functions."] = true
+L["Slash Commands"] = true
+L["Picks a Custom Colour for WoW macro slash commands like /cast and /use."] = true
 L["Plugins"] = true
 
 L["Registered Addons"] = true
@@ -686,8 +685,6 @@ L["Print Active Modifiers on Click"] = true
 L["Store output of debug messages in a Global Variable that can be referrenced by other mods."] = true
 L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"] = true
 L["Enable Mod Debug Mode"] = true
-L["Conditionals Colour"] = true
-L["String Colour"] = true
 L["Command Colour"] = true
 L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] =
     true
@@ -779,6 +776,8 @@ L["Button Settings"] = true
 L["Skyriding / Vehicle Keybinds"] = true
 L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"] = true
 L["Skyriding Button"] = true
+L["Unassigned"] = true
+L["Press a key..."] = true
 
 -- #1835
 L["Keybinding Tools"] = true

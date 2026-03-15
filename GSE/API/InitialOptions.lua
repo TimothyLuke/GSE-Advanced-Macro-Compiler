@@ -44,7 +44,6 @@ function GSE.SetDefaultOptions()
     GSEOptions.NUMBER = "|cffffaa00"
     GSEOptions.STRING = "|cff888888"
     GSEOptions.COMMENT = "|cff55cc55"
-    GSEOptions.INDENT = "|cffccaa88"
     GSEOptions.EQUALS = "|cffccddee"
     GSEOptions.STANDARDFUNCS = "|cff55ddcc"
     GSEOptions.WOWSHORTCUTS = "|cffddaaff"
