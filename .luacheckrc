@@ -519,5 +519,6 @@ globals = {
     "GameTooltip_SetTitle",
     "ActionButton_Update",
     "CreateSettingsButtonInitializer",
-    "ActionButton_SetTooltip"
+    "ActionButton_SetTooltip",
+    "BFButton"
 }
