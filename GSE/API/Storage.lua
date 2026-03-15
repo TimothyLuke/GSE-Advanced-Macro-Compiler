@@ -1128,7 +1128,7 @@ function GSE.UpdateIcon(self, reseticon)
         GSE.UsedSequences[gsebutton] = true
     end
     if GSE.Utils then
-        GSE.TraceSequence(gsebutton, step, foundSpell)
+        GSE.TraceSequence(gsebutton, step, foundSpell, executionseq[step] and executionseq[step].blockPath)
     end
     GSE.WagoAnalytics:Switch(gsebutton .. "_" .. GSE.GetCurrentClassID(), true)
 end
@@ -1229,10 +1229,10 @@ function GSE.GetSequenceSummary()
     return returntable
 end
 
-local function buildAction(action, metaData, variables)
+local function buildAction(action, metaData, blockPath)
     if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
-        return GSE.processAction(action, metaData, variables)
+        return GSE.processAction(action, metaData, nil, blockPath)
     else
         if GSE.isEmpty(action.type) then
             action.type = "spell"
@@ -1275,6 +1275,9 @@ local function buildAction(action, metaData, variables)
                 end
             end
         end
+        if blockPath then
+            spelllist.blockPath = blockPath
+        end
         return spelllist
     end
 end
@@ -1310,15 +1313,16 @@ local function processRepeats(actionList)
     return actionList
 end
 
-function GSE.processAction(action, metaData, variables)
+function GSE.processAction(action, metaData, variables, path)
     if action.Disabled then
         return
     end
     if action.Type == Statics.Actions.Loop then
         local actionList = {}
         -- setup the interation
-        for _, v in ipairs(action) do
-            local builtaction = GSE.processAction(v, metaData, variables)
+        for idx, v in ipairs(action) do
+            local childPath = path and (path .. "." .. idx) or tostring(idx)
+            local builtaction = GSE.processAction(v, metaData, variables, childPath)
             table.insert(actionList, builtaction)
         end
         local returnActions = {}
@@ -1384,7 +1388,7 @@ function GSE.processAction(action, metaData, variables)
         end
         if clicks > 1 then
             for loop = 1, clicks do
-                table.insert(PauseActions, {["type"] = "click"})
+                table.insert(PauseActions, {["type"] = "click", ["blockPath"] = path})
                 GSE.PrintDebugMessage(loop, "Storage1")
             end
         end
@@ -1415,14 +1419,15 @@ function GSE.processAction(action, metaData, variables)
         end
 
         local actionList = {}
-        for _, v in ipairs(actions) do
-            local builtaction = GSE.processAction(v, metaData, variables)
+        for idx, v in ipairs(actions) do
+            local childPath = path and (path .. "." .. idx) or tostring(idx)
+            local builtaction = GSE.processAction(v, metaData, variables, childPath)
             table.insert(actionList, builtaction)
         end
 
         return actionList
     elseif action.Type == Statics.Actions.Action then
-        local builtstuff = buildAction(action, metaData)
+        local builtstuff = buildAction(action, metaData, path)
         return builtstuff
     elseif action.Type == Statics.Actions.Repeat then
         if GSE.isEmpty(action.Interval) then
@@ -1435,7 +1440,7 @@ function GSE.processAction(action, metaData, variables)
         end
 
         local returnAction = {
-            ["Action"] = buildAction(action, metaData),
+            ["Action"] = buildAction(action, metaData, path),
             ["Interval"] = tonumber(action.Interval)
         }
 
@@ -1538,14 +1543,19 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     end
 
     for k, v in pairs(spelllist[1]) do
-        if k == "macrotext" then
+        if k == "blockPath" then
+            -- not transferred to the secure button
+        elseif k == "macrotext" then
             gsebutton:SetAttribute("macro", nil)
             gsebutton:SetAttribute("unit", nil)
+            gsebutton:SetAttribute(k, v)
         elseif k == "macro" then
             gsebutton:SetAttribute("macrotext", nil)
             gsebutton:SetAttribute("unit", nil)
+            gsebutton:SetAttribute(k, v)
+        else
+            gsebutton:SetAttribute(k, v)
         end
-        gsebutton:SetAttribute(k, v)
     end
 
     gsebutton:SetAttribute("stepped", false)
@@ -1555,8 +1565,10 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         local line
         steps[k] = {}
         for i, j in pairs(v) do
-            line = i .. "\002" .. j
-            tinsert(steps[k], line)
+            if i ~= "blockPath" then
+                line = i .. "\002" .. j
+                tinsert(steps[k], line)
+            end
         end
     end
 

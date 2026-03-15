@@ -829,7 +829,7 @@ L["Prevent the menu from being dragged to a new position."] = true
 L["Right-Click for Options"] = true
 L["Shift + Right-Click to copy version"] = true
 L["Position Locked"] = true
-
+L["Change"] = true
 L["WhatsNew"] =
 [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.04
 

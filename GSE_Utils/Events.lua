@@ -7,7 +7,7 @@ local L = GSE.L
 local Statics = GSE.Static
 
 --- This function is used to debug a sequence and trace its execution.
-function GSE.TraceSequence(button, step, spell)
+function GSE.TraceSequence(button, step, spell, blockPath)
     if GSE.UnsavedOptions.DebugSequenceExecution and not GSE.isEmpty(spell) then
         local isUsable, notEnoughMana = C_Spell.IsSpellUsable(spell)
         local usableOutput, manaOutput, GCDOutput, CastingOutput
@@ -48,7 +48,7 @@ function GSE.TraceSequence(button, step, spell)
             GCDOutput = GSEOptions.UNKNOWN .. "GCD In Cooldown" .. Statics.StringReset
         end
 
-        local fullBlock = ""
+        local fullBlock = blockPath and (GSEOptions.EmphasisColour .. " block:" .. blockPath .. Statics.StringReset) or ""
 
         GSE.PrintDebugMessage(
             table.concat(
