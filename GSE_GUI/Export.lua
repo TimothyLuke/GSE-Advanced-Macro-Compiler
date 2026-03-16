@@ -59,7 +59,7 @@ local function compileExport(exportTable, humanReadable)
     return exportstring
 end
 
-GSE.GUIAdvancedExport = function(exportframe, objectname, type)
+GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     exportframe:ReleaseChildren()
     exportframe:SetStatusText(L["Advanced Export"])
     local exportTable = {
@@ -303,8 +303,8 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
 end
 
 
-function GSE.GUIExport(category, objectname, type)
+function GSE.GUIExport(category, objectname, exportCategory)
     exportframe.classid = category
-    GSE.GUIAdvancedExport(exportframe, objectname, type)
+    GSE.GUIAdvancedExport(exportframe, objectname, exportCategory)
     exportframe:Show()
 end

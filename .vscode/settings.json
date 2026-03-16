@@ -51,7 +51,10 @@
     "MinimalSliderWithSteppersMixin",
     "RegisterAttributeDriver",
     "CANCEL",
-    "GameTooltip_SetTitle"
+    "GameTooltip_SetTitle",
+    "CreateSettingsButtonInitializer",
+    "GameTooltip_SetDefaultAnchor",
+    "ColorPickerFrame"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
