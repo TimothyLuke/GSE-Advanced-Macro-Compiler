@@ -6,6 +6,10 @@ L["GSE Sequence"] = true
 L["Show Actionbar Override Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
 
+-- Sequence integrity / checksum strings
+L["Sequence has been altered from its exported state"] = true
+L["GSE_SEQUENCE_INTEGRITY_WARNING_TEXT"] = "WARNING: The sequence '%s' does not have a valid integrity checksum.\n\nThis means the sequence was either not created with GSE, or has been modified since it was last exported.\n\nPlease verify its contents before using it."
+
 -- checksequencesforerrors / FixSequenceStructure strings
 L["Scanning GSE.Library for structural and content issues..."] = true
 L["Sequence is not a table"] = true

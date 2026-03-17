@@ -78,7 +78,7 @@ function GSE.CreateEditor()
     editframe.frame:SetFrameStrata("MEDIUM")
     editframe.frame:SetClampedToScreen(true)
     editframe.Sequence = {}
-    editframe.Sequence.Macros = {}
+    editframe.Sequence.Versions = {}
     editframe.SequenceName = ""
     editframe.Raid = 1
     editframe.PVP = 1
@@ -97,11 +97,11 @@ function GSE.CreateEditor()
     editframe.frame:SetClampRectInsets(-10, -10, -10, -10)
 
     local function GetVersionList()
-        if not #editframe.Sequence.Macros then
+        if not #editframe.Sequence.Versions then
             return {}
         end
         local tabl = {}
-        for k, v in ipairs(editframe.Sequence.Macros) do
+        for k, v in ipairs(editframe.Sequence.Versions) do
             tabl[tostring(k)] = v.Label and tostring(k) .. " - " .. v.Label or tostring(k)
         end
         return tabl
@@ -404,7 +404,7 @@ function GSE.CreateEditor()
                 else
                     tab = func()
                     if not GSE.isEmpty(tab) then
-                        editframe.Sequence.Macros[version] = tab
+                        editframe.Sequence.Versions[version] = tab
                         treeContainer:SelectByValue(path .. "\001" .. version)
                     else
                         GSE.Print(L["Unable to process content.  Fix table and try again."], L["Raw Editor"])
@@ -463,12 +463,12 @@ function GSE.CreateEditor()
             local blocksThisLevel
 
             if #parentPath == 1 then
-                blocksThisLevel = #editframe.Sequence.Macros[version].Actions
+                blocksThisLevel = #editframe.Sequence.Versions[version].Actions
             else
                 if GSE.isEmpty(dontDeleteLastParent) then
                     parentPath[#parentPath] = nil
                 end
-                blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
+                blocksThisLevel = #editframe.Sequence.Versions[version].Actions[parentPath]
             end
             layoutcontainer:SetLayout("Flow")
             layoutcontainer:SetFullWidth(true)
@@ -486,7 +486,7 @@ function GSE.CreateEditor()
                 moveUpButton:SetCallback(
                     "OnClick",
                     function()
-                        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                        local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                         local destinationPath = {}
                         for k, v in ipairs(path) do
                             if k == #path then
@@ -495,9 +495,9 @@ function GSE.CreateEditor()
                             table.insert(destinationPath, v)
                         end
 
-                        editframe.Sequence.Macros[version].Actions[path] =
-                            GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                        editframe.Sequence.Macros[version].Actions[destinationPath] = original
+                        editframe.Sequence.Versions[version].Actions[path] =
+                            GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                        editframe.Sequence.Versions[version].Actions[destinationPath] = original
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
                 )
@@ -528,7 +528,7 @@ function GSE.CreateEditor()
                 moveDownButton:SetCallback(
                     "OnClick",
                     function()
-                        local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                        local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                         local destinationPath = {}
                         for k, v in ipairs(path) do
                             if k == #path then
@@ -537,9 +537,9 @@ function GSE.CreateEditor()
                             table.insert(destinationPath, v)
                         end
 
-                        editframe.Sequence.Macros[version].Actions[path] =
-                            GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                        editframe.Sequence.Macros[version].Actions[destinationPath] = original
+                        editframe.Sequence.Versions[version].Actions[path] =
+                            GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                        editframe.Sequence.Versions[version].Actions[destinationPath] = original
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
                 )
@@ -582,7 +582,7 @@ function GSE.CreateEditor()
                             table.insert(delPath, v)
                         end
                     end
-                    table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
+                    table.remove(editframe.Sequence.Versions[version].Actions[delPath], delObj)
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
             )
@@ -627,12 +627,12 @@ function GSE.CreateEditor()
                         }
                         if #path > 1 then
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                editframe.Sequence.Versions[version].Actions[parentPath],
                                 lastPath + 1,
                                 newAction
                             )
                         else
-                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -672,12 +672,12 @@ function GSE.CreateEditor()
                         -- setmetatable(newAction, Statics.TableMetadataFunction)
                         if #path > 1 then
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                editframe.Sequence.Versions[version].Actions[parentPath],
                                 lastPath + 1,
                                 newAction
                             )
                         else
-                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -709,12 +709,12 @@ function GSE.CreateEditor()
                         }
                         if #path > 1 then
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                editframe.Sequence.Versions[version].Actions[parentPath],
                                 lastPath + 1,
                                 newAction
                             )
                         else
-                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -759,12 +759,12 @@ function GSE.CreateEditor()
                         }
                         if #path > 1 then
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                editframe.Sequence.Versions[version].Actions[parentPath],
                                 lastPath + 1,
                                 newAction
                             )
                         else
-                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -811,12 +811,12 @@ function GSE.CreateEditor()
                         }
                         if #path > 1 then
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[parentPath],
+                                editframe.Sequence.Versions[version].Actions[parentPath],
                                 lastPath + 1,
                                 newAction
                             )
                         else
-                            table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                            table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -865,8 +865,8 @@ function GSE.CreateEditor()
                             if #testpath > 0 then
                                 -- check that the path exists
                                 if
-                                    GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
-                                        type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
+                                    GSE.isEmpty(editframe.Sequence.Versions[version].Actions[testpath]) or
+                                        type(editframe.Sequence.Versions[version].Actions[testpath]) ~= "table"
                                     then
                                     GSE.Print(L["Error: Destination path not found."])
                                     return
@@ -876,8 +876,8 @@ function GSE.CreateEditor()
                             if #sourcepath > 0 then
                                 -- check that the path exists  If this has happened we have a big problem
                                 if
-                                    GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
-                                        type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
+                                    GSE.isEmpty(editframe.Sequence.Versions[version].Actions[sourcepath]) or
+                                        type(editframe.Sequence.Versions[version].Actions[sourcepath]) ~= "table"
                                     then
                                     GSE.Print(L["Error: Source path not found."])
                                     return
@@ -890,30 +890,30 @@ function GSE.CreateEditor()
                             end
 
                             local insertActions =
-                                GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                                GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                             local endPoint = tonumber(destinationPath[#destinationPath])
 
                             local pathPoint = tonumber(path[#path])
 
                             if #sourcepath > 0 then
-                                table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
+                                table.remove(editframe.Sequence.Versions[version].Actions[sourcepath], pathPoint)
                             else
-                                table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
+                                table.remove(editframe.Sequence.Versions[version].Actions, pathPoint)
                             end
                             if #testpath > 0 then
                                 if endPoint > #testpath + 1 then
                                     endPoint = #testpath + 1
                                 end
                                 table.insert(
-                                    editframe.Sequence.Macros[version].Actions[testpath],
+                                    editframe.Sequence.Versions[version].Actions[testpath],
                                     endPoint,
                                     insertActions
                                 )
                             else
-                                if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
-                                    endPoint = #editframe.Sequence.Macros[version].Actions + 1
+                                if endPoint > #editframe.Sequence.Versions[version].Actions + 1 then
+                                    endPoint = #editframe.Sequence.Versions[version].Actions + 1
                                 end
-                                table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
+                                table.insert(editframe.Sequence.Versions[version].Actions, endPoint, insertActions)
                             end
                             ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                         end
@@ -949,14 +949,14 @@ function GSE.CreateEditor()
                 disableBlock:SetWidth(130)
                 disableBlock:SetTriState(false)
                 disableBlock:SetLabel(L["Disable Block"])
-                disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
+                disableBlock:SetValue(editframe.Sequence.Versions[version].Actions[path].Disabled)
                 highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
                 highlightTexture:SetAllPoints(true)
 
                 disableBlock:SetCallback(
                     "OnValueChanged",
                     function(sel, object, value)
-                        editframe.Sequence.Macros[version].Actions[path].Disabled = value
+                        editframe.Sequence.Versions[version].Actions[path].Disabled = value
                         if value == true then
                             highlightTexture:SetColorTexture(1, 0, 0, 0.15)
                         else
@@ -964,7 +964,7 @@ function GSE.CreateEditor()
                         end
                     end
                 )
-                if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+                if editframe.Sequence.Versions[version].Actions[path].Disabled == true then
                     highlightTexture:SetColorTexture(1, 0, 0, 0.15)
                 else
                     highlightTexture:SetColorTexture(1, 0, 0, 0)
@@ -1176,7 +1176,7 @@ function GSE.CreateEditor()
                         else
                             returnAction["MS"] = tonumber(text)
                         end
-                        editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
                         editframe:SetStatusText(editframe.statusText)
                     end
                 )
@@ -1190,7 +1190,7 @@ function GSE.CreateEditor()
                 clicksdropdown:SetCallback(
                     "OnValueChanged",
                     function(self, event, text)
-                        --editframe.Sequence.Macros[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
+                        --editframe.Sequence.Versions[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
                         local returnAction = {}
                         returnAction["Type"] = action.Type
                         if text == L["Clicks"] then
@@ -1204,7 +1204,7 @@ function GSE.CreateEditor()
                             msvalueeditbox:SetDisabled(true)
                         end
 
-                        editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
                     end
                 )
                 if clicksdropdown:GetValue() == L["Milliseconds"] or clicksdropdown:GetValue() == L["Clicks"] then
@@ -1246,12 +1246,12 @@ function GSE.CreateEditor()
                 unitEditBox:SetWidth(250)
                 unitEditBox:DisableButton(true)
                 unitEditBox:SetText(action.unit)
-                --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Macros[version])
+                --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Versions[version])
                 unitEditBox:SetCallback(
                     "OnTextChanged",
                     function(sel, object, value)
-                        editframe.Sequence.Macros[version].Actions[keyPath].unit = value
-                        --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+                        editframe.Sequence.Versions[version].Actions[keyPath].unit = value
+                        --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Versions[version])
                     end
                 )
                 unitEditBox:SetCallback(
@@ -1399,18 +1399,18 @@ function GSE.CreateEditor()
                 interval:SetCallback(
                     "OnTextChanged",
                     function(sel, object, value)
-                        editframe.Sequence.Macros[version].Actions[keyPath].Interval = value
-                        --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Macros[version])
+                        editframe.Sequence.Versions[version].Actions[keyPath].Interval = value
+                        --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Versions[version])
                     end
                 )
                 actiontype:SetCallback(
                     "OnValueChanged",
                     function(sel, object, value)
                         if value == true then
-                            editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Repeat
+                            editframe.Sequence.Versions[version].Actions[keyPath].Type = Statics.Actions.Repeat
                             interval:SetDisabled(false)
                         else
-                            editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Action
+                            editframe.Sequence.Versions[version].Actions[keyPath].Type = Statics.Actions.Action
                             interval:SetDisabled(true)
                         end
                     end
@@ -1459,7 +1459,7 @@ function GSE.CreateEditor()
                 stepdropdown:SetCallback(
                     "OnValueChanged",
                     function(sel, object, value)
-                        editframe.Sequence.Macros[version].Actions[keyPath].StepFunction = value
+                        editframe.Sequence.Versions[version].Actions[keyPath].StepFunction = value
                     end
                 )
 
@@ -1490,7 +1490,7 @@ function GSE.CreateEditor()
                     function(sel, object, value)
                         value = tonumber(value)
                         if type(value) == "number" and value > 0 then
-                            editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+                            editframe.Sequence.Versions[version].Actions[keyPath].Repeat = value
                         end
                     end
                 )
@@ -1563,7 +1563,7 @@ function GSE.CreateEditor()
                 booleanEditBox:SetCallback(
                     "OnTextChanged",
                     function(sel, object, value)
-                        editframe.Sequence.Macros[version].Actions[keyPath].Variable = value
+                        editframe.Sequence.Versions[version].Actions[keyPath].Variable = value
                         action.Variable = value
                     end
                 )
@@ -1580,7 +1580,7 @@ function GSE.CreateEditor()
                                             k,
                                             function()
                                                 booleanEditBox:SetText([[=GSE.V["]] .. k .. [["]()]])
-                                                editframe.Sequence.Macros[version].Actions[keyPath].Variable =
+                                                editframe.Sequence.Versions[version].Actions[keyPath].Variable =
                                                     [[=GSE.V["]] .. k .. [["]()]]
                                                 action.Variable = [[=GSE.V["]] .. k .. [["]()]]
                                             end
@@ -1591,7 +1591,7 @@ function GSE.CreateEditor()
                                         "True",
                                         function()
                                             booleanEditBox:SetText([[= true]])
-                                            editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= true]]
+                                            editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= true]]
                                             action.Variable = [[= true]]
                                         end
                                     )
@@ -1599,7 +1599,7 @@ function GSE.CreateEditor()
                                         "False",
                                         function()
                                             booleanEditBox:SetText([[= false]])
-                                            editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= false]]
+                                            editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= false]]
                                             action.Variable = [[= true]]
                                         end
                                     )
@@ -1725,7 +1725,7 @@ function GSE.CreateEditor()
                 SequenceDropDown:SetCallback(
                     "OnValueChanged",
                     function(obj, event, key, checked)
-                        editframe.Sequence.Macros[version].Actions[keyPath] = {
+                        editframe.Sequence.Versions[version].Actions[keyPath] = {
                             ["Type"] = Statics.Actions.Embed,
                             ["Sequence"] = key
                         }
@@ -1737,8 +1737,8 @@ function GSE.CreateEditor()
                 pcontainer:AddChild(macroPanel)
             end
         end
-        if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
-            editframe.Sequence.Macros[version].Actions = {
+        if GSE.isEmpty(editframe.Sequence.Versions[version].Actions) then
+            editframe.Sequence.Versions[version].Actions = {
                 [1] = {
                     ["macro"] = "Need Macro Here",
                     ["Type"] = Statics.Actions.Action
@@ -1746,7 +1746,7 @@ function GSE.CreateEditor()
             }
         end
 
-        local macro = editframe.Sequence.Macros[version].Actions
+        local macro = editframe.Sequence.Versions[version].Actions
 
         local font = CreateFont("seqPanelFont")
         font:SetFontObject(GameFontNormal)
@@ -1778,7 +1778,7 @@ function GSE.CreateEditor()
                     ["SpecID"] = GSE.GetCurrentSpecID(),
                     ["GSEVersion"] = GSE.VersionString
                 },
-                ["Macros"] = {
+                ["Versions"] = {
                     [1] = {
                         ["Actions"] = {
                             [1] = {
@@ -1795,7 +1795,7 @@ function GSE.CreateEditor()
         local macrocontainer = AceGUI:Create("InlineGroup")
         macrocontainer:SetTitle(L["Sequence"])
         macrocontainer:SetFullWidth(true)
-        setmetatable(editframe.Sequence.Macros[version].Actions, Statics.TableMetadataFunction)
+        setmetatable(editframe.Sequence.Versions[version].Actions, Statics.TableMetadataFunction)
         editframe.booleanFunctions = {}
         editframe.numericFunctions = {}
 
@@ -1826,7 +1826,7 @@ function GSE.CreateEditor()
             function()
                 version = tonumber(version)
                 local sequence = editframe.Sequence
-                if #sequence.Macros <= 1 then
+                if #sequence.Versions <= 1 then
                     GSE.Print(
                         L["This is the only version of this macro.  Delete the entire macro to delete this version."]
                     )
@@ -1948,7 +1948,7 @@ function GSE.CreateEditor()
                  then
                     sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
                 end
-                table.remove(sequence.Macros, version)
+                table.remove(sequence.Versions, version)
                 printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
                 editframe.ManageTree()
                 treeContainer:SelectByValue(path)
@@ -1992,7 +1992,7 @@ function GSE.CreateEditor()
                 drawRawEditor(
                     macrocontainer,
                     version,
-                    GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Macros[version])),
+                    GSE.Dump(GSE.UnEscapeTableRecursive(editframe.Sequence.Versions[version])),
                     path
                 )
 
@@ -2024,7 +2024,7 @@ function GSE.CreateEditor()
         previewMacro:SetCallback(
             "OnClick",
             function()
-                local GSE3Macro = GSE.CompileTemplate(editframe.Sequence.Macros[version])
+                local GSE3Macro = GSE.CompileTemplate(editframe.Sequence.Versions[version])
                 GSE.GUIShowCompiledMacroGui(GSE3Macro, editframe.SequenceName .. " : " .. version, editframe)
                 GSE.WagoAnalytics:Switch("Compile Template", true)
             end
@@ -2064,7 +2064,7 @@ function GSE.CreateEditor()
                     ["type"] = "macro",
                     ["Type"] = Statics.Actions.Action
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                table.insert(editframe.Sequence.Versions[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
                 ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
@@ -2101,7 +2101,7 @@ function GSE.CreateEditor()
                     ["Repeat"] = 2
                 }
                 -- setmetatable(newAction, Statics.TableMetadataFunction)
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                table.insert(editframe.Sequence.Versions[version].Actions, 1, newAction)
                 if not editframe.scrollstatus then
                     editframe.scrollStatus = {}
                 end
@@ -2134,7 +2134,7 @@ function GSE.CreateEditor()
                     ["Variable"] = "GCD",
                     ["Type"] = Statics.Actions.Pause
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                table.insert(editframe.Sequence.Versions[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
                 ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
@@ -2177,7 +2177,7 @@ function GSE.CreateEditor()
                     },
                     ["Type"] = Statics.Actions.If
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                table.insert(editframe.Sequence.Versions[version].Actions, 1, newAction)
                 editframe.scrollStatus.scrollvalue = 1
                 ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
@@ -2220,7 +2220,7 @@ function GSE.CreateEditor()
                 local newAction = {
                     ["Type"] = Statics.Actions.Embed
                 }
-                table.insert(editframe.Sequence.Macros[version].Actions, 1, newAction)
+                table.insert(editframe.Sequence.Versions[version].Actions, 1, newAction)
                 ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
             end
         )
@@ -2249,11 +2249,11 @@ function GSE.CreateEditor()
         local versionLabel = AceGUI:Create("EditBox")
         versionLabel:SetWidth(200)
         versionLabel:SetLabel(L["Version"] .. " " .. L["Name"])
-        versionLabel:SetText(BuildVersionLabel(version, editframe.Sequence.Macros[version].Label, true))
+        versionLabel:SetText(BuildVersionLabel(version, editframe.Sequence.Versions[version].Label, true))
         versionLabel:SetCallback(
             "OnTextChanged",
             function(self, event, text)
-                editframe.Sequence.Macros[version].Label = text
+                editframe.Sequence.Versions[version].Label = text
             end
         )
         versionLabel:DisableButton(true)
@@ -2292,8 +2292,8 @@ function GSE.CreateEditor()
         toolbarrow1:SetLayout("Flow")
         toolbarrow1:SetFullWidth(true)
 
-        if GSE.isEmpty(editframe.Sequence.Macros[version].InbuiltVariables) then
-            editframe.Sequence.Macros[version].InbuiltVariables = {}
+        if GSE.isEmpty(editframe.Sequence.Versions[version].InbuiltVariables) then
+            editframe.Sequence.Versions[version].InbuiltVariables = {}
         end
         local combatresetcheckbox = AceGUI:Create("CheckBox")
         combatresetcheckbox:SetType("checkbox")
@@ -2301,11 +2301,11 @@ function GSE.CreateEditor()
         combatresetcheckbox:SetTriState(true)
         combatresetcheckbox:SetLabel(L["Combat"])
         toolbarrow1:AddChild(combatresetcheckbox)
-        combatresetcheckbox:SetValue(editframe.Sequence.Macros[version].InbuiltVariables.Combat)
+        combatresetcheckbox:SetValue(editframe.Sequence.Versions[version].InbuiltVariables.Combat)
         combatresetcheckbox:SetCallback(
             "OnValueChanged",
             function(sel, object, value)
-                editframe.Sequence.Macros[version].InbuiltVariables.Combat = value
+                editframe.Sequence.Versions[version].InbuiltVariables.Combat = value
             end
         )
         combatresetcheckbox:SetCallback(
@@ -2366,8 +2366,8 @@ function GSE.CreateEditor()
             spellEditBox:SetWidth(250)
             spellEditBox:DisableButton(true)
 
-            if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
-                sequence.Macros[version].Actions[keyPath].type = "spell"
+            if GSE.isEmpty(sequence.Versions[version].Actions[keyPath].type) then
+                sequence.Versions[version].Actions[keyPath].type = "spell"
             end
             if GSE.isEmpty(action.type) then
                 action.type = "spell"
@@ -2405,47 +2405,47 @@ function GSE.CreateEditor()
             spellEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
-                    if sequence.Macros[version].Actions[keyPath].type == "pet" then
-                        sequence.Macros[version].Actions[keyPath].action = value
-                        sequence.Macros[version].Actions[keyPath].spell = nil
-                        sequence.Macros[version].Actions[keyPath].macro = nil
-                        sequence.Macros[version].Actions[keyPath].item = nil
-                        sequence.Macros[version].Actions[keyPath].toy = nil
-                    elseif sequence.Macros[version].Actions[keyPath].type == "macro" then
+                    if sequence.Versions[version].Actions[keyPath].type == "pet" then
+                        sequence.Versions[version].Actions[keyPath].action = value
+                        sequence.Versions[version].Actions[keyPath].spell = nil
+                        sequence.Versions[version].Actions[keyPath].macro = nil
+                        sequence.Versions[version].Actions[keyPath].item = nil
+                        sequence.Versions[version].Actions[keyPath].toy = nil
+                    elseif sequence.Versions[version].Actions[keyPath].type == "macro" then
                         if string.sub(value, 1, 1) == "/" then
-                            sequence.Macros[version].Actions[keyPath].macro =
+                            sequence.Versions[version].Actions[keyPath].macro =
                                 GSE.TranslateString(value, Statics.TranslatorMode.Current)
                         else
-                            sequence.Macros[version].Actions[keyPath].macro = value
+                            sequence.Versions[version].Actions[keyPath].macro = value
                         end
-                        sequence.Macros[version].Actions[keyPath].spell = nil
-                        sequence.Macros[version].Actions[keyPath].action = nil
-                        sequence.Macros[version].Actions[keyPath].item = nil
-                        sequence.Macros[version].Actions[keyPath].toy = nil
-                        sequence.Macros[version].Actions[keyPath].unit = nil
-                    elseif sequence.Macros[version].Actions[keyPath].type == "item" then
-                        sequence.Macros[version].Actions[keyPath].item = value
-                        sequence.Macros[version].Actions[keyPath].spell = nil
-                        sequence.Macros[version].Actions[keyPath].action = nil
-                        sequence.Macros[version].Actions[keyPath].macro = nil
-                        sequence.Macros[version].Actions[keyPath].toy = nil
-                    elseif sequence.Macros[version].Actions[keyPath].type == "toy" then
-                        sequence.Macros[version].Actions[keyPath].toy = value
-                        sequence.Macros[version].Actions[keyPath].spell = nil
-                        sequence.Macros[version].Actions[keyPath].action = nil
-                        sequence.Macros[version].Actions[keyPath].macro = nil
-                        sequence.Macros[version].Actions[keyPath].item = nil
+                        sequence.Versions[version].Actions[keyPath].spell = nil
+                        sequence.Versions[version].Actions[keyPath].action = nil
+                        sequence.Versions[version].Actions[keyPath].item = nil
+                        sequence.Versions[version].Actions[keyPath].toy = nil
+                        sequence.Versions[version].Actions[keyPath].unit = nil
+                    elseif sequence.Versions[version].Actions[keyPath].type == "item" then
+                        sequence.Versions[version].Actions[keyPath].item = value
+                        sequence.Versions[version].Actions[keyPath].spell = nil
+                        sequence.Versions[version].Actions[keyPath].action = nil
+                        sequence.Versions[version].Actions[keyPath].macro = nil
+                        sequence.Versions[version].Actions[keyPath].toy = nil
+                    elseif sequence.Versions[version].Actions[keyPath].type == "toy" then
+                        sequence.Versions[version].Actions[keyPath].toy = value
+                        sequence.Versions[version].Actions[keyPath].spell = nil
+                        sequence.Versions[version].Actions[keyPath].action = nil
+                        sequence.Versions[version].Actions[keyPath].macro = nil
+                        sequence.Versions[version].Actions[keyPath].item = nil
                     else
                         local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
                         if storedValue then
-                            sequence.Macros[version].Actions[keyPath].spell = storedValue
+                            sequence.Versions[version].Actions[keyPath].spell = storedValue
                         else
-                            sequence.Macros[version].Actions[keyPath].spell = value
+                            sequence.Versions[version].Actions[keyPath].spell = value
                         end
-                        sequence.Macros[version].Actions[keyPath].action = nil
-                        sequence.Macros[version].Actions[keyPath].macro = nil
-                        sequence.Macros[version].Actions[keyPath].item = nil
-                        sequence.Macros[version].Actions[keyPath].toy = nil
+                        sequence.Versions[version].Actions[keyPath].action = nil
+                        sequence.Versions[version].Actions[keyPath].macro = nil
+                        sequence.Versions[version].Actions[keyPath].item = nil
+                        sequence.Versions[version].Actions[keyPath].toy = nil
                     end
 
                 end
@@ -2465,15 +2465,15 @@ function GSE.CreateEditor()
                 "OnTextChanged",
                 function(sel, object, value)
                     if string.sub(value, 1, 1) == "/" then
-                        sequence.Macros[version].Actions[keyPath].macro =
+                        sequence.Versions[version].Actions[keyPath].macro =
                             GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
                     else
-                        sequence.Macros[version].Actions[keyPath].macro = value
+                        sequence.Versions[version].Actions[keyPath].macro = value
                     end
-                    sequence.Macros[version].Actions[keyPath].spell = nil
-                    sequence.Macros[version].Actions[keyPath].action = nil
-                    sequence.Macros[version].Actions[keyPath].item = nil
-                    sequence.Macros[version].Actions[keyPath].toy = nil
+                    sequence.Versions[version].Actions[keyPath].spell = nil
+                    sequence.Versions[version].Actions[keyPath].action = nil
+                    sequence.Versions[version].Actions[keyPath].item = nil
+                    sequence.Versions[version].Actions[keyPath].toy = nil
                     local compiledmacrotext =
                         GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
                     local lenMacro = string.len(compiledmacrotext)
@@ -2593,7 +2593,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
             ["GSEVersion"] = GSE.VersionString,
             ["Name"]       = name,
         },
-        ["Macros"] = {
+        ["Versions"] = {
             [1] = {
                 ["Actions"] = {
                     [1] = { ["macro"] = "Need Macro Here", ["Type"] = Statics.Actions.Action }
@@ -2602,7 +2602,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
         }
     }
     if not GSE.isEmpty(recordedstring) then
-        sequence.Macros[1]["Actions"] = nil
+        sequence.Versions[1]["Actions"] = nil
         local recordedMacro = {}
         for _, v in ipairs(GSE.SplitMeIntoLines(recordedstring)) do
             local spellid = GSE.TranslateString(v, Statics.TranslatorMode.ID)
@@ -2610,7 +2610,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
                 table.insert(recordedMacro, { ["Type"] = Statics.Actions.Action, ["type"] = "macro", ["macro"] = spellid })
             end
         end
-        sequence.Macros[1]["Actions"] = recordedMacro
+        sequence.Versions[1]["Actions"] = recordedMacro
     end
     if GSE.isEmpty(sequence.WeakAuras) then sequence.WeakAuras = {} end
     GSESequences[classid][name] = GSE.EncodeMessage({name, sequence})

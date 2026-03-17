@@ -29,7 +29,7 @@ end
 --- Add a sequence to the library
 function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Check its not a GSE2 Sequence
-    if GSE.isEmpty(sequence.Macros) then
+    if GSE.isEmpty(sequence.Versions) then
         GSE.Print(string.format("%s " .. L["was unable to be interpreted."], sequenceName), L["Unrecognised Import"])
         return
     end
@@ -111,7 +111,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     end
     if classid == GSE.GetCurrentClassID() or classid == 0 then
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
-        GSE.UpdateSequence(sequenceName, sequence.Macros[sequence.MetaData.Default])
+        GSE.UpdateSequence(sequenceName, sequence.Versions[sequence.MetaData.Default])
     end
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
@@ -135,9 +135,9 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         sequenceName = tempseqName
     end
     if action == "MERGE" then
-        for k, v in ipairs(newSequence.Macros) do
+        for k, v in ipairs(newSequence.Versions) do
             GSE.PrintDebugMessage("adding " .. k, "Storage")
-            table.insert(GSE.Library[classid][sequenceName].Macros, v)
+            table.insert(GSE.Library[classid][sequenceName].Versions, v)
         end
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
@@ -341,6 +341,14 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                     )
                 return
             end
+            -- Warn if the sequence has been modified after it was exported.
+            if GSE.VerifySequenceChecksum then
+                local integrity = GSE.VerifySequenceChecksum(v)
+                if integrity ~= true then
+                    StaticPopup_Show("GSE_SEQUENCE_INTEGRITY_WARNING", seqName)
+                end
+            end
+
             if forcereplace then
                 GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
             else
@@ -505,7 +513,7 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
         table.insert(issues, L["Missing MetaData table"])
         return issues
     end
-    if type(seq.Macros) ~= "table" then
+    if type(seq.Versions) ~= "table" then
         table.insert(issues, L["Missing or invalid Macros table"])
         return issues
     end
@@ -515,8 +523,16 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
         table.insert(issues, L["MetaData.SpecID is missing"])
     end
 
+    -- Integrity check: if a checksum is present it must still match the Versions content.
+    -- "no_checksum" is not an error — locally created sequences have no checksum.
+    if GSE.VerifySequenceChecksum then
+        if GSE.VerifySequenceChecksum(seq) == false then
+            table.insert(issues, L["Sequence has been altered from its exported state"])
+        end
+    end
+
     -- Macros array analysis
-    local macIp, macNum, macMax = arrayStats(seq.Macros)
+    local macIp, macNum, macMax = arrayStats(seq.Versions)
     if macNum == 0 then
         table.insert(issues, L["Macros array is empty (no versions defined)"])
         return issues
@@ -532,7 +548,7 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
         local val = seq.MetaData[ctxKey]
         if not GSE.isEmpty(val) then
             local idx = tonumber(val)
-            if idx and (idx < 1 or idx > macMax or seq.Macros[idx] == nil) then
+            if idx and (idx < 1 or idx > macMax or seq.Versions[idx] == nil) then
                 table.insert(issues, string.format(
                     L["MetaData.%s = %d references a non-existent Macros version (max valid index: %d)"],
                     ctxKey, idx, macMax))
@@ -551,7 +567,7 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
     }
 
     -- Inspect every Macro version (including those beyond array gaps)
-    for macIdx, macVer in pairs(seq.Macros) do
+    for macIdx, macVer in pairs(seq.Versions) do
         if type(macIdx) == "number" then
             if type(macVer) ~= "table" then
                 table.insert(issues, string.format(L["Macros[%d] is not a table"], macIdx))
@@ -699,8 +715,8 @@ end
 function GSE.ComputeSequenceDependencies(sequence)
     if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return end
     local vars, seqs, macros = {}, {}, {}
-    if type(sequence.Macros) == "table" then
-        walkTableForDeps(sequence.Macros, vars, seqs, macros)
+    if type(sequence.Versions) == "table" then
+        walkTableForDeps(sequence.Versions, vars, seqs, macros)
     end
     local varList, seqList, macroList = {}, {}, {}
     for k in pairs(vars) do table.insert(varList, k) end
@@ -874,8 +890,8 @@ function GSE.ScanMacrosForErrors()
                 end
 
                 -- Runtime compile check for each reachable Macro version
-                if type(seq) == "table" and type(seq.Macros) == "table" then
-                    for macvidx, macroversion in ipairs(seq.Macros) do
+                if type(seq) == "table" and type(seq.Versions) == "table" then
+                    for macvidx, macroversion in ipairs(seq.Versions) do
                         if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
                             local ok, err = pcall(GSE.CompileTemplate, macroversion)
                             if not ok then
@@ -1076,9 +1092,9 @@ function GSE.FixSequenceStructure(classlibid, seqname)
     end
 
     -- 2. Re-index Macros array (compact gaps into a clean 1..n sequence)
-    if type(seq.Macros) == "table" then
+    if type(seq.Versions) == "table" then
         local oldMacroKeys = {}
-        for k in pairs(seq.Macros) do
+        for k in pairs(seq.Versions) do
             if type(k) == "number" and k >= 1 then
                 table.insert(oldMacroKeys, k)
             end
@@ -1090,12 +1106,12 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         local newMacros = {}
         for newIdx, oldIdx in ipairs(oldMacroKeys) do
             macroIndexMap[oldIdx] = newIdx
-            newMacros[newIdx] = seq.Macros[oldIdx]
+            newMacros[newIdx] = seq.Versions[oldIdx]
         end
-        seq.Macros = newMacros
+        seq.Versions = newMacros
 
         -- 3. Re-index Actions arrays within each Macro version
-        for _, macroversion in ipairs(seq.Macros) do
+        for _, macroversion in ipairs(seq.Versions) do
             if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
                 local oldActKeys = {}
                 for k in pairs(macroversion.Actions) do
@@ -1114,7 +1130,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         end
 
         -- 4. Update MetaData context version references using the old→new mapping
-        local maxNewIdx = #seq.Macros
+        local maxNewIdx = #seq.Versions
         for _, ctxKey in ipairs(seqContextKeys) do
             local val = seq.MetaData[ctxKey]
             if not GSE.isEmpty(val) then
@@ -1166,10 +1182,10 @@ function GSE.ExportSequenceHumanReadableFormat(sequence, sequencename)
     returnstring =
         returnstring ..
         "This macro contains " ..
-            (#sequence.Macros > 1 and #sequence.Macros .. " macro templates. " or "1 macro template. ") ..
+            (#sequence.Versions > 1 and #sequence.Versions .. " macro templates. " or "1 macro template. ") ..
                 string.format(L["This Sequence was exported from GSE %s."], GSE.VersionString) .. "\n\n"
-    if (#sequence.Macros > 1) then
-        for k, _ in pairs(sequence.Macros) do
+    if (#sequence.Versions > 1) then
+        for k, _ in pairs(sequence.Versions) do
             if not GSE.isEmpty(sequence["MetaData"].Default) then
                 if sequence["MetaData"].Default == k then
                     returnstring = returnstring .. "- The Default macro template is " .. k .. "\n"

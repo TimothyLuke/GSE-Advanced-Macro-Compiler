@@ -114,7 +114,7 @@ describe(
           SpecID  = 11,
           Default = 1,
         },
-        Macros = {
+        Versions = {
           [1] = {
             Actions = {
               [1] = {Type = "Action", macro = "/cast Fireball"}
@@ -146,7 +146,7 @@ describe(
         it(
           "reports missing MetaData table",
           function()
-            GSE.Library[0]["BadSeq"] = {Macros = {[1] = {Actions = {}}}}
+            GSE.Library[0]["BadSeq"] = {Versions = {[1] = {Actions = {}}}}
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("Missing MetaData table"))
             assert.is_true(hasMsg("Issues found in 'BadSeq'"))
@@ -178,7 +178,7 @@ describe(
           function()
             local seq = makeSeq()
             -- Macros has [1] and [3] — index 2 is missing
-            seq.Macros[3] = {
+            seq.Versions[3] = {
               Actions = {[1] = {Type = "Action", macro = "/cast Frost Nova"}},
               InbuiltVariables = {}
             }
@@ -215,7 +215,7 @@ describe(
           "reports a Macro version with missing Actions table",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions = nil
+            seq.Versions[1].Actions = nil
             GSE.Library[0]["NoActions"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("Macros[1].Actions is missing or not a table"))
@@ -227,7 +227,7 @@ describe(
           function()
             local seq = makeSeq()
             -- Actions has [1] and [3] — index 2 is missing
-            seq.Macros[1].Actions[3] = {Type = "Action", macro = "/cast Frost Nova"}
+            seq.Versions[1].Actions[3] = {Type = "Action", macro = "/cast Frost Nova"}
             GSE.Library[0]["GappedActions"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("Macros[1].Actions has gaps"))
@@ -238,7 +238,7 @@ describe(
           "reports an action that is missing the Type field",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {macro = "/cast Fireball"}  -- no Type
+            seq.Versions[1].Actions[2] = {macro = "/cast Fireball"}  -- no Type
             GSE.Library[0]["NoType"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("is missing Type field"))
@@ -249,7 +249,7 @@ describe(
           "reports an action with an unrecognized Type value",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "WrongType", macro = "/cast Fireball"}
+            seq.Versions[1].Actions[2] = {Type = "WrongType", macro = "/cast Fireball"}
             GSE.Library[0]["BadType"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("has unrecognized Type: 'WrongType'"))
@@ -260,7 +260,7 @@ describe(
           "reports an If action that is missing the Variable field",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "If"}  -- no Variable
+            seq.Versions[1].Actions[2] = {Type = "If"}  -- no Variable
             GSE.Library[0]["BadIf"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("(If) is missing the Variable field"))
@@ -271,7 +271,7 @@ describe(
           "does not report an If action that has a Variable",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "If", Variable = "Combat"}
+            seq.Versions[1].Actions[2] = {Type = "If", Variable = "Combat"}
             GSE.Library[0]["GoodIf"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("(If) is missing the Variable field"))
@@ -283,7 +283,7 @@ describe(
           "reports an Embed action that is missing the Sequence field",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "Embed"}  -- no Sequence
+            seq.Versions[1].Actions[2] = {Type = "Embed"}  -- no Sequence
             GSE.Library[0]["BadEmbed"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("(Embed) is missing the Sequence field"))
@@ -294,7 +294,7 @@ describe(
           "does not report an Embed action that has a Sequence field",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "Embed", Sequence = "OtherSeq"}
+            seq.Versions[1].Actions[2] = {Type = "Embed", Sequence = "OtherSeq"}
             GSE.Library[0]["GoodEmbed"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("(Embed) is missing the Sequence field"))
@@ -306,7 +306,7 @@ describe(
           "reports a Pause action that has neither Clicks nor MS",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "Pause"}
+            seq.Versions[1].Actions[2] = {Type = "Pause"}
             GSE.Library[0]["BadPause"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("(Pause) has neither Clicks nor MS"))
@@ -317,7 +317,7 @@ describe(
           "does not report a Pause action that specifies Clicks",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "Pause", Clicks = 3}
+            seq.Versions[1].Actions[2] = {Type = "Pause", Clicks = 3}
             GSE.Library[0]["GoodPauseClicks"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("(Pause) has neither Clicks nor MS"))
@@ -328,7 +328,7 @@ describe(
           "does not report a Pause action that specifies MS",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[2] = {Type = "Pause", MS = 500}
+            seq.Versions[1].Actions[2] = {Type = "Pause", MS = 500}
             GSE.Library[0]["GoodPauseMS"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("(Pause) has neither Clicks nor MS"))
@@ -386,7 +386,7 @@ describe(
           "reports macro text that exceeds 255 characters",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast " .. string.rep("A", 260)
+            seq.Versions[1].Actions[1].macro = "/cast " .. string.rep("A", 260)
             GSE.Library[0]["LongMacro"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("macro text exceeds 255 characters"))
@@ -397,7 +397,7 @@ describe(
           "does not report macro text within the 255-character limit",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast Fireball"
+            seq.Versions[1].Actions[1].macro = "/cast Fireball"
             GSE.Library[0]["ShortMacro"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("macro text exceeds 255 characters"))
@@ -409,7 +409,7 @@ describe(
           "reports unbalanced '[' in macro text conditionals",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast [harm Fireball"  -- missing ]
+            seq.Versions[1].Actions[1].macro = "/cast [harm Fireball"  -- missing ]
             GSE.Library[0]["UnbalancedOpen"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("unbalanced brackets"))
@@ -420,7 +420,7 @@ describe(
           "reports unbalanced ']' in macro text conditionals",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast harm] Fireball"  -- missing [
+            seq.Versions[1].Actions[1].macro = "/cast harm] Fireball"  -- missing [
             GSE.Library[0]["UnbalancedClose"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("unbalanced brackets"))
@@ -431,7 +431,7 @@ describe(
           "does not report balanced brackets",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast [harm][nodead] Fireball"
+            seq.Versions[1].Actions[1].macro = "/cast [harm][nodead] Fireball"
             GSE.Library[0]["BalancedBrackets"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unbalanced brackets"))
@@ -443,7 +443,7 @@ describe(
           "reports an unrecognized slash command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/foobarnotreal Fireball"
+            seq.Versions[1].Actions[1].macro = "/foobarnotreal Fireball"
             GSE.Library[0]["BadCmd"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("unrecognized slash command: /foobarnotreal"))
@@ -454,7 +454,7 @@ describe(
           "does not flag /cast as an unrecognized command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/cast [harm] Fireball"
+            seq.Versions[1].Actions[1].macro = "/cast [harm] Fireball"
             GSE.Library[0]["GoodCast"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unrecognized slash command"))
@@ -466,7 +466,7 @@ describe(
           "does not flag /use as an unrecognized command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/use 14"
+            seq.Versions[1].Actions[1].macro = "/use 14"
             GSE.Library[0]["GoodUse"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unrecognized slash command"))
@@ -477,7 +477,7 @@ describe(
           "does not flag /run as an unrecognized command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/run UIErrorsFrame:Clear()"
+            seq.Versions[1].Actions[1].macro = "/run UIErrorsFrame:Clear()"
             GSE.Library[0]["GoodRun"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unrecognized slash command"))
@@ -488,7 +488,7 @@ describe(
           "does not flag /console as an unrecognized command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "/console Sound_EnableSFX 0"
+            seq.Versions[1].Actions[1].macro = "/console Sound_EnableSFX 0"
             GSE.Library[0]["GoodConsole"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unrecognized slash command"))
@@ -499,7 +499,7 @@ describe(
           "does not flag a spell name (no leading /) as an invalid command",
           function()
             local seq = makeSeq()
-            seq.Macros[1].Actions[1].macro = "Fireball"  -- spell name, not macrotext
+            seq.Versions[1].Actions[1].macro = "Fireball"  -- spell name, not macrotext
             GSE.Library[0]["SpellName"] = seq
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("unrecognized slash command"))
@@ -597,11 +597,11 @@ describe(
             }
             GSE.FixSequenceStructure(0, "GappedSeq")
             local fixed = GSE.Library[0]["GappedSeq"]
-            assert.is_not_nil(fixed.Macros[1])
-            assert.is_not_nil(fixed.Macros[2])
-            assert.is_not_nil(fixed.Macros[3])
-            assert.is_nil(fixed.Macros[4])
-            assert.is_nil(fixed.Macros[5])
+            assert.is_not_nil(fixed.Versions[1])
+            assert.is_not_nil(fixed.Versions[2])
+            assert.is_not_nil(fixed.Versions[3])
+            assert.is_nil(fixed.Versions[4])
+            assert.is_nil(fixed.Versions[5])
           end
         )
 
@@ -618,8 +618,8 @@ describe(
             GSE.FixSequenceStructure(0, "ContentSeq")
             local fixed = GSE.Library[0]["ContentSeq"]
             -- Old [1] → new [1], old [3] → new [2]
-            assert.are.equal("/cast A", fixed.Macros[1].Actions[1].macro)
-            assert.are.equal("/cast B", fixed.Macros[2].Actions[1].macro)
+            assert.are.equal("/cast A", fixed.Versions[1].Actions[1].macro)
+            assert.are.equal("/cast B", fixed.Versions[2].Actions[1].macro)
           end
         )
 
@@ -702,9 +702,9 @@ describe(
             }
             GSE.FixSequenceStructure(0, "GappedActions")
             local fixed = GSE.Library[0]["GappedActions"]
-            assert.is_not_nil(fixed.Macros[1].Actions[1])
-            assert.is_not_nil(fixed.Macros[1].Actions[2])
-            assert.is_nil(fixed.Macros[1].Actions[3])
+            assert.is_not_nil(fixed.Versions[1].Actions[1])
+            assert.is_not_nil(fixed.Versions[1].Actions[2])
+            assert.is_nil(fixed.Versions[1].Actions[3])
           end
         )
 
@@ -725,8 +725,8 @@ describe(
             }
             GSE.FixSequenceStructure(0, "ActionsContent")
             local fixed = GSE.Library[0]["ActionsContent"]
-            assert.are.equal("/cast A", fixed.Macros[1].Actions[1].macro)
-            assert.are.equal("/cast B", fixed.Macros[1].Actions[2].macro)
+            assert.are.equal("/cast A", fixed.Versions[1].Actions[1].macro)
+            assert.are.equal("/cast B", fixed.Versions[1].Actions[2].macro)
           end
         )
 
@@ -754,10 +754,10 @@ describe(
             }
             GSE.FixSequenceStructure(0, "MultiVersionActions")
             local fixed = GSE.Library[0]["MultiVersionActions"]
-            assert.is_nil(fixed.Macros[1].Actions[3])
-            assert.is_nil(fixed.Macros[2].Actions[5])
-            assert.is_not_nil(fixed.Macros[1].Actions[2])
-            assert.is_not_nil(fixed.Macros[2].Actions[2])
+            assert.is_nil(fixed.Versions[1].Actions[3])
+            assert.is_nil(fixed.Versions[2].Actions[5])
+            assert.is_not_nil(fixed.Versions[1].Actions[2])
+            assert.is_not_nil(fixed.Versions[2].Actions[2])
           end
         )
 

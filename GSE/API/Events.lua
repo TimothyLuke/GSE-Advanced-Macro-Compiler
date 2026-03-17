@@ -708,6 +708,10 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformReloadSequences(true)
     LoadOverrides()
     GSE.ManageMacros()
+    -- Migrate any remaining classes that weren't loaded at startup.
+    if GSE.MigrateAllRemainingClasses then
+        GSE.MigrateAllRemainingClasses()
+    end
     if ConsolePort then
         C_Timer.After(10, LoadOverrides)
     end
@@ -1034,7 +1038,7 @@ function GSE:ProcessOOCQueue()
                     GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
                 else
                     GSE.ReplaceSequence(v.classid, v.sequencename, v.sequence)
-                    GSE.UpdateSequence(v.sequencename, v.sequence.Macros[GSE.GetActiveSequenceVersion(v.sequencename)])
+                    GSE.UpdateSequence(v.sequencename, v.sequence.Versions[GSE.GetActiveSequenceVersion(v.sequencename)])
                 end
             elseif v.action == "updatevariable" then
                 GSE.UpdateVariable(v.variable, v.name)

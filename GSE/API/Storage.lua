@@ -9,6 +9,18 @@ local VARIABLE_SELFKEY_PREFIX = "GSEVar_"  -- AceEvent self-key prefix for varia
 -- Track which class libraries have been decompressed into GSE.Library.
 GSE.LoadedClasses = GSE.LoadedClasses or {}
 
+--- One-off migration: rename the old "Macros" array to "Versions" on a sequence table.
+-- Uses bracket notation for the old key so future rename passes cannot corrupt this guard.
+-- Returns true when migration was performed so the caller can re-save to disk.
+local function migrateSequenceVersions(sequence)
+    if type(sequence) ~= "table" then return false end
+    local oldValue = sequence["Macros"]   -- read the pre-rename field name
+    if sequence.Versions or not oldValue then return false end
+    sequence.Versions      = oldValue
+    sequence["Macros"]     = nil          -- clear the old field
+    return true
+end
+
 --- Decompress a single class from GSESequences into GSE.Library (internal).
 local function loadOneClass(classid)
     if GSE.LoadedClasses[classid] then return end
@@ -25,6 +37,9 @@ local function loadOneClass(classid)
             function()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
                 GSE.Library[classid][i] = uncompressedVersion[2]
+                if migrateSequenceVersions(GSE.Library[classid][i]) then
+                    GSESequences[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
+                end
             end
         )
         if err then
@@ -60,6 +75,9 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
+                if migrateSequenceVersions(GSE.Library[classid][sequenceName]) then
+                    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+                end
             end
         end
     )
@@ -340,6 +358,8 @@ end
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
+    -- Checksum is stamped on export only, not on save, so the stored checksum
+    -- always reflects the last-exported state rather than the current edit state.
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = sequence
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
@@ -375,6 +395,17 @@ function GSE.LoadStorage(destination)
     end
     -- Now load only the variables these sequences depend on.
     GSE.LoadVariables()
+end
+
+--- Force-load every class that has not yet been decompressed, triggering the
+-- Macros→Versions migration for any sequences still in the old format.
+-- Called from PLAYER_ENTERING_WORLD so all class data is migrated shortly after login.
+function GSE.MigrateAllRemainingClasses()
+    for classid = 0, 13 do
+        if not GSE.LoadedClasses[classid] then
+            loadOneClass(classid)
+        end
+    end
 end
 
 --- Compile and register a single variable from its compressed store entry.
@@ -667,13 +698,13 @@ function GSE.PerformReloadSequences(force)
     end
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         if not sequence.MetaData.Disabled then
-            func(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+            func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
         end
     end
     if not GSE.isEmpty(GSE.Library[0]) then
         for name, sequence in pairs(GSE.Library[0]) do
             if GSE.isEmpty(sequence.MetaData.Disabled) then
-                func(name, sequence.Macros[GSE.GetActiveSequenceVersion(name)])
+                func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
             end
         end
     end
@@ -1450,7 +1481,7 @@ function GSE.processAction(action, metaData, variables, path)
         if action.Sequence then
             local sequence = GSE.FindSequence(action.Sequence)
             if sequence then
-                return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Macros[GSE.GetActiveSequenceVersion(action.Sequence)], Statics.TranslatorMode.String)))
+                return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Versions[GSE.GetActiveSequenceVersion(action.Sequence)], Statics.TranslatorMode.String)))
             end
         end
         return

@@ -122,6 +122,7 @@ globals = {
     "Talented",
     -- Lua
     "bit.band",
+    "bit.bxor",
     "bit.lshift",
     "bit.rshift",
     "string.split",

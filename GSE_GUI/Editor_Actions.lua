@@ -97,7 +97,7 @@ local function renderPause(editframe, pcontainer, action, version, keyPath, tree
             else
                 returnAction["MS"] = tonumber(text)
             end
-            editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+            editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
             editframe:SetStatusText(editframe.statusText)
         end
     )
@@ -124,7 +124,7 @@ local function renderPause(editframe, pcontainer, action, version, keyPath, tree
                 msvalueeditbox:SetDisabled(true)
             end
 
-            editframe.Sequence.Macros[version].Actions[keyPath] = returnAction
+            editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
         end
     )
     if clicksdropdown:GetValue() == L["Milliseconds"] or clicksdropdown:GetValue() == L["Clicks"] then
@@ -168,7 +168,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
     unitEditBox:SetCallback(
         "OnTextChanged",
         function(sel, object, value)
-            editframe.Sequence.Macros[version].Actions[keyPath].unit = value
+            editframe.Sequence.Versions[version].Actions[keyPath].unit = value
         end
     )
     unitEditBox:SetCallback(
@@ -373,17 +373,17 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
     interval:SetCallback(
         "OnTextChanged",
         function(sel, object, value)
-            editframe.Sequence.Macros[version].Actions[keyPath].Interval = value
+            editframe.Sequence.Versions[version].Actions[keyPath].Interval = value
         end
     )
     actiontype:SetCallback(
         "OnValueChanged",
         function(sel, object, value)
             if value == true then
-                editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Repeat
+                editframe.Sequence.Versions[version].Actions[keyPath].Type = Statics.Actions.Repeat
                 interval:SetDisabled(false)
             else
-                editframe.Sequence.Macros[version].Actions[keyPath].Type = Statics.Actions.Action
+                editframe.Sequence.Versions[version].Actions[keyPath].Type = Statics.Actions.Action
                 interval:SetDisabled(true)
             end
         end
@@ -434,7 +434,7 @@ local function renderLoop(editframe, pcontainer, action, version, keyPath, treep
     stepdropdown:SetCallback(
         "OnValueChanged",
         function(sel, object, value)
-            editframe.Sequence.Macros[version].Actions[keyPath].StepFunction = value
+            editframe.Sequence.Versions[version].Actions[keyPath].StepFunction = value
         end
     )
 
@@ -465,7 +465,7 @@ local function renderLoop(editframe, pcontainer, action, version, keyPath, treep
         function(sel, object, value)
             value = tonumber(value)
             if type(value) == "number" and value > 0 then
-                editframe.Sequence.Macros[version].Actions[keyPath].Repeat = value
+                editframe.Sequence.Versions[version].Actions[keyPath].Repeat = value
             end
         end
     )
@@ -538,7 +538,7 @@ local function renderIf(editframe, pcontainer, action, version, keyPath, treepat
     booleanEditBox:SetCallback(
         "OnTextChanged",
         function(sel, object, value)
-            editframe.Sequence.Macros[version].Actions[keyPath].Variable = value
+            editframe.Sequence.Versions[version].Actions[keyPath].Variable = value
             action.Variable = value
         end
     )
@@ -555,7 +555,7 @@ local function renderIf(editframe, pcontainer, action, version, keyPath, treepat
                                 k,
                                 function()
                                     booleanEditBox:SetText([[=GSE.V["]] .. k .. [["]()]])
-                                    editframe.Sequence.Macros[version].Actions[keyPath].Variable =
+                                    editframe.Sequence.Versions[version].Actions[keyPath].Variable =
                                         [[=GSE.V["]] .. k .. [["]()]]
                                     action.Variable = [[=GSE.V["]] .. k .. [["]()]]
                                 end
@@ -566,7 +566,7 @@ local function renderIf(editframe, pcontainer, action, version, keyPath, treepat
                             "True",
                             function()
                                 booleanEditBox:SetText([[= true]])
-                                editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= true]]
+                                editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= true]]
                                 action.Variable = [[= true]]
                             end
                         )
@@ -574,7 +574,7 @@ local function renderIf(editframe, pcontainer, action, version, keyPath, treepat
                             "False",
                             function()
                                 booleanEditBox:SetText([[= false]])
-                                editframe.Sequence.Macros[version].Actions[keyPath].Variable = [[= false]]
+                                editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= false]]
                                 action.Variable = [[= true]]
                             end
                         )
@@ -696,7 +696,7 @@ local function renderEmbed(editframe, pcontainer, action, version, keyPath, tree
     SequenceDropDown:SetCallback(
         "OnValueChanged",
         function(obj, event, key, checked)
-            editframe.Sequence.Macros[version].Actions[keyPath] = {
+            editframe.Sequence.Versions[version].Actions[keyPath] = {
                 ["Type"] = Statics.Actions.Embed,
                 ["Sequence"] = key
             }
@@ -767,12 +767,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         local blocksThisLevel
 
         if #parentPath == 1 then
-            blocksThisLevel = #editframe.Sequence.Macros[version].Actions
+            blocksThisLevel = #editframe.Sequence.Versions[version].Actions
         else
             if GSE.isEmpty(dontDeleteLastParent) then
                 parentPath[#parentPath] = nil
             end
-            blocksThisLevel = #editframe.Sequence.Macros[version].Actions[parentPath]
+            blocksThisLevel = #editframe.Sequence.Versions[version].Actions[parentPath]
         end
         layoutcontainer:SetLayout("Flow")
         layoutcontainer:SetFullWidth(true)
@@ -789,7 +789,7 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
             moveUpButton:SetCallback(
                 "OnClick",
                 function()
-                    local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                    local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                     local destinationPath = {}
                     for k, v in ipairs(path) do
                         if k == #path then
@@ -798,9 +798,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         table.insert(destinationPath, v)
                     end
 
-                    editframe.Sequence.Macros[version].Actions[path] =
-                        GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                    editframe.Sequence.Macros[version].Actions[destinationPath] = original
+                    editframe.Sequence.Versions[version].Actions[path] =
+                        GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                    editframe.Sequence.Versions[version].Actions[destinationPath] = original
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
             )
@@ -825,7 +825,7 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
             moveDownButton:SetCallback(
                 "OnClick",
                 function()
-                    local original = GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                    local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                     local destinationPath = {}
                     for k, v in ipairs(path) do
                         if k == #path then
@@ -834,9 +834,9 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         table.insert(destinationPath, v)
                     end
 
-                    editframe.Sequence.Macros[version].Actions[path] =
-                        GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[destinationPath])
-                    editframe.Sequence.Macros[version].Actions[destinationPath] = original
+                    editframe.Sequence.Versions[version].Actions[path] =
+                        GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                    editframe.Sequence.Versions[version].Actions[destinationPath] = original
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
             )
@@ -872,7 +872,7 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         table.insert(delPath, v)
                     end
                 end
-                table.remove(editframe.Sequence.Macros[version].Actions[delPath], delObj)
+                table.remove(editframe.Sequence.Versions[version].Actions[delPath], delObj)
                 ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
             end
         )
@@ -916,12 +916,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                     }
                     if #path > 1 then
                         table.insert(
-                            editframe.Sequence.Macros[version].Actions[parentPath],
+                            editframe.Sequence.Versions[version].Actions[parentPath],
                             lastPath + 1,
                             newAction
                         )
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                     end
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
@@ -960,12 +960,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
 
                     if #path > 1 then
                         table.insert(
-                            editframe.Sequence.Macros[version].Actions[parentPath],
+                            editframe.Sequence.Versions[version].Actions[parentPath],
                             lastPath + 1,
                             newAction
                         )
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                     end
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
@@ -997,12 +997,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                     }
                     if #path > 1 then
                         table.insert(
-                            editframe.Sequence.Macros[version].Actions[parentPath],
+                            editframe.Sequence.Versions[version].Actions[parentPath],
                             lastPath + 1,
                             newAction
                         )
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                     end
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
@@ -1047,12 +1047,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                     }
                     if #path > 1 then
                         table.insert(
-                            editframe.Sequence.Macros[version].Actions[parentPath],
+                            editframe.Sequence.Versions[version].Actions[parentPath],
                             lastPath + 1,
                             newAction
                         )
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                     end
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
@@ -1099,12 +1099,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                     }
                     if #path > 1 then
                         table.insert(
-                            editframe.Sequence.Macros[version].Actions[parentPath],
+                            editframe.Sequence.Versions[version].Actions[parentPath],
                             lastPath + 1,
                             newAction
                         )
                     else
-                        table.insert(editframe.Sequence.Macros[version].Actions, lastPath + 1, newAction)
+                        table.insert(editframe.Sequence.Versions[version].Actions, lastPath + 1, newAction)
                     end
                     ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                 end
@@ -1162,14 +1162,14 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
             disableBlock:SetTriState(false)
             disableBlock:SetLabel(L["Disable Block"])
             layoutcontainer:AddChild(disableBlock)
-            disableBlock:SetValue(editframe.Sequence.Macros[version].Actions[path].Disabled)
+            disableBlock:SetValue(editframe.Sequence.Versions[version].Actions[path].Disabled)
             local highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
             highlightTexture:SetAllPoints(true)
 
             disableBlock:SetCallback(
                 "OnValueChanged",
                 function(sel, object, value)
-                    editframe.Sequence.Macros[version].Actions[path].Disabled = value
+                    editframe.Sequence.Versions[version].Actions[path].Disabled = value
                     if value == true then
                         highlightTexture:SetColorTexture(1, 0, 0, 0.15)
                     else
@@ -1177,7 +1177,7 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                     end
                 end
             )
-            if editframe.Sequence.Macros[version].Actions[path].Disabled == true then
+            if editframe.Sequence.Versions[version].Actions[path].Disabled == true then
                 highlightTexture:SetColorTexture(1, 0, 0, 0.15)
             else
                 highlightTexture:SetColorTexture(1, 0, 0, 0)
@@ -1241,8 +1241,8 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         if #testpath > 0 then
                             -- check that the path exists
                             if
-                                GSE.isEmpty(editframe.Sequence.Macros[version].Actions[testpath]) or
-                                    type(editframe.Sequence.Macros[version].Actions[testpath]) ~= "table"
+                                GSE.isEmpty(editframe.Sequence.Versions[version].Actions[testpath]) or
+                                    type(editframe.Sequence.Versions[version].Actions[testpath]) ~= "table"
                                 then
                                 GSE.Print(L["Error: Destination path not found."])
                                 return
@@ -1252,8 +1252,8 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         if #sourcepath > 0 then
                             -- check that the path exists  If this has happened we have a big problem
                             if
-                                GSE.isEmpty(editframe.Sequence.Macros[version].Actions[sourcepath]) or
-                                    type(editframe.Sequence.Macros[version].Actions[sourcepath]) ~= "table"
+                                GSE.isEmpty(editframe.Sequence.Versions[version].Actions[sourcepath]) or
+                                    type(editframe.Sequence.Versions[version].Actions[sourcepath]) ~= "table"
                                 then
                                 GSE.Print(L["Error: Source path not found."])
                                 return
@@ -1266,30 +1266,30 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                         end
 
                         local insertActions =
-                            GSE.CloneSequence(editframe.Sequence.Macros[version].Actions[path])
+                            GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
                         local endPoint = tonumber(destinationPath[#destinationPath])
 
                         local pathPoint = tonumber(path[#path])
 
                         if #sourcepath > 0 then
-                            table.remove(editframe.Sequence.Macros[version].Actions[sourcepath], pathPoint)
+                            table.remove(editframe.Sequence.Versions[version].Actions[sourcepath], pathPoint)
                         else
-                            table.remove(editframe.Sequence.Macros[version].Actions, pathPoint)
+                            table.remove(editframe.Sequence.Versions[version].Actions, pathPoint)
                         end
                         if #testpath > 0 then
                             if endPoint > #testpath + 1 then
                                 endPoint = #testpath + 1
                             end
                             table.insert(
-                                editframe.Sequence.Macros[version].Actions[testpath],
+                                editframe.Sequence.Versions[version].Actions[testpath],
                                 endPoint,
                                 insertActions
                             )
                         else
-                            if endPoint > #editframe.Sequence.Macros[version].Actions + 1 then
-                                endPoint = #editframe.Sequence.Macros[version].Actions + 1
+                            if endPoint > #editframe.Sequence.Versions[version].Actions + 1 then
+                                endPoint = #editframe.Sequence.Versions[version].Actions + 1
                             end
-                            table.insert(editframe.Sequence.Macros[version].Actions, endPoint, insertActions)
+                            table.insert(editframe.Sequence.Versions[version].Actions, endPoint, insertActions)
                         end
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -1322,8 +1322,8 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         return layoutcontainer
     end
 
-    if GSE.isEmpty(editframe.Sequence.Macros[version].Actions) then
-        editframe.Sequence.Macros[version].Actions = {
+    if GSE.isEmpty(editframe.Sequence.Versions[version].Actions) then
+        editframe.Sequence.Versions[version].Actions = {
             [1] = {
                 ["macro"] = "Need Macro Here",
                 ["Type"] = Statics.Actions.Action
@@ -1331,7 +1331,7 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         }
     end
 
-    local macro = editframe.Sequence.Macros[version].Actions
+    local macro = editframe.Sequence.Versions[version].Actions
 
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)

@@ -54,8 +54,8 @@ if GSE.GameMode > 10 then
         if #playerSpells < 1 then
             loadPlayerSpells()
         end
-        if GSE.isEmpty(sequence.Macros[version].Actions[keyPath].type) then
-            sequence.Macros[version].Actions[keyPath].type = "spell"
+        if GSE.isEmpty(sequence.Versions[version].Actions[keyPath].type) then
+            sequence.Versions[version].Actions[keyPath].type = "spell"
         end
         if GSE.isEmpty(action.type) then
             action.type = "spell"
@@ -89,42 +89,42 @@ if GSE.GameMode > 10 then
         end
 
         spellEditBox:SetText(spelltext)
-        --local compiledAction = GSE.CompileAction(action, sequence.Macros[version])
+        --local compiledAction = GSE.CompileAction(action, sequence.Versions[version])
         spellEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
-                if sequence.Macros[version].Actions[keyPath].type == "pet" then
-                    sequence.Macros[version].Actions[keyPath].action = value
-                    sequence.Macros[version].Actions[keyPath].spell = nil
-                    sequence.Macros[version].Actions[keyPath].macro = nil
-                    sequence.Macros[version].Actions[keyPath].item = nil
-                    sequence.Macros[version].Actions[keyPath].toy = nil
-                elseif sequence.Macros[version].Actions[keyPath].type == "item" then
-                    sequence.Macros[version].Actions[keyPath].item = value
-                    sequence.Macros[version].Actions[keyPath].spell = nil
-                    sequence.Macros[version].Actions[keyPath].action = nil
-                    sequence.Macros[version].Actions[keyPath].macro = nil
-                    sequence.Macros[version].Actions[keyPath].toy = nil
-                elseif sequence.Macros[version].Actions[keyPath].type == "toy" then
-                    sequence.Macros[version].Actions[keyPath].toy = value
-                    sequence.Macros[version].Actions[keyPath].spell = nil
-                    sequence.Macros[version].Actions[keyPath].action = nil
-                    sequence.Macros[version].Actions[keyPath].macro = nil
-                    sequence.Macros[version].Actions[keyPath].item = nil
+                if sequence.Versions[version].Actions[keyPath].type == "pet" then
+                    sequence.Versions[version].Actions[keyPath].action = value
+                    sequence.Versions[version].Actions[keyPath].spell = nil
+                    sequence.Versions[version].Actions[keyPath].macro = nil
+                    sequence.Versions[version].Actions[keyPath].item = nil
+                    sequence.Versions[version].Actions[keyPath].toy = nil
+                elseif sequence.Versions[version].Actions[keyPath].type == "item" then
+                    sequence.Versions[version].Actions[keyPath].item = value
+                    sequence.Versions[version].Actions[keyPath].spell = nil
+                    sequence.Versions[version].Actions[keyPath].action = nil
+                    sequence.Versions[version].Actions[keyPath].macro = nil
+                    sequence.Versions[version].Actions[keyPath].toy = nil
+                elseif sequence.Versions[version].Actions[keyPath].type == "toy" then
+                    sequence.Versions[version].Actions[keyPath].toy = value
+                    sequence.Versions[version].Actions[keyPath].spell = nil
+                    sequence.Versions[version].Actions[keyPath].action = nil
+                    sequence.Versions[version].Actions[keyPath].macro = nil
+                    sequence.Versions[version].Actions[keyPath].item = nil
                 else
                     local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
                     if storedValue then
-                        sequence.Macros[version].Actions[keyPath].spell = storedValue
+                        sequence.Versions[version].Actions[keyPath].spell = storedValue
                     else
-                        sequence.Macros[version].Actions[keyPath].spell = value
+                        sequence.Versions[version].Actions[keyPath].spell = value
                     end
-                    sequence.Macros[version].Actions[keyPath].action = nil
-                    sequence.Macros[version].Actions[keyPath].macro = nil
-                    sequence.Macros[version].Actions[keyPath].item = nil
-                    sequence.Macros[version].Actions[keyPath].toy = nil
+                    sequence.Versions[version].Actions[keyPath].action = nil
+                    sequence.Versions[version].Actions[keyPath].macro = nil
+                    sequence.Versions[version].Actions[keyPath].item = nil
+                    sequence.Versions[version].Actions[keyPath].toy = nil
                 end
 
-                --compiledAction = GSE.CompileAction(returnAction, sequence.Macros[version])
+                --compiledAction = GSE.CompileAction(returnAction, sequence.Versions[version])
             end
         )
         spellEditBox:SetCallback(
@@ -144,15 +144,15 @@ if GSE.GameMode > 10 then
             function(sel, object, value)
                 value = GSE.UnEscapeString(value)
                 if string.sub(value, 1, 1) == "/" then
-                    sequence.Macros[version].Actions[keyPath].macro =
+                    sequence.Versions[version].Actions[keyPath].macro =
                         GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
                 else
-                    sequence.Macros[version].Actions[keyPath].macro = value
+                    sequence.Versions[version].Actions[keyPath].macro = value
                 end
-                sequence.Macros[version].Actions[keyPath].spell = nil
-                sequence.Macros[version].Actions[keyPath].action = nil
-                sequence.Macros[version].Actions[keyPath].item = nil
-                sequence.Macros[version].Actions[keyPath].toy = nil
+                sequence.Versions[version].Actions[keyPath].spell = nil
+                sequence.Versions[version].Actions[keyPath].action = nil
+                sequence.Versions[version].Actions[keyPath].item = nil
+                sequence.Versions[version].Actions[keyPath].toy = nil
                 local compiledmacrotext =
                     GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
                 local lenMacro = string.len(compiledmacrotext)
@@ -175,7 +175,7 @@ if GSE.GameMode > 10 then
                                     v,
                                     function()
                                         spellEditBox:SetText(v)
-                                        sequence.Macros[version].Actions[keyPath].spell = v
+                                        sequence.Versions[version].Actions[keyPath].spell = v
                                     end
                                 )
                             end
@@ -186,7 +186,7 @@ if GSE.GameMode > 10 then
                                     k,
                                     function()
                                         spellEditBox:SetText("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                                        sequence.Macros[version].Actions[keyPath].spell =
+                                        sequence.Versions[version].Actions[keyPath].spell =
                                             "\n" .. [[=GSE.V["]] .. k .. [["]()]]
                                     end
                                 )
@@ -209,7 +209,7 @@ if GSE.GameMode > 10 then
                                     v,
                                     function()
                                         macroEditBox.editBox:Insert(v)
-                                        sequence.Macros[version].Actions[keyPath].spell = v
+                                        sequence.Versions[version].Actions[keyPath].spell = v
                                     end
                                 )
                             end
@@ -220,7 +220,7 @@ if GSE.GameMode > 10 then
                                     k,
                                     function()
                                         macroEditBox.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                                        sequence.Macros[version].Actions[keyPath].spell =
+                                        sequence.Versions[version].Actions[keyPath].spell =
                                             "\n" .. [[=GSE.V["]] .. k .. [["]()]]
                                     end
                                 )
@@ -318,7 +318,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
                             "|T" .. v.iconID .. ":0|t " .. v.name,
                             function()
                                 lbl:SetText("|T" .. v.iconID .. ":0|t")
-                                sequence.Macros[version].Actions[keyPath].Icon = v.iconID
+                                sequence.Versions[version].Actions[keyPath].Icon = v.iconID
                             end
                         )
                     end
@@ -328,6 +328,22 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     )
     return lbl
 end
+
+-- Patron feature: stamp the checksum onto the locally saved sequence on every save.
+-- Non-patrons only receive a checksum via the export path.
+local function onSequenceSaved(_, sequenceName)
+    if not GSE.Patron then return end
+    if not GSE.ComputeSequenceChecksum then return end
+    for classid = 0, 13 do
+        local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
+        if seq and seq.MetaData then
+            seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
+            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            break
+        end
+    end
+end
+GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
 
 -- Skyriding Bind Bar for Retail
 if GSE.GameMode >= 11 then

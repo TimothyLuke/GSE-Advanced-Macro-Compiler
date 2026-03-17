@@ -41,7 +41,7 @@ local function compileExport(exportTable, humanReadable)
         end
 
         local macroString = ""
-        for k, _ in pairs(exportTable.Macros) do
+        for k, _ in pairs(exportTable["Macros"]) do
             macroString = macroString .. "- " .. k .. "\n"
         end
         if string.len(macroString) > 0 then
@@ -169,6 +169,13 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, type)
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
                 )
+                -- Stamp the checksum on the export clone only.
+                -- The local copy (seq) is intentionally left unchanged so that the
+                -- stored checksum always reflects the last-exported state.
+                local exportedSeq = exportTable["Sequences"][key]
+                if exportedSeq and exportedSeq.MetaData and GSE.ComputeSequenceChecksum then
+                    exportedSeq.MetaData.Checksum = GSE.ComputeSequenceChecksum(exportedSeq)
+                end
                 exportTable.ElementCount = exportTable.ElementCount + 1
 
                 -- Auto-include transitive variable dependencies

@@ -111,7 +111,7 @@ local function processCollection(payload)
   end
 
   local macrosfound = false
-  for k, _ in pairs(payload.Macros) do
+  for k, _ in pairs(payload["Macros"]) do
     macrosfound = true
     if GSE.isEmpty(importset["Macros"]) then
       importset["Macros"] = {}
@@ -125,7 +125,7 @@ local function processCollection(payload)
     macroLabel:SetFontObject(GameFontNormalLarge)
     importframe:AddChild(macroLabel)
     local char, realm = UnitFullName("player")
-    for k, _ in pairs(payload.Macros) do
+    for k, _ in pairs(payload["Macros"]) do
       local row = AceGUI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)

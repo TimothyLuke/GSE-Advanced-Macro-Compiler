@@ -383,10 +383,10 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
             GSE.GUILoadEditor(editframe, path[#path])
         end
         table.insert(
-            editframe.Sequence.Macros,
-            GSE.CloneSequence(editframe.Sequence.Macros[editframe.Sequence.MetaData.Default])
+            editframe.Sequence.Versions,
+            GSE.CloneSequence(editframe.Sequence.Versions[editframe.Sequence.MetaData.Default])
         )
-        editframe.GUIDrawMacroEditor(contentcontainer, #editframe.Sequence.Macros, table.concat(path, "\001"))
+        editframe.GUIDrawMacroEditor(contentcontainer, #editframe.Sequence.Versions, table.concat(path, "\001"))
         editframe:SetTitle(
             L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
         )
@@ -499,7 +499,7 @@ local function ManageTree(editframe)
         end
 
         GSE.EnsureSequenceLoaded(tclassid, elements[3])
-        for i, j in ipairs(GSE.Library[tclassid][elements[3]]["Macros"]) do
+        for i, j in ipairs(GSE.Library[tclassid][elements[3]]["Versions"]) do
             table.insert(node.children, {
                 value = i,
                 text = editframe.BuildVersionLabel(tostring(i), j.Label)

@@ -2,6 +2,18 @@ local GSE = GSE
 local L = GSE.L
 local Statics = GSE.Static
 
+--- Shown when importing a sequence whose checksum is absent or does not match.
+-- The import still proceeds; this is a warning, not a block.
+StaticPopupDialogs["GSE_SEQUENCE_INTEGRITY_WARNING"] = {
+    text = L["GSE_SEQUENCE_INTEGRITY_WARNING_TEXT"],
+    button1 = OKAY,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    showAlert = true,
+    preferredIndex = 3,
+}
+
 StaticPopupDialogs["GS-DebugOutput"] = {
     text = "Dump of GS Debug messages",
     button1 = L["Update"],
