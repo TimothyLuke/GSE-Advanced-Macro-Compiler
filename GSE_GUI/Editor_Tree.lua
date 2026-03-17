@@ -499,11 +499,14 @@ local function ManageTree(editframe)
         end
 
         GSE.EnsureSequenceLoaded(tclassid, elements[3])
-        for i, j in ipairs(GSE.Library[tclassid][elements[3]]["Versions"]) do
-            table.insert(node.children, {
-                value = i,
-                text = editframe.BuildVersionLabel(tostring(i), j.Label)
-            })
+        local loadedSeq = GSE.Library[tclassid] and GSE.Library[tclassid][elements[3]]
+        if loadedSeq then
+            for i, j in ipairs(loadedSeq["Versions"]) do
+                table.insert(node.children, {
+                    value = i,
+                    text = editframe.BuildVersionLabel(tostring(i), j.Label)
+                })
+            end
         end
         table.insert(node.children, {
             text = L["New"] .. " " .. L["Version"],
