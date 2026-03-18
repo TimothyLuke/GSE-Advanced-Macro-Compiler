@@ -830,6 +830,8 @@ L["Right-Click for Options"] = true
 L["Shift + Right-Click to copy version"] = true
 L["Position Locked"] = true
 L["Change"] = true
+L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
+L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] = true
 L["WhatsNew"] =
 [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.04
 
