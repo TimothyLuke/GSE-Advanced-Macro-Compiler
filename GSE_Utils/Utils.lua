@@ -855,6 +855,33 @@ function GSE.GetSequenceDependents(seqName)
     return result
 end
 
+-- Queue of corrupt sequences waiting for the player to act on them.
+local corruptQueue = {}
+
+--- Show the next dialog for a corrupt sequence, if any remain in the queue.
+-- Called by the StaticPopup OnAccept/OnCancel handlers to chain through all entries.
+function GSE.ProcessNextCorruptSequence()
+    if #corruptQueue == 0 then return end
+    local entry = table.remove(corruptQueue, 1)
+    StaticPopupDialogs["GSE_CORRUPT_SEQUENCE"].text = string.format(
+        L["GSE_CORRUPT_SEQUENCE_TEXT"], entry.name, entry.classid
+    )
+    StaticPopup_Show("GSE_CORRUPT_SEQUENCE", nil, nil, entry)
+end
+
+--- Build the dialog queue from GSE.CorruptSequences and show the first dialog.
+-- Drains the global list so repeated calls do not double-present the same entries.
+function GSE.ProcessCorruptSequences()
+    for _, entry in ipairs(GSE.CorruptSequences or {}) do
+        table.insert(corruptQueue, entry)
+    end
+    GSE.CorruptSequences = {}
+    if #corruptQueue > 0 then
+        GSE.Print(string.format(L["%d corrupt sequence(s) found \226\128\148 showing resolution options."], #corruptQueue))
+        GSE.ProcessNextCorruptSequence()
+    end
+end
+
 --- Scans all sequences in GSE.Library for structural and content issues,
 -- then checks GSESequences entries for valid encoding.
 function GSE.ScanMacrosForErrors()
@@ -1054,6 +1081,11 @@ function GSE.ScanMacrosForErrors()
         GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
     else
         GSE.Print(string.format(L["%d issue(s) found.  See above for details and fix commands."], totalIssues))
+    end
+
+    -- Offer interactive dialogs for any sequences that could not be decoded at all.
+    if not GSE.isEmpty(GSE.CorruptSequences) then
+        GSE.ProcessCorruptSequences()
     end
 end
 

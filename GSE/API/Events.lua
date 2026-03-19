@@ -708,9 +708,9 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.PerformReloadSequences(true)
     LoadOverrides()
     GSE.ManageMacros()
-    -- Migrate any remaining classes that weren't loaded at startup.
+    -- Migrate any remaining classes in the background so login is not blocked.
     if GSE.MigrateAllRemainingClasses then
-        GSE.MigrateAllRemainingClasses()
+        GSE.EnqueueOOC({action = "migrateremainingclasses"})
     end
     if ConsolePort then
         C_Timer.After(10, LoadOverrides)
@@ -1054,6 +1054,11 @@ function GSE:ProcessOOCQueue()
                 GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.sequencename, v.newSequence)
             elseif v.action == "FinishReload" then
                 GSE.UnsavedOptions.ReloadQueued = nil
+            elseif v.action == "migrateremainingclasses" then
+                GSE.MigrateAllRemainingClasses()
+                if GSE.ProcessCorruptSequences and not GSE.isEmpty(GSE.CorruptSequences) then
+                    GSE.ProcessCorruptSequences()
+                end
             end
         else
             -- Still in combat; put the item back so it's processed next tick.

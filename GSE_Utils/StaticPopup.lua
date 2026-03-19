@@ -213,6 +213,29 @@ StaticPopupDialogs["GSE-DeleteMacroDialog"] = {
     exclusive = true
 }
 
+--- Shown once per corrupt sequence found during load/migration.
+-- button1 = Delete removes the entry from storage.
+-- button2 = Skip leaves it in place; the player can run /gse checksequencesforerrors later.
+-- OnCancel also fires when the player presses Escape (hideOnEscape = true), so the
+-- chain advances rather than silently stopping.
+StaticPopupDialogs["GSE_CORRUPT_SEQUENCE"] = {
+    text = "",  -- set dynamically before StaticPopup_Show
+    button1 = L["Delete"],
+    button2 = L["Skip"],
+    OnAccept = function(self, data)
+        GSE.DeleteCorruptSequence(data.classid, data.name)
+        GSE.ProcessNextCorruptSequence()
+    end,
+    OnCancel = function(self, data)
+        GSE.ProcessNextCorruptSequence()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+    showAlert = true,
+}
+
 StaticPopupDialogs["GSE_ChatLink"] = {
     text = L["Copy this link and paste it into a chat window."],
     hasEditBox = 1,

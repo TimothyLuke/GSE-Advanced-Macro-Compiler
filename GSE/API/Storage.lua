@@ -9,6 +9,10 @@ local VARIABLE_SELFKEY_PREFIX = "GSEVar_"  -- AceEvent self-key prefix for varia
 -- Track which class libraries have been decompressed into GSE.Library.
 GSE.LoadedClasses = GSE.LoadedClasses or {}
 
+-- Sequences that failed to decode during load are collected here so the UI can
+-- offer the player interactive options (delete / skip) rather than silent loss.
+GSE.CorruptSequences = GSE.CorruptSequences or {}
+
 --- One-off migration: rename the old "Macros" array to "Versions" on a sequence table.
 -- Uses bracket notation for the old key so future rename passes cannot corrupt this guard.
 -- Returns true when migration was performed so the caller can re-save to disk.
@@ -48,6 +52,7 @@ local function loadOneClass(classid)
                     i .. ", You will need to reimport this macro from another source.",
                 err
             )
+            table.insert(GSE.CorruptSequences, {classid = classid, name = i})
         end
     end
 end
@@ -90,7 +95,19 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
                 sequenceName .. ", You will need to reimport this macro from another source.",
             err
         )
+        table.insert(GSE.CorruptSequences, {classid = classid, name = sequenceName})
     end
+end
+
+--- Remove a corrupt sequence from both compressed storage and the live library.
+function GSE.DeleteCorruptSequence(classid, name)
+    if type(GSESequences) == "table" and type(GSESequences[classid]) == "table" then
+        GSESequences[classid][name] = nil
+    end
+    if type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
+        GSE.Library[classid][name] = nil
+    end
+    GSE.Print(string.format(L["Corrupt sequence '%s' (class %d) deleted."], name, classid))
 end
 
 --- Delete a sequence from the library
@@ -399,7 +416,8 @@ end
 
 --- Force-load every class that has not yet been decompressed, triggering the
 -- Macros→Versions migration for any sequences still in the old format.
--- Called from PLAYER_ENTERING_WORLD so all class data is migrated shortly after login.
+-- Enqueued via the OOC queue from PLAYER_ENTERING_WORLD so it runs in the
+-- background (on the next OOC tick) without blocking login.
 function GSE.MigrateAllRemainingClasses()
     for classid = 0, 13 do
         if not GSE.LoadedClasses[classid] then

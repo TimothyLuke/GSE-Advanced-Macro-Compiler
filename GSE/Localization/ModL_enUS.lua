@@ -10,6 +10,12 @@ L["Show the GSE logo as a small watermark on actionbar override buttons."] = tru
 L["Sequence has been altered from its exported state"] = true
 L["GSE_SEQUENCE_INTEGRITY_WARNING_TEXT"] = "WARNING: The sequence '%s' does not have a valid integrity checksum.\n\nThis means the sequence was either not created with GSE, or has been modified since it was last exported.\n\nPlease verify its contents before using it."
 
+-- Corrupt-sequence dialog strings
+L["Skip"] = true
+L["GSE_CORRUPT_SEQUENCE_TEXT"] = "The sequence '%s' (class %d) could not be read and may be corrupt.\n\nDelete it to remove the broken data, or Skip to leave it for now.\nYou can reimport the sequence from its original source to recover it."
+L["Corrupt sequence '%s' (class %d) deleted."] = true
+L["%d corrupt sequence(s) found \226\128\148 showing resolution options."] = true
+
 -- checksequencesforerrors / FixSequenceStructure strings
 L["Scanning GSE.Library for structural and content issues..."] = true
 L["Sequence is not a table"] = true
