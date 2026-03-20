@@ -256,6 +256,11 @@ local function fixContainer(v)
 end
 
 function GSE.processWAGOImport(input, dontencode)
+    -- Migrate pre-#1853 sequences that stored versions under "Macros" instead of "Versions".
+    if input.Macros and not input.Versions then
+        input.Versions = input.Macros
+        input.Macros = nil
+    end
     for k, v in ipairs(input) do
         if type(v) == "table" then
             input[k] = fixContainer(v)
@@ -331,8 +336,13 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             v = GSE.processWAGOImport(v, true)
 
             if v.MetaData.GSEVersion and v.MetaData.GSEVersion > 3200 then
-                if v.MetaData.GSEVersion < math.floor(GSE.VersionNumber/ 100) * 100 then
-                    v.MetaData.Disabled = true
+                if v.MetaData.GSEVersion < GSE.VersionNumber then
+                    -- Older sequence: always show the older-version dialog.
+                    -- OnAccept will chain to the checksum dialog for sequences
+                    -- >= Statics.ChecksumMinVersion (checksums were introduced then).
+                    StaticPopup_Show("GSE_SEQUENCE_OLDER_VERSION", seqName, tostring(v.MetaData.GSEVersion),
+                        {seqName = seqName, sequence = v, forcereplace = forcereplace})
+                    return decompresssuccess
                 end
             else
                 GSE.Print(
@@ -342,10 +352,13 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
                 return
             end
             -- Warn if the sequence has been modified after it was exported.
+            -- If the checksum is invalid the user must confirm before the import proceeds.
             if GSE.VerifySequenceChecksum then
                 local integrity = GSE.VerifySequenceChecksum(v)
                 if integrity ~= true then
-                    StaticPopup_Show("GSE_SEQUENCE_INTEGRITY_WARNING", seqName)
+                    StaticPopup_Show("GSE_SEQUENCE_INTEGRITY_WARNING", seqName, nil,
+                        {seqName = seqName, sequence = v, forcereplace = forcereplace})
+                    return decompresssuccess
                 end
             end
 
@@ -642,6 +655,15 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
                                                 macIdx, actIdx, cmd))
                                         end
                                     end
+                                    -- Check for Java-style // comments; GSE only strips lines starting with --
+                                    for line in (raw .. "\n"):gmatch("([^\n]*)\n") do
+                                        if line:match("^%s*//") then
+                                            table.insert(issues, string.format(
+                                                L["Macros[%d].Actions[%d] uses // comments instead of --; GSE will not strip these on compile"],
+                                                macIdx, actIdx))
+                                            break
+                                        end
+                                    end
                                 end
                             end
                         end
@@ -696,11 +718,12 @@ local function walkTableForDeps(t, vars, seqs, macros)
                 seqs[vSequence] = true
             end
             -- Action block with type="macro": if the macro field does not start with
-            -- "/" or "#" it is a plain WoW macro name reference, not command text.
+            -- "/", "#", or "=" it is a plain WoW macro name reference, not command text.
+            -- "=" prefix means it's a GSE variable expression (e.g. =GSE.V.Name()), not a macro name.
             if vType == "Action" and vtype == "macro" and type(vmacro) == "string" then
                 local text = GSE.UnEscapeString(vmacro)
                 local first = string.sub(text, 1, 1)
-                if #text > 0 and first ~= "/" and first ~= "#" then
+                if #text > 0 and first ~= "/" and first ~= "#" and first ~= "=" then
                     macros[text] = true
                 end
             end
@@ -1089,12 +1112,36 @@ function GSE.ScanMacrosForErrors()
     end
 end
 
+--- Recursively replaces Java-style // comment lines with -- in all action macro fields.
+local function applyJavaCommentFix(actionList)
+    for _, action in pairs(actionList) do
+        if type(action) == "table" then
+            if type(action.macro) == "string" then
+                local lines = {}
+                for line in (action.macro .. "\n"):gmatch("([^\n]*)\n") do
+                    lines[#lines + 1] = line:gsub("^(%s*)//", "%1--")
+                end
+                if lines[#lines] == "" then table.remove(lines) end
+                action.macro = table.concat(lines, "\n")
+            end
+            -- Recurse into nested numeric sub-tables (Loop children, If branches)
+            for k, v in pairs(action) do
+                if type(k) == "number" and type(v) == "table" then
+                    applyJavaCommentFix(v)
+                end
+            end
+        end
+    end
+end
+
 --- Repairs structural issues in a sequence in GSE.Library:
 -- 1. Clears OOC queue entries for the sequence
--- 2. Re-indexes the Macros array to remove numeric gaps
--- 3. Re-indexes each Macro version's Actions array to remove gaps
--- 4. Updates MetaData context version references to match the new indices
--- 5. Saves the repaired sequence and queues a recompile
+-- 2. Migrates pre-#1853 Macros field to Versions
+-- 3. Converts Java-style // comment lines to -- in all action macro text
+-- 4. Re-indexes the Macros array to remove numeric gaps
+-- 5. Re-indexes each Macro version's Actions array to remove gaps
+-- 6. Updates MetaData context version references to match the new indices
+-- 7. Saves the repaired sequence and queues a recompile
 -- Usage: /run GSE.FixSequenceStructure(classLibraryID, "SequenceName")
 function GSE.FixSequenceStructure(classlibid, seqname)
     classlibid = tonumber(classlibid)
@@ -1123,7 +1170,20 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         GSE.Print(string.format(L["Cleared %d pending queue entries for '%s'."], removed, seqname))
     end
 
-    -- 2. Re-index Macros array (compact gaps into a clean 1..n sequence)
+    -- 2. Migrate pre-#1853 sequences that stored versions under "Macros" instead of "Versions".
+    if seq.Macros and not seq.Versions then
+        seq.Versions = seq.Macros
+        seq.Macros = nil
+    end
+
+    -- 3. Replace Java-style // comment lines with -- in all action macro text
+    for _, macver in pairs(seq.Versions or {}) do
+        if type(macver) == "table" and type(macver.Actions) == "table" then
+            applyJavaCommentFix(macver.Actions)
+        end
+    end
+
+    -- 4. Re-index Macros array (compact gaps into a clean 1..n sequence)
     if type(seq.Versions) == "table" then
         local oldMacroKeys = {}
         for k in pairs(seq.Versions) do
@@ -1142,7 +1202,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         end
         seq.Versions = newMacros
 
-        -- 3. Re-index Actions arrays within each Macro version
+        -- 5. Re-index Actions arrays within each Macro version
         for _, macroversion in ipairs(seq.Versions) do
             if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
                 local oldActKeys = {}
@@ -1161,7 +1221,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
             end
         end
 
-        -- 4. Update MetaData context version references using the old→new mapping
+        -- 6. Update MetaData context version references using the old→new mapping
         local maxNewIdx = #seq.Versions
         for _, ctxKey in ipairs(seqContextKeys) do
             local val = seq.MetaData[ctxKey]
@@ -1184,7 +1244,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         end
     end
 
-    -- 5. Save repaired sequence and trigger recompile
+    -- 7. Save repaired sequence and trigger recompile
     GSE.ReplaceSequence(classlibid, seqname, seq)
     if classlibid == GSE.GetCurrentClassID() or classlibid == 0 then
         GSE.ReloadSequences()

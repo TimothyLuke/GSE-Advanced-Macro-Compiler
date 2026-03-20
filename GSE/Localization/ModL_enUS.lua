@@ -6,9 +6,13 @@ L["GSE Sequence"] = true
 L["Show Actionbar Override Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
 
+-- Sequence version / compatibility strings
+L["GSE_SEQUENCE_OLDER_VERSION_TEXT"] = "WARNING: The sequence '%s' was created with an older version of GSE (%s).\n\nIt may need adjustments before it works correctly.\n\nDo you want to proceed with the import anyway?"
+
 -- Sequence integrity / checksum strings
 L["Sequence has been altered from its exported state"] = true
-L["GSE_SEQUENCE_INTEGRITY_WARNING_TEXT"] = "WARNING: The sequence '%s' does not have a valid integrity checksum.\n\nThis means the sequence was either not created with GSE, or has been modified since it was last exported.\n\nPlease verify its contents before using it."
+L["Proceed"] = true
+L["GSE_SEQUENCE_INTEGRITY_WARNING_TEXT"] = "WARNING: The sequence '%s' does not have a valid integrity checksum.\n\nThis means the sequence was either not created with GSE, or has been modified since it was last exported.\n\nPlease verify its contents before using it.\n\nDo you want to proceed with the import anyway?"
 
 -- Corrupt-sequence dialog strings
 L["Skip"] = true
@@ -36,6 +40,7 @@ L["Macros[%d].Actions[%d] (Pause) has neither Clicks nor MS"] = true
 L["Macros[%d].Actions[%d] macro text exceeds 255 characters (%d chars)"] = true
 L["Macros[%d].Actions[%d] macro text has unbalanced brackets (%d '[' vs %d ']')"] = true
 L["Macros[%d].Actions[%d] uses unrecognized slash command: /%s"] = true
+L["Macros[%d].Actions[%d] uses // comments instead of --; GSE will not strip these on compile"] = true
 L["Issues found in '%s' (class library %d):"] = true
 L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"] = true
 L["Compile error in Macros[%d] of '%s': %s"] = true

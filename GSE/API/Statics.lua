@@ -485,6 +485,12 @@ Statics.TranslatorMode.Current = "CURRENT"
 Statics.TranslatorMode.String = "STRING"
 Statics.TranslatorMode.ID = "ID"
 
+-- Minimum GSEVersion that supports sequence checksums.
+-- Sequences with a GSEVersion below this threshold pre-date checksums and are
+-- shown only the "older version" warning on import.  Sequences at or above this
+-- threshold are also subject to the checksum integrity check.
+Statics.ChecksumMinVersion = 3307
+
 Statics.TableMetadataFunction = {
     __index = function(t, k)
         for _, v in ipairs(k) do

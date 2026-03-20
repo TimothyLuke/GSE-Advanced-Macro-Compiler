@@ -892,5 +892,141 @@ describe(
       end
     )
 
+    -- ================================================================
+    -- Java-style // comment detection and FixSequenceStructure conversion
+    -- ================================================================
+
+    describe(
+      "Java-style // comment handling",
+      function()
+
+        it(
+          "reports // comments in action macro text",
+          function()
+            local seq = makeSeq()
+            seq.Versions[1].Actions[1].macro = "// cast Fireball\n/cast Fireball"
+            GSE.Library[0]["CommentSeq"] = seq
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("// comments instead of --"))
+          end
+        )
+
+        it(
+          "reports // with leading whitespace as a comment",
+          function()
+            local seq = makeSeq()
+            seq.Versions[1].Actions[1].macro = "  // indented comment\n/cast Fireball"
+            GSE.Library[0]["IndentCommentSeq"] = seq
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("// comments instead of --"))
+          end
+        )
+
+        it(
+          "does not report -- comments as an issue",
+          function()
+            local seq = makeSeq()
+            seq.Versions[1].Actions[1].macro = "-- valid comment\n/cast Fireball"
+            GSE.Library[0]["DashCommentSeq"] = seq
+            GSE.ScanMacrosForErrors()
+            assert.is_false(hasMsg("// comments instead of --"))
+          end
+        )
+
+        it(
+          "FixSequenceStructure converts // comment lines to -- in action macro text",
+          function()
+            local seq = makeSeq()
+            seq.Versions[1].Actions[1].macro = "// opener comment\n/cast Fireball\n// trailing comment"
+            GSE.Library[0]["FixCommentSeq"] = seq
+            GSE.FixSequenceStructure(0, "FixCommentSeq")
+            local fixed = GSE.Library[0]["FixCommentSeq"]
+            local macro = fixed.Versions[1].Actions[1].macro
+            assert.is_false(macro:find("//", 1, true) ~= nil)
+            assert.is_true(macro:find("--", 1, true) ~= nil)
+          end
+        )
+
+        it(
+          "FixSequenceStructure preserves leading whitespace when converting //",
+          function()
+            local seq = makeSeq()
+            seq.Versions[1].Actions[1].macro = "  // indented\n/cast Fireball"
+            GSE.Library[0]["IndentFixSeq"] = seq
+            GSE.FixSequenceStructure(0, "IndentFixSeq")
+            local fixed = GSE.Library[0]["IndentFixSeq"]
+            local macro = fixed.Versions[1].Actions[1].macro
+            assert.is_true(macro:find("  --", 1, true) ~= nil)
+          end
+        )
+
+      end
+    )
+
+    -- ================================================================
+    -- processWAGOImport — Macros → Versions migration
+    -- ================================================================
+
+    describe(
+      "processWAGOImport migration",
+      function()
+
+        it(
+          "migrates a pre-#1853 sequence with Macros field to Versions on import",
+          function()
+            local oldSeq = {
+              MetaData = {SpecID = 11, Default = 1},
+              Macros = {
+                [1] = {
+                  Actions = {[1] = {Type = "Action", macro = "/cast Fireball"}},
+                  InbuiltVariables = {}
+                }
+              }
+            }
+            local result = GSE.processWAGOImport(oldSeq, true)
+            assert.is_not_nil(result.Versions)
+            assert.is_nil(result.Macros)
+            assert.are.equal("/cast Fireball", result.Versions[1].Actions[1].macro)
+          end
+        )
+
+        it(
+          "does not overwrite an existing Versions field when Macros is also present",
+          function()
+            local seq = {
+              MetaData = {SpecID = 11, Default = 1},
+              Versions = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Frostbolt"}}}
+              },
+              Macros = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Fireball"}}}
+              }
+            }
+            local result = GSE.processWAGOImport(seq, true)
+            -- Versions takes precedence; Macros is left untouched since we only migrate
+            -- when Versions is absent.
+            assert.are.equal("/cast Frostbolt", result.Versions[1].Actions[1].macro)
+          end
+        )
+
+        it(
+          "leaves a modern sequence (Versions only) unchanged",
+          function()
+            local seq = {
+              MetaData = {SpecID = 11, Default = 1},
+              Versions = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Pyroblast"}}}
+              }
+            }
+            local result = GSE.processWAGOImport(seq, true)
+            assert.is_not_nil(result.Versions)
+            assert.is_nil(result.Macros)
+            assert.are.equal("/cast Pyroblast", result.Versions[1].Actions[1].macro)
+          end
+        )
+
+      end
+    )
+
   end
 )
