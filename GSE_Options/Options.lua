@@ -403,12 +403,16 @@ local function createBlizzOptions(category)
                 local desc = C_AddOns.GetAddOnMetadata(packName, "Notes") or
                     string.format(L["Addin Version %s contained versions for the following sequences:"], packName) ..
                     string.format("\n%s", FormatSequenceNames(v.SequenceNames))
-                local function GetValue() return false end
-                local function SetValue(val)
-                    if val then GSE:SendMessage(Statics.ReloadMessage, packName) end
-                end
-                local setting = Settings.RegisterProxySetting(pluginOptions, "plugin_" .. packName, Settings.VarType.Boolean, displayName, false, GetValue, SetValue)
-                Settings.CreateCheckbox(pluginOptions, setting, desc)
+                local layout = SettingsPanel:GetLayout(pluginOptions)
+                layout:AddInitializer(CreateSettingsButtonInitializer(
+                    displayName,
+                    L["Reload"],
+                    function()
+                        GSE:SendMessage(Statics.ReloadMessage, packName)
+                    end,
+                    desc,
+                    false
+                ))
             end
         end
     end

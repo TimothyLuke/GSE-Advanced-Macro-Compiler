@@ -649,6 +649,7 @@ L[
 L["This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames."] = true
 L["Edit Spell Cache"] = true
 L["Edit"] = true
+L["Reload"] = true
 L["Spell Cache Editor"] = true
 L["Spell ID"] = true
 L["Spell Name"] = true
