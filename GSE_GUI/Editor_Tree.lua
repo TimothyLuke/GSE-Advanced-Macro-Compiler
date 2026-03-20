@@ -600,6 +600,10 @@ local function ManageTree(editframe)
             local vers = seq.Versions
             if srcIdx < 1 or srcIdx > #vers or dstIdx < 1 or dstIdx > #vers then return end
 
+            -- Capture the current tree selection so we can restore it after the reorder.
+            local treeStatus = container.status or container.localstatus
+            local currentSelected = treeStatus and treeStatus.selected
+
             -- Reorder: remove source and insert at destination
             local moved = table.remove(vers, srcIdx)
             table.insert(vers, dstIdx, moved)
@@ -647,13 +651,24 @@ local function ManageTree(editframe)
                 end
             end
 
-            -- Clear the right panel — version indices have shifted so anything
-            -- currently rendered is stale.  The user re-clicks to reload.
-            if editframe.loaded then
-                container:ReleaseChildren()
-                editframe.loaded = nil
-            end
+            -- Rebuild the tree, then re-select the previously selected node so the
+            -- right panel redraws automatically via OnGroupSelected.  If the selection
+            -- was a numeric version of this sequence, remap its index to the new position.
             editframe.ManageTree()
+
+            if currentSelected then
+                local newSelected = currentSelected
+                local selParts = {("\001"):split(currentSelected)}
+                if selParts[1] == "Sequences" and #selParts == 4
+                        and selParts[2] == srcParts[2] and selParts[3] == srcParts[3] then
+                    local selIdx = tonumber(selParts[4])
+                    if selIdx then
+                        selParts[4] = tostring(remapVersionIndex(selIdx))
+                        newSelected = table.concat(selParts, "\001")
+                    end
+                end
+                container:SelectByValue(newSelected)
+            end
         end
     )
     treeContainer:SetCallback(
