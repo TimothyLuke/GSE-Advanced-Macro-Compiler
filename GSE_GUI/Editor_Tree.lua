@@ -558,6 +558,105 @@ local function ManageTree(editframe)
 
     treeContainer:SetTree(tree)
     treeContainer:SetCallback(
+        "OnButtonDrop",
+        function(container, event, srcValue, dstValue)
+            -- Parse the uniquevalue paths (segments separated by \001)
+            local srcParts = {("\001"):split(srcValue)}
+            local dstParts = {("\001"):split(dstValue)}
+
+            -- Both must be Sequences > class > sequence > numeric version index
+            if srcParts[1] ~= "Sequences" or dstParts[1] ~= "Sequences" then return end
+            if #srcParts ~= 4 or #dstParts ~= 4 then return end
+
+            local srcIdx = tonumber(srcParts[4])
+            local dstIdx = tonumber(dstParts[4])
+            -- config ("config") and New Version ("newversion") are non-numeric; reject them
+            if not srcIdx or not dstIdx or srcIdx == dstIdx then return end
+
+            -- Must be the same sequence node (srcParts[2] and [3] must match dstParts)
+            if srcParts[2] ~= dstParts[2] or srcParts[3] ~= dstParts[3] then return end
+
+            -- Resolve classid and sequence name from the sequence key "classid,specid,name"
+            local elements = GSE.split(srcParts[3], ",")
+            local classid = tonumber(elements[1])
+            local seqname = elements[3]
+            if not classid or not seqname then return end
+
+            -- Resolve classid and sequence name from the sequence key "classid,specid,name"
+            -- GUILoadEditor decodes a fresh copy into editframe.Sequence, separate from
+            -- GSE.Library.  We must modify editframe.Sequence (the working copy the Save
+            -- button will persist) rather than auto-saving — reorder is a pending edit.
+            -- We also update the Library copy so ManageTree() shows the new order in the
+            -- tree (Library is an in-memory display cache; GSESequences is only written
+            -- on explicit Save).
+            local isLoadedSeq = tostring(editframe.ClassID) == tostring(classid)
+                and editframe.SequenceName == seqname
+                and not GSE.isEmpty(editframe.Sequence)
+
+            if not isLoadedSeq then return end  -- only reorder the currently open sequence
+
+            local seq = editframe.Sequence
+            if not seq.Versions then return end
+            local vers = seq.Versions
+            if srcIdx < 1 or srcIdx > #vers or dstIdx < 1 or dstIdx > #vers then return end
+
+            -- Reorder: remove source and insert at destination
+            local moved = table.remove(vers, srcIdx)
+            table.insert(vers, dstIdx, moved)
+
+            -- Remap a single version index through the move.
+            local function remapVersionIndex(v)
+                if not v then return v end
+                if v == srcIdx then
+                    return dstIdx
+                elseif srcIdx < dstIdx and v > srcIdx and v <= dstIdx then
+                    return v - 1
+                elseif srcIdx > dstIdx and v >= dstIdx and v < srcIdx then
+                    return v + 1
+                end
+                return v
+            end
+
+            -- Update all MetaData fields that hold a version index.
+            -- Context keys that equal Default are stored as nil; re-apply that rule
+            -- after remapping (mirrors the editor's OnValueChanged logic).
+            seq.MetaData.Default = remapVersionIndex(seq.MetaData.Default)
+            local contextKeys = {
+                "Raid", "Arena", "Mythic", "MythicPlus", "PVP",
+                "Heroic", "Dungeon", "Timewalking", "Party", "Scenario",
+            }
+            for _, k in ipairs(contextKeys) do
+                local remapped = remapVersionIndex(seq.MetaData[k])
+                if remapped == seq.MetaData.Default then
+                    seq.MetaData[k] = nil
+                else
+                    seq.MetaData[k] = remapped
+                end
+            end
+
+            -- Mirror the reorder into the Library copy so ManageTree() draws the
+            -- correct order.  This does NOT persist to GSESequences.
+            GSE.EnsureSequenceLoaded(classid, seqname)
+            local libSeq = GSE.Library[classid] and GSE.Library[classid][seqname]
+            if libSeq and libSeq.Versions then
+                local libMoved = table.remove(libSeq.Versions, srcIdx)
+                table.insert(libSeq.Versions, dstIdx, libMoved)
+                libSeq.MetaData.Default = seq.MetaData.Default
+                for _, k in ipairs(contextKeys) do
+                    libSeq.MetaData[k] = seq.MetaData[k]
+                end
+            end
+
+            -- Clear the right panel — version indices have shifted so anything
+            -- currently rendered is stale.  The user re-clicks to reload.
+            if editframe.loaded then
+                container:ReleaseChildren()
+                editframe.loaded = nil
+            end
+            editframe.ManageTree()
+        end
+    )
+    treeContainer:SetCallback(
         "OnGroupSelected",
         function(container, event, group, ...)
             local unique = {("\001"):split(group)}

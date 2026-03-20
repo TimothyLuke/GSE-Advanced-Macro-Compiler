@@ -13,6 +13,12 @@ local select, tremove, unpack, tconcat = select, table.remove, unpack, table.con
 
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
+local GetCursorPosition = GetCursorPosition
+
+-- Drag-and-drop state (module-level; WoW is single-threaded so this is safe)
+-- activeDrag = {uniquevalue, widget, startX, startY} or nil
+local activeDrag = nil
+local DRAG_THRESHOLD_SQ = 100  -- 10-pixel radius before a move is treated as a drag
 
 -- Recycling functions
 local new, del
@@ -195,6 +201,38 @@ local function Expand_OnClick(frame)
     self:RefreshTree()
 end
 
+local function Button_OnMouseDown(frame, mouseButton)
+    if mouseButton ~= "LeftButton" then return end
+    if activeDrag then return end  -- pass-through; preserve original source
+    local x, y = GetCursorPosition()
+    activeDrag = {uniquevalue = frame.uniquevalue, widget = frame.obj, startX = x, startY = y}
+end
+
+local function Button_OnMouseUp(frame, mouseButton)
+    if mouseButton ~= "LeftButton" or not activeDrag then return end
+    local x, y = GetCursorPosition()
+    local dx = x - activeDrag.startX
+    local dy = y - activeDrag.startY
+    local moved = (dx * dx + dy * dy) >= DRAG_THRESHOLD_SQ
+    local src = activeDrag.uniquevalue
+    local widget = activeDrag.widget
+    activeDrag = nil
+    if not moved then return end
+    -- WoW mouse-capture means OnMouseUp always fires on the button that received
+    -- OnMouseDown, not the button under the cursor at release time.  Walk the
+    -- visible buttons to find the one the cursor is actually over.
+    local dstUnique = nil
+    for _, btn in ipairs(widget.buttons) do
+        if btn:IsShown() and btn:IsMouseOver() then
+            dstUnique = btn.uniquevalue
+            break
+        end
+    end
+    if dstUnique and dstUnique ~= src then
+        widget:Fire("OnButtonDrop", src, dstUnique)
+    end
+end
+
 local function Button_OnClick(frame)
     local self = frame.obj
     self:Fire("OnClick", frame.uniquevalue, frame.selected)
@@ -353,6 +391,8 @@ local methods = {
 		button:SetScript("OnDoubleClick", Button_OnDoubleClick)
 		button:SetScript("OnEnter",Button_OnEnter)
 		button:SetScript("OnLeave",Button_OnLeave)
+		button:SetScript("OnMouseDown", Button_OnMouseDown)
+		button:SetScript("OnMouseUp", Button_OnMouseUp)
 
 		button.toggle.button = button
 		button.toggle:SetScript("OnClick",Expand_OnClick)
