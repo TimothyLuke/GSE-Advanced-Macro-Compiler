@@ -204,16 +204,17 @@ function GSE.CreateEditor()
             editframe:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", editorleft, editortop)
         end
     end
-    editframe.Height = GSEOptions.editorHeight and GSEOptions.editorHeight or 500
-    editframe.Width = GSEOptions.editorWidth and GSEOptions.editorWidth or 700
+    local seOpts = GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor or {}
+    editframe.Height = seOpts.height or 500
+    editframe.Width = seOpts.width or 700
 
     if editframe.Height < DEFAULT_HEIGHT then
         editframe.Height = DEFAULT_HEIGHT
-        GSEOptions.editorHeight = editframe.Height
+        GSEOptions.frameLocations.sequenceeditor.height = editframe.Height
     end
     if editframe.Width < DEFAULT_WIDTH then
         editframe.Width = DEFAULT_WIDTH
-        GSEOptions.editorWidth = editframe.Width
+        GSEOptions.frameLocations.sequenceeditor.width = editframe.Width
     end
     editframe.frame:SetHeight(editframe.Height)
     editframe.frame:SetWidth(editframe.Width)
@@ -237,10 +238,10 @@ function GSE.CreateEditor()
             local left, bottom, w, h = self.frame:GetRect()
             GSEOptions.frameLocations.sequenceeditor.left = left
             GSEOptions.frameLocations.sequenceeditor.top = bottom + h
-            GSEOptions.editorHeight = h
-            GSEOptions.editorWidth = w
+            GSEOptions.frameLocations.sequenceeditor.height = h
+            GSEOptions.frameLocations.sequenceeditor.width = w
             if self.treeContainer then
-                GSEOptions.editorTreeWidth = self.treeContainer:GetTreeWidth()
+                GSEOptions.frameLocations.sequenceeditor.treeWidth = self.treeContainer:GetTreeWidth()
             end
             self:Hide()
             self.Sequence = nil
@@ -412,8 +413,9 @@ function GSE.CreateEditor()
     local treeContainer = AceGUI:Create("GSE-TreeGroup")
     treeContainer:SetFullHeight(true)
     treeContainer:SetFullWidth(true)
-    if GSEOptions.editorTreeWidth then
-        treeContainer:SetTreeWidth(GSEOptions.editorTreeWidth, true)
+    local seTreeWidth = GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor and GSEOptions.frameLocations.sequenceeditor.treeWidth
+    if seTreeWidth then
+        treeContainer:SetTreeWidth(seTreeWidth, true)
     end
 
     editframe.treeContainer = treeContainer
@@ -2402,8 +2404,8 @@ function GSE.CreateEditor()
                 editframe.Width = 700
                 editframe:SetWidth(editframe.Width)
             end
-            GSEOptions.editorHeight = editframe.Height
-            GSEOptions.editorWidth = editframe.Width
+            GSEOptions.frameLocations.sequenceeditor.height = editframe.Height
+            GSEOptions.frameLocations.sequenceeditor.width = editframe.Width
             if editframe.scroller then
                 editframe.scroller:SetHeight(editframe.Height - TOOLBAR_OFFSET)
                 editframe.scroller:DoLayout()

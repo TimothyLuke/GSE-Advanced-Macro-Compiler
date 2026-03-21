@@ -568,6 +568,7 @@ L["If Blocks Require a variable."] = true
 
 --3.0.35
 L["Window Sizes"] = true
+L["Frame Locations"] = true
 L["Default Debugger Height"] = true
 L["How many pixels high should the Debuger start at.  Defaults to 500"] = true
 L["Default Debugger Width"] = true

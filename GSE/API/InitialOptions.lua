@@ -86,12 +86,12 @@ function GSE.SetDefaultOptions()
     GSEOptions.showMiniMap = {
         hide = true
     }
-    -- GSEOptions.editorHeight = 500
-    -- GSEOptions.editorWidth = 700
     GSEOptions.showCurrentSpells = true
     GSEOptions.OOCQueueDelay = 7
     GSE.resetMacroResetModifiers()
-    GSEOptions.frameLocations = {}
+    GSEOptions.frameLocations = {
+        sequenceeditor = {height = 500, width = 700, treeWidth = 150}
+    }
     GSEOptions.Multiclick = true
 end
 
@@ -101,6 +101,29 @@ end
 
 if not GSEOptions.DebugModules then
     GSE.SetDefaultOptions()
+end
+
+-- Migrate editor dimensions from old flat keys to frameLocations.sequenceeditor.
+do
+    if GSE.isEmpty(GSEOptions.frameLocations) then
+        GSEOptions.frameLocations = {}
+    end
+    if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+        GSEOptions.frameLocations.sequenceeditor = {}
+    end
+    local se = GSEOptions.frameLocations.sequenceeditor
+    if GSEOptions.editorHeight and GSE.isEmpty(se.height) then
+        se.height = GSEOptions.editorHeight
+        GSEOptions.editorHeight = nil
+    end
+    if GSEOptions.editorWidth and GSE.isEmpty(se.width) then
+        se.width = GSEOptions.editorWidth
+        GSEOptions.editorWidth = nil
+    end
+    if GSEOptions.editorTreeWidth and GSE.isEmpty(se.treeWidth) then
+        se.treeWidth = GSEOptions.editorTreeWidth
+        GSEOptions.editorTreeWidth = nil
+    end
 end
 
 GSE.OOCQueue = {}

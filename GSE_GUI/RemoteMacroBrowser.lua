@@ -20,8 +20,9 @@ remoteFrame:SetCallback(
 )
 remoteFrame:SetLayout("List")
 
-remoteFrame.Height = GSEOptions.editorHeight and GSEOptions.editorHeight or 500
-remoteFrame.Width = GSEOptions.editorWidth and GSEOptions.editorWidth or 700
+local _seOpts = GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor or {}
+remoteFrame.Height = _seOpts.height or 500
+remoteFrame.Width = _seOpts.width or 700
 
 local layoutcontainer = AceGUI:Create("SimpleGroup")
 layoutcontainer:SetFullWidth(true)
