@@ -404,15 +404,66 @@ local function createBlizzOptions(category)
                     string.format(L["Addin Version %s contained versions for the following sequences:"], packName) ..
                     string.format("\n%s", FormatSequenceNames(v.SequenceNames))
                 local layout = SettingsPanel:GetLayout(pluginOptions)
+                local capturedPackName = packName
+                local capturedV = v
                 layout:AddInitializer(CreateSettingsButtonInitializer(
                     displayName,
-                    L["Reload"],
+                    L["Reload All"],
                     function()
-                        GSE:SendMessage(Statics.ReloadMessage, packName)
+                        if capturedV.Sequences then
+                            GSE.LoadPluginSequences(capturedV.Sequences)
+                        else
+                            GSE:SendMessage(Statics.ReloadMessage, capturedPackName)
+                        end
                     end,
                     desc,
                     false
                 ))
+
+                -- Per-sequence restore buttons (only available when the plugin passes its Sequences table)
+                if not GSE.isEmpty(v.Sequences) and v.SequenceNames then
+                    layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
+                        name = string.format(L["Individual Sequences - %s"], displayName),
+                        tooltip = L["Restore a single sequence from this plugin"],
+                    }))
+                    for _, seqName in ipairs(v.SequenceNames) do
+                        local encodedSeq = v.Sequences[seqName]
+                        local status = GSE.GetPluginSequenceStatus(encodedSeq)
+
+                        local compatText
+                        if status.compatible then
+                            compatText = L["Compatible with this version of GSE"]
+                        else
+                            local verStr = status.GSEVersion and tostring(status.GSEVersion) or L["unknown"]
+                            compatText = string.format(L["Not compatible with this version of GSE (sequence version: %s)"], verStr)
+                        end
+
+                        local checksumText
+                        if status.checksum == "valid" then
+                            checksumText = L["Checksum valid"]
+                        elseif status.checksum == "invalid" then
+                            checksumText = L["Checksum invalid - sequence may have been modified"]
+                        else
+                            checksumText = L["No checksum"]
+                        end
+
+                        local seqDesc = compatText .. "\n" .. checksumText
+                        local capturedSeqName = seqName
+                        layout:AddInitializer(CreateSettingsButtonInitializer(
+                            capturedSeqName,
+                            L["Restore"],
+                            function()
+                                local seq = capturedV.Sequences and capturedV.Sequences[capturedSeqName]
+                                if seq then
+                                    GSE.ImportSerialisedSequence(seq, false)
+                                    GSE.PerformReloadSequences()
+                                end
+                            end,
+                            seqDesc,
+                            false
+                        ))
+                    end
+                end
             end
         end
     end

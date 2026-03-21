@@ -22,7 +22,7 @@ local Statics = GSE.Static
 --  return returnVal
 -- end
 
-function GSE.RegisterAddon(name, version, sequencenames)
+function GSE.RegisterAddon(name, version, sequencenames, sequencetable)
     local updateflag = false
     if GSE.isEmpty(GSE.AddInPacks) then
         GSE.AddInPacks = {}
@@ -47,7 +47,59 @@ function GSE.RegisterAddon(name, version, sequencenames)
         GSEOptions.AddInPacks[name].Version = version
     end
     GSE.AddInPacks[name].SequenceNames = sequencenames
+    if sequencetable then
+        GSE.AddInPacks[name].Sequences = sequencetable
+        -- On first load or version change GSE handles the import directly so the
+        -- plugin does not need its own ReloadMessage handler.
+        if updateflag then
+            GSE.LoadPluginSequences(sequencetable)
+        end
+    end
     return updateflag
+end
+
+--- Import every sequence in a plugin's sequences table and trigger a reload.
+-- Called automatically on first/version-change load and from the "Reload All"
+-- button when the plugin has supplied its Sequences table.
+function GSE.LoadPluginSequences(sequencetable)
+    for _, seq in pairs(sequencetable) do
+        GSE.ImportSerialisedSequence(seq, false)
+    end
+    GSE.PerformReloadSequences()
+end
+
+--- Decode a single plugin sequence and return its compatibility status.
+-- Returns a table:
+--   compatible  (bool)   - GSEVersion is in the valid range for this client
+--   GSEVersion  (number) - the sequence's GSEVersion, or nil if unreadable
+--   checksum    (string) - "valid", "invalid", or "no_checksum"
+function GSE.GetPluginSequenceStatus(encodedSeq)
+    local result = {compatible = false, GSEVersion = nil, checksum = "no_checksum"}
+    if not encodedSeq then return result end
+    local ok, decoded
+    if type(encodedSeq) == "table" then
+        ok, decoded = true, encodedSeq
+    else
+        ok, decoded = GSE.DecodeMessage(encodedSeq)
+    end
+    if not ok or not decoded then return result end
+    local meta = decoded.MetaData
+    if not meta then return result end
+    result.GSEVersion = meta.GSEVersion
+    result.compatible = meta.GSEVersion ~= nil
+        and meta.GSEVersion > 3200
+        and meta.GSEVersion <= GSE.VersionNumber
+    if result.compatible and GSE.VerifySequenceChecksum then
+        local cs = GSE.VerifySequenceChecksum(decoded)
+        if cs == true then
+            result.checksum = "valid"
+        elseif cs == false then
+            result.checksum = "invalid"
+        else
+            result.checksum = "no_checksum"
+        end
+    end
+    return result
 end
 
 GSE.DebugProfile("Plugins")

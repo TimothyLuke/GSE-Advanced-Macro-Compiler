@@ -173,6 +173,16 @@ L["Plugins"] = true
 
 L["Registered Addons"] = true
 L["No plugins are currently registered."] = true
+L["Reload All"] = true
+L["Restore"] = true
+L["Individual Sequences - %s"] = true
+L["Restore a single sequence from this plugin"] = true
+L["Compatible with this version of GSE"] = true
+L["Not compatible with this version of GSE (sequence version: %s)"] = true
+L["unknown"] = true
+L["Checksum valid"] = true
+L["Checksum invalid - sequence may have been modified"] = true
+L["No checksum"] = true
 L["Default Tree Panel Width"] = true
 L["How many pixels wide should the sequence list panel on the left of the Editor be.  Defaults to 150"] = true
 
