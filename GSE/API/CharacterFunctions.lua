@@ -42,11 +42,11 @@ function GSE.GetCurrentClassNormalisedName()
 end
 
 function GSE.GetClassIDforSpec(specid)
-    -- Check for Classic WoW
     local classid = 0
     if GSE.GameMode < 5 then
-        -- Classic WoW
-        classid = Statics.SpecIDClassList[specid]
+        -- Pre-MoP classic: no specialisations exist. GetCurrentSpecID() already
+        -- returns the class ID for these versions, so specid IS the class ID.
+        return specid or 0
     else
         local id, name, description, icon, role, class = GetSpecializationInfoByID(specid)
         if specid <= 13 then

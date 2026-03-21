@@ -66,7 +66,7 @@ local function CheckOOCQueueStatus()
   return output
 end
 
-local function prepareTooltipOOCLine(row, OOCEvent, oockey)
+local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
   local x = row:GetCell(1)
   x:SetText(OOCEvent.action)
   x:SetJustifyH("LEFT")
@@ -119,13 +119,23 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey)
       end
       table.remove(GSE.OOCQueue, oockey)
       GSE.Print("OOC queue: manually removed " .. label)
+      rebuildFn()
     end
   )
 end
 
 function dataobj:OnEnter()
+  -- Capture self so the rebuild closure can re-invoke OnEnter after a queue change.
+  local buttonSelf = self
+  local function rebuildTooltip()
+    if buttonSelf.tooltip then
+      buttonSelf.tooltip:Release()
+      buttonSelf.tooltip = nil
+    end
+    dataobj.OnEnter(buttonSelf)
+  end
+
   -- Acquire a tooltip with 3 columns, respectively aligned to left, center and right
-  --local tooltip = LibQTip:Acquire("GSSE", 3, "LEFT", "CENTER", "RIGHT")
   local tooltip = LibQTip:AcquireTooltip("GSE", 3, "LEFT", "CENTER", "RIGHT")
   self.tooltip = tooltip
   tooltip:SetHighlightTexture("Interface\\FriendsFrame\\UI-FriendsFrame-HighlightBar")
@@ -206,11 +216,12 @@ function dataobj:OnEnter()
         "OnMouseDown",
         function()
           GSE.OOCQueue = {}
+          rebuildTooltip()
         end
       )
       for k, v in ipairs(GSE.OOCQueue) do
         y = tooltip:AddRow()
-        prepareTooltipOOCLine(y, v, k)
+        prepareTooltipOOCLine(y, v, k, rebuildTooltip)
       end
     else
       -- No Items
