@@ -1,4 +1,4 @@
-let request = require("request");
+const https = require("https");
 let _ = require("lodash");
 let creator_access_token = process.env.NODE_PATREON_TOKEN;
 let campaignID = "440241";
@@ -7,30 +7,37 @@ const fs = require("fs");
 let apiPath = `campaigns/${campaignID}/members`;
 
 function getData(path, params, done) {
-  let url = `https://www.patreon.com/api/oauth2/v2/${path}`;
+  let urlStr = `https://www.patreon.com/api/oauth2/v2/${path}`;
 
   if (params) {
-    url = `${url}?${params}`;
+    urlStr = `${urlStr}?${params}`;
   }
-  console.log("URL", url);
-  request(
-    {
-      url,
-      headers: {
-        Authorization: "Bearer " + creator_access_token,
-        "User-Agent": "PostmanRuntime/7.39.0",
-      },
+  console.log("URL", urlStr);
+  const url = new URL(urlStr);
+  const options = {
+    hostname: url.hostname,
+    path: url.pathname + url.search,
+    headers: {
+      Authorization: "Bearer " + creator_access_token,
+      "User-Agent": "PostmanRuntime/7.39.0",
     },
-    (err, result, body) => {
-      if (err) return console.log("error trying to update patreon info ", err);
+  };
+  https.get(options, (res) => {
+    let raw = "";
+    res.on("data", (chunk) => { raw += chunk; });
+    res.on("end", () => {
+      let body;
       try {
-        body = JSON.parse(body);
+        body = JSON.parse(raw);
       } catch (error) {
-        return console.log(error, body);
+        return console.log(error, raw);
       }
-      return done(err, body);
-    }
-  );
+      return done(null, body);
+    });
+  }).on("error", (err) => {
+    console.log("error trying to update patreon info ", err);
+    return done(err);
+  });
 }
 
 function getMembers(members, newpath, done) {
