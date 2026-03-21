@@ -124,6 +124,11 @@ do
         se.treeWidth = GSEOptions.editorTreeWidth
         GSEOptions.editorTreeWidth = nil
     end
+    -- Ensure defaults are always stored explicitly so the sliders always
+    -- reflect a real saved value rather than a scattered fallback.
+    if GSE.isEmpty(se.height)    then se.height    = 500 end
+    if GSE.isEmpty(se.width)     then se.width     = 700 end
+    if GSE.isEmpty(se.treeWidth) then se.treeWidth = 150 end
 end
 
 GSE.OOCQueue = {}
