@@ -406,8 +406,18 @@ local function createBlizzOptions(category)
                 local layout = SettingsPanel:GetLayout(pluginOptions)
                 local capturedPackName = packName
                 local capturedV = v
+
+                -- Section header per plugin so each one is visually separated.
+                -- This also acts as the closing boundary for the previous plugin's
+                -- individual sequence items, preventing them from bleeding into the
+                -- next plugin's Reload All button.
+                layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
+                    name = displayName,
+                    tooltip = desc,
+                }))
+
                 layout:AddInitializer(CreateSettingsButtonInitializer(
-                    displayName,
+                    L["Reload All"],
                     L["Reload All"],
                     function()
                         if capturedV.Sequences then
@@ -422,10 +432,6 @@ local function createBlizzOptions(category)
 
                 -- Per-sequence restore buttons (only available when the plugin passes its Sequences table)
                 if not GSE.isEmpty(v.Sequences) and v.SequenceNames then
-                    layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
-                        name = string.format(L["Individual Sequences - %s"], displayName),
-                        tooltip = L["Restore a single sequence from this plugin"],
-                    }))
                     for _, seqName in ipairs(v.SequenceNames) do
                         local encodedSeq = v.Sequences[seqName]
                         local status = GSE.GetPluginSequenceStatus(encodedSeq)
