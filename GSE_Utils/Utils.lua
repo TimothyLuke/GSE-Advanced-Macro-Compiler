@@ -279,7 +279,11 @@ function GSE.processWAGOImport(input, dontencode)
 end
 
 --- Load a serialised Sequence
-function GSE.ImportSerialisedSequence(importstring, forcereplace)
+-- skipDialogs: when true, suppress per-sequence StaticPopup confirmation dialogs
+-- (version-mismatch and checksum warnings). Used by collection imports so that
+-- the synchronous loop over N sequences does not clobber a single shared popup
+-- slot, which would silently drop all but the last sequence.
+function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs)
     local decompresssuccess, actiontable
     if type(importstring) == "table" then
         decompresssuccess, actiontable = true, importstring
@@ -292,13 +296,13 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload
             for _, v in pairs(actiontable["Variables"]) do
-                GSE.ImportSerialisedSequence(v, forcereplace)
+                GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
             for _, v in pairs(actiontable["Sequences"]) do
-                GSE.ImportSerialisedSequence(v, forcereplace)
+                GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
             for _, v in pairs(actiontable["Macros"]) do
-                GSE.ImportSerialisedSequence(v, forcereplace)
+                GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
@@ -337,12 +341,18 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
 
             if v.MetaData.GSEVersion and v.MetaData.GSEVersion > 3200 then
                 if v.MetaData.GSEVersion < GSE.VersionNumber then
-                    -- Older sequence: always show the older-version dialog.
-                    -- OnAccept will chain to the checksum dialog for sequences
-                    -- >= Statics.ChecksumMinVersion (checksums were introduced then).
-                    StaticPopup_Show("GSE_SEQUENCE_OLDER_VERSION", seqName, tostring(v.MetaData.GSEVersion),
-                        {seqName = seqName, sequence = v, forcereplace = forcereplace})
-                    return decompresssuccess
+                    if skipDialogs then
+                        -- Inside a collection import: log and proceed rather than
+                        -- showing a popup that would be clobbered by the next item.
+                        GSE.Print(string.format(L["Sequence '%s' was created with an older version of GSE (%s) - importing anyway as part of collection."], seqName, tostring(v.MetaData.GSEVersion)), L["Import"])
+                    else
+                        -- Older sequence: always show the older-version dialog.
+                        -- OnAccept will chain to the checksum dialog for sequences
+                        -- >= Statics.ChecksumMinVersion (checksums were introduced then).
+                        StaticPopup_Show("GSE_SEQUENCE_OLDER_VERSION", seqName, tostring(v.MetaData.GSEVersion),
+                            {seqName = seqName, sequence = v, forcereplace = forcereplace})
+                        return decompresssuccess
+                    end
                 end
             else
                 GSE.Print(
@@ -353,9 +363,10 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace)
             end
             -- Warn if the sequence has been modified after it was exported.
             -- If the checksum is invalid the user must confirm before the import proceeds.
+            -- Suppress the dialog inside collection imports to avoid clobbering.
             if GSE.VerifySequenceChecksum then
                 local integrity = GSE.VerifySequenceChecksum(v)
-                if integrity ~= true then
+                if integrity ~= true and not skipDialogs then
                     StaticPopup_Show("GSE_SEQUENCE_INTEGRITY_WARNING", seqName, nil,
                         {seqName = seqName, sequence = v, forcereplace = forcereplace})
                     return decompresssuccess

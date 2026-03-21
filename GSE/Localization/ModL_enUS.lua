@@ -177,6 +177,7 @@ L["Reload All"] = true
 L["Restore"] = true
 L["Individual Sequences - %s"] = true
 L["Restore a single sequence from this plugin"] = true
+L["Sequence '%s' was created with an older version of GSE (%s) - importing anyway as part of collection."] = true
 L["Compatible with this version of GSE"] = true
 L["Not compatible with this version of GSE (sequence version: %s)"] = true
 L["unknown"] = true
