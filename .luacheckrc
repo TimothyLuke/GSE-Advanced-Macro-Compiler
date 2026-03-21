@@ -371,6 +371,7 @@ globals = {
     "ItemRefTooltip",
     "LoadAddOn",
     "LoggingCombat",
+    "MacroPopupFrame",
     "Mixin",
     "PlayMusic",
     "PlaySound",

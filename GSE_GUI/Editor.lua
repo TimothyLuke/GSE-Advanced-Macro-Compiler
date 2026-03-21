@@ -11,20 +11,17 @@ local TOOLBAR_OFFSET = 100
 local SCROLLCONTAINER_OFFSET = 120
 
 
-if GSE.isEmpty(GSE.CreateIconControl) then
-    GSE.CreateIconControl = function(action, version, keyPath, sequence, frame)
-        local lbl = AceGUI:Create("Label")
-        lbl:SetFontObject(GameFontNormalLarge)
-        lbl:SetWidth(15)
-        lbl:SetHeight(15)
+function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
+    local lbl = AceGUI:Create("InteractiveLabel")
+    lbl:SetFontObject(GameFontNormalLarge)
+    lbl:SetWidth(25)
+    lbl:SetHeight(25)
 
-        if action.Icon then
-            lbl:SetText("|T" .. action.Icon .. ":0|t")
-            return lbl
-        end
+    if action.Icon then
+        lbl:SetText("|T" .. action.Icon .. ":0|t")
+    else
         local spellinfo = {}
         spellinfo.iconID = Statics.QuestionMarkIconID
-
         if action.type == "macro" then
             local macro = GSE.UnEscapeString(action.macro)
             if string.sub(macro, 1, 1) == "/" then
@@ -47,8 +44,63 @@ if GSE.isEmpty(GSE.CreateIconControl) then
         if spellinfo.iconID then
             lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
         end
-        return lbl
     end
+
+    local spellinfolist = {}
+    if action.type == "macro" then
+        local macro = GSE.UnEscapeString(action.macro)
+        if string.sub(macro, 1, 1) == "/" then
+            local lines = GSE.SplitMeIntoLines(macro)
+            for _, v in ipairs(lines) do
+                local spellinfo = GSE.GetSpellsFromString(v)
+                if spellinfo and #spellinfo > 1 then
+                    for _, j in ipairs(spellinfo) do
+                        if j and j.iconID then
+                            table.insert(spellinfolist, j)
+                        end
+                    end
+                else
+                    if spellinfo and spellinfo.iconID then
+                        table.insert(spellinfolist, spellinfo)
+                    end
+                end
+            end
+        else
+            local spellinfo = {}
+            spellinfo.name = action.macro
+            local macindex = GetMacroIndexByName(spellinfo.name)
+            local _, iconid, _ = GetMacroInfo(macindex)
+            if macindex and iconid then
+                spellinfo.iconID = iconid
+                table.insert(spellinfolist, spellinfo)
+            end
+        end
+    elseif action.type == "Spell" then
+        local spellinfo = C_Spell.GetSpellInfo(action.spell)
+        if spellinfo and spellinfo.iconID then
+            table.insert(spellinfolist, spellinfo)
+        end
+    end
+
+    lbl:SetCallback("OnClick", function(widget, button)
+        MenuUtil.CreateContextMenu(frame, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Select Icon"])
+            for _, v in pairs(spellinfolist) do
+                rootDescription:CreateButton(
+                    "|T" .. v.iconID .. ":0|t " .. v.name,
+                    function()
+                        lbl:SetText("|T" .. v.iconID .. ":0|t")
+                        sequence.Versions[version].Actions[keyPath].Icon = v.iconID
+                    end
+                )
+            end
+            -- Extension point: QoL and other modules append extra items here.
+            if GSE.OnBuildIconMenu then
+                GSE.OnBuildIconMenu(rootDescription, lbl, sequence, version, keyPath)
+            end
+        end)
+    end)
+    return lbl
 end
 local function BuildVersionLabel(version, label, excludekey)
     version = tostring(version)

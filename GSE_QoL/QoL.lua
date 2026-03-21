@@ -235,98 +235,50 @@ if GSE.GameMode > 10 then
     end
 end
 
-function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
-    local lbl = AceGUI:Create("InteractiveLabel")
-    lbl:SetFontObject(GameFontNormalLarge)
-    lbl:SetWidth(25)
-    lbl:SetHeight(25)
+-- Native WoW icon picker integration.
+-- MacroPopupFrame is part of Blizzard_MacroUI which loads lazily; we set up
+-- the hook once after the first ShowNativeIconPicker call successfully loads it.
+local iconPickerCallback = nil
+local iconPickerCommitted = false
+local iconPickerHooked = false
 
-    if action.Icon then
-        lbl:SetText("|T" .. action.Icon .. ":0|t")
-    else
-        local spellinfo = {}
-        spellinfo.iconID = Statics.QuestionMarkIconID
-        if action.type == "macro" then
-            local macro = GSE.UnEscapeString(action.macro)
-            if string.sub(macro, 1, 1) == "/" then
-                local spellstuff = GSE.GetSpellsFromString(macro)
-                if spellstuff and #spellstuff > 1 then
-                    spellstuff = spellstuff[1]
-                end
-                if spellstuff then
-                    spellinfo = spellstuff
-                end
-            else
-                spellinfo.name = action.macro
-                local macindex = GetMacroIndexByName(spellinfo.name)
-                local _, iconid, _ = GetMacroInfo(macindex)
-                spellinfo.iconID = iconid
-            end
-        elseif action.type == "Spell" then
-            spellinfo = C_Spell.GetSpellInfo(action.spell)
+local function setupIconPickerHook()
+    if iconPickerHooked then return true end
+    if not MacroPopupFrame then return false end
+    -- Capture OK: mark committed so OnHide knows the user confirmed.
+    hooksecurefunc("MacroPopupOkayButton_OnClick", function()
+        iconPickerCommitted = true
+    end)
+    -- Fire callback on hide only when the user clicked OK.
+    MacroPopupFrame:HookScript("OnHide", function(self)
+        if iconPickerCommitted and iconPickerCallback and self.selectedIcon then
+            iconPickerCallback(self.selectedIcon)
         end
-        if spellinfo.iconID then
-            lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
-        end
+        iconPickerCallback = nil
+        iconPickerCommitted = false
+    end)
+    iconPickerHooked = true
+    return true
+end
+
+local function ShowNativeIconPicker(callback)
+    if not iconPickerHooked then
+        LoadAddOn("Blizzard_MacroUI")
+        if not setupIconPickerHook() then return end
     end
-    local spellinfolist = {}
+    iconPickerCallback = callback
+    MacroPopupFrame:Show()
+end
 
-    if action.type == "macro" then
-        local macro = GSE.UnEscapeString(action.macro)
-        if string.sub(macro, 1, 1) == "/" then
-            local lines = GSE.SplitMeIntoLines(macro)
-            for _, v in ipairs(lines) do
-                local spellinfo = GSE.GetSpellsFromString(v)
-                if spellinfo and #spellinfo > 1 then
-                    for _, j in ipairs(spellinfo) do
-                        if j and j.iconID then
-                            table.insert(spellinfolist, j)
-                        end
-                    end
-                else
-                    if spellinfo and spellinfo.iconID then
-                        table.insert(spellinfolist, spellinfo)
-                    end
-                end
-            end
-        else
-            local spellinfo = {}
-            spellinfo.name = action.macro
-            local macindex = GetMacroIndexByName(spellinfo.name)
-            local _, iconid, _ = GetMacroInfo(macindex)
-            if macindex and iconid then
-                spellinfo.iconID = iconid
-                table.insert(spellinfolist, spellinfo)
-            end
-        end
-    elseif action.type == "Spell" then
-        local spellinfo = C_Spell.GetSpellInfo(action.spell)
-        if spellinfo and spellinfo.iconID then
-            table.insert(spellinfolist, spellinfo)
-        end
-    end
-
-    lbl:SetCallback(
-        "OnClick",
-        function(widget, button)
-            MenuUtil.CreateContextMenu(
-                frame,
-                function(ownerRegion, rootDescription)
-                    rootDescription:CreateTitle(L["Select Icon"])
-                    for _, v in pairs(spellinfolist) do
-                        rootDescription:CreateButton(
-                            "|T" .. v.iconID .. ":0|t " .. v.name,
-                            function()
-                                lbl:SetText("|T" .. v.iconID .. ":0|t")
-                                sequence.Versions[version].Actions[keyPath].Icon = v.iconID
-                            end
-                        )
-                    end
-                end
-            )
-        end
-    )
-    return lbl
+-- Appended to the icon context menu in the editor for QoL users.
+GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
+    rootDescription:CreateDivider()
+    rootDescription:CreateButton(L["Choose any icon..."], function()
+        ShowNativeIconPicker(function(iconID)
+            lbl:SetText("|T" .. iconID .. ":0|t")
+            sequence.Versions[version].Actions[keyPath].Icon = iconID
+        end)
+    end)
 end
 
 -- Patron feature: stamp the checksum onto the locally saved sequence on every save.
