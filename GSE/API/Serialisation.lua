@@ -282,7 +282,7 @@ end
 
 function GSE.SequenceChatPattern(sequenceName, classID)
     local playerName = UnitName("player")
-    return "[GSE: " .. playerName .. " - " .. sequenceName .. " - " .. classID .. "]"
+    return "[GSE: " .. (playerName or "?") .. " - " .. (sequenceName or "?") .. " - " .. (classID or "0") .. "]"
 end
 
 function GSE.CreateSequenceLink(sequenceName, classID, playerName)

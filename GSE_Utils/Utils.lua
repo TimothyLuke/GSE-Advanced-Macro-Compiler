@@ -81,7 +81,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         sequence.MetaData.SpecID = GSE.GetCurrentClassID()
         classid = GSE.GetCurrentClassID()
     end
-    GSE.PrintDebugMessage("Classid now - " .. classid, "Storage")
+    GSE.PrintDebugMessage("Classid now - " .. tostring(classid or 0), "Storage")
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end

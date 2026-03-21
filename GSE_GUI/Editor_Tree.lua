@@ -702,8 +702,10 @@ local function ManageTree(editframe)
                 end
                 -- area == "Macro": no right-click menu
             elseif mbutton == "LeftButton" and IsShiftKeyDown() then
-                StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
-                StaticPopup_Show("GSE_ChatLink")
+                if classid and sequencename then
+                    StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
+                    StaticPopup_Show("GSE_ChatLink")
+                end
             else
                 -- Left-click dispatch table
                 if area == "NewSequence" then
