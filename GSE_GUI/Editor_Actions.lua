@@ -782,10 +782,11 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         layoutcontainer:SetLayout("Flow")
         layoutcontainer:SetFullWidth(true)
         layoutcontainer:SetHeight(30)
-        local moveUpButton = AceGUI:Create("Icon")
-        local moveDownButton = AceGUI:Create("Icon")
+        local moveUpButton, moveDownButton
 
         if GSE.isEmpty(disableMove) then
+            moveUpButton = AceGUI:Create("Icon")
+            moveDownButton = AceGUI:Create("Icon")
             moveUpButton:SetImageSize(30, 30)
             moveUpButton:SetWidth(30)
             moveUpButton:SetHeight(30)
@@ -819,6 +820,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 "OnLeave",
                 function()
                     GSE.ClearTooltip(editframe)
+                end
+            )
+            moveUpButton:SetCallback(
+                "OnRelease",
+                function(self)
+                    self:SetDisabled(false)
                 end
             )
 
@@ -855,6 +862,12 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
                 "OnLeave",
                 function()
                     GSE.ClearTooltip(editframe)
+                end
+            )
+            moveDownButton:SetCallback(
+                "OnRelease",
+                function(self)
+                    self:SetDisabled(false)
                 end
             )
         end
@@ -900,12 +913,13 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
             end
         )
 
-        local addLoopButton = AceGUI:Create("Icon")
-        local addActionButton = AceGUI:Create("Icon")
-        local addPauseButton = AceGUI:Create("Icon")
-        local addIfButton = AceGUI:Create("Icon")
-        local addEmbedButton = AceGUI:Create("Icon")
+        local addLoopButton, addActionButton, addPauseButton, addIfButton, addEmbedButton
         if includeAdd then
+            addLoopButton = AceGUI:Create("Icon")
+            addActionButton = AceGUI:Create("Icon")
+            addPauseButton = AceGUI:Create("Icon")
+            addIfButton = AceGUI:Create("Icon")
+            addEmbedButton = AceGUI:Create("Icon")
             addActionButton:SetImageSize(30, 30)
             addActionButton:SetWidth(30)
             addActionButton:SetHeight(30)
@@ -1135,6 +1149,8 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
         end
 
         if GSE.isEmpty(disableMove) then
+            moveUpButton:SetDisabled(lastPath == 1)
+            moveDownButton:SetDisabled(lastPath == blocksThisLevel)
             layoutcontainer:AddChild(moveUpButton)
             layoutcontainer:AddChild(moveDownButton)
             local spacerlabel1 = AceGUI:Create("Label")
@@ -1142,11 +1158,6 @@ local function DrawSequenceEditor(editframe, tcontainer, version, path, ChooseVe
             layoutcontainer:AddChild(spacerlabel1)
         end
         layoutcontainer:AddChild(headingLabel)
-        if lastPath == 1 then
-            moveUpButton:SetDisabled(true)
-        elseif lastPath == blocksThisLevel then
-            moveDownButton:SetDisabled(true)
-        end
         if includeAdd then
             local spacerlabel2 = AceGUI:Create("Label")
             spacerlabel2:SetWidth(5)

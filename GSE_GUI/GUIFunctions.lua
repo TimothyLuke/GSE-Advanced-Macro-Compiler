@@ -19,11 +19,16 @@ function GSE:OnInitialize()
 end
 
 function GSE.OpenOptionsPanel()
-  if GSE.MenuCategoryID then
-    Settings.OpenToCategory(GSE.MenuCategoryID)
-  else
+  if not GSE.MenuCategoryID then
     GSE.Print(L["Options Not Enabled"])
+    return
   end
+  if InCombatLockdown() then
+    GSE.EnqueueOOC({action = "openoptions"})
+    GSE.Print(L["Options will open after combat ends."])
+    return
+  end
+  Settings.OpenToCategory(GSE.MenuCategoryID)
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)

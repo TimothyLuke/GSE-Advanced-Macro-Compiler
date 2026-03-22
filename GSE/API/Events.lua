@@ -1095,6 +1095,10 @@ function GSE:ProcessOOCQueue()
                 if GSE.ProcessCorruptSequences and not GSE.isEmpty(GSE.CorruptSequences) then
                     GSE.ProcessCorruptSequences()
                 end
+            elseif v.action == "openoptions" then
+                if GSE.OpenOptionsPanel then
+                    GSE.OpenOptionsPanel()
+                end
             end
         else
             -- Still in combat; put the item back so it's processed next tick.

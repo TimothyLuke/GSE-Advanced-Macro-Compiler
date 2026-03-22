@@ -306,7 +306,7 @@ function GSE.EnqueueOOC(vals)
             end
         end
 
-    elseif action == "FinishReload" or action == "managemacros" then
+    elseif action == "FinishReload" or action == "managemacros" or action == "openoptions" then
         for _, v in ipairs(GSE.OOCQueue) do
             if v.action == action then
                 return

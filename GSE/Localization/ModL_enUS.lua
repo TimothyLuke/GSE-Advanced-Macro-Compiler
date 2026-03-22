@@ -829,6 +829,7 @@ L["Show Sequence Name"] = true
 L["Show the Name of the Sequence"] = true
 -- #1846
 L["Options Not Enabled"] = true
+L["Options will open after combat ends."] = true
 L["Import String Not Recognised."] = true
 L["GSE Import Successful."] = true
 L["GSE Collection to Import."] = true
