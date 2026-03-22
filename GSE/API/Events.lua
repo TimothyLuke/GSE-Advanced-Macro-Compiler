@@ -166,6 +166,34 @@ local BAR_SWAP_ONCLICK = [[
 -- Track which buttons already have the icon-update hook to avoid duplicate hooks.
 local iconHookedButtons = {}
 
+-- Track which LAB buttons already have the secure WrapScript installed.
+-- Only needs to be set up once per button across repeated LoadOverrides() calls.
+local labVehicleDriverButtons = {}
+
+-- Secure OnAttributeChanged snippet for LAB-managed buttons (BT4, ElvUI, NDui, CPB_).
+--
+-- Problem: SetState registers a custom state handler whose func sets type="click",
+-- but the func is guarded with InCombatLockdown() so in combat it cannot call
+-- SetAttribute.  When the bar returns from a vehicle/skyriding state in combat,
+-- LAB activates the custom state and sets type="custom", but the func is skipped,
+-- leaving the button stuck at type="custom" (does nothing when clicked).
+--
+-- Fix: intercept type="custom" transitions here, inside the secure execution
+-- environment where InCombatLockdown() does NOT restrict SetAttribute calls.
+-- Immediately complete the state setup that the func would have done OOC.
+local VEHICLE_OAC_LAB = [[
+    if name ~= "type" then return end
+    if value ~= "custom" then return end
+    if not self:GetAttribute("gse-button") then return end
+    -- LAB activated the custom state (type="custom") but the state func is guarded
+    -- with InCombatLockdown() so in combat it cannot call SetAttribute.
+    -- Complete the type restoration here in the secure execution environment
+    -- where InCombatLockdown() does NOT restrict SetAttribute calls.
+    -- clickbutton is intentionally NOT touched: LAB never clears it during state
+    -- transitions, so the reference set at overrideActionButton time remains valid.
+    self:SetAttribute("type", "click")
+]]
+
 -- Compute the effective action slot for a button from non-secure code.
 -- WoW's RegisterAttributeDriver writes the final computed slot into the "action"
 -- attribute on every button (Blizzard, Dominos, etc.), so prefer that first.
@@ -470,7 +498,15 @@ local function overrideActionButton(savedBind, force)
             )
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
-            -- WrapScript removed: SetState handles type management for these button addons
+            -- Install a secure OnAttributeChanged WrapScript (once per button) that
+            -- intercepts LAB's type="custom" transition and immediately restores
+            -- type="click".  This fires inside the secure execution environment so
+            -- it works even during combat lockdown, allowing the GSE button to
+            -- function immediately after dismounting/leaving a vehicle in combat.
+            if not labVehicleDriverButtons[Button] then
+                labVehicleDriverButtons[Button] = true
+                SHBT:WrapScript(_G[Button], "OnAttributeChanged", VEHICLE_OAC_LAB)
+            end
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)

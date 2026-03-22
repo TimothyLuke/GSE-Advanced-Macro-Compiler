@@ -321,6 +321,7 @@ Statics.DebugModules[Statics.SourceTransmission] = Statics.SourceTransmission
 Statics.DebugModules["API"] = "API"
 Statics.DebugModules["GUI"] = "GUI"
 Statics.DebugModules["Startup"] = "Startup"
+Statics.DebugModules["Events"] = "Events"
 
 Statics.TranslationKey = "KEY"
 Statics.TranslationHash = "HASH"
