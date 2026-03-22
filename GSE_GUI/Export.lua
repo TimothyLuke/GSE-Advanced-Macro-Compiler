@@ -169,12 +169,17 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
                 )
-                -- Stamp the checksum on the export clone only.
-                -- The local copy (seq) is intentionally left unchanged so that the
-                -- stored checksum always reflects the last-exported state.
+                -- Stamp the current GSEVersion and checksum on the export clone only.
+                -- The local copy (seq) is intentionally left unchanged.
+                -- Updating GSEVersion on export prevents false "older version" warnings
+                -- when re-importing sequences that were originally created in an earlier
+                -- GSE build but have been running fine in the current one.
                 local exportedSeq = exportTable["Sequences"][key]
-                if exportedSeq and exportedSeq.MetaData and GSE.ComputeSequenceChecksum then
-                    exportedSeq.MetaData.Checksum = GSE.ComputeSequenceChecksum(exportedSeq)
+                if exportedSeq and exportedSeq.MetaData then
+                    exportedSeq.MetaData.GSEVersion = GSE.VersionNumber
+                    if GSE.ComputeSequenceChecksum then
+                        exportedSeq.MetaData.Checksum = GSE.ComputeSequenceChecksum(exportedSeq)
+                    end
                 end
                 exportTable.ElementCount = exportTable.ElementCount + 1
 
