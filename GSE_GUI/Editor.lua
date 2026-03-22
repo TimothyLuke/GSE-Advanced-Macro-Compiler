@@ -40,10 +40,17 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
                 local spellstuff = GSE.GetSpellsFromString(macro)
                 if spellstuff and #spellstuff > 1 then spellstuff = spellstuff[1] end
                 if spellstuff and spellstuff.iconID then iconID = spellstuff.iconID end
-            elseif string.sub(macro, 1, 1) ~= "=" then
+            elseif string.sub(macro, 1, 1) == "=" then
+                -- Variable reference: the raw text has no slash commands to parse,
+                -- so fall back to the compiled output which expands the variable.
+                local compiled = GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                if compiled and string.sub(compiled, 1, 1) == "/" then
+                    local spellstuff = GSE.GetSpellsFromString(compiled)
+                    if spellstuff and #spellstuff > 1 then spellstuff = spellstuff[1] end
+                    if spellstuff and spellstuff.iconID then iconID = spellstuff.iconID end
+                end
+            else
                 -- External WoW macro name: look up its icon.
-                -- Variable references (starting with "=") keep the QuestionMarkIconID
-                -- so the icon widget is visible and patrons can click to assign one.
                 local macindex = GetMacroIndexByName(macro)
                 local _, micon = GetMacroInfo(macindex)
                 if micon then iconID = micon end

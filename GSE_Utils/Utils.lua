@@ -1097,7 +1097,71 @@ function GSE.ScanMacrosForErrors()
         end
     end
 
-    -- 5. GSESequences encoding check (existing behaviour: remove malformed entries)
+    -- 5. Icon coverage check: report Action blocks whose icon cannot be determined.
+    --    These are cosmetic warnings (not functional errors) but help authors notice
+    --    that a block will show '?' in the editor.  Pet-ability blocks are skipped
+    --    because no client-side icon lookup is available for pet abilities.
+    if C_Spell and C_Spell.GetSpellInfo then
+        for classlibid = 0, 13 do
+            local classlib = GSE.Library[classlibid]
+            if classlib and type(classlib) == "table" then
+                for seqname, seq in pairs(classlib) do
+                    if type(seq) == "table" and type(seq.Versions) == "table" then
+                        for vidx, macroversion in ipairs(seq.Versions) do
+                            if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
+                                for bidx, action in ipairs(macroversion.Actions) do
+                                    if action.Type == "Action" and action.type ~= "pet" and not action.Icon then
+                                        local hasIcon = false
+                                        if action.type == "spell" then
+                                            local si = action.spell and C_Spell.GetSpellInfo(action.spell)
+                                            hasIcon = si and si.iconID ~= nil
+                                        elseif action.type == "item" or action.type == "toy" then
+                                            local key = action.item or action.toy
+                                            hasIcon = key and select(10, GetItemInfo(key)) ~= nil
+                                        elseif action.type == "macro" or GSE.isEmpty(action.type) then
+                                            local macro = action.macro and GSE.UnEscapeString(action.macro) or ""
+                                            if string.sub(macro, 1, 1) == "/" then
+                                                local ss = GSE.GetSpellsFromString(macro)
+                                                hasIcon = ss ~= nil and (ss.iconID ~= nil or #ss > 0)
+                                            elseif string.sub(macro, 1, 1) == "=" then
+                                                -- Variable reference: check the compiled output
+                                                local ok, compiled = pcall(GSE.CompileMacroText, macro, Statics.TranslatorMode.String)
+                                                if ok and compiled then
+                                                    compiled = GSE.UnEscapeString(compiled)
+                                                    if string.sub(compiled, 1, 1) == "/" then
+                                                        local ss = GSE.GetSpellsFromString(compiled)
+                                                        hasIcon = ss ~= nil and (ss.iconID ~= nil or #ss > 0)
+                                                    end
+                                                end
+                                            elseif macro ~= "" then
+                                                -- External WoW macro name
+                                                if GetMacroIndexByName then
+                                                    local midx = GetMacroIndexByName(macro)
+                                                    local _, micon = GetMacroInfo(midx)
+                                                    hasIcon = micon ~= nil
+                                                end
+                                            end
+                                        end
+                                        if not hasIcon then
+                                            totalIssues = totalIssues + 1
+                                            GSE.Print(
+                                                string.format(
+                                                    L["Sequence '%s' (class %d) version %d block %d has no icon set (showing ?).  Open the block in the editor and assign an icon."],
+                                                    seqname, classlibid, vidx, bidx
+                                                )
+                                            )
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- 6. GSESequences encoding check (existing behaviour: remove malformed entries)
     if type(GSESequences) == "table" then
         for classlibid, classlib in ipairs(GSESequences) do
             if type(classlib) == "table" then
