@@ -181,6 +181,11 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
     typegroup:SetLayout("Flow")
     local actionicon = GSE.CreateIconControl(action, version, keyPath, editframe.Sequence, macroPanel.frame)
     typegroup:AddChild(actionicon)
+    -- Refresh the icon when the user finishes editing the spell/item/toy field.
+    -- OnEditFocusLost is set to an empty stub in CreateSpellEditBox; safe to overwrite.
+    spellEditBox:SetCallback("OnEditFocusLost", function()
+        actionicon:RefreshIcon()
+    end)
     local spellradio = AceGUI:Create("CheckBox")
     spellradio:SetType("radio")
     spellradio:SetLabel(L["Spell"])

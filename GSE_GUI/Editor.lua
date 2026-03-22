@@ -17,34 +17,44 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     lbl:SetWidth(25)
     lbl:SetHeight(25)
 
-    if action.Icon then
-        lbl:SetText("|T" .. action.Icon .. ":0|t")
-    else
-        local spellinfo = {}
-        spellinfo.iconID = Statics.QuestionMarkIconID
-        if action.type == "macro" then
-            local macro = GSE.UnEscapeString(action.macro)
+    -- Derives the display icon for the block.  Called once on creation and
+    -- again whenever the spell/item/toy field changes (via RefreshIcon).
+    -- Honours a manually-assigned action.Icon; otherwise infers from the
+    -- spell, item, toy, or macro content.
+    local function refreshIcon()
+        local iconID = Statics.QuestionMarkIconID
+        if action.Icon then
+            iconID = action.Icon
+        elseif action.type == "spell" then
+            local si = action.spell and C_Spell.GetSpellInfo(action.spell)
+            if si and si.iconID then iconID = si.iconID end
+        elseif action.type == "item" or action.type == "toy" then
+            local itemKey = action.item or action.toy
+            if itemKey then
+                local icon = select(10, GetItemInfo(itemKey))
+                if icon then iconID = icon end
+            end
+        elseif action.type == "macro" then
+            local macro = action.macro and GSE.UnEscapeString(action.macro) or ""
             if string.sub(macro, 1, 1) == "/" then
                 local spellstuff = GSE.GetSpellsFromString(macro)
-                if spellstuff and #spellstuff > 1 then
-                    spellstuff = spellstuff[1]
-                end
-                if spellstuff then
-                    spellinfo = spellstuff
-                end
-            else
-                spellinfo.name = action.macro
-                local macindex = GetMacroIndexByName(spellinfo.name)
-                local _, iconid, _ = GetMacroInfo(macindex)
-                spellinfo.iconID = iconid
+                if spellstuff and #spellstuff > 1 then spellstuff = spellstuff[1] end
+                if spellstuff and spellstuff.iconID then iconID = spellstuff.iconID end
+            elseif string.sub(macro, 1, 1) ~= "=" then
+                -- External WoW macro name: look up its icon.
+                -- Variable references (starting with "=") keep the QuestionMarkIconID
+                -- so the icon widget is visible and patrons can click to assign one.
+                local macindex = GetMacroIndexByName(macro)
+                local _, micon = GetMacroInfo(macindex)
+                if micon then iconID = micon end
             end
-        elseif action.type == "Spell" then
-            spellinfo = C_Spell.GetSpellInfo(action.spell)
         end
-        if spellinfo.iconID then
-            lbl:SetText("|T" .. spellinfo.iconID .. ":0|t")
-        end
+        lbl:SetText("|T" .. iconID .. ":0|t")
     end
+
+    -- Expose so callers can refresh the icon after the spell field changes.
+    lbl.RefreshIcon = refreshIcon
+    refreshIcon()
 
     local spellinfolist = {}
     if action.type == "macro" then
@@ -1318,6 +1328,10 @@ function GSE.CreateEditor()
                 typegroup:SetLayout("Flow")
                 local actionicon = GSE.CreateIconControl(action, version, keyPath, editframe.Sequence, macroPanel.frame)
                 typegroup:AddChild(actionicon)
+                -- Refresh the icon when the user finishes editing the spell/item/toy field.
+                spellEditBox:SetCallback("OnEditFocusLost", function()
+                    actionicon:RefreshIcon()
+                end)
                 local spellradio = AceGUI:Create("CheckBox")
                 spellradio:SetType("radio")
                 spellradio:SetLabel(L["Spell"])
