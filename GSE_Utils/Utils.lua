@@ -1683,9 +1683,12 @@ do
 
         if not existingSequence then
             -- Only show the picker on genuinely empty slots.
-            local action = self.action or self:GetAttribute("action")
-            if not action or action == 0 then return end
-            if HasAction(action) then return end
+            -- CPB_ (ConsolePort) buttons are controller-mapped, not slot-based; skip the action check.
+            if string.sub(self:GetName() or "", 1, 4) ~= "CPB_" then
+                local action = self.action or self:GetAttribute("action")
+                if not action or action == 0 then return end
+                if HasAction(action) then return end
+            end
         end
 
         local classIconText = ""
@@ -1810,6 +1813,19 @@ do
             end
             for i = 73, 132 do
                 local btn = _G["DominosActionButton" .. i]
+                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+        end
+
+        if ConsolePort then
+            local cpbButtons = {
+                "CPB_PADDUP", "CPB_PADDLEFT", "CPB_PADDDOWN", "CPB_PADDRIGHT",
+                "CPB_PADLSHOULDER", "CPB_PADRSHOULDER",
+                "CPB_PADRTRIGGER", "CPB_PADLTRIGGER",
+                "CPB_PAD1", "CPB_PAD2", "CPB_PAD3", "CPB_PAD4",
+            }
+            for _, name in ipairs(cpbButtons) do
+                local btn = _G[name]
                 if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
             end
         end
