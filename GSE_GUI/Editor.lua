@@ -634,47 +634,50 @@ function GSE.CreateEditor()
                 )
             end
 
-            local deleteBlockButton = AceGUI:Create("Icon")
-            deleteBlockButton:SetImageSize(30, 30)
-            deleteBlockButton:SetWidth(30)
-            deleteBlockButton:SetHeight(30)
-            deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
+            local deleteBlockButton
+            if not disableDelete then
+                deleteBlockButton = AceGUI:Create("Icon")
+                deleteBlockButton:SetImageSize(30, 30)
+                deleteBlockButton:SetWidth(30)
+                deleteBlockButton:SetHeight(30)
+                deleteBlockButton:SetImage(Statics.ActionsIcons.Delete)
 
-            deleteBlockButton:SetCallback(
-                "OnClick",
-                function()
-                    container:ReleaseChildren()
-                    local delPath = {}
-                    local delObj
-                    for k, v in ipairs(path) do
-                        if k == #path then
-                            delObj = v
-                        else
-                            table.insert(delPath, v)
+                deleteBlockButton:SetCallback(
+                    "OnClick",
+                    function()
+                        container:ReleaseChildren()
+                        local delPath = {}
+                        local delObj
+                        for k, v in ipairs(path) do
+                            if k == #path then
+                                delObj = v
+                            else
+                                table.insert(delPath, v)
+                            end
                         end
+                        table.remove(editframe.Sequence.Versions[version].Actions[delPath], delObj)
+                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
-                    table.remove(editframe.Sequence.Versions[version].Actions[delPath], delObj)
-                    ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                end
-            )
-            deleteBlockButton:SetCallback(
-                "OnEnter",
-                function()
-                    GSE.CreateToolTip(
-                        L["Delete Block"],
-                        L[
-                            "Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."
-                        ],
-                        editframe
-                    )
-                end
-            )
-            deleteBlockButton:SetCallback(
-                "OnLeave",
-                function()
-                    GSE.ClearTooltip(editframe)
-                end
-            )
+                )
+                deleteBlockButton:SetCallback(
+                    "OnEnter",
+                    function()
+                        GSE.CreateToolTip(
+                            L["Delete Block"],
+                            L[
+                                "Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."
+                            ],
+                            editframe
+                        )
+                    end
+                )
+                deleteBlockButton:SetCallback(
+                    "OnLeave",
+                    function()
+                        GSE.ClearTooltip(editframe)
+                    end
+                )
+            end
 
             local addLoopButton, addActionButton, addPauseButton, addIfButton, addEmbedButton
             if includeAdd then
