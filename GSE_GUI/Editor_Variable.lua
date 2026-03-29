@@ -94,7 +94,8 @@ end]],
     if not GSE.isEmpty(variable.Author) then
         authoreditbox:SetText(variable.Author)
     else
-        authoreditbox:SetText(GSE.GetCharacterName())
+        variable.Author = GSE.GetCharacterName()
+        authoreditbox:SetText(variable.Author)
     end
     authoreditbox:SetCallback(
         "OnTextChanged",
