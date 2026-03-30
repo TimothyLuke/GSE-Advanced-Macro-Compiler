@@ -4,7 +4,7 @@
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
 ## Version: @project-version@
-## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros
+## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros GSEIncomingQueue
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## LoadSavedVariablesFirst: 1
 
@@ -55,6 +55,8 @@ API\InitialOptions.lua
 API\StringFunctions.lua
 API\CharacterFunctions.lua
 API\Translator.lua
+API\sha512.lua
+API\ed25519verify.lua
 API\Checksum.lua
 API\Storage.lua
 API\Plugins.lua

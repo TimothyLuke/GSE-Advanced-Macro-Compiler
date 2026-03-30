@@ -43,7 +43,7 @@ jobs:
         run: |
           luarocks install mockagne 1.0
           luarocks install luaunit
-          # luarocks install luabitop
+          luarocks install luabitop
           luarocks install busted
           luarocks install luacov
           luarocks install luacov-coveralls
@@ -89,6 +89,48 @@ jobs:
         run: npm run-script pat
         env:
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK }}
+
+      - name: Publish to GSE Tools
+        if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GSE_ACTION_TOKEN: ${{ secrets.GSE_ACTION_TOKEN }}
+          GSE_API_URL: ${{ secrets.GSE_API_URL || 'https://gse.tools/api' }}
+          GSE_FILE_API_URL: ${{ secrets.GSE_FILE_API_URL || 'https://api.qik.dev' }}
+          SCOPE_ID: '69c5b349738d1f112d148281'
+        run: |
+          for zip in GSE-*.zip; do
+            [ -f "$zip" ] || continue
+            FULL_VERSION=$(basename "$zip" .zip | sed 's/^GSE-//')
+            echo "Publishing $zip (version: $FULL_VERSION)..."
+
+            IS_PATRON=false
+            if [[ "$FULL_VERSION" == *"-PatronBuild" ]]; then
+              IS_PATRON=true
+            fi
+
+            # Step 1: Upload zip to Qik file storage with public security
+            UPLOAD_RESPONSE=$(curl -f -s -X POST "${GSE_FILE_API_URL}/content/file/create" \
+              -H "Authorization: Bearer ${GSE_ACTION_TOKEN}" \
+              -F "file=@${zip}" \
+              -F "title=${zip}" \
+              -F "meta.security=public" \
+              -F "meta.scopes[]=${SCOPE_ID}")
+            FILE_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '._id')
+
+            if [ -z "$FILE_ID" ] || [ "$FILE_ID" = "null" ]; then
+              echo "Warning: file upload failed for $zip (non-fatal)"
+              echo "Response: $UPLOAD_RESPONSE"
+              continue
+            fi
+            echo "  Uploaded $zip -> $FILE_ID"
+
+            # Step 2: Create release record via action with file ID
+            curl -f -s -X POST "${GSE_API_URL}/actions/69c745e14106131aec21c3d7?access_token=${GSE_ACTION_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"fileId\":\"${FILE_ID}\",\"version\":\"${FULL_VERSION}\",\"channel\":\"release\",\"isPatronBuild\":${IS_PATRON}}" \
+              && echo "  Published $FULL_VERSION" \
+              || echo "Warning: publish action failed for $zip (non-fatal)"
+          done
 
       - name: Parse and generate documentation
         run: |
