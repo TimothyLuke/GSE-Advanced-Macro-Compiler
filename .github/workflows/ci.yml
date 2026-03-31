@@ -41,6 +41,7 @@ jobs:
 
       - name: Build Luarocks
         run: |
+          git config --global url."https://".insteadOf git://
           luarocks install mockagne 1.0
           luarocks install luaunit
           luarocks install luabitop
