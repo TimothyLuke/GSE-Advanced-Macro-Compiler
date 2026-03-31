@@ -138,7 +138,10 @@ function deleteExistingZips(done) {
     for (const file of files) {
       console.log(`Processing File .release/${file}`);
       if (file.endsWith("zip")) {
-        return fs.unlink(`.release/${file}`, done);
+        // Move the original BigWigs zip to root so publish step can upload it too
+        fs.renameSync(`.release/${file}`, `./${file}`);
+        console.log(`Moved .release/${file} to ./${file}`);
+        return done();
       }
       if (file.endsWith("json")) {
         return fs.unlink(`.release/${file}`, done);
