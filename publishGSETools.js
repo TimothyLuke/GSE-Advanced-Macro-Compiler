@@ -35,12 +35,16 @@ async function main() {
       meta: { type: 'file', security: 'public', scopes: [SCOPE_ID] },
     });
     const formData = new FormData();
+    formData.append('json', metadata);
     formData.append('file', new Blob([fileBuffer]), zip);
-    formData.append('data', metadata);
 
     const uploadRes = await fetch(
-      `${fileApiUrl}/content/file/create?access_token=${token}`,
-      { method: 'POST', body: formData },
+      `${fileApiUrl}/file/upload`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      },
     );
     const uploadData = await uploadRes.json();
 
@@ -52,10 +56,13 @@ async function main() {
 
     // Step 2: Create release record via publish action
     const pubRes = await fetch(
-      `${apiUrl}/actions/${PUBLISH_ACTION_ID}?access_token=${token}`,
+      `${apiUrl}/actions/${PUBLISH_ACTION_ID}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           fileId: uploadData._id,
           version: fullVersion,
