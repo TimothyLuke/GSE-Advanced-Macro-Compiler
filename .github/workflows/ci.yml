@@ -118,7 +118,7 @@ jobs:
             echo "  Channel: $CHANNEL"
 
             # Step 1: Upload zip to Qik file storage with public security
-            UPLOAD_RESPONSE=$(curl -f -s -X POST "${GSE_FILE_API_URL}/content/file/create?access_token=${GSE_ACTION_TOKEN}" \
+            UPLOAD_RESPONSE=$(curl -s -X POST "${GSE_FILE_API_URL}/content/file/create?access_token=${GSE_ACTION_TOKEN}" \
               -F "file=@${zip}" \
               -F "title=${zip}" \
               -F "meta.security=public" \
@@ -133,7 +133,7 @@ jobs:
             echo "  Uploaded $zip -> $FILE_ID"
 
             # Step 2: Create release record via action with file ID
-            curl -f -s -X POST "${GSE_API_URL}/actions/69c745e14106131aec21c3d7?access_token=${GSE_ACTION_TOKEN}" \
+            curl -s -X POST "${GSE_API_URL}/actions/69c745e14106131aec21c3d7?access_token=${GSE_ACTION_TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"fileId\":\"${FILE_ID}\",\"version\":\"${FULL_VERSION}\",\"channel\":\"${CHANNEL}\",\"isPatronBuild\":${IS_PATRON}}" \
               && echo "  Published $FULL_VERSION ($CHANNEL)" \
