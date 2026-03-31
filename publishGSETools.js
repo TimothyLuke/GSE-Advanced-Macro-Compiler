@@ -30,11 +30,13 @@ async function main() {
 
     // Step 1: Upload zip to Qik file storage
     const fileBuffer = fs.readFileSync(zip);
+    const metadata = JSON.stringify({
+      title: zip,
+      meta: { type: 'file', security: 'public', scopes: [SCOPE_ID] },
+    });
     const formData = new FormData();
     formData.append('file', new Blob([fileBuffer]), zip);
-    formData.append('title', zip);
-    formData.append('meta.security', 'public');
-    formData.append('meta.scopes[]', SCOPE_ID);
+    formData.append('data', metadata);
 
     const uploadRes = await fetch(
       `${fileApiUrl}/content/file/create?access_token=${token}`,
