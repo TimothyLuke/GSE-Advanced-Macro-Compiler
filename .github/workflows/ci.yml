@@ -97,7 +97,6 @@ jobs:
           GSE_ACTION_TOKEN: ${{ secrets.GSE_BOT_TOKEN }}
           GSE_API_URL: ${{ secrets.GSE_API_URL || 'https://gse.tools/api' }}
           GSE_FILE_API_URL: ${{ secrets.GSE_FILE_API_URL || 'https://api.qik.dev' }}
-          SCOPE_ID: '69c5b349738d1f112d148281'
         run: |
           for zip in GSE-*.zip; do
             [ -f "$zip" ] || continue
@@ -121,8 +120,7 @@ jobs:
             UPLOAD_RESPONSE=$(curl -s -X POST "${GSE_FILE_API_URL}/content/file/create?access_token=${GSE_ACTION_TOKEN}" \
               -F "file=@${zip}" \
               -F "title=${zip}" \
-              -F "meta.security=public" \
-              -F "meta.scopes[]=${SCOPE_ID}")
+              -F "meta.security=public")
             FILE_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '._id')
 
             if [ -z "$FILE_ID" ] || [ "$FILE_ID" = "null" ]; then
