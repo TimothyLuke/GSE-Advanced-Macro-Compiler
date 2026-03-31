@@ -94,7 +94,7 @@ jobs:
       - name: Publish to GSE Tools
         if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') }}
         env:
-          GSE_ACTION_TOKEN: ${{ secrets.GSE_ACTION_TOKEN }}
+          GSE_ACTION_TOKEN: ${{ secrets.GSE_BOT_TOKEN }}
           GSE_API_URL: ${{ secrets.GSE_API_URL || 'https://gse.tools/api' }}
           GSE_FILE_API_URL: ${{ secrets.GSE_FILE_API_URL || 'https://api.qik.dev' }}
           SCOPE_ID: '69c5b349738d1f112d148281'
