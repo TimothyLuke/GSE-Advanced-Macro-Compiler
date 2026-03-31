@@ -118,8 +118,7 @@ jobs:
             echo "  Channel: $CHANNEL"
 
             # Step 1: Upload zip to Qik file storage with public security
-            UPLOAD_RESPONSE=$(curl -f -s -X POST "${GSE_FILE_API_URL}/content/file/create" \
-              -H "Authorization: Bearer ${GSE_ACTION_TOKEN}" \
+            UPLOAD_RESPONSE=$(curl -f -s -X POST "${GSE_FILE_API_URL}/content/file/create?access_token=${GSE_ACTION_TOKEN}" \
               -F "file=@${zip}" \
               -F "title=${zip}" \
               -F "meta.security=public" \
