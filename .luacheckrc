@@ -2,6 +2,7 @@ std = "lua51"
 max_line_length = false
 exclude_files = {
     "**/Libs/**/*.lua",
+    "**/Lib/**/*.lua",
     ".luacheckrc",
     "**/Deprecated/**/*.lua",
     "**/spec/**/*.lua",
@@ -107,6 +108,10 @@ globals = {
     "GSEVariables",
     "GSEMacros",
     "UnitFullName",
+    -- Internal globals (cross-file)
+    "GSE_Ed25519Verify",
+    "GSE_SHA512",
+    "GSEIncomingQueue",
     -- GSE
     "GSE",
     "GSE2",
@@ -122,6 +127,7 @@ globals = {
     "Talented",
     -- Lua
     "bit.band",
+    "bit.bor",
     "bit.bxor",
     "bit.lshift",
     "bit.rshift",
