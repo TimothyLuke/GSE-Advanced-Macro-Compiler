@@ -18,6 +18,10 @@ describe("Checksum API", function()
         -- seen by the Lua 5.1 parser — the whole file must be valid Lua 5.1 syntax.
         -- Note: busted sandboxes spec files, so we assign to _G explicitly.
         if not _G.bit then
+            -- luabitop (Lua 5.1 via luarocks) exposes as require("bit"), not _G.bit
+            pcall(function() _G.bit = require("bit") end)
+        end
+        if not _G.bit then
             local src = [[
                 local M = 0xFFFFFFFF
                 _G.bit = {
