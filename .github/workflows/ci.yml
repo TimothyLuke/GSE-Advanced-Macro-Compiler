@@ -92,7 +92,7 @@ jobs:
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK }}
 
       - name: Publish to GSE Tools
-        if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           GSE_ACTION_TOKEN: ${{ secrets.GSE_BOT_TOKEN }}
           GSE_API_URL: ${{ secrets.GSE_API_URL || 'https://gse.tools/api' }}
@@ -108,6 +108,14 @@ jobs:
             if [[ "$FULL_VERSION" == *"-PatronBuild" ]]; then
               IS_PATRON=true
             fi
+
+            # Determine channel: tagged releases (e.g. 3.3.08, 3.3.08-a) are "release",
+            # commit builds (e.g. 3.3.08-7-gcb03a1d) are "alpha"
+            CHANNEL="alpha"
+            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              CHANNEL="release"
+            fi
+            echo "  Channel: $CHANNEL"
 
             # Step 1: Upload zip to Qik file storage with public security
             UPLOAD_RESPONSE=$(curl -f -s -X POST "${GSE_FILE_API_URL}/content/file/create" \
@@ -128,8 +136,8 @@ jobs:
             # Step 2: Create release record via action with file ID
             curl -f -s -X POST "${GSE_API_URL}/actions/69c745e14106131aec21c3d7?access_token=${GSE_ACTION_TOKEN}" \
               -H "Content-Type: application/json" \
-              -d "{\"fileId\":\"${FILE_ID}\",\"version\":\"${FULL_VERSION}\",\"channel\":\"release\",\"isPatronBuild\":${IS_PATRON}}" \
-              && echo "  Published $FULL_VERSION" \
+              -d "{\"fileId\":\"${FILE_ID}\",\"version\":\"${FULL_VERSION}\",\"channel\":\"${CHANNEL}\",\"isPatronBuild\":${IS_PATRON}}" \
+              && echo "  Published $FULL_VERSION ($CHANNEL)" \
               || echo "Warning: publish action failed for $zip (non-fatal)"
           done
 
