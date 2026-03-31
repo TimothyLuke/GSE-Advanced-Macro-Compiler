@@ -10,6 +10,7 @@
   },
   "scripts": {
     "run": "node patreonUpdate.js",
-    "pat": "node patreonBuild.js"
+    "pat": "node patreonBuild.js",
+    "publish-gse": "node publishGSETools.js"
   }
 }
