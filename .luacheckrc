@@ -112,6 +112,7 @@ globals = {
     "GSE_Ed25519Verify",
     "GSE_SHA512",
     "GSEIncomingQueue",
+    "GSECompanionQueue",
     -- GSE
     "GSE",
     "GSE2",
