@@ -5,6 +5,9 @@ L["Enable Actionbar Override Popup"] = true
 L["GSE Sequence"] = true
 L["Show Actionbar Override Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
+L["GSE Companion"] = true
+L["Auto Accept Companion Updates"] = true
+L["Automatically import sequences pushed from the GSE Companion app without showing the import dialog. Deletes will still require confirmation."] = true
 
 -- Sequence version / compatibility strings
 L["GSE_SEQUENCE_OLDER_VERSION_TEXT"] = "WARNING: The sequence '%s' was created with an older version of GSE (%s).\n\nIt may need adjustments before it works correctly.\n\nDo you want to proceed with the import anyway?"

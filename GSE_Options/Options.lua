@@ -725,6 +725,16 @@ function GSE:CreateConfigPanels()
         end
         do
             local layout = SettingsPanel:GetLayout(generalOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["GSE Companion"], ["tooltip"]= L["GSE Companion"]}))
+        end
+        -- Auto Accept Companion Updates
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "companionAutoAccept", "CompanionAutoAccept", GSEOptions, Settings.VarType.Boolean, L["Auto Accept Companion Updates"], false)
+            Settings.CreateCheckbox(generalOptions, setting, L["Automatically import sequences pushed from the GSE Companion app without showing the import dialog. Deletes will still require confirmation."])
+        end
+
+        do
+            local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Filter Sequence Selection"], ["tooltip"]= L["Filter Sequence Selection"]}))
         end
         -- Show All Sequences
