@@ -176,9 +176,12 @@ local function createBlizzOptions(category)
                 return tonumber(C_CVar.GetCVar("ActionButtonUseKeyDown")) == 1
             end
             local function SetValue(val)
-                C_CVar.SetCVar("ActionButtonUseKeyDown", val and 1 or 0)
+                local ok, err = pcall(C_CVar.SetCVar, "ActionButtonUseKeyDown", val and 1 or 0)
+                if not ok then
+                    GSE.PrintDebugMessage("SetCVar ActionButtonUseKeyDown error: " .. tostring(err), "Options")
+                end
             end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
+            local setting = Settings.RegisterProxySetting(troubleOptions, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["This setting is a common setting used by all WoW mods.  If affects how your action buttons respond.  With this on the react when you hit the button.  With them off they react when you let them go.  In GSE's case this setting has to be off for Actionbar Overrides to work."])
         end
 
