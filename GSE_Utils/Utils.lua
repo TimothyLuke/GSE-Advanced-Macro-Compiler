@@ -697,8 +697,8 @@ local function scanStringForVarRefs(str, found)
     for name in str:gmatch('GSE%.V%[["\'](.-)["\']%]') do
         found[name] = true
     end
-    -- Dot notation: GSE.V.name()
-    for name in str:gmatch('GSE%.V%.([%w_]+)%s*%(%)') do
+    -- Dot notation: GSE.V.name() or GSE.V.name(arg)
+    for name in str:gmatch('GSE%.V%.([%w_]+)%s*%(') do
         found[name] = true
     end
 end
@@ -731,14 +731,17 @@ local function walkTableForDeps(t, vars, seqs, macros)
             -- Action block with type="macro": if the macro field does not start with
             -- "/", "#", or "=" it is a plain WoW macro name reference, not command text.
             -- "=" prefix means it's a GSE variable expression (e.g. =GSE.V.Name()), not a macro name.
-            if vType == "Action" and vtype == "macro" and type(vmacro) == "string" then
+            if vType == "Action" and vtype == "macro" and type(vmacro) == "string"
+                    and not rawget(v, "Disabled") then
                 local text = GSE.UnEscapeString(vmacro)
                 local first = string.sub(text, 1, 1)
                 if #text > 0 and first ~= "/" and first ~= "#" and first ~= "=" then
                     macros[text] = true
                 end
             end
-            walkTableForDeps(v, vars, seqs, macros)
+            if not (vType == "Action" and rawget(v, "Disabled")) then
+                walkTableForDeps(v, vars, seqs, macros)
+            end
         end
     end
 end

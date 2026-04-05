@@ -93,6 +93,7 @@ function GSE.SetDefaultOptions()
         sequenceeditor = {height = 500, width = 700, treeWidth = 150}
     }
     GSEOptions.Multiclick = true
+    GSEOptions.SyncWoWMacros = false
 end
 
 if GSE.isEmpty(GSEOptions) then

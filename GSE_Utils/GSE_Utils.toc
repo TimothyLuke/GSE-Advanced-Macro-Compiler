@@ -33,3 +33,4 @@ StaticPopup.lua
 Utils.lua
 Tracker.lua
 CompanionQueue.lua
+MacroSync.lua
