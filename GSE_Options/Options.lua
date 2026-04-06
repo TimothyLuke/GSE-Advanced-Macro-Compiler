@@ -737,8 +737,8 @@ function GSE:CreateConfigPanels()
         end
         -- Sync WoW Macros to GSEMacros
         do
-            local setting = Settings.RegisterAddOnSetting(generalOptions, "syncWoWMacros", "SyncWoWMacros", GSEOptions, Settings.VarType.Boolean, L["Sync WoW Macros to GSEMacros"], false)
-            Settings.CreateCheckbox(generalOptions, setting, L["When enabled, all of your WoW macros are imported into GSEMacros and kept in sync. Changes made via the /macro dialog are reflected in GSEMacros, and incoming changes from the GSE Tools website are written back to your WoW macros."])
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "syncWoWMacros", "SyncWoWMacros", GSEOptions, Settings.VarType.Boolean, L["Sync WoW Macros to GSE.Tools"], false)
+            Settings.CreateCheckbox(generalOptions, setting, L["When enabled, all of your WoW macros are imported into GSE.Tools and kept in sync via the GSE Companion App. Changes made via the /macro dialog are reflected in GSE's Managed Macro Section, and incoming changes from GSE.Tools are written back to your WoW macros."])
         end
 
         do
