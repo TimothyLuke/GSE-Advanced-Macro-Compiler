@@ -1623,7 +1623,9 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
 
     local compressedsteps = {}
     for _, v in ipairs(steps) do
-        table.insert(compressedsteps, string.join("|", unpack(v)))
+        if #v > 0 then
+            table.insert(compressedsteps, string.join("|", unpack(v)))
+        end
     end
     local bigsequence = {}
 
@@ -1674,9 +1676,11 @@ for k,v in ipairs(compressedspelllist) do
         end
         for _, j in ipairs(splitB) do
             local sa, ea = string.find(j, "\002", 1, true)
-            local a = string.sub(j, 1, sa - 1)
-            local b = string.sub(j, ea + 1)
-            spelllist[k][x][a] = b
+            if sa then
+                local a = string.sub(j, 1, sa - 1)
+                local b = string.sub(j, ea + 1)
+                spelllist[k][x][a] = b
+            end
         end
     end
     maxsequences = k

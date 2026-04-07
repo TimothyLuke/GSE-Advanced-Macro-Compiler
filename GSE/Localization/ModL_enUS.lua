@@ -48,6 +48,7 @@ L["Issues found in '%s' (class library %d):"] = true
 L["Sequence '%s' (class %d) version %d block %d has no icon set (showing ?).  Open the block in the editor and assign an icon."] = true
 L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"] = true
 L["Compile error in Macros[%d] of '%s': %s"] = true
+L["Empty step at index %d in Macros[%d] of '%s': spell ID lookup may have failed"] = true
 L["%d issue(s) found.  See above for details and fix commands."] = true
 -- Dependency UI labels
 L["Dependencies"] = true

@@ -957,16 +957,41 @@ function GSE.ScanMacrosForErrors()
                 if type(seq) == "table" and type(seq.Versions) == "table" then
                     for macvidx, macroversion in ipairs(seq.Versions) do
                         if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
-                            local ok, err = pcall(GSE.CompileTemplate, macroversion)
+                            local ok, result = pcall(GSE.CompileTemplate, macroversion)
                             if not ok then
                                 totalIssues = totalIssues + 1
                                 GSE.Print(
                                     string.format(
                                         L["Compile error in Macros[%d] of '%s': %s"],
-                                        macvidx, seqname, tostring(err)
+                                        macvidx, seqname, tostring(result)
                                     ),
                                     "Error"
                                 )
+                            elseif type(result) == "table" then
+                                -- Check for steps that would encode to an empty string.
+                                -- This happens when GetSpellId returns nil (e.g. after
+                                -- resurrection/phasing), leaving a step with only blockPath.
+                                -- Such steps crash inside the secure Execute string with
+                                -- "attempt to perform arithmetic on local 'sa' (a nil value)".
+                                for stepIdx, step in ipairs(result) do
+                                    local hasField = false
+                                    for k, _ in pairs(step) do
+                                        if k ~= "blockPath" then
+                                            hasField = true
+                                            break
+                                        end
+                                    end
+                                    if not hasField then
+                                        totalIssues = totalIssues + 1
+                                        GSE.Print(
+                                            string.format(
+                                                L["Empty step at index %d in Macros[%d] of '%s': spell ID lookup may have failed"],
+                                                stepIdx, macvidx, seqname
+                                            ),
+                                            "Error"
+                                        )
+                                    end
+                                end
                             end
                         end
                     end

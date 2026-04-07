@@ -511,6 +511,68 @@ describe(
     )
 
     -- ================================================================
+    -- ScanMacrosForErrors — empty step (nil spell ID) checks
+    -- ================================================================
+
+    describe(
+      "ScanMacrosForErrors empty step checks",
+      function()
+
+        it(
+          "reports an empty step when CompileTemplate returns a step with only blockPath",
+          function()
+            -- Override CompileTemplate to simulate GetSpellId returning nil:
+            -- the step has only blockPath (no spell/macro/etc field).
+            GSE.CompileTemplate = function(_macro)
+              return {{blockPath = "1"}}
+            end
+            GSE.Library[0]["EmptyStepSeq"] = makeSeq()
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("Empty step at index 1"))
+            assert.is_true(hasMsg("EmptyStepSeq"))
+            -- restore stub
+            GSE.CompileTemplate = function(_macro) return {} end
+          end
+        )
+
+        it(
+          "does not report a step that has a non-blockPath field",
+          function()
+            GSE.CompileTemplate = function(_macro)
+              return {{blockPath = "1", spell = "1234"}}
+            end
+            GSE.Library[0]["GoodStepSeq"] = makeSeq()
+            GSE.ScanMacrosForErrors()
+            assert.is_false(hasMsg("Empty step"))
+            -- restore stub
+            GSE.CompileTemplate = function(_macro) return {} end
+          end
+        )
+
+        it(
+          "reports multiple empty steps in a single version",
+          function()
+            GSE.CompileTemplate = function(_macro)
+              return {
+                {blockPath = "1"},
+                {blockPath = "1", spell = "111"},  -- ok
+                {blockPath = "2"},
+              }
+            end
+            GSE.Library[0]["MultiEmptySeq"] = makeSeq()
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("Empty step at index 1"))
+            assert.is_true(hasMsg("Empty step at index 3"))
+            assert.is_false(hasMsg("Empty step at index 2"))
+            -- restore stub
+            GSE.CompileTemplate = function(_macro) return {} end
+          end
+        )
+
+      end
+    )
+
+    -- ================================================================
     -- ScanMacrosForErrors — name collision checks
     -- ================================================================
 
