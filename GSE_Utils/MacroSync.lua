@@ -102,17 +102,6 @@ function GSE.ManageMacros()
 end
 
 -- ---------------------------------------------------------------------------
--- React to the option being toggled in the Settings panel.
--- ---------------------------------------------------------------------------
-local settingFrame = CreateFrame("Frame")
-settingFrame:RegisterEvent("ADDON_SETTING_CHANGED")
-settingFrame:SetScript("OnEvent", function(self, event, addonName, settingKey)
-    if settingKey == "SyncWoWMacros" and GSEOptions.SyncWoWMacros then
-        C_Timer.After(0, GSE.SyncAllWoWMacros)
-    end
-end)
-
--- ---------------------------------------------------------------------------
 -- On login: do an initial full sync if the option was persisted as enabled.
 -- Delayed slightly to let PLAYER_ENTERING_WORLD setup finish first.
 -- ---------------------------------------------------------------------------
