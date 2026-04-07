@@ -1957,7 +1957,7 @@ function GSE.CreateEditor()
                 end
                 if sequence.MetaData.Scenario == version then
                     sequence.MetaData.Scenario = sequence.MetaData.Default
-                    printtext = printtext .. " " .. L["Scenario setting changed to Default."]
+                    printtext = printtext .. " " .. L["Delves and Scenarios setting changed to Default."]
                 end
 
                 if sequence.MetaData.Default > 1 then

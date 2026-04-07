@@ -18,7 +18,7 @@ local contextVersionConfigs = {
     {key="Dungeon",     label=L["Dungeon"],     tip=L["The version of this macro to use in normal dungeons."],                                                                                                  grp=4, spacer=true},
     {key="Timewalking", label=L["Timewalking"], tip=L["The version of this macro to use when in time walking dungeons."],                                                                                       grp=5, spacer=false},
     {key="Party",       label=L["Party"],       tip=L["The version of this macro to use when in a party in the world."],                                                                                        grp=5, spacer=true},
-    {key="Scenario",    label=L["Scenario"],    tip=L["The version of this macro to use in Scenarios."],                                                                                                        grp=6, spacer=false},
+    {key="Scenario",    label=L["Delves and Scenarios"],    tip=L["The version of this macro to use in Delves and Scenarios."],                                                                               grp=6, spacer=false},
 }
 
 local function GUIDrawMetadataEditor(editframe, container)

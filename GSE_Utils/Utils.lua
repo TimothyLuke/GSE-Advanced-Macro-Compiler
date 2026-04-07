@@ -1408,7 +1408,7 @@ function GSE.ExportSequenceHumanReadableFormat(sequence, sequencename)
             end
             if not GSE.isEmpty(sequence["MetaData"].Scenario) then
                 if sequence["MetaData"].Scenario == k then
-                    returnstring = returnstring .. "- Scenarios use template " .. k .. "\n"
+                    returnstring = returnstring .. "- Delves and Scenarios use template " .. k .. "\n"
                 end
             end
         end

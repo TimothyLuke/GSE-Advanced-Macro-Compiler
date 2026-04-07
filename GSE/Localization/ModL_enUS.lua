@@ -459,6 +459,7 @@ L["The milliseconds being used in key click delay."] = true
 
 -- 2.5.3
 L["Scenario"] = true
+L["Delves and Scenarios"] = true
 
 -- 2.5.4
 L["GSE: Import a Macro String."] = true
@@ -468,7 +469,9 @@ L["Version"] = true
 
 -- 2.5.9
 L["The version of this macro to use in Scenarios."] = true
+L["The version of this macro to use in Delves and Scenarios."] = true
 L["Scenario setting changed to Default."] = true
+L["Delves and Scenarios setting changed to Default."] = true
 
 -- 2.6.01
 L["Variables"] = true
