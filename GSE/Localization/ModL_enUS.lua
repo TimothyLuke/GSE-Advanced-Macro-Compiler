@@ -879,41 +879,23 @@ L["When enabled, all of your WoW macros are imported into GSE.Tools and kept in 
 L["Sync WoW Macros to GSE.Tools"] = true
 
 L["WhatsNew"] =
-[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.04
+[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.10
 
-|cFFFFD100Actionbar Override Popup|r
-Right-clicking an empty actionbar button while out of combat now opens a |cFF00BFFFAssign GSE Sequence|r popup, letting you bind a sequence to that button without opening the editor. Your current spec icon is shown in the menu so you always know which spec you are assigning for.
+|cFFFFD100GSE.tools — The GSE Platform|r
+GSE now has a home on the web at |cFF00BFFFgse.tools|r. Browse, share, and discover sequences, variables, and macros created by the community. Sequences you mark as |cFF00FFFFpublic|r on the platform are visible to everyone — no account required to view them.
 
-If you use |cFFFF8C00keybinds exclusively|r and have no actionbar overrides configured, this popup is |cFFFF8C00disabled by default|r to avoid getting in your way. You can toggle it in |cFF00BFFFOptions → Actionbar Overrides → Enable Actionbar Override Popup|r.
+|cFFFFD100GSE Companion App|r
+The |cFF00BFFFGSE Companion|r is a desktop app that connects your in-game GSE to the platform. It:
+ - |cFFFFD100Syncs|r your sequences, variables, and macros to your gse.tools account automatically.
+ - |cFFFFD100Installs|r content from the platform directly into your WoW client — browse on gse.tools, click Install, and |cFF00BFFF/reload|r.
+ - |cFFFFD100Receives updates|r when authors publish new versions of sequences you have installed.
+ - Works with Retail, Classic, and PTR clients.
 
-|cFFFFD100Dominos Support|r
-GSE's actionbar override system now works with the |cFF00BFFFDominos|r actionbar addon as well as the default Blizzard bars.
+Download the Companion at |cFF00BFFFgse.tools|r. Once installed, a small bridge addon (|cFFFFFFFFGSE Companion Bridge|r) appears in your addon list — keep it enabled.
 
-|cFFFFD100Editor: Minimize Button|r
-The Sequence Editor now has a |cFF00BFFFminimize button|r in the top-right corner of the frame. Clicking it collapses the editor (and the Compile Template preview if open) into a small draggable |cFFFFFFFFGS|r|cFF00FFFFE|r icon showing the current sequence name. Click the icon to restore the editor. The icon position is never saved.
+|cFFFFD100Platform Import Queue|r
+When the Companion delivers content, the |cFF00BFFFImport|r dialog opens automatically on login showing what is available. If you close the dialog without importing, a reminder appears in chat with instructions to reopen it via |cFF00BFFF/gse import|r.
 
-|cFFFFD100Editor: Compile Template Window|r
-The |cFF00BFFFCompile Template|r preview window now closes automatically when its parent editor is closed, and is reused on repeat clicks rather than creating a new floating window each time.
+Authors who enable |cFF00BFFFAuto-Accept|r in GSE Options will have incoming updates imported silently on login.
 
-|cFFFFD100Editor: Tree Panel Width Remembered|r
-The width of the sequence tree panel on the left side of the editor is now saved and restored alongside the editor's height and width.
-
-|cFFFFD100Enhanced Sequence Checker|r
-|cFF00BFFF/gse checksequencesforerrors|r now performs a deep structural inspection of every sequence, reporting on:
- - Missing or malformed metadata
- - Empty, gapped, or out-of-range action arrays
- - Macro text exceeding 255 characters
- - Unbalanced brackets or unrecognised slash commands
- - Missing variable or embed references
-Where issues are found, a ready-to-paste |cFF00BFFF/run|r command is shown to attempt automatic repair.
-
-|cFFFFD100Performance|r
-Internal improvements to OOC queue processing, login sequencing, and event handling reduce overhead during load, zone changes, and group changes.
-
-|cFFFFD100Bug Fixes|r
- - Keybinds configured in GSE are no longer overridden by the actionbar override system.
- - Actionbar override icons now display correctly for bars other than bar 1.
- - Hovering over an actionbar override button no longer clears its icon.
- - GSE Options are now correctly initialised on first install.
- - Fixed several secure frame errors related to actionbar overrides.
 ]]
