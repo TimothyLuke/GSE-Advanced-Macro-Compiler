@@ -826,19 +826,9 @@ local function startup()
     end
     GSE:SendMessage(Statics.CoreLoadedMessage)
 
-    -- Notify the user if GSECompanion has queued incoming content from the platform
-    if not GSE.isEmpty(GSEIncomingQueue) then
-        C_Timer.After(3, function()
-            GSE.Print(
-                "|cff00ccffGSE Platform:|r " ..
-                #GSEIncomingQueue ..
-                " update(s) are ready to import from the GSE Platform. " ..
-                "Open the import dialog with " ..
-                GSEOptions.CommandColour .. "/gse import|r " ..
-                "or click the Import button in the GSE menu."
-            )
-        end)
-    end
+    -- The GSE_Companion bridge addon handles showing the import dialog
+    -- for incoming platform content. The import landing page also shows
+    -- a banner when GSE.IncomingQueue has pending entries.
 
     -- Register the Sample Macros
     if not GSEOptions.HideLoginMessage then

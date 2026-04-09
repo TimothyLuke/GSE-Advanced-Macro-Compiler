@@ -4,7 +4,7 @@
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
 ## Version: @project-version@
-## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros GSEIncomingQueue
+## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## LoadSavedVariablesFirst: 1
 

@@ -16,6 +16,17 @@ importframe:SetStatusText(L["Import Macro from Forums"])
 importframe:SetCallback(
   "OnClose",
   function(widget)
+    if importframe._fromQueue and GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
+      GSE.Print(
+        "|cff00ccffGSE Companion:|r " ..
+        #GSE.IncomingQueue ..
+        " update(s) queued for import. " ..
+        "Open the import dialog with " ..
+        (GSEOptions and GSEOptions.CommandColour or "|cFF00FFFF") ..
+        "/gse import|r " ..
+        "or click the Import button in the GSE menu."
+      )
+    end
     importframe:Hide()
   end
 )
@@ -214,9 +225,15 @@ local function processCollection(payload)
       )
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
-        -- Clear the platform incoming queue now that the user has imported it
+        -- Mark imported IDs so the Companion app can prune them from the bridge data
         if importframe._fromQueue then
-          GSEIncomingQueue = {}
+          if GSE.IncomingQueue and GSECompanionBridgeDB then
+            GSECompanionBridgeDB.imported = GSECompanionBridgeDB.imported or {}
+            for _, item in ipairs(GSE.IncomingQueue) do
+              if item._id then GSECompanionBridgeDB.imported[item._id] = true end
+            end
+          end
+          GSE.IncomingQueue = {}
           importframe._fromQueue = false
         end
         importframe:Hide()
@@ -469,7 +486,13 @@ local function processQueueCollections(collections)
     end
     if allSuccess then
       if importframe._fromQueue then
-        GSEIncomingQueue = {}
+        if GSE.IncomingQueue and GSECompanionBridgeDB then
+          GSECompanionBridgeDB.imported = GSECompanionBridgeDB.imported or {}
+          for _, item in ipairs(GSE.IncomingQueue) do
+            if item._id then GSECompanionBridgeDB.imported[item._id] = true end
+          end
+        end
+        GSE.IncomingQueue = {}
         importframe._fromQueue = false
       end
       importframe:Hide()
@@ -481,13 +504,13 @@ local function processQueueCollections(collections)
   importframe:AddChild(toolbarrow)
 end
 
--- Decode all items in GSEIncomingQueue, keeping each as its own collection,
+-- Decode all items in GSE.IncomingQueue, keeping each as its own collection,
 -- and present them grouped. Called from login notification or the landing page.
 local function processQueue()
-  if GSE.isEmpty(GSEIncomingQueue) then return end
+  if not GSE.IncomingQueue or GSE.isEmpty(GSE.IncomingQueue) then return end
 
   local collections = {}
-  for _, item in ipairs(GSEIncomingQueue) do
+  for _, item in ipairs(GSE.IncomingQueue) do
     for seqName, encoded in pairs(item.sequences or {}) do
       local ok, collection = GSE.DecodeMessage(encoded)
       if ok and collection.type == "COLLECTION" then
@@ -500,7 +523,7 @@ local function processQueue()
   end
 
   if #collections == 0 then
-    GSE.Print(L["No valid content found in the GSE Platform queue."])
+    GSE.Print("|cff00ccffGSE Platform:|r No valid content found in the queue.")
     return
   end
 
@@ -514,14 +537,14 @@ local function LandingPage()
   importframe._fromQueue = false
 
   -- If the platform queue has pending content, show a banner button at the top
-  if not GSE.isEmpty(GSEIncomingQueue) then
+  if GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
     local queueBanner = AceGUI:Create("SimpleGroup")
     queueBanner:SetLayout("Flow")
     queueBanner:SetFullWidth(true)
     local queueLabel = AceGUI:Create("Label")
     queueLabel:SetText(
       "|cff00ccffGSE Platform:|r  " ..
-      #GSEIncomingQueue ..
+      #GSE.IncomingQueue ..
       " queued update(s) waiting to be imported."
     )
     queueLabel:SetWidth(400)

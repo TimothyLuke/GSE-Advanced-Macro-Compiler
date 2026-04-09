@@ -27,6 +27,7 @@ end
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 GSE.Pause = {}
 GSE.OutputQueue = {}
+GSE.IncomingQueue = {}
 GSE.DebugOutput = ""
 GSE.SequenceDebugOutput = ""
 GSE.GUI = {}

@@ -33,11 +33,11 @@ local function ProcessCompanionQueue()
             elseif ct == "macro" and entry.encoded then
                 table.insert(macInstalls, entry)
             elseif entry.sequences then
-                -- Sequences go into GSEIncomingQueue for the import dialog
-                if GSE.isEmpty(GSEIncomingQueue) then
-                    GSEIncomingQueue = {}
+                -- Sequences go into GSE.IncomingQueue for the import dialog
+                if not GSE.IncomingQueue then
+                    GSE.IncomingQueue = {}
                 end
-                table.insert(GSEIncomingQueue, {
+                table.insert(GSE.IncomingQueue, {
                     name      = entry.name or "",
                     author    = entry.author or "",
                     source    = entry.source or "gsecompanion",
@@ -97,7 +97,7 @@ local function ProcessCompanionQueue()
         if GSEOptions.CompanionAutoAccept then
             -- Auto-accept: decode and import each queued sequence directly via OOC
             C_Timer.After(1, function()
-                for _, item in ipairs(GSEIncomingQueue or {}) do
+                for _, item in ipairs(GSE.IncomingQueue or {}) do
                     for _, encoded in pairs(item.sequences or {}) do
                         local ok, collection = GSE.DecodeMessage(encoded)
                         if ok and collection and collection.payload and collection.payload.Sequences then
@@ -107,7 +107,7 @@ local function ProcessCompanionQueue()
                         end
                     end
                 end
-                GSEIncomingQueue = {}
+                GSE.IncomingQueue = {}
                 GSE.Print(
                     "|cff00ccffGSE Companion:|r Auto-imported " ..
                     #seqInstalls .. " sequence update(s)."
