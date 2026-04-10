@@ -42,16 +42,40 @@ function getData(path, params, done) {
 
 function getMembers(members, newpath, done) {
   return getData(apiPath, newpath, function (err, body) {
-    members = _.concat(
-      members,
-      _.map(body.data, function (member) {
-        return _.get(member, "attributes.full_name");
-      })
-    );
-    // console.log(members);
+    // Build tier map from included resources
+    const tierMap = {};
+    if (body.included) {
+      body.included.forEach(function (inc) {
+        if (inc.type === "tier") {
+          tierMap[inc.id] = inc.attributes.title;
+        }
+      });
+    }
+
+    // Process each member — only active patrons on the Special Access tier
+    body.data.forEach(function (member) {
+      const attrs = member.attributes;
+      if (attrs.patron_status !== "active_patron") return;
+
+      const tierIds =
+        (member.relationships &&
+          member.relationships.currently_entitled_tiers &&
+          member.relationships.currently_entitled_tiers.data) ||
+        [];
+      const tiers = tierIds.map(function (t) {
+        return tierMap[t.id] || "";
+      });
+      const hasSpecialAccess = tiers.some(function (t) {
+        return t.toLowerCase().includes("special access");
+      });
+
+      if (hasSpecialAccess) {
+        members.push(attrs.full_name);
+      }
+    });
+
     if (body.links && body.links.next) {
       let params = new URL(body.links.next).searchParams;
-
       return getMembers(members, params.toString(), done);
     }
 
@@ -59,18 +83,22 @@ function getMembers(members, newpath, done) {
   });
 }
 
-getMembers([], "fields%5Bmember%5D=full_name", function (err, result) {
-  let memberList = _.sortBy(result);
-  let output = `local GSE = GSE
+getMembers(
+  [],
+  "include=currently_entitled_tiers&fields%5Bmember%5D=full_name%2Cpatron_status&fields%5Btier%5D=title",
+  function (err, result) {
+    let memberList = _.sortBy(result);
+    let output = `local GSE = GSE
 local Statics = GSE.Static
 
 Statics.Patrons = {
-    "${memberList.join('",\n    "')}"
+    [[${memberList.join("]],\n    [[")}]]
 }`;
-  console.log(output);
-  fs.writeFile("GSE_Utils/Patrons.lua", output, (err) => {
-    if (err) {
-      console.error(err);
-    }
-  });
-});
+    console.log(output);
+    fs.writeFile("GSE_Utils/Patrons.lua", output, (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
+  }
+);
