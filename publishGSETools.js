@@ -6,7 +6,7 @@ const PUBLISH_ACTION_ID = '69c745e14106131aec21c3d7';
 
 async function main() {
   const apiUrl = process.env.GSE_API_URL || 'https://gse.tools/api';
-  const fileApiUrl = process.env.GSE_FILE_API_URL || 'https://api.qik.dev';
+  const fileApiUrl = process.env.GSE_FILE_API_URL || apiUrl;
   const token = process.env.GSE_ACTION_TOKEN;
   const isTag = (process.env.GITHUB_REF || '').startsWith('refs/tags/');
 
@@ -38,14 +38,23 @@ async function main() {
     formData.append('json', metadata);
     formData.append('file', new Blob([fileBuffer]), zip);
 
+    const uploadUrl = `${fileApiUrl}/file/upload`;
+    console.log(`[publish] Uploading to ${uploadUrl} (${(fileBuffer.length / 1024).toFixed(0)} KB)`);
     const uploadRes = await fetch(
-      `${fileApiUrl}/file/upload`,
+      uploadUrl,
       {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       },
     );
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.log(`[publish] File upload HTTP ${uploadRes.status}: ${errText.slice(0, 300)}`);
+      continue;
+    }
+
     const uploadData = await uploadRes.json();
 
     if (!uploadData._id) {
@@ -71,6 +80,13 @@ async function main() {
         }),
       },
     );
+
+    if (!pubRes.ok) {
+      const errText = await pubRes.text();
+      console.log(`[publish] Action HTTP ${pubRes.status}: ${errText.slice(0, 300)}`);
+      continue;
+    }
+
     const pubData = await pubRes.json();
 
     if (pubData.success) {
