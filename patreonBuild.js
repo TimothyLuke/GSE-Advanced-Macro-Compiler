@@ -125,8 +125,13 @@ function publishArchive(done) {
     hook.send({
       embeds: [embed],
       files: [file],
+    }).then(function() {
+      console.log('[pat] Discord webhook sent');
+      return done();
+    }).catch(function(err) {
+      console.log('[pat] Discord webhook failed:', err.message);
+      return done();
     });
-    //hook.sendFile(`GSE-${BuildNumber}.zip`).then(done);
   } catch (err) {
     console.log(err);
     return done(err);
