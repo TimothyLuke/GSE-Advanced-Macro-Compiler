@@ -263,7 +263,7 @@ end
 
 local function ShowNativeIconPicker(callback)
     if not iconPickerHooked then
-        LoadAddOn("Blizzard_MacroUI")
+        C_AddOns.LoadAddOn("Blizzard_MacroUI")
         if not setupIconPickerHook() then return end
     end
     iconPickerCallback = callback
