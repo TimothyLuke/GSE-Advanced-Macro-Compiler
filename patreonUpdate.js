@@ -42,6 +42,11 @@ function getData(path, params, done) {
 
 function getMembers(members, newpath, done) {
   return getData(apiPath, newpath, function (err, body) {
+    if (err || !body || !body.data) {
+      console.error("Patreon API returned unexpected response:", JSON.stringify(body || {}).substring(0, 500));
+      return done(err || new Error("No data in Patreon response"), members);
+    }
+
     // Build tier map from included resources
     const tierMap = {};
     if (body.included) {
@@ -76,10 +81,13 @@ function getMembers(members, newpath, done) {
 
     if (body.links && body.links.next) {
       let params = new URL(body.links.next).searchParams;
-      return getMembers(members, params.toString(), done);
+      // Small delay to avoid Patreon rate limiting
+      return setTimeout(function () {
+        getMembers(members, params.toString(), done);
+      }, 200);
     }
 
-    return done(err, members);
+    return done(null, members);
   });
 }
 
