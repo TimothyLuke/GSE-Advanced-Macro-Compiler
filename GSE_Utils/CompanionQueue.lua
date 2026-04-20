@@ -272,7 +272,7 @@ local function ProcessCompanionQueue()
     end
 
     if #deletes > 0 then
-        C_Timer.After(#seqInstalls > 0 and 2 or 1, function()
+        C_Timer.After(#installs > 0 and 2 or 1, function()
             local lines = {}
             for _, d in ipairs(seqDeletes) do
                 table.insert(lines, (d.name or "?") .. " (sequence)")
