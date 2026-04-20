@@ -295,13 +295,23 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs)
     if decompresssuccess and actiontable then
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload
-            for _, v in pairs(actiontable["Variables"]) do
+            -- Sequences/Variables/Macros in a COLLECTION payload are keyed by
+            -- name and their values are the raw data tables (no {name, data}
+            -- array wrapper). Propagate the key into the object's identity
+            -- field so the recursive call can resolve it.
+            for name, v in pairs(actiontable["Variables"]) do
+                if type(v) == "table" and not v.name then v.name = name end
                 GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
-            for _, v in pairs(actiontable["Sequences"]) do
+            for name, v in pairs(actiontable["Sequences"]) do
+                if type(v) == "table" then
+                    v.MetaData = v.MetaData or {}
+                    if not v.MetaData.Name then v.MetaData.Name = name end
+                end
                 GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
-            for _, v in pairs(actiontable["Macros"]) do
+            for name, v in pairs(actiontable["Macros"]) do
+                if type(v) == "table" and not v.name then v.name = name end
                 GSE.ImportSerialisedSequence(v, forcereplace, true)
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
@@ -1511,6 +1521,14 @@ function GSE.PrintGnomeHelp()
                 ],
         GNOME
     )
+    GSE.Print(
+        L["The command "] ..
+            GSEOptions.CommandColour ..
+                L[
+                    "/gse clearincoming|r will abort any pending GSE Companion updates without importing them, and tell the Companion to prune them."
+                ],
+        GNOME
+    )
 end
 
 GSE:RegisterChatCommand("gse", "GSSlash")
@@ -1626,6 +1644,20 @@ function GSE:GSSlash(input)
         GSE.ReloadSequences()
     elseif string.lower(command) == "clearoocqueue" then
         GSE.OOCQueue = {}
+    elseif string.lower(command) == "clearincoming" then
+        local pending = GSE.IncomingQueue or {}
+        local count = #pending
+        if GSE.CompanionMarkImported then
+            for _, item in ipairs(pending) do
+                GSE.CompanionMarkImported(item)
+            end
+        end
+        GSE.IncomingQueue = {}
+        if GSE.GUIImportFrame then GSE.GUIImportFrame:Hide() end
+        GSE.Print(
+            "|cff00ccffGSE Companion:|r Cleared " .. count ..
+            " pending update(s) from the incoming queue."
+        )
     elseif string.lower(command) == "import" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then

@@ -33,15 +33,32 @@ importframe:SetCallback(
 importframe:SetLayout("List")
 importframe:AddChild(AceGUI:Create("Label"))
 
-local function processCollection(payload)
+-- Create the scrolling content area used by both import flows. Children added to
+-- the returned ScrollFrame scroll inside the fixed-height container, leaving the
+-- Import button (added to `importframe` directly) anchored at the bottom.
+local function setupScrollContent()
   importframe:ReleaseChildren()
   importframe:SetLayout("List")
+  local scrollContainer = AceGUI:Create("SimpleGroup")
+  scrollContainer:SetFullWidth(true)
+  scrollContainer:SetLayout("Fill")
+  scrollContainer:SetHeight((importframe.frame:GetHeight() or 400) - 120)
+  importframe:AddChild(scrollContainer)
+  local scroll = AceGUI:Create("ScrollFrame")
+  scroll:SetLayout("List")
+  scroll:SetFullWidth(true)
+  scrollContainer:AddChild(scroll)
+  return scroll
+end
+
+local function processCollection(payload)
+  local scroll = setupScrollContent()
   local header = AceGUI:Create("Heading")
   header:SetText(string.format(L["Processing Collection of %s Elements."], payload.ElementCount))
   header:SetFullWidth(true)
   local importset = {}
   local sequencesfound = false
-  importframe:AddChild(header)
+  scroll:AddChild(header)
   for k, _ in pairs(payload.Sequences) do
     sequencesfound = true
     if GSE.isEmpty(importset["Sequences"]) then
@@ -53,7 +70,7 @@ local function processCollection(payload)
     local sequencelabel = AceGUI:Create("Label")
     sequencelabel:SetText(L["Sequences"])
     sequencelabel:SetFontObject(GameFontNormalLarge)
-    importframe:AddChild(sequencelabel)
+    scroll:AddChild(sequencelabel)
     for k, _ in pairs(payload.Sequences) do
       local row = AceGUI:Create("SimpleGroup")
       row:SetLayout("Flow")
@@ -77,7 +94,7 @@ local function processCollection(payload)
         end
       )
       row:AddChild(chkbox)
-      importframe:AddChild(row)
+      scroll:AddChild(row)
     end
   end
 
@@ -93,7 +110,7 @@ local function processCollection(payload)
     local variablelabel = AceGUI:Create("Label")
     variablelabel:SetText(L["Variables"])
     variablelabel:SetFontObject(GameFontNormalLarge)
-    importframe:AddChild(variablelabel)
+    scroll:AddChild(variablelabel)
     for k, _ in pairs(payload.Variables) do
       local row = AceGUI:Create("SimpleGroup")
       row:SetLayout("Flow")
@@ -117,7 +134,7 @@ local function processCollection(payload)
         end
       )
       row:AddChild(chkbox)
-      importframe:AddChild(row)
+      scroll:AddChild(row)
     end
   end
 
@@ -134,7 +151,7 @@ local function processCollection(payload)
     local macroLabel = AceGUI:Create("Label")
     macroLabel:SetText(L["Macros"])
     macroLabel:SetFontObject(GameFontNormalLarge)
-    importframe:AddChild(macroLabel)
+    scroll:AddChild(macroLabel)
     local char, realm = UnitFullName("player")
     for k, _ in pairs(payload["Macros"]) do
       local row = AceGUI:Create("SimpleGroup")
@@ -162,7 +179,7 @@ local function processCollection(payload)
         end
       )
       row:AddChild(chkbox)
-      importframe:AddChild(row)
+      scroll:AddChild(row)
     end
   end
 
@@ -225,12 +242,11 @@ local function processCollection(payload)
       )
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
-        -- Mark imported IDs so the Companion app can prune them from the bridge data
+        -- Mark imported by identity so the Companion can prune them from the bridge data
         if importframe._fromQueue then
-          if GSE.IncomingQueue and GSECompanionBridgeDB then
-            GSECompanionBridgeDB.imported = GSECompanionBridgeDB.imported or {}
+          if GSE.IncomingQueue and GSE.CompanionMarkImported then
             for _, item in ipairs(GSE.IncomingQueue) do
-              if item._id then GSECompanionBridgeDB.imported[item._id] = true end
+              GSE.CompanionMarkImported(item)
             end
           end
           GSE.IncomingQueue = {}
@@ -280,20 +296,19 @@ local function truncate(str, maxLen)
 end
 
 -- Add a greyed sub-line of descriptive text under the current item.
-local function addDescLabel(text)
+local function addDescLabel(container, text)
   if not text or text == "" then return end
   local lbl = AceGUI:Create("Label")
   lbl:SetText("|cff888888" .. text .. "|r")
   lbl:SetFullWidth(true)
-  importframe:AddChild(lbl)
+  container:AddChild(lbl)
 end
 
 -- Render a list of decoded collections (each with its own heading) and a single
 -- Import button that re-encodes and imports each collection separately.
 -- collections: array of { name=string, payload={Sequences,Variables,Macros,ElementCount} }
 local function processQueueCollections(collections)
-  importframe:ReleaseChildren()
-  importframe:SetLayout("List")
+  local scroll = setupScrollContent()
 
   -- Per-collection, per-key checkbox state: importset[i][category][key] = bool
   local importset = {}
@@ -307,7 +322,7 @@ local function processQueueCollections(collections)
     local header = AceGUI:Create("Heading")
     header:SetText(collectionHeading(col, i))
     header:SetFullWidth(true)
-    importframe:AddChild(header)
+    scroll:AddChild(header)
 
     -- Collect HelpTxt from all sequences in this collection for the summary line.
     -- Shows beneath the heading so the user knows what the collection is for.
@@ -318,7 +333,7 @@ local function processQueueCollections(collections)
         if txt then table.insert(seqDescs, txt) end
       end
     end
-    addDescLabel(table.concat(seqDescs, "  ·  "))
+    addDescLabel(scroll, table.concat(seqDescs, "  ·  "))
 
     -- ── Sequences ─────────────────────────────────────────────────────────
     local sequencesfound = false
@@ -330,10 +345,18 @@ local function processQueueCollections(collections)
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Sequences"])
       lbl:SetFontObject(GameFontNormalLarge)
-      importframe:AddChild(lbl)
+      scroll:AddChild(lbl)
       for k, seqData in pairs(payload.Sequences or {}) do
-        local exists = (GSESequences[0] and GSESequences[0][k])
-                    or (GSESequences[GSE.GetCurrentClassID()] and GSESequences[GSE.GetCurrentClassID()][k])
+        -- A sequence exists if it's stored under ANY class bucket, not just
+        -- the viewer's current class. Paladin TL_PROT must still read as
+        -- "Update" when the viewing character is an Evoker.
+        local exists = false
+        for cid = 0, 13 do
+          if GSESequences[cid] and GSESequences[cid][k] then
+            exists = true
+            break
+          end
+        end
         local row = AceGUI:Create("SimpleGroup")
         row:SetLayout("Flow")
         row:SetFullWidth(true)
@@ -349,7 +372,7 @@ local function processQueueCollections(collections)
           importset[ci].Sequences[ck] = val
         end)
         row:AddChild(chkbox)
-        importframe:AddChild(row)
+        scroll:AddChild(row)
         -- Per-element description (HelpTxt from MetaData, only if collection has >1 sequence
         -- or the collection-level desc would otherwise be absent)
         if type(seqData) == "table" and type(seqData.MetaData) == "table" then
@@ -364,7 +387,7 @@ local function processQueueCollections(collections)
             dlbl:SetText("|cff888888" .. eleDesc .. "|r")
             dlbl:SetFullWidth(true)
             drow:AddChild(dlbl)
-            importframe:AddChild(drow)
+            scroll:AddChild(drow)
           end
         end
       end
@@ -380,7 +403,7 @@ local function processQueueCollections(collections)
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Variables"])
       lbl:SetFontObject(GameFontNormalLarge)
-      importframe:AddChild(lbl)
+      scroll:AddChild(lbl)
       for k, _ in pairs(payload.Variables or {}) do
         local row = AceGUI:Create("SimpleGroup")
         row:SetLayout("Flow")
@@ -397,7 +420,7 @@ local function processQueueCollections(collections)
           importset[ci].Variables[ck] = val
         end)
         row:AddChild(chkbox)
-        importframe:AddChild(row)
+        scroll:AddChild(row)
       end
     end
 
@@ -411,14 +434,25 @@ local function processQueueCollections(collections)
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Macros"])
       lbl:SetFontObject(GameFontNormalLarge)
-      importframe:AddChild(lbl)
+      scroll:AddChild(lbl)
       if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
         GSEMacros[char .. "-" .. realm] = {}
       end
       for k, _ in pairs(payload.Macros or {}) do
-        local exists = GSEMacros[k]
-                    or GSEMacros[char .. "-" .. realm][k]
-                    or GetMacroIndexByName(k)
+        -- GSEMacros mixes two shapes under one table: top-level keys can be
+        -- either macro names (value = node with text/value fields) OR
+        -- "Char-Realm" bucket names (value = table keyed by macro name).
+        -- A node has a scalar `text` or `name`; a bucket doesn't.
+        -- GetMacroIndexByName returns 0 (truthy in Lua) when not found, so
+        -- this must be a `> 0` check.
+        local topLevel = GSEMacros[k]
+        local isMacroNode = type(topLevel) == "table"
+            and (type(topLevel.text) == "string" or type(topLevel.name) == "string")
+        local charBucket = GSEMacros[char .. "-" .. realm]
+        local macIdx = GetMacroIndexByName(k)
+        local exists = isMacroNode
+                    or (type(charBucket) == "table" and charBucket[k] ~= nil)
+                    or (type(macIdx) == "number" and macIdx > 0)
         local row = AceGUI:Create("SimpleGroup")
         row:SetLayout("Flow")
         row:SetFullWidth(true)
@@ -434,7 +468,7 @@ local function processQueueCollections(collections)
           importset[ci].Macros[ck] = val
         end)
         row:AddChild(chkbox)
-        importframe:AddChild(row)
+        scroll:AddChild(row)
       end
     end
   end
@@ -486,10 +520,9 @@ local function processQueueCollections(collections)
     end
     if allSuccess then
       if importframe._fromQueue then
-        if GSE.IncomingQueue and GSECompanionBridgeDB then
-          GSECompanionBridgeDB.imported = GSECompanionBridgeDB.imported or {}
+        if GSE.IncomingQueue and GSE.CompanionMarkImported then
           for _, item in ipairs(GSE.IncomingQueue) do
-            if item._id then GSECompanionBridgeDB.imported[item._id] = true end
+            GSE.CompanionMarkImported(item)
           end
         end
         GSE.IncomingQueue = {}
