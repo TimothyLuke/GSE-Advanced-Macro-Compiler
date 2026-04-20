@@ -317,6 +317,15 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
         mode = Statics.TranslatorMode.ID
     end
+    -- C_Spell.GetSpellInfo errors on nil / non-string-non-number input.
+    -- CreateSpellEditBox calls us with action.spell, which is nil for a
+    -- freshly-added Spell action the user hasn't filled in yet.
+    if GSE.isEmpty(spellstring) then
+        return nil
+    end
+    if type(spellstring) ~= "string" and type(spellstring) ~= "number" then
+        return nil
+    end
     if GSE.isEmpty(GSESpellCache) then
         GSESpellCache = {
             ["enUS"] = {}
@@ -328,7 +337,8 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     end
     local returnval, name, rank, spellId
 
-    local spellinfo = C_Spell.GetSpellInfo(spellstring)
+    local ok, spellinfo = pcall(C_Spell.GetSpellInfo, spellstring)
+    if not ok then spellinfo = nil end
     if not spellinfo then
         if type(spellstring) == "string" then
             ---@diagnostic disable-next-line: missing-fields
@@ -337,6 +347,10 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             if GSESpellCache[GetLocale()][spellinfo] then
                 spellinfo.spellID = GSESpellCache[GetLocale()][spellinfo]
             end
+        else
+            -- Numeric spell ID that the client doesn't know about: nothing
+            -- meaningful to return. Bail rather than indexing nil below.
+            return nil
         end
     end
     rank = spellinfo.rank and spellinfo.rank or nil

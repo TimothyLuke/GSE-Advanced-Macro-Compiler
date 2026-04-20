@@ -13,16 +13,57 @@ GSE.LoadedClasses = GSE.LoadedClasses or {}
 -- offer the player interactive options (delete / skip) rather than silent loss.
 GSE.CorruptSequences = GSE.CorruptSequences or {}
 
---- One-off migration: rename the old "Macros" array to "Versions" on a sequence table.
--- Uses bracket notation for the old key so future rename passes cannot corrupt this guard.
--- Returns true when migration was performed so the caller can re-save to disk.
+-- Walk an action/version tree and rename legacy `macrotext` → `macro`.
+-- Platform storage historically emitted `macrotext` (a WoW SecureActionButton
+-- runtime attribute name, never a stored-data field). The editor and runtime
+-- read `macro`, so blocks that only have `macrotext` fall through the spell
+-- branch and crash C_Spell.GetSpellInfo. Returns true if anything changed.
+local function renameMacrotextInTree(node)
+    if type(node) ~= "table" then return false end
+    local changed = false
+    if node.macrotext ~= nil then
+        if node.macro == nil then
+            node.macro = node.macrotext
+        end
+        node.macrotext = nil
+        changed = true
+    end
+    for _, v in pairs(node) do
+        if type(v) == "table" and renameMacrotextInTree(v) then
+            changed = true
+        end
+    end
+    return changed
+end
+
+--- One-off migration applied on every sequence load:
+---  * rename the old "Macros" array to "Versions"
+---  * recursively rename legacy `macrotext` → `macro` inside action blocks
+---  * clear MetaData.Checksum when anything changed (the stored signature was
+---    produced against the pre-rename tree and would no longer verify; the
+---    addon's Checksum verifier returns "no_checksum" for an absent sig and
+---    suppresses the warning until the sequence is re-exported).
+-- Returns true when any migration was performed so the caller can re-save to disk.
 local function migrateSequenceVersions(sequence)
     if type(sequence) ~= "table" then return false end
+    local changed = false
     local oldValue = sequence["Macros"]   -- read the pre-rename field name
-    if sequence.Versions or not oldValue then return false end
-    sequence.Versions      = oldValue
-    sequence["Macros"]     = nil          -- clear the old field
-    return true
+    if oldValue and not sequence.Versions then
+        sequence.Versions  = oldValue
+        sequence["Macros"] = nil           -- clear the old field
+        changed = true
+    end
+    if type(sequence.Versions) == "table" then
+        for _, version in pairs(sequence.Versions) do
+            if renameMacrotextInTree(version) then
+                changed = true
+            end
+        end
+    end
+    if changed and type(sequence.MetaData) == "table" then
+        sequence.MetaData.Checksum = nil
+    end
+    return changed
 end
 
 --- Decompress a single class from GSESequences into GSE.Library (internal).
