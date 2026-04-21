@@ -846,6 +846,9 @@ L["Removed unreadable sequence "] = true
 L[
         "/gse checksequencesforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
     ] = true
+L[
+        "/gse clearincoming|r will abort any pending GSE Companion updates without importing them, and tell the Companion to prune them."
+    ] = true
 
 -- #1854
 L["Add Embed"] = true
