@@ -20,13 +20,21 @@ function GSE.GetCurrentSpecID()
     end
 end
 
+-- WoW 12.0.5: UnitSpellHaste("player") returns a "secret number value" once combat
+-- starts while execution is tainted by an addon. The call itself succeeds but any
+-- arithmetic on the value throws. We cache the last known good haste out of combat
+-- and fall back to it when the secret-taint path trips.
+local lastKnownHaste = 0
+
 --- Return the current GCD for the current character
 function GSE.GetGCD()
-    local gcd
     local haste = UnitSpellHaste("player")
-    gcd = 1.5 / (1 + 0.01 * haste)
-
-    return gcd
+    local ok, gcd = pcall(function() return 1.5 / (1 + 0.01 * haste) end)
+    if ok then
+        lastKnownHaste = haste
+        return gcd
+    end
+    return 1.5 / (1 + 0.01 * lastKnownHaste)
 end
 
 --- Return the characters class id
