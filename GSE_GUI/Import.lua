@@ -304,13 +304,55 @@ local function addDescLabel(container, text)
   container:AddChild(lbl)
 end
 
+-- Per-row action helper. Replaces the old single-checkbox-per-row UI with a
+-- 4-state dropdown so the user can resolve conflicts inline rather than via
+-- popup interruptions:
+--   Import  – default; routes through ImportSerialisedSequence (which may
+--             still show a compare dialog if the item exists locally)
+--   Replace – overwrite local with the incoming version, no dialog
+--   Merge   – append incoming Versions to the local sequence (sequences only;
+--             vars/macros treat Merge as Replace because they have no version
+--             concept)
+--   Ignore  – do not import; mark this entry as imported so it doesn't surface
+--             again in the queue
+-- includeMerge is false for Variables/Macros to keep the menu honest.
+local function addActionRow(scroll, label, importsetSlot, key, includeMerge)
+  local row = AceGUI:Create("SimpleGroup")
+  row:SetLayout("Flow")
+  row:SetFullWidth(true)
+  local spacer = AceGUI:Create("Label")
+  spacer:SetText("") spacer:SetWidth(30)
+  row:AddChild(spacer)
+  local nameLabel = AceGUI:Create("Label")
+  nameLabel:SetText(label)
+  nameLabel:SetWidth(380)
+  row:AddChild(nameLabel)
+  local dd = AceGUI:Create("Dropdown")
+  if includeMerge then
+    dd:SetList({ Import = "Import", Replace = "Replace", Merge = "Merge", Ignore = "Ignore" },
+               { "Import", "Replace", "Merge", "Ignore" })
+  else
+    dd:SetList({ Import = "Import", Replace = "Replace", Ignore = "Ignore" },
+               { "Import", "Replace", "Ignore" })
+  end
+  dd:SetValue("Import")
+  dd:SetWidth(120)
+  importsetSlot[key] = "Import"
+  dd:SetCallback("OnValueChanged", function(_, _, val)
+    importsetSlot[key] = val
+  end)
+  row:AddChild(dd)
+  scroll:AddChild(row)
+end
+
 -- Render a list of decoded collections (each with its own heading) and a single
 -- Import button that re-encodes and imports each collection separately.
 -- collections: array of { name=string, payload={Sequences,Variables,Macros,ElementCount} }
 local function processQueueCollections(collections)
   local scroll = setupScrollContent()
 
-  -- Per-collection, per-key checkbox state: importset[i][category][key] = bool
+  -- Per-collection, per-key per-action choice:
+  --   importset[i][category][key] = "Import"|"Replace"|"Merge"|"Ignore"
   local importset = {}
   local char, realm = UnitFullName("player")
 
@@ -337,9 +379,8 @@ local function processQueueCollections(collections)
 
     -- ── Sequences ─────────────────────────────────────────────────────────
     local sequencesfound = false
-    for k, _ in pairs(payload.Sequences or {}) do
-      sequencesfound = true
-      importset[i].Sequences[k] = true
+    for _ in pairs(payload.Sequences or {}) do
+      sequencesfound = true; break
     end
     if sequencesfound then
       local lbl = AceGUI:Create("Label")
@@ -347,34 +388,11 @@ local function processQueueCollections(collections)
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, seqData in pairs(payload.Sequences or {}) do
-        -- A sequence exists if it's stored under ANY class bucket, not just
-        -- the viewer's current class. Paladin TL_PROT must still read as
-        -- "Update" when the viewing character is an Evoker.
         local exists = false
         for cid = 0, 13 do
-          if GSESequences[cid] and GSESequences[cid][k] then
-            exists = true
-            break
-          end
+          if GSESequences[cid] and GSESequences[cid][k] then exists = true break end
         end
-        local row = AceGUI:Create("SimpleGroup")
-        row:SetLayout("Flow")
-        row:SetFullWidth(true)
-        local spacer = AceGUI:Create("Label")
-        spacer:SetText("") spacer:SetWidth(30)
-        row:AddChild(spacer)
-        local chkbox = AceGUI:Create("CheckBox")
-        chkbox:SetLabel(k .. " " .. statusTag(exists))
-        chkbox:SetValue(true)
-        chkbox:SetWidth(400)
-        local ci, ck = i, k
-        chkbox:SetCallback("OnValueChanged", function(_, _, val)
-          importset[ci].Sequences[ck] = val
-        end)
-        row:AddChild(chkbox)
-        scroll:AddChild(row)
-        -- Per-element description (HelpTxt from MetaData, only if collection has >1 sequence
-        -- or the collection-level desc would otherwise be absent)
+        addActionRow(scroll, k .. " " .. statusTag(exists), importset[i].Sequences, k, true)
         if type(seqData) == "table" and type(seqData.MetaData) == "table" then
           local eleDesc = truncate(seqData.MetaData.HelpTxt, 160)
           if eleDesc and (#seqDescs == 0 or #payload.Sequences > 1) then
@@ -395,41 +413,21 @@ local function processQueueCollections(collections)
 
     -- ── Variables ─────────────────────────────────────────────────────────
     local variablesfound = false
-    for k, _ in pairs(payload.Variables or {}) do
-      variablesfound = true
-      importset[i].Variables[k] = true
-    end
+    for _ in pairs(payload.Variables or {}) do variablesfound = true; break end
     if variablesfound then
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Variables"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, _ in pairs(payload.Variables or {}) do
-        local row = AceGUI:Create("SimpleGroup")
-        row:SetLayout("Flow")
-        row:SetFullWidth(true)
-        local spacer = AceGUI:Create("Label")
-        spacer:SetText("") spacer:SetWidth(30)
-        row:AddChild(spacer)
-        local chkbox = AceGUI:Create("CheckBox")
-        chkbox:SetLabel(k .. " " .. statusTag(not GSE.isEmpty(GSEVariables[k])))
-        chkbox:SetValue(true)
-        chkbox:SetWidth(400)
-        local ci, ck = i, k
-        chkbox:SetCallback("OnValueChanged", function(_, _, val)
-          importset[ci].Variables[ck] = val
-        end)
-        row:AddChild(chkbox)
-        scroll:AddChild(row)
+        addActionRow(scroll, k .. " " .. statusTag(not GSE.isEmpty(GSEVariables[k])),
+                     importset[i].Variables, k, false)
       end
     end
 
     -- ── Macros ────────────────────────────────────────────────────────────
     local macrosfound = false
-    for k, _ in pairs(payload.Macros or {}) do
-      macrosfound = true
-      importset[i].Macros[k] = true
-    end
+    for _ in pairs(payload.Macros or {}) do macrosfound = true; break end
     if macrosfound then
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Macros"])
@@ -439,12 +437,6 @@ local function processQueueCollections(collections)
         GSEMacros[char .. "-" .. realm] = {}
       end
       for k, _ in pairs(payload.Macros or {}) do
-        -- GSEMacros mixes two shapes under one table: top-level keys can be
-        -- either macro names (value = node with text/value fields) OR
-        -- "Char-Realm" bucket names (value = table keyed by macro name).
-        -- A node has a scalar `text` or `name`; a bucket doesn't.
-        -- GetMacroIndexByName returns 0 (truthy in Lua) when not found, so
-        -- this must be a `> 0` check.
         local topLevel = GSEMacros[k]
         local isMacroNode = type(topLevel) == "table"
             and (type(topLevel.text) == "string" or type(topLevel.name) == "string")
@@ -453,22 +445,7 @@ local function processQueueCollections(collections)
         local exists = isMacroNode
                     or (type(charBucket) == "table" and charBucket[k] ~= nil)
                     or (type(macIdx) == "number" and macIdx > 0)
-        local row = AceGUI:Create("SimpleGroup")
-        row:SetLayout("Flow")
-        row:SetFullWidth(true)
-        local spacer = AceGUI:Create("Label")
-        spacer:SetText("") spacer:SetWidth(30)
-        row:AddChild(spacer)
-        local chkbox = AceGUI:Create("CheckBox")
-        chkbox:SetLabel(k .. " " .. statusTag(exists))
-        chkbox:SetValue(true)
-        chkbox:SetWidth(400)
-        local ci, ck = i, k
-        chkbox:SetCallback("OnValueChanged", function(_, _, val)
-          importset[ci].Macros[ck] = val
-        end)
-        row:AddChild(chkbox)
-        scroll:AddChild(row)
+        addActionRow(scroll, k .. " " .. statusTag(exists), importset[i].Macros, k, false)
       end
     end
   end
@@ -483,54 +460,112 @@ local function processQueueCollections(collections)
   local importbutton = AceGUI:Create("Button")
   importbutton:SetText(L["Import"])
   importbutton:SetCallback("OnClick", function()
-    local allSuccess = true
+    local anyFailed = false
+    local successByName = {}
+    -- Group each collection's checked items into 3 action buckets. Ignore
+    -- entries are excluded from the buckets entirely — they get marked as
+    -- imported (so they don't return) without producing any storage
+    -- mutation. Each non-empty bucket is encoded as its own COLLECTION
+    -- payload and dispatched with the matching ImportSerialisedSequence
+    -- flags: forcereplace for Replace, forcemerge for Merge, neither for
+    -- Import (which keeps the existing compare-on-conflict behaviour).
     for i, col in ipairs(collections) do
-      local filtered = {
-        ["Sequences"] = {}, ["Variables"] = {}, ["Macros"] = {}, ["ElementCount"] = 0,
+      local buckets = {
+        Import  = { Sequences = {}, Variables = {}, Macros = {}, n = 0 },
+        Replace = { Sequences = {}, Variables = {}, Macros = {}, n = 0 },
+        Merge   = { Sequences = {}, Variables = {}, Macros = {}, n = 0 },
       }
-      for k, v in pairs(importset[i].Sequences) do
-        if v then
-          local val = col.payload.Sequences[k]
-          if type(val) == "table" then val = GSE.processWAGOImport(val) end
-          filtered.Sequences[k] = val
-          filtered.ElementCount = filtered.ElementCount + 1
+      local hadAnyAction = false
+      local hadAnyImport = false  -- did any non-Ignore action run?
+      local addToBucket = function(category, k, v, action)
+        local bucket = buckets[action]
+        if not bucket then return end
+        if type(v) == "table" then v = GSE.processWAGOImport(v) end
+        bucket[category][k] = v
+        bucket.n = bucket.n + 1
+        hadAnyImport = true
+      end
+      for k, action in pairs(importset[i].Sequences) do
+        hadAnyAction = true
+        if action ~= "Ignore" and col.payload.Sequences[k] then
+          addToBucket("Sequences", k, col.payload.Sequences[k], action)
         end
       end
-      for k, v in pairs(importset[i].Variables) do
-        if v then
-          local val = col.payload.Variables[k]
-          if type(val) == "table" then val = GSE.processWAGOImport(val) end
-          filtered.Variables[k] = val
-          filtered.ElementCount = filtered.ElementCount + 1
+      for k, action in pairs(importset[i].Variables) do
+        hadAnyAction = true
+        -- Variables/Macros have no Merge concept — fold Merge into Replace.
+        local effective = (action == "Merge") and "Replace" or action
+        if effective ~= "Ignore" and col.payload.Variables[k] then
+          addToBucket("Variables", k, col.payload.Variables[k], effective)
         end
       end
-      for k, v in pairs(importset[i].Macros) do
-        if v then
-          local val = col.payload.Macros[k]
-          if type(val) == "table" then val = GSE.processWAGOImport(val) end
-          filtered.Macros[k] = val
-          filtered.ElementCount = filtered.ElementCount + 1
+      for k, action in pairs(importset[i].Macros) do
+        hadAnyAction = true
+        local effective = (action == "Merge") and "Replace" or action
+        if effective ~= "Ignore" and col.payload.Macros[k] then
+          addToBucket("Macros", k, col.payload.Macros[k], effective)
         end
       end
-      if filtered.ElementCount > 0 then
-        local importstring = GSE.EncodeMessage({ ["type"] = "COLLECTION", ["payload"] = filtered })
-        local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
-        if not success then allSuccess = false end
+
+      local colSuccess = true
+      for action, b in pairs(buckets) do
+        if b.n > 0 then
+          local payload = { Sequences = b.Sequences, Variables = b.Variables, Macros = b.Macros, ElementCount = b.n }
+          local importstring = GSE.EncodeMessage({ ["type"] = "COLLECTION", ["payload"] = payload })
+          local forcereplace = (action == "Replace") or importframe.AutoCreateIcon
+          local forcemerge   = (action == "Merge")
+          local ok = GSE.ImportSerialisedSequence(importstring, forcereplace, false, forcemerge)
+          if not ok then colSuccess = false end
+        end
       end
+      -- A collection counts as "successfully resolved" (and so its
+      -- IncomingQueue item gets marked) when every non-Ignore action
+      -- succeeded, OR when every action was Ignore (the user explicitly
+      -- dismissed the whole entry).
+      if hadAnyAction and colSuccess then
+        successByName[col.name or ""] = true
+      end
+      if not colSuccess then anyFailed = true end
+      _ = hadAnyImport  -- suppress luacheck unused-variable warning
     end
-    if allSuccess then
-      if importframe._fromQueue then
-        if GSE.IncomingQueue and GSE.CompanionMarkImported then
-          for _, item in ipairs(GSE.IncomingQueue) do
+    if importframe._fromQueue then
+      local pageSize = importframe._pageSize or 0
+      if GSE.IncomingQueue and GSE.CompanionMarkImported and pageSize > 0 then
+        -- Only mark the items rendered on THIS page. The rest of
+        -- IncomingQueue (page 2+) must remain unmarked so it surfaces
+        -- next dialog open / next /reload.
+        for idx = 1, pageSize do
+          local item = GSE.IncomingQueue[idx]
+          if item and successByName[item.name or ""] then
             GSE.CompanionMarkImported(item)
           end
         end
-        GSE.IncomingQueue = {}
-        importframe._fromQueue = false
       end
-      importframe:Hide()
-    else
+      -- Drop the rendered slice from the front of the queue. Anything
+      -- behind it is the "next page".
+      if pageSize > 0 then
+        for _ = 1, pageSize do
+          if GSE.IncomingQueue and GSE.IncomingQueue[1] then
+            table.remove(GSE.IncomingQueue, 1)
+          end
+        end
+      end
+      importframe._fromQueue = false
+      importframe._pageSize = nil
+      importframe._pageTotal = nil
+    end
+    importframe:Hide()
+    if anyFailed then
       StaticPopup_Show("GSE-MacroImportFailure")
+    end
+    -- If more items are queued, tell the user how many are left and
+    -- how to advance. /reload triggers ProcessBridgeData which re-fills
+    -- IncomingQueue from the bridge file (with markers filtered out).
+    if GSE.IncomingQueue and #GSE.IncomingQueue > 0 then
+      GSE.Print(
+        "|cff00ccffGSE Companion:|r " .. #GSE.IncomingQueue ..
+        " more update(s) queued. Open the import dialog or /reload to continue."
+      )
     end
   end)
   toolbarrow:AddChild(importbutton)
@@ -539,11 +574,21 @@ end
 
 -- Decode all items in GSE.IncomingQueue, keeping each as its own collection,
 -- and present them grouped. Called from login notification or the landing page.
+-- How many incoming items the dialog renders per pass. The Companion
+-- now writes the FULL backlog into the bridge file, so pagination is the
+-- addon's job: import the visible page, /reload (or wait for prune+next
+-- ProcessBridgeData), see the next page.
+local QUEUE_PAGE_SIZE = 20
+
 local function processQueue()
   if not GSE.IncomingQueue or GSE.isEmpty(GSE.IncomingQueue) then return end
 
+  local total = #GSE.IncomingQueue
+  local pageEnd = math.min(QUEUE_PAGE_SIZE, total)
+
   local collections = {}
-  for _, item in ipairs(GSE.IncomingQueue) do
+  for idx = 1, pageEnd do
+    local item = GSE.IncomingQueue[idx]
     for seqName, encoded in pairs(item.sequences or {}) do
       local ok, collection = GSE.DecodeMessage(encoded)
       if ok and collection.type == "COLLECTION" then
@@ -560,7 +605,12 @@ local function processQueue()
     return
   end
 
+  -- Stash for the import button so it can mark-imported only the items it
+  -- actually rendered. Anything beyond this page stays in IncomingQueue
+  -- and surfaces on the next dialog open.
   importframe._fromQueue = true
+  importframe._pageSize = pageEnd
+  importframe._pageTotal = total
   processQueueCollections(collections)
   importframe:Show()
 end
@@ -575,11 +625,16 @@ local function LandingPage()
     queueBanner:SetLayout("Flow")
     queueBanner:SetFullWidth(true)
     local queueLabel = AceGUI:Create("Label")
-    queueLabel:SetText(
-      "|cff00ccffGSE Platform:|r  " ..
-      #GSE.IncomingQueue ..
-      " queued update(s) waiting to be imported."
-    )
+    local total = #GSE.IncomingQueue
+    local visible = math.min(QUEUE_PAGE_SIZE, total)
+    local label
+    if total > QUEUE_PAGE_SIZE then
+      label = "|cff00ccffGSE Platform:|r  Showing " .. visible ..
+              " of " .. total .. " queued update(s). Import this batch to see the next."
+    else
+      label = "|cff00ccffGSE Platform:|r  " .. total .. " queued update(s) waiting to be imported."
+    end
+    queueLabel:SetText(label)
     queueLabel:SetWidth(400)
     queueBanner:AddChild(queueLabel)
     local queueButton = AceGUI:Create("Button")

@@ -117,6 +117,24 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
 end
 
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+    -- Defensive Macros → Versions migration: every code path that produces
+    -- a newSequence is supposed to run processWAGOImport first (which does
+    -- this rename), but if any caller bypasses that, MERGE iterates over
+    -- newSequence.Versions and silently appends nothing — and REPLACE
+    -- writes a sequence with `Macros` only and `Versions` absent, which
+    -- presents in the editor as "no versions". Always migrate here too.
+    if type(newSequence) == "table" and newSequence.Macros and not newSequence.Versions then
+        newSequence.Versions = newSequence.Macros
+        newSequence.Macros = nil
+    end
+    -- Same for the local target — if the existing record was loaded from
+    -- pre-migration storage it may still have Macros. We migrate so MERGE's
+    -- table.insert into .Versions doesn't error on a nil destination.
+    local localSeq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    if type(localSeq) == "table" and localSeq.Macros and not localSeq.Versions then
+        localSeq.Versions = localSeq.Macros
+        localSeq.Macros = nil
+    end
     if GSE.isEmpty(newSequence.LastUpdated) then
         newSequence.LastUpdated = GSE.GetTimestamp()
     end
@@ -135,6 +153,15 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         sequenceName = tempseqName
     end
     if action == "MERGE" then
+        -- Both sides need a Versions table. Migration above set them up;
+        -- belt-and-braces: if either is still nil, init/empty out so the
+        -- ipairs/insert doesn't crash and we don't silently no-op.
+        if type(GSE.Library[classid][sequenceName].Versions) ~= "table" then
+            GSE.Library[classid][sequenceName].Versions = {}
+        end
+        if type(newSequence.Versions) ~= "table" then
+            newSequence.Versions = {}
+        end
         for k, v in ipairs(newSequence.Versions) do
             GSE.PrintDebugMessage("adding " .. k, "Storage")
             table.insert(GSE.Library[classid][sequenceName].Versions, v)
@@ -283,7 +310,10 @@ end
 -- (version-mismatch and checksum warnings). Used by collection imports so that
 -- the synchronous loop over N sequences does not clobber a single shared popup
 -- slot, which would silently drop all but the last sequence.
-function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs)
+-- forcemerge: when true, route conflict resolution to PerformMergeAction("MERGE")
+-- without showing the compare dialog. Mutually exclusive with forcereplace —
+-- if both are true, forcereplace wins (defensive).
+function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, forcemerge)
     local decompresssuccess, actiontable
     if type(importstring) == "table" then
         decompresssuccess, actiontable = true, importstring
@@ -301,18 +331,18 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs)
             -- field so the recursive call can resolve it.
             for name, v in pairs(actiontable["Variables"]) do
                 if type(v) == "table" and not v.name then v.name = name end
-                GSE.ImportSerialisedSequence(v, forcereplace, true)
+                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             for name, v in pairs(actiontable["Sequences"]) do
                 if type(v) == "table" then
                     v.MetaData = v.MetaData or {}
                     if not v.MetaData.Name then v.MetaData.Name = name end
                 end
-                GSE.ImportSerialisedSequence(v, forcereplace, true)
+                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             for name, v in pairs(actiontable["Macros"]) do
                 if type(v) == "table" and not v.name then v.name = name end
-                GSE.ImportSerialisedSequence(v, forcereplace, true)
+                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
@@ -385,6 +415,18 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs)
 
             if forcereplace then
                 GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
+            elseif forcemerge then
+                -- Route to MERGE without compare dialog. The classid lookup
+                -- mirrors AddSequenceToCollection's resolution: prefer the
+                -- spec's class id, fall back to scanning class libs for an
+                -- existing same-name sequence.
+                local classid = GSE.GetClassIDforSpec(v.MetaData and v.MetaData.SpecID)
+                if (classid == nil or classid == 0) and GSE.Library then
+                    for cid = 0, 13 do
+                        if GSE.Library[cid] and GSE.Library[cid][seqName] then classid = cid break end
+                    end
+                end
+                GSE.PerformMergeAction("MERGE", classid or 0, seqName, v)
             else
                 GSE.AddSequenceToCollection(seqName, v)
             end

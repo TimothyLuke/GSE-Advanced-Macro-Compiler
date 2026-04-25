@@ -17,7 +17,6 @@
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
 ## Group: GSE
-## SavedVariables: GSECompanionQueue
 
 
 embeds.xml
@@ -32,5 +31,4 @@ Events.lua
 StaticPopup.lua
 Utils.lua
 Tracker.lua
-CompanionQueue.lua
 MacroSync.lua

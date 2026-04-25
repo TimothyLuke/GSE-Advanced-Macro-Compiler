@@ -226,7 +226,30 @@ function GSE.VerifySequenceChecksum(sequence)
         if not sig_bytes or #sig_bytes ~= 64 then return false end
 
         local canonical = canonicalise_v2(sequence.Versions)
-        return GSE_Ed25519Verify(get_pubkey(), canonical, sig_bytes) == true
+
+        -- Pure-Lua ed25519 verify in WoW occasionally exceeds the per-
+        -- execution instruction budget on imports of larger sequences,
+        -- aborting with "script ran too long". Two mitigations:
+        --   1. Per-session cache: signatures we've already verified once
+        --      this session are trusted on re-import (key = sig+canonical
+        --      length, avoiding storing the full canonical payload).
+        --   2. pcall guard: if the verify aborts, downgrade to
+        --      "no_checksum" so the import proceeds rather than getting
+        --      stuck. The badge will still flag it as unverified.
+        GSE._v2VerifyCache = GSE._v2VerifyCache or {}
+        local cacheKey = payload .. "@" .. tostring(#canonical)
+        if GSE._v2VerifyCache[cacheKey] then
+            return GSE._v2VerifyCache[cacheKey]
+        end
+        local ok, result = pcall(GSE_Ed25519Verify, get_pubkey(), canonical, sig_bytes)
+        if not ok then
+            -- Script-too-long or other runtime error during verify.
+            -- Don't fail the whole import — return no_checksum.
+            return "no_checksum"
+        end
+        local verdict = result == true
+        GSE._v2VerifyCache[cacheKey] = verdict
+        return verdict
     end
 
     -- v1 (and any other hash-based versions): recompute and compare

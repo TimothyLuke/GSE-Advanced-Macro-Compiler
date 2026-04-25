@@ -1495,7 +1495,19 @@ function GSE.processAction(action, metaData, variables, path)
             funct = string.sub(funct, 2, string.len(funct))
         end
 
-        local val = loadstring("return " .. funct)()
+        -- User-defined GSE.V.* variables can throw at runtime (missing locale
+        -- keys, stale spell ids, nil C_API responses). A throw here would kill
+        -- the whole reload pass for every sequence. Treat any error as a
+        -- false branch decision — the macro continues to compile.
+        local val = false
+        local fn, loadErr = loadstring("return " .. funct)
+        if fn then
+            local ok, result = pcall(fn)
+            if ok then val = result
+            else GSE.PrintDebugMessage("If-block eval error: " .. tostring(result), "Storage") end
+        else
+            GSE.PrintDebugMessage("If-block load error: " .. tostring(loadErr), "Storage")
+        end
 
         local actions
         if val then
