@@ -378,10 +378,7 @@ local function processQueueCollections(collections)
     addDescLabel(scroll, table.concat(seqDescs, "  ·  "))
 
     -- ── Sequences ─────────────────────────────────────────────────────────
-    local sequencesfound = false
-    for _ in pairs(payload.Sequences or {}) do
-      sequencesfound = true; break
-    end
+    local sequencesfound = next(payload.Sequences or {}) ~= nil
     if sequencesfound then
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Sequences"])
@@ -412,8 +409,7 @@ local function processQueueCollections(collections)
     end
 
     -- ── Variables ─────────────────────────────────────────────────────────
-    local variablesfound = false
-    for _ in pairs(payload.Variables or {}) do variablesfound = true; break end
+    local variablesfound = next(payload.Variables or {}) ~= nil
     if variablesfound then
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Variables"])
@@ -426,8 +422,7 @@ local function processQueueCollections(collections)
     end
 
     -- ── Macros ────────────────────────────────────────────────────────────
-    local macrosfound = false
-    for _ in pairs(payload.Macros or {}) do macrosfound = true; break end
+    local macrosfound = next(payload.Macros or {}) ~= nil
     if macrosfound then
       local lbl = AceGUI:Create("Label")
       lbl:SetText(L["Macros"])
@@ -476,14 +471,12 @@ local function processQueueCollections(collections)
         Merge   = { Sequences = {}, Variables = {}, Macros = {}, n = 0 },
       }
       local hadAnyAction = false
-      local hadAnyImport = false  -- did any non-Ignore action run?
       local addToBucket = function(category, k, v, action)
         local bucket = buckets[action]
         if not bucket then return end
         if type(v) == "table" then v = GSE.processWAGOImport(v) end
         bucket[category][k] = v
         bucket.n = bucket.n + 1
-        hadAnyImport = true
       end
       for k, action in pairs(importset[i].Sequences) do
         hadAnyAction = true
@@ -526,7 +519,6 @@ local function processQueueCollections(collections)
         successByName[col.name or ""] = true
       end
       if not colSuccess then anyFailed = true end
-      _ = hadAnyImport  -- suppress luacheck unused-variable warning
     end
     if importframe._fromQueue then
       local pageSize = importframe._pageSize or 0
