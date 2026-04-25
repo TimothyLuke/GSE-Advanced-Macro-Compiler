@@ -200,14 +200,19 @@ local function processCollection(payload)
         ["Macros"] = {},
         ["ElementCount"] = 0
       }
+      -- processWAGOImport returns nil when it refuses an incompatible
+      -- legacy record (Macros-only). Skip those silently — the function
+      -- already printed the user-facing "upload to gse.tools" message.
       if importset["Sequences"] then
         for k, v in pairs(importset["Sequences"]) do
           if v then
             if type(payload["Sequences"][k]) == "table" then
               payload["Sequences"][k] = GSE.processWAGOImport(payload["Sequences"][k])
             end
-            filteredpayload["Sequences"][k] = payload["Sequences"][k]
-            filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            if payload["Sequences"][k] ~= nil then
+              filteredpayload["Sequences"][k] = payload["Sequences"][k]
+              filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            end
           end
         end
       end
@@ -217,8 +222,10 @@ local function processCollection(payload)
             if type(payload["Variables"][k]) == "table" then
               payload["Variables"][k] = GSE.processWAGOImport(payload["Variables"][k])
             end
-            filteredpayload["Variables"][k] = payload["Variables"][k]
-            filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            if payload["Variables"][k] ~= nil then
+              filteredpayload["Variables"][k] = payload["Variables"][k]
+              filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            end
           end
         end
       end
@@ -228,8 +235,10 @@ local function processCollection(payload)
             if type(payload["Macros"][k]) == "table" then
               payload["Macros"][k] = GSE.processWAGOImport(payload["Macros"][k])
             end
-            filteredpayload["Macros"][k] = payload["Macros"][k]
-            filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            if payload["Macros"][k] ~= nil then
+              filteredpayload["Macros"][k] = payload["Macros"][k]
+              filteredpayload["ElementCount"] = filteredpayload["ElementCount"] + 1
+            end
           end
         end
       end
@@ -475,6 +484,10 @@ local function processQueueCollections(collections)
         local bucket = buckets[action]
         if not bucket then return end
         if type(v) == "table" then v = GSE.processWAGOImport(v) end
+        -- processWAGOImport returns nil when it refuses (incompatible
+        -- legacy format). It already printed the user-facing message;
+        -- skip this entry so the rest of the batch still imports.
+        if v == nil then return end
         bucket[category][k] = v
         bucket.n = bucket.n + 1
       end

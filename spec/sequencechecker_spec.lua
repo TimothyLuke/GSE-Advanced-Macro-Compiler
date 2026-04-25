@@ -163,6 +163,27 @@ describe(
         )
 
         it(
+          "reports a record that still carries the deprecated Macros field as incompatible",
+          function()
+            -- Pre-#1853 schema (Versions used to be called Macros). The
+            -- mod no longer auto-renames; this record must round-trip
+            -- through gse.tools to come back in the current schema.
+            GSE.Library[0]["LegacyMacrosOnly"] = {
+              MetaData = {SpecID = 11, Default = 1},
+              Macros = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Old"}}, InbuiltVariables = {}},
+              }
+            }
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("incompatible with the current version of GSE"))
+            assert.is_true(hasMsg("https://gse.tools"))
+            -- The generic "Missing or invalid Macros table" must NOT
+            -- fire here — specific-over-generic.
+            assert.is_false(hasMsg("Missing or invalid Macros table"))
+          end
+        )
+
+        it(
           "reports missing MetaData.SpecID",
           function()
             local seq = makeSeq()
@@ -186,6 +207,29 @@ describe(
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("Macros array has gaps"))
             assert.is_true(hasMsg("1 version(s) reachable of 2 total (max index 3)"))
+          end
+        )
+
+        it(
+          "reports Versions starting at index 0 (ipairs invisible)",
+          function()
+            -- Real-world cause: bad in-game merge OR a CBOR round-trip
+            -- that preserved 0-based keys. ipairs(t) starts at 1 → editor
+            -- and runtime see no versions even though the data is there.
+            local seq = makeSeq()
+            seq.Versions = {
+              [0] = {
+                Actions = {[1] = {Type = "Action", macro = "/cast Fireball"}},
+                InbuiltVariables = {}
+              }
+            }
+            GSE.Library[0]["ZeroKeyed"] = seq
+            GSE.ScanMacrosForErrors()
+            assert.is_true(hasMsg("Versions starts at index 0"))
+            assert.is_true(hasMsg("Issues found in 'ZeroKeyed'"))
+            -- The generic "empty" message must NOT fire here — the data
+            -- isn't empty, just mis-keyed. Specific-over-generic.
+            assert.is_false(hasMsg("Macros array is empty (no versions defined)"))
           end
         )
 
@@ -651,7 +695,7 @@ describe(
             -- Macros[1], Macros[3], Macros[5] — two gaps
             GSE.Library[0]["GappedSeq"] = {
               MetaData = {SpecID = 11, Default = 1},
-              Macros = {
+              Versions = {
                 [1] = {Actions = {[1] = {Type = "Action", macro = "/cast A"}}, InbuiltVariables = {}},
                 [3] = {Actions = {[1] = {Type = "Action", macro = "/cast B"}}, InbuiltVariables = {}},
                 [5] = {Actions = {[1] = {Type = "Action", macro = "/cast C"}}, InbuiltVariables = {}},
@@ -668,11 +712,73 @@ describe(
         )
 
         it(
+          "refuses to repair a Macros-only record and points the user at gse.tools",
+          function()
+            -- The auto-rename Macros → Versions has been retired; the
+            -- repair tool must not silently re-key. The record is left
+            -- untouched and a clear remedy message is printed.
+            GSE.Library[0]["LegacyMacrosOnly"] = {
+              MetaData = {SpecID = 11, Default = 1},
+              Macros = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Old"}}, InbuiltVariables = {}},
+              }
+            }
+            GSE.FixSequenceStructure(0, "LegacyMacrosOnly")
+            local fixed = GSE.Library[0]["LegacyMacrosOnly"]
+            -- Untouched: no auto-rename happened.
+            assert.is_not_nil(fixed.Macros)
+            assert.is_nil(fixed.Versions)
+            assert.is_true(hasMsg("incompatible with the current version of GSE"))
+            assert.is_true(hasMsg("https://gse.tools"))
+          end
+        )
+
+        it(
+          "remaps Versions[0] to Versions[1] without dropping the entry",
+          function()
+            -- Repro of the real bug: a bad in-game merge produced
+            -- Versions[0] only. The previous compaction filtered to
+            -- k >= 1 which DELETED the entry; FixSequenceStructure must
+            -- recover it by mapping 0 → 1 instead.
+            GSE.Library[0]["ZeroFix"] = {
+              MetaData = {SpecID = 11, Default = 1},
+              Versions = {
+                [0] = {Actions = {[1] = {Type = "Action", macro = "/cast Recovered"}}, InbuiltVariables = {}},
+              }
+            }
+            GSE.FixSequenceStructure(0, "ZeroFix")
+            local fixed = GSE.Library[0]["ZeroFix"]
+            assert.is_not_nil(fixed.Versions[1])
+            assert.is_nil(fixed.Versions[0])
+            assert.are.equal("/cast Recovered", fixed.Versions[1].Actions[1].macro)
+          end
+        )
+
+        it(
+          "remaps mixed 0-and-1 keyed Versions to consecutive 1..N",
+          function()
+            GSE.Library[0]["ZeroAndOne"] = {
+              MetaData = {SpecID = 11, Default = 1},
+              Versions = {
+                [0] = {Actions = {[1] = {Type = "Action", macro = "/cast First"}}, InbuiltVariables = {}},
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Second"}}, InbuiltVariables = {}},
+              }
+            }
+            GSE.FixSequenceStructure(0, "ZeroAndOne")
+            local fixed = GSE.Library[0]["ZeroAndOne"]
+            assert.are.equal("/cast First",  fixed.Versions[1].Actions[1].macro)
+            assert.are.equal("/cast Second", fixed.Versions[2].Actions[1].macro)
+            assert.is_nil(fixed.Versions[0])
+            assert.is_nil(fixed.Versions[3])
+          end
+        )
+
+        it(
           "preserves Macro version content and order after compaction",
           function()
             GSE.Library[0]["ContentSeq"] = {
               MetaData = {SpecID = 11, Default = 1},
-              Macros = {
+              Versions = {
                 [1] = {Actions = {[1] = {Type = "Action", macro = "/cast A"}}, InbuiltVariables = {}},
                 [3] = {Actions = {[1] = {Type = "Action", macro = "/cast B"}}, InbuiltVariables = {}},
               }
@@ -691,7 +797,7 @@ describe(
             -- Default was pointing at old Macros[3]; after compaction that becomes [2]
             GSE.Library[0]["DefaultUpdate"] = {
               MetaData = {SpecID = 11, Default = 3},
-              Macros = {
+              Versions = {
                 [1] = {Actions = {[1] = {Type = "Action", macro = "/cast A"}}, InbuiltVariables = {}},
                 [3] = {Actions = {[1] = {Type = "Action", macro = "/cast B"}}, InbuiltVariables = {}},
               }
@@ -707,7 +813,7 @@ describe(
           function()
             GSE.Library[0]["RaidUpdate"] = {
               MetaData = {SpecID = 11, Default = 1, Raid = 3},
-              Macros = {
+              Versions = {
                 [1] = {Actions = {[1] = {Type = "Action", macro = "/cast A"}}, InbuiltVariables = {}},
                 [3] = {Actions = {[1] = {Type = "Action", macro = "/cast B"}}, InbuiltVariables = {}},
               }
@@ -724,7 +830,7 @@ describe(
             -- Raid points to index 5 which doesn't exist in a 2-entry Macros table
             GSE.Library[0]["ClampedRef"] = {
               MetaData = {SpecID = 11, Default = 1, Raid = 5},
-              Macros = {
+              Versions = {
                 [1] = {Actions = {[1] = {Type = "Action", macro = "/cast A"}}, InbuiltVariables = {}},
                 [2] = {Actions = {[1] = {Type = "Action", macro = "/cast B"}}, InbuiltVariables = {}},
               }
@@ -752,7 +858,7 @@ describe(
           function()
             GSE.Library[0]["GappedActions"] = {
               MetaData = {SpecID = 11, Default = 1},
-              Macros = {
+              Versions = {
                 [1] = {
                   Actions = {
                     [1] = {Type = "Action", macro = "/cast A"},
@@ -775,7 +881,7 @@ describe(
           function()
             GSE.Library[0]["ActionsContent"] = {
               MetaData = {SpecID = 11, Default = 1},
-              Macros = {
+              Versions = {
                 [1] = {
                   Actions = {
                     [1] = {Type = "Action", macro = "/cast A"},
@@ -797,7 +903,7 @@ describe(
           function()
             GSE.Library[0]["MultiVersionActions"] = {
               MetaData = {SpecID = 11, Default = 1},
-              Macros = {
+              Versions = {
                 [1] = {
                   Actions = {
                     [1] = {Type = "Action", macro = "/cast A1"},
@@ -1026,18 +1132,21 @@ describe(
     )
 
     -- ================================================================
-    -- processWAGOImport — Macros → Versions migration
+    -- processWAGOImport — Macros field is now refused (auto-rename retired)
     -- ================================================================
 
     describe(
-      "processWAGOImport migration",
+      "processWAGOImport legacy refusal",
       function()
 
         it(
-          "migrates a pre-#1853 sequence with Macros field to Versions on import",
+          "refuses a pre-#1853 sequence (Macros only) and returns nil",
           function()
+            -- Pre-#1853 records stored versions under "Macros". The
+            -- mod no longer auto-renames; the record must round-trip
+            -- through gse.tools to come back in the current schema.
             local oldSeq = {
-              MetaData = {SpecID = 11, Default = 1},
+              MetaData = {SpecID = 11, Default = 1, Name = "OldMacroSeq"},
               Macros = {
                 [1] = {
                   Actions = {[1] = {Type = "Action", macro = "/cast Fireball"}},
@@ -1046,28 +1155,9 @@ describe(
               }
             }
             local result = GSE.processWAGOImport(oldSeq, true)
-            assert.is_not_nil(result.Versions)
-            assert.is_nil(result.Macros)
-            assert.are.equal("/cast Fireball", result.Versions[1].Actions[1].macro)
-          end
-        )
-
-        it(
-          "does not overwrite an existing Versions field when Macros is also present",
-          function()
-            local seq = {
-              MetaData = {SpecID = 11, Default = 1},
-              Versions = {
-                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Frostbolt"}}}
-              },
-              Macros = {
-                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Fireball"}}}
-              }
-            }
-            local result = GSE.processWAGOImport(seq, true)
-            -- Versions takes precedence; Macros is left untouched since we only migrate
-            -- when Versions is absent.
-            assert.are.equal("/cast Frostbolt", result.Versions[1].Actions[1].macro)
+            assert.is_nil(result)
+            assert.is_true(hasMsg("incompatible with the current version of GSE"))
+            assert.is_true(hasMsg("https://gse.tools"))
           end
         )
 
@@ -1084,6 +1174,28 @@ describe(
             assert.is_not_nil(result.Versions)
             assert.is_nil(result.Macros)
             assert.are.equal("/cast Pyroblast", result.Versions[1].Actions[1].macro)
+          end
+        )
+
+        it(
+          "accepts a record with both fields when Versions is populated",
+          function()
+            -- A defensive case: the record has both fields. Since
+            -- Versions is present, processWAGOImport accepts it as-is
+            -- (no auto-rename, no refusal). The legacy Macros field
+            -- is ignored — the runtime only ever reads Versions.
+            local seq = {
+              MetaData = {SpecID = 11, Default = 1},
+              Macros = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast Old"}}}
+              },
+              Versions = {
+                [1] = {Actions = {[1] = {Type = "Action", macro = "/cast New"}}}
+              }
+            }
+            local result = GSE.processWAGOImport(seq, true)
+            assert.is_not_nil(result)
+            assert.are.equal("/cast New", result.Versions[1].Actions[1].macro)
           end
         )
 
