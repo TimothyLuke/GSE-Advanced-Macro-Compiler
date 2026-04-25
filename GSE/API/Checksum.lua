@@ -231,14 +231,19 @@ function GSE.VerifySequenceChecksum(sequence)
         -- execution instruction budget on imports of larger sequences,
         -- aborting with "script ran too long". Two mitigations:
         --   1. Per-session cache: signatures we've already verified once
-        --      this session are trusted on re-import (key = sig+canonical
-        --      length, avoiding storing the full canonical payload).
+        --      this session are trusted on re-import. The cache key MUST
+        --      include the full canonical bytes — using only the
+        --      canonical's *length* alongside the signature lets a
+        --      tampered sequence (same length, same signature, different
+        --      content) collide with a previously-cached `true` result
+        --      and pass verification incorrectly. busted spec
+        --      checksum_spec.lua@191 covers this case.
         --   2. pcall guard: if the verify aborts, downgrade to
         --      "no_checksum" so the import proceeds rather than getting
         --      stuck. The badge will still flag it as unverified.
         GSE._v2VerifyCache = GSE._v2VerifyCache or {}
-        local cacheKey = payload .. "@" .. tostring(#canonical)
-        if GSE._v2VerifyCache[cacheKey] then
+        local cacheKey = payload .. "@" .. canonical
+        if GSE._v2VerifyCache[cacheKey] ~= nil then
             return GSE._v2VerifyCache[cacheKey]
         end
         local ok, result = pcall(GSE_Ed25519Verify, get_pubkey(), canonical, sig_bytes)
