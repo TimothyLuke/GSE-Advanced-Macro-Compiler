@@ -693,6 +693,31 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "UseVerboseExportFormat", "DefaultHumanReadableExportFormat", GSEOptions, Settings.VarType.Boolean, L["Create Human Readable Exports"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["When exporting from GSE create a descriptive export for Discord/Discource forums."])
         end
+        -- Default Import Action: pre-selected value in the import compare
+        -- dialog (MacroCompare.lua) when an incoming sequence collides with
+        -- a local one. Used to live in the old options panel; lost in the
+        -- migration. Backing field GSEOptions.DefaultImportAction is read
+        -- by MacroCompare.lua and Utils.lua already.
+        do
+            local function GetValue()
+                local v = GSEOptions and GSEOptions.DefaultImportAction
+                if v == "MERGE" or v == "REPLACE" or v == "IGNORE" or v == "RENAME" then return v end
+                return "MERGE"
+            end
+            local function SetValue(val)
+                GSEOptions.DefaultImportAction = val
+            end
+            local setting = Settings.RegisterProxySetting(generalOptions, "defaultImportAction", Settings.VarType.String, L["Default Import Action"], "MERGE", GetValue, SetValue)
+            local function GetOptions()
+                local container = Settings.CreateControlTextContainer()
+                container:Add("MERGE",   L["Merge"])
+                container:Add("REPLACE", L["Replace"])
+                container:Add("IGNORE",  L["Ignore"])
+                container:Add("RENAME",  L["Rename New Macro"])
+                return container:GetData()
+            end
+            Settings.CreateDropdown(generalOptions, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."])
+        end
         ---- OOC Queue Delay
         do
             local function GetValue()

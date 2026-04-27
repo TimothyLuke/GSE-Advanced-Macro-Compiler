@@ -329,7 +329,11 @@ end]],
     deleteRowButton:SetCallback(
         "OnClick",
         function()
-            GSEVariables[keyEditBox:GetText()] = nil
+            -- Canonical helper clears GSEVariables, GSE.V cache, and the
+            -- Companion PlatformID sidecar. Previously inlined
+            -- `GSEVariables[k] = nil` left orphans the next sync had to
+            -- scrub.
+            GSE.DeleteVariable(keyEditBox:GetText())
             if editframe.loaded then
                 container:ReleaseChildren()
                 editframe.loaded = nil

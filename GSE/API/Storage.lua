@@ -165,6 +165,37 @@ function GSE.DeleteCorruptSequence(classid, name)
     GSE.Print(string.format(L["Corrupt sequence '%s' (class %d) deleted."], name, classid))
 end
 
+--- Delete a variable from local storage by name. Single canonical
+-- helper for both UI and OOC-queue callers — each was previously
+-- inlining `GSEVariables[k] = nil` etc., which made it easy to forget
+-- the sidecar tables (GSE.V cache, Companion PlatformID sidecar) and
+-- left orphans behind that the next sync had to clean up.
+function GSE.DeleteVariable(name)
+    if not name or name == "" then return end
+    if GSEVariables then GSEVariables[name] = nil end
+    if GSE.V then GSE.V[name] = nil end
+    -- Companion sidecar: name → server-id map. Clearing it stops the
+    -- next sync from re-uploading the deleted variable on the basis of
+    -- a stale stamp.
+    if GSEVariablePlatformIDs then GSEVariablePlatformIDs[name] = nil end
+end
+
+--- Delete a macro from local storage by name. Handles both account-
+-- level (GSEMacros[name]) and character-level (GSEMacros["char-realm"]
+-- [name]) storage; clears whichever holds the entry.
+function GSE.DeleteMacro(name)
+    if not name or name == "" then return end
+    if GSEMacros then
+        GSEMacros[name] = nil
+        for _, t in pairs(GSEMacros) do
+            if type(t) == "table" and t[name] ~= nil then
+                t[name] = nil
+            end
+        end
+    end
+    if GSEMacroPlatformIDs then GSEMacroPlatformIDs[name] = nil end
+end
+
 --- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
@@ -381,6 +412,10 @@ end
 
 --- Add a sequence to the library
 function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
+    -- Save-cancels-delete (see UpdateVariable for rationale).
+    if GSE.CompanionCancelPendingDelete then
+        GSE.CompanionCancelPendingDelete("sequence", sequenceName)
+    end
     local vals = {}
     vals.action = "Save"
     vals.sequencename = sequenceName
@@ -1878,6 +1913,13 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
 end
 
 function GSE.UpdateVariable(variable, name, status)
+    -- A save of variable X cancels any pending Companion-bridge delete for
+    -- the same name — the user's intent ("X exists") trumps a queued
+    -- delete request, and the next sync will push the freshly-saved
+    -- variable back to the server. No-op when no Companion is in use.
+    if GSE.CompanionCancelPendingDelete then
+        GSE.CompanionCancelPendingDelete("variable", name)
+    end
     GSE.ComputeVariableDependencies(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
@@ -1901,6 +1943,10 @@ function GSE.UpdateVariable(variable, name, status)
 end
 
 function GSE.UpdateMacro(node, category)
+    -- Save-cancels-delete (see UpdateVariable for rationale).
+    if node and node.name and GSE.CompanionCancelPendingDelete then
+        GSE.CompanionCancelPendingDelete("macro", node.name)
+    end
     if not InCombatLockdown() then
         GSE:UnregisterEvent("UPDATE_MACROS")
         local slot = GetMacroIndexByName(node.name)
@@ -1956,8 +2002,15 @@ function GSE.CompileMacroText(text, mode)
                     GSE.Print(error, L["Variables"])
                 end
                 if functionresult and type(functionresult) == "function" then
-                    if pcall(functionresult) then
-                        value = functionresult()
+                    -- Capture the protected result instead of invoking the
+                    -- function twice. The previous form ran the function
+                    -- inside pcall AND again outside; functions with side
+                    -- effects fired twice, and a function that succeeded
+                    -- once but failed on the second call would error
+                    -- outside the protected scope.
+                    local ok, result = pcall(functionresult)
+                    if ok then
+                        value = result
                     else
                         value = ""
                     end

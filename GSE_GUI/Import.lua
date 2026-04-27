@@ -354,6 +354,12 @@ local function addActionRow(scroll, label, importsetSlot, key, includeMerge)
   scroll:AddChild(row)
 end
 
+-- Forward declaration so callbacks defined inside processQueueCollections,
+-- renderDeletesPage, and the landing-page banner can call processQueue()
+-- to advance to the next page (or phase). Assigned at the bottom of the
+-- file, after renderImportsPage and renderDeletesPage are defined.
+local processQueue
+
 -- Render a list of decoded collections (each with its own heading) and a single
 -- Import button that re-encodes and imports each collection separately.
 -- collections: array of { name=string, payload={Sequences,Variables,Macros,ElementCount} }
@@ -563,15 +569,10 @@ local function processQueueCollections(collections)
     if anyFailed then
       StaticPopup_Show("GSE-MacroImportFailure")
     end
-    -- If more items are queued, tell the user how many are left and
-    -- how to advance. /reload triggers ProcessBridgeData which re-fills
-    -- IncomingQueue from the bridge file (with markers filtered out).
-    if GSE.IncomingQueue and #GSE.IncomingQueue > 0 then
-      GSE.Print(
-        "|cff00ccffGSE Companion:|r " .. #GSE.IncomingQueue ..
-        " more update(s) queued. Open the import dialog or /reload to continue."
-      )
-    end
+    -- Auto-advance: more imports → next imports page; otherwise fall
+    -- through to deletes. processQueue() is a no-op once both queues
+    -- are empty.
+    if processQueue then processQueue() end
   end)
   toolbarrow:AddChild(importbutton)
   importframe:AddChild(toolbarrow)
@@ -585,9 +586,10 @@ end
 -- ProcessBridgeData), see the next page.
 local QUEUE_PAGE_SIZE = 20
 
-local function processQueue()
+-- Imports phase renderer — original processQueue body. Called by the
+-- phase dispatcher when GSE.IncomingQueue has pending entries.
+local function renderImportsPage()
   if not GSE.IncomingQueue or GSE.isEmpty(GSE.IncomingQueue) then return end
-
   local total = #GSE.IncomingQueue
   local pageEnd = math.min(QUEUE_PAGE_SIZE, total)
 
@@ -610,14 +612,107 @@ local function processQueue()
     return
   end
 
-  -- Stash for the import button so it can mark-imported only the items it
-  -- actually rendered. Anything beyond this page stays in IncomingQueue
-  -- and surfaces on the next dialog open.
   importframe._fromQueue = true
   importframe._pageSize = pageEnd
   importframe._pageTotal = total
   processQueueCollections(collections)
   importframe:Show()
+end
+
+-- Deletes phase: paginated review of GSE.PendingBridgeDeletes with per-
+-- entry Delete/Ignore dropdowns. Auto-accept doesn't apply here; every
+-- page requires explicit user confirmation. After Confirm the rendered
+-- slice is drained from PendingBridgeDeletes and processQueue() runs
+-- again to either show the next deletes page or close out.
+local function renderDeletesPage()
+  if not GSE.PendingBridgeDeletes or GSE.isEmpty(GSE.PendingBridgeDeletes) then return end
+  local total = #GSE.PendingBridgeDeletes
+  local pageEnd = math.min(QUEUE_PAGE_SIZE, total)
+
+  -- Snapshot the page so the dialog renders a stable view even if other
+  -- code mutates the table mid-dialog (e.g. a save-cancels-delete fires
+  -- while the dialog is open).
+  local pageEntries = {}
+  for idx = 1, pageEnd do pageEntries[idx] = GSE.PendingBridgeDeletes[idx] end
+
+  local scroll = setupScrollContent()
+  local header = AceGUI:Create("Heading")
+  if total > QUEUE_PAGE_SIZE then
+    header:SetText(string.format(
+      "GSE Companion: pending deletes  1-%d of %d", pageEnd, total))
+  else
+    header:SetText(string.format(
+      "GSE Companion: pending deletes  (%d)", total))
+  end
+  header:SetFullWidth(true)
+  scroll:AddChild(header)
+
+  local desc = AceGUI:Create("Label")
+  desc:SetText(
+    "Pick |cFFFF6666Delete|r to remove the entry from your local SavedVariables. " ..
+    "Pick |cFFAAAAAAIgnore|r to keep it (a save of the same name will also cancel " ..
+    "the pending delete). Either choice closes the entry out — it won't return " ..
+    "on next sync."
+  )
+  desc:SetFullWidth(true)
+  scroll:AddChild(desc)
+
+  local actionsByIndex = {}
+  for idx, d in ipairs(pageEntries) do
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetLayout("Flow"); row:SetFullWidth(true)
+    local sp = AceGUI:Create("Label"); sp:SetText(""); sp:SetWidth(30)
+    row:AddChild(sp)
+    local nameLabel = AceGUI:Create("Label")
+    nameLabel:SetText(string.format("%s  |cFF888888(%s)|r",
+      tostring(d.name or "?"), tostring(d.contentType or "sequence")))
+    nameLabel:SetWidth(380)
+    row:AddChild(nameLabel)
+    local dd = AceGUI:Create("Dropdown")
+    dd:SetList({ Delete = "Delete", Ignore = "Ignore" }, { "Delete", "Ignore" })
+    dd:SetValue("Delete")
+    dd:SetWidth(120)
+    actionsByIndex[idx] = "Delete"
+    dd:SetCallback("OnValueChanged", function(_, _, val)
+      actionsByIndex[idx] = val
+    end)
+    row:AddChild(dd)
+    scroll:AddChild(row)
+  end
+
+  local toolbarrow = AceGUI:Create("SimpleGroup")
+  toolbarrow:SetFullWidth(true)
+  local sp2 = AceGUI:Create("Label"); sp2:SetWidth(500); sp2:SetText("")
+  toolbarrow:AddChild(sp2)
+  local confirmbutton = AceGUI:Create("Button")
+  confirmbutton:SetText("Confirm")
+  confirmbutton:SetCallback("OnClick", function()
+    for idx, d in ipairs(pageEntries) do
+      local act = actionsByIndex[idx] or "Ignore"
+      if GSE.CompanionConfirmDelete then
+        GSE.CompanionConfirmDelete(d._id, d.contentType, d.name, d.classid, act)
+      end
+    end
+    importframe:Hide()
+    -- Advance: another page of deletes or wrap up.
+    if processQueue then processQueue() end
+  end)
+  toolbarrow:AddChild(confirmbutton)
+  importframe:AddChild(toolbarrow)
+  importframe:Show()
+end
+
+-- Phase dispatcher. Strict separation — never mix imports + deletes on a
+-- page. Imports drain first; only after IncomingQueue is empty do deletes
+-- surface. Called from the landing-page banner button, the login banner,
+-- and post-page auto-advance after each Import/Confirm click.
+processQueue = function()
+  if GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
+    return renderImportsPage()
+  end
+  if GSE.PendingBridgeDeletes and not GSE.isEmpty(GSE.PendingBridgeDeletes) then
+    return renderDeletesPage()
+  end
 end
 
 local function LandingPage()
@@ -650,6 +745,27 @@ local function LandingPage()
     end)
     queueBanner:AddChild(queueButton)
     importframe:AddChild(queueBanner)
+    local divider = AceGUI:Create("Heading")
+    divider:SetText("  — or paste a string below —  ")
+    divider:SetFullWidth(true)
+    importframe:AddChild(divider)
+  elseif GSE.PendingBridgeDeletes and not GSE.isEmpty(GSE.PendingBridgeDeletes) then
+    -- Imports queue is empty but deletes are pending — let the user resolve
+    -- them from the same dialog they'd use for imports.
+    local delBanner = AceGUI:Create("SimpleGroup")
+    delBanner:SetLayout("Flow")
+    delBanner:SetFullWidth(true)
+    local delLabel = AceGUI:Create("Label")
+    delLabel:SetText("|cff00ccffGSE Platform:|r  " .. #GSE.PendingBridgeDeletes ..
+                     " pending delete(s) awaiting your review.")
+    delLabel:SetWidth(400)
+    delBanner:AddChild(delLabel)
+    local delButton = AceGUI:Create("Button")
+    delButton:SetText("Review Deletes")
+    delButton:SetWidth(200)
+    delButton:SetCallback("OnClick", function() processQueue() end)
+    delBanner:AddChild(delButton)
+    importframe:AddChild(delBanner)
     local divider = AceGUI:Create("Heading")
     divider:SetText("  — or paste a string below —  ")
     divider:SetFullWidth(true)

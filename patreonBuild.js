@@ -57,6 +57,50 @@ function addExtras(done) {
   return done();
 }
 
+// GSE_QoL is excluded from the BigWigs packager via .pkgmeta `ignore:`,
+// so its `## Version: @project-version@` token never gets substituted by
+// the packager. addExtras above just cpSync's the source folder (token
+// and all). Here we copy the resolved Version line from GSE/GSE.toc —
+// which BigWigs DID substitute, and which updateToc(GSE) further
+// appended `-PatronBuild` to in this waterfall — onto the QoL toc so
+// patrons get the same versioned suffix as the rest of the bundle.
+function syncQoLVersionFromGSE(done) {
+  const gseTocPath = `./.release/GSE/GSE.toc`;
+  const qolTocPath = `./.release/GSE_QoL/GSE_QoL.toc`;
+  fs.readFile(gseTocPath, "utf8", (err, gseData) => {
+    if (err) {
+      console.log(`[syncQoLVersion] cannot read ${gseTocPath}`);
+      return done(err);
+    }
+    const versionLine = lines(gseData).find((l) =>
+      l.startsWith("## Version:")
+    );
+    if (!versionLine) {
+      return done(new Error(`No "## Version:" line in ${gseTocPath}`));
+    }
+    fs.readFile(qolTocPath, "utf8", (err2, qolData) => {
+      if (err2) {
+        console.log(`[syncQoLVersion] cannot read ${qolTocPath}`);
+        return done(err2);
+      }
+      const qolLines = lines(qolData);
+      const idx = qolLines.findIndex((o) => o.startsWith("## Version:"));
+      if (idx < 0) {
+        return done(new Error(`No "## Version:" line in ${qolTocPath}`));
+      }
+      const cleanedVersion = versionLine.replace(/(\r\n|\n|\r)/gm, "");
+      qolLines[idx] = cleanedVersion;
+      fs.writeFile(qolTocPath, qolLines.join("\n"), (err3) => {
+        if (err3) return done(err3);
+        console.log(
+          `[syncQoLVersion] GSE_QoL.toc Version set to: ${cleanedVersion}`
+        );
+        return done();
+      });
+    });
+  });
+}
+
 function createArchive(done) {
   const archiver = require("archiver");
   const output = fs.createWriteStream(`GSE-${BuildNumber}.zip`);
@@ -170,6 +214,7 @@ async.waterfall(
     async.apply(updateToc, "GSE_Options", "GSE_Options"),
     deleteExistingZips,
     addExtras,
+    syncQoLVersionFromGSE,
     createArchive,
     publishArchive,
     closeMessage,

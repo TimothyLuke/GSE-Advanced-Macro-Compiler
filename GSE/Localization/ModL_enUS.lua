@@ -658,6 +658,13 @@ L[
         "The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."
     ] = true
 L["OOC Queue Delay"] = true
+L["Default Import Action"] = true
+L[
+        "Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."
+    ] = true
+L[
+        "Auto-repaired %d sequence(s) with structurally invalid Versions (index-0 keys remapped to 1-based)."
+    ] = true
 
 --1239
 L["/gse|r again."] = true

@@ -1103,6 +1103,23 @@ function GSE:ProcessOOCQueue()
                 if GSE.OpenOptionsPanel then
                     GSE.OpenOptionsPanel()
                 end
+            elseif v.action == "deletesequence" then
+                -- Generic OOC sequence delete. Used by the Companion bridge
+                -- after the user confirms a delete (the website record has
+                -- already been soft-deleted by the time we get here) and
+                -- could be used by future Mod UI paths that need to delete
+                -- out-of-combat. classid resolved at enqueue time.
+                if v.sequencename and v.classid and tonumber(v.classid) and tonumber(v.classid) > 0 then
+                    GSE.DeleteSequence(tonumber(v.classid), v.sequencename)
+                end
+            elseif v.action == "deletevariable" then
+                if v.variablename then
+                    GSE.DeleteVariable(v.variablename)
+                end
+            elseif v.action == "deletemacro" then
+                if v.macroname then
+                    GSE.DeleteMacro(v.macroname)
+                end
             end
         else
             -- Still in combat; put the item back so it's processed next tick.

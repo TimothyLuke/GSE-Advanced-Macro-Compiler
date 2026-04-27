@@ -107,6 +107,9 @@ globals = {
     "GSESpellCache",
     "GSEVariables",
     "GSEMacros",
+    "GSEPlatformIDs",
+    "GSEVariablePlatformIDs",
+    "GSEMacroPlatformIDs",
     "UnitFullName",
     -- Internal globals (cross-file)
     "GSE_Ed25519Verify",

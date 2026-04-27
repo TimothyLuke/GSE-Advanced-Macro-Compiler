@@ -1002,6 +1002,19 @@ end
 function GSE.ScanMacrosForErrors()
     GSE.Print(L["Scanning GSE.Library for structural and content issues..."])
     local totalIssues = 0
+    local autoFixedCount = 0
+
+    -- Auto-fixable issue detection. For now only the "Versions starts at
+    -- index 0" case — FixSequenceStructure remaps 0→1 cleanly and the
+    -- result is always equivalent or better. Other issues (missing
+    -- MetaData, schema-incompatible, etc.) need user attention so they
+    -- continue to surface verbatim. Match by substring on a stable
+    -- prefix of the localised string; if a translator drops the prefix
+    -- the auto-fix simply doesn't trigger and the user gets the manual
+    -- /run hint as before — not a regression.
+    local function isAutoFixableIssue(issue)
+        return type(issue) == "string" and issue:find("Versions starts at index 0", 1, true) ~= nil
+    end
 
     -- 1. Structural / content checks on GSE.Library (all class IDs, including 0 = global)
     for classlibid = 0, 13 do
@@ -1010,6 +1023,27 @@ function GSE.ScanMacrosForErrors()
         if classlib and type(classlib) == "table" then
             for seqname, seq in pairs(classlib) do
                 local issues = checkSeqStructure(classlibid, seqname, seq)
+
+                -- Partition issues into auto-fixable vs. the rest. If
+                -- any are auto-fixable, run FixSequenceStructure silently
+                -- once for the whole sequence (the fix re-keys Versions
+                -- end-to-end, which addresses every auto-fixable issue
+                -- at once) and re-scan to surface anything that didn't
+                -- get cleaned up by the repair.
+                local hadAutoFixable = false
+                for _, issue in ipairs(issues) do
+                    if isAutoFixableIssue(issue) then hadAutoFixable = true; break end
+                end
+                if hadAutoFixable then
+                    if GSE.FixSequenceStructure(classlibid, seqname, true) then
+                        autoFixedCount = autoFixedCount + 1
+                        -- Re-fetch the sequence post-repair and re-scan
+                        -- so the rest of this iteration sees the repaired
+                        -- shape, not the broken one we entered with.
+                        seq = GSE.Library[classlibid] and GSE.Library[classlibid][seqname]
+                        issues = seq and checkSeqStructure(classlibid, seqname, seq) or {}
+                    end
+                end
 
                 if #issues > 0 then
                     totalIssues = totalIssues + #issues
@@ -1281,6 +1315,11 @@ function GSE.ScanMacrosForErrors()
         end
     end
 
+    if autoFixedCount > 0 then
+        GSE.Print(string.format(
+            L["Auto-repaired %d sequence(s) with structurally invalid Versions (index-0 keys remapped to 1-based)."],
+            autoFixedCount))
+    end
     if totalIssues == 0 then
         GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
     else
@@ -1324,17 +1363,22 @@ end
 -- 6. Updates MetaData context version references to match the new indices
 -- 7. Saves the repaired sequence and queues a recompile
 -- Usage: /run GSE.FixSequenceStructure(classLibraryID, "SequenceName")
-function GSE.FixSequenceStructure(classlibid, seqname)
+-- silent: when true, suppress informational/success prints. Errors
+-- (invalid class id, missing sequence, schema-incompatible) still print
+-- because they signal the caller's request couldn't be honoured. Used
+-- by GSE.ScanMacrosForErrors's auto-repair path so the user gets one
+-- summary line rather than per-sequence chatter.
+function GSE.FixSequenceStructure(classlibid, seqname, silent)
     classlibid = tonumber(classlibid)
     GSE.EnsureSequenceLoaded(classlibid, seqname)
     if not classlibid or not GSE.Library[classlibid] then
         GSE.Print(string.format(L["Invalid class library ID: %s"], tostring(classlibid)))
-        return
+        return false
     end
     local seq = GSE.Library[classlibid][seqname]
     if GSE.isEmpty(seq) then
         GSE.Print(string.format(L["Sequence '%s' not found in class library %d."], seqname, classlibid))
-        return
+        return false
     end
 
     -- 1. Remove any pending OOC queue entries for this sequence
@@ -1347,7 +1391,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
     end
     local removed = #GSE.OOCQueue - #kept
     GSE.OOCQueue = kept
-    if removed > 0 then
+    if removed > 0 and not silent then
         GSE.Print(string.format(L["Cleared %d pending queue entries for '%s'."], removed, seqname))
     end
 
@@ -1358,7 +1402,7 @@ function GSE.FixSequenceStructure(classlibid, seqname)
         GSE.Print(string.format(
             L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
             seqname), L["Import"])
-        return
+        return false
     end
 
     -- 3. Replace Java-style // comment lines with -- in all action macro text
@@ -1423,10 +1467,12 @@ function GSE.FixSequenceStructure(classlibid, seqname)
                     else
                         -- Was pointing to a gap or beyond the end; clamp to max valid index
                         local clamped = maxNewIdx > 0 and maxNewIdx or nil
-                        GSE.Print(string.format(
-                            L["MetaData.%s remapped from non-existent version %d to %d."],
-                            ctxKey, oldIdx, clamped or 0
-                        ))
+                        if not silent then
+                            GSE.Print(string.format(
+                                L["MetaData.%s remapped from non-existent version %d to %d."],
+                                ctxKey, oldIdx, clamped or 0
+                            ))
+                        end
                         seq.MetaData[ctxKey] = clamped
                     end
                 end
@@ -1438,16 +1484,21 @@ function GSE.FixSequenceStructure(classlibid, seqname)
     GSE.ReplaceSequence(classlibid, seqname, seq)
     if classlibid == GSE.GetCurrentClassID() or classlibid == 0 then
         GSE.ReloadSequences()
-        GSE.Print(string.format(
-            L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."],
-            seqname
-        ))
+        if not silent then
+            GSE.Print(string.format(
+                L["'%s' has been repaired and queued for recompile.  Leave combat or /reload to apply."],
+                seqname
+            ))
+        end
     else
-        GSE.Print(string.format(
-            L["'%s' repaired. Sequence is for class %d; button will update when that class is played."],
-            seqname, classlibid
-        ))
+        if not silent then
+            GSE.Print(string.format(
+                L["'%s' repaired. Sequence is for class %d; button will update when that class is played."],
+                seqname, classlibid
+            ))
+        end
     end
+    return true
 end
 
 --- This creates a pretty export for WLM Forums

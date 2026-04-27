@@ -211,11 +211,14 @@ describe(
         )
 
         it(
-          "reports Versions starting at index 0 (ipairs invisible)",
+          "auto-repairs Versions starting at index 0 (ipairs invisible) silently",
           function()
             -- Real-world cause: bad in-game merge OR a CBOR round-trip
             -- that preserved 0-based keys. ipairs(t) starts at 1 → editor
             -- and runtime see no versions even though the data is there.
+            -- ScanMacrosForErrors auto-runs FixSequenceStructure for this
+            -- case, so the per-sequence error spam is suppressed and a
+            -- single summary line surfaces instead.
             local seq = makeSeq()
             seq.Versions = {
               [0] = {
@@ -225,11 +228,18 @@ describe(
             }
             GSE.Library[0]["ZeroKeyed"] = seq
             GSE.ScanMacrosForErrors()
-            assert.is_true(hasMsg("Versions starts at index 0"))
-            assert.is_true(hasMsg("Issues found in 'ZeroKeyed'"))
-            -- The generic "empty" message must NOT fire here — the data
-            -- isn't empty, just mis-keyed. Specific-over-generic.
+            -- Per-sequence error spam is suppressed by the auto-fix path.
+            assert.is_false(hasMsg("Versions starts at index 0"))
+            assert.is_false(hasMsg("Issues found in 'ZeroKeyed'"))
+            -- The generic "empty" message must also NOT fire — data isn't
+            -- empty, just mis-keyed. Specific-over-generic.
             assert.is_false(hasMsg("Macros array is empty (no versions defined)"))
+            -- A single summary line confirms the silent repair happened.
+            assert.is_true(hasMsg("Auto-repaired"))
+            -- Post-condition: the broken Versions[0] entry got remapped
+            -- to Versions[1] so ipairs sees it again.
+            assert.is_not_nil(GSE.Library[0]["ZeroKeyed"].Versions[1])
+            assert.is_nil(GSE.Library[0]["ZeroKeyed"].Versions[0])
           end
         )
 

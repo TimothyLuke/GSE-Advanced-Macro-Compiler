@@ -22,7 +22,10 @@ if GSE.GameMode > 10 then
 
             local offset = lineinfo.itemIndexOffset
 
-            for i = 0, lineinfo.numSpellBookItems do
+            -- Items in this skill line are at indices [offset+1 .. offset+N].
+            -- The previous `for i = 0, N do` ran N+1 times and started at
+            -- index `offset` — the last item of the prior skill line, or 0.
+            for i = 1, lineinfo.numSpellBookItems do
                 local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
                 if spellinfo then  -- <-- also guard this
                     local spellName = spellinfo.name

@@ -150,8 +150,7 @@ local function onRightClick_VARIABLES(editframe, container, group, unique, key)
                 GSE.GUIExport(nil, key, "VARIABLE")
             end)
             rootDescription:CreateButton(L["Delete"], function()
-                GSE.V[key] = nil
-                GSEVariables[key] = nil
+                GSE.DeleteVariable(key)
                 editframe.ManageTree()
             end)
         end
