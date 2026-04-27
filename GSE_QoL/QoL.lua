@@ -238,39 +238,123 @@ if GSE.GameMode > 10 then
     end
 end
 
--- Native WoW icon picker integration.
--- MacroPopupFrame is part of Blizzard_MacroUI which loads lazily; we set up
--- the hook once after the first ShowNativeIconPicker call successfully loads it.
+-- Native WoW icon picker, owned by GSE.
+--
+-- Pattern lifted from Jaliborc/BagBrother config/panels/ruleEdit.lua —
+-- the only public addon I found that successfully creates a STANDALONE
+-- popup from IconSelectorPopupFrameTemplate (rather than borrowing
+-- Blizzard's MacroPopupFrame, which is hard-coupled to MacroFrame and
+-- silently does nothing when shown without it). Critical bits the
+-- earlier "obvious" implementation missed:
+--   * Explicit SetSize — the template's XML <Size> doesn't reliably
+--     apply to a CreateFrame'd virtual template instance.
+--   * Explicit SetPoint on `IconSelector` inside `BorderBox`. Without
+--     this the icon grid has no anchor, so even though the popup is
+--     "showing" you see nothing render.
+--   * iconDataProvider + SetSelectionsDataProvider + SelectedCallback
+--     wired ONCE at frame creation, not per-show. The template mixin
+--     already provides GetIconByIndex/GetNumIcons/GetIndexOfIcon as
+--     dataProvider proxies, so we don't redefine them.
+--   * No OnShow / OnHide override needed — the template's own OnShow
+--     handles event registration; we just position once.
 local iconPickerCallback = nil
-local iconPickerCommitted = false
-local iconPickerHooked = false
+local iconPickerFrame = nil
 
-local function setupIconPickerHook()
-    if iconPickerHooked then return true end
-    if not MacroPopupFrame then return false end
-    -- Capture OK: mark committed so OnHide knows the user confirmed.
-    hooksecurefunc("MacroPopupOkayButton_OnClick", function()
-        iconPickerCommitted = true
-    end)
-    -- Fire callback on hide only when the user clicked OK.
-    MacroPopupFrame:HookScript("OnHide", function(self)
-        if iconPickerCommitted and iconPickerCallback and self.selectedIcon then
-            iconPickerCallback(self.selectedIcon)
+local function buildIconPickerFrame()
+    if iconPickerFrame then return iconPickerFrame end
+    if not IconSelectorPopupFrameTemplateMixin then return nil end
+
+    local f = CreateFrame("Frame", "GSE_IconSelectorPopupFrame", UIParent, "IconSelectorPopupFrameTemplate")
+    f:Hide()
+    f:SetFrameStrata("DIALOG")
+    -- The template's instantiation adds its own anchor (TOPLEFT to UIParent),
+    -- so a plain SetPoint("CENTER") gets queued AFTER it — GetPoint(1)
+    -- returns TOPLEFT and the popup paints in the screen's top-left corner
+    -- (behind addon trays, easy to miss). ClearAllPoints first, then anchor
+    -- ourselves — same pattern Jaliborc/BagBrother uses.
+    f:ClearAllPoints()
+    f:SetPoint("CENTER")
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+
+    -- Strip the macro-name workflow Blizzard's template assumes — the
+    -- name editbox, its header label, the "Currently Selected" preview
+    -- on the right, and the Okay button itself are all geared toward
+    -- creating/editing a named macro. We just want "click an icon →
+    -- return it." Hide them all and skip the Okay-button confirm step.
+    if f.BorderBox then
+        if f.BorderBox.IconSelectorEditBox    then f.BorderBox.IconSelectorEditBox:Hide() end
+        if f.BorderBox.EditBoxHeaderText      then f.BorderBox.EditBoxHeaderText:Hide() end
+        if f.BorderBox.SelectedIconArea       then f.BorderBox.SelectedIconArea:Hide() end
+        if f.BorderBox.OkayButton             then f.BorderBox.OkayButton:Hide() end
+    end
+
+    -- Initialise the icon data provider ONCE. Methods GetIconByIndex /
+    -- GetNumIcons / GetIndexOfIcon are inherited from
+    -- IconSelectorPopupFrameTemplateMixin and auto-proxy through this.
+    f.iconDataProvider = CreateAndInitFromMixin(
+        IconDataProviderMixin, IconDataProviderExtraType.None)
+
+    -- The icon grid needs an explicit anchor inside the BorderBox.
+    -- Anchored higher than BagBrother's offset because we hid the
+    -- name-entry section above it.
+    f.IconSelector:ClearAllPoints()
+    f.IconSelector:SetPoint("TOPLEFT", f.BorderBox, "TOPLEFT", 21, -56)
+    f.IconSelector:SetSelectionsDataProvider(
+        GenerateClosure(f.GetIconByIndex, f),
+        GenerateClosure(f.GetNumIcons,    f))
+
+    -- Single-click commit: as soon as the user picks an icon, fire the
+    -- callback and hide. Cancel button still works normally — the user
+    -- can dismiss without a selection. No Okay-button round-trip.
+    f.IconSelector:SetSelectedCallback(function(_, icon)
+        if iconPickerCallback and icon then
+            local cb = iconPickerCallback
+            iconPickerCallback = nil
+            cb(icon)
         end
-        iconPickerCallback = nil
-        iconPickerCommitted = false
+        f:Hide()
     end)
-    iconPickerHooked = true
-    return true
+
+    -- Trim the popup height since we removed the top section.
+    f:SetSize(525, 460)
+
+    -- Cancel still works — clear pending callback so a later Show
+    -- doesn't accidentally fire it.
+    function f:CancelButton_OnClick()
+        IconSelectorPopupFrameTemplateMixin.CancelButton_OnClick(self)
+        iconPickerCallback = nil
+    end
+
+    iconPickerFrame = f
+    return f
 end
 
 local function ShowNativeIconPicker(callback)
-    if not iconPickerHooked then
-        C_AddOns.LoadAddOn("Blizzard_MacroUI")
-        if not setupIconPickerHook() then return end
+    local f = buildIconPickerFrame()
+    if not f then
+        GSE.Print("|cffff6666GSE QoL:|r icon picker template unavailable.", "Error")
+        return
     end
     iconPickerCallback = callback
-    MacroPopupFrame:Show()
+    -- Scroll the grid to its top on each open so it renders cleanly.
+    -- Wrapped in pcall because the icon data provider can lazy-init
+    -- and throw on the first show after a /reload — when invoked from
+    -- inside a context-menu callback the menu system swallows errors
+    -- silently and the user just sees nothing happen.
+    local ok, err = pcall(function()
+        if f.IconSelector and f.iconDataProvider and f.iconDataProvider:GetNumIcons() > 0 then
+            f.IconSelector:SetSelectedIndex(1)
+            f.IconSelector:ScrollToSelectedIndex()
+        end
+    end)
+    if not ok then
+        GSE.Print("|cffff6666GSE QoL:|r icon picker init failed: " .. tostring(err), "Error")
+    end
+    f:Show()
 end
 
 -- Appended to the icon context menu in the editor for QoL users.
