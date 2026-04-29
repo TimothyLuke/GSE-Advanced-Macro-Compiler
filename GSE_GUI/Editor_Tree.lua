@@ -108,9 +108,12 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                 container:AddChild(rightContainer)
             end)
             if not GSE.isEmpty(sequencename) then
-                rootDescription:CreateButton(L["Export"], function()
-                    GSE.GUIExport(classid, sequencename, "SEQUENCE")
-                end)
+                local rcSeq = GSE.FindSequence(sequencename)
+                if not (rcSeq and rcSeq.MetaData and rcSeq.MetaData.noExport) then
+                    rootDescription:CreateButton(L["Export"], function()
+                        GSE.GUIExport(classid, sequencename, "SEQUENCE")
+                    end)
+                end
                 rootDescription:CreateButton(L["Send"], function()
                     GSE.GUIShowTransmissionGui(sequencename, editframe)
                 end)
@@ -146,9 +149,12 @@ local function onRightClick_VARIABLES(editframe, container, group, unique, key)
         editframe.frame,
         function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Manage Variables"])
-            rootDescription:CreateButton(L["Export Variable"], function()
-                GSE.GUIExport(nil, key, "VARIABLE")
-            end)
+            local varOk, varDecoded = GSE.DecodeMessage(GSEVariables[key])
+            if not (varOk and varDecoded and varDecoded.MetaData and varDecoded.MetaData.noExport) then
+                rootDescription:CreateButton(L["Export Variable"], function()
+                    GSE.GUIExport(nil, key, "VARIABLE")
+                end)
+            end
             rootDescription:CreateButton(L["Delete"], function()
                 GSE.DeleteVariable(key)
                 editframe.ManageTree()

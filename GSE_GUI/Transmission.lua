@@ -69,7 +69,18 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
     transmissionFrame:SetPoint("TOPLEFT", editframe.frame, editframe.Width + 10, 0)
   end
 
-  local names = GSE.GetSequenceNames()
+  local allNames = GSE.GetSequenceNames()
+  local names = {}
+  for k, v in pairs(allNames) do
+    local txElements = GSE.split(k, ",")
+    local txClassId = tonumber(txElements[1])
+    local txSeqName = txElements[3]
+    GSE.EnsureSequenceLoaded(txClassId, txSeqName)
+    local txSeq = GSE.Library[txClassId] and GSE.Library[txClassId][txSeqName]
+    if not (txSeq and txSeq.MetaData and txSeq.MetaData.noExport) then
+      names[k] = v
+    end
+  end
   transmissionFrame.SequenceListbox:SetList(names)
   if not GSE.isEmpty(inckey) then
     transmissionFrame.SequenceListbox:SetValue(inckey)

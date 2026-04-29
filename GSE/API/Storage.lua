@@ -1360,9 +1360,11 @@ function GSE.GetSequenceSummary()
     for k, v in ipairs(GSE.Library) do
         returntable[k] = {}
         for i, j in pairs(v) do
-            returntable[k][i] = {}
-            returntable[k][i].Help = j["MetaData"].Help
-            returntable[k][i].LastUpdated = j["MetaData"].LastUpdated
+            if not (j["MetaData"] and j["MetaData"].noExport) then
+                returntable[k][i] = {}
+                returntable[k][i].Help = j["MetaData"].Help
+                returntable[k][i].LastUpdated = j["MetaData"].LastUpdated
+            end
         end
     end
     return returntable

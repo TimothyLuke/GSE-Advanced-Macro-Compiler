@@ -33,6 +33,17 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
     t.ClassID = classid
     t.SequenceName = SequenceName
     GSE.EnsureSequenceLoaded(classid, SequenceName)
+    local txGuardSeq = GSE.Library[classid] and GSE.Library[classid][SequenceName]
+    if txGuardSeq and txGuardSeq.MetaData and txGuardSeq.MetaData.noExport then
+        GSE.Print(
+            string.format(L["'%s' cannot be shared — it is protected content."], SequenceName),
+            "Error"
+        )
+        if transmissionFrame then
+            transmissionFrame:SetStatusText(L["Cannot share protected content"])
+        end
+        return
+    end
     t.Sequence = GSE.Library[classid][SequenceName]
     GSE.sendMessage(t, channel, target)
     if transmissionFrame then
@@ -228,8 +239,13 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             end
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSESequences[tonumber(t.ClassID)][t.SequenceName]) then
-                    GSE.SendSequence(tonumber(t.ClassID), t.SequenceName, sender, "WHISPER")
+                local reqClassId = tonumber(t.ClassID)
+                local reqSeq = GSE.Library[reqClassId] and GSE.Library[reqClassId][t.SequenceName]
+                if reqSeq and reqSeq.MetaData and reqSeq.MetaData.noExport then
+                    return  -- silent refusal; requester's UI just times out
+                end
+                if not GSE.isEmpty(GSESequences[reqClassId][t.SequenceName]) then
+                    GSE.SendSequence(reqClassId, t.SequenceName, sender, "WHISPER")
                 end
             else
                 GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
