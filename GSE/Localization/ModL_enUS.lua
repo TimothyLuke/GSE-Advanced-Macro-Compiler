@@ -70,6 +70,7 @@ L["Restored macro '%s' required by sequence '%s'."] = true
 -- Export dependency auto-include
 L["Auto-included %d variable(s) required by %s: %s"] = true
 L["WARNING: %s depends on variable(s) that do not exist and cannot be exported: %s"] = true
+L["'%s' cannot be exported — it is protected content."] = true
 L["%s embeds sequence '%s' — add it to the export if needed."] = true
 L["WARNING: %s embeds sequence(s) that do not exist: %s"] = true
 L["Invalid class library ID: %s"] = true

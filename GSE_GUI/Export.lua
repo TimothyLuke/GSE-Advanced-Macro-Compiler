@@ -165,6 +165,17 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         function(obj, event, key, checked)
             if checked then
                 local seq = GSE.FindSequence(key)
+                -- Block export of subscriber/protected content. The noExport flag
+                -- is stamped by the server in MetaData when syncing sequences that
+                -- belong to another author (public, subscriber, or fork sources).
+                -- It lives outside Versions so it does not affect the checksum.
+                if seq and seq.MetaData and seq.MetaData.noExport then
+                    GSE.Print(
+                        string.format(L["'%s' cannot be exported — it is protected content."], key),
+                        "Error"
+                    )
+                    return
+                end
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
