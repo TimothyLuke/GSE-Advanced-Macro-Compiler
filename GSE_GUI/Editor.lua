@@ -2431,7 +2431,7 @@ function GSE.CreateEditor()
             GSEOptions.frameLocations.sequenceeditor.height = editframe.Height
             GSEOptions.frameLocations.sequenceeditor.width = editframe.Width
             if editframe.scroller then
-                editframe.scroller:SetHeight(editframe.Height - TOOLBAR_OFFSET)
+                editframe.scroller:SetHeight(editframe.Height - SCROLLCONTAINER_OFFSET)
                 editframe.scroller:DoLayout()
             end
         end

@@ -14,6 +14,9 @@ end
 
 --- Remove WoW Text Markup from a string.
 function GSE.UnEscapeString(str)
+    if type(str) ~= "string" then
+        return str
+    end
     for k, v in pairs(Statics.StringFormatEscapes) do
         str = string.gsub(str, k, v)
     end

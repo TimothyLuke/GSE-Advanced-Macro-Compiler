@@ -264,7 +264,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     local editButtonGroup = AceGUI:Create("SimpleGroup")
     editButtonGroup:SetFullWidth(true)
     editButtonGroup:SetLayout("Flow")
-    editButtonGroup:SetHeight(15)
+    editButtonGroup:SetHeight(30)
 
     local savebutton = AceGUI:Create("Button")
     savebutton:SetText(L["Save"])

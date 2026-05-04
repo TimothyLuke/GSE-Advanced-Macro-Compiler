@@ -301,7 +301,9 @@ local function showGSEButtonTooltip(btn)
     local entry = executionseq[step]
     local spellID
     if entry.type == "spell" and entry.spell and C_Spell and C_Spell.GetSpellInfo then
-        local info = C_Spell.GetSpellInfo(GSE.UnEscapeString(entry.spell))
+        local spell = GSE.UnEscapeString(entry.spell)
+        local currentSpell = GSE.GetCurrentSpellID and GSE.GetCurrentSpellID(spell) or spell
+        local info = C_Spell.GetSpellInfo(currentSpell)
         spellID = info and info.spellID
     elseif entry.type == "macro" and entry.macrotext then
         local info = GSE.GetSpellsFromString(entry.macrotext)
@@ -567,6 +569,49 @@ local function overrideActionButton(savedBind, force)
     end
 end
 
+local function isUsableActionBarOverride(savedBind)
+    if type(savedBind) ~= "table" then return false end
+
+    local buttonName = savedBind.Bind
+    local sequenceName = savedBind.Sequence
+    if GSE.isEmpty(buttonName) or GSE.isEmpty(sequenceName) then return false end
+
+    return _G[buttonName] ~= nil and _G[sequenceName] ~= nil
+end
+
+local function hasUsableActionBarOverride(overrides)
+    if type(overrides) ~= "table" then return false end
+
+    for _, savedBind in pairs(overrides) do
+        if isUsableActionBarOverride(savedBind) then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function hasCurrentActionBarOverride()
+    local actionBarBinds = GSE_C and GSE_C["ActionBarBinds"]
+    if type(actionBarBinds) ~= "table" then return false end
+
+    local spec = GetSpec()
+    local specs = actionBarBinds["Specialisations"]
+    if specs and hasUsableActionBarOverride(specs[spec]) then
+        return true
+    end
+
+    if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+        local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
+        local loadouts = actionBarBinds["LoadOuts"]
+        if selected and loadouts and loadouts[spec] and hasUsableActionBarOverride(loadouts[spec][selected]) then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -586,11 +631,9 @@ local function LoadOverrides(force)
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()]) then
         GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] = {}
     end
-    -- If any overrides are configured, ensure the CVars that block them are off.
+    -- If an override can actually be loaded, ensure the CVars that block it are off.
     -- SetCVar is not combat-restricted so this runs regardless of lockdown state.
-    -- Note: GSE.isEmpty only tests for nil/"", so use next() to detect a non-empty table.
-    local specOverrides = GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]
-    if specOverrides and next(specOverrides) ~= nil then
+    if hasCurrentActionBarOverride() then
         ensureActionBarCVars()
     end
     if not InCombatLockdown() then
@@ -781,6 +824,9 @@ local function startup()
     if GSE.isEmpty(GSESpellCache[GetLocale()]) then
         GSESpellCache[GetLocale()] = {}
     end
+    if GSE.SanitizeSpellCache then
+        GSE.SanitizeSpellCache()
+    end
 
     GSE.LoadStorage(GSE.Library)
 
@@ -842,6 +888,35 @@ local function startup()
 end
 
 startup()
+
+local spellIconRefreshQueued = false
+local function queueCurrentSpellIconRefresh()
+    if spellIconRefreshQueued then return end
+    spellIconRefreshQueued = true
+    C_Timer.After(0.05, function()
+        spellIconRefreshQueued = false
+        if not GSE.SequencesExec then return end
+
+        for name, _ in pairs(GSE.SequencesExec) do
+            local button = _G[name]
+            if button and GSE.UpdateIcon then
+                GSE.UpdateIcon(button, false)
+            end
+        end
+    end)
+end
+
+function GSE:SPELL_UPDATE_USABLE()
+    queueCurrentSpellIconRefresh()
+end
+
+function GSE:SPELL_ACTIVATION_OVERLAY_SHOW()
+    queueCurrentSpellIconRefresh()
+end
+
+function GSE:SPELL_ACTIVATION_OVERLAY_HIDE()
+    queueCurrentSpellIconRefresh()
+end
 
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     GSE:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -1034,6 +1109,9 @@ if GSE.GameMode > 10 then
     GSE:RegisterEvent("SPEC_INVOLUNTARILY_CHANGED")
     GSE:RegisterEvent("TRAIT_CONFIG_UPDATED")
     GSE:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")
+    GSE:RegisterEvent("SPELL_UPDATE_USABLE")
+    GSE:RegisterEvent("SPELL_ACTIVATION_OVERLAY_SHOW")
+    GSE:RegisterEvent("SPELL_ACTIVATION_OVERLAY_HIDE")
 end
 
 if GSE.GameMode <= 3 then

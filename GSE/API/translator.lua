@@ -5,6 +5,106 @@ local GNOME = Statics.DebugModules["Translator"]
 
 local L = GSE.L
 
+local function normaliseSpellIDValue(value)
+    if type(value) == "table" then
+        value = value.spellID or value.id
+    end
+    return tonumber(value) or value
+end
+
+local function findBaseSpellID(spellID)
+    spellID = normaliseSpellIDValue(spellID)
+    if not spellID then return nil end
+
+    local FindBaseSpellByID = (C_SpellBook and C_SpellBook.FindBaseSpellByID) or FindBaseSpellByID
+    if FindBaseSpellByID then
+        local ok, baseSpell = pcall(FindBaseSpellByID, spellID)
+        baseSpell = ok and normaliseSpellIDValue(baseSpell) or nil
+        if baseSpell and baseSpell ~= 0 then
+            return baseSpell
+        end
+    end
+
+    if not GSE.isEmpty(Statics.BaseSpellTable[spellID]) then
+        return Statics.BaseSpellTable[spellID]
+    end
+
+    return spellID
+end
+
+local function findCurrentSpellID(spellID)
+    spellID = normaliseSpellIDValue(spellID)
+    if not spellID then return nil end
+
+    local FindSpellOverrideByID = (C_SpellBook and C_SpellBook.FindSpellOverrideByID) or FindSpellOverrideByID
+    if FindSpellOverrideByID then
+        local ok, currentSpell = pcall(FindSpellOverrideByID, spellID)
+        currentSpell = ok and normaliseSpellIDValue(currentSpell) or nil
+        if currentSpell and currentSpell ~= 0 then
+            return currentSpell
+        end
+    end
+
+    return spellID
+end
+
+local function getSpellInfoID(spell)
+    if GSE.isEmpty(spell) or not C_Spell or not C_Spell.GetSpellInfo then
+        return nil
+    end
+
+    local ok, spellinfo = pcall(C_Spell.GetSpellInfo, spell)
+    if ok and spellinfo then
+        return normaliseSpellIDValue(spellinfo.spellID)
+    end
+end
+
+local function spellIDIsInSpellBook(spellID)
+    if not C_SpellBook or not C_SpellBook.FindSpellBookSlotForSpell then
+        return true
+    end
+
+    local ok, slot = pcall(C_SpellBook.FindSpellBookSlotForSpell, spellID)
+    return ok and slot and slot > 0
+end
+
+local function canCacheSpellLookup(spellstring, spellID, rawSpellID)
+    if tonumber(spellstring) ~= nil or GSE.isEmpty(spellID) then
+        return false
+    end
+
+    if rawSpellID and rawSpellID ~= spellID then
+        return true
+    end
+
+    return spellIDIsInSpellBook(spellID)
+end
+
+function GSE.GetBaseSpellID(spell)
+    local spellID = tonumber(spell) or getSpellInfoID(spell)
+    return findBaseSpellID(spellID)
+end
+
+function GSE.GetCurrentSpellID(spell)
+    local baseSpell = GSE.GetBaseSpellID(spell)
+    return findCurrentSpellID(baseSpell)
+end
+
+function GSE.SanitizeSpellCache()
+    if GSE.isEmpty(GSESpellCache) then return end
+
+    for _, cache in pairs(GSESpellCache) do
+        if type(cache) == "table" then
+            for spellName, spellID in pairs(cache) do
+                local baseSpell = findBaseSpellID(spellID)
+                if baseSpell and baseSpell ~= spellID then
+                    cache[spellName] = baseSpell
+                end
+            end
+        end
+    end
+end
+
 --- GSE.TranslateSequence will translate from local spell name to spell id and back again.\
 -- Mode of "STRING" will return local names where mode "ID" will return id's
 -- dropAbsolute will remove "$$" from the start of lines.
@@ -226,9 +326,8 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
                 if test then
-                    local FindSpellOverrideByID = FindSpellOverrideByID or C_SpellBook.FindSpellOverrideByID
-                    local currentSpell = FindSpellOverrideByID(test)
-                    if currentSpell then
+                    local currentSpell = GSE.GetCurrentSpellID(test)
+                    if currentSpell and currentSpell ~= test then
                         ---@diagnostic disable-next-line: cast-local-type
                         etc = currentSpell
                     end
@@ -335,7 +434,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(GSESpellCache[GetLocale()]) then
         GSESpellCache[GetLocale()] = {}
     end
-    local returnval, name, rank, spellId
+    local returnval, name, rank, spellId, rawSpellId
 
     local ok, spellinfo = pcall(C_Spell.GetSpellInfo, spellstring)
     if not ok then spellinfo = nil end
@@ -344,8 +443,8 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             ---@diagnostic disable-next-line: missing-fields
             spellinfo = {}
             spellinfo.name = spellstring
-            if GSESpellCache[GetLocale()][spellinfo] then
-                spellinfo.spellID = GSESpellCache[GetLocale()][spellinfo]
+            if GSESpellCache[GetLocale()][spellstring] then
+                spellinfo.spellID = GSESpellCache[GetLocale()][spellstring]
             end
         else
             -- Numeric spell ID that the client doesn't know about: nothing
@@ -354,7 +453,8 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         end
     end
     rank = spellinfo.rank and spellinfo.rank or nil
-    spellId = spellinfo.spellID and spellinfo.spellID or nil
+    rawSpellId = normaliseSpellIDValue(spellinfo.spellID)
+    spellId = rawSpellId
     name = spellinfo.name
     if mode ~= Statics.TranslatorMode.ID then
         if not GSE.isEmpty(rank) then
@@ -366,26 +466,18 @@ function GSE.GetSpellId(spellstring, mode, absolute)
         returnval = spellId
         -- Check for overrides like Crusade and Avenging Wrath.
         if not absolute and not GSE.isEmpty(returnval) then
-            local FindBaseSpellByID =  C_SpellBook.FindBaseSpellByID or  FindBaseSpellByID
-            if FindBaseSpellByID(returnval) then
-                returnval = FindBaseSpellByID(returnval)
-            -- if type(returnval) == "table" then
-            --     returnval = returnval.spellID
-            -- end
-            end
-            -- Still need Heart of Azeroth overrides.
-            if not GSE.isEmpty(Statics.BaseSpellTable[returnval]) then
-                returnval = Statics.BaseSpellTable[returnval]
-            end
+            returnval = findBaseSpellID(returnval)
         end
     end
     if not GSE.isEmpty(returnval) then
         if mode == Statics.TranslatorMode.ID and tonumber(spellstring) == nil then
-            if
-                GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) == true or
-                    GSESpellCache[GetLocale()][spellstring] ~= returnval
-             then
-                GSESpellCache[GetLocale()][spellstring] = returnval
+            local existingCache = GSESpellCache[GetLocale()][spellstring]
+            if canCacheSpellLookup(spellstring, returnval, rawSpellId) then
+                if GSE.isEmpty(existingCache) == true or existingCache ~= returnval then
+                    GSESpellCache[GetLocale()][spellstring] = returnval
+                end
+            elseif not GSE.isEmpty(existingCache) then
+                returnval = existingCache
             end
         end
         GSE.PrintDebugMessage(
