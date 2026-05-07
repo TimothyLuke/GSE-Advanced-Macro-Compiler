@@ -10,6 +10,109 @@ local DEFAULT_WIDTH = 700
 local TOOLBAR_OFFSET = 100
 local SCROLLCONTAINER_OFFSET = 120
 
+if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
+
+local MAX_MACRO_BODY = 255
+local MACRO_LIMIT_BG = {0.35, 0, 0, 0.35}
+local MACRO_LIMIT_BORDER = {1, 0.05, 0.05, 1}
+local MACRO_NORMAL_BG = {0, 0, 0, 1}
+local MACRO_NORMAL_BORDER = {0.4, 0.4, 0.4, 1}
+
+-- Visible compiled length, matching what the runtime emits and what WoW would
+-- count once color escapes are stripped. UnEscapeString already removes both
+-- single and doubled |c..|r forms, so this is the right thing to count.
+local function GetCompiledMacroBodyLength(macroText)
+    if type(macroText) ~= "string" or macroText == "" then return 0 end
+    local compiled = macroText
+    if GSE.CompileMacroText then
+        local ok, result = pcall(GSE.CompileMacroText, macroText, Statics.TranslatorMode.String)
+        if ok and result then compiled = result end
+    end
+    if GSE.UnEscapeString then
+        local ok, result = pcall(GSE.UnEscapeString, compiled)
+        if ok and result then compiled = result end
+    end
+    return string.len(compiled or "")
+end
+
+-- Toggle the macro edit box between normal and over-limit visuals on its
+-- AceGUI-provided scrollBG backdrop. Silent fallback if scrollBG is missing.
+local function UpdateMacroLimitState(macroEditBox, macroText)
+    local backdrop = macroEditBox and macroEditBox.scrollBG
+    if not (backdrop and backdrop.SetBackdropColor and backdrop.SetBackdropBorderColor) then return end
+
+    if GetCompiledMacroBodyLength(macroText) > MAX_MACRO_BODY then
+        backdrop:SetBackdropColor(unpack(MACRO_LIMIT_BG))
+        backdrop:SetBackdropBorderColor(unpack(MACRO_LIMIT_BORDER))
+    else
+        backdrop:SetBackdropColor(unpack(MACRO_NORMAL_BG))
+        backdrop:SetBackdropBorderColor(unpack(MACRO_NORMAL_BORDER))
+    end
+end
+
+local MACRO_EDITOR_SCROLL_PIXELS = 45
+
+local function GetEditorScrollContainer(frame)
+    local editor = frame and (frame.obj or frame)
+    return editor and editor.scrollContainer
+end
+
+-- When the macro edit box has focus, wheel scrolls inside it; otherwise
+-- forward to the editor's outer scroll container.
+local function ScrollFocusedMacroEditor(macroEditBox, delta)
+    local editBox = macroEditBox and macroEditBox.editBox
+    if not (editBox and editBox.HasFocus and editBox:HasFocus()) then return false end
+
+    local scrollFrame = macroEditBox.scrollFrame
+    if not (scrollFrame and scrollFrame.GetVerticalScroll and scrollFrame.SetVerticalScroll) then return true end
+
+    local range = (scrollFrame.GetVerticalScrollRange and scrollFrame:GetVerticalScrollRange()) or 0
+    if range <= 0 then return true end
+
+    local current = scrollFrame:GetVerticalScroll() or 0
+    local target = current - ((delta or 0) * MACRO_EDITOR_SCROLL_PIXELS)
+    if target < 0 then
+        target = 0
+    elseif target > range then
+        target = range
+    end
+    scrollFrame:SetVerticalScroll(target)
+    return true
+end
+
+local function MacroEditor_OnMouseWheel(mouseFrame, delta)
+    local macroEditBox = mouseFrame and mouseFrame.gseWheelForwardWidget
+    if ScrollFocusedMacroEditor(macroEditBox, delta) then return end
+
+    local scrollContainer = GetEditorScrollContainer(macroEditBox and macroEditBox.gseWheelForwardFrame)
+    if scrollContainer and scrollContainer.MoveScroll then
+        scrollContainer:MoveScroll(delta)
+    elseif mouseFrame and mouseFrame.gsePreviousOnMouseWheel then
+        mouseFrame.gsePreviousOnMouseWheel(mouseFrame, delta)
+    end
+end
+
+local function ForwardMacroEditorMouseWheel(macroEditBox, frame)
+    if not macroEditBox then return end
+    macroEditBox.gseWheelForwardFrame = frame
+
+    for _, mouseFrame in ipairs({ macroEditBox.editBox, macroEditBox.scrollFrame }) do
+        if mouseFrame and mouseFrame.SetScript then
+            mouseFrame.gseWheelForwardWidget = macroEditBox
+            if not mouseFrame.gseMacroWheelForwarded then
+                mouseFrame.gsePreviousOnMouseWheel = mouseFrame.GetScript and mouseFrame:GetScript("OnMouseWheel")
+                mouseFrame:SetScript("OnMouseWheel", MacroEditor_OnMouseWheel)
+                mouseFrame.gseMacroWheelForwarded = true
+            end
+            if mouseFrame.EnableMouseWheel then mouseFrame:EnableMouseWheel(true) end
+        end
+    end
+end
+
+-- Exposed so GSE_QoL's CreateSpellEditBox override can wire the same hooks.
+GSE.GUI.UpdateMacroLimitState = UpdateMacroLimitState
+GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
+
 
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     local lbl = AceGUI:Create("InteractiveLabel")
@@ -2556,6 +2659,8 @@ function GSE.CreateEditor()
             macroEditBox:SetNumLines(5)
             macroEditBox:SetRelativeWidth(0.5)
             macroEditBox:SetText(spelltext)
+            ForwardMacroEditorMouseWheel(macroEditBox, frame)
+            UpdateMacroLimitState(macroEditBox, action.macro)
             macroEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
@@ -2584,6 +2689,7 @@ function GSE.CreateEditor()
                     end
                     compiledmacrotext = compiledmacrotext .. "\n\n" .. charcount
                     compiledMacro:SetText(compiledmacrotext)
+                    UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)
                 end
             )
             return spellEditBox, macroEditBox

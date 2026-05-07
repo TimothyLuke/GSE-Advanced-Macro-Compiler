@@ -5,6 +5,31 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
+local EDITOR_SCROLL_WHEEL_PIXELS = 45
+
+-- Replace the AceGUI ScrollFrame's MoveScroll with a fixed-pixel step so a
+-- mouse-wheel tick advances the same amount regardless of content height.
+local function SmoothEditorScrollFrame(scrollWidget)
+    if not scrollWidget or scrollWidget.gseSmoothMouseWheel then return end
+    scrollWidget.gseSmoothMouseWheel = true
+
+    scrollWidget.MoveScroll = function(self, wheelDelta)
+        local status = self.status or self.localstatus
+        if not (self.scrollBarShown and status) then return end
+
+        local viewHeight = self.scrollframe:GetHeight()
+        local contentHeight = self.content:GetHeight()
+        local scrollRange = contentHeight - viewHeight
+        if scrollRange <= 0 then return end
+
+        local step = (EDITOR_SCROLL_WHEEL_PIXELS / scrollRange) * 1000
+        local newValue = status.scrollvalue - ((wheelDelta or 0) * step)
+        self.scrollbar:SetValue(math.min(math.max(newValue, 0), 1000))
+    end
+end
+
+GSE.GUI.SmoothEditorScrollFrame = SmoothEditorScrollFrame
+
 -- ---------------------------------------------------------------------------
 -- Right-click context menus, keyed by tree "area" (unique[1])
 -- ---------------------------------------------------------------------------
@@ -339,6 +364,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     contentcontainer:SetStatusTable(editframe.scrollStatus)
     editframe.scroller = scrollcontainer
     editframe.scrollContainer = contentcontainer
+    SmoothEditorScrollFrame(contentcontainer)
     container:AddChild(basecontainer)
     basecontainer:AddChild(scrollcontainer)
     editframe.SequenceName = sequencename

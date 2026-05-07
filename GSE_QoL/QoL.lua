@@ -142,6 +142,12 @@ if GSE.GameMode > 10 then
         macroEditBox:SetNumLines(5)
         macroEditBox:SetRelativeWidth(0.5)
         macroEditBox:SetText(spelltext)
+        if GSE.GUI and GSE.GUI.ForwardMacroEditorMouseWheel then
+            GSE.GUI.ForwardMacroEditorMouseWheel(macroEditBox, frame)
+        end
+        if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+            GSE.GUI.UpdateMacroLimitState(macroEditBox, action.macro)
+        end
         macroEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
@@ -161,6 +167,9 @@ if GSE.GameMode > 10 then
                 local lenMacro = string.len(compiledmacrotext)
                 compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
                 compiledMacro:SetText(compiledmacrotext)
+                if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+                    GSE.GUI.UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)
+                end
             end
         )
 

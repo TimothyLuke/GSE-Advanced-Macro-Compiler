@@ -1988,7 +1988,7 @@ function GSE.BackfillLastUpdated()
 
     -- Variables: flat shape, GSEVariables[name] is the variable table.
     if GSEVariables then
-        for name, v in pairs(GSEVariables) do
+        for _, v in pairs(GSEVariables) do
             if type(v) == "table" and not v.LastUpdated then
                 v.LastUpdated = now
                 touched = touched + 1
@@ -2001,7 +2001,7 @@ function GSE.BackfillLastUpdated()
     -- bucket vs node entry is distinguished by the presence of macro
     -- node fields (text/value/managed) on the value itself.
     if GSEMacros then
-        for k, scopeOrNode in pairs(GSEMacros) do
+        for _, scopeOrNode in pairs(GSEMacros) do
             if type(scopeOrNode) == "table" then
                 local isNode = scopeOrNode.text ~= nil
                     or scopeOrNode.value ~= nil
@@ -2013,7 +2013,7 @@ function GSE.BackfillLastUpdated()
                         touched = touched + 1
                     end
                 else
-                    for nm, node in pairs(scopeOrNode) do
+                    for _, node in pairs(scopeOrNode) do
                         if type(node) == "table" and not node.LastUpdated then
                             node.LastUpdated = now
                             touched = touched + 1

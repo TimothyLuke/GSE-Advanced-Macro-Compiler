@@ -17,9 +17,15 @@ function GSE.UnEscapeString(str)
     if type(str) ~= "string" then
         return str
     end
+    -- Strip doubled escapes (e.g. round-tripped through SetText) before single ones
+    str = string.gsub(str, "||[cC]%x%x%x%x%x%x%x%x", "")
+    str = string.gsub(str, "||r", "")
+    str = string.gsub(str, "|[cC]%x%x%x%x%x%x%x%x", "")
+    str = string.gsub(str, "|r", "")
     for k, v in pairs(Statics.StringFormatEscapes) do
         str = string.gsub(str, k, v)
     end
+    str = string.gsub(str, "||", "|")
     return str
 end
 
