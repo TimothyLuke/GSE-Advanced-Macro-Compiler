@@ -261,9 +261,16 @@ function GSE.ObjectExists(name)
     return type(GSE.FindGlobalObject(name)) ~= "nil"
 end
 
---- Get the current time as a timestamp
+--- Get the current time as a 14-digit UTC timestamp string (YYYYMMDDHHMMSS).
+-- Sourced from the WoW realm clock via GetServerTime() so timestamps written
+-- by characters in different real-world timezones remain lexicographically
+-- comparable. The "!" prefix to date() switches to gmtime; without it the
+-- format would use the player's client local time and a UTC+10 player editing
+-- at 23:00 would produce a "later" stamp than a UTC-5 player editing 5 min
+-- later at 09:00 their time, breaking server-side newer-wins resolution of
+-- multi-account upload conflicts.
 function GSE.GetTimestamp()
-    return date("%Y%m%d%H%M%S")
+    return date("!%Y%m%d%H%M%S", GetServerTime())
 end
 
 --- decode a timestamp into a table

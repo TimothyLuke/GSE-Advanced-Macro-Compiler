@@ -783,6 +783,13 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
     GSE.UpdateZoneFlags()
+    -- One-off: stamp LastUpdated on any pre-existing record that's missing it
+    -- (older mod versions didn't track it for macros at all, and never-edited
+    -- sequences/variables can also be missing the field). Idempotent — a
+    -- SavedVariables flag prevents re-runs after the first successful pass.
+    if GSE.BackfillLastUpdated then
+        GSE.BackfillLastUpdated()
+    end
     LoadKeyBindings(true)
     GSE.PerformReloadSequences(true)
     LoadOverrides()

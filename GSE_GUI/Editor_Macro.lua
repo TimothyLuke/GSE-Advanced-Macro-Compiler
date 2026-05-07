@@ -94,8 +94,16 @@ local function showMacro(editframe, node, container)
         function(self, _, text)
             local slot = GetMacroIndexByName(node.name)
             if slot then
+                local oldName = node.name
                 EditMacro(slot, text)
                 node.name = text
+                -- Clear the platform-id sidecar entry under the old name so
+                -- the next Companion sync mints a fresh server identity.
+                -- See Editor_Variable / Editor sequence rename for the
+                -- v4↔v5 bouncing pattern this prevents.
+                if oldName ~= text and GSEMacroPlatformIDs then
+                    GSEMacroPlatformIDs[oldName] = nil
+                end
             end
         end
     )

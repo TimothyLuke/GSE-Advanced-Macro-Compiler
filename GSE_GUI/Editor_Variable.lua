@@ -69,6 +69,15 @@ end]],
             local orig = GSEVariables[currentKey]
             GSEVariables[text] = orig
             GSEVariables[currentKey] = nil
+            -- Clear the platform-id sidecar entry under the OLD name. The
+            -- variable is now stored under `text`; the next Companion sync
+            -- must mint a fresh server identity rather than pointing the
+            -- new variable at the old one's _id (which would alternate-
+            -- write with the original on every sync — same class as the
+            -- v4↔v5 sequence collision).
+            if GSEVariablePlatformIDs then
+                GSEVariablePlatformIDs[currentKey] = nil
+            end
             currentKey = text
             local implementationText = [[=GSE.V.]] .. text .. [[()]]
             implementation:SetText(implementationText)

@@ -414,6 +414,23 @@ function GSE.CreateEditor()
                     editframe.nameeditbox:SetFocus()
                     return
                 end
+                if editframe.newname then
+                    -- Save-as-new-name path: the sequence object inherited
+                    -- its source's MetaData (including PlatformID). Without
+                    -- clearing it here, both old and new sequences would
+                    -- resolve to the same server record on next sync, and
+                    -- /upsert would alternate between their two payloads
+                    -- (the v4↔v5 bouncing class observed 2026-05-08).
+                    -- Mint a fresh server identity on the next Companion
+                    -- sync by wiping the stamp here.
+                    if sequence.MetaData then
+                        sequence.MetaData.PlatformID = nil
+                    end
+                    if GSEPlatformIDs and editframe.OrigSequenceName then
+                        local origKey = editframe.OrigSequenceName .. "|" .. (editframe.Sequence and editframe.Sequence.MetaData and editframe.Sequence.MetaData.Author or "")
+                        GSEPlatformIDs[origKey] = nil
+                    end
+                end
                 GSE.EnqueueOOC(vals)
                 editframe:SetStatusText(L["Save pending for "] .. SequenceName)
             end
