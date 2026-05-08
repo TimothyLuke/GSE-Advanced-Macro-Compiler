@@ -1663,6 +1663,39 @@ GSE:RegisterChatCommand("gse", "GSSlash")
 
 -- Functions
 
+--- Drain the entire incoming queue. Marks every pending item as imported so
+--- the Companion prunes them on its side, then empties the local table.
+--- Shared by /gse clearincoming and the queue-manager UI.
+function GSE.ClearIncomingQueue()
+    local pending = GSE.IncomingQueue or {}
+    local count = #pending
+    if GSE.CompanionMarkImported then
+        for _, item in ipairs(pending) do
+            GSE.CompanionMarkImported(item)
+        end
+    end
+    GSE.IncomingQueue = {}
+    if GSE.GUIImportFrame then GSE.GUIImportFrame:Hide() end
+    GSE.Print(
+        "|cff00ccffGSE Companion:|r Cleared " .. count ..
+        " pending update(s) from the incoming queue."
+    )
+    return count
+end
+
+--- Remove a single incoming-queue entry by index (1-based). Marks it as
+--- imported on the Companion side so the same payload doesn't re-sync, then
+--- drops it from the local queue. Returns true on success.
+function GSE.RemoveIncomingQueueEntry(index)
+    if not (GSE.IncomingQueue and GSE.IncomingQueue[index]) then return false end
+    local item = GSE.IncomingQueue[index]
+    if GSE.CompanionMarkImported then
+        GSE.CompanionMarkImported(item)
+    end
+    table.remove(GSE.IncomingQueue, index)
+    return true
+end
+
 --- This function finds a macro by name.  It checks current class first then global
 function GSE.FindSequence(sequenceName)
     local returnVal
@@ -1773,19 +1806,12 @@ function GSE:GSSlash(input)
     elseif string.lower(command) == "clearoocqueue" then
         GSE.OOCQueue = {}
     elseif string.lower(command) == "clearincoming" then
-        local pending = GSE.IncomingQueue or {}
-        local count = #pending
-        if GSE.CompanionMarkImported then
-            for _, item in ipairs(pending) do
-                GSE.CompanionMarkImported(item)
-            end
+        GSE.ClearIncomingQueue()
+    elseif string.lower(command) == "incoming" then
+        GSE.CheckGUI()
+        if GSE.UnsavedOptions["GUI"] and GSE.ShowIncomingQueueManager then
+            GSE.ShowIncomingQueueManager()
         end
-        GSE.IncomingQueue = {}
-        if GSE.GUIImportFrame then GSE.GUIImportFrame:Hide() end
-        GSE.Print(
-            "|cff00ccffGSE Companion:|r Cleared " .. count ..
-            " pending update(s) from the incoming queue."
-        )
     elseif string.lower(command) == "import" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then

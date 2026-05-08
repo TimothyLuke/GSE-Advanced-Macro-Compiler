@@ -359,6 +359,9 @@ end
 -- to advance to the next page (or phase). Assigned at the bottom of the
 -- file, after renderImportsPage and renderDeletesPage are defined.
 local processQueue
+-- Forward-declared because LandingPage's banner button calls into it before
+-- the full definition appears further down the file.
+local renderQueueManager
 
 -- Render a list of decoded collections (each with its own heading) and a single
 -- Import button that re-encodes and imports each collection separately.
@@ -744,6 +747,13 @@ local function LandingPage()
       processQueue()
     end)
     queueBanner:AddChild(queueButton)
+    local manageButton = AceGUI:Create("Button")
+    manageButton:SetText("Manage Queue")
+    manageButton:SetWidth(140)
+    manageButton:SetCallback("OnClick", function()
+      renderQueueManager()
+    end)
+    queueBanner:AddChild(manageButton)
     importframe:AddChild(queueBanner)
     local divider = AceGUI:Create("Heading")
     divider:SetText("  — or paste a string below —  ")
@@ -819,4 +829,110 @@ end
 -- Called by the login notification or the GSE menu to jump straight to the queue
 function GSE.ShowIncomingQueue()
   processQueue()
+end
+
+-- Build a human-readable summary of one queue item for the manager view.
+-- Items hold a list of encoded collections under .sequences keyed by name;
+-- decode lazily and concatenate the inner sequence/variable/macro names.
+local function describeQueueEntry(item)
+  if type(item) ~= "table" then return "?" end
+  local detailParts = {}
+  for _, encoded in pairs(item.sequences or {}) do
+    local ok, collection = GSE.DecodeMessage(encoded)
+    if ok and collection and collection.payload then
+      local p = collection.payload
+      for k in pairs(p.Sequences or {}) do table.insert(detailParts, k) end
+      for k in pairs(p.Variables or {}) do table.insert(detailParts, k .. " (Var)") end
+      for k in pairs(p.Macros or {}) do table.insert(detailParts, k .. " (Mac)") end
+    end
+  end
+  if #detailParts == 0 then return tostring(item.name or "?") end
+  return string.format("%s  |cff888888[%s]|r",
+    tostring(item.name or "?"), table.concat(detailParts, ", "))
+end
+
+renderQueueManager = function()
+  importframe:ReleaseChildren()
+  importframe._fromQueue = false
+
+  local scroll = setupScrollContent()
+  local total = GSE.IncomingQueue and #GSE.IncomingQueue or 0
+
+  local header = AceGUI:Create("Heading")
+  header:SetText(string.format(
+    "|cff00ccffGSE Companion:|r Incoming queue (%d)", total))
+  header:SetFullWidth(true)
+  scroll:AddChild(header)
+
+  if total == 0 then
+    local empty = AceGUI:Create("Label")
+    empty:SetText("Queue is empty.")
+    empty:SetFullWidth(true)
+    scroll:AddChild(empty)
+  else
+    local desc = AceGUI:Create("Label")
+    desc:SetText(
+      "|cFFFF6666Remove|r drops one entry from the queue and tells the " ..
+      "Companion to prune it (won't re-sync). |cFFFF6666Clear All|r does " ..
+      "the same for every entry."
+    )
+    desc:SetFullWidth(true)
+    scroll:AddChild(desc)
+
+    -- Snapshot a stable view: render row-by-row using the original indices.
+    -- Removing during iteration mutates GSE.IncomingQueue, so each Remove
+    -- click re-renders rather than touching the live row list in place.
+    for idx = 1, total do
+      local item = GSE.IncomingQueue[idx]
+      local row = AceGUI:Create("SimpleGroup")
+      row:SetLayout("Flow")
+      row:SetFullWidth(true)
+
+      local label = AceGUI:Create("Label")
+      label:SetText(describeQueueEntry(item))
+      label:SetWidth(500)
+      row:AddChild(label)
+
+      local removeBtn = AceGUI:Create("Button")
+      removeBtn:SetText("Remove")
+      removeBtn:SetWidth(100)
+      removeBtn:SetCallback("OnClick", function()
+        if GSE.RemoveIncomingQueueEntry then
+          GSE.RemoveIncomingQueueEntry(idx)
+        end
+        renderQueueManager()
+      end)
+      row:AddChild(removeBtn)
+      scroll:AddChild(row)
+    end
+  end
+
+  local toolbar = AceGUI:Create("SimpleGroup")
+  toolbar:SetFullWidth(true)
+  toolbar:SetLayout("Flow")
+
+  local clearBtn = AceGUI:Create("Button")
+  clearBtn:SetText("Clear All")
+  clearBtn:SetWidth(140)
+  clearBtn:SetDisabled(total == 0)
+  clearBtn:SetCallback("OnClick", function()
+    if GSE.ClearIncomingQueue then GSE.ClearIncomingQueue() end
+    importframe:Hide()
+  end)
+  toolbar:AddChild(clearBtn)
+
+  local closeBtn = AceGUI:Create("Button")
+  closeBtn:SetText(L["Close"] or "Close")
+  closeBtn:SetWidth(140)
+  closeBtn:SetCallback("OnClick", function() importframe:Hide() end)
+  toolbar:AddChild(closeBtn)
+
+  importframe:AddChild(toolbar)
+  importframe:Show()
+end
+
+-- Open the queue-manager dialog (list + per-row remove + clear all).
+-- Different from GSE.ShowIncomingQueue, which jumps into the import flow.
+function GSE.ShowIncomingQueueManager()
+  renderQueueManager()
 end
