@@ -109,9 +109,38 @@ local function ForwardMacroEditorMouseWheel(macroEditBox, frame)
     end
 end
 
+-- Inline "X/255" indicator anchored to the top-right of the macro edit box,
+-- replacing the old side-panel that listed compiled output. Created on first
+-- call; subsequent calls just retext + recolour.
+local function SetMacroCountText(macroEditBox, lenMacro)
+    if not (macroEditBox and macroEditBox.frame) then return end
+
+    local fs = macroEditBox.gseMacroCountText
+    if not fs then
+        fs = macroEditBox.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        fs:SetJustifyH("RIGHT")
+        fs:SetJustifyV("TOP")
+        fs:ClearAllPoints()
+        local anchor = macroEditBox.scrollBG or macroEditBox.frame
+        fs:SetPoint("BOTTOMRIGHT", anchor, "TOPRIGHT", -4, 2)
+        macroEditBox.gseMacroCountText = fs
+    end
+
+    lenMacro = lenMacro or 0
+    local text = string.format("%d/%d", lenMacro, MAX_MACRO_BODY)
+    if lenMacro > MAX_MACRO_BODY then
+        local prefix = (GSEOptions and GSEOptions.UNKNOWN) or "|cffff5555"
+        local suffix = (Statics and Statics.StringReset) or "|r"
+        fs:SetText(prefix .. text .. suffix)
+    else
+        fs:SetText(text)
+    end
+end
+
 -- Exposed so GSE_QoL's CreateSpellEditBox override can wire the same hooks.
 GSE.GUI.UpdateMacroLimitState = UpdateMacroLimitState
 GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
+GSE.GUI.SetMacroCountText = SetMacroCountText
 
 
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
@@ -566,6 +595,20 @@ function GSE.CreateEditor()
         end
         editframe.scrollContainer:DoLayout()
     end
+    -- Re-renders just the action panels of the currently-open version.
+    -- Captured by DrawSequenceEditor on every render (covers both the
+    -- ChooseVersion path and the direct call from GUIDrawMacroEditor),
+    -- so external callers like MacroPreview Show/Close can replay it
+    -- without knowing how the original render was triggered.
+    editframe.RefreshCurrentVersion = function()
+        local last = editframe._lastDrawSequence
+        if not (last and last.container and editframe.DrawSequenceEditor) then return end
+        last.container:ReleaseChildren()
+        editframe.DrawSequenceEditor(last.container, last.version, last.path)
+        if editframe.scrollContainer and editframe.scrollContainer.DoLayout then
+            editframe.scrollContainer:DoLayout()
+        end
+    end
     local function drawRawEditor(container, version, tablestring, path)
         container:ReleaseChildren()
 
@@ -636,6 +679,13 @@ function GSE.CreateEditor()
         container:AddChild(toolcontainer)
     end
     local function DrawSequenceEditor(tcontainer, version, path)
+        -- Captured for editframe.RefreshCurrentVersion so an external open/close
+        -- of the Compiled Template window can re-render action panels.
+        editframe._lastDrawSequence = {
+            container = tcontainer,
+            version = version,
+            path = path,
+        }
     local function GetBlockToolbar(
             version,
             path,
@@ -1537,32 +1587,47 @@ function GSE.CreateEditor()
                     local macrolayout = AceGUI:Create("SimpleGroup")
                     macrolayout:SetLayout("Flow")
                     macrolayout:SetFullWidth(true)
+
+                    -- Populate compiled-side-panel text regardless of
+                    -- visibility — it's a no-op SetText when the Label
+                    -- isn't in the layout, but means we don't have to
+                    -- re-derive it on Compiled Template open/close.
                     local compiledmacrotext =
                         GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-                    local lenMacro = string.len(compiledmacrotext)
+                    local compiledLen = string.len(compiledmacrotext)
                     local charcount
-                    if lenMacro > 255 then
+                    if compiledLen > 255 then
                         charcount =
                             string.format(
                             GSEOptions.UNKNOWN .. L["%s/255 Characters Used"] .. Statics.StringReset,
-                            lenMacro
+                            compiledLen
                         )
                     else
-                        charcount = string.format(L["%s/255 Characters Used"], lenMacro)
+                        charcount = string.format(L["%s/255 Characters Used"], compiledLen)
                     end
-                    compiledmacrotext = compiledmacrotext .. "\n\n" .. charcount
-
-                    compiledMacro:SetText(compiledmacrotext)
+                    compiledMacro:SetText(compiledmacrotext .. "\n\n" .. charcount)
                     compiledMacro.label:SetNonSpaceWrap(true)
-                    compiledMacro:SetRelativeWidth(0.45)
 
-                    local spacerm = AceGUI:Create("Label")
-                    spacerm:SetRelativeWidth(0.03)
-                    macrolayout:AddChild(macroeditbox)
-                    macrolayout:AddChild(spacerm)
-                    macrolayout:AddChild(compiledMacro)
+                    local previewOpen = editframe.PreviewFrame and editframe.PreviewFrame:IsShown()
+                    if previewOpen then
+                        macroeditbox:SetRelativeWidth(0.5)
+                        compiledMacro:SetRelativeWidth(0.45)
+                        local spacerm = AceGUI:Create("Label")
+                        spacerm:SetRelativeWidth(0.03)
+                        macrolayout:AddChild(macroeditbox)
+                        macrolayout:AddChild(spacerm)
+                        macrolayout:AddChild(compiledMacro)
+                    else
+                        macroeditbox:SetFullWidth(true)
+                        macrolayout:AddChild(macroeditbox)
+                    end
 
                     spellcontainer:AddChild(macrolayout)
+                    -- Count what's actually in the editor (visible chars,
+                    -- color codes stripped) rather than the runtime-expanded
+                    -- compiled length — that's what the user sees typed.
+                    local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
+                    SetMacroCountText(macroeditbox, string.len(visible))
                 else
                     local editcontainer = AceGUI:Create("SimpleGroup")
                     editcontainer:SetLayout("Flow")
@@ -2674,21 +2739,21 @@ function GSE.CreateEditor()
                     sequence.Versions[version].Actions[keyPath].action = nil
                     sequence.Versions[version].Actions[keyPath].item = nil
                     sequence.Versions[version].Actions[keyPath].toy = nil
-                    local compiledmacrotext =
-                        GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-                    local lenMacro = string.len(compiledmacrotext)
-                    local charcount
-                    if lenMacro > 255 then
-                        charcount =
-                            string.format(
-                            GSEOptions.UNKNOWN .. L["%s/255 Characters Used"] .. Statics.StringReset,
-                            lenMacro
-                        )
-                    else
-                        charcount = string.format(L["%s/255 Characters Used"], lenMacro)
+                    -- Keep the side panel text in sync even if it's not in
+                    -- the layout right now — saves a re-derive when the
+                    -- Compiled Template window is reopened.
+                    if compiledMacro and compiledMacro.SetText then
+                        local body = GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                        local bodyLen = string.len(body)
+                        local cc
+                        if bodyLen > 255 then
+                            cc = string.format(GSEOptions.UNKNOWN .. L["%s/255 Characters Used"] .. Statics.StringReset, bodyLen)
+                        else
+                            cc = string.format(L["%s/255 Characters Used"], bodyLen)
+                        end
+                        compiledMacro:SetText(body .. "\n\n" .. cc)
                     end
-                    compiledmacrotext = compiledmacrotext .. "\n\n" .. charcount
-                    compiledMacro:SetText(compiledmacrotext)
+                    SetMacroCountText(macroEditBox, string.len(GSE.UnEscapeString(value or "")))
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)
                 end
             )

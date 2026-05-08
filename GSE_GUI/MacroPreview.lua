@@ -18,6 +18,12 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
       "OnClose",
       function(widget)
         PreviewFrame:Hide()
+        -- Editor's macro blocks render the inline side panel only when this
+        -- preview frame is visible, so a refresh is needed on close to drop
+        -- the panel and let the multiline take full width again.
+        if editframe and editframe.RefreshCurrentVersion then
+          editframe.RefreshCurrentVersion()
+        end
       end
     )
     PreviewFrame:SetLayout("List")
@@ -62,5 +68,11 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
     PreviewLabel:SetText(PreviewFrame.text)
   end
   PreviewFrame:SetStatusText(title)
+  local wasShown = PreviewFrame:IsShown()
   PreviewFrame:Show()
+  -- Refresh editor macro blocks so the inline side panel appears alongside
+  -- the multiline editor whenever this preview frame becomes visible.
+  if not wasShown and editframe and editframe.RefreshCurrentVersion then
+    editframe.RefreshCurrentVersion()
+  end
 end

@@ -318,32 +318,46 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
         local macrolayout = AceGUI:Create("SimpleGroup")
         macrolayout:SetLayout("Flow")
         macrolayout:SetFullWidth(true)
+
+        -- Populate compiled-side-panel text regardless of visibility — see
+        -- Editor.lua's inline equivalent for the rationale.
         local compiledmacrotext =
             GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-        local lenMacro = string.len(compiledmacrotext)
+        local compiledLen = string.len(compiledmacrotext)
         local charcount
-        if lenMacro > 255 then
+        if compiledLen > 255 then
             charcount =
                 string.format(
                 GSEOptions.UNKNOWN .. L["%s/255 Characters Used"] .. Statics.StringReset,
-                lenMacro
+                compiledLen
             )
         else
-            charcount = string.format(L["%s/255 Characters Used"], lenMacro)
+            charcount = string.format(L["%s/255 Characters Used"], compiledLen)
         end
-        compiledmacrotext = compiledmacrotext .. "\n\n" .. charcount
-
-        compiledMacro:SetText(compiledmacrotext)
+        compiledMacro:SetText(compiledmacrotext .. "\n\n" .. charcount)
         compiledMacro.label:SetNonSpaceWrap(true)
-        compiledMacro:SetRelativeWidth(0.45)
 
-        local spacerm = AceGUI:Create("Label")
-        spacerm:SetRelativeWidth(0.03)
-        macrolayout:AddChild(macroeditbox)
-        macrolayout:AddChild(spacerm)
-        macrolayout:AddChild(compiledMacro)
+        local previewOpen = editframe.PreviewFrame and editframe.PreviewFrame:IsShown()
+        if previewOpen then
+            macroeditbox:SetRelativeWidth(0.5)
+            compiledMacro:SetRelativeWidth(0.45)
+            local spacerm = AceGUI:Create("Label")
+            spacerm:SetRelativeWidth(0.03)
+            macrolayout:AddChild(macroeditbox)
+            macrolayout:AddChild(spacerm)
+            macrolayout:AddChild(compiledMacro)
+        else
+            macroeditbox:SetFullWidth(true)
+            macrolayout:AddChild(macroeditbox)
+        end
 
         spellcontainer:AddChild(macrolayout)
+        if GSE.GUI and GSE.GUI.SetMacroCountText then
+            -- Count visible chars actually in the editor, not the runtime-
+            -- expanded compiled length.
+            local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
+            GSE.GUI.SetMacroCountText(macroeditbox, string.len(visible))
+        end
     else
         local editcontainer = AceGUI:Create("SimpleGroup")
         editcontainer:SetLayout("Flow")

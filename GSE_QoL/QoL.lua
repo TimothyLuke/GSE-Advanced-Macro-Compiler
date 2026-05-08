@@ -162,11 +162,22 @@ if GSE.GameMode > 10 then
                 sequence.Versions[version].Actions[keyPath].action = nil
                 sequence.Versions[version].Actions[keyPath].item = nil
                 sequence.Versions[version].Actions[keyPath].toy = nil
-                local compiledmacrotext =
-                    GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-                local lenMacro = string.len(compiledmacrotext)
-                compiledmacrotext = compiledmacrotext .. "\n\n" .. string.format(L["%s/255 Characters Used"], lenMacro)
-                compiledMacro:SetText(compiledmacrotext)
+                -- Keep the side panel content current even if not laid out;
+                -- avoids a re-derive when the Compiled Template window opens.
+                if compiledMacro and compiledMacro.SetText then
+                    local body = GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                    local bodyLen = string.len(body)
+                    local cc
+                    if bodyLen > 255 then
+                        cc = string.format(GSEOptions.UNKNOWN .. L["%s/255 Characters Used"] .. Statics.StringReset, bodyLen)
+                    else
+                        cc = string.format(L["%s/255 Characters Used"], bodyLen)
+                    end
+                    compiledMacro:SetText(body .. "\n\n" .. cc)
+                end
+                if GSE.GUI and GSE.GUI.SetMacroCountText then
+                    GSE.GUI.SetMacroCountText(macroEditBox, string.len(GSE.UnEscapeString(value or "")))
+                end
                 if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
                     GSE.GUI.UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)
                 end
