@@ -5,6 +5,9 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
+local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+local StoreMacroEditorText = GSE.StoreMacroEditorText
+
 -- ---------------------------------------------------------------------------
 -- buildMacroMenu()  →  "Macros" tree node
 -- ---------------------------------------------------------------------------
@@ -211,10 +214,10 @@ local function showMacro(editframe, node, container)
         managedMacro:SetLabel(L["Macro Template"])
         local managedtext =
             (source[node.name].managedMacro and
-            GSE.CompileMacroText(
+            DecodeMacroEditorText(GSE.CompileMacroText(
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
                 Statics.TranslatorMode.Current
-            ) or node.text)
+            )) or DecodeMacroEditorText(node.text))
         managedMacro:SetText(managedtext)
         managedMacro:SetNumLines(8)
         managedMacro:SetFullWidth(true)
@@ -228,10 +231,10 @@ local function showMacro(editframe, node, container)
 
         local compiledtext =
             (source[node.name].managedMacro and
-            GSE.CompileMacroText(
+            DecodeMacroEditorText(GSE.CompileMacroText(
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
                 Statics.TranslatorMode.String
-            ) or node.text)
+            )) or DecodeMacroEditorText(node.text))
         compiledMacro:SetText(compiledtext)
 
         local compiledlinecount = AceGUI:Create("Label")
@@ -246,8 +249,8 @@ local function showMacro(editframe, node, container)
             "OnTextChanged",
             function(self, _, text)
                 editframe:SetStatusText(L["Save pending for "] .. node.name)
-                source[node.name].managedMacro = GSE.CompileMacroText(text, Statics.TranslatorMode.ID)
-                local compiled = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
+                source[node.name].managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
+                local compiled = DecodeMacroEditorText(GSE.CompileMacroText(text, Statics.TranslatorMode.String))
                 compiledMacro:SetText(compiled)
                 compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
                 local oocaction = {
@@ -319,14 +322,14 @@ local function showMacro(editframe, node, container)
 
         local macro = AceGUI:Create("MultiLineEditBox")
         macro:SetLabel(L["Macro"])
-        macro:SetText(node.text)
+        macro:SetText(DecodeMacroEditorText(node.text))
         macro:SetNumLines(8)
         macro:SetFullWidth(true)
         macro:SetCallback(
             "OnEnterPressed",
             function(self, _, text)
                 editframe:SetStatusText(L["Save pending for "] .. node.name)
-                node.text = GSE.CompileMacroText(text, Statics.TranslatorMode.String)
+                node.text = StoreMacroEditorText(text, Statics.TranslatorMode.String)
                 local oocaction = {
                     ["action"] = "updatemacro",
                     ["node"] = node,
@@ -338,7 +341,7 @@ local function showMacro(editframe, node, container)
         macro:SetCallback(
             "OnTextChanged",
             function(self, _, text)
-                local length = string.len(text)
+                local length = string.len(DecodeMacroEditorText(text))
                 local line = string.format(L["%s/255 Characters Used"], length)
                 if length > 255 then
                     line = GSEOptions.UNKNOWN .. line .. Statics.StringReset

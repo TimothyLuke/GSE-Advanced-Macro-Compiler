@@ -8,6 +8,17 @@ local L = GSE.L
 
 local playerSpells = {}
 
+local DecodeEditorText = GSE.DecodeEditorText
+local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+
+local function DisableMultilineEditorColoring(editBox)
+    if editBox and editBox.editBox and IndentationLib and IndentationLib.disable then
+        IndentationLib.disable(editBox.editBox)
+    end
+end
+
+local StoreMacroEditorText = GSE.StoreMacroEditorText
+
 function GSE.PlayerSpellsLoaded()
     return #playerSpells > 0
 end
@@ -73,6 +84,10 @@ if GSE.GameMode > 10 then
             spelltext = action.item
             spellEditBox:SetLabel(L["Item"])
         elseif action.macro then
+            local repairedMacro = StoreMacroEditorText(action.macro)
+            if repairedMacro ~= action.macro then
+                action.macro = repairedMacro
+            end
             if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
                 spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
             else
@@ -90,12 +105,16 @@ if GSE.GameMode > 10 then
                 spelltext = action.spell
             end
         end
+        if not action.macro then
+            spelltext = DecodeEditorText(spelltext)
+        end
 
         spellEditBox:SetText(spelltext)
         --local compiledAction = GSE.CompileAction(action, sequence.Versions[version])
         spellEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
+                value = DecodeEditorText(value)
                 if sequence.Versions[version].Actions[keyPath].type == "pet" then
                     sequence.Versions[version].Actions[keyPath].action = value
                     sequence.Versions[version].Actions[keyPath].spell = nil
@@ -137,6 +156,7 @@ if GSE.GameMode > 10 then
         )
 
         local macroEditBox = AceGUI:Create("MultiLineEditBox")
+        DisableMultilineEditorColoring(macroEditBox)
         macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
         macroEditBox:DisableButton(true)
         macroEditBox:SetNumLines(5)
@@ -149,15 +169,24 @@ if GSE.GameMode > 10 then
             GSE.GUI.UpdateMacroLimitState(macroEditBox, action.macro)
         end
         macroEditBox:SetCallback(
+            "OnRelease",
+            function(sel)
+                DisableMultilineEditorColoring(sel)
+                if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+                    GSE.GUI.UpdateMacroLimitState(sel, nil)
+                end
+            end
+        )
+        macroEditBox:SetCallback(
             "OnTextChanged",
             function(sel, object, value)
-                value = GSE.UnEscapeString(value)
-                if string.sub(value, 1, 1) == "/" then
-                    sequence.Versions[version].Actions[keyPath].macro =
-                        GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
-                else
-                    sequence.Versions[version].Actions[keyPath].macro = value
+                value = DecodeMacroEditorText(value)
+                if sel and not sel.gseDecodingEditorText and sel.GetText and sel:GetText() ~= value then
+                    sel.gseDecodingEditorText = true
+                    sel:SetText(value)
+                    sel.gseDecodingEditorText = nil
                 end
+                sequence.Versions[version].Actions[keyPath].macro = StoreMacroEditorText(value)
                 sequence.Versions[version].Actions[keyPath].spell = nil
                 sequence.Versions[version].Actions[keyPath].action = nil
                 sequence.Versions[version].Actions[keyPath].item = nil
@@ -165,7 +194,15 @@ if GSE.GameMode > 10 then
                 -- Keep the side panel content current even if not laid out;
                 -- avoids a re-derive when the Compiled Template window opens.
                 if compiledMacro and compiledMacro.SetText then
-                    local body = GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                    local body =
+                        DecodeMacroEditorText(
+                        GSE.UnEscapeString(
+                            GSE.CompileMacroText(
+                                sequence.Versions[version].Actions[keyPath].macro,
+                                Statics.TranslatorMode.String
+                            )
+                        )
+                    )
                     local bodyLen = string.len(body)
                     local cc
                     if bodyLen > 255 then
@@ -176,7 +213,7 @@ if GSE.GameMode > 10 then
                     compiledMacro:SetText(body .. "\n\n" .. cc)
                 end
                 if GSE.GUI and GSE.GUI.SetMacroCountText then
-                    GSE.GUI.SetMacroCountText(macroEditBox, string.len(GSE.UnEscapeString(value or "")))
+                    GSE.GUI.SetMacroCountText(macroEditBox, string.len(DecodeMacroEditorText(value or "")))
                 end
                 if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
                     GSE.GUI.UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)

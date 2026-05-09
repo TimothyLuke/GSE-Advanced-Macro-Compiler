@@ -294,6 +294,14 @@ end]],
         end
     )
     IndentationLib.enable(valueEditBox.editBox, Statics.IndentationColorTable, 4)
+    valueEditBox:SetCallback(
+        "OnRelease",
+        function(widget)
+            if widget and widget.editBox and IndentationLib and IndentationLib.disable then
+                IndentationLib.disable(widget.editBox)
+            end
+        end
+    )
     container:AddChild(valueEditBox)
 
     implementation:SetLabel(L["Implementation Link"])

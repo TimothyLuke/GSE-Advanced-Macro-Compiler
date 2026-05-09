@@ -32,6 +32,9 @@ local function GetCompiledMacroBodyLength(macroText)
         local ok, result = pcall(GSE.UnEscapeString, compiled)
         if ok and result then compiled = result end
     end
+    if GSE.DecodeMacroEditorText then
+        compiled = GSE.DecodeMacroEditorText(compiled)
+    end
     return string.len(compiled or "")
 end
 
@@ -141,6 +144,23 @@ end
 GSE.GUI.UpdateMacroLimitState = UpdateMacroLimitState
 GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
 GSE.GUI.SetMacroCountText = SetMacroCountText
+
+local DecodeEditorText = GSE.DecodeEditorText
+local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+
+local function DisableRawEditorColoring(rawEditBox)
+    if rawEditBox and rawEditBox.editBox and IndentationLib and IndentationLib.disable then
+        IndentationLib.disable(rawEditBox.editBox)
+    end
+end
+
+local function DisableMultilineEditorColoring(editBox)
+    if editBox and editBox.editBox and IndentationLib and IndentationLib.disable then
+        IndentationLib.disable(editBox.editBox)
+    end
+end
+
+local StoreMacroEditorText = GSE.StoreMacroEditorText
 
 
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
@@ -620,6 +640,9 @@ function GSE.CreateEditor()
         seqTableEditbox:SetText(tablestring)
 
         IndentationLib.enable(seqTableEditbox.editBox, Statics.IndentationColorTable, 4)
+        seqTableEditbox:SetCallback("OnRelease", function(widget)
+            DisableRawEditorColoring(widget)
+        end)
 
         local compileButton = AceGUI:Create("Button")
         compileButton:SetText(L["Compile"])
@@ -628,7 +651,7 @@ function GSE.CreateEditor()
             "OnClick",
             function()
                 local tab
-                local load = "return " .. seqTableEditbox:GetText()
+                local load = "return " .. DecodeEditorText(seqTableEditbox:GetText())
                 local func, err = loadstring(load)
                 if err or not func then
                     GSE.Print(L["Unable to process content.  Fix table and try again."], L["Raw Editor"])
@@ -638,6 +661,7 @@ function GSE.CreateEditor()
                 else
                     tab = func()
                     if not GSE.isEmpty(tab) then
+                        DisableRawEditorColoring(seqTableEditbox)
                         editframe.Sequence.Versions[version] = tab
                         treeContainer:SelectByValue(path .. "\001" .. version)
                     else
@@ -659,6 +683,7 @@ function GSE.CreateEditor()
         cancelButton:SetCallback(
             "OnClick",
             function()
+                DisableRawEditorColoring(seqTableEditbox)
                 treeContainer:SelectByValue(path .. "\001" .. version)
             end
         )
@@ -1572,7 +1597,13 @@ function GSE.CreateEditor()
                             action[field] = nil
                         end
                         if cfg.clearUnit then action.unit = nil end
-                        action[cfg.actionField] = cfg.sourceBox:GetText()
+                        local sourceText = cfg.sourceBox:GetText()
+                        if cfg.type == "macro" then
+                            sourceText = StoreMacroEditorText(sourceText)
+                        else
+                            sourceText = DecodeEditorText(sourceText)
+                        end
+                        action[cfg.actionField] = sourceText
                         action.type = cfg.type
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                     end
@@ -2252,6 +2283,9 @@ function GSE.CreateEditor()
         raweditbutton:SetCallback(
             "OnClick",
             function()
+                if GSE.SanitizeSequenceEditorMarkup then
+                    GSE.SanitizeSequenceEditorMarkup(editframe.Sequence.Versions[version])
+                end
                 drawRawEditor(
                     macrocontainer,
                     version,
@@ -2645,6 +2679,10 @@ function GSE.CreateEditor()
                 spelltext = action.item
                 spellEditBox:SetLabel(L["Item"])
             elseif action.macro then
+                local repairedMacro = StoreMacroEditorText(action.macro)
+                if repairedMacro ~= action.macro then
+                    action.macro = repairedMacro
+                end
                 if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
                     spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
                 else
@@ -2662,12 +2700,16 @@ function GSE.CreateEditor()
                     spelltext = action.spell
                 end
             end
+            if not action.macro then
+                spelltext = DecodeEditorText(spelltext)
+            end
 
             spellEditBox:SetText(spelltext)
 
             spellEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
+                    value = DecodeEditorText(value)
                     if sequence.Versions[version].Actions[keyPath].type == "pet" then
                         sequence.Versions[version].Actions[keyPath].action = value
                         sequence.Versions[version].Actions[keyPath].spell = nil
@@ -2675,12 +2717,7 @@ function GSE.CreateEditor()
                         sequence.Versions[version].Actions[keyPath].item = nil
                         sequence.Versions[version].Actions[keyPath].toy = nil
                     elseif sequence.Versions[version].Actions[keyPath].type == "macro" then
-                        if string.sub(value, 1, 1) == "/" then
-                            sequence.Versions[version].Actions[keyPath].macro =
-                                GSE.TranslateString(value, Statics.TranslatorMode.Current)
-                        else
-                            sequence.Versions[version].Actions[keyPath].macro = value
-                        end
+                        sequence.Versions[version].Actions[keyPath].macro = StoreMacroEditorText(value)
                         sequence.Versions[version].Actions[keyPath].spell = nil
                         sequence.Versions[version].Actions[keyPath].action = nil
                         sequence.Versions[version].Actions[keyPath].item = nil
@@ -2719,6 +2756,7 @@ function GSE.CreateEditor()
                 end
             )
             local macroEditBox = AceGUI:Create("MultiLineEditBox")
+            DisableMultilineEditorColoring(macroEditBox)
             macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
             macroEditBox:DisableButton(true)
             macroEditBox:SetNumLines(5)
@@ -2727,14 +2765,22 @@ function GSE.CreateEditor()
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
             UpdateMacroLimitState(macroEditBox, action.macro)
             macroEditBox:SetCallback(
+                "OnRelease",
+                function(sel)
+                    DisableMultilineEditorColoring(sel)
+                    UpdateMacroLimitState(sel, nil)
+                end
+            )
+            macroEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
-                    if string.sub(value, 1, 1) == "/" then
-                        sequence.Versions[version].Actions[keyPath].macro =
-                            GSE.CompileMacroText(value, Statics.TranslatorMode.ID)
-                    else
-                        sequence.Versions[version].Actions[keyPath].macro = value
+                    value = DecodeMacroEditorText(value)
+                    if sel and not sel.gseDecodingEditorText and sel.GetText and sel:GetText() ~= value then
+                        sel.gseDecodingEditorText = true
+                        sel:SetText(value)
+                        sel.gseDecodingEditorText = nil
                     end
+                    sequence.Versions[version].Actions[keyPath].macro = StoreMacroEditorText(value)
                     sequence.Versions[version].Actions[keyPath].spell = nil
                     sequence.Versions[version].Actions[keyPath].action = nil
                     sequence.Versions[version].Actions[keyPath].item = nil
@@ -2743,7 +2789,15 @@ function GSE.CreateEditor()
                     -- the layout right now — saves a re-derive when the
                     -- Compiled Template window is reopened.
                     if compiledMacro and compiledMacro.SetText then
-                        local body = GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+                        local body =
+                            DecodeMacroEditorText(
+                            GSE.UnEscapeString(
+                                GSE.CompileMacroText(
+                                    sequence.Versions[version].Actions[keyPath].macro,
+                                    Statics.TranslatorMode.String
+                                )
+                            )
+                        )
                         local bodyLen = string.len(body)
                         local cc
                         if bodyLen > 255 then
@@ -2753,7 +2807,7 @@ function GSE.CreateEditor()
                         end
                         compiledMacro:SetText(body .. "\n\n" .. cc)
                     end
-                    SetMacroCountText(macroEditBox, string.len(GSE.UnEscapeString(value or "")))
+                    SetMacroCountText(macroEditBox, string.len(DecodeMacroEditorText(value or "")))
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro)
                 end
             )

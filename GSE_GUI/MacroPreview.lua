@@ -3,6 +3,12 @@ local GSE = GSE
 local Statics = GSE.Static
 
 local L = GSE.L
+local function DisablePreviewColoring(widget)
+    if widget and widget.editBox and IndentationLib and IndentationLib.disable then
+        IndentationLib.disable(widget.editBox)
+    end
+end
+
 function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
   local AceGUI = LibStub("AceGUI-3.0")
 
@@ -41,6 +47,7 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
     PreviewFrame:AddChild(PreviewLabel)
 
     IndentationLib.enable(PreviewLabel.editBox, Statics.IndentationColorTable, 4)
+    PreviewLabel:SetCallback("OnRelease", DisablePreviewColoring)
 
     PreviewFrame.frame:SetScript(
       "OnSizeChanged",

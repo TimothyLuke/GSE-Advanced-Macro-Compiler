@@ -4,6 +4,12 @@ local Statics = GSE.Static
 local AceGUI = LibStub("AceGUI-3.0")
 local L = GSE.L
 
+local function DisableCompareColoring(widget)
+  if widget and widget.editBox and IndentationLib and IndentationLib.disable then
+    IndentationLib.disable(widget.editBox)
+  end
+end
+
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   local compareframe = AceGUI:Create("Frame")
   compareframe:Hide()
@@ -19,6 +25,8 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   compareframe:SetCallback(
     "OnClose",
     function(self)
+      DisableCompareColoring(compareframe.OrigText)
+      DisableCompareColoring(compareframe.NewText)
       compareframe:Hide()
       GSE.ShowSequences()
       AceGUI:Release(self)
@@ -39,6 +47,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   leftColumn:DisableButton(true)
   leftColumn:SetLabel(L["Local Macro"])
   IndentationLib.enable(leftColumn.editBox, Statics.IndentationColorTable, 4)
+  leftColumn:SetCallback("OnRelease", DisableCompareColoring)
 
   local rightColumn = AceGUI:Create("MultiLineEditBox")
   compareframe.NewText = rightColumn
@@ -48,6 +57,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   rightColumn:DisableButton(true)
   rightColumn:SetLabel(L["Updated Macro"])
   IndentationLib.enable(rightColumn.editBox, Statics.IndentationColorTable, 4)
+  rightColumn:SetCallback("OnRelease", DisableCompareColoring)
 
   headerGroup:AddChild(leftColumn)
   headerGroup:AddChild(rightColumn)
@@ -113,6 +123,8 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   actionbutton:SetCallback(
     "OnClick",
     function()
+      DisableCompareColoring(compareframe.OrigText)
+      DisableCompareColoring(compareframe.NewText)
       compareframe:Hide()
       GSE.PerformMergeAction(
         compareframe.ChosenAction,

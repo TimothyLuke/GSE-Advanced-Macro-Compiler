@@ -8,6 +8,10 @@ if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 -- Forward declaration so drawAction can be called recursively from renderers.
 local drawAction
 
+local DecodeEditorText = GSE.DecodeEditorText
+local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+local StoreMacroEditorText = GSE.StoreMacroEditorText
+
 -- ─── Per-action-type renderers ───────────────────────────────────────────────
 
 local function renderPause(editframe, pcontainer, action, version, keyPath, treepath, GetBlockToolbar, ChooseVersion, tcontainer, hlabel, includeAdd)
@@ -229,7 +233,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
                 macroradio:SetValue(false)
                 toyradio:SetValue(false)
                 petradio:SetValue(false)
-                action.spell = spellEditBox:GetText()
+                action.spell = DecodeEditorText(spellEditBox:GetText())
                 action.macro = nil
                 action.item = nil
                 action.toy = nil
@@ -249,7 +253,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
                 petradio:SetValue(false)
                 action.spell = nil
                 action.macro = nil
-                action.item = spellEditBox:GetText()
+                action.item = DecodeEditorText(spellEditBox:GetText())
                 action.toy = nil
                 action.action = nil
                 action.type = "item"
@@ -268,7 +272,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
                 action.spell = nil
                 action.macro = nil
                 action.item = nil
-                action.action = spellEditBox:GetText()
+                action.action = DecodeEditorText(spellEditBox:GetText())
                 action.toy = nil
                 action.type = "pet"
                 ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
@@ -287,7 +291,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
                 action.macro = nil
                 action.item = nil
                 action.action = nil
-                action.toy = spellEditBox:GetText()
+                action.toy = DecodeEditorText(spellEditBox:GetText())
                 action.type = "toy"
                 ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
             end
@@ -302,7 +306,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
                 itemradio:SetValue(false)
                 petradio:SetValue(false)
                 action.spell = nil
-                action.macro = macroeditbox:GetText()
+                action.macro = StoreMacroEditorText(macroeditbox:GetText())
                 action.item = nil
                 action.action = nil
                 action.toy = nil
@@ -322,7 +326,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
         -- Populate compiled-side-panel text regardless of visibility — see
         -- Editor.lua's inline equivalent for the rationale.
         local compiledmacrotext =
-            GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
+            DecodeMacroEditorText(GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String)))
         local compiledLen = string.len(compiledmacrotext)
         local charcount
         if compiledLen > 255 then
@@ -355,7 +359,7 @@ local function renderAction(editframe, pcontainer, action, version, keyPath, tre
         if GSE.GUI and GSE.GUI.SetMacroCountText then
             -- Count visible chars actually in the editor, not the runtime-
             -- expanded compiled length.
-            local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
+            local visible = DecodeMacroEditorText(GSE.UnEscapeString(macroeditbox:GetText() or ""))
             GSE.GUI.SetMacroCountText(macroeditbox, string.len(visible))
         end
     else
