@@ -62,6 +62,9 @@ local function migrateSequenceVersions(sequence)
             end
         end
     end
+    if GSE.SanitizeSequenceEditorMarkup and GSE.SanitizeSequenceEditorMarkup(sequence) then
+        changed = true
+    end
     if changed and type(sequence.MetaData) == "table" then
         sequence.MetaData.Checksum = nil
     end
@@ -463,6 +466,9 @@ end
 
 --- Replace a current version of a Macro
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
+    if GSE.SanitizeSequenceEditorMarkup then
+        GSE.SanitizeSequenceEditorMarkup(sequence)
+    end
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     -- Checksum is stamped on export only, not on save, so the stored checksum
@@ -1407,6 +1413,9 @@ local function buildAction(action, metaData, blockPath)
                         GSE.GetSpellId(value, Statics.TranslatorMode.ID) or
                         GSE.GetSpellId(value, Statics.TranslatorMode.String)
                 elseif k == "macro" then
+                    if GSE.DecodeMacroEditorText then
+                        value = GSE.DecodeMacroEditorText(value)
+                    end
                     if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
                         -- we have a line of macrotext
                         spelllist["macrotext"] =
@@ -2089,6 +2098,9 @@ end
 function GSE.CompileMacroText(text, mode)
     if GSE.isEmpty(mode) then
         mode = Statics.TranslatorMode.ID
+    end
+    if GSE.DecodeMacroEditorText then
+        text = GSE.DecodeMacroEditorText(text)
     end
     local lines = GSE.SplitMeIntoLines(text)
     for k, v in ipairs(lines) do

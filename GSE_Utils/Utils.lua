@@ -51,6 +51,9 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
             return
         end
     end
+    if GSE.SanitizeSequenceEditorMarkup then
+        GSE.SanitizeSequenceEditorMarkup(sequence)
+    end
 
     GSE.PrintDebugMessage("Attempting to import " .. sequenceName, "Storage")
     GSE.PrintDebugMessage("Classid not supplied - " .. tostring(GSE.isEmpty(classid)), "Storage")
@@ -128,6 +131,9 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     end
     if GSE.isEmpty(newSequence.LastUpdated) then
         newSequence.LastUpdated = GSE.GetTimestamp()
+    end
+    if GSE.SanitizeSequenceEditorMarkup then
+        GSE.SanitizeSequenceEditorMarkup(newSequence)
     end
     if sequenceName:len() > 28 then
         local tempseqName = sequenceName:sub(1, 28)
@@ -273,6 +279,84 @@ local function fixContainer(v)
     return fixedTable
 end
 
+local importMarkupTextKeys = {
+    macro = true,
+    macrotext = true,
+    text = true,
+    managedMacro = true,
+    manageMacro = true,
+    funct = true
+}
+
+local importMarkupContainerKeys = {
+    Actions = true,
+    KeyPress = true,
+    KeyRelease = true
+}
+
+local importMacroMarkupTextKeys = {
+    macro = true,
+    macrotext = true,
+    text = true,
+    managedMacro = true,
+    manageMacro = true
+}
+
+local importMacroMarkupContainerKeys = {
+    KeyPress = true,
+    KeyRelease = true
+}
+
+local function decodeImportedEditorText(value, macroText)
+    if macroText and GSE.DecodeMacroEditorText then
+        return GSE.DecodeMacroEditorText(value)
+    elseif GSE.DecodeEditorText then
+        return GSE.DecodeEditorText(value)
+    end
+    if type(value) ~= "string" then return value end
+    value = value:gsub("||[cC]%x%x%x%x%x%x%x%x", "")
+    value = value:gsub("||r", "")
+    value = value:gsub("|[cC]%x%x%x%x%x%x%x%x", "")
+    value = value:gsub("|r", "")
+    value = value:gsub("||", "|")
+    if macroText then
+        value = value:gsub("(^[ \t]*)|([%a]+)", "%1/%2")
+        value = value:gsub("(\n[ \t]*)|([%a]+)", "%1/%2")
+    end
+    return value
+end
+
+local function scrubImportedEditorMarkup(node, decodeAllStrings, macroTextContext)
+    if type(node) ~= "table" then return node end
+    if GSE.SanitizeSequenceEditorMarkup and GSE.SanitizeSequenceEditorMarkup(node) then
+        return node
+    end
+    local isActionBlock = rawget(node, "Type") ~= nil
+    for k, v in pairs(node) do
+        if type(v) == "table" then
+            scrubImportedEditorMarkup(
+                v,
+                decodeAllStrings or importMarkupContainerKeys[k] or isActionBlock,
+                macroTextContext or importMacroMarkupContainerKeys[k]
+            )
+        elseif type(v) == "string" then
+            if decodeAllStrings or importMarkupTextKeys[k] then
+                node[k] = decodeImportedEditorText(v, macroTextContext or importMacroMarkupTextKeys[k])
+            end
+        end
+    end
+    return node
+end
+
+local function scrubCollectionPayload(payload)
+    if type(payload) ~= "table" then return end
+    for _, category in ipairs({"Sequences", "Variables", "Macros"}) do
+        for _, v in pairs(payload[category] or {}) do
+            scrubImportedEditorMarkup(v)
+        end
+    end
+end
+
 function GSE.processWAGOImport(input, dontencode)
     -- Pre-#1853 records stored versions under "Macros" instead of "Versions".
     -- The auto-rename has been retired: refuse to interpret a Macros-only
@@ -295,6 +379,7 @@ function GSE.processWAGOImport(input, dontencode)
             input[k] = fixContainer(v)
         end
     end
+    scrubImportedEditorMarkup(input)
     if dontencode then
         return input
     else
@@ -321,28 +406,30 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
 
     if decompresssuccess and actiontable then
         if actiontable.type == "COLLECTION" then
-            actiontable = actiontable.payload
+            actiontable = actiontable.payload or {}
+            scrubCollectionPayload(actiontable)
             -- Sequences/Variables/Macros in a COLLECTION payload are keyed by
             -- name and their values are the raw data tables (no {name, data}
             -- array wrapper). Propagate the key into the object's identity
             -- field so the recursive call can resolve it.
-            for name, v in pairs(actiontable["Variables"]) do
+            for name, v in pairs(actiontable["Variables"] or {}) do
                 if type(v) == "table" and not v.name then v.name = name end
                 GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
-            for name, v in pairs(actiontable["Sequences"]) do
+            for name, v in pairs(actiontable["Sequences"] or {}) do
                 if type(v) == "table" then
                     v.MetaData = v.MetaData or {}
                     if not v.MetaData.Name then v.MetaData.Name = name end
                 end
                 GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
-            for name, v in pairs(actiontable["Macros"]) do
+            for name, v in pairs(actiontable["Macros"] or {}) do
                 if type(v) == "table" and not v.name then v.name = name end
                 GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
+            scrubImportedEditorMarkup(actiontable)
             actiontable.objectType = nil
             local oocaction = {
                 ["action"] = "importmacro",
@@ -350,6 +437,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             }
             GSE.EnqueueOOC(oocaction)
         elseif actiontable.objectType == "VARIABLE" then
+            scrubImportedEditorMarkup(actiontable)
             actiontable.objectType = nil
             local oocaction = {
                 ["action"] = "updatevariable",
