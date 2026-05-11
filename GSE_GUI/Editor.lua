@@ -2775,11 +2775,8 @@ function GSE.CreateEditor()
                 "OnTextChanged",
                 function(sel, object, value)
                     value = DecodeMacroEditorText(value)
-                    if sel and not sel.gseDecodingEditorText and sel.GetText and sel:GetText() ~= value then
-                        sel.gseDecodingEditorText = true
-                        sel:SetText(value)
-                        sel.gseDecodingEditorText = nil
-                    end
+                    -- Do not SetText here; AceGUI resets the caret to 0 on OnTextSet
+                    -- and would strip the editor's colour markup while the user types.
                     sequence.Versions[version].Actions[keyPath].macro = StoreMacroEditorText(value)
                     sequence.Versions[version].Actions[keyPath].spell = nil
                     sequence.Versions[version].Actions[keyPath].action = nil
