@@ -2,11 +2,14 @@ const fs = require('fs');
 const path = require('path');
 
 const SCOPE_ID = '69c5b349738d1f112d148281';
-const PUBLISH_ACTION_ID = '69c745e14106131aec21c3d7';
 
 async function main() {
+  // File uploads still go through Qik (gse.tools/api/file/upload). The
+  // release-record write moved to the Node API at api.gse.tools/publish/mod
+  // (was Qik action 69c745e14106131aec21c3d7).
   const apiUrl = process.env.GSE_API_URL || 'https://gse.tools/api';
   const fileApiUrl = process.env.GSE_FILE_API_URL || apiUrl;
+  const publishApiUrl = process.env.GSE_PUBLISH_API_URL || 'https://api.gse.tools';
   const token = process.env.GSE_ACTION_TOKEN;
   const isTag = (process.env.GITHUB_REF || '').startsWith('refs/tags/');
 
@@ -63,9 +66,9 @@ async function main() {
     }
     console.log(`[publish] Uploaded ${zip} -> ${uploadData._id}`);
 
-    // Step 2: Create release record via publish action
+    // Step 2: Create release record via Node API
     const pubRes = await fetch(
-      `${apiUrl}/actions/${PUBLISH_ACTION_ID}`,
+      `${publishApiUrl}/publish/mod`,
       {
         method: 'POST',
         headers: {
