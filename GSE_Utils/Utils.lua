@@ -61,9 +61,17 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     sequenceName = string.gsub(sequenceName, " ", "_")
     sequenceName = string.gsub(sequenceName, ",", "_")
 
-    -- check Sequence TOC matches the current TOC
+    -- check Sequence TOC matches the current TOC at expansion-major
+    -- resolution. TOCs are XXYYZZ (XX = expansion, YY = patch, ZZ = build);
+    -- a sequence stamped 120001 and a client running 120005 are both
+    -- Midnight and shouldn't warn. Only flag when the expansion itself
+    -- differs (e.g. a Midnight sequence loaded on TWW) or when the stored
+    -- TOC is empty.
     local gameversion, build, date, tocversion = GetBuildInfo()
-    if GSE.isEmpty(sequence.MetaData.TOC) or sequence.MetaData.TOC ~= tocversion then
+    local seqTOC = tonumber(sequence.MetaData.TOC)
+    local seqExp = seqTOC and math.floor(seqTOC / 10000) or nil
+    local clientExp = tocversion and math.floor(tonumber(tocversion) / 10000) or nil
+    if GSE.isEmpty(sequence.MetaData.TOC) or seqExp ~= clientExp then
         GSE.Print(
             string.format(
                 L["WARNING ONLY"] ..
