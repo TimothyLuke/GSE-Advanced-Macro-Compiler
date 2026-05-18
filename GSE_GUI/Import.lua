@@ -492,10 +492,17 @@ local function processQueueCollections(collections)
       local addToBucket = function(category, k, v, action)
         local bucket = buckets[action]
         if not bucket then return end
+        -- Match manual-paste path (processCollection at the top of this
+        -- file): processWAGOImport WITHOUT dontencode returns the encoded
+        -- string. The outer EncodeMessage wraps it, the recursive
+        -- ImportSerialisedSequence DecodeMessages back. The round-trip
+        -- is identical end-to-end to a user pasting the string into the
+        -- import box, so any future "manual works / dialog doesn't" gap
+        -- is structurally impossible — both paths are the same bytes.
         if type(v) == "table" then v = GSE.processWAGOImport(v) end
-        -- processWAGOImport returns nil when it refuses (incompatible
-        -- legacy format). It already printed the user-facing message;
-        -- skip this entry so the rest of the batch still imports.
+        -- processWAGOImport returns nil when it refuses (pre-#1853 Macros-
+        -- only records). User-facing message already printed; skip this
+        -- entry so the rest of the batch still imports.
         if v == nil then return end
         bucket[category][k] = v
         bucket.n = bucket.n + 1
@@ -526,6 +533,12 @@ local function processQueueCollections(collections)
       for action, b in pairs(buckets) do
         if b.n > 0 then
           local payload = { Sequences = b.Sequences, Variables = b.Variables, Macros = b.Macros, ElementCount = b.n }
+          -- Re-encode the outer COLLECTION as a string so the recursive
+          -- decode path is identical to manual paste. ImportSerialisedSequence
+          -- accepts a table form but the dialog needs to match manual
+          -- byte-for-byte so the "manual works / dialog doesn't" class of
+          -- bug can't recur — both paths now traverse the same EncodeMessage
+          -- → DecodeMessage round-trip.
           local importstring = GSE.EncodeMessage({ ["type"] = "COLLECTION", ["payload"] = payload })
           local forcereplace = (action == "Replace") or importframe.AutoCreateIcon
           local forcemerge   = (action == "Merge")
