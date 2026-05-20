@@ -38,6 +38,19 @@ local function GetCompiledMacroBodyLength(macroText)
     return string.len(compiled or "")
 end
 
+-- Non-interactive "muted" icon. Uses a Label (a plain Frame) rather than the
+-- AceGUI "Icon" widget (a Button), so it never carries Disabled or EnableMouse
+-- state back into the shared widget pool. The muted look is baked into the
+-- texture asset, so no vertex colour or desaturation is applied at runtime.
+-- Optional trailing args are texture coords passed through to SetImage.
+local function CreateMutedIcon(imagePath, size, ...)
+    local icon = AceGUI:Create("Label")
+    icon:SetImage(imagePath, ...)
+    icon:SetImageSize(size, size)
+    icon:SetWidth(size)
+    return icon
+end
+
 -- Toggle the macro edit box between normal and over-limit visuals on its
 -- AceGUI-provided scrollBG backdrop. Silent fallback if scrollBG is missing.
 local function UpdateMacroLimitState(macroEditBox, macroText)
@@ -742,91 +755,90 @@ function GSE.CreateEditor()
             local moveUpButton, moveDownButton
 
             if GSE.isEmpty(disableMove) then
-                moveUpButton = AceGUI:Create("Icon")
-                moveDownButton = AceGUI:Create("Icon")
-                moveUpButton:SetImageSize(30, 30)
-                moveUpButton:SetWidth(30)
-                moveUpButton:SetHeight(30)
-                moveUpButton:SetImage(Statics.ActionsIcons.Up)
+                if lastPath > 1 then
+                    moveUpButton = AceGUI:Create("Icon")
+                    moveUpButton:SetImageSize(30, 30)
+                    moveUpButton:SetWidth(30)
+                    moveUpButton:SetHeight(30)
+                    moveUpButton:SetImage(Statics.ActionsIcons.Up)
 
-                moveUpButton:SetCallback(
-                    "OnClick",
-                    function()
-                        local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
-                        local destinationPath = {}
-                        for k, v in ipairs(path) do
-                            if k == #path then
-                                v = v - 1
+                    moveUpButton:SetCallback(
+                        "OnClick",
+                        function()
+                            local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
+                            local destinationPath = {}
+                            for k, v in ipairs(path) do
+                                if k == #path then
+                                    v = v - 1
+                                end
+                                table.insert(destinationPath, v)
                             end
-                            table.insert(destinationPath, v)
+
+                            editframe.Sequence.Versions[version].Actions[path] =
+                                GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                            editframe.Sequence.Versions[version].Actions[destinationPath] = original
+                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
                         end
+                    )
+                    moveUpButton:SetCallback(
+                        "OnEnter",
+                        function()
+                            GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
+                        end
+                    )
+                    moveUpButton:SetCallback(
+                        "OnLeave",
+                        function()
+                            GSE.ClearTooltip(editframe)
+                        end
+                    )
+                else
+                    -- Top block: a non-interactive muted icon instead of a
+                    -- disabled Icon button, so no state leaks into the pool.
+                    moveUpButton = CreateMutedIcon(Statics.ActionsIconsMuted.Up, 30)
+                end
 
-                        editframe.Sequence.Versions[version].Actions[path] =
-                            GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
-                        editframe.Sequence.Versions[version].Actions[destinationPath] = original
-                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                    end
-                )
-                moveUpButton:SetCallback(
-                    "OnEnter",
-                    function()
-                        GSE.CreateToolTip(L["Move Up"], L["Move this block up one block."], editframe)
-                    end
-                )
-                moveUpButton:SetCallback(
-                    "OnLeave",
-                    function()
-                        GSE.ClearTooltip(editframe)
-                    end
-                )
-                moveUpButton:SetCallback(
-                    "OnRelease",
-                    function(self)
-                        self:SetDisabled(false)
-                    end
-                )
+                if lastPath < blocksThisLevel then
+                    moveDownButton = AceGUI:Create("Icon")
+                    moveDownButton:SetImageSize(30, 30)
+                    moveDownButton:SetWidth(30)
+                    moveDownButton:SetHeight(30)
+                    moveDownButton:SetImage(Statics.ActionsIcons.Down)
 
-                moveDownButton:SetImageSize(30, 30)
-                moveDownButton:SetWidth(30)
-                moveDownButton:SetHeight(30)
-                moveDownButton:SetImage(Statics.ActionsIcons.Down)
-
-                moveDownButton:SetCallback(
-                    "OnClick",
-                    function()
-                        local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
-                        local destinationPath = {}
-                        for k, v in ipairs(path) do
-                            if k == #path then
-                                v = v + 1
+                    moveDownButton:SetCallback(
+                        "OnClick",
+                        function()
+                            local original = GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[path])
+                            local destinationPath = {}
+                            for k, v in ipairs(path) do
+                                if k == #path then
+                                    v = v + 1
+                                end
+                                table.insert(destinationPath, v)
                             end
-                            table.insert(destinationPath, v)
-                        end
 
-                        editframe.Sequence.Versions[version].Actions[path] =
-                            GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
-                        editframe.Sequence.Versions[version].Actions[destinationPath] = original
-                        ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
-                    end
-                )
-                moveDownButton:SetCallback(
-                    "OnEnter",
-                    function()
-                        GSE.CreateToolTip(L["Move Down"], L["Move this block down one block."], editframe)
-                    end
-                )
-                moveDownButton:SetCallback(
-                    "OnLeave",
-                    function()
-                        GSE.ClearTooltip(editframe)
-                    end
-                )
-                moveDownButton:SetCallback(
-                    "OnRelease",
-                    function(self)
-                        self:SetDisabled(false)
-                    end
-                )
+                            editframe.Sequence.Versions[version].Actions[path] =
+                                GSE.CloneSequence(editframe.Sequence.Versions[version].Actions[destinationPath])
+                            editframe.Sequence.Versions[version].Actions[destinationPath] = original
+                            ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+                        end
+                    )
+                    moveDownButton:SetCallback(
+                        "OnEnter",
+                        function()
+                            GSE.CreateToolTip(L["Move Down"], L["Move this block down one block."], editframe)
+                        end
+                    )
+                    moveDownButton:SetCallback(
+                        "OnLeave",
+                        function()
+                            GSE.ClearTooltip(editframe)
+                        end
+                    )
+                else
+                    -- Bottom block: non-interactive muted icon (see above).
+                    moveDownButton = CreateMutedIcon(Statics.ActionsIconsMuted.Down, 30)
+                end
             end
 
             local deleteBlockButton
@@ -1265,10 +1277,8 @@ function GSE.CreateEditor()
                 )
             end
 
-            -- 1. Up / Down
+            -- 1. Up / Down (muted state already baked in at creation)
             if GSE.isEmpty(disableMove) then
-                moveUpButton:SetDisabled(lastPath == 1)
-                moveDownButton:SetDisabled(lastPath == blocksThisLevel)
                 layoutcontainer:AddChild(moveUpButton)
                 layoutcontainer:AddChild(moveDownButton)
                 local spacerlabel1 = AceGUI:Create("Label")
@@ -1328,21 +1338,11 @@ function GSE.CreateEditor()
             label:SetFontObject(GameFontNormalLarge)
             pcontainer:AddChild(label)
 
-            local hlabelIcon = AceGUI:Create("Icon")
-            hlabelIcon:SetImage(Statics.ActionsIcons[action.Type] or Statics.ActionsIcons.Action)
-            hlabelIcon:SetImageSize(15, 15)
-            hlabelIcon:SetWidth(15)
-            hlabelIcon:SetHeight(20)
-            hlabelIcon.image:SetTexCoord(0.16, 0.84, 0.16, 0.84)
-            hlabelIcon.image:SetDesaturated(true)
-            hlabelIcon.image:ClearAllPoints()
-            hlabelIcon.image:SetPoint("BOTTOMLEFT", hlabelIcon.frame, "BOTTOMLEFT", 0, 3)
-            hlabelIcon.frame:EnableMouse(false)
-            hlabelIcon:SetCallback("OnRelease", function(self)
-                self.image:SetDesaturated(false)
-                self.image:ClearAllPoints()
-                self.image:SetPoint("TOP", 0, -5)
-            end)
+            -- Decorative heading icon: a non-interactive muted icon (Label) so no
+            -- EnableMouse/desaturation state leaks back into the shared Icon pool.
+            local hlabelIcon = CreateMutedIcon(
+                Statics.ActionsIconsMuted[action.Type] or Statics.ActionsIconsMuted.Action,
+                15, 0.16, 0.84, 0.16, 0.84)
 
             local hlabelText = AceGUI:Create("Label")
             hlabelText:SetText(action.Type == Statics.Actions.Repeat and Statics.Actions.Action or Statics.Actions[action.Type])

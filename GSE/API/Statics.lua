@@ -449,6 +449,18 @@ Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.png"
 Statics.ActionsIcons.Key = "Interface\\Addons\\GSE_GUI\\Assets\\key.png"
 Statics.ActionsIcons.Settings = "Interface\\Icons\\trade_engineering"
 
+-- Pre-muted (desaturated + dimmed) variants. Baked into the texture so a muted
+-- icon never needs SetDisabled/SetDesaturated/vertex tint at runtime, which
+-- would otherwise leak state back into the shared AceGUI widget pool.
+Statics.ActionsIconsMuted = {}
+Statics.ActionsIconsMuted.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up_muted.png"
+Statics.ActionsIconsMuted.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down_muted.png"
+Statics.ActionsIconsMuted.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action_muted.png"
+Statics.ActionsIconsMuted.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop_muted.png"
+Statics.ActionsIconsMuted.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause_muted.png"
+Statics.ActionsIconsMuted.If = "Interface\\Addons\\GSE_GUI\\Assets\\if_muted.png"
+Statics.ActionsIconsMuted.Embed = "Interface\\Addons\\GSE_GUI\\Assets\\embed_muted.png"
+
 Statics.Icons = {}
 Statics.Icons.Sequences = "Interface\\Icons\\inv_misc_book_09"
 Statics.Icons.Keybindings = Statics.ActionsIcons.Key
