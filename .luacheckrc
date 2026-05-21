@@ -267,6 +267,7 @@ globals = {
     "C_ChatInfo.SendAddonMessage",
     "C_DateAndTime.GetCurrentCalendarTime",
     "C_EncounterJournal.GetSectionIconFlags",
+    "C_InstanceEncounter.IsEncounterInProgress",
     "C_EncounterJournal.GetSectionInfo",
     "C_FriendList.GetFriendInfo",
     "C_Garrison.IsOnGarrisonMap",

@@ -1178,6 +1178,20 @@ function GSE.StopOOCTimer()
     GSE.OOCTimer = nil
 end
 
+--- True while a boss encounter is in progress. Prefers the 12.0 (Midnight)
+--- C_InstanceEncounter namespace; falls back to the long-standing global,
+--- which is present on every flavour GSE ships for, so classic builds still
+--- get the gate.
+function GSE.IsEncounterInProgress()
+    if C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress then
+        return C_InstanceEncounter.IsEncounterInProgress()
+    end
+    if IsEncounterInProgress then
+        return IsEncounterInProgress()
+    end
+    return false
+end
+
 function GSE:ProcessOOCQueue()
     -- check ZONE_CHANGED_NEW_AREA issues
     if GSE.currentZone ~= GetRealZoneText() then
@@ -1188,10 +1202,19 @@ function GSE:ProcessOOCQueue()
     -- new table, and combat-blocked items are re-inserted cleanly with no holes.
     local queue = GSE.OOCQueue
     GSE.OOCQueue = {}
+    -- A boss encounter can briefly drop combat (InCombatLockdown goes false)
+    -- mid-fight. Recompiling the button in that window rebuilds the macro
+    -- under the player mid-encounter, so an UpdateSequence dequeued while an
+    -- encounter is in progress is re-queued to wait the encounter out.
+    local encounterInProgress = GSE.IsEncounterInProgress()
     for _, v in ipairs(queue) do
         if not InCombatLockdown() then
             if v.action == "UpdateSequence" then
-                GSE.OOCUpdateSequence(v.name, v.macroversion)
+                if encounterInProgress then
+                    table.insert(GSE.OOCQueue, v)
+                else
+                    GSE.OOCUpdateSequence(v.name, v.macroversion)
+                end
             elseif v.action == "Save" then
                 GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
             elseif v.action == "Replace" then

@@ -877,6 +877,17 @@ function GSE.OOCUpdateSequence(name, sequence)
         return
     end
 
+    -- Defensive recompile gate. ProcessOOCQueue already defers UpdateSequence
+    -- items while a boss encounter is in progress, but OOCUpdateSequence is
+    -- also reachable directly (PerformReloadSequences(true), and any future
+    -- caller). Re-queue and bail so no path runs CreateGSE3Button mid-
+    -- encounter; EnqueueOOC dedupes by name and ProcessOOCQueue runs the
+    -- recompile once the encounter ends.
+    if GSE.IsEncounterInProgress and GSE.IsEncounterInProgress() then
+        GSE.UpdateSequence(name, sequence)
+        return
+    end
+
     local combatReset = false
     if GSE.isEmpty(sequence.InbuiltVariables) then
         sequence.InbuiltVariables = {["Combat"] = false}
