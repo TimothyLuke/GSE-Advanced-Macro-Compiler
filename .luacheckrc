@@ -528,6 +528,7 @@ globals = {
     "C_AssistedCombat",
     "SetOverrideBindingClick",
     "SetOverrideBinding",
+    "ClearOverrideBindings",
     "RegisterAttributeDriver",
     "issecretvalue",
     "SettingsPanel",
