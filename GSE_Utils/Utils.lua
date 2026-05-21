@@ -229,7 +229,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                                 GSEOptions.EmphasisColour ..
                                     numCharacterMacros ..
                                         L[
-                                            "|r.  As a result this macro was not created.  Please delete some macros and reenter "
+                                            "|r. As a result this macro was not created.  Please delete some macros and reenter "
                                         ] ..
                                             GSEOptions.CommandColour .. L["/gse|r again."],
                 GNOME
@@ -1725,7 +1725,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."
+                    "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
                 ],
         GNOME
     )

@@ -70,7 +70,6 @@ L["Restored macro '%s' required by sequence '%s'."] = true
 -- Export dependency auto-include
 L["Auto-included %d variable(s) required by %s: %s"] = true
 L["WARNING: %s depends on variable(s) that do not exist and cannot be exported: %s"] = true
-L["'%s' cannot be exported — it is protected content."] = true
 L["'%s' cannot be shared — it is protected content."] = true
 L["Cannot share protected content"] = true
 L["%s embeds sequence '%s' — add it to the export if needed."] = true
@@ -136,9 +135,6 @@ L["No"] = true
 L["General"] = true
 L["General Options"] = true
 
-L[
-        "By setting the default Icon for all macros to be the QuestionMark, the macro button on your toolbar will change every key hit."
-    ] = true
 
 L["Debug Mode Options"] = true
 
@@ -147,9 +143,6 @@ L["This will display debug messages in the Chat window."] = true
 L["Store Debug Messages"] = true
 
 L["Colour"] = true
-L["Colour and Accessibility Options"] = true
-L["Open Colour Settings"] = true
-L["Click to open the colour picker for GSE text and editor colours."] = true
 L["Title Colour"] = true
 L["Picks a Custom Colour for the Mod Names."] = true
 L["Info Colour"] = true
@@ -185,8 +178,6 @@ L["Registered Addons"] = true
 L["No plugins are currently registered."] = true
 L["Reload All"] = true
 L["Restore"] = true
-L["Individual Sequences - %s"] = true
-L["Restore a single sequence from this plugin"] = true
 L["Sequence '%s' was created with an older version of GSE (%s) - importing anyway as part of collection."] = true
 L["Compatible with this version of GSE"] = true
 L["Not compatible with this version of GSE (sequence version: %s)"] = true
@@ -205,9 +196,6 @@ L["Debug"] = true
 L["Filter Sequence Selection"] = true
 L["Show All Sequences in Editor"] = true
 L["Show Class Sequences in Editor"] = true
-L[
-        "When loading or creating a sequence, if it is a global or the macro has an unknown specID automatically create the Macro Stub in Account Macros"
-    ] = true
 
 -- New Strings 1.4
 L["Sequence Debugger"] = true
@@ -313,14 +301,8 @@ L["Alt Keys."] = true
 L["Control Keys."] = true
 L["Shift Keys."] = true
 L["To get started "] = true
-L[
-        "This function will update macro stubs to support listening to the options below.  This is required to be completed 1 time per character."
-    ] = true
 
 -- GSE 2.1.01
-L[
-        "To correct this either delete the version via the GSE Editor or enter the following command to delete this macro totally.  %s/run GSE.DeleteSequence (%i, %s)%s"
-    ] = true
 L[
         "By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."
     ] = true
@@ -373,9 +355,6 @@ L["Arena"] = true
 L["Local Macro"] = true
 L["Updated Macro"] = true
 L["Sequence Compare"] = true
-L[
-        "When GSE imports a sequence and it already exists locally and has local edits, what do you want the default action to be.  Merge - Add the new MacroVersions to the existing Sequence.  Replace - Replace the existing sequence with the new version. Ignore - ignore updates.  This default action will set the default on the Compare screen however if the GUI is not available this will be the action taken."
-    ] = true
 L["Merge"] = true
 L["Ignore"] = true
 L["Choose import action:"] = true
@@ -442,8 +421,6 @@ L["Delete this macro.  This is not able to be undone."] = true
 L["Decompress"] = true
 
 -- GSE 2.4.11
-L["About"] = true
-L["About GSE"] = true
 L["History"] = true
 L[
         "GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community."
@@ -464,7 +441,6 @@ L["MS Click Rate"] = true
 L["The milliseconds being used in key click delay."] = true
 
 -- 2.5.3
-L["Scenario"] = true
 L["Delves and Scenarios"] = true
 
 -- 2.5.4
@@ -474,9 +450,7 @@ L["GSE: Import a Macro String."] = true
 L["Version"] = true
 
 -- 2.5.9
-L["The version of this macro to use in Scenarios."] = true
 L["The version of this macro to use in Delves and Scenarios."] = true
-L["Scenario setting changed to Default."] = true
 L["Delves and Scenarios setting changed to Default."] = true
 
 -- 2.6.01
@@ -494,9 +468,6 @@ L["How many pixels wide should the Editor start at.  Defaults to 700"] = true
 L["WARNING ONLY"] = true
 
 -- 2.6.11
-L[
-        "Checks to see if you have a Heart of Azeroth equipped and if so will insert '/cast Heart Essence' into the macro.  If not your macro will skip this line."
-    ] = true
 
 -- 2.6.19
 L["Current GCD"] = true
@@ -516,7 +487,6 @@ L["Request Macro"] = true
 L["Request that the user sends you a copy of this macro."] = true
 L["Select a Sequence"] = true
 --3.0.0
-L["Block Type: %s"] = true
 L["How many macro Clicks to pause for?"] = true
 L["Clicks"] = true
 L["Measure"] = true
@@ -580,7 +550,6 @@ L["Macro Compile Error"] = true
 L["If Blocks Require a variable."] = true
 
 --3.0.35
-L["Window Sizes"] = true
 L["Frame Locations"] = true
 L["Default Debugger Height"] = true
 L["How many pixels high should the Debuger start at.  Defaults to 500"] = true
@@ -603,14 +572,14 @@ L[
         "/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."
     ] = true
 L[
+        "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
+    ] = true
+L[
         "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
     ] = true
 L["/gse help|r to get started."] = true
 L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["GSE Plugins"] = true
-L[
-        "As GSE is updated, there may be left over macros that no longer relate to sequences.  This will check for these automatically on logout.  Alternatively this check can be run via /gse cleanorphans"
-    ] = true
 
 -- #1087
 L["Character"] = true
@@ -639,22 +608,10 @@ L["Troubleshooting"] = true
 L["Common Solutions to game quirks that seem to affect some people."] = true
 L["CVar Settings"] = true
 L["ActionButtonUseKeyDown"] = true
-L[
-        "This CVAR makes WoW use your abilities when you press the key not when you release it.  To use GSE in its native configuration this needs to be checked."
-    ] = true
 
 -- #1209
-L[
-        "This setting forces the ActionButtonUseKeyDown setting one way or another.  It also reconfigures GSE's Macro Stubs to operate in the specified mode."
-    ] = true
 
 -- #1215
-L[
-        "Dragonflight has changed how the /click command operates.  As a result all your macro stubs (found in /macro) have been updated to match the value of the CVar ActionButtonUseKeyDown.  This is a one off configuration change that needs to be done for each character.  You can change this configuration in GSE's Options."
-    ] = true
-L[
-        "GSE Macro Stubs have been reset to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)"
-    ] = true
 
 -- #1210
 L[
@@ -676,22 +633,15 @@ L["/gse|r again."] = true
 L["Clear Spell Cache"] = true
 L["Clear"] = true
 L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames."] = true
-L[
-        "This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames.."
-    ] = true
 L["This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames."] = true
 L["Edit Spell Cache"] = true
 L["The GSE_GUI Module needs to be enabled to edit the spell cache."] = true
 L["Edit"] = true
-L["Reload"] = true
 L["Spell Cache Editor"] = true
 L["Spell ID"] = true
 L["Spell Name"] = true
 
 --1315
-L[
-        "GSE2 Retro interface loaded.  Type `%s/gse2 import%s` to import an old GSE2 string or `%s/gse2 edit%s` to mock up a new template using the GSE2 editor."
-    ] = true
 
 -- 1377
 
@@ -699,7 +649,6 @@ L[
 L["Unit Name"] = true
 L["Disable Sequence"] = true
 L["Do not compile this Sequence at startup."] = true
-L["Action Type"] = true
 L["There was an error processing "] = true
 L["Export Variable"] = true
 L["Save the changes made to this variable."] = true
@@ -741,9 +690,6 @@ L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out 
 L["Party"] = true
 L["Repeat"] = true
 L["How many times does this action repeat"] = true
-L[
-        "Create a new macro in the /macro interface and assign it an Icon. Then reopen this menu.  You cannot create a new macro here but after it has been created you can manage it."
-    ] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
 L["The author of this Variable."] = true
@@ -914,3 +860,9 @@ When the Companion delivers content, the |cFF00BFFFImport|r dialog opens automat
 Authors who enable |cFF00BFFFAuto-Accept|r in GSE Options will have incoming updates imported silently on login.
 
 ]]
+
+-- Localisation audit (2026-05-21): keys referenced in code but previously absent here.
+L["Class"] = true
+L["You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."] = true
+L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."] = true
+L["|r. As a result this macro was not created.  Please delete some macros and reenter "] = true

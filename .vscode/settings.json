@@ -54,7 +54,12 @@
     "GameTooltip_SetTitle",
     "CreateSettingsButtonInitializer",
     "GameTooltip_SetDefaultAnchor",
-    "ColorPickerFrame"
+    "ColorPickerFrame",
+    "MacroPopupFrame",
+    "IconSelectorPopupFrameTemplateMixin",
+    "GenerateClosure",
+    "IconDataProviderMixin",
+    "IconDataProviderExtraType"
   ],
   "Lua.diagnostics.disable": [
     "undefined-field",
