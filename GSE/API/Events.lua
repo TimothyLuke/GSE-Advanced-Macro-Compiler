@@ -439,11 +439,14 @@ end
 
 -- EllesmereUI routes action-bar keybinds to native engine commands via
 -- SetOverrideBinding (anchored to Blizzard's hidden original buttons), not
--- to clicking the visible EABButton frame.  So the frame-attribute override
--- in overrideActionButton is only caught for mouse clicks.  This owner frame
--- carries the extra SetOverrideBindingClick bindings that route the slot's
--- key straight to the GSE sequence button.  Cleared + reapplied as a unit
--- by LoadOverrides.
+-- to clicking the visible EABButton frame -- so without help the keypress
+-- never reaches the EABButton and its GSE override.  This owner frame
+-- carries SetOverrideBindingClick bindings that route the slot's key to
+-- *click the EABButton frame*, so the keypress goes through the same
+-- type-attribute state machine (BAR_SWAP_OAC / BAR_SWAP_ONCLICK) as a mouse
+-- click -- and therefore releases to the bar during vehicle / skyriding /
+-- override-bar states, exactly like a Blizzard button.  Cleared + reapplied
+-- as a unit by LoadOverrides.
 local GSE_EABBindOwner = CreateFrame("Frame", "GSE_EABBindOwner", UIParent)
 
 local function overrideActionButton(savedBind, force)
@@ -462,15 +465,19 @@ local function overrideActionButton(savedBind, force)
         "1"
     _G[Button]:SetAttribute("gse-button", Sequence)
     -- EllesmereUI keybinds bypass the EABButton frame (see GSE_EABBindOwner
-    -- above): bind the slot's key(s) straight to the GSE sequence button.
+    -- above): bind the slot's key(s) to *click the EABButton frame* -- NOT
+    -- straight to the GSE sequence button.  Routing through the frame means
+    -- the keypress obeys the button's type attribute, which BAR_SWAP_OAC /
+    -- BAR_SWAP_ONCLICK flip to "action" during vehicle/skyriding/override-bar
+    -- states -- so the key releases to the bar just like a mouse click.
     -- isPriority=true so this wins over EllesmereUI's own (non-priority)
     -- SetOverrideBinding for the same key.
     if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
         local cmd = _G[Button].commandName
         if cmd then
             local k1, k2 = GetBindingKey(cmd)
-            if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Sequence) end
-            if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Sequence) end
+            if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Button) end
+            if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Button) end
         else
             GSE.PrintDebugMessage(
                 "EllesmereUI button " .. Button .. " has no commandName; keybind override not applied",
