@@ -437,6 +437,15 @@ local function hookActionButtonUpdate()
     end)
 end
 
+-- EllesmereUI routes action-bar keybinds to native engine commands via
+-- SetOverrideBinding (anchored to Blizzard's hidden original buttons), not
+-- to clicking the visible EABButton frame.  So the frame-attribute override
+-- in overrideActionButton is only caught for mouse clicks.  This owner frame
+-- carries the extra SetOverrideBindingClick bindings that route the slot's
+-- key straight to the GSE sequence button.  Cleared + reapplied as a unit
+-- by LoadOverrides.
+local GSE_EABBindOwner = CreateFrame("Frame", "GSE_EABBindOwner", UIParent)
+
 local function overrideActionButton(savedBind, force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -452,6 +461,23 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
     _G[Button]:SetAttribute("gse-button", Sequence)
+    -- EllesmereUI keybinds bypass the EABButton frame (see GSE_EABBindOwner
+    -- above): bind the slot's key(s) straight to the GSE sequence button.
+    -- isPriority=true so this wins over EllesmereUI's own (non-priority)
+    -- SetOverrideBinding for the same key.
+    if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
+        local cmd = _G[Button].commandName
+        if cmd then
+            local k1, k2 = GetBindingKey(cmd)
+            if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Sequence) end
+            if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Sequence) end
+        else
+            GSE.PrintDebugMessage(
+                "EllesmereUI button " .. Button .. " has no commandName; keybind override not applied",
+                "EVENTS"
+            )
+        end
+    end
     if string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
         -- Dominos and ButtonForge use ActionBarButtonTemplate / SecureActionButtonTemplate;
         -- action slot is a secure attribute only, not a page/slot hierarchy.
@@ -637,6 +663,9 @@ local function LoadOverrides(force)
         ensureActionBarCVars()
     end
     if not InCombatLockdown() then
+        -- Drop all EllesmereUI keybind overrides; the reapply loop below
+        -- re-adds them for overrides that are still active.
+        ClearOverrideBindings(GSE_EABBindOwner)
         for k, _ in pairs(GSE.ButtonOverrides) do
             -- revert all buttons
             if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" then

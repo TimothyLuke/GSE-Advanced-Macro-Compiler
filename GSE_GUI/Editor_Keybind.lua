@@ -532,6 +532,14 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                 end
             end
         end
+        if _G["EABButton1"] then
+            -- EllesmereUI action bars: EABButton1..180.
+            for i = 1, 180 do
+                if _G["EABButton" .. i] then
+                    buttonlist["EABButton" .. i] = "EABButton" .. i
+                end
+            end
+        end
         if BFButton then
             -- ButtonForge names both bar frames and action buttons as "ButtonForge" .. N
             -- using separate sequential counters, so bar and button frames are interspersed.

@@ -8,7 +8,7 @@
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## LoadSavedVariablesFirst: 1
 
-## OptionalDeps: Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4 NDui Dominos ButtonForge
+## OptionalDeps: Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4 NDui Dominos ButtonForge EllesmereUIActionBars
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Menu_Logo.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
