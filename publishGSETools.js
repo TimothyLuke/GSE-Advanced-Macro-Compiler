@@ -94,6 +94,13 @@ async function main() {
 
     if (pubData.success) {
       console.log(`[publish] Published ${fullVersion} (${channel})`);
+      if (pubData.cleanup) {
+        const { scanned = 0, targeted = 0, deleted = [], failed = [], latestBase, previousBase } = pubData.cleanup;
+        console.log(`[publish] Cleanup: scanned ${scanned}, archived ${deleted.length}/${targeted} (kept latest=${latestBase ?? '-'}, previous=${previousBase ?? '-'})`);
+        if (failed.length) console.log(`[publish] Cleanup failures:`, failed.slice(0, 5));
+      } else if (pubData.cleanupError) {
+        console.log(`[publish] Cleanup failed (non-fatal): ${pubData.cleanupError}`);
+      }
     } else {
       console.log(`[publish] Publish failed:`, pubData.error || JSON.stringify(pubData));
     }
