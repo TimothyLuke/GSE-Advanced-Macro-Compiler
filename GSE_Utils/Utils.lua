@@ -1725,7 +1725,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
+                "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
                 ],
         GNOME
     )

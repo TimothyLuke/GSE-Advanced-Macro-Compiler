@@ -94,6 +94,13 @@ function GSE.SetDefaultOptions()
     }
     GSEOptions.Multiclick = true
     GSEOptions.SyncWoWMacros = false
+    -- Modifier-held "pause" toggles. When enabled, holding the matching
+    -- modifier while pressing the GSE sequence button sends an empty
+    -- macro and does NOT advance the step — letting the user stall the
+    -- rotation without breaking it.
+    GSEOptions.ShiftPause = false
+    GSEOptions.AltPause = false
+    GSEOptions.CtrlPause = false
 end
 
 if GSE.isEmpty(GSEOptions) then

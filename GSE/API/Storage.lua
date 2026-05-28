@@ -1718,6 +1718,14 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
 
         gsebutton:SetAttribute("combatreset", combatReset)
     end
+    -- Modifier-pause attributes. Read inside the secure OnClick handler
+    -- (cannot read GSEOptions directly from secure context) so re-stamp on
+    -- every button (re)build to pick up option toggles. The reload prompt
+    -- on the option's UI ensures fresh attribute values on next play
+    -- session even though a live toggle won't take effect until reload.
+    gsebutton:SetAttribute("shiftpause", GSEOptions.ShiftPause and true or false)
+    gsebutton:SetAttribute("altpause",   GSEOptions.AltPause   and true or false)
+    gsebutton:SetAttribute("ctrlpause",  GSEOptions.CtrlPause  and true or false)
 
     for k, v in pairs(spelllist[1]) do
         if k == "blockPath" then
@@ -1828,6 +1836,15 @@ end
     local clickexecution =
         GSE.GetMacroResetImplementation() ..
         [=[
+    if (self:GetAttribute('shiftpause') and IsShiftKeyDown())
+        or (self:GetAttribute('altpause') and IsAltKeyDown())
+        or (self:GetAttribute('ctrlpause') and IsControlKeyDown()) then
+        self:SetAttribute('type', 'macro')
+        self:SetAttribute('macro', nil)
+        self:SetAttribute('unit', nil)
+        self:SetAttribute('macrotext', '')
+        return
+    end
     local mods = "RALT=" .. tostring(IsRightAltKeyDown()) .. "|" ..
     "LALT=".. tostring(IsLeftAltKeyDown()) .. "|" ..
     "AALT=" .. tostring(IsAltKeyDown()) .. "|" ..
@@ -1871,6 +1888,15 @@ end
         clickexecution =
             GSE.GetMacroResetImplementation() ..
             [=[
+    if (self:GetAttribute('shiftpause') and IsShiftKeyDown())
+        or (self:GetAttribute('altpause') and IsAltKeyDown())
+        or (self:GetAttribute('ctrlpause') and IsControlKeyDown()) then
+        self:SetAttribute('type', 'macro')
+        self:SetAttribute('macro', nil)
+        self:SetAttribute('unit', nil)
+        self:SetAttribute('macrotext', '')
+        return
+    end
     local mods = "RALT=" .. tostring(IsRightAltKeyDown()) .. "|" ..
     "LALT=".. tostring(IsLeftAltKeyDown()) .. "|" ..
     "AALT=" .. tostring(IsAltKeyDown()) .. "|" ..

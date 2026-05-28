@@ -199,6 +199,38 @@ local function createBlizzOptions(category)
             Settings.CreateCheckbox(troubleOptions, setting, L["GSE Sequences are converted to a button that responds to 'Clicks' or Keyboard keypresses (WoW calls these Hardware Events).  \n\nWhen you use a KeyBind with a sequence, WoW sends two hardware events each time. With this setting on, GSE then interprets these two clicks as one and advances your sequence one step.  With this off it would advance two steps.  \n\nIn comparison Actionbar Overrides and '/click SEQUENCE' macros only sends one hardware Event.  If you primarily use Keybinds over Actionbar Overrides over Keybinds you want this set true.  If however you want to use Actionbar Overrides this must be false."])
         end
 
+        -- Modifier-held pause toggles. The reload prompt is required: the
+        -- value is read inside a secure OnClick handler attribute that's
+        -- stamped at button-build time, so a live toggle only takes effect
+        -- after CreateGSE3Button reruns (which happens on UI reload).
+        do
+            local function GetValue() return GSEOptions.ShiftPause == true end
+            local function SetValue(val)
+                GSEOptions.ShiftPause = val
+                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnShift", Settings.VarType.Boolean, L["Pause Sequences While Shift Is Held"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Shift makes GSE send an empty macro and stops the sequence from advancing until Shift is released."])
+        end
+        do
+            local function GetValue() return GSEOptions.AltPause == true end
+            local function SetValue(val)
+                GSEOptions.AltPause = val
+                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnAlt", Settings.VarType.Boolean, L["Pause Sequences While Alt Is Held"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Alt makes GSE send an empty macro and stops the sequence from advancing until Alt is released."])
+        end
+        do
+            local function GetValue() return GSEOptions.CtrlPause == true end
+            local function SetValue(val)
+                GSEOptions.CtrlPause = val
+                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnCtrl", Settings.VarType.Boolean, L["Pause Sequences While Ctrl Is Held"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."])
+        end
+
         do
             local layout = SettingsPanel:GetLayout(troubleOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = L["Keybinding Tools"], tooltip = L["Keybinding Tools"]}))

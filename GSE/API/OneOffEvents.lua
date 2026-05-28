@@ -156,6 +156,20 @@ function GSE.PerformOneOffEvents()
         GSEOptions.Updates["3310"] = true
     end
 
+    -- Back-fill the modifier-pause toggles for users who upgraded into a
+    -- GSEOptions table that pre-dates these keys. SetDefaultOptions() only
+    -- fires on fresh installs (gated on DebugModules), so without this
+    -- the three flags stay nil for existing users. Storage.lua's stamp
+    -- already coerces nil → false at the secure-attribute level, but
+    -- normalising to a literal boolean here means the Options UI getters
+    -- and any future read sees a real value too.
+    if GSE.isEmpty(GSEOptions.Updates["modifierPause"]) then
+        if GSEOptions.ShiftPause == nil then GSEOptions.ShiftPause = false end
+        if GSEOptions.AltPause   == nil then GSEOptions.AltPause   = false end
+        if GSEOptions.CtrlPause  == nil then GSEOptions.CtrlPause  = false end
+        GSEOptions.Updates["modifierPause"] = true
+    end
+
 end
 
 GSE.DebugProfile("OneOffEvents")
