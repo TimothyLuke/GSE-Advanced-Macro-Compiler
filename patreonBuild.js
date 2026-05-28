@@ -134,17 +134,22 @@ function publishArchive(done) {
 
   const hook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK });
 
-  // Brand assets hosted via Qik file storage at gse.tools — same file id
-  // the website's header and hero logos use, so re-branding propagates by
-  // swapping the file behind this id rather than chasing URLs across
-  // GitHub Actions, Discord, and forgecdn. Older builds pointed at a
-  // forgecdn URL (gse2-logo-dark-2x.png) that's now permanently stale.
+  // Two surfaces consume the logo art:
+  //   - The webhook's per-message bot avatar (avatarURL below) — MUST be a
+  //     real URL, Discord fetches it at send time. gse.tools-hosted file
+  //     id 6a17c04d699ec384f2773a97 works (same id the website uses).
+  //   - The embed's author icon + thumbnail — Discord's media-proxy fetch
+  //     for embed thumbnails refuses our 302-to-signed-S3 redirect even
+  //     though avatarURL accepts it, so we attach the file directly and
+  //     reference it via attachment://gse-logo.png. The actual bytes ship
+  //     with the message, no proxy fetch needed.
   const LOGO_URL = "https://gse.tools/api/file/6a17c04d699ec384f2773a97/GSE-Logo-Wrench.png";
+  const LOGO_ATTACHMENT = "attachment://gse-logo.png";
 
   const embed = new EmbedBuilder()
     .setAuthor({
       name: "GSE Updater",
-      iconURL: LOGO_URL,
+      iconURL: LOGO_ATTACHMENT,
       url: "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler",
     })
     .addFields({
@@ -153,10 +158,14 @@ function publishArchive(done) {
       inline: true,
     })
     .setColor("#00b0f4")
-    .setThumbnail(LOGO_URL)
+    .setThumbnail(LOGO_ATTACHMENT)
     .setTimestamp();
 
   var file = new AttachmentBuilder(`./GSE-${BuildNumber}.zip`);
+  var logoFile = new AttachmentBuilder(
+    "./GSE_GUI/Assets/GSE_Logo_Dark_512.png",
+    { name: "gse-logo.png" },
+  );
 
   try {
     // username + avatarURL override the webhook's default identity per
@@ -166,7 +175,7 @@ function publishArchive(done) {
       username: "GSE Build Bot",
       avatarURL: LOGO_URL,
       embeds: [embed],
-      files: [file],
+      files: [file, logoFile],
     }).then(function() {
       console.log('[pat] Discord webhook sent');
       return done();
