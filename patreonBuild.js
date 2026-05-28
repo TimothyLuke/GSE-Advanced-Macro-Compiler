@@ -134,39 +134,37 @@ function publishArchive(done) {
 
   const hook = new WebhookClient({ url: process.env.DISCORD_WEBHOOK });
 
+  // Brand assets hosted via Qik file storage at gse.tools — same file id
+  // the website's header and hero logos use, so re-branding propagates by
+  // swapping the file behind this id rather than chasing URLs across
+  // GitHub Actions, Discord, and forgecdn. Older builds pointed at a
+  // forgecdn URL (gse2-logo-dark-2x.png) that's now permanently stale.
+  const LOGO_URL = "https://gse.tools/api/file/6a17c04d699ec384f2773a97/GSE-Logo-Wrench.png";
+
   const embed = new EmbedBuilder()
-    // .setTitle(`GSE ${BuildVersion}`)
     .setAuthor({
       name: "GSE Updater",
-      iconURL:
-        "https://media.forgecdn.net/attachments/372/575/gse2-logo-dark-2x.png",
-      url: "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler.com",
+      iconURL: LOGO_URL,
+      url: "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler",
     })
-    //   .setURL(
-    //     "https://www.https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler.com"
-    //   )
     .addFields({
       name: "New GSE Update",
       value: `${BuildNumber} Released`,
       inline: true,
     })
-    //   .addField("Second field", "this is not inline")
     .setColor("#00b0f4")
-    .setThumbnail(
-      "https://media.forgecdn.net/attachments/372/575/gse2-logo-dark-2x.png"
-    )
-    //   .setDescription("Oh look a description :)")
-    //   .setImage("https://cdn.discordapp.com/embed/avatars/0.png")
-    //   .setFooter(
-    //     "Hey its a footer",
-    //     "https://cdn.discordapp.com/embed/avatars/0.png"
-    //   )
+    .setThumbnail(LOGO_URL)
     .setTimestamp();
 
   var file = new AttachmentBuilder(`./GSE-${BuildNumber}.zip`);
 
   try {
+    // username + avatarURL override the webhook's default identity per
+    // message, so the bot's avatar matches the embed even if the webhook
+    // was created with the old hex logo in the Discord server settings.
     hook.send({
+      username: "GSE Build Bot",
+      avatarURL: LOGO_URL,
       embeds: [embed],
       files: [file],
     }).then(function() {
