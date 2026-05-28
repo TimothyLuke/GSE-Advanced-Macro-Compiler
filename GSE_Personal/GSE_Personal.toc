@@ -5,6 +5,6 @@
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
 
 Templates.lua
