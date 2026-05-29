@@ -138,7 +138,11 @@ function publishArchive(done) {
   // the same shape (no redirects, stable Content-Type: image/png). The
   // file is the one committed to this repo at GSE_GUI/Assets, so a
   // rebrand is "push a new logo, embed updates on the next build".
-  const LOGO_URL = "https://raw.githubusercontent.com/TimothyLuke/GSE-Advanced-Macro-Compiler/master/GSE_GUI/Assets/GSE_Logo_Dark_512.png";
+  // Point at GSE_Menu_Logo.png — the wide-finish wrench that reads better
+  // at the embed-thumbnail size than the square dark icon does. Same
+  // GitHub raw shape (direct image, no redirects) so Discord's embed
+  // proxy is happy with it.
+  const LOGO_URL = "https://raw.githubusercontent.com/TimothyLuke/GSE-Advanced-Macro-Compiler/master/GSE_GUI/Assets/GSE_Menu_Logo.png";
 
   const embed = new EmbedBuilder()
     .setAuthor({
