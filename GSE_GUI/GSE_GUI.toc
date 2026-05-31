@@ -1,13 +1,13 @@
 ## Interface: 11508, 20505, 50503, 50504, 120005
 
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
+## Title: |cFFFFFFFFGSE_NoACE Files - GUI|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-10-g7e2a200-PatronBuild
 ## Dependencies: GSE GSE_Utils
 ## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUIActionBars
 ## LoadOnDemand: 1
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -19,13 +19,10 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE
+## Group: GSE_NoACE
 
 
-Ace3_Extensions\AceGUIContainer-KeyGroup.lua
-Ace3_Extensions\AceGUI-3.0-Spacer.lua
-Ace3_Extensions\AceGUI-3.0-Controller_KeyBind.lua
-Ace3_Extensions\AceGUI-3.0-GSETreeGroup.lua
+NativeUI.lua
 Import.lua
 Export.lua
 DebugWindow.lua
@@ -36,6 +33,7 @@ Editor_Metadata.lua
 Editor_Variable.lua
 Editor_Keybind.lua
 Editor_Macro.lua
+Editor_Undo.lua
 Editor_Tree.lua
 Editor.lua
 RemoteMacroBrowser.lua

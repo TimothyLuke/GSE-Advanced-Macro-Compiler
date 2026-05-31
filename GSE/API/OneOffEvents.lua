@@ -1,7 +1,7 @@
 local GSE = GSE
-local Statics = GSE.Static
+local _Statics = GSE.Static
 
-local L = GSE.L
+local _L = GSE.L
 
 if not GSE_C then
     GSE_C = {}
@@ -172,4 +172,5 @@ function GSE.PerformOneOffEvents()
 
 end
 
-GSE.DebugProfile("OneOffEvents")
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("OneOffEvents") end
+

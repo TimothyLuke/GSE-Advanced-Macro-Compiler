@@ -153,13 +153,14 @@ local function determineSpecializationName(specID)
     if GSE.GameMode < 7 then
         return GSE.SpecIDClassList[specID]
     else
-        local _, specname = GetSpecializationInfoByID(specID)
+        local _, specname = GSE.GetSpecializationInfoByID(specID)
         return specname
     end
 end
 
 local function determineClassName(specID)
-    return C_CreatureInfo.GetClassInfo(specID) and C_CreatureInfo.GetClassInfo(specID).className or nil
+    local classInfo = GSE.GetClassInfo(specID)
+    return classInfo and classInfo.className or nil
 end
 
 function GSE.GetClassName(classID)
@@ -279,20 +280,10 @@ Statics.Sequential = "Sequential"
 Statics.ReversePriority = "ReversePriority"
 Statics.Random = "Random"
 
-Statics.PrintKeyModifiers =
-    [[
-print("Right alt key " .. tostring(IsRightAltKeyDown()))
-print("Left alt key " .. tostring(IsLeftAltKeyDown()))
-print("Any alt key " .. tostring(IsAltKeyDown()))
-print("Right ctrl key " .. tostring(IsRightControlKeyDown()))
-print("Left ctrl key " .. tostring(IsLeftControlKeyDown()))
-print("Any ctrl key " .. tostring(IsControlKeyDown()))
-print("Right shft key " .. tostring(IsRightShiftKeyDown()))
-print("Left shft key " .. tostring(IsLeftShiftKeyDown()))
-print("Any shft key " .. tostring(IsShiftKeyDown()))
-print("Any mod key " .. tostring(IsModifierKeyDown()))
-print("GetMouseButtonClicked() " .. GetMouseButtonClicked() )
-]]
+-- Statics.PrintKeyModifiers (the modifier-key debug snippet injected into
+-- generated macros when GSEOptions.DebugPrintModConditionsOnKeyPress is set)
+-- is defined once, lower in this file. The earlier duplicate definition was
+-- removed for release; both copies were identical in effect.
 
 Statics.StringFormatEscapes = {
     ["|c%x%x%x%x%x%x%x%x"] = "", -- Color start
@@ -440,6 +431,7 @@ Statics.ActionsIcons = {}
 Statics.ActionsIcons.Add = "Interface\\Addons\\GSE_GUI\\Assets\\add.png"
 Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.png"
 Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.png"
+Statics.ActionsIcons.Mouse = "Interface\\Addons\\GSE_GUI\\Assets\\drag.png"
 Statics.ActionsIcons.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action.png"
 Statics.ActionsIcons.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop.png"
 Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.png"
@@ -447,40 +439,37 @@ Statics.ActionsIcons.If = "Interface\\Addons\\GSE_GUI\\Assets\\if.png"
 Statics.ActionsIcons.Embed = "Interface\\Addons\\GSE_GUI\\Assets\\embed.png"
 Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.png"
 Statics.ActionsIcons.Key = "Interface\\Addons\\GSE_GUI\\Assets\\key.png"
-Statics.ActionsIcons.Settings = "Interface\\Icons\\trade_engineering"
-
--- Pre-muted (desaturated + dimmed) variants. Baked into the texture so a muted
--- icon never needs SetDisabled/SetDesaturated/vertex tint at runtime, which
--- would otherwise leak state back into the shared AceGUI widget pool.
-Statics.ActionsIconsMuted = {}
-Statics.ActionsIconsMuted.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up_muted.png"
-Statics.ActionsIconsMuted.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down_muted.png"
-Statics.ActionsIconsMuted.Action = "Interface\\Addons\\GSE_GUI\\Assets\\action_muted.png"
-Statics.ActionsIconsMuted.Loop = "Interface\\Addons\\GSE_GUI\\Assets\\loop_muted.png"
-Statics.ActionsIconsMuted.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause_muted.png"
-Statics.ActionsIconsMuted.If = "Interface\\Addons\\GSE_GUI\\Assets\\if_muted.png"
-Statics.ActionsIconsMuted.Embed = "Interface\\Addons\\GSE_GUI\\Assets\\embed_muted.png"
+Statics.ActionsIcons.Settings = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
 
 Statics.Icons = {}
-Statics.Icons.Sequences = "Interface\\Icons\\inv_misc_book_09"
+Statics.Icons.Sequences = "Interface\\Addons\\GSE_GUI\\Assets\\sequences.png"
 Statics.Icons.Keybindings = Statics.ActionsIcons.Key
-Statics.Icons.Variables = GSE.GameMode <= 4 and "Interface\\Icons\\inv_misc_note_01" or "Interface\\Icons\\spell_mekkatorque_bot_redwrench"
-Statics.Icons.Import = GSE.GameMode <= 4 and "Interface\\Icons\\inv_misc_scrollunrolled01" or "Interface\\Icons\\inv_misc_scrollunrolled01b"
-Statics.Icons.Macros = "Interface\\MacroFrame\\MacroFrame-Icon"
-Statics.Icons.Options = Statics.ActionsIcons.Settings
+Statics.Icons.Variables = "Interface\\Addons\\GSE_GUI\\Assets\\variables.png"
+Statics.Icons.Import = "Interface\\Addons\\GSE_GUI\\Assets\\import.png"
+Statics.Icons.Macros = "Interface\\Addons\\GSE_GUI\\Assets\\macro.png"
+Statics.Icons.Options = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
 Statics.Icons.Close = "Interface\\Addons\\GSE_GUI\\Assets\\close.png"
-Statics.Icons.Logo = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_512x512-Transparent.png"
+Statics.Icons.Logo = "Interface\\Addons\\GSE_GUI\\Assets\\GSE-Logo.png"
 Statics.Icons.Discord = "Interface\\Addons\\GSE_GUI\\Assets\\discord.png"
 Statics.Icons.Github = "Interface\\Addons\\GSE_GUI\\Assets\\github.png"
 Statics.Icons.Patreon = "Interface\\Addons\\GSE_GUI\\Assets\\patreon.png"
-Statics.Icons.MenuLogo = "Interface/AddOns/GSE_GUI/Assets/GSE_512x512-Transparent.png"
+Statics.Icons.GSEUnited = "Interface\\Addons\\GSE_GUI\\Assets\\GSEUnited.png"
+Statics.Icons.Oak = "Interface\\Addons\\GSE_GUI\\Assets\\Oak.png"
+Statics.Icons.MenuLogo = "Interface/AddOns/GSE_GUI/Assets/GSE-Menu.png"
 Statics.Icons.Export = 4419478
-Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/ActionORide.png"
-Statics.Icons.Account = 133784
-Statics.Icons.Personal = 236448
+Statics.Icons.Button = "Interface/AddOns/GSE_GUI/Assets/actionoride.png"
+Statics.Icons.Mouse = Statics.ActionsIcons.Mouse
+Statics.Icons.Account = "Interface\\Addons\\GSE_GUI\\Assets\\warcraft.png"
+Statics.Icons.Personal = Statics.Icons.Account
 Statics.Icons.Talents = 134327
 Statics.Icons.GSE_Logo_Dark = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_512x512-Transparent.png"
-
+-- Minimap-only icon. Separate constant so the new wrench-style logo
+-- appears on the minimap LDB button without changing the dark logo
+-- used on the other surfaces (sidebar Settings icons, action-bar
+-- watermark, tracker placeholder, sequence default). When the time
+-- comes to repoint everything to the new artwork, GSE_Logo_Dark
+-- becomes the rebrand vehicle and this can be retired.
+Statics.Icons.MinimapIcon = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png"
 
 Statics.TranslatorMode = {}
 Statics.TranslatorMode.Current = "CURRENT"
@@ -536,19 +525,6 @@ print("Any mod key " .. tostring(IsModifierKeyDown()))
 print("GetMouseButtonClicked() " .. GetMouseButtonClicked() )
 ]]
 
-StaticPopupDialogs["GSE_ConfirmReloadUIDialog"] = {
-    text = L["You need to reload the User Interface to complete this task.  Would you like to do this now?"],
-    button1 = L["Yes"],
-    button2 = L["No"],
-    OnAccept = function()
-        ReloadUI()
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3 -- Avoid some UI taint, see https://www.wowace.com/news/376-how-to-avoid-some-ui-taint
-}
-
 Statics.Messages = {}
 Statics.Messages.GSE_SEQUENCE_ICON_UPDATE = "GSE_SEQUENCE_ICON_UPDATE"
 Statics.Messages.GSE_MODS_VISIBLE = "GSE_MODS_VISIBLE"
@@ -556,9 +532,9 @@ Statics.Messages.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
 Statics.Messages.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
 Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
 
--- Lookup set: keys in this set are Ace messages → use RegisterMessage/UnregisterMessage
+-- Lookup set: keys in this set are internal messages -> use RegisterMessage/UnregisterMessage
 -- All other keys in VariableEventList are WoW events → use RegisterEvent/UnregisterEvent
-Statics.AceMessages = {
+Statics.InternalMessages = {
     ["GSE_SEQUENCE_UPDATED"]     = true,
     ["GSE_VARIABLE_UPDATED"]     = true,
     ["GSE_COLLECTION_IMPORTED"]  = true,
@@ -567,8 +543,8 @@ Statics.AceMessages = {
 }
 
 -- Full event list for variable event callbacks.
--- Flat key=value table for AceGUI Dropdown:SetList() / SetMultiselect().
--- GSE internal Ace messages are prefixed with "[GSE] " in the display value.
+-- Flat key=value table for native dropdown SetList() / SetMultiselect().
+-- GSE internal messages are prefixed with "[GSE] " in the display value.
 Statics.VariableEventList = {
     -- GSE Internal Messages
     ["GSE_SEQUENCE_UPDATED"]              = "[GSE] GSE_SEQUENCE_UPDATED",
@@ -672,4 +648,102 @@ Statics.VariableEventList = {
     ["UNIT_DISPLAYPOWER"]                 = "UNIT_DISPLAYPOWER",
 }
 
-GSE.DebugProfile("Statics")
+-- =========================================================================
+-- Tracker configuration constants
+--
+-- Centralised tunables that govern the Sequence Icon Frame / Tracker
+-- subsystem behaviour. Previously these lived as file-locals at the top
+-- of GSE_Utils/Tracker.lua, where (a) they were invisible to readers of
+-- the rest of the project and (b) they pushed Tracker.lua's chunk-level
+-- local-variable count uncomfortably close to Lua 5.1's hard 200-per-
+-- function ceiling. Moving them onto the Statics namespace solves both:
+-- one documented home, and 6 freed local slots in Tracker.lua's main
+-- chunk for future feature work.
+--
+-- Each value's purpose, with rationale where the number isn't obvious:
+--
+--   DefaultIconCount = 10
+--       How many sequence-icon slots the Tracker frame shows by default
+--       in its horizontal/vertical strip. Caps at 10 because the
+--       Tracker options panel slider also tops out at 10.
+--
+--   KeyHistoryLimit = 1
+--       How many recent activation keys to retain for diagnostic
+--       display. Set to 1 because GSE only shows the most recent
+--       key in the "Activation Key:" Tracker text line.
+--
+--   MirrorIconGap = 8
+--       Horizontal pixel gap between the Sequence Icon Frame and its
+--       Successful Cast mirror panel when both are shown linked
+--       (current sequence icon + the mirrored "you just cast" icon).
+--
+--   SuccessCastWindow = 1.5
+--       Window in seconds after a GSE activity event (sequence step
+--       advance) during which a successful spell cast can be
+--       attributed to the same sequence. Past this window the
+--       successful-cast indicator does not light up even if a cast
+--       lands -- protects against unrelated cast events crediting GSE.
+--
+--   DefaultGCDGraceWindow = 1.5
+--       Seconds added to the calculated GCD when deciding whether the
+--       sequence step's spell is "still on cooldown" for icon display
+--       purposes. Matches SuccessCastWindow by design -- both are
+--       grace periods of the same order.
+--
+--   ActiveSpamKeyHoldSeconds = 0.45
+--       How long the active spam-key indicator (the "yellow flash"
+--       that shows your binding key while you are mashing it) stays
+--       visible after the most recent press. Below this, brief taps
+--       wouldn't register; above, the indicator lingers awkwardly.
+-- =========================================================================
+Statics.TrackerConfig = {
+    DefaultIconCount         = 10,
+    KeyHistoryLimit          = 1,
+    MirrorIconGap            = 8,
+    SuccessCastWindow        = 1.5,
+    DefaultGCDGraceWindow    = 1.5,
+    ActiveSpamKeyHoldSeconds = 0.45,
+    -- Single source of truth for the tracker's "show the sequence name"
+    -- default. Previously this literal `true` was duplicated in five
+    -- places (Tracker.lua's X/Y layout presets + EnsureSequenceIconFrameOptions,
+    -- and Options.lua's EnsureSequenceIconFrameOptions + ResetTrackerToDefaultLayout).
+    -- All five now read this constant so the default can never drift.
+    DefaultShowSequenceName  = true,
+}
+
+-- =========================================================================
+-- Centralised "is this icon a placeholder?" predicate.
+--
+-- Returns true if `icon` is one of GSE's fallback / placeholder icons --
+-- the empty / nil cases, the Blizzard question-mark icon (in either
+-- string-path or numeric file-data-ID form), or any of GSE's own brand
+-- logos that get used as "no real icon yet" markers. Anything else --
+-- a real spell icon, a real macro icon, a user-picked custom icon --
+-- returns false.
+--
+-- Centralised here so that the four call sites (actionIconIsFallback in
+-- Storage.lua's GetCurrentButtonIconInfo, isGSEFallbackTexture in
+-- Events.lua, IsFallbackIcon in Tracker.lua, isManagedMacroFallbackIcon
+-- in Storage.lua) all share one definition. Previously these four were
+-- maintained independently and drifted -- the Events.lua copy notably
+-- was missing the Statics.QuestionMark string check that the other
+-- three had. Routing all four through this single helper closes that
+-- gap and means future additions (e.g. macro.png, new logo files) only
+-- need to be considered in one place.
+--
+-- Note: GSE.isEmpty is defined in Init.lua, which loads strictly before
+-- Statics.lua per GSE.toc -- safe to call here at runtime. We only
+-- read Statics.* fields at call time, so no chicken-and-egg with the
+-- Statics namespace itself.
+-- =========================================================================
+function GSE.IsFallbackIcon(icon)
+    return GSE.isEmpty(icon)
+        or icon == Statics.QuestionMark
+        or icon == Statics.QuestionMarkIconID
+        or icon == Statics.Icons.GSE_Logo_Dark
+        or icon == Statics.Icons.Logo
+        or icon == Statics.Icons.MenuLogo
+end
+
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Statics") end
+

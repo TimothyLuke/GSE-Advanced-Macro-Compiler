@@ -1,15 +1,15 @@
 ## Interface: 11508, 20505, 50503, 50504, 120005
 
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
+## Title: |cFFFFFFFFGSE_NoACE Files - Core|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-10-g7e2a200-PatronBuild
 ## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros GSEPlatformIDs GSEVariablePlatformIDs GSEMacroPlatformIDs
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## LoadSavedVariablesFirst: 1
 
 ## OptionalDeps: Talented ElvUI Details WagoAnalytics ConsolePort ConsolePort_Bar Bartender4 NDui Dominos ButtonForge EllesmereUIActionBars
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE-Logo.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -21,7 +21,7 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE
+## Group: GSE_NoACE
 
 
 
@@ -31,6 +31,9 @@
 
 # Lib
 embeds.xml
+
+# Native core services
+API\Native.lua
 
 # Setup Localization
 Localization\ModL_enUS.lua
@@ -54,7 +57,7 @@ API\InitialOptions.lua
 # Storage and core
 API\StringFunctions.lua
 API\CharacterFunctions.lua
-API\Translator.lua
+API\translator.lua
 API\sha512.lua
 API\ed25519verify.lua
 API\Checksum.lua

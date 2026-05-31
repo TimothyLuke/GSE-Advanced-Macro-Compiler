@@ -1,6 +1,6 @@
 local GSE = GSE
-local L = GSE.L
-local Statics = GSE.Static
+local _L = GSE.L
+local _Statics = GSE.Static
 
 -- --- List addons that GSE knows about that have been disabled
 -- function GSE.ListUnloadedAddons()
@@ -102,4 +102,5 @@ function GSE.GetPluginSequenceStatus(encodedSeq)
     return result
 end
 
-GSE.DebugProfile("Plugins")
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Plugins") end
+

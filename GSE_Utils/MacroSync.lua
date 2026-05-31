@@ -1,5 +1,5 @@
 local GSE = GSE
-local Statics = GSE.Static
+local _Statics = GSE.Static
 
 -- ---------------------------------------------------------------------------
 -- WoW Macro ↔ GSEMacros bidirectional sync
@@ -111,7 +111,7 @@ loginFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_ENTERING_WORLD" then
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         if GSEOptions.SyncWoWMacros then
-            C_Timer.After(5, GSE.SyncAllWoWMacros)
+            GSE.After(5, GSE.SyncAllWoWMacros)
         end
     end
 end)

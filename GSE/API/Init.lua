@@ -1,29 +1,16 @@
 -- GLOBALS: GSE
-GSE =
-    LibStub("AceAddon-3.0"):NewAddon(
-    "GSE",
-    "AceConsole-3.0",
-    "AceEvent-3.0",
-    "AceComm-3.0",
-    "AceTimer-3.0"
-)
-GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
-GSE.Static = {}
+GSE = GSE or {}
+GSE.L = GSE.L or {}
+GSE.Static = GSE.Static or {}
 
 GSE.WagoAnalytics = LibStub("WagoAnalytics"):Register("kGr0YY6y")
 
-GSE.VersionString = C_AddOns.GetAddOnMetadata("GSE", "Version")
-
---@debug@
-if GSE.VersionString:find("version") then
-    GSE.VersionString = "3.3.00-development"
-    GSE.Developer = true
-end
---@end-debug@
+GSE.VersionString = GSE.GetAddOnMetadata("GSE", "Version") or "0.0.0"
 
 if GSE.VersionString:find("Patron") then
     GSE.Patron = true
 end
+GSE.Developer = false  -- set true only during active development; never ship as true
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 GSE.Pause = {}
 GSE.OutputQueue = {}
@@ -60,10 +47,15 @@ function GSE.split(source, delimiters)
     return elements
 end
 
-local gameversion, _, _, _, _, buildType = GetBuildInfo()
-local majorVersion = GSE.split(gameversion, ".")
+local gameversion, _, _, _, _, _buildType = GetBuildInfo()
+local majorVersion = GSE.split(gameversion or "0", ".")
 
-GSE.GameMode = tonumber(majorVersion[1])
+GSE.GameMode = tonumber(majorVersion[1]) or 0
+GSE.ProjectID = WOW_PROJECT_ID
+GSE.IsMainline = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+GSE.IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+GSE.IsVanilla = WOW_PROJECT_ID == WOW_PROJECT_VANILLA_CLASSIC
+GSE.IsMists = WOW_PROJECT_MISTS_CLASSIC and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
@@ -117,13 +109,25 @@ end
 --    be sent to variable <code>GSE.Print</code>
 --    The Title is stripped for intermod debug output via GSE.DebugOutput
 local function determinationOutputDestination(message, title)
+    local wroteDebugOutput = false
     if GSE.UnsavedOptions.DebugSequenceExecution then
         GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
+        wroteDebugOutput = true
     elseif GSEOptions.sendDebugOutputToDebugOutput then
         GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
+        wroteDebugOutput = true
     end
     if GSEOptions.sendDebugOutputToChatWindow then
         GSE.Print(message, title)
+    end
+    if
+        wroteDebugOutput and type(GSE.GUIUpdateOutput) == "function" and GSE.GUIDebugFrame and
+            type(GSE.GUIDebugIsOpenOrMinimized) == "function" and GSE.GUIDebugIsOpenOrMinimized() and not GSE.GUIDebugPaused and
+            not GSE.DebugOutputFlushing
+     then
+        GSE.DebugOutputFlushing = true
+        pcall(GSE.GUIUpdateOutput)
+        GSE.DebugOutputFlushing = nil
     end
 end
 
@@ -156,9 +160,12 @@ function GSE.PrintDebugMessage(message, module)
 end
 
 function GSE.DebugProfile(event)
+    if type(debugprofilestop) ~= "function" then
+        return
+    end
     local currentTimeStop = debugprofilestop()
-    if GSE.ProfileStop then
-        GSE.WagoAnalytics:SetCounter("Init_" .. event, currentTimeStop - GSE.ProfileStop)
+    if GSE.ProfileStop and GSE.WagoAnalytics and type(GSE.WagoAnalytics.SetCounter) == "function" then
+        GSE.WagoAnalytics:SetCounter("Init_" .. tostring(event), currentTimeStop - GSE.ProfileStop)
     end
     GSE.ProfileStop = currentTimeStop
 end
@@ -175,4 +182,4 @@ GSE.inHeroic = false
 GSE.inParty = false
 
 -- initialise debugprofilestart
-GSE.DebugProfile("init")
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("init") end

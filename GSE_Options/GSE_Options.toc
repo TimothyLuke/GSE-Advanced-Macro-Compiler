@@ -1,11 +1,11 @@
 ## Interface: 11508, 20505, 50503, 50504, 120005
 
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Configuration Options|r
+## Title: |cFFFFFFFFGSE_NoACE Files - Options|r
 ## Notes: GSE Configuration Options
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-10-g7e2a200-PatronBuild
 ## Dependencies: GSE_Utils
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -17,7 +17,7 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE
+## Group: GSE_NoACE
 
 
 Options.lua

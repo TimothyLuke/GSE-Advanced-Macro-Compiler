@@ -1,0 +1,46 @@
+-- Retail Priest — Shadow
+-- Source: https://www.icy-veins.com/wow/shadow-priest-pve-dps-spell-summary
+GSE.RegisterSpellList("Retail", "PRIEST", "Shadow", {
+    -- Core rotation
+    "Mind Flay",
+    "Mind Blast",
+    "Mind Spike",
+    "Shadow Word: Pain",
+    "Vampiric Touch",
+    "Devouring Plague",
+    "Shadow Word: Death",
+    "Mind Sear",
+    "Shadow Crash",
+    "Mind Bomb",
+    "Halo",
+    "Divine Star",
+    -- Cooldowns
+    "Voidform",
+    "Void Eruption",
+    "Dark Ascension",
+    "Mindbender",
+    "Shadowfiend",
+    "Power Infusion",
+    "Vampiric Embrace",
+    "Silence",
+    -- Heals (off-spec)
+    "Flash Heal",
+    "Renew",
+    "Power Word: Shield",
+    -- Defensives / utility
+    "Dispersion",
+    "Fade",
+    "Desperate Prayer",
+    "Power Word: Fortitude",
+    "Levitate",
+    "Mass Dispel",
+    "Dispel Magic",
+    "Purify Disease",
+    "Resurrection",
+    "Mind Soothe",
+    "Shackle Undead",
+    "Psychic Scream",
+    "Psychic Horror",
+    "Mind Control",
+    "Fear Ward",
+})
