@@ -3,6 +3,20 @@ local GSE = GSE
 local Statics = GSE.Static
 
 local L = GSE.L
+local PREVIEW_WIDTH_OFFSET = 18
+local PREVIEW_HEIGHT_OFFSET = 66
+local MIN_PREVIEW_HEIGHT = 300
+local DEFAULT_PREVIEW_HEIGHT = 700
+
+local function GetEditorPreviewHeight(editframe)
+    local editorFrame = editframe and editframe.frame
+    local height = editorFrame and editorFrame.GetHeight and editorFrame:GetHeight()
+    if not height or height <= 0 then
+        height = editframe and editframe.Height
+    end
+    return math.max(MIN_PREVIEW_HEIGHT, height or DEFAULT_PREVIEW_HEIGHT)
+end
+
 local function DisablePreviewColoring(widget)
     if widget and widget.editBox and IndentationLib and IndentationLib.disable then
         IndentationLib.disable(widget.editBox)
@@ -10,13 +24,13 @@ local function DisablePreviewColoring(widget)
 end
 
 function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
-  local AceGUI = LibStub("AceGUI-3.0")
+  local UI = GSE.UI
 
   -- Reuse an existing preview frame for this editor rather than leaking a new
   -- one on every button click.
   local PreviewFrame = editframe.PreviewFrame
   if GSE.isEmpty(PreviewFrame) then
-    PreviewFrame = AceGUI:Create("Frame")
+    PreviewFrame = UI:Create("Frame")
     PreviewFrame.frame:SetFrameStrata("MEDIUM")
     PreviewFrame.frame:SetClampedToScreen(true)
     PreviewFrame:SetTitle(L["Compiled Template"])
@@ -33,13 +47,15 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
       end
     )
     PreviewFrame:SetLayout("List")
-    PreviewFrame.frame:SetClampRectInsets(-10, -10, -10, -10)
+    PreviewFrame.frame:SetClampRectInsets(10, 0, 0, 0)
     PreviewFrame:SetWidth(280)
-    PreviewFrame:SetHeight(700)
+    PreviewFrame:SetHeight(GetEditorPreviewHeight(editframe))
+    PreviewFrame:SetResizeBounds(280, MIN_PREVIEW_HEIGHT)
+    PreviewFrame:SetResizable(true)
     PreviewFrame:Hide()
 
-    local PreviewLabel = AceGUI:Create("MultiLineEditBox")
-    PreviewLabel:SetWidth(270)
+    local PreviewLabel = UI:Create("MultiLineEditBox")
+    PreviewLabel:SetWidth(280 - PREVIEW_WIDTH_OFFSET)
     PreviewLabel:SetNumLines(40)
     PreviewLabel:DisableButton(true)
 
@@ -52,8 +68,8 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
     PreviewFrame.frame:SetScript(
       "OnSizeChanged",
       function(self, width, height)
-        PreviewLabel:SetWidth(width - 30)
-        PreviewLabel:SetHeight(height - 80)
+        PreviewLabel:SetWidth(width - PREVIEW_WIDTH_OFFSET)
+        PreviewLabel:SetHeight(height - PREVIEW_HEIGHT_OFFSET)
       end
     )
 
@@ -67,6 +83,8 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
   local count = #spelllist
   PreviewLabel:SetLabel(L["Compiled"] .. " " .. count .. " " .. L["Actions"])
   if editframe:IsVisible() then
+    PreviewFrame:SetHeight(GetEditorPreviewHeight(editframe))
+    PreviewLabel:SetHeight(PreviewFrame.frame:GetHeight() - PREVIEW_HEIGHT_OFFSET)
     PreviewFrame:ClearAllPoints()
     PreviewFrame:SetPoint("TOPLEFT", editframe.frame, editframe.Width + 10, 0)
   end
@@ -77,7 +95,7 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
   PreviewFrame:SetStatusText(title)
   local wasShown = PreviewFrame:IsShown()
   PreviewFrame:Show()
-  -- Refresh editor macro blocks so the inline side panel appears alongside
+  if PreviewFrame.frame and GSE.RegisterUIScaleFrame then GSE.RegisterUIScaleFrame(PreviewFrame.frame) end
   -- the multiline editor whenever this preview frame becomes visible.
   if not wasShown and editframe and editframe.RefreshCurrentVersion then
     editframe.RefreshCurrentVersion()

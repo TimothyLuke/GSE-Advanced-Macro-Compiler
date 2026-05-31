@@ -6,12 +6,8 @@ externals:
   GSE/Lib/AceLocale-3.0: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
   GSE/Lib/AceEvent-3.0: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
   GSE/Lib/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
-  GSE/Lib/AceConsole-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
   GSE/Lib/AceComm-3.0: https://repos.wowace.com/wow/ace3/trunk/AceComm-3.0
-  GSE/Lib/AceGUI-3.0: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
-  GSE/Lib/AceTimer-3.0: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
   GSE/Lib/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1.git
-  GSE/Lib/AceGUI-3.0-Completing-EditBox: https://repos.wowace.com/wow/acegui-3-0-completing-editbox/trunk
   GSE/Lib/LibQTip-2.0: https://github.com/Torhal/LibQTip-2.0.git
   GSE/Lib/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
   GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
@@ -21,7 +17,6 @@ externals:
 move-folders:
   GSE/GSE/Lib/LibSharedMedia-3.0: GSE/GSE_Utils/Lib/LibSharedMedia-3.0
   GSE/GSE/Lib/LibDBIcon-1.0: GSE/GSE_Utils/Lib/LibDBIcon-1.0
-  GSE/GSE/Lib/AceGUI-3.0-Completing-EditBox: GSE/GSE_Utils/Lib/AceGUI-3.0-Completing-EditBox
   GSE/GSE/Lib/LibDBCompartment: GSE/GSE_Utils/Lib/LibDBCompartment
   GSE/GSE: GSE
   GSE/GSE_GUI: GSE_GUI

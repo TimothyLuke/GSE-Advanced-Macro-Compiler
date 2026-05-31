@@ -1,12 +1,82 @@
 local GSE = GSE
 local Statics = GSE.Static
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
 local DecodeMacroEditorText = GSE.DecodeMacroEditorText
 local StoreMacroEditorText = GSE.StoreMacroEditorText
+
+local function SetEditBoxLabelGap(widget, gap)
+    if not (widget and widget.label and widget.editBox and widget.frame) then return end
+    local labelHeight = widget.label:GetStringHeight()
+    if not labelHeight or labelHeight <= 0 then labelHeight = 12 end
+    local g = gap or (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
+    widget.editBox:ClearAllPoints()
+    widget.editBox:SetPoint("TOPLEFT", widget.frame, "TOPLEFT", 4, -(labelHeight + g))
+    widget.editBox:SetPoint("RIGHT", widget.frame, "RIGHT", -4, 0)
+end
+
+local function SetMultiLineLabelGap(widget, gap)
+    if not (widget and widget.label and widget.scrollBG and widget.frame) then return end
+    local labelHeight = widget.labelHeight or widget.label:GetStringHeight()
+    if not labelHeight or labelHeight <= 0 then labelHeight = 12 end
+    local scrollBarReserve = widget.scrollBarReserve or 24
+    local g = gap or (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
+    widget.scrollBG:ClearAllPoints()
+    widget.scrollBG:SetPoint("TOPLEFT", widget.frame, "TOPLEFT", 0, -(labelHeight + g))
+    widget.scrollBG:SetPoint("BOTTOMRIGHT", widget.frame, "BOTTOMRIGHT", -scrollBarReserve, 0)
+end
+
+local function SetMultiLineContentPadding(widget, padding)
+    if not (widget and widget.scrollBG and widget.scrollFrame) then return end
+    padding = padding or 2
+    widget.leftOffset = padding
+    widget.rightOffset = padding
+    widget.verticalOffset = padding
+    widget.scrollFrame:ClearAllPoints()
+    widget.scrollFrame:SetPoint("TOPLEFT", widget.scrollBG, "TOPLEFT", padding, -padding)
+    widget.scrollFrame:SetPoint("BOTTOMRIGHT", widget.scrollBG, "BOTTOMRIGHT", -padding, padding)
+end
+
+local function SetMacroTextCounter(widget, text)
+    if text == nil and widget and widget.GetText then
+        text = widget:GetText()
+    end
+    if GSE.GUI and GSE.GUI.SetMacroCountText then
+        GSE.GUI.SetMacroCountText(widget, GSE.GetMacroEditorTextLength(text or ""))
+    end
+    if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+        GSE.GUI.UpdateMacroLimitState(widget, text)
+    end
+end
+
+local function ConfigureCompiledMacroLabel(widget)
+    if not widget then return end
+    widget:SetFullWidth(true)
+    if widget.label then
+        if widget.label.SetWordWrap then widget.label:SetWordWrap(true) end
+        if widget.label.SetNonSpaceWrap then widget.label:SetNonSpaceWrap(true) end
+    end
+    widget.OnWidthSet = function(self)
+        if not (self.label and self.label.GetStringHeight) then return end
+        local height = math.max(20, self.label:GetStringHeight() + 2)
+        self.height = height
+        self.frame:SetHeight(height)
+    end
+end
+
+local function SetCompiledMacroText(widget, text)
+    if not widget then return end
+    widget:SetText(text)
+    if widget.OnWidthSet then widget:OnWidthSet(widget.frame and widget.frame:GetWidth()) end
+    if widget.parent and widget.parent.DoLayout then widget.parent:DoLayout() end
+end
+
+local function ConfigureMacroFieldLabel(widget)
+    if widget and widget.label and widget.label.SetFontObject then widget.label:SetFontObject(GameFontNormalSmall) end
+end
 
 -- ---------------------------------------------------------------------------
 -- buildMacroMenu()  →  "Macros" tree node
@@ -55,6 +125,10 @@ end
 -- showMacro(editframe, node, container)
 -- ---------------------------------------------------------------------------
 local function showMacro(editframe, node, container)
+    -- Section header — uses the GSE macro asset icon, not the individual macro's WoW icon
+    if GSE.GUI.AddSectionHeader then
+        GSE.GUI.AddSectionHeader(container, L["Macros"] or "Macros", GSE.Static.Icons.Macros)
+    end
     local char, realm = UnitFullName("player")
 
     local source = GSEMacros
@@ -65,7 +139,7 @@ local function showMacro(editframe, node, container)
         source = GSEMacros[char .. "-" .. realm]
     end
 
-    local manageGSE = AceGUI:Create("CheckBox")
+    local manageGSE = UI:Create("CheckBox")
     manageGSE:SetType("radio")
     manageGSE:SetLabel(L["Manage Macro with GSE"])
     manageGSE:SetTriState(false)
@@ -84,14 +158,23 @@ local function showMacro(editframe, node, container)
     if source[node.name] and source[node.name].Managed then
         managed = source[node.name].Managed
     end
+    editframe.activeMacroName = node.name
 
-    local headerGroup = AceGUI:Create("SimpleGroup")
+    local headerGroup = UI:Create("SimpleGroup")
     headerGroup:SetFullWidth(true)
     headerGroup:SetLayout("Flow")
+    -- Top-align the icon with the Macro Name field (top of the stack to its right).
+    if headerGroup.SetFlowVAlign then headerGroup:SetFlowVAlign("TOP") end
+    if headerGroup.SetFlowGap    then headerGroup:SetFlowGap(12) end
 
-    local nameeditbox = AceGUI:Create("EditBox")
+    local nameeditbox = UI:Create("EditBox")
     nameeditbox:SetLabel(L["Macro Name"])
+    ConfigureMacroFieldLabel(nameeditbox)
+    SetEditBoxLabelGap(nameeditbox, 2)
     nameeditbox:SetWidth(250)
+    -- Fit the field to label+box (default frame is controlHeight*2=48, leaving ~12px
+    -- dead space below the box). Trimming it pulls the Author field up.
+    if nameeditbox.SetHeight then nameeditbox:SetHeight(36) end
     nameeditbox:SetCallback(
         "OnEnterPressed",
         function(self, _, text)
@@ -126,12 +209,34 @@ local function showMacro(editframe, node, container)
     nameeditbox:DisableButton(false)
     nameeditbox:SetText(node.name)
 
-    local spacerlabel = AceGUI:Create("Label")
-    spacerlabel:SetWidth(10)
+    -- Author — shown on the first macro page even before "Manage Macro with GSE" is
+    -- checked. source[node.name] is always populated above, so writing .Author here
+    -- is safe in the unmanaged state too.
+    local authoreditbox = UI:Create("EditBox")
+    authoreditbox:SetLabel(L["Author"])
+    ConfigureMacroFieldLabel(authoreditbox)
+    SetEditBoxLabelGap(authoreditbox, 2)
+    authoreditbox:SetWidth(250)
+    authoreditbox:DisableButton(true)
+    authoreditbox:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Author"], L["The author of this Macro."], editframe)
+    end)
+    authoreditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    if not GSE.isEmpty(node.Author) then
+        authoreditbox:SetText(node.Author)
+    else
+        authoreditbox:SetText(GSE.GetCharacterName())
+    end
+    authoreditbox:SetCallback(
+        "OnTextChanged",
+        function(obj, event, key)
+            node.Author = key
+            source[node.name].Author = key
+        end
+    )
 
-    local iconpicker = AceGUI:Create("Icon")
-    iconpicker:SetImageSize(40, 40)
-    iconpicker:SetLabel(L["Macro Icon"])
+    local iconpicker = UI:Create("Icon")
+    iconpicker:SetImageSize(80, 80)
     iconpicker.frame:RegisterForDrag("LeftButton")
     iconpicker.frame:SetScript(
         "OnDragStart",
@@ -157,61 +262,65 @@ local function showMacro(editframe, node, container)
         end
     )
     iconpicker:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    -- Nudge the icon up 5px so its top lines up with the Macro Name field top.
+    if iconpicker.SetFlowOffset then iconpicker:SetFlowOffset(0, 5) end
+    -- Name + Author stacked to the right of the icon. Both boxes share the column's
+    -- left edge, so they align with no manual indent.
+    local fieldsColumn = UI:Create("SimpleGroup")
+    fieldsColumn:SetLayout("List")
+    fieldsColumn:SetWidth(260)
+    if fieldsColumn.SetListGap     then fieldsColumn:SetListGap(8) end
+    if fieldsColumn.SetListPadding then fieldsColumn:SetListPadding(0, 0, 0, 0) end
+    fieldsColumn:AddChild(nameeditbox)
+    fieldsColumn:AddChild(authoreditbox)
+    -- Nudge both fields up 5; then a little extra per field (Name +2, Author +5).
+    if fieldsColumn.SetFlowOffset then fieldsColumn:SetFlowOffset(0, 5) end
+    if nameeditbox.SetFlowOffset   then nameeditbox:SetFlowOffset(0, 1) end
+    if authoreditbox.SetFlowOffset then authoreditbox:SetFlowOffset(0, 4) end
+    -- Nudge the "Manage Macro with GSE" checkbox right 2px (positive x = right).
+    if manageGSE.SetFlowOffset     then manageGSE:SetFlowOffset(2, 0) end
+
     headerGroup:AddChild(iconpicker)
-    headerGroup:AddChild(spacerlabel)
-    headerGroup:AddChild(nameeditbox)
-    container:AddChild(headerGroup)
+    headerGroup:AddChild(fieldsColumn)
     container:AddChild(manageGSE)
+    container:AddChild(headerGroup)
 
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
-    local fontName, fontHeight, fontFlags = GameFontNormal:GetFont()
+    local _fontName, _fontHeight, _fontFlags = GameFontNormal:GetFont()
     local origjustificationH = font:GetJustifyH()
     local origjustificationV = font:GetJustifyV()
     font:SetJustifyH("CENTER")
     font:SetJustifyV("MIDDLE")
 
+    -- Help Information shows on the first macro page too (matching the managed page).
+    -- source[node.name] is always populated above, so writing .comments is safe even
+    -- before "Manage Macro with GSE" is checked.
+    local commentsEditBox = UI:Create("MultiLineEditBox")
+    commentsEditBox:SetLabel(L["Help Information"])
+    ConfigureMacroFieldLabel(commentsEditBox)
+    SetMultiLineLabelGap(commentsEditBox, 2)
+    SetMultiLineContentPadding(commentsEditBox, 2)
+    commentsEditBox:SetNumLines(3)
+    commentsEditBox:SetFullWidth(true)
+    commentsEditBox:DisableButton(true)
+    if source[node.name].comments then
+        commentsEditBox:SetText(source[node.name].comments)
+    end
+    commentsEditBox:SetCallback("OnTextChanged", function(self, event, text)
+        source[node.name].comments = text
+    end)
+    commentsEditBox:SetCallback("OnEditFocusLost", function()
+        source[node.name].comments = commentsEditBox:GetText()
+    end)
+    container:AddChild(commentsEditBox)
+
     if managed then
-        local authoreditbox = AceGUI:Create("EditBox")
-        authoreditbox:SetLabel(L["Author"])
-        authoreditbox:SetWidth(250)
-        authoreditbox:DisableButton(true)
-        authoreditbox:SetCallback("OnEnter", function()
-            GSE.CreateToolTip(L["Author"], L["The author of this Macro."], editframe)
-        end)
-        authoreditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-        if not GSE.isEmpty(node.Author) then
-            authoreditbox:SetText(node.Author)
-        else
-            authoreditbox:SetText(GSE.GetCharacterName())
-        end
-        authoreditbox:SetCallback(
-            "OnTextChanged",
-            function(obj, event, key)
-                node.Author = key
-                source[node.name].Author = key
-            end
-        )
-        container:AddChild(authoreditbox)
-
-        local commentsEditBox = AceGUI:Create("MultiLineEditBox")
-        commentsEditBox:SetLabel(L["Help Information"])
-        commentsEditBox:SetNumLines(3)
-        commentsEditBox:SetFullWidth(true)
-        commentsEditBox:DisableButton(true)
-        if source[node.name].comments then
-            commentsEditBox:SetText(source[node.name].comments)
-        end
-        commentsEditBox:SetCallback("OnTextChanged", function(self, event, text)
-            source[node.name].comments = text
-        end)
-        commentsEditBox:SetCallback("OnEditFocusLost", function()
-            source[node.name].comments = commentsEditBox:GetText()
-        end)
-        container:AddChild(commentsEditBox)
-
-        local managedMacro = AceGUI:Create("MultiLineEditBox")
-        managedMacro:SetLabel(L["Macro Template"])
+        local managedMacro = UI:Create("MultiLineEditBox")
+        managedMacro:SetLabel(L["Macro"])
+        ConfigureMacroFieldLabel(managedMacro)
+        SetMultiLineLabelGap(managedMacro, 2)
+        SetMultiLineContentPadding(managedMacro, 2)
         local managedtext =
             (source[node.name].managedMacro and
             DecodeMacroEditorText(GSE.CompileMacroText(
@@ -221,13 +330,10 @@ local function showMacro(editframe, node, container)
         managedMacro:SetText(managedtext)
         managedMacro:SetNumLines(8)
         managedMacro:SetFullWidth(true)
+        SetMacroTextCounter(managedMacro, managedtext)
 
-        local compiledMacro = AceGUI:Create("Label")
-        compiledMacro:SetWidth(editframe.Width - 200)
-
-        local heading2 = AceGUI:Create("Heading")
-        heading2:SetText(L["Compiled Macro"])
-        heading2:SetFullWidth(true)
+        local compiledMacro = UI:Create("Label")
+        ConfigureCompiledMacroLabel(compiledMacro)
 
         local compiledtext =
             (source[node.name].managedMacro and
@@ -235,30 +341,50 @@ local function showMacro(editframe, node, container)
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
                 Statics.TranslatorMode.String
             )) or DecodeMacroEditorText(node.text))
-        compiledMacro:SetText(compiledtext)
+        SetCompiledMacroText(compiledMacro, compiledtext)
 
-        local compiledlinecount = AceGUI:Create("Label")
-        compiledlinecount:SetWidth(editframe.Width - 200)
-        compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiledtext)))
-        compiledlinecount:ClearAllPoints()
-        compiledlinecount:SetPoint("CENTER")
-        compiledlinecount:SetFontObject(font)
-        compiledlinecount:SetFont(fontName, fontHeight, fontFlags)
+        -- Compile the authored macro to its spell-name form and queue the in-game
+        -- macro update. Split out of OnTextChanged so it can run either live
+        -- (real-time parsing on) or once on focus-loss / accept (real-time parsing
+        -- off). The authored macro (managedMacro, the ID form) is always stored in
+        -- OnTextChanged regardless of this setting, so nothing the user types is
+        -- ever lost; only the derived compile + macro refresh are deferred.
+        local function commitManagedMacroCompile(displayText)
+            local compiled = DecodeMacroEditorText(GSE.CompileMacroText(displayText, Statics.TranslatorMode.String))
+            source[node.name].text = compiled
+            SetCompiledMacroText(compiledMacro, compiled)
+            GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = source[node.name]})
+        end
 
         managedMacro:SetCallback(
             "OnTextChanged",
             function(self, _, text)
+                SetMacroTextCounter(managedMacro, text)
                 editframe:SetStatusText(L["Save pending for "] .. node.name)
+                -- Always persist the authored macro so nothing is lost.
                 source[node.name].managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
-                local compiled = DecodeMacroEditorText(GSE.CompileMacroText(text, Statics.TranslatorMode.String))
-                compiledMacro:SetText(compiled)
-                compiledlinecount:SetText(string.format(L["%s/255 Characters Used"], string.len(compiled)))
-                local oocaction = {
-                    ["action"] = "updatemacro",
-                    ["node"] = source[node.name],
-                    ["status"] = editframe:SetStatusText()
-                }
-                GSE.EnqueueOOC(oocaction)
+                if GSE.ShouldTranslateLive() then
+                    -- Live: compile + queue the in-game macro update on every change.
+                    commitManagedMacroCompile(text)
+                end
+                -- When not live, the compile + macro refresh run on focus-loss /
+                -- accept (handlers below), keeping typing responsive.
+            end
+        )
+
+        managedMacro:SetCallback(
+            "OnEditFocusLost",
+            function()
+                -- Always reconcile on focus-loss so the compiled macro is current
+                -- regardless of mode/combat (a harmless repeat when live already ran).
+                commitManagedMacroCompile(managedMacro:GetText())
+            end
+        )
+
+        managedMacro:SetCallback(
+            "OnEnterPressed",
+            function(self, _, text)
+                commitManagedMacroCompile(text)
             end
         )
 
@@ -300,31 +426,33 @@ local function showMacro(editframe, node, container)
             )
         end
 
-        managedMacro:DisableButton(true)
+        -- Match the unmanaged page exactly: show the accept button and drop the
+        -- trailing Spacer (the unmanaged page has neither a "Template" label nor a
+        -- spacer, so its "Used by Sequences" panel sits one row higher).
+        managedMacro:DisableButton(false)
+        -- Push the Macro box down 3px (negative y = down) for a little breathing
+        -- room below Help Information.
+        if managedMacro.SetFlowOffset then managedMacro:SetFlowOffset(0, -3) end
         container:AddChild(managedMacro)
-        container:AddChild(heading2)
-        local inlinecompiled = AceGUI:Create("InlineGroup")
-        inlinecompiled:SetFullWidth(true)
-        inlinecompiled:AddChild(compiledMacro)
-        container:AddChild(inlinecompiled)
-        container:AddChild(AceGUI:Create("Spacer"))
-        container:AddChild(compiledlinecount)
+        -- "Compiled Macro" preview removed from the page. compiledMacro stays as an
+        -- unattached label so the managedMacro OnTextChanged callback can still write
+        -- to it; source[node.name].text (set there) is the value that actually matters.
     else
-        local linecount = AceGUI:Create("Label")
-        linecount:SetWidth(editframe.Width - 200)
-        linecount:SetText(string.format(L["%s/255 Characters Used"], string.len(node.text)))
-        linecount:ClearAllPoints()
-        linecount:SetPoint("CENTER")
-        linecount:SetFontObject(font)
-        linecount:SetFont(fontName, fontHeight, fontFlags)
         font:SetJustifyH(origjustificationH)
         font:SetJustifyV(origjustificationV)
 
-        local macro = AceGUI:Create("MultiLineEditBox")
+        local macro = UI:Create("MultiLineEditBox")
         macro:SetLabel(L["Macro"])
+        ConfigureMacroFieldLabel(macro)
+        SetMultiLineLabelGap(macro, 2)
+        SetMultiLineContentPadding(macro, 2)
         macro:SetText(DecodeMacroEditorText(node.text))
         macro:SetNumLines(8)
         macro:SetFullWidth(true)
+        SetMacroTextCounter(macro)
+        macro:SetCallback("OnTextChanged", function(self, _, text)
+            SetMacroTextCounter(macro, text)
+        end)
         macro:SetCallback(
             "OnEnterPressed",
             function(self, _, text)
@@ -332,26 +460,30 @@ local function showMacro(editframe, node, container)
                 node.text = StoreMacroEditorText(text, Statics.TranslatorMode.String)
                 local oocaction = {
                     ["action"] = "updatemacro",
-                    ["node"] = node,
-                    ["status"] = editframe:SetStatusText()
+                    ["node"] = node
                 }
                 GSE.EnqueueOOC(oocaction)
             end
         )
-        macro:SetCallback(
-            "OnTextChanged",
-            function(self, _, text)
-                local length = string.len(DecodeMacroEditorText(text))
-                local line = string.format(L["%s/255 Characters Used"], length)
-                if length > 255 then
-                    line = GSEOptions.UNKNOWN .. line .. Statics.StringReset
-                end
-                linecount:SetText(line)
-            end
-        )
         macro:DisableButton(false)
+        -- Push the Macro box down 3px (negative y = down) to match the managed page.
+        if macro.SetFlowOffset then macro:SetFlowOffset(0, -3) end
         container:AddChild(macro)
-        container:AddChild(linecount)
+    end
+
+    -- "Used by Sequences" panel at the bottom of every macro page — lists the
+    -- sequences that embed this macro. Same styled table as the variable page.
+    if GSE.GUI.CreateDependencyWindow and GSE.GetMacroDependents then
+        local heading = (L["Used by Sequences"] or "Used by Sequences") .. ":"
+        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
+        local rows = {}
+        for _, entry in ipairs(GSE.GetMacroDependents(node.name)) do
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.name]
+            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
+            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
+            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
+        end
+        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true, rightInset = 38 })
     end
 
     manageGSE:SetCallback(
@@ -373,7 +505,19 @@ local function showMacro(editframe, node, container)
                 GSE.UnEscapeString(
                 GSE.TranslateString(source[node.name].managedMacro, Statics.TranslatorMode.Current)
             )
-            showMacro(editframe, node, container)
+            if not value and editframe.pendingSaveName == node.name then
+                editframe:SetStatusText(editframe.statusText or ("GSE: " .. GSE.VersionString))
+            end
+            local function redrawMacroPanel()
+                if container.ReleaseChildren then container:ReleaseChildren() end
+                showMacro(editframe, node, container)
+                editframe.loaded = true
+                if container.DoLayout then container:DoLayout() end
+                if editframe.scroller and editframe.scroller.DoLayout then editframe.scroller:DoLayout() end
+                if editframe.treeContainer and editframe.treeContainer.DoLayout then editframe.treeContainer:DoLayout() end
+                if editframe.DoLayout then editframe:DoLayout() end
+            end
+            C_Timer.After(0.01, redrawMacroPanel)
         end
     )
 end

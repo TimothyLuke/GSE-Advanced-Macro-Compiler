@@ -58,8 +58,6 @@ L["Requires Variables:"] = true
 L["Embeds Sequences:"] = true
 L["Requires Macros:"] = true
 L["Embedded by:"] = true
-L["Used by Variables:"] = true
-L["Used by Sequences:"] = true
 -- Dependency tracking
 L["Sequence '%s' (class %d) depends on variable '%s' which does not exist."] = true
 L["Sequence '%s' (class %d) embeds sequence '%s' which does not exist."] = true
@@ -88,7 +86,20 @@ L["Actionbar Overrides: The following CVars were automatically set to false as t
 L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."] = true
 
 L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."] = true
-L["Enter a name for the new sequence:"] = true
+L["Enter a Name for the New Sequence"] = true
+L["Sequence Renamed"] = true
+L["-gse.tools ID will remain the same-"] = true
+L["Delete Sequence"] = true
+L["Are you sure you want to Delete"] = true
+L["This will Delete the Sequence and all Versions."] = true
+L["This Action Cannot be Undone!"] = true
+L["Copy this Link and Paste into a Chat Window."] = true
+L["Text selected. Press Ctrl+C to Copy"] = true
+L["Version Number"] = true
+L["Developer Debug"] = true
+L["Corrupt Sequence"] = true
+L["Enter NEW Name for the Duplicated Sequence:"] = true
+L["-sequence will receive a new gse.tools id-"] = true
 L["Enter a name for the new variable:"] = true
 L["Create"] = true
 L["<SEQUENCEDEBUG> |r "] = true
@@ -115,6 +126,7 @@ L["  The Alternative ClassID is "] = true
 -- Sequence Editor Stuff
 L["Sequence"] = true
 L["New"] = true
+L["Duplicate"] = true
 
 L["Load Sequence"] = true
 L["Disable Sequence"] = true
@@ -125,7 +137,6 @@ L["Sequential (1 2 3 4)"] = true
 L["Priority List (1 12 123 1234)"] = true
 L["Macro Icon"] = true
 L["Delete Version"] = true
-L["Specialisation / Class ID"] = true
 -- Options Debug
 
 -- Options Stuff
@@ -133,7 +144,6 @@ L["You need to reload the User Interface to complete this task.  Would you like 
 L["Yes"] = true
 L["No"] = true
 L["General"] = true
-L["General Options"] = true
 
 
 L["Debug Mode Options"] = true
@@ -142,7 +152,6 @@ L["Display debug messages in Chat Window"] = true
 L["This will display debug messages in the Chat window."] = true
 L["Store Debug Messages"] = true
 
-L["Colour"] = true
 L["Title Colour"] = true
 L["Picks a Custom Colour for the Mod Names."] = true
 L["Info Colour"] = true
@@ -153,7 +162,6 @@ L["Emphasis Colour"] = true
 L["Picks a Custom Colour for emphasis."] = true
 L["Normal Colour"] = true
 L["Picks a Custom Colour to be used normally."] = true
-L["Editor Colours"] = true
 L["Spells & Action Labels"] = true
 L["Picks a Custom Colour for spell names and action block type labels."] = true
 L["Unknown Colour"] = true
@@ -185,8 +193,6 @@ L["unknown"] = true
 L["Checksum valid"] = true
 L["Checksum invalid - sequence may have been modified"] = true
 L["No checksum"] = true
-L["Default Tree Panel Width"] = true
-L["How many pixels wide should the sequence list panel on the left of the Editor be.  Defaults to 150"] = true
 
 L["Import"] = true
 L["Close"] = true
@@ -194,13 +200,14 @@ L["Debug Output Options"] = true
 L["Enable Debug for the following Modules"] = true
 L["Debug"] = true
 L["Filter Sequence Selection"] = true
+L["Editor Scroll Speed"] = true
+L["Pixels scrolled per mouse-wheel notch in the Sequence Editor. Higher = faster scrolling. Default 280."] = true
+L["All Sequences"] = true
 L["Show All Sequences in Editor"] = true
 L["Show Class Sequences in Editor"] = true
 
 -- New Strings 1.4
 L["Sequence Debugger"] = true
-L["Gnome Sequencer: Sequence Debugger. Monitor the Execution of your Macro"] = true
-L["Output"] = true
 L["Pause"] = true
 L["Resume"] = true
 L["Clear"] = true
@@ -213,10 +220,8 @@ L["Send To"] = true
 L["Send"] = true
 L["Received Sequence "] = true
 L[" from "] = true
-L["Ready to Send"] = true
 L[" sent"] = true
 L["Reset Sequences when out of combat"] = true
-L["Resets sequences back to the initial state when out of combat."] = true
 
 -- 1.4.4
 L["Record Macro"] = true
@@ -236,11 +241,7 @@ L["Help Information"] = true
 L["Help Link"] = true
 L["Default Version"] = true
 L["Raid"] = true
-L["Mythic"] = true
-L["PVP"] = true
 L["Author"] = true
-L["Combat"] = true
-L["Resets"] = true
 L["This is the only version of this macro.  Delete the entire macro to delete this version."] = true
 L[
         "You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."
@@ -255,7 +256,6 @@ L["Addin Version %s contained versions for the following sequences:"] = true
 L["GSE"] = true
 L["Export a Sequence"] = true
 L["Export"] = true
-L["Copy this link and open it in a Browser."] = true
 L["This will display debug messages for the "] = true
 L[" Deleted Orphaned Macro "] = true
 --- GSE2.0.1-2.0.4
@@ -271,14 +271,12 @@ L["This Sequence was exported from GSE %s."] = true
 
 -- GSE 2.1.0
 L["Dungeon"] = true
-L["Heroic"] = true
 L[
         "GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."
     ] = true
 
 L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."] =
     true
-L["Mouse Buttons."] = true
 L["Sequence Reset"] = true
 L[
         "These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."
@@ -402,11 +400,8 @@ L["The version of this macro that will be used when you enter raids."] = true
 L[
         "The version of this macro to use in Arenas.  If this is not specified, GSE will look for a PVP version before the default."
     ] = true
-L["The version of this macro to use in Mythic Dungeons."] = true
 L["The version of this macro to use in PVP."] = true
 L["The version of this macro to use in normal dungeons."] = true
-L["The version of this macro to use in heroic dungeons."] = true
-L["The version of this macro to use when in a party in the world."] = true
 L["The version of this macro to use when in time walking dungeons."] = true
 L["The version of this macro to use in Mythic+ Dungeons."] = true
 L[
@@ -416,8 +411,6 @@ L["The author of this macro."] = true
 L[
         "Delete this version of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
     ] = true
-L["Reset this macro when you exit combat."] = true
-L["Delete this macro.  This is not able to be undone."] = true
 L["Decompress"] = true
 
 -- GSE 2.4.11
@@ -437,11 +430,9 @@ L["Raid setting changed to Default."] = true
 L["Mythic setting changed to Default."] = true
 
 -- GSE 2.5.0
-L["MS Click Rate"] = true
 L["The milliseconds being used in key click delay."] = true
 
 -- 2.5.3
-L["Delves and Scenarios"] = true
 
 -- 2.5.4
 L["GSE: Import a Macro String."] = true
@@ -462,7 +453,6 @@ L["Comma-separated list of WoW events or GSE messages that trigger this variable
 L["Default Editor Height"] = true
 L["How many pixels high should the Editor start at.  Defaults to 700"] = true
 L["Default Editor Width"] = true
-L["How many pixels wide should the Editor start at.  Defaults to 700"] = true
 
 --2.6.08
 L["WARNING ONLY"] = true
@@ -502,9 +492,7 @@ L["Unable to process content.  Fix table and try again."] = true
 L["Raw Editor"] = true
 L["Global"] = true
 L["Move Up"] = true
-L["Move this block up one block."] = true
 L["Move Down"] = true
-L["Move this block down one block."] = true
 L["Delete Block"] = true
 L[
         "Delete this Block from the sequence.  \nWARNING: If this is a loop this will delete all the blocks inside the loop as well."
@@ -517,7 +505,6 @@ L["Add Pause"] = true
 L["Add a Pause Block."] = true
 L["Pause for the GCD."] = true
 L["Error processing Custom Pause Value.  You will need to recheck your macros."] = true
-L["Support GSE"] = true
 
 -- 3.0.2
 L["Compiled Template"] = true
@@ -533,7 +520,6 @@ L[
 L["Compiled"] = true
 
 --3.0.16
-L["Disable Block"] = true
 L[
         "Disable this block so that it is not executed. If this is a container block, like a loop, all the blocks within it will also be disabled."
     ] = true
@@ -550,9 +536,7 @@ L["Macro Compile Error"] = true
 L["If Blocks Require a variable."] = true
 
 --3.0.35
-L["Frame Locations"] = true
 L["Default Debugger Height"] = true
-L["How many pixels high should the Debuger start at.  Defaults to 500"] = true
 L["Default Debugger Width"] = true
 L["How many pixels wide should the Debugger start at.  Defaults to 700"] = true
 
@@ -565,14 +549,10 @@ L["How many milliseconds to pause for?"] = true
 L["Local Function: "] = true
 
 -- #659
-L["Copy this link and paste it into a chat window."] = true
 
 -- #996
 L[
         "/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."
-    ] = true
-L[
-        "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
     ] = true
 L[
         "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
@@ -582,7 +562,6 @@ L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["GSE Plugins"] = true
 
 -- #1087
-L["Character"] = true
 
 -- #1114
 L["The GUI is missing.  Please ensure that your GSE install is complete."] = true
@@ -590,13 +569,6 @@ L["The GUI is corrupt.  Please ensure that your GSE install is complete."] = tru
 L["The GUI needs updating.  Please ensure that your GSE install is complete."] = true
 
 -- #981
-L["Block Path"] = true
-L[
-        "The block path shows the direct location of a block.  This can be edited to move a block to a different position quickly.  Each block is prefixed by its container.\nEG 2.3 means that the block is the third block in a container at level 2.  You can move a block into a container block by specifying the parent block.  You need to press the Okay button to move the block."
-    ] = true
-L["Error: Destination path not found."] = true
-L["Error: Source path not found."] = true
-L["Error: You cannot move a container to be a child within itself."] = true
 -- #1146
 L["was unable to be interpreted."] = true
 L["Unrecognised Import"] = true
@@ -637,6 +609,7 @@ L["This function will open a window enabling you to edit the spell cache and any
 L["Edit Spell Cache"] = true
 L["The GSE_GUI Module needs to be enabled to edit the spell cache."] = true
 L["Edit"] = true
+L["Reload"] = true
 L["Spell Cache Editor"] = true
 L["Spell ID"] = true
 L["Spell Name"] = true
@@ -665,8 +638,6 @@ L["Macro Name"] = true
 L["Manage Macro with GSE"] = true
 L["%s/255 Characters Used"] = true
 L["Macro"] = true
-L["Macro Template"] = true
-L["Compiled Macro"] = true
 L["Manage Variables"] = true
 L["Insert GSE Sequence"] = true
 L["Insert GSE Variable"] = true
@@ -687,17 +658,14 @@ L["Enable Mod Debug Mode"] = true
 L["Command Colour"] = true
 L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] =
     true
-L["Party"] = true
 L["Repeat"] = true
 L["How many times does this action repeat"] = true
 L["When exporting from GSE create a descriptive export for Discord/Discource forums."] = true
 L["Create Human Readable Exports"] = true
 L["The author of this Variable."] = true
-L["Last Updated"] = true
 L["The author of this Macro."] = true
 L["Saved"] = true
 L["Save pending for "] = true
-L["Insert Spell"] = true
 L["Advanced Export"] = true
 L["Set Key to Bind"] = true
 L["Keybind"] = true
@@ -711,8 +679,6 @@ L["Pet Ability"] = true
 L["This macro is not compatible with this version of the game and cannot be imported."] = true
 L["Sequence Named %s was not specifically designed for this version of the game.  It may need adjustments."] = true
 L["with no body"] = true
-L["GSE Discord"] = true
-L["Report an Issue"] = true
 L["GSE: Whats New in "] = "GSE: What's new in "
 L["Show next time you login."] = true
 L["Changes Left Side, Changes Right Side, Many Changes!!!! Handle It!"] = true
@@ -773,30 +739,14 @@ L["Button Settings"] = true
 
 -- #1806
 L["Skyriding / Vehicle Keybinds"] = true
-L["Override bindings for Skyriding, Vehicle, Possess and Override Bars"] = true
 L["Skyriding Button"] = true
-L["Unassigned"] = true
 L["Press a key..."] = true
 
 -- #1835
 L["Keybinding Tools"] = true
-L["Show Sequence Icons"] = true
-L["Show the Sequence Icon Preview Frame"] = true
-L["Preview Icon Size"] = true
-L["Default is 64 pixels."] = true
-L["Horizontal Layout"] = true
-L["Icon Preview Orientation: Horizontal"] = true
-L["Vertical Layout"] = true
-L["Icon Preview Orientation: Vertical"] = true
-L["Show Sequence Modifiers"] = true
-L["Show the Modifiers (eg Shift, Alt, Ctrl) and Buttons (eg Left Mousebutton) that were seen by the GSE sequence at the click/press it was triggered from."] = true
-L["Show Sequence Name"] = true
-L["Show the Name of the Sequence"] = true
 -- #1846
 L["Options Not Enabled"] = true
-L["Options will open after combat ends."] = true
 L["Import String Not Recognised."] = true
-L["GSE Import Successful."] = true
 L["GSE Collection to Import."] = true
 
 -- #1860
@@ -818,26 +768,37 @@ L["When enabled, this variable's function will be called automatically when the 
 L["Add from List"] = true
 L["Select a known WoW event or GSE message to append it to the Trigger Events box."] = true
 -- Menu orientation & lock
-L["Menu"] = true
-L["Menu Options"] = true
+L["Toolbar"] = true
+L["Toolbar Options"] = true
 L["Growth Direction"] = true
-L["Direction the menu grows from the logo button."] = true
 L["Up"] = true
 L["Down"] = true
 L["Left"] = true
 L["Right"] = true
 L["Lock Position"] = true
-L["Lock Menu Position"] = true
-L["Prevent the menu from being dragged to a new position."] = true
+L["Lock Toolbar Position"] = true
+L["Strata"] = true
+L["Static Toolbar"] = true
+L["Slide Out Toolbar"] = true
+L["When checked, the toolbar icons stay always visible (Static Toolbar). When unchecked, icons stay hidden until you mouseover the logo, then slide out."] = true
+L["Background"] = true
+L["Low"] = true
+L["High"] = true
+L["Dialog"] = true
 L["Right-Click for Options"] = true
 L["Shift + Right-Click to copy version"] = true
 L["Position Locked"] = true
 L["Change"] = true
 L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
-L["Are you sure you want to delete %s?  This will delete the macro and all versions.  This action cannot be undone."] = true
 
 L["When enabled, all of your WoW macros are imported into GSE.Tools and kept in sync via the GSE Companion App. Changes made via the /macro dialog are reflected in GSE's Managed Macro Section, and incoming changes from GSE.Tools are written back to your WoW macros."] = true
 L["Sync WoW Macros to GSE.Tools"] = true
+L["Pause Sequences While Shift Is Held"] = true
+L["When enabled, holding Shift makes GSE send an empty macro and stops the sequence from advancing until Shift is released."] = true
+L["Pause Sequences While Alt Is Held"] = true
+L["When enabled, holding Alt makes GSE send an empty macro and stops the sequence from advancing until Alt is released."] = true
+L["Pause Sequences While Ctrl Is Held"] = true
+L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."] = true
 
 L["WhatsNew"] =
 [[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.10
@@ -861,14 +822,92 @@ Authors who enable |cFF00BFFFAuto-Accept|r in GSE Options will have incoming upd
 
 ]]
 
--- Localisation audit (2026-05-21): keys referenced in code but previously absent here.
-L["Class"] = true
+-- =========================================================================
+-- Keys auto-added by locale audit: previously fell through to AceLocale's
+-- key-as-value default. Adding them here makes enUS the complete source of
+-- truth so future translators have a full reference. No runtime change.
+-- =========================================================================
+
+-- Used in GSE_GUI/Editor.lua
 L["You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."] = true
+
+-- Used in GSE_GUI/Editor_Macro.lua
+L["Used by Sequences"] = true
+
+-- Used in GSE_GUI/Editor_Metadata.lua
+L["Class"] = true
+L["Config"] = true
+L["Date Last Updated"] = true
+L["Delves/Scenarios"] = true
+L["Notes"] = true
+L["PvE"] = true
+L["PvP"] = true
+L["Solo"] = true
+L["Specialization/Class ID"] = true
+L["The version of this macro to use while solo in PvE."] = true
+L["Type"] = true
+
+-- Used in GSE_GUI/Editor_Tree.lua
+L["Delete this sequence.  This is not able to be undone."] = true
+L["Export this sequence."] = true
+L["One or more MacroBlocks are over 255 characters. Shorten them before saving."] = true
+L["Open or close the sequence debugger."] = true
+L["Reload the user interface."] = true
+L["This sequence is unable to be exported."] = true
+
+-- Used in GSE_GUI/Export.lua
+L["Enter Export Package Name"] = true
+
+-- Used in GSE_GUI/Menu.lua
+L["Cannot Open Options during Combat"] = true
+
+-- Used in GSE_GUI/NativeUI.lua
+L["GSE Developer Debug settings are active.\n\nActive: %s\n\nThese settings can create heavy logging during gameplay or loading."] = true
+
+-- Used in GSE_Options/Options.lua
+L["Breathe"] = true
+L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] = true
+L["Flash"] = true
+L["Focus Highlight Brightness"] = true
+L["Focus Highlight Proc"] = true
+L["Focus Highlight Tint"] = true
+L["How many pixels wide should the Editor start at.  Defaults to 1050"] = true
+L["Medium"] = true
+L["Off"] = true
+L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] = true
+L["Pulse"] = true
+L["Strobe"] = true
+L["Throb"] = true
+L["Use GSE's Modern interface skin. This does not require ElvUI."] = true
+L["When enabled, holding the matching modifier sends an empty macro instead of advancing the sequence step."] = true
+L["When enabled, the focused block's empty areas (outside the macro text box) get a soft fill in the rail color so you can spot it at a glance. Disable to keep only the proc-pulsed border around the focused block — useful if the tint feels distracting while reading or editing."] = true
+
+-- Used in GSE_QoL/QoL.lua
+L["Not Bound"] = true
+
+-- Used in GSE_Utils/Utils.lua
+L["/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."] = true
 L["Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."] = true
+L["|r.  As a result this macro was not created.  Please delete some macros and reenter "] = true
 L["|r. As a result this macro was not created.  Please delete some macros and reenter "] = true
-L["Pause Sequences While Shift Is Held"] = true
-L["When enabled, holding Shift makes GSE send an empty macro and stops the sequence from advancing until Shift is released."] = true
-L["Pause Sequences While Alt Is Held"] = true
-L["When enabled, holding Alt makes GSE send an empty macro and stops the sequence from advancing until Alt is released."] = true
-L["Pause Sequences While Ctrl Is Held"] = true
-L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."] = true
+
+-- Release sync: keys present in code but previously missing from enUS.
+-- Added so enUS is complete (used == defined) and translators see them.
+L["Delay spell translations to reduce lag for users with older machines. When on, the macro editor waits until you click out of a box to translate and colour spell IDs and names instead of doing it as you type. Off by default (live as you type while editing). This only affects the editor; nothing is translated during normal gameplay."] = true
+L["Delayed Spell Translations"] = true
+L["GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."] = true
+L["How the macro editor turns spell IDs into spell names as you edit."] = true
+
+-- =========================================================================
+-- DebugWindow.lua button-label strings — passed to GSE.SetDebuggerButtonText
+-- which routes through DebuggerLabel → L[key]. These don't appear as
+-- L["..."] in source so the static audit missed them; AceLocale errored
+-- at runtime on first lookup until these were registered.
+-- =========================================================================
+L["Tracker: On"] = true
+L["Tracker: Off"] = true
+L["Stats: On"] = true
+L["Stats: Off"] = true
+L["Hardware: On"] = true
+L["Hardware: Off"] = true
+L["|cFFFFFFFFGS|r|cFF00FFFFE|r|cFFFFFFFF:|r |cFFFFD100Resources|r"] = true

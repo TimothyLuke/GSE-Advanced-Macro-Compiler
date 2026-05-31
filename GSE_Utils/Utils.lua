@@ -67,7 +67,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Midnight and shouldn't warn. Only flag when the expansion itself
     -- differs (e.g. a Midnight sequence loaded on TWW) or when the stored
     -- TOC is empty.
-    local gameversion, build, date, tocversion = GetBuildInfo()
+    local _gameversion, _build, _date, tocversion = GetBuildInfo()
     local seqTOC = tonumber(sequence.MetaData.TOC)
     local seqExp = seqTOC and math.floor(seqTOC / 10000) or nil
     local clientExp = tocversion and math.floor(tonumber(tocversion) / 10000) or nil
@@ -101,19 +101,12 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.PrintDebugMessage("Macro Exists", "Storage")
     end
     if found then
-        -- Check if modified
-        if GSE.isEmpty(GSE.Library[classid][sequenceName]["MetaData"].ManualIntervention) then
-            -- Macro hasnt been touched.
-            GSE.PrintDebugMessage(L["No changes were made to "] .. sequenceName, "Storage")
+        -- Existing sequence imports should let the user choose whether to merge,
+        -- replace, rename, or ignore even when the local copy has no manual edits.
+        if GSE.GUIShowCompareWindow then
+            GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
         else
-            -- Perform choice.
-            -- First check if GUI.
-            if GSE.GUI then
-                -- Show dialog.
-                GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
-            else
-                GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
-            end
+            GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
         end
     else
         GSE.PrintDebugMessage("Creating New Macro", "Storage")
@@ -229,7 +222,7 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                                 GSEOptions.EmphasisColour ..
                                     numCharacterMacros ..
                                         L[
-                                            "|r. As a result this macro was not created.  Please delete some macros and reenter "
+                                            "|r.  As a result this macro was not created.  Please delete some macros and reenter "
                                         ] ..
                                             GSEOptions.CommandColour .. L["/gse|r again."],
                 GNOME
@@ -486,8 +479,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                         -- Older sequence: always show the older-version dialog.
                         -- OnAccept will chain to the checksum dialog for sequences
                         -- >= Statics.ChecksumMinVersion (checksums were introduced then).
-                        StaticPopup_Show("GSE_SEQUENCE_OLDER_VERSION", seqName, tostring(v.MetaData.GSEVersion),
-                            {seqName = seqName, sequence = v, forcereplace = forcereplace})
+                        GSE.GUICall("GUIConfirmSequenceOlderVersion", seqName, v, forcereplace)
                         return decompresssuccess
                     end
                 end
@@ -504,8 +496,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             if GSE.VerifySequenceChecksum then
                 local integrity = GSE.VerifySequenceChecksum(v)
                 if integrity ~= true and not skipDialogs then
-                    StaticPopup_Show("GSE_SEQUENCE_INTEGRITY_WARNING", seqName, nil,
-                        {seqName = seqName, sequence = v, forcereplace = forcereplace})
+                    GSE.GUICall("GUIConfirmSequenceIntegrity", seqName, v, forcereplace)
                     return decompresssuccess
                 end
             end
@@ -544,7 +535,7 @@ function GSE.CleanOrphanSequences()
     local todelete = {}
     for macid = 1, maxmacros do
         local found = false
-        local mname, mtexture, mbody = GetMacroInfo(macid)
+        local mname, _mtexture, _mbody = GetMacroInfo(macid)
         if not GSE.isEmpty(mname) then
             if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][mname]) then
                 found = true
@@ -601,8 +592,8 @@ end
 
 --- MetaData keys that store Macros array index references.
 local seqContextKeys = {
-    "Default", "Scenario", "Arena", "PVP", "Raid",
-    "Normal", "Mythic", "Timewalking", "Party"
+    "Default", "PVESolo", "Scenario", "Arena", "PVP", "Raid",
+    "Normal", "Dungeon", "Heroic", "Mythic", "MythicPlus", "Timewalking", "Party"
 }
 
 --- Set of valid WoW macro slash commands (warcraft.wiki.gg/wiki/Macro_commands).
@@ -818,10 +809,12 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
                                     if raw:sub(1, 1) == "/" then
                                         -- 255-character WoW macro block limit
                                         local unesc = GSE.UnEscapeString(raw)
-                                        if #unesc > 255 then
+                                        local macroLength =
+                                            GSE.GetMacroEditorTextLength and GSE.GetMacroEditorTextLength(unesc) or #unesc
+                                        if macroLength > 255 then
                                             table.insert(issues, string.format(
                                                 L["Macros[%d].Actions[%d] macro text exceeds 255 characters (%d chars)"],
-                                                macIdx, actIdx, #unesc))
+                                                macIdx, actIdx, macroLength))
                                         end
                                         -- Unbalanced conditional bracket check
                                         local opens, closes = 0, 0
@@ -886,6 +879,13 @@ local function scanStringForMacroRefs(str, found)
     end
 end
 
+--- Names that look like WoW macro references but are actually GSE placeholder
+-- text shipped with every new sequence. Excluded from dependency tracking so
+-- they do not show as red "missing macro" entries in the editor metadata panel.
+GSE.PlaceholderMacroNames = GSE.PlaceholderMacroNames or {
+    ["Need Stuff Here"] = true,
+}
+
 --- Recursively walk a table collecting variable refs, Embed sequence names, and macro refs.
 local function walkTableForDeps(t, vars, seqs, macros)
     for _, v in pairs(t) do
@@ -909,7 +909,8 @@ local function walkTableForDeps(t, vars, seqs, macros)
                     and not rawget(v, "Disabled") then
                 local text = GSE.UnEscapeString(vmacro)
                 local first = string.sub(text, 1, 1)
-                if #text > 0 and first ~= "/" and first ~= "#" and first ~= "=" then
+                if #text > 0 and first ~= "/" and first ~= "#" and first ~= "="
+                        and not (GSE.PlaceholderMacroNames and GSE.PlaceholderMacroNames[text]) then
                     macros[text] = true
                 end
             end
@@ -1066,6 +1067,35 @@ function GSE.GetSequenceDependents(seqName)
     return result
 end
 
+--- Find all loaded sequences that embed the given macro name.
+-- Searches GSE.Library sequences whose MetaData.Dependencies.Macros lists the macro.
+-- Returns array of {classid=n, name=s}.
+function GSE.GetMacroDependents(macroName)
+    local result = {}
+    for classid = 0, 13 do
+        if GSE.Library[classid] then
+            for name, seq in pairs(GSE.Library[classid]) do
+                if type(seq) == "table" and type(seq.MetaData) == "table" then
+                    local deps = seq.MetaData.Dependencies
+                    if deps and type(deps.Macros) == "table" then
+                        for _, mname in ipairs(deps.Macros) do
+                            if mname == macroName then
+                                table.insert(result, {classid = classid, name = name})
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    table.sort(result, function(a, b)
+        if a.classid ~= b.classid then return a.classid < b.classid end
+        return a.name < b.name
+    end)
+    return result
+end
+
 -- Queue of corrupt sequences waiting for the player to act on them.
 local corruptQueue = {}
 
@@ -1074,10 +1104,8 @@ local corruptQueue = {}
 function GSE.ProcessNextCorruptSequence()
     if #corruptQueue == 0 then return end
     local entry = table.remove(corruptQueue, 1)
-    StaticPopupDialogs["GSE_CORRUPT_SEQUENCE"].text = string.format(
-        L["GSE_CORRUPT_SEQUENCE_TEXT"], entry.name, entry.classid
-    )
-    StaticPopup_Show("GSE_CORRUPT_SEQUENCE", nil, nil, entry)
+    GSE.GUICall("GUIConfirmCorruptSequence", entry.classid, entry.name,
+        string.format(L["GSE_CORRUPT_SEQUENCE_TEXT"], entry.name, entry.classid))
 end
 
 --- Build the dialog queue from GSE.CorruptSequences and show the first dialog.
@@ -1337,7 +1365,7 @@ function GSE.ScanMacrosForErrors()
     --    These are cosmetic warnings (not functional errors) but help authors notice
     --    that a block will show '?' in the editor.  Pet-ability blocks are skipped
     --    because no client-side icon lookup is available for pet abilities.
-    if C_Spell and C_Spell.GetSpellInfo then
+    do
         for classlibid = 0, 13 do
             local classlib = GSE.Library[classlibid]
             if classlib and type(classlib) == "table" then
@@ -1349,11 +1377,11 @@ function GSE.ScanMacrosForErrors()
                                     if action.Type == "Action" and action.type ~= "pet" and not action.Icon then
                                         local hasIcon = false
                                         if action.type == "spell" then
-                                            local si = action.spell and C_Spell.GetSpellInfo(action.spell)
+                                            local si = action.spell and GSE.GetSpellInfo(action.spell)
                                             hasIcon = si and si.iconID ~= nil
                                         elseif action.type == "item" or action.type == "toy" then
                                             local key = action.item or action.toy
-                                            hasIcon = key and select(10, GetItemInfo(key)) ~= nil
+                                            hasIcon = key and select(10, C_Item.GetItemInfo(key)) ~= nil
                                         elseif action.type == "macro" or GSE.isEmpty(action.type) then
                                             local macro = action.macro and GSE.UnEscapeString(action.macro) or ""
                                             if string.sub(macro, 1, 1) == "/" then
@@ -1416,6 +1444,15 @@ function GSE.ScanMacrosForErrors()
             L["Auto-repaired %d sequence(s) with structurally invalid Versions (index-0 keys remapped to 1-based)."],
             autoFixedCount))
     end
+
+    -- 7. Final save pass: hydrate action icons across every loaded class and
+    --    persist resolved iconIDs to the saved variable. Runs LAST so any
+    --    modifications made by sections 1-6 (auto-repairs, encoding cleanup)
+    --    are also caught by this commit. Equivalent to /gsesaveallsequences.
+    if GSE.SaveAllSequenceActionIcons then
+        GSE.SaveAllSequenceActionIcons()
+    end
+
     if totalIssues == 0 then
         GSE.Print(L["Finished scanning for errors.  If no other messages then no errors were found."])
     else
@@ -1725,7 +1762,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
+                "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."
                 ],
         GNOME
     )
@@ -1753,9 +1790,19 @@ function GSE.PrintGnomeHelp()
                 ],
         GNOME
     )
+    GSE.Print(
+        GSEOptions.CommandColour ..
+            L[
+                "GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
+            ],
+        GNOME
+    )
 end
 
-GSE:RegisterChatCommand("gse", "GSSlash")
+SLASH_GSE1 = "/gse"
+SlashCmdList.GSE = function(input)
+    GSE:GSSlash(input)
+end
 
 -- Functions
 
@@ -1826,9 +1873,9 @@ function GSE:GSSlash(input)
         if GSE.GameMode < 7 then
             GSE.Print(L["Your ClassID is "] .. currentclassId .. " " .. Statics.SpecIDList[currentclassId], GNOME)
         else
-            local currentSpec = GetSpecialization()
-            local currentSpecID = currentSpec and select(1, GetSpecializationInfo(currentSpec)) or "None"
+            local currentSpecID = GSE.GetCurrentSpecID()
             local _, specname, _, _, _, _, _ = GetSpecializationInfoByID(currentSpecID)
+            specname = specname or "None"
             GSE.Print(
                 L["Your current Specialisation is "] ..
                     currentSpecID .. ":" .. specname .. L["  The Alternative ClassID is "] .. currentclassId,
@@ -1868,7 +1915,7 @@ function GSE:GSSlash(input)
             end
         end
     elseif command == "showdebugoutput" then
-        StaticPopup_Show("GS-DebugOutput")
+        GSE.GUICall("GUIShowDebugOutput")
     elseif command == "record" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
@@ -1884,14 +1931,26 @@ function GSE:GSSlash(input)
         if GSE.UnsavedOptions["GUI"] then
             GSE.ShowVariables()
         end
+    elseif command == "options" or command == "config" then
+        if GSE.OpenOptionsPanel then
+            GSE.OpenOptionsPanel()
+        else
+            GSE.Print(L["Options Not Enabled"])
+        end
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
-        StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+        GSE.GUICall("GUIConfirmReloadUI")
     elseif command == "movelostmacros" then
         GSE.MoveMacroToClassFromGlobal()
     elseif command == "checksequencesforerrors" then
         GSE.ScanMacrosForErrors()
+    elseif command == "scanicons" then
+        if GSE.ScanSequenceActionIcons then
+            GSE.ScanSequenceActionIcons()
+        else
+            GSE.Print("GSE icon scan is unavailable. Make sure GSE_GUI is loaded, then /reload.")
+        end
     elseif command == "compressstring" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
@@ -1924,10 +1983,96 @@ function GSE:GSSlash(input)
         else
            GSE.Print("Invalid Bind - /gse bind spec sequence key")
         end
+
+    -- ----------------------------------------------------------------
+    -- Icon-resolver commands. Reach back into Editor.lua-owned routines
+    -- via the GSE.* namespace; the `if GSE.X then` guards are defensive
+    -- against a layered build that ships without GSE_GUI.
+    -- ----------------------------------------------------------------
+    elseif command == "spelliconreset" then
+        if GSE.ResetAllSequenceActionIcons then GSE.ResetAllSequenceActionIcons() end
+    elseif command == "iconscan" then
+        if GSE.ScanSequenceActionIcons then GSE.ScanSequenceActionIcons() end
+    elseif command == "saveallsequences" then
+        if GSE.SaveAllSequenceActionIcons then GSE.SaveAllSequenceActionIcons() end
+
+    -- ----------------------------------------------------------------
+    -- Tracker layout slot save / apply. Backed by routines defined in
+    -- GSE_Utils/Tracker.lua. Layout slots X and Y are independent.
+    -- ----------------------------------------------------------------
+    elseif command == "savelayoutx" then
+        if GSE.SequenceIconSaveLayout and GSE.SequenceIconSaveLayout("X") then
+            GSE.Print("Tracker Layout X saved with the current positions and configuration.")
+        end
+    elseif command == "savelayouty" then
+        if GSE.SequenceIconSaveLayout and GSE.SequenceIconSaveLayout("Y") then
+            GSE.Print("Tracker Layout Y saved with the current positions and configuration.")
+        end
+    elseif command == "applylayoutx" then
+        if GSE.SequenceIconApplyLayout and GSE.SequenceIconApplyLayout("X") then
+            GSE.Print("Tracker Layout X applied.")
+        else
+            GSE.Print("Tracker Layout X is not saved. Save it first with /gse savelayoutx.")
+        end
+    elseif command == "applylayouty" then
+        if GSE.SequenceIconApplyLayout and GSE.SequenceIconApplyLayout("Y") then
+            GSE.Print("Tracker Layout Y applied.")
+        else
+            GSE.Print("Tracker Layout Y is not saved. Save it first with /gse savelayouty.")
+        end
+
+    -- ----------------------------------------------------------------
+    -- Tracker defaults. Chat-side equivalent of the Options panel's
+    -- "Restore Defaults" button. Safe to call any time -- does not
+    -- touch saved layout slots X or Y.
+    -- ----------------------------------------------------------------
+    elseif command == "resettracker" then
+        if GSE.ResetTrackerToDefaultLayout then
+            GSE.ResetTrackerToDefaultLayout()
+            GSE.Print("Tracker reset to the default layout.")
+        end
+
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
-            GSE.ShowMenu()
+            -- Route to Editor when the Toolbar is disabled (see Options.lua's
+            -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
+            if GSEOptions and GSEOptions.ToolbarEnabled == false then
+                -- 1) If an editor already exists this session, just bring
+                --    it forward — never create a duplicate. (Especially
+                --    important on PatronBuild where CreateEditor doesn't
+                --    dedupe.)
+                if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
+                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
+                    if existing and existing.Show then existing:Show() end
+                    return
+                end
+
+                -- 2) No editor exists yet. On the FIRST /gse this session,
+                --    GSE.CheckGUI() above just lazy-loaded GSE_GUI which
+                --    queued Editor.lua's RestoreSequenceEditorIfNeeded for
+                --    the next tick. If the user had the editor open last
+                --    session (seOpts.open=true), that restore WILL create
+                --    one — calling ShowSequences here would create a 2nd.
+                --    Detect "restore is pending" via the saved open state
+                --    AND a flag the restore sets after it runs. If pending,
+                --    let the restore handle it.
+                local seOpts = GSEOptions and GSEOptions.frameLocations
+                    and GSEOptions.frameLocations.sequenceeditor
+                local restorePending = seOpts and seOpts.open
+                    and not GSE._SequenceEditorRestoreFired
+                if restorePending then
+                    return
+                end
+
+                -- 3) Restore either won't fire (seOpts.open false) or
+                --    already fired without producing an editor (e.g. it
+                --    ran but the user X-closed it since) — safe to create
+                --    one ourselves now, synchronously.
+                if GSE.ShowSequences then GSE.ShowSequences() end
+            else
+                GSE.ShowMenu()
+            end
         end
     end
 end
@@ -1987,12 +2132,6 @@ do
         if not GSEOptions.actionBarOverridePopup then return end
         if InCombatLockdown() then return end
         if mousebutton ~= "RightButton" then return end
-        -- Fire exactly once per right-click regardless of how the button
-        -- registered for clicks. Blizzard buttons register AnyDown+AnyUp
-        -- (OnClick fires down then up); EllesmereUI's EABButtons register
-        -- AnyUp only when ActionButtonUseKeyDown is off (which GSE's
-        -- Actionbar Overrides require) -- so the old `if not down` guard
-        -- silently dropped every EABButton right-click.
         if down then
             self._gseABMenuDown = true
         elseif self._gseABMenuDown then
@@ -2013,7 +2152,7 @@ do
         end
 
         local classIconText = ""
-        local classInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
+        local classInfo = C_CreatureInfo.GetClassInfo(GSE.GetCurrentClassID())
         if classInfo and classInfo.classFile then
             classIconText = "|A:classicon-" .. classInfo.classFile:lower() .. ":16:16|a "
         end
@@ -2048,7 +2187,7 @@ do
             for _, entry in ipairs(names) do
                 local iconText = classIconText
                 local specID = entry.specID
-                if specID and specID >= 15 and GetSpecializationInfoByID then
+                if specID and specID >= 15 then
                     local _, _, _, specIconID = GetSpecializationInfoByID(specID)
                     if specIconID then
                         iconText = "|T" .. specIconID .. ":16:16|t "
@@ -2125,8 +2264,6 @@ do
             end
         end
 
-        -- EllesmereUI action bars: custom EABButton1..180 frames. Hook them
-        -- like any other custom bar so the right-click assign menu appears.
         if _G["EABButton1"] then
             for i = 1, 180 do
                 local btn = _G["EABButton" .. i]

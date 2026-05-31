@@ -1,9 +1,9 @@
 local GSE = GSE
 
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
-local compressframe = AceGUI:Create("Frame")
+local compressframe = UI:Create("Frame")
 compressframe.frame:SetFrameStrata("MEDIUM")
 compressframe.frame:SetClampedToScreen(true)
 compressframe:Hide()
@@ -18,18 +18,18 @@ compressframe:SetCallback(
 )
 compressframe:SetLayout("List")
 
-local importsequencebox = AceGUI:Create("MultiLineEditBox")
+local importsequencebox = UI:Create("MultiLineEditBox")
 importsequencebox:SetLabel(L["Sequence to Compress."])
 importsequencebox:SetNumLines(20)
 importsequencebox:DisableButton(true)
 importsequencebox:SetFullWidth(true)
 compressframe:AddChild(importsequencebox)
 
-local recButtonGroup = AceGUI:Create("SimpleGroup")
+local recButtonGroup = UI:Create("SimpleGroup")
 recButtonGroup:SetFullWidth(true)
 recButtonGroup:SetLayout("Flow")
 
-local recbutton = AceGUI:Create("Button")
+local recbutton = UI:Create("Button")
 recbutton:SetText(L["Compress"])
 recbutton:SetWidth(150)
 recbutton:SetCallback(
@@ -38,7 +38,7 @@ recbutton:SetCallback(
     importsequencebox:SetText(GSE.EncodeMessage(importsequencebox:GetText()))
   end
 )
-local decbutton = AceGUI:Create("Button")
+local decbutton = UI:Create("Button")
 decbutton:SetText(L["Decompress"])
 decbutton:SetWidth(150)
 decbutton:SetCallback(
@@ -57,3 +57,7 @@ recButtonGroup:AddChild(decbutton)
 
 compressframe:AddChild(recButtonGroup)
 GSE.GUICompressFrame = compressframe
+
+if compressframe and compressframe.frame and GSE.RegisterUIScaleFrame then
+    GSE.RegisterUIScaleFrame(compressframe.frame)
+end

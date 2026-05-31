@@ -1,9 +1,19 @@
 local GSE = GSE
 local Statics = GSE.Static
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
+
+local function SetEditBoxLabelGap(widget, gap)
+    if not (widget and widget.label and widget.editBox and widget.frame) then return end
+    local labelHeight = widget.label:GetStringHeight()
+    if not labelHeight or labelHeight <= 0 then labelHeight = 12 end
+    local g = gap or (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
+    widget.editBox:ClearAllPoints()
+    widget.editBox:SetPoint("TOPLEFT", widget.frame, "TOPLEFT", 4, -(labelHeight + g))
+    widget.editBox:SetPoint("RIGHT", widget.frame, "RIGHT", -4, 0)
+end
 
 -- ---------------------------------------------------------------------------
 -- buildVariablesMenu()  →  tree node for the Variables section
@@ -21,7 +31,7 @@ local function buildVariablesMenu()
             }
         }
     }
-    for k, _ in pairs(GSEVariables) do
+    for k, _ in pairs(GSEVariables or {}) do
         local node = {
             value = k,
             text = "|CFFFFFFFF" .. k .. Statics.StringReset
@@ -37,15 +47,16 @@ end
 -- ---------------------------------------------------------------------------
 local function showVariable(editframe, name, container)
     editframe.SequenceName = name
-    local implementation = AceGUI:Create("EditBox")
+    local implementation = UI:Create("EditBox")
+    local currentKey = name ~= "NEWVARIABLES" and name or nil
     local variable = {
         ["funct"] = [[function()
     return true
 end]],
         ["comments"] = ""
     }
-    if not GSE.isEmpty(GSEVariables[name]) then
-        local status, err =
+    if GSEVariables and not GSE.isEmpty(GSEVariables[name]) then
+        local _status, err =
             pcall(
             function()
                 local _, uncompressedVersion = GSE.DecodeMessage(GSEVariables[name])
@@ -57,36 +68,24 @@ end]],
         end
     end
 
-    local keyEditBox = AceGUI:Create("EditBox")
-    keyEditBox:SetLabel(L["Name"])
+    local keyEditBox = UI:Create("EditBox")
+    keyEditBox:SetCompactNoLabel(true)
     keyEditBox:DisableButton(true)
-    keyEditBox:SetWidth(150)
+    keyEditBox:SetWidth(250)
+    keyEditBox:SetHeight(24)
     keyEditBox:SetText(name)
-    local currentKey = name
     keyEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            local orig = GSEVariables[currentKey]
-            GSEVariables[text] = orig
-            GSEVariables[currentKey] = nil
-            -- Clear the platform-id sidecar entry under the OLD name. The
-            -- variable is now stored under `text`; the next Companion sync
-            -- must mint a fresh server identity rather than pointing the
-            -- new variable at the old one's _id (which would alternate-
-            -- write with the original on every sync — same class as the
-            -- v4↔v5 sequence collision).
-            if GSEVariablePlatformIDs then
-                GSEVariablePlatformIDs[currentKey] = nil
-            end
-            currentKey = text
             local implementationText = [[=GSE.V.]] .. text .. [[()]]
             implementation:SetText(implementationText)
         end
     )
 
-    local authoreditbox = AceGUI:Create("EditBox")
-    authoreditbox:SetLabel(L["Author"])
+    local authoreditbox = UI:Create("EditBox")
+    authoreditbox:SetCompactNoLabel(true)
     authoreditbox:SetWidth(250)
+    authoreditbox:SetHeight(24)
     authoreditbox:DisableButton(true)
     authoreditbox:SetCallback(
         "OnEnter",
@@ -112,10 +111,30 @@ end]],
             variable.Author = key
         end
     )
-    container:AddChild(keyEditBox)
-    container:AddChild(authoreditbox)
+    local function createInlineFieldRow(labelText, field)
+        local row = UI:Create("SimpleGroup")
+        row:SetFullWidth(true)
+        row:SetHeight(28)
+        row:SetLayout("Flow")
+        if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
+        if row.SetFlowGap then row:SetFlowGap(8) end
+        if row.SetFlowVAlign then row:SetFlowVAlign("MIDDLE") end
 
-    local commentsEditBox = AceGUI:Create("MultiLineEditBox")
+        local label = UI:Create("Label")
+        label:SetText(labelText)
+        label:SetWidth(80)
+        label:SetHeight(22)
+        if label.SetJustifyV then label:SetJustifyV("MIDDLE") end
+
+        row:AddChild(label)
+        row:AddChild(field)
+        return row
+    end
+
+    container:AddChild(createInlineFieldRow(L["Name"], keyEditBox))
+    container:AddChild(createInlineFieldRow(L["Author"], authoreditbox))
+
+    local commentsEditBox = UI:Create("MultiLineEditBox")
     commentsEditBox:SetLabel(L["Help Information"])
     commentsEditBox:SetNumLines(3)
     commentsEditBox:SetFullWidth(true)
@@ -155,9 +174,9 @@ end]],
 
     local isEventEnabled = variable.eventEnabled or false
 
-    local eventToggle = AceGUI:Create("CheckBox")
+    local eventToggle = UI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
-    eventToggle:SetFullWidth(true)
+    eventToggle:SetWidth(150)
     eventToggle:SetValue(isEventEnabled)
     eventToggle:SetCallback(
         "OnEnter",
@@ -172,9 +191,11 @@ end]],
     eventToggle:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
     -- Text box: editable, comma-separated list of event names.
-    local eventEditBox = AceGUI:Create("EditBox")
+    local eventEditBox = UI:Create("EditBox")
     eventEditBox:SetLabel(L["Trigger Events"])
-    eventEditBox:SetRelativeWidth(0.65)
+    eventEditBox:SetWidth(210)
+    eventEditBox:SetHeight(30)
+    if eventEditBox.SetFlowFillRemaining then eventEditBox:SetFlowFillRemaining(true) end
     eventEditBox:DisableButton(true)
     eventEditBox:SetDisabled(not isEventEnabled)
     eventEditBox:SetText(formatEventNames(variable.eventNames))
@@ -205,12 +226,12 @@ end]],
             local parts = {}
             for _, evtName in ipairs(names) do
                 local tag
-                if Statics.AceMessages[evtName] then
+                if Statics.InternalMessages[evtName] then
                     tag = "[GSE Msg]"
                 elseif C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(evtName) then
                     tag = "[WoW Event]"
                 else
-                    tag = "[AceMsg]"
+                    tag = "[Addon Msg]"
                 end
                 table.insert(parts, evtName .. " " .. tag)
             end
@@ -219,10 +240,16 @@ end]],
     )
 
     -- Dropdown: single-select, appends the chosen event to the text box.
-    local eventDropdown = AceGUI:Create("Dropdown")
+    local eventDropdown = UI:Create("Dropdown")
     eventDropdown:SetLabel(L["Add from List"])
-    eventDropdown:SetRelativeWidth(0.33)
-    eventDropdown:SetList(Statics.VariableEventList)
+    eventDropdown:SetWidth(300)
+    eventDropdown:SetHeight(30)
+    if eventDropdown.SetMaxVisibleItems then eventDropdown:SetMaxVisibleItems(20) end
+    local eventOrder = {}
+    for key, _ in pairs(Statics.VariableEventList or {}) do
+        table.insert(eventOrder, key)
+    end
+    eventDropdown:SetList(Statics.VariableEventList, GSE.SortTableAlphabetical(eventOrder))
     eventDropdown:SetDisabled(not isEventEnabled)
     eventDropdown:SetCallback(
         "OnValueChanged",
@@ -265,18 +292,24 @@ end]],
         end
     )
 
-    local eventCallbackGroup = AceGUI:Create("SimpleGroup")
+    local eventCallbackGroup = UI:Create("SimpleGroup")
     eventCallbackGroup:SetLayout("Flow")
     eventCallbackGroup:SetFullWidth(true)
+    if eventCallbackGroup.SetFlowPadding then eventCallbackGroup:SetFlowPadding(0, 8, 8, 8) end
+    if eventCallbackGroup.SetFlowGap    then eventCallbackGroup:SetFlowGap(4) end
+    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("MIDDLE") end
     eventCallbackGroup:AddChild(eventToggle)
-    eventCallbackGroup:AddChild(eventEditBox)
+    -- The dropdown/editbox carry labels above their boxes (~14px), pushing those
+    -- boxes down. Nudge the checkbox down so its box lines up with them on one row.
+    if eventToggle.SetFlowOffset then eventToggle:SetFlowOffset(0, -8) end
     eventCallbackGroup:AddChild(eventDropdown)
+    eventCallbackGroup:AddChild(eventEditBox)
     container:AddChild(eventCallbackGroup)
     -- ────────────────────────────────────────────────────────────────────────
 
-    local valueEditBox = AceGUI:Create("MultiLineEditBox")
+    local valueEditBox = UI:Create("MultiLineEditBox")
     valueEditBox:SetLabel(L["Variable"])
-    valueEditBox:SetNumLines(15)
+    valueEditBox:SetNumLines(11)
     valueEditBox:SetFullWidth(true)
     valueEditBox:DisableButton(true)
     valueEditBox:SetText(variable.funct)
@@ -305,7 +338,11 @@ end]],
     container:AddChild(valueEditBox)
 
     implementation:SetLabel(L["Implementation Link"])
+    implementation:SetCompactNoLabel(false)
+    implementation:SetWidth(210)
+    implementation:SetHeight(32)
     implementation:DisableButton(true)
+    SetEditBoxLabelGap(implementation, 2)
     local implementationText = [[=GSE.V.]] .. name .. [[()]]
     implementation:SetText(implementationText)
     implementation:SetCallback(
@@ -314,33 +351,53 @@ end]],
             implementation:SetText(implementationText)
         end
     )
-    container:AddChild(implementation)
 
-    local currentOutput = AceGUI:Create("EditBox")
+    local currentOutput = UI:Create("EditBox")
     currentOutput:SetLabel(L["Current Value"])
+    currentOutput:SetCompactNoLabel(false)
+    currentOutput:SetWidth(360)
+    if currentOutput.SetFlowFillRemaining then currentOutput:SetFlowFillRemaining(true) end
+    currentOutput:SetHeight(32)
     currentOutput:DisableButton(true)
+    SetEditBoxLabelGap(currentOutput, 2)
     local outputText = L["Not Yet Active"]
     if GSE.V[name] and type(GSE.V[name]) == "function" then
         outputText = GSE.V[name]()
     end
     currentOutput:SetText(tostring(outputText))
+    if currentOutput.editBox and currentOutput.editBox.SetCursorPosition then
+        currentOutput.editBox:SetCursorPosition(0)
+    end
     currentOutput:SetCallback(
         "OnTextChanged",
         function(self, event, text)
             currentOutput:SetText(outputText)
+            if currentOutput.editBox and currentOutput.editBox.SetCursorPosition then
+                currentOutput.editBox:SetCursorPosition(0)
+            end
         end
     )
-    container:AddChild(currentOutput)
 
-    local spacer2 = AceGUI:Create("Label")
-    spacer2:SetWidth(10)
-    container:AddChild(spacer2)
+    local implementationOutputRow = UI:Create("SimpleGroup")
+    implementationOutputRow:SetFullWidth(true)
+    implementationOutputRow:SetHeight(38)
+    implementationOutputRow:SetLayout("Flow")
+    if implementationOutputRow.SetFlowPadding then implementationOutputRow:SetFlowPadding(0, 0, 20, 0) end
+    if implementationOutputRow.SetFlowGap then implementationOutputRow:SetFlowGap(16) end
+    if implementationOutputRow.SetFlowVAlign then implementationOutputRow:SetFlowVAlign("TOP") end
 
-    local buttonRow = AceGUI:Create("SimpleGroup")
+    implementationOutputRow:AddChild(implementation)
+    implementationOutputRow:AddChild(currentOutput)
+    container:AddChild(implementationOutputRow)
+
+    local buttonRow = UI:Create("SimpleGroup")
     buttonRow:SetLayout("Flow")
     buttonRow:SetWidth(400)
+    if buttonRow.SetFlowOffset then buttonRow:SetFlowOffset(-4, 0) end
+    if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
+    if buttonRow.SetFlowGap then buttonRow:SetFlowGap(10) end
 
-    local deleteRowButton = AceGUI:Create("Button")
+    local deleteRowButton = UI:Create("Button")
     deleteRowButton:SetText(L["Delete Variable"])
     deleteRowButton:SetWidth(150)
     deleteRowButton:SetCallback(
@@ -370,24 +427,9 @@ end]],
             GSE.ClearTooltip(editframe)
         end
     )
-    buttonRow:AddChild(deleteRowButton)
+    local _lastUpdatedTs = variable.LastUpdated  -- captured for table row below
 
-    local spacer3 = AceGUI:Create("Label")
-    spacer3:SetWidth(10)
-    buttonRow:AddChild(spacer3)
-
-    local lastSaved = AceGUI:Create("Label")
-    if variable.LastUpdated then
-        local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
-        lastSaved:SetText(
-            L["Last Updated"] ..
-                " " ..
-                    updated.month ..
-                        "/" .. updated.day .. "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
-        )
-    end
-
-    local savebutton = AceGUI:Create("Button")
+    local savebutton = UI:Create("Button")
     savebutton:SetText(L["Save"])
     savebutton:SetWidth(150)
     savebutton:SetCallback(
@@ -395,23 +437,30 @@ end]],
         function()
             local checkvariable, error = GSE.CheckVariable(valueEditBox:GetText())
             if checkvariable then
+                local saveName = keyEditBox:GetText()
+                if GSE.isEmpty(saveName) then
+                    GSE.Print("The variable name cannot be empty.", Statics.DebugModules["Editor"])
+                    return
+                end
                 editframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
                 variable.LastUpdated = GSE.GetTimestamp()
-                local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+                local _updated = GSE.DecodeTimeStamp(variable.LastUpdated)
                 local oocaction = {
                     ["action"] = "updatevariable",
                     ["variable"] = variable,
-                    ["name"] = keyEditBox:GetText()
+                    ["name"] = saveName
                 }
                 GSE.EnqueueOOC(oocaction)
-                lastSaved:SetText(
-                    L["Last Updated"] ..
-                        " " ..
-                            updated.month ..
-                                "/" ..
-                                    updated.day ..
-                                        "/" .. updated.year .. " " .. updated.hour .. ":" .. updated.minute
-                )
+                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSEVariables and not GSE.isEmpty(GSEVariables[currentKey]) then
+                    GSE.EnqueueOOC(
+                        {
+                            ["action"] = "deletevariable",
+                            ["variablename"] = currentKey
+                        }
+                    )
+                end
+                currentKey = saveName
+                _lastUpdatedTs = variable.LastUpdated
             else
                 GSE.Print(
                     L["There is an error in the sequence that needs to be corrected before it can be saved."],
@@ -434,59 +483,28 @@ end]],
         end
     )
     buttonRow:AddChild(savebutton)
+    buttonRow:AddChild(deleteRowButton)
     container:AddChild(buttonRow)
-    container:AddChild(lastSaved)
 
-    -- Dependencies section
-    local varDeps = variable.Dependencies
+    -- Dependencies — styled table matching the sequence metadata window
+    local varDeps    = variable.Dependencies
     local dependents = GSE.GetVariableDependents(name)
-    local hasDeps = varDeps and type(varDeps.Variables) == "table" and #varDeps.Variables > 0
-    local hasUsedBy = #dependents.sequences > 0 or #dependents.variables > 0
-    if hasDeps or hasUsedBy then
-        local depHeading = AceGUI:Create("Heading")
-        depHeading:SetText(L["Dependencies"])
-        depHeading:SetFullWidth(true)
-        container:AddChild(depHeading)
+    local _hasDeps    = varDeps and type(varDeps.Variables) == "table" and #varDeps.Variables > 0
+    local _hasUsedBy  = #dependents.sequences > 0 or #dependents.variables > 0
 
-        local depGroup = AceGUI:Create("SimpleGroup")
-        depGroup:SetLayout("Flow")
-        depGroup:SetFullWidth(true)
+    if GSE.GUI.CreateDependencyWindow then
+        local heading = L["Used by Sequences"] .. ":"
+        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
 
-        if hasDeps then
-            local depsLabel = AceGUI:Create("Label")
-            depsLabel:SetRelativeWidth(0.33)
-            local lines = {L["Requires Variables:"]}
-            for _, vname in ipairs(varDeps.Variables) do
-                local exists = not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname])
-                lines[#lines + 1] = (exists and "  " or "  |cFFFF0000") .. vname .. (exists and "" or " (!)|r")
-            end
-            depsLabel:SetText(table.concat(lines, "\n"))
-            depGroup:AddChild(depsLabel)
+        local rows = {}
+        for _, entry in ipairs(dependents.sequences) do
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.name]
+            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
+            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
+            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
         end
 
-        if #dependents.variables > 0 then
-            local usedByVarLabel = AceGUI:Create("Label")
-            usedByVarLabel:SetRelativeWidth(0.33)
-            local lines = {L["Used by Variables:"]}
-            for _, vname in ipairs(dependents.variables) do
-                lines[#lines + 1] = "  " .. vname
-            end
-            usedByVarLabel:SetText(table.concat(lines, "\n"))
-            depGroup:AddChild(usedByVarLabel)
-        end
-
-        if #dependents.sequences > 0 then
-            local usedBySeqLabel = AceGUI:Create("Label")
-            usedBySeqLabel:SetRelativeWidth(0.33)
-            local lines = {L["Used by Sequences:"]}
-            for _, entry in ipairs(dependents.sequences) do
-                lines[#lines + 1] = "  " .. entry.name .. " (" .. L["Class"] .. " " .. entry.classid .. ")"
-            end
-            usedBySeqLabel:SetText(table.concat(lines, "\n"))
-            depGroup:AddChild(usedBySeqLabel)
-        end
-
-        container:AddChild(depGroup)
+        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
     end
 end
 
