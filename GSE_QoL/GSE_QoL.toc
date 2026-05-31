@@ -1,11 +1,11 @@
 ## Interface: 11508, 20505, 50503, 50504, 120005
 
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Quality of Life Updates|r
+## Title: |cFFFFFFFFGSE_NoACE Files - QoL|r
 ## Notes: GSE Quality of Life
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-10-g7e2a200-PatronBuild
 ## Dependencies: GSE_Utils GSE_Options
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -17,7 +17,73 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE
+## Group: GSE_NoACE
 
-
+SpellLibrary.lua
+Spells\Vanilla\Druid\Balance.lua
+Spells\Vanilla\Druid\Feral.lua
+Spells\Vanilla\Druid\Restoration.lua
+Spells\Vanilla\Hunter\BeastMastery.lua
+Spells\Vanilla\Hunter\Marksmanship.lua
+Spells\Vanilla\Hunter\Survival.lua
+Spells\Vanilla\Mage\Arcane.lua
+Spells\Vanilla\Mage\Fire.lua
+Spells\Vanilla\Mage\Frost.lua
+Spells\Vanilla\Paladin\Holy.lua
+Spells\Vanilla\Paladin\Protection.lua
+Spells\Vanilla\Paladin\Retribution.lua
+Spells\Vanilla\Priest\Discipline.lua
+Spells\Vanilla\Priest\Holy.lua
+Spells\Vanilla\Priest\Shadow.lua
+Spells\Vanilla\Rogue\Assassination.lua
+Spells\Vanilla\Rogue\Combat.lua
+Spells\Vanilla\Rogue\Subtlety.lua
+Spells\Vanilla\Shaman\Elemental.lua
+Spells\Vanilla\Shaman\Enhancement.lua
+Spells\Vanilla\Shaman\Restoration.lua
+Spells\Vanilla\Warlock\Affliction.lua
+Spells\Vanilla\Warlock\Demonology.lua
+Spells\Vanilla\Warlock\Destruction.lua
+Spells\Vanilla\Warrior\Arms.lua
+Spells\Vanilla\Warrior\Fury.lua
+Spells\Vanilla\Warrior\Protection.lua
+Spells\Retail\DeathKnight\Blood.lua
+Spells\Retail\DeathKnight\Frost.lua
+Spells\Retail\DeathKnight\Unholy.lua
+Spells\Retail\DemonHunter\Havoc.lua
+Spells\Retail\DemonHunter\Vengeance.lua
+Spells\Retail\Druid\Balance.lua
+Spells\Retail\Druid\Feral.lua
+Spells\Retail\Druid\Guardian.lua
+Spells\Retail\Druid\Restoration.lua
+Spells\Retail\Evoker\Augmentation.lua
+Spells\Retail\Evoker\Devastation.lua
+Spells\Retail\Evoker\Preservation.lua
+Spells\Retail\Hunter\BeastMastery.lua
+Spells\Retail\Hunter\Marksmanship.lua
+Spells\Retail\Hunter\Survival.lua
+Spells\Retail\Mage\Arcane.lua
+Spells\Retail\Mage\Fire.lua
+Spells\Retail\Mage\Frost.lua
+Spells\Retail\Monk\Brewmaster.lua
+Spells\Retail\Monk\Mistweaver.lua
+Spells\Retail\Monk\Windwalker.lua
+Spells\Retail\Paladin\Holy.lua
+Spells\Retail\Paladin\Protection.lua
+Spells\Retail\Paladin\Retribution.lua
+Spells\Retail\Priest\Discipline.lua
+Spells\Retail\Priest\Holy.lua
+Spells\Retail\Priest\Shadow.lua
+Spells\Retail\Rogue\Assassination.lua
+Spells\Retail\Rogue\Outlaw.lua
+Spells\Retail\Rogue\Subtlety.lua
+Spells\Retail\Shaman\Elemental.lua
+Spells\Retail\Shaman\Enhancement.lua
+Spells\Retail\Shaman\Restoration.lua
+Spells\Retail\Warlock\Affliction.lua
+Spells\Retail\Warlock\Demonology.lua
+Spells\Retail\Warlock\Destruction.lua
+Spells\Retail\Warrior\Arms.lua
+Spells\Retail\Warrior\Fury.lua
+Spells\Retail\Warrior\Protection.lua
 QoL.lua

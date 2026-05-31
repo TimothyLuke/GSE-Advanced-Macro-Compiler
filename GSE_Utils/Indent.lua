@@ -33,11 +33,11 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
     lib.revision = revision
 
     local stringlen = string.len
-    local stringformat = string.format
+    local _stringformat = string.format
     local stringfind = string.find
     local stringsub = string.sub
     local stringbyte = string.byte
-    local stringchar = string.char
+    local _stringchar = string.char
     local stringrep = string.rep
     local stringgsub = string.gsub
 
@@ -327,7 +327,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
         -- Check for long comment
         local isBracketString, nextPos, equalsCount = isBracketStringNext(text, pos)
         if isBracketString then
-            local tokenType, nextPos2 = nextBracketString(text, nextPos, equalsCount)
+            local _tokenType, nextPos2 = nextBracketString(text, nextPos, equalsCount)
             return tokens.TOKEN_COMMENT_LONG, nextPos2
         end
 
@@ -572,7 +572,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
         local prevTokenWidth = 0
 
         local pos = 1
-        local level = 0
+        local _level = 0
 
         while true do
             if caretPosition and not newCaretPosition and pos >= caretPosition then
@@ -602,7 +602,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
 
             if tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
                 -- ignore color codes
-                local tempxxxxx = true
+                local _tempxxxxx = true
             elseif tokenType == tokens.TOKEN_LINEBREAK or tokenType == tokens.TOKEN_WHITESPACE then
                 if tokenType == tokens.TOKEN_LINEBREAK then
                     numLines = numLines + 1
@@ -767,7 +767,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
                 end
             elseif tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
                 -- skip these, though they shouldn't be encountered here anyway
-                local tempxxxxx = true
+                local _tempxxxxx = true
             else
                 hitNonWhitespace = true
                 local str = stringsub(code, pos, nextPos - 1)
@@ -986,7 +986,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
                 linebreakcount = linebreakcount + 1
             elseif whitespaceCharacters[b] then
                 -- Ignore whitespace characters
-                local tempxxxxxx = true
+                local _tempxxxxxx = true
             else
                 break
             end
@@ -1016,7 +1016,7 @@ if not IndentationLib.revision or revision > IndentationLib.revision then
         dirty[editbox] = nil
 
         local colorTable = editbox.faiap_colorTable or defaultColorTable
-        local tabWidth = editbox.faiap_tabWidth
+        local _tabWidth = editbox.faiap_tabWidth
 
         local orgCode = editboxGetText(editbox)
         local prevCode = editboxStringCache[editbox]

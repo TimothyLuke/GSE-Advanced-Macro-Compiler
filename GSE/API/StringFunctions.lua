@@ -92,9 +92,23 @@ function GSE.DecodeMacroEditorText(text)
     return text
 end
 
+--- Count macro editor text while ignoring full Lua-style note lines.
+function GSE.GetMacroEditorTextLength(text)
+    text = GSE.DecodeMacroEditorText(text)
+    if type(text) ~= "string" or text == "" then return 0 end
+
+    local countedLines = {}
+    for line in (text .. "\n"):gmatch("(.-)\r?\n") do
+        if not line:match("^%s*%-%-") then
+            table.insert(countedLines, line)
+        end
+    end
+    return string.len(table.concat(countedLines, "\n"))
+end
 function GSE.StoreMacroEditorText(text, mode)
     text = GSE.DecodeMacroEditorText(text)
-    if type(text) == "string" and string.sub(text, 1, 1) == "/" and GSE.CompileMacroText then
+    if type(text) ~= "string" then return "" end
+    if string.sub(text, 1, 1) == "/" and GSE.CompileMacroText then
         text = GSE.DecodeMacroEditorText(GSE.CompileMacroText(text, mode or Statics.TranslatorMode.ID))
     end
     return text
@@ -139,6 +153,7 @@ end
 
 --- Add the lines of a string as individual entries.
 function GSE.lines(tab, str)
+    if type(str) ~= "string" then str = str and tostring(str) or "" end
     local function helper(line)
         table.insert(tab, line)
         return ""
@@ -150,6 +165,10 @@ end
 function GSE.SplitMeIntoLines(str)
     --GSE.PrintDebugMessage("Entering GSTRSplitMeIntoLines with : \n" .. str, GNOME)
     local t = {}
+    if type(str) ~= "string" then
+        if str == nil then return t end
+        str = tostring(str)
+    end
     local function helper(line)
         table.insert(t, line)
         GSE.PrintDebugMessage("Line : " .. line, Statics.GSEString)
@@ -482,7 +501,8 @@ end
 
 
 function GSE.GetMacroStringFormat()
-    local CVarValue = C_CVar.GetCVar("ActionButtonUseKeyDown") and "DOWN" or "UP"
+    local cvar = GSE.GetCVar and GSE.GetCVar("ActionButtonUseKeyDown")
+    local CVarValue = tonumber(cvar) == 1 and "DOWN" or "UP"
     local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or CVarValue
     return state
 end
@@ -544,4 +564,5 @@ function GSE.CountTableLength(T)
   return count
 end
 
-GSE.DebugProfile("StringFunctions")
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("StringFunctions") end
+

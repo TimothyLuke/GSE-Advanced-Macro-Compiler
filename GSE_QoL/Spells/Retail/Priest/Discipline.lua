@@ -1,0 +1,48 @@
+-- Retail Priest — Discipline
+-- Source: https://www.icy-veins.com/wow/discipline-priest-pve-healing-spell-summary
+GSE.RegisterSpellList("Retail", "PRIEST", "Discipline", {
+    -- Heals
+    "Power Word: Shield",
+    "Flash Heal",
+    "Heal",
+    "Penance",
+    "Power Word: Radiance",
+    "Power Word: Barrier",
+    "Pain Suppression",
+    "Renew",
+    "Prayer of Healing",
+    "Prayer of Mending",
+    "Light's Wrath",
+    -- Cooldowns
+    "Rapture",
+    "Evangelism",
+    "Spirit Shell",
+    "Mindbender",
+    "Shadowfiend",
+    "Power Infusion",
+    "Divine Hymn",
+    -- Damage (atonement)
+    "Smite",
+    "Shadow Word: Pain",
+    "Purge the Wicked",
+    "Holy Fire",
+    "Mind Blast",
+    "Schism",
+    "Halo",
+    "Divine Star",
+    "Power Word: Solace",
+    "Shadow Word: Death",
+    -- Defensives / utility
+    "Fade",
+    "Desperate Prayer",
+    "Power Word: Fortitude",
+    "Levitate",
+    "Mass Dispel",
+    "Dispel Magic",
+    "Purify",
+    "Resurrection",
+    "Mind Soothe",
+    "Shackle Undead",
+    "Psychic Scream",
+    "Fear Ward",
+})

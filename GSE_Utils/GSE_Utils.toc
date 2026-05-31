@@ -1,10 +1,10 @@
 ## Interface: 11508, 20505, 50503, 50504, 120005
-## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
+## Title: |cFFFFFFFFGSE_NoACE Files - Utils|r
 ## Notes: Optional Utilities for GSE
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-10-g7e2a200-PatronBuild
 ## Dependencies: GSE
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_Logo_Dark_512
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -16,12 +16,11 @@
 ## Category-ruRU: Бой
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
-## Group: GSE
+## Group: GSE_NoACE
 
 
 embeds.xml
 Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Lib\AceGUI-3.0-Completing-EditBox\AceGUI-3.0-Completing-EditBox.lua
 Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
 
@@ -32,3 +31,4 @@ StaticPopup.lua
 Utils.lua
 Tracker.lua
 MacroSync.lua
+SlashCommands.lua

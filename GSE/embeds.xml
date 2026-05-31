@@ -2,13 +2,6 @@
 ..\FrameXML\UI.xsd">
     <Script file="Lib\LibStub\LibStub.lua"/>
     <Include file="Lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
-    <Include file="Lib\AceAddon-3.0\AceAddon-3.0.xml"/>
-    <Include file="Lib\AceConsole-3.0\AceConsole-3.0.xml"/>
-    <Include file="Lib\AceGUI-3.0\AceGUI-3.0.xml"/>
-    <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
-    <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
-    <Include file="Lib\AceTimer-3.0\AceTimer-3.0.xml"/>
-    <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
     <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
     <Script file="Lib\WagoAnalytics\Shim.lua" />
     <Include file="Lib\LibQTip-2.0\LibQTip-2.0\Manifest.xml"/>

@@ -3,11 +3,11 @@
 -- Public: GSE_Ed25519Verify(pubkey_str, message_str, sig_str) -> boolean
 -- All arguments are binary strings (32, any length, 64 bytes).
 
-local band, bor, bxor = bit.band, bit.bor, bit.bxor
-local rshift, lshift  = bit.rshift, bit.lshift
+local band, _bor, _bxor = bit.band, bit.bor, bit.bxor
+local _rshift, _lshift  = bit.rshift, bit.lshift
 
 local M32 = 0x100000000
-local function u32(x) if x < 0 then return x + M32 end; return x end
+local function _u32(x) if x < 0 then return x + M32 end; return x end
 
 -- ── Field arithmetic mod p = 2^255 - 19 ──────────────────────────────────────
 -- Field elements: arrays of 32 unsigned bytes, little-endian.

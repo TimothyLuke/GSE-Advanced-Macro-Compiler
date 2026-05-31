@@ -1,10 +1,10 @@
 local GSE = GSE
 local Statics = GSE.Static
 
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
-local remoteFrame = AceGUI:Create("Frame")
+local remoteFrame = UI:Create("Frame")
 remoteFrame.frame:SetFrameStrata("MEDIUM")
 remoteFrame:Hide()
 remoteFrame.GSEUser = ""
@@ -24,49 +24,49 @@ local _seOpts = GSEOptions.frameLocations and GSEOptions.frameLocations.sequence
 remoteFrame.Height = _seOpts.height or 500
 remoteFrame.Width = _seOpts.width or 700
 
-local layoutcontainer = AceGUI:Create("SimpleGroup")
+local layoutcontainer = UI:Create("SimpleGroup")
 layoutcontainer:SetFullWidth(true)
 layoutcontainer:SetHeight(remoteFrame.Height - 320)
 layoutcontainer:SetLayout("Flow") -- Important!
 
-local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+local scrollcontainer = UI:Create("SimpleGroup") -- "InlineGroup" is also good
 scrollcontainer:SetFullWidth(true)
 -- scrollcontainer:SetFullHeight(true) -- Probably?
 -- scrollcontainer:SetWidth(remoteFrame.Width )
 scrollcontainer:SetHeight(remoteFrame.Height - 320)
 scrollcontainer:SetLayout("Fill") -- Important!
 
-local contentcontainer = AceGUI:Create("ScrollFrame")
+local contentcontainer = UI:Create("ScrollFrame")
 scrollcontainer:AddChild(contentcontainer)
 layoutcontainer:AddChild(scrollcontainer)
 remoteFrame:AddChild(layoutcontainer)
 
 local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = UI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
 
-    local keyEditBox = AceGUI:Create("Label")
+    local keyEditBox = UI:Create("Label")
     keyEditBox:SetText(SequenceName)
     keyEditBox:SetWidth(rowWidth * 0.25)
 
     linegroup1:AddChild(keyEditBox)
 
-    local spacerlabel1 = AceGUI:Create("Label")
+    local spacerlabel1 = UI:Create("Label")
     spacerlabel1:SetWidth(5)
     linegroup1:AddChild(spacerlabel1)
 
-    local helpLabel = AceGUI:Create("Label")
+    local helpLabel = UI:Create("Label")
     helpLabel:SetText(Help)
     helpLabel:SetWidth(rowWidth * 0.75)
     linegroup1:AddChild(helpLabel)
 
-    local spacerlabel2 = AceGUI:Create("Label")
+    local spacerlabel2 = UI:Create("Label")
     spacerlabel2:SetWidth(8)
     linegroup1:AddChild(spacerlabel2)
 
-    local testRowButton = AceGUI:Create("Icon")
+    local testRowButton = UI:Create("Icon")
     testRowButton:SetImageSize(20, 20)
     testRowButton:SetWidth(20)
     testRowButton:SetHeight(20)
@@ -96,7 +96,7 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
     )
     linegroup1:AddChild(testRowButton)
 
-    -- local deleteRowButton = AceGUI:Create("Icon")
+    -- local deleteRowButton = UI:Create("Icon")
     -- deleteRowButton:SetImageSize(20, 20)
     -- deleteRowButton:SetWidth(20)
     -- deleteRowButton:SetHeight(20)
@@ -118,31 +118,31 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
 end
 
 function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
-    local classlinegroup = AceGUI:Create("SimpleGroup")
+    local classlinegroup = UI:Create("SimpleGroup")
     classlinegroup:SetLayout("Flow")
     local columnWidth = remoteFrame.Width - 55
 
     classlinegroup:SetWidth(remoteFrame.Width - 50)
 
-    local nameLabel = AceGUI:Create("Heading")
+    local nameLabel = UI:Create("Heading")
     nameLabel:SetText(L["Name"])
     nameLabel:SetWidth((columnWidth - 25) * 0.25)
     classlinegroup:AddChild(nameLabel)
 
-    local spacerlabel1 = AceGUI:Create("Label")
+    local spacerlabel1 = UI:Create("Label")
     spacerlabel1:SetWidth(5)
     classlinegroup:AddChild(spacerlabel1)
 
-    local valueLabel = AceGUI:Create("Heading")
+    local valueLabel = UI:Create("Heading")
     valueLabel:SetText(L["Help Information"])
     valueLabel:SetWidth((columnWidth - 45) * 0.75 - 18)
     classlinegroup:AddChild(valueLabel)
 
-    local spacerlabel2 = AceGUI:Create("Label")
+    local spacerlabel2 = UI:Create("Label")
     spacerlabel2:SetWidth(5)
     classlinegroup:AddChild(spacerlabel2)
 
-    local delLabel = AceGUI:Create("Heading")
+    local delLabel = UI:Create("Heading")
     delLabel:SetText(L["Actions"])
     delLabel:SetWidth(25)
     classlinegroup:AddChild(delLabel)
@@ -154,18 +154,18 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
     remoteFrame.Channel = channel
     for ClassID, v in ipairs(remoteFrame.SequenceList) do
         local lClassID = tonumber(ClassID)
-        local linegroup1 = AceGUI:Create("SimpleGroup")
+        local linegroup1 = UI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
         linegroup1:SetWidth(columnWidth)
         if lClassID > 0 then
-            local classbutton = AceGUI:Create("Icon")
+            local classbutton = UI:Create("Icon")
             classbutton:SetImageSize(20, 20)
             classbutton:SetWidth(20)
             classbutton:SetHeight(20)
             classbutton:SetImage(GSE.GetClassIcon(lClassID))
             linegroup1:AddChild(classbutton)
         end
-        local classLabel = AceGUI:Create("Label")
+        local classLabel = UI:Create("Label")
         classLabel:SetText(Statics.SpecIDList[lClassID])
         linegroup1:AddChild(classLabel)
         contentcontainer:AddChild(linegroup1)
@@ -192,3 +192,7 @@ remoteFrame:SetCallback(
         remoteFrame:Hide()
     end
 )
+
+if remoteFrame and remoteFrame.frame and GSE.RegisterUIScaleFrame then
+    GSE.RegisterUIScaleFrame(remoteFrame.frame)
+end

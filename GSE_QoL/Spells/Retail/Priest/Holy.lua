@@ -1,0 +1,45 @@
+-- Retail Priest — Holy
+-- Source: https://www.icy-veins.com/wow/holy-priest-pve-healing-spell-summary
+GSE.RegisterSpellList("Retail", "PRIEST", "Holy", {
+    -- Heals
+    "Flash Heal",
+    "Heal",
+    "Renew",
+    "Prayer of Healing",
+    "Prayer of Mending",
+    "Circle of Healing",
+    "Holy Word: Serenity",
+    "Holy Word: Sanctify",
+    "Holy Word: Salvation",
+    "Holy Word: Chastise",
+    "Divine Hymn",
+    "Power Word: Shield",
+    "Power Word: Life",
+    "Guardian Spirit",
+    -- Cooldowns
+    "Apotheosis",
+    "Symbol of Hope",
+    "Power Infusion",
+    "Lightwell",
+    "Divine Star",
+    "Halo",
+    -- Damage (off-spec)
+    "Smite",
+    "Holy Fire",
+    "Shadow Word: Pain",
+    "Mind Blast",
+    "Shadow Word: Death",
+    -- Defensives / utility
+    "Fade",
+    "Desperate Prayer",
+    "Power Word: Fortitude",
+    "Levitate",
+    "Mass Dispel",
+    "Dispel Magic",
+    "Purify",
+    "Resurrection",
+    "Mind Soothe",
+    "Shackle Undead",
+    "Psychic Scream",
+    "Fear Ward",
+})
