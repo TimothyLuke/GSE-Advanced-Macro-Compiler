@@ -3,6 +3,7 @@ local Statics = GSE.Static
 local L = GSE.L
 
 local GNOME = "Storage"
+local mname = nil
 
 function GSE.ImportLegacyStorage(Library)
     if GSE.isEmpty(GSESequences) then
@@ -67,7 +68,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     -- Midnight and shouldn't warn. Only flag when the expansion itself
     -- differs (e.g. a Midnight sequence loaded on TWW) or when the stored
     -- TOC is empty.
-    local _gameversion, _build, _date, tocversion = GetBuildInfo()
+    local _, _, _, tocversion = GetBuildInfo()
     local seqTOC = tonumber(sequence.MetaData.TOC)
     local seqExp = seqTOC and math.floor(seqTOC / 10000) or nil
     local clientExp = tocversion and math.floor(tonumber(tocversion) / 10000) or nil
@@ -533,9 +534,8 @@ end
 function GSE.CleanOrphanSequences()
     local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
     local todelete = {}
-    for macid = 1, maxmacros do
+    for _ = 1, maxmacros do
         local found = false
-        local mname, _mtexture, _mbody = GetMacroInfo(macid)
         if not GSE.isEmpty(mname) then
             if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][mname]) then
                 found = true
@@ -2060,7 +2060,7 @@ function GSE:GSSlash(input)
                 local seOpts = GSEOptions and GSEOptions.frameLocations
                     and GSEOptions.frameLocations.sequenceeditor
                 local restorePending = seOpts and seOpts.open
-                    and not GSE._SequenceEditorRestoreFired
+                    and not GSE.SequenceEditorRestoreFired
                 if restorePending then
                     return
                 end
@@ -2133,9 +2133,9 @@ do
         if InCombatLockdown() then return end
         if mousebutton ~= "RightButton" then return end
         if down then
-            self._gseABMenuDown = true
-        elseif self._gseABMenuDown then
-            self._gseABMenuDown = nil
+            self.gseABMenuDown = true
+        elseif self.gseABMenuDown then
+            self.gseABMenuDown = nil
             return
         end
 

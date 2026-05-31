@@ -16,7 +16,7 @@ describe("Checksum API", function()
         -- On Lua 5.3+/5.5 without luabitop (local dev), we compile the shim via
         -- load/loadstring so that the 5.3+ operators (&, |, ~, >>, <<) are never
         -- seen by the Lua 5.1 parser — the whole file must be valid Lua 5.1 syntax.
-        -- Note: busted sandboxes spec files, so we assign to _G explicitly.
+        -- Note: busted sandboxes spec files, so we assign to G explicitly.
         if not _G.bit then
             -- luabitop (Lua 5.1 via luarocks) exposes as require("bit"), not _G.bit
             pcall(function() _G.bit = require("bit") end)
@@ -47,7 +47,7 @@ describe("Checksum API", function()
             -- which is the right signal: install luabitop (see ci.yml).
         end
 
-        -- WoW globals needed by Checksum.lua v1 algorithm (must be on _G for same reason)
+        -- WoW globals needed by Checksum.lua v1 algorithm (must be on G for same reason)
         _G.WOW_PROJECT_ID    = 1
         _G.GetExpansionLevel = function() return 0 end
 

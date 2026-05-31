@@ -544,7 +544,7 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
             end
         end
 
-        -- Add any buttons referenced in saved AO data that exist in _G but weren't auto-detected
+        -- Add any buttons referenced in saved AO data that exist in G but weren't auto-detected
         if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
             if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
                 for _, buttons in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do

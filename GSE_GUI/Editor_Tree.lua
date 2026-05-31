@@ -613,7 +613,7 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                         title      = L["Duplicate"],
                         prompt     = L["Enter NEW Name for the Duplicated Sequence:"],
                         note       = L["-sequence will receive a new gse.tools id-"],
-                        default    = sequencename .. "_Copy",
+                        default    = sequencename .. "Copy",
                         acceptText = L["Create"],
                         maxLetters = 60,
                         onAccept   = function(name)
@@ -1648,7 +1648,7 @@ local function ManageTree(editframe)
                 elseif area == "Import" then
                     GSE.ShowImport()
                 elseif area == "KEYBINDINGS" then
-                    local _path = unique
+                    local path = unique
                     onClick_KEYBINDINGS(editframe, container, group, unique)
                 elseif area == "Sequences" then
                     local path = GSE.CloneSequence(unique)

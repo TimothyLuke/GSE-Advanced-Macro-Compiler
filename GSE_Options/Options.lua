@@ -53,7 +53,6 @@ local ABOUT_LOGO_WIDTH = 120
 local ABOUT_LOGO_HEIGHT = 120
 local SETTINGS_BUTTON_WIDTH = 200
 local SETTINGS_BUTTON_HEIGHT = 22
-local _MODERN_COLOR_BUTTON_WIDTH = 96
 local MODERN_COLOR_SWATCH_SIZE = 16
 local MODERN_COLOR_POPUP_WIDTH = 360
 local MODERN_COLOR_POPUP_HEIGHT = 150
@@ -184,7 +183,7 @@ local MODERN_CLASS_FILE_BY_ID = {
 -- option panels further down.
 -- =========================================================================
 
-local function _InstallSettingsButtonFix()
+local function InstallSettingsButtonFix()
     if settingsButtonFixInstalled or not SettingsButtonControlMixin or not SettingsButtonControlMixin.Init then return end
 
     local originalInit = SettingsButtonControlMixin.Init
@@ -715,7 +714,7 @@ local function OpenBlizzardColorPickerForPopup(popup)
     C_Timer.After(0, function() HookModernColorPickerClassButton(applyClassColor) end)
 end
 
-local function _GetModernColorPopup()
+local function GetModernColorPopup()
     if modernColorPopup then return modernColorPopup end
 
     local popup = CreateFrame("Frame", "GSEModernColorPickerPopup", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)

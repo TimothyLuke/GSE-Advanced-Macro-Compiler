@@ -4,6 +4,7 @@ local UI = GSE.UI
 local L = GSE.L
 
 local exportframe = UI:Create("Frame")
+local uncompressedVersion = nil
 exportframe:SetSize(760, 560)
 exportframe:Hide()
 exportframe.classid = 0
@@ -398,7 +399,6 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                local _localsuccess, uncompressedVersion = GSE.DecodeMessage(GSEVariables[key])
                 uncompressedVersion.objectType = "VARIABLE"
                 uncompressedVersion.name = key
                 exportTable["Variables"][key] = GSE.EncodeMessage(uncompressedVersion)

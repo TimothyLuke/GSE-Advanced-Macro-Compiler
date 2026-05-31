@@ -4,6 +4,7 @@ local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
+local linegroup1, toolbar, toolbar2, finalizeToolbar, finalizeToolbar1, finalizeToolbar2, toolbarGroup = nil, nil, nil, nil, nil, nil, nil
 local FRAME_DISPLACEMENT = 30
 local DEFAULT_HEIGHT = 800
 local DEFAULT_WIDTH = 800
@@ -12,7 +13,6 @@ local MIN_EDITOR_HEIGHT = 500   -- minimum resize height
 local MAX_EDITOR_HEIGHT = 2000
 local MAX_EDITOR_WIDTH = 3000
 local EDITOR_SCREEN_MARGIN = 20
-local _TOOLBAR_OFFSET = 70
 local SCROLLCONTAINER_OFFSET = 70
 local MACRO_STATIC_HEADER_HEIGHT = 52
 local RAW_EDITOR_BUTTON_ROW_HEIGHT = 26
@@ -110,27 +110,27 @@ end
 -- Called when the overlay is first shown and again from the live refresh
 -- helper after the user changes the dropdown.
 local function ApplyFocusHighProcToOverlay(overlay)
-    if not (overlay and overlay._gseFadeOut and overlay._gseFadeIn and overlay._gsePulse) then return end
+    if not (overlay and overlay.gseFadeOut and overlay.gseFadeIn and overlay.gsePulse) then return end
     local cfg = GetFocusHighProcConfig()
-    overlay._gseFadeOut:SetFromAlpha(cfg.high)
-    overlay._gseFadeOut:SetToAlpha(cfg.low)
-    overlay._gseFadeOut:SetDuration(cfg.duration)
-    if overlay._gseFadeOut.SetSmoothing then overlay._gseFadeOut:SetSmoothing(cfg.smoothing) end
-    overlay._gseFadeIn:SetFromAlpha(cfg.low)
-    overlay._gseFadeIn:SetToAlpha(cfg.high)
-    overlay._gseFadeIn:SetDuration(cfg.duration)
-    if overlay._gseFadeIn.SetSmoothing then overlay._gseFadeIn:SetSmoothing(cfg.smoothing) end
+    overlay.gseFadeOut:SetFromAlpha(cfg.high)
+    overlay.gseFadeOut:SetToAlpha(cfg.low)
+    overlay.gseFadeOut:SetDuration(cfg.duration)
+    if overlay.gseFadeOut.SetSmoothing then overlay.gseFadeOut:SetSmoothing(cfg.smoothing) end
+    overlay.gseFadeIn:SetFromAlpha(cfg.low)
+    overlay.gseFadeIn:SetToAlpha(cfg.high)
+    overlay.gseFadeIn:SetDuration(cfg.duration)
+    if overlay.gseFadeIn.SetSmoothing then overlay.gseFadeIn:SetSmoothing(cfg.smoothing) end
     -- OFF: stop the anim and pin the border solid. Otherwise (re)start it so
     -- the new type takes effect mid-cycle if the overlay is already visible
     -- — sharp types like STROBE switching from a smooth PULSE need a restart
     -- to clear the in-flight smoothing curve.
     if cfg.low >= 1.00 then
-        overlay._gsePulse:Stop()
+        overlay.gsePulse:Stop()
         overlay:SetAlpha(1.0)
     elseif overlay:IsShown() then
-        overlay._gsePulse:Stop()
+        overlay.gsePulse:Stop()
         overlay:SetAlpha(1.0)
-        overlay._gsePulse:Play()
+        overlay.gsePulse:Play()
     end
 end
 
@@ -142,7 +142,7 @@ end
 GSE.GUI.RefreshFocusHighProc = function()
     for overlay in pairs(FocusHighProcOverlays) do
         ApplyFocusHighProcToOverlay(overlay)
-        if overlay._gseRefreshTint then overlay._gseRefreshTint() end
+        if overlay.gseRefreshTint then overlay.gseRefreshTint() end
     end
 end
 
@@ -2661,9 +2661,9 @@ function GSE.CreateEditor()
                 vals.sequence = sequence
                 vals.classid = classid
 
-                -- "Name in use" check: query Library directly rather than _G
+                -- "Name in use" check: query Library directly rather than G
                 -- so a just-deleted sequence's macro button (which lingers in
-                -- _G until reload) does not falsely block reuse of that name.
+                -- G until reload) does not falsely block reuse of that name.
                 local plainName = GSE.UnEscapeString(SequenceName)
                 local nameInUse = not GSE.isEmpty(
                     GSE.Library[classid] and GSE.Library[classid][plainName]
@@ -2764,7 +2764,7 @@ function GSE.CreateEditor()
     -- so external callers like MacroPreview Show/Close can replay it
     -- without knowing how the original render was triggered.
     editframe.RefreshCurrentVersion = function()
-        local last = editframe._lastDrawSequence
+        local last = editframe.lastDrawSequence
         if not (last and last.container and editframe.DrawSequenceEditor) then return end
         editframe.currentMacroLimitVersion = last.version
         last.container:ReleaseChildren()
@@ -3000,7 +3000,7 @@ function GSE.CreateEditor()
         end
     end
     local function DrawSequenceEditor(tcontainer, version, path)
-        editframe._drawingSequenceEditor = true
+        editframe.drawingSequenceEditor = true
         editframe.rawEditor = nil
         SetOuterEditorScrollBarEnabled(true)
         if tcontainer.SetListPadding then
@@ -3009,17 +3009,17 @@ function GSE.CreateEditor()
         -- Captured for editframe.RefreshCurrentVersion so an external open/close
         -- of the Compiled Template window can re-render action panels.
         editframe.currentMacroLimitVersion = version
-        editframe._lastDrawSequence = {
+        editframe.lastDrawSequence = {
             container = tcontainer,
             version = version,
             path = path,
         }
-        editframe._macroDragTargets = {}
-        editframe._selectedMacroBlockHighlight = nil
-        editframe._macroBlockSelectionOverlays = {}
+        editframe.macroDragTargets = {}
+        editframe.selectedMacroBlockHighlight = nil
+        editframe.macroBlockSelectionOverlays = {}
         -- Visual (top-to-bottom) order of selectable blocks, rebuilt each draw as
         -- RegisterMacroBlockSelection runs. Used for arrow-key focus navigation.
-        editframe._macroBlockNavOrder = {}
+        editframe.macroBlockNavOrder = {}
 
         local function ClonePath(sourcePath)
             local cloned = {}
@@ -3047,7 +3047,7 @@ function GSE.CreateEditor()
             if not overlay then return end
             if selected then
                 overlay:Show()
-                editframe._selectedMacroBlockHighlight = overlay
+                editframe.selectedMacroBlockHighlight = overlay
             else
                 overlay:Hide()
             end
@@ -3077,7 +3077,7 @@ function GSE.CreateEditor()
             -- The tint lives on the BLOCK frame, not on the overlay frame
             -- (which carries the proc-pulse alpha animation), so it stays
             -- constant at 10% regardless of which proc style is active.
-            -- _gseRefreshTint() also honours the FocusHighlightTint master
+            -- gseRefreshTint() also honours the FocusHighlightTint master
             -- toggle and the per-action Disabled state — when either is
             -- off-true the tint is hidden so the red-disable highlight or
             -- the plain editor view dominates.
@@ -3085,10 +3085,10 @@ function GSE.CreateEditor()
             focusTint:SetColorTexture(c[1], c[2], c[3], 0.25)
             focusTint:SetAllPoints(frame)
             focusTint:Hide()
-            overlay._gseFocusTint = focusTint
+            overlay.gseFocusTint = focusTint
 
-            overlay._gseRefreshTint = function()
-                local tint = overlay._gseFocusTint
+            overlay.gseRefreshTint = function()
+                local tint = overlay.gseFocusTint
                 if not tint then return end
                 if not overlay:IsShown() then tint:Hide(); return end
                 -- Master toggle: explicit false disables tinting globally.
@@ -3098,7 +3098,7 @@ function GSE.CreateEditor()
                     tint:Hide()
                     return
                 end
-                local action = overlay._gseGetAction and overlay._gseGetAction()
+                local action = overlay.gseGetAction and overlay.gseGetAction()
                 if action and action.Disabled then
                     tint:Hide()
                 else
@@ -3151,9 +3151,9 @@ function GSE.CreateEditor()
             fadeIn:SetSmoothing("IN_OUT")
             -- Stash refs so the FocusHighProc Settings-callback can update
             -- alpha values without recreating overlays.
-            overlay._gsePulse = pulse
-            overlay._gseFadeOut = fadeOut
-            overlay._gseFadeIn = fadeIn
+            overlay.gsePulse = pulse
+            overlay.gseFadeOut = fadeOut
+            overlay.gseFadeIn = fadeIn
             FocusHighProcOverlays[overlay] = true
             -- Apply the configured level now so the initial values match the
             -- saved setting instead of the hardcoded 0.45 baseline.
@@ -3164,12 +3164,12 @@ function GSE.CreateEditor()
                 ApplyFocusHighProcToOverlay(self)
                 local cfg = GetFocusHighProcConfig()
                 if cfg.low < 1.00 then pulse:Play() end
-                if self._gseRefreshTint then self._gseRefreshTint() end
+                if self.gseRefreshTint then self.gseRefreshTint() end
             end)
             overlay:HookScript("OnHide", function(self)
                 pulse:Stop()
                 self:SetAlpha(1)  -- restore baseline alpha so next Show starts solid
-                if self._gseFocusTint then self._gseFocusTint:Hide() end
+                if self.gseFocusTint then self.gseFocusTint:Hide() end
             end)
 
             overlay:Hide()
@@ -3185,62 +3185,62 @@ function GSE.CreateEditor()
         end
 
         local function MacroBlockAutoSelectionAllowed(keyPath)
-            if MacroBlockPathIsEmpty(editframe._macroBlockAutoSelectOnlyPath) then return true end
+            if MacroBlockPathIsEmpty(editframe.macroBlockAutoSelectOnlyPath) then return true end
 
             local now = GetTime and GetTime() or 0
-            if editframe._macroBlockAutoSelectOnlyUntil and now > editframe._macroBlockAutoSelectOnlyUntil then
-                editframe._macroBlockAutoSelectOnlyPath = nil
-                editframe._macroBlockAutoSelectOnlyUntil = nil
+            if editframe.macroBlockAutoSelectOnlyUntil and now > editframe.macroBlockAutoSelectOnlyUntil then
+                editframe.macroBlockAutoSelectOnlyPath = nil
+                editframe.macroBlockAutoSelectOnlyUntil = nil
                 return true
             end
 
-            return PathsEqual(editframe._macroBlockAutoSelectOnlyPath, keyPath)
+            return PathsEqual(editframe.macroBlockAutoSelectOnlyPath, keyPath)
         end
 
         local function RestrictMacroBlockAutoSelectionToPath(keyPath, duration)
             if MacroBlockPathIsEmpty(keyPath) then return end
-            editframe._macroBlockAutoSelectOnlyPath = ClonePath(keyPath)
-            editframe._macroBlockAutoSelectOnlyUntil = (GetTime and GetTime() or 0) + (duration or 0.4)
+            editframe.macroBlockAutoSelectOnlyPath = ClonePath(keyPath)
+            editframe.macroBlockAutoSelectOnlyUntil = (GetTime and GetTime() or 0) + (duration or 0.4)
         end
 
         local function ClearMacroBlockAutoSelectionRestriction(keyPath)
             if
-                MacroBlockPathIsEmpty(editframe._macroBlockAutoSelectOnlyPath) or
+                MacroBlockPathIsEmpty(editframe.macroBlockAutoSelectOnlyPath) or
                 MacroBlockPathIsEmpty(keyPath) or
-                PathsEqual(editframe._macroBlockAutoSelectOnlyPath, keyPath)
+                PathsEqual(editframe.macroBlockAutoSelectOnlyPath, keyPath)
             then
-                editframe._macroBlockAutoSelectOnlyPath = nil
-                editframe._macroBlockAutoSelectOnlyUntil = nil
+                editframe.macroBlockAutoSelectOnlyPath = nil
+                editframe.macroBlockAutoSelectOnlyUntil = nil
             end
         end
 
         local function SelectMacroBlockPath(keyPath, overlay, force)
             if MacroBlockPathIsEmpty(keyPath) then return end
-            if editframe._drawingSequenceEditor and not force then return end
-            overlay = overlay or (editframe._macroBlockSelectionOverlays and
-                editframe._macroBlockSelectionOverlays[MacroBlockSelectionKey(keyPath)])
+            if editframe.drawingSequenceEditor and not force then return end
+            overlay = overlay or (editframe.macroBlockSelectionOverlays and
+                editframe.macroBlockSelectionOverlays[MacroBlockSelectionKey(keyPath)])
 
-            if editframe._selectedMacroBlockHighlight and editframe._selectedMacroBlockHighlight ~= overlay then
-                editframe._selectedMacroBlockHighlight:Hide()
+            if editframe.selectedMacroBlockHighlight and editframe.selectedMacroBlockHighlight ~= overlay then
+                editframe.selectedMacroBlockHighlight:Hide()
             end
 
-            editframe._selectedMacroBlockPath = ClonePath(keyPath)
-            editframe._selectedMacroBlockVersion = version
+            editframe.selectedMacroBlockPath = ClonePath(keyPath)
+            editframe.selectedMacroBlockVersion = version
             SetMacroBlockSelectionOverlayShown(overlay, true)
             if editframe.UpdateMacroBlockToolbarState then
                 editframe.UpdateMacroBlockToolbarState()
             end
             -- Center the selected block in the scroll view
-            if editframe._gseFocusSelectedMacroBlock then
-                C_Timer.After(0.05, editframe._gseFocusSelectedMacroBlock)
+            if editframe.gseFocusSelectedMacroBlock then
+                C_Timer.After(0.05, editframe.gseFocusSelectedMacroBlock)
             end
         end
 
         -- Expose to GUIDrawMacroEditor scope (InsertTopToolbarAction cannot see these
         -- locals directly because it lives in a sibling function, not inside DrawSequenceEditor).
-        editframe._gseSelectMacroBlockPath = SelectMacroBlockPath
-        editframe._gseRestrictMacroBlockAutoSelect = RestrictMacroBlockAutoSelectionToPath
-        editframe._gseClearMacroBlockAutoSelect = ClearMacroBlockAutoSelectionRestriction
+        editframe.gseSelectMacroBlockPath = SelectMacroBlockPath
+        editframe.gseRestrictMacroBlockAutoSelect = RestrictMacroBlockAutoSelectionToPath
+        editframe.gseClearMacroBlockAutoSelect = ClearMacroBlockAutoSelectionRestriction
 
         local function HookMacroBlockSelectionFrame(frame, keyPath)
             if not (frame and frame.HookScript) then return end
@@ -3276,16 +3276,16 @@ function GSE.CreateEditor()
             if not (widget and widget.frame) then return end
             local frame = widget.frame
             local overlay = CreateMacroBlockSelectionOverlay(frame, actionType)
-            editframe._macroBlockSelectionOverlays[MacroBlockSelectionKey(keyPath)] = overlay
-            if editframe._macroBlockNavOrder then
-                editframe._macroBlockNavOrder[#editframe._macroBlockNavOrder + 1] = ClonePath(keyPath)
+            editframe.macroBlockSelectionOverlays[MacroBlockSelectionKey(keyPath)] = overlay
+            if editframe.macroBlockNavOrder then
+                editframe.macroBlockNavOrder[#editframe.macroBlockNavOrder + 1] = ClonePath(keyPath)
             end
             -- Closure so the overlay can resolve its action struct at show
             -- time and check action.Disabled to decide whether to render the
             -- focus tint. Cloned keyPath captured by value so subsequent
             -- mutations to the caller's table can't break the lookup.
             local boundKeyPath = ClonePath(keyPath)
-            overlay._gseGetAction = function()
+            overlay.gseGetAction = function()
                 if not (editframe and editframe.Sequence and editframe.Sequence.Versions) then return nil end
                 local v = editframe.Sequence.Versions[version]
                 if not (v and v.Actions) then return nil end
@@ -3296,30 +3296,30 @@ function GSE.CreateEditor()
                 end
                 return node
             end
-            local pendingSelected = editframe._pendingMacroBlockSelectVersion == version and
-                PathsEqual(editframe._pendingMacroBlockSelectPath, keyPath)
+            local pendingSelected = editframe.pendingMacroBlockSelectVersion == version and
+                PathsEqual(editframe.pendingMacroBlockSelectPath, keyPath)
             if pendingSelected then
-                editframe._selectedMacroBlockPath = ClonePath(keyPath)
-                editframe._selectedMacroBlockVersion = version
+                editframe.selectedMacroBlockPath = ClonePath(keyPath)
+                editframe.selectedMacroBlockVersion = version
             end
-            local selected = pendingSelected or editframe._selectedMacroBlockVersion == version and
-                PathsEqual(editframe._selectedMacroBlockPath, keyPath)
+            local selected = pendingSelected or editframe.selectedMacroBlockVersion == version and
+                PathsEqual(editframe.selectedMacroBlockPath, keyPath)
             SetMacroBlockSelectionOverlayShown(overlay, selected)
             frame:EnableMouse(true)
             frame:HookScript(
                 "OnMouseDown",
                 function(_, button)
-                    if button ~= "LeftButton" or editframe._macroBlockDrag then return end
-                    local alreadySelected = editframe._selectedMacroBlockVersion == version and
-                        PathsEqual(editframe._selectedMacroBlockPath, keyPath)
+                    if button ~= "LeftButton" or editframe.macroBlockDrag then return end
+                    local alreadySelected = editframe.selectedMacroBlockVersion == version and
+                        PathsEqual(editframe.selectedMacroBlockPath, keyPath)
 
-                    if editframe._selectedMacroBlockHighlight and editframe._selectedMacroBlockHighlight ~= overlay then
-                        editframe._selectedMacroBlockHighlight:Hide()
+                    if editframe.selectedMacroBlockHighlight and editframe.selectedMacroBlockHighlight ~= overlay then
+                        editframe.selectedMacroBlockHighlight:Hide()
                     end
 
                     if alreadySelected then
-                        editframe._selectedMacroBlockPath = nil
-                        editframe._selectedMacroBlockVersion = nil
+                        editframe.selectedMacroBlockPath = nil
+                        editframe.selectedMacroBlockVersion = nil
                         SetMacroBlockSelectionOverlayShown(overlay, false)
                     else
                         SelectMacroBlockPath(keyPath, overlay)
@@ -3411,7 +3411,7 @@ function GSE.CreateEditor()
             cursorY = cursorY / scale
             if cursorX < left or cursorX > right then return false end
 
-            local direction, distance = 0, 0
+            local direction, distance
             if cursorY > top then
                 direction = -1
                 distance = cursorY - top
@@ -3539,7 +3539,7 @@ function GSE.CreateEditor()
         local function RegisterMacroBlockDragTarget(frame, keyPath)
             if not frame then return end
             table.insert(
-                editframe._macroDragTargets,
+                editframe.macroDragTargets,
                 {
                     frame = frame,
                     keyPath = ClonePath(keyPath),
@@ -3553,7 +3553,7 @@ function GSE.CreateEditor()
             if not CursorInsideMacroBlockDropArea(editframe) then return nil end
 
             local target
-            for _, candidate in ipairs(editframe._macroDragTargets or {}) do
+            for _, candidate in ipairs(editframe.macroDragTargets or {}) do
                 if
                     candidate.frame and
                     candidate.frame:IsShown() and
@@ -3589,7 +3589,7 @@ function GSE.CreateEditor()
             local target
             for _, editor in ipairs(GSE.GUI.editors or {}) do
                 if editor ~= editframe and EditorIsVisible(editor) and CursorInsideMacroBlockDropArea(editor) then
-                    for _, candidate in ipairs(editor._macroDragTargets or {}) do
+                    for _, candidate in ipairs(editor.macroDragTargets or {}) do
                         if candidate.frame and candidate.frame:IsShown() and FrameContainsCursor(candidate.frame) then
                             if not target or #candidate.keyPath > #target.keyPath then
                                 target = candidate
@@ -3657,7 +3657,7 @@ function GSE.CreateEditor()
         local UpdateMacroBlockDrag
         local DROP_MARKER_CURSOR_Y_OFFSET = -2
         local function EnsureMacroBlockDragGhost()
-            if editframe._macroBlockDragGhost then return editframe._macroBlockDragGhost end
+            if editframe.macroBlockDragGhost then return editframe.macroBlockDragGhost end
 
             local ghost = CreateFrame("Frame", nil, UIParent)
             ghost:SetFrameStrata("TOOLTIP")
@@ -3682,7 +3682,7 @@ function GSE.CreateEditor()
             ghost.title:SetJustifyH("LEFT")
             if ghost.title.SetWordWrap then ghost.title:SetWordWrap(false) end
             ghost:Hide()
-            editframe._macroBlockDragGhost = ghost
+            editframe.macroBlockDragGhost = ghost
             return ghost
         end
 
@@ -3693,7 +3693,7 @@ function GSE.CreateEditor()
         end
 
         local function EnsureMacroBlockDropMarker()
-            if editframe._macroBlockDropMarker then return editframe._macroBlockDropMarker end
+            if editframe.macroBlockDropMarker then return editframe.macroBlockDropMarker end
 
             local marker = CreateFrame("Frame", nil, UIParent)
             marker:SetFrameStrata("TOOLTIP")
@@ -3713,13 +3713,13 @@ function GSE.CreateEditor()
             marker.right:SetPoint("RIGHT")
             marker.right:SetColorTexture(0.25, 1.00, 0.35, 1)
             marker:Hide()
-            editframe._macroBlockDropMarker = marker
+            editframe.macroBlockDropMarker = marker
             return marker
         end
 
         local function HideMacroBlockDropMarker()
-            if editframe._macroBlockDropMarker then
-                editframe._macroBlockDropMarker:Hide()
+            if editframe.macroBlockDropMarker then
+                editframe.macroBlockDropMarker:Hide()
             end
         end
 
@@ -3752,7 +3752,7 @@ function GSE.CreateEditor()
             if GSE.isEmpty(sourcePath) then return false end
             local startX, startY = GetCursorPosition()
             local sourceAction = GetActionAtPath(sourcePath)
-            editframe._macroBlockDrag = {
+            editframe.macroBlockDrag = {
                 sourcePath = ClonePath(sourcePath),
                 treepath = treepath,
                 dragHandle = dragHandle,
@@ -3769,7 +3769,7 @@ function GSE.CreateEditor()
             ghost:SetScript(
                 "OnUpdate",
                 function(self, elapsed)
-                    if not editframe._macroBlockDrag then
+                    if not editframe.macroBlockDrag then
                         self:SetScript("OnUpdate", nil)
                         self:Hide()
                         return
@@ -3785,7 +3785,7 @@ function GSE.CreateEditor()
         end
 
         UpdateMacroBlockDrag = function(force)
-            local drag = editframe._macroBlockDrag
+            local drag = editframe.macroBlockDrag
             if not drag then return false end
 
             local cursorX, cursorY = GetCursorPosition()
@@ -3813,16 +3813,16 @@ function GSE.CreateEditor()
         end
 
         FinishMacroBlockDrag = function()
-            local drag = editframe._macroBlockDrag
+            local drag = editframe.macroBlockDrag
             if not drag then return end
             local releasedInside = CursorInsideMacroBlockDropArea(editframe)
             UpdateMacroBlockDrag(true)
 
-            editframe._macroBlockDrag = nil
+            editframe.macroBlockDrag = nil
             if drag.dragHandle and drag.dragHandle.SetHoverLocked then drag.dragHandle:SetHoverLocked(false) end
             HideMacroBlockDropMarker()
 
-            local ghost = editframe._macroBlockDragGhost
+            local ghost = editframe.macroBlockDragGhost
             if ghost then
                 ghost:SetScript("OnUpdate", nil)
                 ghost:Hide()
@@ -3862,7 +3862,6 @@ function GSE.CreateEditor()
 
             local parentPath = GSE.CloneSequence(path)
             local toolbarTargetPath = {}
-            local _blocksThisLevel
 
             local function EnsureActionList(listPath)
                 if GSE.isEmpty(listPath) or #listPath == 0 then
@@ -3878,13 +3877,11 @@ function GSE.CreateEditor()
             end
 
             if #parentPath == 1 then
-                _blocksThisLevel = #actions
             else
                 if GSE.isEmpty(dontDeleteLastParent) then
                     parentPath[#parentPath] = nil
                 end
                 toolbarTargetPath = GSE.CloneSequence(parentPath)
-                _blocksThisLevel = #EnsureActionList(toolbarTargetPath)
             end
 
             local function InsertToolbarAction(newAction)
@@ -4419,9 +4416,9 @@ function GSE.CreateEditor()
                         -- the type-colored tint immediately (letting the red
                         -- highlight read clean) — and unhides it again on
                         -- re-enable without waiting for a re-focus.
-                        local overlays = editframe._macroBlockSelectionOverlays
+                        local overlays = editframe.macroBlockSelectionOverlays
                         local overlay = overlays and overlays[GSE.SafeConcat(path, ".")]
-                        if overlay and overlay._gseRefreshTint then overlay._gseRefreshTint() end
+                        if overlay and overlay.gseRefreshTint then overlay.gseRefreshTint() end
                     end
                 )
                 if editframe.Sequence.Versions[version].Actions[path].Disabled == true then
@@ -4723,9 +4720,6 @@ function GSE.CreateEditor()
                 end
                 pauseFields:AddChild(msvalueeditbox)
                 linegroup1:AddChild(pauseFields)
-
-                local toolbarGroup, finalizeToolbar, _createAddButtonRow, _createChildAddButtonRow =
-                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, linegroup1)
                 finalizeToolbar()
                 block:AddChild(toolbarGroup)
                 block:AddChild(linegroup1)
@@ -4745,9 +4739,6 @@ function GSE.CreateEditor()
                 macroPanel:SetAutoAdjustHeight(true)
                 if macroPanel.SetListPadding then macroPanel:SetListPadding(0, 0, 0, 16) end
                 if macroPanel.SetListGap then macroPanel:SetListGap(0) end
-
-                local linegroup1, finalizeToolbar, _createAddButtonRow, _createChildAddButtonRow =
-                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
                 finalizeToolbar()
 
                 macroPanel:AddChild(linegroup1)
@@ -5217,8 +5208,6 @@ function GSE.CreateEditor()
                 layout3:SetFullWidth(true)
                 layout3:SetLayout("List")
                 layout3:SetAutoAdjustHeight(true)
-                local linegroup1, finalizeToolbar, _createAddButtonRow, _createChildAddButtonRow =
-                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, layout3)
                 if linegroup1.SetFlowOffset then linegroup1:SetFlowOffset(7, 0) end
 
                 local stepdropdown = UI:Create("Dropdown")
@@ -5373,8 +5362,6 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
-                local linegroup1, finalizeToolbar, _createAddButtonRow =
-                    GetBlockToolbar(version, keyPath, treepath, false, hlabel, macroPanel)
                 if linegroup1.SetFlowOffset then linegroup1:SetFlowOffset(0, -2) end
 
                 local variableLabel = UI:Create("Label")
@@ -5485,9 +5472,6 @@ function GSE.CreateEditor()
                 trueContainer:SetLayout("Flow")
                 trueContainer:SetFullWidth(true)
                 if trueContainer.SetFlowPadding then trueContainer:SetFlowPadding(0, 4, 0, 4) end
-
-                local toolbar, finalizeToolbar1, _createTrueAddButtonRow =
-                    GetBlockToolbar(version, trueKeyPath, treepath, false, tlabel, trueContainer, true, true, true)
                 toolbar:SetHeight(22)
                 finalizeToolbar1()
                 trueGroup:AddChild(toolbar)
@@ -5522,9 +5506,6 @@ function GSE.CreateEditor()
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")
                 if falsecontainer.SetFlowPadding then falsecontainer:SetFlowPadding(0, 4, 0, 4) end
-
-                local toolbar2, finalizeToolbar2, _createFalseAddButtonRow =
-                    GetBlockToolbar(version, falseKeyPath, treepath, false, flabel, falsecontainer, true, true, true)
                 toolbar2:SetHeight(22)
                 finalizeToolbar2()
                 falsegroup:AddChild(toolbar2)
@@ -5553,8 +5534,6 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
-                local linegroup1, finalizeToolbar, _createAddButtonRow, _createChildAddButtonRow =
-                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
                 finalizeToolbar()
                 macroPanel:AddChild(linegroup1)
                 local SequenceDropDown = UI:Create("Dropdown")
@@ -5644,7 +5623,7 @@ function GSE.CreateEditor()
             drawAction(tcontainer, action, version, keyPath, path)
         end
         if tcontainer.DoLayout then tcontainer:DoLayout() end
-        editframe._drawingSequenceEditor = nil
+        editframe.drawingSequenceEditor = nil
     end
     editframe.DrawSequenceEditor = function(...)
         DrawSequenceEditor(...)
@@ -5994,9 +5973,9 @@ function GSE.CreateEditor()
         end
 
         local function SetSelectedMacroBlockPathForTopButtons(newPath)
-            editframe._selectedMacroBlockPath = CloneMacroBlockPath(newPath)
-            editframe._selectedMacroBlockVersion = version
-            editframe._selectedMacroBlockHighlight = nil
+            editframe.selectedMacroBlockPath = CloneMacroBlockPath(newPath)
+            editframe.selectedMacroBlockVersion = version
+            editframe.selectedMacroBlockHighlight = nil
         end
 
         local function MacroBlockPathsEqual(leftPath, rightPath)
@@ -6056,7 +6035,7 @@ function GSE.CreateEditor()
             end
         end
 
-        local function _GetVisibleMacroBlockPaths()
+        local function GetVisibleMacroBlockPaths()
             local visiblePaths = {}
             AddVisibleMacroBlockPaths(GetTopButtonActionList({}), {}, visiblePaths)
             return visiblePaths
@@ -6086,7 +6065,7 @@ function GSE.CreateEditor()
             return movementPaths
         end
 
-        local function _GetMoveDestinationAfterVisiblePath(targetPath)
+        local function GetMoveDestinationAfterVisiblePath(targetPath)
             local targetAction = GetTopButtonActionAtPath(targetPath)
             local childListPath = GetActionChildListPath(targetPath, targetAction)
             if childListPath and type(GetTopButtonActionList(childListPath)) == "table" then
@@ -6116,13 +6095,13 @@ function GSE.CreateEditor()
             return destinationPath
         end
 
-        local function _GetPathAfterMacroBlock(targetPath)
+        local function GetPathAfterMacroBlock(targetPath)
             local destinationPath = CloneMacroBlockPath(targetPath)
             destinationPath[#destinationPath] = (tonumber(destinationPath[#destinationPath]) or 0) + 1
             return destinationPath
         end
 
-        local function _GetSkippedMoveBlockPath(actionPath, selectedPath)
+        local function GetSkippedMoveBlockPath(actionPath, selectedPath)
             local candidatePath = {}
             for _, pathIndex in ipairs(actionPath or {}) do
                 table.insert(candidatePath, pathIndex)
@@ -6267,13 +6246,13 @@ function GSE.CreateEditor()
 
         local function GetSelectedMacroBlockForTopButtons()
             local selectedPath =
-                editframe._selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe._selectedMacroBlockPath)
+                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
                     or nil
             local selectedAction = selectedPath and #selectedPath > 0 and GetTopButtonActionAtPath(selectedPath) or nil
             return selectedPath, selectedAction
         end
 
-        local function _SelectedMacroBlockIsInIfContext()
+        local function SelectedMacroBlockIsInIfContext()
             local selectedPath, selectedAction = GetSelectedMacroBlockForTopButtons()
             if selectedAction and selectedAction.Type == Statics.Actions.If then return true end
             return GetContainingIfBlockPath(selectedPath) ~= nil
@@ -6336,7 +6315,7 @@ function GSE.CreateEditor()
                 local rootActions = GetTopButtonActionList({})
                 if type(rootActions) ~= "table" then return end
                 table.insert(rootActions, 1, newAction)
-                editframe._selectedMacroBlockHighlight = nil
+                editframe.selectedMacroBlockHighlight = nil
                 editframe.scrollStatus = editframe.scrollStatus or {}
                 editframe.scrollStatus.scrollvalue = 1
                 insertedPath = {1}
@@ -6345,39 +6324,39 @@ function GSE.CreateEditor()
 
             editframe.scrollStatus = editframe.scrollStatus or {}
             local finalInsertedPath = CloneMacroBlockPath(insertedPath)
-            if editframe._gseRestrictMacroBlockAutoSelect then
-                editframe._gseRestrictMacroBlockAutoSelect(finalInsertedPath, 0.45)
+            if editframe.gseRestrictMacroBlockAutoSelect then
+                editframe.gseRestrictMacroBlockAutoSelect(finalInsertedPath, 0.45)
             end
-            editframe._pendingMacroBlockSelectPath = CloneMacroBlockPath(finalInsertedPath)
-            editframe._pendingMacroBlockSelectVersion = version
+            editframe.pendingMacroBlockSelectPath = CloneMacroBlockPath(finalInsertedPath)
+            editframe.pendingMacroBlockSelectVersion = version
             ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
-            if editframe._gseSelectMacroBlockPath then
-                editframe._gseSelectMacroBlockPath(finalInsertedPath, nil, true)
+            if editframe.gseSelectMacroBlockPath then
+                editframe.gseSelectMacroBlockPath(finalInsertedPath, nil, true)
             end
-            editframe._pendingMacroBlockSelectPath = nil
-            editframe._pendingMacroBlockSelectVersion = nil
+            editframe.pendingMacroBlockSelectPath = nil
+            editframe.pendingMacroBlockSelectVersion = nil
             if insertedPath and FocusSelectedMacroBlock then
                 C_Timer.After(0.01, function()
-                    if editframe._gseSelectMacroBlockPath then
-                        editframe._gseSelectMacroBlockPath(finalInsertedPath, nil, true)
+                    if editframe.gseSelectMacroBlockPath then
+                        editframe.gseSelectMacroBlockPath(finalInsertedPath, nil, true)
                     end
                     FocusSelectedMacroBlock()
                 end)
                 C_Timer.After(0.06, function()
-                    if editframe._gseSelectMacroBlockPath then
-                        editframe._gseSelectMacroBlockPath(finalInsertedPath, nil, true)
+                    if editframe.gseSelectMacroBlockPath then
+                        editframe.gseSelectMacroBlockPath(finalInsertedPath, nil, true)
                     end
                     FocusSelectedMacroBlock()
                 end)
                 C_Timer.After(0.18, function()
-                    if editframe._gseSelectMacroBlockPath then
-                        editframe._gseSelectMacroBlockPath(finalInsertedPath, nil, true)
+                    if editframe.gseSelectMacroBlockPath then
+                        editframe.gseSelectMacroBlockPath(finalInsertedPath, nil, true)
                     end
                     FocusSelectedMacroBlock()
                 end)
                 C_Timer.After(0.45, function()
-                    if editframe._gseClearMacroBlockAutoSelect then
-                        editframe._gseClearMacroBlockAutoSelect(finalInsertedPath)
+                    if editframe.gseClearMacroBlockAutoSelect then
+                        editframe.gseClearMacroBlockAutoSelect(finalInsertedPath)
                     end
                 end)
             end
@@ -6385,7 +6364,7 @@ function GSE.CreateEditor()
 
         FocusSelectedMacroBlock = function()
             local scrollContainer = editframe.scrollContainer
-            local selectedOverlay = editframe._selectedMacroBlockHighlight
+            local selectedOverlay = editframe.selectedMacroBlockHighlight
             local selectedFrame = selectedOverlay and selectedOverlay:GetParent()
             local scrollFrame = scrollContainer and scrollContainer.scrollframe
             if not (scrollContainer and scrollContainer.SetScroll and selectedFrame and scrollFrame) then return end
@@ -6431,18 +6410,18 @@ function GSE.CreateEditor()
 
         -- Expose to DrawSequenceEditor scope so SelectMacroBlockPath
         -- can center the block when selected by clicking.
-        editframe._gseFocusSelectedMacroBlock = FocusSelectedMacroBlock
+        editframe.gseFocusSelectedMacroBlock = FocusSelectedMacroBlock
 
         function BlinkSelectedMacroBlock()
             RefocusSelectedMacroBlock()
 
-            local selectedOverlay = editframe._selectedMacroBlockHighlight
+            local selectedOverlay = editframe.selectedMacroBlockHighlight
             if not selectedOverlay then return end
 
-            editframe._selectedMacroBlockBlinkToken = (editframe._selectedMacroBlockBlinkToken or 0) + 1
-            local blinkToken = editframe._selectedMacroBlockBlinkToken
+            editframe.selectedMacroBlockBlinkToken = (editframe.selectedMacroBlockBlinkToken or 0) + 1
+            local blinkToken = editframe.selectedMacroBlockBlinkToken
             local function setBlinkAlpha(alpha)
-                if editframe._selectedMacroBlockBlinkToken ~= blinkToken then return end
+                if editframe.selectedMacroBlockBlinkToken ~= blinkToken then return end
                 if selectedOverlay.SetAlpha then selectedOverlay:SetAlpha(alpha) end
                 if selectedOverlay.Show then selectedOverlay:Show() end
             end
@@ -6455,11 +6434,10 @@ function GSE.CreateEditor()
 
         local function MoveSelectedMacroBlock(direction)
             local selectedPath =
-                editframe._selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe._selectedMacroBlockPath)
+                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
                     or nil
             if not selectedPath or #selectedPath == 0 then return false end
             local selectedAction = GetTopButtonActionAtPath(selectedPath)
-            local _selectedIsIfBlock = selectedAction and selectedAction.Type == Statics.Actions.If
             local selectedContainingIfPath = GetContainingIfBlockPath(selectedPath)
             local selectedIfBranchPath = selectedContainingIfPath and
                 GetContainingIfBranchPath(selectedPath, selectedContainingIfPath) or
@@ -6515,17 +6493,17 @@ function GSE.CreateEditor()
 
             editframe.scrollStatus = editframe.scrollStatus or {}
             local finalMovedPath = CloneMacroBlockPath(movedPath)
-            editframe._pendingMacroBlockSelectPath = CloneMacroBlockPath(finalMovedPath)
-            editframe._pendingMacroBlockSelectVersion = version
+            editframe.pendingMacroBlockSelectPath = CloneMacroBlockPath(finalMovedPath)
+            editframe.pendingMacroBlockSelectVersion = version
             ChooseVersion(macrocontainer, version, editframe.scrollStatus.scrollvalue, path)
-            if editframe._gseSelectMacroBlockPath then
-                editframe._gseSelectMacroBlockPath(finalMovedPath, nil, true)
+            if editframe.gseSelectMacroBlockPath then
+                editframe.gseSelectMacroBlockPath(finalMovedPath, nil, true)
             end
-            editframe._pendingMacroBlockSelectPath = nil
-            editframe._pendingMacroBlockSelectVersion = nil
+            editframe.pendingMacroBlockSelectPath = nil
+            editframe.pendingMacroBlockSelectVersion = nil
             C_Timer.After(0.01, function()
-                if editframe._gseSelectMacroBlockPath then
-                    editframe._gseSelectMacroBlockPath(finalMovedPath, nil, true)
+                if editframe.gseSelectMacroBlockPath then
+                    editframe.gseSelectMacroBlockPath(finalMovedPath, nil, true)
                 end
                 RefocusSelectedMacroBlock()
             end)
@@ -6563,10 +6541,10 @@ function GSE.CreateEditor()
         -- visual order, without reordering. Walks the render-order list so it
         -- follows exactly what is on screen (including inside If branches / loops).
         local function NavigateSelectedMacroBlock(direction)
-            local navOrder = editframe._macroBlockNavOrder
+            local navOrder = editframe.macroBlockNavOrder
             if type(navOrder) ~= "table" or #navOrder == 0 then return false end
             local selectedPath =
-                editframe._selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe._selectedMacroBlockPath)
+                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
                     or nil
             if not selectedPath or #selectedPath == 0 then return false end
 
@@ -6585,8 +6563,8 @@ function GSE.CreateEditor()
                 return false
             end
 
-            if editframe._gseSelectMacroBlockPath then
-                editframe._gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
+            if editframe.gseSelectMacroBlockPath then
+                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
             end
             return true
         end
@@ -6595,9 +6573,9 @@ function GSE.CreateEditor()
             SetEditorKeyboardPropagation(true)
             if key ~= "UP" and key ~= "DOWN" then return end
             if MacroMoveKeyIsBoundToWoW(key) then return end
-            if KeyboardFocusIsTextEntry() or editframe._macroBlockDrag or editframe.rawEditor then return end
+            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
             if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
-            if editframe._selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe._selectedMacroBlockPath) then return end
+            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
 
             SetEditorKeyboardPropagation(false)
             local direction = key == "UP" and -1 or 1
@@ -7604,7 +7582,7 @@ end
 local function RestoreSequenceEditorIfNeeded()
     local seOpts = EnsureSequenceEditorRestoreOptions()
     if not seOpts.open then
-        GSE._SequenceEditorRestoreFired = true
+        GSE.SequenceEditorRestoreFired = true
         return
     end
 
@@ -7616,7 +7594,7 @@ local function RestoreSequenceEditorIfNeeded()
     if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
         local existing = GSE.GUI.editors[#GSE.GUI.editors]
         if existing and existing.Show then existing:Show() end
-        GSE._SequenceEditorRestoreFired = true
+        GSE.SequenceEditorRestoreFired = true
         return
     end
 
@@ -7629,7 +7607,7 @@ local function RestoreSequenceEditorIfNeeded()
     else
         GSE.ShowSequences()
     end
-    GSE._SequenceEditorRestoreFired = true
+    GSE.SequenceEditorRestoreFired = true
 end
 
 if C_Timer and C_Timer.After then

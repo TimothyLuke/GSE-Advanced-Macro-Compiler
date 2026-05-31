@@ -52,7 +52,6 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
 end
 
 function GSE.sendMessage(tab, channel, target, priority)
-    local _, _instanceType = IsInInstance()
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
     if tab.Command == "GS-E_TRANSMITSEQUENCE" then
         GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
@@ -86,7 +85,6 @@ end
 
 function GSE.performVersionCheck(version)
     if string.match(GSE.VersionString, "development") then
-        local _developer = true
         GSE.old = false
     else
         if GSE.ParseVersion(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
@@ -170,7 +168,6 @@ function GSE.storeSender(sender, senderversion)
 end
 
 function GSE.sendVersionCheck()
-    local _, _instanceType = IsInInstance()
     local t = {}
     t.Command = "GS-E_VERSIONCHK"
     t.Version = GSE.VersionString

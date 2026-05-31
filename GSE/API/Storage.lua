@@ -120,10 +120,10 @@ local function loadOneClass(classid)
         return
     end
     for i, j in pairs(GSESequences[classid]) do
-        local _status, err =
+        local status, err =
             pcall(
             function()
-                local _localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
                 GSE.Library[classid][i] = uncompressedVersion[2]
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][i])
                 if reason == "macros-deprecated" then
@@ -169,7 +169,7 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
-    local _status, err =
+    local status, err =
         pcall(
         function()
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
@@ -622,7 +622,7 @@ end
 -- brand-new sequence: it is given a fresh GSE.Tools identity (PlatformID is
 -- cleared) so the copy and the original never resolve to the same server
 -- record. If newName is supplied it is used (normalised + collision-checked);
--- otherwise a unique "<source>_Copy" name is generated. The sequence is stored
+-- otherwise a unique "<source>Copy" name is generated. The sequence is stored
 -- synchronously (so open editor trees can show it immediately) and its secure
 -- button is built on the next OOC tick. Returns the new name, or nil on failure.
 function GSE.DuplicateSequence(classid, sourceName, newName)
@@ -646,8 +646,8 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
             return nil
         end
     else
-        -- Auto-generate: "<source>_Copy", then "_Copy2", "_Copy3", ...
-        local base = sourceName .. "_Copy"
+        -- Auto-generate: "<source>Copy", then "Copy2", "Copy3", ...
+        local base = sourceName .. "Copy"
         newName = base
         local suffix = 2
         while not GSE.isEmpty(GSE.Library[classid][newName]) do
@@ -723,7 +723,7 @@ end
 --- Compile and register a single variable from its compressed store entry.
 -- Shared by LoadVariables and EnsureSequenceVariablesLoaded.
 local function loadOneVariable(k, v)
-    local _status, err =
+    local status, err =
         pcall(
         function()
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
@@ -1147,7 +1147,7 @@ end
 
 --- Return whether to store the macro in Personal Character Macros or Account Macros
 function GSE.SetMacroLocation()
-    local _numAccountMacros, numCharacterMacros = GetNumMacros()
+    local _, numCharacterMacros = GetNumMacros()
     local returnval
     returnval = 1
     if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSEOptions.overflowPersonalMacros then
@@ -1834,7 +1834,7 @@ function GSE.CompressSequenceFromString(importstring)
             __index = _G
         }
     )
-    local func, _err = loadstring(functiondefinition, "Storage")
+    local func, err = loadstring(functiondefinition, "Storage")
     if func then
         -- Make the compiled function see this table as its "globals"
         setfenv(func, fake_globals)

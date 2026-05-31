@@ -1,5 +1,4 @@
 local GSE = GSE
-local _Statics = GSE.Static
 
 local UI = GSE.UI
 local L = GSE.L

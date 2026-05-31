@@ -1,5 +1,4 @@
 local GSE = GSE
-local _GNOME, _ = ...
 
 local L = GSE.L
 local onpause = false
@@ -1665,7 +1664,7 @@ local function DebugRowsToExport()
             lines[#lines + 1] = StripDebugColor(row.message)
         else
             local values = {}
-            for i, column in ipairs(debugColumns) do
+            for i, _ in ipairs(debugColumns) do
                 if IsDebugColumnVisible(i) then
                     values[#values + 1] = ExportColumnText(row.values and row.values[i] or "", widths[i])
                 end
@@ -1718,8 +1717,8 @@ DebugFrame.DebugRowsToLegacyExport = function()
     return table.concat(lines, "\n")
 end
 
-local function _DebugRowsToStats()
-    local statsRowsData, _total = BuildStatsRows()
+local function DebugRowsToStats()
+    local statsRowsData, total = BuildStatsRows()
     local lines = {"Debugger Event Statistics", "Total Events Logged: " .. tostring(DebugFrame:GetTotalDebugEventsLogged()), ""}
     local filterLines = AddFilterSummary()
     for _, line in ipairs(filterLines) do
@@ -2216,7 +2215,7 @@ for i, column in ipairs(statsColumns) do
 end
 PositionStatsColumns(statsHeaderBackground, statsHeaderLabels, true)
 
-for i, column in ipairs(statsColumns) do
+for i, _ in ipairs(statsColumns) do
     local columnIndex = i
     local menuButton = CreateFrame("Button", nil, statsHeaderBackground)
     menuButton:SetSize(DEBUG_UI.COLUMN_MENU_WIDTH, DEBUG_UI.STATS_WIDGET_ROW_HEIGHT - 2)
@@ -3649,7 +3648,7 @@ ApplyColumnLayout = function()
 end
 
 local function EnsureHeaderColumns()
-    for i, column in ipairs(debugColumns) do
+    for i, _ in ipairs(debugColumns) do
         if not headerLabels[i] then
             local label = headerContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             label:SetJustifyH("LEFT")
@@ -4121,7 +4120,7 @@ end
 
 function DebugFrame.UpdateDebuggerLayout()
     local width = DebugFrame:GetWidth()
-    local _height = DebugFrame:GetHeight()
+    local height = DebugFrame:GetHeight()
     local primaryButtonTop = 58
     local secondaryButtonTop = 30
     local outputBottom = 88

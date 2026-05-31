@@ -1,5 +1,4 @@
 local GSE = GSE
-local _UI = GSE.UI
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 

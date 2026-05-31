@@ -287,7 +287,6 @@ local function showMacro(editframe, node, container)
 
     local font = CreateFont("seqPanelFont")
     font:SetFontObject(GameFontNormal)
-    local _fontName, _fontHeight, _fontFlags = GameFontNormal:GetFont()
     local origjustificationH = font:GetJustifyH()
     local origjustificationV = font:GetJustifyV()
     font:SetJustifyH("CENTER")

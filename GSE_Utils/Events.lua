@@ -1,10 +1,7 @@
-local _GNOME, _ = ...
 
 local GSE = GSE
-local GCD
-
-local _L = GSE.L
 local Statics = GSE.Static
+local GCD = nil
 
 local SequenceDebugColumns = {
     {label = "Timestamp", width = 9, pixelWidth = 76, min = 65},

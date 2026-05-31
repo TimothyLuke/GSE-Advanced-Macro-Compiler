@@ -8,7 +8,6 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   local UI = GSE.UI
 
   local transauthor = GetUnitName("player", true) .. "@" .. GetRealmName()
-  local _transauthorlen = string.len(transauthor)
 
   local transmissionFrame = UI:Create("Frame")
   transmissionFrame.frame:SetFrameStrata("MEDIUM")
@@ -60,7 +59,7 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   transmissionFrame:AddChild(sendbutton)
 
   if editframe then
-    local _point, _relativeTo, _relativePoint, _xOfs, _yOfs = editframe:GetPoint()
+    -- editframe:GetPoint() returns are unused; dropped
 
     transmissionFrame:ClearAllPoints()
     transmissionFrame:SetPoint("TOPLEFT", editframe.frame, editframe.Width + 10, 0)

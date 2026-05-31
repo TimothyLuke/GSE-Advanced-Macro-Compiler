@@ -2,6 +2,7 @@ local GSE = GSE
 local Statics = GSE.Static
 
 local UI = GSE.UI
+local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor or {}
 local L = GSE.L
 
 local remoteFrame = UI:Create("Frame")
@@ -20,9 +21,8 @@ remoteFrame:SetCallback(
 )
 remoteFrame:SetLayout("List")
 
-local _seOpts = GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor or {}
-remoteFrame.Height = _seOpts.height or 500
-remoteFrame.Width = _seOpts.width or 700
+remoteFrame.Height = seOpts.height or 500
+remoteFrame.Width = seOpts.width or 700
 
 local layoutcontainer = UI:Create("SimpleGroup")
 layoutcontainer:SetFullWidth(true)

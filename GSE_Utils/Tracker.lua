@@ -1,8 +1,9 @@
 local GSE = GSE
-local _L = GSE.L
 local Statics = GSE.Static
 
 -- Tracker tunable constants (DefaultIconCount, KeyHistoryLimit,
+local lastGSEActivitySequence = nil
+local assistedHighlightIconID = nil
 -- MirrorIconGap, SuccessCastWindow, DefaultGCDGraceWindow,
 -- ActiveSpamKeyHoldSeconds) live on Statics.TrackerConfig -- see
 -- GSE/API/Statics.lua for the values and rationale. Pulling them out
@@ -115,8 +116,6 @@ local lastPushSequence
 local lastPushIcon
 local lastPushTime = 0
 local lastGSEActivityTime = 0
-local lastGSEActivitySequence
-local _lastScrollHitIconID
 local scrollHitSerial = 0
 local lastSuccessfulCastHitTime = 0
 local lastSuccessfulCastHitIconID
@@ -124,8 +123,6 @@ local successfulCastHitSerial = 0
 local lastAssistedSuccessCastSerial = 0
 local successfulCastCount = 0
 local assistedSuccessHitCount = 0
-local assistedHighlightIconID
-local _assistedHighlightName
 local assistedHighlightSequence
 local assistedHighlightIsFallback = false
 local successfulCastIconID
@@ -148,7 +145,6 @@ local moveModeEnabled = false
 local sequenceTextMoveModeEnabled = false
 local successfulCastMoveModeEnabled = false
 local assistedSuccessMoveModeEnabled = false
-local _sequenceTextFramePositionLoaded = false
 local SaveSequenceTextFramePosition
 local UpdateAssistedSuccessFrame
 local RefreshAssistedSuccessMoveMode
@@ -902,7 +898,6 @@ GSE.SequenceIconSaveInternalFramePosition = function(prefix, frame)
     currentOptions[prefix .. "X"] = left
     currentOptions[prefix .. "Y"] = top
     currentOptions[prefix .. "Anchor"] = "TOPLEFT"   -- migration marker
-    if prefix == "Text" then _sequenceTextFramePositionLoaded = true end
 end
 
 GSE.SequenceIconApplyInternalFramePosition = function(prefix, frame)
@@ -2404,7 +2399,6 @@ function GSE.SequenceIconStickTrackerFrames()
     currentOptions.AssistedSuccessMoved = false
     currentOptions.AssistedSuccessX = nil
     currentOptions.AssistedSuccessY = nil
-    _sequenceTextFramePositionLoaded = false
     UpdateSequenceTextPosition()
     if GSE.SequenceIconLayoutTrackerWidget then GSE.SequenceIconLayoutTrackerWidget() end
     if SuccessfulCastFrame then SuccessfulCastFrame:SetClampedToScreen(true) end
@@ -2672,7 +2666,6 @@ local function SetAssistedHighlightIcon(sequence, iconID, trackHit, hitSerial, d
 
     assistedHighlightSequence = sequence
     assistedHighlightIconID = iconID
-    _assistedHighlightName = displayName or GetPrettySequenceName(sequence or activeSequence or "")
     assistedHighlightIsFallback = isFallback == true
     UpdateCastMirrorIcons()
 end
@@ -2705,7 +2698,6 @@ end
 local function ClearAssistedHighlightIcon()
     assistedHighlightSequence = nil
     assistedHighlightIconID = nil
-    _assistedHighlightName = nil
     assistedHighlightIsFallback = false
     UpdateCastMirrorIcons()
 end
@@ -3050,7 +3042,6 @@ local function PushSequenceIcon(sequence, iconID, directInput, buttonName, block
     table.insert(SequenceIconEntries, 1, {sequence = sequence, iconID = iconID, blockPath = blockPath, step = step})
     TrimIconEntries()
     RenderSequenceIcons()
-    _lastScrollHitIconID = iconID
     return true
 end
 
@@ -3263,7 +3254,6 @@ local function ResetSequenceTextFramePosition()
     currentOptions.TextY = nil
     currentOptions.TextWidth = GSE.SequenceIconTextResize.DefaultWidth
     currentOptions.TextHeight = GSE.SequenceIconTextResize.DefaultHeight
-    _sequenceTextFramePositionLoaded = false
     UpdateSequenceTextPosition()
 
     if currentOptions.Enabled and currentOptions.ShowTrackerText ~= false then

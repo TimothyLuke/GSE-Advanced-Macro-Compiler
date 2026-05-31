@@ -260,7 +260,7 @@ local function styleImportNativeDropdown(widget)
   layoutImportChrome(chrome, MODERN_IMPORT_BUTTON_BG, MODERN_IMPORT_BUTTON_BORDER, 1)
   chrome:Show()
 
-  local text = name and (_G[name .. "Text"] or _G[name .. "_Text"])
+  local text = name and (_G[name .. "Text"] or _G[name .. "Text"])
   if text then
     text:ClearAllPoints()
     text:SetPoint("LEFT", chrome, "LEFT", 8, 0)
@@ -389,7 +389,7 @@ prepareImportFrame()
 importframe:SetCallback(
   "OnClose",
   function(widget)
-    if importframe._fromQueue and GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
+    if importframe.fromQueue and GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
       GSE.Print(
         "|cff00ccffGSE Companion:|r " ..
         #GSE.IncomingQueue ..
@@ -622,14 +622,14 @@ local function processCollection(payload)
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
         -- Mark imported by identity so the Companion can prune them from the bridge data
-        if importframe._fromQueue then
+        if importframe.fromQueue then
           if GSE.IncomingQueue and GSE.CompanionMarkImported then
             for _, item in ipairs(GSE.IncomingQueue) do
               GSE.CompanionMarkImported(item)
             end
           end
           GSE.IncomingQueue = {}
-          importframe._fromQueue = false
+          importframe.fromQueue = false
         end
         importframe:Hide()
       else
@@ -924,8 +924,8 @@ local function processQueueCollections(collections)
       end
       if not colSuccess then anyFailed = true end
     end
-    if importframe._fromQueue then
-      local pageSize = importframe._pageSize or 0
+    if importframe.fromQueue then
+      local pageSize = importframe.pageSize or 0
       if GSE.IncomingQueue and GSE.CompanionMarkImported and pageSize > 0 then
         -- Only mark the items rendered on THIS page. The rest of
         -- IncomingQueue (page 2+) must remain unmarked so it surfaces
@@ -946,9 +946,9 @@ local function processQueueCollections(collections)
           end
         end
       end
-      importframe._fromQueue = false
-      importframe._pageSize = nil
-      importframe._pageTotal = nil
+      importframe.fromQueue = false
+      importframe.pageSize = nil
+      importframe.pageTotal = nil
     end
     importframe:Hide()
     if anyFailed then
@@ -997,9 +997,9 @@ local function renderImportsPage()
     return
   end
 
-  importframe._fromQueue = true
-  importframe._pageSize = pageEnd
-  importframe._pageTotal = total
+  importframe.fromQueue = true
+  importframe.pageSize = pageEnd
+  importframe.pageTotal = total
   processQueueCollections(collections)
   importframe:Show()
 end
@@ -1074,7 +1074,7 @@ local function renderDeletesPage()
     for idx, d in ipairs(pageEntries) do
       local act = actionsByIndex[idx] or "Ignore"
       if GSE.CompanionConfirmDelete then
-        GSE.CompanionConfirmDelete(d._id, d.contentType, d.name, d.classid, act)
+        GSE.CompanionConfirmDelete(d.id, d.contentType, d.name, d.classid, act)
       end
     end
     importframe:Hide()
@@ -1102,7 +1102,7 @@ end
 local function LandingPage()
   importframe:ReleaseChildren()
   prepareImportFrame()
-  importframe._fromQueue = false
+  importframe.fromQueue = false
   local hasBanner = false
 
   -- If the platform queue has pending content, show a banner button at the top
@@ -1248,7 +1248,7 @@ end
 
 renderQueueManager = function()
   importframe:ReleaseChildren()
-  importframe._fromQueue = false
+  importframe.fromQueue = false
 
   local scroll = setupScrollContent()
   local total = GSE.IncomingQueue and #GSE.IncomingQueue or 0

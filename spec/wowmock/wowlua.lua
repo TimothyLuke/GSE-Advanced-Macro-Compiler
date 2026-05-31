@@ -89,4 +89,4 @@ for key, func in pairs(math) do
 	end
 end
 
-return setmetatable(funcs, { __index = _G })
+return setmetatable(funcs, { __index = G })

@@ -3,7 +3,6 @@ local Statics = GSE.Static
 
 local GNOME = Statics.DebugModules["Translator"]
 
-local _L = GSE.L
 
 local function normaliseSpellIDValue(value)
     if type(value) == "table" then
@@ -188,7 +187,7 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                                     uetc = string.sub(uetc, 2)
                                     output = output .. "!"
                                 end
-                                local _foundspell, returnval =
+                                local foundspell, returnval =
                                     GSE.TranslateSpell(uetc, mode, (cleanNewLines and cleanNewLines or false), absolute)
                                 output = output .. returnval .. ", "
                             end

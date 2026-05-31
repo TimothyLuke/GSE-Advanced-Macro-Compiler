@@ -1,4 +1,3 @@
-local _GNOME, _ = ...
 
 local GSE = GSE
 

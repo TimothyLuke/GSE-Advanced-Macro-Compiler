@@ -4,6 +4,7 @@ GSE.UI = GSE.UI or {}
 
 local UI = GSE.UI
 local L = GSE.L
+local origToggle = nil
 local widgetId = 0
 local frameTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
@@ -128,16 +129,16 @@ end
 
 -- Ruler FontString: measures unconstrained natural text width.
 -- Parented to UIParent so it works regardless of navWindow visibility.
-local _treeTextRuler
+local treeTextRuler
 local function getTreeTextWidth(fontString)
     if not fontString then return 0 end
-    if not _treeTextRuler then
-        _treeTextRuler = UIParent:CreateFontString(nil, "ARTWORK")
-        _treeTextRuler:Hide()
+    if not treeTextRuler then
+        treeTextRuler = UIParent:CreateFontString(nil, "ARTWORK")
+        treeTextRuler:Hide()
     end
-    _treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
-    _treeTextRuler:SetText(fontString:GetText() or "")
-    return _treeTextRuler:GetStringWidth()
+    treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
+    treeTextRuler:SetText(fontString:GetText() or "")
+    return treeTextRuler:GetStringWidth()
 end
 local WINDOW_SCREEN_BUFFER = 0
 local WINDOW_LEFT_VISUAL_ALLOWANCE = 0
@@ -3377,7 +3378,7 @@ local function createDropdown()
         chrome:Show()
 
         local name = nativeDropdown.GetName and nativeDropdown:GetName()
-        local text = name and (_G[name .. "Text"] or _G[name .. "_Text"]) or nil
+        local text = name and (_G[name .. "Text"] or _G[name .. "Text"]) or nil
         if text then
             text:ClearAllPoints()
             text:SetPoint("LEFT", chrome, "LEFT", STYLE.padLarge, 0)
@@ -4990,9 +4991,8 @@ local function createTreeGroup()
     syncChevronStrata()
 
     -- Wrap toggleNavWindow to also update chevron
-    local _origToggle = toggleNavWindow
     toggleNavWindow = function()
-        _origToggle()
+        origToggle()
         updateChevron()
     end
     widget.ToggleNavWindow = toggleNavWindow

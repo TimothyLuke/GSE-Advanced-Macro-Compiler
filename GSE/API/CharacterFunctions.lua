@@ -1,6 +1,5 @@
 local GSE = GSE
 local L = GSE.L
-local _GNOME, _ = ...
 
 local Statics = GSE.Static
 
@@ -61,7 +60,7 @@ function GSE.GetClassIDforSpec(specid)
         -- returns the class ID for these versions, so specid IS the class ID.
         return specid or 0
     else
-        local _id, _name, _description, _icon, _role, class = GetSpecializationInfoByID(specid)
+        local _, _, _, _, _, class = GetSpecializationInfoByID(specid)
         if specid <= 13 then
             classid = specid
         else
@@ -99,8 +98,8 @@ Statics.Icons.Personal = GSE.GetClassIcon(GSE.GetCurrentClassID()) or Statics.Ic
 
 --- Check if the specID provided matches the players current class
 function GSE.isSpecIDForCurrentClass(specID)
-    local _, _specname, _specdescription, _specicon, _, _specrole, specclass = GetSpecializationInfoByID(specID)
-    local _currentclassDisplayName, currentenglishclass, currentclassId = UnitClass("player")
+    local _, _, _, _, _, _, specclass = GetSpecializationInfoByID(specID)
+    local _, currentenglishclass, currentclassId = UnitClass("player")
     specclass = specclass or ""
     if specID > 15 then
         GSE.PrintDebugMessage("Checking if specID " .. specID .. " " .. specclass .. " equals " .. currentenglishclass)

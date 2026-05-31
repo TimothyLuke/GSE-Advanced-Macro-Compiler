@@ -577,7 +577,7 @@ describe(
           function()
             -- Override CompileTemplate to simulate GetSpellId returning nil:
             -- the step has only blockPath (no spell/macro/etc field).
-            GSE.CompileTemplate = function(_macro)
+            GSE.CompileTemplate = function(macro)
               return {{blockPath = "1"}}
             end
             GSE.Library[0]["EmptyStepSeq"] = makeSeq()
@@ -585,28 +585,28 @@ describe(
             assert.is_true(hasMsg("Empty step at index 1"))
             assert.is_true(hasMsg("EmptyStepSeq"))
             -- restore stub
-            GSE.CompileTemplate = function(_macro) return {} end
+            GSE.CompileTemplate = function(macro) return {} end
           end
         )
 
         it(
           "does not report a step that has a non-blockPath field",
           function()
-            GSE.CompileTemplate = function(_macro)
+            GSE.CompileTemplate = function(macro)
               return {{blockPath = "1", spell = "1234"}}
             end
             GSE.Library[0]["GoodStepSeq"] = makeSeq()
             GSE.ScanMacrosForErrors()
             assert.is_false(hasMsg("Empty step"))
             -- restore stub
-            GSE.CompileTemplate = function(_macro) return {} end
+            GSE.CompileTemplate = function(macro) return {} end
           end
         )
 
         it(
           "reports multiple empty steps in a single version",
           function()
-            GSE.CompileTemplate = function(_macro)
+            GSE.CompileTemplate = function(macro)
               return {
                 {blockPath = "1"},
                 {blockPath = "1", spell = "111"},  -- ok
@@ -619,7 +619,7 @@ describe(
             assert.is_true(hasMsg("Empty step at index 3"))
             assert.is_false(hasMsg("Empty step at index 2"))
             -- restore stub
-            GSE.CompileTemplate = function(_macro) return {} end
+            GSE.CompileTemplate = function(macro) return {} end
           end
         )
 

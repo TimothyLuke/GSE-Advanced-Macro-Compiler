@@ -1,7 +1,6 @@
 local GSE = GSE
-local _Statics = GSE.Static
+local Statics = GSE.Static
 local UI = GSE.UI
-local _L = GSE.L
 
 -- Initialise GUI namespace
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end

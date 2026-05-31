@@ -56,7 +56,7 @@ end]],
         ["comments"] = ""
     }
     if GSEVariables and not GSE.isEmpty(GSEVariables[name]) then
-        local _status, err =
+        local status, err =
             pcall(
             function()
                 local _, uncompressedVersion = GSE.DecodeMessage(GSEVariables[name])
@@ -427,7 +427,6 @@ end]],
             GSE.ClearTooltip(editframe)
         end
     )
-    local _lastUpdatedTs = variable.LastUpdated  -- captured for table row below
 
     local savebutton = UI:Create("Button")
     savebutton:SetText(L["Save"])
@@ -444,7 +443,7 @@ end]],
                 end
                 editframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
                 variable.LastUpdated = GSE.GetTimestamp()
-                local _updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+                local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
                 local oocaction = {
                     ["action"] = "updatevariable",
                     ["variable"] = variable,
@@ -460,7 +459,6 @@ end]],
                     )
                 end
                 currentKey = saveName
-                _lastUpdatedTs = variable.LastUpdated
             else
                 GSE.Print(
                     L["There is an error in the sequence that needs to be corrected before it can be saved."],
@@ -489,8 +487,6 @@ end]],
     -- Dependencies — styled table matching the sequence metadata window
     local varDeps    = variable.Dependencies
     local dependents = GSE.GetVariableDependents(name)
-    local _hasDeps    = varDeps and type(varDeps.Variables) == "table" and #varDeps.Variables > 0
-    local _hasUsedBy  = #dependents.sequences > 0 or #dependents.variables > 0
 
     if GSE.GUI.CreateDependencyWindow then
         local heading = L["Used by Sequences"] .. ":"
