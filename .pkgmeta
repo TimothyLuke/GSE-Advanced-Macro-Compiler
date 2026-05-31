@@ -36,7 +36,6 @@ ignore:
   - docs
   - deploy.sh
   - deploy_key.enc
-  - Deprecated
   - GSE/tmp
   - out
   - tmp
@@ -54,6 +53,7 @@ ignore:
   - GSE_Personal
   - GSE_QoL
   - mklinks.bat
+  - *.md
 
 wowi-archive-previous: no
 enable-toc-creation: no

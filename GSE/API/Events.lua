@@ -322,7 +322,7 @@ local function addGSEWatermark(Button)
     local btn = _G[Button]
     if not btn then return end
     local wm = btn:CreateTexture(nil, "OVERLAY", nil, 7)
-    wm:SetTexture(Statics.Icons.GSE_Logo_Dark)
+    wm:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png")
     wm:SetSize(14, 14)
     wm:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 2)
     wm:SetAlpha(0.85)
