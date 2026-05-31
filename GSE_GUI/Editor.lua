@@ -4,7 +4,6 @@ local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
-local linegroup1, toolbar, toolbar2, finalizeToolbar, finalizeToolbar1, finalizeToolbar2, toolbarGroup = nil, nil, nil, nil, nil, nil, nil
 local FRAME_DISPLACEMENT = 30
 local DEFAULT_HEIGHT = 800
 local DEFAULT_WIDTH = 800
@@ -13,6 +12,7 @@ local MIN_EDITOR_HEIGHT = 500   -- minimum resize height
 local MAX_EDITOR_HEIGHT = 2000
 local MAX_EDITOR_WIDTH = 3000
 local EDITOR_SCREEN_MARGIN = 20
+local TOOLBAR_OFFSET = 70
 local SCROLLCONTAINER_OFFSET = 70
 local MACRO_STATIC_HEADER_HEIGHT = 52
 local RAW_EDITOR_BUTTON_ROW_HEIGHT = 26
@@ -268,7 +268,11 @@ GSE.GUI.SyncTrees = function()
             -- refresh and scroll it. One-shot.
             tc.skipNextReveal = nil
         elseif tc and tc.RevealSelection then
-            C_Timer.After(0, function() if tc and tc.RevealSelection then tc:RevealSelection() end end)
+            if GSE.After then
+                C_Timer.After(0, function() if tc and tc.RevealSelection then tc:RevealSelection() end end)
+            else
+                tc:RevealSelection()
+            end
         end
     end
 end
@@ -1764,16 +1768,13 @@ function GSE.ResetAllSequenceActionIcons()
     return changedSequences, refreshedIcons, scannedActions, savedSequences, savedIcons, clearedUserSelections
 end
 
--- Slash commands previously registered standalone here
--- (/gsespelliconreset, /gseiconscan, /gsesaveallsequences,
--- /gsesavelayoutx/y, /gseapplylayoutx/y, /gseresettracker) are now
--- subcommands of /gse, dispatched from GSE:GSSlash in
--- GSE_Utils/Utils.lua (e.g. /gse spelliconreset, /gse iconscan, etc.).
--- That keeps every slash command in one place and avoids a parallel
--- registration mechanism. The handlers still reach back into the
--- Editor.lua-owned routines (GSE.ResetAllSequenceActionIcons,
--- GSE.ScanSequenceActionIcons, GSE.SaveAllSequenceActionIcons)
--- through the GSE.* namespace.
+-- Slash commands previously defined here (/gsespelliconreset,
+-- /gseiconscan, /gsesaveallsequences, /gsesavelayoutx/y,
+-- /gseapplylayoutx/y, /gseresettracker) were moved to
+-- GSE_Utils/SlashCommands.lua so all GSE native slash commands live
+-- together. The handlers still reach back into Editor.lua-owned
+-- functions (GSE.ResetAllSequenceActionIcons, GSE.ScanSequenceActionIcons,
+-- GSE.SaveAllSequenceActionIcons) through the GSE.* namespace.
 
 
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
@@ -2237,7 +2238,7 @@ function GSE.CreateEditor()
                 self.treeContainer.navWindowFrame:Hide()
             end
             if GSE.GUI.ClearUndo then GSE.GUI.ClearUndo(self) end
-            if GSE.GUI.ClearUndoIfNoVisibleEditors then
+            if GSE.After and GSE.GUI.ClearUndoIfNoVisibleEditors then
                 C_Timer.After(0, GSE.GUI.ClearUndoIfNoVisibleEditors)
             end
             self.Sequence = nil
@@ -2431,8 +2432,10 @@ function GSE.CreateEditor()
                     elseif p.Show then p:Show() end
                 end
                 restorePanel()
-                C_Timer.After(0,    restorePanel)
-                C_Timer.After(0.15, restorePanel)
+                if GSE.After then
+                    C_Timer.After(0,    restorePanel)
+                    C_Timer.After(0.15, restorePanel)
+                end
             end
         end
         self.previewWasVisible = nil
@@ -2554,9 +2557,11 @@ function GSE.CreateEditor()
         minimizedWidget:Show()
         if GSE.ClampFrameToScreen then
             GSE.ClampFrameToScreen(minimizedWidget)
-            C_Timer.After(0, function()
-                if minimizedWidget:IsShown() then GSE.ClampFrameToScreen(minimizedWidget) end
-            end)
+            if GSE.After then
+                C_Timer.After(0, function()
+                    if minimizedWidget:IsShown() then GSE.ClampFrameToScreen(minimizedWidget) end
+                end)
+            end
         end
     end
     minimizeBtn:SetScript("OnClick", collapseEditor)
@@ -4720,6 +4725,9 @@ function GSE.CreateEditor()
                 end
                 pauseFields:AddChild(msvalueeditbox)
                 linegroup1:AddChild(pauseFields)
+
+                local toolbarGroup, finalizeToolbar, createAddButtonRow, createChildAddButtonRow =
+                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, linegroup1)
                 finalizeToolbar()
                 block:AddChild(toolbarGroup)
                 block:AddChild(linegroup1)
@@ -4739,6 +4747,9 @@ function GSE.CreateEditor()
                 macroPanel:SetAutoAdjustHeight(true)
                 if macroPanel.SetListPadding then macroPanel:SetListPadding(0, 0, 0, 16) end
                 if macroPanel.SetListGap then macroPanel:SetListGap(0) end
+
+                local linegroup1, finalizeToolbar, createAddButtonRow, createChildAddButtonRow =
+                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
                 finalizeToolbar()
 
                 macroPanel:AddChild(linegroup1)
@@ -5208,6 +5219,8 @@ function GSE.CreateEditor()
                 layout3:SetFullWidth(true)
                 layout3:SetLayout("List")
                 layout3:SetAutoAdjustHeight(true)
+                local linegroup1, finalizeToolbar, createAddButtonRow, createChildAddButtonRow =
+                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, layout3)
                 if linegroup1.SetFlowOffset then linegroup1:SetFlowOffset(7, 0) end
 
                 local stepdropdown = UI:Create("Dropdown")
@@ -5362,6 +5375,8 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
+                local linegroup1, finalizeToolbar, createAddButtonRow =
+                    GetBlockToolbar(version, keyPath, treepath, false, hlabel, macroPanel)
                 if linegroup1.SetFlowOffset then linegroup1:SetFlowOffset(0, -2) end
 
                 local variableLabel = UI:Create("Label")
@@ -5472,6 +5487,9 @@ function GSE.CreateEditor()
                 trueContainer:SetLayout("Flow")
                 trueContainer:SetFullWidth(true)
                 if trueContainer.SetFlowPadding then trueContainer:SetFlowPadding(0, 4, 0, 4) end
+
+                local toolbar, finalizeToolbar1, createTrueAddButtonRow =
+                    GetBlockToolbar(version, trueKeyPath, treepath, false, tlabel, trueContainer, true, true, true)
                 toolbar:SetHeight(22)
                 finalizeToolbar1()
                 trueGroup:AddChild(toolbar)
@@ -5506,6 +5524,9 @@ function GSE.CreateEditor()
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")
                 if falsecontainer.SetFlowPadding then falsecontainer:SetFlowPadding(0, 4, 0, 4) end
+
+                local toolbar2, finalizeToolbar2, createFalseAddButtonRow =
+                    GetBlockToolbar(version, falseKeyPath, treepath, false, flabel, falsecontainer, true, true, true)
                 toolbar2:SetHeight(22)
                 finalizeToolbar2()
                 falsegroup:AddChild(toolbar2)
@@ -5534,6 +5555,8 @@ function GSE.CreateEditor()
                         macroPanel.frame:SetBackdrop(nil)
                     end
                 )
+                local linegroup1, finalizeToolbar, createAddButtonRow, createChildAddButtonRow =
+                    GetBlockToolbar(version, keyPath, treepath, includeAdd, hlabel, macroPanel)
                 finalizeToolbar()
                 macroPanel:AddChild(linegroup1)
                 local SequenceDropDown = UI:Create("Dropdown")
@@ -6438,6 +6461,7 @@ function GSE.CreateEditor()
                     or nil
             if not selectedPath or #selectedPath == 0 then return false end
             local selectedAction = GetTopButtonActionAtPath(selectedPath)
+            local selectedIsIfBlock = selectedAction and selectedAction.Type == Statics.Actions.If
             local selectedContainingIfPath = GetContainingIfBlockPath(selectedPath)
             local selectedIfBranchPath = selectedContainingIfPath and
                 GetContainingIfBranchPath(selectedPath, selectedContainingIfPath) or

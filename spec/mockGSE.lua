@@ -1,4 +1,11 @@
 ---@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
+
+-- WoW chat-slash globals. Real WoW exposes SlashCmdList + SLASH_<NAME>1 as
+-- the canonical slash-command registration surface; Utils.lua registers
+-- /gse this way at module scope. Provide a writable stub so loading
+-- Utils.lua in busted doesn't crash on `SlashCmdList.GSE = function ... end`.
+SlashCmdList = SlashCmdList or {}
+
 GSE = {}
 GSE.L = {}
 GSE.Static = {}

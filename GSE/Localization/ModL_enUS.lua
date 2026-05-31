@@ -911,3 +911,18 @@ L["Stats: Off"] = true
 L["Hardware: On"] = true
 L["Hardware: Off"] = true
 L["|cFFFFFFFFGS|r|cFF00FFFFE|r|cFFFFFFFF:|r |cFFFFD100Resources|r"] = true
+
+-- =========================================================================
+-- Restored direct L["X"] uses missed by earlier audit (caught at runtime
+-- when Editor_Metadata.lua's contextVersionConfigs table loaded — these
+-- keys are referenced as `L["X"]` at chunk-level in that file).
+-- =========================================================================
+L["Mythic"] = true
+L["The version of this macro to use in Mythic Dungeons."] = true
+L["PVP"] = true
+L["Heroic"] = true
+L["The version of this macro to use in heroic dungeons."] = true
+L["Party"] = true
+L["The version of this macro to use when in a party in the world."] = true
+L["Delves and Scenarios"] = true
+L["Specialisation / Class ID"] = true
