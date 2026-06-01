@@ -3,6 +3,22 @@ local GSE = GSE
 local Statics = GSE.Static
 
 local L = GSE.L
+-- Icon for the "Skyriding / Vehicle Keybinds" editor tree node, using the
+-- skyriding.png art now shipped under GSE_GUI/Assets (a 128x128 Skyriding icon).
+local SKYRIDING_KEYBIND_ICON = "Interface\\AddOns\\GSE_GUI\\Assets\\skyriding.png"
+local SKYRIDING_KEYBIND_COL_WIDTH  = 200   -- each of the 3 even columns
+local SKYRIDING_KEYBIND_ICON_COL   = 30    -- icon size (image = frame size)
+local SKYRIDING_KEYBIND_LABEL_WIDTH  = SKYRIDING_KEYBIND_COL_WIDTH
+local SKYRIDING_KEYBIND_BUTTON_WIDTH = 130
+local SKYRIDING_KEYBIND_ROW_GAP = 16
+local SKYRIDING_KEYBIND_ROW_WIDTH = SKYRIDING_KEYBIND_LABEL_WIDTH + SKYRIDING_KEYBIND_ROW_GAP +
+    SKYRIDING_KEYBIND_BUTTON_WIDTH + SKYRIDING_KEYBIND_ROW_GAP + SKYRIDING_KEYBIND_ICON_COL
+local SKYRIDING_KEYBIND_ROW_COUNT = 12
+local SKYRIDING_KEYBIND_ROW_HEIGHT = 34
+local SKYRIDING_KEYBIND_DIVIDER_HEIGHT = 1
+local SKYRIDING_KEYBIND_LIST_GAP = 2
+local SKYRIDING_KEYBIND_ROWS_HEIGHT = (SKYRIDING_KEYBIND_ROW_COUNT * SKYRIDING_KEYBIND_ROW_HEIGHT) +
+    ((SKYRIDING_KEYBIND_ROW_COUNT - 1) * SKYRIDING_KEYBIND_LIST_GAP)
 
 -- ============================================================================
 -- Macro Insertion Toolbar moved to the GSE_MacroToolbar addon.
@@ -155,27 +171,9 @@ GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
 
 -- Skyriding Bind Bar for Retail
 if GSE.GameMode >= 11 then
-    -- Native Blizzard Settings subcategory. Lifted from the master-branch
-    -- pattern that was overwritten by the AceGUI removal pass — register a
-    -- vertical layout subcategory and add native button initializers, one
-    -- per vehicle slot. CreateSettingsButtonInitializer + SettingsPanel are
-    -- standard Blizzard APIs (11.0+); the panel rebuilds each open from
-    -- the initializer data so the displayed text always reflects what
-    -- was saved.
-    local skyOptions = Settings.RegisterVerticalLayoutSubcategory(
-        Settings.GetCategory(GSE.MenuCategoryID),
-        L["Skyriding / Vehicle Keybinds"]
-    )
-
-    do
-        local layout = SettingsPanel:GetLayout(skyOptions)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {
-            name = L["Skyriding / Vehicle Keybinds"],
-            tooltip = "Override bindings for Skyriding, Vehicle, Possess and Override Bars",
-        }))
+    local function GetSkyridingBindText(slotIndex)
+        return (GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(slotIndex)]) or L["Not Bound"]
     end
-
-    local slotInits = {}
 
     local function onKeyDown(self, key)
         if key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" or
@@ -198,42 +196,232 @@ if GSE.GameMode >= 11 then
             GSEOptions.SkyRidingBinds[tostring(slotIndex)] = binding
         end
         if GSE.UpdateVehicleBar then GSE.UpdateVehicleBar() end
-        self:SetText(binding)
+        if self.obj and self.obj.SetText then
+            self.obj:SetText(binding)
+        else
+            self:SetText(binding)
+        end
         self:SetScript("OnKeyDown", nil)
         self:EnableKeyboard(false)
         if self.SetPropagateKeyboardInput then self:SetPropagateKeyboardInput(true) end
-        -- Keep initializer data in sync so the panel shows the current
-        -- binding when re-opened. Without this the row text reverts to the
-        -- initial value supplied at register time (typically "Not Bound").
-        local init = slotInits[slotIndex]
-        if init and init.GetData then
-            local data = init:GetData()
-            if data then data.buttonText = binding end
+    end
+
+    local function CancelSkyridingKeyCapture(button)
+        if not button then return end
+        local frame = button.frame or button
+        if frame.SetScript then frame:SetScript("OnKeyDown", nil) end
+        if frame.EnableKeyboard then frame:EnableKeyboard(false) end
+        if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(true) end
+    end
+
+    local function StartSkyridingKeyCapture(button, slotIndex)
+        if not button then return end
+        local frame = button.frame or button
+        frame.gseSlot = slotIndex
+        if button.SetText then
+            button:SetText(L["Press a key..."])
+        elseif frame.SetText then
+            frame:SetText(L["Press a key..."])
+        end
+        if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(false) end
+        if frame.EnableKeyboard then frame:EnableKeyboard(true) end
+        if frame.SetScript then frame:SetScript("OnKeyDown", onKeyDown) end
+    end
+
+    function GSE.BuildSkyridingKeybindTreeNode()
+        return {
+            value = "SKYRIDING",
+            text = L["Skyriding / Vehicle Keybinds"],
+            icon = SKYRIDING_KEYBIND_ICON
+        }
+    end
+
+    function GSE.DrawSkyridingKeybindEditor(container)
+        local activeUI = GSE.UI
+        if not (container and activeUI) then return end
+        container:ReleaseChildren()
+        container:SetFullHeight(true)
+        container:SetLayout("List")
+        local skyPad = (GSE.GUI and GSE.GUI.CONTENT_PADDING) or 20
+        container:SetListPadding(skyPad, skyPad, skyPad, skyPad)
+        container:SetListGap(SKYRIDING_KEYBIND_LIST_GAP)
+
+        local function centerFlowContent(widget, contentWidth)
+            local function apply(width)
+                width = tonumber(width) or (widget.frame and widget.frame:GetWidth()) or contentWidth
+                local padding = math.max(0, math.floor((width - contentWidth) / 2))
+                widget.flowPadLeft = padding
+                widget.flowPadRight = padding
+            end
+
+            widget.OnWidthSet = function(self, width)
+                apply(width)
+                if self.DoLayout then self:DoLayout() end
+            end
+
+            -- Frame-level OnSizeChanged catches size changes from the parent
+            -- container's layout pass, which AceGUI does NOT always route through
+            -- the widget's SetWidth path. Without this hook, SetFullWidth(true)
+            -- children get the correct frame width but never recompute padding,
+            -- leaving the flow content stuck at left-aligned (padding = 0).
+            if widget.frame and widget.frame.HookScript then
+                widget.frame:HookScript("OnSizeChanged", function(_, width)
+                    apply(width)
+                    if widget.DoLayout then widget:DoLayout() end
+                end)
+            end
+
+            apply(widget.width)
+        end
+
+        local function centerRowsVertically(widget, spacer)
+            local function apply(height)
+                height = tonumber(height) or (widget.frame and widget.frame:GetHeight()) or 0
+                local skyPad2 = (GSE.GUI and GSE.GUI.CONTENT_PADDING) or 20
+                -- 36 px headingRow + 1 px divider + 3 list gaps = fixed visual height above rows.
+                local fixedHeight = skyPad2 +
+                    36 +
+                    SKYRIDING_KEYBIND_DIVIDER_HEIGHT +
+                    SKYRIDING_KEYBIND_ROWS_HEIGHT +
+                    skyPad2 +
+                    (SKYRIDING_KEYBIND_LIST_GAP * 3)
+                local spacerHeight = math.max(0, math.floor((height - fixedHeight) / 2))
+
+                spacer.height = spacerHeight
+                spacer.explicitHeight = true
+                if spacer.frame then spacer.frame:SetHeight(math.max(1, spacerHeight)) end
+            end
+
+            widget.OnHeightSet = function(_, height)
+                apply(height)
+            end
+
+            if widget.frame and widget.frame.HookScript then
+                widget.frame:HookScript("OnSizeChanged", function(_, _, height)
+                    apply(height)
+                    if widget.DoLayout then widget:DoLayout() end
+                end)
+            end
+
+            apply(widget.height)
+        end
+
+        local function addDivider()
+            local divider = activeUI:Create("SimpleGroup")
+            divider:SetFullWidth(true)
+            divider:SetHeight(1)
+            local line = divider.frame and divider.frame:CreateTexture(nil, "ARTWORK")
+            if line then
+                line:SetPoint("LEFT", divider.frame, "LEFT", 0, 0)
+                line:SetPoint("RIGHT", divider.frame, "RIGHT", 0, 0)
+                line:SetHeight(1)
+                line:SetColorTexture(1, 1, 1, 0.22)
+            end
+            container:AddChild(divider)
+        end
+
+        -- Page header. The canvas subcategory does not get a native Blizzard
+        -- header (only VerticalLayoutSubcategory does), so render one in-canvas
+        -- styled to match Tools & Diagnostics: white text, GameFontHighlightLarge-ish
+        -- font, left-aligned, followed by a 1px divider line.
+        local headingRow = activeUI:Create("SimpleGroup")
+        headingRow:SetFullWidth(true)
+        headingRow:SetHeight(36)
+        headingRow:SetLayout("Flow")
+        if headingRow.SetFlowPadding then headingRow:SetFlowPadding(10, 6, 0, 0) end
+
+        local heading = activeUI:Create("Heading")
+        heading:SetText(L["Skyriding / Vehicle Keybinds"])
+        heading:SetWidth(520)
+        heading:SetHeight(28)
+        heading:SetJustifyH("LEFT")
+        heading:SetJustifyV("MIDDLE")
+        heading:SetColor(1, 1, 1, 1)
+        if heading.frame then
+            local fs = heading.frame.GetFontString and heading.frame:GetFontString()
+            if not fs then fs = heading.label or heading.text end
+            if fs and fs.SetFont and GameFontHighlightLarge then
+                local face, size, flags = GameFontHighlightLarge:GetFont()
+                if face then fs:SetFont(face, size or 14, flags) end
+            end
+        end
+        headingRow:AddChild(heading)
+        container:AddChild(headingRow)
+        addDivider()
+
+        local verticalSpacer = activeUI:Create("SimpleGroup")
+        verticalSpacer:SetFullWidth(true)
+        verticalSpacer:SetHeight(1)
+        container:AddChild(verticalSpacer)
+        centerRowsVertically(container, verticalSpacer)
+
+        for i = 1, SKYRIDING_KEYBIND_ROW_COUNT do
+            local slotIndex = i
+            local row = activeUI:Create("SimpleGroup")
+            row:SetFullWidth(true)
+            row:SetHeight(SKYRIDING_KEYBIND_ROW_HEIGHT)
+            row:SetLayout("Flow")
+            row:SetFlowGap(SKYRIDING_KEYBIND_ROW_GAP)
+            row:SetFlowVAlign("CENTER")
+            centerFlowContent(row, SKYRIDING_KEYBIND_ROW_WIDTH)
+
+            local button = activeUI:Create("Button")
+            button:SetText(GetSkyridingBindText(i))
+            button:SetWidth(SKYRIDING_KEYBIND_BUTTON_WIDTH)
+            button:SetHeight(20)
+            button:SetCallback("OnClick", function(widget, mouseButton)
+                if mouseButton == "RightButton" then
+                    if GSE.isEmpty(GSEOptions.SkyRidingBinds) then GSEOptions.SkyRidingBinds = {} end
+                    GSEOptions.SkyRidingBinds[tostring(slotIndex)] = nil
+                    if GSE.UpdateVehicleBar then GSE.UpdateVehicleBar() end
+                    -- Cancel capture and update text deferred so WoW flushes
+                    -- the input event before we redraw the button label.
+                    local function doCancel()
+                        CancelSkyridingKeyCapture(widget)
+                        local notBound = L["Not Bound"]
+                        widget:SetText(notBound)
+                        local frame = widget.frame or widget
+                        if frame.SetText then frame:SetText(notBound) end
+                    end
+                    C_Timer.After(0, doCancel)
+                else
+                    StartSkyridingKeyCapture(widget, slotIndex)
+                end
+            end)
+            row:AddChild(button)
+
+            -- Icon column (centre): shows vehicle bar slot icon if mounted, placeholder otherwise
+            local slotIcon = activeUI:Create("Icon")
+            local function refreshSlotIcon()
+                local tex = nil
+                if HasVehicleActionBar and HasVehicleActionBar() then
+                    local page = GetVehicleBarIndex and GetVehicleBarIndex() or 0
+                    if page > 0 then
+                        tex = GetActionTexture and GetActionTexture((page - 1) * 12 + slotIndex)
+                    end
+                end
+                slotIcon:SetImage(tex or "")
+            end
+            refreshSlotIcon()
+            slotIcon:SetImageSize(SKYRIDING_KEYBIND_ICON_COL, SKYRIDING_KEYBIND_ICON_COL)
+            if slotIcon.SetHoverImageSize then slotIcon:SetHoverImageSize(SKYRIDING_KEYBIND_ICON_COL, SKYRIDING_KEYBIND_ICON_COL) end
+            if slotIcon.SetHoverLocked then slotIcon:SetHoverLocked(true) end
+            slotIcon.flowXOffset = 0
+            slotIcon.flowYOffset = math.floor((SKYRIDING_KEYBIND_ROW_HEIGHT - SKYRIDING_KEYBIND_ICON_COL) / 2)
+            row:AddChild(slotIcon)
+
+            local label = activeUI:Create("Label")
+            label:SetText(L["Skyriding Button"] .. " " .. i)
+            label:SetWidth(SKYRIDING_KEYBIND_LABEL_WIDTH)
+            label:SetHeight(28)
+            label:SetJustifyH("LEFT")
+            label:SetJustifyV("MIDDLE")
+            label:SetColor(1, 0.82, 0, 1)
+            row:AddChild(label)
+
+            container:AddChild(row)
         end
     end
-
-    for i = 1, 12 do
-        local slotIndex = i
-        local layout = SettingsPanel:GetLayout(skyOptions)
-        local init = CreateSettingsButtonInitializer(
-            L["Skyriding Button"] .. " " .. i,
-            (GSEOptions.SkyRidingBinds and GSEOptions.SkyRidingBinds[tostring(i)]) or L["Not Bound"],
-            function(btnArg)
-                if not btnArg then return end
-                local btn = btnArg
-                btn.gseSlot = slotIndex
-                btn:SetText(L["Press a key..."])
-                if btn.SetPropagateKeyboardInput then btn:SetPropagateKeyboardInput(false) end
-                btn:EnableKeyboard(true)
-                btn:SetScript("OnKeyDown", onKeyDown)
-            end,
-            "",
-            false
-        )
-        slotInits[i] = init
-        layout:AddInitializer(init)
-    end
-
 
     -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
     ----------------------------------------------------------------------------------------------------------
@@ -260,15 +448,7 @@ if GSE.GameMode >= 11 then
     -- Vehicle/Skyriding bar
     local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
     VehicleBar:SetAttribute("actionpage", 1)
-    -- Do NOT :Hide() this frame. Secure-handler binding overrides set via
-    -- self:SetBindingClick(true, ...) inside the _onattributechanged snippet
-    -- are tied to the handler frame's visibility — hiding it undoes the
-    -- override immediately, so even though vehicletype="vehicle" (verified
-    -- via /dump on a Skyriding mount 2026-06-01) and the for-loop runs,
-    -- the user's "1" key keeps firing the original binding instead of
-    -- CLICK GSE_VehicleButton1. The VehicleBar has zero visible content
-    -- (the action buttons inside it are individually :Hide()'d below) so
-    -- leaving the container frame Shown produces no visual artefact.
+    VehicleBar:Hide()
 
     -- Creating buttons
     local VehicleButton = {}
@@ -316,16 +496,7 @@ if GSE.GameMode >= 11 then
     GSE.UpdateVehicleBar()
     -- Triggers
     VehicleBar:SetAttribute(
-        -- Leading underscore matters. Dropping it (the change at a32c1c64
-        -- "Second Cut removing AceGUI Dependency") broke skyriding /
-        -- vehicle / petbattle key bindings — BoKamil reported it 2026-06-01;
-        -- downgrade to pre-a32c1c64 on the same client restored function,
-        -- proving it's our code, not a Blizzard-side change. The snippet
-        -- below uses secure restricted-environment methods (SetBindingClick)
-        -- so the attribute name has to be the one the secure infrastructure
-        -- listens to; the unprefixed name isn't it. Do not drop the
-        -- underscore again.
-        "_onattributechanged",
+        "onattributechanged",
         [[
   -- Actionpage update
   if name == "page" then
@@ -352,38 +523,6 @@ if GSE.GameMode >= 11 then
   end
 ]]
     )
-
-    -- Parallel Lua-side override path. Verified 2026-06-01 with Tim:
-    -- the secure handler above runs (vehicletype attribute does flip to
-    -- "vehicle" on a Skyriding mount per /dump), but its
-    -- self:SetBindingClick(true, ...) calls aren't actually overriding
-    -- the user's existing binding ("1" continued to fire the GSE sequence
-    -- it was already bound to, not GSE_VehicleButton1). Driving the same
-    -- override via SetOverrideBindingClick from Lua side on the same
-    -- attribute change, with the VehicleBar as the owner so it auto-
-    -- clears on dismount. Guarded by InCombatLockdown — secure binding
-    -- changes are blocked in combat anyway.
-    VehicleBar:HookScript("OnAttributeChanged", function(self, name, value)
-        if name ~= "vehicletype" then return end
-        if InCombatLockdown and InCombatLockdown() then return end
-        if value == "vehicle" then
-            for slotStr, key in pairs(GSEOptions.SkyRidingBinds or {}) do
-                local slot = tonumber(slotStr)
-                if slot and key and key ~= "" then
-                    SetOverrideBindingClick(self, true, key, "GSE_VehicleButton" .. slot)
-                end
-            end
-        elseif value == "petbattle" then
-            for slotStr, key in pairs(GSEOptions.SkyRidingBinds or {}) do
-                local slot = tonumber(slotStr)
-                if slot and slot <= 6 and key and key ~= "" then
-                    SetOverrideBindingClick(self, true, key, "GSE_PetBattleButton" .. slot)
-                end
-            end
-        elseif value == "none" then
-            ClearOverrideBindings(self)
-        end
-    end)
 
     -- Actionpage trigger
     RegisterAttributeDriver(VehicleBar, "page", "[vehicleui] A; [possessbar] B; [overridebar] C; [bonusbar:5] D; E")

@@ -3,7 +3,7 @@
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Quality of Life Updates|r
 ## Notes: GSE Quality of Life
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-18-g657a37a-PatronBuild
 ## Dependencies: GSE_Utils GSE_Options
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
 ## Category-enUS: Combat

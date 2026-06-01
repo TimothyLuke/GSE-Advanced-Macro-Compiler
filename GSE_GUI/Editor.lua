@@ -4,21 +4,6 @@ local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
--- Form-field label colour. The GSE modern theme paints labels in the
--- KEYWORD accent (gold/yellow by default). When EllesmereUI is driving
--- the look we want neutral white so the labels match the rest of EUI's
--- panel typography. Centralised so every label site stays consistent.
-local function keywordColor()
-    -- GSE.GUIGetColour returns r, g, b as separate values (not a table).
-    -- :SetColor unpacks those into :SetTextColor(r, g, b[, a]), so we must
-    -- return multiple values too — a table here would arrive as r=<table>
-    -- at SetTextColor and crash.
-    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
-        return 1, 1, 1, 1
-    end
-    return GSE.GUIGetColour(GSEOptions.KEYWORD)
-end
-
 local FRAME_DISPLACEMENT = 30
 local DEFAULT_HEIGHT = 800
 local DEFAULT_WIDTH = 800
@@ -2382,7 +2367,7 @@ function GSE.CreateEditor()
     minWidgetExpand:RegisterForClicks("LeftButtonUp")
     minWidgetExpand:SetFrameLevel((minWidgetClose:GetFrameLevel() or minWidgetBackdrop:GetFrameLevel()) + 1)
     minWidgetExpand:SetPoint("RIGHT", minWidgetClose, "LEFT", 2, 0)
-    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
+    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
     minWidgetExpand:SetNormalTexture(minWidgetExpandTexture)
     minWidgetExpand:SetPushedTexture(minWidgetExpandTexture)
     minWidgetExpand:SetHighlightTexture(minWidgetExpandTexture, minWidgetUsesModern and "BLEND" or "ADD")
@@ -2519,7 +2504,7 @@ function GSE.CreateEditor()
         minimizeBtn:SetPoint("TOPRIGHT", editframe.frame, "TOPRIGHT", -34, -5)
     end
     minimizeBtn:SetFrameLevel(((editframe.closebutton and editframe.closebutton.GetFrameLevel and editframe.closebutton:GetFrameLevel()) or editframe.frame:GetFrameLevel() or 0) + 2)
-    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
+    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
     minimizeBtn:SetNormalTexture(minimizeBtnTexture)
     minimizeBtn:SetPushedTexture(minimizeBtnTexture)
     minimizeBtn:SetHighlightTexture(minimizeBtnTexture, minimizeBtnUsesModern and "BLEND" or "ADD")
@@ -2818,7 +2803,7 @@ function GSE.CreateEditor()
         resetLabel:SetWidth(110)
         resetLabel:SetHeight(24)
         if resetLabel.SetJustifyV then resetLabel:SetJustifyV("MIDDLE") end
-        resetLabel:SetColor(keywordColor())
+        resetLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 
         local combatResetDropdown = UI:Create("Dropdown")
         combatResetDropdown:SetLabel("")
@@ -4941,7 +4926,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(keywordColor())
+			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -4950,7 +4935,7 @@ function GSE.CreateEditor()
 			macroTextLabel:SetText("")
 			macroTextLabel:SetWidth(macroRailWidth)
 			macroTextLabel:SetHeight(18)
-			macroTextLabel:SetColor(keywordColor())
+			macroTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 			if macroTextLabel.SetJustifyH then macroTextLabel:SetJustifyH("LEFT") end
 			if macroTextLabel.SetJustifyV then macroTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5078,7 +5063,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(keywordColor())
+			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -5087,7 +5072,7 @@ function GSE.CreateEditor()
 			actionTextLabel:SetText("")
 			actionTextLabel:SetWidth(macroRailWidth)
 			actionTextLabel:SetHeight(4)
-			actionTextLabel:SetColor(keywordColor())
+			actionTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 			if actionTextLabel.SetJustifyH then actionTextLabel:SetJustifyH("LEFT") end
 			if actionTextLabel.SetJustifyV then actionTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5339,7 +5324,7 @@ function GSE.CreateEditor()
                 stepRowLabel:SetText("Step FN")
                 stepRowLabel:SetWidth(loopControlLabelWidth)
                 stepRowLabel:SetHeight(24)
-                stepRowLabel:SetColor(keywordColor())
+                stepRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
                 if stepRowLabel.SetJustifyV then stepRowLabel:SetJustifyV("MIDDLE") end
                 stepRow:AddChild(stepRowLabel)
                 stepRow:AddChild(stepdropdown)
@@ -5356,7 +5341,7 @@ function GSE.CreateEditor()
                 repeatRowLabel:SetText(L["Repeat"])
                 repeatRowLabel:SetWidth(loopControlLabelWidth)
                 repeatRowLabel:SetHeight(24)
-                repeatRowLabel:SetColor(keywordColor())
+                repeatRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
                 if repeatRowLabel.SetJustifyV then repeatRowLabel:SetJustifyV("MIDDLE") end
                 repeatRow:AddChild(repeatRowLabel)
                 repeatRow:AddChild(looplimit)
@@ -5496,7 +5481,7 @@ function GSE.CreateEditor()
                 tlabel:SetText("True")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 tlabel:SetFontObject(GameFontNormalLarge)
-                tlabel:SetColor(keywordColor())
+                tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
 
                 local trueContainer = UI:Create("SimpleGroup")
                 trueContainer:SetLayout("Flow")
@@ -5534,7 +5519,7 @@ function GSE.CreateEditor()
                 flabel:SetText("False")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 flabel:SetFontObject(GameFontNormalLarge)
-                flabel:SetColor(keywordColor())
+                flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
                 local falsecontainer = UI:Create("SimpleGroup")
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")
@@ -6550,101 +6535,23 @@ function GSE.CreateEditor()
             return true
         end
 
-        local function KeyboardFocusIsTextEntry()
-            local keyboardFocus
-            if GetCurrentKeyBoardFocus then
-                keyboardFocus = GetCurrentKeyBoardFocus()
-            elseif GetCurrentKeyboardFocus then
-                keyboardFocus = GetCurrentKeyboardFocus()
-            end
-            return keyboardFocus ~= nil
-        end
-
-        local function SetEditorKeyboardPropagation(propagate)
-            if not (editframe.frame and editframe.frame.SetPropagateKeyboardInput) then return end
-            if GSE.GUI.SetPropagateKeyboardSafe then
-                GSE.GUI.SetPropagateKeyboardSafe(editframe.frame, propagate)
-            else
-                editframe.frame:SetPropagateKeyboardInput(propagate)
-            end
-        end
-
-        local function MacroMoveKeyIsBoundToWoW(key)
-            if not GetBindingAction then return false end
-            local action = GetBindingAction(key, true)
-            if GSE.isEmpty(action) then action = GetBindingAction(key) end
-            return not GSE.isEmpty(action)
-        end
-
-        -- Move the focus/selection to the previous (-1) or next (+1) block in
-        -- visual order, without reordering. Walks the render-order list so it
-        -- follows exactly what is on screen (including inside If branches / loops).
-        local function NavigateSelectedMacroBlock(direction)
-            local navOrder = editframe.macroBlockNavOrder
-            if type(navOrder) ~= "table" or #navOrder == 0 then return false end
-            local selectedPath =
-                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
-                    or nil
-            if not selectedPath or #selectedPath == 0 then return false end
-
-            local currentIndex
-            for index, navPath in ipairs(navOrder) do
-                if MacroBlockPathsEqual(navPath, selectedPath) then
-                    currentIndex = index
-                    break
-                end
-            end
-            if not currentIndex then return false end
-
-            local targetIndex = currentIndex + direction
-            if targetIndex < 1 or targetIndex > #navOrder then
-                BlinkSelectedMacroBlock()   -- already at the top/bottom block
-                return false
-            end
-
-            if editframe.gseSelectMacroBlockPath then
-                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
-            end
-            return true
-        end
-
-        local function HandleMacroBlockMoveKey(_, key)
-            SetEditorKeyboardPropagation(true)
-            if key ~= "UP" and key ~= "DOWN" then return end
-            if MacroMoveKeyIsBoundToWoW(key) then return end
-            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
-            if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
-            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
-
-            SetEditorKeyboardPropagation(false)
-            local direction = key == "UP" and -1 or 1
-            if IsShiftKeyDown() then
-                MoveSelectedMacroBlock(direction)        -- Shift + arrow: reorder the block
-            else
-                NavigateSelectedMacroBlock(direction)    -- arrow: move focus to the adjacent block
-            end
-        end
-
-        if editframe.frame and editframe.frame.EnableKeyboard and editframe.frame.SetPropagateKeyboardInput then
-            editframe.frame:SetScript("OnKeyDown", HandleMacroBlockMoveKey)
-            editframe.frame:SetScript("OnKeyUp", function()
-                SetEditorKeyboardPropagation(true)
-            end)
-            -- Enable capture + propagation together, deferred out of combat so we
-            -- never call the protected SetPropagateKeyboardInput in combat nor
-            -- swallow the player's keybinds (patrons may open the editor mid-combat).
-            local function enableMacroBlockKeys()
-                if editframe.frame and editframe.frame.EnableKeyboard then editframe.frame:EnableKeyboard(true) end
-                if editframe.frame and editframe.frame.SetPropagateKeyboardInput then
-                    editframe.frame:SetPropagateKeyboardInput(true)
-                end
-            end
-            if GSE.GUI.RunWhenCombatSafe then
-                GSE.GUI.RunWhenCombatSafe(enableMacroBlockKeys)
-            else
-                enableMacroBlockKeys()
-            end
-        end
+        -- Arrow-key block handling has been REMOVED.
+        --   * plain Up/Down previously moved the selection cursor through the list
+        --   * Shift+Up/Down previously reordered the focused block
+        -- The arrow keys are bound to character movement in WoW by default, and the
+        -- old handler called SetPropagateKeyboardInput(false) when it acted on an
+        -- arrow, which CONSUMED the key and stole the player's movement while the
+        -- editor was open. Blocks are reordered with the Move Up / Move Down buttons
+        -- and the cursor is moved by clicking a block, so no keyboard shortcut is
+        -- needed.
+        --
+        -- Nothing here registers an OnKeyDown handler or enables keyboard capture
+        -- on the editor frame, so the arrow keys (and every other key) propagate to
+        -- the game by default and character movement works normally. The Ctrl+Z
+        -- undo subsystem that used to capture this frame's keyboard has also been
+        -- removed, so there is no frame-level keyboard handler here at all.
+        -- (MoveSelectedMacroBlock above is still used by the Move Up / Move Down
+        -- buttons; the cursor is moved by clicking a block.)
 
         local moveUpButton = UI:Create("Icon")
         local moveDownButton = UI:Create("Icon")
@@ -7140,7 +7047,6 @@ function GSE.CreateEditor()
             end
 
             spellEditBox:SetText(spelltext)
-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, spellEditBox) end
 
             spellEditBox:SetCallback(
                 "OnTextChanged",
@@ -7211,7 +7117,6 @@ function GSE.CreateEditor()
             macroEditBox:SetNumLines(5)
             macroEditBox:SetRelativeWidth(0.5)
             macroEditBox:SetText(spelltext)
-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, macroEditBox) end
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
             macroEditBox:SetCallback(
@@ -7299,7 +7204,6 @@ function GSE.CreateEditor()
     GSE.GUI.SetupKeybind(editframe)
     GSE.GUI.SetupMacro(editframe)
     GSE.GUI.SetupTree(editframe)
-    if GSE.GUI.SetupUndo then GSE.GUI.SetupUndo(editframe) end
 
     function editframe:remoteSequenceUpdated(seqName)
         if seqName == editframe.SequenceName then

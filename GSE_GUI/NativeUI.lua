@@ -424,21 +424,7 @@ local GSE_MODERN_CLASS_COLORS = {
     WARLOCK = {0.53, 0.53, 0.93, 1},
     WARRIOR = {0.78, 0.61, 0.43, 1}
 }
--- Returns true when an external skin provider (ElvUI / EllesmereUI) is
--- driving the look. Both `shouldUseElvUISkin` (gates the apply*ElvUI*
--- helpers) AND `getNormalAccentColor` (gates the apply*NormalAccent*
--- helpers) check this; the modern theme has two colour modes (ElvUI-style
--- and normal-accent), so we have to step aside from both, not just one.
-local function hasExternalSkinProvider()
-    if GSE.Skin and GSE.Skin.providerName then
-        local provider = GSE.Skin.providerName
-        if provider == "ElvUI" or provider == "EllesmereUI" then return true end
-    end
-    return false
-end
-
 local function shouldUseElvUISkin()
-    if hasExternalSkinProvider() then return false end
     if GSE.ShouldUseModernSkin then
         return GSE.ShouldUseModernSkin()
     end
@@ -474,7 +460,6 @@ local function getModernClassColor(alpha)
 end
 
 local function getNormalAccentColor(alpha)
-    if hasExternalSkinProvider() then return nil end
     if shouldUseElvUISkin() then return nil end
     return getModernClassColor(alpha or 1)
 end
@@ -570,52 +555,22 @@ end
 local function anchorModernSlimScrollBar(scrollbar, anchorFrame, rightOffset, topInset, bottomInset)
     if not (scrollbar and anchorFrame and scrollbar.ClearAllPoints and scrollbar.SetPoint) then return end
 
-    -- Reparent to the anchor frame. UIPanelScrollFrameTemplate creates
-    -- scrollFrame.ScrollBar as a CHILD of scrollFrame. createScrollFrame
-    -- calls scrollFrame:SetClipsChildren(true), which clips child rendering
-    -- to scrollFrame's rectangle. Since the slim scrollbar is anchored
-    -- outside scrollFrame's right edge (in the scrollBarReserve gap), it
-    -- gets clipped to nothing and renders invisible. Reparenting to the
-    -- anchor frame (the outer wrapper) takes the scrollbar out of the
-    -- clip region. Inner text-box scrollFrames don't SetClipsChildren so
-    -- this is a no-op there.
-    if scrollbar.SetParent and scrollbar.GetParent and scrollbar:GetParent() ~= anchorFrame then
-        scrollbar:SetParent(anchorFrame)
-    end
     scrollbar:ClearAllPoints()
     scrollbar:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT", rightOffset or 0, -(topInset or 0))
     scrollbar:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT", rightOffset or 0, bottomInset or 0)
 end
 
 local function setModernSlimScrollBarState(scrollbar, state)
-    if not scrollbar then return end
-    if not (shouldUseElvUISkin() or hasExternalSkinProvider()) then return end
+    if not (scrollbar and shouldUseElvUISkin()) then return end
 
     local thumb = scrollbar.GSEModernScrollBarThumb or getScrollBarThumb(scrollbar)
-
-    -- Pull the thumb accent from EllesmereUI.ELLESMERE_GREEN (the user's
-    -- chosen accent) when EUI is driving the look; fall back to the modern
-    -- skin's class colour otherwise. Without this branch the scrollbars
-    -- showed up blue against EUI's accent green / class teal.
-    local function euiAccent(alpha)
-        local EUI = _G.EllesmereUI
-        if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
-            local c = EUI.ELLESMERE_GREEN
-            return {c.r or 0, c.g or 0.55, c.b or 0.55, alpha}
-        end
-        return nil
-    end
-
-    local thumbColor = (hasExternalSkinProvider() and euiAccent(0.86))
-        or getModernClassColor(0.86) or {0.00, 0.55, 0.90, 0.86}
+    local thumbColor = getModernClassColor(0.86) or {0.00, 0.55, 0.90, 0.86}
     local trackColor = {0.36, 0.38, 0.40, 0.68}
     if state == "hover" then
-        thumbColor = (hasExternalSkinProvider() and euiAccent(0.98))
-            or getModernClassColor(0.98) or {0.00, 0.62, 1.00, 0.98}
+        thumbColor = getModernClassColor(0.98) or {0.00, 0.62, 1.00, 0.98}
         trackColor = {0.44, 0.46, 0.48, 0.80}
     elseif state == "active" then
-        thumbColor = (hasExternalSkinProvider() and euiAccent(1))
-            or getModernClassColor(1) or {0.00, 0.68, 1.00, 1}
+        thumbColor = getModernClassColor(1) or {0.00, 0.68, 1.00, 1}
         trackColor = {0.50, 0.52, 0.54, 0.88}
     end
 
@@ -624,13 +579,7 @@ local function setModernSlimScrollBarState(scrollbar, state)
 end
 
 local function applyModernSlimScrollBar(scrollbar, anchorFrame, rightOffset, topInset, bottomInset)
-    -- Apply the slim scrollbar look under the modern skin OR an external
-    -- skin provider — both want minimal scrollbar chrome over Blizzard's
-    -- gold textured default. Without this, EUI sessions left scrollbars
-    -- either invisible (regions alpha-stripped elsewhere) or in Blizzard
-    -- gold which clashed with the dark editor.
-    if not scrollbar then return end
-    if not (shouldUseElvUISkin() or hasExternalSkinProvider()) then return end
+    if not (scrollbar and shouldUseElvUISkin()) then return end
 
     suppressModernScrollBarButton(scrollbar.ScrollUpButton or getNamedChild(scrollbar, "ScrollUpButton"))
     suppressModernScrollBarButton(scrollbar.ScrollDownButton or getNamedChild(scrollbar, "ScrollDownButton"))
@@ -690,11 +639,6 @@ local function applyModernSlimScrollBar(scrollbar, anchorFrame, rightOffset, top
 
     setModernSlimScrollBarState(scrollbar, (scrollbar.IsMouseOver and scrollbar:IsMouseOver()) and "hover" or "normal")
 end
-
--- Public entry point so files outside NativeUI (e.g. DebugWindow) can route
--- their UIPanelScrollFrameTemplate scrollbars through the same slim painter
--- the editor / multi-line editboxes use. Same signature as the local helper.
-UI.ApplyModernSlimScrollBar = applyModernSlimScrollBar
 
 local function ensureElvUIWindowBand(frame, key, pointA, relativePointA, xA, yA, pointB, relativePointB, xB, yB, height, bg, border)
     if not frame then return end
@@ -1036,17 +980,6 @@ end
 local function applyNormalAccentWindowSkin(frame)
     if not frame then return end
 
-    -- When an external skin provider is driving the look, defer to it so
-    -- the host UI's frame chrome (EUI dark fill + accent border) takes
-    -- the place of our own accent-overlay border AND the Blizzard panel
-    -- template's gold chrome that would otherwise show through.
-    if hasExternalSkinProvider() and GSE.Skin and GSE.Skin.Frame then
-        if frame.GSENormalAccentOuterBorder then frame.GSENormalAccentOuterBorder:Hide() end
-        if frame.GSENormalAccentBorderOverlay then frame.GSENormalAccentBorderOverlay:Hide() end
-        GSE.Skin.Frame(frame)
-        return
-    end
-
     local accent = getNormalAccentColor(1)
     if accent then
         if frame.GSENormalAccentOuterBorder then frame.GSENormalAccentOuterBorder:Hide() end
@@ -1111,16 +1044,6 @@ local function skinPanel(frame)
         applyElvUIBackdrop(frame, ELVUI_SKIN.panelBg, ELVUI_SKIN.border)
         return
     end
-    -- Under an external skin provider (EUI / ElvUI), delegate frame painting
-    -- to the provider so GSE panels match the host UI's chrome. Otherwise we'd
-    -- paint Blizzard's UI-DialogBox-Background + Tooltips-Border textures
-    -- below, which is the gold ornate frame that visibly clashes with EUI's
-    -- flat dark panels (the tree sidebar / debugger window were both stuck
-    -- on this fallback under EUI before this branch existed).
-    if hasExternalSkinProvider() and GSE.Skin and GSE.Skin.Frame then
-        GSE.Skin.Frame(frame)
-        return
-    end
     applyBackdrop(
         frame,
         {
@@ -1139,10 +1062,6 @@ end
 local function skinInset(frame)
     if shouldUseElvUISkin() then
         applyElvUIBackdrop(frame, ELVUI_SKIN.insetBg, ELVUI_SKIN.mutedBorder)
-        return
-    end
-    if hasExternalSkinProvider() and GSE.Skin and GSE.Skin.InsetFrame then
-        GSE.Skin.InsetFrame(frame)
         return
     end
     applyBackdrop(
@@ -1282,7 +1201,7 @@ local function autoHeightGroup(child)
 end
 
 local function setChildSize(child, width, height)
-    if width and width > 0 then
+    if type(width) == "number" and width > 0 then
         child.width = width
         child.frame:SetWidth(width)
         if child.OnWidthSet then child:OnWidthSet(width) end
@@ -1300,19 +1219,26 @@ local function actualChildHeight(child, fallback)
 end
 
 local function childWidth(parent, child, contentWidth)
-    if child.fullWidth then
+    -- Defensive: treat AceGUI's SetFullWidth-equivalent string "fill" the
+    -- same as our fullWidth flag. AceGUI widgets store width = "fill"
+    -- directly on the table; if any sneaks into a NativeUI container,
+    -- passing the string straight to frame:SetWidth (Blizzard API that
+    -- wants a number) crashes the whole layout pass. Same rule for height.
+    if child.fullWidth or child.width == "fill" then
         return math.max(1, contentWidth - (STYLE.listPadX * 2))
     elseif child.relativeWidth then
         return math.max(1, (contentWidth - (STYLE.listPadX * 2)) * child.relativeWidth)
     end
-    return child.width or safeWidth(child.frame, 200)
+    if type(child.width) == "number" then return child.width end
+    return safeWidth(child.frame, 200)
 end
 
 local function childHeight(parent, child, contentHeight)
-    if child.fullHeight then
+    if child.fullHeight or child.height == "fill" then
         return math.max(1, contentHeight - (STYLE.flowPadY * 2))
     end
-    return child.height or safeHeight(child.frame, STYLE.controlHeight)
+    if type(child.height) == "number" then return child.height end
+    return safeHeight(child.frame, STYLE.controlHeight)
 end
 
 local function normalizeLayout(layout)
@@ -1537,6 +1463,14 @@ function baseMethods:Fire(event, ...)
 end
 
 function baseMethods:SetWidth(width)
+    -- Mirror AceGUI semantics: SetWidth("fill") == SetFullWidth(true). Lets
+    -- mixed AceGUI/NativeUI parent trees compose without crashing in the
+    -- layout pass that follows.
+    if width == "fill" then
+        self.fullWidth = true
+        if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
+        return
+    end
     self.width = width
     self.frame:SetWidth(width)
     if self.OnWidthSet then self:OnWidthSet(width) end
@@ -2538,12 +2472,6 @@ local function createEditBox()
         hideFrameTextures(editBox)
         ensureElvUIChrome(frame, "GSEElvUIEditChrome", editBox, ELVUI_SKIN.insetBg, ELVUI_SKIN.mutedBorder)
         label:SetTextColor(unpack(ELVUI_SKIN.fieldLabelText))
-    elseif hasExternalSkinProvider() and GSE.Skin and GSE.Skin.PaintBodyText then
-        -- External provider (EUI/ElvUI) is active. The label otherwise
-        -- inherits GameFontNormalSmall's gold default, which clashes with
-        -- the host UI's neutral text. Paint TEXT_WHITE so the label looks
-        -- like every other EUI-panel label.
-        GSE.Skin.PaintBodyText(label, 1, 1, 1, 1)
     end
 
     local widget = wrap("EditBox", frame)
@@ -2650,18 +2578,6 @@ local function createMultiLineEditBox()
     if shouldUseElvUISkin() then
         applyElvUIBackdrop(scrollBG, ELVUI_SKIN.insetBg, ELVUI_SKIN.mutedBorder)
         label:SetTextColor(unpack(ELVUI_SKIN.fieldLabelText))
-    elseif hasExternalSkinProvider() and GSE.Skin then
-        if GSE.Skin.PaintBodyText then GSE.Skin.PaintBodyText(label, 1, 1, 1, 1) end
-        -- Pure black fill, NO inner EUI border — the outer panel's border
-        -- already defines the editbox edge, and an additional accent
-        -- border on scrollBG reads as a faint inner stripe.
-        if scrollBG.SetBackdrop then
-            scrollBG:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8X8",
-                insets = {left = 0, right = 0, top = 0, bottom = 0},
-            })
-            scrollBG:SetBackdropColor(0, 0, 0, 1)
-        end
     end
 
     local scrollFrame = CreateFrame("ScrollFrame", nextName("MultiLineScroll"), frame, "UIPanelScrollFrameTemplate")
@@ -2798,19 +2714,10 @@ local function createCheckBox()
     check:SetScript("OnLeave", function(self) setElvUITextButtonHover(self, false); setElvUICheckBoxHover(self, false); widget:Fire("OnLeave") end)
     applyElvUICheckBoxSkin(check, text)
     applyNormalAccentCheckBoxText(check, text)
-    -- Under an external skin provider both apply* helpers above bail out,
-    -- leaving the checkbox text at UICheckButtonTemplate's gold default.
-    -- Paint TEXT_WHITE so the label matches the rest of the EUI panel.
-    if hasExternalSkinProvider() and GSE.Skin and GSE.Skin.PaintBodyText then
-        GSE.Skin.PaintBodyText(text, 1, 1, 1, 1)
-    end
 
     function widget:SetLabel(value)
         text:SetText(textValue(value))
         if not self.disabled then applyNormalAccentCheckBoxText(check, text) end
-        if hasExternalSkinProvider() and GSE.Skin and GSE.Skin.PaintBodyText then
-            GSE.Skin.PaintBodyText(text, 1, 1, 1, 1)
-        end
     end
 
     function widget:SetWidth(width)
@@ -3035,6 +2942,24 @@ local function createScrollFrame()
     widget.content = content
     widget.scrollframe = scrollFrame
     widget.scrollbar = getScrollBar(scrollFrame)
+    if widget.scrollbar then
+        -- UIPanelScrollFrameTemplate parents its scrollbar to the inner scroll
+        -- frame and anchors it just outside that frame's right edge. Because the
+        -- scroll frame has SetClipsChildren(true) (set above, to keep the macro
+        -- content bounded), that clip mask was cutting the scrollbar away -- which
+        -- is why the editor looked like it had no main scrollbar. applyModernSlim-
+        -- ScrollBar only re-anchors under the ElvUI skin, so on the default skin
+        -- nothing repositioned it. Re-parent the bar onto the OUTER frame (not
+        -- clipped) and anchor it in the reserved right-hand gutter so it renders.
+        widget.scrollbar:SetParent(frame)
+        widget.scrollbar:ClearAllPoints()
+        widget.scrollbar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -STYLE.padXXS, -STYLE.scrollBarWidth)
+        widget.scrollbar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -STYLE.padXXS, STYLE.scrollBarWidth)
+        widget.scrollbar:SetWidth(STYLE.scrollBarWidth)
+        if widget.scrollbar.SetFrameLevel and scrollFrame.GetFrameLevel then
+            widget.scrollbar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
+        end
+    end
     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
     widget.localstatus = {scrollvalue = 0}
     widget.scrollBarShown = false
@@ -3230,8 +3155,6 @@ local function createDropdown()
     label:SetJustifyH("LEFT")
     if shouldUseElvUISkin() then
         label:SetTextColor(unpack(ELVUI_SKIN.fieldLabelText))
-    elseif hasExternalSkinProvider() and GSE.Skin and GSE.Skin.PaintBodyText then
-        GSE.Skin.PaintBodyText(label, 1, 1, 1, 1)
     end
 
     local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
@@ -4319,21 +4242,6 @@ end
 
 local function applyElvUITreeToggleState(button, active)
     if not (button and button.toggle) then return end
-    -- Under an external provider (ElvUI / EllesmereUI) the orange/pink tint
-    -- of expand.png/collapse.png clashes with the host UI's neutral palette.
-    -- Same treatment as the GSE modern skin's expand toggle: desaturate the
-    -- texture and tint it neutral, brightening on hover.
-    if hasExternalSkinProvider() then
-        if button.toggle.SetDesaturated then button.toggle:SetDesaturated(true) end
-        if button.toggle.SetVertexColor then
-            if active then
-                button.toggle:SetVertexColor(1, 1, 1, 1)
-            else
-                button.toggle:SetVertexColor(0.7, 0.7, 0.7, 0.9)
-            end
-        end
-        return
-    end
     if shouldUseElvUISkin() then
         if active then
             if button.toggle.SetDesaturated then button.toggle:SetDesaturated(false) end
@@ -4477,20 +4385,7 @@ local function updateTreeButton(button, line, selected, expanded)
     button.disabled = line.disabled
     button.selected = selected
 
-    -- Selection highlight: EUI / ElvUI panels paint a subtle accent-coloured
-    -- band behind the currently-selected list item (e.g. inventory "All Items").
-    -- Match that here when an external skin provider is active.
-    if selected and hasExternalSkinProvider() then
-        local euiTable = _G.EllesmereUI
-        local r, g, b = 0.2, 0.5, 0.6
-        if type(euiTable) == "table" and type(euiTable.ELLESMERE_GREEN) == "table" then
-            local c = euiTable.ELLESMERE_GREEN
-            r, g, b = c.r or r, c.g or g, c.b or b
-        end
-        button.bg:SetColorTexture(r, g, b, 0.22)
-    else
-        button.bg:SetColorTexture(0, 0, 0, 0)
-    end
+    button.bg:SetColorTexture(0, 0, 0, 0)
     button.text:SetFontObject(level <= 2 and "GameFontNormalLarge" or "GameFontHighlight")
     local lineText = textValue(line.text)
     button.text:SetText(line.disabled and ("|cff808080" .. lineText .. FONT_COLOR_CODE_CLOSE) or lineText)

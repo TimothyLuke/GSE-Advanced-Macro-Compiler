@@ -1,0 +1,1305 @@
+##############################################################################
+## GSE_1924 — MERGED UNIFIED DIFF (all 9 fix bundles)
+## Generated: 2026-06-01 22:45
+##
+## Sections are in chronological order. Each per-feature block is the
+## original combined/feature .diff, byte-for-byte (CRLF preserved), so the
+## hunks remain accurate. The '##' banner lines are not part of any hunk;
+## 'patch -p1 --binary' skips them and still applies each '--- a/ +++ b/' block.
+##
+## CONTENTS
+##   1. Scrollbar (12:29 PM) -> GSE_GUI/NativeUI.lua
+##   2. ArrowKeys (12:47 PM) -> GSE_GUI/Editor.lua
+##   3. ReloadCmd (12:55 PM) -> GSE_Utils/Utils.lua
+##   4. RemoveCtrlZ (1:04 PM) -> GSE_GUI/Editor.lua, GSE_GUI/GSE_GUI.toc, /dev/null
+##   5. MultiEditor (1:20 PM) -> GSE_Utils/Utils.lua
+##   6. toolbar-toggle (7:06 PM) -> GSE_Options/Options.lua
+##   7. error-muting (7:25 PM) -> GSE/API/InitialOptions.lua, GSE/API/Events.lua, GSE_Options/Options.lua
+##   8. aceconsole-removal (8:30 PM) -> GSE/embeds.xml, GSE/API/Init.lua, GSE/API/Native.lua
+##   9. all-fixes (8:54 PM) -> GSE/embeds.xml, GSE/API/Init.lua, GSE/API/Native.lua, GSE/API/InitialOptions.lua, GSE/API/Events.lua, GSE/API/Storage.lua, GSE_Options/Options.lua
+##############################################################################
+
+
+##############################################################################
+## [1] Scrollbar  —  12:29 PM
+## source: GSE_1924_Scrollbar-0612026-1229/Changes GSE_1924_Scrollbar-0612026-1229/DIFF/GSE_1924_Scrollbar-0612026-1229.combined.diff
+##############################################################################
+--- a/GSE_GUI/NativeUI.lua
++++ b/GSE_GUI/NativeUI.lua
+@@ -2942,6 +2942,24 @@
+     widget.content = content
+     widget.scrollframe = scrollFrame
+     widget.scrollbar = getScrollBar(scrollFrame)
++    if widget.scrollbar then
++        -- UIPanelScrollFrameTemplate parents its scrollbar to the inner scroll
++        -- frame and anchors it just outside that frame's right edge. Because the
++        -- scroll frame has SetClipsChildren(true) (set above, to keep the macro
++        -- content bounded), that clip mask was cutting the scrollbar away -- which
++        -- is why the editor looked like it had no main scrollbar. applyModernSlim-
++        -- ScrollBar only re-anchors under the ElvUI skin, so on the default skin
++        -- nothing repositioned it. Re-parent the bar onto the OUTER frame (not
++        -- clipped) and anchor it in the reserved right-hand gutter so it renders.
++        widget.scrollbar:SetParent(frame)
++        widget.scrollbar:ClearAllPoints()
++        widget.scrollbar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -STYLE.padXXS, -STYLE.scrollBarWidth)
++        widget.scrollbar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -STYLE.padXXS, STYLE.scrollBarWidth)
++        widget.scrollbar:SetWidth(STYLE.scrollBarWidth)
++        if widget.scrollbar.SetFrameLevel and scrollFrame.GetFrameLevel then
++            widget.scrollbar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
++        end
++    end
+     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
+     widget.localstatus = {scrollvalue = 0}
+     widget.scrollBarShown = false
+
+##############################################################################
+## [2] ArrowKeys  —  12:47 PM
+## source: GSE_1924_ArrowKeys-0612026-1247/Changes GSE_1924_ArrowKeys-0612026-1247/DIFF/GSE_1924_ArrowKeys-0612026-1247.combined.diff
+##############################################################################
+--- a/GSE_GUI/Editor.lua
++++ b/GSE_GUI/Editor.lua
+@@ -6535,101 +6535,24 @@
+             return true
+         end
+ 
+-        local function KeyboardFocusIsTextEntry()
+-            local keyboardFocus
+-            if GetCurrentKeyBoardFocus then
+-                keyboardFocus = GetCurrentKeyBoardFocus()
+-            elseif GetCurrentKeyboardFocus then
+-                keyboardFocus = GetCurrentKeyboardFocus()
+-            end
+-            return keyboardFocus ~= nil
+-        end
+-
+-        local function SetEditorKeyboardPropagation(propagate)
+-            if not (editframe.frame and editframe.frame.SetPropagateKeyboardInput) then return end
+-            if GSE.GUI.SetPropagateKeyboardSafe then
+-                GSE.GUI.SetPropagateKeyboardSafe(editframe.frame, propagate)
+-            else
+-                editframe.frame:SetPropagateKeyboardInput(propagate)
+-            end
+-        end
+-
+-        local function MacroMoveKeyIsBoundToWoW(key)
+-            if not GetBindingAction then return false end
+-            local action = GetBindingAction(key, true)
+-            if GSE.isEmpty(action) then action = GetBindingAction(key) end
+-            return not GSE.isEmpty(action)
+-        end
+-
+-        -- Move the focus/selection to the previous (-1) or next (+1) block in
+-        -- visual order, without reordering. Walks the render-order list so it
+-        -- follows exactly what is on screen (including inside If branches / loops).
+-        local function NavigateSelectedMacroBlock(direction)
+-            local navOrder = editframe.macroBlockNavOrder
+-            if type(navOrder) ~= "table" or #navOrder == 0 then return false end
+-            local selectedPath =
+-                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
+-                    or nil
+-            if not selectedPath or #selectedPath == 0 then return false end
+-
+-            local currentIndex
+-            for index, navPath in ipairs(navOrder) do
+-                if MacroBlockPathsEqual(navPath, selectedPath) then
+-                    currentIndex = index
+-                    break
+-                end
+-            end
+-            if not currentIndex then return false end
+-
+-            local targetIndex = currentIndex + direction
+-            if targetIndex < 1 or targetIndex > #navOrder then
+-                BlinkSelectedMacroBlock()   -- already at the top/bottom block
+-                return false
+-            end
+-
+-            if editframe.gseSelectMacroBlockPath then
+-                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
+-            end
+-            return true
+-        end
+-
+-        local function HandleMacroBlockMoveKey(_, key)
+-            SetEditorKeyboardPropagation(true)
+-            if key ~= "UP" and key ~= "DOWN" then return end
+-            if MacroMoveKeyIsBoundToWoW(key) then return end
+-            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
+-            if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
+-            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
+-
+-            SetEditorKeyboardPropagation(false)
+-            local direction = key == "UP" and -1 or 1
+-            if IsShiftKeyDown() then
+-                MoveSelectedMacroBlock(direction)        -- Shift + arrow: reorder the block
+-            else
+-                NavigateSelectedMacroBlock(direction)    -- arrow: move focus to the adjacent block
+-            end
+-        end
+-
+-        if editframe.frame and editframe.frame.EnableKeyboard and editframe.frame.SetPropagateKeyboardInput then
+-            editframe.frame:SetScript("OnKeyDown", HandleMacroBlockMoveKey)
+-            editframe.frame:SetScript("OnKeyUp", function()
+-                SetEditorKeyboardPropagation(true)
+-            end)
+-            -- Enable capture + propagation together, deferred out of combat so we
+-            -- never call the protected SetPropagateKeyboardInput in combat nor
+-            -- swallow the player's keybinds (patrons may open the editor mid-combat).
+-            local function enableMacroBlockKeys()
+-                if editframe.frame and editframe.frame.EnableKeyboard then editframe.frame:EnableKeyboard(true) end
+-                if editframe.frame and editframe.frame.SetPropagateKeyboardInput then
+-                    editframe.frame:SetPropagateKeyboardInput(true)
+-                end
+-            end
+-            if GSE.GUI.RunWhenCombatSafe then
+-                GSE.GUI.RunWhenCombatSafe(enableMacroBlockKeys)
+-            else
+-                enableMacroBlockKeys()
+-            end
+-        end
++        -- Arrow-key block handling has been REMOVED.
++        --   * plain Up/Down previously moved the selection cursor through the list
++        --   * Shift+Up/Down previously reordered the focused block
++        -- The arrow keys are bound to character movement in WoW by default, and the
++        -- old handler called SetPropagateKeyboardInput(false) when it acted on an
++        -- arrow, which CONSUMED the key and stole the player's movement while the
++        -- editor was open. Blocks are reordered with the Move Up / Move Down buttons
++        -- and the cursor is moved by clicking a block, so no keyboard shortcut is
++        -- needed.
++        --
++        -- We deliberately do NOT register an OnKeyDown handler or enable keyboard
++        -- capture here. Editor_Undo's SetupUndo() owns the editor frame's keyboard:
++        -- it enables capture with propagation kept TRUE (so every key, including the
++        -- arrows, still reaches the game) and drives Ctrl+Z undo from its own
++        -- OnKeyDown. With nothing chained behind that handler, arrows are no longer
++        -- intercepted here, character movement works normally, and undo is
++        -- unaffected. (MoveSelectedMacroBlock above is still used by the Move Up /
++        -- Move Down buttons.)
+ 
+         local moveUpButton = UI:Create("Icon")
+         local moveDownButton = UI:Create("Icon")
+
+##############################################################################
+## [3] ReloadCmd  —  12:55 PM
+## source: GSE_1924_ReloadCmd-0612026-1255/Changes GSE_1924_ReloadCmd-0612026-1255/DIFF/GSE_1924_ReloadCmd-0612026-1255.combined.diff
+##############################################################################
+--- a/GSE_Utils/Utils.lua
++++ b/GSE_Utils/Utils.lua
+@@ -1804,6 +1804,12 @@
+     GSE:GSSlash(input)
+ end
+ 
++-- /rl is a quick alias for reloading the UI (same as /reload or /reloadui).
++SLASH_GSERELOADUI1 = "/rl"
++SlashCmdList.GSERELOADUI = function()
++    if ReloadUI then ReloadUI() end
++end
++
+ -- Functions
+ 
+ --- Drain the entire incoming queue. Marks every pending item as imported so
+
+##############################################################################
+## [4] RemoveCtrlZ  —  1:04 PM
+## source: GSE_1924_RemoveCtrlZ-0612026-1304/Changes GSE_1924_RemoveCtrlZ-0612026-1304/DIFF/GSE_1924_RemoveCtrlZ-0612026-1304.combined.diff
+##############################################################################
+--- a/GSE_GUI/Editor.lua
++++ b/GSE_GUI/Editor.lua
+@@ -6545,14 +6545,13 @@
+         -- and the cursor is moved by clicking a block, so no keyboard shortcut is
+         -- needed.
+         --
+-        -- We deliberately do NOT register an OnKeyDown handler or enable keyboard
+-        -- capture here. Editor_Undo's SetupUndo() owns the editor frame's keyboard:
+-        -- it enables capture with propagation kept TRUE (so every key, including the
+-        -- arrows, still reaches the game) and drives Ctrl+Z undo from its own
+-        -- OnKeyDown. With nothing chained behind that handler, arrows are no longer
+-        -- intercepted here, character movement works normally, and undo is
+-        -- unaffected. (MoveSelectedMacroBlock above is still used by the Move Up /
+-        -- Move Down buttons.)
++        -- Nothing here registers an OnKeyDown handler or enables keyboard capture
++        -- on the editor frame, so the arrow keys (and every other key) propagate to
++        -- the game by default and character movement works normally. The Ctrl+Z
++        -- undo subsystem that used to capture this frame's keyboard has also been
++        -- removed, so there is no frame-level keyboard handler here at all.
++        -- (MoveSelectedMacroBlock above is still used by the Move Up / Move Down
++        -- buttons; the cursor is moved by clicking a block.)
+ 
+         local moveUpButton = UI:Create("Icon")
+         local moveDownButton = UI:Create("Icon")
+@@ -7048,7 +7047,6 @@
+             end
+ 
+             spellEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, spellEditBox) end
+ 
+             spellEditBox:SetCallback(
+                 "OnTextChanged",
+@@ -7119,7 +7117,6 @@
+             macroEditBox:SetNumLines(5)
+             macroEditBox:SetRelativeWidth(0.5)
+             macroEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, macroEditBox) end
+             ForwardMacroEditorMouseWheel(macroEditBox, frame)
+             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
+             macroEditBox:SetCallback(
+@@ -7207,7 +7204,6 @@
+     GSE.GUI.SetupKeybind(editframe)
+     GSE.GUI.SetupMacro(editframe)
+     GSE.GUI.SetupTree(editframe)
+-    if GSE.GUI.SetupUndo then GSE.GUI.SetupUndo(editframe) end
+ 
+     function editframe:remoteSequenceUpdated(seqName)
+         if seqName == editframe.SequenceName then
+--- a/GSE_GUI/GSE_GUI.toc
++++ b/GSE_GUI/GSE_GUI.toc
+@@ -34,7 +34,6 @@
+ Editor_Variable.lua
+ Editor_Keybind.lua
+ Editor_Macro.lua
+-Editor_Undo.lua
+ Editor_Tree.lua
+ Editor.lua
+ RemoteMacroBrowser.lua
+--- a/GSE_GUI/Editor_Undo.lua
++++ /dev/null
+@@ -1,344 +0,0 @@
+-local GSE = GSE
+-
+-if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
+-
+-local MAX_UNDO_STEPS = 30
+-local UNDO_CHECK_INTERVAL = 0.35
+-local TYPING_COALESCE_SECONDS = 1.25
+-
+--- SetPropagateKeyboardInput is protected during combat lockdown — calling it in
+--- combat triggers ADDON_ACTION_BLOCKED. Patrons can open the editor mid-combat,
+--- so run such work immediately when safe, otherwise queue it until combat ends.
+-local combatWatcher
+-local pendingSafeFns = {}
+-local function RunWhenSafe(fn)
+-    if not fn then return end
+-    if not (InCombatLockdown and InCombatLockdown()) then
+-        fn()
+-        return
+-    end
+-    pendingSafeFns[#pendingSafeFns + 1] = fn
+-    if not combatWatcher then
+-        combatWatcher = CreateFrame("Frame")
+-        combatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+-        combatWatcher:SetScript("OnEvent", function()
+-            if InCombatLockdown and InCombatLockdown() then return end
+-            local fns = pendingSafeFns
+-            pendingSafeFns = {}
+-            for _, f in ipairs(fns) do pcall(f) end
+-        end)
+-    end
+-end
+-
+-local function SetPropagateSafe(frame, value)
+-    if not (frame and frame.SetPropagateKeyboardInput) then return end
+-    RunWhenSafe(function()
+-        if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(value) end
+-    end)
+-end
+-
+--- Shared so other GSE_GUI files (e.g. the editor's macro-block keyboard setup)
+--- can defer protected keyboard calls past combat lockdown the same way.
+-GSE.GUI.RunWhenCombatSafe = RunWhenSafe
+-GSE.GUI.SetPropagateKeyboardSafe = SetPropagateSafe
+-
+-local function IsSequenceLoaded(editor)
+-    return type(editor) == "table" and type(editor.Sequence) == "table" and type(editor.Sequence.Versions) == "table"
+-end
+-
+-local function GetSelectedPath(editor)
+-    local tree = editor and editor.treeContainer
+-    local status = tree and (tree.status or tree.localstatus)
+-    return status and status.selected
+-end
+-
+-local function StableValue(value, seen)
+-    local valueType = type(value)
+-    if valueType ~= "table" then return valueType .. ":" .. tostring(value) end
+-
+-    seen = seen or {}
+-    if seen[value] then return "table:<cycle>" end
+-    seen[value] = true
+-
+-    local keys = {}
+-    for key in pairs(value) do
+-        keys[#keys + 1] = key
+-    end
+-    table.sort(keys, function(left, right)
+-        return tostring(left) < tostring(right)
+-    end)
+-
+-    local parts = {"table:{"}
+-    for _, key in ipairs(keys) do
+-        parts[#parts + 1] = StableValue(key, seen)
+-        parts[#parts + 1] = "="
+-        parts[#parts + 1] = StableValue(value[key], seen)
+-        parts[#parts + 1] = ";"
+-    end
+-    parts[#parts + 1] = "}"
+-
+-    seen[value] = nil
+-    return table.concat(parts)
+-end
+-
+-local function Fingerprint(editor)
+-    if not IsSequenceLoaded(editor) then return nil end
+-    return StableValue(editor.Sequence)
+-end
+-
+-local function GetUndoState(editor)
+-    if not editor then return nil end
+-    editor.GSEUndo = editor.GSEUndo or {
+-        undoStack = {},
+-        redoStack = {},
+-        elapsed = 0,
+-    }
+-    return editor.GSEUndo
+-end
+-
+-local function MakeSnapshot(editor, reason)
+-    if not IsSequenceLoaded(editor) or not GSE.CloneSequence then return nil end
+-
+-    return {
+-        sequence = GSE.CloneSequence(editor.Sequence),
+-        hash = Fingerprint(editor),
+-        sequenceName = editor.SequenceName,
+-        origSequenceName = editor.OrigSequenceName,
+-        classID = editor.ClassID,
+-        selectedPath = GetSelectedPath(editor),
+-        currentVersion = editor.currentMacroLimitVersion,
+-        scrollValue = editor.scrollStatus and editor.scrollStatus.scrollvalue,
+-        reason = reason or "Edit",
+-    }
+-end
+-
+-local function SetBaseline(editor, reason)
+-    local state = GetUndoState(editor)
+-    if not state then return end
+-
+-    state.baseline = MakeSnapshot(editor, reason)
+-    state.baselineHash = Fingerprint(editor)
+-end
+-
+-local function PushUndoSnapshot(editor, snapshot)
+-    local state = GetUndoState(editor)
+-    if not (state and snapshot and snapshot.sequence) then return end
+-
+-    local last = state.undoStack[#state.undoStack]
+-    if last and last.hash and snapshot.hash and last.hash == snapshot.hash then return end
+-
+-    state.undoStack[#state.undoStack + 1] = snapshot
+-    while #state.undoStack > MAX_UNDO_STEPS do
+-        table.remove(state.undoStack, 1)
+-    end
+-    state.redoStack = {}
+-end
+-
+-function GSE.GUI.CaptureUndoCheckpoint(editor, reason, coalesceKey)
+-    local state = GetUndoState(editor)
+-    if not (state and IsSequenceLoaded(editor)) or state.restoring then return end
+-
+-    local now = GetTime and GetTime() or 0
+-    if coalesceKey and state.coalesceKey == coalesceKey and state.coalesceUntil and now < state.coalesceUntil then
+-        return
+-    end
+-
+-    local snapshot = MakeSnapshot(editor, reason or "Edit")
+-    if not snapshot then return end
+-
+-    PushUndoSnapshot(editor, snapshot)
+-    state.pendingCheckpointHash = snapshot.hash
+-    if coalesceKey then
+-        state.coalesceKey = coalesceKey
+-        state.coalesceUntil = now + TYPING_COALESCE_SECONDS
+-    end
+-end
+-
+-local function MirrorEditorSequenceForTree(editor)
+-    if not IsSequenceLoaded(editor) then return end
+-    if not (GSE.Library and editor.ClassID and editor.SequenceName) then return end
+-
+-    GSE.Library[editor.ClassID] = GSE.Library[editor.ClassID] or {}
+-    GSE.Library[editor.ClassID][editor.SequenceName] = GSE.CloneSequence(editor.Sequence)
+-end
+-
+-local function RestoreSelection(editor, snapshot)
+-    if not (editor and snapshot) then return end
+-
+-    local path = snapshot.selectedPath
+-    if path and GSE.GUI.SelectEditorTreePath then
+-        GSE.GUI.SelectEditorTreePath(editor, path)
+-    elseif path and editor.treeContainer then
+-        editor.treeContainer:SelectByValue(path)
+-    elseif editor.RefreshCurrentVersion then
+-        editor:RefreshCurrentVersion()
+-    end
+-end
+-
+-function GSE.GUI.ResetUndo(editor)
+-    local state = GetUndoState(editor)
+-    if not state then return end
+-
+-    state.undoStack = {}
+-    state.redoStack = {}
+-    state.elapsed = 0
+-    state.restoring = nil
+-    SetBaseline(editor, "Loaded")
+-end
+-
+-function GSE.GUI.ClearUndo(editor)
+-    local state = editor and editor.GSEUndo
+-    if not state then return end
+-
+-    state.undoStack = {}
+-    state.redoStack = {}
+-    state.baseline = nil
+-    state.baselineHash = nil
+-    state.elapsed = 0
+-    state.restoring = nil
+-end
+-
+-function GSE.GUI.ClearAllUndo()
+-    local editors = GSE.GUI and GSE.GUI.editors
+-    if not editors then return end
+-
+-    for _, editor in ipairs(editors) do
+-        if GSE.GUI.ClearUndo then GSE.GUI.ClearUndo(editor) end
+-    end
+-end
+-
+-function GSE.GUI.ClearUndoIfNoVisibleEditors()
+-    local editors = GSE.GUI and GSE.GUI.editors
+-    if not editors then return end
+-
+-    for _, editor in ipairs(editors) do
+-        if editor and editor.frame and editor.frame.IsShown and editor.frame:IsShown() then
+-            return
+-        end
+-    end
+-
+-    GSE.GUI.ClearAllUndo()
+-end
+-
+-function GSE.GUI.RestoreUndo(editor)
+-    local state = GetUndoState(editor)
+-    if not (state and state.undoStack and #state.undoStack > 0) then
+-        return false
+-    end
+-
+-    local snapshot = table.remove(state.undoStack)
+-    state.redoStack[#state.redoStack + 1] = MakeSnapshot(editor, "Redo")
+-    state.restoring = true
+-
+-    editor.Sequence = GSE.CloneSequence(snapshot.sequence)
+-    editor.SequenceName = snapshot.sequenceName
+-    editor.OrigSequenceName = snapshot.origSequenceName
+-    editor.ClassID = snapshot.classID
+-    editor.currentMacroLimitVersion = snapshot.currentVersion
+-    if editor.scrollStatus then editor.scrollStatus.scrollvalue = snapshot.scrollValue or 0 end
+-
+-    MirrorEditorSequenceForTree(editor)
+-    if editor.ManageTree then editor.ManageTree() end
+-    RestoreSelection(editor, snapshot)
+-
+-    SetBaseline(editor, "Undo")
+-    state.restoring = nil
+-
+-    return true
+-end
+-
+-local function OnUndoUpdate(frame, elapsed)
+-    local editor = frame and frame.GSEUndoEditor
+-    local state = GetUndoState(editor)
+-    if not (state and IsSequenceLoaded(editor)) or state.restoring then return end
+-
+-    state.elapsed = (state.elapsed or 0) + (elapsed or 0)
+-    if state.elapsed < UNDO_CHECK_INTERVAL then return end
+-    state.elapsed = 0
+-
+-    local currentHash = Fingerprint(editor)
+-    if not currentHash then return end
+-
+-    if not state.baselineHash then
+-        SetBaseline(editor, "Loaded")
+-        return
+-    end
+-
+-    if currentHash ~= state.baselineHash then
+-        if state.pendingCheckpointHash == state.baselineHash then
+-            state.pendingCheckpointHash = nil
+-        else
+-            PushUndoSnapshot(editor, state.baseline or MakeSnapshot(editor, "Edit"))
+-        end
+-        SetBaseline(editor, "Edit")
+-    end
+-end
+-
+-local function IsUndoKey(key)
+-    return (key == "Z" or key == "z" or key == "CTRL-Z") and IsControlKeyDown and IsControlKeyDown() and
+-        not (IsAltKeyDown and IsAltKeyDown())
+-end
+-
+-local function IsModifierOnlyKey(key)
+-    return key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" or
+-        key == "LSHIFT" or key == "RSHIFT" or key == "LMETA" or key == "RMETA"
+-end
+-
+-local function BindKeyboardFrame(editor, frame, keepPropagating)
+-    if not (editor and frame and frame.SetScript) then return end
+-    if frame.GSEUndoBound then return end
+-
+-    frame.GSEUndoBound = true
+-    frame.GSEUndoEditor = editor
+-
+-    local previousOnKeyDown = frame.GetScript and frame:GetScript("OnKeyDown")
+-
+-    frame:SetScript("OnKeyDown", function(self, key)
+-        if IsUndoKey(key) then
+-            SetPropagateSafe(self, false)
+-            GSE.GUI.RestoreUndo(editor)
+-            return
+-        end
+-        if not IsModifierOnlyKey(key) and not keepPropagating and GSE.GUI.CaptureUndoCheckpoint then
+-            GSE.GUI.CaptureUndoCheckpoint(editor, "Typing", "typing")
+-        end
+-        if previousOnKeyDown then previousOnKeyDown(self, key) end
+-    end)
+-
+-    if keepPropagating then
+-        -- Main editor frame: enable keyboard capture AND key propagation together,
+-        -- and defer both out of combat. SetPropagateKeyboardInput is protected in
+-        -- combat, and enabling capture without propagation would swallow the
+-        -- player's combat keybinds (patrons can open the editor mid-combat).
+-        RunWhenSafe(function()
+-            if frame.EnableKeyboard then frame:EnableKeyboard(true) end
+-            if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(true) end
+-        end)
+-    else
+-        -- Edit boxes consume their own typing; no propagation needed and
+-        -- EnableKeyboard is not protected, so apply immediately.
+-        if frame.EnableKeyboard then frame:EnableKeyboard(true) end
+-    end
+-end
+-
+-function GSE.GUI.BindUndoWidget(editor, widget)
+-    if not (editor and widget) then return end
+-
+-    BindKeyboardFrame(editor, widget.editBox or widget.editbox or widget.frame)
+-end
+-
+-function GSE.GUI.SetupUndo(editor)
+-    if not (editor and editor.frame) then return end
+-    if editor.GSEUndoInstalled then return end
+-
+-    editor.GSEUndoInstalled = true
+-    BindKeyboardFrame(editor, editor.frame, true)
+-
+-    if editor.frame.HookScript then
+-        editor.frame.GSEUndoEditor = editor
+-        editor.frame:HookScript("OnUpdate", OnUndoUpdate)
+-        editor.frame:HookScript("OnShow", function()
+-            if not GetUndoState(editor).baselineHash then SetBaseline(editor, "Loaded") end
+-        end)
+-    end
+-end
+
+##############################################################################
+## [5] MultiEditor  —  1:20 PM
+## source: GSE_1924_MultiEditor-0612026-1320/Changes GSE_1924_MultiEditor-0612026-1320/DIFF/GSE_1924_MultiEditor-0612026-1320.combined.diff
+##############################################################################
+--- a/GSE_Utils/Utils.lua
++++ b/GSE_Utils/Utils.lua
+@@ -2044,13 +2044,22 @@
+             -- Route to Editor when the Toolbar is disabled (see Options.lua's
+             -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
+             if GSEOptions and GSEOptions.ToolbarEnabled == false then
+-                -- 1) If an editor already exists this session, just bring
+-                --    it forward — never create a duplicate. (Especially
+-                --    important on PatronBuild where CreateEditor doesn't
+-                --    dedupe.)
++                -- 1) An editor already exists this session. With multi-window
++                --    support (GSE.GUI.Feature.MULTI_WINDOW) each /gse opens an
++                --    ADDITIONAL editor window, so open another one here. Without
++                --    it, CreateEditor returns the single shared editor, so just
++                --    bring the existing one forward. (CreateEditor does not
++                --    dedupe on PatronBuild.)
+                 if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
+-                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
+-                    if existing and existing.Show then existing:Show() end
++                    local multiWindow = GSE.GUI.Feature and GSE.GUI.Feature.MULTI_WINDOW
++                        and GSE.GUI.Feature.MULTI_WINDOW()
++                    if multiWindow and GSE.ShowSequences then
++                        -- Open an additional editor window.
++                        GSE.ShowSequences()
++                    else
++                        local existing = GSE.GUI.editors[#GSE.GUI.editors]
++                        if existing and existing.Show then existing:Show() end
++                    end
+                     return
+                 end
+ 
+
+##############################################################################
+## [6] toolbar-toggle  —  7:06 PM
+## source: GSE_1924_toolbar-toggle-6-12026-706pm/GSE_1924_toolbar-toggle-6-12026-706pm/Changes GSE_1924_toolbar-toggle-6-12026-706pm/GSE_1924_toolbar-toggle.diff
+##############################################################################
+--- a/GSE_Options/Options.lua
++++ b/GSE_Options/Options.lua
+@@ -2668,6 +2668,13 @@
+             local function SetValue(val)
+                 GSEOptions.ToolbarEnabled = val and true or false
+                 if val then
++                    -- GSE_GUI is LoadOnDemand and owns GSE.ShowMenu / GSE.MenuFrame.
++                    -- On a session where the Toolbar started OFF, GSE_GUI is not
++                    -- loaded yet, so GSE.ShowMenu would be nil and the toggle would
++                    -- flip to ON without the Toolbar ever appearing (and without
++                    -- setting menu.open, so it would not return on next login
++                    -- either). Force-load it first, the same way /gse toolbar does.
++                    if GSE.CheckGUI then GSE.CheckGUI() end
+                     -- Turned ON: bring up the toolbar immediately so the user
+                     -- sees the result of toggling on. GSE.ShowMenu sets
+                     -- menu.open = true so the toolbar also auto-shows on next
+
+##############################################################################
+## [7] error-muting  —  7:25 PM
+## source: GSE_1924_error-muting-20260601-1925/GSE_1924_error-muting-20260601-1925/Changes GSE_1924_error-muting-20260601-1925/GSE_1924_error-muting.diff
+##############################################################################
+--- a/GSE/API/InitialOptions.lua
++++ b/GSE/API/InitialOptions.lua
+@@ -140,6 +140,9 @@
+     GSEOptions.UseModernSkin = false
+     GSEOptions.UseModernClassColors = false
+     GSEOptions.UseModernCustomColor = false
++    GSEOptions.HideUIErrorFrame = true
++    GSEOptions.MuteVoiceErrors = true
++    GSEOptions.MuteLowerEnergy = true
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+         g = MODERN_CUSTOM_COLOR_DEFAULT.g,
+@@ -178,6 +181,18 @@
+     GSEOptions.UseModernClassColors = false
+ end
+ 
++if GSEOptions.HideUIErrorFrame == nil then
++    GSEOptions.HideUIErrorFrame = true
++end
++
++if GSEOptions.MuteVoiceErrors == nil then
++    GSEOptions.MuteVoiceErrors = true
++end
++
++if GSEOptions.MuteLowerEnergy == nil then
++    GSEOptions.MuteLowerEnergy = true
++end
++
+ if type(GSEOptions.ModernCustomColor) ~= "table" then
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+--- a/GSE/API/Events.lua
++++ b/GSE/API/Events.lua
+@@ -74,6 +74,94 @@
+ 
+ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
+ 
++local LOWER_ENERGY_SOUND_ID = 1489541
++local errorMessageState = {
++    originalHandler = nil,
++    installed = false
++}
++
++local function EnsureErrorMessageOptions()
++    if not GSEOptions then GSEOptions = {} end
++    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
++    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
++    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
++end
++
++local function IsAllowedUIError(err)
++    if not err then return false end
++    if (ERR_INV_FULL and err == ERR_INV_FULL)
++        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
++        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
++        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
++        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
++        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
++        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
++        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
++        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
++        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
++        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
++        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
++        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
++        return true
++    end
++    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
++        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
++        return ok and pattern and err:find(pattern)
++    end
++    return false
++end
++
++local function FilterUIErrorsFrame(self, event, id, err, ...)
++    if event == "UI_ERROR_MESSAGE" then
++        if IsAllowedUIError(err) then
++            if errorMessageState.originalHandler then
++                return errorMessageState.originalHandler(self, event, id, err, ...)
++            end
++        end
++        return
++    end
++    if errorMessageState.originalHandler then
++        return errorMessageState.originalHandler(self, event, id, err, ...)
++    end
++end
++
++local function SetErrorSpeechMuted(muted)
++    local setter = C_CVar and C_CVar.SetCVar or SetCVar
++    if setter then
++        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
++    end
++end
++
++local function SetLowerEnergyMuted(muted)
++    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
++    if soundFunc then
++        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
++    end
++end
++
++function GSE.ApplyErrorMessageOptions()
++    EnsureErrorMessageOptions()
++
++    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
++        if GSEOptions.HideUIErrorFrame then
++            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
++            if currentHandler ~= FilterUIErrorsFrame then
++                errorMessageState.originalHandler = currentHandler
++            end
++            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
++            errorMessageState.installed = true
++        elseif errorMessageState.installed then
++            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
++                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
++            end
++            errorMessageState.installed = false
++        end
++    end
++
++    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
++    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
++end
++
+ -- Fired once per session when overrides are loaded.  Corrects CVars that interfere
+ -- with actionbar overrides and tells the player what was changed.
+ local actionBarCVarCheckedThisSession = false
+@@ -920,6 +1008,7 @@
+     GSE.InstallDeveloperDebugGameMenuWarning()
+     GSE.currentZone = GetRealZoneText()
+     GSE.PlayerEntered = true
++    GSE.ApplyErrorMessageOptions()
+     GSE.UpdateZoneFlags()
+     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
+     -- (older mod versions didn't track it for macros at all, and never-edited
+--- a/GSE_Options/Options.lua
++++ b/GSE_Options/Options.lua
+@@ -1601,6 +1601,42 @@
+     end
+ end
+ 
++local function AddErrorMessageOptions(optionsCategory)
++    do
++        local layout = SettingsPanel:GetLayout(optionsCategory)
++        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Error Messages", tooltip = "Error Messages"}))
++    end
++
++    local function AddErrorToggle(settingID, optionKey, label, tooltip)
++        local setting = Settings.RegisterAddOnSetting(optionsCategory, settingID, optionKey, GSEOptions, Settings.VarType.Boolean, label, true)
++        setting:SetValueChangedCallback(function()
++            if GSE.ApplyErrorMessageOptions then
++                GSE.ApplyErrorMessageOptions()
++            end
++        end)
++        Settings.CreateCheckbox(optionsCategory, setting, tooltip)
++    end
++
++    AddErrorToggle(
++        "hideUIErrorFrame",
++        "HideUIErrorFrame",
++        "UIErrorFrame",
++        "Suppress most UI error text such as 'Not enough rage'. Important errors are still shown."
++    )
++    AddErrorToggle(
++        "muteVoiceErrors",
++        "MuteVoiceErrors",
++        "Voice Errors",
++        "Mute spoken UI error voice lines."
++    )
++    AddErrorToggle(
++        "muteLowerEnergy",
++        "MuteLowerEnergy",
++        "Lower Energy",
++        "Mute the lower-energy/vigor recharge sound used by Leatrix Plus."
++    )
++end
++
+ local function AddOutOfCombatQueueOptions(optionsCategory)
+     do
+         local layout = SettingsPanel:GetLayout(optionsCategory)
+@@ -2946,6 +2982,7 @@
+         end
+         AddMacroButtonBehaviorOptions(generalOptions)
+         AddActionBarClickBehaviorOptions(generalOptions)
++        AddErrorMessageOptions(generalOptions)
+         do
+             local layout = SettingsPanel:GetLayout(generalOptions)
+             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
+
+##############################################################################
+## [8] aceconsole-removal  —  8:30 PM
+## source: GSE_1924_aceconsole-removal-20260601-2030/GSE_1924_aceconsole-removal-20260601-2030/Changes GSE_1924_aceconsole-removal-20260601-2030/GSE_1924_aceconsole-removal.diff
+##############################################################################
+--- a/GSE/embeds.xml
++++ b/GSE/embeds.xml
+@@ -6,7 +6,6 @@
+     <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
+     <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
+     <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
+-    <Include file="Lib\AceConsole-3.0\AceConsole-3.0.xml"/>
+     <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
+     <Script file="Lib\WagoAnalytics\Shim.lua" />
+     <Include file="Lib\LibQTip-2.0\LibQTip-2.0\Manifest.xml"/>
+--- a/GSE/API/Init.lua
++++ b/GSE/API/Init.lua
+@@ -2,7 +2,6 @@
+ GSE =
+     LibStub("AceAddon-3.0"):NewAddon(
+     "GSE",
+-    "AceConsole-3.0",
+     "AceEvent-3.0",
+     "AceComm-3.0"
+ )
+--- a/GSE/API/Native.lua
++++ b/GSE/API/Native.lua
+@@ -1,7 +1,7 @@
+ -- GSE helper functions that genuinely add behavior — NOT thin wrappers
+ -- around WoW APIs. WoW APIs are called directly at the call site.
+--- Ace3 mixin (AceConsole / AceEvent / AceComm via Init.lua) provides
+--- :RegisterChatCommand / :RegisterEvent / :SendMessage / :RegisterComm etc.
++-- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
++-- :RegisterEvent / :SendMessage / :RegisterComm etc.
+ --
+ -- This file contains:
+ --   * GSE.SafeSecureCmdOptionParse: pcall + UI-error suppression around
+
+##############################################################################
+## [9] all-fixes  —  8:54 PM
+## source: GSE_1924_all-fixes-20260601-2054/GSE_1924_all-fixes-20260601-2054/Changes GSE_1924_all-fixes-20260601-2054/GSE_1924_all-fixes.diff
+##############################################################################
+# GSE #1924 — consolidated fixes (toolbar toggle, error muting, action-bar override flicker, AceConsole removal)
+# Apply from the addon root with: git apply all-fixes.diff   (or: patch -p1 < all-fixes.diff)
+# NOTE: this patch also implies DELETING the folder GSE/Lib/AceConsole-3.0/ (AceConsole-3.0.lua + AceConsole-3.0.xml),
+#       which is part of the AceConsole removal but not represented as text hunks here.
+
+--- a/GSE/embeds.xml
++++ b/GSE/embeds.xml
+@@ -6,7 +6,6 @@
+     <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
+     <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
+     <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
+-    <Include file="Lib\AceConsole-3.0\AceConsole-3.0.xml"/>
+     <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
+     <Script file="Lib\WagoAnalytics\Shim.lua" />
+     <Include file="Lib\LibQTip-2.0\LibQTip-2.0\Manifest.xml"/>
+--- a/GSE/API/Init.lua
++++ b/GSE/API/Init.lua
+@@ -2,7 +2,6 @@
+ GSE =
+     LibStub("AceAddon-3.0"):NewAddon(
+     "GSE",
+-    "AceConsole-3.0",
+     "AceEvent-3.0",
+     "AceComm-3.0"
+ )
+--- a/GSE/API/Native.lua
++++ b/GSE/API/Native.lua
+@@ -1,7 +1,7 @@
+ -- GSE helper functions that genuinely add behavior — NOT thin wrappers
+ -- around WoW APIs. WoW APIs are called directly at the call site.
+--- Ace3 mixin (AceConsole / AceEvent / AceComm via Init.lua) provides
+--- :RegisterChatCommand / :RegisterEvent / :SendMessage / :RegisterComm etc.
++-- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
++-- :RegisterEvent / :SendMessage / :RegisterComm etc.
+ --
+ -- This file contains:
+ --   * GSE.SafeSecureCmdOptionParse: pcall + UI-error suppression around
+--- a/GSE/API/InitialOptions.lua
++++ b/GSE/API/InitialOptions.lua
+@@ -140,6 +140,9 @@
+     GSEOptions.UseModernSkin = false
+     GSEOptions.UseModernClassColors = false
+     GSEOptions.UseModernCustomColor = false
++    GSEOptions.HideUIErrorFrame = true
++    GSEOptions.MuteVoiceErrors = true
++    GSEOptions.MuteLowerEnergy = true
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+         g = MODERN_CUSTOM_COLOR_DEFAULT.g,
+@@ -178,6 +181,18 @@
+     GSEOptions.UseModernClassColors = false
+ end
+ 
++if GSEOptions.HideUIErrorFrame == nil then
++    GSEOptions.HideUIErrorFrame = true
++end
++
++if GSEOptions.MuteVoiceErrors == nil then
++    GSEOptions.MuteVoiceErrors = true
++end
++
++if GSEOptions.MuteLowerEnergy == nil then
++    GSEOptions.MuteLowerEnergy = true
++end
++
+ if type(GSEOptions.ModernCustomColor) ~= "table" then
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+--- a/GSE/API/Events.lua
++++ b/GSE/API/Events.lua
+@@ -74,6 +74,94 @@
+ 
+ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
+ 
++local LOWER_ENERGY_SOUND_ID = 1489541
++local errorMessageState = {
++    originalHandler = nil,
++    installed = false
++}
++
++local function EnsureErrorMessageOptions()
++    if not GSEOptions then GSEOptions = {} end
++    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
++    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
++    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
++end
++
++local function IsAllowedUIError(err)
++    if not err then return false end
++    if (ERR_INV_FULL and err == ERR_INV_FULL)
++        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
++        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
++        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
++        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
++        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
++        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
++        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
++        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
++        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
++        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
++        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
++        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
++        return true
++    end
++    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
++        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
++        return ok and pattern and err:find(pattern)
++    end
++    return false
++end
++
++local function FilterUIErrorsFrame(self, event, id, err, ...)
++    if event == "UI_ERROR_MESSAGE" then
++        if IsAllowedUIError(err) then
++            if errorMessageState.originalHandler then
++                return errorMessageState.originalHandler(self, event, id, err, ...)
++            end
++        end
++        return
++    end
++    if errorMessageState.originalHandler then
++        return errorMessageState.originalHandler(self, event, id, err, ...)
++    end
++end
++
++local function SetErrorSpeechMuted(muted)
++    local setter = C_CVar and C_CVar.SetCVar or SetCVar
++    if setter then
++        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
++    end
++end
++
++local function SetLowerEnergyMuted(muted)
++    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
++    if soundFunc then
++        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
++    end
++end
++
++function GSE.ApplyErrorMessageOptions()
++    EnsureErrorMessageOptions()
++
++    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
++        if GSEOptions.HideUIErrorFrame then
++            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
++            if currentHandler ~= FilterUIErrorsFrame then
++                errorMessageState.originalHandler = currentHandler
++            end
++            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
++            errorMessageState.installed = true
++        elseif errorMessageState.installed then
++            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
++                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
++            end
++            errorMessageState.installed = false
++        end
++    end
++
++    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
++    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
++end
++
+ -- Fired once per session when overrides are loaded.  Corrects CVars that interfere
+ -- with actionbar overrides and tells the player what was changed.
+ local actionBarCVarCheckedThisSession = false
+@@ -207,6 +295,22 @@
+     return slot + (page - 1) * 12
+ end
+ 
++-- True when the player has dropped a real (non-empty, non-macro) action into the
++-- action-bar slot a GSE override sits on. Mirrors the BAR_SWAP secure handlers,
++-- which treat empty and macro slots as still owned by the override and any other
++-- action as something to yield to. Used to stop GSE repainting its sequence icon
++-- over the real action's icon, which otherwise fights WoW's own repaint and makes
++-- the button flicker when a normal key/spell is placed in the same slot.
++function GSE.ActionBarSlotHasForeignAction(button)
++    if not button or not button.GetAttribute then return false end
++    if not button:GetAttribute("gse-button") then return false end
++    local slot = getButtonEffectiveSlot(button)
++    if not slot or not GetActionInfo then return false end
++    local actionType = GetActionInfo(slot)
++    if actionType == nil or actionType == "macro" then return false end
++    return true
++end
++
+ -- Return the display icon for a GSE-overridden button.
+ -- Resolve directly from the compiled GSE action first so MacroBlock conditionals
+ -- such as [mod:alt] repaint like a normal in-game macro.
+@@ -259,6 +363,8 @@
+ end
+ 
+ local function getGSEButtonIcon(self)
++    -- A real action in the slot wins: don't paint the sequence icon over it.
++    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
+     local seq = self:GetAttribute("gse-button")
+     local seqTexture = getGSESequenceIcon(seq)
+     if seqTexture then return seqTexture end
+@@ -584,7 +690,8 @@
+                 _G[Button]:HookScript(
+                     "OnEnter",
+                     function(self)
+-                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                        if not InCombatLockdown() and self:GetAttribute("gse-button")
++                            and not GSE.ActionBarSlotHasForeignAction(self) then
+                             self:SetAttribute("type", "click")
+                         end
+                     end
+@@ -663,7 +770,8 @@
+                     _G[Button]:HookScript(
+                         "OnEnter",
+                         function(self)
+-                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                            if not InCombatLockdown() and self:GetAttribute("gse-button")
++                                and not GSE.ActionBarSlotHasForeignAction(self) then
+                                 self:SetAttribute("type", "click")
+                             end
+                         end
+@@ -678,7 +786,16 @@
+                         "",
+                         [[
+     if self:GetAttribute('gse-button') then
+-        self:SetAttribute('type', 'click')
++        local slot = self:GetID()
++        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
++        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
++                                or (page and (slot + page * 12 - 12)) or nil
++        local at = effectiveAction and GetActionInfo(effectiveAction)
++        -- Only re-assert the override on hover when the slot is empty or a macro;
++        -- if a real action sits here, leave type="action" so it stays usable.
++        if at == nil or at == "macro" then
++            self:SetAttribute('type', 'click')
++        end
+     end
+ ]]
+                     )
+@@ -705,6 +822,57 @@
+     end
+ end
+ 
++-- ---------------------------------------------------------------------------
++-- Yield an override to a real action the player drops into its slot.
++--
++-- The secure BAR_SWAP_ONCLICK / BAR_SWAP_OAC snippets already switch a button
++-- between the GSE override (type="click") and the underlying action
++-- (type="action"), but they only run on a click or a bar-page/state swap. When
++-- the player simply drops a spell into the slot neither fires, so the button is
++-- left behind the stale override -- GSE icon + watermark bleeding through, and
++-- the action looking disabled -- until the next click. ACTIONBAR_SLOT_CHANGED
++-- (registered below) runs the same evaluation immediately. type is a protected
++-- attribute, so this only acts out of combat; the in-combat case is covered by
++-- LoadOverrides() on PLAYER_REGEN_ENABLED. Attributes are written only when they
++-- actually change, so a no-op slot event does not re-trigger a repaint.
++-- ---------------------------------------------------------------------------
++local function reevaluateOverrideButtonState(buttonName, sequence)
++    local btn = _G[buttonName]
++    if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
++    local foreign = GSE.ActionBarSlotHasForeignAction(btn)
++    local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
++    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
++    -- own state system; leave their type alone and just correct the icon/watermark.
++    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
++        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
++    if not isLAB then
++        local desiredType = foreign and "action" or "click"
++        if btn:GetAttribute("type") ~= desiredType then
++            btn:SetAttribute("type", desiredType)
++            if not foreign and sequence and _G[sequence] then
++                btn:SetAttribute("clickbutton", _G[sequence])
++            end
++        end
++    end
++    -- gse-eff-action drives the existing OnAttributeChanged icon hook: > 0 shows the
++    -- real action icon and hides the GSE watermark; 0 restores the sequence icon.
++    if btn:GetAttribute("gse-eff-action") ~= desiredEff then
++        btn:SetAttribute("gse-eff-action", desiredEff)
++    end
++end
++
++local function reevaluateAllOverrideButtons()
++    if GSE.isEmpty(GSE.ButtonOverrides) then return end
++    if InCombatLockdown() then return end
++    for buttonName, sequence in pairs(GSE.ButtonOverrides) do
++        reevaluateOverrideButtonState(buttonName, sequence)
++    end
++end
++
++function GSE:ACTIONBAR_SLOT_CHANGED()
++    reevaluateAllOverrideButtons()
++end
++
+ local function isUsableActionBarOverride(savedBind)
+     if type(savedBind) ~= "table" then return false end
+ 
+@@ -813,6 +981,10 @@
+                 end
+             end
+         end
++        -- A freshly (re)loaded override whose slot already holds a real action
++        -- must start yielded, not behind the override. Defer one frame so the
++        -- action-bar slots are populated before we read them.
++        C_Timer.After(0, reevaluateAllOverrideButtons)
+     end
+ end
+ 
+@@ -920,6 +1092,7 @@
+     GSE.InstallDeveloperDebugGameMenuWarning()
+     GSE.currentZone = GetRealZoneText()
+     GSE.PlayerEntered = true
++    GSE.ApplyErrorMessageOptions()
+     GSE.UpdateZoneFlags()
+     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
+     -- (older mod versions didn't track it for macros at all, and never-edited
+@@ -1312,6 +1485,7 @@
+ GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
+ GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
+ GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
++GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+ GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+ GSE:RegisterEvent("UNIT_FACTION")
+ GSE:RegisterEvent("PLAYER_LEVEL_UP")
+--- a/GSE/API/Storage.lua
++++ b/GSE/API/Storage.lua
+@@ -1737,7 +1737,11 @@
+                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
+                             string.sub(k, 1, 4) == "NDui"
+                      then
+-                        _G[k].icon:SetTexture(spellinfo.iconID)
++                        -- Yield to a real action the player dropped into this slot (matches the
++                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
++                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
++                            _G[k].icon:SetTexture(spellinfo.iconID)
++                        end
+                     else
+                         if GSE.GameMode == 11 then
+                             local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
+--- a/GSE_Options/Options.lua
++++ b/GSE_Options/Options.lua
+@@ -1601,6 +1601,42 @@
+     end
+ end
+ 
++local function AddErrorMessageOptions(optionsCategory)
++    do
++        local layout = SettingsPanel:GetLayout(optionsCategory)
++        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Error Messages", tooltip = "Error Messages"}))
++    end
++
++    local function AddErrorToggle(settingID, optionKey, label, tooltip)
++        local setting = Settings.RegisterAddOnSetting(optionsCategory, settingID, optionKey, GSEOptions, Settings.VarType.Boolean, label, true)
++        setting:SetValueChangedCallback(function()
++            if GSE.ApplyErrorMessageOptions then
++                GSE.ApplyErrorMessageOptions()
++            end
++        end)
++        Settings.CreateCheckbox(optionsCategory, setting, tooltip)
++    end
++
++    AddErrorToggle(
++        "hideUIErrorFrame",
++        "HideUIErrorFrame",
++        "UIErrorFrame",
++        "Suppress most UI error text such as 'Not enough rage'. Important errors are still shown."
++    )
++    AddErrorToggle(
++        "muteVoiceErrors",
++        "MuteVoiceErrors",
++        "Voice Errors",
++        "Mute spoken UI error voice lines."
++    )
++    AddErrorToggle(
++        "muteLowerEnergy",
++        "MuteLowerEnergy",
++        "Lower Energy",
++        "Mute the lower-energy/vigor recharge sound used by Leatrix Plus."
++    )
++end
++
+ local function AddOutOfCombatQueueOptions(optionsCategory)
+     do
+         local layout = SettingsPanel:GetLayout(optionsCategory)
+@@ -2668,6 +2704,13 @@
+             local function SetValue(val)
+                 GSEOptions.ToolbarEnabled = val and true or false
+                 if val then
++                    -- GSE_GUI is LoadOnDemand and owns GSE.ShowMenu / GSE.MenuFrame.
++                    -- On a session where the Toolbar started OFF, GSE_GUI is not
++                    -- loaded yet, so GSE.ShowMenu would be nil and the toggle would
++                    -- flip to ON without the Toolbar ever appearing (and without
++                    -- setting menu.open, so it would not return on next login
++                    -- either). Force-load it first, the same way /gse toolbar does.
++                    if GSE.CheckGUI then GSE.CheckGUI() end
+                     -- Turned ON: bring up the toolbar immediately so the user
+                     -- sees the result of toggling on. GSE.ShowMenu sets
+                     -- menu.open = true so the toolbar also auto-shows on next
+@@ -2939,6 +2982,7 @@
+         end
+         AddMacroButtonBehaviorOptions(generalOptions)
+         AddActionBarClickBehaviorOptions(generalOptions)
++        AddErrorMessageOptions(generalOptions)
+         do
+             local layout = SettingsPanel:GetLayout(generalOptions)
+             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))

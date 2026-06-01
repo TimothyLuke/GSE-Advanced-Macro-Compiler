@@ -1791,6 +1791,14 @@ function GSE.PrintGnomeHelp()
         GNOME
     )
     GSE.Print(
+        L["The command "] ..
+            GSEOptions.CommandColour ..
+                L[
+                    "/gse toolbar|r turns the GSE Toolbar on or off (/gse toolbar on, /gse toolbar off, or /gse toolbar to toggle). Use this to bring the Toolbar back when it is off."
+                ],
+        GNOME
+    )
+    GSE.Print(
         GSEOptions.CommandColour ..
             L[
                 "GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
@@ -1802,6 +1810,12 @@ end
 SLASH_GSE1 = "/gse"
 SlashCmdList.GSE = function(input)
     GSE:GSSlash(input)
+end
+
+-- /rl is a quick alias for reloading the UI (same as /reload or /reloadui).
+SLASH_GSERELOADUI1 = "/rl"
+SlashCmdList.GSERELOADUI = function()
+    if ReloadUI then ReloadUI() end
 end
 
 -- Functions
@@ -1937,6 +1951,38 @@ function GSE:GSSlash(input)
         else
             GSE.Print(L["Options Not Enabled"])
         end
+    elseif command == "toolbar" then
+        -- Toggle (or set with "on"/"off") the GSE Toolbar from chat. Mirrors the
+        -- "GSE Toolbar ON / OFF" checkbox in Options (Windows & Layout). This is
+        -- the reliable way to turn the Toolbar back ON after it has been turned
+        -- OFF: while the Toolbar is off, /gse opens the Sequence Editor and the
+        -- Toolbar's own Options icon is unavailable.
+        local colour = (GSEOptions and GSEOptions.CommandColour) or ""
+        local arg = params[2] and string.lower(params[2]) or nil
+        local enable
+        if arg == "on" then
+            enable = true
+        elseif arg == "off" then
+            enable = false
+        else
+            enable = not (GSEOptions and GSEOptions.ToolbarEnabled ~= false)
+        end
+        if GSEOptions then
+            GSEOptions.ToolbarEnabled = enable and true or false
+        end
+        GSE.CheckGUI()
+        if enable then
+            if GSE.ShowMenu then GSE.ShowMenu() end
+            GSE.Print(colour .. "GSE Toolbar ON|r")
+        else
+            if GSE.MenuFrame and GSE.MenuFrame:IsShown() then
+                GSE.MenuFrame:Hide()
+            end
+            if GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
+                GSEOptions.frameLocations.menu.open = false
+            end
+            GSE.Print(colour .. "GSE Toolbar OFF|r. Type " .. colour .. "/gse toolbar on|r to turn it back on.")
+        end
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
         GSE.Print(L["Options have been reset to defaults."])
@@ -2038,13 +2084,22 @@ function GSE:GSSlash(input)
             -- Route to Editor when the Toolbar is disabled (see Options.lua's
             -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
             if GSEOptions and GSEOptions.ToolbarEnabled == false then
-                -- 1) If an editor already exists this session, just bring
-                --    it forward — never create a duplicate. (Especially
-                --    important on PatronBuild where CreateEditor doesn't
-                --    dedupe.)
+                -- 1) An editor already exists this session. With multi-window
+                --    support (GSE.GUI.Feature.MULTI_WINDOW) each /gse opens an
+                --    ADDITIONAL editor window, so open another one here. Without
+                --    it, CreateEditor returns the single shared editor, so just
+                --    bring the existing one forward. (CreateEditor does not
+                --    dedupe on PatronBuild.)
                 if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
-                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
-                    if existing and existing.Show then existing:Show() end
+                    local multiWindow = GSE.GUI.Feature and GSE.GUI.Feature.MULTI_WINDOW
+                        and GSE.GUI.Feature.MULTI_WINDOW()
+                    if multiWindow and GSE.ShowSequences then
+                        -- Open an additional editor window.
+                        GSE.ShowSequences()
+                    else
+                        local existing = GSE.GUI.editors[#GSE.GUI.editors]
+                        if existing and existing.Show then existing:Show() end
+                    end
                     return
                 end
 

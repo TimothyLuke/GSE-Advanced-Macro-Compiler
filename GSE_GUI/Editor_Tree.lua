@@ -117,12 +117,7 @@ local RESOURCE_COPY_OFFSET_Y = -8
 local EDITOR_FOOTER_BUTTON_GAP = 6
 
 local function SetResourceFrameTextColor(text, color)
-    if not (text and text.SetTextColor and color) then return end
-    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
-        text:SetTextColor(1, 1, 1, 1)
-    else
-        text:SetTextColor(unpack(color))
-    end
+    if text and text.SetTextColor and color then text:SetTextColor(unpack(color)) end
 end
 
 local function GetResourceEditBox(editBox)
@@ -352,11 +347,7 @@ local function CreateResourceRow(parent, resource, index)
     title:SetFontObject(GameFontNormal)
     title:SetJustifyH("LEFT")
     title:SetJustifyV("MIDDLE")
-    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
-        title:SetColor(1, 1, 1, 1)
-    else
-        title:SetColor(unpack(RESOURCE_GOLD))
-    end
+    title:SetColor(unpack(RESOURCE_GOLD))
     if title.text and title.text.SetWordWrap then title.text:SetWordWrap(false) end
     body:AddChild(title)
 
@@ -1107,7 +1098,15 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return rc
     end
 
-    if unique[#unique] == "NKB" then
+    if unique[#unique] == "SKYRIDING" then
+        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
+        local rc = makeRightContainer()
+        if GSE.DrawSkyridingKeybindEditor then
+            GSE.DrawSkyridingKeybindEditor(rc)
+        end
+        editframe.loaded = true
+        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (L["Skyriding / Vehicle Keybinds"] or "Skyriding"))
+    elseif unique[#unique] == "NKB" then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
         editframe.showKeybind(nil, nil, nil, nil, "KB", rc)

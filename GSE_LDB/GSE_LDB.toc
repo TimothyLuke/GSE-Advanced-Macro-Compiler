@@ -3,7 +3,7 @@
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Data Feeds and Minimap|r
 ## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-18-g657a37a-PatronBuild
 ## Dependencies: GSE GSE_Utils
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
 ## Category-enUS: Combat

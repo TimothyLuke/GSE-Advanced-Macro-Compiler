@@ -140,6 +140,9 @@ function GSE.SetDefaultOptions()
     GSEOptions.UseModernSkin = false
     GSEOptions.UseModernClassColors = false
     GSEOptions.UseModernCustomColor = false
+    GSEOptions.HideUIErrorFrame = true
+    GSEOptions.MuteVoiceErrors = true
+    GSEOptions.MuteLowerEnergy = true
     GSEOptions.ModernCustomColor = {
         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
         g = MODERN_CUSTOM_COLOR_DEFAULT.g,
@@ -176,6 +179,18 @@ end
 
 if GSEOptions.UseModernCustomColor == true then
     GSEOptions.UseModernClassColors = false
+end
+
+if GSEOptions.HideUIErrorFrame == nil then
+    GSEOptions.HideUIErrorFrame = true
+end
+
+if GSEOptions.MuteVoiceErrors == nil then
+    GSEOptions.MuteVoiceErrors = true
+end
+
+if GSEOptions.MuteLowerEnergy == nil then
+    GSEOptions.MuteLowerEnergy = true
 end
 
 if type(GSEOptions.ModernCustomColor) ~= "table" then

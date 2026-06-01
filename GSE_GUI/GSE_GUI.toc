@@ -3,7 +3,7 @@
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
-## Version: @project-version@
+## Version: 3.3.19-18-g657a37a-PatronBuild
 ## Dependencies: GSE GSE_Utils
 ## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUI, EllesmereUIActionBars
 ## LoadOnDemand: 1
@@ -34,7 +34,6 @@ Editor_Metadata.lua
 Editor_Variable.lua
 Editor_Keybind.lua
 Editor_Macro.lua
-Editor_Undo.lua
 Editor_Tree.lua
 Editor.lua
 RemoteMacroBrowser.lua

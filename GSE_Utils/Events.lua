@@ -13,7 +13,7 @@ local SequenceDebugColumns = {
     {label = "Castable", width = 16, pixelWidth = 76, min = 60},
     {label = "Resources", width = 20, pixelWidth = 90, min = 70},
     {label = "Casting", width = 30, pixelWidth = 112, min = 75},
-    {label = "Suggested - Spell Assist", width = 30, pixelWidth = 150, min = 110}
+    {label = "Next Cast", width = 18, pixelWidth = 90, min = 70}
 }
 GSE.SequenceDebugColumns = SequenceDebugColumns
 
@@ -182,6 +182,13 @@ end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
     if unit == "player" then
+        -- Bail out quietly if GSE core did not finish initialising (e.g. the
+        -- main GSE addon aborted before GSE.split / GSE.GameMode were defined).
+        -- Without this the handler errors on every successful cast in combat
+        -- (the reported "Events.lua:186: attempt to call a nil value").
+        if type(GSE.split) ~= "function" or GSE.GameMode == nil then
+            return
+        end
         local GCD_Timer
         local elements = GSE.split(action, "-")
         local successfulSpellID = tonumber(elements and elements[6]) or tonumber(sped) or (elements and elements[6]) or sped

@@ -2,23 +2,30 @@
 GSE =
     LibStub("AceAddon-3.0"):NewAddon(
     "GSE",
-    "AceConsole-3.0",
     "AceEvent-3.0",
     "AceComm-3.0"
 )
-GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
+-- Use silent mode and fall back to an English-key table if the "GSE" locale is
+-- not registered. A corrupted or partially-downloaded Localization\ModL_*.lua
+-- file would otherwise make GetLocale() raise here, aborting Init.lua before
+-- GSE.split / GSE.GameMode are defined and leaving the addon half-loaded (which
+-- then errors in combat, e.g. GSE_Utils/Events.lua calling the nil GSE.split).
+GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE", true)
+if not GSE.L then
+    GSE.L = setmetatable({}, {__index = function(_, key) return key end})
+end
 GSE.Static = {}
 
 GSE.WagoAnalytics = LibStub("WagoAnalytics"):Register("kGr0YY6y")
 
 GSE.VersionString = C_AddOns.GetAddOnMetadata("GSE", "Version")
 
---@debug@
+--[==[@debug@
 if GSE.VersionString:find("version") then
     GSE.VersionString = "3.3.00-development"
     GSE.Developer = true
 end
---@end-debug@
+--@end-debug@]==]
 
 if GSE.VersionString:find("Patron") then
     GSE.Patron = true
@@ -47,6 +54,11 @@ end
 --- Split a string into an array based on the delimiter specified.
 function GSE.split(source, delimiters)
     local elements = {}
+    -- Guard against nil input so callers passing a possibly-nil value (e.g.
+    -- a missing GUID segment) get an empty table instead of an error.
+    if source == nil or delimiters == nil then
+        return elements
+    end
     local pattern = "([^" .. delimiters .. "]+)"
     local _ =
         string.gsub(

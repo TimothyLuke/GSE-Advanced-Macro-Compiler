@@ -1601,6 +1601,42 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
     end
 end
 
+local function AddErrorMessageOptions(optionsCategory)
+    do
+        local layout = SettingsPanel:GetLayout(optionsCategory)
+        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Error Messages", tooltip = "Error Messages"}))
+    end
+
+    local function AddErrorToggle(settingID, optionKey, label, tooltip)
+        local setting = Settings.RegisterAddOnSetting(optionsCategory, settingID, optionKey, GSEOptions, Settings.VarType.Boolean, label, true)
+        setting:SetValueChangedCallback(function()
+            if GSE.ApplyErrorMessageOptions then
+                GSE.ApplyErrorMessageOptions()
+            end
+        end)
+        Settings.CreateCheckbox(optionsCategory, setting, tooltip)
+    end
+
+    AddErrorToggle(
+        "hideUIErrorFrame",
+        "HideUIErrorFrame",
+        "UIErrorFrame",
+        "Suppress most UI error text such as 'Not enough rage'. Important errors are still shown."
+    )
+    AddErrorToggle(
+        "muteVoiceErrors",
+        "MuteVoiceErrors",
+        "Voice Errors",
+        "Mute spoken UI error voice lines."
+    )
+    AddErrorToggle(
+        "muteLowerEnergy",
+        "MuteLowerEnergy",
+        "Lower Energy",
+        "Mute the lower-energy/vigor recharge sound used by Leatrix Plus."
+    )
+end
+
 local function AddOutOfCombatQueueOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -2668,6 +2704,13 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function SetValue(val)
                 GSEOptions.ToolbarEnabled = val and true or false
                 if val then
+                    -- GSE_GUI is LoadOnDemand and owns GSE.ShowMenu / GSE.MenuFrame.
+                    -- On a session where the Toolbar started OFF, GSE_GUI is not
+                    -- loaded yet, so GSE.ShowMenu would be nil and the toggle would
+                    -- flip to ON without the Toolbar ever appearing (and without
+                    -- setting menu.open, so it would not return on next login
+                    -- either). Force-load it first, the same way /gse toolbar does.
+                    if GSE.CheckGUI then GSE.CheckGUI() end
                     -- Turned ON: bring up the toolbar immediately so the user
                     -- sees the result of toggling on. GSE.ShowMenu sets
                     -- menu.open = true so the toolbar also auto-shows on next
@@ -2939,6 +2982,7 @@ function GSE:CreateConfigPanels()
         end
         AddMacroButtonBehaviorOptions(generalOptions)
         AddActionBarClickBehaviorOptions(generalOptions)
+        AddErrorMessageOptions(generalOptions)
         do
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
@@ -3017,13 +3061,63 @@ function GSE:CreateConfigPanels()
 
         createBlizzOptions(category, pluginOptions)
 
-        -- Skyriding / Vehicle Keybinds subcategory is registered natively
-        -- by GSE_QoL/QoL.lua via Settings.RegisterVerticalLayoutSubcategory
-        -- + CreateSettingsButtonInitializer (matching the master-branch
-        -- pattern that pre-dated the AceGUI removal regression). Doing it
-        -- there avoids the NativeUI canvas dance we used here previously,
-        -- which only rendered on first OnShow and failed to refresh the
-        -- displayed binding text after a user rebound a slot.
+        -- Skyriding: Vehicle panel — Retail only (GameMode >= 11), sibling of Tools & Diagnostics
+        if GSE.GameMode >= 11 then
+            local canvasFrame = CreateFrame("Frame")
+
+            local skyCategory
+            if Settings.RegisterCanvasLayoutSubcategory then
+                skyCategory = Settings.RegisterCanvasLayoutSubcategory(category, canvasFrame, "Skyriding / Vehicle Keybinds")
+            else
+                -- Fallback for builds where canvas subcategory isn't available
+                skyCategory = Settings.RegisterVerticalLayoutSubcategory(category, "Skyriding / Vehicle Keybinds")
+            end
+
+            if skyCategory then
+                local drawn = false
+                local container = nil
+
+                local function applyCanvasSize()
+                    if not (container and container.frame) then return end
+                    local w = canvasFrame:GetWidth()
+                    local h = canvasFrame:GetHeight()
+                    if (w or 0) > 0 and container.SetWidth then container:SetWidth(w) end
+                    if (h or 0) > 0 and container.SetHeight then container:SetHeight(h) end
+                    if container.DoLayout then container:DoLayout() end
+                end
+
+                local function drawContent()
+                    if drawn then return end
+                    local w = canvasFrame:GetWidth()
+                    local h = canvasFrame:GetHeight()
+                    if (w or 0) < 10 or (h or 0) < 10 then return end
+                    drawn = true
+                    local activeUI = GSE and GSE.UI
+                    if not (activeUI and GSE.DrawSkyridingKeybindEditor) then return end
+                    container = activeUI:Create("SimpleGroup")
+                    if not (container and container.frame) then return end
+                    container.frame:SetParent(canvasFrame)
+                    container.frame:SetPoint("TOPLEFT", canvasFrame, "TOPLEFT", 0, 0)
+                    -- Drive size through NativeUI so OnHeightSet fires and
+                    -- centerRowsVertically can calculate the correct spacer height
+                    if container.SetWidth then container:SetWidth(w) end
+                    if container.SetHeight then container:SetHeight(h) end
+                    GSE.DrawSkyridingKeybindEditor(container)
+                    C_Timer.After(0, applyCanvasSize)
+                end
+
+                canvasFrame:SetScript("OnSizeChanged", function()
+                    if drawn then
+                        applyCanvasSize()
+                    else
+                        drawContent()
+                    end
+                end)
+                canvasFrame:SetScript("OnShow", function()
+                    drawContent()
+                end)
+            end
+        end
 
     end
 

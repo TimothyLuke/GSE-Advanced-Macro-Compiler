@@ -74,6 +74,94 @@ end
 
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
+local LOWER_ENERGY_SOUND_ID = 1489541
+local errorMessageState = {
+    originalHandler = nil,
+    installed = false
+}
+
+local function EnsureErrorMessageOptions()
+    if not GSEOptions then GSEOptions = {} end
+    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
+    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
+    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
+end
+
+local function IsAllowedUIError(err)
+    if not err then return false end
+    if (ERR_INV_FULL and err == ERR_INV_FULL)
+        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
+        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
+        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
+        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
+        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
+        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
+        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
+        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
+        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
+        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
+        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
+        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
+        return true
+    end
+    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
+        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
+        return ok and pattern and err:find(pattern)
+    end
+    return false
+end
+
+local function FilterUIErrorsFrame(self, event, id, err, ...)
+    if event == "UI_ERROR_MESSAGE" then
+        if IsAllowedUIError(err) then
+            if errorMessageState.originalHandler then
+                return errorMessageState.originalHandler(self, event, id, err, ...)
+            end
+        end
+        return
+    end
+    if errorMessageState.originalHandler then
+        return errorMessageState.originalHandler(self, event, id, err, ...)
+    end
+end
+
+local function SetErrorSpeechMuted(muted)
+    local setter = C_CVar and C_CVar.SetCVar or SetCVar
+    if setter then
+        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
+    end
+end
+
+local function SetLowerEnergyMuted(muted)
+    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
+    if soundFunc then
+        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
+    end
+end
+
+function GSE.ApplyErrorMessageOptions()
+    EnsureErrorMessageOptions()
+
+    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
+        if GSEOptions.HideUIErrorFrame then
+            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
+            if currentHandler ~= FilterUIErrorsFrame then
+                errorMessageState.originalHandler = currentHandler
+            end
+            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
+            errorMessageState.installed = true
+        elseif errorMessageState.installed then
+            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
+                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
+            end
+            errorMessageState.installed = false
+        end
+    end
+
+    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
+    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
+end
+
 -- Fired once per session when overrides are loaded.  Corrects CVars that interfere
 -- with actionbar overrides and tells the player what was changed.
 local actionBarCVarCheckedThisSession = false
@@ -207,6 +295,22 @@ local function getButtonEffectiveSlot(btn)
     return slot + (page - 1) * 12
 end
 
+-- True when the player has dropped a real (non-empty, non-macro) action into the
+-- action-bar slot a GSE override sits on. Mirrors the BAR_SWAP secure handlers,
+-- which treat empty and macro slots as still owned by the override and any other
+-- action as something to yield to. Used to stop GSE repainting its sequence icon
+-- over the real action's icon, which otherwise fights WoW's own repaint and makes
+-- the button flicker when a normal key/spell is placed in the same slot.
+function GSE.ActionBarSlotHasForeignAction(button)
+    if not button or not button.GetAttribute then return false end
+    if not button:GetAttribute("gse-button") then return false end
+    local slot = getButtonEffectiveSlot(button)
+    if not slot or not GetActionInfo then return false end
+    local actionType = GetActionInfo(slot)
+    if actionType == nil or actionType == "macro" then return false end
+    return true
+end
+
 -- Return the display icon for a GSE-overridden button.
 -- Resolve directly from the compiled GSE action first so MacroBlock conditionals
 -- such as [mod:alt] repaint like a normal in-game macro.
@@ -259,6 +363,8 @@ local function getGSESequenceIcon(seq)
 end
 
 local function getGSEButtonIcon(self)
+    -- A real action in the slot wins: don't paint the sequence icon over it.
+    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
     local seq = self:GetAttribute("gse-button")
     local seqTexture = getGSESequenceIcon(seq)
     if seqTexture then return seqTexture end
@@ -584,7 +690,8 @@ local function overrideActionButton(savedBind, force)
                 _G[Button]:HookScript(
                     "OnEnter",
                     function(self)
-                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
+                        if not InCombatLockdown() and self:GetAttribute("gse-button")
+                            and not GSE.ActionBarSlotHasForeignAction(self) then
                             self:SetAttribute("type", "click")
                         end
                     end
@@ -663,7 +770,8 @@ local function overrideActionButton(savedBind, force)
                     _G[Button]:HookScript(
                         "OnEnter",
                         function(self)
-                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
+                            if not InCombatLockdown() and self:GetAttribute("gse-button")
+                                and not GSE.ActionBarSlotHasForeignAction(self) then
                                 self:SetAttribute("type", "click")
                             end
                         end
@@ -678,7 +786,16 @@ local function overrideActionButton(savedBind, force)
                         "",
                         [[
     if self:GetAttribute('gse-button') then
-        self:SetAttribute('type', 'click')
+        local slot = self:GetID()
+        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
+        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
+                                or (page and (slot + page * 12 - 12)) or nil
+        local at = effectiveAction and GetActionInfo(effectiveAction)
+        -- Only re-assert the override on hover when the slot is empty or a macro;
+        -- if a real action sits here, leave type="action" so it stays usable.
+        if at == nil or at == "macro" then
+            self:SetAttribute('type', 'click')
+        end
     end
 ]]
                     )
@@ -703,6 +820,57 @@ local function overrideActionButton(savedBind, force)
             end
         end)
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- Yield an override to a real action the player drops into its slot.
+--
+-- The secure BAR_SWAP_ONCLICK / BAR_SWAP_OAC snippets already switch a button
+-- between the GSE override (type="click") and the underlying action
+-- (type="action"), but they only run on a click or a bar-page/state swap. When
+-- the player simply drops a spell into the slot neither fires, so the button is
+-- left behind the stale override -- GSE icon + watermark bleeding through, and
+-- the action looking disabled -- until the next click. ACTIONBAR_SLOT_CHANGED
+-- (registered below) runs the same evaluation immediately. type is a protected
+-- attribute, so this only acts out of combat; the in-combat case is covered by
+-- LoadOverrides() on PLAYER_REGEN_ENABLED. Attributes are written only when they
+-- actually change, so a no-op slot event does not re-trigger a repaint.
+-- ---------------------------------------------------------------------------
+local function reevaluateOverrideButtonState(buttonName, sequence)
+    local btn = _G[buttonName]
+    if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
+    local foreign = GSE.ActionBarSlotHasForeignAction(btn)
+    local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
+    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
+    -- own state system; leave their type alone and just correct the icon/watermark.
+    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
+        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
+    if not isLAB then
+        local desiredType = foreign and "action" or "click"
+        if btn:GetAttribute("type") ~= desiredType then
+            btn:SetAttribute("type", desiredType)
+            if not foreign and sequence and _G[sequence] then
+                btn:SetAttribute("clickbutton", _G[sequence])
+            end
+        end
+    end
+    -- gse-eff-action drives the existing OnAttributeChanged icon hook: > 0 shows the
+    -- real action icon and hides the GSE watermark; 0 restores the sequence icon.
+    if btn:GetAttribute("gse-eff-action") ~= desiredEff then
+        btn:SetAttribute("gse-eff-action", desiredEff)
+    end
+end
+
+local function reevaluateAllOverrideButtons()
+    if GSE.isEmpty(GSE.ButtonOverrides) then return end
+    if InCombatLockdown() then return end
+    for buttonName, sequence in pairs(GSE.ButtonOverrides) do
+        reevaluateOverrideButtonState(buttonName, sequence)
+    end
+end
+
+function GSE:ACTIONBAR_SLOT_CHANGED()
+    reevaluateAllOverrideButtons()
 end
 
 local function isUsableActionBarOverride(savedBind)
@@ -813,6 +981,10 @@ local function LoadOverrides(force)
                 end
             end
         end
+        -- A freshly (re)loaded override whose slot already holds a real action
+        -- must start yielded, not behind the override. Defer one frame so the
+        -- action-bar slots are populated before we read them.
+        C_Timer.After(0, reevaluateAllOverrideButtons)
     end
 end
 
@@ -920,6 +1092,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.InstallDeveloperDebugGameMenuWarning()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
+    GSE.ApplyErrorMessageOptions()
     GSE.UpdateZoneFlags()
     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
     -- (older mod versions didn't track it for macros at all, and never-edited
@@ -1312,6 +1485,7 @@ GSE:RegisterEvent("PLAYER_LOGOUT")
 GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
+GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
