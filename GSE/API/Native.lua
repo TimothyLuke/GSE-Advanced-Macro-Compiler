@@ -134,3 +134,13 @@ function GSE.GetSpellCooldown(spell)
     end
     return nil
 end
+
+--- Returns true when EllesmereUI is loaded in any form. Same dual-signal
+--- detection the action-bar override code uses (Events.lua + Utils.lua look
+--- for EABButton1; the framework also exposes _G.EllesmereUI). Either signal
+--- means the EUI suite is active and GSE should defer to its skin/look.
+function GSE.IsEllesmereUILoaded()
+    if type(_G.EllesmereUI) == "table" then return true end
+    if _G.EABButton1 then return true end
+    return false
+end

@@ -117,7 +117,12 @@ local RESOURCE_COPY_OFFSET_Y = -8
 local EDITOR_FOOTER_BUTTON_GAP = 6
 
 local function SetResourceFrameTextColor(text, color)
-    if text and text.SetTextColor and color then text:SetTextColor(unpack(color)) end
+    if not (text and text.SetTextColor and color) then return end
+    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        text:SetTextColor(1, 1, 1, 1)
+    else
+        text:SetTextColor(unpack(color))
+    end
 end
 
 local function GetResourceEditBox(editBox)
@@ -347,7 +352,11 @@ local function CreateResourceRow(parent, resource, index)
     title:SetFontObject(GameFontNormal)
     title:SetJustifyH("LEFT")
     title:SetJustifyV("MIDDLE")
-    title:SetColor(unpack(RESOURCE_GOLD))
+    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        title:SetColor(1, 1, 1, 1)
+    else
+        title:SetColor(unpack(RESOURCE_GOLD))
+    end
     if title.text and title.text.SetWordWrap then title.text:SetWordWrap(false) end
     body:AddChild(title)
 

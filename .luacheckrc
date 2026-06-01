@@ -414,6 +414,7 @@ globals = {
     "UnitDetailedThreatSituation",
     "UnitDistanceSquared",
     "UnitExists",
+    "UnitFactionGroup",
     "UnitGetTotalAbsorbs",
     "UnitGUID",
     "UnitGroupRolesAssigned",

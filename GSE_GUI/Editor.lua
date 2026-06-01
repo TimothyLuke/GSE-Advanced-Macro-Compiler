@@ -4,6 +4,21 @@ local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
+-- Form-field label colour. The GSE modern theme paints labels in the
+-- KEYWORD accent (gold/yellow by default). When EllesmereUI is driving
+-- the look we want neutral white so the labels match the rest of EUI's
+-- panel typography. Centralised so every label site stays consistent.
+local function keywordColor()
+    -- GSE.GUIGetColour returns r, g, b as separate values (not a table).
+    -- :SetColor unpacks those into :SetTextColor(r, g, b[, a]), so we must
+    -- return multiple values too — a table here would arrive as r=<table>
+    -- at SetTextColor and crash.
+    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        return 1, 1, 1, 1
+    end
+    return GSE.GUIGetColour(GSEOptions.KEYWORD)
+end
+
 local FRAME_DISPLACEMENT = 30
 local DEFAULT_HEIGHT = 800
 local DEFAULT_WIDTH = 800
@@ -2367,7 +2382,7 @@ function GSE.CreateEditor()
     minWidgetExpand:RegisterForClicks("LeftButtonUp")
     minWidgetExpand:SetFrameLevel((minWidgetClose:GetFrameLevel() or minWidgetBackdrop:GetFrameLevel()) + 1)
     minWidgetExpand:SetPoint("RIGHT", minWidgetClose, "LEFT", 2, 0)
-    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
+    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
     minWidgetExpand:SetNormalTexture(minWidgetExpandTexture)
     minWidgetExpand:SetPushedTexture(minWidgetExpandTexture)
     minWidgetExpand:SetHighlightTexture(minWidgetExpandTexture, minWidgetUsesModern and "BLEND" or "ADD")
@@ -2504,7 +2519,7 @@ function GSE.CreateEditor()
         minimizeBtn:SetPoint("TOPRIGHT", editframe.frame, "TOPRIGHT", -34, -5)
     end
     minimizeBtn:SetFrameLevel(((editframe.closebutton and editframe.closebutton.GetFrameLevel and editframe.closebutton:GetFrameLevel()) or editframe.frame:GetFrameLevel() or 0) + 2)
-    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
+    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
     minimizeBtn:SetNormalTexture(minimizeBtnTexture)
     minimizeBtn:SetPushedTexture(minimizeBtnTexture)
     minimizeBtn:SetHighlightTexture(minimizeBtnTexture, minimizeBtnUsesModern and "BLEND" or "ADD")
@@ -2803,7 +2818,7 @@ function GSE.CreateEditor()
         resetLabel:SetWidth(110)
         resetLabel:SetHeight(24)
         if resetLabel.SetJustifyV then resetLabel:SetJustifyV("MIDDLE") end
-        resetLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+        resetLabel:SetColor(keywordColor())
 
         local combatResetDropdown = UI:Create("Dropdown")
         combatResetDropdown:SetLabel("")
@@ -4926,7 +4941,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			typeLabel:SetColor(keywordColor())
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -4935,7 +4950,7 @@ function GSE.CreateEditor()
 			macroTextLabel:SetText("")
 			macroTextLabel:SetWidth(macroRailWidth)
 			macroTextLabel:SetHeight(18)
-			macroTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			macroTextLabel:SetColor(keywordColor())
 			if macroTextLabel.SetJustifyH then macroTextLabel:SetJustifyH("LEFT") end
 			if macroTextLabel.SetJustifyV then macroTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5063,7 +5078,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			typeLabel:SetColor(keywordColor())
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -5072,7 +5087,7 @@ function GSE.CreateEditor()
 			actionTextLabel:SetText("")
 			actionTextLabel:SetWidth(macroRailWidth)
 			actionTextLabel:SetHeight(4)
-			actionTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			actionTextLabel:SetColor(keywordColor())
 			if actionTextLabel.SetJustifyH then actionTextLabel:SetJustifyH("LEFT") end
 			if actionTextLabel.SetJustifyV then actionTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5324,7 +5339,7 @@ function GSE.CreateEditor()
                 stepRowLabel:SetText("Step FN")
                 stepRowLabel:SetWidth(loopControlLabelWidth)
                 stepRowLabel:SetHeight(24)
-                stepRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                stepRowLabel:SetColor(keywordColor())
                 if stepRowLabel.SetJustifyV then stepRowLabel:SetJustifyV("MIDDLE") end
                 stepRow:AddChild(stepRowLabel)
                 stepRow:AddChild(stepdropdown)
@@ -5341,7 +5356,7 @@ function GSE.CreateEditor()
                 repeatRowLabel:SetText(L["Repeat"])
                 repeatRowLabel:SetWidth(loopControlLabelWidth)
                 repeatRowLabel:SetHeight(24)
-                repeatRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                repeatRowLabel:SetColor(keywordColor())
                 if repeatRowLabel.SetJustifyV then repeatRowLabel:SetJustifyV("MIDDLE") end
                 repeatRow:AddChild(repeatRowLabel)
                 repeatRow:AddChild(looplimit)
@@ -5481,7 +5496,7 @@ function GSE.CreateEditor()
                 tlabel:SetText("True")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 tlabel:SetFontObject(GameFontNormalLarge)
-                tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                tlabel:SetColor(keywordColor())
 
                 local trueContainer = UI:Create("SimpleGroup")
                 trueContainer:SetLayout("Flow")
@@ -5519,7 +5534,7 @@ function GSE.CreateEditor()
                 flabel:SetText("False")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 flabel:SetFontObject(GameFontNormalLarge)
-                flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                flabel:SetColor(keywordColor())
                 local falsecontainer = UI:Create("SimpleGroup")
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")

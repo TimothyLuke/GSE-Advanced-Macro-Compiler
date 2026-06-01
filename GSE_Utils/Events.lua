@@ -13,7 +13,7 @@ local SequenceDebugColumns = {
     {label = "Castable", width = 16, pixelWidth = 76, min = 60},
     {label = "Resources", width = 20, pixelWidth = 90, min = 70},
     {label = "Casting", width = 30, pixelWidth = 112, min = 75},
-    {label = "Next Cast", width = 18, pixelWidth = 90, min = 70}
+    {label = "Suggested - Spell Assist", width = 30, pixelWidth = 150, min = 110}
 }
 GSE.SequenceDebugColumns = SequenceDebugColumns
 

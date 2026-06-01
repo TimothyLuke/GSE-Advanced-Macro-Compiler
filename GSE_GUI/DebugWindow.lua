@@ -59,10 +59,18 @@ local DEFAULT_DEBUG_COLUMNS = {
     {label = "Castable", width = 76, min = 60},
     {label = "Resources", width = 90, min = 70},
     {label = "Casting", width = 112, min = 75},
-    {label = "Next Cast", width = 90, min = 70}
+    {label = "Suggested - Spell Assist", width = 150, min = 110}
 }
 
 function GSE.DebugUsesModernSkin()
+    -- When an external skin provider (ElvUI / EllesmereUI) is active we want
+    -- the debugger's in-file dark-fill button system to kick in instead of
+    -- the buttons falling back to Blizzard's red UIPanelButtonTemplate. The
+    -- external provider's painters layer on top via Skin.Button calls added
+    -- to each button site below.
+    if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() then
+        return true
+    end
     return (GSE.ShouldUseModernSkin and GSE.ShouldUseModernSkin()) or
         (GSE.ShouldUseElvUISkin and GSE.ShouldUseElvUISkin())
 end
@@ -265,6 +273,15 @@ function GSE.StyleDebugTextButton(button)
         button:HookScript("OnDisable", function(self) GSE.UpdateDebugTextButtonState(self, false) end)
     end
     GSE.UpdateDebugTextButtonState(button, button.IsMouseOver and button:IsMouseOver())
+
+    -- When an external skin provider (ElvUI / EllesmereUI) is active, layer
+    -- its border + backdrop on top of our dark-grey fill. The provider's
+    -- Skin.Button blanks UIPanelButtonTemplate's red textures (no-op here
+    -- since modern mode already alpha=0'd them) and paints the EUI accent
+    -- border so the debugger matches the rest of EUI panels.
+    if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Button then
+        GSE.Skin.Button(button)
+    end
 end
 
 local STATS_COLUMNS = {
@@ -878,6 +895,13 @@ if not DebugFrame.GSEUsesBlizzardPanelTemplate and DebugFrame.SetBackdrop then
     DebugFrame:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 end
 
+-- Under EUI / ElvUI, repaint the DebugFrame's chrome through the active skin
+-- provider so the debugger panel matches host UI panels instead of showing
+-- Blizzard's gold ornate DialogBox-Border edge texture.
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(DebugFrame)
+end
+
 GSE.GUIDebugFrame = DebugFrame
 function GSE.GUIDebugIsOpenOrMinimized()
     local frame = GSE.GUIDebugFrame
@@ -980,7 +1004,11 @@ local function PositionDebuggerTitleText()
     title:SetJustifyV("MIDDLE")
     if title.SetFontObject then title:SetFontObject(GameFontNormal) end
     if title.SetDrawLayer then title:SetDrawLayer("OVERLAY", 7) end
-    if title.SetTextColor then title:SetTextColor(1, 0.82, 0, 1) end
+    if GSE.Skin and GSE.Skin.PaintBodyText then
+        GSE.Skin.PaintBodyText(title, 1, 0.82, 0, 1)
+    elseif title.SetTextColor then
+        title:SetTextColor(1, 0.82, 0, 1)
+    end
     if title.SetAlpha then title:SetAlpha(1) end
     title:SetText(DebugFrame.debuggerTitleText)
     title:Show()
@@ -1181,7 +1209,11 @@ if headerBackground.SetBackdrop then
         }
     )
     headerBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    headerBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(headerBackground, 0.7, 0.62, 0.12, 1)
+    else
+        headerBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(headerBackground)
 
@@ -1217,6 +1249,15 @@ scrollBackground:Show()
 headerBackground:Show()
 headerScrollFrame:Show()
 scrollFrame:Show()
+
+-- Route the debugger's main scrollbar through NativeUI's slim modern painter
+-- so it matches the editor's outer scrollbar instead of Blizzard's gold default.
+-- The slim painter handles both EUI and the modern theme; outside of those it
+-- no-ops and Blizzard's default scrollbar stays.
+if GSE.UI and GSE.UI.ApplyModernSlimScrollBar then
+    local debugScrollBar = scrollFrame.ScrollBar or _G[scrollFrame:GetName() .. "ScrollBar"]
+    if debugScrollBar then GSE.UI.ApplyModernSlimScrollBar(debugScrollBar, scrollBackground, -6, 0, 0) end
+end
 
 local headerLabels = {}
 local headerHandles = {}
@@ -1800,6 +1841,10 @@ if not statsWidget.GSEUsesBlizzardPanelTemplate and statsWidget.SetBackdrop then
     statsWidget:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 end
 
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(statsWidget)
+end
+
 local function SaveStatsWidgetLocation()
     local location = EnsureStatsWidgetLocation()
     location.width = ClampNumber(statsWidget:GetWidth(), DEBUG_UI.STATS_WIDGET_MIN_WIDTH, GetMaxStatsWidgetWidth(), DEBUG_UI.STATS_WIDGET_WIDTH)
@@ -1994,7 +2039,11 @@ if statsHeaderBackground.SetBackdrop then
         }
     )
     statsHeaderBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    statsHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(statsHeaderBackground, 0.7, 0.62, 0.12, 1)
+    else
+        statsHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(statsHeaderBackground)
 
@@ -2526,6 +2575,10 @@ if not hardwareWidget.GSEUsesBlizzardPanelTemplate and hardwareWidget.SetBackdro
     hardwareWidget:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 end
 
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(hardwareWidget)
+end
+
 AnchorHardwareWidget = function()
     if hardwareWidget.GSESideDetached then return end
     hardwareWidget:ClearAllPoints()
@@ -2605,7 +2658,11 @@ if hardwareHeaderBackground.SetBackdrop then
         }
     )
     hardwareHeaderBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    hardwareHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(hardwareHeaderBackground, 0.7, 0.62, 0.12, 1)
+    else
+        hardwareHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(hardwareHeaderBackground)
 
