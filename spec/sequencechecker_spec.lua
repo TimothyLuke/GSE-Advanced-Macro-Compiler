@@ -51,6 +51,24 @@ describe(
           return 11  -- Druid in unit tests
         end
 
+        -- ScanMacrosForErrors does an icon-coverage pass that calls into
+        -- helpers defined in GSE/API/Storage.lua + C_Item / GSE.GetSpellInfo.
+        -- The structural-check tests don't exercise those paths, so stub them
+        -- to return "no icon info available" — the calling code already
+        -- treats nil as "icon unknown" and falls through.
+        -- Return a sentinel that satisfies the icon-coverage check (hasIcon
+        -- becomes true) so the structural tests below aren't drowned in
+        -- "no icon set" warnings for sequences they didn't explicitly
+        -- construct to test icon coverage.
+        function GSE.GetSpellsFromString(_, _) return {iconID = 1} end -- luacheck: ignore
+        function GSE.GetSpellInfo(_) return {iconID = 1} end -- luacheck: ignore
+        function GSE.GetMacroTextIconInfo(_, _) return {iconID = 1} end -- luacheck: ignore
+        function GSE.CompileMacroText(_, _) return "" end -- luacheck: ignore
+        C_Item = C_Item or {}
+        function C_Item.GetItemInfo(_) return nil end -- luacheck: ignore
+        function GetMacroIndexByName(_) return 0 end -- luacheck: ignore
+        function GetMacroInfo(_) return nil, nil end -- luacheck: ignore
+
         function GSE.ReplaceSequence(classid, seqname, seq) -- luacheck: ignore
           table.insert(replaceSeqCalls, {classid = classid, seqname = seqname, seq = seq})
           -- Mirror what the real implementation does so Library stays in sync

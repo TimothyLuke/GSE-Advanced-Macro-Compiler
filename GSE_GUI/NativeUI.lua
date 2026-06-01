@@ -1201,7 +1201,7 @@ local function autoHeightGroup(child)
 end
 
 local function setChildSize(child, width, height)
-    if width and width > 0 then
+    if type(width) == "number" and width > 0 then
         child.width = width
         child.frame:SetWidth(width)
         if child.OnWidthSet then child:OnWidthSet(width) end
@@ -1219,19 +1219,26 @@ local function actualChildHeight(child, fallback)
 end
 
 local function childWidth(parent, child, contentWidth)
-    if child.fullWidth then
+    -- Defensive: treat AceGUI's SetFullWidth-equivalent string "fill" the
+    -- same as our fullWidth flag. AceGUI widgets store width = "fill"
+    -- directly on the table; if any sneaks into a NativeUI container,
+    -- passing the string straight to frame:SetWidth (Blizzard API that
+    -- wants a number) crashes the whole layout pass. Same rule for height.
+    if child.fullWidth or child.width == "fill" then
         return math.max(1, contentWidth - (STYLE.listPadX * 2))
     elseif child.relativeWidth then
         return math.max(1, (contentWidth - (STYLE.listPadX * 2)) * child.relativeWidth)
     end
-    return child.width or safeWidth(child.frame, 200)
+    if type(child.width) == "number" then return child.width end
+    return safeWidth(child.frame, 200)
 end
 
 local function childHeight(parent, child, contentHeight)
-    if child.fullHeight then
+    if child.fullHeight or child.height == "fill" then
         return math.max(1, contentHeight - (STYLE.flowPadY * 2))
     end
-    return child.height or safeHeight(child.frame, STYLE.controlHeight)
+    if type(child.height) == "number" then return child.height end
+    return safeHeight(child.frame, STYLE.controlHeight)
 end
 
 local function normalizeLayout(layout)
@@ -1456,6 +1463,14 @@ function baseMethods:Fire(event, ...)
 end
 
 function baseMethods:SetWidth(width)
+    -- Mirror AceGUI semantics: SetWidth("fill") == SetFullWidth(true). Lets
+    -- mixed AceGUI/NativeUI parent trees compose without crashing in the
+    -- layout pass that follows.
+    if width == "fill" then
+        self.fullWidth = true
+        if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
+        return
+    end
     self.width = width
     self.frame:SetWidth(width)
     if self.OnWidthSet then self:OnWidthSet(width) end

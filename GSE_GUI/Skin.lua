@@ -83,47 +83,56 @@ local function makeElvUIProvider()
 end
 
 -- ─── EllesmereUI provider ──────────────────────────────────────────────
--- EllesmereUI exposes no public Handle* API for external addons. The
--- closest hook is EllesmereUI.GetAccentColor(), which returns the user's
--- configured accent (r, g, b). We use that to paint GSE frame borders in
--- a colour that matches the rest of the user's EllesmereUI-themed UI.
--- The backdrop is a dark fill at 85% alpha to match EllesmereUI's panel
--- aesthetic; no attempt is made to replicate their 4-texture-strip border
--- system (that's internal and would couple us to EllesmereUI's locals).
+-- EllesmereUI doesn't ship a HandleX surface like ElvUI, but its public
+-- API is richer than first appeared. We use:
 --
--- This is intentionally not as polished as the ElvUI path — it's a
--- visually compatible best-effort treatment.
+--   EllesmereUI.ApplyBorderStyle(frame, size, r, g, b, a, textureKey)
+--       Their canonical border painter. Handles both the "solid" 4-strip
+--       PP system (their default) and BackdropTemplate-based textured
+--       borders. Auto-resolves the texture path from the texture key.
+--   EllesmereUI.GetAccentColor()  -> r, g, b
+--       User's configured accent (or class-color / preset).
+--   EllesmereUI.GetActiveTheme()  -> string
+--   EllesmereUI.ResolveBorderTexture(key) -> texture path
+--   EllesmereUI.PP                -- exposed panel-painter
+--       PP.CreateBorder(frame, r, g, b, a, size, drawLayer, subLevel)
+--       PP.SetBorderColor(frame, r, g, b, a)
+--
+-- We call ApplyBorderStyle to paint the same 4-strip borders EllesmereUI
+-- paints on its own panels, in the same accent colour. NativeUI's own
+-- chrome (CreateTexture overlays for the GSE orange/teal theme) remains
+-- on top of this — fully suppressing it requires per-widget knowledge of
+-- which textures NativeUI created. That's the next refactor; for now the
+-- EUI borders sit at the frame edge and the GSE theme fills the body.
 
-local EUI_BG = {0.10, 0.10, 0.12, 0.85}     -- panel background
-local EUI_EDGE_FILE = "Interface\\Buttons\\WHITE8x8"
-local EUI_EDGE_SIZE = 1
+local EUI_BG = {0.10, 0.10, 0.12, 0.85}     -- panel background (EUI doesn't expose a panel-bg colour API)
+local EUI_BORDER_SIZE = 1                    -- 1px is EUI's default thin border
 local EUI_BACKDROP = {
-    bgFile   = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = EUI_EDGE_FILE,
-    edgeSize = EUI_EDGE_SIZE,
-    insets   = {left = 0, right = 0, top = 0, bottom = 0},
+    bgFile = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = nil,                          -- borders come from EUI's PP system, not from our backdrop
+    edgeSize = 0,
+    insets = {left = 0, right = 0, top = 0, bottom = 0},
 }
 
 local function getEUIAccent()
-    if type(_G.EllesmereUI) == "table" and type(_G.EllesmereUI.GetAccentColor) == "function" then
-        local ok, r, g, b = pcall(_G.EllesmereUI.GetAccentColor)
+    local EUI = _G.EllesmereUI
+    if type(EUI) == "table" and type(EUI.GetAccentColor) == "function" then
+        local ok, r, g, b = pcall(EUI.GetAccentColor)
         if ok and r then return r, g, b end
     end
-    return 1, 1, 1  -- white fallback
+    return 1, 1, 1
 end
 
-local function paintEUIBorder(frame)
-    if not frame or type(frame.SetBackdrop) ~= "function" then return end
-    frame:SetBackdrop(EUI_BACKDROP)
-    frame:SetBackdropColor(EUI_BG[1], EUI_BG[2], EUI_BG[3], EUI_BG[4])
-    local r, g, b = getEUIAccent()
-    frame:SetBackdropBorderColor(r, g, b, 0.7)
+local function getEUITextureKey()
+    -- Default texture key for the user's active theme. EUI doesn't expose
+    -- a "get the current border texture for an arbitrary addon" — that's
+    -- per-addon registered with RegisterBorderDefaults. We default to
+    -- "solid" which is their 4-strip system and matches most users'
+    -- panels out of the box.
+    return "solid"
 end
 
 local function stripBlizzardRegions(frame)
-    -- Best-effort: hide the standard Blizzard backdrop pieces if present.
-    -- BackdropTemplate / NineSlice frames usually expose these regions by
-    -- name; non-Backdrop frames just no-op the SetShown calls.
     if not frame then return end
     for _, key in ipairs({"NineSlice", "Border", "Bg", "BorderTopLeft", "BorderTopRight",
                           "BorderBottomLeft", "BorderBottomRight", "BorderTop", "BorderBottom",
@@ -134,12 +143,11 @@ local function stripBlizzardRegions(frame)
 end
 
 local function makeEllesmereUIProvider()
-    if type(_G.EllesmereUI) ~= "table" then return nil end
+    local EUI = _G.EllesmereUI
+    if type(EUI) ~= "table" then return nil end
+    -- Require the public painters — bail if EUI is too old.
+    if type(EUI.ApplyBorderStyle) ~= "function" then return nil end
 
-    -- Adopt BackdropTemplate at load time so SetBackdrop is available on
-    -- frames created via the standard CreateFrame("Frame", name, parent)
-    -- (no template). Reapplying it inside the skin call works because
-    -- BackdropTemplateMixin's :OnBackdropLoaded is idempotent.
     local function ensureBackdropMixin(frame)
         if not frame then return end
         if type(frame.SetBackdrop) == "function" then return end
@@ -149,21 +157,41 @@ local function makeEllesmereUIProvider()
         end
     end
 
-    local function skinFrame(frame)
+    local function paintBackdrop(frame)
+        if not frame or type(frame.SetBackdrop) ~= "function" then return end
         ensureBackdropMixin(frame)
+        frame:SetBackdrop(EUI_BACKDROP)
+        frame:SetBackdropColor(EUI_BG[1], EUI_BG[2], EUI_BG[3], EUI_BG[4])
+    end
+
+    local function paintEUIBorder(frame)
+        if not frame then return end
+        local r, g, b = getEUIAccent()
+        local ok = pcall(EUI.ApplyBorderStyle, frame, EUI_BORDER_SIZE, r, g, b, 0.85, getEUITextureKey())
+        if not ok and EUI.PP and EUI.PP.CreateBorder then
+            -- Fallback: drop straight into the panel-painter
+            pcall(EUI.PP.CreateBorder, frame, r, g, b, 0.85, EUI_BORDER_SIZE, "OVERLAY", 7)
+        end
+    end
+
+    local function skinFrame(frame)
+        if not frame then return end
         stripBlizzardRegions(frame)
+        paintBackdrop(frame)
         paintEUIBorder(frame)
     end
 
     local function skinButton(btn)
         if not btn then return end
         stripBlizzardRegions(btn)
+        -- Suppress the Blizzard UIPanelButton chrome that NativeUI's createButton
+        -- left in place — those bright textures defeat the EUI look.
         for _, region in ipairs({btn:GetRegions()}) do
             if region.GetObjectType and region:GetObjectType() == "Texture" then
-                region:SetAlpha(0)
+                if region.SetAlpha then region:SetAlpha(0) end
             end
         end
-        ensureBackdropMixin(btn)
+        paintBackdrop(btn)
         paintEUIBorder(btn)
         if btn.SetNormalFontObject then btn:SetNormalFontObject("GameFontNormal") end
         if btn.SetHighlightFontObject then btn:SetHighlightFontObject("GameFontHighlight") end
@@ -172,11 +200,15 @@ local function makeEllesmereUIProvider()
     local function skinEditBox(edit)
         if not edit then return end
         stripBlizzardRegions(edit)
-        for _, region in ipairs({"Left", "Middle", "Right"}) do
-            local tex = _G[edit:GetName() and (edit:GetName() .. region) or ""]
-            if tex and tex.SetAlpha then tex:SetAlpha(0) end
+        -- Blizzard EditBox templates expose <name>Left/Middle/Right textures.
+        local name = edit.GetName and edit:GetName()
+        if name then
+            for _, suffix in ipairs({"Left", "Middle", "Right"}) do
+                local tex = _G[name .. suffix]
+                if tex and tex.SetAlpha then tex:SetAlpha(0) end
+            end
         end
-        ensureBackdropMixin(edit)
+        paintBackdrop(edit)
         paintEUIBorder(edit)
     end
 
