@@ -3017,63 +3017,13 @@ function GSE:CreateConfigPanels()
 
         createBlizzOptions(category, pluginOptions)
 
-        -- Skyriding: Vehicle panel — Retail only (GameMode >= 11), sibling of Tools & Diagnostics
-        if GSE.GameMode >= 11 then
-            local canvasFrame = CreateFrame("Frame")
-
-            local skyCategory
-            if Settings.RegisterCanvasLayoutSubcategory then
-                skyCategory = Settings.RegisterCanvasLayoutSubcategory(category, canvasFrame, "Skyriding / Vehicle Keybinds")
-            else
-                -- Fallback for builds where canvas subcategory isn't available
-                skyCategory = Settings.RegisterVerticalLayoutSubcategory(category, "Skyriding / Vehicle Keybinds")
-            end
-
-            if skyCategory then
-                local drawn = false
-                local container = nil
-
-                local function applyCanvasSize()
-                    if not (container and container.frame) then return end
-                    local w = canvasFrame:GetWidth()
-                    local h = canvasFrame:GetHeight()
-                    if (w or 0) > 0 and container.SetWidth then container:SetWidth(w) end
-                    if (h or 0) > 0 and container.SetHeight then container:SetHeight(h) end
-                    if container.DoLayout then container:DoLayout() end
-                end
-
-                local function drawContent()
-                    if drawn then return end
-                    local w = canvasFrame:GetWidth()
-                    local h = canvasFrame:GetHeight()
-                    if (w or 0) < 10 or (h or 0) < 10 then return end
-                    drawn = true
-                    local activeUI = GSE and GSE.UI
-                    if not (activeUI and GSE.DrawSkyridingKeybindEditor) then return end
-                    container = activeUI:Create("SimpleGroup")
-                    if not (container and container.frame) then return end
-                    container.frame:SetParent(canvasFrame)
-                    container.frame:SetPoint("TOPLEFT", canvasFrame, "TOPLEFT", 0, 0)
-                    -- Drive size through NativeUI so OnHeightSet fires and
-                    -- centerRowsVertically can calculate the correct spacer height
-                    if container.SetWidth then container:SetWidth(w) end
-                    if container.SetHeight then container:SetHeight(h) end
-                    GSE.DrawSkyridingKeybindEditor(container)
-                    C_Timer.After(0, applyCanvasSize)
-                end
-
-                canvasFrame:SetScript("OnSizeChanged", function()
-                    if drawn then
-                        applyCanvasSize()
-                    else
-                        drawContent()
-                    end
-                end)
-                canvasFrame:SetScript("OnShow", function()
-                    drawContent()
-                end)
-            end
-        end
+        -- Skyriding / Vehicle Keybinds subcategory is registered natively
+        -- by GSE_QoL/QoL.lua via Settings.RegisterVerticalLayoutSubcategory
+        -- + CreateSettingsButtonInitializer (matching the master-branch
+        -- pattern that pre-dated the AceGUI removal regression). Doing it
+        -- there avoids the NativeUI canvas dance we used here previously,
+        -- which only rendered on first OnShow and failed to refresh the
+        -- displayed binding text after a user rebound a slot.
 
     end
 

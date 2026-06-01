@@ -1107,15 +1107,7 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return rc
     end
 
-    if unique[#unique] == "SKYRIDING" then
-        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer()
-        if GSE.DrawSkyridingKeybindEditor then
-            GSE.DrawSkyridingKeybindEditor(rc)
-        end
-        editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (L["Skyriding / Vehicle Keybinds"] or "Skyriding"))
-    elseif unique[#unique] == "NKB" then
+    if unique[#unique] == "NKB" then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
         editframe.showKeybind(nil, nil, nil, nil, "KB", rc)
