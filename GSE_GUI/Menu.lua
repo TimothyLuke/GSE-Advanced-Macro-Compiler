@@ -42,9 +42,13 @@ frame:SetFrameStrata("MEDIUM")
 frame:SetClampedToScreen(true)
 frame:EnableMouse(true)
 frame:RegisterForDrag("LeftButton")
+-- Solid black backdrop. The original used Interface/CHARACTERFRAME/UI-Party-Background
+-- with forward slashes which silently failed to render in some environments
+-- (Wine + retail asset case-sensitivity), leaving the toolbar visually
+-- transparent. WHITE8X8 tinted black always renders.
 frame:SetBackdrop({
-    bgFile   = "Interface/CHARACTERFRAME/UI-Party-Background",
-    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    bgFile   = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
     tile = true, tileSize = 16, edgeSize = 16,
     insets = { left = 4, right = 4, top = 4, bottom = 4 }
 })
@@ -71,7 +75,7 @@ logo:RegisterForDrag("LeftButton")
 
 local logoTex = logo:CreateTexture(nil, "OVERLAY")
 logoTex:SetAllPoints()
-logoTex:SetTexture(Statics.Icons.MenuLogo)
+logoTex:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE-Logo.png")
 
 logo:SetScript("OnDragStart", function()
     if not isLocked() then frame:StartMoving() end
