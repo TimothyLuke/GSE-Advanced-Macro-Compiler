@@ -181,7 +181,6 @@ function GSE.ClearCommonKeyBinds()
     end
     local char = UnitFullName("player")
     local realm = GetRealmName()
-    GSE_C = {}
     GSE_C["KeyBindings"] = {}
     GSE_C["KeyBindings"][char .. "-" .. realm] = {}
     GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
