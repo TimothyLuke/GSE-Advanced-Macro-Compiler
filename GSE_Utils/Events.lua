@@ -3,6 +3,11 @@ local GSE = GSE
 local Statics = GSE.Static
 local GCD = nil
 
+-- The "Next Cast" column shows Blizzard's Assisted Highlight recommendation,
+-- which only exists on Retail (the C_AssistedCombat API). Gate the column on the
+-- API's presence so other game versions don't get a permanently-empty column.
+local ASSISTED_HIGHLIGHT_AVAILABLE = C_AssistedCombat ~= nil and C_AssistedCombat.GetNextCastSpell ~= nil
+
 local SequenceDebugColumns = {
     {label = "Timestamp", width = 9, pixelWidth = 76, min = 65},
     {label = "Step", width = 4, pixelWidth = 40, min = 34},
@@ -12,9 +17,11 @@ local SequenceDebugColumns = {
     {label = "Action / Spellbook", width = 40, pixelWidth = 204, min = 130},
     {label = "Castable", width = 16, pixelWidth = 76, min = 60},
     {label = "Resources", width = 20, pixelWidth = 90, min = 70},
-    {label = "Casting", width = 30, pixelWidth = 112, min = 75},
-    {label = "Suggested - Spell Assist", width = 30, pixelWidth = 150, min = 110}
+    {label = "Casting", width = 30, pixelWidth = 112, min = 75}
 }
+if ASSISTED_HIGHLIGHT_AVAILABLE then
+    SequenceDebugColumns[#SequenceDebugColumns + 1] = {label = "Suggested - Spell Assist", width = 30, pixelWidth = 150, min = 110}
+end
 GSE.SequenceDebugColumns = SequenceDebugColumns
 
 local function StripDebugColor(text)
@@ -83,6 +90,48 @@ local function GetSequenceDebugNameWithVersion(sequenceName)
     return cleanName
 end
 
+-- Resolve the player's in-progress cast or channel for the "Casting" column.
+-- In 12.0 the spell *name* returned by UnitCastingInfo/UnitChannelInfo is
+-- withheld (secret) in combat, so the column kept reading nil and reported "not
+-- actively casting". The spell *ID* and the never-secret cast-bar ID were since
+-- loosened, so resolve the name from the ID (and still fall back to the name
+-- return on older clients / when it isn't withheld). Returns (castName, isCasting)
+-- so the column can report a cast even when the name can't be resolved. Every
+-- value touch is pcall-guarded because individual returns can still be secret
+-- values that throw when read/compared in addon code (which would otherwise
+-- abort the whole trace and blank every column).
+local function ResolvePlayerCast()
+    local castName, isCasting = nil, false
+    local function tryUnit(infoFn, spellIDIndex, castBarIDIndex)
+        if type(infoFn) ~= "function" then return end
+        pcall(function()
+            local r = { infoFn("player") }
+            -- castBarID is never secret and is present whenever a cast bar shows.
+            if castBarIDIndex and r[castBarIDIndex] ~= nil then isCasting = true end
+            local spellID = r[spellIDIndex]
+            if spellID ~= nil then
+                isCasting = true
+                local info = GSE.GetSpellInfo(spellID)
+                if info and info.name ~= nil and info.name ~= "" then
+                    castName = info.name
+                    return
+                end
+            end
+            -- Fallback to the name return (older clients, or when not withheld).
+            local name = r[1]
+            if name ~= nil and name ~= "" then
+                castName = name
+                isCasting = true
+            end
+        end)
+    end
+    tryUnit(UnitCastingInfo, 9, 10)      -- UnitCastingInfo: castingSpellID=9, castBarID=10
+    if GSE.isEmpty(castName) then
+        tryUnit(UnitChannelInfo, 8, nil) -- UnitChannelInfo: spellID=8
+    end
+    return castName, isCasting
+end
+
 --- This function is used to debug a sequence and trace its execution.
 function GSE.TraceSequence(button, step, spell, blockPath)
     if GSE.UnsavedOptions.DebugSequenceExecution then
@@ -115,21 +164,35 @@ function GSE.TraceSequence(button, step, spell, blockPath)
         else
             manaOutput = "Resources Available"
         end
-        local castingspell = UnitCastingInfo("player")
+        -- "Casting" reports the player's live cast/channel at this step. The
+        -- resolver reads the (loosened) spell ID and cast-bar ID so it still works
+        -- when 12.0 combat withholds the spell name; isCasting is true whenever a
+        -- cast is detected, even if the name itself can't be resolved.
+        local castingspell, isCasting = ResolvePlayerCast()
 
         if not GSE.isEmpty(castingspell) then
             CastingOutput = "Casting " .. castingspell
+        elseif isCasting then
+            CastingOutput = "Casting"
         else
-            CastingOutput = "Not actively casting anything else."
+            CastingOutput = "Not Casting"
         end
         GCDOutput = "GCD Free"
         if GCD then
             GCDOutput = "GCD In Cooldown"
         end
 
-        local nextCastSpell = C_AssistedCombat and C_AssistedCombat.GetNextCastSpell and C_AssistedCombat.GetNextCastSpell()
-        local nextCastInfo = nextCastSpell and GSE.GetSpellInfo(nextCastSpell)
-        local nextCastName = nextCastInfo and nextCastInfo.name or ""
+        -- "Next Cast" = Blizzard's Assisted Highlight recommendation (Retail
+        -- only). pcall-guarded so a secret/return-type quirk in 12.0 combat can't
+        -- error out and abort the trace.
+        local nextCastName = ""
+        if ASSISTED_HIGHLIGHT_AVAILABLE then
+            local ok, nextCastSpell = pcall(C_AssistedCombat.GetNextCastSpell)
+            if ok and nextCastSpell then
+                local nextCastInfo = GSE.GetSpellInfo(nextCastSpell)
+                nextCastName = (nextCastInfo and nextCastInfo.name) or ""
+            end
+        end
         local actionOutput = ColorText(spell and (GSE.GetSpellId(spell, Statics.TranslatorMode.Current) or spell) or "nil", "|cFFFFF569")
         local spellbookColor = FoundInSpellBook and "|cFF00FF00" or "|cFFFF5555"
         if not GSE.isEmpty(foundOutput) then actionOutput = actionOutput .. ColorText(" - " .. foundOutput, spellbookColor) end
@@ -165,9 +228,11 @@ function GSE.TraceSequence(button, step, spell, blockPath)
             actionOutput,
             ColorText(usableOutput, usableColor),
             ColorText(manaOutput, manaColor),
-            ColorText(CastingOutput, castingColor),
-            ColorText(nextCastName, "|cFFFFD100")
+            ColorText(CastingOutput, castingColor)
         }
+        if ASSISTED_HIGHLIGHT_AVAILABLE then
+            row[#row + 1] = ColorText(nextCastName, "|cFFFFD100")
+        end
 
         local canAppendToDebugger =
             type(GSE.GUIDebugAppendEvent) == "function" and type(GSE.GUIDebugIsOpenOrMinimized) == "function" and
@@ -182,13 +247,21 @@ end
 
 function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
     if unit == "player" then
+        -- Bail out quietly if GSE core did not finish initialising (e.g. the
+        -- main GSE addon aborted before GSE.split / GSE.GameMode were defined).
+        -- Without this the handler errors on every successful cast in combat
+        -- (the reported "Events.lua:186: attempt to call a nil value").
+        if type(GSE.split) ~= "function" or GSE.GameMode == nil then
+            return
+        end
         local GCD_Timer
         local elements = GSE.split(action, "-")
-        local successfulSpellID = tonumber(elements and elements[6]) or tonumber(sped) or (elements and elements[6]) or sped
+        local successfulSpellID = tonumber(sped) or tonumber(elements and elements[6]) or sped or (elements and elements[6])
+        local successfulSpellLookup = successfulSpellID or (elements and elements[6])
         local successfulSpellName
         if GSE.GameMode > 1 then
             if GSE.GameMode > 11 then
-                local spellid = elements[6]
+                local spellid = successfulSpellLookup
                 local cooldownInfo = GSE.GetSpellCooldown(spellid)
                 local potentialGCD = cooldownInfo and cooldownInfo.duration or GSE.GetGCD()
                 if issecretvalue(potentialGCD)then
@@ -218,10 +291,10 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
         if GSE.GameMode > 10 then
             local spell
 
-            local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
+            local found = successfulSpellLookup and C_SpellBook.FindSpellBookSlotForSpell(successfulSpellLookup)
             if found then
                 foundskill = true
-                local spellInfo = GSE.GetSpellInfo(elements[6])
+                local spellInfo = GSE.GetSpellInfo(successfulSpellLookup)
                 spell = spellInfo and spellInfo.name
                 successfulSpellName = spell
             end
@@ -233,7 +306,7 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
                 end
             end
         else
-            local spellInfo = GSE.GetSpellInfo(elements[6])
+            local spellInfo = GSE.GetSpellInfo(successfulSpellLookup)
             local spell = spellInfo and spellInfo.name
             successfulSpellName = spell
             local fskilltype = spell and GetSpellBookItemInfo(spell)

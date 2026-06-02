@@ -790,7 +790,10 @@ local function makeScrollableRightPane(container)
     -- ScrollFrame uses List layout for children by default and engages
     -- scrollbars automatically when content height exceeds the frame.
     local scroll = UI:Create("ScrollFrame")
-    if scroll.SetScrollStep  then scroll:SetScrollStep(96) end
+    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
+    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
+    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
+    -- only updates the global SCROLL_STEP — had no effect on this pane.
     if scroll.SetListPadding then
         scroll:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, SECTION_HEADER_TOP, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING)
     end
@@ -1177,7 +1180,10 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     scrollcontainer:SetLayout("Fill")
     editframe.scrollStatus = {}
     local contentcontainer = UI:Create("ScrollFrame")
-    if contentcontainer.SetScrollStep then contentcontainer:SetScrollStep(96) end
+    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
+    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
+    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
+    -- only updates the global SCROLL_STEP — had no effect on the block list.
     scrollcontainer:AddChild(contentcontainer)
     contentcontainer:SetFullWidth(true)
         contentcontainer:SetFullHeight(true)
