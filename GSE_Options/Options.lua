@@ -1274,7 +1274,7 @@ local function EnsureSequenceIconFrameOptions()
     local opts = GSEOptions.SequenceIconFrame
     opts.Enabled = opts.Enabled == true
     opts.IconSize = 100
-    opts.IconCount = ClampNumber(opts.IconCount, 1, 10, 10)
+    opts.IconCount = ClampNumber(opts.IconCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
     opts.Scale = 0.50
     opts.Orientation = (opts.Orientation == "VERTICAL") and "VERTICAL" or "HORIZONTAL"
     if opts.ShowSequenceName == nil then opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName end
@@ -1298,7 +1298,7 @@ local function ResetTrackerToDefaultLayout()
     local opts = EnsureSequenceIconFrameOptions()
     opts.Enabled = true
     opts.IconSize = 100
-    opts.IconCount = 10
+    opts.IconCount = Statics.TrackerConfig.DefaultIconCount
     opts.Scale = 0.50
     opts.Orientation = "HORIZONTAL"
     opts.TextMoved = false
@@ -2490,21 +2490,6 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "printKeyPressModifiers", Settings.VarType.Boolean, L["Print Active Modifiers on Click"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."])
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().IconCount end
-            local function SetValue(val)
-                if GSE.SetSequenceIconFrameIconCount then
-                    GSE.SetSequenceIconFrameIconCount(val)
-                else
-                    EnsureSequenceIconFrameOptions().IconCount = ClampNumber(val, 1, 10, 10)
-                    if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "iconPreviewCount", Settings.VarType.Number, "Preview Icon Count", 10, GetValue, SetValue)
-            local options = Settings.CreateSliderOptions(1, 10, 1)
-            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-            Settings.CreateSlider(troubleOptions, setting, options, "How many recent sequence icons to keep visible.")
         end
         -- Tracker Frame Scale: scales the three on-screen tracker frames
         -- (SC Icon, Sequence Icon Scroll, Tracker Text) together as one

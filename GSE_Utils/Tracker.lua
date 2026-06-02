@@ -49,7 +49,7 @@ GSE.TrackerLayoutPresets = {
         Config = {
             SuccessfulCastsLocked = false,
             AssistedSuccessLocked = false,
-            IconCount = 10,
+            IconCount = 1,
             TextLocked = false,
             ShowTrackerText = true,
             Linked = true,
@@ -67,7 +67,7 @@ GSE.TrackerLayoutPresets = {
         Config = {
             SuccessfulCastsLocked = false,
             AssistedSuccessLocked = false,
-            IconCount = 10,
+            IconCount = 1,
             TextLocked = false,
             ShowTrackerText = true,
             Linked = false,
@@ -224,7 +224,7 @@ local function EnsureSequenceIconFrameOptions()
 
     opts.Enabled = opts.Enabled == true
     opts.IconSize = 100
-    opts.IconCount = ClampNumber(opts.IconCount, 1, 10, Statics.TrackerConfig.DefaultIconCount)
+    opts.IconCount = ClampNumber(opts.IconCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
     opts.Scale = 0.50
     opts.TextWidth = ClampNumber(opts.TextWidth, GSE.SequenceIconTextResize.MinWidth, GSE.SequenceIconTextResize.MaxWidth, GSE.SequenceIconTextResize.DefaultWidth)
     opts.TextHeight = ClampNumber(opts.TextHeight, GSE.SequenceIconTextResize.MinHeight, GSE.SequenceIconTextResize.MaxHeight, GSE.SequenceIconTextResize.DefaultHeight)
@@ -307,14 +307,53 @@ end
 function GSE.SequenceIconApplyTrackerFrameScale()
     local scale = GSE.SequenceIconGetTrackerFrameScale()
     scale = math.max(0.75, math.min(2.0, scale))
-    if GSE.SequenceIconFrame and GSE.SequenceIconFrame.SetScale then
-        GSE.SequenceIconFrame:SetScale(scale)
+    local currentOptions = EnsureSequenceIconFrameOptions()
+
+    -- Mirror the Editor / Toolbar / Debugger scaling fix on the tracker: when
+    -- the scale changes, keep each frame's on-screen position fixed instead of
+    -- letting it jump. Frames in the linked layout anchor to the parent widget
+    -- at a zero offset and are already position-stable under SetScale; only
+    -- frames the user has dragged out on their own (Moved) carry a
+    -- scale-sensitive screen offset, so for those capture the centre in
+    -- absolute pixels, rescale, re-anchor to the same spot and persist it -- the
+    -- same absolute-pixel technique GSE.ApplyScaleToFrame uses for the windows.
+    local scaleTargets = {
+        { key = "Icon",            frame = GSE.SequenceIconFrame },
+        { key = "Text",            frame = GSE.SequenceIconTextFrame },
+        { key = "SuccessfulCasts", frame = GSE.SuccessfulCastFrame },
+    }
+    for _, target in ipairs(scaleTargets) do
+        local frame = target.frame
+        if frame and frame.SetScale then
+            local moved = currentOptions[target.key .. "Moved"] == true
+            local absX, absY, preserve
+            if moved and frame.IsShown and frame:IsShown() and frame.GetCenter then
+                local centerX, centerY = frame:GetCenter()
+                if centerX and centerY then
+                    local oldEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
+                    if not oldEffective or oldEffective <= 0 then oldEffective = 1 end
+                    absX, absY, preserve = centerX * oldEffective, centerY * oldEffective, true
+                end
+            end
+
+            frame:SetScale(scale)
+
+            if preserve and GSE.SetFrameScreenPoint then
+                local newEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
+                if not newEffective or newEffective <= 0 then newEffective = 1 end
+                GSE.SetFrameScreenPoint(frame, "CENTER", absX / newEffective, absY / newEffective)
+                if GSE.SequenceIconSaveInternalFramePosition then
+                    GSE.SequenceIconSaveInternalFramePosition(target.key, frame)
+                end
+            end
+        end
     end
-    if GSE.SequenceIconTextFrame and GSE.SequenceIconTextFrame.SetScale then
-        GSE.SequenceIconTextFrame:SetScale(scale)
-    end
-    if GSE.SuccessfulCastFrame and GSE.SuccessfulCastFrame.SetScale then
-        GSE.SuccessfulCastFrame:SetScale(scale)
+
+    -- The base ApplyTrackerScale re-flows the widget after scaling; the frame
+    -- scale path skipped this, so re-anchor the linked frames to the widget and
+    -- re-apply any moved frames from their (now updated) saved positions.
+    if GSE.SequenceIconLayoutTrackerWidget then
+        GSE.SequenceIconLayoutTrackerWidget()
     end
 end
 
@@ -818,6 +857,19 @@ local function IsControlChordDown()
     return IsControlKeyDown and IsControlKeyDown() == true
 end
 
+-- The tracker's right-click chords (Shift = swap layout, Control = toggle
+-- linked, Alt = toggle lock) all need the frame to be accepting mouse input.
+-- While the tracker is LOCKED the frames are mouse-disabled so plain clicks
+-- pass through; we re-enable ("arm") them only while one of these modifiers is
+-- held so every chord can fire without breaking click-through. Previously only
+-- Control armed the frame, so Alt+RightClick (lock) and Shift+RightClick (swap)
+-- never reached the handler on a locked tracker.
+local function IsTrackerToggleChordDown()
+    return (IsAltKeyDown and IsAltKeyDown() == true)
+        or (IsControlKeyDown and IsControlKeyDown() == true)
+        or (IsShiftKeyDown and IsShiftKeyDown() == true)
+end
+
 local function IsSuccessfulCastFrameEnabled()
     local currentOptions = EnsureSequenceIconFrameOptions()
     return currentOptions.Enabled and currentOptions.ShowSuccessfulCasts ~= false
@@ -888,7 +940,7 @@ GSE.SequenceIconSaveInternalFramePosition = function(prefix, frame)
 
     -- All tracker frames now anchor by TOP-LEFT so their top/left edge stays
     -- fixed as their contents grow or shrink. For the icon scroll specifically,
-    -- this means reducing Preview Icon Count collapses icons toward the TOP
+    -- the strip is locked to a single icon, so it anchors from the TOP
     -- (vertical) or LEFT (horizontal) of the saved position, never the center.
     if not (frame.GetLeft and frame.GetTop) then return end
     local left, top = frame:GetLeft(), frame:GetTop()
@@ -1373,7 +1425,7 @@ end
 local function RefreshMoveMode()
     local currentOptions = EnsureSequenceIconFrameOptions()
     local unlocked = currentOptions.Enabled and currentOptions.Locked == false
-    local armedForToggle = currentOptions.Enabled and currentOptions.Locked == true and IsControlChordDown()
+    local armedForToggle = currentOptions.Enabled and currentOptions.Locked == true and IsTrackerToggleChordDown()
 
     SequenceIconFrame:EnableMouse(unlocked or armedForToggle)
     if unlocked then SequenceIconFrame:RegisterForDrag("LeftButton") end
@@ -1389,7 +1441,7 @@ end
 local function RefreshSequenceTextMoveMode()
     local currentOptions = EnsureSequenceIconFrameOptions()
     local unlocked = currentOptions.Enabled and currentOptions.TextLocked == false
-    local armedForToggle = currentOptions.Enabled and currentOptions.TextLocked == true and IsControlChordDown()
+    local armedForToggle = currentOptions.Enabled and currentOptions.TextLocked == true and IsTrackerToggleChordDown()
 
     SequenceIconTextFrame:EnableMouse(unlocked or armedForToggle)
     if unlocked then SequenceIconTextFrame:RegisterForDrag("LeftButton") end
@@ -1407,7 +1459,7 @@ local function RefreshSuccessfulCastMoveMode()
     local currentOptions = EnsureSequenceIconFrameOptions()
     local enabled = IsSuccessfulCastFrameEnabled()
     local unlocked = enabled and currentOptions.SuccessfulCastsLocked == false
-    local armedForToggle = enabled and currentOptions.SuccessfulCastsLocked == true and IsControlChordDown()
+    local armedForToggle = enabled and currentOptions.SuccessfulCastsLocked == true and IsTrackerToggleChordDown()
 
     SuccessfulCastFrame:EnableMouse(unlocked or armedForToggle)
     if unlocked then SuccessfulCastFrame:RegisterForDrag("LeftButton") end
@@ -1424,7 +1476,7 @@ RefreshAssistedSuccessMoveMode = function()
     local currentOptions = EnsureSequenceIconFrameOptions()
     local enabled = IsAssistedSuccessFrameEnabled() and (heldAssistedSuccessIconID ~= nil or not IsPlayerInCombat())
     local unlocked = enabled and currentOptions.AssistedSuccessLocked == false
-    local armedForToggle = enabled and currentOptions.AssistedSuccessLocked == true and IsControlChordDown()
+    local armedForToggle = enabled and currentOptions.AssistedSuccessLocked == true and IsTrackerToggleChordDown()
 
     AssistedSuccessFrame:EnableMouse(unlocked or armedForToggle)
     if unlocked then AssistedSuccessFrame:RegisterForDrag("LeftButton") end
@@ -3476,7 +3528,7 @@ end
 
 function GSE.SetSequenceIconFrameIconCount(newCount)
     local currentOptions = EnsureSequenceIconFrameOptions()
-    currentOptions.IconCount = ClampNumber(newCount, 1, 10, Statics.TrackerConfig.DefaultIconCount)
+    currentOptions.IconCount = ClampNumber(newCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
     TrimIconEntries()
     RenderSequenceIcons()
 end
