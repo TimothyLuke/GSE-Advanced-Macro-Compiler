@@ -45,7 +45,13 @@ local function SetMacroTextCounter(widget, text)
         text = widget:GetText()
     end
     if GSE.GUI and GSE.GUI.SetMacroCountText then
-        GSE.GUI.SetMacroCountText(widget, GSE.GetMacroEditorTextLength(text or ""))
+        -- Show the COMPILED body length so the indicator matches the over-limit
+        -- trigger (UpdateMacroLimitState) and what WoW enforces on the slot.
+        -- Fall back to the raw typed length only if the compiled-length helper
+        -- isn't loaded (e.g. a partial install).
+        local lenMacro = (GSE.GUI.GetCompiledMacroBodyLength and GSE.GUI.GetCompiledMacroBodyLength(text or ""))
+            or GSE.GetMacroEditorTextLength(text or "")
+        GSE.GUI.SetMacroCountText(widget, lenMacro)
     end
     if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
         GSE.GUI.UpdateMacroLimitState(widget, text)

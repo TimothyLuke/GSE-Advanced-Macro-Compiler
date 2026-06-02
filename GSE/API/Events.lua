@@ -207,6 +207,22 @@ local function getButtonEffectiveSlot(btn)
     return slot + (page - 1) * 12
 end
 
+-- True when the player has dropped a real (non-empty, non-macro) action into the
+-- action-bar slot a GSE override sits on. Mirrors the BAR_SWAP secure handlers,
+-- which treat empty and macro slots as still owned by the override and any other
+-- action as something to yield to. Used to stop GSE repainting its sequence icon
+-- over the real action's icon, which otherwise fights WoW's own repaint and makes
+-- the button flicker when a normal key/spell is placed in the same slot.
+function GSE.ActionBarSlotHasForeignAction(button)
+    if not button or not button.GetAttribute then return false end
+    if not button:GetAttribute("gse-button") then return false end
+    local slot = getButtonEffectiveSlot(button)
+    if not slot or not GetActionInfo then return false end
+    local actionType = GetActionInfo(slot)
+    if actionType == nil or actionType == "macro" then return false end
+    return true
+end
+
 -- Return the display icon for a GSE-overridden button.
 -- Resolve directly from the compiled GSE action first so MacroBlock conditionals
 -- such as [mod:alt] repaint like a normal in-game macro.
@@ -259,6 +275,8 @@ local function getGSESequenceIcon(seq)
 end
 
 local function getGSEButtonIcon(self)
+    -- A real action in the slot wins: don't paint the sequence icon over it.
+    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
     local seq = self:GetAttribute("gse-button")
     local seqTexture = getGSESequenceIcon(seq)
     if seqTexture then return seqTexture end
@@ -584,7 +602,8 @@ local function overrideActionButton(savedBind, force)
                 _G[Button]:HookScript(
                     "OnEnter",
                     function(self)
-                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
+                        if not InCombatLockdown() and self:GetAttribute("gse-button")
+                            and not GSE.ActionBarSlotHasForeignAction(self) then
                             self:SetAttribute("type", "click")
                         end
                     end
@@ -663,7 +682,8 @@ local function overrideActionButton(savedBind, force)
                     _G[Button]:HookScript(
                         "OnEnter",
                         function(self)
-                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
+                            if not InCombatLockdown() and self:GetAttribute("gse-button")
+                                and not GSE.ActionBarSlotHasForeignAction(self) then
                                 self:SetAttribute("type", "click")
                             end
                         end
@@ -678,7 +698,16 @@ local function overrideActionButton(savedBind, force)
                         "",
                         [[
     if self:GetAttribute('gse-button') then
-        self:SetAttribute('type', 'click')
+        local slot = self:GetID()
+        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
+        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
+                                or (page and (slot + page * 12 - 12)) or nil
+        local at = effectiveAction and GetActionInfo(effectiveAction)
+        -- Only re-assert the override on hover when the slot is empty or a macro;
+        -- if a real action sits here, leave type="action" so it stays usable.
+        if at == nil or at == "macro" then
+            self:SetAttribute('type', 'click')
+        end
     end
 ]]
                     )
@@ -703,6 +732,57 @@ local function overrideActionButton(savedBind, force)
             end
         end)
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- Yield an override to a real action the player drops into its slot.
+--
+-- The secure BAR_SWAP_ONCLICK / BAR_SWAP_OAC snippets already switch a button
+-- between the GSE override (type="click") and the underlying action
+-- (type="action"), but they only run on a click or a bar-page/state swap. When
+-- the player simply drops a spell into the slot neither fires, so the button is
+-- left behind the stale override -- GSE icon + watermark bleeding through, and
+-- the action looking disabled -- until the next click. ACTIONBAR_SLOT_CHANGED
+-- (registered below) runs the same evaluation immediately. type is a protected
+-- attribute, so this only acts out of combat; the in-combat case is covered by
+-- LoadOverrides() on PLAYER_REGEN_ENABLED. Attributes are written only when they
+-- actually change, so a no-op slot event does not re-trigger a repaint.
+-- ---------------------------------------------------------------------------
+local function reevaluateOverrideButtonState(buttonName, sequence)
+    local btn = _G[buttonName]
+    if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
+    local foreign = GSE.ActionBarSlotHasForeignAction(btn)
+    local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
+    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
+    -- own state system; leave their type alone and just correct the icon/watermark.
+    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
+        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
+    if not isLAB then
+        local desiredType = foreign and "action" or "click"
+        if btn:GetAttribute("type") ~= desiredType then
+            btn:SetAttribute("type", desiredType)
+            if not foreign and sequence and _G[sequence] then
+                btn:SetAttribute("clickbutton", _G[sequence])
+            end
+        end
+    end
+    -- gse-eff-action drives the existing OnAttributeChanged icon hook: > 0 shows the
+    -- real action icon and hides the GSE watermark; 0 restores the sequence icon.
+    if btn:GetAttribute("gse-eff-action") ~= desiredEff then
+        btn:SetAttribute("gse-eff-action", desiredEff)
+    end
+end
+
+local function reevaluateAllOverrideButtons()
+    if GSE.isEmpty(GSE.ButtonOverrides) then return end
+    if InCombatLockdown() then return end
+    for buttonName, sequence in pairs(GSE.ButtonOverrides) do
+        reevaluateOverrideButtonState(buttonName, sequence)
+    end
+end
+
+function GSE:ACTIONBAR_SLOT_CHANGED()
+    reevaluateAllOverrideButtons()
 end
 
 local function isUsableActionBarOverride(savedBind)
@@ -864,6 +944,10 @@ local function LoadKeyBindings(payload)
                 end
             end
         end
+        -- A freshly (re)loaded override whose slot already holds a real action
+        -- must start yielded, not behind the override. Defer one frame so the
+        -- action-bar slots are populated before we read them.
+        C_Timer.After(0, reevaluateAllOverrideButtons)
     end
 end
 
@@ -1312,6 +1396,7 @@ GSE:RegisterEvent("PLAYER_LOGOUT")
 GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
+GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")

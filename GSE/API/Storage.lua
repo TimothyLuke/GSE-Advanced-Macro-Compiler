@@ -1737,7 +1737,11 @@ function GSE.UpdateIcon(self, reseticon)
                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
                             string.sub(k, 1, 4) == "NDui"
                      then
-                        _G[k].icon:SetTexture(spellinfo.iconID)
+                        -- Yield to a real action the player dropped into this slot (matches the
+                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
+                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
+                            _G[k].icon:SetTexture(spellinfo.iconID)
+                        end
                     else
                         if GSE.GameMode == 11 then
                             local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
