@@ -1,0 +1,510 @@
+--- a/GSE/API/Events.lua
++++ b/GSE/API/Events.lua
+@@ -74,6 +74,94 @@
+ 
+ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
+ 
++local LOWER_ENERGY_SOUND_ID = 1489541
++local errorMessageState = {
++    originalHandler = nil,
++    installed = false
++}
++
++local function EnsureErrorMessageOptions()
++    if not GSEOptions then GSEOptions = {} end
++    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
++    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
++    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
++end
++
++local function IsAllowedUIError(err)
++    if not err then return false end
++    if (ERR_INV_FULL and err == ERR_INV_FULL)
++        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
++        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
++        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
++        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
++        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
++        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
++        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
++        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
++        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
++        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
++        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
++        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
++        return true
++    end
++    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
++        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
++        return ok and pattern and err:find(pattern)
++    end
++    return false
++end
++
++local function FilterUIErrorsFrame(self, event, id, err, ...)
++    if event == "UI_ERROR_MESSAGE" then
++        if IsAllowedUIError(err) then
++            if errorMessageState.originalHandler then
++                return errorMessageState.originalHandler(self, event, id, err, ...)
++            end
++        end
++        return
++    end
++    if errorMessageState.originalHandler then
++        return errorMessageState.originalHandler(self, event, id, err, ...)
++    end
++end
++
++local function SetErrorSpeechMuted(muted)
++    local setter = C_CVar and C_CVar.SetCVar or SetCVar
++    if setter then
++        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
++    end
++end
++
++local function SetLowerEnergyMuted(muted)
++    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
++    if soundFunc then
++        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
++    end
++end
++
++function GSE.ApplyErrorMessageOptions()
++    EnsureErrorMessageOptions()
++
++    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
++        if GSEOptions.HideUIErrorFrame then
++            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
++            if currentHandler ~= FilterUIErrorsFrame then
++                errorMessageState.originalHandler = currentHandler
++            end
++            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
++            errorMessageState.installed = true
++        elseif errorMessageState.installed then
++            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
++                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
++            end
++            errorMessageState.installed = false
++        end
++    end
++
++    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
++    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
++end
++
+ -- Fired once per session when overrides are loaded.  Corrects CVars that interfere
+ -- with actionbar overrides and tells the player what was changed.
+ local actionBarCVarCheckedThisSession = false
+@@ -207,6 +295,22 @@
+     return slot + (page - 1) * 12
+ end
+ 
++-- True when the player has dropped a real (non-empty, non-macro) action into the
++-- action-bar slot a GSE override sits on. Mirrors the BAR_SWAP secure handlers,
++-- which treat empty and macro slots as still owned by the override and any other
++-- action as something to yield to. Used to stop GSE repainting its sequence icon
++-- over the real action's icon, which otherwise fights WoW's own repaint and makes
++-- the button flicker when a normal key/spell is placed in the same slot.
++function GSE.ActionBarSlotHasForeignAction(button)
++    if not button or not button.GetAttribute then return false end
++    if not button:GetAttribute("gse-button") then return false end
++    local slot = getButtonEffectiveSlot(button)
++    if not slot or not GetActionInfo then return false end
++    local actionType = GetActionInfo(slot)
++    if actionType == nil or actionType == "macro" then return false end
++    return true
++end
++
+ -- Return the display icon for a GSE-overridden button.
+ -- Resolve directly from the compiled GSE action first so MacroBlock conditionals
+ -- such as [mod:alt] repaint like a normal in-game macro.
+@@ -259,6 +363,8 @@
+ end
+ 
+ local function getGSEButtonIcon(self)
++    -- A real action in the slot wins: don't paint the sequence icon over it.
++    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
+     local seq = self:GetAttribute("gse-button")
+     local seqTexture = getGSESequenceIcon(seq)
+     if seqTexture then return seqTexture end
+@@ -584,7 +690,8 @@
+                 _G[Button]:HookScript(
+                     "OnEnter",
+                     function(self)
+-                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                        if not InCombatLockdown() and self:GetAttribute("gse-button")
++                            and not GSE.ActionBarSlotHasForeignAction(self) then
+                             self:SetAttribute("type", "click")
+                         end
+                     end
+@@ -663,7 +770,8 @@
+                     _G[Button]:HookScript(
+                         "OnEnter",
+                         function(self)
+-                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                            if not InCombatLockdown() and self:GetAttribute("gse-button")
++                                and not GSE.ActionBarSlotHasForeignAction(self) then
+                                 self:SetAttribute("type", "click")
+                             end
+                         end
+@@ -678,7 +786,16 @@
+                         "",
+                         [[
+     if self:GetAttribute('gse-button') then
+-        self:SetAttribute('type', 'click')
++        local slot = self:GetID()
++        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
++        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
++                                or (page and (slot + page * 12 - 12)) or nil
++        local at = effectiveAction and GetActionInfo(effectiveAction)
++        -- Only re-assert the override on hover when the slot is empty or a macro;
++        -- if a real action sits here, leave type="action" so it stays usable.
++        if at == nil or at == "macro" then
++            self:SetAttribute('type', 'click')
++        end
+     end
+ ]]
+                     )
+@@ -705,6 +822,57 @@
+     end
+ end
+ 
++-- ---------------------------------------------------------------------------
++-- Yield an override to a real action the player drops into its slot.
++--
++-- The secure BAR_SWAP_ONCLICK / BAR_SWAP_OAC snippets already switch a button
++-- between the GSE override (type="click") and the underlying action
++-- (type="action"), but they only run on a click or a bar-page/state swap. When
++-- the player simply drops a spell into the slot neither fires, so the button is
++-- left behind the stale override -- GSE icon + watermark bleeding through, and
++-- the action looking disabled -- until the next click. ACTIONBAR_SLOT_CHANGED
++-- (registered below) runs the same evaluation immediately. type is a protected
++-- attribute, so this only acts out of combat; the in-combat case is covered by
++-- LoadOverrides() on PLAYER_REGEN_ENABLED. Attributes are written only when they
++-- actually change, so a no-op slot event does not re-trigger a repaint.
++-- ---------------------------------------------------------------------------
++local function reevaluateOverrideButtonState(buttonName, sequence)
++    local btn = _G[buttonName]
++    if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
++    local foreign = GSE.ActionBarSlotHasForeignAction(btn)
++    local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
++    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
++    -- own state system; leave their type alone and just correct the icon/watermark.
++    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
++        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
++    if not isLAB then
++        local desiredType = foreign and "action" or "click"
++        if btn:GetAttribute("type") ~= desiredType then
++            btn:SetAttribute("type", desiredType)
++            if not foreign and sequence and _G[sequence] then
++                btn:SetAttribute("clickbutton", _G[sequence])
++            end
++        end
++    end
++    -- gse-eff-action drives the existing OnAttributeChanged icon hook: > 0 shows the
++    -- real action icon and hides the GSE watermark; 0 restores the sequence icon.
++    if btn:GetAttribute("gse-eff-action") ~= desiredEff then
++        btn:SetAttribute("gse-eff-action", desiredEff)
++    end
++end
++
++local function reevaluateAllOverrideButtons()
++    if GSE.isEmpty(GSE.ButtonOverrides) then return end
++    if InCombatLockdown() then return end
++    for buttonName, sequence in pairs(GSE.ButtonOverrides) do
++        reevaluateOverrideButtonState(buttonName, sequence)
++    end
++end
++
++function GSE:ACTIONBAR_SLOT_CHANGED()
++    reevaluateAllOverrideButtons()
++end
++
+ local function isUsableActionBarOverride(savedBind)
+     if type(savedBind) ~= "table" then return false end
+ 
+@@ -813,6 +981,10 @@
+                 end
+             end
+         end
++        -- A freshly (re)loaded override whose slot already holds a real action
++        -- must start yielded, not behind the override. Defer one frame so the
++        -- action-bar slots are populated before we read them.
++        C_Timer.After(0, reevaluateAllOverrideButtons)
+     end
+ end
+ 
+@@ -920,6 +1092,7 @@
+     GSE.InstallDeveloperDebugGameMenuWarning()
+     GSE.currentZone = GetRealZoneText()
+     GSE.PlayerEntered = true
++    GSE.ApplyErrorMessageOptions()
+     GSE.UpdateZoneFlags()
+     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
+     -- (older mod versions didn't track it for macros at all, and never-edited
+@@ -1312,6 +1485,7 @@
+ GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
+ GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
+ GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
++GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+ GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+ GSE:RegisterEvent("UNIT_FACTION")
+ GSE:RegisterEvent("PLAYER_LEVEL_UP")
+--- a/GSE/API/Native.lua
++++ b/GSE/API/Native.lua
+@@ -1,7 +1,7 @@
+ -- GSE helper functions that genuinely add behavior — NOT thin wrappers
+ -- around WoW APIs. WoW APIs are called directly at the call site.
+--- Ace3 mixin (AceConsole / AceEvent / AceComm via Init.lua) provides
+--- :RegisterChatCommand / :RegisterEvent / :SendMessage / :RegisterComm etc.
++-- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
++-- :RegisterEvent / :SendMessage / :RegisterComm etc.
+ --
+ -- This file contains:
+ --   * GSE.SafeSecureCmdOptionParse: pcall + UI-error suppression around
+--- a/GSE/API/Storage.lua
++++ b/GSE/API/Storage.lua
+@@ -1737,7 +1737,11 @@
+                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
+                             string.sub(k, 1, 4) == "NDui"
+                      then
+-                        _G[k].icon:SetTexture(spellinfo.iconID)
++                        -- Yield to a real action the player dropped into this slot (matches the
++                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
++                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
++                            _G[k].icon:SetTexture(spellinfo.iconID)
++                        end
+                     else
+                         if GSE.GameMode == 11 then
+                             local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
+--- a/GSE_GUI/Editor.lua
++++ b/GSE_GUI/Editor.lua
+@@ -632,6 +632,12 @@
+ GSE.GUI.RefreshMacroLimitSaveState = RefreshMacroLimitSaveState
+ GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
+ GSE.GUI.SetMacroCountText = SetMacroCountText
++-- The "X/255" indicator must report the SAME length the over-limit trigger
++-- (UpdateMacroLimitState) and WoW itself enforce: the compiled body, after
++-- spell-name translation. Showing the raw typed length instead made the
++-- counter read e.g. 252/255 while the trigger fired on the 256-char compiled
++-- body. Expose the compiled-length helper so every counter call site uses it.
++GSE.GUI.GetCompiledMacroBodyLength = GetCompiledMacroBodyLength
+ 
+ local DecodeEditorText = GSE.DecodeEditorText
+ local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+@@ -5038,11 +5044,11 @@
+ 			macroBody:AddChild(macroRail)
+ 			macroBody:AddChild(macroFields)
+ 			spellcontainer:AddChild(macroBody)
+-			-- Count visible editor text with color codes and note lines removed.
+-			-- color codes stripped) rather than the runtime-expanded
+-			-- compiled length ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â that's what the user sees typed.
+-			local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
+-			SetMacroCountText(macroeditbox, GSE.GetMacroEditorTextLength(visible))
++			-- Report the COMPILED macro body length (after spell-name translation)
++			-- so the "X/255" indicator matches the over-limit trigger and what WoW
++			-- actually enforces on the macro slot. Showing the raw typed length
++			-- made the counter read e.g. 252/255 while the trigger fired at 256.
++			SetMacroCountText(macroeditbox, GetCompiledMacroBodyLength(macroeditbox:GetText() or ""))
+ 		else
+ 			local actionBodyHeight = 92
+ 			local actionBody = UI:Create("SimpleGroup")
+@@ -6535,101 +6541,23 @@
+             return true
+         end
+ 
+-        local function KeyboardFocusIsTextEntry()
+-            local keyboardFocus
+-            if GetCurrentKeyBoardFocus then
+-                keyboardFocus = GetCurrentKeyBoardFocus()
+-            elseif GetCurrentKeyboardFocus then
+-                keyboardFocus = GetCurrentKeyboardFocus()
+-            end
+-            return keyboardFocus ~= nil
+-        end
+-
+-        local function SetEditorKeyboardPropagation(propagate)
+-            if not (editframe.frame and editframe.frame.SetPropagateKeyboardInput) then return end
+-            if GSE.GUI.SetPropagateKeyboardSafe then
+-                GSE.GUI.SetPropagateKeyboardSafe(editframe.frame, propagate)
+-            else
+-                editframe.frame:SetPropagateKeyboardInput(propagate)
+-            end
+-        end
+-
+-        local function MacroMoveKeyIsBoundToWoW(key)
+-            if not GetBindingAction then return false end
+-            local action = GetBindingAction(key, true)
+-            if GSE.isEmpty(action) then action = GetBindingAction(key) end
+-            return not GSE.isEmpty(action)
+-        end
+-
+-        -- Move the focus/selection to the previous (-1) or next (+1) block in
+-        -- visual order, without reordering. Walks the render-order list so it
+-        -- follows exactly what is on screen (including inside If branches / loops).
+-        local function NavigateSelectedMacroBlock(direction)
+-            local navOrder = editframe.macroBlockNavOrder
+-            if type(navOrder) ~= "table" or #navOrder == 0 then return false end
+-            local selectedPath =
+-                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
+-                    or nil
+-            if not selectedPath or #selectedPath == 0 then return false end
+-
+-            local currentIndex
+-            for index, navPath in ipairs(navOrder) do
+-                if MacroBlockPathsEqual(navPath, selectedPath) then
+-                    currentIndex = index
+-                    break
+-                end
+-            end
+-            if not currentIndex then return false end
+-
+-            local targetIndex = currentIndex + direction
+-            if targetIndex < 1 or targetIndex > #navOrder then
+-                BlinkSelectedMacroBlock()   -- already at the top/bottom block
+-                return false
+-            end
+-
+-            if editframe.gseSelectMacroBlockPath then
+-                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
+-            end
+-            return true
+-        end
+-
+-        local function HandleMacroBlockMoveKey(_, key)
+-            SetEditorKeyboardPropagation(true)
+-            if key ~= "UP" and key ~= "DOWN" then return end
+-            if MacroMoveKeyIsBoundToWoW(key) then return end
+-            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
+-            if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
+-            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
+-
+-            SetEditorKeyboardPropagation(false)
+-            local direction = key == "UP" and -1 or 1
+-            if IsShiftKeyDown() then
+-                MoveSelectedMacroBlock(direction)        -- Shift + arrow: reorder the block
+-            else
+-                NavigateSelectedMacroBlock(direction)    -- arrow: move focus to the adjacent block
+-            end
+-        end
+-
+-        if editframe.frame and editframe.frame.EnableKeyboard and editframe.frame.SetPropagateKeyboardInput then
+-            editframe.frame:SetScript("OnKeyDown", HandleMacroBlockMoveKey)
+-            editframe.frame:SetScript("OnKeyUp", function()
+-                SetEditorKeyboardPropagation(true)
+-            end)
+-            -- Enable capture + propagation together, deferred out of combat so we
+-            -- never call the protected SetPropagateKeyboardInput in combat nor
+-            -- swallow the player's keybinds (patrons may open the editor mid-combat).
+-            local function enableMacroBlockKeys()
+-                if editframe.frame and editframe.frame.EnableKeyboard then editframe.frame:EnableKeyboard(true) end
+-                if editframe.frame and editframe.frame.SetPropagateKeyboardInput then
+-                    editframe.frame:SetPropagateKeyboardInput(true)
+-                end
+-            end
+-            if GSE.GUI.RunWhenCombatSafe then
+-                GSE.GUI.RunWhenCombatSafe(enableMacroBlockKeys)
+-            else
+-                enableMacroBlockKeys()
+-            end
+-        end
++        -- Arrow-key block handling has been REMOVED.
++        --   * plain Up/Down previously moved the selection cursor through the list
++        --   * Shift+Up/Down previously reordered the focused block
++        -- The arrow keys are bound to character movement in WoW by default, and the
++        -- old handler called SetPropagateKeyboardInput(false) when it acted on an
++        -- arrow, which CONSUMED the key and stole the player's movement while the
++        -- editor was open. Blocks are reordered with the Move Up / Move Down buttons
++        -- and the cursor is moved by clicking a block, so no keyboard shortcut is
++        -- needed.
++        --
++        -- Nothing here registers an OnKeyDown handler or enables keyboard capture
++        -- on the editor frame, so the arrow keys (and every other key) propagate to
++        -- the game by default and character movement works normally. The Ctrl+Z
++        -- undo subsystem that used to capture this frame's keyboard has also been
++        -- removed, so there is no frame-level keyboard handler here at all.
++        -- (MoveSelectedMacroBlock above is still used by the Move Up / Move Down
++        -- buttons; the cursor is moved by clicking a block.)
+ 
+         local moveUpButton = UI:Create("Icon")
+         local moveDownButton = UI:Create("Icon")
+@@ -7125,7 +7053,6 @@
+             end
+ 
+             spellEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, spellEditBox) end
+ 
+             spellEditBox:SetCallback(
+                 "OnTextChanged",
+@@ -7196,7 +7123,6 @@
+             macroEditBox:SetNumLines(5)
+             macroEditBox:SetRelativeWidth(0.5)
+             macroEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, macroEditBox) end
+             ForwardMacroEditorMouseWheel(macroEditBox, frame)
+             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
+             macroEditBox:SetCallback(
+@@ -7253,7 +7179,10 @@
+                         compiledMacro:SetText(body)
+                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
+                     end
+-                    SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
++                    -- Count the COMPILED body (post translation), the same value
++                    -- UpdateMacroLimitState/WoW enforce, so the indicator and the
++                    -- over-limit trigger never disagree (was: raw typed length).
++                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(sequence.Versions[version].Actions[keyPath].macro))
+                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
+                 end
+             )
+@@ -7284,7 +7213,6 @@
+     GSE.GUI.SetupKeybind(editframe)
+     GSE.GUI.SetupMacro(editframe)
+     GSE.GUI.SetupTree(editframe)
+-    if GSE.GUI.SetupUndo then GSE.GUI.SetupUndo(editframe) end
+ 
+     function editframe:remoteSequenceUpdated(seqName)
+         if seqName == editframe.SequenceName then
+--- a/GSE_GUI/Editor_Macro.lua
++++ b/GSE_GUI/Editor_Macro.lua
+@@ -45,7 +45,13 @@
+         text = widget:GetText()
+     end
+     if GSE.GUI and GSE.GUI.SetMacroCountText then
+-        GSE.GUI.SetMacroCountText(widget, GSE.GetMacroEditorTextLength(text or ""))
++        -- Show the COMPILED body length so the indicator matches the over-limit
++        -- trigger (UpdateMacroLimitState) and what WoW enforces on the slot.
++        -- Fall back to the raw typed length only if the compiled-length helper
++        -- isn't loaded (e.g. a partial install).
++        local lenMacro = (GSE.GUI.GetCompiledMacroBodyLength and GSE.GUI.GetCompiledMacroBodyLength(text or ""))
++            or GSE.GetMacroEditorTextLength(text or "")
++        GSE.GUI.SetMacroCountText(widget, lenMacro)
+     end
+     if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+         GSE.GUI.UpdateMacroLimitState(widget, text)
+--- a/GSE_GUI/NativeUI.lua
++++ b/GSE_GUI/NativeUI.lua
+@@ -2942,6 +2942,24 @@
+     widget.content = content
+     widget.scrollframe = scrollFrame
+     widget.scrollbar = getScrollBar(scrollFrame)
++    if widget.scrollbar then
++        -- UIPanelScrollFrameTemplate parents its scrollbar to the inner scroll
++        -- frame and anchors it just outside that frame's right edge. Because the
++        -- scroll frame has SetClipsChildren(true) (set above, to keep the macro
++        -- content bounded), that clip mask was cutting the scrollbar away -- which
++        -- is why the editor looked like it had no main scrollbar. applyModernSlim-
++        -- ScrollBar only re-anchors under the ElvUI skin, so on the default skin
++        -- nothing repositioned it. Re-parent the bar onto the OUTER frame (not
++        -- clipped) and anchor it in the reserved right-hand gutter so it renders.
++        widget.scrollbar:SetParent(frame)
++        widget.scrollbar:ClearAllPoints()
++        widget.scrollbar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -STYLE.padXXS, -STYLE.scrollBarWidth)
++        widget.scrollbar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -STYLE.padXXS, STYLE.scrollBarWidth)
++        widget.scrollbar:SetWidth(STYLE.scrollBarWidth)
++        if widget.scrollbar.SetFrameLevel and scrollFrame.GetFrameLevel then
++            widget.scrollbar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
++        end
++    end
+     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
+     widget.localstatus = {scrollvalue = 0}
+     widget.scrollBarShown = false

@@ -1,0 +1,1892 @@
+--- a/GSE/API/Events.lua
++++ b/GSE/API/Events.lua
+@@ -74,6 +74,94 @@
+ 
+ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
+ 
++local LOWER_ENERGY_SOUND_ID = 1489541
++local errorMessageState = {
++    originalHandler = nil,
++    installed = false
++}
++
++local function EnsureErrorMessageOptions()
++    if not GSEOptions then GSEOptions = {} end
++    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
++    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
++    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
++end
++
++local function IsAllowedUIError(err)
++    if not err then return false end
++    if (ERR_INV_FULL and err == ERR_INV_FULL)
++        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
++        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
++        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
++        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
++        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
++        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
++        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
++        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
++        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
++        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
++        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
++        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
++        return true
++    end
++    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
++        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
++        return ok and pattern and err:find(pattern)
++    end
++    return false
++end
++
++local function FilterUIErrorsFrame(self, event, id, err, ...)
++    if event == "UI_ERROR_MESSAGE" then
++        if IsAllowedUIError(err) then
++            if errorMessageState.originalHandler then
++                return errorMessageState.originalHandler(self, event, id, err, ...)
++            end
++        end
++        return
++    end
++    if errorMessageState.originalHandler then
++        return errorMessageState.originalHandler(self, event, id, err, ...)
++    end
++end
++
++local function SetErrorSpeechMuted(muted)
++    local setter = C_CVar and C_CVar.SetCVar or SetCVar
++    if setter then
++        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
++    end
++end
++
++local function SetLowerEnergyMuted(muted)
++    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
++    if soundFunc then
++        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
++    end
++end
++
++function GSE.ApplyErrorMessageOptions()
++    EnsureErrorMessageOptions()
++
++    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
++        if GSEOptions.HideUIErrorFrame then
++            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
++            if currentHandler ~= FilterUIErrorsFrame then
++                errorMessageState.originalHandler = currentHandler
++            end
++            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
++            errorMessageState.installed = true
++        elseif errorMessageState.installed then
++            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
++                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
++            end
++            errorMessageState.installed = false
++        end
++    end
++
++    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
++    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
++end
++
+ -- Fired once per session when overrides are loaded.  Corrects CVars that interfere
+ -- with actionbar overrides and tells the player what was changed.
+ local actionBarCVarCheckedThisSession = false
+@@ -207,6 +295,22 @@
+     return slot + (page - 1) * 12
+ end
+ 
++-- True when the player has dropped a real (non-empty, non-macro) action into the
++-- action-bar slot a GSE override sits on. Mirrors the BAR_SWAP secure handlers,
++-- which treat empty and macro slots as still owned by the override and any other
++-- action as something to yield to. Used to stop GSE repainting its sequence icon
++-- over the real action's icon, which otherwise fights WoW's own repaint and makes
++-- the button flicker when a normal key/spell is placed in the same slot.
++function GSE.ActionBarSlotHasForeignAction(button)
++    if not button or not button.GetAttribute then return false end
++    if not button:GetAttribute("gse-button") then return false end
++    local slot = getButtonEffectiveSlot(button)
++    if not slot or not GetActionInfo then return false end
++    local actionType = GetActionInfo(slot)
++    if actionType == nil or actionType == "macro" then return false end
++    return true
++end
++
+ -- Return the display icon for a GSE-overridden button.
+ -- Resolve directly from the compiled GSE action first so MacroBlock conditionals
+ -- such as [mod:alt] repaint like a normal in-game macro.
+@@ -259,6 +363,8 @@
+ end
+ 
+ local function getGSEButtonIcon(self)
++    -- A real action in the slot wins: don't paint the sequence icon over it.
++    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
+     local seq = self:GetAttribute("gse-button")
+     local seqTexture = getGSESequenceIcon(seq)
+     if seqTexture then return seqTexture end
+@@ -584,7 +690,8 @@
+                 _G[Button]:HookScript(
+                     "OnEnter",
+                     function(self)
+-                        if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                        if not InCombatLockdown() and self:GetAttribute("gse-button")
++                            and not GSE.ActionBarSlotHasForeignAction(self) then
+                             self:SetAttribute("type", "click")
+                         end
+                     end
+@@ -663,7 +770,8 @@
+                     _G[Button]:HookScript(
+                         "OnEnter",
+                         function(self)
+-                            if not InCombatLockdown() and self:GetAttribute("gse-button") then
++                            if not InCombatLockdown() and self:GetAttribute("gse-button")
++                                and not GSE.ActionBarSlotHasForeignAction(self) then
+                                 self:SetAttribute("type", "click")
+                             end
+                         end
+@@ -678,7 +786,16 @@
+                         "",
+                         [[
+     if self:GetAttribute('gse-button') then
+-        self:SetAttribute('type', 'click')
++        local slot = self:GetID()
++        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
++        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
++                                or (page and (slot + page * 12 - 12)) or nil
++        local at = effectiveAction and GetActionInfo(effectiveAction)
++        -- Only re-assert the override on hover when the slot is empty or a macro;
++        -- if a real action sits here, leave type="action" so it stays usable.
++        if at == nil or at == "macro" then
++            self:SetAttribute('type', 'click')
++        end
+     end
+ ]]
+                     )
+@@ -705,6 +822,57 @@
+     end
+ end
+ 
++-- ---------------------------------------------------------------------------
++-- Yield an override to a real action the player drops into its slot.
++--
++-- The secure BAR_SWAP_ONCLICK / BAR_SWAP_OAC snippets already switch a button
++-- between the GSE override (type="click") and the underlying action
++-- (type="action"), but they only run on a click or a bar-page/state swap. When
++-- the player simply drops a spell into the slot neither fires, so the button is
++-- left behind the stale override -- GSE icon + watermark bleeding through, and
++-- the action looking disabled -- until the next click. ACTIONBAR_SLOT_CHANGED
++-- (registered below) runs the same evaluation immediately. type is a protected
++-- attribute, so this only acts out of combat; the in-combat case is covered by
++-- LoadOverrides() on PLAYER_REGEN_ENABLED. Attributes are written only when they
++-- actually change, so a no-op slot event does not re-trigger a repaint.
++-- ---------------------------------------------------------------------------
++local function reevaluateOverrideButtonState(buttonName, sequence)
++    local btn = _G[buttonName]
++    if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
++    local foreign = GSE.ActionBarSlotHasForeignAction(btn)
++    local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
++    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
++    -- own state system; leave their type alone and just correct the icon/watermark.
++    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
++        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
++    if not isLAB then
++        local desiredType = foreign and "action" or "click"
++        if btn:GetAttribute("type") ~= desiredType then
++            btn:SetAttribute("type", desiredType)
++            if not foreign and sequence and _G[sequence] then
++                btn:SetAttribute("clickbutton", _G[sequence])
++            end
++        end
++    end
++    -- gse-eff-action drives the existing OnAttributeChanged icon hook: > 0 shows the
++    -- real action icon and hides the GSE watermark; 0 restores the sequence icon.
++    if btn:GetAttribute("gse-eff-action") ~= desiredEff then
++        btn:SetAttribute("gse-eff-action", desiredEff)
++    end
++end
++
++local function reevaluateAllOverrideButtons()
++    if GSE.isEmpty(GSE.ButtonOverrides) then return end
++    if InCombatLockdown() then return end
++    for buttonName, sequence in pairs(GSE.ButtonOverrides) do
++        reevaluateOverrideButtonState(buttonName, sequence)
++    end
++end
++
++function GSE:ACTIONBAR_SLOT_CHANGED()
++    reevaluateAllOverrideButtons()
++end
++
+ local function isUsableActionBarOverride(savedBind)
+     if type(savedBind) ~= "table" then return false end
+ 
+@@ -813,6 +981,10 @@
+                 end
+             end
+         end
++        -- A freshly (re)loaded override whose slot already holds a real action
++        -- must start yielded, not behind the override. Defer one frame so the
++        -- action-bar slots are populated before we read them.
++        C_Timer.After(0, reevaluateAllOverrideButtons)
+     end
+ end
+ 
+@@ -920,6 +1092,7 @@
+     GSE.InstallDeveloperDebugGameMenuWarning()
+     GSE.currentZone = GetRealZoneText()
+     GSE.PlayerEntered = true
++    GSE.ApplyErrorMessageOptions()
+     GSE.UpdateZoneFlags()
+     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
+     -- (older mod versions didn't track it for macros at all, and never-edited
+@@ -1312,6 +1485,7 @@
+ GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
+ GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
+ GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
++GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+ GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+ GSE:RegisterEvent("UNIT_FACTION")
+ GSE:RegisterEvent("PLAYER_LEVEL_UP")
+--- a/GSE/API/InitialOptions.lua
++++ b/GSE/API/InitialOptions.lua
+@@ -140,6 +140,9 @@
+     GSEOptions.UseModernSkin = false
+     GSEOptions.UseModernClassColors = false
+     GSEOptions.UseModernCustomColor = false
++    GSEOptions.HideUIErrorFrame = true
++    GSEOptions.MuteVoiceErrors = true
++    GSEOptions.MuteLowerEnergy = true
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+         g = MODERN_CUSTOM_COLOR_DEFAULT.g,
+@@ -178,6 +181,18 @@
+     GSEOptions.UseModernClassColors = false
+ end
+ 
++if GSEOptions.HideUIErrorFrame == nil then
++    GSEOptions.HideUIErrorFrame = true
++end
++
++if GSEOptions.MuteVoiceErrors == nil then
++    GSEOptions.MuteVoiceErrors = true
++end
++
++if GSEOptions.MuteLowerEnergy == nil then
++    GSEOptions.MuteLowerEnergy = true
++end
++
+ if type(GSEOptions.ModernCustomColor) ~= "table" then
+     GSEOptions.ModernCustomColor = {
+         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
+@@ -356,17 +371,36 @@
+     scale = ClampUIScale(scale or GSE.GetUIScale())
+     local preserveCenter = frame.IsShown and frame:IsShown() and frame.GetCenter and frame.ClearAllPoints and frame.SetPoint
+         and not frame.GSESkipScaleRecenter
+-    local centerX, centerY
++    -- Capture the centre in ABSOLUTE screen pixels (frame-local centre times the
++    -- OLD effective scale) before SetScale. GetCenter is in the frame's own
++    -- coordinate space, which changes with scale; re-anchoring with the raw old
++    -- value after SetScale moved the centre by newScale/oldScale -- right/up on
++    -- grow, left/down on shrink. Going through absolute pixels keeps the centre
++    -- fixed so the window scales about its centre.
++    local absX, absY
+     if preserveCenter then
+-        centerX, centerY = frame:GetCenter()
++        local centerX, centerY = frame:GetCenter()
+         preserveCenter = centerX and centerY and UIParent
++        if preserveCenter then
++            local oldEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
++            if not oldEffective or oldEffective <= 0 then oldEffective = 1 end
++            absX, absY = centerX * oldEffective, centerY * oldEffective
++        end
+     end
+ 
+     frame:SetScale(scale)
+ 
+     if preserveCenter then
+-        GSE.SetFrameScreenPoint(frame, "CENTER", centerX, centerY)
+-        GSE.ClampFrameToScreen(frame)
++        -- Convert the absolute-pixel centre back into the frame's NEW local units.
++        local newEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
++        if not newEffective or newEffective <= 0 then newEffective = 1 end
++        GSE.SetFrameScreenPoint(frame, "CENTER", absX / newEffective, absY / newEffective)
++        -- Frames that self-clamp (SetClampedToScreen) opt out of GSE's clamp via
++        -- GSESkipScaleClamp: GSE's clamp permanently re-anchors a frame that grew
++        -- past a screen edge, which caused the toolbar's scale-down "left jump".
++        if not frame.GSESkipScaleClamp then
++            GSE.ClampFrameToScreen(frame)
++        end
+     end
+ end
+ 
+--- a/GSE/API/Native.lua
++++ b/GSE/API/Native.lua
+@@ -1,7 +1,7 @@
+ -- GSE helper functions that genuinely add behavior — NOT thin wrappers
+ -- around WoW APIs. WoW APIs are called directly at the call site.
+--- Ace3 mixin (AceConsole / AceEvent / AceComm via Init.lua) provides
+--- :RegisterChatCommand / :RegisterEvent / :SendMessage / :RegisterComm etc.
++-- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
++-- :RegisterEvent / :SendMessage / :RegisterComm etc.
+ --
+ -- This file contains:
+ --   * GSE.SafeSecureCmdOptionParse: pcall + UI-error suppression around
+--- a/GSE/API/Storage.lua
++++ b/GSE/API/Storage.lua
+@@ -1737,7 +1737,11 @@
+                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
+                             string.sub(k, 1, 4) == "NDui"
+                      then
+-                        _G[k].icon:SetTexture(spellinfo.iconID)
++                        -- Yield to a real action the player dropped into this slot (matches the
++                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
++                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
++                            _G[k].icon:SetTexture(spellinfo.iconID)
++                        end
+                     else
+                         if GSE.GameMode == 11 then
+                             local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
+--- a/GSE/embeds.xml
++++ b/GSE/embeds.xml
+@@ -1,12 +1,12 @@
+-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+-..\FrameXML\UI.xsd">
+-    <Script file="Lib\LibStub\LibStub.lua"/>
+-    <Include file="Lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
+-    <Include file="Lib\AceAddon-3.0\AceAddon-3.0.xml"/>
+-    <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
+-    <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
+-    <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
+-    <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
+-    <Script file="Lib\WagoAnalytics\Shim.lua" />
+-    <Include file="Lib\LibQTip-2.0\LibQTip-2.0\Manifest.xml"/>
++<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
++..\FrameXML\UI.xsd">
++    <Script file="Lib\LibStub\LibStub.lua"/>
++    <Include file="Lib\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
++    <Include file="Lib\AceAddon-3.0\AceAddon-3.0.xml"/>
++    <Include file="Lib\AceEvent-3.0\AceEvent-3.0.xml"/>
++    <Include file="Lib\AceLocale-3.0\AceLocale-3.0.xml"/>
++    <Include file="Lib\AceComm-3.0\AceComm-3.0.xml"/>
++    <Script file="Lib\LibDataBroker-1.1\LibDataBroker-1.1.lua" />
++    <Script file="Lib\WagoAnalytics\Shim.lua" />
++    <Include file="Lib\LibQTip-2.0\LibQTip-2.0\Manifest.xml"/>
+ </Ui>
+\ No newline at end of file
+--- a/GSE_GUI/DebugWindow.lua
++++ b/GSE_GUI/DebugWindow.lua
+@@ -58,9 +58,13 @@
+     {label = "Action / Spellbook", width = 204, min = 130},
+     {label = "Castable", width = 76, min = 60},
+     {label = "Resources", width = 90, min = 70},
+-    {label = "Casting", width = 112, min = 75},
+-    {label = "Next Cast", width = 90, min = 70}
++    {label = "Casting", width = 112, min = 75}
+ }
++-- Next Cast is the Assisted Highlight recommendation (Retail only); keep this
++-- fallback list in sync with GSE.SequenceDebugColumns by gating it the same way.
++if C_AssistedCombat and C_AssistedCombat.GetNextCastSpell then
++    DEFAULT_DEBUG_COLUMNS[#DEFAULT_DEBUG_COLUMNS + 1] = {label = "Next Cast", width = 90, min = 70}
++end
+ 
+ function GSE.DebugUsesModernSkin()
+     return (GSE.ShouldUseModernSkin and GSE.ShouldUseModernSkin()) or
+@@ -391,6 +395,27 @@
+     return columns
+ end
+ 
++local function CopyDebugColumnOrder(location, columns)
++    local savedOrder = location and location.columnOrder
++    local order, seen = {}, {}
++    if type(savedOrder) == "table" then
++        for _, columnIndex in ipairs(savedOrder) do
++            columnIndex = tonumber(columnIndex)
++            if columnIndex and columns[columnIndex] and not seen[columnIndex] then
++                order[#order + 1] = columnIndex
++                seen[columnIndex] = true
++            end
++        end
++    end
++    for columnIndex in ipairs(columns) do
++        if not seen[columnIndex] then
++            order[#order + 1] = columnIndex
++            seen[columnIndex] = true
++        end
++    end
++    return order
++end
++
+ local frameTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
+ function GSE.CreateDebuggerEditorFrame(name, parent)
+     for _, templateName in ipairs({"ButtonFrameTemplate", "BasicFrameTemplateWithInset"}) do
+@@ -894,6 +919,7 @@
+ DebugFrame.Height = ClampNumber(debugLocation.height or GSEOptions.debugHeight, DEBUG_UI.MIN_DEBUGGER_HEIGHT, GetMaxDebuggerHeight(), DEBUG_UI.MIN_DEBUGGER_HEIGHT)
+ DebugFrame.Width = ClampNumber(debugLocation.width or GSEOptions.debugWidth, DEBUG_UI.MIN_DEBUGGER_WIDTH, GetMaxDebuggerWidth(), DEBUG_UI.MIN_DEBUGGER_WIDTH)
+ local debugColumns = CopyDebugColumns(debugLocation)
++local debugColumnOrder = CopyDebugColumnOrder(debugLocation, debugColumns)
+ GSEOptions.debugHeight = DebugFrame.Height
+ GSEOptions.debugWidth = DebugFrame.Width
+ DebugFrame:SetSize(DebugFrame.Width, DebugFrame.Height)
+@@ -1221,6 +1247,7 @@
+ local headerLabels = {}
+ local headerHandles = {}
+ local headerMenuButtons = {}
++local headerDragButtons = {}
+ local rowPool = {}
+ local debugRows = {}
+ local visibleRows = {}
+@@ -1228,6 +1255,7 @@
+ local statsResetDebugIndex = 1
+ local activeColumnFilters = {}
+ local activeStatsFilters = {}
++local activeDebugSort = {column = nil, direction = nil}
+ local activeStatsSort = {column = nil, direction = nil}
+ local statsSortScrollToTop = false
+ local activeSearchText = ""
+@@ -1332,6 +1360,36 @@
+     return column and column.visible ~= false
+ end
+ 
++local function GetVisibleDebugColumnOrder()
++    local visible = {}
++    for _, columnIndex in ipairs(debugColumnOrder) do
++        if IsDebugColumnVisible(columnIndex) then visible[#visible + 1] = columnIndex end
++    end
++    return visible
++end
++
++local function GetDebugColumnOrderPosition(columnIndex)
++    for position, orderedColumnIndex in ipairs(debugColumnOrder) do
++        if orderedColumnIndex == columnIndex then return position end
++    end
++end
++
++local function MoveDebugColumnBefore(columnIndex, beforeColumnIndex)
++    if not columnIndex or columnIndex == beforeColumnIndex then return false end
++    local oldPosition = GetDebugColumnOrderPosition(columnIndex)
++    if not oldPosition then return false end
++    if beforeColumnIndex == debugColumnOrder[oldPosition + 1] then return false end
++    if not beforeColumnIndex and oldPosition == #debugColumnOrder then return false end
++    table.remove(debugColumnOrder, oldPosition)
++    local insertPosition = beforeColumnIndex and GetDebugColumnOrderPosition(beforeColumnIndex) or nil
++    if insertPosition then
++        table.insert(debugColumnOrder, insertPosition, columnIndex)
++    else
++        debugColumnOrder[#debugColumnOrder + 1] = columnIndex
++    end
++    return true
++end
++
+ local function GetVisibleDebugColumnCount()
+     local count = 0
+     for i in ipairs(debugColumns) do
+@@ -1356,10 +1414,14 @@
+     location.columnVersion = DEBUG_UI.DEBUG_COLUMN_SCHEMA_VERSION
+     location.columnWidths = {}
+     location.columnVisibility = {}
++    location.columnOrder = {}
+     for i, column in ipairs(debugColumns) do
+         location.columnWidths[i] = column.width
+         location.columnVisibility[i] = column.visible ~= false
+     end
++    for orderIndex, columnIndex in ipairs(debugColumnOrder) do
++        location.columnOrder[orderIndex] = columnIndex
++    end
+ end
+ 
+ local function TextWidthFromPixels(column)
+@@ -1408,6 +1470,16 @@
+     end
+ end
+ 
++local function IsDebugSortableColumn(columnIndex)
++    local column = columnIndex and debugColumns[columnIndex]
++    local label = column and column.label
++    return label == "Timestamp" or label == "Step"
++end
++
++local function HasDebugColumnMenu(columnIndex)
++    return IsFilterableColumn(columnIndex) or IsDebugSortableColumn(columnIndex)
++end
++
+ local function GetDebugRowTimestamp(row)
+     local timestampIndex = GetDebugColumnIndex("Timestamp")
+     local timestamp = timestampIndex and row and row.values and StripDebugColor(row.values[timestampIndex] or "") or nil
+@@ -1431,30 +1503,65 @@
+     return timestamp and debugErrorTimestamps[timestamp] == true
+ end
+ 
++local SUCCESSFUL_CAST_FALLBACK_WINDOW = 8
++
++local function MarkSuccessfulCastRow(row, timestampIndex, castingIndex, castDisplayName)
++    if not (row and row.values) then return false end
++    row.successfulCastTimestamp = true
++    row.values[timestampIndex] = "|cFFFFD100" .. StripDebugColor(row.values[timestampIndex] or "") .. "|r"
++    if castingIndex and castDisplayName ~= "" then
++        row.values[castingIndex] = "|cFF00D1FFCasting " .. castDisplayName .. "|r"
++    end
++    return true
++end
++
++local function IsSuccessfulCastFallbackRow(row, now)
++    if not (row and row.values) then return false end
++    if row.successfulCastTimestamp then return false end
++    if row.createdAt and now then return (now - row.createdAt) <= SUCCESSFUL_CAST_FALLBACK_WINDOW end
++    return false
++end
++
+ function GSE.GUIDebugMarkSuccessfulCast(spellID, spellName)
+     local actionIndex = GetDebugColumnIndex("Action / Spellbook")
+     local timestampIndex = GetDebugColumnIndex("Timestamp")
++    local castingIndex = GetDebugColumnIndex("Casting")
+     if not actionIndex or not timestampIndex then return false end
+ 
+     local spellIDText = spellID and tostring(spellID) or ""
+     local spellNameText = spellName and string.lower(StripDebugColor(spellName)) or ""
+     if spellIDText == "" and spellNameText == "" then return false end
+ 
++    local castDisplayName = StripDebugColor(spellName or "")
++    if castDisplayName == "" and spellIDText ~= "" and GSE.GetSpellInfo then
++        local spellInfo = GSE.GetSpellInfo(spellID)
++        if spellInfo and spellInfo.name then castDisplayName = spellInfo.name end
++    end
++    if castDisplayName == "" then castDisplayName = spellIDText end
++    if spellNameText == "" and castDisplayName ~= "" then spellNameText = string.lower(castDisplayName) end
++
++    local fallbackRow
++    local now = GetTime and GetTime() or nil
+     for rowIndex = #debugRows, math.max(1, #debugRows - 100), -1 do
+         local row = debugRows[rowIndex]
++        if not fallbackRow and IsSuccessfulCastFallbackRow(row, now) then fallbackRow = row end
+         local actionText = row and row.values and StripDebugColor(row.values[actionIndex] or "") or ""
+         local actionLower = string.lower(actionText)
+         local matched = (spellIDText ~= "" and string.find(actionText, spellIDText, 1, true) ~= nil)
+             or (spellNameText ~= "" and string.find(actionLower, spellNameText, 1, true) ~= nil)
+ 
+         if matched then
+-            row.successfulCastTimestamp = true
+-            row.values[timestampIndex] = "|cFFFFD100" .. StripDebugColor(row.values[timestampIndex] or "") .. "|r"
++            MarkSuccessfulCastRow(row, timestampIndex, castingIndex, castDisplayName)
+             UpdateRows(false)
+             return true
+         end
+     end
+ 
++    if MarkSuccessfulCastRow(fallbackRow, timestampIndex, castingIndex, castDisplayName) then
++        UpdateRows(false)
++        return true
++    end
++
+     return false
+ end
+ 
+@@ -1486,6 +1593,49 @@
+     return true
+ end
+ 
++local function ParseDebugTimestampSeconds(value)
++    local hour, minute, second = tostring(value or ""):match("^(%d+):(%d+):(%d+)$")
++    if not hour then return nil end
++    return (tonumber(hour) or 0) * 3600 + (tonumber(minute) or 0) * 60 + (tonumber(second) or 0)
++end
++
++local function GetDebugSortValue(row, columnIndex)
++    if not (row and row.values and columnIndex) then return nil end
++    local value = StripDebugColor(row.values[columnIndex] or "")
++    local column = debugColumns[columnIndex]
++    if column and column.label == "Timestamp" then
++        return ParseDebugTimestampSeconds(value) or value
++    elseif column and column.label == "Step" then
++        return tonumber(value) or value
++    end
++    return value
++end
++
++local function ApplyDebugVisibleSort()
++    if not activeDebugSort.column then return end
++    local sortColumn = activeDebugSort.column
++    local sortDirection = activeDebugSort.direction == "DESC" and "DESC" or "ASC"
++    table.sort(
++        visibleRows,
++        function(left, right)
++            local leftValue = GetDebugSortValue(left, sortColumn)
++            local rightValue = GetDebugSortValue(right, sortColumn)
++            if leftValue ~= nil and rightValue ~= nil and leftValue ~= rightValue then
++                if type(leftValue) ~= type(rightValue) then
++                    leftValue = tostring(leftValue)
++                    rightValue = tostring(rightValue)
++                end
++                if sortDirection == "DESC" then return leftValue > rightValue end
++                return leftValue < rightValue
++            end
++            local leftIndex = left and left.debugIndex or 0
++            local rightIndex = right and right.debugIndex or 0
++            if sortDirection == "DESC" then return leftIndex > rightIndex end
++            return leftIndex < rightIndex
++        end
++    )
++end
++
+ local function RebuildVisibleRows()
+     for i = #visibleRows, 1, -1 do
+         visibleRows[i] = nil
+@@ -1493,6 +1643,7 @@
+     for _, row in ipairs(debugRows) do
+         if RowMatchesFilters(row) then visibleRows[#visibleRows + 1] = row end
+     end
++    ApplyDebugVisibleSort()
+ end
+ 
+ local function FindSearchSuggestion(prefix)
+@@ -1635,7 +1786,8 @@
+ 
+ local function AddFilterSummary()
+     local lines = {"Filters:"}
+-    for i, column in ipairs(debugColumns) do
++    for _, i in ipairs(debugColumnOrder) do
++        local column = debugColumns[i]
+         if IsFilterableColumn(i) then
+             local filterValue = activeColumnFilters[i]
+             local checked = filterValue and "[x]" or "[ ]"
+@@ -1650,7 +1802,8 @@
+ local function DebugRowsToExport()
+     local exportLines = {}
+     local widths = {}
+-    for i, column in ipairs(debugColumns) do
++    for _, i in ipairs(debugColumnOrder) do
++        local column = debugColumns[i]
+         if IsDebugColumnVisible(i) then
+             widths[i] = TextWidthFromPixels(column)
+             exportLines[#exportLines + 1] = ExportColumnText(column.label, widths[i])
+@@ -1664,7 +1817,7 @@
+             lines[#lines + 1] = StripDebugColor(row.message)
+         else
+             local values = {}
+-            for i, _ in ipairs(debugColumns) do
++            for _, i in ipairs(debugColumnOrder) do
+                 if IsDebugColumnVisible(i) then
+                     values[#values + 1] = ExportColumnText(row.values and row.values[i] or "", widths[i])
+                 end
+@@ -3281,6 +3434,17 @@
+     end
+ )
+ 
++local function EnsureRowLabel(rowFrame, columnIndex)
++    local label = rowFrame.labels[columnIndex]
++    if not label then
++        label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
++        label:SetJustifyH("LEFT")
++        label:SetWordWrap(false)
++        rowFrame.labels[columnIndex] = label
++    end
++    return label
++end
++
+ local function PositionRowLabels(rowFrame, row)
+     local totalWidth = GetColumnTotalWidth()
+     local useErrorColor = RowUsesSpellbookErrorTimestamp(row)
+@@ -3288,9 +3452,10 @@
+ 
+     if row and row.message then
+         local messageShown = false
+-        for i, label in ipairs(rowFrame.labels) do
++        for _, columnIndex in ipairs(debugColumnOrder) do
++            local label = EnsureRowLabel(rowFrame, columnIndex)
+             label:ClearAllPoints()
+-            if not messageShown and IsDebugColumnVisible(i) then
++            if not messageShown and IsDebugColumnVisible(columnIndex) then
+                 label:SetPoint("LEFT", rowFrame, "LEFT", 4, 0)
+                 label:SetPoint("RIGHT", rowFrame, "RIGHT", -4, 0)
+                 label:SetText(tostring(row.message or ""))
+@@ -3310,20 +3475,15 @@
+     end
+ 
+     local left = 0
+-    for i, column in ipairs(debugColumns) do
+-        local label = rowFrame.labels[i]
+-        if not label then
+-            label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+-            label:SetJustifyH("LEFT")
+-            label:SetWordWrap(false)
+-            rowFrame.labels[i] = label
+-        end
+-        if IsDebugColumnVisible(i) then
++    for _, columnIndex in ipairs(debugColumnOrder) do
++        local column = debugColumns[columnIndex]
++        local label = EnsureRowLabel(rowFrame, columnIndex)
++        if IsDebugColumnVisible(columnIndex) then
+             label:ClearAllPoints()
+             label:SetPoint("LEFT", rowFrame, "LEFT", left + 4, 0)
+             label:SetWidth(math.max(1, (column.width or 0) - 8))
+             label:SetHeight(DEBUG_UI.ROW_HEIGHT)
+-            label:SetText(tostring(row and row.values and row.values[i] or ""))
++            label:SetText(tostring(row and row.values and row.values[columnIndex] or ""))
+             if useErrorColor then
+                 label:SetTextColor(1, 0.15, 0.15, 1)
+             else
+@@ -3461,10 +3621,11 @@
+ end
+ 
+ local function RefreshDebugOutputColumnMenu()
+-    for index, column in ipairs(debugColumns) do
++    for rowIndex, index in ipairs(debugColumnOrder) do
++        local column = debugColumns[index]
+         local button = debugColumnButtons[index]
+         if button then
+-            ConfigureDropdownRow(button, index, column.label or ("Column " .. index), IsDebugColumnVisible(index), button:GetScript("OnClick"))
++            ConfigureDropdownRow(button, rowIndex, column.label or ("Column " .. index), IsDebugColumnVisible(index), button:GetScript("OnClick"))
+         end
+     end
+ end
+@@ -3487,7 +3648,7 @@
+         button:SetText("v")
+         local fontString = button:GetFontString()
+         if fontString then
+-            if activeColumnFilters[i] then
++            if activeColumnFilters[i] or activeDebugSort.column == i then
+                 fontString:SetTextColor(1, 0.82, 0.15, 1)
+             else
+                 fontString:SetTextColor(0.75, 0.75, 0.75, 1)
+@@ -3535,7 +3696,12 @@
+             filterText[#filterText + 1] = tostring(column and column.label or columnIndex) .. " = " .. tostring(value)
+         end
+         table.sort(filterText)
+-        GSE.GUIDebugAppendLine("Filter enabled: " .. table.concat(filterText, ", ") .. ". Events remain in timestamp order.")
++        local suffix = ". Events remain in timestamp order."
++        if activeDebugSort.column then
++            local sortColumn = debugColumns[activeDebugSort.column]
++            suffix = ". Events are sorted by " .. tostring(sortColumn and sortColumn.label or activeDebugSort.column) .. " " .. tostring(activeDebugSort.direction or "ASC") .. "."
++        end
++        GSE.GUIDebugAppendLine("Filter enabled: " .. table.concat(filterText, ", ") .. suffix)
+     elseif SetDebuggerStatusText then
+         SetDebuggerStatusText()
+     else
+@@ -3543,7 +3709,84 @@
+     end
+ end
+ 
++local function ApplyDebugColumnSort(columnIndex, direction)
++    if not direction then
++        activeDebugSort.column = nil
++        activeDebugSort.direction = nil
++    else
++        activeDebugSort.column = columnIndex
++        activeDebugSort.direction = direction == "DESC" and "DESC" or "ASC"
++    end
++    RebuildVisibleRows()
++    UpdateFilterIndicators()
++    UpdateRows(false)
++    if SetDebuggerStatusText then
++        if activeDebugSort.column then
++            local column = debugColumns[activeDebugSort.column]
++            DebugFrame:SetStatusText("Sorted by " .. tostring(column and column.label or activeDebugSort.column) .. " " .. activeDebugSort.direction)
++        else
++            SetDebuggerStatusText()
++        end
++    end
++end
++
+ local function ShowFilterMenu(columnIndex, anchor)
++    if IsDebugSortableColumn(columnIndex) then
++        local column = debugColumns[columnIndex]
++        local columnLabel = column and column.label or "Column"
++        local menuWidth = math.max(180, column and column.width or 120)
++        local rowCount = 3
++        filterMenu:SetSize(menuWidth, rowCount * DEBUG_UI.DROPDOWN_ROW_HEIGHT + (DEBUG_UI.DROPDOWN_INSET * 2))
++        filterContent:SetSize(menuWidth - (DEBUG_UI.DROPDOWN_INSET * 2), rowCount * DEBUG_UI.DROPDOWN_ROW_HEIGHT)
++
++        local firstLabel = columnLabel == "Timestamp" and "Oldest First" or "Step Ascending"
++        local secondLabel = columnLabel == "Timestamp" and "Newest First" or "Step Descending"
++        ConfigureDropdownRow(
++            EnsureFilterButton(1),
++            1,
++            firstLabel,
++            activeDebugSort.column == columnIndex and activeDebugSort.direction == "ASC",
++            function()
++                filterMenu:Hide()
++                ApplyDebugColumnSort(columnIndex, "ASC")
++            end,
++            {1, 0.82, 0, 1}
++        )
++        ConfigureDropdownRow(
++            EnsureFilterButton(2),
++            2,
++            secondLabel,
++            activeDebugSort.column == columnIndex and activeDebugSort.direction == "DESC",
++            function()
++                filterMenu:Hide()
++                ApplyDebugColumnSort(columnIndex, "DESC")
++            end,
++            {1, 0.82, 0, 1}
++        )
++        ConfigureDropdownRow(
++            EnsureFilterButton(3),
++            3,
++            "Clear Sort",
++            not activeDebugSort.column,
++            function()
++                filterMenu:Hide()
++                ApplyDebugColumnSort(nil, nil)
++            end
++        )
++        for i = 4, #filterButtons do
++            filterButtons[i]:Hide()
++        end
++
++        filterScroll:SetVerticalScroll(0)
++        HideDropdownScrollBar(filterScroll)
++        filterMenu:ClearAllPoints()
++        RaiseDebuggerPopup(filterMenu, anchor)
++        filterMenu:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -2)
++        DebugFrame.ShowDebuggerDropdownClickAway(filterMenu)
++        filterMenu:Show()
++        return
++    end
++
+     if not IsFilterableColumn(columnIndex) then return end
+ 
+     local values, displayValues = GetFilterValuesForColumn(columnIndex)
+@@ -3600,13 +3843,16 @@
+     if headerScrollFrame.SetHorizontalScroll then headerScrollFrame:SetHorizontalScroll(0) end
+ 
+     local left = 0
+-    for i, column in ipairs(debugColumns) do
++    local visibleOrder = GetVisibleDebugColumnOrder()
++    local lastVisibleColumnIndex = visibleOrder[#visibleOrder]
++    for _, i in ipairs(debugColumnOrder) do
++        local column = debugColumns[i]
+         local label = headerLabels[i]
+         if label then
+             if IsDebugColumnVisible(i) then
+                 label:ClearAllPoints()
+                 label:SetPoint("LEFT", headerContent, "LEFT", left + 4, 0)
+-                local menuWidth = IsFilterableColumn(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
++                local menuWidth = HasDebugColumnMenu(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
+                 label:SetWidth(math.max(1, (column.width or 0) - menuWidth - 8))
+                 label:SetHeight(DEBUG_UI.HEADER_HEIGHT)
+                 label:SetText(column.label or "")
+@@ -3616,9 +3862,22 @@
+             end
+         end
+ 
++        local dragButton = headerDragButtons[i]
++        if dragButton then
++            if IsDebugColumnVisible(i) then
++                local menuWidth = HasDebugColumnMenu(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
++                dragButton:ClearAllPoints()
++                dragButton:SetPoint("LEFT", headerContent, "LEFT", left, 0)
++                dragButton:SetSize(math.max(1, (column.width or 0) - menuWidth - DEBUG_UI.COLUMN_HANDLE_WIDTH), DEBUG_UI.HEADER_HEIGHT)
++                dragButton:Show()
++            else
++                dragButton:Hide()
++            end
++        end
++
+         local menuButton = headerMenuButtons[i]
+         if menuButton then
+-            if IsDebugColumnVisible(i) and IsFilterableColumn(i) then
++            if IsDebugColumnVisible(i) and HasDebugColumnMenu(i) then
+                 menuButton:ClearAllPoints()
+                 menuButton:SetPoint("LEFT", headerContent, "LEFT", left + (column.width or 0) - DEBUG_UI.COLUMN_MENU_WIDTH - 2, 2)
+                 menuButton:SetSize(DEBUG_UI.COLUMN_MENU_WIDTH, DEBUG_UI.HEADER_HEIGHT - 4)
+@@ -3630,7 +3889,7 @@
+ 
+         local handle = headerHandles[i]
+         if handle then
+-            if IsDebugColumnVisible(i) then
++            if IsDebugColumnVisible(i) and i ~= lastVisibleColumnIndex then
+                 handle:ClearAllPoints()
+                 handle:SetPoint("LEFT", headerContent, "LEFT", left + (column.width or 0) - 2, 0)
+                 handle:SetHeight(DEBUG_UI.HEADER_HEIGHT)
+@@ -3647,6 +3906,36 @@
+     end
+ end
+ 
++local function GetDebugHeaderCursorX()
++    local cursorX = GetCursorPosition()
++    local scale = UIParent and UIParent:GetEffectiveScale() or 1
++    local headerLeft = headerContent:GetLeft() or 0
++    return (cursorX / scale) - headerLeft
++end
++
++local function GetDebugColumnBeforeCursor(cursorX, movingColumnIndex)
++    local left = 0
++    for _, columnIndex in ipairs(debugColumnOrder) do
++        if IsDebugColumnVisible(columnIndex) then
++            local column = debugColumns[columnIndex]
++            local columnWidth = column and column.width or 0
++            if columnIndex ~= movingColumnIndex and cursorX < left + (columnWidth / 2) then return columnIndex end
++            left = left + columnWidth + DEBUG_UI.COLUMN_GAP
++        end
++    end
++end
++
++local function UpdateDebugHeaderDrag(dragButton)
++    local columnIndex = dragButton and dragButton.columnIndex
++    if not columnIndex then return end
++    local beforeColumnIndex = GetDebugColumnBeforeCursor(GetDebugHeaderCursorX(), columnIndex)
++    if MoveDebugColumnBefore(columnIndex, beforeColumnIndex) then
++        dragButton.dragMoved = true
++        SaveColumnWidths()
++        ApplyColumnLayout()
++    end
++end
++
+ local function EnsureHeaderColumns()
+     for i, _ in ipairs(debugColumns) do
+         if not headerLabels[i] then
+@@ -3656,7 +3945,37 @@
+             headerLabels[i] = label
+         end
+ 
+-        if IsFilterableColumn(i) and not headerMenuButtons[i] then
++        if not headerDragButtons[i] then
++            local columnIndex = i
++            local dragButton = CreateFrame("Button", nil, headerContent)
++            dragButton.columnIndex = columnIndex
++            dragButton:EnableMouse(true)
++            if dragButton.SetFrameLevel then dragButton:SetFrameLevel((headerContent:GetFrameLevel() or 0) + 10) end
++            dragButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight")
++            dragButton:SetScript(
++                "OnMouseDown",
++                function(self, button)
++                    if button ~= "LeftButton" then return end
++                    if DebugFrame.HideDebuggerDropdowns then DebugFrame.HideDebuggerDropdowns() end
++                    self.dragMoved = false
++                    self:SetScript("OnUpdate", UpdateDebugHeaderDrag)
++                end
++            )
++            dragButton:SetScript(
++                "OnMouseUp",
++                function(self)
++                    self:SetScript("OnUpdate", nil)
++                    if self.dragMoved then
++                        SaveColumnWidths()
++                        if RefreshStatsWidget then RefreshStatsWidget() end
++                    end
++                    self.dragMoved = false
++                end
++            )
++            headerDragButtons[columnIndex] = dragButton
++        end
++
++        if HasDebugColumnMenu(i) and not headerMenuButtons[i] then
+             local columnIndex = i
+             local menuButton = CreateFrame("Button", nil, headerContent)
+             menuButton:SetSize(DEBUG_UI.COLUMN_MENU_WIDTH, DEBUG_UI.HEADER_HEIGHT - 4)
+@@ -3681,11 +4000,12 @@
+             headerMenuButtons[columnIndex] = menuButton
+         end
+ 
+-        if i < #debugColumns and not headerHandles[i] then
++        if not headerHandles[i] then
+             local columnIndex = i
+             local handle = CreateFrame("Frame", nil, headerContent)
+             handle:SetWidth(DEBUG_UI.COLUMN_HANDLE_WIDTH)
+             handle:EnableMouse(true)
++            if handle.SetFrameLevel then handle:SetFrameLevel((headerContent:GetFrameLevel() or 0) + 30) end
+             local texture = handle:CreateTexture(nil, "OVERLAY")
+             texture:SetPoint("TOP", handle, "TOP", 0, -3)
+             texture:SetPoint("BOTTOM", handle, "BOTTOM", 0, 3)
+@@ -3783,11 +4103,15 @@
+ end
+ 
+ local function AddDebugRow(row, scrollToBottom)
++    if GetTime and not row.createdAt then row.createdAt = GetTime() end
+     row.debugIndex = #debugRows + 1
+     MarkSpellbookErrorTimestamp(row)
+     debugRows[#debugRows + 1] = row
+-    if RowMatchesFilters(row) then visibleRows[#visibleRows + 1] = row end
+-    UpdateRows(scrollToBottom ~= false)
++    if RowMatchesFilters(row) then
++        visibleRows[#visibleRows + 1] = row
++        ApplyDebugVisibleSort()
++    end
++    UpdateRows((scrollToBottom ~= false) and not activeDebugSort.column)
+     if RefreshStatsWidget then RefreshStatsWidget() end
+ end
+ 
+--- a/GSE_GUI/Editor.lua
++++ b/GSE_GUI/Editor.lua
+@@ -632,6 +632,12 @@
+ GSE.GUI.RefreshMacroLimitSaveState = RefreshMacroLimitSaveState
+ GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
+ GSE.GUI.SetMacroCountText = SetMacroCountText
++-- The "X/255" indicator must report the SAME length the over-limit trigger
++-- (UpdateMacroLimitState) and WoW itself enforce: the compiled body, after
++-- spell-name translation. Showing the raw typed length instead made the
++-- counter read e.g. 252/255 while the trigger fired on the 256-char compiled
++-- body. Expose the compiled-length helper so every counter call site uses it.
++GSE.GUI.GetCompiledMacroBodyLength = GetCompiledMacroBodyLength
+ 
+ local DecodeEditorText = GSE.DecodeEditorText
+ local DecodeMacroEditorText = GSE.DecodeMacroEditorText
+@@ -5038,11 +5044,11 @@
+ 			macroBody:AddChild(macroRail)
+ 			macroBody:AddChild(macroFields)
+ 			spellcontainer:AddChild(macroBody)
+-			-- Count visible editor text with color codes and note lines removed.
+-			-- color codes stripped) rather than the runtime-expanded
+-			-- compiled length ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â that's what the user sees typed.
+-			local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
+-			SetMacroCountText(macroeditbox, GSE.GetMacroEditorTextLength(visible))
++			-- Report the COMPILED macro body length (after spell-name translation)
++			-- so the "X/255" indicator matches the over-limit trigger and what WoW
++			-- actually enforces on the macro slot. Showing the raw typed length
++			-- made the counter read e.g. 252/255 while the trigger fired at 256.
++			SetMacroCountText(macroeditbox, GetCompiledMacroBodyLength(macroeditbox:GetText() or ""))
+ 		else
+ 			local actionBodyHeight = 92
+ 			local actionBody = UI:Create("SimpleGroup")
+@@ -6535,101 +6541,23 @@
+             return true
+         end
+ 
+-        local function KeyboardFocusIsTextEntry()
+-            local keyboardFocus
+-            if GetCurrentKeyBoardFocus then
+-                keyboardFocus = GetCurrentKeyBoardFocus()
+-            elseif GetCurrentKeyboardFocus then
+-                keyboardFocus = GetCurrentKeyboardFocus()
+-            end
+-            return keyboardFocus ~= nil
+-        end
+-
+-        local function SetEditorKeyboardPropagation(propagate)
+-            if not (editframe.frame and editframe.frame.SetPropagateKeyboardInput) then return end
+-            if GSE.GUI.SetPropagateKeyboardSafe then
+-                GSE.GUI.SetPropagateKeyboardSafe(editframe.frame, propagate)
+-            else
+-                editframe.frame:SetPropagateKeyboardInput(propagate)
+-            end
+-        end
+-
+-        local function MacroMoveKeyIsBoundToWoW(key)
+-            if not GetBindingAction then return false end
+-            local action = GetBindingAction(key, true)
+-            if GSE.isEmpty(action) then action = GetBindingAction(key) end
+-            return not GSE.isEmpty(action)
+-        end
+-
+-        -- Move the focus/selection to the previous (-1) or next (+1) block in
+-        -- visual order, without reordering. Walks the render-order list so it
+-        -- follows exactly what is on screen (including inside If branches / loops).
+-        local function NavigateSelectedMacroBlock(direction)
+-            local navOrder = editframe.macroBlockNavOrder
+-            if type(navOrder) ~= "table" or #navOrder == 0 then return false end
+-            local selectedPath =
+-                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
+-                    or nil
+-            if not selectedPath or #selectedPath == 0 then return false end
+-
+-            local currentIndex
+-            for index, navPath in ipairs(navOrder) do
+-                if MacroBlockPathsEqual(navPath, selectedPath) then
+-                    currentIndex = index
+-                    break
+-                end
+-            end
+-            if not currentIndex then return false end
+-
+-            local targetIndex = currentIndex + direction
+-            if targetIndex < 1 or targetIndex > #navOrder then
+-                BlinkSelectedMacroBlock()   -- already at the top/bottom block
+-                return false
+-            end
+-
+-            if editframe.gseSelectMacroBlockPath then
+-                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
+-            end
+-            return true
+-        end
+-
+-        local function HandleMacroBlockMoveKey(_, key)
+-            SetEditorKeyboardPropagation(true)
+-            if key ~= "UP" and key ~= "DOWN" then return end
+-            if MacroMoveKeyIsBoundToWoW(key) then return end
+-            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
+-            if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
+-            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
+-
+-            SetEditorKeyboardPropagation(false)
+-            local direction = key == "UP" and -1 or 1
+-            if IsShiftKeyDown() then
+-                MoveSelectedMacroBlock(direction)        -- Shift + arrow: reorder the block
+-            else
+-                NavigateSelectedMacroBlock(direction)    -- arrow: move focus to the adjacent block
+-            end
+-        end
+-
+-        if editframe.frame and editframe.frame.EnableKeyboard and editframe.frame.SetPropagateKeyboardInput then
+-            editframe.frame:SetScript("OnKeyDown", HandleMacroBlockMoveKey)
+-            editframe.frame:SetScript("OnKeyUp", function()
+-                SetEditorKeyboardPropagation(true)
+-            end)
+-            -- Enable capture + propagation together, deferred out of combat so we
+-            -- never call the protected SetPropagateKeyboardInput in combat nor
+-            -- swallow the player's keybinds (patrons may open the editor mid-combat).
+-            local function enableMacroBlockKeys()
+-                if editframe.frame and editframe.frame.EnableKeyboard then editframe.frame:EnableKeyboard(true) end
+-                if editframe.frame and editframe.frame.SetPropagateKeyboardInput then
+-                    editframe.frame:SetPropagateKeyboardInput(true)
+-                end
+-            end
+-            if GSE.GUI.RunWhenCombatSafe then
+-                GSE.GUI.RunWhenCombatSafe(enableMacroBlockKeys)
+-            else
+-                enableMacroBlockKeys()
+-            end
+-        end
++        -- Arrow-key block handling has been REMOVED.
++        --   * plain Up/Down previously moved the selection cursor through the list
++        --   * Shift+Up/Down previously reordered the focused block
++        -- The arrow keys are bound to character movement in WoW by default, and the
++        -- old handler called SetPropagateKeyboardInput(false) when it acted on an
++        -- arrow, which CONSUMED the key and stole the player's movement while the
++        -- editor was open. Blocks are reordered with the Move Up / Move Down buttons
++        -- and the cursor is moved by clicking a block, so no keyboard shortcut is
++        -- needed.
++        --
++        -- Nothing here registers an OnKeyDown handler or enables keyboard capture
++        -- on the editor frame, so the arrow keys (and every other key) propagate to
++        -- the game by default and character movement works normally. The Ctrl+Z
++        -- undo subsystem that used to capture this frame's keyboard has also been
++        -- removed, so there is no frame-level keyboard handler here at all.
++        -- (MoveSelectedMacroBlock above is still used by the Move Up / Move Down
++        -- buttons; the cursor is moved by clicking a block.)
+ 
+         local moveUpButton = UI:Create("Icon")
+         local moveDownButton = UI:Create("Icon")
+@@ -7125,7 +7053,6 @@
+             end
+ 
+             spellEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, spellEditBox) end
+ 
+             spellEditBox:SetCallback(
+                 "OnTextChanged",
+@@ -7196,7 +7123,6 @@
+             macroEditBox:SetNumLines(5)
+             macroEditBox:SetRelativeWidth(0.5)
+             macroEditBox:SetText(spelltext)
+-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, macroEditBox) end
+             ForwardMacroEditorMouseWheel(macroEditBox, frame)
+             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
+             macroEditBox:SetCallback(
+@@ -7253,7 +7179,10 @@
+                         compiledMacro:SetText(body)
+                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
+                     end
+-                    SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
++                    -- Count the COMPILED body (post translation), the same value
++                    -- UpdateMacroLimitState/WoW enforce, so the indicator and the
++                    -- over-limit trigger never disagree (was: raw typed length).
++                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(sequence.Versions[version].Actions[keyPath].macro))
+                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
+                 end
+             )
+@@ -7284,7 +7213,6 @@
+     GSE.GUI.SetupKeybind(editframe)
+     GSE.GUI.SetupMacro(editframe)
+     GSE.GUI.SetupTree(editframe)
+-    if GSE.GUI.SetupUndo then GSE.GUI.SetupUndo(editframe) end
+ 
+     function editframe:remoteSequenceUpdated(seqName)
+         if seqName == editframe.SequenceName then
+--- a/GSE_GUI/Editor_Macro.lua
++++ b/GSE_GUI/Editor_Macro.lua
+@@ -45,7 +45,13 @@
+         text = widget:GetText()
+     end
+     if GSE.GUI and GSE.GUI.SetMacroCountText then
+-        GSE.GUI.SetMacroCountText(widget, GSE.GetMacroEditorTextLength(text or ""))
++        -- Show the COMPILED body length so the indicator matches the over-limit
++        -- trigger (UpdateMacroLimitState) and what WoW enforces on the slot.
++        -- Fall back to the raw typed length only if the compiled-length helper
++        -- isn't loaded (e.g. a partial install).
++        local lenMacro = (GSE.GUI.GetCompiledMacroBodyLength and GSE.GUI.GetCompiledMacroBodyLength(text or ""))
++            or GSE.GetMacroEditorTextLength(text or "")
++        GSE.GUI.SetMacroCountText(widget, lenMacro)
+     end
+     if GSE.GUI and GSE.GUI.UpdateMacroLimitState then
+         GSE.GUI.UpdateMacroLimitState(widget, text)
+--- a/GSE_GUI/Editor_Tree.lua
++++ b/GSE_GUI/Editor_Tree.lua
+@@ -781,7 +781,10 @@
+     -- ScrollFrame uses List layout for children by default and engages
+     -- scrollbars automatically when content height exceeds the frame.
+     local scroll = UI:Create("ScrollFrame")
+-    if scroll.SetScrollStep  then scroll:SetScrollStep(96) end
++    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
++    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
++    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
++    -- only updates the global SCROLL_STEP — had no effect on this pane.
+     if scroll.SetListPadding then
+         scroll:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, SECTION_HEADER_TOP, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING)
+     end
+@@ -1176,7 +1179,10 @@
+     scrollcontainer:SetLayout("Fill")
+     editframe.scrollStatus = {}
+     local contentcontainer = UI:Create("ScrollFrame")
+-    if contentcontainer.SetScrollStep then contentcontainer:SetScrollStep(96) end
++    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
++    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
++    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
++    -- only updates the global SCROLL_STEP — had no effect on the block list.
+     scrollcontainer:AddChild(contentcontainer)
+     contentcontainer:SetFullWidth(true)
+         contentcontainer:SetFullHeight(true)
+--- a/GSE_GUI/Menu.lua
++++ b/GSE_GUI/Menu.lua
+@@ -39,7 +39,10 @@
+ ---------------------------------------------------------
+ local frame = CreateFrame("Frame", "GSEMenuFrame", UIParent, "BackdropTemplate")
+ frame:SetFrameStrata("MEDIUM")
+-frame:SetClampedToScreen(true)
++frame:SetClampedToScreen(true)
++-- Self-clamps via SetClampedToScreen above, so skip GSE's post-scale clamp,
++-- which would permanently re-anchor the frame and cause a scale-down "left jump".
++frame.GSESkipScaleClamp = true
+ frame:EnableMouse(true)
+ frame:RegisterForDrag("LeftButton")
+ frame:SetBackdrop({
+--- a/GSE_GUI/NativeUI.lua
++++ b/GSE_GUI/NativeUI.lua
+@@ -2942,6 +2942,24 @@
+     widget.content = content
+     widget.scrollframe = scrollFrame
+     widget.scrollbar = getScrollBar(scrollFrame)
++    if widget.scrollbar then
++        -- UIPanelScrollFrameTemplate parents its scrollbar to the inner scroll
++        -- frame and anchors it just outside that frame's right edge. Because the
++        -- scroll frame has SetClipsChildren(true) (set above, to keep the macro
++        -- content bounded), that clip mask was cutting the scrollbar away -- which
++        -- is why the editor looked like it had no main scrollbar. applyModernSlim-
++        -- ScrollBar only re-anchors under the ElvUI skin, so on the default skin
++        -- nothing repositioned it. Re-parent the bar onto the OUTER frame (not
++        -- clipped) and anchor it in the reserved right-hand gutter so it renders.
++        widget.scrollbar:SetParent(frame)
++        widget.scrollbar:ClearAllPoints()
++        widget.scrollbar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -STYLE.padXXS, -STYLE.scrollBarWidth)
++        widget.scrollbar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -STYLE.padXXS, STYLE.scrollBarWidth)
++        widget.scrollbar:SetWidth(STYLE.scrollBarWidth)
++        if widget.scrollbar.SetFrameLevel and scrollFrame.GetFrameLevel then
++            widget.scrollbar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
++        end
++    end
+     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
+     widget.localstatus = {scrollvalue = 0}
+     widget.scrollBarShown = false
+--- a/GSE_Options/Options.lua
++++ b/GSE_Options/Options.lua
+@@ -86,6 +86,124 @@
+     if SettingsPanel.Raise then SettingsPanel:Raise() end
+ end
+ 
++local function RaiseOptionsDropdownFrame(frame, anchor)
++    if not frame then return end
++    if frame.SetFrameStrata then frame:SetFrameStrata("TOOLTIP") end
++    if frame.SetToplevel then frame:SetToplevel(true) end
++    if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
++    if frame.SetFrameLevel then
++        local panelLevel = SettingsPanel and SettingsPanel.GetFrameLevel and SettingsPanel:GetFrameLevel() or 0
++        local anchorLevel = anchor and anchor.GetFrameLevel and anchor:GetFrameLevel() or 0
++        frame:SetFrameLevel(math.max(panelLevel, anchorLevel, 20) + 100)
++    end
++end
++
++local function FrameHasButtonChildren(frame)
++    if not (frame and frame.GetChildren) then return false end
++    for _, child in ipairs({frame:GetChildren()}) do
++        if child.GetObjectType and child:GetObjectType() == "Button" then return true end
++    end
++    return false
++end
++
++local function RaiseVisibleOptionsDropdownChildren(frame, anchor, depth)
++    if not frame or (depth or 0) > 4 then return end
++    if frame.GetChildren then
++        for _, child in ipairs({frame:GetChildren()}) do
++            local name = child.GetName and child:GetName()
++            if type(name) ~= "string" then name = "" end
++            local lowerName = string.lower(name)
++            -- Match by name, OR treat a frame whose children include option
++            -- buttons as the popout list. The WoW Settings SelectionPopout
++            -- popout is anonymous, so name matching alone never catches it.
++            local looksLikeDropdownPopup =
++                string.find(lowerName, "dropdown", 1, true) or
++                string.find(lowerName, "drop_down", 1, true) or
++                string.find(lowerName, "popout", 1, true) or
++                string.find(lowerName, "menu", 1, true) or
++                string.find(lowerName, "list", 1, true) or
++                FrameHasButtonChildren(child)
++            if looksLikeDropdownPopup and (not child.IsShown or child:IsShown()) then
++                RaiseOptionsDropdownFrame(child, anchor)
++            end
++            RaiseVisibleOptionsDropdownChildren(child, anchor, (depth or 0) + 1)
++        end
++    end
++end
++
++local function RaiseKnownOptionsDropdownPopouts(frameWidget)
++    -- The Settings row exposes its control as frameWidget.Control in modern
++    -- WoW (.DropDown does not exist); fall through it for older shapes.
++    local dd = frameWidget and (frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown)
++    local anchor = (dd and (dd.Button or dd.button)) or dd or frameWidget
++    local candidates = {
++        dd and dd.SelectionPopoutFrame,
++        dd and dd.PopoutFrame,
++        dd and dd.Popout,
++        dd and dd.Menu,
++        dd and dd.MenuFrame,
++        dd and dd.DropDownMenu,
++        frameWidget and frameWidget.SelectionPopoutFrame,
++        frameWidget and frameWidget.PopoutFrame,
++        frameWidget and frameWidget.Popout,
++        frameWidget and frameWidget.Menu,
++        frameWidget and frameWidget.MenuFrame,
++        _G.SettingsDropdownList,
++        _G.SettingsDropdownList1,
++        _G.SettingsDropdownMenu,
++        _G.SettingsDropdownMenu1,
++        _G.DropDownList1,
++        _G.DropDownList2,
++        _G.L_DropDownList1,
++        _G.L_DropDownList2
++    }
++    for _, frame in ipairs(candidates) do
++        if frame and (not frame.IsShown or frame:IsShown()) then
++            RaiseOptionsDropdownFrame(frame, anchor)
++            RaiseVisibleOptionsDropdownChildren(frame, anchor)
++        end
++    end
++    RaiseVisibleOptionsDropdownChildren(dd, anchor)
++end
++
++local function QueueRaiseOptionsDropdownPopouts(frameWidget)
++    local function RaiseNow()
++        RaiseKnownOptionsDropdownPopouts(frameWidget)
++    end
++    RaiseNow()
++    if C_Timer and C_Timer.After then
++        C_Timer.After(0, RaiseNow)
++        C_Timer.After(0.05, RaiseNow)
++    end
++end
++
++local function HookOptionsDropdownWidget(frameWidget)
++    if not frameWidget or frameWidget.GSERaisedDropdownHooked then return end
++    frameWidget.GSERaisedDropdownHooked = true
++    local dd = frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown
++    local targets = {frameWidget, dd, dd and dd.Button, dd and dd.button, dd and dd.SelectionPopoutButton}
++    for _, target in ipairs(targets) do
++        if target and target.HookScript then
++            pcall(target.HookScript, target, "OnMouseDown", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
++            pcall(target.HookScript, target, "OnMouseUp", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
++            pcall(target.HookScript, target, "OnClick", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
++            pcall(target.HookScript, target, "OnShow", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
++        end
++    end
++end
++
++local function RaiseOptionsDropdown(initializer)
++    if not initializer or initializer.GSERaisedDropdownWrapped then return initializer end
++    initializer.GSERaisedDropdownWrapped = true
++    local origInitFrame = initializer.InitFrame
++    initializer.InitFrame = function(self, frameWidget)
++        if origInitFrame then pcall(origInitFrame, self, frameWidget) end
++        pcall(HookOptionsDropdownWidget, frameWidget)
++        pcall(QueueRaiseOptionsDropdownPopouts, frameWidget)
++    end
++    return initializer
++end
++
+ function GSE.OpenRegisteredOptionsPanel(editor)
+     if GSE.GUI then GSE.GUI.optionsEditor = editor end
+ 
+@@ -1601,6 +1719,42 @@
+     end
+ end
+ 
++local function AddErrorMessageOptions(optionsCategory)
++    do
++        local layout = SettingsPanel:GetLayout(optionsCategory)
++        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Error Messages", tooltip = "Error Messages"}))
++    end
++
++    local function AddErrorToggle(settingID, optionKey, label, tooltip)
++        local setting = Settings.RegisterAddOnSetting(optionsCategory, settingID, optionKey, GSEOptions, Settings.VarType.Boolean, label, true)
++        setting:SetValueChangedCallback(function()
++            if GSE.ApplyErrorMessageOptions then
++                GSE.ApplyErrorMessageOptions()
++            end
++        end)
++        Settings.CreateCheckbox(optionsCategory, setting, tooltip)
++    end
++
++    AddErrorToggle(
++        "hideUIErrorFrame",
++        "HideUIErrorFrame",
++        "UIErrorFrame",
++        "Suppress most UI error text such as 'Not enough rage'. Important errors are still shown."
++    )
++    AddErrorToggle(
++        "muteVoiceErrors",
++        "MuteVoiceErrors",
++        "Voice Errors",
++        "Mute spoken UI error voice lines."
++    )
++    AddErrorToggle(
++        "muteLowerEnergy",
++        "MuteLowerEnergy",
++        "Lower Energy",
++        "Mute the lower-energy/vigor recharge sound used by Leatrix Plus."
++    )
++end
++
+ local function AddOutOfCombatQueueOptions(optionsCategory)
+     do
+         local layout = SettingsPanel:GetLayout(optionsCategory)
+@@ -1728,7 +1882,7 @@
+             container:Add("RENAME",  L["Rename New Macro"])
+             return container:GetData()
+         end
+-        Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."])
++        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."]))
+     end
+ end
+ 
+@@ -1781,43 +1935,9 @@
+     -- is NOT changed here — only the animation behaviour of the four border
+     -- lines (plus the unrelated rail-color tint, which lives in Editor.lua).
+     --
+-    -- Rendered as Settings dropdowns to keep the L/R-arrow + center-label
+-    -- visual the user expects, but the popout-on-click is disabled via the
+-    -- DisableDropdownPopout helper below. The popout menu was overflowing
+-    -- the Settings panel and rendering behind subsequent rows; keeping just
+-    -- the steppers (which are separate widgets from the popout button)
+-    -- gives the same cycling behaviour without that visual bug.
+-    local function DisableDropdownPopout(frameWidget)
+-        if not frameWidget then return end
+-        -- The control's central popout button lives at frame.DropDown.Button
+-        -- in modern WoW (Dragonflight/TWW). Lower-case alias guarded for
+-        -- older clients. Increment/Decrement buttons (the L/R steppers) are
+-        -- siblings, so they remain interactive after this call.
+-        local dd = frameWidget.DropDown or frameWidget.Dropdown
+-        if not dd then return end
+-        local popoutBtn = dd.Button or dd.button
+-        if popoutBtn and popoutBtn.SetScript then
+-            popoutBtn:SetScript("OnClick",     function() end)
+-            popoutBtn:SetScript("OnMouseDown", function() end)
+-            popoutBtn:SetScript("OnMouseUp",   function() end)
+-            popoutBtn:SetScript("PreClick",    function() end)
+-        end
+-    end
+-
+-    -- Tag-and-wrap helper: takes an initializer returned by
+-    -- Settings.CreateDropdown and wraps its InitFrame hook so the popout is
+-    -- disabled the moment the widget is bound to a list row. pcall-guarded
+-    -- so a future API shape change can't crash addon load — worst case,
+-    -- the popup re-appears (the steppers still work).
+-    local function NoPopoutDropdown(initializer)
+-        if not initializer then return initializer end
+-        local origInitFrame = initializer.InitFrame
+-        initializer.InitFrame = function(self, frameWidget)
+-            if origInitFrame then pcall(origInitFrame, self, frameWidget) end
+-            pcall(DisableDropdownPopout, frameWidget)
+-        end
+-        return initializer
+-    end
++    -- Settings dropdown popouts need to be raised above the Settings panel.
++    -- RaiseOptionsDropdown keeps the normal click-to-open list and also keeps
++    -- the L/R steppers working.
+ 
+     -- Focus Highlight Proc
+     do
+@@ -1841,9 +1961,7 @@
+             local container = Settings.CreateControlTextContainer()
+             -- Just the type names — matches the Strata / Growth Direction
+             -- dropdowns elsewhere in the Options panel where the center
+-            -- label is a single short word. The popout is still disabled
+-            -- via NoPopoutDropdown below, so the L/R stepper buttons are
+-            -- the only way to cycle through these.
++            -- label is a single short word.
+             container:Add("OFF",     L["Off"]     or "Off")
+             container:Add("PULSE",   L["Pulse"]   or "Pulse")
+             container:Add("FLASH",   L["Flash"]   or "Flash")
+@@ -1852,7 +1970,7 @@
+             container:Add("STROBE",  L["Strobe"]  or "Strobe")
+             return container:GetData()
+         end
+-        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
++        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
+     end
+     -- Focus Highlight Brightness
+     do
+@@ -1877,7 +1995,7 @@
+             container:Add("HIGH",   L["High"]   or "High")
+             return container:GetData()
+         end
+-        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
++        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
+     end
+     -- Editor Scroll Speed (live) — sits at the bottom of this section so the
+     -- focus-highlight pair stays grouped under the "Show Current Spells"
+@@ -2668,6 +2786,13 @@
+             local function SetValue(val)
+                 GSEOptions.ToolbarEnabled = val and true or false
+                 if val then
++                    -- GSE_GUI is LoadOnDemand and owns GSE.ShowMenu / GSE.MenuFrame.
++                    -- On a session where the Toolbar started OFF, GSE_GUI is not
++                    -- loaded yet, so GSE.ShowMenu would be nil and the toggle would
++                    -- flip to ON without the Toolbar ever appearing (and without
++                    -- setting menu.open, so it would not return on next login
++                    -- either). Force-load it first, the same way /gse toolbar does.
++                    if GSE.CheckGUI then GSE.CheckGUI() end
+                     -- Turned ON: bring up the toolbar immediately so the user
+                     -- sees the result of toggling on. GSE.ShowMenu sets
+                     -- menu.open = true so the toolbar also auto-shows on next
+@@ -2714,7 +2839,7 @@
+                 container:Add("DIALOG",     L["Dialog"]     or "Dialog")
+                 return container:GetData()
+             end
+-            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements.")
++            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements."))
+         end
+         do
+             -- 2. Growth Direction dropdown.
+@@ -2734,7 +2859,7 @@
+                 container:Add("RIGHT", L["Right"])
+                 return container:GetData()
+             end
+-            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button.")
++            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button."))
+         end
+         do
+             -- 3. Static / Slide Out toggle — checked = Static (the default),
+@@ -2939,6 +3064,7 @@
+         end
+         AddMacroButtonBehaviorOptions(generalOptions)
+         AddActionBarClickBehaviorOptions(generalOptions)
++        AddErrorMessageOptions(generalOptions)
+         do
+             local layout = SettingsPanel:GetLayout(generalOptions)
+             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
+--- a/GSE_Utils/Events.lua
++++ b/GSE_Utils/Events.lua
+@@ -3,6 +3,11 @@
+ local Statics = GSE.Static
+ local GCD = nil
+ 
++-- The "Next Cast" column shows Blizzard's Assisted Highlight recommendation,
++-- which only exists on Retail (the C_AssistedCombat API). Gate the column on the
++-- API's presence so other game versions don't get a permanently-empty column.
++local ASSISTED_HIGHLIGHT_AVAILABLE = C_AssistedCombat ~= nil and C_AssistedCombat.GetNextCastSpell ~= nil
++
+ local SequenceDebugColumns = {
+     {label = "Timestamp", width = 9, pixelWidth = 76, min = 65},
+     {label = "Step", width = 4, pixelWidth = 40, min = 34},
+@@ -12,9 +17,11 @@
+     {label = "Action / Spellbook", width = 40, pixelWidth = 204, min = 130},
+     {label = "Castable", width = 16, pixelWidth = 76, min = 60},
+     {label = "Resources", width = 20, pixelWidth = 90, min = 70},
+-    {label = "Casting", width = 30, pixelWidth = 112, min = 75},
+-    {label = "Next Cast", width = 18, pixelWidth = 90, min = 70}
++    {label = "Casting", width = 30, pixelWidth = 112, min = 75}
+ }
++if ASSISTED_HIGHLIGHT_AVAILABLE then
++    SequenceDebugColumns[#SequenceDebugColumns + 1] = {label = "Next Cast", width = 18, pixelWidth = 90, min = 70}
++end
+ GSE.SequenceDebugColumns = SequenceDebugColumns
+ 
+ local function StripDebugColor(text)
+@@ -83,6 +90,48 @@
+     return cleanName
+ end
+ 
++-- Resolve the player's in-progress cast or channel for the "Casting" column.
++-- In 12.0 the spell *name* returned by UnitCastingInfo/UnitChannelInfo is
++-- withheld (secret) in combat, so the column kept reading nil and reported "not
++-- actively casting". The spell *ID* and the never-secret cast-bar ID were since
++-- loosened, so resolve the name from the ID (and still fall back to the name
++-- return on older clients / when it isn't withheld). Returns (castName, isCasting)
++-- so the column can report a cast even when the name can't be resolved. Every
++-- value touch is pcall-guarded because individual returns can still be secret
++-- values that throw when read/compared in addon code (which would otherwise
++-- abort the whole trace and blank every column).
++local function ResolvePlayerCast()
++    local castName, isCasting = nil, false
++    local function tryUnit(infoFn, spellIDIndex, castBarIDIndex)
++        if type(infoFn) ~= "function" then return end
++        pcall(function()
++            local r = { infoFn("player") }
++            -- castBarID is never secret and is present whenever a cast bar shows.
++            if castBarIDIndex and r[castBarIDIndex] ~= nil then isCasting = true end
++            local spellID = r[spellIDIndex]
++            if spellID ~= nil then
++                isCasting = true
++                local info = GSE.GetSpellInfo(spellID)
++                if info and info.name ~= nil and info.name ~= "" then
++                    castName = info.name
++                    return
++                end
++            end
++            -- Fallback to the name return (older clients, or when not withheld).
++            local name = r[1]
++            if name ~= nil and name ~= "" then
++                castName = name
++                isCasting = true
++            end
++        end)
++    end
++    tryUnit(UnitCastingInfo, 9, 10)      -- UnitCastingInfo: castingSpellID=9, castBarID=10
++    if GSE.isEmpty(castName) then
++        tryUnit(UnitChannelInfo, 8, nil) -- UnitChannelInfo: spellID=8
++    end
++    return castName, isCasting
++end
++
+ --- This function is used to debug a sequence and trace its execution.
+ function GSE.TraceSequence(button, step, spell, blockPath)
+     if GSE.UnsavedOptions.DebugSequenceExecution then
+@@ -115,21 +164,35 @@
+         else
+             manaOutput = "Resources Available"
+         end
+-        local castingspell = UnitCastingInfo("player")
++        -- "Casting" reports the player's live cast/channel at this step. The
++        -- resolver reads the (loosened) spell ID and cast-bar ID so it still works
++        -- when 12.0 combat withholds the spell name; isCasting is true whenever a
++        -- cast is detected, even if the name itself can't be resolved.
++        local castingspell, isCasting = ResolvePlayerCast()
+ 
+         if not GSE.isEmpty(castingspell) then
+             CastingOutput = "Casting " .. castingspell
++        elseif isCasting then
++            CastingOutput = "Casting"
+         else
+-            CastingOutput = "Not actively casting anything else."
++            CastingOutput = "Not Casting"
+         end
+         GCDOutput = "GCD Free"
+         if GCD then
+             GCDOutput = "GCD In Cooldown"
+         end
+ 
+-        local nextCastSpell = C_AssistedCombat and C_AssistedCombat.GetNextCastSpell and C_AssistedCombat.GetNextCastSpell()
+-        local nextCastInfo = nextCastSpell and GSE.GetSpellInfo(nextCastSpell)
+-        local nextCastName = nextCastInfo and nextCastInfo.name or ""
++        -- "Next Cast" = Blizzard's Assisted Highlight recommendation (Retail
++        -- only). pcall-guarded so a secret/return-type quirk in 12.0 combat can't
++        -- error out and abort the trace.
++        local nextCastName = ""
++        if ASSISTED_HIGHLIGHT_AVAILABLE then
++            local ok, nextCastSpell = pcall(C_AssistedCombat.GetNextCastSpell)
++            if ok and nextCastSpell then
++                local nextCastInfo = GSE.GetSpellInfo(nextCastSpell)
++                nextCastName = (nextCastInfo and nextCastInfo.name) or ""
++            end
++        end
+         local actionOutput = ColorText(spell and (GSE.GetSpellId(spell, Statics.TranslatorMode.Current) or spell) or "nil", "|cFFFFF569")
+         local spellbookColor = FoundInSpellBook and "|cFF00FF00" or "|cFFFF5555"
+         if not GSE.isEmpty(foundOutput) then actionOutput = actionOutput .. ColorText(" - " .. foundOutput, spellbookColor) end
+@@ -165,9 +228,11 @@
+             actionOutput,
+             ColorText(usableOutput, usableColor),
+             ColorText(manaOutput, manaColor),
+-            ColorText(CastingOutput, castingColor),
+-            ColorText(nextCastName, "|cFFFFD100")
++            ColorText(CastingOutput, castingColor)
+         }
++        if ASSISTED_HIGHLIGHT_AVAILABLE then
++            row[#row + 1] = ColorText(nextCastName, "|cFFFFD100")
++        end
+ 
+         local canAppendToDebugger =
+             type(GSE.GUIDebugAppendEvent) == "function" and type(GSE.GUIDebugIsOpenOrMinimized) == "function" and
+@@ -182,13 +247,21 @@
+ 
+ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
+     if unit == "player" then
++        -- Bail out quietly if GSE core did not finish initialising (e.g. the
++        -- main GSE addon aborted before GSE.split / GSE.GameMode were defined).
++        -- Without this the handler errors on every successful cast in combat
++        -- (the reported "Events.lua:186: attempt to call a nil value").
++        if type(GSE.split) ~= "function" or GSE.GameMode == nil then
++            return
++        end
+         local GCD_Timer
+         local elements = GSE.split(action, "-")
+-        local successfulSpellID = tonumber(elements and elements[6]) or tonumber(sped) or (elements and elements[6]) or sped
++        local successfulSpellID = tonumber(sped) or tonumber(elements and elements[6]) or sped or (elements and elements[6])
++        local successfulSpellLookup = successfulSpellID or (elements and elements[6])
+         local successfulSpellName
+         if GSE.GameMode > 1 then
+             if GSE.GameMode > 11 then
+-                local spellid = elements[6]
++                local spellid = successfulSpellLookup
+                 local cooldownInfo = GSE.GetSpellCooldown(spellid)
+                 local potentialGCD = cooldownInfo and cooldownInfo.duration or GSE.GetGCD()
+                 if issecretvalue(potentialGCD)then
+@@ -218,10 +291,10 @@
+         if GSE.GameMode > 10 then
+             local spell
+ 
+-            local found = C_SpellBook.FindSpellBookSlotForSpell(elements[6])
++            local found = successfulSpellLookup and C_SpellBook.FindSpellBookSlotForSpell(successfulSpellLookup)
+             if found then
+                 foundskill = true
+-                local spellInfo = GSE.GetSpellInfo(elements[6])
++                local spellInfo = GSE.GetSpellInfo(successfulSpellLookup)
+                 spell = spellInfo and spellInfo.name
+                 successfulSpellName = spell
+             end
+@@ -233,7 +306,7 @@
+                 end
+             end
+         else
+-            local spellInfo = GSE.GetSpellInfo(elements[6])
++            local spellInfo = GSE.GetSpellInfo(successfulSpellLookup)
+             local spell = spellInfo and spellInfo.name
+             successfulSpellName = spell
+             local fskilltype = spell and GetSpellBookItemInfo(spell)
+--- a/GSE_Utils/Utils.lua
++++ b/GSE_Utils/Utils.lua
+@@ -1791,6 +1791,14 @@
+         GNOME
+     )
+     GSE.Print(
++        L["The command "] ..
++            GSEOptions.CommandColour ..
++                L[
++                    "/gse toolbar|r turns the GSE Toolbar on or off (/gse toolbar on, /gse toolbar off, or /gse toolbar to toggle). Use this to bring the Toolbar back when it is off."
++                ],
++        GNOME
++    )
++    GSE.Print(
+         GSEOptions.CommandColour ..
+             L[
+                 "GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
+@@ -1804,6 +1812,12 @@
+     GSE:GSSlash(input)
+ end
+ 
++-- /rl is a quick alias for reloading the UI (same as /reload or /reloadui).
++SLASH_GSERELOADUI1 = "/rl"
++SlashCmdList.GSERELOADUI = function()
++    if ReloadUI then ReloadUI() end
++end
++
+ -- Functions
+ 
+ --- Drain the entire incoming queue. Marks every pending item as imported so
+@@ -1937,6 +1951,38 @@
+         else
+             GSE.Print(L["Options Not Enabled"])
+         end
++    elseif command == "toolbar" then
++        -- Toggle (or set with "on"/"off") the GSE Toolbar from chat. Mirrors the
++        -- "GSE Toolbar ON / OFF" checkbox in Options (Windows & Layout). This is
++        -- the reliable way to turn the Toolbar back ON after it has been turned
++        -- OFF: while the Toolbar is off, /gse opens the Sequence Editor and the
++        -- Toolbar's own Options icon is unavailable.
++        local colour = (GSEOptions and GSEOptions.CommandColour) or ""
++        local arg = params[2] and string.lower(params[2]) or nil
++        local enable
++        if arg == "on" then
++            enable = true
++        elseif arg == "off" then
++            enable = false
++        else
++            enable = not (GSEOptions and GSEOptions.ToolbarEnabled ~= false)
++        end
++        if GSEOptions then
++            GSEOptions.ToolbarEnabled = enable and true or false
++        end
++        GSE.CheckGUI()
++        if enable then
++            if GSE.ShowMenu then GSE.ShowMenu() end
++            GSE.Print(colour .. "GSE Toolbar ON|r")
++        else
++            if GSE.MenuFrame and GSE.MenuFrame:IsShown() then
++                GSE.MenuFrame:Hide()
++            end
++            if GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
++                GSEOptions.frameLocations.menu.open = false
++            end
++            GSE.Print(colour .. "GSE Toolbar OFF|r. Type " .. colour .. "/gse toolbar on|r to turn it back on.")
++        end
+     elseif command == "resetoptions" then
+         GSE.SetDefaultOptions()
+         GSE.Print(L["Options have been reset to defaults."])
+@@ -2038,13 +2084,22 @@
+             -- Route to Editor when the Toolbar is disabled (see Options.lua's
+             -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
+             if GSEOptions and GSEOptions.ToolbarEnabled == false then
+-                -- 1) If an editor already exists this session, just bring
+-                --    it forward — never create a duplicate. (Especially
+-                --    important on PatronBuild where CreateEditor doesn't
+-                --    dedupe.)
++                -- 1) An editor already exists this session. With multi-window
++                --    support (GSE.GUI.Feature.MULTI_WINDOW) each /gse opens an
++                --    ADDITIONAL editor window, so open another one here. Without
++                --    it, CreateEditor returns the single shared editor, so just
++                --    bring the existing one forward. (CreateEditor does not
++                --    dedupe on PatronBuild.)
+                 if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
+-                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
+-                    if existing and existing.Show then existing:Show() end
++                    local multiWindow = GSE.GUI.Feature and GSE.GUI.Feature.MULTI_WINDOW
++                        and GSE.GUI.Feature.MULTI_WINDOW()
++                    if multiWindow and GSE.ShowSequences then
++                        -- Open an additional editor window.
++                        GSE.ShowSequences()
++                    else
++                        local existing = GSE.GUI.editors[#GSE.GUI.editors]
++                        if existing and existing.Show then existing:Show() end
++                    end
+                     return
+                 end
+ 
+@@ -2193,14 +2248,25 @@
+                         iconText = "|T" .. specIconID .. ":16:16|t "
+                     end
+                 end
+-                local label = iconText .. entry.name
++                -- Highlight the override already assigned to this slot so the user
++                -- can see at a glance which sequence is active. existingSequence is
++                -- the slot's current gse-button attribute; match it to the list entry.
++                local isCurrent = existingSequence ~= nil and entry.name == existingSequence
++                local marker = isCurrent and "|TInterface\\RaidFrame\\ReadyCheck-Ready:16:16|t " or ""
++                local label = marker .. iconText .. entry.name
+                 if entry.disabled then
+                     local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
+                     element:SetTooltip(function(tooltip, elementDescription)
+                         GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
+                     end)
+                 else
+-                    rootDescription:CreateButton(label, function()
++                    local entryLabel = label
++                    if isCurrent then
++                        -- Active override: green check + green name. Still clickable
++                        -- (re-assigning the same sequence is a harmless no-op).
++                        entryLabel = marker .. iconText .. "|cFF1EFF00" .. entry.name .. "|r"
++                    end
++                    rootDescription:CreateButton(entryLabel, function()
+                         GSE.CreateActionBarOverride(buttonName, entry.name)
+                     end)
+                 end
+--- a/GSE_Utils/embeds.xml
++++ b/GSE_Utils/embeds.xml
+@@ -1,4 +1,4 @@
+-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+-..\FrameXML\UI.xsd">
+-    <Include file="Lib\LibDBCompartment\lib.xml"/>
++<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
++..\FrameXML\UI.xsd">
++    <Include file="Lib\LibDBCompartment\lib.xml"/>
+ </Ui>
+\ No newline at end of file
