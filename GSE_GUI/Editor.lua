@@ -632,6 +632,12 @@ GSE.GUI.UpdateMacroLimitState = UpdateMacroLimitState
 GSE.GUI.RefreshMacroLimitSaveState = RefreshMacroLimitSaveState
 GSE.GUI.ForwardMacroEditorMouseWheel = ForwardMacroEditorMouseWheel
 GSE.GUI.SetMacroCountText = SetMacroCountText
+-- The "X/255" indicator must report the SAME length the over-limit trigger
+-- (UpdateMacroLimitState) and WoW itself enforce: the compiled body, after
+-- spell-name translation. Showing the raw typed length instead made the
+-- counter read e.g. 252/255 while the trigger fired on the 256-char compiled
+-- body. Expose the compiled-length helper so every counter call site uses it.
+GSE.GUI.GetCompiledMacroBodyLength = GetCompiledMacroBodyLength
 
 local DecodeEditorText = GSE.DecodeEditorText
 local DecodeMacroEditorText = GSE.DecodeMacroEditorText
@@ -5038,11 +5044,11 @@ function GSE.CreateEditor()
 			macroBody:AddChild(macroRail)
 			macroBody:AddChild(macroFields)
 			spellcontainer:AddChild(macroBody)
-			-- Count visible editor text with color codes and note lines removed.
-			-- color codes stripped) rather than the runtime-expanded
-			-- compiled length ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â that's what the user sees typed.
-			local visible = GSE.UnEscapeString(macroeditbox:GetText() or "")
-			SetMacroCountText(macroeditbox, GSE.GetMacroEditorTextLength(visible))
+			-- Report the COMPILED macro body length (after spell-name translation)
+			-- so the "X/255" indicator matches the over-limit trigger and what WoW
+			-- actually enforces on the macro slot. Showing the raw typed length
+			-- made the counter read e.g. 252/255 while the trigger fired at 256.
+			SetMacroCountText(macroeditbox, GetCompiledMacroBodyLength(macroeditbox:GetText() or ""))
 		else
 			local actionBodyHeight = 92
 			local actionBody = UI:Create("SimpleGroup")
@@ -7173,7 +7179,10 @@ function GSE.CreateEditor()
                         compiledMacro:SetText(body)
                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
                     end
-                    SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
+                    -- Count the COMPILED body (post translation), the same value
+                    -- UpdateMacroLimitState/WoW enforce, so the indicator and the
+                    -- over-limit trigger never disagree (was: raw typed length).
+                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(sequence.Versions[version].Actions[keyPath].macro))
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
                 end
             )

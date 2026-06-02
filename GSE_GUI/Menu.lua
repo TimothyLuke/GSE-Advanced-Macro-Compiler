@@ -40,6 +40,9 @@ end
 local frame = CreateFrame("Frame", "GSEMenuFrame", UIParent, "BackdropTemplate")
 frame:SetFrameStrata("MEDIUM")
 frame:SetClampedToScreen(true)
+-- Self-clamps via SetClampedToScreen above, so skip GSE's post-scale clamp,
+-- which would permanently re-anchor the frame and cause a scale-down "left jump".
+frame.GSESkipScaleClamp = true
 frame:EnableMouse(true)
 frame:RegisterForDrag("LeftButton")
 frame:SetBackdrop({

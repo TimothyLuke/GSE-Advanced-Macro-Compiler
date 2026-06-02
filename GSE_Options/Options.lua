@@ -86,6 +86,124 @@ local function BringSettingsPanelForward()
     if SettingsPanel.Raise then SettingsPanel:Raise() end
 end
 
+local function RaiseOptionsDropdownFrame(frame, anchor)
+    if not frame then return end
+    if frame.SetFrameStrata then frame:SetFrameStrata("TOOLTIP") end
+    if frame.SetToplevel then frame:SetToplevel(true) end
+    if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
+    if frame.SetFrameLevel then
+        local panelLevel = SettingsPanel and SettingsPanel.GetFrameLevel and SettingsPanel:GetFrameLevel() or 0
+        local anchorLevel = anchor and anchor.GetFrameLevel and anchor:GetFrameLevel() or 0
+        frame:SetFrameLevel(math.max(panelLevel, anchorLevel, 20) + 100)
+    end
+end
+
+local function FrameHasButtonChildren(frame)
+    if not (frame and frame.GetChildren) then return false end
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child.GetObjectType and child:GetObjectType() == "Button" then return true end
+    end
+    return false
+end
+
+local function RaiseVisibleOptionsDropdownChildren(frame, anchor, depth)
+    if not frame or (depth or 0) > 4 then return end
+    if frame.GetChildren then
+        for _, child in ipairs({frame:GetChildren()}) do
+            local name = child.GetName and child:GetName()
+            if type(name) ~= "string" then name = "" end
+            local lowerName = string.lower(name)
+            -- Match by name, OR treat a frame whose children include option
+            -- buttons as the popout list. The WoW Settings SelectionPopout
+            -- popout is anonymous, so name matching alone never catches it.
+            local looksLikeDropdownPopup =
+                string.find(lowerName, "dropdown", 1, true) or
+                string.find(lowerName, "drop_down", 1, true) or
+                string.find(lowerName, "popout", 1, true) or
+                string.find(lowerName, "menu", 1, true) or
+                string.find(lowerName, "list", 1, true) or
+                FrameHasButtonChildren(child)
+            if looksLikeDropdownPopup and (not child.IsShown or child:IsShown()) then
+                RaiseOptionsDropdownFrame(child, anchor)
+            end
+            RaiseVisibleOptionsDropdownChildren(child, anchor, (depth or 0) + 1)
+        end
+    end
+end
+
+local function RaiseKnownOptionsDropdownPopouts(frameWidget)
+    -- The Settings row exposes its control as frameWidget.Control in modern
+    -- WoW (.DropDown does not exist); fall through it for older shapes.
+    local dd = frameWidget and (frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown)
+    local anchor = (dd and (dd.Button or dd.button)) or dd or frameWidget
+    local candidates = {
+        dd and dd.SelectionPopoutFrame,
+        dd and dd.PopoutFrame,
+        dd and dd.Popout,
+        dd and dd.Menu,
+        dd and dd.MenuFrame,
+        dd and dd.DropDownMenu,
+        frameWidget and frameWidget.SelectionPopoutFrame,
+        frameWidget and frameWidget.PopoutFrame,
+        frameWidget and frameWidget.Popout,
+        frameWidget and frameWidget.Menu,
+        frameWidget and frameWidget.MenuFrame,
+        _G.SettingsDropdownList,
+        _G.SettingsDropdownList1,
+        _G.SettingsDropdownMenu,
+        _G.SettingsDropdownMenu1,
+        _G.DropDownList1,
+        _G.DropDownList2,
+        _G.L_DropDownList1,
+        _G.L_DropDownList2
+    }
+    for _, frame in ipairs(candidates) do
+        if frame and (not frame.IsShown or frame:IsShown()) then
+            RaiseOptionsDropdownFrame(frame, anchor)
+            RaiseVisibleOptionsDropdownChildren(frame, anchor)
+        end
+    end
+    RaiseVisibleOptionsDropdownChildren(dd, anchor)
+end
+
+local function QueueRaiseOptionsDropdownPopouts(frameWidget)
+    local function RaiseNow()
+        RaiseKnownOptionsDropdownPopouts(frameWidget)
+    end
+    RaiseNow()
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, RaiseNow)
+        C_Timer.After(0.05, RaiseNow)
+    end
+end
+
+local function HookOptionsDropdownWidget(frameWidget)
+    if not frameWidget or frameWidget.GSERaisedDropdownHooked then return end
+    frameWidget.GSERaisedDropdownHooked = true
+    local dd = frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown
+    local targets = {frameWidget, dd, dd and dd.Button, dd and dd.button, dd and dd.SelectionPopoutButton}
+    for _, target in ipairs(targets) do
+        if target and target.HookScript then
+            pcall(target.HookScript, target, "OnMouseDown", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
+            pcall(target.HookScript, target, "OnMouseUp", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
+            pcall(target.HookScript, target, "OnClick", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
+            pcall(target.HookScript, target, "OnShow", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
+        end
+    end
+end
+
+local function RaiseOptionsDropdown(initializer)
+    if not initializer or initializer.GSERaisedDropdownWrapped then return initializer end
+    initializer.GSERaisedDropdownWrapped = true
+    local origInitFrame = initializer.InitFrame
+    initializer.InitFrame = function(self, frameWidget)
+        if origInitFrame then pcall(origInitFrame, self, frameWidget) end
+        pcall(HookOptionsDropdownWidget, frameWidget)
+        pcall(QueueRaiseOptionsDropdownPopouts, frameWidget)
+    end
+    return initializer
+end
+
 function GSE.OpenRegisteredOptionsPanel(editor)
     if GSE.GUI then GSE.GUI.optionsEditor = editor end
 
@@ -1764,7 +1882,7 @@ local function AddImportExportOptions(optionsCategory)
             container:Add("RENAME",  L["Rename New Macro"])
             return container:GetData()
         end
-        Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."])
+        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."]))
     end
 end
 
@@ -1817,43 +1935,9 @@ function AddEditorSequenceListOptions(optionsCategory)
     -- is NOT changed here — only the animation behaviour of the four border
     -- lines (plus the unrelated rail-color tint, which lives in Editor.lua).
     --
-    -- Rendered as Settings dropdowns to keep the L/R-arrow + center-label
-    -- visual the user expects, but the popout-on-click is disabled via the
-    -- DisableDropdownPopout helper below. The popout menu was overflowing
-    -- the Settings panel and rendering behind subsequent rows; keeping just
-    -- the steppers (which are separate widgets from the popout button)
-    -- gives the same cycling behaviour without that visual bug.
-    local function DisableDropdownPopout(frameWidget)
-        if not frameWidget then return end
-        -- The control's central popout button lives at frame.DropDown.Button
-        -- in modern WoW (Dragonflight/TWW). Lower-case alias guarded for
-        -- older clients. Increment/Decrement buttons (the L/R steppers) are
-        -- siblings, so they remain interactive after this call.
-        local dd = frameWidget.DropDown or frameWidget.Dropdown
-        if not dd then return end
-        local popoutBtn = dd.Button or dd.button
-        if popoutBtn and popoutBtn.SetScript then
-            popoutBtn:SetScript("OnClick",     function() end)
-            popoutBtn:SetScript("OnMouseDown", function() end)
-            popoutBtn:SetScript("OnMouseUp",   function() end)
-            popoutBtn:SetScript("PreClick",    function() end)
-        end
-    end
-
-    -- Tag-and-wrap helper: takes an initializer returned by
-    -- Settings.CreateDropdown and wraps its InitFrame hook so the popout is
-    -- disabled the moment the widget is bound to a list row. pcall-guarded
-    -- so a future API shape change can't crash addon load — worst case,
-    -- the popup re-appears (the steppers still work).
-    local function NoPopoutDropdown(initializer)
-        if not initializer then return initializer end
-        local origInitFrame = initializer.InitFrame
-        initializer.InitFrame = function(self, frameWidget)
-            if origInitFrame then pcall(origInitFrame, self, frameWidget) end
-            pcall(DisableDropdownPopout, frameWidget)
-        end
-        return initializer
-    end
+    -- Settings dropdown popouts need to be raised above the Settings panel.
+    -- RaiseOptionsDropdown keeps the normal click-to-open list and also keeps
+    -- the L/R steppers working.
 
     -- Focus Highlight Proc
     do
@@ -1877,9 +1961,7 @@ function AddEditorSequenceListOptions(optionsCategory)
             local container = Settings.CreateControlTextContainer()
             -- Just the type names — matches the Strata / Growth Direction
             -- dropdowns elsewhere in the Options panel where the center
-            -- label is a single short word. The popout is still disabled
-            -- via NoPopoutDropdown below, so the L/R stepper buttons are
-            -- the only way to cycle through these.
+            -- label is a single short word.
             container:Add("OFF",     L["Off"]     or "Off")
             container:Add("PULSE",   L["Pulse"]   or "Pulse")
             container:Add("FLASH",   L["Flash"]   or "Flash")
@@ -1888,7 +1970,7 @@ function AddEditorSequenceListOptions(optionsCategory)
             container:Add("STROBE",  L["Strobe"]  or "Strobe")
             return container:GetData()
         end
-        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
+        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
     end
     -- Focus Highlight Brightness
     do
@@ -1913,7 +1995,7 @@ function AddEditorSequenceListOptions(optionsCategory)
             container:Add("HIGH",   L["High"]   or "High")
             return container:GetData()
         end
-        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
+        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
     end
     -- Editor Scroll Speed (live) — sits at the bottom of this section so the
     -- focus-highlight pair stays grouped under the "Show Current Spells"
@@ -2757,7 +2839,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 container:Add("DIALOG",     L["Dialog"]     or "Dialog")
                 return container:GetData()
             end
-            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements.")
+            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements."))
         end
         do
             -- 2. Growth Direction dropdown.
@@ -2777,7 +2859,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 container:Add("RIGHT", L["Right"])
                 return container:GetData()
             end
-            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button.")
+            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button."))
         end
         do
             -- 3. Static / Slide Out toggle — checked = Static (the default),

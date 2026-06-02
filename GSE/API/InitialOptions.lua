@@ -371,17 +371,36 @@ function GSE.ApplyScaleToFrame(frame, scale)
     scale = ClampUIScale(scale or GSE.GetUIScale())
     local preserveCenter = frame.IsShown and frame:IsShown() and frame.GetCenter and frame.ClearAllPoints and frame.SetPoint
         and not frame.GSESkipScaleRecenter
-    local centerX, centerY
+    -- Capture the centre in ABSOLUTE screen pixels (frame-local centre times the
+    -- OLD effective scale) before SetScale. GetCenter is in the frame's own
+    -- coordinate space, which changes with scale; re-anchoring with the raw old
+    -- value after SetScale moved the centre by newScale/oldScale -- right/up on
+    -- grow, left/down on shrink. Going through absolute pixels keeps the centre
+    -- fixed so the window scales about its centre.
+    local absX, absY
     if preserveCenter then
-        centerX, centerY = frame:GetCenter()
+        local centerX, centerY = frame:GetCenter()
         preserveCenter = centerX and centerY and UIParent
+        if preserveCenter then
+            local oldEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
+            if not oldEffective or oldEffective <= 0 then oldEffective = 1 end
+            absX, absY = centerX * oldEffective, centerY * oldEffective
+        end
     end
 
     frame:SetScale(scale)
 
     if preserveCenter then
-        GSE.SetFrameScreenPoint(frame, "CENTER", centerX, centerY)
-        GSE.ClampFrameToScreen(frame)
+        -- Convert the absolute-pixel centre back into the frame's NEW local units.
+        local newEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
+        if not newEffective or newEffective <= 0 then newEffective = 1 end
+        GSE.SetFrameScreenPoint(frame, "CENTER", absX / newEffective, absY / newEffective)
+        -- Frames that self-clamp (SetClampedToScreen) opt out of GSE's clamp via
+        -- GSESkipScaleClamp: GSE's clamp permanently re-anchors a frame that grew
+        -- past a screen edge, which caused the toolbar's scale-down "left jump".
+        if not frame.GSESkipScaleClamp then
+            GSE.ClampFrameToScreen(frame)
+        end
     end
 end
 

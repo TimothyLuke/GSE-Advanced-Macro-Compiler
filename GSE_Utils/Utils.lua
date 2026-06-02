@@ -2248,14 +2248,25 @@ do
                         iconText = "|T" .. specIconID .. ":16:16|t "
                     end
                 end
-                local label = iconText .. entry.name
+                -- Highlight the override already assigned to this slot so the user
+                -- can see at a glance which sequence is active. existingSequence is
+                -- the slot's current gse-button attribute; match it to the list entry.
+                local isCurrent = existingSequence ~= nil and entry.name == existingSequence
+                local marker = isCurrent and "|TInterface\\RaidFrame\\ReadyCheck-Ready:16:16|t " or ""
+                local label = marker .. iconText .. entry.name
                 if entry.disabled then
                     local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
                     element:SetTooltip(function(tooltip, elementDescription)
                         GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
                     end)
                 else
-                    rootDescription:CreateButton(label, function()
+                    local entryLabel = label
+                    if isCurrent then
+                        -- Active override: green check + green name. Still clickable
+                        -- (re-assigning the same sequence is a harmless no-op).
+                        entryLabel = marker .. iconText .. "|cFF1EFF00" .. entry.name .. "|r"
+                    end
+                    rootDescription:CreateButton(entryLabel, function()
                         GSE.CreateActionBarOverride(buttonName, entry.name)
                     end)
                 end
