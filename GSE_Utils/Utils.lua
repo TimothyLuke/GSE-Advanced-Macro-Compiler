@@ -2038,13 +2038,22 @@ function GSE:GSSlash(input)
             -- Route to Editor when the Toolbar is disabled (see Options.lua's
             -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
             if GSEOptions and GSEOptions.ToolbarEnabled == false then
-                -- 1) If an editor already exists this session, just bring
-                --    it forward — never create a duplicate. (Especially
-                --    important on PatronBuild where CreateEditor doesn't
-                --    dedupe.)
+                -- 1) An editor already exists this session. With multi-window
+                --    support (GSE.GUI.Feature.MULTI_WINDOW) each /gse opens an
+                --    ADDITIONAL editor window, so open another one here. Without
+                --    it, CreateEditor returns the single shared editor, so just
+                --    bring the existing one forward. (CreateEditor does not
+                --    dedupe on PatronBuild.)
                 if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
-                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
-                    if existing and existing.Show then existing:Show() end
+                    local multiWindow = GSE.GUI.Feature and GSE.GUI.Feature.MULTI_WINDOW
+                        and GSE.GUI.Feature.MULTI_WINDOW()
+                    if multiWindow and GSE.ShowSequences then
+                        -- Open an additional editor window.
+                        GSE.ShowSequences()
+                    else
+                        local existing = GSE.GUI.editors[#GSE.GUI.editors]
+                        if existing and existing.Show then existing:Show() end
+                    end
                     return
                 end
 

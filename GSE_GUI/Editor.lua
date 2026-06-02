@@ -6550,101 +6550,6 @@ function GSE.CreateEditor()
             return true
         end
 
-        local function KeyboardFocusIsTextEntry()
-            local keyboardFocus
-            if GetCurrentKeyBoardFocus then
-                keyboardFocus = GetCurrentKeyBoardFocus()
-            elseif GetCurrentKeyboardFocus then
-                keyboardFocus = GetCurrentKeyboardFocus()
-            end
-            return keyboardFocus ~= nil
-        end
-
-        local function SetEditorKeyboardPropagation(propagate)
-            if not (editframe.frame and editframe.frame.SetPropagateKeyboardInput) then return end
-            if GSE.GUI.SetPropagateKeyboardSafe then
-                GSE.GUI.SetPropagateKeyboardSafe(editframe.frame, propagate)
-            else
-                editframe.frame:SetPropagateKeyboardInput(propagate)
-            end
-        end
-
-        local function MacroMoveKeyIsBoundToWoW(key)
-            if not GetBindingAction then return false end
-            local action = GetBindingAction(key, true)
-            if GSE.isEmpty(action) then action = GetBindingAction(key) end
-            return not GSE.isEmpty(action)
-        end
-
-        -- Move the focus/selection to the previous (-1) or next (+1) block in
-        -- visual order, without reordering. Walks the render-order list so it
-        -- follows exactly what is on screen (including inside If branches / loops).
-        local function NavigateSelectedMacroBlock(direction)
-            local navOrder = editframe.macroBlockNavOrder
-            if type(navOrder) ~= "table" or #navOrder == 0 then return false end
-            local selectedPath =
-                editframe.selectedMacroBlockVersion == version and CloneMacroBlockPath(editframe.selectedMacroBlockPath)
-                    or nil
-            if not selectedPath or #selectedPath == 0 then return false end
-
-            local currentIndex
-            for index, navPath in ipairs(navOrder) do
-                if MacroBlockPathsEqual(navPath, selectedPath) then
-                    currentIndex = index
-                    break
-                end
-            end
-            if not currentIndex then return false end
-
-            local targetIndex = currentIndex + direction
-            if targetIndex < 1 or targetIndex > #navOrder then
-                BlinkSelectedMacroBlock()   -- already at the top/bottom block
-                return false
-            end
-
-            if editframe.gseSelectMacroBlockPath then
-                editframe.gseSelectMacroBlockPath(CloneMacroBlockPath(navOrder[targetIndex]), nil, true)
-            end
-            return true
-        end
-
-        local function HandleMacroBlockMoveKey(_, key)
-            SetEditorKeyboardPropagation(true)
-            if key ~= "UP" and key ~= "DOWN" then return end
-            if MacroMoveKeyIsBoundToWoW(key) then return end
-            if KeyboardFocusIsTextEntry() or editframe.macroBlockDrag or editframe.rawEditor then return end
-            if GSE.GUI and GSE.GUI.activeEditor and GSE.GUI.activeEditor ~= editframe then return end
-            if editframe.selectedMacroBlockVersion ~= version or GSE.isEmpty(editframe.selectedMacroBlockPath) then return end
-
-            SetEditorKeyboardPropagation(false)
-            local direction = key == "UP" and -1 or 1
-            if IsShiftKeyDown() then
-                MoveSelectedMacroBlock(direction)        -- Shift + arrow: reorder the block
-            else
-                NavigateSelectedMacroBlock(direction)    -- arrow: move focus to the adjacent block
-            end
-        end
-
-        if editframe.frame and editframe.frame.EnableKeyboard and editframe.frame.SetPropagateKeyboardInput then
-            editframe.frame:SetScript("OnKeyDown", HandleMacroBlockMoveKey)
-            editframe.frame:SetScript("OnKeyUp", function()
-                SetEditorKeyboardPropagation(true)
-            end)
-            -- Enable capture + propagation together, deferred out of combat so we
-            -- never call the protected SetPropagateKeyboardInput in combat nor
-            -- swallow the player's keybinds (patrons may open the editor mid-combat).
-            local function enableMacroBlockKeys()
-                if editframe.frame and editframe.frame.EnableKeyboard then editframe.frame:EnableKeyboard(true) end
-                if editframe.frame and editframe.frame.SetPropagateKeyboardInput then
-                    editframe.frame:SetPropagateKeyboardInput(true)
-                end
-            end
-            if GSE.GUI.RunWhenCombatSafe then
-                GSE.GUI.RunWhenCombatSafe(enableMacroBlockKeys)
-            else
-                enableMacroBlockKeys()
-            end
-        end
 
         local moveUpButton = UI:Create("Icon")
         local moveDownButton = UI:Create("Icon")
@@ -7140,7 +7045,6 @@ function GSE.CreateEditor()
             end
 
             spellEditBox:SetText(spelltext)
-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, spellEditBox) end
 
             spellEditBox:SetCallback(
                 "OnTextChanged",
@@ -7211,7 +7115,6 @@ function GSE.CreateEditor()
             macroEditBox:SetNumLines(5)
             macroEditBox:SetRelativeWidth(0.5)
             macroEditBox:SetText(spelltext)
-            if GSE.GUI.BindUndoWidget then GSE.GUI.BindUndoWidget(editframe, macroEditBox) end
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
             macroEditBox:SetCallback(
@@ -7299,7 +7202,6 @@ function GSE.CreateEditor()
     GSE.GUI.SetupKeybind(editframe)
     GSE.GUI.SetupMacro(editframe)
     GSE.GUI.SetupTree(editframe)
-    if GSE.GUI.SetupUndo then GSE.GUI.SetupUndo(editframe) end
 
     function editframe:remoteSequenceUpdated(seqName)
         if seqName == editframe.SequenceName then

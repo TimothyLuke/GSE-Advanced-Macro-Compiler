@@ -34,7 +34,6 @@ Editor_Metadata.lua
 Editor_Variable.lua
 Editor_Keybind.lua
 Editor_Macro.lua
-Editor_Undo.lua
 Editor_Tree.lua
 Editor.lua
 RemoteMacroBrowser.lua

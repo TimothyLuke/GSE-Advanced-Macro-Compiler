@@ -2668,6 +2668,13 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function SetValue(val)
                 GSEOptions.ToolbarEnabled = val and true or false
                 if val then
+                    -- GSE_GUI is LoadOnDemand and owns GSE.ShowMenu / GSE.MenuFrame.
+                    -- On a session where the Toolbar started OFF, GSE_GUI is not
+                    -- loaded yet, so GSE.ShowMenu would be nil and the toggle would
+                    -- flip to ON without the Toolbar ever appearing (and without
+                    -- setting menu.open, so it would not return on next login
+                    -- either). Force-load it first, the same way /gse toolbar does.
+                    if GSE.CheckGUI then GSE.CheckGUI() end
                     -- Turned ON: bring up the toolbar immediately so the user
                     -- sees the result of toggling on. GSE.ShowMenu sets
                     -- menu.open = true so the toolbar also auto-shows on next
