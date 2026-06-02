@@ -7,7 +7,7 @@
 ## Dependencies: GSE GSE_Utils
 ## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUI, EllesmereUIActionBars
 ## LoadOnDemand: 1
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate

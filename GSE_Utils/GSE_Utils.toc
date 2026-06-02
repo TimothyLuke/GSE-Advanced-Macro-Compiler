@@ -4,7 +4,7 @@
 ## Author: TimothyLuke
 ## Version: 3.3.19-18-g657a37a-PatronBuild
 ## Dependencies: GSE
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
