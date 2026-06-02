@@ -3,7 +3,6 @@ local Statics = GSE.Static
 
 local GNOME = Statics.DebugModules["Translator"]
 
-local L = GSE.L
 
 local function normaliseSpellIDValue(value)
     if type(value) == "table" then
@@ -49,23 +48,19 @@ local function findCurrentSpellID(spellID)
 end
 
 local function getSpellInfoID(spell)
-    if GSE.isEmpty(spell) or not C_Spell or not C_Spell.GetSpellInfo then
+    if GSE.isEmpty(spell) then
         return nil
     end
 
-    local ok, spellinfo = pcall(C_Spell.GetSpellInfo, spell)
-    if ok and spellinfo then
+    local spellinfo = GSE.GetSpellInfo(spell)
+    if spellinfo then
         return normaliseSpellIDValue(spellinfo.spellID)
     end
 end
 
 local function spellIDIsInSpellBook(spellID)
-    if not C_SpellBook or not C_SpellBook.FindSpellBookSlotForSpell then
-        return true
-    end
-
-    local ok, slot = pcall(C_SpellBook.FindSpellBookSlotForSpell, spellID)
-    return ok and slot and slot > 0
+    local slot = C_SpellBook.FindSpellBookSlotForSpell(spellID)
+    return slot == nil or slot > 0
 end
 
 local function canCacheSpellLookup(spellstring, spellID, rawSpellID)
@@ -131,6 +126,7 @@ end
 
 function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
     instring = GSE.UnEscapeString(instring)
+    if type(instring) ~= "string" then return instring and tostring(instring) or "" end
     local lines = GSE.SplitMeIntoLines(instring)
     if #lines > 1 then
         local output = {}
@@ -376,6 +372,7 @@ function GSE.GetConditionalsFromString(str)
         mods = string.sub(str, leftstr, rightstr)
         GSE.PrintDebugMessage("mods changed to: " .. mods, GNOME)
         str = string.sub(str, rightstr + 1)
+        str = string.gsub(str, "^%s+", "")
         GSE.PrintDebugMessage("str changed to: " .. str, GNOME)
     end
     -- if not cleanNewLines then
@@ -388,21 +385,16 @@ function GSE.GetConditionalsFromString(str)
         GSE.PrintDebugMessage("found reset= at" .. resetleft, GNOME)
     end
 
-    local rightfound = false
-    local resetright = 0
     if resetleft then
-        for i = 1, #str do
-            local c = str:sub(i, i)
-            if c == " " then
-                if not rightfound then
-                    resetright = i
-                    rightfound = true
-                end
-            end
+        local resetright = string.find(str, "%s", resetleft) or (string.len(str) + 1)
+        local resetmod = string.sub(str, resetleft, resetright - 1)
+        if not GSE.isEmpty(mods) then
+            mods = mods .. " "
         end
-        mods = mods .. " " .. string.sub(str, resetleft, resetright)
+        mods = mods .. resetmod
         GSE.PrintDebugMessage("reset= mods changed to: " .. mods, GNOME)
-        str = string.sub(str, resetright + 1)
+        str = string.sub(str, resetright)
+        str = string.gsub(str, "^%s+", "")
         GSE.PrintDebugMessage("reset= test str changed to: " .. str, GNOME)
         found = true
     end
@@ -436,8 +428,7 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     end
     local returnval, name, rank, spellId, rawSpellId
 
-    local ok, spellinfo = pcall(C_Spell.GetSpellInfo, spellstring)
-    if not ok then spellinfo = nil end
+    local spellinfo = GSE.GetSpellInfo(spellstring)
     if not spellinfo then
         if type(spellstring) == "string" then
             ---@diagnostic disable-next-line: missing-fields
@@ -533,4 +524,5 @@ end
 
 GSE.TranslatorAvailable = true
 
-GSE.DebugProfile("Translator")
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Translator") end
+

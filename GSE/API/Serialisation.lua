@@ -52,7 +52,6 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
 end
 
 function GSE.sendMessage(tab, channel, target, priority)
-    local _, instanceType = IsInInstance()
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
     if tab.Command == "GS-E_TRANSMITSEQUENCE" then
         GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
@@ -86,7 +85,6 @@ end
 
 function GSE.performVersionCheck(version)
     if string.match(GSE.VersionString, "development") then
-        local developer = true
         GSE.old = false
     else
         if GSE.ParseVersion(version) ~= nil and GSE.ParseVersion(version) > GSE.VersionNumber then
@@ -99,7 +97,7 @@ function GSE.performVersionCheck(version)
                 )
                 GSE.old = true
                 if (GSE.ParseVersion(version) - GSE.VersionNumber >= 5) then
-                    StaticPopup_Show("GSE_UPDATE_AVAILABLE")
+                    GSE.GUICall("GUIShowUpdateAvailable")
                 end
             end
         end
@@ -170,7 +168,6 @@ function GSE.storeSender(sender, senderversion)
 end
 
 function GSE.sendVersionCheck()
-    local _, instanceType = IsInInstance()
     local t = {}
     t.Command = "GS-E_VERSIONCHK"
     t.Version = GSE.VersionString
@@ -276,7 +273,7 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                         ["enUS"] = {}
                     }
                 end
-                if not GSE.isEmpty(t.cache) and #t.cache > 0 then
+                if not GSE.isEmpty(t.cache) and next(t.cache) ~= nil then
                     for locale, spells in pairs(t.cache) do
                         GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
                         for k, v in pairs(spells) do
@@ -392,19 +389,15 @@ hooksecurefunc(
     function(link)
         local linkType, addon, param1 = string.split(":", link)
         if linkType == "garrmission" and addon == "GSE" then
-            if param1 == "foo" then
-                print("Processed test link foo")
-            else
-                local cmd, sequenceName, player, ClassID = string.split("@", param1)
-                if cmd == "seq" then
-                    if player == UnitName("player") then
-                        local editor = GSE.CreateEditor()
-                        editor.ManageTree()
-                        GSE.GUILoadEditor(editor, ClassID .. "," .. sequenceName)
-                    else
-                        GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
-                        GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")
-                    end
+            local cmd, sequenceName, player, ClassID = string.split("@", param1)
+            if cmd == "seq" then
+                if player == UnitName("player") then
+                    local editor = GSE.CreateEditor()
+                    editor.ManageTree()
+                    GSE.GUILoadEditor(editor, ClassID .. "," .. sequenceName)
+                else
+                    GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
+                    GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")
                 end
             end
         end
@@ -412,4 +405,5 @@ hooksecurefunc(
 )
 
 GSE:RegisterComm("GSE")
-GSE.DebugProfile("Serialisation")
+
+if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Serialisation") end

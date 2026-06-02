@@ -1,11 +1,11 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Configuration Options|r
 ## Notes: GSE Configuration Options
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE_Utils
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate

@@ -342,15 +342,15 @@ local GY_LE = {
     0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,
 }
 
-local _B = nil
+local B = nil
 local function get_base()
-    if not _B then
+    if not B then
         local gx = {}; for i=1,32 do gx[i]=GX_LE[i] end
         local gy = {}; for i=1,32 do gy[i]=GY_LE[i] end
         local one = fe_copy(FE_ONE)
-        _B = {gx, gy, one, fe_mul(gx,gy)}
+        B = {gx, gy, one, fe_mul(gx,gy)}
     end
-    return _B
+    return B
 end
 
 -- ── Public API ────────────────────────────────────────────────────────────────

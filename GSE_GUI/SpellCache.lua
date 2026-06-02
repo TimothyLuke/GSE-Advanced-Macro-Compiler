@@ -1,18 +1,16 @@
 local GSE = GSE
-local Statics = GSE.Static
 
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
-local cacheFrame = AceGUI:Create("Frame")
-cacheFrame.frame:SetFrameStrata("MEDIUM")
-cacheFrame.frame:SetClampedToScreen(true)
+local cacheFrame = UI:Create("Frame")
+UI.MakePopup(cacheFrame.frame, {center = true})
 cacheFrame:Hide()
 GSE.GUICacheFrame = cacheFrame
 function GSE.GUICreateCacheTabs()
     local tabl = {}
 
-    for key, _ in pairs(GSESpellCache) do
+    for key, _ in pairs(GSESpellCache or {}) do
         table.insert(
             tabl,
             {
@@ -50,12 +48,12 @@ local function addKeyPairRow(container, rowWidth, key, value, language)
         return
     end
 
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = UI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     linegroup1:SetWidth(rowWidth)
     rowWidth = rowWidth - 70
 
-    local keyEditBox = AceGUI:Create("EditBox")
+    local keyEditBox = UI:Create("EditBox")
     keyEditBox:SetLabel()
     keyEditBox:DisableButton(true)
     keyEditBox:SetWidth(rowWidth * 0.50)
@@ -71,11 +69,11 @@ local function addKeyPairRow(container, rowWidth, key, value, language)
     )
     linegroup1:AddChild(keyEditBox)
 
-    local spacerlabel1 = AceGUI:Create("Label")
+    local spacerlabel1 = UI:Create("Label")
     spacerlabel1:SetWidth(5)
     linegroup1:AddChild(spacerlabel1)
 
-    local valueEditBox = AceGUI:Create("EditBox")
+    local valueEditBox = UI:Create("EditBox")
     valueEditBox:SetLabel()
     valueEditBox:SetWidth(rowWidth * 0.50)
     valueEditBox:DisableButton(true)
@@ -95,11 +93,11 @@ local function addKeyPairRow(container, rowWidth, key, value, language)
 
     linegroup1:AddChild(valueEditBox)
 
-    local spacerlabel2 = AceGUI:Create("Label")
+    local spacerlabel2 = UI:Create("Label")
     spacerlabel2:SetWidth(15)
     linegroup1:AddChild(spacerlabel2)
 
-    local deleteRowButton = AceGUI:Create("Icon")
+    local deleteRowButton = UI:Create("Icon")
     deleteRowButton:SetImageSize(20, 20)
     deleteRowButton:SetWidth(20)
     deleteRowButton:SetHeight(20)
@@ -120,46 +118,49 @@ local function addKeyPairRow(container, rowWidth, key, value, language)
 end
 
 function GSE:GUIDrawSpellCacheEditor(container, language)
+    local languageCache = GSESpellCache and GSESpellCache[language]
+    if type(languageCache) ~= "table" then languageCache = {} end
+
     local maxWidth = container.frame:GetWidth()
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local scrollcontainer = UI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetHeight(cacheFrame.Height - 110)
     scrollcontainer:SetLayout("Fill") -- Important!
 
-    local contentcontainer = AceGUI:Create("ScrollFrame") -- "InlineGroup" is also good
+    local contentcontainer = UI:Create("ScrollFrame") -- "InlineGroup" is also good
     contentcontainer:SetWidth(maxWidth)
     contentcontainer:SetAutoAdjustHeight(true)
     scrollcontainer:AddChild(contentcontainer)
-    local linegroup1 = AceGUI:Create("SimpleGroup")
+    local linegroup1 = UI:Create("SimpleGroup")
     linegroup1:SetLayout("Flow")
     local columnWidth = maxWidth - 55
 
     linegroup1:SetWidth(columnWidth + 5)
 
-    local nameLabel = AceGUI:Create("Heading")
+    local nameLabel = UI:Create("Heading")
     nameLabel:SetText(L["Spell Name"])
     nameLabel:SetWidth(columnWidth * 0.48)
     linegroup1:AddChild(nameLabel)
 
-    local spacerlabel1 = AceGUI:Create("Label")
+    local spacerlabel1 = UI:Create("Label")
     spacerlabel1:SetWidth(5)
     linegroup1:AddChild(spacerlabel1)
 
-    local valueLabel = AceGUI:Create("Heading")
+    local valueLabel = UI:Create("Heading")
     valueLabel:SetText(L["Spell ID"])
     valueLabel:SetWidth(columnWidth * 0.47)
     linegroup1:AddChild(valueLabel)
 
-    local spacerlabel2 = AceGUI:Create("Label")
+    local spacerlabel2 = UI:Create("Label")
     spacerlabel2:SetWidth(5)
     linegroup1:AddChild(spacerlabel2)
 
-    local delLabel = AceGUI:Create("Heading")
+    local delLabel = UI:Create("Heading")
     delLabel:SetText(L["Actions"])
     delLabel:SetWidth(columnWidth * 0.10)
     linegroup1:AddChild(delLabel)
     contentcontainer:AddChild(linegroup1)
-    for key, value in pairs(GSESpellCache[language]) do
+    for key, value in pairs(languageCache) do
         addKeyPairRow(contentcontainer, columnWidth, key, value, language)
     end
     container:AddChild(scrollcontainer)
@@ -175,7 +176,7 @@ if cacheFrame.Width < 700 then
     cacheFrame.Width = 700
     GSEOptions.cacheWidth = cacheFrame.Width
 end
-cacheFrame.frame:SetClampRectInsets(-10, -10, -10, -10)
+cacheFrame.frame:SetClampRectInsets(10, 0, 0, 0)
 cacheFrame.frame:SetHeight(cacheFrame.Height)
 cacheFrame.frame:SetWidth(cacheFrame.Width)
 cacheFrame:SetTitle(L["Spell Cache Editor"])
@@ -210,9 +211,10 @@ cacheFrame.frame:SetScript(
     end
 )
 
-local tabgrp = AceGUI:Create("TabGroup")
+local tabgrp = UI:Create("TabGroup")
 tabgrp:SetLayout("Flow")
-tabgrp:SetTabs(GSE.GUICreateCacheTabs())
+local cacheTabs = GSE.GUICreateCacheTabs()
+tabgrp:SetTabs(cacheTabs)
 cacheFrame.ContentContainer = tabgrp
 tabgrp:SetCallback(
     "OnGroupSelected",
@@ -224,5 +226,11 @@ tabgrp:SetCallback(
 tabgrp:SetFullWidth(true)
 tabgrp:SetFullHeight(true)
 
-tabgrp:SelectTab("config")
+if cacheTabs[1] then
+    tabgrp:SelectTab(cacheTabs[1].value)
+end
 cacheFrame:AddChild(tabgrp)
+
+if cacheFrame and cacheFrame.frame and GSE.RegisterUIScaleFrame then
+    GSE.RegisterUIScaleFrame(cacheFrame.frame)
+end

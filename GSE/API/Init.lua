@@ -2,10 +2,8 @@
 GSE =
     LibStub("AceAddon-3.0"):NewAddon(
     "GSE",
-    "AceConsole-3.0",
     "AceEvent-3.0",
-    "AceComm-3.0",
-    "AceTimer-3.0"
+    "AceComm-3.0"
 )
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
@@ -117,13 +115,25 @@ end
 --    be sent to variable <code>GSE.Print</code>
 --    The Title is stripped for intermod debug output via GSE.DebugOutput
 local function determinationOutputDestination(message, title)
+    local wroteDebugOutput = false
     if GSE.UnsavedOptions.DebugSequenceExecution then
         GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
+        wroteDebugOutput = true
     elseif GSEOptions.sendDebugOutputToDebugOutput then
         GSE.DebugOutput = GSE.DebugOutput .. message .. "\n"
+        wroteDebugOutput = true
     end
     if GSEOptions.sendDebugOutputToChatWindow then
         GSE.Print(message, title)
+    end
+    if
+        wroteDebugOutput and type(GSE.GUIUpdateOutput) == "function" and GSE.GUIDebugFrame and
+            type(GSE.GUIDebugIsOpenOrMinimized) == "function" and GSE.GUIDebugIsOpenOrMinimized() and not GSE.GUIDebugPaused and
+            not GSE.DebugOutputFlushing
+     then
+        GSE.DebugOutputFlushing = true
+        pcall(GSE.GUIUpdateOutput)
+        GSE.DebugOutputFlushing = nil
     end
 end
 

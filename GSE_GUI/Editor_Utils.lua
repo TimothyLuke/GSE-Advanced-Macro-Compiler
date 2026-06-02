@@ -1,13 +1,12 @@
 local GSE = GSE
 local Statics = GSE.Static
-local AceGUI = LibStub("AceGUI-3.0")
-local L = GSE.L
+local UI = GSE.UI
 
 -- Initialise GUI namespace
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
 --- Attach tooltip OnEnter/OnLeave callbacks to a widget.
--- @param widget  AceGUI widget
+-- @param widget  GSE.UI widget
 -- @param title   string  Tooltip title
 -- @param text    string  Tooltip body
 -- @param editframe  the editor frame (for GSE.CreateToolTip / ClearTooltip)
@@ -29,10 +28,10 @@ end
 -- @param title     string  tooltip title (optional)
 -- @param text      string  tooltip body (optional)
 -- @param editframe  (optional, needed for tooltip)
--- @return AceGUI InteractiveLabel widget
+-- @return GSE.UI InteractiveLabel widget
 function GSE.GUI.MakeIconButton(iconPath, size, onClick, title, text, editframe)
     size = size or 20
-    local btn = AceGUI:Create("InteractiveLabel")
+    local btn = UI:Create("InteractiveLabel")
     btn:SetImageSize(size, size)
     btn:SetImage(iconPath)
     btn:SetCallback("OnClick", onClick)

@@ -1,13 +1,13 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
 ## Version: @project-version@
 ## Dependencies: GSE GSE_Utils
-## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUIActionBars
+## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUI, EllesmereUIActionBars
 ## LoadOnDemand: 1
-## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
 ## Category-deDE: Kampf
 ## Category-esES: Combate
@@ -22,10 +22,8 @@
 ## Group: GSE
 
 
-Ace3_Extensions\AceGUIContainer-KeyGroup.lua
-Ace3_Extensions\AceGUI-3.0-Spacer.lua
-Ace3_Extensions\AceGUI-3.0-Controller_KeyBind.lua
-Ace3_Extensions\AceGUI-3.0-GSETreeGroup.lua
+Skin.lua
+NativeUI.lua
 Import.lua
 Export.lua
 DebugWindow.lua

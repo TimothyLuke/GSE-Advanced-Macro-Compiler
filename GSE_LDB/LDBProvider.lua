@@ -3,7 +3,10 @@ local GSE = GSE
 local Statics = GSE.Static
 local L = GSE.L
 
-local iconSource = Statics.Icons.GSE_Logo_Dark
+-- Prefer the dedicated MinimapIcon (new wrench-style PNG) when defined,
+-- fall back to the legacy GSE_Logo_Dark BLP for forward/backward
+-- compatibility with builds that don't have the new constant.
+local iconSource = Statics.Icons.MinimapIcon or Statics.Icons.GSE_Logo_Dark
 
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 
@@ -37,7 +40,8 @@ local LibQTip = LibStub("LibQTip-2.0")
 local LibSharedMedia = LibStub("LibSharedMedia-3.0")
 
 local icon = LibStub("LibDBIcon-1.0")
-icon:Register(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"], dataobj, GSEOptions.showMiniMap)
+local dataObjectName = L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"]
+icon:Register(dataObjectName, dataobj, GSEOptions.showMiniMap)
 
 local LibDBCompartment = LibStub:GetLibrary("LibDBCompartment-1.0")
 LibDBCompartment:Register(L["GSE"], dataobj)
@@ -253,25 +257,47 @@ function dataobj:OnLeave()
 end
 
 
-function dataobj:OnClick(button)
-  if GSE.CheckGUI() then
-    if button == "LeftButton" then
-      GSE.ShowSequences()
-    elseif button == "MiddleButton" then
-      GSE.ShowKeyBindings()
-    elseif button == "RightButton" then
-      GSE.GUIShowDebugWindow()
-    end
+local function normaliseMouseButton(button)
+  button = tostring(button or "")
+  button = button:gsub("Up$", ""):gsub("Down$", "")
+  return button
+end
+
+local function ensureGUI()
+  if GSE.UnsavedOptions and GSE.UnsavedOptions["GUI"] then return true end
+  if GSE.CheckGUI then GSE.CheckGUI() end
+  return (GSE.UnsavedOptions and GSE.UnsavedOptions["GUI"]) or GSE.ShowSequences or GSE.GUIShowDebugWindow
+end
+
+local function handleDataObjectClick(button)
+  button = normaliseMouseButton(button)
+  if not ensureGUI() then return end
+
+  if button == "LeftButton" then
+    if GSE.ShowSequences then GSE.ShowSequences() end
+  elseif button == "MiddleButton" then
+    if GSE.ShowKeyBindings then GSE.ShowKeyBindings() end
+  elseif button == "RightButton" then
+    if GSE.GUIShowDebugWindow then GSE.GUIShowDebugWindow() end
   end
+end
+
+function dataobj:OnClick(button)
+  handleDataObjectClick(button)
+end
+
+local minimapButton = icon.GetMinimapButton and icon:GetMinimapButton(dataObjectName)
+if minimapButton then
+  minimapButton:RegisterForClicks("AnyUp")
 end
 
 
 function GSE.miniMapShow()
-  icon:Show(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"])
+  icon:Show(dataObjectName)
 end
 
 function GSE.miniMapHide()
-  icon:Hide(L["GSE"] .. " " .. L["Gnome Sequencer Enhanced"])
+  icon:Hide(dataObjectName)
 end
 
 --- This shows or hides the minimap icon.

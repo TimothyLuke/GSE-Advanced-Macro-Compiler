@@ -3,6 +3,15 @@ local L = GSE.L
 local Statics = GSE.Static
 local LibQTip = LibStub("LibQTip-2.0")
 
+local function AnchorTooltipToCursor(tooltip)
+  local x, y = GetCursorPosition()
+  local scale = UIParent:GetEffectiveScale()
+
+  tooltip:ClearAllPoints()
+  tooltip:SetClampedToScreen(true)
+  tooltip:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", (x / scale) + 16, (y / scale) - 16)
+end
+
 --- Format the text against the GSE Sequence Spec.
 function GSE.GUIParseText(editbox)
   if GSEOptions.RealtimeParse then
@@ -18,17 +27,10 @@ function GSE:OnInitialize()
   GSE.GUIVersionFrame:Hide()
 end
 
-function GSE.OpenOptionsPanel()
-  if not GSE.MenuCategoryID then
-    GSE.Print(L["Options Not Enabled"])
-    return
+function GSE.OpenOptionsPanel(editor)
+  if GSE.OpenRegisteredOptionsPanel then
+    return GSE.OpenRegisteredOptionsPanel(editor)
   end
-  if InCombatLockdown() then
-    GSE.EnqueueOOC({action = "openoptions"})
-    GSE.Print(L["Options will open after combat ends."])
-    return
-  end
-  Settings.OpenToCategory(GSE.MenuCategoryID)
 end
 
 function GSE.CreateToolTip(title, tip, GSEFrame)
@@ -38,13 +40,15 @@ function GSE.CreateToolTip(title, tip, GSEFrame)
   GSEFrame.tooltip = tooltip
   tooltip:AddHeadingRow(GSEOptions.TitleColour .. title .. Statics.StringReset)
   tooltip:AddRow(tip)
-  tooltip:SmartAnchorTo(GSEFrame.frame)
+  AnchorTooltipToCursor(tooltip)
+  tooltip:SetScript("OnUpdate", AnchorTooltipToCursor)
 
   tooltip:Show()
 end
 
 function GSE.ClearTooltip(GSEFrame)
   if GSEFrame.tooltip then
+    GSEFrame.tooltip:SetScript("OnUpdate", nil)
     GSEFrame.tooltip:Release()
   end
   GSEFrame.tooltip = nil
@@ -67,5 +71,20 @@ function GSE.ShowSequenceList(SequenceTable, GSEUser, channel)
 end
 
 function GSE.GUIShowSpellCacheWindow()
+  if not GSE.GUICacheFrame then
+    GSE.Print(L["The GSE_GUI Module needs to be enabled to edit the spell cache."], L["Options"])
+    return
+  end
+
+  local frame = GSE.GUICacheFrame.frame
+  if frame then
+    -- Conditional center: only anchor the frame if it has no points yet, so
+    -- a user's saved drag position isn't clobbered every time the cache
+    -- window is reopened.
+    local needsCenter = frame.GetNumPoints and frame:GetNumPoints() == 0
+    GSE.UI.MakePopup(frame, {center = needsCenter})
+  end
+
   GSE.GUICacheFrame:Show()
+  if frame and frame.Raise then frame:Raise() end
 end

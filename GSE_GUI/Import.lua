@@ -1,22 +1,395 @@
 local GSE = GSE
 local Statics = GSE.Static
 
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
-local importframe = AceGUI:Create("Frame")
+local MODERN_IMPORT_BACKDROP = {
+  bgFile = "Interface\\Buttons\\WHITE8X8",
+  edgeFile = "Interface\\Buttons\\WHITE8X8",
+  edgeSize = 1,
+  insets = { left = 0, right = 0, top = 0, bottom = 0 },
+}
+local MODERN_IMPORT_BG = { 0.02, 0.025, 0.028, 0.94 }
+local MODERN_IMPORT_PANEL_BG = { 0.015, 0.018, 0.020, 0.92 }
+local MODERN_IMPORT_BORDER = { 0.22, 0.24, 0.25, 0.95 }
+local MODERN_IMPORT_MUTED_BORDER = { 0.10, 0.10, 0.10, 1 }
+local MODERN_IMPORT_ACCENT = { 0.00, 0.784, 0.784, 1 }
+local MODERN_IMPORT_BUTTON_BG = { 0.055, 0.055, 0.055, 0.92 }
+local MODERN_IMPORT_BUTTON_HOVER_BG = { 0.10, 0.10, 0.10, 0.96 }
+local MODERN_IMPORT_BUTTON_DISABLED_BG = { 0.035, 0.035, 0.035, 0.72 }
+local MODERN_IMPORT_BUTTON_BORDER = { 0.18, 0.18, 0.18, 1 }
+local MODERN_IMPORT_BUTTON_DISABLED_BORDER = { 0.08, 0.08, 0.08, 1 }
+local MODERN_IMPORT_BUTTON_TEXT = { 0.92, 0.92, 0.92, 1 }
+local MODERN_IMPORT_BUTTON_HOVER_TEXT = { 1, 0.82, 0, 1 }
+local MODERN_IMPORT_BUTTON_DISABLED_TEXT = { 0.45, 0.45, 0.45, 1 }
+local MODERN_IMPORT_CHEVRON = "Interface\\AddOns\\GSE_GUI\\Assets\\down-chevron.png"
+local MODERN_IMPORT_CLASS_COLORS = {
+  DEATHKNIGHT = {0.77, 0.12, 0.23, 1},
+  DEMONHUNTER = {0.64, 0.19, 0.79, 1},
+  DRUID = {1.00, 0.49, 0.04, 1},
+  EVOKER = {0.20, 0.58, 0.50, 1},
+  HUNTER = {0.67, 0.83, 0.45, 1},
+  MAGE = {0.25, 0.78, 0.92, 1},
+  MONK = {0.00, 1.00, 0.59, 1},
+  PALADIN = {0.96, 0.55, 0.73, 1},
+  PRIEST = {1.00, 1.00, 1.00, 1},
+  ROGUE = {1.00, 0.96, 0.41, 1},
+  SHAMAN = {0.00, 0.44, 0.87, 1},
+  WARLOCK = {0.53, 0.53, 0.93, 1},
+  WARRIOR = {0.78, 0.61, 0.43, 1},
+}
+
+local function shouldUseModernImportSkin()
+  return (GSE.ShouldUseModernSkin and GSE.ShouldUseModernSkin()) or
+    (GSE.ShouldUseElvUISkin and GSE.ShouldUseElvUISkin())
+end
+
+local function getImportAccent(alpha)
+  if GSE.ShouldUseModernCustomColor and GSE.ShouldUseModernCustomColor() and GSE.GetModernCustomColor then
+    return GSE.GetModernCustomColor(alpha or 1)
+  end
+
+  if GSE.ShouldUseModernClassColors and GSE.ShouldUseModernClassColors() and UnitClass then
+    local localizedClass, classFile = UnitClass("player")
+    classFile = classFile or localizedClass
+    if type(classFile) == "string" then
+      classFile = classFile:upper():gsub("%s+", "")
+    end
+    local color = classFile and MODERN_IMPORT_CLASS_COLORS[classFile]
+    if color then
+      return { color.r or color[1] or 1, color.g or color[2] or 1, color.b or color[3] or 1, alpha or color.a or color[4] or 1 }
+    end
+  end
+
+  return { MODERN_IMPORT_ACCENT[1], MODERN_IMPORT_ACCENT[2], MODERN_IMPORT_ACCENT[3], alpha or MODERN_IMPORT_ACCENT[4] }
+end
+
+local function applyModernImportBackdrop(frame, bg, border)
+  if not (frame and frame.SetBackdrop) then return end
+  frame:SetBackdrop(MODERN_IMPORT_BACKDROP)
+  frame:SetBackdropColor(unpack(bg or MODERN_IMPORT_BG))
+  frame:SetBackdropBorderColor(unpack(border or MODERN_IMPORT_BORDER))
+end
+
+local function hideImportTextures(frame)
+  if not frame or frame.GSEImportTexturesHidden then return end
+  for _, region in ipairs({ frame:GetRegions() }) do
+    if region.GetObjectType and region:GetObjectType() == "Texture" and not region.GSEImportOwned then
+      region:Hide()
+    end
+  end
+  frame.GSEImportTexturesHidden = true
+end
+
+local function showImportTextures(frame)
+  if not frame then return end
+  for _, region in ipairs({ frame:GetRegions() }) do
+    if region.GetObjectType and region:GetObjectType() == "Texture" and not region.GSEImportOwned and region.Show then
+      region:Show()
+    elseif region.GSEImportOwned and region.Hide then
+      region:Hide()
+    end
+  end
+  frame.GSEImportTexturesHidden = nil
+end
+
+local function createImportTexture(frame, layer)
+  local texture = frame:CreateTexture(nil, layer or "BORDER")
+  texture.GSEImportOwned = true
+  return texture
+end
+
+local function ensureImportChrome(frame)
+  if not (frame and frame.CreateTexture) then return end
+  if frame.GSEImportChromeFill then return end
+  frame.GSEImportChromeFill = createImportTexture(frame, "BACKGROUND")
+  frame.GSEImportChromeTop = createImportTexture(frame, "BORDER")
+  frame.GSEImportChromeBottom = createImportTexture(frame, "BORDER")
+  frame.GSEImportChromeLeft = createImportTexture(frame, "BORDER")
+  frame.GSEImportChromeRight = createImportTexture(frame, "BORDER")
+end
+
+local function layoutImportChrome(frame, fillColor, borderColor, inset)
+  if not (frame and frame.GSEImportChromeFill) then return end
+  inset = inset or 1
+  fillColor = fillColor or MODERN_IMPORT_BUTTON_BG
+  borderColor = borderColor or MODERN_IMPORT_BUTTON_BORDER
+
+  frame.GSEImportChromeFill:ClearAllPoints()
+  frame.GSEImportChromeFill:SetPoint("TOPLEFT", frame, "TOPLEFT", inset, -inset)
+  frame.GSEImportChromeFill:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset, inset)
+  frame.GSEImportChromeFill:SetColorTexture(unpack(fillColor))
+  frame.GSEImportChromeFill:Show()
+
+  frame.GSEImportChromeTop:ClearAllPoints()
+  frame.GSEImportChromeTop:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+  frame.GSEImportChromeTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+  frame.GSEImportChromeTop:SetHeight(1)
+
+  frame.GSEImportChromeBottom:ClearAllPoints()
+  frame.GSEImportChromeBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+  frame.GSEImportChromeBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+  frame.GSEImportChromeBottom:SetHeight(1)
+
+  frame.GSEImportChromeLeft:ClearAllPoints()
+  frame.GSEImportChromeLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+  frame.GSEImportChromeLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+  frame.GSEImportChromeLeft:SetWidth(1)
+
+  frame.GSEImportChromeRight:ClearAllPoints()
+  frame.GSEImportChromeRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+  frame.GSEImportChromeRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+  frame.GSEImportChromeRight:SetWidth(1)
+
+  frame.GSEImportChromeTop:SetColorTexture(unpack(borderColor))
+  frame.GSEImportChromeBottom:SetColorTexture(unpack(borderColor))
+  frame.GSEImportChromeLeft:SetColorTexture(unpack(borderColor))
+  frame.GSEImportChromeRight:SetColorTexture(unpack(borderColor))
+  frame.GSEImportChromeTop:Show()
+  frame.GSEImportChromeBottom:Show()
+  frame.GSEImportChromeLeft:Show()
+  frame.GSEImportChromeRight:Show()
+end
+
+local function updateImportButtonState(button, hovered)
+  if not (button and button.GSEImportChromeFill) then return end
+  local enabled = not (button.IsEnabled and not button:IsEnabled())
+  local fillColor = enabled and (hovered and MODERN_IMPORT_BUTTON_HOVER_BG or MODERN_IMPORT_BUTTON_BG) or MODERN_IMPORT_BUTTON_DISABLED_BG
+  local borderColor = enabled and MODERN_IMPORT_BUTTON_BORDER or MODERN_IMPORT_BUTTON_DISABLED_BORDER
+  layoutImportChrome(button, fillColor, borderColor, 1)
+
+  local text = button.GetFontString and button:GetFontString()
+  if text and text.SetTextColor then
+    if not enabled then
+      text:SetTextColor(unpack(MODERN_IMPORT_BUTTON_DISABLED_TEXT))
+    elseif hovered then
+      text:SetTextColor(unpack(MODERN_IMPORT_BUTTON_HOVER_TEXT))
+    else
+      text:SetTextColor(unpack(MODERN_IMPORT_BUTTON_TEXT))
+    end
+  end
+end
+
+local function styleImportButtonFrame(button)
+  if not button then return end
+  if not shouldUseModernImportSkin() then
+    showImportTextures(button)
+    return
+  end
+  hideImportTextures(button)
+  ensureImportChrome(button)
+
+  if button.SetNormalFontObject then button:SetNormalFontObject(GameFontNormalSmall or GameFontNormal) end
+  if button.SetHighlightFontObject then button:SetHighlightFontObject(GameFontHighlightSmall or GameFontHighlight) end
+  if button.SetDisabledFontObject then button:SetDisabledFontObject(GameFontDisableSmall or GameFontDisable) end
+  if button.SetHighlightTexture then
+    button:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "BLEND")
+    local highlight = button.GetHighlightTexture and button:GetHighlightTexture()
+    if highlight then
+      highlight.GSEImportOwned = true
+      highlight:SetAlpha(1)
+      highlight:SetVertexColor(1, 1, 1, 0.10)
+    end
+  end
+
+  if not button.GSEImportButtonHooked and button.HookScript then
+    button.GSEImportButtonHooked = true
+    button:HookScript("OnEnter", function(self) updateImportButtonState(self, true) end)
+    button:HookScript("OnLeave", function(self) updateImportButtonState(self, false) end)
+    button:HookScript("OnEnable", function(self) updateImportButtonState(self, self.IsMouseOver and self:IsMouseOver()) end)
+    button:HookScript("OnDisable", function(self) updateImportButtonState(self, false) end)
+  end
+
+  updateImportButtonState(button, button.IsMouseOver and button:IsMouseOver())
+end
+
+local function styleImportButton(widget, width, rightAlign)
+  if not widget then return end
+  if width and widget.SetWidth then widget:SetWidth(width) end
+  if rightAlign and widget.SetFlowRightAlign then widget:SetFlowRightAlign(true) end
+  styleImportButtonFrame(widget.frame or widget.button or widget)
+end
+
+local function setImportTextureAlpha(texture, alpha)
+  if texture and texture.SetAlpha then texture:SetAlpha(alpha) end
+end
+
+local function styleImportNativeDropdown(widget)
+  if not (widget and widget.nativeDropdown and widget.frame) then return end
+  local nativeDropdown = widget.nativeDropdown
+  local name = nativeDropdown.GetName and nativeDropdown:GetName()
+
+  if not shouldUseModernImportSkin() then
+    if widget.GSEImportDropdownChrome then widget.GSEImportDropdownChrome:Hide() end
+    if name then
+      setImportTextureAlpha(_G[name .. "Left"], 1)
+      setImportTextureAlpha(_G[name .. "Middle"], 1)
+      setImportTextureAlpha(_G[name .. "Right"], 1)
+    end
+    local nativeArrow = name and (_G[name .. "Button"] or _G[name .. "ButtonFrame"]) or nativeDropdown.Button
+    if nativeArrow then
+      setImportTextureAlpha(nativeArrow.GetNormalTexture and nativeArrow:GetNormalTexture(), 1)
+      setImportTextureAlpha(nativeArrow.GetPushedTexture and nativeArrow:GetPushedTexture(), 1)
+      setImportTextureAlpha(nativeArrow.GetDisabledTexture and nativeArrow:GetDisabledTexture(), 1)
+      setImportTextureAlpha(nativeArrow.GetHighlightTexture and nativeArrow:GetHighlightTexture(), 1)
+      if nativeArrow.GSEImportChevron then nativeArrow.GSEImportChevron:Hide() end
+    end
+    return
+  end
+
+  if name then
+    setImportTextureAlpha(_G[name .. "Left"], 0)
+    setImportTextureAlpha(_G[name .. "Middle"], 0)
+    setImportTextureAlpha(_G[name .. "Right"], 0)
+  end
+
+  local chrome = widget.GSEImportDropdownChrome
+  if not chrome then
+    chrome = CreateFrame("Frame", nil, widget.frame)
+    chrome:EnableMouse(false)
+    widget.GSEImportDropdownChrome = chrome
+  end
+  chrome:ClearAllPoints()
+  chrome:SetPoint("TOPLEFT", widget.frame, "TOPLEFT", 0, 0)
+  chrome:SetPoint("BOTTOMRIGHT", widget.frame, "BOTTOMRIGHT", 0, 0)
+  if chrome.SetFrameLevel and nativeDropdown.GetFrameLevel then
+    chrome:SetFrameLevel(math.max(0, (nativeDropdown:GetFrameLevel() or 1) - 1))
+  end
+  ensureImportChrome(chrome)
+  layoutImportChrome(chrome, MODERN_IMPORT_BUTTON_BG, MODERN_IMPORT_BUTTON_BORDER, 1)
+  chrome:Show()
+
+  local text = name and (_G[name .. "Text"] or _G[name .. "Text"])
+  if text then
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", chrome, "LEFT", 8, 0)
+    text:SetPoint("RIGHT", chrome, "RIGHT", -28, 0)
+    text:SetJustifyH("LEFT")
+    if text.SetTextColor then text:SetTextColor(unpack(MODERN_IMPORT_BUTTON_TEXT)) end
+  end
+
+  local arrowButton = name and (_G[name .. "Button"] or _G[name .. "ButtonFrame"]) or nativeDropdown.Button
+  if arrowButton then
+    arrowButton:ClearAllPoints()
+    arrowButton:SetPoint("RIGHT", chrome, "RIGHT", -3, 0)
+    arrowButton:SetSize(20, 20)
+    setImportTextureAlpha(arrowButton.GetNormalTexture and arrowButton:GetNormalTexture(), 0)
+    setImportTextureAlpha(arrowButton.GetPushedTexture and arrowButton:GetPushedTexture(), 0)
+    setImportTextureAlpha(arrowButton.GetDisabledTexture and arrowButton:GetDisabledTexture(), 0)
+    setImportTextureAlpha(arrowButton.GetHighlightTexture and arrowButton:GetHighlightTexture(), 0)
+
+    if not arrowButton.GSEImportChevron then
+      arrowButton.GSEImportChevron = arrowButton:CreateTexture(nil, "OVERLAY")
+      arrowButton.GSEImportChevron.GSEImportOwned = true
+    end
+    arrowButton.GSEImportChevron:SetTexture(MODERN_IMPORT_CHEVRON)
+    arrowButton.GSEImportChevron:ClearAllPoints()
+    arrowButton.GSEImportChevron:SetPoint("CENTER", arrowButton, "CENTER", 0, 0)
+    arrowButton.GSEImportChevron:SetSize(14, 14)
+    arrowButton.GSEImportChevron:SetVertexColor(0.92, 0.92, 0.92, 1)
+    arrowButton.GSEImportChevron:Show()
+  end
+end
+
+local function styleImportDropdown(widget)
+  if not widget then return end
+  if widget.SetDropdownStyle then widget:SetDropdownStyle(true) end
+  styleImportButtonFrame(widget.button)
+  styleImportNativeDropdown(widget)
+  if not widget.GSEImportDropdownHooked and widget.frame and widget.frame.HookScript then
+    widget.GSEImportDropdownHooked = true
+    widget.frame:HookScript("OnShow", function() styleImportNativeDropdown(widget) end)
+  end
+end
+
+local importframe = UI:Create("Frame")
 GSE.GUIImportFrame = importframe
 
+local function styleImportWindow()
+  if not (importframe and importframe.frame) then return end
+
+  if shouldUseModernImportSkin() then
+    hideImportTextures(importframe.frame)
+    if importframe.titlebar then hideImportTextures(importframe.titlebar) end
+    applyModernImportBackdrop(importframe.frame, MODERN_IMPORT_BG, getImportAccent(0.95))
+    if importframe.titlebar and importframe.titlebar ~= importframe.frame then
+      applyModernImportBackdrop(importframe.titlebar, { 0.015, 0.018, 0.020, 0.96 }, MODERN_IMPORT_MUTED_BORDER)
+    end
+    if importframe.titletext and importframe.titletext.SetTextColor then
+      importframe.titletext:SetTextColor(1, 1, 1, 1)
+    end
+    if importframe.frame.GSEBodyFill then importframe.frame.GSEBodyFill:Hide() end
+    return
+  end
+
+  showImportTextures(importframe.frame)
+  if importframe.titlebar then showImportTextures(importframe.titlebar) end
+  if UI and UI.ApplyNativeWindowSkin then
+    UI.ApplyNativeWindowSkin(importframe.frame, importframe.titlebar, importframe.titletext, importframe.closebutton)
+  end
+end
+
+local function styleImportPanel(panel, height)
+  if not panel then return end
+  local S = UI.NativeStyle or {}
+  local pad = S.padLarge or 10
+  panel:SetFullWidth(true)
+  if height then panel:SetHeight(height) end
+  if panel.SetLeftBorderColor then panel:SetLeftBorderColor(0, 0, 0, 0, 0) end
+  if panel.SetListPadding then panel:SetListPadding(pad, pad, pad, pad) end
+  if panel.SetListGap then panel:SetListGap(6) end
+  if panel.content and panel.frame then
+    panel.content:ClearAllPoints()
+    panel.content:SetPoint("TOPLEFT",     panel.frame, "TOPLEFT",     pad, -pad)
+    panel.content:SetPoint("BOTTOMRIGHT", panel.frame, "BOTTOMRIGHT", -pad,  pad)
+  end
+  if shouldUseModernImportSkin() then
+    applyModernImportBackdrop(panel.frame, MODERN_IMPORT_PANEL_BG, MODERN_IMPORT_MUTED_BORDER)
+  elseif UI and UI.ApplyNativeInsetSkin then
+    UI.ApplyNativeInsetSkin(panel.frame)
+  end
+end
+
+local function createImportPanel(height)
+  local panel = UI:Create("InlineGroup")
+  panel:SetLayout("List")
+  styleImportPanel(panel, height)
+  return panel
+end
+
+local function createImportToolbar()
+  local toolbar = UI:Create("SimpleGroup")
+  toolbar:SetFullWidth(true)
+  toolbar:SetHeight(28)
+  toolbar:SetLayout("Flow")
+  if toolbar.SetFlowPadding then toolbar:SetFlowPadding(0, 0, 0, 0) end
+  if toolbar.SetFlowGap then toolbar:SetFlowGap(8) end
+  if toolbar.SetFlowVAlign then toolbar:SetFlowVAlign("CENTER") end
+  return toolbar
+end
+
+local function prepareImportFrame()
+  importframe:SetLayout("List")
+  if importframe.SetListPadding then importframe:SetListPadding(0, 0, 0, 0) end
+  if importframe.SetListGap then importframe:SetListGap(8) end
+  styleImportWindow()
+end
+
+importframe:SetSize(760, 560)
 importframe.frame:SetFrameStrata("MEDIUM")
 importframe.frame:SetClampedToScreen(true)
+importframe.frame:ClearAllPoints()
+importframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 importframe:Hide()
 importframe:SetTitle(L["GSE: Import a Macro String."])
 importframe:SetStatusText(L["Import Macro from Forums"])
+prepareImportFrame()
 importframe:SetCallback(
   "OnClose",
   function(widget)
-    if importframe._fromQueue and GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
+    if importframe.fromQueue and GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
       GSE.Print(
         "|cff00ccffGSE Companion:|r " ..
         #GSE.IncomingQueue ..
@@ -31,21 +404,22 @@ importframe:SetCallback(
   end
 )
 importframe:SetLayout("List")
-importframe:AddChild(AceGUI:Create("Label"))
+importframe:AddChild(UI:Create("Label"))
 
 -- Create the scrolling content area used by both import flows. Children added to
 -- the returned ScrollFrame scroll inside the fixed-height container, leaving the
 -- Import button (added to `importframe` directly) anchored at the bottom.
 local function setupScrollContent()
   importframe:ReleaseChildren()
-  importframe:SetLayout("List")
-  local scrollContainer = AceGUI:Create("SimpleGroup")
-  scrollContainer:SetFullWidth(true)
+  prepareImportFrame()
+  local scrollContainer = createImportPanel((importframe.frame:GetHeight() or 400) - 116)
   scrollContainer:SetLayout("Fill")
-  scrollContainer:SetHeight((importframe.frame:GetHeight() or 400) - 120)
   importframe:AddChild(scrollContainer)
-  local scroll = AceGUI:Create("ScrollFrame")
+  local scroll = UI:Create("ScrollFrame")
   scroll:SetLayout("List")
+  local S = UI.NativeStyle or {}
+  if scroll.SetListPadding then scroll:SetListPadding(S.listPadX or 5, S.listPadTop or 5, S.listPadX or 5, S.listPadBottom or 5) end
+  if scroll.SetListGap then scroll:SetListGap(6) end
   scroll:SetFullWidth(true)
   scrollContainer:AddChild(scroll)
   return scroll
@@ -53,7 +427,7 @@ end
 
 local function processCollection(payload)
   local scroll = setupScrollContent()
-  local header = AceGUI:Create("Heading")
+  local header = UI:Create("Heading")
   header:SetText(string.format(L["Processing Collection of %s Elements."], payload.ElementCount))
   header:SetFullWidth(true)
   local importset = {}
@@ -67,26 +441,26 @@ local function processCollection(payload)
     importset["Sequences"][k] = true
   end
   if sequencesfound then
-    local sequencelabel = AceGUI:Create("Label")
+    local sequencelabel = UI:Create("Label")
     sequencelabel:SetText(L["Sequences"])
     sequencelabel:SetFontObject(GameFontNormalLarge)
     scroll:AddChild(sequencelabel)
     for k, _ in pairs(payload.Sequences) do
-      local row = AceGUI:Create("SimpleGroup")
+      local row = UI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)
-      local spacer = AceGUI:Create("Label")
+      local spacer = UI:Create("Label")
       spacer:SetText("")
       spacer:SetWidth(30)
       row:AddChild(spacer)
-      local chkbox = AceGUI:Create("CheckBox")
+      local chkbox = UI:Create("CheckBox")
       local label = k
       if GSESequences[0][k] or GSESequences[GSE.GetCurrentClassID()][k] then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
       chkbox:SetValue(importset["Sequences"][k])
-      chkbox:SetWidth(400)
+      chkbox:SetWidth(560)
       chkbox:SetCallback(
         "OnValueChanged",
         function(obj, event, key)
@@ -107,26 +481,26 @@ local function processCollection(payload)
     importset["Variables"][k] = true
   end
   if variablesfound then
-    local variablelabel = AceGUI:Create("Label")
+    local variablelabel = UI:Create("Label")
     variablelabel:SetText(L["Variables"])
     variablelabel:SetFontObject(GameFontNormalLarge)
     scroll:AddChild(variablelabel)
     for k, _ in pairs(payload.Variables) do
-      local row = AceGUI:Create("SimpleGroup")
+      local row = UI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)
-      local spacer = AceGUI:Create("Label")
+      local spacer = UI:Create("Label")
       spacer:SetText("")
       spacer:SetWidth(30)
       row:AddChild(spacer)
-      local chkbox = AceGUI:Create("CheckBox")
+      local chkbox = UI:Create("CheckBox")
       local label = k
       if GSEVariables[k] then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
       chkbox:SetValue(importset["Variables"][k])
-      chkbox:SetWidth(400)
+      chkbox:SetWidth(560)
       chkbox:SetCallback(
         "OnValueChanged",
         function(obj, event, key)
@@ -148,20 +522,20 @@ local function processCollection(payload)
   end
 
   if macrosfound then
-    local macroLabel = AceGUI:Create("Label")
+    local macroLabel = UI:Create("Label")
     macroLabel:SetText(L["Macros"])
     macroLabel:SetFontObject(GameFontNormalLarge)
     scroll:AddChild(macroLabel)
     local char, realm = UnitFullName("player")
     for k, _ in pairs(payload["Macros"]) do
-      local row = AceGUI:Create("SimpleGroup")
+      local row = UI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)
-      local spacer = AceGUI:Create("Label")
+      local spacer = UI:Create("Label")
       spacer:SetText("")
       spacer:SetWidth(30)
       row:AddChild(spacer)
-      local chkbox = AceGUI:Create("CheckBox")
+      local chkbox = UI:Create("CheckBox")
       local label = k
       if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
         GSEMacros[char .. "-" .. realm] = {}
@@ -171,7 +545,7 @@ local function processCollection(payload)
       end
       chkbox:SetLabel(label)
       chkbox:SetValue(importset["Macros"][k])
-      chkbox:SetWidth(400)
+      chkbox:SetWidth(560)
       chkbox:SetCallback(
         "OnValueChanged",
         function(obj, event, key)
@@ -183,14 +557,10 @@ local function processCollection(payload)
     end
   end
 
-  local toolbarrow = AceGUI:Create("SimpleGroup")
-  toolbarrow:SetFullWidth(true)
-  local spacerx = AceGUI:Create("Label")
-  spacerx:SetWidth(500)
-  spacerx:SetText()
-  toolbarrow:AddChild(spacerx)
-  local importbutton = AceGUI:Create("Button")
+  local toolbarrow = createImportToolbar()
+  local importbutton = UI:Create("Button")
   importbutton:SetText(L["Import"])
+  styleImportButton(importbutton, 150)
   importbutton:SetCallback(
     "OnClick",
     function()
@@ -252,18 +622,18 @@ local function processCollection(payload)
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
         -- Mark imported by identity so the Companion can prune them from the bridge data
-        if importframe._fromQueue then
+        if importframe.fromQueue then
           if GSE.IncomingQueue and GSE.CompanionMarkImported then
             for _, item in ipairs(GSE.IncomingQueue) do
               GSE.CompanionMarkImported(item)
             end
           end
           GSE.IncomingQueue = {}
-          importframe._fromQueue = false
+          importframe.fromQueue = false
         end
         importframe:Hide()
       else
-        StaticPopup_Show("GSE-MacroImportFailure")
+        GSE.GUIShowImportFailure()
       end
     end
   )
@@ -307,7 +677,7 @@ end
 -- Add a greyed sub-line of descriptive text under the current item.
 local function addDescLabel(container, text)
   if not text or text == "" then return end
-  local lbl = AceGUI:Create("Label")
+  local lbl = UI:Create("Label")
   lbl:SetText("|cff888888" .. text .. "|r")
   lbl:SetFullWidth(true)
   container:AddChild(lbl)
@@ -326,17 +696,18 @@ end
 --             again in the queue
 -- includeMerge is false for Variables/Macros to keep the menu honest.
 local function addActionRow(scroll, label, importsetSlot, key, includeMerge)
-  local row = AceGUI:Create("SimpleGroup")
+  local row = UI:Create("SimpleGroup")
   row:SetLayout("Flow")
   row:SetFullWidth(true)
-  local spacer = AceGUI:Create("Label")
+  row:SetFlowVAlign("MIDDLE")
+  local spacer = UI:Create("Label")
   spacer:SetText("") spacer:SetWidth(30)
   row:AddChild(spacer)
-  local nameLabel = AceGUI:Create("Label")
+  local nameLabel = UI:Create("Label")
   nameLabel:SetText(label)
-  nameLabel:SetWidth(380)
+  nameLabel:SetWidth(460)
   row:AddChild(nameLabel)
-  local dd = AceGUI:Create("Dropdown")
+  local dd = UI:Create("Dropdown")
   if includeMerge then
     dd:SetList({ Import = "Import", Replace = "Replace", Merge = "Merge", Ignore = "Ignore" },
                { "Import", "Replace", "Merge", "Ignore" })
@@ -346,6 +717,8 @@ local function addActionRow(scroll, label, importsetSlot, key, includeMerge)
   end
   dd:SetValue("Import")
   dd:SetWidth(120)
+  styleImportDropdown(dd)
+  dd:SetFlowRightAlign(true)
   importsetSlot[key] = "Import"
   dd:SetCallback("OnValueChanged", function(_, _, val)
     importsetSlot[key] = val
@@ -379,7 +752,7 @@ local function processQueueCollections(collections)
     local payload = col.payload
 
     -- ── Collection heading ────────────────────────────────────────────────
-    local header = AceGUI:Create("Heading")
+    local header = UI:Create("Heading")
     header:SetText(collectionHeading(col, i))
     header:SetFullWidth(true)
     scroll:AddChild(header)
@@ -398,7 +771,7 @@ local function processQueueCollections(collections)
     -- ── Sequences ─────────────────────────────────────────────────────────
     local sequencesfound = next(payload.Sequences or {}) ~= nil
     if sequencesfound then
-      local lbl = AceGUI:Create("Label")
+      local lbl = UI:Create("Label")
       lbl:SetText(L["Sequences"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
@@ -411,12 +784,12 @@ local function processQueueCollections(collections)
         if type(seqData) == "table" and type(seqData.MetaData) == "table" then
           local eleDesc = truncate(seqData.MetaData.HelpTxt, 160)
           if eleDesc and (#seqDescs == 0 or #payload.Sequences > 1) then
-            local drow = AceGUI:Create("SimpleGroup")
+            local drow = UI:Create("SimpleGroup")
             drow:SetLayout("Flow") drow:SetFullWidth(true)
-            local dspacer = AceGUI:Create("Label")
+            local dspacer = UI:Create("Label")
             dspacer:SetText("") dspacer:SetWidth(50)
             drow:AddChild(dspacer)
-            local dlbl = AceGUI:Create("Label")
+            local dlbl = UI:Create("Label")
             dlbl:SetText("|cff888888" .. eleDesc .. "|r")
             dlbl:SetFullWidth(true)
             drow:AddChild(dlbl)
@@ -429,7 +802,7 @@ local function processQueueCollections(collections)
     -- ── Variables ─────────────────────────────────────────────────────────
     local variablesfound = next(payload.Variables or {}) ~= nil
     if variablesfound then
-      local lbl = AceGUI:Create("Label")
+      local lbl = UI:Create("Label")
       lbl:SetText(L["Variables"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
@@ -442,7 +815,7 @@ local function processQueueCollections(collections)
     -- ── Macros ────────────────────────────────────────────────────────────
     local macrosfound = next(payload.Macros or {}) ~= nil
     if macrosfound then
-      local lbl = AceGUI:Create("Label")
+      local lbl = UI:Create("Label")
       lbl:SetText(L["Macros"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
@@ -464,14 +837,10 @@ local function processQueueCollections(collections)
   end
 
   -- Single Import button at the bottom — imports each collection separately
-  local toolbarrow = AceGUI:Create("SimpleGroup")
-  toolbarrow:SetFullWidth(true)
-  local spacerx = AceGUI:Create("Label")
-  spacerx:SetWidth(500)
-  spacerx:SetText()
-  toolbarrow:AddChild(spacerx)
-  local importbutton = AceGUI:Create("Button")
+  local toolbarrow = createImportToolbar()
+  local importbutton = UI:Create("Button")
   importbutton:SetText(L["Import"])
+  styleImportButton(importbutton, 150)
   importbutton:SetCallback("OnClick", function()
     local anyFailed = false
     local successByName = {}
@@ -555,8 +924,8 @@ local function processQueueCollections(collections)
       end
       if not colSuccess then anyFailed = true end
     end
-    if importframe._fromQueue then
-      local pageSize = importframe._pageSize or 0
+    if importframe.fromQueue then
+      local pageSize = importframe.pageSize or 0
       if GSE.IncomingQueue and GSE.CompanionMarkImported and pageSize > 0 then
         -- Only mark the items rendered on THIS page. The rest of
         -- IncomingQueue (page 2+) must remain unmarked so it surfaces
@@ -577,13 +946,13 @@ local function processQueueCollections(collections)
           end
         end
       end
-      importframe._fromQueue = false
-      importframe._pageSize = nil
-      importframe._pageTotal = nil
+      importframe.fromQueue = false
+      importframe.pageSize = nil
+      importframe.pageTotal = nil
     end
     importframe:Hide()
     if anyFailed then
-      StaticPopup_Show("GSE-MacroImportFailure")
+      GSE.GUIShowImportFailure()
     end
     -- Auto-advance: more imports → next imports page; otherwise fall
     -- through to deletes. processQueue() is a no-op once both queues
@@ -628,9 +997,9 @@ local function renderImportsPage()
     return
   end
 
-  importframe._fromQueue = true
-  importframe._pageSize = pageEnd
-  importframe._pageTotal = total
+  importframe.fromQueue = true
+  importframe.pageSize = pageEnd
+  importframe.pageTotal = total
   processQueueCollections(collections)
   importframe:Show()
 end
@@ -652,7 +1021,7 @@ local function renderDeletesPage()
   for idx = 1, pageEnd do pageEntries[idx] = GSE.PendingBridgeDeletes[idx] end
 
   local scroll = setupScrollContent()
-  local header = AceGUI:Create("Heading")
+  local header = UI:Create("Heading")
   if total > QUEUE_PAGE_SIZE then
     header:SetText(string.format(
       "GSE Companion: pending deletes  1-%d of %d", pageEnd, total))
@@ -663,7 +1032,7 @@ local function renderDeletesPage()
   header:SetFullWidth(true)
   scroll:AddChild(header)
 
-  local desc = AceGUI:Create("Label")
+  local desc = UI:Create("Label")
   desc:SetText(
     "Pick |cFFFF6666Delete|r to remove the entry from your local SavedVariables. " ..
     "Pick |cFFAAAAAAIgnore|r to keep it (a save of the same name will also cancel " ..
@@ -675,19 +1044,20 @@ local function renderDeletesPage()
 
   local actionsByIndex = {}
   for idx, d in ipairs(pageEntries) do
-    local row = AceGUI:Create("SimpleGroup")
+    local row = UI:Create("SimpleGroup")
     row:SetLayout("Flow"); row:SetFullWidth(true)
-    local sp = AceGUI:Create("Label"); sp:SetText(""); sp:SetWidth(30)
+    local sp = UI:Create("Label"); sp:SetText(""); sp:SetWidth(30)
     row:AddChild(sp)
-    local nameLabel = AceGUI:Create("Label")
+    local nameLabel = UI:Create("Label")
     nameLabel:SetText(string.format("%s  |cFF888888(%s)|r",
       tostring(d.name or "?"), tostring(d.contentType or "sequence")))
-    nameLabel:SetWidth(380)
+    nameLabel:SetWidth(560)
     row:AddChild(nameLabel)
-    local dd = AceGUI:Create("Dropdown")
+    local dd = UI:Create("Dropdown")
     dd:SetList({ Delete = "Delete", Ignore = "Ignore" }, { "Delete", "Ignore" })
     dd:SetValue("Delete")
     dd:SetWidth(120)
+    styleImportDropdown(dd)
     actionsByIndex[idx] = "Delete"
     dd:SetCallback("OnValueChanged", function(_, _, val)
       actionsByIndex[idx] = val
@@ -696,17 +1066,15 @@ local function renderDeletesPage()
     scroll:AddChild(row)
   end
 
-  local toolbarrow = AceGUI:Create("SimpleGroup")
-  toolbarrow:SetFullWidth(true)
-  local sp2 = AceGUI:Create("Label"); sp2:SetWidth(500); sp2:SetText("")
-  toolbarrow:AddChild(sp2)
-  local confirmbutton = AceGUI:Create("Button")
+  local toolbarrow = createImportToolbar()
+  local confirmbutton = UI:Create("Button")
   confirmbutton:SetText("Confirm")
+  styleImportButton(confirmbutton, 150)
   confirmbutton:SetCallback("OnClick", function()
     for idx, d in ipairs(pageEntries) do
       local act = actionsByIndex[idx] or "Ignore"
       if GSE.CompanionConfirmDelete then
-        GSE.CompanionConfirmDelete(d._id, d.contentType, d.name, d.classid, act)
+        GSE.CompanionConfirmDelete(d.id, d.contentType, d.name, d.classid, act)
       end
     end
     importframe:Hide()
@@ -733,14 +1101,15 @@ end
 
 local function LandingPage()
   importframe:ReleaseChildren()
-  importframe._fromQueue = false
+  prepareImportFrame()
+  importframe.fromQueue = false
+  local hasBanner = false
 
   -- If the platform queue has pending content, show a banner button at the top
   if GSE.IncomingQueue and not GSE.isEmpty(GSE.IncomingQueue) then
-    local queueBanner = AceGUI:Create("SimpleGroup")
-    queueBanner:SetLayout("Flow")
-    queueBanner:SetFullWidth(true)
-    local queueLabel = AceGUI:Create("Label")
+    hasBanner = true
+    local queueBanner = createImportPanel(76)
+    local queueLabel = UI:Create("Label")
     local total = #GSE.IncomingQueue
     local visible = math.min(QUEUE_PAGE_SIZE, total)
     local label
@@ -751,64 +1120,69 @@ local function LandingPage()
       label = "|cff00ccffGSE Platform:|r  " .. total .. " queued update(s) waiting to be imported."
     end
     queueLabel:SetText(label)
-    queueLabel:SetWidth(400)
+    queueLabel:SetFullWidth(true)
     queueBanner:AddChild(queueLabel)
-    local queueButton = AceGUI:Create("Button")
+    local queueButtons = createImportToolbar()
+    local queueButton = UI:Create("Button")
     queueButton:SetText("Import Platform Updates")
-    queueButton:SetWidth(200)
+    styleImportButton(queueButton, 200)
     queueButton:SetCallback("OnClick", function()
       processQueue()
     end)
-    queueBanner:AddChild(queueButton)
-    local manageButton = AceGUI:Create("Button")
+    queueButtons:AddChild(queueButton)
+    local manageButton = UI:Create("Button")
     manageButton:SetText("Manage Queue")
-    manageButton:SetWidth(140)
+    styleImportButton(manageButton, 140)
     manageButton:SetCallback("OnClick", function()
       renderQueueManager()
     end)
-    queueBanner:AddChild(manageButton)
+    queueButtons:AddChild(manageButton)
+    queueBanner:AddChild(queueButtons)
     importframe:AddChild(queueBanner)
-    local divider = AceGUI:Create("Heading")
-    divider:SetText("  — or paste a string below —  ")
+    local divider = UI:Create("Heading")
+    divider:SetText("  - or paste a string below -  ")
     divider:SetFullWidth(true)
     importframe:AddChild(divider)
   elseif GSE.PendingBridgeDeletes and not GSE.isEmpty(GSE.PendingBridgeDeletes) then
     -- Imports queue is empty but deletes are pending — let the user resolve
     -- them from the same dialog they'd use for imports.
-    local delBanner = AceGUI:Create("SimpleGroup")
-    delBanner:SetLayout("Flow")
-    delBanner:SetFullWidth(true)
-    local delLabel = AceGUI:Create("Label")
+    hasBanner = true
+    local delBanner = createImportPanel(76)
+    local delLabel = UI:Create("Label")
     delLabel:SetText("|cff00ccffGSE Platform:|r  " .. #GSE.PendingBridgeDeletes ..
                      " pending delete(s) awaiting your review.")
-    delLabel:SetWidth(400)
+    delLabel:SetFullWidth(true)
     delBanner:AddChild(delLabel)
-    local delButton = AceGUI:Create("Button")
+    local delButtons = createImportToolbar()
+    local delButton = UI:Create("Button")
     delButton:SetText("Review Deletes")
-    delButton:SetWidth(200)
+    styleImportButton(delButton, 200)
     delButton:SetCallback("OnClick", function() processQueue() end)
-    delBanner:AddChild(delButton)
+    delButtons:AddChild(delButton)
+    delBanner:AddChild(delButtons)
     importframe:AddChild(delBanner)
-    local divider = AceGUI:Create("Heading")
-    divider:SetText("  — or paste a string below —  ")
+    local divider = UI:Create("Heading")
+    divider:SetText("  - or paste a string below -  ")
     divider:SetFullWidth(true)
     importframe:AddChild(divider)
   end
 
-  local importsequencebox = AceGUI:Create("MultiLineEditBox")
-  local recbutton = AceGUI:Create("Button")
+  local pastePanelHeight = hasBanner and 332 or 408
+  local pastePanel = createImportPanel(pastePanelHeight)
+  local importsequencebox = UI:Create("MultiLineEditBox")
+  local recbutton = UI:Create("Button")
 
   importsequencebox:SetLabel(L["GSE Collection to Import."])
-  importsequencebox:SetNumLines(20)
+  importsequencebox:SetHeight(pastePanelHeight - 40)
   importsequencebox:DisableButton(true)
   importsequencebox:SetFullWidth(true)
-  importframe:AddChild(importsequencebox)
+  pastePanel:AddChild(importsequencebox)
+  importframe:AddChild(pastePanel)
 
   GSE.GUIImportFrame = importframe
-  local recButtonGroup = AceGUI:Create("SimpleGroup")
-  recButtonGroup:SetLayout("Flow")
+  local recButtonGroup = createImportToolbar()
   recbutton:SetText(L["Import"])
-  recbutton:SetWidth(150)
+  styleImportButton(recbutton, 150)
   recbutton:SetCallback(
     "OnClick",
     function()
@@ -824,7 +1198,7 @@ local function LandingPage()
           importsequencebox:SetText("")
           importframe:Hide()
         else
-          StaticPopup_Show("GSE-MacroImportFailure")
+          GSE.GUIShowImportFailure()
         end
       end
     end
@@ -836,7 +1210,15 @@ local function LandingPage()
 end
 
 function GSE.ShowImport()
+  if importframe then
+    importframe:SetSize(760, 560)
+  end
   LandingPage()
+  if importframe and importframe.frame then
+    UI.MakePopup(importframe.frame, {center = true})
+    if importframe.frame.Raise then importframe.frame:Raise() end
+    importframe.frame:Show()
+  end
 end
 
 -- Called by the login notification or the GSE menu to jump straight to the queue
@@ -866,24 +1248,24 @@ end
 
 renderQueueManager = function()
   importframe:ReleaseChildren()
-  importframe._fromQueue = false
+  importframe.fromQueue = false
 
   local scroll = setupScrollContent()
   local total = GSE.IncomingQueue and #GSE.IncomingQueue or 0
 
-  local header = AceGUI:Create("Heading")
+  local header = UI:Create("Heading")
   header:SetText(string.format(
     "|cff00ccffGSE Companion:|r Incoming queue (%d)", total))
   header:SetFullWidth(true)
   scroll:AddChild(header)
 
   if total == 0 then
-    local empty = AceGUI:Create("Label")
+    local empty = UI:Create("Label")
     empty:SetText("Queue is empty.")
     empty:SetFullWidth(true)
     scroll:AddChild(empty)
   else
-    local desc = AceGUI:Create("Label")
+    local desc = UI:Create("Label")
     desc:SetText(
       "|cFFFF6666Remove|r drops one entry from the queue and tells the " ..
       "Companion to prune it (won't re-sync). |cFFFF6666Clear All|r does " ..
@@ -897,18 +1279,18 @@ renderQueueManager = function()
     -- click re-renders rather than touching the live row list in place.
     for idx = 1, total do
       local item = GSE.IncomingQueue[idx]
-      local row = AceGUI:Create("SimpleGroup")
+      local row = UI:Create("SimpleGroup")
       row:SetLayout("Flow")
       row:SetFullWidth(true)
 
-      local label = AceGUI:Create("Label")
+      local label = UI:Create("Label")
       label:SetText(describeQueueEntry(item))
-      label:SetWidth(500)
+      label:SetWidth(620)
       row:AddChild(label)
 
-      local removeBtn = AceGUI:Create("Button")
+      local removeBtn = UI:Create("Button")
       removeBtn:SetText("Remove")
-      removeBtn:SetWidth(100)
+      styleImportButton(removeBtn, 100)
       removeBtn:SetCallback("OnClick", function()
         if GSE.RemoveIncomingQueueEntry then
           GSE.RemoveIncomingQueueEntry(idx)
@@ -920,23 +1302,21 @@ renderQueueManager = function()
     end
   end
 
-  local toolbar = AceGUI:Create("SimpleGroup")
-  toolbar:SetFullWidth(true)
-  toolbar:SetLayout("Flow")
+  local toolbar = createImportToolbar()
 
-  local clearBtn = AceGUI:Create("Button")
+  local clearBtn = UI:Create("Button")
   clearBtn:SetText("Clear All")
-  clearBtn:SetWidth(140)
   clearBtn:SetDisabled(total == 0)
+  styleImportButton(clearBtn, 140)
   clearBtn:SetCallback("OnClick", function()
     if GSE.ClearIncomingQueue then GSE.ClearIncomingQueue() end
     importframe:Hide()
   end)
   toolbar:AddChild(clearBtn)
 
-  local closeBtn = AceGUI:Create("Button")
+  local closeBtn = UI:Create("Button")
   closeBtn:SetText(L["Close"] or "Close")
-  closeBtn:SetWidth(140)
+  styleImportButton(closeBtn, 140)
   closeBtn:SetCallback("OnClick", function() importframe:Hide() end)
   toolbar:AddChild(closeBtn)
 
@@ -948,4 +1328,9 @@ end
 -- Different from GSE.ShowIncomingQueue, which jumps into the import flow.
 function GSE.ShowIncomingQueueManager()
   renderQueueManager()
+end
+
+-- Register import frame for GSE UI scale
+if importframe and importframe.frame and GSE.RegisterUIScaleFrame then
+    GSE.RegisterUIScaleFrame(importframe.frame)
 end

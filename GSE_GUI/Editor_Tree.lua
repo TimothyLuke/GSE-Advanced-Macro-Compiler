@@ -1,34 +1,513 @@
 local GSE = GSE
 local Statics = GSE.Static
-local AceGUI = LibStub("AceGUI-3.0")
+local UI = GSE.UI
 local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
-local EDITOR_SCROLL_WHEEL_PIXELS = 45
+-- Single padding value for all sides of every editor section panel.
+-- Change this one number to adjust Config/Notes/Macros/Variables/Keybindings/AO/Skyriding.
+GSE.GUI.CONTENT_PADDING = 20
+local CONFIG_CONTENT_LEFT_PADDING = GSE.GUI.CONTENT_PADDING
 
--- Replace the AceGUI ScrollFrame's MoveScroll with a fixed-pixel step so a
--- mouse-wheel tick advances the same amount regardless of content height.
 local function SmoothEditorScrollFrame(scrollWidget)
     if not scrollWidget or scrollWidget.gseSmoothMouseWheel then return end
     scrollWidget.gseSmoothMouseWheel = true
-
-    scrollWidget.MoveScroll = function(self, wheelDelta)
-        local status = self.status or self.localstatus
-        if not (self.scrollBarShown and status) then return end
-
-        local viewHeight = self.scrollframe:GetHeight()
-        local contentHeight = self.content:GetHeight()
-        local scrollRange = contentHeight - viewHeight
-        if scrollRange <= 0 then return end
-
-        local step = (EDITOR_SCROLL_WHEEL_PIXELS / scrollRange) * 1000
-        local newValue = status.scrollvalue - ((wheelDelta or 0) * step)
-        self.scrollbar:SetValue(math.min(math.max(newValue, 0), 1000))
-    end
 end
 
 GSE.GUI.SmoothEditorScrollFrame = SmoothEditorScrollFrame
+
+local function ReportMacroOptionWarningsForText(text)
+    if type(text) ~= "string" or text == "" then return end
+    if GSE.DecodeMacroEditorText then text = GSE.DecodeMacroEditorText(text) end
+    if GSE.UnEscapeString then text = GSE.UnEscapeString(text) end
+    if type(text) ~= "string" or string.sub(text, 1, 1) ~= "/" then return end
+
+    local lines = GSE.SplitMeIntoLines and GSE.SplitMeIntoLines(text) or {}
+    for _, line in ipairs(lines) do
+        local rest = string.match(line or "", "^%s*/%a+%s+(.*)")
+        if rest and rest ~= "" and GSE.SafeSecureCmdOptionParse then
+            GSE.SafeSecureCmdOptionParse(rest, false)
+        end
+    end
+end
+
+local function ReportMacroOptionWarningsForActionList(actions)
+    if type(actions) ~= "table" then return end
+    for _, action in ipairs(actions) do
+        if type(action) == "table" then
+            ReportMacroOptionWarningsForText(action.macro)
+            if action.Type == Statics.Actions.Loop then
+                ReportMacroOptionWarningsForActionList(action)
+            elseif action.Type == Statics.Actions.If then
+                ReportMacroOptionWarningsForActionList(action[1])
+                ReportMacroOptionWarningsForActionList(action[2])
+            end
+        end
+    end
+end
+
+local function ReportMacroOptionWarningsForSequence(sequence)
+    if type(sequence) ~= "table" or type(sequence.Versions) ~= "table" then return end
+    for _, versionData in pairs(sequence.Versions) do
+        if type(versionData) == "table" then
+            ReportMacroOptionWarningsForActionList(versionData.Actions)
+        end
+    end
+end
+
+local RESOURCE_LINKS = {
+    {
+        title = "GSE Tools - Official GSE Sequence Repository",
+        icon = "Interface\\Addons\\GSE_GUI\\Assets\\GSE-Logo.png",
+        url = "https://gse.tools"
+    },
+    {
+        title = "TimothyLuke's GitHub - GSE Addon Repository / Issues",
+        icon = Statics.Icons.Github,
+        iconOffsetX = 2,
+        url = "https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler"
+    },
+    {
+        title = "GSE Official Addon / Tools / CompApp",
+        icon = "Interface\\Addons\\GSE_GUI\\Assets\\discord.png",
+        iconOffsetX = -3,
+        url = "https://discord.com/invite/yUS9R4ZXZA"
+    },
+    {
+        title = "GSE United - User/Creator Discord Community",
+        icon = Statics.Icons.GSEUnited,
+        iconSize = 58,
+        rowHeight = 58,
+        iconOffsetX = -10,
+        contentOffsetX = -12,
+        url = "https://discord.gg/gseunited"
+    },
+    {
+        title = "Oak - YouTube",
+        icon = Statics.Icons.Oak,
+        url = "https://www.youtube.com/@oakensoul"
+    },
+    {
+        title = "GSE Addon Patreon",
+        icon = Statics.Icons.Patreon,
+        rowOffsetY = 3,
+        contentOffsetX = 0,
+        url = "https://www.patreon.com/TimothyLuke"
+    }
+}
+
+local resourcesFrame
+local RESOURCE_GOLD = {1, 0.82, 0, 1}
+local RESOURCE_BUTTON_TEXT = "|cFFFFFFFFGS|r|cFF00FFFFE|r|cFFFFFFFF:|r |cFFFFD100Resources|r"
+local RESOURCE_BUTTON_WIDTH = 145
+-- Width/height give the row's Flow layout (icon + URL box + Copy button) enough
+-- room not to wrap the Copy button onto a second line, accounting for the
+-- popup's border insets. Pair with RESOURCE_BODY_WIDTH below if adjusting.
+local RESOURCE_FRAME_WIDTH = 640
+local RESOURCE_FRAME_HEIGHT = 480
+local RESOURCE_ROW_HEIGHT = 53
+local RESOURCE_ICON_SIZE = 46
+local RESOURCE_BODY_WIDTH = 278
+local RESOURCE_COPY_WIDTH = 64
+local RESOURCE_ROW_OFFSET_X = 8
+local RESOURCE_ROW_STACK_LIFT = 10
+local RESOURCE_ROW_FLOW_GAP = 2
+local RESOURCE_COPY_OFFSET_Y = -8
+local EDITOR_FOOTER_BUTTON_GAP = 6
+
+local function SetResourceFrameTextColor(text, color)
+    if not (text and text.SetTextColor and color) then return end
+    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        text:SetTextColor(1, 1, 1, 1)
+    else
+        text:SetTextColor(unpack(color))
+    end
+end
+
+local function GetResourceEditBox(editBox)
+    if not editBox then return nil end
+    return editBox.editBox or editBox.editbox or editBox
+end
+
+local function CopyResourceLink(editBox, link)
+    local copied = false
+    if C_Clipboard and C_Clipboard.SetClipboard then
+        copied = pcall(function() C_Clipboard.SetClipboard(link) end)
+    elseif SetClipboard then
+        copied = pcall(function() SetClipboard(link) end)
+    end
+
+    local nativeEditBox = GetResourceEditBox(editBox)
+    if nativeEditBox then
+        nativeEditBox:SetFocus()
+        nativeEditBox:HighlightText()
+    end
+
+    if resourcesFrame and resourcesFrame.SetStatusText then
+        resourcesFrame:SetStatusText(copied and "Link copied." or "Link selected. Press Ctrl+C to copy.")
+    end
+end
+
+local function SetResourceVersionTextHover(hovered)
+    if not (resourcesFrame and resourcesFrame.statustext) then return end
+    if resourcesFrame.statustext.GetFont and resourcesFrame.statustext.SetFont then
+        if not resourcesFrame.versionTextBaseFont then
+            local fontFile, fontSize, fontFlags = resourcesFrame.statustext:GetFont()
+            if fontFile and fontSize then resourcesFrame.versionTextBaseFont = {fontFile, fontSize, fontFlags} end
+        end
+        if resourcesFrame.versionTextBaseFont then
+            resourcesFrame.statustext:SetFont(
+                resourcesFrame.versionTextBaseFont[1],
+                hovered and math.floor((resourcesFrame.versionTextBaseFont[2] * 1.14) + 0.5) or resourcesFrame.versionTextBaseFont[2],
+                resourcesFrame.versionTextBaseFont[3]
+            )
+            return
+        end
+    end
+    if resourcesFrame.statustext.SetScale then resourcesFrame.statustext:SetScale(hovered and 1.08 or 1) end
+end
+
+local function UpdateResourceVersionHitBox()
+    if not (resourcesFrame and resourcesFrame.versionHitBox and resourcesFrame.statustext) then return end
+    local textWidth = resourcesFrame.statustext.GetStringWidth and resourcesFrame.statustext:GetStringWidth() or 0
+    local textHeight = resourcesFrame.statustext.GetStringHeight and resourcesFrame.statustext:GetStringHeight() or 0
+    resourcesFrame.versionHitBox:ClearAllPoints()
+    resourcesFrame.versionHitBox:SetSize(math.max(1, math.ceil(textWidth)), math.max(12, math.ceil(textHeight) + 6))
+    resourcesFrame.versionHitBox:SetPoint("CENTER", resourcesFrame.statustext, "CENTER", 0, 0)
+end
+
+-- Generic: wire a FontString so double-clicking it opens the version copy
+-- popup. Mirrors the popup's hover/tooltip behavior using the FontString's
+-- own font (not the resourcesFrame globals) so it works on any host frame.
+local function AttachVersionLinkHitBox(parentFrame, statusText)
+    if not (parentFrame and statusText) then return nil end
+    local hitBox = CreateFrame("Button", nil, parentFrame)
+    hitBox:RegisterForClicks("LeftButtonUp")
+    hitBox:EnableMouse(true)
+
+    local baseFont
+    local function setHover(hovered)
+        if not (statusText.GetFont and statusText.SetFont) then return end
+        if not baseFont then
+            local f, s, x = statusText:GetFont()
+            if f and s then baseFont = {f, s, x} end
+        end
+        if baseFont then
+            statusText:SetFont(baseFont[1], hovered and math.floor((baseFont[2] * 1.14) + 0.5) or baseFont[2], baseFont[3])
+        end
+    end
+
+    local function resize()
+        local w = statusText.GetStringWidth  and statusText:GetStringWidth()  or 0
+        local h = statusText.GetStringHeight and statusText:GetStringHeight() or 0
+        hitBox:ClearAllPoints()
+        hitBox:SetSize(math.max(1, math.ceil(w)), math.max(12, math.ceil(h) + 6))
+        hitBox:SetPoint("CENTER", statusText, "CENTER", 0, 0)
+    end
+
+    hitBox:SetScript("OnMouseDown", function(self)
+        local now = GetTime and GetTime() or 0
+        if now - (self.lastClick or 0) <= 0.35 then
+            self.lastClick = 0
+            if GSE.GUIShowVersionCopyWindow then GSE.GUIShowVersionCopyWindow() end
+            return
+        end
+        self.lastClick = now
+    end)
+    hitBox:SetScript("OnEnter", function(self)
+        setHover(true); resize()
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:SetText("GSE Version")
+        GameTooltip:AddLine("Double-click: Copy version", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    hitBox:SetScript("OnLeave", function()
+        setHover(false); resize()
+        if GameTooltip then GameTooltip:Hide() end
+    end)
+
+    if hitBox.SetFrameLevel and parentFrame.GetFrameLevel then
+        hitBox:SetFrameLevel((parentFrame:GetFrameLevel() or 0) + 80)
+    end
+    resize()
+    hitBox.Resize = resize
+    return hitBox
+end
+GSE.GUI.AttachVersionLinkHitBox = AttachVersionLinkHitBox
+
+local function EnsureResourceVersionHitBox()
+    if not (resourcesFrame and resourcesFrame.frame and resourcesFrame.statustext) then return end
+    resourcesFrame.statustext:ClearAllPoints()
+    resourcesFrame.statustext:SetPoint("BOTTOMLEFT", resourcesFrame.frame, "BOTTOMLEFT", 14, 21)
+    resourcesFrame.statustext:SetPoint("TOPRIGHT", resourcesFrame.frame, "BOTTOMRIGHT", -14, 47)
+    resourcesFrame.statustext:SetJustifyH("CENTER")
+    resourcesFrame.statustext:SetJustifyV("MIDDLE")
+
+    if not resourcesFrame.versionHitBox then
+        resourcesFrame.versionHitBox = CreateFrame("Button", nil, resourcesFrame.frame)
+        resourcesFrame.versionHitBox:RegisterForClicks("LeftButtonUp")
+        resourcesFrame.versionHitBox:EnableMouse(true)
+        resourcesFrame.versionHitBox:SetScript(
+            "OnMouseDown",
+            function()
+                local now = GetTime and GetTime() or 0
+                if now - (resourcesFrame.lastVersionClick or 0) <= 0.35 then
+                    resourcesFrame.lastVersionClick = 0
+                    if GSE.GUIShowVersionCopyWindow then GSE.GUIShowVersionCopyWindow() end
+                    return
+                end
+                resourcesFrame.lastVersionClick = now
+            end
+        )
+        resourcesFrame.versionHitBox:SetScript(
+            "OnEnter",
+            function(self)
+                SetResourceVersionTextHover(true)
+                UpdateResourceVersionHitBox()
+                if not GameTooltip then return end
+                GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+                GameTooltip:SetText("GSE Version")
+                GameTooltip:AddLine("Double-click: Copy version", 1, 1, 1)
+                GameTooltip:Show()
+            end
+        )
+        resourcesFrame.versionHitBox:SetScript(
+            "OnLeave",
+            function()
+                SetResourceVersionTextHover(false)
+                UpdateResourceVersionHitBox()
+                if GameTooltip then GameTooltip:Hide() end
+            end
+        )
+    end
+
+    UpdateResourceVersionHitBox()
+    if resourcesFrame.versionHitBox.SetFrameLevel and resourcesFrame.frame.GetFrameLevel then
+        resourcesFrame.versionHitBox:SetFrameLevel((resourcesFrame.frame:GetFrameLevel() or 0) + 80)
+    end
+    resourcesFrame.versionHitBox:Show()
+end
+
+local function PrepareResourceEditBox(editBox)
+    local nativeEditBox = GetResourceEditBox(editBox)
+    if not nativeEditBox then return end
+
+    nativeEditBox:SetAutoFocus(false)
+    nativeEditBox:SetFontObject(ChatFontNormal or GameFontHighlightSmall)
+    nativeEditBox:SetCursorPosition(0)
+    nativeEditBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+    nativeEditBox:SetScript("OnEscapePressed", function(self)
+        self:HighlightText(0, 0)
+        self:ClearFocus()
+    end)
+    nativeEditBox:SetScript("OnMouseUp", function(self)
+        self:SetFocus()
+        self:HighlightText()
+    end)
+end
+
+local function CreateResourceRow(parent, resource, index)
+    local row = UI:Create("SimpleGroup")
+    local rowHeight = resource.rowHeight or RESOURCE_ROW_HEIGHT
+    row:SetFullWidth(true)
+    row:SetHeight(rowHeight)
+    row:SetFlowOffset(RESOURCE_ROW_OFFSET_X, (((index or 1) - 1) * RESOURCE_ROW_STACK_LIFT) + (resource.rowOffsetY or 0))
+    row:SetLayout("Flow")
+    row:SetFlowPadding(0, 0, 0, 0)
+    row:SetFlowGap(RESOURCE_ROW_FLOW_GAP)
+    row:SetFlowVAlign("CENTER")
+
+    local icon = UI:Create("Icon")
+    icon:SetImage(resource.icon)
+    local iconSize = resource.iconSize or RESOURCE_ICON_SIZE
+    icon:SetImageSize(iconSize, iconSize)
+    icon:SetHoverImageSize(iconSize, iconSize)
+    icon:SetFlowOffset(resource.iconOffsetX or 0, resource.iconOffsetY or 0)
+    icon:SetHoverLocked(true)
+    if icon.SetElvUISubduedIcon then icon:SetElvUISubduedIcon(false) end
+    if icon.SetElvUIIconBackgroundShown then icon:SetElvUIIconBackgroundShown(false) end
+    row:AddChild(icon)
+
+    local contentOffsetX = resource.contentOffsetX or 0
+    local contentOffsetY = resource.contentOffsetY or 0
+
+    local body = UI:Create("SimpleGroup")
+    -- Fill the space between the icon and the right-pinned Copy button so the
+    -- URL box adapts to the popup's real content width (UI-scale independent).
+    -- RESOURCE_BODY_WIDTH stays as the fallback width before the flow lays out.
+    body:SetWidth(RESOURCE_BODY_WIDTH)
+    body:SetFlowFillRemaining(true)
+    body:SetHeight(rowHeight)
+    body:SetFlowOffset(contentOffsetX, contentOffsetY)
+    body:SetLayout("List")
+    body:SetListPadding(0, 1, 0, 0)
+    body:SetListGap(2)
+
+    local title = UI:Create("Label")
+    title:SetText(resource.title)
+    title:SetFullWidth(true)
+    title:SetHeight(20)
+    title:SetFontObject(GameFontNormal)
+    title:SetJustifyH("LEFT")
+    title:SetJustifyV("MIDDLE")
+    if GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        title:SetColor(1, 1, 1, 1)
+    else
+        title:SetColor(unpack(RESOURCE_GOLD))
+    end
+    if title.text and title.text.SetWordWrap then title.text:SetWordWrap(false) end
+    body:AddChild(title)
+
+    local editBox = UI:Create("EditBox")
+    editBox:SetCompactNoLabel(true)
+    editBox:SetFullWidth(true)
+    editBox:SetHeight(26)
+    editBox:SetText(resource.url)
+    PrepareResourceEditBox(editBox)
+    body:AddChild(editBox)
+
+    row:AddChild(body)
+
+    local copyButton = UI:Create("Button")
+    copyButton:SetText("Copy")
+    copyButton:SetWidth(RESOURCE_COPY_WIDTH)
+    copyButton:SetHeight(24)
+    -- Pin Copy to the row's right edge. Right-aligned flow children skip the
+    -- wrap check, so Copy can never spill onto the next row's icon. The body
+    -- (flowFillRemaining) reserves this width, so the two never overlap. X
+    -- offset is fixed (not contentOffsetX) so every row's Copy lines up.
+    copyButton:SetFlowRightAlign(true)
+    copyButton:SetFlowOffset(0, contentOffsetY + RESOURCE_COPY_OFFSET_Y)
+    copyButton:SetCallback("OnClick", function() CopyResourceLink(editBox, resource.url) end)
+    row:AddChild(copyButton)
+
+    parent:AddChild(row)
+end
+
+local function ReleaseEditorFooterButtons(editframe)
+    if editframe and editframe.SetFooterShown then editframe:SetFooterShown(false) end
+end
+
+local function PositionEditorFooterButtons(editframe)
+    if editframe and editframe.SetFooterShown then editframe:SetFooterShown(true) end
+end
+
+-- Render the resource rows (and optional subtitle) into any AceGUI container.
+-- Used by ShowResourcesPopup AND by the Settings panel's Resources canvas so
+-- both surfaces present identical content from one source.
+local function DrawResourcesContent(container, opts)
+    if not (container and container.AddChild) then return end
+    opts = opts or {}
+    local showSubtitle = opts.showSubtitle
+    if showSubtitle == nil then showSubtitle = true end
+
+    if showSubtitle then
+        local subtitle = UI:Create("Heading")
+        subtitle:SetText("Copy and Paste Links")
+        subtitle:SetFullWidth(true)
+        subtitle:SetHeight(22)
+        subtitle:SetFontObject(GameFontHighlightSmall)
+        subtitle:SetJustifyH("CENTER")
+        subtitle:SetJustifyV("MIDDLE")
+        container:AddChild(subtitle)
+    end
+
+    for index, resource in ipairs(RESOURCE_LINKS) do
+        CreateResourceRow(container, resource, index)
+    end
+end
+
+GSE.GUI.DrawResourcesContent = DrawResourcesContent
+-- Also expose the popup dimensions so external callers can size their own
+-- container to match the popup's "as a group" footprint.
+GSE.GUI.RESOURCE_FRAME_WIDTH  = RESOURCE_FRAME_WIDTH
+GSE.GUI.RESOURCE_FRAME_HEIGHT = RESOURCE_FRAME_HEIGHT
+
+local function ShowResourcesPopup(owner)
+    if not resourcesFrame then
+        resourcesFrame = UI:Create("Frame")
+        resourcesFrame:SetTitle("Resources")
+        resourcesFrame:SetSize(RESOURCE_FRAME_WIDTH, RESOURCE_FRAME_HEIGHT)
+        resourcesFrame:SetLayout("List")
+        -- Left/right content padding for THIS popup only (the editor/debugger
+        -- windows are unaffected). 20 each side, restoring the earlier margin.
+        resourcesFrame:SetListPadding(20, 12, 20, 8)
+        resourcesFrame:SetListGap(8)
+        resourcesFrame:SetResizable(false)
+        -- TOOLTIP strata sits above the Blizzard Settings panel
+        -- (FULLSCREEN_DIALOG); frameLevel 200 lifts the popup above other
+        -- TOOLTIP-strata frames like the GSE menu so it isn't obscured.
+        UI.MakePopup(resourcesFrame.frame, {frameLevel = 200})
+
+        if resourcesFrame.titletext then
+            SetResourceFrameTextColor(resourcesFrame.titletext, RESOURCE_GOLD)
+        end
+
+        DrawResourcesContent(resourcesFrame)
+    end
+
+    resourcesFrame:SetStatusText("GSE: " .. tostring(GSE.VersionString or ""))
+    resourcesFrame:ClearAllPoints()
+    -- Position the Resources popup near screen centre, nudged 15px right of
+    -- centre, regardless of which frame opened it.
+    resourcesFrame:SetPoint("CENTER", UIParent, "CENTER", 15, 0)
+    resourcesFrame:Show()
+    EnsureResourceVersionHitBox()
+end
+
+GSE.GUI.ShowResourcesPopup = ShowResourcesPopup
+
+local function GetSequenceEditorOptions()
+    if not GSEOptions then return nil end
+    if GSE.isEmpty(GSEOptions.frameLocations) then GSEOptions.frameLocations = {} end
+    if GSE.isEmpty(GSEOptions.frameLocations.sequenceeditor) then
+        GSEOptions.frameLocations.sequenceeditor = {}
+    end
+    return GSEOptions.frameLocations.sequenceeditor
+end
+
+local function SequenceEditorPathExists(path)
+    if GSE.isEmpty(path) then return false end
+    local unique = {("\001"):split(path)}
+    if unique[1] ~= "Sequences" or #unique < 4 then return false end
+
+    local elements = GSE.split(unique[3] or "", ",")
+    local classid = tonumber(elements[1])
+    local sequenceName = elements[3]
+    if not classid or GSE.isEmpty(sequenceName) then return false end
+    if not (GSESequences and GSESequences[classid] and GSESequences[classid][sequenceName]) then return false end
+
+    local key = unique[#unique]
+    if key == "config" then return true end
+    local version = tonumber(key)
+    if not version then return false end
+
+    GSE.EnsureSequenceLoaded(classid, sequenceName)
+    local loadedSeq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    return loadedSeq and loadedSeq.Versions and loadedSeq.Versions[version] ~= nil
+end
+
+local function SaveLastSequenceEditorPath(group, unique)
+    if unique[1] ~= "Sequences" or #unique < 4 or unique[#unique] == "newversion" then return end
+    local opts = GetSequenceEditorOptions()
+    if opts then opts.lastSequencePath = group end
+end
+
+function GSE.GUI.GetLastSequenceEditorPath()
+    local opts = GetSequenceEditorOptions()
+    local path = opts and opts.lastSequencePath
+    if SequenceEditorPathExists(path) then return path end
+    if opts then opts.lastSequencePath = nil end
+    return nil
+end
+
+function GSE.GUI.SelectEditorTreePath(editor, path)
+    if not (editor and editor.treeContainer and path) then return end
+    editor.forceTreeSelection = true
+    editor.treeContainer:SelectByValue(path)
+end
 
 -- ---------------------------------------------------------------------------
 -- Right-click context menus, keyed by tree "area" (unique[1])
@@ -40,13 +519,13 @@ local function onRightClick_KEYBINDINGS(editframe, container, group, unique)
         editframe.frame,
         function(ownerRegion, rootDescription)
             rootDescription:CreateButton(L["New KeyBind"], function()
-                local rightContainer = AceGUI:Create("SimpleGroup")
+                local rightContainer = UI:Create("SimpleGroup")
                 rightContainer:SetFullWidth(true)
                 rightContainer:SetLayout("List")
                 editframe.showKeybind(nil, nil, nil, nil, "KB", rightContainer)
             end)
             rootDescription:CreateButton(L["New Actionbar Override"], function()
-                local rightContainer = AceGUI:Create("SimpleGroup")
+                local rightContainer = UI:Create("SimpleGroup")
                 rightContainer:SetFullWidth(true)
                 rightContainer:SetLayout("List")
                 editframe.showKeybind(nil, nil, nil, nil, "AO", rightContainer)
@@ -126,7 +605,7 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                     container:ReleaseChildren()
                     editframe.loaded = nil
                 end
-                local rightContainer = AceGUI:Create("SimpleGroup")
+                local rightContainer = UI:Create("SimpleGroup")
                 rightContainer:SetFullWidth(true)
                 rightContainer:SetLayout("List")
                 GSE.GUILoadEditor(editframe)
@@ -134,7 +613,27 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
             end)
             if not GSE.isEmpty(sequencename) then
                 local rcSeq = GSE.FindSequence(sequencename)
-                if not (rcSeq and rcSeq.MetaData and rcSeq.MetaData.noExport) then
+                -- Protected/foreign content (noExport) is not owned by this user,
+                -- so it cannot be copied — the Duplicate option is shown greyed out.
+                local isProtected = rcSeq and rcSeq.MetaData and rcSeq.MetaData.noExport
+                local dupButton = rootDescription:CreateButton(L["Duplicate"], function()
+                    UI.ShowInputDialog({
+                        owner      = editframe,
+                        title      = L["Duplicate"],
+                        prompt     = L["Enter NEW Name for the Duplicated Sequence:"],
+                        note       = L["-sequence will receive a new gse.tools id-"],
+                        default    = sequencename .. "Copy",
+                        acceptText = L["Create"],
+                        maxLetters = 60,
+                        onAccept   = function(name)
+                            GSE.GUIDuplicateSequence(editframe, classid, sequencename, name)
+                        end,
+                    })
+                end)
+                if dupButton and dupButton.SetEnabled then
+                    dupButton:SetEnabled(not isProtected)
+                end
+                if not isProtected then
                     rootDescription:CreateButton(L["Export"], function()
                         GSE.GUIExport(classid, sequencename, "SEQUENCE")
                     end)
@@ -146,15 +645,33 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                     rootDescription:CreateButton(
                         string.format(L["Open %s in New Window"], sequencename),
                         function()
+                            local targetGroup = group
+                            if unique[1] == "Sequences" and #unique == 3 then
+                                targetGroup = group .. "\001config"
+                            elseif unique[#unique] == "newversion" then
+                                targetGroup = table.concat({unique[1], unique[2], unique[3], "config"}, "\001")
+                            end
+
                             local editor = GSE.CreateEditor()
                             editor.ManageTree()
-                            editor.treeContainer:SelectByValue(group)
+                            editor:Show()
+                            C_Timer.After(0, function()
+                                if GSE.GUI.SelectEditorTreePath then
+                                    GSE.GUI.SelectEditorTreePath(editor, targetGroup)
+                                end
+                            end)
                         end
                     )
                 end
                 rootDescription:CreateButton(L["Chat Link"], function()
-                    StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
-                    StaticPopup_Show("GSE_ChatLink")
+                    GSE.UI.ShowLinkDialog({
+                        owner      = editframe,
+                        title      = L["Chat Link"],
+                        prompt     = L["Copy this Link and Paste into a Chat Window."],
+                        link       = GSE.SequenceChatPattern(sequencename, classid),
+                        buttonText = CLOSE,
+                        note       = L["Text selected. Press Ctrl+C to Copy"],
+                    })
                 end)
             end
             rootDescription:CreateButton(L["Keybindings"], function()
@@ -192,13 +709,369 @@ end
 -- Left-click handlers, keyed by area
 -- ---------------------------------------------------------------------------
 
+local SECTION_HEADER_HEIGHT  = 40   -- space above the grey line
+local SECTION_HEADER_LEFT    = 10   -- right shift
+local SECTION_ICON_SIZE      = 28   -- icon size
+local SECTION_FONT_HEIGHT    = 30   -- text row height
+local SECTION_HEADER_TOP     = 10   -- container top padding for any grey-line section header
+
+local function addSectionDivider(container, title, icon)
+    if title then
+        -- Account for container top padding so content centres in the full visible space
+        local containerTop = GSE.GUI.CONTENT_PADDING or 20
+        local totalSpace   = containerTop + SECTION_HEADER_HEIGHT
+        local top = math.max(0, math.floor(totalSpace / 2 - SECTION_FONT_HEIGHT / 2) - containerTop)
+
+        local headerRow = UI:Create("SimpleGroup")
+        headerRow:SetFullWidth(true)
+        headerRow:SetHeight(SECTION_HEADER_HEIGHT)
+        headerRow:SetLayout("Flow")
+        if headerRow.SetFlowGap     then headerRow:SetFlowGap(10) end
+        if headerRow.SetFlowPadding then headerRow:SetFlowPadding(SECTION_HEADER_LEFT, top, 0, 0) end
+
+        if icon then
+            local titleIcon = UI:Create("Icon")
+            titleIcon:SetImage(icon)
+            titleIcon:SetImageSize(SECTION_ICON_SIZE, SECTION_ICON_SIZE)
+            if titleIcon.SetHoverImageSize then titleIcon:SetHoverImageSize(SECTION_ICON_SIZE, SECTION_ICON_SIZE) end
+            titleIcon:SetWidth(SECTION_ICON_SIZE + 2)
+            titleIcon:SetHeight(SECTION_FONT_HEIGHT)
+            if titleIcon.SetHoverLocked then titleIcon:SetHoverLocked(true) end
+            headerRow:AddChild(titleIcon)
+        end
+
+        local heading = UI:Create("Heading")
+        heading:SetText(title)
+        heading:SetWidth(400)
+        heading:SetHeight(SECTION_FONT_HEIGHT)
+        if heading.SetJustifyH then heading:SetJustifyH("LEFT") end
+        if heading.SetJustifyV then heading:SetJustifyV("MIDDLE") end
+        if heading.SetColor    then heading:SetColor(1, 1, 1, 1) end
+        if heading.frame then
+            local fs = heading.frame.GetFontString and heading.frame:GetFontString()
+            if not fs then fs = heading.label or heading.text end
+            if fs and fs.SetFont then
+                local face, size, flags = GameFontNormalHuge:GetFont()
+                if face then fs:SetFont(face, size or 16, flags) end
+            end
+        end
+        headerRow:AddChild(heading)
+        container:AddChild(headerRow)
+    end
+
+    local divider = UI:Create("SimpleGroup")
+    divider:SetFullWidth(true)
+    divider:SetHeight(1)
+    local line = divider.frame and divider.frame:CreateTexture(nil, "ARTWORK")
+    if line then
+        line:SetAllPoints(divider.frame)
+        line:SetColorTexture(1, 1, 1, 0.22)
+    end
+    container:AddChild(divider)
+end
+
+
+-- Add a scrollable content area as a child of the tree-group's right pane
+-- and return the inner ScrollFrame for callers to add page content into.
+-- This is used by the Variables / Macros / Keybindings click handlers — none
+-- of which had a scroll wrapper before. With MIN_EDITOR_HEIGHT now 500 (was
+-- 800), their content can easily exceed the visible height; adding the
+-- scroll here keeps everything reachable. Sequences already has its own
+-- staticHeader+scrollcontainer pattern in onClick_Sequences so it isn't
+-- routed through this helper.
+local function makeScrollableRightPane(container)
+    -- Outer Fill wrapper takes the whole right pane.
+    local outer = UI:Create("SimpleGroup")
+    outer:SetFullWidth(true)
+    outer:SetFullHeight(true)
+    outer:SetLayout("Fill")
+
+    -- ScrollFrame inside the wrapper holds the page content. AceGUI's
+    -- ScrollFrame uses List layout for children by default and engages
+    -- scrollbars automatically when content height exceeds the frame.
+    local scroll = UI:Create("ScrollFrame")
+    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
+    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
+    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
+    -- only updates the global SCROLL_STEP — had no effect on this pane.
+    if scroll.SetListPadding then
+        scroll:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, SECTION_HEADER_TOP, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING)
+    end
+    outer:AddChild(scroll)
+    scroll:SetFullWidth(true)
+    scroll:SetFullHeight(true)
+
+    container:AddChild(outer)
+    SmoothEditorScrollFrame(scroll)
+    return scroll
+end
+
+
+-- ---------------------------------------------------------------------------
+-- InitEditorFooterButtons(editframe)
+-- Creates footer buttons ONCE and registers them with AddFooterChild.
+-- Guarded by editframe.footerInitialized so repeat calls are no-ops.
+-- onClick_Sequences must NEVER call AddFooterChild itself — only SetFooterShown.
+-- ---------------------------------------------------------------------------
+local function InitEditorFooterButtons(editframe)
+    if editframe.footerInitialized then return end
+    editframe.footerInitialized = true
+
+    local editOptionsbutton = UI:Create("Button")
+    editOptionsbutton:SetText(L["Options"])
+    editOptionsbutton:SetWidth(100)
+    if editOptionsbutton.SetElvUIBackgroundShown then editOptionsbutton:SetElvUIBackgroundShown(true) end
+    editOptionsbutton:SetCallback("OnClick", function() GSE.OpenOptionsPanel(editframe) end)
+    editOptionsbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Options"], L["Opens the GSE Options window"], editframe)
+    end)
+    editOptionsbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local resourcesButton = UI:Create("Button")
+    resourcesButton:SetText(RESOURCE_BUTTON_TEXT)
+    resourcesButton:SetWidth(RESOURCE_BUTTON_WIDTH)
+    if resourcesButton.SetElvUIBackgroundShown then resourcesButton:SetElvUIBackgroundShown(true) end
+    resourcesButton:SetCallback("OnClick", function() GSE.GUI.ShowResourcesPopup(editframe) end)
+    resourcesButton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip("Resources", "All GSE Support, Tools, Sequences, Community, Patreon Links.", editframe)
+    end)
+    resourcesButton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local transbutton = UI:Create("Button")
+    transbutton:SetText(L["Send"])
+    transbutton:SetWidth(100)
+    if transbutton.SetElvUIBackgroundShown then transbutton:SetElvUIBackgroundShown(true) end
+    transbutton:SetCallback("OnClick", function()
+        GSE.GUIShowTransmissionGui(editframe.ClassID .. "," .. editframe.SequenceName, editframe)
+    end)
+    transbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(
+            L["Send"],
+            L["Send this macro to another GSE player who is on the same server as you are."],
+            editframe
+        )
+    end)
+    transbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local savebutton = UI:Create("Button")
+    savebutton:SetText(L["Save"])
+    savebutton:SetWidth(100)
+    if savebutton.SetElvUIBackgroundShown then savebutton:SetElvUIBackgroundShown(true) end
+    savebutton:SetCallback(
+        "OnClick",
+        function()
+            if editframe.RefreshMacroLimitSaveState and not editframe:RefreshMacroLimitSaveState() then
+                GSE.Print(
+                    L["One or more MacroBlocks are over 255 characters. Shorten them before saving."],
+                    "ERROR"
+                )
+                return
+            end
+            if GSE.isEmpty(editframe.invalidPause) then
+                local _, _, _, tocversion = GetBuildInfo()
+                editframe.Sequence.MetaData.ManualIntervention = true
+                editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
+                editframe.Sequence.MetaData.EnforceCompatability = true
+                editframe.Sequence.MetaData.TOC = tocversion
+                editframe.SequenceName = GSE.UnEscapeString(editframe.SequenceName or "")
+                editframe.save = true
+                ReportMacroOptionWarningsForSequence(editframe.Sequence)
+                local queued = editframe.GUIUpdateSequenceDefinition(
+                    editframe.ClassID,
+                    editframe.SequenceName,
+                    editframe.Sequence
+                )
+                if queued then
+                    if GSE.ProcessOOCQueue and not (InCombatLockdown and InCombatLockdown()) then
+                        C_Timer.After(0, function()
+                            if not (InCombatLockdown and InCombatLockdown()) then
+                                GSE:ProcessOOCQueue()
+                            end
+                        end)
+                    end
+                    editframe:SetStatusText(L["Save pending for "] .. editframe.SequenceName)
+                    editframe.newname = nil
+                else
+                    editframe.save = nil
+                end
+            else
+                GSE.Print(
+                    L["Error processing Custom Pause Value.  You will need to recheck your macros."],
+                    "ERROR"
+                )
+            end
+        end
+    )
+    savebutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Save"], L["Save the changes made to this macro"], editframe)
+    end)
+    savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    editframe.SaveButton = savebutton
+
+    -- Export reads editframe.ClassID / editframe.SequenceName at click time so it
+    -- always reflects the currently-loaded sequence, not a stale init-time closure.
+    local exportbutton = UI:Create("Button")
+    exportbutton:SetText(L["Export"])
+    exportbutton:SetWidth(100)
+    if exportbutton.SetElvUIBackgroundShown then exportbutton:SetElvUIBackgroundShown(true) end
+    exportbutton:SetCallback("OnClick", function()
+        local sequence = GSE.FindSequence and GSE.FindSequence(editframe.SequenceName)
+        if sequence and sequence.MetaData and sequence.MetaData.noExport then
+            if editframe.SetStatusText then editframe:SetStatusText(L["This sequence is unable to be exported."]) end
+            return
+        end
+        GSE.GUIExport(editframe.ClassID, editframe.SequenceName, "SEQUENCE")
+    end)
+    exportbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Export"], L["Export this sequence."], editframe)
+    end)
+    exportbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local debugbutton = UI:Create("Button")
+    debugbutton:SetText(L["Debug"])
+    debugbutton:SetWidth(100)
+    if debugbutton.SetElvUIBackgroundShown then debugbutton:SetElvUIBackgroundShown(true) end
+    debugbutton:SetCallback("OnClick", function()
+        if GSE.GUIDebugFrame and GSE.GUIDebugFrame.IsShown and GSE.GUIDebugFrame:IsShown() then
+            if GSE.GUICloseDebugWindow then
+                GSE.GUICloseDebugWindow()
+            else
+                GSE.GUIDebugFrame:Hide()
+            end
+            return
+        end
+        if GSE.GUIShowDebugWindow then GSE.GUIShowDebugWindow() end
+    end)
+    debugbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Debug"], L["Open or close the sequence debugger."], editframe)
+    end)
+    debugbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local reloadbutton = UI:Create("Button")
+    reloadbutton:SetText(L["Reload"])
+    reloadbutton:SetWidth(100)
+    if reloadbutton.SetElvUIBackgroundShown then reloadbutton:SetElvUIBackgroundShown(true) end
+    reloadbutton:SetCallback("OnClick", function()
+        if ReloadUI then ReloadUI() end
+    end)
+    reloadbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Reload"], L["Reload the user interface."], editframe)
+    end)
+    reloadbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local delbutton = UI:Create("Button")
+    delbutton:SetText(L["Delete Sequence"])
+    delbutton:SetWidth(130)
+    if delbutton.SetElvUIBackgroundShown then delbutton:SetElvUIBackgroundShown(true) end
+    delbutton:SetCallback("OnClick", function()
+        local seqname = editframe.SequenceName
+        local cid = editframe.ClassID
+        editframe.GUIDeleteSequence(cid, seqname)
+        editframe.ManageTree()
+    end)
+    delbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Delete Sequence"], L["Delete this sequence.  This is not able to be undone."], editframe)
+    end)
+    delbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    editframe.PositionEditorFooterButtons = PositionEditorFooterButtons
+    if editframe.SetFooterHeight then editframe:SetFooterHeight(52) end
+    if editframe.SetFooterBottomOffset then editframe:SetFooterBottomOffset(30) end
+    if editframe.SetFooterContentGap then editframe:SetFooterContentGap(6) end
+    if editframe.SetFooterGap then editframe:SetFooterGap(EDITOR_FOOTER_BUTTON_GAP) end
+    if editframe.SetFooterRowGap then editframe:SetFooterRowGap(4) end
+    if editframe.SetFooterAlignment then editframe:SetFooterAlignment("CENTER") end
+    -- Reset to a fresh table so AddFooterChild never inserts into sectionFooterChildrenCache
+    -- if ShowSectionFooter ran before this initializer.
+    editframe.footerChildren = {}
+    if editframe.AddFooterChild then
+        editframe:AddFooterChild(savebutton, 1)
+        editframe:AddFooterChild(delbutton, 1)
+        editframe:AddFooterChild(exportbutton, 1)
+        editframe:AddFooterChild(editOptionsbutton, 1)
+        editframe:AddFooterChild(resourcesButton, 1)
+        editframe:AddFooterChild(transbutton, 2)
+        editframe:AddFooterChild(reloadbutton, 2)
+        editframe:AddFooterChild(debugbutton, 2)
+    end
+    -- Cache the sequence button set so ShowSequenceFooter / ShowSectionFooter
+    -- can swap footerChildren without ever creating or destroying widgets.
+    editframe.sequenceFooterChildrenCache = editframe.footerChildren
+end
+
+-- ---------------------------------------------------------------------------
+-- InitSectionFooterButtons(editframe)
+-- Creates the section-page footer (Resources button, centered) ONCE.
+-- Guarded by editframe.sectionFooterInitialized.
+-- ---------------------------------------------------------------------------
+local function InitSectionFooterButtons(editframe)
+    if editframe.sectionFooterInitialized then return end
+    editframe.sectionFooterInitialized = true
+
+    local resourcesButton = UI:Create("Button")
+    resourcesButton:SetText(RESOURCE_BUTTON_TEXT)
+    resourcesButton:SetWidth(RESOURCE_BUTTON_WIDTH)
+    if resourcesButton.SetElvUIBackgroundShown then resourcesButton:SetElvUIBackgroundShown(true) end
+    resourcesButton:SetCallback("OnClick", function() GSE.GUI.ShowResourcesPopup(editframe) end)
+    resourcesButton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip("Resources", "All GSE Support, Tools, Sequences, Community, Patreon Links.", editframe)
+    end)
+    resourcesButton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    -- Register directly with the footer frame so layoutFooterChildren can position it,
+    -- but store in a SEPARATE cache — never mixed into sequenceFooterChildrenCache.
+    resourcesButton.footerRow = 1
+    resourcesButton.parent = editframe
+    if editframe.footer and resourcesButton.frame then
+        resourcesButton.frame:SetParent(editframe.footer)
+    end
+    editframe.sectionFooterChildrenCache = { resourcesButton }
+end
+
+-- ---------------------------------------------------------------------------
+-- ShowSequenceFooter / ShowSectionFooter
+-- Swap footerChildren between the two cached sets, then trigger layout.
+-- NEVER call AddFooterChild after init — that appends and causes duplicates.
+-- ---------------------------------------------------------------------------
+local function HideFooterCache(cache)
+    if not cache then return end
+    for _, child in ipairs(cache) do
+        if child.frame then child.frame:Hide() end
+    end
+end
+
+local function ShowSequenceFooter(editframe)
+    InitEditorFooterButtons(editframe)
+    HideFooterCache(editframe.sectionFooterChildrenCache)
+    editframe.footerChildren = editframe.sequenceFooterChildrenCache
+    if editframe.SetFooterShown then editframe:SetFooterShown(true) end
+    if editframe.DoFooterLayout then editframe:DoFooterLayout() end
+end
+
+local function ShowSectionFooter(editframe)
+    InitSectionFooterButtons(editframe)
+    HideFooterCache(editframe.sequenceFooterChildrenCache)
+    editframe.footerChildren = editframe.sectionFooterChildrenCache
+    if editframe.SetFooterHeight then editframe:SetFooterHeight(52) end
+    if editframe.SetFooterBottomOffset then editframe:SetFooterBottomOffset(30) end
+    if editframe.SetFooterContentGap then editframe:SetFooterContentGap(6) end
+    if editframe.SetFooterGap then editframe:SetFooterGap(EDITOR_FOOTER_BUTTON_GAP) end
+    if editframe.SetFooterRowGap then editframe:SetFooterRowGap(4) end
+    if editframe.SetFooterAlignment then editframe:SetFooterAlignment("CENTER") end
+    if editframe.SetFooterShown then editframe:SetFooterShown(true) end
+    if editframe.DoFooterLayout then editframe:DoFooterLayout() end
+end
+
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
-    if #unique < 2 then return end
+    if not unique or #unique < 2 then return end
+    ShowSectionFooter(editframe)
 
     local bind, loadout, kbtype, button
     kbtype = unique[2]
     local specialization = unique[3]
-    if C_SpecializationInfo or GetSpecialization then
+    -- Use the same API check as buildKeybindMenu: GetSpecializationInfo determines
+    -- whether a spec-level intermediate node was inserted into the tree.
+    if GetSpecializationInfo then
         bind = unique[4]
         if #unique == 6 then
             loadout = unique[4]
@@ -226,150 +1099,116 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         end
     end
 
-    local function makeRightContainer()
-        local rc = AceGUI:Create("SimpleGroup")
-        rc:SetFullWidth(true)
-        rc:SetLayout("List")
+    local function makeRightContainer(withDivider)
+        -- Build a scrollable wrapper inside the right pane. The scroll engages
+        -- automatically if the keybind form (which can include many rows for
+        -- spec + button combinations) exceeds the editor's visible height.
+        local rc = makeScrollableRightPane(container)
+        if withDivider then
+            addSectionDivider(rc, withDivider.title, withDivider.icon)
+        end
         return rc
     end
 
     if unique[#unique] == "NKB" then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer()
+        local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
         editframe.showKeybind(nil, nil, nil, nil, "KB", rc)
-        container:AddChild(rc)
         editframe.loaded = true
-        editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New KeyBind"])
+        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (L["New KeyBind"] or "New Keybind"))
     elseif unique[#unique] == "NAO" then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer()
+        local rc = makeRightContainer({title = L["Actionbar Overrides"] or "Actionbar Overrides", icon = Statics.Icons.Button})
         editframe.showKeybind(nil, nil, nil, nil, "AO", rc)
-        container:AddChild(rc)
         editframe.loaded = true
-        editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["New Actionbar Override"])
+        editframe:SetTitle("GSE: " .. (L["Actionbar Overrides"] or "Actionbar Overrides") .. ": " .. (L["New Actionbar Override"] or "New Override"))
     else
         if bind and button and kbtype then
             if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
             local rc = makeRightContainer()
             editframe.showKeybind(bind, button, specialization, loadout, kbtype, rc)
-            container:AddChild(rc)
             editframe.loaded = true
-            editframe:SetTitle(L["Sequence Editor"] .. ": " .. L["Keybind"])
+            editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (bind or L["Keybind"] or "Keybind"))
         end
     end
 end
 
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, sequencename)
     if #unique < 3 then return end
+    SaveLastSequenceEditorPath(group, unique)
+    ReleaseEditorFooterButtons(editframe)
 
-    local editOptionsbutton = AceGUI:Create("Button")
-    editOptionsbutton:SetText(L["Options"])
-    editOptionsbutton:SetWidth(100)
-    editOptionsbutton:SetCallback("OnClick", function() GSE.OpenOptionsPanel() end)
-    editOptionsbutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Options"], L["Opens the GSE Options window"], editframe)
-    end)
-    editOptionsbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    -- The native widget layer has no widget pool, so stale child frames must be
+    -- cleared even if a prior draw failed before setting loaded.
+    container:ReleaseChildren()
+    editframe.loaded = nil
 
-    local transbutton = AceGUI:Create("Button")
-    transbutton:SetText(L["Send"])
-    transbutton:SetWidth(100)
-    transbutton:SetCallback("OnClick", function()
-        GSE.GUIShowTransmissionGui(editframe.ClassID .. "," .. editframe.SequenceName, editframe)
-    end)
-    transbutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(
-            L["Send"],
-            L["Send this macro to another GSE player who is on the same server as you are."],
-            editframe
-        )
-    end)
-    transbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-
-    local editButtonGroup = AceGUI:Create("SimpleGroup")
-    editButtonGroup:SetFullWidth(true)
-    editButtonGroup:SetLayout("Flow")
-    editButtonGroup:SetHeight(30)
-
-    local savebutton = AceGUI:Create("Button")
-    savebutton:SetText(L["Save"])
-    savebutton:SetWidth(100)
-    savebutton:SetCallback(
-        "OnClick",
-        function()
-            if GSE.isEmpty(editframe.invalidPause) then
-                editframe:SetStatusText(L["Save pending for "] .. editframe.SequenceName)
-                local _, _, _, tocversion = GetBuildInfo()
-                editframe.Sequence.MetaData.ManualIntervention = true
-                editframe.Sequence.MetaData.GSEVersion = GSE.VersionNumber
-                editframe.Sequence.MetaData.EnforceCompatability = true
-                editframe.Sequence.MetaData.TOC = tocversion
-                editframe.SequenceName = GSE.UnEscapeString(editframe.SequenceName)
-                editframe.GUIUpdateSequenceDefinition(
-                    editframe.ClassID,
-                    editframe.SequenceName,
-                    editframe.Sequence
-                )
-                editframe.save = true
-                if editframe.newname then
-                    editframe.newname = nil
-                end
-            else
-                GSE.Print(
-                    L["Error processing Custom Pause Value.  You will need to recheck your macros."],
-                    "ERROR"
-                )
-            end
+    -- Helper that returns the right pane's actual usable height. Querying
+    -- the AceGUI container's content frame gives us a number that matches
+    -- the real visible area regardless of which frame template the editor
+    -- uses (ButtonFrameTemplate on retail = ~70 px chrome; BasicFrameTemplate
+    -- WithInset on MoP / Classic = ~85-95 px chrome). A fixed offset can't
+    -- satisfy both; the prior 70 worked on retail but cut MoP content off.
+    -- The PANE_BOTTOM_MARGIN trims inner-pane padding so the content frame
+    -- doesn't overflow the editor's bottom chrome (sub-panels were rendering
+    -- ~20 px past the visible area before this margin was applied).
+    local PANE_BOTTOM_MARGIN = 20
+    local function getScrollAreaHeight()
+        local pane = (container and container.content) or (container and container.frame)
+        if pane and pane.GetHeight then
+            local h = pane:GetHeight()
+            if h and h > 100 then return math.max(80, h - PANE_BOTTOM_MARGIN) end
         end
-    )
-    savebutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Save"], L["Save the changes made to this macro"], editframe)
-    end)
-    savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-    editButtonGroup:AddChild(savebutton)
-    editframe.SaveButton = savebutton
+        -- Conservative fallback (slightly larger than the old -70 so MoP
+        -- doesn't clip if the query fails entirely).
+        return math.max(80, (editframe.Height or 760) - 85 - PANE_BOTTOM_MARGIN)
+    end
+    editframe.GetScrollAreaHeight = getScrollAreaHeight
 
-    local delbutton = AceGUI:Create("Button")
-    delbutton:SetText(L["Delete"])
-    delbutton:SetWidth(100)
-    delbutton:SetCallback("OnClick", function()
-        local seqname = editframe.SequenceName
-        local cid = editframe.ClassID
-        editframe.GUIDeleteSequence(cid, seqname)
-        editframe.ManageTree()
-    end)
-    delbutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Delete"], L["Delete this macro.  This is not able to be undone."], editframe)
-    end)
-    delbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-    editButtonGroup:AddChild(delbutton)
-    editButtonGroup:AddChild(transbutton)
-    editButtonGroup:AddChild(editOptionsbutton)
-
-    if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-
-    local basecontainer = AceGUI:Create("SimpleGroup")
+    local basecontainer = UI:Create("SimpleGroup")
     basecontainer:SetLayout("List")
     basecontainer:SetFullWidth(true)
-    basecontainer:SetHeight(editframe.Height - 100) -- TOOLBAR_OFFSET
-    local scrollcontainer = AceGUI:Create("SimpleGroup")
+    basecontainer:SetHeight(getScrollAreaHeight())
+    local staticHeaderContainer = UI:Create("SimpleGroup")
+    staticHeaderContainer:SetFullWidth(true)
+    staticHeaderContainer:SetHeight(0)
+    staticHeaderContainer:SetLayout("List")
+
+    local scrollcontainer = UI:Create("SimpleGroup")
     scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetHeight(editframe.Height - 120) -- SCROLLCONTAINER_OFFSET
+    scrollcontainer:SetHeight(getScrollAreaHeight())
     scrollcontainer:SetLayout("Fill")
     editframe.scrollStatus = {}
-    local contentcontainer = AceGUI:Create("ScrollFrame")
+    local contentcontainer = UI:Create("ScrollFrame")
+    -- No per-area SetScrollStep here: inherit the live, Options-driven scroll
+    -- speed (NativeUI SCROLL_STEP, set by the "Editor Scroll Speed" slider).
+    -- A hardcoded step (was 96) pinned self.scrollStep, so the slider — which
+    -- only updates the global SCROLL_STEP — had no effect on the block list.
     scrollcontainer:AddChild(contentcontainer)
     contentcontainer:SetFullWidth(true)
-    contentcontainer:SetFullHeight(true)
-    contentcontainer:SetStatusTable(editframe.scrollStatus)
+        contentcontainer:SetFullHeight(true)
+        contentcontainer:SetStatusTable(editframe.scrollStatus)
     editframe.scroller = scrollcontainer
     editframe.scrollContainer = contentcontainer
+    editframe.staticHeaderContainer = staticHeaderContainer
+    editframe.baseContainer = basecontainer   -- needed by OnSizeChanged to update height on resize
+    editframe.staticHeaderHeight = 0
+    editframe.SetStaticHeaderHeight = function(_, height)
+        height = tonumber(height) or 0
+        editframe.staticHeaderHeight = height
+        staticHeaderContainer:SetHeight(height)
+        scrollcontainer:SetHeight(math.max(80, getScrollAreaHeight() - height))
+        if contentcontainer.DoLayout then contentcontainer:DoLayout() end
+        if scrollcontainer.DoLayout then scrollcontainer:DoLayout() end
+        if basecontainer.DoLayout then basecontainer:DoLayout() end
+    end
     SmoothEditorScrollFrame(contentcontainer)
     container:AddChild(basecontainer)
+    basecontainer:AddChild(staticHeaderContainer)
     basecontainer:AddChild(scrollcontainer)
     editframe.SequenceName = sequencename
 
-    -- Navigate to class-level node → auto-select config.
+    -- Navigate to sequence-level node -> auto-select config.
     -- Defer SelectByValue to the next frame so that Button_OnClick's Expand_OnClick
     -- fires on the still-valid frame before RefreshTree recycles the button pool.
     if unique[1] == "Sequences" and #unique == 3 then
@@ -379,40 +1218,37 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         end)
         return
     elseif key == "config" then
+        if editframe.staticHeaderContainer then editframe.staticHeaderContainer:ReleaseChildren() end
+        if editframe.SetStaticHeaderHeight then editframe:SetStaticHeaderHeight(0) end
+        -- Pull content flush to the top of the content pane for config
+        if container.SetListPadding then container:SetListPadding(0, 0, 0, 0) end
         if editframe.OrigSequenceName ~= sequencename then
             GSE.GUILoadEditor(editframe, path[#path])
         end
-        local nameeditbox = AceGUI:Create("EditBox")
-        nameeditbox:SetLabel(L["Sequence Name"])
-        nameeditbox:SetWidth(250)
-        nameeditbox:DisableButton(true)
-        nameeditbox:SetText(sequencename)
-        nameeditbox:SetCallback("OnTextChanged", function()
-            editframe.SequenceName = nameeditbox:GetText()
-            editframe.newname = true
-        end)
-        nameeditbox:SetCallback("OnEnter", function()
-            GSE.CreateToolTip(
-                L["Sequence Name"],
-                L[
-                    "The name of your macro.  This name has to be unique and can only be used for one object.\nYou can copy this entire macro by changing the name and choosing Save."
-                ],
-                editframe
-            )
-        end)
-        nameeditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-        editframe.nameeditbox = nameeditbox
-        local headerGroup = AceGUI:Create("SimpleGroup")
-        headerGroup:SetFullWidth(true)
-        headerGroup:SetLayout("Flow")
-        contentcontainer:AddChild(headerGroup)
-        headerGroup:AddChild(nameeditbox)
+        local treeWidth = editframe.treeContainer and editframe.treeContainer.GetTreeWidth and editframe.treeContainer:GetTreeWidth() or 0
+        -- Chrome allowance (editor borders + scrollbar) is ~50, not 80; the extra 30
+        -- left the content container narrower than its pane, padding the right side.
+        local configContentWidth = math.max(620, (editframe.Width or 800) - treeWidth - 50)
+        editframe.metadataContentWidth = configContentWidth
+        if contentcontainer.SetWidth then contentcontainer:SetWidth(configContentWidth) end
+        if contentcontainer.SetListGap then contentcontainer:SetListGap(2) end
         editframe.GUIDrawMetadataEditor(contentcontainer)
+        editframe.metadataContentWidth = nil
+        -- Apply padding AFTER draw — GUIDrawMetadataEditor resets it internally
+        -- Match GUIDrawMetadataEditor's own padding exactly (Editor_Metadata line ~896:
+        -- left=right=30, top=15) so the area stays put and left/right padding are equal
+        -- whether drawn here on entry or re-drawn on tab switch.
+        if contentcontainer.SetListPadding then contentcontainer:SetListPadding(CONFIG_CONTENT_LEFT_PADDING + 10, 15, CONFIG_CONTENT_LEFT_PADDING + 10, CONFIG_CONTENT_LEFT_PADDING + 10) end
+        if contentcontainer.DoLayout then contentcontainer:DoLayout() end
         editframe:SetTitle(L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Configuration"] .. ")")
+        ShowSequenceFooter(editframe)   -- full editor buttons (Save/Delete/Export/...) on the config page
+        if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
     elseif key == "newversion" then
         if editframe.OrigSequenceName ~= sequencename then
             GSE.GUILoadEditor(editframe, path[#path])
         end
+        ShowSequenceFooter(editframe)
+        if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
         table.insert(
             editframe.Sequence.Versions,
             GSE.CloneSequence(editframe.Sequence.Versions[editframe.Sequence.MetaData.Default])
@@ -425,30 +1261,74 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         if editframe.OrigSequenceName ~= sequencename then
             GSE.GUILoadEditor(editframe, path[#path])
         end
+        if container.SetListPadding then container:SetListPadding(nil, nil, nil, nil) end
+        ShowSequenceFooter(editframe)
+        if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
         editframe.GUIDrawMacroEditor(contentcontainer, key, table.concat(path, "\001"))
+        local version = editframe.Sequence and editframe.Sequence.Versions and editframe.Sequence.Versions[tonumber(key) or key]
+        local versionName = version and version.Label
+        if GSE.isEmpty(versionName) then
+            versionName = tostring(key) == "1" and L["Default"] or L["Version"]
+        end
         editframe:SetTitle(
-            L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Version"] .. ":" .. key .. ")"
+            L["Sequence Editor"] .. ": " .. sequencename .. " (v" .. key .. ":" .. versionName .. ")"
         )
     end
-    basecontainer:AddChild(editButtonGroup)
+    -- All onClick_Sequences pages (config + versions) now use the full editor
+    -- footer, so position the buttons on every path.
+    PositionEditorFooterButtons(editframe)
     editframe.loaded = true
 end
 
 local function onClick_VARIABLES(editframe, container, group, unique, key)
     if #unique <= 1 then return end
+    ShowSectionFooter(editframe)
     if key == "NEWVARIABLES" then
-        StaticPopup_Show("GSE_NEW_VARIABLE_NAME", nil, nil, {editor = editframe})
+        GSE.GUINewVariablePrompt(editframe)
         return
     end
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-    editframe.showVariable(key, container)
+    -- Wrap the variable form in a ScrollFrame so it remains reachable when
+    -- the editor is sized small. Padding is set on the inner scroll pane,
+    -- so we no longer need it on the outer container.
+    local scrollPane = makeScrollableRightPane(container)
+    addSectionDivider(scrollPane, L["Variables"] or "Variables", Statics.Icons.Variables)
+    editframe:SetTitle("GSE: " .. (L["Variables"] or "Variables") .. ": " .. (key or ""))
+    editframe.showVariable(key, scrollPane)
     editframe.loaded = true
 end
 
+local function getFirstMacroPath(scope)
+    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    local function findInRange(parent, firstSlot, lastSlot)
+        for macid = firstSlot, lastSlot do
+            local mname = GetMacroInfo(macid)
+            if mname then return "Macro\001" .. parent .. "\001" .. macid end
+        end
+    end
+
+    if scope == "A" then
+        return findInRange("A", 1, MAX_ACCOUNT_MACROS)
+    elseif scope == "P" then
+        return findInRange("P", MAX_ACCOUNT_MACROS + 1, maxmacros)
+    end
+
+    return findInRange("A", 1, MAX_ACCOUNT_MACROS) or findInRange("P", MAX_ACCOUNT_MACROS + 1, maxmacros)
+end
+
 local function onClick_Macro(editframe, container, group, unique, key)
+    if #unique < 3 then
+        local firstMacroPath = getFirstMacroPath(unique[2])
+        if firstMacroPath then editframe.treeContainer:SelectByValue(firstMacroPath) end
+        return
+    end
     if #unique ~= 3 then return end
+    ShowSectionFooter(editframe)
     local mtext
-    local mname, micon, matext = GetMacroInfo(key)
+    local macroID = tonumber(key)
+    if not macroID then return end
+    local mname, micon, matext = GetMacroInfo(macroID)
+    if not mname then return end
     if unique[2] == "A" then
         if GSEMacros[mname] and GSEMacros[mname].text then
             mtext = GSEMacros[mname].text
@@ -466,13 +1346,17 @@ local function onClick_Macro(editframe, container, group, unique, key)
         end
     end
     local node = {
-        value = tonumber(unique[3]),
+        value = macroID,
         name = mname,
         icon = micon,
         text = mtext
     }
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-    editframe.showMacro(node, container)
+    -- Scroll wrapper keeps the macro view (header + buttons + edit box) usable
+    -- when the editor frame is sized small.
+    local scrollPane = makeScrollableRightPane(container)
+    editframe:SetTitle("GSE: " .. (L["Macros"] or "Macros") .. ": " .. (mname or ""))
+    editframe.showMacro(node, scrollPane)
     editframe.loaded = true
 end
 
@@ -588,6 +1472,14 @@ local function ManageTree(editframe)
     table.insert(tree, editframe.buildMacroMenu())
 
     treeContainer:SetTree(tree)
+    treeContainer:SetCallback(
+        "OnClick",
+        function(container, event, group)
+            if group == "Import" and GSE.ShowImport then
+                GSE.ShowImport()
+            end
+        end
+    )
     treeContainer:SetCallback(
         "OnButtonDrop",
         function(container, event, srcValue, dstValue)
@@ -710,6 +1602,7 @@ local function ManageTree(editframe)
             local elements, classid, sequencename
             local area = unique[1]
 
+
             if area == "Sequences" then
                 if unique[3] then
                     elements = GSE.split(unique[3], ",")
@@ -720,7 +1613,9 @@ local function ManageTree(editframe)
                 end
             end
 
-            local mbutton = GetMouseButtonClicked()
+            local forceTreeSelection = editframe.forceTreeSelection
+            editframe.forceTreeSelection = nil
+            local mbutton = forceTreeSelection and nil or GetMouseButtonClicked()
 
             if mbutton == "RightButton" then
                 -- Dispatch table for right-click by area
@@ -734,10 +1629,26 @@ local function ManageTree(editframe)
                 -- area == "Macro": no right-click menu
             elseif mbutton == "LeftButton" and IsShiftKeyDown() then
                 if classid and sequencename then
-                    StaticPopupDialogs["GSE_ChatLink"].link = GSE.SequenceChatPattern(sequencename, classid)
-                    StaticPopup_Show("GSE_ChatLink")
+                    GSE.UI.ShowLinkDialog({
+                        owner      = editframe,
+                        title      = L["Chat Link"],
+                        prompt     = L["Copy this Link and Paste into a Chat Window."],
+                        link       = GSE.SequenceChatPattern(sequencename, classid),
+                        buttonText = CLOSE,
+                        note       = L["Text selected. Press Ctrl+C to Copy"],
+                    })
                 end
             else
+                -- Save last visited node for restore on reload (exclude Keybindings)
+                if area ~= "KEYBINDINGS" and area ~= "NewSequence" and area ~= "Import" then
+                    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
+                    if seOpts then
+                        seOpts.lastArea    = area
+                        seOpts.lastKey     = key
+                        seOpts.lastClassId = classid
+                    end
+                end
+
                 -- Left-click dispatch table
                 if area == "NewSequence" then
                     GSE.GUILoadEditor(editframe)
@@ -769,4 +1680,38 @@ function GSE.GUI.SetupTree(editframe)
     editframe.ManageTree = function()
         ManageTree(editframe)
     end
+
+    -- Restore last visited node after the tree finishes building
+    editframe.RestoreLastNode = function()
+        local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
+        if not seOpts then return end
+        local area    = seOpts.lastArea
+        local key     = seOpts.lastKey
+        local classid = seOpts.lastClassId
+        if not area then return end
+
+        local container = editframe.treeContent or editframe.rightPanel
+        if not container then return end
+
+        if area == "Sequences" and key and classid then
+            local unique = {classid, key}
+            local path = {classid}
+            onClick_Sequences(editframe, container, nil, unique, path, key, classid, key)
+        elseif area == "VARIABLES" and key then
+            onClick_VARIABLES(editframe, container, nil, nil, key)
+        elseif area == "Macro" and key then
+            onClick_Macro(editframe, container, nil, nil, key)
+        elseif area == "KEYBINDINGS" then
+            onClick_KEYBINDINGS(editframe, container, nil, nil)
+        end
+    end
+end
+
+-- Expose section header helper for reuse outside Editor_Tree
+GSE.GUI.AddSectionHeader = function(container, title, icon)
+    local pad = GSE.GUI.CONTENT_PADDING or 20
+    if container.SetListPadding then
+        container:SetListPadding(pad, SECTION_HEADER_TOP, pad, pad)
+    end
+    addSectionDivider(container, title, icon)
 end

@@ -1,0 +1,22 @@
+diff --git a/GSE_GUI/Editor_Keybind.lua b/GSE_GUI/Editor_Keybind.lua
+index 5525ff6..d769998 100755
+--- a/GSE_GUI/Editor_Keybind.lua
++++ b/GSE_GUI/Editor_Keybind.lua
+@@ -244,7 +244,7 @@ end
+ local function showKeybind(editframe, bind, button, specialization, loadout, type, rightContainer)
+     if type == "KB" then
+         if not specialization then
+-            if GSE.GameMode < 10 then
++            if GSE.GameMode < 7 then
+                 specialization = 1
+             else
+                 local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
+@@ -429,7 +429,7 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
+             bind = button.Bind
+         end
+         if not specialization then
+-            if GSE.GameMode < 10 then
++            if GSE.GameMode < 7 then
+                 specialization = 1
+             else
+                 local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization

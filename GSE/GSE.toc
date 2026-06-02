@@ -1,4 +1,4 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
@@ -32,7 +32,8 @@
 # Lib
 embeds.xml
 
-# Setup Localization
+# Setup Localization (must precede Init.lua: AceLocale:GetLocale("GSE")
+# requires at least one :NewLocale("GSE", ...) call to have run first)
 Localization\ModL_enUS.lua
 Localization\ModL_ptBR.lua
 Localization\ModL_frFR.lua
@@ -45,8 +46,11 @@ Localization\ModL_zhCN.lua
 Localization\ModL_esES.lua
 Localization\ModL_zhTW.lua
 
-# Startup
+# Startup — Init.lua creates the GSE addon table via AceAddon:NewAddon.
+# Native.lua must load AFTER this so its `function GSE.X(...)` definitions
+# attach to the real GSE table instead of erroring on a nil global.
 API\Init.lua
+API\Native.lua
 API\Statics.lua
 API\InitialOptions.lua
 
@@ -54,7 +58,7 @@ API\InitialOptions.lua
 # Storage and core
 API\StringFunctions.lua
 API\CharacterFunctions.lua
-API\Translator.lua
+API\translator.lua
 API\sha512.lua
 API\ed25519verify.lua
 API\Checksum.lua

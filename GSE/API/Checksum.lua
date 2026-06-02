@@ -113,11 +113,11 @@ local function canonicalise_v2(val)
 end
 
 -- Base64url decoder (for v2 signature payload)
-local _b64url_lut = {}
+local b64url_lut = {}
 do
     local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-    for i = 1, #chars do _b64url_lut[chars:sub(i,i)] = i - 1 end
-    _b64url_lut["+"] = 62; _b64url_lut["/"] = 63; _b64url_lut["="] = 0
+    for i = 1, #chars do b64url_lut[chars:sub(i,i)] = i - 1 end
+    b64url_lut["+"] = 62; b64url_lut["/"] = 63; b64url_lut["="] = 0
 end
 
 local function gsev2_b64url_decode(s)
@@ -126,10 +126,10 @@ local function gsev2_b64url_decode(s)
     local padded = s .. string.rep("=", pad)
     local out = {}
     for i = 1, #padded, 4 do
-        local a = _b64url_lut[padded:sub(i,i)]   or 0
-        local b = _b64url_lut[padded:sub(i+1,i+1)] or 0
-        local c = _b64url_lut[padded:sub(i+2,i+2)] or 0
-        local d = _b64url_lut[padded:sub(i+3,i+3)] or 0
+        local a = b64url_lut[padded:sub(i,i)]   or 0
+        local b = b64url_lut[padded:sub(i+1,i+1)] or 0
+        local c = b64url_lut[padded:sub(i+2,i+2)] or 0
+        local d = b64url_lut[padded:sub(i+3,i+3)] or 0
         local n = a*262144 + b*4096 + c*64 + d
         out[#out+1] = string.char(math.floor(n/65536) % 256)
         if padded:sub(i+2,i+2) ~= "=" then
@@ -152,14 +152,14 @@ local PLATFORM_PUBKEY_LE = {
     0xb0,0xba,0x5d,0xa5,0xd7,0xe7,0xe2,0x44,0x97,0x5f,0x05,0x45,0x43,0x0d,0x68,0x3a,
 }
 
-local _pubkey_str = nil
+local pubkey_str = nil
 local function get_pubkey()
-    if not _pubkey_str then
+    if not pubkey_str then
         local t = {}
         for i = 1, 32 do t[i] = string.char(PLATFORM_PUBKEY_LE[i]) end
-        _pubkey_str = table.concat(t)
+        pubkey_str = table.concat(t)
     end
-    return _pubkey_str
+    return pubkey_str
 end
 
 -- ── Algorithm dispatch table ──────────────────────────────────────────────────
@@ -241,10 +241,10 @@ function GSE.VerifySequenceChecksum(sequence)
         --   2. pcall guard: if the verify aborts, downgrade to
         --      "no_checksum" so the import proceeds rather than getting
         --      stuck. The badge will still flag it as unverified.
-        GSE._v2VerifyCache = GSE._v2VerifyCache or {}
+        GSE.v2VerifyCache = GSE.v2VerifyCache or {}
         local cacheKey = payload .. "@" .. canonical
-        if GSE._v2VerifyCache[cacheKey] ~= nil then
-            return GSE._v2VerifyCache[cacheKey]
+        if GSE.v2VerifyCache[cacheKey] ~= nil then
+            return GSE.v2VerifyCache[cacheKey]
         end
         local ok, result = pcall(GSE_Ed25519Verify, get_pubkey(), canonical, sig_bytes)
         if not ok then
@@ -253,7 +253,7 @@ function GSE.VerifySequenceChecksum(sequence)
             return "no_checksum"
         end
         local verdict = result == true
-        GSE._v2VerifyCache[cacheKey] = verdict
+        GSE.v2VerifyCache[cacheKey] = verdict
         return verdict
     end
 
