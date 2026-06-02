@@ -260,15 +260,7 @@ if GSE.GameMode >= 11 then
     -- Vehicle/Skyriding bar
     local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
     VehicleBar:SetAttribute("actionpage", 1)
-    -- Do NOT :Hide() this frame. Secure-handler binding overrides set via
-    -- self:SetBindingClick(true, ...) inside the _onattributechanged snippet
-    -- are tied to the handler frame's visibility — hiding it undoes the
-    -- override immediately, so even though vehicletype="vehicle" (verified
-    -- via /dump on a Skyriding mount 2026-06-01) and the for-loop runs,
-    -- the user's "1" key keeps firing the original binding instead of
-    -- CLICK GSE_VehicleButton1. The VehicleBar has zero visible content
-    -- (the action buttons inside it are individually :Hide()'d below) so
-    -- leaving the container frame Shown produces no visual artefact.
+    VehicleBar:Hide()
 
     -- Creating buttons
     local VehicleButton = {}
@@ -352,38 +344,6 @@ if GSE.GameMode >= 11 then
   end
 ]]
     )
-
-    -- Parallel Lua-side override path. Verified 2026-06-01 with Tim:
-    -- the secure handler above runs (vehicletype attribute does flip to
-    -- "vehicle" on a Skyriding mount per /dump), but its
-    -- self:SetBindingClick(true, ...) calls aren't actually overriding
-    -- the user's existing binding ("1" continued to fire the GSE sequence
-    -- it was already bound to, not GSE_VehicleButton1). Driving the same
-    -- override via SetOverrideBindingClick from Lua side on the same
-    -- attribute change, with the VehicleBar as the owner so it auto-
-    -- clears on dismount. Guarded by InCombatLockdown — secure binding
-    -- changes are blocked in combat anyway.
-    VehicleBar:HookScript("OnAttributeChanged", function(self, name, value)
-        if name ~= "vehicletype" then return end
-        if InCombatLockdown and InCombatLockdown() then return end
-        if value == "vehicle" then
-            for slotStr, key in pairs(GSEOptions.SkyRidingBinds or {}) do
-                local slot = tonumber(slotStr)
-                if slot and key and key ~= "" then
-                    SetOverrideBindingClick(self, true, key, "GSE_VehicleButton" .. slot)
-                end
-            end
-        elseif value == "petbattle" then
-            for slotStr, key in pairs(GSEOptions.SkyRidingBinds or {}) do
-                local slot = tonumber(slotStr)
-                if slot and slot <= 6 and key and key ~= "" then
-                    SetOverrideBindingClick(self, true, key, "GSE_PetBattleButton" .. slot)
-                end
-            end
-        elseif value == "none" then
-            ClearOverrideBindings(self)
-        end
-    end)
 
     -- Actionpage trigger
     RegisterAttributeDriver(VehicleBar, "page", "[vehicleui] A; [possessbar] B; [overridebar] C; [bonusbar:5] D; E")
