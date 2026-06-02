@@ -2253,6 +2253,32 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(troubleOptions, setting, "Master on/off switch for the GSE Tracker (sequence icons, text panel, successful cast, assisted highlight). Turning this off hides every tracker frame.")
         end
         do
+            local function GetValue() return EnsureSequenceIconFrameOptions().SingleIcon == true end
+            local function SetValue(val)
+                local opts = EnsureSequenceIconFrameOptions()
+                opts.SingleIcon = val == true
+                if opts.SingleIcon and opts.IconCount and opts.IconCount > 1 then
+                    if GSE.SetSequenceIconFrameIconCount then
+                        GSE.SetSequenceIconFrameIconCount(1)
+                    else
+                        opts.IconCount = 1
+                    end
+                end
+                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerSingleIcon", Settings.VarType.Boolean, "Single Icon", false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "Lock the Tracker preview to a single icon (the next upcoming spell). When OFF the preview shows up to 10 icons.")
+        end
+        do
+            local function GetValue() return EnsureSequenceIconFrameOptions().PreserveScaleOnZoom == true end
+            local function SetValue(val)
+                EnsureSequenceIconFrameOptions().PreserveScaleOnZoom = val == true
+                if GSE.SequenceIconApplyTrackerFrameScale then GSE.SequenceIconApplyTrackerFrameScale() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerPreserveScaleOnZoom", Settings.VarType.Boolean, "Preserve Scale On Zoom", false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "When the Tracker Frame Scale slider changes, keep each tracker frame centred on its current on-screen position instead of letting it shift. Off uses the default scale-only behaviour.")
+        end
+        do
             local function GetValue()
                 return EnsureSequenceIconFrameOptions().ShowSuccessfulCasts
             end
