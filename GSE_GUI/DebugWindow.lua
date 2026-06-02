@@ -58,9 +58,15 @@ local DEFAULT_DEBUG_COLUMNS = {
     {label = "Action / Spellbook", width = 204, min = 130},
     {label = "Castable", width = 76, min = 60},
     {label = "Resources", width = 90, min = 70},
-    {label = "Casting", width = 112, min = 75},
-    {label = "Suggested - Spell Assist", width = 150, min = 110}
+    {label = "Casting", width = 112, min = 75}
 }
+-- "Suggested - Spell Assist" is the Assisted-Highlight recommendation, which
+-- only exists on Retail builds that expose C_AssistedCombat. Gate the column
+-- here so MoP-Classic / Anniversary / etc. don't render an empty column.
+-- Keep this in sync with GSE.SequenceDebugColumns the same way.
+if C_AssistedCombat and C_AssistedCombat.GetNextCastSpell then
+    DEFAULT_DEBUG_COLUMNS[#DEFAULT_DEBUG_COLUMNS + 1] = {label = "Suggested - Spell Assist", width = 150, min = 110}
+end
 
 function GSE.DebugUsesModernSkin()
     -- When an external skin provider (ElvUI / EllesmereUI) is active we want
@@ -406,6 +412,27 @@ local function CopyDebugColumns(location)
         }
     end
     return columns
+end
+
+local function CopyDebugColumnOrder(location, columns)
+    local savedOrder = location and location.columnOrder
+    local order, seen = {}, {}
+    if type(savedOrder) == "table" then
+        for _, columnIndex in ipairs(savedOrder) do
+            columnIndex = tonumber(columnIndex)
+            if columnIndex and columns[columnIndex] and not seen[columnIndex] then
+                order[#order + 1] = columnIndex
+                seen[columnIndex] = true
+            end
+        end
+    end
+    for columnIndex in ipairs(columns) do
+        if not seen[columnIndex] then
+            order[#order + 1] = columnIndex
+            seen[columnIndex] = true
+        end
+    end
+    return order
 end
 
 local frameTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
@@ -918,6 +945,7 @@ DebugFrame:SetFrameStrata(currentDebuggerStrata)
 DebugFrame.Height = ClampNumber(debugLocation.height or GSEOptions.debugHeight, DEBUG_UI.MIN_DEBUGGER_HEIGHT, GetMaxDebuggerHeight(), DEBUG_UI.MIN_DEBUGGER_HEIGHT)
 DebugFrame.Width = ClampNumber(debugLocation.width or GSEOptions.debugWidth, DEBUG_UI.MIN_DEBUGGER_WIDTH, GetMaxDebuggerWidth(), DEBUG_UI.MIN_DEBUGGER_WIDTH)
 local debugColumns = CopyDebugColumns(debugLocation)
+local debugColumnOrder = CopyDebugColumnOrder(debugLocation, debugColumns)
 GSEOptions.debugHeight = DebugFrame.Height
 GSEOptions.debugWidth = DebugFrame.Width
 DebugFrame:SetSize(DebugFrame.Width, DebugFrame.Height)
@@ -1262,6 +1290,7 @@ end
 local headerLabels = {}
 local headerHandles = {}
 local headerMenuButtons = {}
+local headerDragButtons = {}
 local rowPool = {}
 local debugRows = {}
 local visibleRows = {}
@@ -1269,6 +1298,7 @@ local debugErrorTimestamps = {}
 local statsResetDebugIndex = 1
 local activeColumnFilters = {}
 local activeStatsFilters = {}
+local activeDebugSort = {column = nil, direction = nil}
 local activeStatsSort = {column = nil, direction = nil}
 local statsSortScrollToTop = false
 local activeSearchText = ""
@@ -1373,6 +1403,36 @@ local function IsDebugColumnVisible(index)
     return column and column.visible ~= false
 end
 
+local function GetVisibleDebugColumnOrder()
+    local visible = {}
+    for _, columnIndex in ipairs(debugColumnOrder) do
+        if IsDebugColumnVisible(columnIndex) then visible[#visible + 1] = columnIndex end
+    end
+    return visible
+end
+
+local function GetDebugColumnOrderPosition(columnIndex)
+    for position, orderedColumnIndex in ipairs(debugColumnOrder) do
+        if orderedColumnIndex == columnIndex then return position end
+    end
+end
+
+local function MoveDebugColumnBefore(columnIndex, beforeColumnIndex)
+    if not columnIndex or columnIndex == beforeColumnIndex then return false end
+    local oldPosition = GetDebugColumnOrderPosition(columnIndex)
+    if not oldPosition then return false end
+    if beforeColumnIndex == debugColumnOrder[oldPosition + 1] then return false end
+    if not beforeColumnIndex and oldPosition == #debugColumnOrder then return false end
+    table.remove(debugColumnOrder, oldPosition)
+    local insertPosition = beforeColumnIndex and GetDebugColumnOrderPosition(beforeColumnIndex) or nil
+    if insertPosition then
+        table.insert(debugColumnOrder, insertPosition, columnIndex)
+    else
+        debugColumnOrder[#debugColumnOrder + 1] = columnIndex
+    end
+    return true
+end
+
 local function GetVisibleDebugColumnCount()
     local count = 0
     for i in ipairs(debugColumns) do
@@ -1397,9 +1457,13 @@ local function SaveColumnWidths()
     location.columnVersion = DEBUG_UI.DEBUG_COLUMN_SCHEMA_VERSION
     location.columnWidths = {}
     location.columnVisibility = {}
+    location.columnOrder = {}
     for i, column in ipairs(debugColumns) do
         location.columnWidths[i] = column.width
         location.columnVisibility[i] = column.visible ~= false
+    end
+    for orderIndex, columnIndex in ipairs(debugColumnOrder) do
+        location.columnOrder[orderIndex] = columnIndex
     end
 end
 
@@ -1449,6 +1513,16 @@ local function GetDebugColumnIndex(label)
     end
 end
 
+local function IsDebugSortableColumn(columnIndex)
+    local column = columnIndex and debugColumns[columnIndex]
+    local label = column and column.label
+    return label == "Timestamp" or label == "Step"
+end
+
+local function HasDebugColumnMenu(columnIndex)
+    return IsFilterableColumn(columnIndex) or IsDebugSortableColumn(columnIndex)
+end
+
 local function GetDebugRowTimestamp(row)
     local timestampIndex = GetDebugColumnIndex("Timestamp")
     local timestamp = timestampIndex and row and row.values and StripDebugColor(row.values[timestampIndex] or "") or nil
@@ -1472,28 +1546,63 @@ local function RowUsesSpellbookErrorTimestamp(row)
     return timestamp and debugErrorTimestamps[timestamp] == true
 end
 
+local SUCCESSFUL_CAST_FALLBACK_WINDOW = 8
+
+local function MarkSuccessfulCastRow(row, timestampIndex, castingIndex, castDisplayName)
+    if not (row and row.values) then return false end
+    row.successfulCastTimestamp = true
+    row.values[timestampIndex] = "|cFFFFD100" .. StripDebugColor(row.values[timestampIndex] or "") .. "|r"
+    if castingIndex and castDisplayName ~= "" then
+        row.values[castingIndex] = "|cFF00D1FFCasting " .. castDisplayName .. "|r"
+    end
+    return true
+end
+
+local function IsSuccessfulCastFallbackRow(row, now)
+    if not (row and row.values) then return false end
+    if row.successfulCastTimestamp then return false end
+    if row.createdAt and now then return (now - row.createdAt) <= SUCCESSFUL_CAST_FALLBACK_WINDOW end
+    return false
+end
+
 function GSE.GUIDebugMarkSuccessfulCast(spellID, spellName)
     local actionIndex = GetDebugColumnIndex("Action / Spellbook")
     local timestampIndex = GetDebugColumnIndex("Timestamp")
+    local castingIndex = GetDebugColumnIndex("Casting")
     if not actionIndex or not timestampIndex then return false end
 
     local spellIDText = spellID and tostring(spellID) or ""
     local spellNameText = spellName and string.lower(StripDebugColor(spellName)) or ""
     if spellIDText == "" and spellNameText == "" then return false end
 
+    local castDisplayName = StripDebugColor(spellName or "")
+    if castDisplayName == "" and spellIDText ~= "" and GSE.GetSpellInfo then
+        local spellInfo = GSE.GetSpellInfo(spellID)
+        if spellInfo and spellInfo.name then castDisplayName = spellInfo.name end
+    end
+    if castDisplayName == "" then castDisplayName = spellIDText end
+    if spellNameText == "" and castDisplayName ~= "" then spellNameText = string.lower(castDisplayName) end
+
+    local fallbackRow
+    local now = GetTime and GetTime() or nil
     for rowIndex = #debugRows, math.max(1, #debugRows - 100), -1 do
         local row = debugRows[rowIndex]
+        if not fallbackRow and IsSuccessfulCastFallbackRow(row, now) then fallbackRow = row end
         local actionText = row and row.values and StripDebugColor(row.values[actionIndex] or "") or ""
         local actionLower = string.lower(actionText)
         local matched = (spellIDText ~= "" and string.find(actionText, spellIDText, 1, true) ~= nil)
             or (spellNameText ~= "" and string.find(actionLower, spellNameText, 1, true) ~= nil)
 
         if matched then
-            row.successfulCastTimestamp = true
-            row.values[timestampIndex] = "|cFFFFD100" .. StripDebugColor(row.values[timestampIndex] or "") .. "|r"
+            MarkSuccessfulCastRow(row, timestampIndex, castingIndex, castDisplayName)
             UpdateRows(false)
             return true
         end
+    end
+
+    if MarkSuccessfulCastRow(fallbackRow, timestampIndex, castingIndex, castDisplayName) then
+        UpdateRows(false)
+        return true
     end
 
     return false
@@ -1527,6 +1636,49 @@ local function RowMatchesFilters(row)
     return true
 end
 
+local function ParseDebugTimestampSeconds(value)
+    local hour, minute, second = tostring(value or ""):match("^(%d+):(%d+):(%d+)$")
+    if not hour then return nil end
+    return (tonumber(hour) or 0) * 3600 + (tonumber(minute) or 0) * 60 + (tonumber(second) or 0)
+end
+
+local function GetDebugSortValue(row, columnIndex)
+    if not (row and row.values and columnIndex) then return nil end
+    local value = StripDebugColor(row.values[columnIndex] or "")
+    local column = debugColumns[columnIndex]
+    if column and column.label == "Timestamp" then
+        return ParseDebugTimestampSeconds(value) or value
+    elseif column and column.label == "Step" then
+        return tonumber(value) or value
+    end
+    return value
+end
+
+local function ApplyDebugVisibleSort()
+    if not activeDebugSort.column then return end
+    local sortColumn = activeDebugSort.column
+    local sortDirection = activeDebugSort.direction == "DESC" and "DESC" or "ASC"
+    table.sort(
+        visibleRows,
+        function(left, right)
+            local leftValue = GetDebugSortValue(left, sortColumn)
+            local rightValue = GetDebugSortValue(right, sortColumn)
+            if leftValue ~= nil and rightValue ~= nil and leftValue ~= rightValue then
+                if type(leftValue) ~= type(rightValue) then
+                    leftValue = tostring(leftValue)
+                    rightValue = tostring(rightValue)
+                end
+                if sortDirection == "DESC" then return leftValue > rightValue end
+                return leftValue < rightValue
+            end
+            local leftIndex = left and left.debugIndex or 0
+            local rightIndex = right and right.debugIndex or 0
+            if sortDirection == "DESC" then return leftIndex > rightIndex end
+            return leftIndex < rightIndex
+        end
+    )
+end
+
 local function RebuildVisibleRows()
     for i = #visibleRows, 1, -1 do
         visibleRows[i] = nil
@@ -1534,6 +1686,7 @@ local function RebuildVisibleRows()
     for _, row in ipairs(debugRows) do
         if RowMatchesFilters(row) then visibleRows[#visibleRows + 1] = row end
     end
+    ApplyDebugVisibleSort()
 end
 
 local function FindSearchSuggestion(prefix)
@@ -1676,7 +1829,8 @@ end
 
 local function AddFilterSummary()
     local lines = {"Filters:"}
-    for i, column in ipairs(debugColumns) do
+    for _, i in ipairs(debugColumnOrder) do
+        local column = debugColumns[i]
         if IsFilterableColumn(i) then
             local filterValue = activeColumnFilters[i]
             local checked = filterValue and "[x]" or "[ ]"
@@ -1691,7 +1845,8 @@ end
 local function DebugRowsToExport()
     local exportLines = {}
     local widths = {}
-    for i, column in ipairs(debugColumns) do
+    for _, i in ipairs(debugColumnOrder) do
+        local column = debugColumns[i]
         if IsDebugColumnVisible(i) then
             widths[i] = TextWidthFromPixels(column)
             exportLines[#exportLines + 1] = ExportColumnText(column.label, widths[i])
@@ -1705,7 +1860,7 @@ local function DebugRowsToExport()
             lines[#lines + 1] = StripDebugColor(row.message)
         else
             local values = {}
-            for i, _ in ipairs(debugColumns) do
+            for _, i in ipairs(debugColumnOrder) do
                 if IsDebugColumnVisible(i) then
                     values[#values + 1] = ExportColumnText(row.values and row.values[i] or "", widths[i])
                 end
@@ -3338,6 +3493,17 @@ DebugFrame.minimizedWidget:SetScript(
     end
 )
 
+local function EnsureRowLabel(rowFrame, columnIndex)
+    local label = rowFrame.labels[columnIndex]
+    if not label then
+        label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        label:SetJustifyH("LEFT")
+        label:SetWordWrap(false)
+        rowFrame.labels[columnIndex] = label
+    end
+    return label
+end
+
 local function PositionRowLabels(rowFrame, row)
     local totalWidth = GetColumnTotalWidth()
     local useErrorColor = RowUsesSpellbookErrorTimestamp(row)
@@ -3345,9 +3511,10 @@ local function PositionRowLabels(rowFrame, row)
 
     if row and row.message then
         local messageShown = false
-        for i, label in ipairs(rowFrame.labels) do
+        for _, columnIndex in ipairs(debugColumnOrder) do
+            local label = EnsureRowLabel(rowFrame, columnIndex)
             label:ClearAllPoints()
-            if not messageShown and IsDebugColumnVisible(i) then
+            if not messageShown and IsDebugColumnVisible(columnIndex) then
                 label:SetPoint("LEFT", rowFrame, "LEFT", 4, 0)
                 label:SetPoint("RIGHT", rowFrame, "RIGHT", -4, 0)
                 label:SetText(tostring(row.message or ""))
@@ -3367,20 +3534,15 @@ local function PositionRowLabels(rowFrame, row)
     end
 
     local left = 0
-    for i, column in ipairs(debugColumns) do
-        local label = rowFrame.labels[i]
-        if not label then
-            label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            label:SetJustifyH("LEFT")
-            label:SetWordWrap(false)
-            rowFrame.labels[i] = label
-        end
-        if IsDebugColumnVisible(i) then
+    for _, columnIndex in ipairs(debugColumnOrder) do
+        local column = debugColumns[columnIndex]
+        local label = EnsureRowLabel(rowFrame, columnIndex)
+        if IsDebugColumnVisible(columnIndex) then
             label:ClearAllPoints()
             label:SetPoint("LEFT", rowFrame, "LEFT", left + 4, 0)
             label:SetWidth(math.max(1, (column.width or 0) - 8))
             label:SetHeight(DEBUG_UI.ROW_HEIGHT)
-            label:SetText(tostring(row and row.values and row.values[i] or ""))
+            label:SetText(tostring(row and row.values and row.values[columnIndex] or ""))
             if useErrorColor then
                 label:SetTextColor(1, 0.15, 0.15, 1)
             else
@@ -3518,10 +3680,11 @@ local function EnsureDebugOutputColumnMenu()
 end
 
 local function RefreshDebugOutputColumnMenu()
-    for index, column in ipairs(debugColumns) do
+    for rowIndex, index in ipairs(debugColumnOrder) do
+        local column = debugColumns[index]
         local button = debugColumnButtons[index]
         if button then
-            ConfigureDropdownRow(button, index, column.label or ("Column " .. index), IsDebugColumnVisible(index), button:GetScript("OnClick"))
+            ConfigureDropdownRow(button, rowIndex, column.label or ("Column " .. index), IsDebugColumnVisible(index), button:GetScript("OnClick"))
         end
     end
 end
@@ -3544,7 +3707,7 @@ local function UpdateFilterIndicators()
         button:SetText("v")
         local fontString = button:GetFontString()
         if fontString then
-            if activeColumnFilters[i] then
+            if activeColumnFilters[i] or activeDebugSort.column == i then
                 fontString:SetTextColor(1, 0.82, 0.15, 1)
             else
                 fontString:SetTextColor(0.75, 0.75, 0.75, 1)
@@ -3592,7 +3755,12 @@ local function ApplyColumnFilters(scrollToBottom)
             filterText[#filterText + 1] = tostring(column and column.label or columnIndex) .. " = " .. tostring(value)
         end
         table.sort(filterText)
-        GSE.GUIDebugAppendLine("Filter enabled: " .. table.concat(filterText, ", ") .. ". Events remain in timestamp order.")
+        local suffix = ". Events remain in timestamp order."
+        if activeDebugSort.column then
+            local sortColumn = debugColumns[activeDebugSort.column]
+            suffix = ". Events are sorted by " .. tostring(sortColumn and sortColumn.label or activeDebugSort.column) .. " " .. tostring(activeDebugSort.direction or "ASC") .. "."
+        end
+        GSE.GUIDebugAppendLine("Filter enabled: " .. table.concat(filterText, ", ") .. suffix)
     elseif SetDebuggerStatusText then
         SetDebuggerStatusText()
     else
@@ -3600,7 +3768,84 @@ local function ApplyColumnFilters(scrollToBottom)
     end
 end
 
+local function ApplyDebugColumnSort(columnIndex, direction)
+    if not direction then
+        activeDebugSort.column = nil
+        activeDebugSort.direction = nil
+    else
+        activeDebugSort.column = columnIndex
+        activeDebugSort.direction = direction == "DESC" and "DESC" or "ASC"
+    end
+    RebuildVisibleRows()
+    UpdateFilterIndicators()
+    UpdateRows(false)
+    if SetDebuggerStatusText then
+        if activeDebugSort.column then
+            local column = debugColumns[activeDebugSort.column]
+            DebugFrame:SetStatusText("Sorted by " .. tostring(column and column.label or activeDebugSort.column) .. " " .. activeDebugSort.direction)
+        else
+            SetDebuggerStatusText()
+        end
+    end
+end
+
 local function ShowFilterMenu(columnIndex, anchor)
+    if IsDebugSortableColumn(columnIndex) then
+        local column = debugColumns[columnIndex]
+        local columnLabel = column and column.label or "Column"
+        local menuWidth = math.max(180, column and column.width or 120)
+        local rowCount = 3
+        filterMenu:SetSize(menuWidth, rowCount * DEBUG_UI.DROPDOWN_ROW_HEIGHT + (DEBUG_UI.DROPDOWN_INSET * 2))
+        filterContent:SetSize(menuWidth - (DEBUG_UI.DROPDOWN_INSET * 2), rowCount * DEBUG_UI.DROPDOWN_ROW_HEIGHT)
+
+        local firstLabel = columnLabel == "Timestamp" and "Oldest First" or "Step Ascending"
+        local secondLabel = columnLabel == "Timestamp" and "Newest First" or "Step Descending"
+        ConfigureDropdownRow(
+            EnsureFilterButton(1),
+            1,
+            firstLabel,
+            activeDebugSort.column == columnIndex and activeDebugSort.direction == "ASC",
+            function()
+                filterMenu:Hide()
+                ApplyDebugColumnSort(columnIndex, "ASC")
+            end,
+            {1, 0.82, 0, 1}
+        )
+        ConfigureDropdownRow(
+            EnsureFilterButton(2),
+            2,
+            secondLabel,
+            activeDebugSort.column == columnIndex and activeDebugSort.direction == "DESC",
+            function()
+                filterMenu:Hide()
+                ApplyDebugColumnSort(columnIndex, "DESC")
+            end,
+            {1, 0.82, 0, 1}
+        )
+        ConfigureDropdownRow(
+            EnsureFilterButton(3),
+            3,
+            "Clear Sort",
+            not activeDebugSort.column,
+            function()
+                filterMenu:Hide()
+                ApplyDebugColumnSort(nil, nil)
+            end
+        )
+        for i = 4, #filterButtons do
+            filterButtons[i]:Hide()
+        end
+
+        filterScroll:SetVerticalScroll(0)
+        HideDropdownScrollBar(filterScroll)
+        filterMenu:ClearAllPoints()
+        RaiseDebuggerPopup(filterMenu, anchor)
+        filterMenu:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -2)
+        DebugFrame.ShowDebuggerDropdownClickAway(filterMenu)
+        filterMenu:Show()
+        return
+    end
+
     if not IsFilterableColumn(columnIndex) then return end
 
     local values, displayValues = GetFilterValuesForColumn(columnIndex)
@@ -3657,13 +3902,16 @@ ApplyColumnLayout = function()
     if headerScrollFrame.SetHorizontalScroll then headerScrollFrame:SetHorizontalScroll(0) end
 
     local left = 0
-    for i, column in ipairs(debugColumns) do
+    local visibleOrder = GetVisibleDebugColumnOrder()
+    local lastVisibleColumnIndex = visibleOrder[#visibleOrder]
+    for _, i in ipairs(debugColumnOrder) do
+        local column = debugColumns[i]
         local label = headerLabels[i]
         if label then
             if IsDebugColumnVisible(i) then
                 label:ClearAllPoints()
                 label:SetPoint("LEFT", headerContent, "LEFT", left + 4, 0)
-                local menuWidth = IsFilterableColumn(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
+                local menuWidth = HasDebugColumnMenu(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
                 label:SetWidth(math.max(1, (column.width or 0) - menuWidth - 8))
                 label:SetHeight(DEBUG_UI.HEADER_HEIGHT)
                 label:SetText(column.label or "")
@@ -3673,9 +3921,22 @@ ApplyColumnLayout = function()
             end
         end
 
+        local dragButton = headerDragButtons[i]
+        if dragButton then
+            if IsDebugColumnVisible(i) then
+                local menuWidth = HasDebugColumnMenu(i) and DEBUG_UI.COLUMN_MENU_WIDTH or 0
+                dragButton:ClearAllPoints()
+                dragButton:SetPoint("LEFT", headerContent, "LEFT", left, 0)
+                dragButton:SetSize(math.max(1, (column.width or 0) - menuWidth - DEBUG_UI.COLUMN_HANDLE_WIDTH), DEBUG_UI.HEADER_HEIGHT)
+                dragButton:Show()
+            else
+                dragButton:Hide()
+            end
+        end
+
         local menuButton = headerMenuButtons[i]
         if menuButton then
-            if IsDebugColumnVisible(i) and IsFilterableColumn(i) then
+            if IsDebugColumnVisible(i) and HasDebugColumnMenu(i) then
                 menuButton:ClearAllPoints()
                 menuButton:SetPoint("LEFT", headerContent, "LEFT", left + (column.width or 0) - DEBUG_UI.COLUMN_MENU_WIDTH - 2, 2)
                 menuButton:SetSize(DEBUG_UI.COLUMN_MENU_WIDTH, DEBUG_UI.HEADER_HEIGHT - 4)
@@ -3687,7 +3948,7 @@ ApplyColumnLayout = function()
 
         local handle = headerHandles[i]
         if handle then
-            if IsDebugColumnVisible(i) then
+            if IsDebugColumnVisible(i) and i ~= lastVisibleColumnIndex then
                 handle:ClearAllPoints()
                 handle:SetPoint("LEFT", headerContent, "LEFT", left + (column.width or 0) - 2, 0)
                 handle:SetHeight(DEBUG_UI.HEADER_HEIGHT)
@@ -3704,6 +3965,36 @@ ApplyColumnLayout = function()
     end
 end
 
+local function GetDebugHeaderCursorX()
+    local cursorX = GetCursorPosition()
+    local scale = UIParent and UIParent:GetEffectiveScale() or 1
+    local headerLeft = headerContent:GetLeft() or 0
+    return (cursorX / scale) - headerLeft
+end
+
+local function GetDebugColumnBeforeCursor(cursorX, movingColumnIndex)
+    local left = 0
+    for _, columnIndex in ipairs(debugColumnOrder) do
+        if IsDebugColumnVisible(columnIndex) then
+            local column = debugColumns[columnIndex]
+            local columnWidth = column and column.width or 0
+            if columnIndex ~= movingColumnIndex and cursorX < left + (columnWidth / 2) then return columnIndex end
+            left = left + columnWidth + DEBUG_UI.COLUMN_GAP
+        end
+    end
+end
+
+local function UpdateDebugHeaderDrag(dragButton)
+    local columnIndex = dragButton and dragButton.columnIndex
+    if not columnIndex then return end
+    local beforeColumnIndex = GetDebugColumnBeforeCursor(GetDebugHeaderCursorX(), columnIndex)
+    if MoveDebugColumnBefore(columnIndex, beforeColumnIndex) then
+        dragButton.dragMoved = true
+        SaveColumnWidths()
+        ApplyColumnLayout()
+    end
+end
+
 local function EnsureHeaderColumns()
     for i, _ in ipairs(debugColumns) do
         if not headerLabels[i] then
@@ -3713,7 +4004,37 @@ local function EnsureHeaderColumns()
             headerLabels[i] = label
         end
 
-        if IsFilterableColumn(i) and not headerMenuButtons[i] then
+        if not headerDragButtons[i] then
+            local columnIndex = i
+            local dragButton = CreateFrame("Button", nil, headerContent)
+            dragButton.columnIndex = columnIndex
+            dragButton:EnableMouse(true)
+            if dragButton.SetFrameLevel then dragButton:SetFrameLevel((headerContent:GetFrameLevel() or 0) + 10) end
+            dragButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight")
+            dragButton:SetScript(
+                "OnMouseDown",
+                function(self, button)
+                    if button ~= "LeftButton" then return end
+                    if DebugFrame.HideDebuggerDropdowns then DebugFrame.HideDebuggerDropdowns() end
+                    self.dragMoved = false
+                    self:SetScript("OnUpdate", UpdateDebugHeaderDrag)
+                end
+            )
+            dragButton:SetScript(
+                "OnMouseUp",
+                function(self)
+                    self:SetScript("OnUpdate", nil)
+                    if self.dragMoved then
+                        SaveColumnWidths()
+                        if RefreshStatsWidget then RefreshStatsWidget() end
+                    end
+                    self.dragMoved = false
+                end
+            )
+            headerDragButtons[columnIndex] = dragButton
+        end
+
+        if HasDebugColumnMenu(i) and not headerMenuButtons[i] then
             local columnIndex = i
             local menuButton = CreateFrame("Button", nil, headerContent)
             menuButton:SetSize(DEBUG_UI.COLUMN_MENU_WIDTH, DEBUG_UI.HEADER_HEIGHT - 4)
@@ -3738,11 +4059,12 @@ local function EnsureHeaderColumns()
             headerMenuButtons[columnIndex] = menuButton
         end
 
-        if i < #debugColumns and not headerHandles[i] then
+        if not headerHandles[i] then
             local columnIndex = i
             local handle = CreateFrame("Frame", nil, headerContent)
             handle:SetWidth(DEBUG_UI.COLUMN_HANDLE_WIDTH)
             handle:EnableMouse(true)
+            if handle.SetFrameLevel then handle:SetFrameLevel((headerContent:GetFrameLevel() or 0) + 30) end
             local texture = handle:CreateTexture(nil, "OVERLAY")
             texture:SetPoint("TOP", handle, "TOP", 0, -3)
             texture:SetPoint("BOTTOM", handle, "BOTTOM", 0, 3)
@@ -3840,11 +4162,15 @@ UpdateRows = function(scrollToBottom)
 end
 
 local function AddDebugRow(row, scrollToBottom)
+    if GetTime and not row.createdAt then row.createdAt = GetTime() end
     row.debugIndex = #debugRows + 1
     MarkSpellbookErrorTimestamp(row)
     debugRows[#debugRows + 1] = row
-    if RowMatchesFilters(row) then visibleRows[#visibleRows + 1] = row end
-    UpdateRows(scrollToBottom ~= false)
+    if RowMatchesFilters(row) then
+        visibleRows[#visibleRows + 1] = row
+        ApplyDebugVisibleSort()
+    end
+    UpdateRows((scrollToBottom ~= false) and not activeDebugSort.column)
     if RefreshStatsWidget then RefreshStatsWidget() end
 end
 
