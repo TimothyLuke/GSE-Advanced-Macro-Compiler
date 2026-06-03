@@ -3012,7 +3012,10 @@ local function createIcon()
         refreshIconVisualSize()
     end
 
-    if GSE.Skin and GSE.Skin.Icon then GSE.Skin.Icon(button) end
+    -- ElvUI's S:HandleIcon strictly requires a Texture (calls
+    -- icon:SetTexCoord internally). Pass the texture we just created,
+    -- not the surrounding Button frame.
+    if GSE.Skin and GSE.Skin.Icon then GSE.Skin.Icon(texture) end
     return widget
 end
 
