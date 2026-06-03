@@ -1743,7 +1743,7 @@ function GSE.UpdateIcon(self, reseticon)
                             _G[k].icon:SetTexture(spellinfo.iconID)
                         end
                     else
-                        if GSE.GameMode == 11 then
+                        if GSE.GameMode >= 11 then
                             local parent, slot = _G[k] and _G[k]:GetParent():GetParent(), _G[k] and _G[k]:GetID()
                             local page = parent and parent:GetAttribute("actionpage")
                             local actionSlot = page and slot and slot > 0 and (slot + page * 12 - 12)
