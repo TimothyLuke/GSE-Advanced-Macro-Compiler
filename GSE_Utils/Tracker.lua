@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 
 -- Tracker tunable constants (DefaultIconCount, KeyHistoryLimit,
@@ -3714,3 +3718,5 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 end)
 
 RefreshMoveModes()
+end
+table.insert(ns.deferred, setup)

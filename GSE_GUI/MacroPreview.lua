@@ -1,7 +1,9 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
-
 local L = GSE.L
 local PREVIEW_WIDTH_OFFSET = 18
 local PREVIEW_HEIGHT_OFFSET = 66
@@ -101,3 +103,5 @@ function GSE.GUIShowCompiledMacroGui(spelllist, title, editframe)
     editframe.RefreshCurrentVersion()
   end
 end
+end
+table.insert(ns.deferred, setup)

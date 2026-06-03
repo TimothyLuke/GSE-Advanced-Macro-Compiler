@@ -1,5 +1,8 @@
-local GNOME, _ = ...
-local GSE = GSE
+local GNOME, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local Statics = GSE.Static
 
@@ -3062,3 +3065,5 @@ function GSE:CreateConfigPanels()
 
 end
 GSE:CreateConfigPanels()
+end
+table.insert(ns.deferred, setup)

@@ -1,5 +1,8 @@
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
-local GSE = GSE
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local GCD = nil
 
@@ -324,3 +327,5 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
     end
 end
 GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+end
+table.insert(ns.deferred, setup)

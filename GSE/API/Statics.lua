@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 local Statics = GSE.Static
 local L = GSE.L
 GSE.Library = {}

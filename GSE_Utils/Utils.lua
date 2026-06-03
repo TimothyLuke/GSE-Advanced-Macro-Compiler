@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local L = GSE.L
 
@@ -2309,3 +2313,5 @@ do
 end
 
 GSE.Utils = true
+end
+table.insert(ns.deferred, setup)

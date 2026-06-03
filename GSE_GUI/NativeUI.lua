@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 
 GSE.UI = GSE.UI or {}
 
@@ -6797,3 +6801,5 @@ function UI.CreateEditorSidePanel(editorFrame, contentFrame)
     refreshSideWindow()
     return panel
 end
+end
+table.insert(ns.deferred, setup)

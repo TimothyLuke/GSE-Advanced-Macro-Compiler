@@ -22,6 +22,11 @@
 ## Group: GSE
 
 
+# Bootstrap declares ns.deferred and exposes _G.GSE_GUI_Initialize, which
+# main GSE calls on ADDON_LOADED. Every subsequent file registers its body
+# via table.insert(ns.deferred, setup) and runs in TOC order at init time.
+Bootstrap.lua
+
 Skin.lua
 NativeUI.lua
 Import.lua

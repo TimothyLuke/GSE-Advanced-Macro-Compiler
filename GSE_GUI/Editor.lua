@@ -1,6 +1,9 @@
-local GSE = GSE
-local Statics = GSE.Static
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
+local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
@@ -7562,3 +7565,5 @@ if C_Timer and C_Timer.After then
 else
     RestoreSequenceEditorIfNeeded()
 end
+end
+table.insert(ns.deferred, setup)

@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local Statics = GSE.Static
 local LibQTip = LibStub("LibQTip-2.0")
@@ -88,3 +92,5 @@ function GSE.GUIShowSpellCacheWindow()
   GSE.GUICacheFrame:Show()
   if frame and frame.Raise then frame:Raise() end
 end
+end
+table.insert(ns.deferred, setup)

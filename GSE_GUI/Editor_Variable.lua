@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
@@ -513,3 +517,5 @@ function GSE.GUI.SetupVariable(editframe)
     end
     editframe.buildVariablesMenu = buildVariablesMenu
 end
+end
+table.insert(ns.deferred, setup)

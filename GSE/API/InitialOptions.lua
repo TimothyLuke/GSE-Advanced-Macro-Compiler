@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 local Statics = GSE.Static
 if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("End Patrons") end
 -- These are overridden when the saved variables are loaded in

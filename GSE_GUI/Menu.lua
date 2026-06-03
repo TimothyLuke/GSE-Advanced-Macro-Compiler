@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local Statics = GSE.Static
 
@@ -262,3 +266,5 @@ function GSE.ShowMenu()
 end
 
 GSE.MenuFrame = frame
+end
+table.insert(ns.deferred, setup)

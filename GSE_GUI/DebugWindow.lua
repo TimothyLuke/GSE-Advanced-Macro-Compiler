@@ -1,5 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local onpause = false
 
@@ -4981,3 +4984,5 @@ if EnsureHardwareWidgetLocation().open then
         if GSE.GUIShowDebugHardwareWidget then GSE.GUIShowDebugHardwareWidget() end
     end
 end
+end
+table.insert(ns.deferred, setup)

@@ -1,5 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local UI = GSE.UI
 local L = GSE.L
 
@@ -61,3 +64,5 @@ GSE.GUICompressFrame = compressframe
 if compressframe and compressframe.frame and GSE.RegisterUIScaleFrame then
     GSE.RegisterUIScaleFrame(compressframe.frame)
 end
+end
+table.insert(ns.deferred, setup)

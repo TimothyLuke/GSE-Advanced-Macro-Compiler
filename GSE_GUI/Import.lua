@@ -1,6 +1,9 @@
-local GSE = GSE
-local Statics = GSE.Static
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
+local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
 
@@ -1334,3 +1337,5 @@ end
 if importframe and importframe.frame and GSE.RegisterUIScaleFrame then
     GSE.RegisterUIScaleFrame(importframe.frame)
 end
+end
+table.insert(ns.deferred, setup)

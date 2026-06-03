@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 local Statics = GSE.Static
 
 --- Remove WoW Text Markup from a sequence.  Deprecated Use GSE.UnEscapeTableRecursive

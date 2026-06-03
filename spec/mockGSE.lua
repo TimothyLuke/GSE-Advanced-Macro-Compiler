@@ -10,8 +10,41 @@ GSE = {}
 GSE.L = {}
 GSE.Static = {}
 GSE.VersionString = "2.0.00-18-g95ecb41"
+-- Production source files use `local _, GSE = ...` (main GSE) or
+-- `local _, ns = ...; ns.GSE` (submodules). Both want the GSE table as
+-- the second positional from WoW's addon load tuple. Self-reference lets
+-- the require-override below pass `GSE` as both `ns` (so submodule code's
+-- `ns.GSE` resolves) and as `GSE` (so main-GSE code captures it directly).
+GSE.GSE = GSE
 
 GNOME = "UnitTest"
+
+-- Source files moved from `local GSE = GSE` (global lookup) to
+-- `local _, GSE = ...` (private addon namespace). Under busted, require()
+-- passes (modname, loaderdata-string) as ..., so the second positional is
+-- a string, not our mock GSE table. Intercept requires for repo-relative
+-- GSE/ paths and call the chunk with our mock GSE as the namespace.
+-- Submodule files also push a deferred setup() into ns.deferred; we run
+-- (and drain) it immediately so tests see the bodies as executed.
+local origRequire = require
+local loaded = {}
+function require(modname)
+    if type(modname) == "string" and (modname:match("^%.%./GSE/") or modname:match("^%.%./GSE_")) then
+        if loaded[modname] ~= nil then return loaded[modname] end
+        local path = modname:gsub("^%.%./", "") .. ".lua"
+        local chunk, err = loadfile(path)
+        if not chunk then error(err, 2) end
+        local result = chunk("GSE_TEST", GSE)
+        if GSE.deferred then
+            local pending = GSE.deferred
+            GSE.deferred = nil
+            for _, fn in ipairs(pending) do fn() end
+        end
+        loaded[modname] = result == nil and true or result
+        return loaded[modname]
+    end
+    return origRequire(modname)
+end
 
 GSELibrary = {}
 GSEStorage = {}

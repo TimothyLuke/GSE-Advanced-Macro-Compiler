@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 
 -- ---------------------------------------------------------------------------
@@ -115,3 +119,5 @@ loginFrame:SetScript("OnEvent", function(self, event)
         end
     end
 end)
+end
+table.insert(ns.deferred, setup)

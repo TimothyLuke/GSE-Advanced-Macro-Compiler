@@ -1,7 +1,9 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
-
 local L = GSE.L
 
 -- ============================================================================
@@ -376,3 +378,5 @@ if GSE.GameMode >= 11 then
     GSE:RegisterEvent("PET_BATTLE_OPENING_START")
     GSE:RegisterEvent("PET_BATTLE_CLOSE")
 end
+end
+table.insert(ns.deferred, setup)

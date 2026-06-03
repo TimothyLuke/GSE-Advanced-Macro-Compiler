@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 
 local GNOME = "Checksum" -- luacheck: ignore
 

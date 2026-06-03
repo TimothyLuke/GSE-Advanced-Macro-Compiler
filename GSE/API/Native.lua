@@ -1,7 +1,9 @@
+local _, GSE = ...
+
 -- GSE helper functions that genuinely add behavior — NOT thin wrappers
 -- around WoW APIs. WoW APIs are called directly at the call site.
--- Ace3 mixin (AceConsole / AceEvent / AceComm via Init.lua) provides
--- :RegisterChatCommand / :RegisterEvent / :SendMessage / :RegisterComm etc.
+-- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
+-- :RegisterEvent / :SendMessage / :RegisterComm etc.
 --
 -- This file contains:
 --   * GSE.SafeSecureCmdOptionParse: pcall + UI-error suppression around

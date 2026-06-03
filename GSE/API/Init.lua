@@ -1,10 +1,13 @@
--- GLOBALS: GSE
-GSE =
-    LibStub("AceAddon-3.0"):NewAddon(
-    "GSE",
-    "AceEvent-3.0",
-    "AceComm-3.0"
-)
+local _, GSE = ...
+
+-- Mix the Ace3 capabilities we need straight onto the addon's private namespace
+-- table. We deliberately skip LibStub("AceAddon-3.0"):NewAddon — that would
+-- register GSE under a name discoverable via LibStub:GetAddon, which is the
+-- exact leakage we are closing. Embed installs the methods directly, leaving
+-- no public handle to the GSE table.
+LibStub("AceEvent-3.0"):Embed(GSE)
+LibStub("AceComm-3.0"):Embed(GSE)
+
 GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 
@@ -186,3 +189,46 @@ GSE.inParty = false
 
 -- initialise debugprofilestart
 GSE.DebugProfile("init")
+
+-- ---------------------------------------------------------------------------
+-- Submodule init dispatch
+--
+-- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL) cannot reach
+-- this addon's private namespace at parse-time. Each one exposes a single
+-- global `<name>_Initialize` function that takes the GSE table and runs the
+-- submodule's deferred setup. Reinit guards live inside each submodule.
+-- ---------------------------------------------------------------------------
+local SUBMODULES = {
+    GSE_Utils = true,
+    GSE_Options = true,
+    GSE_GUI = true,
+    GSE_LDB = true,
+    GSE_QoL = true,
+}
+
+local function pushGSEInto(addon)
+    if not SUBMODULES[addon] then return end
+    local initFn = _G[addon .. "_Initialize"]
+    if type(initFn) == "function" then
+        initFn(GSE)
+    end
+end
+
+-- If a submodule somehow loaded before main GSE (TOC dependencies should
+-- prevent this, but cover the case anyway), push GSE into it now.
+for name in pairs(SUBMODULES) do
+    if C_AddOns.IsAddOnLoaded(name) then
+        pushGSEInto(name)
+    end
+end
+
+-- Catch submodules that load after us. AceEvent dispatches as
+-- `self:method(eventname, ...payload)`, so the loaded addon name is the
+-- second positional, not the first. Define the method BEFORE registering:
+-- AceEvent (via CallbackHandler) checks that self[method] is callable at
+-- registration time and errors if the slot is still nil.
+function GSE:ADDON_LOADED(_, addon)
+    if not SUBMODULES[addon] then return end
+    pushGSEInto(addon)
+end
+GSE:RegisterEvent("ADDON_LOADED")

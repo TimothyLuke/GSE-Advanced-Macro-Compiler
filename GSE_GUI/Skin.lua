@@ -19,7 +19,11 @@
 -- table shape as elvUIProvider() / ellesmereUIProvider() below and add a
 -- detect step in selectProvider().
 
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 
 GSE.Skin = GSE.Skin or {}
 
@@ -470,3 +474,5 @@ else
         selectProvider()
     end)
 end
+end
+table.insert(ns.deferred, setup)

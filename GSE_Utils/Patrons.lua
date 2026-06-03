@@ -1,5 +1,8 @@
-local GSE = GSE
-local Statics = GSE.Static
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local Statics = ns.GSE.Static
 
 Statics.Patrons = {
     [[Shane Kuchler]],
@@ -345,3 +348,5 @@ Statics.Patrons = {
     [[Russell Baker]],
     [[Ray Adams]]
 }
+end
+table.insert(ns.deferred, setup)

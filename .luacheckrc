@@ -115,8 +115,14 @@ globals = {
     "GSE_Ed25519Verify",
     "GSE_SHA512",
     "GSECompanionBridgeDB",
+    -- Submodule init entry points (called by main GSE on ADDON_LOADED; each
+    -- submodule's Bootstrap.lua defines its own _Initialize global)
+    "GSE_Utils_Initialize",
+    "GSE_Options_Initialize",
+    "GSE_GUI_Initialize",
+    "GSE_LDB_Initialize",
+    "GSE_QoL_Initialize",
     -- GSE
-    "GSE",
     "GSE2",
     "GSEGUI",
     "GNOME",

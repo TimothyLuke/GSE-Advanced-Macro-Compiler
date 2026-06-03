@@ -20,4 +20,8 @@
 ## Group: GSE
 
 
+# Bootstrap declares ns.deferred and exposes _G.GSE_Options_Initialize, which
+# main GSE calls on ADDON_LOADED.
+Bootstrap.lua
+
 Options.lua

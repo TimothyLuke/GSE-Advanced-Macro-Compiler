@@ -20,4 +20,7 @@
 ## Group: GSE
 
 
+# Bootstrap exposes _G.GSE_LDB_Initialize that main GSE calls on ADDON_LOADED.
+Bootstrap.lua
+
 LDBProvider.lua

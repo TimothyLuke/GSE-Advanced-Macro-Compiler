@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 local Statics = GSE.Static
 
 local GNOME = Statics.DebugModules["Translator"]

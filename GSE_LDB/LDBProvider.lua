@@ -1,5 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local L = GSE.L
 
@@ -327,3 +330,5 @@ local GCDLDB =
 GSE.GCDLDB = GCDLDB
 
 GSE.LDB = true
+end
+table.insert(ns.deferred, setup)
