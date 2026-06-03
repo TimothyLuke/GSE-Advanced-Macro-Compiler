@@ -96,12 +96,17 @@ getMembers(
   "include=currently_entitled_tiers&fields%5Bmember%5D=full_name%2Cpatron_status&fields%5Btier%5D=title",
   function (err, result) {
     let memberList = _.sortBy(result);
-    let output = `local GSE = GSE
-local Statics = GSE.Static
+    let output = `local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local Statics = ns.GSE.Static
 
 Statics.Patrons = {
     [[${memberList.join("]],\n    [[")}]]
-}`;
+}
+end
+table.insert(ns.deferred, setup)`;
     console.log(output);
     fs.writeFile("GSE_Utils/Patrons.lua", output, (err) => {
       if (err) {
