@@ -2,7 +2,6 @@ package-as: GSE
 
 externals:
   GSE/Lib/LibStub: https://repos.wowace.com/wow/libstub/trunk
-  GSE/Lib/AceAddon-3.0: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
   GSE/Lib/AceLocale-3.0: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
   GSE/Lib/AceEvent-3.0: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
   GSE/Lib/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
@@ -22,7 +21,6 @@ move-folders:
   GSE/GSE_GUI: GSE_GUI
   GSE/GSE_LDB: GSE_LDB
   GSE/GSE_Utils: GSE_Utils
-  GSE/GSE_Personal: GSE_Personal
   GSE/GSE_QoL: GSE_QoL
   GSE/GSE_Options: GSE_Options
  

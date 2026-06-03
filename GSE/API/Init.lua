@@ -1,10 +1,5 @@
 local _, GSE = ...
 
--- Mix the Ace3 capabilities we need straight onto the addon's private namespace
--- table. We deliberately skip LibStub("AceAddon-3.0"):NewAddon — that would
--- register GSE under a name discoverable via LibStub:GetAddon, which is the
--- exact leakage we are closing. Embed installs the methods directly, leaving
--- no public handle to the GSE table.
 LibStub("AceEvent-3.0"):Embed(GSE)
 LibStub("AceComm-3.0"):Embed(GSE)
 
