@@ -237,48 +237,20 @@ if GSE.GameMode >= 11 then
     end
 
 
-    -- Hidden macro buttons that execute pet battle abilities, to click on them when the player -- enters a pet battle, with the binds assigned by the user in the vehicle binds panel
-    ----------------------------------------------------------------------------------------------------------
-
-    -- Pet battle buttons
-    local PetBattleButton = {}
-    for i = 1, 6 do
-        PetBattleButton[i] = CreateFrame("Button", "GSE_PetBattleButton" .. i, nil, "SecureActionButtonTemplate")
-        PetBattleButton[i]:RegisterForClicks("AnyDown")
-        PetBattleButton[i]:SetAttribute("type", "macro")
-        if i <= 3 then
-            PetBattleButton[i]:SetAttribute(
-                "macrotext",
-                "/run PetBattleFrame.BottomFrame.abilityButtons[" .. i .. "]:Click()"
-            )
-        end
-    end
-
-    PetBattleButton[4]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.SwitchPetButton:Click()")
-    PetBattleButton[5]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.CatchButton:Click()")
-    PetBattleButton[6]:SetAttribute("macrotext", "/run PetBattleFrame.BottomFrame.ForfeitButton:Click()") -- Hidden action bar to click on its buttons when the player enters a vehicle or -- skyriding mount, with the binds assigned by the user in the vehicle binds panel
-    -------------------------------------------------------------------------------------------------------
-
-    -- Vehicle/Skyriding bar
+    -- Vehicle/Skyriding/PetBattle binding handler. When the player enters a
+    -- vehicle, possess bar, override bar, Skyriding (bonusbar:5), or a pet
+    -- battle, redirect each configured key to ACTIONBUTTON<n> as a priority
+    -- override -- which beats GSE's base sequence binding and falls back to
+    -- it automatically when ClearBindings() runs on dismount/exit.
+    -- ACTIONBUTTON<n> already does the right thing for whatever bar is
+    -- currently active, so no actionpage / intermediate-button indirection
+    -- is needed.
     local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
-    VehicleBar:SetAttribute("actionpage", 1)
     VehicleBar:Hide()
 
-    -- Creating buttons
-    local VehicleButton = {}
-    for i = 1, 12 do
-        VehicleButton[i] = CreateFrame("Button", "GSE_VehicleButton" .. i, VehicleBar, "SecureActionButtonTemplate")
-        local B = VehicleButton[i]
-        B:Hide()
-        B:SetID(i)
-        B:SetAttribute("type", "action")
-        B:SetAttribute("action", i)
-        B:SetAttribute("useparent-actionpage", true)
-        B:RegisterForClicks("AnyDown")
-    end
-
-    -- Table that will store the keybinds for vehicles desired by the user
-
+    -- Compile the user's SkyRidingBinds map into VehicleKeybind inside the
+    -- restricted environment. Called once at init and again whenever the
+    -- user changes a bind in Options.
     function GSE.UpdateVehicleBar()
         local tableval = {}
         if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
@@ -304,79 +276,39 @@ if GSE.GameMode >= 11 then
         if not tablevals then
             executionString = "VehicleKeybind = newtable()"
         end
-        VehicleBar:Execute(executionString) -- Key: Button index / Value: Keybind
+        VehicleBar:Execute(executionString)
     end
 
     GSE.UpdateVehicleBar()
-    -- Triggers
+
     VehicleBar:SetAttribute(
-        -- Leading underscore matters. Dropping it (the change at a32c1c64
-        -- "Second Cut removing AceGUI Dependency") broke skyriding /
-        -- vehicle / petbattle key bindings — BoKamil reported it 2026-06-01;
-        -- downgrade to pre-a32c1c64 on the same client restored function,
-        -- proving it's our code, not a Blizzard-side change. The snippet
-        -- below uses secure restricted-environment methods (SetBindingClick)
-        -- so the attribute name has to be the one the secure infrastructure
-        -- listens to; the unprefixed name isn't it. Do not drop the
-        -- underscore again.
+        -- Leading underscore matters. The secure infrastructure only fires
+        -- the underscore-prefixed snippet; the plain name is a silent no-op
+        -- (regression at a32c1c64 "Second Cut removing AceGUI Dependency",
+        -- restored 2026-06-01). Do not drop the underscore again.
         "_onattributechanged",
         [[
-  -- Actionpage update
-  if name == "page" then
-    if HasVehicleActionBar() then self:SetAttribute("actionpage", GetVehicleBarIndex())
-    elseif HasOverrideActionBar() then self:SetAttribute("actionpage", GetOverrideBarIndex())
-    elseif HasBonusActionBar() then self:SetAttribute("actionpage", GetBonusBarIndex())
-    else self:SetAttribute("actionpage", GetActionBarPage()) end
-
-  -- Settings binds of higher priority than the normal ones when the player enters a vehicle, to be able to use it
-  elseif name == "vehicletype" then
-    if value == "vehicle" then -- Vehicles/Skyriding
+  if name == "vehicletype" then
+    if value == "vehicle" then        -- Vehicles / Possess / Override / Skyriding
       for i = 1, 12 do
-        if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_VehicleButton"..i) end
+        if VehicleKeybind[i] then self:SetBinding(true, VehicleKeybind[i], "ACTIONBUTTON"..i) end
       end
-
-    elseif value == "petbattle" then -- Pet battle
+    elseif value == "petbattle" then  -- Pet battle
       for i = 1, 6 do
-        if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_PetBattleButton"..i) end
+        if VehicleKeybind[i] then self:SetBinding(true, VehicleKeybind[i], "ACTIONBUTTON"..i) end
       end
-
-    elseif value == "none" then -- No vehicle, deleting vehicle binds
+    elseif value == "none" then       -- Back to normal, drop our overrides
       self:ClearBindings()
     end
   end
 ]]
     )
 
-    -- Actionpage trigger
-    RegisterAttributeDriver(VehicleBar, "page", "[vehicleui] A; [possessbar] B; [overridebar] C; [bonusbar:5] D; E")
-
-    -- Vehicle trigger
     RegisterAttributeDriver(
         VehicleBar,
         "vehicletype",
-        "[vehicleui][possessbar][overridebar][bonusbar:5] vehicle;" .. "[petbattle] petbattle;" .. "none"
-    ) -- Event PET_BATTLE_OPENING_START -- Triggers when a pet battle starts. Used only in MoP because it doesn't have the [petbattle] -- macro condition to detect pet battles from the Restricted Environment like post-MoP expansions.
-    ----------------------------------------------------------------------------------------------------------------------
-
-    --[[ Events ]]
-    function GSE:PET_BATTLE_OPENING_START()
-        VehicleBar:Execute(
-            [[
-    for i = 1, 6 do
-      if VehicleKeybind[i] then self:SetBindingClick(true, VehicleKeybind[i], "GSE_PetBattleButton"..i) end
-    end
-  ]]
-        )
-    end
-
-    -- Event PET_BATTLE_CLOSE
-    -- Triggers when a pet battle starts. Used only in MoP because it doesn't have the [petbattle]
-    -- macro condition to detect pet battles from the Restricted Environment like post-MoP expansions.
-    function GSE:PET_BATTLE_CLOSE()
-        VehicleBar:Execute([[ self:ClearBindings() ]])
-    end
-    GSE:RegisterEvent("PET_BATTLE_OPENING_START")
-    GSE:RegisterEvent("PET_BATTLE_CLOSE")
+        "[vehicleui][possessbar][overridebar][bonusbar:5] vehicle; [petbattle] petbattle; none"
+    )
 end
 end
 table.insert(ns.deferred, setup)
