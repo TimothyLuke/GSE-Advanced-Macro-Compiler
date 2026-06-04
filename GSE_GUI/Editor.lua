@@ -4704,14 +4704,17 @@ function GSE.CreateEditor()
                 msvalueeditbox:SetCallback(
                     "OnTextChanged",
                     function(self, event, text)
-                        local returnAction = {}
-                        returnAction["Type"] = action.Type
-                        if clicksdropdown:GetValue() == L["Clicks"] then
-                            returnAction["Clicks"] = tonumber(text)
-                        else
-                            returnAction["MS"] = tonumber(text)
+                        local pauseAction = editframe.Sequence.Versions[version].Actions[keyPath]
+                        if clicksdropdown:GetValue() == L["Milliseconds"] then
+                            pauseAction.MS = tonumber(text) or 0
+                            pauseAction.Clicks = nil
+                            pauseAction.Variable = nil
+                        elseif clicksdropdown:GetValue() == L["Clicks"] then
+                            pauseAction.Clicks = tonumber(text) or 0
+                            pauseAction.MS = nil
+                            pauseAction.Variable = nil
                         end
-                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
+                        -- GCD / numeric-function measures ignore the (disabled) value box.
                         editframe:SetStatusText(editframe.statusText)
                     end
                 )
@@ -4725,21 +4728,24 @@ function GSE.CreateEditor()
                 clicksdropdown:SetCallback(
                     "OnValueChanged",
                     function(self, event, text)
-                        --editframe.Sequence.Versions[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
-                        local returnAction = {}
-                        returnAction["Type"] = action.Type
+                        local pauseAction = editframe.Sequence.Versions[version].Actions[keyPath]
                         if text == L["Clicks"] then
-                            returnAction["Clicks"] = tonumber(msvalueeditbox:GetText())
+                            pauseAction.Clicks = tonumber(msvalueeditbox:GetText()) or 0
+                            pauseAction.MS = nil
+                            pauseAction.Variable = nil
                             msvalueeditbox:SetDisabled(false)
                         elseif text == L["Milliseconds"] then
-                            returnAction["MS"] = tonumber(msvalueeditbox:GetText())
+                            pauseAction.MS = tonumber(msvalueeditbox:GetText()) or 0
+                            pauseAction.Clicks = nil
+                            pauseAction.Variable = nil
                             msvalueeditbox:SetDisabled(false)
                         else
-                            returnAction["Variable"] = text
+                            pauseAction.Variable = text
+                            pauseAction.Clicks = nil
+                            pauseAction.MS = nil
                             msvalueeditbox:SetDisabled(true)
                         end
-
-                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
+                        editframe:SetStatusText(editframe.statusText)
                     end
                 )
                 if clicksdropdown:GetValue() == L["Milliseconds"] or clicksdropdown:GetValue() == L["Clicks"] then
@@ -5628,10 +5634,9 @@ function GSE.CreateEditor()
                 SequenceDropDown:SetCallback(
                     "OnValueChanged",
                     function(obj, event, key, checked)
-                        editframe.Sequence.Versions[version].Actions[keyPath] = {
-                            ["Type"] = Statics.Actions.Embed,
-                            ["Sequence"] = key
-                        }
+                        local embedAction = editframe.Sequence.Versions[version].Actions[keyPath]
+                        embedAction.Type = Statics.Actions.Embed
+                        embedAction.Sequence = key
                     end
                 )
 
