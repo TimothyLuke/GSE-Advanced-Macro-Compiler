@@ -3012,10 +3012,12 @@ local function createIcon()
         refreshIconVisualSize()
     end
 
-    -- ElvUI's S:HandleIcon strictly requires a Texture (calls
-    -- icon:SetTexCoord internally). Pass the texture we just created,
-    -- not the surrounding Button frame.
-    if GSE.Skin and GSE.Skin.Icon then GSE.Skin.Icon(texture) end
+    -- Skin.Icon's contract is (carrierFrame, iconTexture). ElvUI uses the
+    -- texture (its HandleIcon calls SetTexCoord); EllesmereUI uses the
+    -- frame (its skinFrame applies a SetBackdrop + NineSlice border, which
+    -- only works on a real Frame, not a Texture). Pass both; the active
+    -- provider's Icon entry picks the one it can use.
+    if GSE.Skin and GSE.Skin.Icon then GSE.Skin.Icon(button, texture) end
     return widget
 end
 

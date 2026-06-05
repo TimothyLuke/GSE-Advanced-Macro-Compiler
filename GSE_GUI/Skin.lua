@@ -81,7 +81,11 @@ local function makeElvUIProvider()
         ScrollBar   = function(sb)        if S.HandleScrollBar then S:HandleScrollBar(sb) end end,
         Tab         = function(tab)       if S.HandleTab then S:HandleTab(tab) end end,
         StatusBar   = function(bar)       if S.HandleStatusBar then S:HandleStatusBar(bar) end end,
-        Icon        = function(icon)      S:HandleIcon(icon) end,
+        -- Icon is called as `Icon(buttonFrame, textureRegion)`. ElvUI's
+        -- HandleIcon requires a Texture (it calls SetTexCoord internally),
+        -- so prefer the texture. Falling back to the first arg keeps the
+        -- wrapper safe against any future single-arg callers.
+        Icon        = function(frame, texture) S:HandleIcon(texture or frame) end,
         ItemButton  = function(b)         S:HandleItemButton(b, true) end,
         StaticPopup = function(popup)     S:HandleStaticPopup(popup) end,
     }
