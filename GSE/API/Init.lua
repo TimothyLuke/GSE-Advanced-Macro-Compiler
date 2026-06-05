@@ -199,6 +199,7 @@ local SUBMODULES = {
     GSE_GUI = true,
     GSE_LDB = true,
     GSE_QoL = true,
+    GSE_Companion = true,
 }
 
 local function pushGSEInto(addon)
