@@ -1563,6 +1563,22 @@ local function AddActionBarWatermarkOption(optionsCategory)
     end
 end
 
+local function AddActionBarLabelOption(optionsCategory)
+    do
+        local function GetValue()
+            return GSEOptions.showActionBarLabel ~= false
+        end
+        local function SetValue(val)
+            GSEOptions.showActionBarLabel = val == true
+            if GSE.SetActionBarLabelEnabled then
+                GSE.SetActionBarLabelEnabled()
+            end
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Actionbar Override Label"], true, GetValue, SetValue)
+        Settings.CreateCheckbox(optionsCategory, setting, L["Show the sequence name as a text label on actionbar override buttons."])
+    end
+end
+
 local function AddActionBarClickBehaviorOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -2975,6 +2991,7 @@ function GSE:CreateConfigPanels()
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
         AddActionBarWatermarkOption(generalOptions)
+        AddActionBarLabelOption(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
