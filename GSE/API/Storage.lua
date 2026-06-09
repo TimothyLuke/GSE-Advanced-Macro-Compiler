@@ -1753,7 +1753,11 @@ function GSE.UpdateIcon(self, reseticon)
                                     _G[k].icon:SetTexture(spellinfo.iconID)
 
                                     _G[k].icon:Show()
-                                    _G[k].TextOverlayContainer.Count:SetText(gsebutton)
+                                    -- Sequence-name label on the override button.
+                                    -- showActionBarLabel (default on) gates it; off
+                                    -- writes an empty string so no label shows.
+                                    _G[k].TextOverlayContainer.Count:SetText(
+                                        GSEOptions.showActionBarLabel ~= false and gsebutton or "")
                                     _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
                                 end
                             end
@@ -1783,6 +1787,20 @@ function GSE.UpdateIcon(self, reseticon)
         GSE.SequenceDebugLastClickSerials[gsebutton] = clickSerial
     end
     GSE.WagoAnalytics:Switch(gsebutton .. "_" .. GSE.GetCurrentClassID(), true)
+end
+
+--- Re-apply the action-bar override label option live (from the options panel,
+--- no /reload needed). The label text is written inside GSE.UpdateIcon, so just
+--- re-run it for every overridden sequence to pick up showActionBarLabel.
+function GSE.SetActionBarLabelEnabled()
+    if not GSE.ButtonOverrides then return end
+    local seen = {}
+    for _, sequence in pairs(GSE.ButtonOverrides) do
+        if sequence and _G[sequence] and not seen[sequence] then
+            seen[sequence] = true
+            GSE.UpdateIcon(_G[sequence], false)
+        end
+    end
 end
 
 --- Takes a collection of Sequences and returns a list of names

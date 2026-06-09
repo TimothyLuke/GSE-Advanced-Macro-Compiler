@@ -261,35 +261,6 @@ local function getGSEButtonIcon(self)
         if texture and not isGSEFallbackTexture(texture) then return texture end
     end
 end
--- Native action-button macro-name label (the "Name" FontString). A GSE override
--- sits on a synced WoW macro, so WoW renders the sequence name in that label.
--- The showActionBarLabel option (default on) lets the player hide it. We only
--- hide it while the override is actually active -- when the slot yields to a
--- real action (gse-eff-action > 0) we leave the name alone so that action's own
--- name shows normally. Hiding a FontString region is not combat-protected.
-local function applyGSEButtonLabel(btnName)
-    local btn = btnName and _G[btnName]
-    if not btn or not btn.GetAttribute then return end
-    if not btn:GetAttribute("gse-button") then return end
-    local nameFS = btn.Name or _G[btnName .. "Name"]
-    if not nameFS then return end
-    local yielded = (tonumber(btn:GetAttribute("gse-eff-action")) or 0) > 0
-    if GSEOptions.showActionBarLabel == false and not yielded then
-        nameFS:Hide()
-    else
-        nameFS:Show()
-    end
-end
-
--- Re-apply the label option across every current override button (live toggle
--- from the options panel, no /reload needed).
-function GSE.SetActionBarLabelEnabled()
-    if not GSE.ButtonOverrides then return end
-    for btnName in pairs(GSE.ButtonOverrides) do
-        applyGSEButtonLabel(btnName)
-    end
-end
-
 local function repaintGSEOverrideButton(button, defer)
     if not button or not button.GetAttribute then return end
 
@@ -304,7 +275,6 @@ local function repaintGSEOverrideButton(button, defer)
             icon:SetTexture(texture)
             icon:Show()
         end
-        applyGSEButtonLabel(btnName)
     end
 
     if defer then
@@ -503,7 +473,6 @@ local function hookButtonIconUpdates(Button)
                 scheduleIconRestore(self, icon)
                 setWatermarkVisible(btnName, true)
             end
-            applyGSEButtonLabel(btnName)
         elseif name == "type" and value == "click" then
             -- type was set back to "click" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ WoW's own update will run this frame
             -- and clear the icon; restore it on the next frame.
@@ -561,7 +530,6 @@ local function hookActionButtonUpdate()
             icon:SetTexture(texture)
             icon:Show()
         end
-        if seq then applyGSEButtonLabel(btnName) end
     end)
 end
 
