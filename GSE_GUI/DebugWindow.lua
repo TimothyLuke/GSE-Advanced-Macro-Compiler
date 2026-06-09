@@ -1975,6 +1975,9 @@ end
 local statsLocation = EnsureStatsWidgetLocation()
 local statsColumns = CopyStatsColumns(statsLocation)
 local statsWidget = GSE.CreateDebuggerEditorFrame("GSEGUIDebugStatsWidget", UIParent)
+-- Mark as a Debugger side panel so the scale routine keeps it docked to the main
+-- Debugger while attached, and only recentres it once the user detaches it.
+statsWidget.GSEDebugSidePanel = true
 statsWidget:SetFrameStrata(currentDebuggerStrata)
 statsWidget:SetClampedToScreen(false)
 statsWidget:SetMovable(true)
@@ -2711,6 +2714,9 @@ DebugFrame.IsHardwareStateActive = function()
     return hardwareState.lastSeen and hardwareState.lastSeen > 0 and now >= hardwareState.lastSeen and (now - hardwareState.lastSeen) <= hardwareState.activeTimeout
 end
 hardwareWidget = GSE.CreateDebuggerEditorFrame("GSEGUIDebugHardwareWidget", UIParent)
+-- Mark as a Debugger side panel (see statsWidget above): keep docked while
+-- attached, recentre on scale only when detached.
+hardwareWidget.GSEDebugSidePanel = true
 hardwareWidget:SetFrameStrata(currentDebuggerStrata)
 hardwareWidget:SetClampedToScreen(false)
 hardwareWidget:SetMovable(true)

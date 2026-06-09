@@ -161,6 +161,26 @@ if not GSEOptions.DebugModules then
     GSE.SetDefaultOptions()
 end
 
+-- Developer Debug is a developer-only facility. Its toggles (Enable Mod Debug
+-- Mode, the chat/store debug-output options and per-module debug) live in a
+-- Settings subcategory that is only built when GSE.Developer is set -- and that
+-- flag is set ONLY by the version-string check in Init.lua (unpackaged dev
+-- checkout). A normal user therefore has no UI to turn any of these on, so a
+-- persisted debug flag can only be a leftover from a prior developer/Patron
+-- build. Left alone it spams heavy logging and nags the GameMenu "Developer
+-- Debug settings are active" warning. Force the whole set off on every load
+-- unless this build is genuinely a developer build.
+if not GSE.Developer then
+    GSEOptions.debug = false
+    GSEOptions.sendDebugOutputToChatWindow = false
+    GSEOptions.sendDebugOutputToDebugOutput = false
+    if type(GSEOptions.DebugModules) == "table" then
+        for moduleName in pairs(GSEOptions.DebugModules) do
+            GSEOptions.DebugModules[moduleName] = false
+        end
+    end
+end
+
 if GSEOptions.UseModernSkin == nil then
     GSEOptions.UseModernSkin = GSEOptions.UseElvUISkin == true
 end

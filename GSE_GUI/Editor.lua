@@ -4008,10 +4008,74 @@ function GSE.CreateEditor()
                             end
                         end
                         local targetList = EnsureActionList(delPath)
+                        local removed = false
                         if targetList and delObj and delObj >= 1 and delObj <= #targetList then
                             table.remove(targetList, delObj)
+                            removed = true
                         end
+
+                        -- Deleting a block used to leave the rebuilt editor scrolled to the
+                        -- top, forcing the user to scroll all the way back down. Instead, keep
+                        -- them where they were: select + scroll to the block immediately above
+                        -- the one just removed (falling back to the new first block, or the
+                        -- parent container block when a nested list is emptied). This mirrors
+                        -- the Add/Move pending-select-then-focus pattern used elsewhere.
+                        local focusPath
+                        if removed then
+                            if targetList and #targetList > 0 then
+                                local focusIdx = delObj - 1
+                                if focusIdx < 1 then focusIdx = 1 end
+                                if focusIdx > #targetList then focusIdx = #targetList end
+                                focusPath = {}
+                                for _, step in ipairs(delPath) do
+                                    focusPath[#focusPath + 1] = step
+                                end
+                                focusPath[#focusPath + 1] = focusIdx
+                            elseif #delPath > 0 then
+                                focusPath = {}
+                                for _, step in ipairs(delPath) do
+                                    focusPath[#focusPath + 1] = step
+                                end
+                            end
+                        end
+
+                        if focusPath then
+                            if editframe.gseRestrictMacroBlockAutoSelect then
+                                editframe.gseRestrictMacroBlockAutoSelect(focusPath, 0.45)
+                            end
+                            editframe.pendingMacroBlockSelectPath = focusPath
+                            editframe.pendingMacroBlockSelectVersion = version
+                        end
+
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+
+                        if focusPath then
+                            if editframe.gseSelectMacroBlockPath then
+                                editframe.gseSelectMacroBlockPath(focusPath, nil, true)
+                            end
+                            editframe.pendingMacroBlockSelectPath = nil
+                            editframe.pendingMacroBlockSelectVersion = nil
+
+                            local function refocusDeletedNeighbour()
+                                if editframe.gseSelectMacroBlockPath then
+                                    editframe.gseSelectMacroBlockPath(focusPath, nil, true)
+                                end
+                                if editframe.gseFocusSelectedMacroBlock then
+                                    editframe.gseFocusSelectedMacroBlock()
+                                end
+                            end
+
+                            -- Layout settles asynchronously after the rebuild, so
+                            -- re-assert selection + scroll across a few frames.
+                            C_Timer.After(0.01, refocusDeletedNeighbour)
+                            C_Timer.After(0.06, refocusDeletedNeighbour)
+                            C_Timer.After(0.18, refocusDeletedNeighbour)
+                            C_Timer.After(0.45, function()
+                                if editframe.gseClearMacroBlockAutoSelect then
+                                    editframe.gseClearMacroBlockAutoSelect(focusPath)
+                                end
+                            end)
+                        end
                     end
                 )
                 deleteBlockButton:SetCallback(

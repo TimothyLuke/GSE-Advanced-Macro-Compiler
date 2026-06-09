@@ -55,6 +55,7 @@ local STYLE = {
     scrollBarReserve = 24,
     scrollBarWidth = 16,
     scrollBarVisibleReserve = 18,
+    scrollArrowInset = 18,
     panelTabWidth = 120,
     tabBarHeight = 28,
     tabContentOffset = 32,
@@ -3044,6 +3045,35 @@ local function createScrollFrame()
     widget.content = content
     widget.scrollframe = scrollFrame
     widget.scrollbar = getScrollBar(scrollFrame)
+    -- The scrollFrame above calls SetClipsChildren(true), which clips child rendering
+    -- to its own rectangle. UIPanelScrollFrameTemplate parents its ScrollBar to the
+    -- scrollFrame and anchors it just outside the right edge -- inside the
+    -- scrollBarReserve gap -- so the bar is clipped to nothing and never appears.
+    -- applyModernSlimScrollBar already reparents the bar out of the clip region, but it
+    -- only runs under the modern / ElvUI skins (UseModernSkin defaults to false), so on
+    -- the default Blizzard skin the bar stayed clipped and the editor's right-hand
+    -- scrollbar was permanently hidden. Lift it out of the clip unconditionally here so
+    -- the bar is visible on every skin, then let applyModernSlimScrollBar layer on the
+    -- slim styling only when a themed skin is active.
+    --
+    -- On the default Blizzard skin the bar keeps its ScrollUp/ScrollDownButton,
+    -- which UIPanelScrollFrameTemplate anchors just above the bar top and just
+    -- below the bar bottom. With a zero bottom inset the down arrow overhangs the
+    -- frame's bottom edge and is clipped by the editor window border (the reported
+    -- "bottom scroll arrow hidden"). Inset the bar bottom by the arrow-button
+    -- height so the down arrow sits inside the frame. Measure the real button
+    -- (robust across client/skin) and fall back to STYLE.scrollArrowInset. The top
+    -- is left flush: its up arrow already sits behind the editor header, and the
+    -- modern / ElvUI path suppresses the arrow buttons and re-anchors flush (0,0)
+    -- in applyModernSlimScrollBar below, so this inset is default-skin only.
+    local arrowInset = STYLE.scrollArrowInset
+    local downArrow = widget.scrollbar and (widget.scrollbar.ScrollDownButton
+        or getNamedChild(widget.scrollbar, "ScrollDownButton"))
+    if downArrow and downArrow.GetHeight then
+        local downArrowHeight = downArrow:GetHeight()
+        if downArrowHeight and downArrowHeight > 0 then arrowInset = downArrowHeight end
+    end
+    anchorModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, arrowInset)
     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
     widget.localstatus = {scrollvalue = 0}
     widget.scrollBarShown = false
@@ -3073,24 +3103,32 @@ local function createScrollFrame()
         return math.max(nativeRange, manualRange)
     end
 
-    local function clampScrollPixels(value)
-        return math.min(math.max(value or 0, 0), getScrollRange())
+    -- knownRange lets callers pass a scroll range they have already computed for
+    -- the current gesture so the per-frame smooth-scroll pump does not re-run
+    -- getScrollRange() -> scrollFrame:UpdateScrollChildRect() on every OnUpdate
+    -- tick. Content size is fixed during a glide, so the gesture-start range is
+    -- valid for the whole animation; recomputing it each frame was forcing two
+    -- scroll-child-rect rebuilds per frame and made scrolling choppy on long
+    -- sequences. knownRange is optional -- callers that may have just changed the
+    -- content height (drag, SetScroll) omit it and a fresh range is computed.
+    local function clampScrollPixels(value, knownRange)
+        return math.min(math.max(value or 0, 0), knownRange or getScrollRange())
     end
 
-    local function syncScrollbar(value)
+    local function syncScrollbar(value, knownRange)
         if not widget.scrollbar then return end
         widget.noupdate = true
-        widget.scrollbar:SetValue(clampScrollPixels(value))
+        widget.scrollbar:SetValue(clampScrollPixels(value, knownRange))
         widget.noupdate = nil
     end
 
-    local function setScrollPixels(value)
-        local range = getScrollRange()
+    local function setScrollPixels(value, knownRange)
+        local range = knownRange or getScrollRange()
         local target = math.min(math.max(value or 0, 0), range)
         local status = widget.status or widget.localstatus
         scrollFrame:SetVerticalScroll(target)
         status.scrollvalue = target
-        syncScrollbar(target)
+        syncScrollbar(target, range)
     end
 
     local function stopSmoothScroll()
@@ -3107,18 +3145,20 @@ local function createScrollFrame()
 
         stopSmoothScroll()
         if math.abs(target - start) < 0.5 then
-            setScrollPixels(target)
+            setScrollPixels(target, range)
             return
         end
 
         widget.scrollStart = start
         widget.scrollTarget = target
         widget.scrollElapsed = 0
+        -- range is captured once here and reused for every frame of the glide;
+        -- the OnUpdate pump never calls getScrollRange()/UpdateScrollChildRect().
         frame:SetScript("OnUpdate", function(_, elapsed)
             widget.scrollElapsed = (widget.scrollElapsed or 0) + (elapsed or 0)
             local progress = math.min(widget.scrollElapsed / SCROLL_SMOOTH_DURATION, 1)
             local eased = 1 - ((1 - progress) * (1 - progress))
-            setScrollPixels(widget.scrollStart + ((widget.scrollTarget - widget.scrollStart) * eased))
+            setScrollPixels(widget.scrollStart + ((widget.scrollTarget - widget.scrollStart) * eased), range)
             if progress >= 1 then stopSmoothScroll() end
         end)
     end
@@ -3126,7 +3166,20 @@ local function createScrollFrame()
     local function setScrollbarValue(value)
         if widget.noupdate then return end
         stopSmoothScroll()
-        setScrollPixels(value)
+        -- Dragging the thumb fires OnValueChanged every frame the mouse moves.
+        -- The scrollbar's max value is kept equal to the scroll range by
+        -- UpdateScroll, and content height does not change mid-drag, so reuse it
+        -- as the known range instead of recomputing getScrollRange() ->
+        -- scrollFrame:UpdateScrollChildRect() on every tick -- that per-tick
+        -- layout rebuild is what made dragging the scrollbar laggy. The mouse
+        -- wheel already avoids this via the gesture range cached in smoothScrollTo;
+        -- the drag path was the one still rebuilding the child rect per tick.
+        local knownRange
+        if widget.scrollbar and widget.scrollbar.GetMinMaxValues then
+            local _, maxVal = widget.scrollbar:GetMinMaxValues()
+            if maxVal and maxVal > 0 then knownRange = maxVal end
+        end
+        setScrollPixels(value, knownRange)
     end
 
     if widget.scrollbar then
@@ -3158,7 +3211,7 @@ local function createScrollFrame()
         if range <= 0 then
             scrollFrame:SetVerticalScroll(0)
             status.scrollvalue = 0
-            syncScrollbar(0)
+            syncScrollbar(0, range)
             return
         end
         local wheelDelta = delta or 0
@@ -3194,10 +3247,10 @@ local function createScrollFrame()
         if self.scrollbar then
             if range > 0 and self.scrollBarEnabled ~= false then
                 self.scrollbar:SetMinMaxValues(0, range)
-                syncScrollbar(status.scrollvalue)
+                syncScrollbar(status.scrollvalue, range)
                 self.scrollbar:Show()
             else
-                syncScrollbar(0)
+                syncScrollbar(0, range)
                 self.scrollbar:Hide()
             end
         end
