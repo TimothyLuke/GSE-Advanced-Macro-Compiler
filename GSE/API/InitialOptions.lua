@@ -135,7 +135,6 @@ function GSE.SetDefaultOptions()
     GSEOptions.frameLocations = {
         sequenceeditor = {height = 800, width = 800, treeWidth = 165}
     }
-    GSEOptions.Multiclick = true
     GSEOptions.SyncWoWMacros = false
     GSEOptions.UseModernSkin = false
     GSEOptions.UseModernClassColors = false

@@ -206,11 +206,11 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
                         if not GSE.isEmpty(trimRight) then
                             etc = string.sub(etc, 1, trimRight - 1)
                         end
-                        if mode == Statics.TranslatorMode.String then
-                            if tonumber(GetCVar("ActionButtonUseKeyDown")) == 1 then
-                                etc = etc .. " LeftButton t"
-                            end
-                        end
+                        -- Always emit a bare `/click NAME` (down=false). GSE
+                        -- sequence buttons now pin useOnKeyDown=false, so a
+                        -- key-DOWN forward (`LeftButton t`) would no longer match
+                        -- the executor's cast edge. Bare /click resolves on the
+                        -- up edge under both ActionButtonUseKeyDown states.
                         output = output .. " " .. etc
                     elseif Statics.CastCmds[string.lower(cmd)] then
                         -- Check for cast Sequences

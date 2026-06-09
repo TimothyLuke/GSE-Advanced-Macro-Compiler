@@ -2230,10 +2230,20 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         gsebutton:SetAttribute("step", 1)
         gsebutton:SetAttribute("name", name)
         gsebutton.UpdateIcon = GSE.UpdateIcon
-        gsebutton:RegisterForClicks("AnyUp", "AnyDown")
+        -- Single registered edge so a keybind advances the step ONCE per press,
+        -- not once on down and again on up.
+        gsebutton:RegisterForClicks("AnyUp")
 
         gsebutton:SetAttribute("combatreset", combatReset)
     end
+    -- Pin the executor to the key-UP edge irrespective of the
+    -- ActionButtonUseKeyDown CVar. The action-bar override delegate
+    -- (SecureActionButton type="click") forwards clickbutton:Click(button) with
+    -- NO down argument, i.e. down=false, so the executor must cast on down=false
+    -- to work under both CVar states. Direct key-DOWN latency is provided by a
+    -- separate relay button (see GSE.GetKeybindClickTarget) rather than by
+    -- letting this button follow the CVar.
+    gsebutton:SetAttribute("useOnKeyDown", false)
 
     -- Modifier-pause attributes. Read inside the secure OnClick handler
     -- (cannot read GSEOptions directly from secure context) so re-stamp on
@@ -2260,7 +2270,6 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
         end
     end
 
-    gsebutton:SetAttribute("stepped", false)
     local steps = {}
 
     for k, v in ipairs(spelllist) do
@@ -2403,67 +2412,6 @@ end
     self:SetAttribute('gseclickserial', gseclickserial + 1)
     self:CallMethod('UpdateIcon')
     ]=]
-    if GSEOptions.Multiclick then
-        clickexecution =
-            GSE.GetMacroResetImplementation() ..
-            [=[
-    if (self:GetAttribute('shiftpause') and IsShiftKeyDown())
-        or (self:GetAttribute('altpause') and IsAltKeyDown())
-        or (self:GetAttribute('ctrlpause') and IsControlKeyDown()) then
-        self:SetAttribute('type', 'macro')
-        self:SetAttribute('macro', nil)
-        self:SetAttribute('unit', nil)
-        self:SetAttribute('macrotext', '')
-        return
-    end
-    local mods = "RALT=" .. tostring(IsRightAltKeyDown()) .. "|" ..
-    "LALT=".. tostring(IsLeftAltKeyDown()) .. "|" ..
-    "AALT=" .. tostring(IsAltKeyDown()) .. "|" ..
-    "RCTRL=" .. tostring(IsRightControlKeyDown()) .. "|" ..
-    "LCTRL=" .. tostring(IsLeftControlKeyDown()) .. "|" ..
-    "ACTRL=" .. tostring(IsControlKeyDown()) .. "|" ..
-    "RSHIFT=" .. tostring(IsRightShiftKeyDown()) .. "|" ..
-    "LSHIFT=" .. tostring(IsLeftShiftKeyDown()) .. "|" ..
-    "ASHIFT=" .. tostring(IsShiftKeyDown()) .. "|" ..
-    "AMOD=" .. tostring(IsModifierKeyDown()) .. "|" ..
-    "MOUSEBUTTON=" .. GetMouseButtonClicked()
-    self:SetAttribute('localmods', mods)
-    local iteration = self:GetAttribute('iteration') or 1
-    local step = self:GetAttribute('step')
-    step = tonumber(step)
-    iteration = tonumber(iteration)
-    if self:GetAttribute('stepped') then
-        self:SetAttribute('stepped', false)
-    else
-        for k,v in pairs(spelllist[iteration][step]) do
-            if k == "macrotext" then
-                self:SetAttribute("macro", nil )
-                self:SetAttribute("unit", nil )
-            elseif k == "macro" then
-                self:SetAttribute("macrotext", nil )
-                self:SetAttribute("unit", nil )
-            elseif k == "Icon" then
-                -- skip
-            end
-            self:SetAttribute(k, v )
-        end
-
-        self:SetAttribute('stepped', true)
-        if step < #spelllist[iteration] then
-            step = step % #spelllist[iteration] + 1
-        else
-            iteration = iteration % maxsequences + 1
-            step = 1
-        end
-
-        self:SetAttribute('step', step)
-        self:SetAttribute('iteration', iteration)
-        local gseclickserial = tonumber(self:GetAttribute('gseclickserial') or 0) or 0
-        self:SetAttribute('gseclickserial', gseclickserial + 1)
-        self:CallMethod('UpdateIcon')
-    end
-    ]=]
-    end
     if GSEOptions.DebugPrintModConditionsOnKeyPress then
         clickexecution = Statics.PrintKeyModifiers .. clickexecution
     end
@@ -2487,6 +2435,52 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
         )
         if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(err), "Storage") end
     end
+end
+
+--- Return the frame name a keybind should click for sequence `name`.
+--
+-- The executor button casts on the key-UP edge (down=false) so it stays
+-- compatible with the action-bar override delegate, which forwards Click(button)
+-- with no down flag. That means a direct keybind bound straight to the executor
+-- also resolves on key-up -- fine, except a player running
+-- ActionButtonUseKeyDown=1 expects key-DOWN latency.
+--
+-- When the CVar is on we hand the keybind a thin relay button instead: it fires
+-- on AnyDown (useOnKeyDown=true) and forwards into the executor via type="click"
+-- (Click(button) -> down=false), so the cast lands on the key-down edge without
+-- double-stepping. This mirrors how an action-bar override button already relays
+-- into the sequence. When the CVar is off (or we are in combat and cannot build
+-- the relay) we bind straight to the executor, which resolves on key-up.
+function GSE.GetKeybindClickTarget(name)
+    if GSE.isEmpty(name) or GSE.isEmpty(_G[name]) then
+        return name
+    end
+    if C_CVar.GetCVar("ActionButtonUseKeyDown") ~= "1" then
+        return name
+    end
+    local relayName = name .. "_KD"
+    local relay = _G[relayName]
+    if GSE.isEmpty(relay) then
+        if InCombatLockdown() then
+            -- RegisterForClicks/SetAttribute are restricted on protected frames
+            -- in combat; fall back to the executor until the next OOC rebind.
+            return name
+        end
+        relay = CreateFrame("Button", relayName, nil, "SecureActionButtonTemplate")
+        relay.gseKeyDownRelay = true
+        relay:RegisterForClicks("AnyDown")
+    elseif not relay.gseKeyDownRelay then
+        -- A frame already owns this name and it is NOT one of our relays (e.g. a
+        -- user sequence literally named "<name>_KD"). Don't clobber it -- bind
+        -- the keybind straight to the executor (resolves on key-up) instead.
+        return name
+    end
+    if not InCombatLockdown() then
+        relay:SetAttribute("type", "click")
+        relay:SetAttribute("clickbutton", _G[name])
+        relay:SetAttribute("useOnKeyDown", true)
+    end
+    return relayName
 end
 
 function GSE.UpdateVariable(variable, name, status)

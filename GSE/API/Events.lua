@@ -73,31 +73,6 @@ end
 
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
--- Fired once per session when overrides are loaded.  Corrects CVars that interfere
--- with actionbar overrides and tells the player what was changed.
-local actionBarCVarCheckedThisSession = false
-local function ensureActionBarCVars()
-    if actionBarCVarCheckedThisSession then return end
-    actionBarCVarCheckedThisSession = true
-    local fixed = {}
-    local needsReload = false
-    if GetCVar("ActionButtonUseKeyDown") == "1" then
-        SetCVar("ActionButtonUseKeyDown", 0)
-        table.insert(fixed, "ActionButtonUseKeyDown (CVar)")
-    end
-    if GSEOptions.Multiclick then
-        GSEOptions.Multiclick = false
-        table.insert(fixed, "MultiClickButtons (GSE Option - requires /reload to fully apply)")
-        needsReload = true
-    end
-    if #fixed > 0 then
-        GSE.Print(L["Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] .. table.concat(fixed, ", "))
-        if needsReload then
-            GSE.Print(L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."])
-        end
-    end
-end
-
 -- Secure OnAttributeChanged handler shared by all native/Dominos/third-party button paths.
 -- When WoW swaps the action bar (vehicle, skyriding, possession, override bar) it changes
 -- the 'action' or 'pressandholdaction' attribute on the button.  We catch that here,
@@ -784,49 +759,6 @@ function GSE:ACTIONBAR_SLOT_CHANGED()
     reevaluateAllOverrideButtons()
 end
 
-local function isUsableActionBarOverride(savedBind)
-    if type(savedBind) ~= "table" then return false end
-
-    local buttonName = savedBind.Bind
-    local sequenceName = savedBind.Sequence
-    if GSE.isEmpty(buttonName) or GSE.isEmpty(sequenceName) then return false end
-
-    return _G[buttonName] ~= nil and _G[sequenceName] ~= nil
-end
-
-local function hasUsableActionBarOverride(overrides)
-    if type(overrides) ~= "table" then return false end
-
-    for _, savedBind in pairs(overrides) do
-        if isUsableActionBarOverride(savedBind) then
-            return true
-        end
-    end
-
-    return false
-end
-
-local function hasCurrentActionBarOverride()
-    local actionBarBinds = GSE_C and GSE_C["ActionBarBinds"]
-    if type(actionBarBinds) ~= "table" then return false end
-
-    local spec = GetSpec()
-    local specs = actionBarBinds["Specialisations"]
-    if specs and hasUsableActionBarOverride(specs[spec]) then
-        return true
-    end
-
-    if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
-        local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
-        local loadouts = actionBarBinds["LoadOuts"]
-        if selected and loadouts and loadouts[spec] and hasUsableActionBarOverride(loadouts[spec][selected]) then
-            return true
-        end
-    end
-
-    return false
-end
-
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -845,11 +777,6 @@ local function LoadOverrides(force)
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()]) then
         GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] = {}
-    end
-    -- If an override can actually be loaded, ensure the CVars that block it are off.
-    -- SetCVar is not combat-restricted so this runs regardless of lockdown state.
-    if hasCurrentActionBarOverride() then
-        ensureActionBarCVars()
     end
     if not InCombatLockdown() then
         ClearOverrideBindings(GSE_EABBindOwner)
@@ -915,9 +842,10 @@ local function LoadKeyBindings(payload)
 
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
-            SetBindingClick(k, v, "LeftButton")
+            local target = GSE.GetKeybindClickTarget(v)
+            SetBindingClick(k, target, "LeftButton")
             if GSE.GameMode == 5 then
-                SetOverrideBindingClick(keybindingframe, false, k, v)
+                SetOverrideBindingClick(keybindingframe, false, k, target)
             end
         -- print("Bound", k, v)
         end
@@ -936,9 +864,10 @@ local function LoadKeyBindings(payload)
                 )
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     SetBinding(k)
-                    SetBindingClick(k, v, "LeftButton")
+                    local target = GSE.GetKeybindClickTarget(v)
+                    SetBindingClick(k, target, "LeftButton")
                     if GSE.GameMode == 5 then
-                        SetOverrideBindingClick(keybindingframe, false, k, v)
+                        SetOverrideBindingClick(keybindingframe, false, k, target)
                     end
                 end
             end

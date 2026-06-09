@@ -1563,24 +1563,6 @@ local function AddActionBarWatermarkOption(optionsCategory)
     end
 end
 
-local function AddMacroButtonBehaviorOptions(optionsCategory)
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Macro Button Behavior", tooltip = L["Button Settings"]}))
-    end
-    do
-        local function GetValue()
-            return GSEOptions.Multiclick
-        end
-        local function SetValue(val)
-            GSEOptions.Multiclick = val
-            GSE.GUICall("GUIConfirmReloadUI")
-        end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "useMulticlickButtons", Settings.VarType.Boolean, L["Use MultiClick Buttons"], true, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["GSE Sequences are converted to a button that responds to 'Clicks' or Keyboard keypresses (WoW calls these Hardware Events).  \n\nWhen you use a KeyBind with a sequence, WoW sends two hardware events each time. With this setting on, GSE then interprets these two clicks as one and advances your sequence one step.  With this off it would advance two steps.  \n\nIn comparison Actionbar Overrides and '/click SEQUENCE' macros only sends one hardware Event.  If you primarily use Keybinds over Actionbar Overrides over Keybinds you want this set true.  If however you want to use Actionbar Overrides this must be false."])
-    end
-end
-
 local function AddActionBarClickBehaviorOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -1597,10 +1579,19 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
             end)
             if not ok then
                 GSE.PrintDebugMessage("SetCVar ActionButtonUseKeyDown error: " .. tostring(err), "Options")
+                return
+            end
+            -- Rebind keys so the key-down relay (GSE.GetKeybindClickTarget) is
+            -- built or dropped to match the new CVar state without a manual
+            -- /reload. Combat-safe: LoadKeyBindings guards its SetBindingClick
+            -- calls with InCombatLockdown(), so a toggle mid-combat simply takes
+            -- effect on the next out-of-combat rebind.
+            if GSE.ReloadKeyBindings then
+                GSE.ReloadKeyBindings()
             end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["This setting is a common setting used by all WoW mods.  If affects how your action buttons respond.  With this on the react when you hit the button.  With them off they react when you let them go.  In GSE's case this setting has to be off for Actionbar Overrides to work."])
+        Settings.CreateCheckbox(optionsCategory, setting, L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."])
     end
 end
 
@@ -2973,7 +2964,6 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
         end
-        AddMacroButtonBehaviorOptions(generalOptions)
         AddActionBarClickBehaviorOptions(generalOptions)
         do
             local layout = SettingsPanel:GetLayout(generalOptions)
