@@ -1534,8 +1534,10 @@ end
 -- disabled). Bound to Alt+RightClick on any of the three tracker frames.
 -- ------------------------------------------------------------------------
 function GSE.SequenceIconToggleTrackerLocked()
-    local currentlyLocked = GSE.SequenceIconAreLinkedTrackerFramesLocked and
-                                GSE.SequenceIconAreLinkedTrackerFramesLocked() or true
+    local currentlyLocked = true
+    if GSE.SequenceIconAreLinkedTrackerFramesLocked then
+        currentlyLocked = GSE.SequenceIconAreLinkedTrackerFramesLocked() == true
+    end
     local newLocked = not currentlyLocked
     if GSE.SequenceIconSetLinkedTrackerLockState then
         GSE.SequenceIconSetLinkedTrackerLockState(newLocked)
