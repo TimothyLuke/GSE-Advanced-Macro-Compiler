@@ -275,7 +275,7 @@ L[
         "GSE is a complete rewrite of that addon that allows you create a sequence of macros to be executed at the push of a button."
     ] = true
 
-L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."] =
+L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each sequence keypress."] =
     true
 L["Sequence Reset"] = true
 L[

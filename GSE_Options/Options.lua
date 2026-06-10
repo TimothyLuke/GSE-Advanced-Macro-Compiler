@@ -2407,7 +2407,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "printKeyPressModifiers", Settings.VarType.Boolean, L["Print Active Modifiers on Click"], false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."])
+            Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each sequence keypress."])
         end
         do
             local function GetValue() return EnsureSequenceIconFrameOptions().IconCount end
