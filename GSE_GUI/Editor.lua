@@ -397,7 +397,7 @@ local BLOCK_FRAME_RAIL_COLORS_BY_TYPE = {
 local function BumpCheckBoxTextUp(widget)
     if widget and widget.text and widget.frame then
         widget.text:ClearAllPoints()
-        widget.text:SetPoint("LEFT", widget.frame, "RIGHT", 0, 0)
+        widget.text:SetPoint("LEFT", widget.frame, "RIGHT", 0, 1)
         widget.text:SetJustifyV("MIDDLE")
     end
 end
@@ -5221,7 +5221,7 @@ function GSE.CreateEditor()
                 typerow:SetLayout("Flow")
                 if typerow.SetFlowVAlign then typerow:SetFlowVAlign("CENTER") end
                 typerow:SetFullWidth(true)
-                if typerow.SetFlowOffset then typerow:SetFlowOffset(0, -4) end
+                if typerow.SetFlowOffset then typerow:SetFlowOffset(0, 16) end
 		local repeatRowLeftPadding = macroRailWidth + 6
 		local repeatRowBottomPadding = #keyPath == 1 and 0 or 10
 		if typerow.SetFlowPadding then typerow:SetFlowPadding(repeatRowLeftPadding, 0, 4, repeatRowBottomPadding) end
@@ -6992,7 +6992,16 @@ function GSE.CreateEditor()
         end)
     end
 
+    editframe:SetCallback("OnResizeStart", function()
+        if editframe.treeContainer then
+            editframe.treeContainer.skipTreeRefresh = true
+        end
+    end)
+
     editframe:SetCallback("OnResizeStop", function()
+        if editframe.treeContainer then
+            editframe.treeContainer.skipTreeRefresh = nil
+        end
         if editframe.resizeLayoutPending or editframe.resizeLayoutDirty then
             FinishResizeLayout()
         end

@@ -5190,7 +5190,7 @@ local function createTreeGroup()
     if not frame:IsShown() then chevronFrame:Hide() end
     syncChevronStrata()
 
-    -- Wrap toggleNavWindow to also update chevron
+    origToggle = toggleNavWindow
     toggleNavWindow = function()
         origToggle()
         updateChevron()
@@ -5620,12 +5620,13 @@ local function createTreeGroup()
         status.fullwidth = width
         -- border always fills the full frame now; navWindow floats separately
         content:SetWidth(math.max(1, width - (STYLE.treeContentPadX * 2)))
-        if navVisible then refreshNavWindow() end
+        if navVisible and not self.skipTreeRefresh then refreshNavWindow() end
     end
 
     function widget:OnHeightSet(height)
         content:SetHeight(math.max(1, height - (STYLE.treeContentPadTop + STYLE.treeContentPadBottom)))
-        self:RefreshTree()
+        -- Skip the full tree rebuild during a resize drag (same gate as OnWidthSet).
+        if not self.skipTreeRefresh then self:RefreshTree() end
     end
 
     function widget:SetTreeWidth(treewidth, resizable)
