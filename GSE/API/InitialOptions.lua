@@ -1,4 +1,4 @@
-local GSE = GSE
+local _, GSE = ...
 local Statics = GSE.Static
 if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("End Patrons") end
 -- These are overridden when the saved variables are loaded in
@@ -135,14 +135,10 @@ function GSE.SetDefaultOptions()
     GSEOptions.frameLocations = {
         sequenceeditor = {height = 800, width = 800, treeWidth = 165}
     }
-    GSEOptions.Multiclick = true
     GSEOptions.SyncWoWMacros = false
     GSEOptions.UseModernSkin = false
     GSEOptions.UseModernClassColors = false
     GSEOptions.UseModernCustomColor = false
-    GSEOptions.HideUIErrorFrame = true
-    GSEOptions.MuteVoiceErrors = true
-    GSEOptions.MuteLowerEnergy = true
     GSEOptions.ModernCustomColor = {
         r = MODERN_CUSTOM_COLOR_DEFAULT.r,
         g = MODERN_CUSTOM_COLOR_DEFAULT.g,
@@ -165,6 +161,26 @@ if not GSEOptions.DebugModules then
     GSE.SetDefaultOptions()
 end
 
+-- Developer Debug is a developer-only facility. Its toggles (Enable Mod Debug
+-- Mode, the chat/store debug-output options and per-module debug) live in a
+-- Settings subcategory that is only built when GSE.Developer is set -- and that
+-- flag is set ONLY by the version-string check in Init.lua (unpackaged dev
+-- checkout). A normal user therefore has no UI to turn any of these on, so a
+-- persisted debug flag can only be a leftover from a prior developer/Patron
+-- build. Left alone it spams heavy logging and nags the GameMenu "Developer
+-- Debug settings are active" warning. Force the whole set off on every load
+-- unless this build is genuinely a developer build.
+if not GSE.Developer then
+    GSEOptions.debug = false
+    GSEOptions.sendDebugOutputToChatWindow = false
+    GSEOptions.sendDebugOutputToDebugOutput = false
+    if type(GSEOptions.DebugModules) == "table" then
+        for moduleName in pairs(GSEOptions.DebugModules) do
+            GSEOptions.DebugModules[moduleName] = false
+        end
+    end
+end
+
 if GSEOptions.UseModernSkin == nil then
     GSEOptions.UseModernSkin = GSEOptions.UseElvUISkin == true
 end
@@ -179,18 +195,6 @@ end
 
 if GSEOptions.UseModernCustomColor == true then
     GSEOptions.UseModernClassColors = false
-end
-
-if GSEOptions.HideUIErrorFrame == nil then
-    GSEOptions.HideUIErrorFrame = true
-end
-
-if GSEOptions.MuteVoiceErrors == nil then
-    GSEOptions.MuteVoiceErrors = true
-end
-
-if GSEOptions.MuteLowerEnergy == nil then
-    GSEOptions.MuteLowerEnergy = true
 end
 
 if type(GSEOptions.ModernCustomColor) ~= "table" then
@@ -232,6 +236,23 @@ function GSE.SetModernCustomColor(r, g, b)
 end
 
 function GSE.ShouldUseElvUISkin()
+    return GSE.ShouldUseModernSkin()
+end
+
+-- Whether GSE should hand its frames to an external skin provider
+-- (ElvUI / EllesmereUI) when one is loaded. This is the single source of
+-- truth the skin dispatcher (GSE_GUI/Skin.lua) consults before it routes
+-- anything through a host UI.
+--
+-- Native Skin  (UseModernSkin == false) -> false: the user explicitly asked
+--   for GSE's plain Blizzard look, so external providers are IGNORED even
+--   when ElvUI/EllesmereUI is loaded. GUI stays 100% native.
+-- Modern Skin  (UseModernSkin == true)  -> true: GSE adopts the host UI's
+--   skin if present, otherwise falls back to GSE's own modern theme.
+--
+-- The Native checkbox in Options drives UseModernSkin, so the user's choice
+-- alone decides this — addon presence never forces a skin on its own.
+function GSE.ShouldHonorExternalSkin()
     return GSE.ShouldUseModernSkin()
 end
 
@@ -371,36 +392,17 @@ function GSE.ApplyScaleToFrame(frame, scale)
     scale = ClampUIScale(scale or GSE.GetUIScale())
     local preserveCenter = frame.IsShown and frame:IsShown() and frame.GetCenter and frame.ClearAllPoints and frame.SetPoint
         and not frame.GSESkipScaleRecenter
-    -- Capture the centre in ABSOLUTE screen pixels (frame-local centre times the
-    -- OLD effective scale) before SetScale. GetCenter is in the frame's own
-    -- coordinate space, which changes with scale; re-anchoring with the raw old
-    -- value after SetScale moved the centre by newScale/oldScale -- right/up on
-    -- grow, left/down on shrink. Going through absolute pixels keeps the centre
-    -- fixed so the window scales about its centre.
-    local absX, absY
+    local centerX, centerY
     if preserveCenter then
-        local centerX, centerY = frame:GetCenter()
+        centerX, centerY = frame:GetCenter()
         preserveCenter = centerX and centerY and UIParent
-        if preserveCenter then
-            local oldEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
-            if not oldEffective or oldEffective <= 0 then oldEffective = 1 end
-            absX, absY = centerX * oldEffective, centerY * oldEffective
-        end
     end
 
     frame:SetScale(scale)
 
     if preserveCenter then
-        -- Convert the absolute-pixel centre back into the frame's NEW local units.
-        local newEffective = (frame.GetEffectiveScale and frame:GetEffectiveScale()) or 1
-        if not newEffective or newEffective <= 0 then newEffective = 1 end
-        GSE.SetFrameScreenPoint(frame, "CENTER", absX / newEffective, absY / newEffective)
-        -- Frames that self-clamp (SetClampedToScreen) opt out of GSE's clamp via
-        -- GSESkipScaleClamp: GSE's clamp permanently re-anchors a frame that grew
-        -- past a screen edge, which caused the toolbar's scale-down "left jump".
-        if not frame.GSESkipScaleClamp then
-            GSE.ClampFrameToScreen(frame)
-        end
+        GSE.SetFrameScreenPoint(frame, "CENTER", centerX, centerY)
+        GSE.ClampFrameToScreen(frame)
     end
 end
 

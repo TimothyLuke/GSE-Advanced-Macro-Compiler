@@ -1,5 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local onpause = false
 
@@ -60,13 +63,23 @@ local DEFAULT_DEBUG_COLUMNS = {
     {label = "Resources", width = 90, min = 70},
     {label = "Casting", width = 112, min = 75}
 }
--- Next Cast is the Assisted Highlight recommendation (Retail only); keep this
--- fallback list in sync with GSE.SequenceDebugColumns by gating it the same way.
+-- "Suggested - Spell Assist" is the Assisted-Highlight recommendation, which
+-- only exists on Retail builds that expose C_AssistedCombat. Gate the column
+-- here so MoP-Classic / Anniversary / etc. don't render an empty column.
+-- Keep this in sync with GSE.SequenceDebugColumns the same way.
 if C_AssistedCombat and C_AssistedCombat.GetNextCastSpell then
-    DEFAULT_DEBUG_COLUMNS[#DEFAULT_DEBUG_COLUMNS + 1] = {label = "Next Cast", width = 90, min = 70}
+    DEFAULT_DEBUG_COLUMNS[#DEFAULT_DEBUG_COLUMNS + 1] = {label = "Suggested - Spell Assist", width = 150, min = 110}
 end
 
 function GSE.DebugUsesModernSkin()
+    -- When an external skin provider (ElvUI / EllesmereUI) is active we want
+    -- the debugger's in-file dark-fill button system to kick in instead of
+    -- the buttons falling back to Blizzard's red UIPanelButtonTemplate. The
+    -- external provider's painters layer on top via Skin.Button calls added
+    -- to each button site below.
+    if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() then
+        return true
+    end
     return (GSE.ShouldUseModernSkin and GSE.ShouldUseModernSkin()) or
         (GSE.ShouldUseElvUISkin and GSE.ShouldUseElvUISkin())
 end
@@ -269,6 +282,15 @@ function GSE.StyleDebugTextButton(button)
         button:HookScript("OnDisable", function(self) GSE.UpdateDebugTextButtonState(self, false) end)
     end
     GSE.UpdateDebugTextButtonState(button, button.IsMouseOver and button:IsMouseOver())
+
+    -- When an external skin provider (ElvUI / EllesmereUI) is active, layer
+    -- its border + backdrop on top of our dark-grey fill. The provider's
+    -- Skin.Button blanks UIPanelButtonTemplate's red textures (no-op here
+    -- since modern mode already alpha=0'd them) and paints the EUI accent
+    -- border so the debugger matches the rest of EUI panels.
+    if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Button then
+        GSE.Skin.Button(button)
+    end
 end
 
 local STATS_COLUMNS = {
@@ -563,36 +585,17 @@ function DebugFrame.EnsureDebuggerSideCloseButton(frame)
     if not frame then return end
     if frame.SetClipsChildren then frame:SetClipsChildren(false) end
 
-    if not frame.CloseButton then
-        frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    end
-
-    frame.CloseButton:ClearAllPoints()
-    frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 3)
-    frame.CloseButton:SetSize(32, 30)
-    GSE.StyleDebugIconButton(frame.CloseButton, GSE.DEBUG_CLOSE_TEXTURE, GSE.DebugUsesModernSkin and GSE.DebugUsesModernSkin())
-    if frame.CloseButton.SetFrameStrata and frame.GetFrameStrata then frame.CloseButton:SetFrameStrata(frame:GetFrameStrata()) end
-    if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then frame.CloseButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 500) end
-    frame.CloseButton:SetScript(
-        "OnClick",
-        function()
-            local click = frame.closeButton and frame.closeButton.GetScript and frame.closeButton:GetScript("OnClick")
-            if click then
-                click(frame.closeButton)
-            else
-                frame:Hide()
-            end
-        end
-    )
-    frame.CloseButton:Show()
+    -- Side windows no longer carry their own [X] close button: it could draw
+    -- behind the panel depending on strata/level, and the side windows are
+    -- toggled from the main Debugger's Stats/Hardware buttons. Hide any one
+    -- that was already created and do not make a new one.
+    if frame.CloseButton then frame.CloseButton:Hide() end
 end
 
 function DebugFrame.SetDebuggerSideCloseButtonVisible(frame, visible)
     if not frame then return end
-    if not frame.CloseButton then DebugFrame.EnsureDebuggerSideCloseButton(frame) end
-    if frame.CloseButton then
-        frame.CloseButton:Show()
-    end
+    -- No side-window [X] anymore; keep any pre-existing one hidden.
+    if frame.CloseButton then frame.CloseButton:Hide() end
 end
 
 function DebugFrame.SyncDebuggerSideSkinLayers(frame)
@@ -606,9 +609,26 @@ function DebugFrame.SyncDebuggerSideSkinLayers(frame)
         if layer.SetFrameLevel then layer:SetFrameLevel(math.max(0, frameLevel + (offset or 0))) end
     end
 
+    -- When attached, keep the class-color border at the side window's own base
+    -- level (offset 0) -- exactly how the MAIN window's border sits at its base
+    -- via ensureElvUIWindowBand. The side base is one below the main (see
+    -- RaiseDebuggerSideChrome), so the side body+border sit just BEHIND the main
+    -- at the docking seam. Detached windows keep the +100 lift so their border
+    -- still draws above other UI.
+    local attached = (frame.GSESideDetached == false)
+        or (DebugFrame.IsDebuggerSideWindowAttached and DebugFrame.IsDebuggerSideWindowAttached(frame))
+    -- When attached, keep the class-color border ONE level above the side
+    -- window's own dark GSEElvUIOuterShell border (offset 1, not 0) so the
+    -- coloured border draws over the dark one on every edge -- the outer
+    -- (free) edges were showing the dark shell border instead of the class
+    -- colour. The side frame sits at main-2 (see RaiseDebuggerSideChrome), so
+    -- this border lands at main-1: above the shell, still BELOW the main's own
+    -- border (main) at the 4px docking overlap. Detached keeps the +100 lift.
+    local borderOffset = attached and 1 or 100
+
     syncLayer(frame.GSEElvUIOuterShell, 0)
-    syncLayer(frame.GSEElvUIOuterClassBorder, 100)
-    syncLayer(frame.GSENormalAccentBorderOverlay, 100)
+    syncLayer(frame.GSEElvUIOuterClassBorder, borderOffset)
+    syncLayer(frame.GSENormalAccentBorderOverlay, borderOffset)
     syncLayer(frame.TitleContainer, 90)
     syncLayer(frame.GSESideVisibleTitleBar, 520)
 end
@@ -644,20 +664,32 @@ end
 function DebugFrame.RaiseDebuggerSideChrome(frame)
     if not frame then return end
     if frame.GSESideDetached == false or (DebugFrame.IsDebuggerSideWindowAttached and DebugFrame.IsDebuggerSideWindowAttached(frame)) then
+        -- Attached: share the main Debugger's strata and sit BEHIND it, so the
+        -- main window's chrome wins at the 4px docking overlap. Level is two
+        -- below the main: the class-color border is synced one above the side
+        -- window's own shell (so it shows), which lands it at main-1 -- above
+        -- the shell yet still below the main's border. Do NOT SetToplevel/Raise
+        -- here, or a click (or this very call) would bump the side in front.
         if frame.SetFrameStrata and DebugFrame.GetFrameStrata then frame:SetFrameStrata(DebugFrame:GetFrameStrata()) end
-        if frame.SetFrameLevel and DebugFrame.GetFrameLevel then frame:SetFrameLevel(DebugFrame:GetFrameLevel() or 0) end
-        if frame.SetToplevel then frame:SetToplevel(true) end
-        if frame.Raise then frame:Raise() end
+        if frame.SetFrameLevel and DebugFrame.GetFrameLevel then
+            frame:SetFrameLevel(math.max(0, (DebugFrame:GetFrameLevel() or 0) - 2))
+        end
+        if frame.SetToplevel then frame:SetToplevel(false) end
     elseif frame.SetToplevel then
         frame:SetToplevel(true)
     end
-    if frame.SetClipsChildren then frame:SetClipsChildren(true) end
+    -- Do NOT clip the outer side window: the Modern class-color border band
+    -- (GSEElvUIOuterClassBorder) sits at/above the frame's top edge, so a true
+    -- clip cuts off the TOP border on the side windows (Stats/Hardware). The
+    -- main Debugger frame isn't clipped, which is why only the side windows
+    -- showed the clipped top. Inner content frames (header/rows/scroll/log)
+    -- each clip themselves, so rows stay contained with the outer clip off.
+    if frame.SetClipsChildren then frame:SetClipsChildren(false) end
     DebugFrame.SyncDebuggerSideSkinLayers(frame)
     if frame.CloseButton then
-        if frame.CloseButton.SetFrameStrata and frame.GetFrameStrata then frame.CloseButton:SetFrameStrata(frame:GetFrameStrata()) end
-        if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then frame.CloseButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 500) end
-        if frame.CloseButton.Raise then frame.CloseButton:Raise() end
-        frame.CloseButton:Show()
+        -- Side windows no longer use their own [X]; keep it hidden if one
+        -- somehow exists. (EnsureDebuggerSideCloseButton no longer creates it.)
+        frame.CloseButton:Hide()
     end
     if frame.GSESideResizeButton and frame.GSESideResizeButton.SetFrameLevel and frame.GetFrameLevel then
         frame.GSESideResizeButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 110)
@@ -879,6 +911,8 @@ DebugFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
 DebugFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     if self.SaveDebuggerLocation then self:SaveDebuggerLocation() end
+    -- Keep attached side windows on the main's strata/level after moving together.
+    if self.UpdateDebuggerWindowLevels then self.UpdateDebuggerWindowLevels() end
 end)
 if DebugFrame.SetResizeBounds then
     DebugFrame:SetResizeBounds(DEBUG_UI.MIN_DEBUGGER_WIDTH, DEBUG_UI.MIN_DEBUGGER_HEIGHT, GetMaxDebuggerWidth(), GetMaxDebuggerHeight())
@@ -901,6 +935,13 @@ if not DebugFrame.GSEUsesBlizzardPanelTemplate and DebugFrame.SetBackdrop then
     )
     DebugFrame:SetBackdropColor(0.03, 0.03, 0.03, 0.94)
     DebugFrame:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+end
+
+-- Under EUI / ElvUI, repaint the DebugFrame's chrome through the active skin
+-- provider so the debugger panel matches host UI panels instead of showing
+-- Blizzard's gold ornate DialogBox-Border edge texture.
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(DebugFrame)
 end
 
 GSE.GUIDebugFrame = DebugFrame
@@ -1006,7 +1047,11 @@ local function PositionDebuggerTitleText()
     title:SetJustifyV("MIDDLE")
     if title.SetFontObject then title:SetFontObject(GameFontNormal) end
     if title.SetDrawLayer then title:SetDrawLayer("OVERLAY", 7) end
-    if title.SetTextColor then title:SetTextColor(1, 0.82, 0, 1) end
+    if GSE.Skin and GSE.Skin.PaintBodyText then
+        GSE.Skin.PaintBodyText(title, 1, 0.82, 0, 1)
+    elseif title.SetTextColor then
+        title:SetTextColor(1, 0.82, 0, 1)
+    end
     if title.SetAlpha then title:SetAlpha(1) end
     title:SetText(DebugFrame.debuggerTitleText)
     title:Show()
@@ -1037,6 +1082,9 @@ local function StopDebuggerTitleMove(button)
     if button and button ~= "LeftButton" then return end
     if DebugFrame.StopMovingOrSizing then DebugFrame:StopMovingOrSizing() end
     if DebugFrame.SaveDebuggerLocation then DebugFrame:SaveDebuggerLocation() end
+    -- Re-sync attached side windows to the main's strata/level after a group
+    -- move, so they keep the same strata as the main even when moved together.
+    if DebugFrame.UpdateDebuggerWindowLevels then DebugFrame.UpdateDebuggerWindowLevels() end
 end
 
 local function IsCursorOverDebuggerTitleBar()
@@ -1115,6 +1163,8 @@ closeButton:SetScript(
     end
 )
 DebugFrame.closebutton = closeButton
+DebugFrame.GSEWindowTitle = title
+DebugFrame.GSEWindowCloseButton = closeButton
 DebugFrame.ApplyEditorWindowStyle(DebugFrame, title, closeButton)
 if DebugFrame.TitleContainer then
     DebugFrame.TitleContainer:EnableMouse(true)
@@ -1207,7 +1257,11 @@ if headerBackground.SetBackdrop then
         }
     )
     headerBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    headerBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(headerBackground, 0.7, 0.62, 0.12, 1)
+    else
+        headerBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(headerBackground)
 
@@ -1243,6 +1297,15 @@ scrollBackground:Show()
 headerBackground:Show()
 headerScrollFrame:Show()
 scrollFrame:Show()
+
+-- Route the debugger's main scrollbar through NativeUI's slim modern painter
+-- so it matches the editor's outer scrollbar instead of Blizzard's gold default.
+-- The slim painter handles both EUI and the modern theme; outside of those it
+-- no-ops and Blizzard's default scrollbar stays.
+if GSE.UI and GSE.UI.ApplyModernSlimScrollBar then
+    local debugScrollBar = scrollFrame.ScrollBar or _G[scrollFrame:GetName() .. "ScrollBar"]
+    if debugScrollBar then GSE.UI.ApplyModernSlimScrollBar(debugScrollBar, scrollBackground, -6, 0, 0) end
+end
 
 local headerLabels = {}
 local headerHandles = {}
@@ -1929,6 +1992,9 @@ end
 local statsLocation = EnsureStatsWidgetLocation()
 local statsColumns = CopyStatsColumns(statsLocation)
 local statsWidget = GSE.CreateDebuggerEditorFrame("GSEGUIDebugStatsWidget", UIParent)
+-- Mark as a Debugger side panel so the scale routine keeps it docked to the main
+-- Debugger while attached, and only recentres it once the user detaches it.
+statsWidget.GSEDebugSidePanel = true
 statsWidget:SetFrameStrata(currentDebuggerStrata)
 statsWidget:SetClampedToScreen(false)
 statsWidget:SetMovable(true)
@@ -1936,7 +2002,7 @@ statsWidget:SetResizable(false)
 statsWidget:EnableMouse(true)
 local defaultStatsHeight = DEBUG_UI.STATS_WIDGET_HEADER_HEIGHT + (DEBUG_UI.STATS_WIDGET_VISIBLE_ROWS * DEBUG_UI.STATS_WIDGET_ROW_HEIGHT) + 12
 statsWidget:SetSize(DEBUG_UI.STATS_WIDGET_WIDTH, DebugFrame:GetHeight() or defaultStatsHeight)
-if statsWidget.SetClipsChildren then statsWidget:SetClipsChildren(true) end
+if statsWidget.SetClipsChildren then statsWidget:SetClipsChildren(false) end
 statsWidget:SetPoint("TOPLEFT", DebugFrame, "TOPRIGHT", DEBUG_UI.STATS_WIDGET_ANCHOR_X, -10)
 if not statsWidget.GSEUsesBlizzardPanelTemplate and statsWidget.SetBackdrop then
     statsWidget:SetBackdrop(
@@ -1951,6 +2017,10 @@ if not statsWidget.GSEUsesBlizzardPanelTemplate and statsWidget.SetBackdrop then
     )
     statsWidget:SetBackdropColor(0.03, 0.03, 0.03, 0.94)
     statsWidget:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+end
+
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(statsWidget)
 end
 
 local function SaveStatsWidgetLocation()
@@ -1981,6 +2051,7 @@ statsTitle:SetPoint("TOPLEFT", statsWidget, "TOPLEFT", 36, -20)
 statsTitle:SetPoint("TOPRIGHT", statsWidget, "TOPRIGHT", -36, -20)
 statsTitle:SetJustifyH("CENTER")
 statsTitle:SetText(DebuggerWindowTitle("Debug Stats"))
+statsWidget.GSEWindowTitle = statsTitle
 DebugFrame.ApplyEditorWindowStyle(statsWidget, statsTitle)
 DebugFrame.PositionDebuggerSideTitle(statsWidget, statsTitle, DebuggerWindowTitle("Debug Stats"))
 
@@ -2147,7 +2218,11 @@ if statsHeaderBackground.SetBackdrop then
         }
     )
     statsHeaderBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    statsHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(statsHeaderBackground, 0.7, 0.62, 0.12, 1)
+    else
+        statsHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(statsHeaderBackground)
 
@@ -2499,7 +2574,11 @@ LayoutStatsWidget = function()
     end
     statsScrollBackground:ClearAllPoints()
     statsScrollBackground:SetPoint("TOPLEFT", statsWidget, "TOPLEFT", 12, -66)
-    statsScrollBackground:SetPoint("BOTTOMRIGHT", statsWidget, "BOTTOMRIGHT", -12, 88)
+    -- Take 2 off the right side of the stats body: -12 -> -14. The header,
+    -- rows scroll frame and column area all anchor to statsScrollBackground's
+    -- right edge, so they follow this in by 2px. Left side and window width
+    -- are unchanged.
+    statsScrollBackground:SetPoint("BOTTOMRIGHT", statsWidget, "BOTTOMRIGHT", -14, 88)
     statsMatchText:ClearAllPoints()
     statsMatchText:SetPoint("TOPLEFT", statsScrollBackground, "BOTTOMLEFT", 0, -4)
     statsMatchText:SetPoint("TOPRIGHT", statsScrollBackground, "BOTTOMRIGHT", 0, -4)
@@ -2657,13 +2736,16 @@ DebugFrame.IsHardwareStateActive = function()
     return hardwareState.lastSeen and hardwareState.lastSeen > 0 and now >= hardwareState.lastSeen and (now - hardwareState.lastSeen) <= hardwareState.activeTimeout
 end
 hardwareWidget = GSE.CreateDebuggerEditorFrame("GSEGUIDebugHardwareWidget", UIParent)
+-- Mark as a Debugger side panel (see statsWidget above): keep docked while
+-- attached, recentre on scale only when detached.
+hardwareWidget.GSEDebugSidePanel = true
 hardwareWidget:SetFrameStrata(currentDebuggerStrata)
 hardwareWidget:SetClampedToScreen(false)
 hardwareWidget:SetMovable(true)
 hardwareWidget:SetResizable(false)
 hardwareWidget:EnableMouse(true)
 hardwareWidget:SetSize(DEBUG_UI.HARDWARE_WIDGET_WIDTH, DebugFrame:GetHeight() or DEBUG_UI.MIN_DEBUGGER_HEIGHT)
-if hardwareWidget.SetClipsChildren then hardwareWidget:SetClipsChildren(true) end
+if hardwareWidget.SetClipsChildren then hardwareWidget:SetClipsChildren(false) end
 if not hardwareWidget.GSEUsesBlizzardPanelTemplate and hardwareWidget.SetBackdrop then
     hardwareWidget:SetBackdrop(
         {
@@ -2677,6 +2759,10 @@ if not hardwareWidget.GSEUsesBlizzardPanelTemplate and hardwareWidget.SetBackdro
     )
     hardwareWidget:SetBackdropColor(0.03, 0.03, 0.03, 0.94)
     hardwareWidget:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+end
+
+if GSE.Skin and GSE.Skin.IsExternalProviderActive and GSE.Skin.IsExternalProviderActive() and GSE.Skin.Frame then
+    GSE.Skin.Frame(hardwareWidget)
 end
 
 AnchorHardwareWidget = function()
@@ -2697,6 +2783,7 @@ hardwareTitle:SetPoint("TOPLEFT", hardwareWidget, "TOPLEFT", 36, -20)
 hardwareTitle:SetPoint("TOPRIGHT", hardwareWidget, "TOPRIGHT", -36, -20)
 hardwareTitle:SetJustifyH("CENTER")
 hardwareTitle:SetText(DebuggerWindowTitle("Hardware Events"))
+hardwareWidget.GSEWindowTitle = hardwareTitle
 DebugFrame.ApplyEditorWindowStyle(hardwareWidget, hardwareTitle)
 DebugFrame.PositionDebuggerSideTitle(hardwareWidget, hardwareTitle, DebuggerWindowTitle("Hardware Events"))
 
@@ -2758,7 +2845,11 @@ if hardwareHeaderBackground.SetBackdrop then
         }
     )
     hardwareHeaderBackground:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    hardwareHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    if GSE.Skin and GSE.Skin.PaintAccentBorder then
+        GSE.Skin.PaintAccentBorder(hardwareHeaderBackground, 0.7, 0.62, 0.12, 1)
+    else
+        hardwareHeaderBackground:SetBackdropBorderColor(0.7, 0.62, 0.12, 1)
+    end
 end
 DebugFrame.ApplyNativeInsetSkin(hardwareHeaderBackground)
 
@@ -4861,6 +4952,28 @@ local function RefreshDebuggerTitleChrome()
     end
 end
 
+-- Re-apply the window chrome to the Debugger and its side windows so they
+-- track the current skin (Native vs Modern vs external provider). The three
+-- ApplyEditorWindowStyle calls at file-load only ran once, so a skin change
+-- afterwards left the Debugger painted with whatever skin was active at load
+-- (the Debugger/side windows showing Native chrome while Modern was selected).
+-- Called on Debugger show and from the Options skin toggle (GSE.RefreshDebuggerSkin).
+function GSE.RefreshDebuggerSkin()
+    DebugFrame.ApplyEditorWindowStyle(DebugFrame, DebugFrame.GSEWindowTitle, DebugFrame.GSEWindowCloseButton)
+    if statsWidget then DebugFrame.ApplyEditorWindowStyle(statsWidget, statsWidget.GSEWindowTitle) end
+    if hardwareWidget then DebugFrame.ApplyEditorWindowStyle(hardwareWidget, hardwareWidget.GSEWindowTitle) end
+    -- ApplyEditorWindowStyle re-seats the main close button at only frame+20;
+    -- re-raise the main controls (close + minimize) to frame+500 and Raise()
+    -- them so the [X] can't end up behind the frame after a restyle/show.
+    if DebugFrame.RaiseDebuggerControls then DebugFrame.RaiseDebuggerControls() end
+    -- Re-raise chrome so strata/clip/close-button levels stay correct after restyle.
+    if DebugFrame.RaiseDebuggerSideChrome then
+        if statsWidget then DebugFrame.RaiseDebuggerSideChrome(statsWidget) end
+        if hardwareWidget then DebugFrame.RaiseDebuggerSideChrome(hardwareWidget) end
+    end
+    RefreshDebuggerTitleChrome()
+end
+
 function GSE.GUIShowDebugWindow()
     if DebugFrame.minimizedWidget and DebugFrame.minimizedWidget:IsShown() and DebugFrame.ExpandFromMinimizedWidget then
         DebugFrame:ExpandFromMinimizedWidget()
@@ -4875,12 +4988,12 @@ function GSE.GUIShowDebugWindow()
     UpdateStatsCombatTimer()
     DebugFrame:Show()
     if DebugFrame.Raise then DebugFrame:Raise() end
-    RefreshDebuggerTitleChrome()
+    GSE.RefreshDebuggerSkin()
 end
 
 DebugFrame:HookScript("OnShow", function(self)
     if self.minimizedWidget then self.minimizedWidget:Hide() end
-    RefreshDebuggerTitleChrome()
+    GSE.RefreshDebuggerSkin()
 end)
 
 DebugFrame:Hide()
@@ -4922,3 +5035,5 @@ if EnsureHardwareWidgetLocation().open then
         if GSE.GUIShowDebugHardwareWidget then GSE.GUIShowDebugHardwareWidget() end
     end
 end
+end
+table.insert(ns.deferred, setup)

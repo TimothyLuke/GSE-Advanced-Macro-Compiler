@@ -1,9 +1,9 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Editor and User Interface|r
 ## Notes: GSE GUI
 ## Author: TimothyLuke
-## Version: 3.3.19-18-g657a37a-PatronBuild
+## Version: 3.3.20-4-g9dc510d-PatronBuild
 ## Dependencies: GSE GSE_Utils
 ## OptionalDeps: GSE2, Bartender4, ElvUI, NDui, Dominos, EllesmereUI, EllesmereUIActionBars
 ## LoadOnDemand: 1
@@ -21,6 +21,11 @@
 ## Category-zhTW: 戰鬥
 ## Group: GSE
 
+
+# Bootstrap declares ns.deferred and exposes _G.GSE_GUI_Initialize, which
+# main GSE calls on ADDON_LOADED. Every subsequent file registers its body
+# via table.insert(ns.deferred, setup) and runs in TOC order at init time.
+Bootstrap.lua
 
 Skin.lua
 NativeUI.lua

@@ -1,5 +1,8 @@
-local GNOME, _ = ...
-local GSE = GSE
+local GNOME, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local L = GSE.L
 local Statics = GSE.Static
 
@@ -84,124 +87,6 @@ local function BringSettingsPanelForward()
     end
     if SettingsPanel.SetFrameStrata then SettingsPanel:SetFrameStrata("FULLSCREEN_DIALOG") end
     if SettingsPanel.Raise then SettingsPanel:Raise() end
-end
-
-local function RaiseOptionsDropdownFrame(frame, anchor)
-    if not frame then return end
-    if frame.SetFrameStrata then frame:SetFrameStrata("TOOLTIP") end
-    if frame.SetToplevel then frame:SetToplevel(true) end
-    if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
-    if frame.SetFrameLevel then
-        local panelLevel = SettingsPanel and SettingsPanel.GetFrameLevel and SettingsPanel:GetFrameLevel() or 0
-        local anchorLevel = anchor and anchor.GetFrameLevel and anchor:GetFrameLevel() or 0
-        frame:SetFrameLevel(math.max(panelLevel, anchorLevel, 20) + 100)
-    end
-end
-
-local function FrameHasButtonChildren(frame)
-    if not (frame and frame.GetChildren) then return false end
-    for _, child in ipairs({frame:GetChildren()}) do
-        if child.GetObjectType and child:GetObjectType() == "Button" then return true end
-    end
-    return false
-end
-
-local function RaiseVisibleOptionsDropdownChildren(frame, anchor, depth)
-    if not frame or (depth or 0) > 4 then return end
-    if frame.GetChildren then
-        for _, child in ipairs({frame:GetChildren()}) do
-            local name = child.GetName and child:GetName()
-            if type(name) ~= "string" then name = "" end
-            local lowerName = string.lower(name)
-            -- Match by name, OR treat a frame whose children include option
-            -- buttons as the popout list. The WoW Settings SelectionPopout
-            -- popout is anonymous, so name matching alone never catches it.
-            local looksLikeDropdownPopup =
-                string.find(lowerName, "dropdown", 1, true) or
-                string.find(lowerName, "drop_down", 1, true) or
-                string.find(lowerName, "popout", 1, true) or
-                string.find(lowerName, "menu", 1, true) or
-                string.find(lowerName, "list", 1, true) or
-                FrameHasButtonChildren(child)
-            if looksLikeDropdownPopup and (not child.IsShown or child:IsShown()) then
-                RaiseOptionsDropdownFrame(child, anchor)
-            end
-            RaiseVisibleOptionsDropdownChildren(child, anchor, (depth or 0) + 1)
-        end
-    end
-end
-
-local function RaiseKnownOptionsDropdownPopouts(frameWidget)
-    -- The Settings row exposes its control as frameWidget.Control in modern
-    -- WoW (.DropDown does not exist); fall through it for older shapes.
-    local dd = frameWidget and (frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown)
-    local anchor = (dd and (dd.Button or dd.button)) or dd or frameWidget
-    local candidates = {
-        dd and dd.SelectionPopoutFrame,
-        dd and dd.PopoutFrame,
-        dd and dd.Popout,
-        dd and dd.Menu,
-        dd and dd.MenuFrame,
-        dd and dd.DropDownMenu,
-        frameWidget and frameWidget.SelectionPopoutFrame,
-        frameWidget and frameWidget.PopoutFrame,
-        frameWidget and frameWidget.Popout,
-        frameWidget and frameWidget.Menu,
-        frameWidget and frameWidget.MenuFrame,
-        _G.SettingsDropdownList,
-        _G.SettingsDropdownList1,
-        _G.SettingsDropdownMenu,
-        _G.SettingsDropdownMenu1,
-        _G.DropDownList1,
-        _G.DropDownList2,
-        _G.L_DropDownList1,
-        _G.L_DropDownList2
-    }
-    for _, frame in ipairs(candidates) do
-        if frame and (not frame.IsShown or frame:IsShown()) then
-            RaiseOptionsDropdownFrame(frame, anchor)
-            RaiseVisibleOptionsDropdownChildren(frame, anchor)
-        end
-    end
-    RaiseVisibleOptionsDropdownChildren(dd, anchor)
-end
-
-local function QueueRaiseOptionsDropdownPopouts(frameWidget)
-    local function RaiseNow()
-        RaiseKnownOptionsDropdownPopouts(frameWidget)
-    end
-    RaiseNow()
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, RaiseNow)
-        C_Timer.After(0.05, RaiseNow)
-    end
-end
-
-local function HookOptionsDropdownWidget(frameWidget)
-    if not frameWidget or frameWidget.GSERaisedDropdownHooked then return end
-    frameWidget.GSERaisedDropdownHooked = true
-    local dd = frameWidget.Control or frameWidget.DropDown or frameWidget.Dropdown or frameWidget.dropdown
-    local targets = {frameWidget, dd, dd and dd.Button, dd and dd.button, dd and dd.SelectionPopoutButton}
-    for _, target in ipairs(targets) do
-        if target and target.HookScript then
-            pcall(target.HookScript, target, "OnMouseDown", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
-            pcall(target.HookScript, target, "OnMouseUp", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
-            pcall(target.HookScript, target, "OnClick", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
-            pcall(target.HookScript, target, "OnShow", function() QueueRaiseOptionsDropdownPopouts(frameWidget) end)
-        end
-    end
-end
-
-local function RaiseOptionsDropdown(initializer)
-    if not initializer or initializer.GSERaisedDropdownWrapped then return initializer end
-    initializer.GSERaisedDropdownWrapped = true
-    local origInitFrame = initializer.InitFrame
-    initializer.InitFrame = function(self, frameWidget)
-        if origInitFrame then pcall(origInitFrame, self, frameWidget) end
-        pcall(HookOptionsDropdownWidget, frameWidget)
-        pcall(QueueRaiseOptionsDropdownPopouts, frameWidget)
-    end
-    return initializer
 end
 
 function GSE.OpenRegisteredOptionsPanel(editor)
@@ -345,6 +230,9 @@ end
 
 local function SkinGSESettingsButton(button)
     if not button or button.GSEElvUISkinned then return end
+    -- Respect the user's skin choice: in Native mode leave this button on
+    -- Blizzard's default look instead of force-applying ElvUI's button skin.
+    if GSE.ShouldHonorExternalSkin and not GSE.ShouldHonorExternalSkin() then return end
     local E = ElvUI and ElvUI[1]
     local S = E and E.GetModule and E:GetModule("Skins", true)
     if S and S.HandleButton and pcall(S.HandleButton, S, button) then
@@ -1274,7 +1162,7 @@ local function EnsureSequenceIconFrameOptions()
     local opts = GSEOptions.SequenceIconFrame
     opts.Enabled = opts.Enabled == true
     opts.IconSize = 100
-    opts.IconCount = ClampNumber(opts.IconCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
+    opts.IconCount = ClampNumber(opts.IconCount, 1, 10, 10)
     opts.Scale = 0.50
     opts.Orientation = (opts.Orientation == "VERTICAL") and "VERTICAL" or "HORIZONTAL"
     if opts.ShowSequenceName == nil then opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName end
@@ -1298,7 +1186,7 @@ local function ResetTrackerToDefaultLayout()
     local opts = EnsureSequenceIconFrameOptions()
     opts.Enabled = true
     opts.IconSize = 100
-    opts.IconCount = Statics.TrackerConfig.DefaultIconCount
+    opts.IconCount = 10
     opts.Scale = 0.50
     opts.Orientation = "HORIZONTAL"
     opts.TextMoved = false
@@ -1481,14 +1369,22 @@ local function AddAppearanceOptions(optionsCategory)
             return GSEOptions.UseModernSkin ~= true
         end
         local function SetValue(val)
-            GSEOptions.UseModernSkin = val ~= true
+            local wasModern = (GSEOptions.UseModernSkin == true)
+            local nowModern = (val ~= true)
+            -- Show the reload prompt in the present (pre-swap) skin, then just
+            -- record the new setting. We do NOT live-swap the skin here:
+            -- re-skinning frames that are already open mid-session drops some of
+            -- them, so instead we wait for the reload, which rebuilds every
+            -- frame in the new skin cleanly and all at once. Prompt only when
+            -- the skin actually flips (not on panel-sync/init or the unclicked
+            -- half of the exclusive pair).
+            if nowModern ~= wasModern and GSE.GUIConfirmReloadUI then GSE.GUIConfirmReloadUI() end
+            GSEOptions.UseModernSkin = nowModern
             RefreshExclusiveOptionRows("skin")
-            -- Live-swap the menu logo so it picks up the new skin without /reload.
-            if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "charUseClassicSkin", Settings.VarType.Boolean, "Native Skin", true, GetValue, SetValue)
         MarkExclusiveCheckboxInitializer(
-            Settings.CreateCheckbox(optionsCategory, setting, "Use GSE's Native interface skin."),
+            Settings.CreateCheckbox(optionsCategory, setting, "Use GSE's Native (Blizzard) interface skin. Ignores ElvUI/EllesmereUI even when they are loaded. A /reload fully repaints any windows already open."),
             "skin",
             GetValue
         )
@@ -1500,10 +1396,18 @@ local function AddAppearanceOptions(optionsCategory)
             return GSEOptions.UseModernSkin == true
         end
         local function SetValue(val)
-            GSEOptions.UseModernSkin = val == true
+            local wasModern = (GSEOptions.UseModernSkin == true)
+            local nowModern = (val == true)
+            -- Show the reload prompt in the present (pre-swap) skin, then just
+            -- record the new setting. We do NOT live-swap the skin here:
+            -- re-skinning frames that are already open mid-session drops some of
+            -- them, so instead we wait for the reload, which rebuilds every
+            -- frame in the new skin cleanly and all at once. Prompt only when
+            -- the skin actually flips (not on panel-sync/init or the unclicked
+            -- half of the exclusive pair).
+            if nowModern ~= wasModern and GSE.GUIConfirmReloadUI then GSE.GUIConfirmReloadUI() end
+            GSEOptions.UseModernSkin = nowModern
             RefreshExclusiveOptionRows("skin")
-            -- Live-swap the menu logo so it picks up the new skin without /reload.
-            if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "charUseModernSkin", Settings.VarType.Boolean, "Modern Skin", false, GetValue, SetValue)
         MarkExclusiveCheckboxInitializer(
@@ -1678,21 +1582,19 @@ local function AddActionBarWatermarkOption(optionsCategory)
     end
 end
 
-local function AddMacroButtonBehaviorOptions(optionsCategory)
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Macro Button Behavior", tooltip = L["Button Settings"]}))
-    end
+local function AddActionBarLabelOption(optionsCategory)
     do
         local function GetValue()
-            return GSEOptions.Multiclick
+            return GSEOptions.showActionBarLabel ~= false
         end
         local function SetValue(val)
-            GSEOptions.Multiclick = val
-            GSE.GUICall("GUIConfirmReloadUI")
+            GSEOptions.showActionBarLabel = val == true
+            if GSE.SetActionBarLabelEnabled then
+                GSE.SetActionBarLabelEnabled()
+            end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "useMulticlickButtons", Settings.VarType.Boolean, L["Use MultiClick Buttons"], true, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["GSE Sequences are converted to a button that responds to 'Clicks' or Keyboard keypresses (WoW calls these Hardware Events).  \n\nWhen you use a KeyBind with a sequence, WoW sends two hardware events each time. With this setting on, GSE then interprets these two clicks as one and advances your sequence one step.  With this off it would advance two steps.  \n\nIn comparison Actionbar Overrides and '/click SEQUENCE' macros only sends one hardware Event.  If you primarily use Keybinds over Actionbar Overrides over Keybinds you want this set true.  If however you want to use Actionbar Overrides this must be false."])
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Actionbar Override Label"], true, GetValue, SetValue)
+        Settings.CreateCheckbox(optionsCategory, setting, L["Show the sequence name as a text label on actionbar override buttons."])
     end
 end
 
@@ -1712,47 +1614,20 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
             end)
             if not ok then
                 GSE.PrintDebugMessage("SetCVar ActionButtonUseKeyDown error: " .. tostring(err), "Options")
+                return
+            end
+            -- Rebind keys so the key-down relay (GSE.GetKeybindClickTarget) is
+            -- built or dropped to match the new CVar state without a manual
+            -- /reload. Combat-safe: LoadKeyBindings guards its SetBindingClick
+            -- calls with InCombatLockdown(), so a toggle mid-combat simply takes
+            -- effect on the next out-of-combat rebind.
+            if GSE.ReloadKeyBindings then
+                GSE.ReloadKeyBindings()
             end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["This setting is a common setting used by all WoW mods.  If affects how your action buttons respond.  With this on the react when you hit the button.  With them off they react when you let them go.  In GSE's case this setting has to be off for Actionbar Overrides to work."])
+        Settings.CreateCheckbox(optionsCategory, setting, L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."])
     end
-end
-
-local function AddErrorMessageOptions(optionsCategory)
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Error Messages", tooltip = "Error Messages"}))
-    end
-
-    local function AddErrorToggle(settingID, optionKey, label, tooltip)
-        local setting = Settings.RegisterAddOnSetting(optionsCategory, settingID, optionKey, GSEOptions, Settings.VarType.Boolean, label, true)
-        setting:SetValueChangedCallback(function()
-            if GSE.ApplyErrorMessageOptions then
-                GSE.ApplyErrorMessageOptions()
-            end
-        end)
-        Settings.CreateCheckbox(optionsCategory, setting, tooltip)
-    end
-
-    AddErrorToggle(
-        "hideUIErrorFrame",
-        "HideUIErrorFrame",
-        "UIErrorFrame",
-        "Suppress most UI error text such as 'Not enough rage'. Important errors are still shown."
-    )
-    AddErrorToggle(
-        "muteVoiceErrors",
-        "MuteVoiceErrors",
-        "Voice Errors",
-        "Mute spoken UI error voice lines."
-    )
-    AddErrorToggle(
-        "muteLowerEnergy",
-        "MuteLowerEnergy",
-        "Lower Energy",
-        "Mute the lower-energy/vigor recharge sound used by Leatrix Plus."
-    )
 end
 
 local function AddOutOfCombatQueueOptions(optionsCategory)
@@ -1882,7 +1757,7 @@ local function AddImportExportOptions(optionsCategory)
             container:Add("RENAME",  L["Rename New Macro"])
             return container:GetData()
         end
-        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."]))
+        Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."])
     end
 end
 
@@ -1935,9 +1810,43 @@ function AddEditorSequenceListOptions(optionsCategory)
     -- is NOT changed here — only the animation behaviour of the four border
     -- lines (plus the unrelated rail-color tint, which lives in Editor.lua).
     --
-    -- Settings dropdown popouts need to be raised above the Settings panel.
-    -- RaiseOptionsDropdown keeps the normal click-to-open list and also keeps
-    -- the L/R steppers working.
+    -- Rendered as Settings dropdowns to keep the L/R-arrow + center-label
+    -- visual the user expects, but the popout-on-click is disabled via the
+    -- DisableDropdownPopout helper below. The popout menu was overflowing
+    -- the Settings panel and rendering behind subsequent rows; keeping just
+    -- the steppers (which are separate widgets from the popout button)
+    -- gives the same cycling behaviour without that visual bug.
+    local function DisableDropdownPopout(frameWidget)
+        if not frameWidget then return end
+        -- The control's central popout button lives at frame.DropDown.Button
+        -- in modern WoW (Dragonflight/TWW). Lower-case alias guarded for
+        -- older clients. Increment/Decrement buttons (the L/R steppers) are
+        -- siblings, so they remain interactive after this call.
+        local dd = frameWidget.DropDown or frameWidget.Dropdown
+        if not dd then return end
+        local popoutBtn = dd.Button or dd.button
+        if popoutBtn and popoutBtn.SetScript then
+            popoutBtn:SetScript("OnClick",     function() end)
+            popoutBtn:SetScript("OnMouseDown", function() end)
+            popoutBtn:SetScript("OnMouseUp",   function() end)
+            popoutBtn:SetScript("PreClick",    function() end)
+        end
+    end
+
+    -- Tag-and-wrap helper: takes an initializer returned by
+    -- Settings.CreateDropdown and wraps its InitFrame hook so the popout is
+    -- disabled the moment the widget is bound to a list row. pcall-guarded
+    -- so a future API shape change can't crash addon load — worst case,
+    -- the popup re-appears (the steppers still work).
+    local function NoPopoutDropdown(initializer)
+        if not initializer then return initializer end
+        local origInitFrame = initializer.InitFrame
+        initializer.InitFrame = function(self, frameWidget)
+            if origInitFrame then pcall(origInitFrame, self, frameWidget) end
+            pcall(DisableDropdownPopout, frameWidget)
+        end
+        return initializer
+    end
 
     -- Focus Highlight Proc
     do
@@ -1961,7 +1870,9 @@ function AddEditorSequenceListOptions(optionsCategory)
             local container = Settings.CreateControlTextContainer()
             -- Just the type names — matches the Strata / Growth Direction
             -- dropdowns elsewhere in the Options panel where the center
-            -- label is a single short word.
+            -- label is a single short word. The popout is still disabled
+            -- via NoPopoutDropdown below, so the L/R stepper buttons are
+            -- the only way to cycle through these.
             container:Add("OFF",     L["Off"]     or "Off")
             container:Add("PULSE",   L["Pulse"]   or "Pulse")
             container:Add("FLASH",   L["Flash"]   or "Flash")
@@ -1970,7 +1881,7 @@ function AddEditorSequenceListOptions(optionsCategory)
             container:Add("STROBE",  L["Strobe"]  or "Strobe")
             return container:GetData()
         end
-        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
+        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."] or "Proc-style animation type for the focused-block highlight border in the Sequence Editor. Step left/right with the arrow buttons to cycle through styles — Pulse is the default smooth fade; Flash is sharp fast on/off; Throb is a slow heavy fade; Breathe is a slow gentle ripple; Strobe is very fast alternation; Off keeps the border solid. Border color stays the per-action-type default."))
     end
     -- Focus Highlight Brightness
     do
@@ -1995,7 +1906,7 @@ function AddEditorSequenceListOptions(optionsCategory)
             container:Add("HIGH",   L["High"]   or "High")
             return container:GetData()
         end
-        RaiseOptionsDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
+        NoPopoutDropdown(Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."] or "Dimming intensity of the focused-block highlight pulse, stacked on top of the Focus Highlight Proc type. Step left/right with the arrow buttons — Low is subtler (smaller alpha swing), Medium uses the type's baseline, High is more dramatic (bigger alpha swing). Has no effect when Focus Highlight Proc is set to Off."))
     end
     -- Editor Scroll Speed (live) — sits at the bottom of this section so the
     -- focus-highlight pair stays grouped under the "Show Current Spells"
@@ -2371,6 +2282,32 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(troubleOptions, setting, "Master on/off switch for the GSE Tracker (sequence icons, text panel, successful cast, assisted highlight). Turning this off hides every tracker frame.")
         end
         do
+            local function GetValue() return EnsureSequenceIconFrameOptions().SingleIcon == true end
+            local function SetValue(val)
+                local opts = EnsureSequenceIconFrameOptions()
+                opts.SingleIcon = val == true
+                if opts.SingleIcon and opts.IconCount and opts.IconCount > 1 then
+                    if GSE.SetSequenceIconFrameIconCount then
+                        GSE.SetSequenceIconFrameIconCount(1)
+                    else
+                        opts.IconCount = 1
+                    end
+                end
+                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerSingleIcon", Settings.VarType.Boolean, "Single Icon", false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "Lock the Tracker preview to a single icon (the next upcoming spell). When OFF the preview shows up to 10 icons.")
+        end
+        do
+            local function GetValue() return EnsureSequenceIconFrameOptions().PreserveScaleOnZoom == true end
+            local function SetValue(val)
+                EnsureSequenceIconFrameOptions().PreserveScaleOnZoom = val == true
+                if GSE.SequenceIconApplyTrackerFrameScale then GSE.SequenceIconApplyTrackerFrameScale() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerPreserveScaleOnZoom", Settings.VarType.Boolean, "Preserve Scale On Zoom", false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "When the Tracker Frame Scale slider changes, keep each tracker frame centred on its current on-screen position instead of letting it shift. Off uses the default scale-only behaviour.")
+        end
+        do
             local function GetValue()
                 return EnsureSequenceIconFrameOptions().ShowSuccessfulCasts
             end
@@ -2490,6 +2427,21 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "printKeyPressModifiers", Settings.VarType.Boolean, L["Print Active Modifiers on Click"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each macro keypress."])
+        end
+        do
+            local function GetValue() return EnsureSequenceIconFrameOptions().IconCount end
+            local function SetValue(val)
+                if GSE.SetSequenceIconFrameIconCount then
+                    GSE.SetSequenceIconFrameIconCount(val)
+                else
+                    EnsureSequenceIconFrameOptions().IconCount = ClampNumber(val, 1, 10, 10)
+                    if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
+                end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "iconPreviewCount", Settings.VarType.Number, "Preview Icon Count", 10, GetValue, SetValue)
+            local options = Settings.CreateSliderOptions(1, 10, 1)
+            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+            Settings.CreateSlider(troubleOptions, setting, options, "How many recent sequence icons to keep visible.")
         end
         -- Tracker Frame Scale: scales the three on-screen tracker frames
         -- (SC Icon, Sequence Icon Scroll, Tracker Text) together as one
@@ -2824,7 +2776,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 container:Add("DIALOG",     L["Dialog"]     or "Dialog")
                 return container:GetData()
             end
-            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements."))
+            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Frame strata controls how the toolbar layers against other UI elements.")
         end
         do
             -- 2. Growth Direction dropdown.
@@ -2844,7 +2796,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 container:Add("RIGHT", L["Right"])
                 return container:GetData()
             end
-            RaiseOptionsDropdown(Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button."))
+            Settings.CreateDropdown(windowOptions, setting, GetOptions, "Direction the toolbar grows from the logo button.")
         end
         do
             -- 3. Static / Slide Out toggle — checked = Static (the default),
@@ -3047,9 +2999,7 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
         end
-        AddMacroButtonBehaviorOptions(generalOptions)
         AddActionBarClickBehaviorOptions(generalOptions)
-        AddErrorMessageOptions(generalOptions)
         do
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
@@ -3060,6 +3010,7 @@ function GSE:CreateConfigPanels()
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
         AddActionBarWatermarkOption(generalOptions)
+        AddActionBarLabelOption(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
@@ -3128,65 +3079,17 @@ function GSE:CreateConfigPanels()
 
         createBlizzOptions(category, pluginOptions)
 
-        -- Skyriding: Vehicle panel — Retail only (GameMode >= 11), sibling of Tools & Diagnostics
-        if GSE.GameMode >= 11 then
-            local canvasFrame = CreateFrame("Frame")
-
-            local skyCategory
-            if Settings.RegisterCanvasLayoutSubcategory then
-                skyCategory = Settings.RegisterCanvasLayoutSubcategory(category, canvasFrame, "Skyriding / Vehicle Keybinds")
-            else
-                -- Fallback for builds where canvas subcategory isn't available
-                skyCategory = Settings.RegisterVerticalLayoutSubcategory(category, "Skyriding / Vehicle Keybinds")
-            end
-
-            if skyCategory then
-                local drawn = false
-                local container = nil
-
-                local function applyCanvasSize()
-                    if not (container and container.frame) then return end
-                    local w = canvasFrame:GetWidth()
-                    local h = canvasFrame:GetHeight()
-                    if (w or 0) > 0 and container.SetWidth then container:SetWidth(w) end
-                    if (h or 0) > 0 and container.SetHeight then container:SetHeight(h) end
-                    if container.DoLayout then container:DoLayout() end
-                end
-
-                local function drawContent()
-                    if drawn then return end
-                    local w = canvasFrame:GetWidth()
-                    local h = canvasFrame:GetHeight()
-                    if (w or 0) < 10 or (h or 0) < 10 then return end
-                    drawn = true
-                    local activeUI = GSE and GSE.UI
-                    if not (activeUI and GSE.DrawSkyridingKeybindEditor) then return end
-                    container = activeUI:Create("SimpleGroup")
-                    if not (container and container.frame) then return end
-                    container.frame:SetParent(canvasFrame)
-                    container.frame:SetPoint("TOPLEFT", canvasFrame, "TOPLEFT", 0, 0)
-                    -- Drive size through NativeUI so OnHeightSet fires and
-                    -- centerRowsVertically can calculate the correct spacer height
-                    if container.SetWidth then container:SetWidth(w) end
-                    if container.SetHeight then container:SetHeight(h) end
-                    GSE.DrawSkyridingKeybindEditor(container)
-                    C_Timer.After(0, applyCanvasSize)
-                end
-
-                canvasFrame:SetScript("OnSizeChanged", function()
-                    if drawn then
-                        applyCanvasSize()
-                    else
-                        drawContent()
-                    end
-                end)
-                canvasFrame:SetScript("OnShow", function()
-                    drawContent()
-                end)
-            end
-        end
+        -- Skyriding / Vehicle Keybinds subcategory is registered natively
+        -- by GSE_QoL/QoL.lua via Settings.RegisterVerticalLayoutSubcategory
+        -- + CreateSettingsButtonInitializer (matching the master-branch
+        -- pattern that pre-dated the AceGUI removal regression). Doing it
+        -- there avoids the NativeUI canvas dance we used here previously,
+        -- which only rendered on first OnShow and failed to refresh the
+        -- displayed binding text after a user rebound a slot.
 
     end
 
 end
 GSE:CreateConfigPanels()
+end
+table.insert(ns.deferred, setup)

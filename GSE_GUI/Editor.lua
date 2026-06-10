@@ -1,8 +1,31 @@
-local GSE = GSE
-local Statics = GSE.Static
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
+local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
+
+-- Form-field label colour. The GSE modern theme paints labels in the
+-- KEYWORD accent (gold/yellow by default). When EllesmereUI is driving
+-- the look we want neutral white so the labels match the rest of EUI's
+-- panel typography. Centralised so every label site stays consistent.
+--
+-- Gated on ShouldHonorExternalSkin: this neutral-white-for-EUI treatment
+-- only applies in Modern mode. If the user chose the Native Skin, labels
+-- keep their KEYWORD colour even when EllesmereUI is loaded.
+local function keywordColor()
+    -- GSE.GUIGetColour returns r, g, b as separate values (not a table).
+    -- :SetColor unpacks those into :SetTextColor(r, g, b[, a]), so we must
+    -- return multiple values too — a table here would arrive as r=<table>
+    -- at SetTextColor and crash.
+    if (not GSE.ShouldHonorExternalSkin or GSE.ShouldHonorExternalSkin())
+        and GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        return 1, 1, 1, 1
+    end
+    return GSE.GUIGetColour(GSEOptions.KEYWORD)
+end
 
 local FRAME_DISPLACEMENT = 30
 local DEFAULT_HEIGHT = 800
@@ -379,7 +402,7 @@ local BLOCK_FRAME_RAIL_COLORS_BY_TYPE = {
 local function BumpCheckBoxTextUp(widget)
     if widget and widget.text and widget.frame then
         widget.text:ClearAllPoints()
-        widget.text:SetPoint("LEFT", widget.frame, "RIGHT", 0, 0)
+        widget.text:SetPoint("LEFT", widget.frame, "RIGHT", 0, 1)
         widget.text:SetJustifyV("MIDDLE")
     end
 end
@@ -2373,7 +2396,7 @@ function GSE.CreateEditor()
     minWidgetExpand:RegisterForClicks("LeftButtonUp")
     minWidgetExpand:SetFrameLevel((minWidgetClose:GetFrameLevel() or minWidgetBackdrop:GetFrameLevel()) + 1)
     minWidgetExpand:SetPoint("RIGHT", minWidgetClose, "LEFT", 2, 0)
-    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
+    local minWidgetExpandTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
     minWidgetExpand:SetNormalTexture(minWidgetExpandTexture)
     minWidgetExpand:SetPushedTexture(minWidgetExpandTexture)
     minWidgetExpand:SetHighlightTexture(minWidgetExpandTexture, minWidgetUsesModern and "BLEND" or "ADD")
@@ -2510,7 +2533,7 @@ function GSE.CreateEditor()
         minimizeBtn:SetPoint("TOPRIGHT", editframe.frame, "TOPRIGHT", -34, -5)
     end
     minimizeBtn:SetFrameLevel(((editframe.closebutton and editframe.closebutton.GetFrameLevel and editframe.closebutton:GetFrameLevel()) or editframe.frame:GetFrameLevel() or 0) + 2)
-    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowup.png"
+    local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
     minimizeBtn:SetNormalTexture(minimizeBtnTexture)
     minimizeBtn:SetPushedTexture(minimizeBtnTexture)
     minimizeBtn:SetHighlightTexture(minimizeBtnTexture, minimizeBtnUsesModern and "BLEND" or "ADD")
@@ -2809,7 +2832,7 @@ function GSE.CreateEditor()
         resetLabel:SetWidth(110)
         resetLabel:SetHeight(24)
         if resetLabel.SetJustifyV then resetLabel:SetJustifyV("MIDDLE") end
-        resetLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+        resetLabel:SetColor(keywordColor())
 
         local combatResetDropdown = UI:Create("Dropdown")
         combatResetDropdown:SetLabel("")
@@ -3990,10 +4013,74 @@ function GSE.CreateEditor()
                             end
                         end
                         local targetList = EnsureActionList(delPath)
+                        local removed = false
                         if targetList and delObj and delObj >= 1 and delObj <= #targetList then
                             table.remove(targetList, delObj)
+                            removed = true
                         end
+
+                        -- Deleting a block used to leave the rebuilt editor scrolled to the
+                        -- top, forcing the user to scroll all the way back down. Instead, keep
+                        -- them where they were: select + scroll to the block immediately above
+                        -- the one just removed (falling back to the new first block, or the
+                        -- parent container block when a nested list is emptied). This mirrors
+                        -- the Add/Move pending-select-then-focus pattern used elsewhere.
+                        local focusPath
+                        if removed then
+                            if targetList and #targetList > 0 then
+                                local focusIdx = delObj - 1
+                                if focusIdx < 1 then focusIdx = 1 end
+                                if focusIdx > #targetList then focusIdx = #targetList end
+                                focusPath = {}
+                                for _, step in ipairs(delPath) do
+                                    focusPath[#focusPath + 1] = step
+                                end
+                                focusPath[#focusPath + 1] = focusIdx
+                            elseif #delPath > 0 then
+                                focusPath = {}
+                                for _, step in ipairs(delPath) do
+                                    focusPath[#focusPath + 1] = step
+                                end
+                            end
+                        end
+
+                        if focusPath then
+                            if editframe.gseRestrictMacroBlockAutoSelect then
+                                editframe.gseRestrictMacroBlockAutoSelect(focusPath, 0.45)
+                            end
+                            editframe.pendingMacroBlockSelectPath = focusPath
+                            editframe.pendingMacroBlockSelectVersion = version
+                        end
+
                         ChooseVersion(tcontainer, version, editframe.scrollStatus.scrollvalue, treepath)
+
+                        if focusPath then
+                            if editframe.gseSelectMacroBlockPath then
+                                editframe.gseSelectMacroBlockPath(focusPath, nil, true)
+                            end
+                            editframe.pendingMacroBlockSelectPath = nil
+                            editframe.pendingMacroBlockSelectVersion = nil
+
+                            local function refocusDeletedNeighbour()
+                                if editframe.gseSelectMacroBlockPath then
+                                    editframe.gseSelectMacroBlockPath(focusPath, nil, true)
+                                end
+                                if editframe.gseFocusSelectedMacroBlock then
+                                    editframe.gseFocusSelectedMacroBlock()
+                                end
+                            end
+
+                            -- Layout settles asynchronously after the rebuild, so
+                            -- re-assert selection + scroll across a few frames.
+                            C_Timer.After(0.01, refocusDeletedNeighbour)
+                            C_Timer.After(0.06, refocusDeletedNeighbour)
+                            C_Timer.After(0.18, refocusDeletedNeighbour)
+                            C_Timer.After(0.45, function()
+                                if editframe.gseClearMacroBlockAutoSelect then
+                                    editframe.gseClearMacroBlockAutoSelect(focusPath)
+                                end
+                            end)
+                        end
                     end
                 )
                 deleteBlockButton:SetCallback(
@@ -4686,14 +4773,17 @@ function GSE.CreateEditor()
                 msvalueeditbox:SetCallback(
                     "OnTextChanged",
                     function(self, event, text)
-                        local returnAction = {}
-                        returnAction["Type"] = action.Type
-                        if clicksdropdown:GetValue() == L["Clicks"] then
-                            returnAction["Clicks"] = tonumber(text)
-                        else
-                            returnAction["MS"] = tonumber(text)
+                        local pauseAction = editframe.Sequence.Versions[version].Actions[keyPath]
+                        if clicksdropdown:GetValue() == L["Milliseconds"] then
+                            pauseAction.MS = tonumber(text) or 0
+                            pauseAction.Clicks = nil
+                            pauseAction.Variable = nil
+                        elseif clicksdropdown:GetValue() == L["Clicks"] then
+                            pauseAction.Clicks = tonumber(text) or 0
+                            pauseAction.MS = nil
+                            pauseAction.Variable = nil
                         end
-                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
+                        -- GCD / numeric-function measures ignore the (disabled) value box.
                         editframe:SetStatusText(editframe.statusText)
                     end
                 )
@@ -4707,21 +4797,24 @@ function GSE.CreateEditor()
                 clicksdropdown:SetCallback(
                     "OnValueChanged",
                     function(self, event, text)
-                        --editframe.Sequence.Versions[version].Variables[keyEditBox:GetText()] = valueEditBox:GetText()
-                        local returnAction = {}
-                        returnAction["Type"] = action.Type
+                        local pauseAction = editframe.Sequence.Versions[version].Actions[keyPath]
                         if text == L["Clicks"] then
-                            returnAction["Clicks"] = tonumber(msvalueeditbox:GetText())
+                            pauseAction.Clicks = tonumber(msvalueeditbox:GetText()) or 0
+                            pauseAction.MS = nil
+                            pauseAction.Variable = nil
                             msvalueeditbox:SetDisabled(false)
                         elseif text == L["Milliseconds"] then
-                            returnAction["MS"] = tonumber(msvalueeditbox:GetText())
+                            pauseAction.MS = tonumber(msvalueeditbox:GetText()) or 0
+                            pauseAction.Clicks = nil
+                            pauseAction.Variable = nil
                             msvalueeditbox:SetDisabled(false)
                         else
-                            returnAction["Variable"] = text
+                            pauseAction.Variable = text
+                            pauseAction.Clicks = nil
+                            pauseAction.MS = nil
                             msvalueeditbox:SetDisabled(true)
                         end
-
-                        editframe.Sequence.Versions[version].Actions[keyPath] = returnAction
+                        editframe:SetStatusText(editframe.statusText)
                     end
                 )
                 if clicksdropdown:GetValue() == L["Milliseconds"] or clicksdropdown:GetValue() == L["Clicks"] then
@@ -4932,7 +5025,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			typeLabel:SetColor(keywordColor())
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -4941,7 +5034,7 @@ function GSE.CreateEditor()
 			macroTextLabel:SetText("")
 			macroTextLabel:SetWidth(macroRailWidth)
 			macroTextLabel:SetHeight(18)
-			macroTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			macroTextLabel:SetColor(keywordColor())
 			if macroTextLabel.SetJustifyH then macroTextLabel:SetJustifyH("LEFT") end
 			if macroTextLabel.SetJustifyV then macroTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5069,7 +5162,7 @@ function GSE.CreateEditor()
 			typeLabel:SetText("Type")
 			typeLabel:SetWidth(macroRailWidth)
 			typeLabel:SetHeight(28)
-			typeLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			typeLabel:SetColor(keywordColor())
 			if typeLabel.SetJustifyH then typeLabel:SetJustifyH("LEFT") end
 			if typeLabel.SetJustifyV then typeLabel:SetJustifyV("MIDDLE") end
 			if typeLabel.SetFlowOffset then typeLabel:SetFlowOffset(0, 4) end
@@ -5078,7 +5171,7 @@ function GSE.CreateEditor()
 			actionTextLabel:SetText("")
 			actionTextLabel:SetWidth(macroRailWidth)
 			actionTextLabel:SetHeight(4)
-			actionTextLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+			actionTextLabel:SetColor(keywordColor())
 			if actionTextLabel.SetJustifyH then actionTextLabel:SetJustifyH("LEFT") end
 			if actionTextLabel.SetJustifyV then actionTextLabel:SetJustifyV("MIDDLE") end
 
@@ -5133,7 +5226,7 @@ function GSE.CreateEditor()
                 typerow:SetLayout("Flow")
                 if typerow.SetFlowVAlign then typerow:SetFlowVAlign("CENTER") end
                 typerow:SetFullWidth(true)
-                if typerow.SetFlowOffset then typerow:SetFlowOffset(0, -4) end
+                if typerow.SetFlowOffset then typerow:SetFlowOffset(0, 16) end
 		local repeatRowLeftPadding = macroRailWidth + 6
 		local repeatRowBottomPadding = #keyPath == 1 and 0 or 10
 		if typerow.SetFlowPadding then typerow:SetFlowPadding(repeatRowLeftPadding, 0, 4, repeatRowBottomPadding) end
@@ -5330,7 +5423,7 @@ function GSE.CreateEditor()
                 stepRowLabel:SetText("Step FN")
                 stepRowLabel:SetWidth(loopControlLabelWidth)
                 stepRowLabel:SetHeight(24)
-                stepRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                stepRowLabel:SetColor(keywordColor())
                 if stepRowLabel.SetJustifyV then stepRowLabel:SetJustifyV("MIDDLE") end
                 stepRow:AddChild(stepRowLabel)
                 stepRow:AddChild(stepdropdown)
@@ -5347,7 +5440,7 @@ function GSE.CreateEditor()
                 repeatRowLabel:SetText(L["Repeat"])
                 repeatRowLabel:SetWidth(loopControlLabelWidth)
                 repeatRowLabel:SetHeight(24)
-                repeatRowLabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                repeatRowLabel:SetColor(keywordColor())
                 if repeatRowLabel.SetJustifyV then repeatRowLabel:SetJustifyV("MIDDLE") end
                 repeatRow:AddChild(repeatRowLabel)
                 repeatRow:AddChild(looplimit)
@@ -5487,7 +5580,7 @@ function GSE.CreateEditor()
                 tlabel:SetText("True")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 tlabel:SetFontObject(GameFontNormalLarge)
-                tlabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                tlabel:SetColor(keywordColor())
 
                 local trueContainer = UI:Create("SimpleGroup")
                 trueContainer:SetLayout("Flow")
@@ -5525,7 +5618,7 @@ function GSE.CreateEditor()
                 flabel:SetText("False")
                 --tlabel:SetFont(fontName, fontHeight + 4 , fontFlags)
                 flabel:SetFontObject(GameFontNormalLarge)
-                flabel:SetColor(GSE.GUIGetColour(GSEOptions.KEYWORD))
+                flabel:SetColor(keywordColor())
                 local falsecontainer = UI:Create("SimpleGroup")
                 falsecontainer:SetFullWidth(true)
                 falsecontainer:SetLayout("Flow")
@@ -5610,10 +5703,9 @@ function GSE.CreateEditor()
                 SequenceDropDown:SetCallback(
                     "OnValueChanged",
                     function(obj, event, key, checked)
-                        editframe.Sequence.Versions[version].Actions[keyPath] = {
-                            ["Type"] = Statics.Actions.Embed,
-                            ["Sequence"] = key
-                        }
+                        local embedAction = editframe.Sequence.Versions[version].Actions[keyPath]
+                        embedAction.Type = Statics.Actions.Embed
+                        embedAction.Sequence = key
                     end
                 )
 
@@ -6541,23 +6633,6 @@ function GSE.CreateEditor()
             return true
         end
 
-        -- Arrow-key block handling has been REMOVED.
-        --   * plain Up/Down previously moved the selection cursor through the list
-        --   * Shift+Up/Down previously reordered the focused block
-        -- The arrow keys are bound to character movement in WoW by default, and the
-        -- old handler called SetPropagateKeyboardInput(false) when it acted on an
-        -- arrow, which CONSUMED the key and stole the player's movement while the
-        -- editor was open. Blocks are reordered with the Move Up / Move Down buttons
-        -- and the cursor is moved by clicking a block, so no keyboard shortcut is
-        -- needed.
-        --
-        -- Nothing here registers an OnKeyDown handler or enables keyboard capture
-        -- on the editor frame, so the arrow keys (and every other key) propagate to
-        -- the game by default and character movement works normally. The Ctrl+Z
-        -- undo subsystem that used to capture this frame's keyboard has also been
-        -- removed, so there is no frame-level keyboard handler here at all.
-        -- (MoveSelectedMacroBlock above is still used by the Move Up / Move Down
-        -- buttons; the cursor is moved by clicking a block.)
 
         local moveUpButton = UI:Create("Icon")
         local moveDownButton = UI:Create("Icon")
@@ -6922,7 +6997,21 @@ function GSE.CreateEditor()
         end)
     end
 
+    -- Gate the TreeGroup's RefreshTree and nav-text-measuring during resize
+    -- drags so the pump's per-tick DoLayout only re-flows the action rows
+    -- (cheap) instead of also rebuilding the entire sequence tree (expensive).
+    -- One correct full refresh runs when the drag ends via FinishResizeLayout.
+    editframe:SetCallback("OnResizeStart", function()
+        if editframe.treeContainer then
+            editframe.treeContainer.skipTreeRefresh = true
+        end
+    end)
+
     editframe:SetCallback("OnResizeStop", function()
+        -- Clear the gate first so FinishResizeLayout triggers a full tree refresh.
+        if editframe.treeContainer then
+            editframe.treeContainer.skipTreeRefresh = nil
+        end
         if editframe.resizeLayoutPending or editframe.resizeLayoutDirty then
             FinishResizeLayout()
         end
@@ -7179,10 +7268,7 @@ function GSE.CreateEditor()
                         compiledMacro:SetText(body)
                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
                     end
-                    -- Count the COMPILED body (post translation), the same value
-                    -- UpdateMacroLimitState/WoW enforce, so the indicator and the
-                    -- over-limit trigger never disagree (was: raw typed length).
-                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(sequence.Versions[version].Actions[keyPath].macro))
+                    SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
                 end
             )
@@ -7567,3 +7653,5 @@ if C_Timer and C_Timer.After then
 else
     RestoreSequenceEditorIfNeeded()
 end
+end
+table.insert(ns.deferred, setup)

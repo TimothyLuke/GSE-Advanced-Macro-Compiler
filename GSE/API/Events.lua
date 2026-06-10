@@ -1,5 +1,4 @@
-
-local GSE = GSE
+local _, GSE = ...
 
 local L = GSE.L
 local Statics = GSE.Static
@@ -73,119 +72,6 @@ local function playerSpec()
 end
 
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
-
-local LOWER_ENERGY_SOUND_ID = 1489541
-local errorMessageState = {
-    originalHandler = nil,
-    installed = false
-}
-
-local function EnsureErrorMessageOptions()
-    if not GSEOptions then GSEOptions = {} end
-    if GSEOptions.HideUIErrorFrame == nil then GSEOptions.HideUIErrorFrame = true end
-    if GSEOptions.MuteVoiceErrors == nil then GSEOptions.MuteVoiceErrors = true end
-    if GSEOptions.MuteLowerEnergy == nil then GSEOptions.MuteLowerEnergy = true end
-end
-
-local function IsAllowedUIError(err)
-    if not err then return false end
-    if (ERR_INV_FULL and err == ERR_INV_FULL)
-        or (ERR_QUEST_LOG_FULL and err == ERR_QUEST_LOG_FULL)
-        or (ERR_RAID_GROUP_ONLY and err == ERR_RAID_GROUP_ONLY)
-        or (ERR_PARTY_LFG_BOOT_LIMIT and err == ERR_PARTY_LFG_BOOT_LIMIT)
-        or (ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE and err == ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE)
-        or (ERR_PARTY_LFG_BOOT_IN_COMBAT and err == ERR_PARTY_LFG_BOOT_IN_COMBAT)
-        or (ERR_PARTY_LFG_BOOT_IN_PROGRESS and err == ERR_PARTY_LFG_BOOT_IN_PROGRESS)
-        or (ERR_PARTY_LFG_BOOT_LOOT_ROLLS and err == ERR_PARTY_LFG_BOOT_LOOT_ROLLS)
-        or (ERR_PARTY_LFG_TELEPORT_IN_COMBAT and err == ERR_PARTY_LFG_TELEPORT_IN_COMBAT)
-        or (ERR_PET_SPELL_DEAD and err == ERR_PET_SPELL_DEAD)
-        or (ERR_PLAYER_DEAD and err == ERR_PLAYER_DEAD)
-        or (SPELL_FAILED_TARGET_NO_POCKETS and err == SPELL_FAILED_TARGET_NO_POCKETS)
-        or (ERR_ALREADY_PICKPOCKETED and err == ERR_ALREADY_PICKPOCKETED) then
-        return true
-    end
-    if type(err) == "string" and ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S then
-        local ok, pattern = pcall(format, ERR_PARTY_LFG_BOOT_NOT_ELIGIBLE_S, ".+")
-        return ok and pattern and err:find(pattern)
-    end
-    return false
-end
-
-local function FilterUIErrorsFrame(self, event, id, err, ...)
-    if event == "UI_ERROR_MESSAGE" then
-        if IsAllowedUIError(err) then
-            if errorMessageState.originalHandler then
-                return errorMessageState.originalHandler(self, event, id, err, ...)
-            end
-        end
-        return
-    end
-    if errorMessageState.originalHandler then
-        return errorMessageState.originalHandler(self, event, id, err, ...)
-    end
-end
-
-local function SetErrorSpeechMuted(muted)
-    local setter = C_CVar and C_CVar.SetCVar or SetCVar
-    if setter then
-        pcall(setter, "Sound_EnableErrorSpeech", muted and "0" or "1")
-    end
-end
-
-local function SetLowerEnergyMuted(muted)
-    local soundFunc = muted and MuteSoundFile or UnmuteSoundFile
-    if soundFunc then
-        pcall(soundFunc, LOWER_ENERGY_SOUND_ID)
-    end
-end
-
-function GSE.ApplyErrorMessageOptions()
-    EnsureErrorMessageOptions()
-
-    if UIErrorsFrame and UIErrorsFrame.GetScript and UIErrorsFrame.SetScript then
-        if GSEOptions.HideUIErrorFrame then
-            local currentHandler = UIErrorsFrame:GetScript("OnEvent")
-            if currentHandler ~= FilterUIErrorsFrame then
-                errorMessageState.originalHandler = currentHandler
-            end
-            UIErrorsFrame:SetScript("OnEvent", FilterUIErrorsFrame)
-            errorMessageState.installed = true
-        elseif errorMessageState.installed then
-            if UIErrorsFrame:GetScript("OnEvent") == FilterUIErrorsFrame then
-                UIErrorsFrame:SetScript("OnEvent", errorMessageState.originalHandler)
-            end
-            errorMessageState.installed = false
-        end
-    end
-
-    SetErrorSpeechMuted(GSEOptions.MuteVoiceErrors)
-    SetLowerEnergyMuted(GSEOptions.MuteLowerEnergy)
-end
-
--- Fired once per session when overrides are loaded.  Corrects CVars that interfere
--- with actionbar overrides and tells the player what was changed.
-local actionBarCVarCheckedThisSession = false
-local function ensureActionBarCVars()
-    if actionBarCVarCheckedThisSession then return end
-    actionBarCVarCheckedThisSession = true
-    local fixed = {}
-    local needsReload = false
-    if GetCVar("ActionButtonUseKeyDown") == "1" then
-        SetCVar("ActionButtonUseKeyDown", 0)
-        table.insert(fixed, "ActionButtonUseKeyDown (CVar)")
-    end
-    if GSEOptions.Multiclick then
-        GSEOptions.Multiclick = false
-        table.insert(fixed, "MultiClickButtons (GSE Option - requires /reload to fully apply)")
-        needsReload = true
-    end
-    if #fixed > 0 then
-        GSE.Print(L["Actionbar Overrides: The following CVars were automatically set to false as they interfere with Actionbar Overrides: "] .. table.concat(fixed, ", "))
-        if needsReload then
-            GSE.Print(L["A UI reload is required for the MultiClickButtons change to take effect.  Type /reload when convenient."])
-        end
-    end
-end
 
 -- Secure OnAttributeChanged handler shared by all native/Dominos/third-party button paths.
 -- When WoW swaps the action bar (vehicle, skyriding, possession, override bar) it changes
@@ -873,49 +759,6 @@ function GSE:ACTIONBAR_SLOT_CHANGED()
     reevaluateAllOverrideButtons()
 end
 
-local function isUsableActionBarOverride(savedBind)
-    if type(savedBind) ~= "table" then return false end
-
-    local buttonName = savedBind.Bind
-    local sequenceName = savedBind.Sequence
-    if GSE.isEmpty(buttonName) or GSE.isEmpty(sequenceName) then return false end
-
-    return _G[buttonName] ~= nil and _G[sequenceName] ~= nil
-end
-
-local function hasUsableActionBarOverride(overrides)
-    if type(overrides) ~= "table" then return false end
-
-    for _, savedBind in pairs(overrides) do
-        if isUsableActionBarOverride(savedBind) then
-            return true
-        end
-    end
-
-    return false
-end
-
-local function hasCurrentActionBarOverride()
-    local actionBarBinds = GSE_C and GSE_C["ActionBarBinds"]
-    if type(actionBarBinds) ~= "table" then return false end
-
-    local spec = GetSpec()
-    local specs = actionBarBinds["Specialisations"]
-    if specs and hasUsableActionBarOverride(specs[spec]) then
-        return true
-    end
-
-    if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
-        local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
-        local loadouts = actionBarBinds["LoadOuts"]
-        if selected and loadouts and loadouts[spec] and hasUsableActionBarOverride(loadouts[spec][selected]) then
-            return true
-        end
-    end
-
-    return false
-end
-
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -934,11 +777,6 @@ local function LoadOverrides(force)
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()]) then
         GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] = {}
-    end
-    -- If an override can actually be loaded, ensure the CVars that block it are off.
-    -- SetCVar is not combat-restricted so this runs regardless of lockdown state.
-    if hasCurrentActionBarOverride() then
-        ensureActionBarCVars()
     end
     if not InCombatLockdown() then
         ClearOverrideBindings(GSE_EABBindOwner)
@@ -981,10 +819,6 @@ local function LoadOverrides(force)
                 end
             end
         end
-        -- A freshly (re)loaded override whose slot already holds a real action
-        -- must start yielded, not behind the override. Defer one frame so the
-        -- action-bar slots are populated before we read them.
-        C_Timer.After(0, reevaluateAllOverrideButtons)
     end
 end
 
@@ -1008,9 +842,10 @@ local function LoadKeyBindings(payload)
 
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
-            SetBindingClick(k, v, "LeftButton")
+            local target = GSE.GetKeybindClickTarget(v)
+            SetBindingClick(k, target, "LeftButton")
             if GSE.GameMode == 5 then
-                SetOverrideBindingClick(keybindingframe, false, k, v)
+                SetOverrideBindingClick(keybindingframe, false, k, target)
             end
         -- print("Bound", k, v)
         end
@@ -1029,13 +864,18 @@ local function LoadKeyBindings(payload)
                 )
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     SetBinding(k)
-                    SetBindingClick(k, v, "LeftButton")
+                    local target = GSE.GetKeybindClickTarget(v)
+                    SetBindingClick(k, target, "LeftButton")
                     if GSE.GameMode == 5 then
-                        SetOverrideBindingClick(keybindingframe, false, k, v)
+                        SetOverrideBindingClick(keybindingframe, false, k, target)
                     end
                 end
             end
         end
+        -- A freshly (re)loaded override whose slot already holds a real action
+        -- must start yielded, not behind the override. Defer one frame so the
+        -- action-bar slots are populated before we read them.
+        C_Timer.After(0, reevaluateAllOverrideButtons)
     end
 end
 
@@ -1092,7 +932,6 @@ function GSE:PLAYER_ENTERING_WORLD()
     GSE.InstallDeveloperDebugGameMenuWarning()
     GSE.currentZone = GetRealZoneText()
     GSE.PlayerEntered = true
-    GSE.ApplyErrorMessageOptions()
     GSE.UpdateZoneFlags()
     -- One-off: stamp LastUpdated on any pre-existing record that's missing it
     -- (older mod versions didn't track it for macros at all, and never-edited

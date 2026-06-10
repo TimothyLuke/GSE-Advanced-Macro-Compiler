@@ -1,6 +1,9 @@
-local GSE = GSE
-local Statics = GSE.Static
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
+local Statics = GSE.Static
 local UI = GSE.UI
 local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor or {}
 local L = GSE.L
@@ -196,3 +199,5 @@ remoteFrame:SetCallback(
 if remoteFrame and remoteFrame.frame and GSE.RegisterUIScaleFrame then
     GSE.RegisterUIScaleFrame(remoteFrame.frame)
 end
+end
+table.insert(ns.deferred, setup)

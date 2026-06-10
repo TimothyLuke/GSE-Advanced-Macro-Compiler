@@ -1,19 +1,9 @@
--- GLOBALS: GSE
-GSE =
-    LibStub("AceAddon-3.0"):NewAddon(
-    "GSE",
-    "AceEvent-3.0",
-    "AceComm-3.0"
-)
--- Use silent mode and fall back to an English-key table if the "GSE" locale is
--- not registered. A corrupted or partially-downloaded Localization\ModL_*.lua
--- file would otherwise make GetLocale() raise here, aborting Init.lua before
--- GSE.split / GSE.GameMode are defined and leaving the addon half-loaded (which
--- then errors in combat, e.g. GSE_Utils/Events.lua calling the nil GSE.split).
-GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE", true)
-if not GSE.L then
-    GSE.L = setmetatable({}, {__index = function(_, key) return key end})
-end
+local _, GSE = ...
+
+LibStub("AceEvent-3.0"):Embed(GSE)
+LibStub("AceComm-3.0"):Embed(GSE)
+
+GSE.L = LibStub("AceLocale-3.0"):GetLocale("GSE")
 GSE.Static = {}
 
 GSE.WagoAnalytics = LibStub("WagoAnalytics"):Register("kGr0YY6y")
@@ -54,11 +44,6 @@ end
 --- Split a string into an array based on the delimiter specified.
 function GSE.split(source, delimiters)
     local elements = {}
-    -- Guard against nil input so callers passing a possibly-nil value (e.g.
-    -- a missing GUID segment) get an empty table instead of an error.
-    if source == nil or delimiters == nil then
-        return elements
-    end
     local pattern = "([^" .. delimiters .. "]+)"
     local _ =
         string.gsub(
@@ -199,3 +184,47 @@ GSE.inParty = false
 
 -- initialise debugprofilestart
 GSE.DebugProfile("init")
+
+-- ---------------------------------------------------------------------------
+-- Submodule init dispatch
+--
+-- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL) cannot reach
+-- this addon's private namespace at parse-time. Each one exposes a single
+-- global `<name>_Initialize` function that takes the GSE table and runs the
+-- submodule's deferred setup. Reinit guards live inside each submodule.
+-- ---------------------------------------------------------------------------
+local SUBMODULES = {
+    GSE_Utils = true,
+    GSE_Options = true,
+    GSE_GUI = true,
+    GSE_LDB = true,
+    GSE_QoL = true,
+    GSE_Companion = true,
+}
+
+local function pushGSEInto(addon)
+    if not SUBMODULES[addon] then return end
+    local initFn = _G[addon .. "_Initialize"]
+    if type(initFn) == "function" then
+        initFn(GSE)
+    end
+end
+
+-- If a submodule somehow loaded before main GSE (TOC dependencies should
+-- prevent this, but cover the case anyway), push GSE into it now.
+for name in pairs(SUBMODULES) do
+    if C_AddOns.IsAddOnLoaded(name) then
+        pushGSEInto(name)
+    end
+end
+
+-- Catch submodules that load after us. AceEvent dispatches as
+-- `self:method(eventname, ...payload)`, so the loaded addon name is the
+-- second positional, not the first. Define the method BEFORE registering:
+-- AceEvent (via CallbackHandler) checks that self[method] is callable at
+-- registration time and errors if the slot is still nil.
+function GSE:ADDON_LOADED(_, addon)
+    if not SUBMODULES[addon] then return end
+    pushGSEInto(addon)
+end
+GSE:RegisterEvent("ADDON_LOADED")

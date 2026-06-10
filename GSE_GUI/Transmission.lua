@@ -1,7 +1,9 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
-
 local L = GSE.L
 
 function GSE.GUIShowTransmissionGui(inckey, editframe)
@@ -85,3 +87,5 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   transmissionFrame:Show()
   if transmissionFrame.frame and GSE.RegisterUIScaleFrame then GSE.RegisterUIScaleFrame(transmissionFrame.frame) end
 end
+end
+table.insert(ns.deferred, setup)

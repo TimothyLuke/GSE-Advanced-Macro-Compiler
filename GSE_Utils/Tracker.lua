@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 
 -- Tracker tunable constants (DefaultIconCount, KeyHistoryLimit,
@@ -49,7 +53,7 @@ GSE.TrackerLayoutPresets = {
         Config = {
             SuccessfulCastsLocked = false,
             AssistedSuccessLocked = false,
-            IconCount = 1,
+            IconCount = 10,
             TextLocked = false,
             ShowTrackerText = true,
             Linked = true,
@@ -67,7 +71,7 @@ GSE.TrackerLayoutPresets = {
         Config = {
             SuccessfulCastsLocked = false,
             AssistedSuccessLocked = false,
-            IconCount = 1,
+            IconCount = 10,
             TextLocked = false,
             ShowTrackerText = true,
             Linked = false,
@@ -223,8 +227,10 @@ local function EnsureSequenceIconFrameOptions()
     end
 
     opts.Enabled = opts.Enabled == true
+    if opts.SingleIcon == nil then opts.SingleIcon = false end
+    if opts.PreserveScaleOnZoom == nil then opts.PreserveScaleOnZoom = false end
     opts.IconSize = 100
-    opts.IconCount = ClampNumber(opts.IconCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
+    opts.IconCount = ClampNumber(opts.IconCount, 1, (opts.SingleIcon and 1 or 10), Statics.TrackerConfig.DefaultIconCount)
     opts.Scale = 0.50
     opts.TextWidth = ClampNumber(opts.TextWidth, GSE.SequenceIconTextResize.MinWidth, GSE.SequenceIconTextResize.MaxWidth, GSE.SequenceIconTextResize.DefaultWidth)
     opts.TextHeight = ClampNumber(opts.TextHeight, GSE.SequenceIconTextResize.MinHeight, GSE.SequenceIconTextResize.MaxHeight, GSE.SequenceIconTextResize.DefaultHeight)
@@ -309,14 +315,25 @@ function GSE.SequenceIconApplyTrackerFrameScale()
     scale = math.max(0.75, math.min(2.0, scale))
     local currentOptions = EnsureSequenceIconFrameOptions()
 
-    -- Mirror the Editor / Toolbar / Debugger scaling fix on the tracker: when
-    -- the scale changes, keep each frame's on-screen position fixed instead of
-    -- letting it jump. Frames in the linked layout anchor to the parent widget
-    -- at a zero offset and are already position-stable under SetScale; only
-    -- frames the user has dragged out on their own (Moved) carry a
-    -- scale-sensitive screen offset, so for those capture the centre in
-    -- absolute pixels, rescale, re-anchor to the same spot and persist it -- the
-    -- same absolute-pixel technique GSE.ApplyScaleToFrame uses for the windows.
+    if not currentOptions.PreserveScaleOnZoom then
+        if GSE.SequenceIconFrame and GSE.SequenceIconFrame.SetScale then
+            GSE.SequenceIconFrame:SetScale(scale)
+        end
+        if GSE.SequenceIconTextFrame and GSE.SequenceIconTextFrame.SetScale then
+            GSE.SequenceIconTextFrame:SetScale(scale)
+        end
+        if GSE.SuccessfulCastFrame and GSE.SuccessfulCastFrame.SetScale then
+            GSE.SuccessfulCastFrame:SetScale(scale)
+        end
+        return
+    end
+
+    -- PreserveScaleOnZoom ON: keep each frame's on-screen position fixed across
+    -- the scale change. Linked-layout frames anchor at zero offset and are
+    -- already position-stable; only frames the user has dragged out (Moved)
+    -- carry a scale-sensitive screen offset, so for those capture the centre in
+    -- absolute pixels, rescale, re-anchor to the same spot and persist it --
+    -- same absolute-pixel technique GSE.ApplyScaleToFrame uses for windows.
     local scaleTargets = {
         { key = "Icon",            frame = GSE.SequenceIconFrame },
         { key = "Text",            frame = GSE.SequenceIconTextFrame },
@@ -349,9 +366,8 @@ function GSE.SequenceIconApplyTrackerFrameScale()
         end
     end
 
-    -- The base ApplyTrackerScale re-flows the widget after scaling; the frame
-    -- scale path skipped this, so re-anchor the linked frames to the widget and
-    -- re-apply any moved frames from their (now updated) saved positions.
+    -- Re-flow the widget so linked frames re-anchor and any moved frames
+    -- re-apply from their (now updated) saved positions.
     if GSE.SequenceIconLayoutTrackerWidget then
         GSE.SequenceIconLayoutTrackerWidget()
     end
@@ -940,7 +956,7 @@ GSE.SequenceIconSaveInternalFramePosition = function(prefix, frame)
 
     -- All tracker frames now anchor by TOP-LEFT so their top/left edge stays
     -- fixed as their contents grow or shrink. For the icon scroll specifically,
-    -- the strip is locked to a single icon, so it anchors from the TOP
+    -- this means reducing Preview Icon Count collapses icons toward the TOP
     -- (vertical) or LEFT (horizontal) of the saved position, never the center.
     if not (frame.GetLeft and frame.GetTop) then return end
     local left, top = frame:GetLeft(), frame:GetTop()
@@ -1518,8 +1534,20 @@ end
 -- disabled). Bound to Alt+RightClick on any of the three tracker frames.
 -- ------------------------------------------------------------------------
 function GSE.SequenceIconToggleTrackerLocked()
-    local currentlyLocked = GSE.SequenceIconAreLinkedTrackerFramesLocked and
-                                GSE.SequenceIconAreLinkedTrackerFramesLocked() or true
+    -- Read the REAL group lock state. The previous expression --
+    --     GSE.SequenceIconAreLinkedTrackerFramesLocked and
+    --         GSE.SequenceIconAreLinkedTrackerFramesLocked() or true
+    -- was the broken `a and b() or c` substitute for a ternary: the
+    -- accessor legitimately returns `false` when the tracker is UNLOCKED,
+    -- so the trailing `or true` overrode it -- (truthy and false) or true
+    -- == true -- pinning currentlyLocked to true on every call. newLocked
+    -- then became `not true` == false every time, so Alt+RightClick could
+    -- only ever UNLOCK; re-locking the tracker was impossible. Compute the
+    -- state directly (nil-safe, no or-default masking a real `false`).
+    local currentlyLocked = true
+    if GSE.SequenceIconAreLinkedTrackerFramesLocked then
+        currentlyLocked = GSE.SequenceIconAreLinkedTrackerFramesLocked() == true
+    end
     local newLocked = not currentlyLocked
     if GSE.SequenceIconSetLinkedTrackerLockState then
         GSE.SequenceIconSetLinkedTrackerLockState(newLocked)
@@ -3528,7 +3556,8 @@ end
 
 function GSE.SetSequenceIconFrameIconCount(newCount)
     local currentOptions = EnsureSequenceIconFrameOptions()
-    currentOptions.IconCount = ClampNumber(newCount, 1, 1, Statics.TrackerConfig.DefaultIconCount)
+    local upper = currentOptions.SingleIcon and 1 or 10
+    currentOptions.IconCount = ClampNumber(newCount, 1, upper, Statics.TrackerConfig.DefaultIconCount)
     TrimIconEntries()
     RenderSequenceIcons()
 end
@@ -3701,3 +3730,5 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 end)
 
 RefreshMoveModes()
+end
+table.insert(ns.deferred, setup)

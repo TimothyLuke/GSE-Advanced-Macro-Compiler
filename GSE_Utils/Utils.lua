@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local L = GSE.L
 
@@ -1791,14 +1795,6 @@ function GSE.PrintGnomeHelp()
         GNOME
     )
     GSE.Print(
-        L["The command "] ..
-            GSEOptions.CommandColour ..
-                L[
-                    "/gse toolbar|r turns the GSE Toolbar on or off (/gse toolbar on, /gse toolbar off, or /gse toolbar to toggle). Use this to bring the Toolbar back when it is off."
-                ],
-        GNOME
-    )
-    GSE.Print(
         GSEOptions.CommandColour ..
             L[
                 "GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
@@ -1810,12 +1806,6 @@ end
 SLASH_GSE1 = "/gse"
 SlashCmdList.GSE = function(input)
     GSE:GSSlash(input)
-end
-
--- /rl is a quick alias for reloading the UI (same as /reload or /reloadui).
-SLASH_GSERELOADUI1 = "/rl"
-SlashCmdList.GSERELOADUI = function()
-    if ReloadUI then ReloadUI() end
 end
 
 -- Functions
@@ -1950,38 +1940,6 @@ function GSE:GSSlash(input)
             GSE.OpenOptionsPanel()
         else
             GSE.Print(L["Options Not Enabled"])
-        end
-    elseif command == "toolbar" then
-        -- Toggle (or set with "on"/"off") the GSE Toolbar from chat. Mirrors the
-        -- "GSE Toolbar ON / OFF" checkbox in Options (Windows & Layout). This is
-        -- the reliable way to turn the Toolbar back ON after it has been turned
-        -- OFF: while the Toolbar is off, /gse opens the Sequence Editor and the
-        -- Toolbar's own Options icon is unavailable.
-        local colour = (GSEOptions and GSEOptions.CommandColour) or ""
-        local arg = params[2] and string.lower(params[2]) or nil
-        local enable
-        if arg == "on" then
-            enable = true
-        elseif arg == "off" then
-            enable = false
-        else
-            enable = not (GSEOptions and GSEOptions.ToolbarEnabled ~= false)
-        end
-        if GSEOptions then
-            GSEOptions.ToolbarEnabled = enable and true or false
-        end
-        GSE.CheckGUI()
-        if enable then
-            if GSE.ShowMenu then GSE.ShowMenu() end
-            GSE.Print(colour .. "GSE Toolbar ON|r")
-        else
-            if GSE.MenuFrame and GSE.MenuFrame:IsShown() then
-                GSE.MenuFrame:Hide()
-            end
-            if GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.menu then
-                GSEOptions.frameLocations.menu.open = false
-            end
-            GSE.Print(colour .. "GSE Toolbar OFF|r. Type " .. colour .. "/gse toolbar on|r to turn it back on.")
         end
     elseif command == "resetoptions" then
         GSE.SetDefaultOptions()
@@ -2248,25 +2206,14 @@ do
                         iconText = "|T" .. specIconID .. ":16:16|t "
                     end
                 end
-                -- Highlight the override already assigned to this slot so the user
-                -- can see at a glance which sequence is active. existingSequence is
-                -- the slot's current gse-button attribute; match it to the list entry.
-                local isCurrent = existingSequence ~= nil and entry.name == existingSequence
-                local marker = isCurrent and "|TInterface\\RaidFrame\\ReadyCheck-Ready:16:16|t " or ""
-                local label = marker .. iconText .. entry.name
+                local label = iconText .. entry.name
                 if entry.disabled then
                     local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
                     element:SetTooltip(function(tooltip, elementDescription)
                         GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
                     end)
                 else
-                    local entryLabel = label
-                    if isCurrent then
-                        -- Active override: green check + green name. Still clickable
-                        -- (re-assigning the same sequence is a harmless no-op).
-                        entryLabel = marker .. iconText .. "|cFF1EFF00" .. entry.name .. "|r"
-                    end
-                    rootDescription:CreateButton(entryLabel, function()
+                    rootDescription:CreateButton(label, function()
                         GSE.CreateActionBarOverride(buttonName, entry.name)
                     end)
                 end
@@ -2366,3 +2313,5 @@ do
 end
 
 GSE.Utils = true
+end
+table.insert(ns.deferred, setup)

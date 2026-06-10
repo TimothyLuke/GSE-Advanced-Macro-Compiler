@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local UI = GSE.UI
 
@@ -66,3 +70,5 @@ GSE.GUI.Feature = {
     MULTI_WINDOW = function() return GSE.Patron end,
     TAB_COMPLETE = function() return GSE.Patron end,
 }
+end
+table.insert(ns.deferred, setup)

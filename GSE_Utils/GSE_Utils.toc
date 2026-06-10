@@ -1,8 +1,8 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
 ## Notes: Optional Utilities for GSE
 ## Author: TimothyLuke
-## Version: 3.3.19-18-g657a37a-PatronBuild
+## Version: 3.3.20-4-g9dc510d-PatronBuild
 ## Dependencies: GSE
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
@@ -23,6 +23,10 @@ embeds.xml
 Lib\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Lib\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
+# Bootstrap declares ns.deferred and exposes _G.GSE_Utils_Initialize, which
+# main GSE calls on ADDON_LOADED. Every other file registers its body via
+# table.insert(ns.deferred, setup).
+Bootstrap.lua
 
 Patrons.lua
 Indent.lua

@@ -1,9 +1,9 @@
-## Interface: 11508, 20505, 50503, 50504, 120005
+## Interface: 11508, 20505, 50503, 50504, 120005, 120007
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Data Feeds and Minimap|r
 ## Notes: LibDataBroker Plugin for GSE
 ## Author: TimothyLuke
-## Version: 3.3.19-18-g657a37a-PatronBuild
+## Version: 3.3.20-4-g9dc510d-PatronBuild
 ## Dependencies: GSE GSE_Utils
 ## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
 ## Category-enUS: Combat
@@ -19,5 +19,8 @@
 ## Category-zhTW: 戰鬥
 ## Group: GSE
 
+
+# Bootstrap exposes _G.GSE_LDB_Initialize that main GSE calls on ADDON_LOADED.
+Bootstrap.lua
 
 LDBProvider.lua

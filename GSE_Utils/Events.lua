@@ -1,5 +1,8 @@
+local _, ns = ...
+ns.deferred = ns.deferred or {}
 
-local GSE = GSE
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local GCD = nil
 
@@ -20,7 +23,7 @@ local SequenceDebugColumns = {
     {label = "Casting", width = 30, pixelWidth = 112, min = 75}
 }
 if ASSISTED_HIGHLIGHT_AVAILABLE then
-    SequenceDebugColumns[#SequenceDebugColumns + 1] = {label = "Next Cast", width = 18, pixelWidth = 90, min = 70}
+    SequenceDebugColumns[#SequenceDebugColumns + 1] = {label = "Suggested - Spell Assist", width = 30, pixelWidth = 150, min = 110}
 end
 GSE.SequenceDebugColumns = SequenceDebugColumns
 
@@ -324,3 +327,5 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
     end
 end
 GSE:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+end
+table.insert(ns.deferred, setup)

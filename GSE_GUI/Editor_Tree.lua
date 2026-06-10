@@ -1,4 +1,8 @@
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 local Statics = GSE.Static
 local UI = GSE.UI
 local L = GSE.L
@@ -117,7 +121,15 @@ local RESOURCE_COPY_OFFSET_Y = -8
 local EDITOR_FOOTER_BUTTON_GAP = 6
 
 local function SetResourceFrameTextColor(text, color)
-    if text and text.SetTextColor and color then text:SetTextColor(unpack(color)) end
+    if not (text and text.SetTextColor and color) then return end
+    -- EUI-neutral-white only in Modern mode; Native keeps the GSE colour
+    -- even when EllesmereUI is loaded.
+    if (not GSE.ShouldHonorExternalSkin or GSE.ShouldHonorExternalSkin())
+        and GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        text:SetTextColor(1, 1, 1, 1)
+    else
+        text:SetTextColor(unpack(color))
+    end
 end
 
 local function GetResourceEditBox(editBox)
@@ -347,7 +359,12 @@ local function CreateResourceRow(parent, resource, index)
     title:SetFontObject(GameFontNormal)
     title:SetJustifyH("LEFT")
     title:SetJustifyV("MIDDLE")
-    title:SetColor(unpack(RESOURCE_GOLD))
+    if (not GSE.ShouldHonorExternalSkin or GSE.ShouldHonorExternalSkin())
+        and GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded() then
+        title:SetColor(1, 1, 1, 1)
+    else
+        title:SetColor(unpack(RESOURCE_GOLD))
+    end
     if title.text and title.text.SetWordWrap then title.text:SetWordWrap(false) end
     body:AddChild(title)
 
@@ -1101,15 +1118,7 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return rc
     end
 
-    if unique[#unique] == "SKYRIDING" then
-        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer()
-        if GSE.DrawSkyridingKeybindEditor then
-            GSE.DrawSkyridingKeybindEditor(rc)
-        end
-        editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (L["Skyriding / Vehicle Keybinds"] or "Skyriding"))
-    elseif unique[#unique] == "NKB" then
+    if unique[#unique] == "NKB" then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
         editframe.showKeybind(nil, nil, nil, nil, "KB", rc)
@@ -1714,3 +1723,5 @@ GSE.GUI.AddSectionHeader = function(container, title, icon)
     end
     addSectionDivider(container, title, icon)
 end
+end
+table.insert(ns.deferred, setup)

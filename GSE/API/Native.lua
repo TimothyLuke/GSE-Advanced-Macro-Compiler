@@ -1,3 +1,5 @@
+local _, GSE = ...
+
 -- GSE helper functions that genuinely add behavior — NOT thin wrappers
 -- around WoW APIs. WoW APIs are called directly at the call site.
 -- Ace3 mixin (AceEvent / AceComm via Init.lua) provides
@@ -133,4 +135,14 @@ function GSE.GetSpellCooldown(spell)
         return {startTime = startTime, duration = duration, isEnabled = isEnabled, modRate = modRate}
     end
     return nil
+end
+
+--- Returns true when EllesmereUI is loaded in any form. Same dual-signal
+--- detection the action-bar override code uses (Events.lua + Utils.lua look
+--- for EABButton1; the framework also exposes _G.EllesmereUI). Either signal
+--- means the EUI suite is active and GSE should defer to its skin/look.
+function GSE.IsEllesmereUILoaded()
+    if type(_G.EllesmereUI) == "table" then return true end
+    if _G.EABButton1 then return true end
+    return false
 end

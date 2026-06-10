@@ -7,20 +7,29 @@
 -- call GSE.Skin.<Type>(widget) at the end of each constructor; this file
 -- is the dispatcher that decides what those calls do.
 --
--- Providers in priority order (first match wins):
+-- USER CHOICE COMES FIRST: an external provider is only considered when the
+-- user is in Modern Skin mode (GSE.ShouldHonorExternalSkin). If the user has
+-- selected the Native Skin, selectProvider() pins the provider to no-op even
+-- when ElvUI/EllesmereUI is loaded, so the GUI is 100% Blizzard-native and no
+-- host skin is forced on by addon presence alone.
+--
+-- Providers in priority order (first match wins, Modern mode only):
 --   1. ElvUI       — calls ElvUI[1]:GetModule("Skins"):HandleX(widget)
---   2. EllesmereUI — applies a dark backdrop + 1px border in EllesmereUI's
---                    accent color (read via EllesmereUI.GetAccentColor()).
---                    EllesmereUI does NOT expose a public Handle* API, so
---                    this is a detect-and-replicate pass — visually
---                    compatible, not a 1:1 mimic.
+--   2. EllesmereUI — uses EllesmereUI.PP.CreateBorder + DARK_BG/BORDER_COLOR.
+--                    These are the same painters/colours EUI uses on its
+--                    own character/inventory/settings panels, so the GSE
+--                    skin matches the rest of EUI by construction.
 --   3. nil         — no-op, GSE frames use Blizzard's default skin.
 --
 -- Adding a new provider: add a builder function that returns the same
 -- table shape as elvUIProvider() / ellesmereUIProvider() below and add a
 -- detect step in selectProvider().
 
-local GSE = GSE
+local _, ns = ...
+ns.deferred = ns.deferred or {}
+
+local function setup()
+local GSE = ns.GSE
 
 GSE.Skin = GSE.Skin or {}
 
@@ -33,6 +42,7 @@ local function makeNoopProvider()
     return {
         name        = "none",
         Frame       = noop,
+        InsetFrame  = noop,
         Button      = noop,
         CloseButton = noop,
         EditBox     = noop,
@@ -66,6 +76,7 @@ local function makeElvUIProvider()
     return {
         name        = "ElvUI",
         Frame       = function(frame, setBackdrop) S:HandleFrame(frame, setBackdrop ~= false) end,
+        InsetFrame  = function(frame, setBackdrop) S:HandleFrame(frame, setBackdrop ~= false) end,
         Button      = function(btn)       S:HandleButton(btn) end,
         CloseButton = function(btn)       S:HandleCloseButton(btn) end,
         EditBox     = function(edit)      S:HandleEditBox(edit) end,
@@ -76,77 +87,120 @@ local function makeElvUIProvider()
         ScrollBar   = function(sb)        if S.HandleScrollBar then S:HandleScrollBar(sb) end end,
         Tab         = function(tab)       if S.HandleTab then S:HandleTab(tab) end end,
         StatusBar   = function(bar)       if S.HandleStatusBar then S:HandleStatusBar(bar) end end,
-        Icon        = function(icon)      S:HandleIcon(icon) end,
+        -- Icon is called as `Icon(buttonFrame, textureRegion)`. ElvUI's
+        -- HandleIcon requires a Texture (it calls SetTexCoord internally),
+        -- so prefer the texture. Falling back to the first arg keeps the
+        -- wrapper safe against any future single-arg callers.
+        Icon        = function(frame, texture) S:HandleIcon(texture or frame) end,
         ItemButton  = function(b)         S:HandleItemButton(b, true) end,
         StaticPopup = function(popup)     S:HandleStaticPopup(popup) end,
     }
 end
 
 -- ─── EllesmereUI provider ──────────────────────────────────────────────
--- EllesmereUI doesn't ship a HandleX surface like ElvUI, but its public
--- API is richer than first appeared. We use:
+-- Verified against EllesmereUI 7.9.4 (Curse #1477613). Public surface used:
 --
---   EllesmereUI.ApplyBorderStyle(frame, size, r, g, b, a, textureKey)
---       Their canonical border painter. Handles both the "solid" 4-strip
---       PP system (their default) and BackdropTemplate-based textured
---       borders. Auto-resolves the texture path from the texture key.
---   EllesmereUI.GetAccentColor()  -> r, g, b
---       User's configured accent (or class-color / preset).
---   EllesmereUI.GetActiveTheme()  -> string
---   EllesmereUI.ResolveBorderTexture(key) -> texture path
---   EllesmereUI.PP                -- exposed panel-painter
---       PP.CreateBorder(frame, r, g, b, a, size, drawLayer, subLevel)
---       PP.SetBorderColor(frame, r, g, b, a)
+--   EllesmereUI.PP                            — panel-painter module
+--     PP.CreateBorder(frame, r, g, b, a,      — paints the 4-edge BackdropTemplate
+--                     borderSize, drawLayer,    border EUI uses on its own panels
+--                     subLevel)
+--     PP.SetBorderColor(frame, r, g, b, a)
+--   EllesmereUI.DARK_BG       = {r, g, b}      — canonical panel-bg colour
+--   EllesmereUI.BORDER_COLOR  = {r, g, b, a}   — canonical border colour
+--   EllesmereUI.ELLESMERE_GREEN                — accent (preserved as fallback)
 --
--- We call ApplyBorderStyle to paint the same 4-strip borders EllesmereUI
--- paints on its own panels, in the same accent colour. NativeUI's own
--- chrome (CreateTexture overlays for the GSE orange/teal theme) remains
--- on top of this — fully suppressing it requires per-widget knowledge of
--- which textures NativeUI created. That's the next refactor; for now the
--- EUI borders sit at the frame edge and the GSE theme fills the body.
+-- NOT present in 7.9.4 (don't reach for them):
+--   EllesmereUI.ApplyBorderStyle, GetAccentColor, ResolveBorderTexture,
+--   GetActiveTheme. Earlier code paths referenced these speculatively.
 
-local EUI_BG = {0.10, 0.10, 0.12, 0.85}     -- panel background (EUI doesn't expose a panel-bg colour API)
 local EUI_BORDER_SIZE = 1                    -- 1px is EUI's default thin border
-local EUI_BACKDROP = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = nil,                          -- borders come from EUI's PP system, not from our backdrop
-    edgeSize = 0,
-    insets = {left = 0, right = 0, top = 0, bottom = 0},
-}
+local EUI_FALLBACK_BG = {0.07, 0.07, 0.07, 1}      -- only used if EUI.DARK_BG missing
+local EUI_FALLBACK_BORDER = {0.0, 0.82, 0.62, 1}   -- only used if EUI.BORDER_COLOR missing
 
-local function getEUIAccent()
+local function getEUIBackdropColor()
     local EUI = _G.EllesmereUI
-    if type(EUI) == "table" and type(EUI.GetAccentColor) == "function" then
-        local ok, r, g, b = pcall(EUI.GetAccentColor)
-        if ok and r then return r, g, b end
+    if type(EUI) == "table" and type(EUI.DARK_BG) == "table" then
+        local c = EUI.DARK_BG
+        return c.r or EUI_FALLBACK_BG[1], c.g or EUI_FALLBACK_BG[2],
+               c.b or EUI_FALLBACK_BG[3], c.a or 1
     end
-    return 1, 1, 1
+    return EUI_FALLBACK_BG[1], EUI_FALLBACK_BG[2], EUI_FALLBACK_BG[3], EUI_FALLBACK_BG[4]
 end
 
-local function getEUITextureKey()
-    -- Default texture key for the user's active theme. EUI doesn't expose
-    -- a "get the current border texture for an arbitrary addon" — that's
-    -- per-addon registered with RegisterBorderDefaults. We default to
-    -- "solid" which is their 4-strip system and matches most users'
-    -- panels out of the box.
-    return "solid"
+-- Theme-keyed background texture (replicated from EllesmereUI.lua's private
+-- THEME_BG_FILES table at line 28-37). Used so GSE panels render the same
+-- textured grain EUI's own character/inventory/settings panels do, instead
+-- of a flat solid colour.
+local EUI_THEME_BG = {
+    ["EllesmereUI"]   = "backgrounds\\eui-bg-all-compressed.png",
+    ["Horde"]         = "backgrounds\\eui-bg-horde-compressed.png",
+    ["Alliance"]      = "backgrounds\\eui-bg-alliance-compressed.png",
+    ["Midnight"]      = "backgrounds\\eui-bg-midnight-compressed.png",
+    ["Dark"]          = "backgrounds\\eui-bg-dark-compressed.png",
+    ["Class Colored"] = "backgrounds\\eui-bg-all-compressed.png",
+    ["Custom Color"]  = "backgrounds\\eui-bg-all-compressed.png",
+}
+
+local function getEUIBackgroundTexture()
+    local EUI = _G.EllesmereUI
+    if type(EUI) ~= "table" or type(EUI.MEDIA_PATH) ~= "string" then return nil end
+    local db = _G.EllesmereUIDB or {}
+    local theme = db.activeTheme or "EllesmereUI"
+    -- "Faction (Auto)" is EUI's runtime alias for Horde/Alliance based on
+    -- the player's faction; resolve it here the same way EUI does.
+    if theme == "Faction (Auto)" and UnitFactionGroup then
+        local _, faction = UnitFactionGroup("player")
+        theme = (faction == "Horde") and "Horde" or "Alliance"
+    end
+    local file = EUI_THEME_BG[theme] or EUI_THEME_BG["EllesmereUI"]
+    return EUI.MEDIA_PATH .. file
+end
+
+local function getEUIBorderColor()
+    local EUI = _G.EllesmereUI
+    if type(EUI) == "table" then
+        if type(EUI.BORDER_COLOR) == "table" then
+            local c = EUI.BORDER_COLOR
+            return c.r or EUI_FALLBACK_BORDER[1], c.g or EUI_FALLBACK_BORDER[2],
+                   c.b or EUI_FALLBACK_BORDER[3], c.a or 1
+        end
+        if type(EUI.ELLESMERE_GREEN) == "table" then
+            local c = EUI.ELLESMERE_GREEN
+            return c.r or EUI_FALLBACK_BORDER[1], c.g or EUI_FALLBACK_BORDER[2],
+                   c.b or EUI_FALLBACK_BORDER[3], c.a or 1
+        end
+    end
+    return EUI_FALLBACK_BORDER[1], EUI_FALLBACK_BORDER[2], EUI_FALLBACK_BORDER[3], EUI_FALLBACK_BORDER[4]
 end
 
 local function stripBlizzardRegions(frame)
     if not frame then return end
-    for _, key in ipairs({"NineSlice", "Border", "Bg", "BorderTopLeft", "BorderTopRight",
-                          "BorderBottomLeft", "BorderBottomRight", "BorderTop", "BorderBottom",
-                          "BorderLeft", "BorderRight"}) do
+    -- Strip only the gold/ornate CHROME textures Blizzard panel templates ship
+    -- with, NOT the title container — hiding TitleBg / TitleContainer wipes
+    -- the frame's title text. Border textures + corner pieces are safe to hide
+    -- because they're the gold ornate edges we're replacing with EUI's border.
+    for _, key in ipairs({
+        "NineSlice", "Border", "Bg",
+        "BorderTopLeft", "BorderTopRight", "BorderBottomLeft", "BorderBottomRight",
+        "BorderTop", "BorderBottom", "BorderLeft", "BorderRight",
+        "TopTileStreaks", "TopBorder", "BotLeftCorner", "BotRightCorner",
+        "LeftBorder", "RightBorder", "BottomBorder",
+        "Inset", "PortraitFrame", "TopLeftCorner", "TopRightCorner",
+    }) do
         local region = frame[key]
         if region and type(region.Hide) == "function" then region:Hide() end
     end
 end
 
 local function makeEllesmereUIProvider()
-    local EUI = _G.EllesmereUI
-    if type(EUI) ~= "table" then return nil end
-    -- Require the public painters — bail if EUI is too old.
-    if type(EUI.ApplyBorderStyle) ~= "function" then return nil end
+    -- Detection mirrors GSE/API/Native.lua:GSE.IsEllesmereUILoaded — same
+    -- dual signal (framework table OR EABButton1) the action-bar override
+    -- code uses, so the skin layer and the keybind layer agree on whether
+    -- EUI is present. Either signal activates this provider; the PP.CreateBorder
+    -- path is only taken if the framework table is real, otherwise we
+    -- degrade to the SetBackdrop edge.
+    if not (GSE.IsEllesmereUILoaded and GSE.IsEllesmereUILoaded()) then return nil end
+    local EUI = type(_G.EllesmereUI) == "table" and _G.EllesmereUI or {}
 
     local function ensureBackdropMixin(frame)
         if not frame then return end
@@ -158,20 +212,71 @@ local function makeEllesmereUIProvider()
     end
 
     local function paintBackdrop(frame)
-        if not frame or type(frame.SetBackdrop) ~= "function" then return end
+        if not frame then return end
+        -- ensureBackdropMixin BEFORE the SetBackdrop check: Blizzard frames
+        -- created with templates like ButtonFrameTemplate / BasicFrameTemplate
+        -- don't have the BackdropTemplate mixin, so frame.SetBackdrop is nil
+        -- until we Mixin it. The DebugFrame is one such frame — bailing on
+        -- the type check first left it without any EUI fill.
         ensureBackdropMixin(frame)
-        frame:SetBackdrop(EUI_BACKDROP)
-        frame:SetBackdropColor(EUI_BG[1], EUI_BG[2], EUI_BG[3], EUI_BG[4])
+        if type(frame.SetBackdrop) ~= "function" then return end
+        -- Flat dark fill via WHITE8X8 + DARK_BG. Attempted the themed
+        -- background texture (eui-bg-*-compressed.png) but SetBackdrop's
+        -- bgFile path resolution disagreed with that PNG on some frames,
+        -- producing transparent panels — see Tim's 123812/123945 reload
+        -- where the debugger main frame went see-through. Flat dark is the
+        -- known-good baseline that already matches EUI closely; texture
+        -- replication is a follow-up that needs a CreateTexture overlay
+        -- approach rather than SetBackdrop.
+        frame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            insets = {left = 0, right = 0, top = 0, bottom = 0},
+        })
+        local br, bg, bb, ba = getEUIBackdropColor()
+        frame:SetBackdropColor(br, bg, bb, ba)
     end
 
     local function paintEUIBorder(frame)
         if not frame then return end
-        local r, g, b = getEUIAccent()
-        local ok = pcall(EUI.ApplyBorderStyle, frame, EUI_BORDER_SIZE, r, g, b, 0.85, getEUITextureKey())
-        if not ok and EUI.PP and EUI.PP.CreateBorder then
-            -- Fallback: drop straight into the panel-painter
-            pcall(EUI.PP.CreateBorder, frame, r, g, b, 0.85, EUI_BORDER_SIZE, "OVERLAY", 7)
+        local r, g, b, a = getEUIBorderColor()
+        -- Preferred path: EllesmereUI.PP.CreateBorder. Same call EUI's own
+        -- MakeBorder helper uses on its panels (see EllesmereUI.lua:606), so
+        -- the GSE frame border ends up visually identical to EUI's own
+        -- character/inventory/settings panels.
+        if EUI.PP and type(EUI.PP.CreateBorder) == "function" then
+            local ok = pcall(EUI.PP.CreateBorder, frame, r, g, b, a, EUI_BORDER_SIZE, "BORDER", 7)
+            if ok then return end
         end
+        -- Degrade path: paint a 1px edge ourselves so the EUI look survives
+        -- even on builds whose PP module is renamed or stripped.
+        if type(frame.SetBackdrop) == "function" then
+            frame:SetBackdrop({
+                bgFile = "Interface\\Buttons\\WHITE8X8",
+                edgeFile = "Interface\\Buttons\\WHITE8X8",
+                edgeSize = EUI_BORDER_SIZE,
+                insets = {left = 0, right = 0, top = 0, bottom = 0},
+            })
+            local br, bg, bb, ba = getEUIBackdropColor()
+            frame:SetBackdropColor(br, bg, bb, ba)
+            frame:SetBackdropBorderColor(r, g, b, a)
+        end
+    end
+
+    local function paintFlatBackdrop(frame)
+        if not frame then return end
+        ensureBackdropMixin(frame)
+        if type(frame.SetBackdrop) ~= "function" then return end
+        -- Flat dark fill (no texture) for INSET surfaces inside an EUI panel
+        -- — editbox scrollBG, list rows, stat boxes etc. EUI's own panels use
+        -- their themed bg only on the OUTER panel; inner controls sit on a
+        -- flat dark fill so the text/content is readable. Texturing the
+        -- inset would compete with the outer panel's pattern.
+        frame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            insets = {left = 0, right = 0, top = 0, bottom = 0},
+        })
+        local br, bg, bb, ba = getEUIBackdropColor()
+        frame:SetBackdropColor(br, bg, bb, ba)
     end
 
     local function skinFrame(frame)
@@ -181,20 +286,72 @@ local function makeEllesmereUIProvider()
         paintEUIBorder(frame)
     end
 
+    local function skinInsetFrame(frame)
+        if not frame then return end
+        stripBlizzardRegions(frame)
+        paintFlatBackdrop(frame)
+        paintEUIBorder(frame)
+    end
+
+    local function blankStateTexture(getter, owner)
+        if not (owner and owner[getter]) then return end
+        local tex = owner[getter](owner)
+        if not tex then return end
+        if tex.SetTexture then pcall(tex.SetTexture, tex, "") end
+        if tex.SetAtlas then pcall(tex.SetAtlas, tex, nil) end
+        if tex.SetAlpha then tex:SetAlpha(0) end
+        if tex.Hide then tex:Hide() end
+    end
+
     local function skinButton(btn)
         if not btn then return end
         stripBlizzardRegions(btn)
-        -- Suppress the Blizzard UIPanelButton chrome that NativeUI's createButton
-        -- left in place — those bright textures defeat the EUI look.
+        -- Buttons get the FLAT dark fill (not the themed texture) — a button
+        -- chrome with a grain pattern reads as an outer panel rather than a
+        -- clickable control. EUI's own buttons sit on flat dark inside the
+        -- textured outer panel; this matches that.
+        -- NativeUI's createButton uses UIPanelButtonTemplate, which in retail
+        -- ships a dark-red textured chrome. Just SetAlpha(0)-ing regions
+        -- isn't enough — Blizzard re-applies Normal / Pushed / Highlight /
+        -- Disabled textures on state transitions and the red flashes back.
+        -- Retail's :SetXTexture(nil) ERRORS (needs an asset), so reach for
+        -- the underlying texture object via GetXTexture() and blank+hide it
+        -- there. The state machine sees a hidden texture and stops painting.
+        blankStateTexture("GetNormalTexture",    btn)
+        blankStateTexture("GetPushedTexture",    btn)
+        blankStateTexture("GetHighlightTexture", btn)
+        blankStateTexture("GetDisabledTexture",  btn)
+        -- UIPanelButtonTemplate also exposes Left/Middle/Right named regions
+        -- (the 3-slice chrome). Region iteration catches them, but we belt
+        -- + braces it: explicitly hide the named ones too.
+        for _, key in ipairs({"Left", "Middle", "Right"}) do
+            local r = btn[key]
+            if r and r.Hide then r:Hide() end
+        end
         for _, region in ipairs({btn:GetRegions()}) do
             if region.GetObjectType and region:GetObjectType() == "Texture" then
                 if region.SetAlpha then region:SetAlpha(0) end
             end
         end
-        paintBackdrop(btn)
+        paintFlatBackdrop(btn)
         paintEUIBorder(btn)
         if btn.SetNormalFontObject then btn:SetNormalFontObject("GameFontNormal") end
         if btn.SetHighlightFontObject then btn:SetHighlightFontObject("GameFontHighlight") end
+    end
+
+    local function paintBlackBackdrop(frame)
+        if not frame then return end
+        ensureBackdropMixin(frame)
+        if type(frame.SetBackdrop) ~= "function" then return end
+        -- Pure black flat fill — editbox interiors. Removes any ambiguity
+        -- about what the editbox area is vs the panel behind it, and matches
+        -- how editors look in EUI's own panels (the search box in inventory,
+        -- the editbox in the settings panel).
+        frame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            insets = {left = 0, right = 0, top = 0, bottom = 0},
+        })
+        frame:SetBackdropColor(0, 0, 0, 1)
     end
 
     local function skinEditBox(edit)
@@ -208,13 +365,17 @@ local function makeEllesmereUIProvider()
                 if tex and tex.SetAlpha then tex:SetAlpha(0) end
             end
         end
-        paintBackdrop(edit)
-        paintEUIBorder(edit)
+        paintBlackBackdrop(edit)
+        -- No paintEUIBorder for editboxes — they're inside an outer EUI-
+        -- bordered panel; adding their own accent border reads as a faint
+        -- double-line stripe inside the box edge. The black fill alone is
+        -- the EUI editbox look.
     end
 
     return {
         name        = "EllesmereUI",
         Frame       = skinFrame,
+        InsetFrame  = skinInsetFrame,
         Button      = skinButton,
         CloseButton = skinButton,
         EditBox     = skinEditBox,
@@ -222,7 +383,11 @@ local function makeEllesmereUIProvider()
         Checkbox    = skinFrame,
         Slider      = skinFrame,
         StepSlider  = skinFrame,
-        ScrollBar   = skinFrame,
+        -- ScrollBar deliberately a no-op: NativeUI's applyModernSlimScrollBar
+        -- already paints a slim accent thumb under EUI (see NativeUI.lua:597).
+        -- Calling skinFrame here would Paint a backdrop+border across the
+        -- whole scrollbar frame and bury the thumb texture.
+        ScrollBar   = noop,
         Tab         = skinButton,
         StatusBar   = skinFrame,
         Icon        = skinFrame,
@@ -232,24 +397,123 @@ local function makeEllesmereUIProvider()
 end
 
 -- ─── Provider selection ────────────────────────────────────────────────
--- Run on PLAYER_LOGIN so both addons have fully loaded. ElvUI takes
--- priority because its skinning surface is far more complete than the
--- EllesmereUI detect-and-replicate path.
+-- ElvUI takes priority because its skinning surface is far more complete
+-- than the EllesmereUI replicate-and-paint path.
+--
+-- HONOR GATE: external providers are only considered when the user is in
+-- Modern Skin mode (GSE.ShouldHonorExternalSkin). When the user has chosen
+-- the Native Skin, we force the no-op provider regardless of whether
+-- ElvUI/EllesmereUI is loaded — GSE's GUI then renders 100% Blizzard-native
+-- and no host skin is forced on by mere addon presence. Because every paint
+-- decision downstream keys off GSE.Skin.providerName (NativeUI's
+-- hasExternalSkinProvider, IsExternalProviderActive, the Paint* helpers),
+-- pinning the provider to "none" here makes the whole GUI native in one move.
 local function selectProvider()
-    local provider = makeElvUIProvider() or makeEllesmereUIProvider() or makeNoopProvider()
+    local provider
+    if GSE.ShouldHonorExternalSkin and not GSE.ShouldHonorExternalSkin() then
+        provider = makeNoopProvider()
+    else
+        provider = makeElvUIProvider() or makeEllesmereUIProvider() or makeNoopProvider()
+    end
     for k, v in pairs(provider) do GSE.Skin[k] = v end
     GSE.Skin.providerName = provider.name
 end
 
-local loginFrame = CreateFrame("Frame")
-loginFrame:RegisterEvent("PLAYER_LOGIN")
-loginFrame:SetScript("OnEvent", function(self)
-    self:UnregisterAllEvents()
+-- Public re-entry so the Native/Modern toggle in Options can re-pick the
+-- provider live. Newly opened windows then read the correct providerName
+-- immediately; already-open windows still need a /reload for a full repaint
+-- (same caveat the menu-logo swap already carries).
+function GSE.Skin.Reselect()
     selectProvider()
-end)
+end
 
 -- Initialise to no-op immediately so any widget-creation calls that fire
--- before PLAYER_LOGIN don't error. PLAYER_LOGIN will then overwrite this
--- table with the resolved provider's methods.
+-- before the provider is picked don't error.
 for k, v in pairs(makeNoopProvider()) do GSE.Skin[k] = v end
 GSE.Skin.providerName = "pending"
+
+-- ─── Public colour helpers ─────────────────────────────────────────────
+-- Any GSE file that hardcodes a colour at a paint site can replace its
+-- SetTextColor / SetBackdropBorderColor call with one of these helpers.
+-- Each takes the original GSE-theme colour as a fallback so non-EUI
+-- sessions render identically to before. Under EUI, the helper substitutes
+-- the canonical EUI colour (ELLESMERE_GREEN for accents, TEXT_WHITE for
+-- body, BORDER_COLOR for border) so GSE frames match other EUI panels.
+--
+-- Pattern at call sites:
+--   text:SetTextColor(1, 0.82, 0, 1)                      -- before
+--   GSE.Skin.PaintAccentText(text, 1, 0.82, 0, 1)         -- after
+--
+-- All four return nothing — they paint in place.
+
+function GSE.Skin.IsExternalProviderActive()
+    local name = GSE.Skin.providerName
+    return name == "ElvUI" or name == "EllesmereUI"
+end
+
+function GSE.Skin.PaintAccentText(text, fallbackR, fallbackG, fallbackB, fallbackA)
+    if not (text and text.SetTextColor) then return end
+    -- Only borrow the host UI's accent when an external provider is actually
+    -- active. In Native mode providerName is "none", so we fall straight
+    -- through to the GSE fallback colour and never read EllesmereUI's palette.
+    if GSE.Skin.IsExternalProviderActive() then
+        local EUI = _G.EllesmereUI
+        if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
+            local c = EUI.ELLESMERE_GREEN
+            text:SetTextColor(c.r or 1, c.g or 1, c.b or 1, c.a or 1)
+            return
+        end
+    end
+    if fallbackR then
+        text:SetTextColor(fallbackR, fallbackG or 0, fallbackB or 0, fallbackA or 1)
+    end
+end
+
+function GSE.Skin.PaintBodyText(text, fallbackR, fallbackG, fallbackB, fallbackA)
+    if not (text and text.SetTextColor) then return end
+    if GSE.Skin.IsExternalProviderActive() then
+        local EUI = _G.EllesmereUI
+        if type(EUI) == "table" and type(EUI.TEXT_WHITE) == "table" then
+            local c = EUI.TEXT_WHITE
+            text:SetTextColor(c.r or 1, c.g or 1, c.b or 1, c.a or 1)
+            return
+        end
+    end
+    if fallbackR then
+        text:SetTextColor(fallbackR, fallbackG or 1, fallbackB or 1, fallbackA or 1)
+    end
+end
+
+function GSE.Skin.PaintAccentBorder(frame, fallbackR, fallbackG, fallbackB, fallbackA)
+    if not (frame and frame.SetBackdropBorderColor) then return end
+    if GSE.Skin.IsExternalProviderActive() then
+        local EUI = _G.EllesmereUI
+        if type(EUI) == "table" and type(EUI.BORDER_COLOR) == "table" then
+            local c = EUI.BORDER_COLOR
+            frame:SetBackdropBorderColor(c.r or 0, c.g or 0.82, c.b or 0.62, c.a or 1)
+            return
+        end
+    end
+    if fallbackR then
+        frame:SetBackdropBorderColor(fallbackR, fallbackG or 0, fallbackB or 0, fallbackA or 1)
+    end
+end
+
+-- Pick the provider. PLAYER_LOGIN only fires at fresh login — on /reload
+-- it never fires again, so a code update that ships a fresh script body
+-- would leave providerName stuck at "pending" after a /reload. Cover both
+-- by registering PLAYER_LOGIN for the cold-login case AND running
+-- selectProvider directly when IsLoggedIn() reports we're already in
+-- world (the /reload case).
+if IsLoggedIn and IsLoggedIn() then
+    selectProvider()
+else
+    local loginFrame = CreateFrame("Frame")
+    loginFrame:RegisterEvent("PLAYER_LOGIN")
+    loginFrame:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        selectProvider()
+    end)
+end
+end
+table.insert(ns.deferred, setup)
