@@ -5,6 +5,21 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
+-- The global GSE is now a minimal locked proxy (see Plugins.lua) with no .V or
+-- internals exposed, to deny in-memory scraping by third-party addons. But user
+-- `=GSE.V.X()` action expressions and stored variable functs are compiled with
+-- loadstring, which runs in the GLOBAL environment -- so they would resolve GSE
+-- to the proxy and never find .V. Compile them in an environment where GSE is
+-- the REAL private namespace, falling through to _G for everything else. This
+-- restores the pre-privatisation resolution of GSE.V in variable expressions
+-- without putting a global GSE handle back where other addons could read it.
+local gseEvalEnv = setmetatable({GSE = GSE}, {__index = _G})
+local function gseLoadstring(code, chunkname)
+    local chunk, err = loadstring(code, chunkname)
+    if chunk then setfenv(chunk, gseEvalEnv) end
+    return chunk, err
+end
+
 local function safeGetSpellInfo(spellIdentifier)
     if spellIdentifier == nil or spellIdentifier == "" then return nil end
     local info = GSE.GetSpellInfo(spellIdentifier)
@@ -728,7 +743,7 @@ local function loadOneVariable(k, v)
         function()
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
             if not localsuccess then return end
-            GSE.V[k] = loadstring("return " .. uncompressedVersion.funct)()
+            GSE.V[k] = gseLoadstring("return " .. uncompressedVersion.funct)()
             if type(GSE.V[k]()) == "boolean" then
                 GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
             end
@@ -744,6 +759,29 @@ local function loadOneVariable(k, v)
             err
         )
     end
+end
+
+-- Lazy-load variables on first access. The selective load (#1065) only compiles
+-- the variables a sequence DECLARES in MetaData.Dependencies.Variables, so a
+-- `=GSE.V.X()` expression evaluated during sequence compilation can reference a
+-- variable that exists in storage but has not been compiled into GSE.V yet -- a
+-- load-order race where the compile reaches the reference before the variable is
+-- loaded. This __index resolves any stored-but-unloaded variable on demand:
+-- "load the dependency, don't report it missing". A genuinely-absent variable
+-- (not in GSEVariables) still returns nil, so the real missing-variable
+-- detection in processAction is unchanged. __index fires only on a key miss;
+-- once loaded the key is set so there is no repeat cost, pairs() is unaffected,
+-- and dependency cycles terminate because loadOneVariable sets the key before
+-- it test-calls the variable.
+if type(GSE.V) == "table" and not getmetatable(GSE.V) then
+    setmetatable(GSE.V, {
+        __index = function(t, k)
+            if not GSE.isEmpty(GSEVariables[k]) then
+                loadOneVariable(k, GSEVariables[k])
+                return rawget(t, k)
+            end
+        end
+    })
 end
 
 --- Walk loaded Library entries to collect the set of variable names directly
@@ -1937,7 +1975,7 @@ local function buildAction(action, metaData, blockPath)
                 if string.sub(value, 1, 1) == "=" then
                     xpcall(
                         function()
-                            local tempval = loadstring("return " .. string.sub(value, 2, string.len(value)))()
+                            local tempval = gseLoadstring("return " .. string.sub(value, 2, string.len(value)))()
                             if tempval then
                                 value = tostring(tempval)
                             else
@@ -2106,7 +2144,7 @@ function GSE.processAction(action, metaData, variables, path)
         -- the whole reload pass for every sequence. Treat any error as a
         -- false branch decision ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â the macro continues to compile.
         local val = false
-        local fn, loadErr = loadstring("return " .. funct)
+        local fn, loadErr = gseLoadstring("return " .. funct)
         if fn then
             local ok, result = pcall(fn)
             if ok then val = result
@@ -2512,7 +2550,7 @@ function GSE.UpdateVariable(variable, name, status)
     GSE.ComputeVariableDependencies(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
     GSEVariables[name] = compressedvariable
-    local actualfunct, error = loadstring("return " .. variable.funct)
+    local actualfunct, error = gseLoadstring("return " .. variable.funct)
     if error then
         if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(error), "Storage") end
     end
@@ -2700,7 +2738,7 @@ function GSE.CompileMacroText(text, mode)
         local value = GSE.UnEscapeString(v)
         if mode == Statics.TranslatorMode.String then
             if string.sub(value, 1, 1) == "=" then
-                local functionresult, error = loadstring("return " .. string.sub(value, 2, string.len(value)))
+                local functionresult, error = gseLoadstring("return " .. string.sub(value, 2, string.len(value)))
 
                 if error then
                     GSE.Print(L["There was an error processing "] .. v, L["Variables"])
@@ -2943,7 +2981,7 @@ function GSE.ManageMacros()
 end
 
 function GSE.CheckVariable(vartext)
-    local actualfunct, error = loadstring("return " .. vartext)
+    local actualfunct, error = gseLoadstring("return " .. vartext)
     return actualfunct, error
 end
 
