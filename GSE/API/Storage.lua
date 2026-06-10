@@ -2985,5 +2985,22 @@ function GSE.CheckVariable(vartext)
     return actualfunct, error
 end
 
+--- Evaluate a `=GSE.V.X(...)` preview expression for the variable editor's test
+-- field. Strips a leading `=`, compiles against the REAL GSE namespace (via
+-- gseLoadstring, so GSE.V resolves past the public proxy) and pcalls it. Lets
+-- the editor test a variable that takes arguments, e.g. =GSE.V.Prescience(2),
+-- and re-evaluate on demand. Returns (true, value) on success or
+-- (false, errorMessage) so the caller can show either.
+function GSE.EvaluateVariableExpression(expr)
+    if GSE.isEmpty(expr) then return false, "" end
+    expr = GSE.TrimWhiteSpace and GSE.TrimWhiteSpace(expr) or expr
+    if string.sub(expr, 1, 1) == "=" then expr = string.sub(expr, 2) end
+    local chunk, err = gseLoadstring("return " .. expr)
+    if not chunk then return false, err end
+    local ok, result = pcall(chunk)
+    if not ok then return false, result end
+    return true, result
+end
+
 if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Storage") end
 

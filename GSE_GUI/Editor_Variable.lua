@@ -349,12 +349,6 @@ end]],
     SetEditBoxLabelGap(implementation, 2)
     local implementationText = [[=GSE.V.]] .. name .. [[()]]
     implementation:SetText(implementationText)
-    implementation:SetCallback(
-        "OnTextChanged",
-        function(self, event, text)
-            implementation:SetText(implementationText)
-        end
-    )
 
     local currentOutput = UI:Create("EditBox")
     currentOutput:SetLabel(L["Current Value"])
@@ -364,14 +358,39 @@ end]],
     currentOutput:SetHeight(32)
     currentOutput:DisableButton(true)
     SetEditBoxLabelGap(currentOutput, 2)
+
     local outputText = L["Not Yet Active"]
+    local function setCurrentOutput(value)
+        outputText = tostring(value)
+        currentOutput:SetText(outputText)
+        if currentOutput.editBox and currentOutput.editBox.SetCursorPosition then
+            currentOutput.editBox:SetCursorPosition(0)
+        end
+    end
+
+    -- Initial value: the no-argument call of the live variable.
     if GSE.V[name] and type(GSE.V[name]) == "function" then
-        outputText = GSE.V[name]()
+        setCurrentOutput(GSE.V[name]())
+    else
+        setCurrentOutput(L["Not Yet Active"])
     end
-    currentOutput:SetText(tostring(outputText))
-    if currentOutput.editBox and currentOutput.editBox.SetCursorPosition then
-        currentOutput.editBox:SetCursorPosition(0)
-    end
+
+    -- The Implementation box is editable so a variable that takes arguments can
+    -- be tested -- type e.g. =GSE.V.Prescience(2) and press Enter to re-evaluate
+    -- it into Current Value. GSE.EvaluateVariableExpression compiles against the
+    -- real GSE namespace so GSE.V resolves.
+    implementation:SetCallback(
+        "OnEnterPressed",
+        function(self, event, text)
+            local ok, result = GSE.EvaluateVariableExpression(text)
+            if ok then
+                setCurrentOutput(result)
+            else
+                setCurrentOutput(L["There was an error processing "] .. tostring(result))
+            end
+        end
+    )
+
     currentOutput:SetCallback(
         "OnTextChanged",
         function(self, event, text)
