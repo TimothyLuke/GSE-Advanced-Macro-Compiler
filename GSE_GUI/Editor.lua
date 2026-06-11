@@ -3110,7 +3110,12 @@ function GSE.CreateEditor()
             -- toggle and the per-action Disabled state — when either is
             -- off-true the tint is hidden so the red-disable highlight or
             -- the plain editor view dominates.
-            local focusTint = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
+            -- ARTWORK (not BACKGROUND): under EllesmereUI every block frame gets
+            -- an opaque flat inset backdrop (Skin.lua paintFlatBackdrop, drawn at
+            -- BACKGROUND) which would otherwise hide this tint. ARTWORK sits above
+            -- that fill but below the block's content child-frame, so the tint
+            -- reads as the block surround on both the EUI and default skins.
+            local focusTint = frame:CreateTexture(nil, "ARTWORK", nil, -8)
             focusTint:SetColorTexture(c[1], c[2], c[3], 0.25)
             focusTint:SetAllPoints(frame)
             focusTint:Hide()
@@ -4491,7 +4496,10 @@ function GSE.CreateEditor()
                 disableBlock:SetLabel("Disable")
                 BumpCheckBoxTextUp(disableBlock)
                 disableBlock:SetValue(editframe.Sequence.Versions[version].Actions[path].Disabled)
-                highlightTexture = container.frame:CreateTexture(nil, "BACKGROUND")
+                -- ARTWORK (not BACKGROUND) so the disabled-block red shows above
+                -- EllesmereUI's opaque flat inset backdrop (drawn at BACKGROUND),
+                -- while still sitting below the block's content child-frame.
+                highlightTexture = container.frame:CreateTexture(nil, "ARTWORK")
                 highlightTexture:SetAllPoints(true)
 
                 disableBlock:SetCallback(
