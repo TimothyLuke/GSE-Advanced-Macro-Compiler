@@ -490,6 +490,7 @@ globals = {
     "hooksecurefunc",
     "SecureCmdOptionParse",
     "FindSpellOverrideByID",
+    "FindSpellBookSlotForSpell",
     "dataObject_OnLeave",
     "AUTOCOMPLETE_LIST",
     "AttemptToSaveBindings",
