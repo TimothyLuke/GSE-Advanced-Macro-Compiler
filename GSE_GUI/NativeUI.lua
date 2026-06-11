@@ -585,7 +585,26 @@ local function anchorModernSlimScrollBar(scrollbar, anchorFrame, rightOffset, to
     -- clip region. Inner text-box scrollFrames don't SetClipsChildren so
     -- this is a no-op there.
     if scrollbar.SetParent and scrollbar.GetParent and scrollbar:GetParent() ~= anchorFrame then
+        -- Blizzard's stock UIPanelScrollBar_OnValueChanged hard-assumes
+        -- `self:GetParent()` is the ScrollFrame and calls
+        -- `:SetVerticalScroll(value)` on it. After this reparent, the
+        -- bar's parent is anchorFrame — a plain BackdropTemplate Frame
+        -- with no SetVerticalScroll — so every scroll tick became
+        -- `attempt to call a nil value` in SecureScrollTemplates.lua.
+        -- In practice only Notes (and the Debugger output pane) tripped
+        -- the crash because the editor's pixel-scroll path overrides
+        -- OnValueChanged after reparenting; the stock handler stayed
+        -- on the Notes and Debug bars. Capture the real ScrollFrame
+        -- here and re-point the handler at it. Guards keep this
+        -- additive: a non-ScrollFrame parent silently skips the
+        -- rewire, callers that install their own handler still win.
+        local originalScrollFrame = scrollbar:GetParent()
         scrollbar:SetParent(anchorFrame)
+        if originalScrollFrame and originalScrollFrame.SetVerticalScroll and scrollbar.SetScript then
+            scrollbar:SetScript("OnValueChanged", function(_, value)
+                originalScrollFrame:SetVerticalScroll(value)
+            end)
+        end
     end
     scrollbar:ClearAllPoints()
     scrollbar:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT", rightOffset or 0, -(topInset or 0))
