@@ -248,6 +248,13 @@ if GSE.GameMode >= 11 then
     local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
     VehicleBar:Hide()
 
+    local function resolveMainBarButton(i)
+        if _G["BT4Button" .. i] then return "BT4Button" .. i end
+        if _G["DominosActionButton" .. i] then return "DominosActionButton" .. i end
+        if _G["ElvUI_Bar1Button" .. i] then return "ElvUI_Bar1Button" .. i end
+        return "ActionButton" .. i
+    end
+
     -- Compile the user's SkyRidingBinds map into VehicleKeybind inside the
     -- restricted environment. Called once at init and again whenever the
     -- user changes a bind in Options.
@@ -261,25 +268,54 @@ if GSE.GameMode >= 11 then
             table.insert(tableval, k .. "\001" .. v)
             tablevals = true
         end
-        local executionString =
-            "VehicleKeybindTable = newtable([=======[" ..
-            string.join("]=======],[=======[", unpack(tableval)) ..
+        -- Resolve frame names for all 12 slots. Always populated, even
+        -- when the user has no binds yet, so the secure environment has
+        -- a consistent VehicleButtonName table to read from.
+        local nameTable = {}
+        for i = 1, 12 do
+            table.insert(nameTable, tostring(i) .. "\001" .. resolveMainBarButton(i))
+        end
+        local executionString
+        if tablevals then
+            executionString =
+                "VehicleKeybindTable = newtable([=======[" ..
+                string.join("]=======],[=======[", unpack(tableval)) ..
+                    "]=======])" ..
+                        [[
+                VehicleKeybind = newtable()
+                for _,v in ipairs(VehicleKeybindTable) do
+                    local x, y = strsplit("\001",v)
+                    VehicleKeybind[tonumber(x)] = y
+                end
+
+                ]]
+        else
+            executionString = "VehicleKeybind = newtable()\n"
+        end
+        executionString = executionString ..
+            "VehicleButtonNameTable = newtable([=======[" ..
+            string.join("]=======],[=======[", unpack(nameTable)) ..
                 "]=======])" ..
                     [[
-            VehicleKeybind = newtable()
-            for _,v in ipairs(VehicleKeybindTable) do
+            VehicleButtonName = newtable()
+            for _,v in ipairs(VehicleButtonNameTable) do
                 local x, y = strsplit("\001",v)
-                VehicleKeybind[tonumber(x)] = y
+                VehicleButtonName[tonumber(x)] = y
             end
-
             ]]
-        if not tablevals then
-            executionString = "VehicleKeybind = newtable()"
-        end
         VehicleBar:Execute(executionString)
     end
 
     GSE.UpdateVehicleBar()
+
+    if not IsLoggedIn() then
+        local plf = CreateFrame("Frame")
+        plf:RegisterEvent("PLAYER_LOGIN")
+        plf:SetScript("OnEvent", function(self)
+            self:UnregisterAllEvents()
+            if GSE.UpdateVehicleBar then GSE.UpdateVehicleBar() end
+        end)
+    end
 
     VehicleBar:SetAttribute(
         -- Leading underscore matters. The secure infrastructure only fires
@@ -291,11 +327,15 @@ if GSE.GameMode >= 11 then
   if name == "vehicletype" then
     if value == "vehicle" then        -- Vehicles / Possess / Override / Skyriding
       for i = 1, 12 do
-        if VehicleKeybind[i] then self:SetBinding(true, VehicleKeybind[i], "ACTIONBUTTON"..i) end
+        if VehicleKeybind[i] and VehicleButtonName[i] then
+          self:SetBinding(true, VehicleKeybind[i], "CLICK "..VehicleButtonName[i]..":LeftButton")
+        end
       end
     elseif value == "petbattle" then  -- Pet battle
       for i = 1, 6 do
-        if VehicleKeybind[i] then self:SetBinding(true, VehicleKeybind[i], "ACTIONBUTTON"..i) end
+        if VehicleKeybind[i] and VehicleButtonName[i] then
+          self:SetBinding(true, VehicleKeybind[i], "CLICK "..VehicleButtonName[i]..":LeftButton")
+        end
       end
     elseif value == "none" then       -- Back to normal, drop our overrides
       self:ClearBindings()
