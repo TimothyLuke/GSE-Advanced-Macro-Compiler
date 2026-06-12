@@ -3047,6 +3047,15 @@ local function HandleUnitSpellcastSucceeded(unitTarget, ...)
     if not currentOptions.Enabled or unitTarget ~= "player" then return end
 
     local now = GetTime and GetTime() or 0
+    -- Only treat this cast as a GSE "successful cast" when it is the cast that
+    -- directly follows a GSE button press. pendingSuccessfulCast is armed in
+    -- MarkGSEActivity (a GSE macro fired) and consumed below by the first cast
+    -- that lands; a stray cast from a key that has nothing to do with GSE finds
+    -- it already false and is ignored. Without this, ANY cast inside the
+    -- SuccessCastWindow flashed the tracker -- the "glows on unrelated keys"
+    -- bug. The window check below stays as a staleness guard (a GSE press whose
+    -- cast never lands must not arm a later unrelated cast).
+    if not pendingSuccessfulCast then return end
     if not lastGSEActivitySequence or (now - lastGSEActivityTime) > Statics.TrackerConfig.SuccessCastWindow then return end
 
     local spellID = GetSucceededSpellID(...)
