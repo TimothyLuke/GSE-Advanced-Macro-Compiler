@@ -1040,6 +1040,7 @@ function GSE.GetActiveSequenceVersion(sequenceName)
 end
 
 function GSE.ReloadSequences()
+    if GSE.ClearTranslateStringCache then GSE.ClearTranslateStringCache() end
     if GSE.isEmpty(GSE.UnsavedOptions.ReloadQueued) then
         GSE.PerformReloadSequences()
         GSE.UnsavedOptions.ReloadQueued = true

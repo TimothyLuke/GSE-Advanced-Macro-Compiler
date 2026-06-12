@@ -124,7 +124,7 @@ function GSE.TranslateSequence(tab, mode, dropAbsolute)
     return tab
 end
 
-function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
+local function translateStringUncached(instring, mode, cleanNewLines, dropAbsolute)
     instring = GSE.UnEscapeString(instring)
     if type(instring) ~= "string" then return instring and tostring(instring) or "" end
     local lines = GSE.SplitMeIntoLines(instring)
@@ -280,6 +280,26 @@ function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
         output = string.gsub(output, "%s+", " ")
         return output
     end
+end
+
+local translateCache = {}
+function GSE.ClearTranslateStringCache()
+    translateCache = {}
+end
+
+function GSE.TranslateString(instring, mode, cleanNewLines, dropAbsolute)
+    if type(instring) ~= "string" then
+        return translateStringUncached(instring, mode, cleanNewLines, dropAbsolute)
+    end
+    local key = instring .. "\30" .. tostring(mode) .. "\30" ..
+        tostring(cleanNewLines) .. "\30" .. tostring(dropAbsolute)
+    local cached = translateCache[key]
+    if cached ~= nil then
+        return cached
+    end
+    local result = translateStringUncached(instring, mode, cleanNewLines, dropAbsolute)
+    translateCache[key] = result
+    return result
 end
 
 function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)

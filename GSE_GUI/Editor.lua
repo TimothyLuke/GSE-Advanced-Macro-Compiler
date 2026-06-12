@@ -874,7 +874,7 @@ local function RefreshMacroEditorColoredText(widget, plainText)
     -- caret handling (scroll/layout recalculation done in C after Lua returns)
     -- runs first and our SetCursorPosition wins. Same pattern as
     -- Export.lua:351 and DebugWindow.lua:2799.
-    if editBox and editBox.SetCursorPosition then
+    if editBox and editBox.SetCursorPosition and editBox.HasFocus and editBox:HasFocus() then
         local capturedBox    = editBox
         local capturedCursor = newCursor
         C_Timer.After(0, function()
@@ -2253,6 +2253,9 @@ function GSE.CreateEditor()
             -- Skip all cleanup so the frame stays usable for restore.
             if self.isMinimizing then return end
 
+            self.buildGeneration = (self.buildGeneration or 0) + 1
+            if self.HideBuildSpinner then self.HideBuildSpinner() end
+
 			self.OrigSequenceName = nil
 			GSE.ClearTooltip(editframe)
 			SaveSequenceEditorLocation()
@@ -2778,6 +2781,7 @@ function GSE.CreateEditor()
         version = tonumber(version) or version
         editframe.currentMacroLimitVersion = version
         container:ReleaseChildren()
+        editframe.pendingScrollRestore = (scrollpos and scrollpos > 0) and scrollpos or nil
         editframe.DrawSequenceEditor(container, version, path)
         if not GSE.isEmpty(editframe.scrollContainer) and scrollpos > 0 then
             editframe.scrollContainer:SetScroll(scrollpos)
@@ -3028,8 +3032,69 @@ function GSE.CreateEditor()
             editframe.scrollContainer:SetScroll(0)
         end
     end
+    local function GetBuildSpinner()
+        local anchor = (editframe.scrollContainer and editframe.scrollContainer.frame) or editframe.frame
+        if not anchor then return nil end
+        local overlay = editframe.buildSpinner
+        if overlay and overlay.gseAnchor ~= anchor then
+            overlay:Hide()
+            overlay = nil
+            editframe.buildSpinner = nil
+        end
+        if not overlay then
+            overlay = CreateFrame("Frame", nil, anchor)
+            overlay.gseAnchor = anchor
+            overlay:SetAllPoints(anchor)
+            overlay:SetFrameStrata(anchor:GetFrameStrata() or "DIALOG")
+            overlay:SetFrameLevel((anchor:GetFrameLevel() or 0) + 60)
+            overlay:EnableMouse(true)   -- swallow clicks on the half-built list
+            overlay:SetScript("OnMouseWheel", function() end)
+            local bg = overlay:CreateTexture(nil, "BACKGROUND")
+            bg:SetAllPoints(overlay)
+            bg:SetColorTexture(0, 0, 0, 0.45)
+            local cog = overlay:CreateTexture(nil, "ARTWORK")
+            cog:SetSize(44, 44)
+            cog:SetPoint("CENTER", overlay, "CENTER", 0, 12)
+            cog:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\cog.png")
+            local ag = cog:CreateAnimationGroup()
+            ag:SetLooping("REPEAT")
+            local rot = ag:CreateAnimation("Rotation")
+            rot:SetDegrees(-360)
+            rot:SetDuration(1.1)
+            overlay.spinAnim = ag
+            local label = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+            label:SetPoint("TOP", cog, "BOTTOM", 0, -12)
+            label:SetText("Building editor")
+            overlay:Hide()
+            editframe.buildSpinner = overlay
+        end
+        return overlay
+    end
+
+    function editframe.ShowBuildSpinner()
+        local overlay = GetBuildSpinner()
+        if not overlay then return end
+        overlay:ClearAllPoints()
+        overlay:SetAllPoints(overlay.gseAnchor)
+        overlay:Show()
+        if overlay.spinAnim then overlay.spinAnim:Play() end
+    end
+
+    function editframe.HideBuildSpinner()
+        local overlay = editframe.buildSpinner
+        if not overlay then return end
+        if overlay.spinAnim then overlay.spinAnim:Stop() end
+        overlay:Hide()
+    end
+
     local function DrawSequenceEditor(tcontainer, version, path)
         editframe.drawingSequenceEditor = true
+        editframe.buildGeneration = (editframe.buildGeneration or 0) + 1
+        local myGen = editframe.buildGeneration
+        local scrollRestore = editframe.pendingScrollRestore
+        editframe.pendingScrollRestore = nil
+        local batchLayout = not _G.GSE_NoLayoutBatch
+        if batchLayout and UI and UI.SuspendLayout then UI:SuspendLayout() end
         editframe.rawEditor = nil
         SetOuterEditorScrollBarEnabled(true)
         if tcontainer.SetListPadding then
@@ -3251,6 +3316,10 @@ function GSE.CreateEditor()
         local function SelectMacroBlockPath(keyPath, overlay, force)
             if MacroBlockPathIsEmpty(keyPath) then return end
             if editframe.drawingSequenceEditor and not force then return end
+            if not force and editframe.suppressMacroAutoSelectUntil and
+                (GetTime and GetTime() or 0) < editframe.suppressMacroAutoSelectUntil then
+                return
+            end
             overlay = overlay or (editframe.macroBlockSelectionOverlays and
                 editframe.macroBlockSelectionOverlays[MacroBlockSelectionKey(keyPath)])
 
@@ -4613,20 +4682,30 @@ function GSE.CreateEditor()
             return layoutcontainer, finalizeToolbar, CreateAddButtonRow, CreateChildAddButtonRow
         end
         local function drawAction(pcontainer, action, version, keyPath, treepath)
+            local function drawChild(childContainer, childAction, childKeyPath, childTreepath)
+                local q = editframe.incBuildQueue
+                if q then
+                    q[#q + 1] = function()
+                        drawAction(childContainer, childAction, version, childKeyPath, childTreepath)
+                    end
+                else
+                    drawAction(childContainer, childAction, version, childKeyPath, childTreepath)
+                end
+            end
             local function DrawNestedChildActions(parentContainer, parentAction, parentKeyPath)
                 if type(parentAction) ~= "table" or #parentAction == 0 then return end
 
                 local childGroup = UI:Create("SimpleGroup")
                 childGroup:SetFullWidth(true)
                 childGroup:SetLayout("List")
+                parentContainer:AddChild(childGroup)
                 for key, childAction in ipairs(parentAction) do
                     if type(childAction) == "table" and childAction.Type then
                         local newKeyPath = GSE.CloneSequence(parentKeyPath)
                         table.insert(newKeyPath, key)
-                        drawAction(childGroup, childAction, version, newKeyPath, treepath)
+                        drawChild(childGroup, childAction, newKeyPath, treepath)
                     end
                 end
-                parentContainer:AddChild(childGroup)
             end
 
             local hlabelIcon = UI:Create("Icon")
@@ -5458,7 +5537,7 @@ function GSE.CreateEditor()
                         table.insert(newKeyPath, v)
                     end
                     table.insert(newKeyPath, key)
-                    drawAction(macroGroup, act, version, newKeyPath)
+                    drawChild(macroGroup, act, newKeyPath)
                 end
 
                 layout3:AddChild(macroGroup)
@@ -5599,7 +5678,7 @@ function GSE.CreateEditor()
                 for key, act in ipairs(action[1]) do
                     local newKeyPath = GSE.CloneSequence(trueKeyPath)
                     table.insert(newKeyPath, key)
-                    drawAction(trueGroup, act, version, newKeyPath)
+                    drawChild(trueGroup, act, newKeyPath)
                 end
 
                 macroPanel:AddChild(linegroup1)
@@ -5636,7 +5715,7 @@ function GSE.CreateEditor()
                 for key, act in ipairs(action[2]) do
                     local newKeyPath = GSE.CloneSequence(falseKeyPath)
                     table.insert(newKeyPath, key)
-                    drawAction(falsegroup, act, version, newKeyPath)
+                    drawChild(falsegroup, act, newKeyPath)
                 end
 
                 falsecontainer:AddChild(falsegroup)
@@ -5740,21 +5819,90 @@ function GSE.CreateEditor()
         font:SetFontObject(GameFontNormal)
         font:SetJustifyV("BOTTOM")
 
-        for key, action in ipairs(macro) do
-            local keyPath = {
-                [1] = key
-            }
-            drawAction(tcontainer, action, version, keyPath, path)
+        local function finishDraw()
+            if tcontainer.DoLayout then tcontainer:DoLayout() end
+            if editframe.scrollContainer and editframe.scrollContainer.DoLayout then
+                editframe.scrollContainer:DoLayout()
+                if editframe.scrollContainer.SetScroll then
+                    editframe.scrollContainer:SetScroll(scrollRestore or 0)
+                end
+            end
+            if editframe.HideBuildSpinner then editframe.HideBuildSpinner() end
+            editframe.suppressMacroAutoSelectUntil = (GetTime and GetTime() or 0) + 0.4
+            editframe.drawingSequenceEditor = nil
         end
-        if tcontainer.DoLayout then tcontainer:DoLayout() end
-        editframe.drawingSequenceEditor = nil
+
+        -- Count the WHOLE block tree (nested If/Loop children included), not just
+        -- the top level: a sequence can have a handful of top-level blocks whose
+        -- subtrees hold hundreds, and that depth is the freeze.
+        local function CountActionBlocks(list)
+            if type(list) ~= "table" then return 0 end
+            local n = 0
+            for _, a in ipairs(list) do
+                if type(a) == "table" and a.Type then
+                    n = n + 1
+                    if a.Type == Statics.Actions.If then
+                        -- If branches live in separate child lists a[1]/a[2].
+                        n = n + CountActionBlocks(a[1]) + CountActionBlocks(a[2])
+                    else
+                        -- Loop bodies (and any inline children) live in a's array part.
+                        n = n + CountActionBlocks(a)
+                    end
+                end
+            end
+            return n
+        end
+        local totalBlocks = CountActionBlocks(macro)
+
+        local INCREMENTAL_MIN_BLOCKS = 12
+        if not (C_Timer and C_Timer.After) or totalBlocks <= INCREMENTAL_MIN_BLOCKS then
+            editframe.incBuildQueue = nil
+            for key, action in ipairs(macro) do
+                drawAction(tcontainer, action, version, { key }, path)
+            end
+            if batchLayout and UI and UI.ResumeLayout then UI:ResumeLayout() end
+            finishDraw()
+        else
+            if batchLayout and UI and UI.ResumeLayout then UI:ResumeLayout() end
+            local queue = {}
+            editframe.incBuildQueue = queue   -- DrawNestedChildActions appends here
+            for key, action in ipairs(macro) do
+                local k, a = key, action
+                queue[#queue + 1] = function()
+                    drawAction(tcontainer, a, version, { k }, path)
+                end
+            end
+            if editframe.ShowBuildSpinner then editframe.ShowBuildSpinner() end
+            local ITEMS = 4         -- blocks built per frame
+            local head = 1
+                -- Do NOT clear incBuildQueue here — a newer draw may already own
+                -- it; the next draw's dispatch always resets it.
+                if batchLayout and UI and UI.SuspendLayout then UI:SuspendLayout() end
+                local built = 0
+                -- The queue grows as blocks enqueue their children; drain FIFO via
+                -- head index. Drained slots set false (not nil) so #queue stays a
+                -- valid length as the tail grows.
+                while built < ITEMS and head <= #queue do
+                    local job = queue[head]
+                    queue[head] = false
+                    head = head + 1
+                    built = built + 1
+                -- Lay out only the content container per chunk (cheap, keeps
+                -- block heights current). Do NOT lay out the scroll frame here —
+                -- its per-chunk UpdateScroll nudges the scroll position down as
+                -- the content grows, so the editor landed ~1 block per chunk
+                -- down instead of at the top (block 4 at 2 chunks, block 8 at 8).
+                -- finishDraw lays out the scroll frame + sets scroll once, after
+                -- every block exists. The spinner covers the build anyway.
+                if tcontainer.DoLayout then tcontainer:DoLayout() end
+            buildChunk()
+        end
     end
     editframe.DrawSequenceEditor = function(...)
         DrawSequenceEditor(...)
     end
     local function GUIDrawMacroEditor(container, version, path)
         version = tonumber(version)
-
         if GSE.isEmpty(editframe.Sequence) then
             editframe.Sequence = {
                 ["MetaData"] = {

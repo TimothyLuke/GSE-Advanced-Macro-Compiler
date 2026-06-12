@@ -10,6 +10,8 @@ local UI = GSE.UI
 local L = GSE.L
 local origToggle = nil
 local widgetId = 0
+local layoutSuspended = 0
+local layoutResumeScheduled = false
 local frameTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
 
@@ -1725,7 +1727,25 @@ function baseMethods:Release()
 end
 
 function baseMethods:DoLayout()
+    if layoutSuspended > 0 then return end
     doLayout(self)
+end
+
+function UI:SuspendLayout()
+    layoutSuspended = layoutSuspended + 1
+    if C_Timer and C_Timer.After and not layoutResumeScheduled then
+        layoutResumeScheduled = true
+        C_Timer.After(0, function()
+            layoutResumeScheduled = false
+            layoutSuspended = 0
+        end)
+    end
+end
+
+function UI:ResumeLayout()
+    if layoutSuspended > 0 then
+        layoutSuspended = layoutSuspended - 1
+    end
 end
 
 function baseMethods:Show()
