@@ -5875,8 +5875,15 @@ function GSE.CreateEditor()
             if editframe.ShowBuildSpinner then editframe.ShowBuildSpinner() end
             local ITEMS = 4         -- blocks built per frame
             local head = 1
+            local function buildChunk()
+                -- Abort if a newer draw started or the editor closed (both bump
+                -- buildGeneration) so we never write into a torn-down container.
                 -- Do NOT clear incBuildQueue here — a newer draw may already own
                 -- it; the next draw's dispatch always resets it.
+                if editframe.buildGeneration ~= myGen then return end
+                if not (editframe.Sequence and editframe.Sequence.Versions and editframe.Sequence.Versions[version]) then
+                    return
+                end
                 if batchLayout and UI and UI.SuspendLayout then UI:SuspendLayout() end
                 local built = 0
                 -- The queue grows as blocks enqueue their children; drain FIFO via
@@ -5887,6 +5894,9 @@ function GSE.CreateEditor()
                     queue[head] = false
                     head = head + 1
                     built = built + 1
+                    if job then job() end
+                end
+                if batchLayout and UI and UI.ResumeLayout then UI:ResumeLayout() end
                 -- Lay out only the content container per chunk (cheap, keeps
                 -- block heights current). Do NOT lay out the scroll frame here —
                 -- its per-chunk UpdateScroll nudges the scroll position down as
@@ -5895,6 +5905,13 @@ function GSE.CreateEditor()
                 -- finishDraw lays out the scroll frame + sets scroll once, after
                 -- every block exists. The spinner covers the build anyway.
                 if tcontainer.DoLayout then tcontainer:DoLayout() end
+                if head <= #queue then
+                    C_Timer.After(0, buildChunk)
+                else
+                    editframe.incBuildQueue = nil
+                    finishDraw()
+                end
+            end
             buildChunk()
         end
     end
