@@ -59,7 +59,21 @@ local function getSpellInfoID(spell)
 end
 
 local function spellIDIsInSpellBook(spellID)
-    local slot = C_SpellBook.FindSpellBookSlotForSpell(spellID)
+    -- TBC Classic Anniversary + MoP Classic expose C_SpellBook but not
+    -- FindSpellBookSlotForSpell (Retail-only). The unguarded call there
+    -- threw `attempt to call a nil value` every CompileMacroText pass —
+    -- ~179 spam errors per Notes save in issue #1925. Mirror the
+    -- defensive pattern used by findBaseSpellID / findCurrentSpellID
+    -- above: prefer C_SpellBook.X, fall back to the legacy top-level
+    -- global, and default to true ("treat as in book") when neither
+    -- exists. That matches the nil-slot path on Retail, where an
+    -- unresolved slot is also reported as in-book by this function.
+    local FindSlot = (C_SpellBook and C_SpellBook.FindSpellBookSlotForSpell)
+        or FindSpellBookSlotForSpell
+    if not FindSlot then
+        return true
+    end
+    local slot = FindSlot(spellID)
     return slot == nil or slot > 0
 end
 
