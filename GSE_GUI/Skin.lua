@@ -436,6 +436,32 @@ function GSE.Skin.IsExternalProviderActive()
     return name == "ElvUI" or name == "EllesmereUI"
 end
 
+-- Accent colour of the *active* external skin provider, as r, g, b (0-1), or
+-- nil when no provider is driving the look. ElvUI exposes its value/accent
+-- colour at E.media.rgbvaluecolor; EllesmereUI uses ELLESMERE_GREEN. This is the
+-- single shared source for every host-accent paint site (scrollbar thumb,
+-- dropdown selected-row), which otherwise poked EllesmereUI.ELLESMERE_GREEN
+-- directly and so showed nothing under ElvUI. Callers fall back to the
+-- GSE-Modern class colour when this returns nil, so a missing field is
+-- harmless -- it just renders as before.
+function GSE.Skin.HostAccentColor()
+    if GSE.Skin.providerName == "ElvUI" then
+        local ElvUI = _G.ElvUI
+        local E = type(ElvUI) == "table" and ElvUI[1]
+        local media = type(E) == "table" and E.media
+        local c = type(media) == "table" and media.rgbvaluecolor
+        if type(c) == "table" then
+            return c.r or c[1], c.g or c[2], c.b or c[3]
+        end
+    end
+    local EUI = _G.EllesmereUI
+    if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
+        local c = EUI.ELLESMERE_GREEN
+        return c.r or 0, c.g or 0.55, c.b or 0.55
+    end
+    return nil
+end
+
 function GSE.Skin.PaintAccentText(text, fallbackR, fallbackG, fallbackB, fallbackA)
     if not (text and text.SetTextColor) then return end
     local EUI = _G.EllesmereUI

@@ -620,15 +620,18 @@ local function setModernSlimScrollBarState(scrollbar, state)
 
     local thumb = scrollbar.GSEModernScrollBarThumb or getScrollBarThumb(scrollbar)
 
-    -- Pull the thumb accent from EllesmereUI.ELLESMERE_GREEN (the user's
-    -- chosen accent) when EUI is driving the look; fall back to the modern
-    -- skin's class colour otherwise. Without this branch the scrollbars
-    -- showed up blue against EUI's accent green / class teal.
+    -- Pull the thumb accent from the active host UI (EllesmereUI's chosen
+    -- accent, or ElvUI's value/class colour) when one is driving the look;
+    -- fall back to the modern skin's class colour otherwise. Without this
+    -- branch the scrollbars showed up blue against the host accent. Shares
+    -- GSE.Skin.HostAccentColor so every host-accent site reads one source.
     local function euiAccent(alpha)
-        local EUI = _G.EllesmereUI
-        if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
-            local c = EUI.ELLESMERE_GREEN
-            return {c.r or 0, c.g or 0.55, c.b or 0.55, alpha}
+        local r, g, b
+        if GSE.Skin and GSE.Skin.HostAccentColor then
+            r, g, b = GSE.Skin.HostAccentColor()
+        end
+        if r then
+            return {r, g, b, alpha}
         end
         return nil
     end
@@ -796,11 +799,15 @@ local function shouldSubdueElvUIAssetIcon(button, path)
     if iconPath:find("interface\\addons\\gse_gui\\assets\\macro.png", 1, true) then return false end
     if iconPath:find("interface\\addons\\gse_gui\\assets\\variables.png", 1, true) then return false end
     if button and button.GSEElvUIKeepIconFullColor then return false end
-    return button and shouldUseElvUISkin() and isGSEAssetTexture(path) and button.GSEElvUISubduedIcon ~= false
+    return button and (shouldUseElvUISkin() or hasExternalSkinProvider()) and isGSEAssetTexture(path) and button.GSEElvUISubduedIcon ~= false
 end
 
 local function applyElvUIIconAssetSkin(button, texture, path)
-    if button and button.GSEElvUIIconChromeSuppressed then
+    -- Under an external skin provider (EUI/ElvUI) the provider paints the icon
+    -- FRAME chrome itself, so take the desaturate-only path here: subdue the
+    -- GSE-asset icon texture (matching the GSE-Modern look) without stacking
+    -- GSE's own chrome on top of the provider's.
+    if (button and button.GSEElvUIIconChromeSuppressed) or hasExternalSkinProvider() then
         if shouldSubdueElvUIAssetIcon(button, path) then
             applyElvUISubduedIconState(button, texture, button.GSEElvUISubduedIconMouseOver)
         else
@@ -1261,6 +1268,21 @@ local function styleBlizzardPanelFrame(frame)
 
     if frame.CloseButton then
         styleCloseButton(frame.CloseButton, frame)
+        -- Under an external provider (EUI/ElvUI) the GSE-Modern close-button
+        -- subdue (applyElvUICloseButtonSkin, gated shouldUseElvUISkin) never
+        -- runs, so the red close.png X stayed full-colour against the
+        -- otherwise-subdued modern chrome on every panel window. Match it
+        -- here: dim the normal + pushed texture, keep the hover highlight
+        -- bright. GSE-Modern keeps its own path (hasExternalSkinProvider is
+        -- false there).
+        if hasExternalSkinProvider() then
+            local cb = frame.CloseButton
+            subdueElvUICloseTexture(cb.GetNormalTexture and cb:GetNormalTexture(), 0.78, 0.36)
+            subdueElvUICloseTexture(cb.GetPushedTexture and cb:GetPushedTexture(), 0.95, 0.70)
+            if cb.GetHighlightTexture and cb:GetHighlightTexture() then
+                cb:GetHighlightTexture():SetAlpha(1)
+            end
+        end
         if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then
             local titleLevel = frame.TitleContainer and frame.TitleContainer.GetFrameLevel and frame.TitleContainer:GetFrameLevel()
             frame.CloseButton:SetFrameLevel((titleLevel or frame:GetFrameLevel()) + 20)
@@ -3013,7 +3035,14 @@ local function createIcon()
 
     function widget:SetElvUISubduedIcon(enabled)
         button.GSEElvUISubduedIcon = enabled and true or false
-        if shouldUseElvUISkin() then
+        -- Re-apply under an external provider too. shouldUseElvUISkin() is
+        -- false when EUI/ElvUI is active, so without the union this set the
+        -- flag but never re-skinned the icon: toolbar buttons re-coloured by
+        -- their enable/disable refresh (Pause/Embed) stayed bright, and icons
+        -- opted OUT via SetElvUISubduedIcon(false) (the GSE: Resources links)
+        -- stayed subdued. The re-apply lets shouldSubdueElvUIAssetIcon honour
+        -- the flag in both directions.
+        if shouldUseElvUISkin() or hasExternalSkinProvider() then
             applyElvUIIconAssetSkin(button, texture, button.GSELastIconPath)
         end
     end
@@ -3422,7 +3451,7 @@ local function createDropdown()
         end
         applyBackdrop(
             chrome,
-            shouldUseElvUISkin() and ELVUI_SKIN.backdrop or {
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.backdrop or {
                 bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
                 edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
                 tile = true,
@@ -3430,8 +3459,8 @@ local function createDropdown()
                 edgeSize = 12,
                 insets = {left = STYLE.padXXS, right = STYLE.padXXS, top = STYLE.padXXS, bottom = STYLE.padXXS}
             },
-            shouldUseElvUISkin() and ELVUI_SKIN.buttonBg or {0, 0, 0, 0.86},
-            shouldUseElvUISkin() and getElvUIBorderColor(ELVUI_SKIN.mutedBorder) or {0.62, 0.62, 0.62, 1}
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.buttonBg or {0, 0, 0, 0.86},
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and getElvUIBorderColor(ELVUI_SKIN.mutedBorder) or {0.62, 0.62, 0.62, 1}
         )
         button.dropdownChrome = chrome
 
@@ -3451,6 +3480,14 @@ local function createDropdown()
         arrow:SetScript("OnClick", function() button:Click() end)
         arrow:SetScript("OnEnter", function() widget:Fire("OnEnter") end)
         arrow:SetScript("OnLeave", function() widget:Fire("OnLeave") end)
+        if shouldUseElvUISkin() or hasExternalSkinProvider() then
+            -- Flat chevron matches the modern/EUI chrome; the gold Blizzard
+            -- ScrollDown glyph reads as non-modern against the dark dropdown.
+            local chevron = "Interface\\AddOns\\GSE_GUI\\Assets\\down-chevron.png"
+            arrow:SetNormalTexture(chevron)
+            arrow:SetPushedTexture(chevron)
+            arrow:SetDisabledTexture(chevron)
+        end
         button.dropdownArrow = arrow
 
         local text = button:GetFontString()
@@ -3557,7 +3594,12 @@ local function createDropdown()
 
         local nativeDropdown = widget.nativeDropdown
         local arrowButton = nativeDropdownMenuAnchor()
-        local useElvUI = shouldUseElvUISkin()
+        -- Native (UIDropDownMenuTemplate) dropdowns must take the modern
+        -- path under an external provider too. shouldUseElvUISkin() is false
+        -- when EUI/ElvUI is active, which left the native dropdown's grey
+        -- Blizzard 3-slice chrome + gold arrow showing under the EUI skin
+        -- (the custom-styled path was already migrated; this is the native one).
+        local useElvUI = shouldUseElvUISkin() or hasExternalSkinProvider()
         setNativeDropdownTextureAlpha(nativeDropdown, useElvUI and 0 or 1)
         applyNativeDropdownArrow(arrowButton, useElvUI)
 
@@ -3721,7 +3763,7 @@ local function createDropdown()
         listFrame:EnableMouse(true)
         applyBackdrop(
             listFrame,
-            shouldUseElvUISkin() and ELVUI_SKIN.backdrop or {
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.backdrop or {
                 bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
                 edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
                 tile = true,
@@ -3729,8 +3771,8 @@ local function createDropdown()
                 edgeSize = 32,
                 insets = {left = 11, right = 12, top = 12, bottom = 11}
             },
-            shouldUseElvUISkin() and ELVUI_SKIN.insetBg or {0, 0, 0, 0.95},
-            shouldUseElvUISkin() and getElvUIBorderColor(ELVUI_SKIN.border) or {1, 1, 1, 1}
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.insetBg or {0, 0, 0, 0.95},
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and getElvUIBorderColor(ELVUI_SKIN.border) or {1, 1, 1, 1}
         )
         listFrame.buttons = {}
 
@@ -4080,7 +4122,15 @@ local function createDropdown()
         if value then
             self.useDropdownList = false
             if applyNativeDropdownStyle(true) then
-                if self.maxVisibleItems then
+                -- Under Modern/EUI, route the open menu through the custom modern
+                -- list instead of Blizzard's grey/gold native DropDownList1:
+                -- installNativeDropdownOverlay intercepts the click, closes the
+                -- native menu, and opens the GSE listFrame (already modern-skinned,
+                -- rendering the same radio/checked selection). The closed box keeps
+                -- its native chrome (positionElvUINativeDropdownChrome); this only
+                -- changes the popup so it matches the box. Native skin keeps the
+                -- stock popup. (maxVisibleItems already used this path.)
+                if self.maxVisibleItems or shouldUseElvUISkin() or hasExternalSkinProvider() then
                     self.useDropdownList = true
                     installNativeDropdownOverlay()
                 end
@@ -4587,11 +4637,13 @@ local function updateTreeButton(button, line, selected, expanded)
     -- band behind the currently-selected list item (e.g. inventory "All Items").
     -- Match that here when an external skin provider is active.
     if selected and hasExternalSkinProvider() then
-        local euiTable = _G.EllesmereUI
         local r, g, b = 0.2, 0.5, 0.6
-        if type(euiTable) == "table" and type(euiTable.ELLESMERE_GREEN) == "table" then
-            local c = euiTable.ELLESMERE_GREEN
-            r, g, b = c.r or r, c.g or g, c.b or b
+        local hr, hg, hb
+        if GSE.Skin and GSE.Skin.HostAccentColor then
+            hr, hg, hb = GSE.Skin.HostAccentColor()
+        end
+        if hr then
+            r, g, b = hr, hg, hb
         end
         button.bg:SetColorTexture(r, g, b, 0.22)
     else
