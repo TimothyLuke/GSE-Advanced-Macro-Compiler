@@ -873,10 +873,12 @@ function GSE.LoadVariables()
         end
     end
     if deferred > 0 then
+        --@debug@
         GSE.PrintDebugMessage(
             string.format("%d variable(s) deferred (not needed by current sequences).", deferred),
             GNOME
         )
+        --@end-debug@
     end
 end
 
@@ -1049,7 +1051,9 @@ function GSE.ReloadSequences()
 end
 
 function GSE.PerformReloadSequences(force)
+    --@debug@
     GSE.PrintDebugMessage("Reloading Sequences", Statics.DebugModules["Storage"])
+    --@end-debug@
     local func
     if force then
         func = GSE.OOCUpdateSequence
@@ -1329,11 +1333,14 @@ end
 function GSE.GetMacroIcon(classid, sequenceIndex)
     classid = tonumber(classid)
     GSE.EnsureSequenceLoaded(classid, sequenceIndex)
+    --@debug@
     GSE.PrintDebugMessage("sequenceIndex: " .. (GSE.isEmpty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
+    --@end-debug@
     classid = tonumber(classid)
     local macindex = GetMacroIndexByName(sequenceIndex)
     local a, iconid, c = GetMacroInfo(macindex)
     if not GSE.isEmpty(a) then
+        --@debug@
         GSE.PrintDebugMessage(
             "Macro Found " ..
                 a ..
@@ -1342,18 +1349,25 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
                             " " .. (GSE.isEmpty(iconid) and L["with no body"] or c),
             GNOME
         )
+        --@end-debug@
     else
+        --@debug@
         GSE.PrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex, GNOME)
+        --@end-debug@
         return GSEOptions.DefaultDisabledMacroIcon
     end
 
     local sequence = GSE.Library[classid][sequenceIndex]
     if GSE.isEmpty(sequence) then
+        --@debug@
         GSE.PrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex, GNOME)
+        --@end-debug@
         return GSEOptions.DefaultDisabledMacroIcon
     end
     if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
+        --@debug@
         GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.Metadata.SpecID, GNOME)
+        --@end-debug@
         if sequence.Metadata.SpecID == 0 then
             return "INV_MISC_QUESTIONMARK"
         else
@@ -1363,7 +1377,9 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
                 )
             if specicon then
                 if type(specicon) == "string" then
+                    --@debug@
                     GSE.PrintDebugMessage("No Sequence Icon setting to " .. strsub(specicon, 17), GNOME)
+                    --@end-debug@
                     return strsub(specicon, 17)
                 end
                 return specicon
@@ -2079,7 +2095,9 @@ function GSE.processAction(action, metaData, variables, path)
                         if step == limit then
                             limit = limit % #actionList + 1
                             step = 1
+                            --@debug@
                             GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
+                            --@end-debug@
                         else
                             step = step + 1
                         end
@@ -2090,7 +2108,9 @@ function GSE.processAction(action, metaData, variables, path)
                         if step == 1 then
                             limit = limit % #actionList + 1
                             step = limit
+                            --@debug@
                             GSE.PrintDebugMessage("Limit is now " .. limit, "Storage")
+                            --@end-debug@
                         else
                             step = step - 1
                         end
@@ -2124,7 +2144,9 @@ function GSE.processAction(action, metaData, variables, path)
         if clicks > 1 then
             for loop = 1, clicks do
                 table.insert(PauseActions, {["type"] = "click", ["blockPath"] = path})
+                --@debug@
                 GSE.PrintDebugMessage(loop, "Storage1")
+                --@end-debug@
             end
         end
         -- print(#PauseActions, GSE.Dump(action))
@@ -2148,10 +2170,17 @@ function GSE.processAction(action, metaData, variables, path)
         local fn, loadErr = gseLoadstring("return " .. funct)
         if fn then
             local ok, result = pcall(fn)
-            if ok then val = result
-            else GSE.PrintDebugMessage("If-block eval error: " .. tostring(result), "Storage") end
+            if ok then
+                val = result
+            else
+                --@debug@
+                GSE.PrintDebugMessage("If-block eval error: " .. tostring(result), "Storage")
+                --@end-debug@
+            end
         else
+            --@debug@
             GSE.PrintDebugMessage("If-block load error: " .. tostring(loadErr), "Storage")
+            --@end-debug@
         end
 
         local actions
@@ -2490,7 +2519,9 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
             ),
             "BROKEN MACRO"
         )
+        --@debug@
         if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(err), "Storage") end
+        --@end-debug@
     end
 end
 
@@ -2553,7 +2584,9 @@ function GSE.UpdateVariable(variable, name, status)
     GSEVariables[name] = compressedvariable
     local actualfunct, error = gseLoadstring("return " .. variable.funct)
     if error then
+        --@debug@
         if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(error), "Storage") end
+        --@end-debug@
     end
     if type(actualfunct) == "function" then
         GSE.V[name] = actualfunct()
@@ -2646,10 +2679,12 @@ function GSE.BackfillLastUpdated()
         GSEOptions.LastUpdatedBackfill_v1 = true
     end
     if touched > 0 then
+        --@debug@
         GSE.PrintDebugMessage(
             string.format("LastUpdated backfill: stamped %d records", touched),
             "Storage"
         )
+        --@end-debug@
     end
 end
 

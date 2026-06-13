@@ -29,7 +29,9 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
     local elements = GSE.split(key, ",")
     local classid = tonumber(elements[1])
     local SequenceName = elements[3]
+    --@debug@
     GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission)
+    --@end-debug@
     t.ClassID = classid
     t.SequenceName = SequenceName
     GSE.EnsureSequenceLoaded(classid, SequenceName)
@@ -52,14 +54,24 @@ function GSE.TransmitSequence(key, channel, target, transmissionFrame)
 end
 
 function GSE.sendMessage(tab, channel, target, priority)
+    --@debug@
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
+    --@end-debug@
     if tab.Command == "GS-E_TRANSMITSEQUENCE" then
+        --@debug@
         GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
+        --@end-debug@
+        --@debug@
         GSE.PrintDebugMessage(GSE.isEmpty(tab.Sequence))
+        --@end-debug@
+        --@debug@
         GSE.PrintDebugMessage(GSE.ExportSequence(tab.Sequence, tab.SequenceName), Statics.SourceTransmission)
+        --@end-debug@
     end
     local transmission = GSE.EncodeMessage(tab)
+    --@debug@
     GSE.PrintDebugMessage("Transmission: \n" .. transmission, Statics.SourceTransmission)
+    --@end-debug@
     if GSE.isEmpty(channel) then
         if IsInRaid() then
             channel =
@@ -196,8 +208,12 @@ function GSE.RequestSequenceList(gseuser, channel)
 end
 
 function GSE:OnCommReceived(prefix, message, channel, sender)
+    --@debug@
     GSE.PrintDebugMessage("GSE:onCommReceived", Statics.SourceTransmission)
+    --@end-debug@
+    --@debug@
     GSE.PrintDebugMessage(prefix .. " " .. message .. " " .. channel .. " " .. sender, Statics.SourceTransmission)
+    --@end-debug@
     if channel == "PARTY" or channel == "RAID" then
         local dest, msg = string.match(message, "^§§([^:]+):(.+)$")
         if dest then
@@ -219,20 +235,28 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
             if sender ~= GetUnitName("player", true) then
                 GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
+                --@end-debug@
+                --@debug@
                 GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false), Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_LISTSEQUENCES" then
             if sender ~= GetUnitName("player", true) then
                 GSE.ListSequences(sender, "WHISPER")
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring List Request from me.", Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_SEQUENCELIST" then
             if sender ~= GetUnitName("player", true) then
                 GSE.ShowSequenceList(t.SequenceTable, sender, channel)
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_REQUESTSEQUENCE" then
             if sender ~= GetUnitName("player", true) then
@@ -245,7 +269,9 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                     GSE.SendSequence(reqClassId, t.SequenceName, sender, "WHISPER")
                 end
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
@@ -253,7 +279,9 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                     GSE.SendSequenceMeta(t.ClassID, t.SequenceName, sender, "WHISPER")
                 end
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring SequenceMeta from me.", Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_SEQUENCEMETA" then
             if sender ~= GetUnitName("player", true) then
@@ -264,7 +292,9 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                     end
                 end
             else
+                --@debug@
                 GSE.PrintDebugMessage("Ignoring SequenceMeta data from me.", Statics.SourceTransmission)
+                --@end-debug@
             end
         elseif t.Command == "GSE_SPELLCACHE" then
             if sender ~= GetUnitName("player", true) then
@@ -275,14 +305,20 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                 end
                 if not GSE.isEmpty(t.cache) and next(t.cache) ~= nil then
                     for locale, spells in pairs(t.cache) do
+                        --@debug@
                         GSE.PrintDebugMessage("processing Locale" .. locale, Statics.SourceTransmission)
+                        --@end-debug@
                         for k, v in pairs(spells) do
+                            --@debug@
                             GSE.PrintDebugMessage("processing spell" .. k, Statics.SourceTransmission)
+                            --@end-debug@
                             if GSE.isEmpty(GSESpellCache[locale]) then
                                 GSESpellCache[locale] = {}
                             end
                             if GSE.isEmpty(GSESpellCache[locale][k]) then
+                                --@debug@
                                 GSE.PrintDebugMessage("Added spell" .. k .. " " .. v, Statics.SourceTransmission)
+                                --@end-debug@
                                 GSESpellCache[locale][k] = v
                             end
                         end

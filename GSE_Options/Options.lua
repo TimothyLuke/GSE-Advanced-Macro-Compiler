@@ -1604,7 +1604,9 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
                 return C_CVar.SetCVar("ActionButtonUseKeyDown", val and 1 or 0)
             end)
             if not ok then
+                --@debug@
                 GSE.PrintDebugMessage("SetCVar ActionButtonUseKeyDown error: " .. tostring(err), "Options")
+                --@end-debug@
                 return
             end
             -- Rebind keys so the key-down relay (GSE.GetKeybindClickTarget) is
@@ -2136,7 +2138,9 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
     local windowOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Windows & Layout")
     local troubleOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Tools & Diagnostics")
     AttachTrackerDefaultsHandler(troubleOptions)
+    --@debug@
     local debugOptions = GSE.Developer and Settings.RegisterVerticalLayoutSubcategory(troubleOptions, "Developer Debug") or nil
+    --@end-debug@
     colourOptions = colourOptions or Settings.RegisterVerticalLayoutSubcategory(troubleOptions, "Text Colors")
     pluginOptions = pluginOptions or Settings.RegisterVerticalLayoutSubcategory(category, L["Plugins"])
 
@@ -2874,6 +2878,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
         AddDebuggerWindowSizeOptions(windowOptions)
     end
 
+    --@debug@
     -- Debug (Developer only)
     if debugOptions then
         do
@@ -2917,6 +2922,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(debugOptions, setting, L["This will display debug messages for the "] .. modKey)
         end
     end
+    --@end-debug@
 end
 
 -- =========================================================================

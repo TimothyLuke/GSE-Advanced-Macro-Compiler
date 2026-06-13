@@ -102,9 +102,13 @@ function GSE.isSpecIDForCurrentClass(specID)
     local _, currentenglishclass, currentclassId = UnitClass("player")
     specclass = specclass or ""
     if specID > 15 then
+        --@debug@
         GSE.PrintDebugMessage("Checking if specID " .. specID .. " " .. specclass .. " equals " .. currentenglishclass)
+        --@end-debug@
     else
+        --@debug@
         GSE.PrintDebugMessage("Checking if specID " .. specID .. " equals currentclassid " .. currentclassId)
+        --@end-debug@
     end
     return (specclass == currentenglishclass or specID == currentclassId)
 end
@@ -136,7 +140,9 @@ function GSE.GetCurrentTalents()
 
             if not loaded then
                 talents = ""
+                --@debug@
                 GSE.PrintDebugMessage(reason, "TALENTS")
+                --@end-debug@
             else
                 if PlayerSpellsFrame and PlayerSpellsFrame.TalentsFrame then
                     PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
@@ -175,7 +181,9 @@ function GSE.ClearCommonKeyBinds()
     for _, p in ipairs(combinators) do
         for _, v in ipairs(defaultbuttons) do
             SetBinding(p .. "-" .. v)
+            --@debug@
             GSE.PrintDebugMessage("Cleared KeyCombination " .. p .. v)
+            --@end-debug@
         end
         SetBinding(p)
     end

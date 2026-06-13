@@ -10,7 +10,9 @@ function GSE:UNIT_FACTION()
     else
         GSE.PVPFlag = false
     end
+    --@debug@
     GSE.PrintDebugMessage("PVP Flag toggled to " .. tostring(GSE.PVPFlag), Statics.DebugModules["API"])
+    --@end-debug@
     GSE.ReloadSequences()
 end
 
@@ -26,6 +28,7 @@ function GSE.UpdateZoneFlags()
     GSE.inParty      = IsInGroup() and true or false
     GSE.inArena      = (type == "arena")
     GSE.inScenario   = (type == "scenario" or difficulty == 167 or difficulty == 152 or difficulty == 208)
+    --@debug@
     GSE.PrintDebugMessage(
         table.concat(
             {
@@ -42,6 +45,7 @@ function GSE.UpdateZoneFlags()
         ),
         Statics.DebugModules["API"]
     )
+    --@end-debug@
 end
 
 function GSE:ZONE_CHANGED_NEW_AREA()
@@ -560,10 +564,12 @@ local function overrideActionButton(savedBind, force)
             if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Button) end
             if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Button) end
         else
+            --@debug@
             GSE.PrintDebugMessage(
                 "EllesmereUI button " .. Button .. " has no commandName; keybind override not applied",
                 "EVENTS"
             )
+            --@end-debug@
         end
     end
     if string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
@@ -813,7 +819,9 @@ local function LoadOverrides(force)
                 selected and GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] and
                     GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]
              then
+                --@debug@
                 GSE.PrintDebugMessage("changing from " .. tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
+                --@end-debug@
                 for _, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
                     overrideActionButton(v, force)
                 end
@@ -858,10 +866,12 @@ local function LoadKeyBindings(payload)
                 selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
              then
+                --@debug@
                 GSE.PrintDebugMessage(
                     "changing from " .. tostring(payload) .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
                     "EVENTS"
                 )
+                --@end-debug@
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     SetBinding(k)
                     local target = GSE.GetKeybindClickTarget(v)
@@ -1007,7 +1017,9 @@ local function startup()
     if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
         GSEMacros[char .. "-" .. realm] = {}
     end
+    --@debug@
     GSE.PrintDebugMessage("I am loaded")
+    --@end-debug@
     if GSE.GameMode >= 12 then
         -- only do this for retail not classics
         for iter = 0, 13 do
@@ -1504,7 +1516,9 @@ function GSE.CheckGUI()
     local loaded, reason = C_AddOns.LoadAddOn("GSE_GUI")
     if not loaded then
         if reason == "DISABLED" then
+            --@debug@
             GSE.PrintDebugMessage("GSE GUI Disabled", "GSE_GUI")
+            --@end-debug@
             GSE.Print(
                 L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the GSE GUI."]
             )
