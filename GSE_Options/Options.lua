@@ -1385,12 +1385,20 @@ local function AddAppearanceOptions(optionsCategory)
             return "NATIVE"
         end
         local function SetValue(val)
+            -- Save the choice only; do NOT swap any skin component live. The
+            -- whole skin (provider, frames, menu logo, fonts) changes together
+            -- on reload so there's never a half-swapped UI. If the user declines
+            -- the reload prompt, nothing visual changed and the session stays on
+            -- the current skin (the saved choice simply applies next reload).
             GSEOptions.SkinMode = val
             -- Keep the legacy boolean in sync for downgrade safety (older GSE
             -- builds still read GSEOptions.UseModernSkin).
             GSEOptions.UseModernSkin = (val == "MODERN")
-            -- Live-swap the menu logo so it picks up the new skin without /reload.
-            if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
+            -- Prompt the reload that applies it all at once. SetValue only fires
+            -- on an actual change. Uses the migrated GSE popup, not the retired
+            -- Blizzard StaticPopupDialogs path. The popup renders in the current
+            -- skin because nothing has swapped yet.
+            GSE.GUICall("GUIConfirmReloadUI")
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "charSkinMode", Settings.VarType.String, "Skin", "NATIVE", GetValue, SetValue)
         local function GetOptions()
