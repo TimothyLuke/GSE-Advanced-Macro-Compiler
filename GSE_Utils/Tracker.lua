@@ -641,7 +641,8 @@ local function EnsureSequenceTextLine(index)
         line:SetWidth(260)
         line:SetHeight(GSE.SequenceIconTextResize.LineHeight)
         if line.GetFont and line.SetFont then
-            local font = _G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont()
+            local font = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont())
+                or (_G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont())
             if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "") end
         end
         if line.SetShadowOffset then line:SetShadowOffset(1, -1) end
@@ -2351,7 +2352,8 @@ local function LayoutSequenceTextLines(textWidth)
         line:SetWidth(textWidth)
         line:SetHeight(GSE.SequenceIconTextResize.LineHeight)
         if line.GetFont and line.SetFont then
-            local font = _G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont()
+            local font = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont())
+                or (_G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont())
             if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "") end
         end
         if line.SetWordWrap then line:SetWordWrap(false) end

@@ -901,7 +901,13 @@ local function setElvUITextButtonHover(button, hovered)
         end
         local base = text.GSETextButtonBaseFont
         if base then
-            text:SetFont(base[1], hovered and (base[2] * ELVUI_TEXT_BUTTON_HOVER_SCALE) or base[2], base[3])
+            -- Keep the active global font on hover/leave too: the captured base
+            -- face is the load-time (Blizzard) font, so re-applying it here is
+            -- what reverted button/tree text on mouseover. Use HostFont for the
+            -- face when one is active (nil under Native -> keep the base face),
+            -- and still apply the hover size scaling.
+            local face = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont()) or base[1]
+            text:SetFont(face, hovered and (base[2] * ELVUI_TEXT_BUTTON_HOVER_SCALE) or base[2], base[3])
             return
         end
     end
@@ -1006,6 +1012,18 @@ local function applyElvUICloseButtonSkin(button)
     if button.GSEElvUICloseText then button.GSEElvUICloseText:Hide() end
 end
 local function applyElvUIWindowSkin(frame, titleBar, title)
+    -- Make GSE windows adopt the active global font (whatever the user's UI is
+    -- using, any skin). Done as an OnShow hook (installed once) so it also
+    -- catches content widgets added after the window is first skinned; the
+    -- immediate call covers chrome present now. Placed before the early-return
+    -- below on purpose so it runs under every skin, not just the ElvUI path.
+    if frame and GSE.Skin and GSE.Skin.ApplyHostFontToTree then
+        if not frame.GSEHostFontHooked and frame.HookScript then
+            frame.GSEHostFontHooked = true
+            frame:HookScript("OnShow", function(self) GSE.Skin.ApplyHostFontToTree(self) end)
+        end
+        GSE.Skin.ApplyHostFontToTree(frame)
+    end
     if not shouldUseElvUISkin() then return end
     hideFrameTextures(frame)
     applyBackdrop(frame, ELVUI_SKIN.backdrop, {0, 0, 0, 0}, {0, 0, 0, 0})
@@ -4617,6 +4635,16 @@ local function updateTreeButton(button, line, selected, expanded)
         button.bg:SetColorTexture(0, 0, 0, 0)
     end
     button.text:SetFontObject(level <= 2 and "GameFontNormalLarge" or "GameFontHighlight")
+    -- SetFontObject above resets the face to a Blizzard font on every refresh;
+    -- under an addon skin re-apply the host font (keeping the object's size) so
+    -- tree rows match the skin instead of reverting to the default face.
+    if GSE.Skin and GSE.Skin.HostFont then
+        local hostFont = GSE.Skin.HostFont()
+        if hostFont then
+            local _, size, flags = button.text:GetFont()
+            if size then button.text:SetFont(hostFont, size, flags) end
+        end
+    end
     local lineText = textValue(line.text)
     button.text:SetText(line.disabled and ("|cff808080" .. lineText .. FONT_COLOR_CODE_CLOSE) or lineText)
     button:EnableMouse(not line.disabled)

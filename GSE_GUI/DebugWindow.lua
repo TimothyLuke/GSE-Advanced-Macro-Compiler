@@ -469,6 +469,18 @@ end
 function DebugFrame.ApplyEditorWindowStyle(frame, titleText, closeButton)
     if not frame then return end
 
+    -- Adopt the active global font (whatever the user's UI uses, any skin)
+    -- across the Debugger windows. OnShow hook (installed once) re-faces content
+    -- built after this style pass; the immediate call covers what exists now.
+    -- Also re-runs on a live skin toggle via GSE.RefreshDebuggerSkin.
+    if GSE.Skin and GSE.Skin.ApplyHostFontToTree then
+        if not frame.GSEHostFontHooked and frame.HookScript then
+            frame.GSEHostFontHooked = true
+            frame:HookScript("OnShow", function(self) GSE.Skin.ApplyHostFontToTree(self) end)
+        end
+        GSE.Skin.ApplyHostFontToTree(frame)
+    end
+
     if ButtonFrameTemplate_HidePortrait then pcall(ButtonFrameTemplate_HidePortrait, frame) end
     if ButtonFrameTemplate_HideButtonBar then pcall(ButtonFrameTemplate_HideButtonBar, frame) end
 
@@ -2682,6 +2694,21 @@ statsWidget:SetScript("OnSizeChanged", function()
     if LayoutStatsWidget then LayoutStatsWidget() end
 end)
 
+-- Re-face a single FontString to the active addon-skin font (ElvUI/EUI),
+-- keeping its size/flags. No-op under Native/Modern. Applied at the debugger's
+-- lazy row factories so rows created after the window is shown still match the
+-- skin -- the OnShow tree sweep only catches rows that exist at show time.
+local function applyHostFontToFontString(fontString)
+    if not (fontString and GSE.Skin and GSE.Skin.HostFont) then return end
+    local font = GSE.Skin.HostFont()
+    if not font then return end
+    local face, size, flags = fontString:GetFont()
+    if size then
+        local ok = fontString:SetFont(font, size, flags)
+        if ok == false and face then fontString:SetFont(face, size, flags) end
+    end
+end
+
 local function EnsureStatsRow(index)
     if statsRows[index] then return statsRows[index] end
     local row = CreateFrame("Frame", nil, statsRowsContent)
@@ -2690,6 +2717,7 @@ local function EnsureStatsRow(index)
     row.labels = {}
     for i in ipairs(statsColumns) do
         row.labels[i] = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        applyHostFontToFontString(row.labels[i])
     end
     PositionStatsColumns(row, row.labels)
     statsRows[index] = row
@@ -3025,6 +3053,8 @@ local function EnsureHardwareRow(index)
     row.value = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     row.value:SetJustifyH("RIGHT")
     row.value:SetWordWrap(false)
+    applyHostFontToFontString(row.event)
+    applyHostFontToFontString(row.value)
     hardwareRows[index] = row
     return row
 end
@@ -3036,6 +3066,7 @@ local function EnsureHardwareModifierLogRow(index)
     row:SetJustifyH("LEFT")
     row:SetJustifyV("MIDDLE")
     row:SetWordWrap(false)
+    applyHostFontToFontString(row)
     hardwareModifierLogRows[index] = row
     return row
 end
@@ -3604,6 +3635,7 @@ local function EnsureRowLabel(rowFrame, columnIndex)
         label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         label:SetJustifyH("LEFT")
         label:SetWordWrap(false)
+        applyHostFontToFontString(label)
         rowFrame.labels[columnIndex] = label
     end
     return label
