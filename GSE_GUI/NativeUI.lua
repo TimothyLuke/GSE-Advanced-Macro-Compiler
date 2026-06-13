@@ -67,6 +67,7 @@ local STYLE = {
     dropdownListInset = 5,
     dropdownListScrollInset = 10,
     dropdownListScrollReserve = 20,
+    dropdownListDefaultMaxVisible = 20,
     dropdownCheckSize = 14,
     dropdownTextLeft = 28,
     dropdownArrowSize = 22,
@@ -3781,11 +3782,15 @@ local function createDropdown()
         local listFrame = ensureDropdownList()
         local rowHeight = STYLE.dropdownListRowHeight
         local order = widget.order or {}
-        local maxVisibleItems = tonumber(widget.maxVisibleItems)
-        local visibleCount = maxVisibleItems and math.min(#order, math.max(1, maxVisibleItems)) or #order
-        local needsScroll = maxVisibleItems and #order > visibleCount
+        -- Cap the visible rows even when the caller set no explicit
+        -- maxVisibleItems, so a long list (e.g. the ~40-entry Spec/Class ID
+        -- dropdown) scrolls inside a bounded popup instead of growing taller
+        -- than the screen. An explicit SetMaxVisibleItems still takes priority.
+        local effectiveMaxVisible = tonumber(widget.maxVisibleItems) or STYLE.dropdownListDefaultMaxVisible
+        local visibleCount = math.min(#order, math.max(1, effectiveMaxVisible))
+        local needsScroll = #order > visibleCount
         local scrollbarReserve = needsScroll and STYLE.dropdownListScrollReserve or 0
-        local listInset = maxVisibleItems and STYLE.dropdownListScrollInset or STYLE.dropdownListInset
+        local listInset = (widget.maxVisibleItems or needsScroll) and STYLE.dropdownListScrollInset or STYLE.dropdownListInset
         if not widget.dropdownMeasureText then
             widget.dropdownMeasureText = UIParent:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
         end
