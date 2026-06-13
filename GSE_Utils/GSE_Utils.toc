@@ -33,5 +33,6 @@ Indent.lua
 Events.lua
 StaticPopup.lua
 Utils.lua
+Appearance.lua
 Tracker.lua
 MacroSync.lua

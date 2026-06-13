@@ -1360,42 +1360,52 @@ local function AddAppearanceOptions(optionsCategory)
         local layout = SettingsPanel:GetLayout(optionsCategory)
         layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Skin", ["tooltip"] = "Skin"}))
     end
-    -- Native Skin
+    -- Skin selection dropdown.
+    --
+    -- Replaces the old Native/Modern mutually-exclusive checkbox pair. Backed by
+    -- the tri-state GSEOptions.SkinMode ("NATIVE" / "MODERN" / "ADDON"); unset =
+    -- AUTO = installed UI addon skin if present, else Native. The third entry is
+    -- only offered when ElvUI or EllesmereUI is installed and is labelled with
+    -- that addon's own name (there is no literal "Auto" entry shown to the user).
+    -- Resolution + provider gating live in GSE_Utils/Appearance.lua and
+    -- GSE_GUI/Skin.lua. A full skin change applies on /reload, as before; only
+    -- the menu logo hot-swaps here.
     do
         local function GetValue()
-            return GSEOptions.UseModernSkin ~= true
+            local m = GSEOptions and GSEOptions.SkinMode
+            if m == "NATIVE" or m == "MODERN" then return m end
+            if m == "ADDON" and GSE.GetInstalledSkinProviderName and GSE.GetInstalledSkinProviderName() then
+                return "ADDON"
+            end
+            -- AUTO (or a pinned ADDON whose provider is no longer installed):
+            -- surface the effective default so the dropdown shows a real entry.
+            if GSE.GetInstalledSkinProviderName and GSE.GetInstalledSkinProviderName() then
+                return "ADDON"
+            end
+            return "NATIVE"
         end
         local function SetValue(val)
-            GSEOptions.UseModernSkin = val ~= true
-            RefreshExclusiveOptionRows("skin")
+            GSEOptions.SkinMode = val
+            -- Keep the legacy boolean in sync for downgrade safety (older GSE
+            -- builds still read GSEOptions.UseModernSkin).
+            GSEOptions.UseModernSkin = (val == "MODERN")
             -- Live-swap the menu logo so it picks up the new skin without /reload.
             if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "charUseClassicSkin", Settings.VarType.Boolean, "Native Skin", true, GetValue, SetValue)
-        MarkExclusiveCheckboxInitializer(
-            Settings.CreateCheckbox(optionsCategory, setting, "Use GSE's Native interface skin."),
-            "skin",
-            GetValue
-        )
-    end
-
-    -- Modern Skin
-    do
-        local function GetValue()
-            return GSEOptions.UseModernSkin == true
+        local setting = Settings.RegisterProxySetting(optionsCategory, "charSkinMode", Settings.VarType.String, "Skin", "NATIVE", GetValue, SetValue)
+        local function GetOptions()
+            local container = Settings.CreateControlTextContainer()
+            container:Add("NATIVE", L["Native"] or "Native")
+            container:Add("MODERN", L["Modern"] or "Modern")
+            local addon = GSE.GetInstalledSkinProviderName and GSE.GetInstalledSkinProviderName()
+            if addon then
+                -- Dynamic label: shows "ElvUI" or "EllesmereUI". Only present
+                -- when that addon is actually installed.
+                container:Add("ADDON", addon)
+            end
+            return container:GetData()
         end
-        local function SetValue(val)
-            GSEOptions.UseModernSkin = val == true
-            RefreshExclusiveOptionRows("skin")
-            -- Live-swap the menu logo so it picks up the new skin without /reload.
-            if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
-        end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "charUseModernSkin", Settings.VarType.Boolean, "Modern Skin", false, GetValue, SetValue)
-        MarkExclusiveCheckboxInitializer(
-            Settings.CreateCheckbox(optionsCategory, setting, L["Use GSE's Modern interface skin. This does not require ElvUI."]),
-            "skin",
-            GetValue
-        )
+        Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Native uses GSE's own interface. Modern uses GSE's dark skin and does not require ElvUI. The third option, shown only when ElvUI or EllesmereUI is installed, matches that addon's look."])
     end
 
     do

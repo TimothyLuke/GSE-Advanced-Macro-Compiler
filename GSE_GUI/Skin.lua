@@ -393,8 +393,21 @@ end
 -- ─── Provider selection ────────────────────────────────────────────────
 -- ElvUI takes priority because its skinning surface is far more complete
 -- than the EllesmereUI replicate-and-paint path.
+--
+-- The external provider only drives GSE's look when the user's effective skin
+-- mode is "ADDON" (the AUTO default when a provider is installed, or an explicit
+-- pick). When the user has explicitly chosen "NATIVE" or "MODERN", we install
+-- the no-op provider so an installed ElvUI/EllesmereUI is ignored and GSE paints
+-- its own native/modern look. GSE.GetEffectiveSkinMode lives in
+-- GSE_Utils/Appearance.lua (GSE_GUI depends on GSE_Utils, so it is available).
 local function selectProvider()
-    local provider = makeElvUIProvider() or makeEllesmereUIProvider() or makeNoopProvider()
+    local effectiveMode = GSE.GetEffectiveSkinMode and GSE.GetEffectiveSkinMode() or "NATIVE"
+    local provider
+    if effectiveMode == "ADDON" then
+        provider = makeElvUIProvider() or makeEllesmereUIProvider() or makeNoopProvider()
+    else
+        provider = makeNoopProvider()
+    end
     for k, v in pairs(provider) do GSE.Skin[k] = v end
     GSE.Skin.providerName = provider.name
 end
