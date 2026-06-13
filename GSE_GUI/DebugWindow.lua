@@ -585,36 +585,17 @@ function DebugFrame.EnsureDebuggerSideCloseButton(frame)
     if not frame then return end
     if frame.SetClipsChildren then frame:SetClipsChildren(false) end
 
-    if not frame.CloseButton then
-        frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    end
-
-    frame.CloseButton:ClearAllPoints()
-    frame.CloseButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 3)
-    frame.CloseButton:SetSize(32, 30)
-    GSE.StyleDebugIconButton(frame.CloseButton, GSE.DEBUG_CLOSE_TEXTURE, GSE.DebugUsesModernSkin and GSE.DebugUsesModernSkin())
-    if frame.CloseButton.SetFrameStrata and frame.GetFrameStrata then frame.CloseButton:SetFrameStrata(frame:GetFrameStrata()) end
-    if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then frame.CloseButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 500) end
-    frame.CloseButton:SetScript(
-        "OnClick",
-        function()
-            local click = frame.closeButton and frame.closeButton.GetScript and frame.closeButton:GetScript("OnClick")
-            if click then
-                click(frame.closeButton)
-            else
-                frame:Hide()
-            end
-        end
-    )
-    frame.CloseButton:Show()
+    -- Side windows no longer carry their own [X] close button: it could draw
+    -- behind the panel depending on strata/level, and the side windows are
+    -- toggled from the main Debugger's Stats/Hardware buttons. Hide any one
+    -- that was already created and do not make a new one.
+    if frame.CloseButton then frame.CloseButton:Hide() end
 end
 
 function DebugFrame.SetDebuggerSideCloseButtonVisible(frame, visible)
     if not frame then return end
-    if not frame.CloseButton then DebugFrame.EnsureDebuggerSideCloseButton(frame) end
-    if frame.CloseButton then
-        frame.CloseButton:Show()
-    end
+    -- No side-window [X] anymore; keep any pre-existing one hidden.
+    if frame.CloseButton then frame.CloseButton:Hide() end
 end
 
 function DebugFrame.SyncDebuggerSideSkinLayers(frame)
@@ -628,9 +609,26 @@ function DebugFrame.SyncDebuggerSideSkinLayers(frame)
         if layer.SetFrameLevel then layer:SetFrameLevel(math.max(0, frameLevel + (offset or 0))) end
     end
 
+    -- When attached, keep the class-color border at the side window's own base
+    -- level (offset 0) -- exactly how the MAIN window's border sits at its base
+    -- via ensureElvUIWindowBand. The side now rides at main+1 (see
+    -- RaiseDebuggerSideChrome) alongside the main as a unit, mirroring the
+    -- Editor's side panels. Detached windows keep the +100 lift so their border
+    -- still draws above other UI.
+    local attached = (frame.GSESideDetached == false)
+        or (DebugFrame.IsDebuggerSideWindowAttached and DebugFrame.IsDebuggerSideWindowAttached(frame))
+    -- When attached, keep the class-color border ONE level above the side
+    -- window's own dark GSEElvUIOuterShell border (offset 1, not 0) so the
+    -- coloured border draws over the dark one on every edge -- the outer
+    -- (free) edges were showing the dark shell border instead of the class
+    -- colour. Offsets are relative to the side frame's own base level, so this
+    -- still resolves correctly now that the side rides at main+1. Detached
+    -- keeps the +100 lift.
+    local borderOffset = attached and 1 or 100
+
     syncLayer(frame.GSEElvUIOuterShell, 0)
-    syncLayer(frame.GSEElvUIOuterClassBorder, 100)
-    syncLayer(frame.GSENormalAccentBorderOverlay, 100)
+    syncLayer(frame.GSEElvUIOuterClassBorder, borderOffset)
+    syncLayer(frame.GSENormalAccentBorderOverlay, borderOffset)
     syncLayer(frame.TitleContainer, 90)
     syncLayer(frame.GSESideVisibleTitleBar, 520)
 end
@@ -666,20 +664,39 @@ end
 function DebugFrame.RaiseDebuggerSideChrome(frame)
     if not frame then return end
     if frame.GSESideDetached == false or (DebugFrame.IsDebuggerSideWindowAttached and DebugFrame.IsDebuggerSideWindowAttached(frame)) then
+        -- Attached: share the main Debugger's strata and ride at the same
+        -- effective level as a UNIT, mirroring the Editor's side panels
+        -- (NativeUI UI.CreateEditorSidePanel is SetToplevel(true); Editor.lua
+        -- syncSidePanel sets side strata = main strata and side level = main+1,
+        -- raised alongside the main). The previous main-2 / SetToplevel(false)
+        -- "sit behind" placed attached side windows BELOW other same-strata UI,
+        -- so they did not share the main's effective strata level and got
+        -- overlapped. Match the Editor: same strata, main+1, toplevel. The
+        -- actual Raise() happens in UpdateDebuggerWindowLevels on activation
+        -- (mirroring SetActiveEditor) -- NOT here, because this is also called
+        -- on frequent content refreshes (e.g. the Hardware modifier log). If it
+        -- raised, those refreshes would keep popping the side window in front of
+        -- unrelated windows such as the Editor's side panels. Layer only here.
         if frame.SetFrameStrata and DebugFrame.GetFrameStrata then frame:SetFrameStrata(DebugFrame:GetFrameStrata()) end
-        if frame.SetFrameLevel and DebugFrame.GetFrameLevel then frame:SetFrameLevel(DebugFrame:GetFrameLevel() or 0) end
+        if frame.SetFrameLevel and DebugFrame.GetFrameLevel then
+            frame:SetFrameLevel((DebugFrame:GetFrameLevel() or 0) + 1)
+        end
         if frame.SetToplevel then frame:SetToplevel(true) end
-        if frame.Raise then frame:Raise() end
     elseif frame.SetToplevel then
         frame:SetToplevel(true)
     end
-    if frame.SetClipsChildren then frame:SetClipsChildren(true) end
+    -- Do NOT clip the outer side window: the Modern class-color border band
+    -- (GSEElvUIOuterClassBorder) sits at/above the frame's top edge, so a true
+    -- clip cuts off the TOP border on the side windows (Stats/Hardware). The
+    -- main Debugger frame isn't clipped, which is why only the side windows
+    -- showed the clipped top. Inner content frames (header/rows/scroll/log)
+    -- each clip themselves, so rows stay contained with the outer clip off.
+    if frame.SetClipsChildren then frame:SetClipsChildren(false) end
     DebugFrame.SyncDebuggerSideSkinLayers(frame)
     if frame.CloseButton then
-        if frame.CloseButton.SetFrameStrata and frame.GetFrameStrata then frame.CloseButton:SetFrameStrata(frame:GetFrameStrata()) end
-        if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then frame.CloseButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 500) end
-        if frame.CloseButton.Raise then frame.CloseButton:Raise() end
-        frame.CloseButton:Show()
+        -- Side windows no longer use their own [X]; keep it hidden if one
+        -- somehow exists. (EnsureDebuggerSideCloseButton no longer creates it.)
+        frame.CloseButton:Hide()
     end
     if frame.GSESideResizeButton and frame.GSESideResizeButton.SetFrameLevel and frame.GetFrameLevel then
         frame.GSESideResizeButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 110)
@@ -690,7 +707,16 @@ end
 function DebugFrame.UpdateDebuggerWindowLevels()
     local activeWindow = DebugFrame.GSEActiveDebuggerWindow or DebugFrame
 
-    if activeWindow and activeWindow.Raise then activeWindow:Raise() end
+    -- Bring the whole Debugger group to the front as a UNIT, mirroring the
+    -- Editor (SetActiveEditor raises the main, then its side panels on top of
+    -- it). Raise the main first, then each attached side window, so the side
+    -- windows ride on top at the 4px docking seam and the group comes forward
+    -- together when any part is activated. This is the ONLY place that calls
+    -- Raise() on the side windows -- RaiseDebuggerSideChrome only re-layers --
+    -- so a side window jumps forward on real activation/move, not on the
+    -- frequent content refreshes (e.g. the Hardware modifier log) that would
+    -- otherwise pop it over unrelated windows like the Editor's side panels.
+    if DebugFrame.Raise then DebugFrame:Raise() end
     if DebugFrame.titleHitBox and DebugFrame.titleHitBox.SetFrameLevel then DebugFrame.titleHitBox:SetFrameLevel((DebugFrame:GetFrameLevel() or 0) + 80) end
     if DebugFrame.versionHitBox and DebugFrame.versionHitBox.SetFrameLevel then DebugFrame.versionHitBox:SetFrameLevel((DebugFrame:GetFrameLevel() or 0) + 80) end
     if DebugFrame.RaiseDebuggerControls then DebugFrame.RaiseDebuggerControls() end
@@ -698,6 +724,7 @@ function DebugFrame.UpdateDebuggerWindowLevels()
         for _, frame in ipairs(DebugFrame.GSEDebuggerManagedWindows) do
             if frame and (frame.GSESideDetached == false or (DebugFrame.IsDebuggerSideWindowAttached and DebugFrame.IsDebuggerSideWindowAttached(frame))) then
                 DebugFrame.RaiseDebuggerSideChrome(frame)
+                if frame.Raise then frame:Raise() end
             end
             -- Show inactive overlay on non-active windows
             if frame and frame.GSEInactiveOverlay then
@@ -710,7 +737,11 @@ function DebugFrame.UpdateDebuggerWindowLevels()
             end
         end
     end
-    if activeWindow and activeWindow ~= DebugFrame then DebugFrame.RaiseDebuggerSideChrome(activeWindow) end
+    -- Keep the active window on the very top of the group.
+    if activeWindow and activeWindow ~= DebugFrame then
+        DebugFrame.RaiseDebuggerSideChrome(activeWindow)
+        if activeWindow.Raise then activeWindow:Raise() end
+    end
 end
 
 function DebugFrame.ActivateDebuggerWindow(frame)
@@ -774,6 +805,19 @@ function DebugFrame.MaybeSnapDebuggerSideWindow(frame)
     end
 
     return false
+end
+
+-- Mirror the Editor: when the MAIN window is dragged, re-check whether any
+-- detached side window is now within snap tolerance of the main and dock it.
+-- (The Editor hooks editorFrame:OnDragStop -> maybeSnapNavWindow for the same
+-- effect; here MaybeSnapDebuggerSideWindow already no-ops on attached frames.)
+function DebugFrame.SnapDetachedSideWindowsToMain()
+    if not DebugFrame.debuggerSideWindows then return end
+    for sideFrame in pairs(DebugFrame.debuggerSideWindows) do
+        if sideFrame and sideFrame.GSESideDetached and sideFrame.IsShown and sideFrame:IsShown() then
+            DebugFrame.MaybeSnapDebuggerSideWindow(sideFrame)
+        end
+    end
 end
 
 function DebugFrame.IsDebuggerSideWindowAttached(frame)
@@ -844,6 +888,10 @@ end
 
 function DebugFrame.ConfigureDebuggerSideWindow(frame, location, minWidth, minHeight, maxWidth, maxHeight)
     if not frame then return end
+    -- Register so the main window's drag-stop can re-snap this side window
+    -- when it is detached (mirrors the Editor's main-drag snap re-check).
+    DebugFrame.debuggerSideWindows = DebugFrame.debuggerSideWindows or {}
+    DebugFrame.debuggerSideWindows[frame] = true
     frame.GSESideLocation = location
     frame:SetMovable(true)
     frame:SetResizable(false)
@@ -901,6 +949,10 @@ DebugFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
 DebugFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     if self.SaveDebuggerLocation then self:SaveDebuggerLocation() end
+    -- Mirror the Editor: dragging the main next to a detached side window re-snaps it.
+    if DebugFrame.SnapDetachedSideWindowsToMain then DebugFrame.SnapDetachedSideWindowsToMain() end
+    -- Keep attached side windows on the main's strata/level after moving together.
+    if self.UpdateDebuggerWindowLevels then self.UpdateDebuggerWindowLevels() end
 end)
 if DebugFrame.SetResizeBounds then
     DebugFrame:SetResizeBounds(DEBUG_UI.MIN_DEBUGGER_WIDTH, DEBUG_UI.MIN_DEBUGGER_HEIGHT, GetMaxDebuggerWidth(), GetMaxDebuggerHeight())
@@ -1070,6 +1122,11 @@ local function StopDebuggerTitleMove(button)
     if button and button ~= "LeftButton" then return end
     if DebugFrame.StopMovingOrSizing then DebugFrame:StopMovingOrSizing() end
     if DebugFrame.SaveDebuggerLocation then DebugFrame:SaveDebuggerLocation() end
+    -- Mirror the Editor: dragging the main next to a detached side window re-snaps it.
+    if DebugFrame.SnapDetachedSideWindowsToMain then DebugFrame.SnapDetachedSideWindowsToMain() end
+    -- Re-sync attached side windows to the main's strata/level after a group
+    -- move, so they keep the same strata as the main even when moved together.
+    if DebugFrame.UpdateDebuggerWindowLevels then DebugFrame.UpdateDebuggerWindowLevels() end
 end
 
 local function IsCursorOverDebuggerTitleBar()
@@ -1148,6 +1205,8 @@ closeButton:SetScript(
     end
 )
 DebugFrame.closebutton = closeButton
+DebugFrame.GSEWindowTitle = title
+DebugFrame.GSEWindowCloseButton = closeButton
 DebugFrame.ApplyEditorWindowStyle(DebugFrame, title, closeButton)
 if DebugFrame.TitleContainer then
     DebugFrame.TitleContainer:EnableMouse(true)
@@ -1985,8 +2044,8 @@ statsWidget:SetResizable(false)
 statsWidget:EnableMouse(true)
 local defaultStatsHeight = DEBUG_UI.STATS_WIDGET_HEADER_HEIGHT + (DEBUG_UI.STATS_WIDGET_VISIBLE_ROWS * DEBUG_UI.STATS_WIDGET_ROW_HEIGHT) + 12
 statsWidget:SetSize(DEBUG_UI.STATS_WIDGET_WIDTH, DebugFrame:GetHeight() or defaultStatsHeight)
-if statsWidget.SetClipsChildren then statsWidget:SetClipsChildren(true) end
-statsWidget:SetPoint("TOPLEFT", DebugFrame, "TOPRIGHT", DEBUG_UI.STATS_WIDGET_ANCHOR_X, -10)
+if statsWidget.SetClipsChildren then statsWidget:SetClipsChildren(false) end
+statsWidget:SetPoint("TOPLEFT", DebugFrame, "TOPRIGHT", DEBUG_UI.STATS_WIDGET_ANCHOR_X, 0)
 if not statsWidget.GSEUsesBlizzardPanelTemplate and statsWidget.SetBackdrop then
     statsWidget:SetBackdrop(
         {
@@ -2020,7 +2079,7 @@ end
 local function AnchorStatsWidget()
     if statsWidget.GSESideDetached then return end
     statsWidget:ClearAllPoints()
-    statsWidget:SetPoint("TOPLEFT", DebugFrame, "TOPRIGHT", DEBUG_UI.STATS_WIDGET_ANCHOR_X, -10)
+    statsWidget:SetPoint("TOPLEFT", DebugFrame, "TOPRIGHT", DEBUG_UI.STATS_WIDGET_ANCHOR_X, 0)
 end
 
 local function UpdateStatsButtonText()
@@ -2034,6 +2093,7 @@ statsTitle:SetPoint("TOPLEFT", statsWidget, "TOPLEFT", 36, -20)
 statsTitle:SetPoint("TOPRIGHT", statsWidget, "TOPRIGHT", -36, -20)
 statsTitle:SetJustifyH("CENTER")
 statsTitle:SetText(DebuggerWindowTitle("Debug Stats"))
+statsWidget.GSEWindowTitle = statsTitle
 DebugFrame.ApplyEditorWindowStyle(statsWidget, statsTitle)
 DebugFrame.PositionDebuggerSideTitle(statsWidget, statsTitle, DebuggerWindowTitle("Debug Stats"))
 
@@ -2550,13 +2610,17 @@ PositionStatsHeaderHandles()
 
 LayoutStatsWidget = function()
     if not statsWidget.GSESideDetached then
-        local targetHeight = (DebugFrame:GetHeight() or defaultStatsHeight) - 10
+        local targetHeight = (DebugFrame:GetHeight() or defaultStatsHeight)
         if math.abs((statsWidget:GetWidth() or 0) - DEBUG_UI.STATS_WIDGET_WIDTH) > 0.5 then statsWidget:SetWidth(DEBUG_UI.STATS_WIDGET_WIDTH) end
         if math.abs((statsWidget:GetHeight() or 0) - targetHeight) > 0.5 then statsWidget:SetHeight(targetHeight) end
     end
     statsScrollBackground:ClearAllPoints()
     statsScrollBackground:SetPoint("TOPLEFT", statsWidget, "TOPLEFT", 12, -66)
-    statsScrollBackground:SetPoint("BOTTOMRIGHT", statsWidget, "BOTTOMRIGHT", -12, 88)
+    -- Take 2 off the right side of the stats body: -12 -> -14. The header,
+    -- rows scroll frame and column area all anchor to statsScrollBackground's
+    -- right edge, so they follow this in by 2px. Left side and window width
+    -- are unchanged.
+    statsScrollBackground:SetPoint("BOTTOMRIGHT", statsWidget, "BOTTOMRIGHT", -14, 88)
     statsMatchText:ClearAllPoints()
     statsMatchText:SetPoint("TOPLEFT", statsScrollBackground, "BOTTOMLEFT", 0, -4)
     statsMatchText:SetPoint("TOPRIGHT", statsScrollBackground, "BOTTOMRIGHT", 0, -4)
@@ -2723,7 +2787,7 @@ hardwareWidget:SetMovable(true)
 hardwareWidget:SetResizable(false)
 hardwareWidget:EnableMouse(true)
 hardwareWidget:SetSize(DEBUG_UI.HARDWARE_WIDGET_WIDTH, DebugFrame:GetHeight() or DEBUG_UI.MIN_DEBUGGER_HEIGHT)
-if hardwareWidget.SetClipsChildren then hardwareWidget:SetClipsChildren(true) end
+if hardwareWidget.SetClipsChildren then hardwareWidget:SetClipsChildren(false) end
 if not hardwareWidget.GSEUsesBlizzardPanelTemplate and hardwareWidget.SetBackdrop then
     hardwareWidget:SetBackdrop(
         {
@@ -2746,7 +2810,7 @@ end
 AnchorHardwareWidget = function()
     if hardwareWidget.GSESideDetached then return end
     hardwareWidget:ClearAllPoints()
-    hardwareWidget:SetPoint("TOPRIGHT", DebugFrame, "TOPLEFT", DEBUG_UI.HARDWARE_WIDGET_ANCHOR_X, -10)
+    hardwareWidget:SetPoint("TOPRIGHT", DebugFrame, "TOPLEFT", DEBUG_UI.HARDWARE_WIDGET_ANCHOR_X, 0)
 end
 
 local function UpdateHardwareButtonText()
@@ -2761,6 +2825,7 @@ hardwareTitle:SetPoint("TOPLEFT", hardwareWidget, "TOPLEFT", 36, -20)
 hardwareTitle:SetPoint("TOPRIGHT", hardwareWidget, "TOPRIGHT", -36, -20)
 hardwareTitle:SetJustifyH("CENTER")
 hardwareTitle:SetText(DebuggerWindowTitle("Hardware Events"))
+hardwareWidget.GSEWindowTitle = hardwareTitle
 DebugFrame.ApplyEditorWindowStyle(hardwareWidget, hardwareTitle)
 DebugFrame.PositionDebuggerSideTitle(hardwareWidget, hardwareTitle, DebuggerWindowTitle("Hardware Events"))
 
@@ -3035,7 +3100,7 @@ end
 
 LayoutHardwareWidget = function()
     if not hardwareWidget.GSESideDetached then
-        local targetHeight = (DebugFrame:GetHeight() or DEBUG_UI.MIN_DEBUGGER_HEIGHT) - 10
+        local targetHeight = (DebugFrame:GetHeight() or DEBUG_UI.MIN_DEBUGGER_HEIGHT)
         if math.abs((hardwareWidget:GetWidth() or 0) - DEBUG_UI.HARDWARE_WIDGET_WIDTH) > 0.5 then hardwareWidget:SetWidth(DEBUG_UI.HARDWARE_WIDGET_WIDTH) end
         if math.abs((hardwareWidget:GetHeight() or 0) - targetHeight) > 0.5 then hardwareWidget:SetHeight(targetHeight) end
     end
@@ -4929,6 +4994,28 @@ local function RefreshDebuggerTitleChrome()
     end
 end
 
+-- Re-apply the window chrome to the Debugger and its side windows so they
+-- track the current skin (Native vs Modern vs external provider). The three
+-- ApplyEditorWindowStyle calls at file-load only ran once, so a skin change
+-- afterwards left the Debugger painted with whatever skin was active at load
+-- (the Debugger/side windows showing Native chrome while Modern was selected).
+-- Called on Debugger show and from the Options skin toggle (GSE.RefreshDebuggerSkin).
+function GSE.RefreshDebuggerSkin()
+    DebugFrame.ApplyEditorWindowStyle(DebugFrame, DebugFrame.GSEWindowTitle, DebugFrame.GSEWindowCloseButton)
+    if statsWidget then DebugFrame.ApplyEditorWindowStyle(statsWidget, statsWidget.GSEWindowTitle) end
+    if hardwareWidget then DebugFrame.ApplyEditorWindowStyle(hardwareWidget, hardwareWidget.GSEWindowTitle) end
+    -- ApplyEditorWindowStyle re-seats the main close button at only frame+20;
+    -- re-raise the main controls (close + minimize) to frame+500 and Raise()
+    -- them so the [X] can't end up behind the frame after a restyle/show.
+    if DebugFrame.RaiseDebuggerControls then DebugFrame.RaiseDebuggerControls() end
+    -- Re-raise chrome so strata/clip/close-button levels stay correct after restyle.
+    if DebugFrame.RaiseDebuggerSideChrome then
+        if statsWidget then DebugFrame.RaiseDebuggerSideChrome(statsWidget) end
+        if hardwareWidget then DebugFrame.RaiseDebuggerSideChrome(hardwareWidget) end
+    end
+    RefreshDebuggerTitleChrome()
+end
+
 function GSE.GUIShowDebugWindow()
     if DebugFrame.minimizedWidget and DebugFrame.minimizedWidget:IsShown() and DebugFrame.ExpandFromMinimizedWidget then
         DebugFrame:ExpandFromMinimizedWidget()
@@ -4943,12 +5030,12 @@ function GSE.GUIShowDebugWindow()
     UpdateStatsCombatTimer()
     DebugFrame:Show()
     if DebugFrame.Raise then DebugFrame:Raise() end
-    RefreshDebuggerTitleChrome()
+    GSE.RefreshDebuggerSkin()
 end
 
 DebugFrame:HookScript("OnShow", function(self)
     if self.minimizedWidget then self.minimizedWidget:Hide() end
-    RefreshDebuggerTitleChrome()
+    GSE.RefreshDebuggerSkin()
 end)
 
 DebugFrame:Hide()
