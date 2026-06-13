@@ -2172,7 +2172,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.ShiftPause == true end
             local function SetValue(val)
                 GSEOptions.ShiftPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnShift", Settings.VarType.Boolean, L["Pause Sequences While Shift Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Shift makes GSE send an empty macro and stops the sequence from advancing until Shift is released."])
@@ -2181,7 +2181,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.AltPause == true end
             local function SetValue(val)
                 GSEOptions.AltPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnAlt", Settings.VarType.Boolean, L["Pause Sequences While Alt Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Alt makes GSE send an empty macro and stops the sequence from advancing until Alt is released."])
@@ -2190,7 +2190,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.CtrlPause == true end
             local function SetValue(val)
                 GSEOptions.CtrlPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnCtrl", Settings.VarType.Boolean, L["Pause Sequences While Ctrl Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."])
