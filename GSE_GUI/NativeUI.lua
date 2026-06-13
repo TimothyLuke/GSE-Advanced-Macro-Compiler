@@ -1034,7 +1034,9 @@ local function applyElvUIWindowSkin(frame, titleBar, title)
             "TOPLEFT",
             "TOPLEFT",
             0,
-            0,
+            1,  -- top edge up 1px (was 0): nudges the class-border band's top
+                -- anchor up so the top border line sits 1px higher. BOTTOMRIGHT
+                -- (below) is unchanged, so only the top edge moves.
             "BOTTOMRIGHT",
             "BOTTOMRIGHT",
             0,
@@ -1081,58 +1083,13 @@ local function applyNormalAccentWindowSkin(frame)
         return
     end
 
-    local accent = getNormalAccentColor(1)
-    if accent then
-        if frame.GSENormalAccentOuterBorder then frame.GSENormalAccentOuterBorder:Hide() end
-
-        local overlay = frame.GSENormalAccentBorderOverlay
-        if not overlay then
-            overlay = CreateFrame("Frame", nil, frame)
-            overlay:EnableMouse(false)
-            frame.GSENormalAccentBorderOverlay = overlay
-
-            overlay.top = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.bottom = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.left = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.right = overlay:CreateTexture(nil, "OVERLAY")
-        end
-
-        local leftOffset = frame.GSEUsesBlizzardPanelTemplate and (WINDOW_LEFT_VISUAL_ALLOWANCE - 7) or -1
-        overlay:ClearAllPoints()
-        overlay:SetPoint("TOPLEFT",     frame, "TOPLEFT",     leftOffset,   1)
-        overlay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -leftOffset, -1)
-        if overlay.SetFrameStrata and frame.GetFrameStrata then overlay:SetFrameStrata(frame:GetFrameStrata()) end
-        if overlay.SetFrameLevel and frame.GetFrameLevel then overlay:SetFrameLevel((frame:GetFrameLevel() or 1) + 12) end
-
-        local borderSize = 2
-        overlay.top:ClearAllPoints()
-        overlay.top:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
-        overlay.top:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
-        overlay.top:SetHeight(borderSize)
-
-        overlay.bottom:ClearAllPoints()
-        overlay.bottom:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
-        overlay.bottom:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
-        overlay.bottom:SetHeight(borderSize)
-
-        overlay.left:ClearAllPoints()
-        overlay.left:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
-        overlay.left:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
-        overlay.left:SetWidth(borderSize)
-
-        overlay.right:ClearAllPoints()
-        overlay.right:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
-        overlay.right:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
-        overlay.right:SetWidth(borderSize)
-
-        colorTexture(overlay.top, accent)
-        colorTexture(overlay.bottom, accent)
-        colorTexture(overlay.left, accent)
-        colorTexture(overlay.right, accent)
-        overlay:Show()
-        return
-    end
-
+    -- Outside class-color border REMOVED for the Native skin: the coloured
+    -- outline didn't sit well against Blizzard's native frame chrome, so we no
+    -- longer draw the 4-side GSENormalAccentBorderOverlay here. We just make
+    -- sure any previously-created border is hidden. (The class/custom accent
+    -- colour still applies to button/checkbox text and the slim scrollbar
+    -- elsewhere; only the window outline is gone. The Modern skin's own
+    -- borders are unaffected — they're handled by applyElvUIWindowSkin.)
     if frame.GSENormalAccentOuterBorder then
         frame.GSENormalAccentOuterBorder:Hide()
     end
