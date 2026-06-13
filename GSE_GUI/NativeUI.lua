@@ -2129,6 +2129,9 @@ local function createFrame()
     -- preempted during input) and runs independent of Editor.lua's own scheduler.
     local LIVE_RESIZE_INTERVAL = 0.02
     local liveResizeAccum = 0
+    -- Whole-pixel coalesce: skip the DoLayout call when the rendered size
+    -- hasn't changed since the last tick (cursor moving sub-pixel or hovering).
+    local lastResizeW, lastResizeH
 
     resizeButton:SetScript(
         "OnMouseDown",
@@ -2136,6 +2139,7 @@ local function createFrame()
             if button == "LeftButton" and widget.resizable then
                 widget.resizing = true
                 liveResizeAccum = 0
+                lastResizeW, lastResizeH = nil, nil
                 widget:Fire("OnResizeStart", widget.width, widget.height)
                 frame:StartSizing("BOTTOMRIGHT")
                 resizeButton:SetScript("OnUpdate", function(_, delta)
@@ -2150,6 +2154,12 @@ local function createFrame()
                     local w, h = frame:GetWidth(), frame:GetHeight()
                     widget.width = w
                     widget.height = h
+                    local rw = math.floor(w + 0.5)
+                    local rh = math.floor(h + 0.5)
+                    if rw == lastResizeW and rh == lastResizeH then
+                        return  -- no change this tick; skip the relayout
+                    end
+                    lastResizeW, lastResizeH = rw, rh
                     if widget.frame and widget.frame:IsShown() then
                         widget:DoLayout()
                     end

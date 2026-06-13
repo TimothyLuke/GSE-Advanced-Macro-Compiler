@@ -567,13 +567,37 @@ function DebugFrame.CreateDebuggerSideResizeButton(frame)
     resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
     if resizeButton.SetFrameLevel and frame.GetFrameLevel then resizeButton:SetFrameLevel((frame:GetFrameLevel() or 0) + 80) end
+    -- Same throttled live-resize model as the main window / Editor: a ~50fps
+    -- OnUpdate pump drives this side window's own layout, with a whole-pixel
+    -- coalesce, instead of relaying out on every raw OnSizeChanged frame.
+    local sideResizeAccum = 0
+    local sideLastResizeW, sideLastResizeH
     resizeButton:SetScript("OnMouseDown", function(_, button)
         if button ~= "LeftButton" then return end
         DebugFrame.DetachDebuggerSideWindow(frame)
+        frame.GSESideResizing = true
+        sideResizeAccum = 0
+        sideLastResizeW, sideLastResizeH = nil, nil
         if frame.StartSizing then frame:StartSizing("BOTTOMRIGHT") end
+        resizeButton:SetScript("OnUpdate", function(_, delta)
+            if not frame.GSESideResizing then
+                resizeButton:SetScript("OnUpdate", nil)
+                return
+            end
+            sideResizeAccum = sideResizeAccum + (delta or 0)
+            if sideResizeAccum < 0.02 then return end
+            sideResizeAccum = 0
+            local rw = math.floor((frame:GetWidth() or 0) + 0.5)
+            local rh = math.floor((frame:GetHeight() or 0) + 0.5)
+            if rw == sideLastResizeW and rh == sideLastResizeH then return end
+            sideLastResizeW, sideLastResizeH = rw, rh
+            if frame:IsShown() and frame.GSESideLayout then frame.GSESideLayout() end
+        end)
     end)
     resizeButton:SetScript("OnMouseUp", function()
+        resizeButton:SetScript("OnUpdate", nil)
         if frame.StopMovingOrSizing then frame:StopMovingOrSizing() end
+        frame.GSESideResizing = nil
         if frame.GSESideLayout then frame.GSESideLayout() end
         if frame.GSESideSave then frame.GSESideSave() end
     end)
@@ -2651,6 +2675,10 @@ end
 
 statsWidget:SetScript("OnSizeChanged", function()
     if statsWidget:IsShown() and not statsWidget.GSESideDetached then AnchorStatsWidget() end
+    -- During a live resize (this window's own drag, or the main window's drag
+    -- while docked) a throttled pump already drives LayoutStatsWidget; skip the
+    -- per-frame relayout here so resizing stays smooth.
+    if statsWidget.GSESideResizing or DebugFrame.resizing then return end
     if LayoutStatsWidget then LayoutStatsWidget() end
 end)
 
@@ -3281,6 +3309,9 @@ DebugFrame.ConfigureDebuggerSideWindow(hardwareWidget, hardwareLocation, 320, 36
 DebugFrame.RegisterDebuggerWindow(hardwareWidget)
 if GSE.RegisterUIScaleFrame then GSE.RegisterDebugUIScaleFrame(hardwareWidget) end
 hardwareWidget:HookScript("OnSizeChanged", function()
+    -- See statsWidget OnSizeChanged: a throttled pump drives the layout during
+    -- a live resize (own drag or the main's drag while docked); skip here.
+    if hardwareWidget.GSESideResizing or DebugFrame.resizing then return end
     if LayoutHardwareWidget then LayoutHardwareWidget() end
 end)
 DebugFrame:HookScript(
@@ -4540,11 +4571,40 @@ DebugFrame.DebugResizeButton:SetPoint("BOTTOMRIGHT", DebugFrame, "BOTTOMRIGHT", 
 DebugFrame.DebugResizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 DebugFrame.DebugResizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
 DebugFrame.DebugResizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+-- Live resize uses the same model as the Editor: a throttled (~50fps) OnUpdate
+-- pump on the grabber drives UpdateDebuggerLayout, with a whole-pixel coalesce
+-- so an idle / sub-pixel tick skips the relayout. Running the full layout on
+-- every raw OnSizeChanged frame was the resize lag.
+local DEBUG_LIVE_RESIZE_INTERVAL = 0.02
+local debugLiveResizeAccum = 0
+local debugLastResizeW, debugLastResizeH
 DebugFrame.DebugResizeButton:SetScript("OnMouseDown", function(_, button)
-    if button == "LeftButton" then DebugFrame:StartSizing("BOTTOMRIGHT") end
+    if button ~= "LeftButton" then return end
+    DebugFrame.resizing = true
+    debugLiveResizeAccum = 0
+    debugLastResizeW, debugLastResizeH = nil, nil
+    DebugFrame:StartSizing("BOTTOMRIGHT")
+    DebugFrame.DebugResizeButton:SetScript("OnUpdate", function(_, delta)
+        if not DebugFrame.resizing then
+            DebugFrame.DebugResizeButton:SetScript("OnUpdate", nil)
+            return
+        end
+        debugLiveResizeAccum = debugLiveResizeAccum + (delta or 0)
+        if debugLiveResizeAccum < DEBUG_LIVE_RESIZE_INTERVAL then return end
+        debugLiveResizeAccum = 0
+        local rw = math.floor((DebugFrame:GetWidth() or 0) + 0.5)
+        local rh = math.floor((DebugFrame:GetHeight() or 0) + 0.5)
+        if rw == debugLastResizeW and rh == debugLastResizeH then return end
+        debugLastResizeW, debugLastResizeH = rw, rh
+        if DebugFrame:IsShown() then DebugFrame.UpdateDebuggerLayout() end
+    end)
 end)
 DebugFrame.DebugResizeButton:SetScript("OnMouseUp", function()
+    DebugFrame.DebugResizeButton:SetScript("OnUpdate", nil)
     DebugFrame:StopMovingOrSizing()
+    DebugFrame.resizing = nil
+    -- Final settle after the throttled pump, regardless of the last tick.
+    if DebugFrame.UpdateDebuggerLayout then DebugFrame.UpdateDebuggerLayout() end
     if DebugFrame.SaveDebuggerLocation then DebugFrame:SaveDebuggerLocation() end
 end)
 
@@ -4959,6 +5019,21 @@ else
 end
 
 DebugFrame:SetScript("OnSizeChanged", function(self, width, height)
+    -- During a live resize drag the throttled OnUpdate pump on the grabber
+    -- drives UpdateDebuggerLayout (~50fps); skip the per-frame relayout here so
+    -- the resize stays smooth. SetResizeBounds enforces min/max during the drag.
+    -- Mirrors the Editor, whose OnSizeChanged returns while widget.resizing.
+    if self.resizing then
+        self.Width = width
+        self.Height = height
+        GSEOptions.debugWidth = width
+        GSEOptions.debugHeight = height
+        return
+    end
+    -- Outside a drag (programmatic SetSize, restore, screen change): clamp and
+    -- lay out immediately. ClampNumber rounds to an integer; if it changed the
+    -- size, SetSize re-fires this handler with the snapped value (SetSize works
+    -- when not actively sizing) and that pass runs UpdateDebuggerLayout.
     local clampedWidth = ClampNumber(width, DEBUG_UI.MIN_DEBUGGER_WIDTH, GetMaxDebuggerWidth(), DEBUG_UI.MIN_DEBUGGER_WIDTH)
     local clampedHeight = ClampNumber(height, DEBUG_UI.MIN_DEBUGGER_HEIGHT, GetMaxDebuggerHeight(), DEBUG_UI.MIN_DEBUGGER_HEIGHT)
     if clampedWidth ~= width or clampedHeight ~= height then
@@ -4973,6 +5048,10 @@ DebugFrame:SetScript("OnSizeChanged", function(self, width, height)
 end)
 
 DebugFrame:SetScript("OnHide", function(self)
+    -- Cancel any in-flight live-resize pump if the window hides mid-drag.
+    if DebugFrame.DebugResizeButton then DebugFrame.DebugResizeButton:SetScript("OnUpdate", nil) end
+    if self.StopMovingOrSizing then self:StopMovingOrSizing() end
+    self.resizing = nil
     self:SaveDebuggerLocation()
 end)
 
