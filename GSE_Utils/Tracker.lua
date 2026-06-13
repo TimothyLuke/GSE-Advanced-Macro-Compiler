@@ -240,6 +240,7 @@ local function EnsureSequenceIconFrameOptions()
     if opts.Orientation == nil then opts.Orientation = "VERTICAL" end
     if opts.ShowTrackerText == nil then opts.ShowTrackerText = true end
     if opts.Linked == nil then opts.Linked = true end
+    if opts.ShowPlayerStatus == nil then opts.ShowPlayerStatus = true end
     if opts.ShowSequenceName == nil then opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName end
     if opts.ShowHardwareEvents == nil then opts.ShowHardwareEvents = true end
     if opts.ShowActivationKey == nil then opts.ShowActivationKey = true end
@@ -629,15 +630,23 @@ sequenceTextBackground:Hide()
 local SequenceTextLines = {}
 local function EnsureSequenceTextLine(index)
     if not SequenceTextLines[index] then
-        local line = SequenceIconTextFrame:CreateFontString(nil, "OVERLAY", "GameTooltipText")
+        -- Follow whatever font the user is using, like the rest of the addon:
+        -- the face is pulled from the live GameFontHighlightSmall object on every
+        -- (re)apply, so skins such as ElvUI -- which replace the GameFont* objects
+        -- globally -- are picked up. A subtle drop shadow, no heavy OUTLINE. The
+        -- user-resizable FontSize/LineHeight are preserved.
+        local line = SequenceIconTextFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         line:SetJustifyH("LEFT")
         line:SetJustifyV("TOP")
         line:SetWidth(260)
         line:SetHeight(GSE.SequenceIconTextResize.LineHeight)
         if line.GetFont and line.SetFont then
-            local font = line:GetFont()
-            if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "OUTLINE") end
+            local font = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont())
+                or (_G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont())
+            if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "") end
         end
+        if line.SetShadowOffset then line:SetShadowOffset(1, -1) end
+        if line.SetShadowColor then line:SetShadowColor(0, 0, 0, 1) end
         if line.SetWordWrap then line:SetWordWrap(false) end
         if line.SetNonSpaceWrap then line:SetNonSpaceWrap(false) end
         SequenceTextLines[index] = line
@@ -652,10 +661,8 @@ local placeholderIcon = SequenceIconFrame:CreateTexture(nil, "ARTWORK")
 placeholderIcon:SetAlpha(0.65)
 function GSE.ApplyTrackerIconTextOutline(fontString)
     if not fontString then return end
-    if fontString.GetFont and fontString.SetFont then
-        local font, size = fontString:GetFont()
-        if font and size then fontString:SetFont(font, size, "OUTLINE") end
-    end
+    -- Match the rest of the addon's windowed text: a subtle drop shadow, no
+    -- heavy OUTLINE. (Name kept for its existing call sites.)
     if fontString.SetShadowOffset then fontString:SetShadowOffset(1, -1) end
     if fontString.SetShadowColor then fontString:SetShadowColor(0, 0, 0, 1) end
 end
@@ -700,7 +707,7 @@ do
     -- Apply larger font size (default GameFontNormalSmall is ~10pt; 14pt
     -- gives a much more readable label across 3 lines on the 100x100 icon).
     local castFont = successfulCastLabel.GetFont and successfulCastLabel:GetFont()
-    if castFont then successfulCastLabel:SetFont(castFont, 15, "OUTLINE") end
+    if castFont then successfulCastLabel:SetFont(castFont, 15) end
 end
 successfulCastLabel:SetJustifyH("CENTER")
 successfulCastLabel:SetJustifyV("MIDDLE")
@@ -2345,8 +2352,9 @@ local function LayoutSequenceTextLines(textWidth)
         line:SetWidth(textWidth)
         line:SetHeight(GSE.SequenceIconTextResize.LineHeight)
         if line.GetFont and line.SetFont then
-            local font = line:GetFont()
-            if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "OUTLINE") end
+            local font = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont())
+                or (_G.GameFontHighlightSmall and _G.GameFontHighlightSmall:GetFont())
+            if font then line:SetFont(font, GSE.SequenceIconTextResize.FontSize, "") end
         end
         if line.SetWordWrap then line:SetWordWrap(false) end
         if line.SetNonSpaceWrap then line:SetNonSpaceWrap(false) end
@@ -2515,7 +2523,7 @@ UpdateSequenceText = function(sequence, mods, placeholderText)
         spamKey, spamKeyActive = GetActiveSpamKey(currentSequence)
     end
 
-    if not placeholderText then
+    if not placeholderText and currentOptions.ShowPlayerStatus ~= false then
         table.insert(lines, "|cffffd100Status:|r " .. FormatCombatState())
     end
 

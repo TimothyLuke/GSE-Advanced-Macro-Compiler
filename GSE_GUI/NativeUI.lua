@@ -67,6 +67,7 @@ local STYLE = {
     dropdownListInset = 5,
     dropdownListScrollInset = 10,
     dropdownListScrollReserve = 20,
+    dropdownListDefaultMaxVisible = 20,
     dropdownCheckSize = 14,
     dropdownTextLeft = 28,
     dropdownArrowSize = 22,
@@ -619,15 +620,18 @@ local function setModernSlimScrollBarState(scrollbar, state)
 
     local thumb = scrollbar.GSEModernScrollBarThumb or getScrollBarThumb(scrollbar)
 
-    -- Pull the thumb accent from EllesmereUI.ELLESMERE_GREEN (the user's
-    -- chosen accent) when EUI is driving the look; fall back to the modern
-    -- skin's class colour otherwise. Without this branch the scrollbars
-    -- showed up blue against EUI's accent green / class teal.
+    -- Pull the thumb accent from the active host UI (EllesmereUI's chosen
+    -- accent, or ElvUI's value/class colour) when one is driving the look;
+    -- fall back to the modern skin's class colour otherwise. Without this
+    -- branch the scrollbars showed up blue against the host accent. Shares
+    -- GSE.Skin.HostAccentColor so every host-accent site reads one source.
     local function euiAccent(alpha)
-        local EUI = _G.EllesmereUI
-        if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
-            local c = EUI.ELLESMERE_GREEN
-            return {c.r or 0, c.g or 0.55, c.b or 0.55, alpha}
+        local r, g, b
+        if GSE.Skin and GSE.Skin.HostAccentColor then
+            r, g, b = GSE.Skin.HostAccentColor()
+        end
+        if r then
+            return {r, g, b, alpha}
         end
         return nil
     end
@@ -795,11 +799,15 @@ local function shouldSubdueElvUIAssetIcon(button, path)
     if iconPath:find("interface\\addons\\gse_gui\\assets\\macro.png", 1, true) then return false end
     if iconPath:find("interface\\addons\\gse_gui\\assets\\variables.png", 1, true) then return false end
     if button and button.GSEElvUIKeepIconFullColor then return false end
-    return button and shouldUseElvUISkin() and isGSEAssetTexture(path) and button.GSEElvUISubduedIcon ~= false
+    return button and (shouldUseElvUISkin() or hasExternalSkinProvider()) and isGSEAssetTexture(path) and button.GSEElvUISubduedIcon ~= false
 end
 
 local function applyElvUIIconAssetSkin(button, texture, path)
-    if button and button.GSEElvUIIconChromeSuppressed then
+    -- Under an external skin provider (EUI/ElvUI) the provider paints the icon
+    -- FRAME chrome itself, so take the desaturate-only path here: subdue the
+    -- GSE-asset icon texture (matching the GSE-Modern look) without stacking
+    -- GSE's own chrome on top of the provider's.
+    if (button and button.GSEElvUIIconChromeSuppressed) or hasExternalSkinProvider() then
         if shouldSubdueElvUIAssetIcon(button, path) then
             applyElvUISubduedIconState(button, texture, button.GSEElvUISubduedIconMouseOver)
         else
@@ -893,7 +901,13 @@ local function setElvUITextButtonHover(button, hovered)
         end
         local base = text.GSETextButtonBaseFont
         if base then
-            text:SetFont(base[1], hovered and (base[2] * ELVUI_TEXT_BUTTON_HOVER_SCALE) or base[2], base[3])
+            -- Keep the active global font on hover/leave too: the captured base
+            -- face is the load-time (Blizzard) font, so re-applying it here is
+            -- what reverted button/tree text on mouseover. Use HostFont for the
+            -- face when one is active (nil under Native -> keep the base face),
+            -- and still apply the hover size scaling.
+            local face = (GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont()) or base[1]
+            text:SetFont(face, hovered and (base[2] * ELVUI_TEXT_BUTTON_HOVER_SCALE) or base[2], base[3])
             return
         end
     end
@@ -998,6 +1012,18 @@ local function applyElvUICloseButtonSkin(button)
     if button.GSEElvUICloseText then button.GSEElvUICloseText:Hide() end
 end
 local function applyElvUIWindowSkin(frame, titleBar, title)
+    -- Make GSE windows adopt the active global font (whatever the user's UI is
+    -- using, any skin). Done as an OnShow hook (installed once) so it also
+    -- catches content widgets added after the window is first skinned; the
+    -- immediate call covers chrome present now. Placed before the early-return
+    -- below on purpose so it runs under every skin, not just the ElvUI path.
+    if frame and GSE.Skin and GSE.Skin.ApplyHostFontToTree then
+        if not frame.GSEHostFontHooked and frame.HookScript then
+            frame.GSEHostFontHooked = true
+            frame:HookScript("OnShow", function(self) GSE.Skin.ApplyHostFontToTree(self) end)
+        end
+        GSE.Skin.ApplyHostFontToTree(frame)
+    end
     if not shouldUseElvUISkin() then return end
     hideFrameTextures(frame)
     applyBackdrop(frame, ELVUI_SKIN.backdrop, {0, 0, 0, 0}, {0, 0, 0, 0})
@@ -1026,7 +1052,9 @@ local function applyElvUIWindowSkin(frame, titleBar, title)
             "TOPLEFT",
             "TOPLEFT",
             0,
-            0,
+            1,  -- top edge up 1px (was 0): nudges the class-border band's top
+                -- anchor up so the top border line sits 1px higher. BOTTOMRIGHT
+                -- (below) is unchanged, so only the top edge moves.
             "BOTTOMRIGHT",
             "BOTTOMRIGHT",
             0,
@@ -1073,58 +1101,13 @@ local function applyNormalAccentWindowSkin(frame)
         return
     end
 
-    local accent = getNormalAccentColor(1)
-    if accent then
-        if frame.GSENormalAccentOuterBorder then frame.GSENormalAccentOuterBorder:Hide() end
-
-        local overlay = frame.GSENormalAccentBorderOverlay
-        if not overlay then
-            overlay = CreateFrame("Frame", nil, frame)
-            overlay:EnableMouse(false)
-            frame.GSENormalAccentBorderOverlay = overlay
-
-            overlay.top = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.bottom = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.left = overlay:CreateTexture(nil, "OVERLAY")
-            overlay.right = overlay:CreateTexture(nil, "OVERLAY")
-        end
-
-        local leftOffset = frame.GSEUsesBlizzardPanelTemplate and (WINDOW_LEFT_VISUAL_ALLOWANCE - 7) or -1
-        overlay:ClearAllPoints()
-        overlay:SetPoint("TOPLEFT",     frame, "TOPLEFT",     leftOffset,   1)
-        overlay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -leftOffset, -1)
-        if overlay.SetFrameStrata and frame.GetFrameStrata then overlay:SetFrameStrata(frame:GetFrameStrata()) end
-        if overlay.SetFrameLevel and frame.GetFrameLevel then overlay:SetFrameLevel((frame:GetFrameLevel() or 1) + 12) end
-
-        local borderSize = 2
-        overlay.top:ClearAllPoints()
-        overlay.top:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
-        overlay.top:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
-        overlay.top:SetHeight(borderSize)
-
-        overlay.bottom:ClearAllPoints()
-        overlay.bottom:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
-        overlay.bottom:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
-        overlay.bottom:SetHeight(borderSize)
-
-        overlay.left:ClearAllPoints()
-        overlay.left:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
-        overlay.left:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
-        overlay.left:SetWidth(borderSize)
-
-        overlay.right:ClearAllPoints()
-        overlay.right:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
-        overlay.right:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
-        overlay.right:SetWidth(borderSize)
-
-        colorTexture(overlay.top, accent)
-        colorTexture(overlay.bottom, accent)
-        colorTexture(overlay.left, accent)
-        colorTexture(overlay.right, accent)
-        overlay:Show()
-        return
-    end
-
+    -- Outside class-color border REMOVED for the Native skin: the coloured
+    -- outline didn't sit well against Blizzard's native frame chrome, so we no
+    -- longer draw the 4-side GSENormalAccentBorderOverlay here. We just make
+    -- sure any previously-created border is hidden. (The class/custom accent
+    -- colour still applies to button/checkbox text and the slim scrollbar
+    -- elsewhere; only the window outline is gone. The Modern skin's own
+    -- borders are unaffected — they're handled by applyElvUIWindowSkin.)
     if frame.GSENormalAccentOuterBorder then
         frame.GSENormalAccentOuterBorder:Hide()
     end
@@ -1260,6 +1243,21 @@ local function styleBlizzardPanelFrame(frame)
 
     if frame.CloseButton then
         styleCloseButton(frame.CloseButton, frame)
+        -- Under an external provider (EUI/ElvUI) the GSE-Modern close-button
+        -- subdue (applyElvUICloseButtonSkin, gated shouldUseElvUISkin) never
+        -- runs, so the red close.png X stayed full-colour against the
+        -- otherwise-subdued modern chrome on every panel window. Match it
+        -- here: dim the normal + pushed texture, keep the hover highlight
+        -- bright. GSE-Modern keeps its own path (hasExternalSkinProvider is
+        -- false there).
+        if hasExternalSkinProvider() then
+            local cb = frame.CloseButton
+            subdueElvUICloseTexture(cb.GetNormalTexture and cb:GetNormalTexture(), 0.78, 0.36)
+            subdueElvUICloseTexture(cb.GetPushedTexture and cb:GetPushedTexture(), 0.95, 0.70)
+            if cb.GetHighlightTexture and cb:GetHighlightTexture() then
+                cb:GetHighlightTexture():SetAlpha(1)
+            end
+        end
         if frame.CloseButton.SetFrameLevel and frame.GetFrameLevel then
             local titleLevel = frame.TitleContainer and frame.TitleContainer.GetFrameLevel and frame.TitleContainer:GetFrameLevel()
             frame.CloseButton:SetFrameLevel((titleLevel or frame:GetFrameLevel()) + 20)
@@ -2106,6 +2104,9 @@ local function createFrame()
     -- preempted during input) and runs independent of Editor.lua's own scheduler.
     local LIVE_RESIZE_INTERVAL = 0.02
     local liveResizeAccum = 0
+    -- Whole-pixel coalesce: skip the DoLayout call when the rendered size
+    -- hasn't changed since the last tick (cursor moving sub-pixel or hovering).
+    local lastResizeW, lastResizeH
 
     resizeButton:SetScript(
         "OnMouseDown",
@@ -2113,6 +2114,7 @@ local function createFrame()
             if button == "LeftButton" and widget.resizable then
                 widget.resizing = true
                 liveResizeAccum = 0
+                lastResizeW, lastResizeH = nil, nil
                 widget:Fire("OnResizeStart", widget.width, widget.height)
                 frame:StartSizing("BOTTOMRIGHT")
                 resizeButton:SetScript("OnUpdate", function(_, delta)
@@ -2127,6 +2129,12 @@ local function createFrame()
                     local w, h = frame:GetWidth(), frame:GetHeight()
                     widget.width = w
                     widget.height = h
+                    local rw = math.floor(w + 0.5)
+                    local rh = math.floor(h + 0.5)
+                    if rw == lastResizeW and rh == lastResizeH then
+                        return  -- no change this tick; skip the relayout
+                    end
+                    lastResizeW, lastResizeH = rw, rh
                     if widget.frame and widget.frame:IsShown() then
                         widget:DoLayout()
                     end
@@ -3012,7 +3020,14 @@ local function createIcon()
 
     function widget:SetElvUISubduedIcon(enabled)
         button.GSEElvUISubduedIcon = enabled and true or false
-        if shouldUseElvUISkin() then
+        -- Re-apply under an external provider too. shouldUseElvUISkin() is
+        -- false when EUI/ElvUI is active, so without the union this set the
+        -- flag but never re-skinned the icon: toolbar buttons re-coloured by
+        -- their enable/disable refresh (Pause/Embed) stayed bright, and icons
+        -- opted OUT via SetElvUISubduedIcon(false) (the GSE: Resources links)
+        -- stayed subdued. The re-apply lets shouldSubdueElvUIAssetIcon honour
+        -- the flag in both directions.
+        if shouldUseElvUISkin() or hasExternalSkinProvider() then
             applyElvUIIconAssetSkin(button, texture, button.GSELastIconPath)
         end
     end
@@ -3421,7 +3436,7 @@ local function createDropdown()
         end
         applyBackdrop(
             chrome,
-            shouldUseElvUISkin() and ELVUI_SKIN.backdrop or {
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.backdrop or {
                 bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
                 edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
                 tile = true,
@@ -3429,8 +3444,8 @@ local function createDropdown()
                 edgeSize = 12,
                 insets = {left = STYLE.padXXS, right = STYLE.padXXS, top = STYLE.padXXS, bottom = STYLE.padXXS}
             },
-            shouldUseElvUISkin() and ELVUI_SKIN.buttonBg or {0, 0, 0, 0.86},
-            shouldUseElvUISkin() and getElvUIBorderColor(ELVUI_SKIN.mutedBorder) or {0.62, 0.62, 0.62, 1}
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.buttonBg or {0, 0, 0, 0.86},
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and getElvUIBorderColor(ELVUI_SKIN.mutedBorder) or {0.62, 0.62, 0.62, 1}
         )
         button.dropdownChrome = chrome
 
@@ -3450,6 +3465,14 @@ local function createDropdown()
         arrow:SetScript("OnClick", function() button:Click() end)
         arrow:SetScript("OnEnter", function() widget:Fire("OnEnter") end)
         arrow:SetScript("OnLeave", function() widget:Fire("OnLeave") end)
+        if shouldUseElvUISkin() or hasExternalSkinProvider() then
+            -- Flat chevron matches the modern/EUI chrome; the gold Blizzard
+            -- ScrollDown glyph reads as non-modern against the dark dropdown.
+            local chevron = "Interface\\AddOns\\GSE_GUI\\Assets\\down-chevron.png"
+            arrow:SetNormalTexture(chevron)
+            arrow:SetPushedTexture(chevron)
+            arrow:SetDisabledTexture(chevron)
+        end
         button.dropdownArrow = arrow
 
         local text = button:GetFontString()
@@ -3556,7 +3579,12 @@ local function createDropdown()
 
         local nativeDropdown = widget.nativeDropdown
         local arrowButton = nativeDropdownMenuAnchor()
-        local useElvUI = shouldUseElvUISkin()
+        -- Native (UIDropDownMenuTemplate) dropdowns must take the modern
+        -- path under an external provider too. shouldUseElvUISkin() is false
+        -- when EUI/ElvUI is active, which left the native dropdown's grey
+        -- Blizzard 3-slice chrome + gold arrow showing under the EUI skin
+        -- (the custom-styled path was already migrated; this is the native one).
+        local useElvUI = shouldUseElvUISkin() or hasExternalSkinProvider()
         setNativeDropdownTextureAlpha(nativeDropdown, useElvUI and 0 or 1)
         applyNativeDropdownArrow(arrowButton, useElvUI)
 
@@ -3720,7 +3748,7 @@ local function createDropdown()
         listFrame:EnableMouse(true)
         applyBackdrop(
             listFrame,
-            shouldUseElvUISkin() and ELVUI_SKIN.backdrop or {
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.backdrop or {
                 bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
                 edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
                 tile = true,
@@ -3728,8 +3756,8 @@ local function createDropdown()
                 edgeSize = 32,
                 insets = {left = 11, right = 12, top = 12, bottom = 11}
             },
-            shouldUseElvUISkin() and ELVUI_SKIN.insetBg or {0, 0, 0, 0.95},
-            shouldUseElvUISkin() and getElvUIBorderColor(ELVUI_SKIN.border) or {1, 1, 1, 1}
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and ELVUI_SKIN.insetBg or {0, 0, 0, 0.95},
+            (shouldUseElvUISkin() or hasExternalSkinProvider()) and getElvUIBorderColor(ELVUI_SKIN.border) or {1, 1, 1, 1}
         )
         listFrame.buttons = {}
 
@@ -3781,11 +3809,15 @@ local function createDropdown()
         local listFrame = ensureDropdownList()
         local rowHeight = STYLE.dropdownListRowHeight
         local order = widget.order or {}
-        local maxVisibleItems = tonumber(widget.maxVisibleItems)
-        local visibleCount = maxVisibleItems and math.min(#order, math.max(1, maxVisibleItems)) or #order
-        local needsScroll = maxVisibleItems and #order > visibleCount
+        -- Cap the visible rows even when the caller set no explicit
+        -- maxVisibleItems, so a long list (e.g. the ~40-entry Spec/Class ID
+        -- dropdown) scrolls inside a bounded popup instead of growing taller
+        -- than the screen. An explicit SetMaxVisibleItems still takes priority.
+        local effectiveMaxVisible = tonumber(widget.maxVisibleItems) or STYLE.dropdownListDefaultMaxVisible
+        local visibleCount = math.min(#order, math.max(1, effectiveMaxVisible))
+        local needsScroll = #order > visibleCount
         local scrollbarReserve = needsScroll and STYLE.dropdownListScrollReserve or 0
-        local listInset = maxVisibleItems and STYLE.dropdownListScrollInset or STYLE.dropdownListInset
+        local listInset = (widget.maxVisibleItems or needsScroll) and STYLE.dropdownListScrollInset or STYLE.dropdownListInset
         if not widget.dropdownMeasureText then
             widget.dropdownMeasureText = UIParent:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
         end
@@ -4075,7 +4107,15 @@ local function createDropdown()
         if value then
             self.useDropdownList = false
             if applyNativeDropdownStyle(true) then
-                if self.maxVisibleItems then
+                -- Under Modern/EUI, route the open menu through the custom modern
+                -- list instead of Blizzard's grey/gold native DropDownList1:
+                -- installNativeDropdownOverlay intercepts the click, closes the
+                -- native menu, and opens the GSE listFrame (already modern-skinned,
+                -- rendering the same radio/checked selection). The closed box keeps
+                -- its native chrome (positionElvUINativeDropdownChrome); this only
+                -- changes the popup so it matches the box. Native skin keeps the
+                -- stock popup. (maxVisibleItems already used this path.)
+                if self.maxVisibleItems or shouldUseElvUISkin() or hasExternalSkinProvider() then
                     self.useDropdownList = true
                     installNativeDropdownOverlay()
                 end
@@ -4582,17 +4622,29 @@ local function updateTreeButton(button, line, selected, expanded)
     -- band behind the currently-selected list item (e.g. inventory "All Items").
     -- Match that here when an external skin provider is active.
     if selected and hasExternalSkinProvider() then
-        local euiTable = _G.EllesmereUI
         local r, g, b = 0.2, 0.5, 0.6
-        if type(euiTable) == "table" and type(euiTable.ELLESMERE_GREEN) == "table" then
-            local c = euiTable.ELLESMERE_GREEN
-            r, g, b = c.r or r, c.g or g, c.b or b
+        local hr, hg, hb
+        if GSE.Skin and GSE.Skin.HostAccentColor then
+            hr, hg, hb = GSE.Skin.HostAccentColor()
+        end
+        if hr then
+            r, g, b = hr, hg, hb
         end
         button.bg:SetColorTexture(r, g, b, 0.22)
     else
         button.bg:SetColorTexture(0, 0, 0, 0)
     end
     button.text:SetFontObject(level <= 2 and "GameFontNormalLarge" or "GameFontHighlight")
+    -- SetFontObject above resets the face to a Blizzard font on every refresh;
+    -- under an addon skin re-apply the host font (keeping the object's size) so
+    -- tree rows match the skin instead of reverting to the default face.
+    if GSE.Skin and GSE.Skin.HostFont then
+        local hostFont = GSE.Skin.HostFont()
+        if hostFont then
+            local _, size, flags = button.text:GetFont()
+            if size then button.text:SetFont(hostFont, size, flags) end
+        end
+    end
     local lineText = textValue(line.text)
     button.text:SetText(line.disabled and ("|cff808080" .. lineText .. FONT_COLOR_CODE_CLOSE) or lineText)
     button:EnableMouse(not line.disabled)

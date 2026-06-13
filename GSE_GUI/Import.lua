@@ -68,8 +68,28 @@ local function getImportAccent(alpha)
   return { MODERN_IMPORT_ACCENT[1], MODERN_IMPORT_ACCENT[2], MODERN_IMPORT_ACCENT[3], alpha or MODERN_IMPORT_ACCENT[4] }
 end
 
+-- Blizzard panel templates (ButtonFrameTemplate / BasicFrameTemplateWithInset,
+-- used by GSE.UI's Frame widget via createBlizzardPanelFrame) and any frame
+-- created without BackdropTemplate expose no SetBackdrop method, so the old
+-- `frame.SetBackdrop` guard bailed and left the window + content panel
+-- transparent under the modern skin (buttons still painted because they use a
+-- CreateTexture chrome, not SetBackdrop). Mix in BackdropTemplateMixin first,
+-- the same pattern GSE_GUI/Skin.lua:paintBackdrop already uses, so the fill
+-- actually applies. The window, its titlebar and the content panel all paint
+-- through here.
+local function ensureImportBackdropMixin(frame)
+  if not frame then return end
+  if type(frame.SetBackdrop) == "function" then return end
+  if _G.BackdropTemplateMixin then
+    Mixin(frame, _G.BackdropTemplateMixin)
+    if type(frame.OnBackdropLoaded) == "function" then frame:OnBackdropLoaded() end
+  end
+end
+
 local function applyModernImportBackdrop(frame, bg, border)
-  if not (frame and frame.SetBackdrop) then return end
+  if not frame then return end
+  ensureImportBackdropMixin(frame)
+  if type(frame.SetBackdrop) ~= "function" then return end
   frame:SetBackdrop(MODERN_IMPORT_BACKDROP)
   frame:SetBackdropColor(unpack(bg or MODERN_IMPORT_BG))
   frame:SetBackdropBorderColor(unpack(border or MODERN_IMPORT_BORDER))
@@ -322,7 +342,22 @@ local function styleImportWindow()
     if importframe.titletext and importframe.titletext.SetTextColor then
       importframe.titletext:SetTextColor(1, 1, 1, 1)
     end
+    -- The ButtonFrameTemplate outer frame does not reliably render a SetBackdrop
+    -- fill -- the title bar and the inner InlineGroup panels do (real
+    -- BackdropTemplate frames), which is why only the window BODY showed
+    -- through. Hiding GSEBodyFill (the panel-template body fill) on top of that
+    -- left the body bare. Paint the body with a CreateTexture fill instead --
+    -- the same reliable approach the import button chrome uses -- spanning the
+    -- whole frame. Marked GSEImportOwned so hide/showImportTextures manage it
+    -- with the rest of the import chrome on skin toggle.
     if importframe.frame.GSEBodyFill then importframe.frame.GSEBodyFill:Hide() end
+    if not importframe.frame.GSEImportBodyFill then
+      importframe.frame.GSEImportBodyFill = importframe.frame:CreateTexture(nil, "BACKGROUND")
+      importframe.frame.GSEImportBodyFill.GSEImportOwned = true
+    end
+    importframe.frame.GSEImportBodyFill:SetAllPoints(importframe.frame)
+    importframe.frame.GSEImportBodyFill:SetColorTexture(unpack(MODERN_IMPORT_BG))
+    importframe.frame.GSEImportBodyFill:Show()
     return
   end
 

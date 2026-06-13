@@ -77,17 +77,6 @@ local RESOURCES_BUTTON_MIN_WIDTH = 190
 local RESOURCES_BUTTON_TEXT = addonName .. "|cFFFFFFFF:|r |cFFFFD100Resources|r"
 local RESOURCES_BUTTON_TEXT_HOVER = RESOURCES_BUTTON_TEXT
 
-local function BringSettingsPanelForward()
-    if not SettingsPanel then return end
-
-    if ShowUIPanel then pcall(ShowUIPanel, SettingsPanel) end
-    if SettingsPanel.Open then pcall(SettingsPanel.Open, SettingsPanel) end
-    if SettingsPanel.Show and (not SettingsPanel.IsShown or not SettingsPanel:IsShown()) then
-        pcall(SettingsPanel.Show, SettingsPanel)
-    end
-    if SettingsPanel.SetFrameStrata then SettingsPanel:SetFrameStrata("FULLSCREEN_DIALOG") end
-    if SettingsPanel.Raise then SettingsPanel:Raise() end
-end
 
 function GSE.OpenRegisteredOptionsPanel(editor)
     if GSE.GUI then GSE.GUI.optionsEditor = editor end
@@ -124,13 +113,16 @@ function GSE.OpenRegisteredOptionsPanel(editor)
     if GSE.LegacyOptionsPanel and InterfaceOptionsFrame_OpenToCategory then
         pcall(InterfaceOptionsFrame_OpenToCategory, GSE.LegacyOptionsPanel)
         pcall(InterfaceOptionsFrame_OpenToCategory, GSE.LegacyOptionsPanel)
-        BringSettingsPanelForward()
         return true
     end
 
     if Settings and Settings.OpenToCategory then
+        -- Let the stock Settings UI open, show and layer the panel itself.
+        -- We only navigate to our category -- no manual ShowUIPanel/Show/Raise
+        -- or strata override, since forcing those put the panel above its own
+        -- dropdown popout menus (they render at DIALOG) and made the menus
+        -- appear behind the panel.
         local opened = pcall(Settings.OpenToCategory, GSE.MenuCategoryID)
-        BringSettingsPanelForward()
         if SettingsPanel and SettingsPanel.OpenToCategory then
             pcall(SettingsPanel.OpenToCategory, SettingsPanel, GSE.MenuCategoryID)
         end
@@ -1385,12 +1377,20 @@ local function AddAppearanceOptions(optionsCategory)
             return "NATIVE"
         end
         local function SetValue(val)
+            -- Save the choice only; do NOT swap any skin component live. The
+            -- whole skin (provider, frames, menu logo, fonts) changes together
+            -- on reload so there's never a half-swapped UI. If the user declines
+            -- the reload prompt, nothing visual changed and the session stays on
+            -- the current skin (the saved choice simply applies next reload).
             GSEOptions.SkinMode = val
             -- Keep the legacy boolean in sync for downgrade safety (older GSE
             -- builds still read GSEOptions.UseModernSkin).
             GSEOptions.UseModernSkin = (val == "MODERN")
-            -- Live-swap the menu logo so it picks up the new skin without /reload.
-            if GSE.GUI and GSE.GUI.RefreshMenuLogo then GSE.GUI.RefreshMenuLogo() end
+            -- Prompt the reload that applies it all at once. SetValue only fires
+            -- on an actual change. Uses the migrated GSE popup, not the retired
+            -- Blizzard StaticPopupDialogs path. The popup renders in the current
+            -- skin because nothing has swapped yet.
+            GSE.GUICall("GUIConfirmReloadUI")
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "charSkinMode", Settings.VarType.String, "Skin", "NATIVE", GetValue, SetValue)
         local function GetOptions()
@@ -2168,7 +2168,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.ShiftPause == true end
             local function SetValue(val)
                 GSEOptions.ShiftPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnShift", Settings.VarType.Boolean, L["Pause Sequences While Shift Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Shift makes GSE send an empty macro and stops the sequence from advancing until Shift is released."])
@@ -2177,7 +2177,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.AltPause == true end
             local function SetValue(val)
                 GSEOptions.AltPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnAlt", Settings.VarType.Boolean, L["Pause Sequences While Alt Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Alt makes GSE send an empty macro and stops the sequence from advancing until Alt is released."])
@@ -2186,7 +2186,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.CtrlPause == true end
             local function SetValue(val)
                 GSEOptions.CtrlPause = val
-                StaticPopup_Show("GSE_ConfirmReloadUIDialog")
+                GSE.GUICall("GUIConfirmReloadUI")
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "pauseOnCtrl", Settings.VarType.Boolean, L["Pause Sequences While Ctrl Is Held"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."])
@@ -2277,23 +2277,6 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(troubleOptions, setting, "Master on/off switch for the GSE Tracker (sequence icons, text panel, successful cast, assisted highlight). Turning this off hides every tracker frame.")
         end
         do
-            local function GetValue() return EnsureSequenceIconFrameOptions().SingleIcon == true end
-            local function SetValue(val)
-                local opts = EnsureSequenceIconFrameOptions()
-                opts.SingleIcon = val == true
-                if opts.SingleIcon and opts.IconCount and opts.IconCount > 1 then
-                    if GSE.SetSequenceIconFrameIconCount then
-                        GSE.SetSequenceIconFrameIconCount(1)
-                    else
-                        opts.IconCount = 1
-                    end
-                end
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerSingleIcon", Settings.VarType.Boolean, "Single Icon", false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Lock the Tracker preview to a single icon (the next upcoming spell). When OFF the preview shows up to 10 icons.")
-        end
-        do
             local function GetValue() return EnsureSequenceIconFrameOptions().PreserveScaleOnZoom == true end
             local function SetValue(val)
                 EnsureSequenceIconFrameOptions().PreserveScaleOnZoom = val == true
@@ -2342,6 +2325,15 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "showTrackerText", Settings.VarType.Boolean, "GSE Tracker Text", true, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, "Show the Tracker text panel (Status / Sequence Name / Activation Key / ModKey / Casts / Step / Blk / Hardware Events).")
+        end
+        do
+            local function GetValue() return EnsureSequenceIconFrameOptions().ShowPlayerStatus ~= false end
+            local function SetValue(val)
+                EnsureSequenceIconFrameOptions().ShowPlayerStatus = val == true
+                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "showPlayerStatus", Settings.VarType.Boolean, "Player Status", true, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "Show the Status line (the player's combat status: Combat / No Combat) in the Tracker text panel.")
         end
         do
             local function GetValue() return EnsureSequenceIconFrameOptions().ShowSequenceName ~= false end
@@ -2422,21 +2414,6 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "printKeyPressModifiers", Settings.VarType.Boolean, L["Print Active Modifiers on Click"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each sequence keypress."])
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().IconCount end
-            local function SetValue(val)
-                if GSE.SetSequenceIconFrameIconCount then
-                    GSE.SetSequenceIconFrameIconCount(val)
-                else
-                    EnsureSequenceIconFrameOptions().IconCount = ClampNumber(val, 1, 10, 10)
-                    if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "iconPreviewCount", Settings.VarType.Number, "Preview Icon Count", 10, GetValue, SetValue)
-            local options = Settings.CreateSliderOptions(1, 10, 1)
-            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-            Settings.CreateSlider(troubleOptions, setting, options, "How many recent sequence icons to keep visible.")
         end
         -- Tracker Frame Scale: scales the three on-screen tracker frames
         -- (SC Icon, Sequence Icon Scroll, Tracker Text) together as one
