@@ -240,6 +240,7 @@ local function EnsureSequenceIconFrameOptions()
     if opts.Orientation == nil then opts.Orientation = "VERTICAL" end
     if opts.ShowTrackerText == nil then opts.ShowTrackerText = true end
     if opts.Linked == nil then opts.Linked = true end
+    if opts.ShowPlayerStatus == nil then opts.ShowPlayerStatus = true end
     if opts.ShowSequenceName == nil then opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName end
     if opts.ShowHardwareEvents == nil then opts.ShowHardwareEvents = true end
     if opts.ShowActivationKey == nil then opts.ShowActivationKey = true end
@@ -2515,7 +2516,7 @@ UpdateSequenceText = function(sequence, mods, placeholderText)
         spamKey, spamKeyActive = GetActiveSpamKey(currentSequence)
     end
 
-    if not placeholderText then
+    if not placeholderText and currentOptions.ShowPlayerStatus ~= false then
         table.insert(lines, "|cffffd100Status:|r " .. FormatCombatState())
     end
 

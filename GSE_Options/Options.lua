@@ -2340,6 +2340,15 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(troubleOptions, setting, "Show the Tracker text panel (Status / Sequence Name / Activation Key / ModKey / Casts / Step / Blk / Hardware Events).")
         end
         do
+            local function GetValue() return EnsureSequenceIconFrameOptions().ShowPlayerStatus ~= false end
+            local function SetValue(val)
+                EnsureSequenceIconFrameOptions().ShowPlayerStatus = val == true
+                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "showPlayerStatus", Settings.VarType.Boolean, "Player Status", true, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "Show the Status line (the player's combat status: Combat / No Combat) in the Tracker text panel.")
+        end
+        do
             local function GetValue() return EnsureSequenceIconFrameOptions().ShowSequenceName ~= false end
             local function SetValue(val)
                 EnsureSequenceIconFrameOptions().ShowSequenceName = val == true
