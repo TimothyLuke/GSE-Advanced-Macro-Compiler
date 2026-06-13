@@ -871,6 +871,7 @@ L["Pulse"] = true
 L["Strobe"] = true
 L["Throb"] = true
 L["Use GSE's Modern interface skin. This does not require ElvUI."] = true
+L["Native uses GSE's own interface. Modern uses GSE's dark skin and does not require ElvUI. The third option, shown only when ElvUI or EllesmereUI is installed, matches that addon's look."] = true
 L["When enabled, holding the matching modifier sends an empty macro instead of advancing the sequence step."] = true
 L["When enabled, the focused block's empty areas (outside the macro text box) get a soft fill in the rail color so you can spot it at a glance. Disable to keep only the proc-pulsed border around the focused block — useful if the tint feels distracting while reading or editing."] = true
 
