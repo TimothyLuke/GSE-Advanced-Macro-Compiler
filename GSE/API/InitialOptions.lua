@@ -5,14 +5,6 @@ if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("End Patrons") end
 
 local MODERN_CUSTOM_COLOR_DEFAULT = {r = 0.00, g = 0.44, b = 0.87}
 
-local function ClampColorComponent(value, fallback)
-    value = tonumber(value)
-    if value == nil then value = fallback or 1 end
-    if value < 0 then return 0 end
-    if value > 1 then return 1 end
-    return value
-end
-
 function GSE.resetMacroResetModifiers()
     GSEOptions.MacroResetModifiers = {}
     GSEOptions.MacroResetModifiers["LeftButton"] = false
@@ -136,7 +128,9 @@ function GSE.SetDefaultOptions()
         sequenceeditor = {height = 800, width = 800, treeWidth = 165}
     }
     GSEOptions.SyncWoWMacros = false
-    GSEOptions.UseModernSkin = false
+    -- Skin selection: GSEOptions.SkinMode ("NATIVE"/"MODERN"/"ADDON"); the
+    -- default is AUTO, represented by leaving it unset (nil). See the migration
+    -- below and GSE_Utils/Appearance.lua:GSE.GetEffectiveSkinMode.
     GSEOptions.UseModernClassColors = false
     GSEOptions.UseModernCustomColor = false
     GSEOptions.ModernCustomColor = {
@@ -181,8 +175,18 @@ if not GSE.Developer then
     end
 end
 
-if GSEOptions.UseModernSkin == nil then
-    GSEOptions.UseModernSkin = GSEOptions.UseElvUISkin == true
+-- Skin selection migration. The old boolean GSEOptions.UseModernSkin (and the
+-- even older GSEOptions.UseElvUISkin before it) is superseded by the tri-state
+-- GSEOptions.SkinMode ("NATIVE" / "MODERN" / "ADDON"; nil = AUTO = installed UI
+-- addon skin if present, else native). Resolution lives in
+-- GSE_Utils/Appearance.lua:GSE.GetEffectiveSkinMode.
+if GSEOptions.SkinMode == nil then
+    if GSEOptions.UseModernSkin == true then
+        -- Preserve users who had explicitly enabled the Modern skin.
+        GSEOptions.SkinMode = "MODERN"
+    end
+    -- UseModernSkin false/nil (and the legacy UseElvUISkin path) leaves SkinMode
+    -- nil = AUTO, which keeps "installed provider wins if present" behaviour.
 end
 
 if GSEOptions.UseModernClassColors == nil then
@@ -205,235 +209,16 @@ if type(GSEOptions.ModernCustomColor) ~= "table" then
     }
 end
 
-function GSE.ShouldUseModernSkin()
-    return GSEOptions and GSEOptions.UseModernSkin == true
-end
-
-function GSE.ShouldUseModernClassColors()
-    return GSEOptions and GSEOptions.UseModernClassColors == true and GSEOptions.UseModernCustomColor ~= true
-end
-
-function GSE.ShouldUseModernCustomColor()
-    return GSEOptions and GSEOptions.UseModernCustomColor == true
-end
-
-function GSE.GetModernCustomColor(alpha)
-    local color = GSEOptions and GSEOptions.ModernCustomColor or MODERN_CUSTOM_COLOR_DEFAULT
-    local r = ClampColorComponent(color.r or color[1], MODERN_CUSTOM_COLOR_DEFAULT.r)
-    local g = ClampColorComponent(color.g or color[2], MODERN_CUSTOM_COLOR_DEFAULT.g)
-    local b = ClampColorComponent(color.b or color[3], MODERN_CUSTOM_COLOR_DEFAULT.b)
-    local a = alpha or ClampColorComponent(color.a or color[4], 1)
-    return {r, g, b, a}
-end
-
-function GSE.SetModernCustomColor(r, g, b)
-    if not GSEOptions then GSEOptions = {} end
-    GSEOptions.ModernCustomColor = {
-        r = ClampColorComponent(r, MODERN_CUSTOM_COLOR_DEFAULT.r),
-        g = ClampColorComponent(g, MODERN_CUSTOM_COLOR_DEFAULT.g),
-        b = ClampColorComponent(b, MODERN_CUSTOM_COLOR_DEFAULT.b)
-    }
-end
-
-function GSE.ShouldUseElvUISkin()
-    return GSE.ShouldUseModernSkin()
-end
-
-local GSE_UI_SCALE_MIN = 0.50
-local GSE_UI_SCALE_MAX = 2.00
-local GSE_WINDOW_SCALE_MIN = 0.75
-local GSE_WINDOW_SCALE_MAX = 1.50
-local GSE_UI_SCALE_DEFAULT = 1.00
-local GSE_UI_SCALE_ROUNDING = 100
-local GSE_UI_SCREEN_BUFFER = 4
-
-local function ClampUIScale(value)
-    value = tonumber(value) or GSE_UI_SCALE_DEFAULT
-    if value < GSE_UI_SCALE_MIN then value = GSE_UI_SCALE_MIN end
-    if value > GSE_UI_SCALE_MAX then value = GSE_UI_SCALE_MAX end
-    return math.floor((value * GSE_UI_SCALE_ROUNDING) + 0.5) / GSE_UI_SCALE_ROUNDING
-end
-
-local function ClampWindowScale(value)
-    value = tonumber(value) or GSE_UI_SCALE_DEFAULT
-    if value < GSE_WINDOW_SCALE_MIN then value = GSE_WINDOW_SCALE_MIN end
-    if value > GSE_WINDOW_SCALE_MAX then value = GSE_WINDOW_SCALE_MAX end
-    return math.floor((value * GSE_UI_SCALE_ROUNDING) + 0.5) / GSE_UI_SCALE_ROUNDING
-end
-
-local function GetUIParentRect()
-    if not UIParent then return 0, 0, 0, 0 end
-
-    local parentLeft, parentBottom, parentWidth, parentHeight = UIParent:GetRect()
-    if parentLeft and parentBottom and parentWidth and parentHeight then
-        return parentLeft, parentBottom, parentWidth, parentHeight
-    end
-
-    return 0, 0, UIParent.GetWidth and UIParent:GetWidth() or 0, UIParent.GetHeight and UIParent:GetHeight() or 0
-end
-
-local function GetFrameScreenPoint(frame, point)
-    if not (frame and frame.GetRect) then return nil end
-
-    local left, bottom, width, height = frame:GetRect()
-    if not (left and bottom and width and height) then return nil end
-
-    point = point or "CENTER"
-    if point == "TOPLEFT" then return left, bottom + height end
-    if point == "TOPRIGHT" then return left + width, bottom + height end
-    if point == "BOTTOMLEFT" then return left, bottom end
-    if point == "BOTTOMRIGHT" then return left + width, bottom end
-    if point == "TOP" then return left + (width / 2), bottom + height end
-    if point == "BOTTOM" then return left + (width / 2), bottom end
-    if point == "LEFT" then return left, bottom + (height / 2) end
-    if point == "RIGHT" then return left + width, bottom + (height / 2) end
-    return left + (width / 2), bottom + (height / 2)
-end
-
-function GSE.SetFrameScreenPoint(frame, point, screenX, screenY)
-    if not (frame and frame.SetPoint and frame.ClearAllPoints and UIParent and screenX and screenY) then return end
-
-    point = point or "CENTER"
-    local parentScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
-    local frameScale = frame.GetEffectiveScale and frame:GetEffectiveScale() or parentScale
-    local scaleRatio = parentScale > 0 and frameScale / parentScale or 1
-    if not scaleRatio or scaleRatio <= 0 then scaleRatio = 1 end
-
-    local offsetX, offsetY = screenX, screenY
-    for _ = 1, 4 do
-        frame:ClearAllPoints()
-        frame:SetPoint(point, UIParent, "BOTTOMLEFT", offsetX, offsetY)
-
-        local actualX, actualY = GetFrameScreenPoint(frame, point)
-        if not actualX or not actualY then return end
-
-        local dx, dy = screenX - actualX, screenY - actualY
-        if math.abs(dx) < 0.5 and math.abs(dy) < 0.5 then return end
-
-        offsetX = offsetX + (dx / scaleRatio)
-        offsetY = offsetY + (dy / scaleRatio)
-    end
-end
-
-function GSE.GetUIScale()
-    return ClampWindowScale(GSE_C and GSE_C.UIScale)
-end
-
-function GSE.SetUIScale(value)
-    if not GSE_C then GSE_C = {} end
-    GSE_C.UIScale = ClampWindowScale(value)
-    if GSE.ApplyUIScale then GSE.ApplyUIScale() end
-end
-
-function GSE.GetMenuUIScale()
-    if not GSE_C then return GSE_UI_SCALE_DEFAULT end
-    if GSE_C.MenuUIScale == nil then
-        GSE_C.MenuUIScale = ClampUIScale(GSE_C.UIScale)
-    end
-    return ClampUIScale(GSE_C.MenuUIScale)
-end
-
-function GSE.SetMenuUIScale(value)
-    if not GSE_C then GSE_C = {} end
-    if GSE_C.MenuUIScale == nil then
-        GSE_C.MenuUIScale = ClampUIScale(GSE_C.UIScale)
-    end
-    GSE_C.MenuUIScale = ClampUIScale(value)
-    if GSE.ApplyMenuUIScale then GSE.ApplyMenuUIScale() end
-end
-
-GSE.UIScaleFrames = GSE.UIScaleFrames or setmetatable({}, {__mode = "k"})
-GSE.MenuUIScaleFrames = GSE.MenuUIScaleFrames or setmetatable({}, {__mode = "k"})
-
-function GSE.ClampFrameToScreen(frame)
-    if not (frame and frame.GetRect and frame.SetPoint and frame.ClearAllPoints and UIParent) then return end
-
-    local parentLeft, parentBottom, parentWidth, parentHeight = GetUIParentRect()
-
-    local left, bottom, width, height = frame:GetRect()
-    if not (left and bottom and width and height and parentWidth > 0 and parentHeight > 0) then return end
-
-    local minLeft = parentLeft + GSE_UI_SCREEN_BUFFER
-    local minBottom = parentBottom + GSE_UI_SCREEN_BUFFER
-    local maxLeft = parentLeft + parentWidth - width - GSE_UI_SCREEN_BUFFER
-    local maxBottom = parentBottom + parentHeight - height - GSE_UI_SCREEN_BUFFER
-    local clampedLeft = width > (parentWidth - (GSE_UI_SCREEN_BUFFER * 2)) and
-        (parentLeft + ((parentWidth - width) / 2)) or
-        math.min(math.max(left, minLeft), maxLeft)
-    local clampedBottom = height > (parentHeight - (GSE_UI_SCREEN_BUFFER * 2)) and
-        (parentBottom + ((parentHeight - height) / 2)) or
-        math.min(math.max(bottom, minBottom), maxBottom)
-
-    if math.abs(clampedLeft - left) < 0.5 and math.abs(clampedBottom - bottom) < 0.5 then return end
-
-    GSE.SetFrameScreenPoint(frame, "BOTTOMLEFT", clampedLeft, clampedBottom)
-end
-
-function GSE.ApplyScaleToFrame(frame, scale)
-    if not (frame and frame.SetScale) then return end
-
-    scale = ClampUIScale(scale or GSE.GetUIScale())
-    local preserveCenter = frame.IsShown and frame:IsShown() and frame.GetCenter and frame.ClearAllPoints and frame.SetPoint
-        and not frame.GSESkipScaleRecenter
-    local centerX, centerY
-    if preserveCenter then
-        centerX, centerY = frame:GetCenter()
-        preserveCenter = centerX and centerY and UIParent
-    end
-
-    frame:SetScale(scale)
-
-    if preserveCenter then
-        GSE.SetFrameScreenPoint(frame, "CENTER", centerX, centerY)
-        GSE.ClampFrameToScreen(frame)
-    end
-end
-
-function GSE.ApplyMenuScaleToFrame(frame)
-    if not (frame and frame.SetScale) then return end
-    GSE.ApplyScaleToFrame(frame, GSE.GetMenuUIScale())
-end
-
-function GSE.RegisterUIScaleFrame(frame)
-    if not frame then return end
-    GSE.UIScaleFrames = GSE.UIScaleFrames or setmetatable({}, {__mode = "k"})
-    GSE.UIScaleFrames[frame] = true
-    GSE.ApplyScaleToFrame(frame)
-end
-
-function GSE.RegisterMenuUIScaleFrame(frame)
-    if not frame then return end
-    GSE.MenuUIScaleFrames = GSE.MenuUIScaleFrames or setmetatable({}, {__mode = "k"})
-    GSE.MenuUIScaleFrames[frame] = true
-    GSE.ApplyMenuScaleToFrame(frame)
-end
-
-function GSE.ApplyUIScale()
-    if GSE.UIScaleFrames then
-        for frame in pairs(GSE.UIScaleFrames) do
-            if frame and frame.SetScale then
-                GSE.ApplyScaleToFrame(frame)
-            else
-                GSE.UIScaleFrames[frame] = nil
-            end
-        end
-    end
-end
-
-function GSE.ApplyMenuUIScale()
-    if GSE.MenuUIScaleFrames then
-        for frame in pairs(GSE.MenuUIScaleFrames) do
-            if frame and frame.SetScale then
-                GSE.ApplyMenuScaleToFrame(frame)
-            else
-                GSE.MenuUIScaleFrames[frame] = nil
-            end
-        end
-    end
-    if GSE.MenuFrame then
-        GSE.ApplyMenuScaleToFrame(GSE.MenuFrame)
-    end
-end
+-- NOTE: The skin accessors (GSE.ShouldUseModernSkin / ShouldUseModernClassColors
+-- / ShouldUseModernCustomColor / GetModernCustomColor / SetModernCustomColor /
+-- ShouldUseElvUISkin) and the entire UI-scale + frame-positioning subsystem
+-- (GSE.GetUIScale / SetUIScale / GetMenuUIScale / SetMenuUIScale /
+-- ApplyScaleToFrame / ApplyMenuScaleToFrame / RegisterUIScaleFrame /
+-- RegisterMenuUIScaleFrame / ApplyUIScale / ApplyMenuUIScale /
+-- SetFrameScreenPoint / ClampFrameToScreen) used to live here. They are
+-- front-end only -- the macro engine never calls them -- so they now live in
+-- GSE_Utils/Appearance.lua, the lowest shared front-end addon. Core retains only
+-- the saved-variable defaults + migration above.
 
 -- Migrate editor dimensions from old flat keys to frameLocations.sequenceeditor.
 do
