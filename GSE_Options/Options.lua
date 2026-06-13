@@ -77,17 +77,6 @@ local RESOURCES_BUTTON_MIN_WIDTH = 190
 local RESOURCES_BUTTON_TEXT = addonName .. "|cFFFFFFFF:|r |cFFFFD100Resources|r"
 local RESOURCES_BUTTON_TEXT_HOVER = RESOURCES_BUTTON_TEXT
 
-local function BringSettingsPanelForward()
-    if not SettingsPanel then return end
-
-    if ShowUIPanel then pcall(ShowUIPanel, SettingsPanel) end
-    if SettingsPanel.Open then pcall(SettingsPanel.Open, SettingsPanel) end
-    if SettingsPanel.Show and (not SettingsPanel.IsShown or not SettingsPanel:IsShown()) then
-        pcall(SettingsPanel.Show, SettingsPanel)
-    end
-    if SettingsPanel.SetFrameStrata then SettingsPanel:SetFrameStrata("FULLSCREEN_DIALOG") end
-    if SettingsPanel.Raise then SettingsPanel:Raise() end
-end
 
 function GSE.OpenRegisteredOptionsPanel(editor)
     if GSE.GUI then GSE.GUI.optionsEditor = editor end
@@ -124,13 +113,16 @@ function GSE.OpenRegisteredOptionsPanel(editor)
     if GSE.LegacyOptionsPanel and InterfaceOptionsFrame_OpenToCategory then
         pcall(InterfaceOptionsFrame_OpenToCategory, GSE.LegacyOptionsPanel)
         pcall(InterfaceOptionsFrame_OpenToCategory, GSE.LegacyOptionsPanel)
-        BringSettingsPanelForward()
         return true
     end
 
     if Settings and Settings.OpenToCategory then
+        -- Let the stock Settings UI open, show and layer the panel itself.
+        -- We only navigate to our category -- no manual ShowUIPanel/Show/Raise
+        -- or strata override, since forcing those put the panel above its own
+        -- dropdown popout menus (they render at DIALOG) and made the menus
+        -- appear behind the panel.
         local opened = pcall(Settings.OpenToCategory, GSE.MenuCategoryID)
-        BringSettingsPanelForward()
         if SettingsPanel and SettingsPanel.OpenToCategory then
             pcall(SettingsPanel.OpenToCategory, SettingsPanel, GSE.MenuCategoryID)
         end
