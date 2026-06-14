@@ -951,6 +951,18 @@ if GSE.GameMode == 5 then
     keybindingframe:Hide()
 end
 
+-- Older builds stored mouse buttons 4/5 (and the middle button) using the
+-- frame-script names ("Button4"/"Button5"/"MiddleButton") rather than valid WoW
+-- binding names ("BUTTON4"/"BUTTON5"/"BUTTON3"), so SetBindingClick silently
+-- failed and the bind did nothing in game. Normalise any stored key to the
+-- binding name so legacy saves keep working without needing to be re-bound.
+local function normalizeBindKey(key)
+    if type(key) ~= "string" then
+        return key
+    end
+    return (key:gsub("MiddleButton", "BUTTON3"):gsub("Button4", "BUTTON4"):gsub("Button5", "BUTTON5"))
+end
+
 local function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
@@ -966,6 +978,7 @@ local function LoadKeyBindings(payload)
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
             local target = GSE.GetKeybindClickTarget(v)
+            k = normalizeBindKey(k)
             SetBindingClick(k, target, "LeftButton")
             if GSE.GameMode == 5 then
                 SetOverrideBindingClick(keybindingframe, false, k, target)
@@ -988,6 +1001,7 @@ local function LoadKeyBindings(payload)
                 )
                 --@end-debug@
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
+                    k = normalizeBindKey(k)
                     SetBinding(k)
                     local target = GSE.GetKeybindClickTarget(v)
                     SetBindingClick(k, target, "LeftButton")
