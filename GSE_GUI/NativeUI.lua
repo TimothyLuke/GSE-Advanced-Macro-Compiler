@@ -4405,7 +4405,13 @@ local function createControllerKeybinding()
         "OnMouseDown",
         function(_, mouseButton)
             if mouseButton == "LeftButton" or mouseButton == "RightButton" then return end
-            if mouseButton == "MiddleButton" then mouseButton = "BUTTON3" end
+            if mouseButton == "MiddleButton" then
+                mouseButton = "BUTTON3"
+            elseif mouseButton == "Button4" then
+                mouseButton = "BUTTON4"
+            elseif mouseButton == "Button5" then
+                mouseButton = "BUTTON5"
+            end
             applyKey(mouseButton)
         end
     )
