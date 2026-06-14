@@ -85,7 +85,14 @@ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFra
 -- we revert type to 'action' so the bar-swap controls work normally.
 local BAR_SWAP_OAC = [[
     if name ~= "action" and name ~= "pressandholdaction" then return end
-    if not self:GetAttribute("gse-button") then return end
+    -- Gate on the SECURE flag, never the insecure "gse-button" string. Reading an
+    -- insecurely-written attribute here would taint this snippet's execution, and
+    -- because this runs interleaved with Blizzard's own OnAttributeChanged on the
+    -- same action-change event (incl. Bartender4 State-Config actionpage paging),
+    -- that taint rides into Blizzard's UpdatePressAndHoldAction and blocks its
+    -- protected SetAttribute in combat (issue #1931). gse-secure is set only from
+    -- inside the secure environment (secureArmGSEButton), so it is never tainted.
+    if not self:GetAttribute("gse-secure") then return end
     local slot = self:GetID()
     local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
     -- Dominos and some third-party bars store the action directly (no page hierarchy).
@@ -115,7 +122,8 @@ local BAR_SWAP_OAC = [[
 -- (overriding BAR_SWAP_OAC) so mouse clicks during vehicle/skyriding/possession
 -- would still redirect to the GSE sequence instead of the override-bar action.
 local BAR_SWAP_ONCLICK = [[
-    local gseButton = self:GetAttribute('gse-button')
+    -- Gate on the secure flag, not the insecure "gse-button" string (see BAR_SWAP_OAC).
+    local gseButton = self:GetAttribute('gse-secure')
     if gseButton then
         local slot = self:GetID()
         local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
@@ -171,6 +179,65 @@ local VEHICLE_OAC_LAB = [[
     -- transitions, so the reference set at overrideActionButton time remains valid.
     self:SetAttribute("type", "click")
 ]]
+
+-- ---------------------------------------------------------------------------
+-- Secure arming of native / Dominos / third-party action buttons (issue #1931).
+--
+-- Writing a button's secure attributes (type, clickbutton, and the gate flag)
+-- from insecure Lua marks those values TAINTED. The GSE secure snippets above
+-- then read the flag, become tainted, and -- because they run interleaved with
+-- Blizzard's own ActionButton update on the same event (and with Bartender4's
+-- "State Configuration" actionpage paging) -- that taint rides into Blizzard's
+-- UpdatePressAndHoldAction, whose protected SetAttribute is then blocked in
+-- combat. Performing the writes INSIDE the SecureHandler (SHBT:Execute) keeps the
+-- values secure, so GSE seeds no taint.
+--
+-- gse-secure (boolean) is the snippet gate and is ONLY ever written here.
+-- The "gse-button" string (sequence name) is still set insecurely elsewhere for
+-- the non-secure icon / yield hooks; no secure code reads it, so its taint is
+-- inert. Callers must be out of combat (SetFrameRef writes a protected attr).
+-- ---------------------------------------------------------------------------
+local function secureArmGSEButton(button, sequenceName)
+    if not button then return end
+    SHBT:SetFrameRef("gseArmButton", button)
+    -- Sentinel to a non-nil ref so a stale ref from a prior call can't leak in;
+    -- the snippet skips clickbutton when the ref is the button itself.
+    SHBT:SetFrameRef("gseArmClick", (sequenceName and _G[sequenceName]) or button)
+    SHBT:Execute([[
+        local b = self:GetFrameRef("gseArmButton")
+        if not b then return end
+        b:SetAttribute("gse-secure", true)
+        local click = self:GetFrameRef("gseArmClick")
+        if click and click ~= b then
+            b:SetAttribute("clickbutton", click)
+        end
+        b:SetAttribute("type", "click")
+    ]])
+end
+
+-- Secure type="action": the override yields to a real action dropped on its slot.
+-- gse-secure stays set so the BAR_SWAP snippets keep re-evaluating the slot.
+local function secureYieldGSEButton(button)
+    if not button then return end
+    SHBT:SetFrameRef("gseArmButton", button)
+    SHBT:Execute([[
+        local b = self:GetFrameRef("gseArmButton")
+        if b then b:SetAttribute("type", "action") end
+    ]])
+end
+
+-- Secure disarm: clear the gate flag and reset type as the override is removed.
+local function secureDisarmGSEButton(button)
+    if not button then return end
+    SHBT:SetFrameRef("gseArmButton", button)
+    SHBT:Execute([[
+        local b = self:GetFrameRef("gseArmButton")
+        if b then
+            b:SetAttribute("gse-secure", nil)
+            b:SetAttribute("type", "action")
+        end
+    ]])
+end
 
 -- Compute the effective action slot for a button from non-secure code.
 -- WoW's RegisterAttributeDriver writes the final computed slot into the "action"
@@ -613,9 +680,10 @@ local function overrideActionButton(savedBind, force)
                     end
                 )
                 SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
-                _G[Button]:SetAttribute("type", "click")
             end
-            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+            -- Arm type/clickbutton + the secure gate from inside the secure
+            -- environment so GSE seeds no taint (issue #1931).
+            secureArmGSEButton(_G[Button], Sequence)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
@@ -716,7 +784,7 @@ local function overrideActionButton(savedBind, force)
                         "OnEnter",
                         "",
                         [[
-    if self:GetAttribute('gse-button') then
+    if self:GetAttribute('gse-secure') then
         local slot = self:GetID()
         local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
         local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
@@ -732,9 +800,11 @@ local function overrideActionButton(savedBind, force)
                     )
                     SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
                 end
-                _G[Button]:SetAttribute("type", "click")
             end
-            _G[Button]:SetAttribute("clickbutton", _G[Sequence])
+            -- Arm type/clickbutton + the secure gate from inside the secure
+            -- environment so GSE seeds no taint on the Blizzard button -- this is
+            -- the taint that Bartender4 State Config surfaced in issue #1931.
+            secureArmGSEButton(_G[Button], Sequence)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
@@ -779,9 +849,12 @@ local function reevaluateOverrideButtonState(buttonName, sequence)
     if not isLAB then
         local desiredType = foreign and "action" or "click"
         if btn:GetAttribute("type") ~= desiredType then
-            btn:SetAttribute("type", desiredType)
-            if not foreign and sequence and _G[sequence] then
-                btn:SetAttribute("clickbutton", _G[sequence])
+            -- Route through the secure handler so this slot-yield re-arm does not
+            -- re-taint the button (issue #1931). Caller is out of combat.
+            if foreign then
+                secureYieldGSEButton(btn)
+            else
+                secureArmGSEButton(btn, sequence)
             end
         end
     end
@@ -839,7 +912,10 @@ local function LoadOverrides(force)
                 removeGSEWatermark(k)
             else
                 _G[k]:SetAttribute("gse-button", nil)
-                _G[k]:SetAttribute("type", "action")
+                -- Clear the secure gate + reset type from inside the secure
+                -- environment (issue #1931); gse-button is a non-secure string so
+                -- clearing it insecurely is harmless.
+                secureDisarmGSEButton(_G[k])
                 SecureHandlerUnwrapScript(_G[k], "OnClick")
                 SecureHandlerUnwrapScript(_G[k], "OnEnter")
                 SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
