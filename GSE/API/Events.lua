@@ -179,6 +179,16 @@ local VEHICLE_OAC_LAB = [[
 local function getButtonEffectiveSlot(btn)
     local action = tonumber(btn:GetAttribute("action"))
     if action and action > 0 then return action end
+    -- Blizzard native action buttons resolve their paged/bonus-bar slot in C and
+    -- expose it as the .action Lua field, NOT as a secure "action" attribute. When
+    -- a bonus bar is active (Druid Cat/Bear form, Prowl, etc. -- GetBonusBarOffset()
+    -- > 0) ActionButton1 maps to slot 73, not base slot 1. The GetID()+actionpage
+    -- fallback below cannot see that offset and would wrongly inspect base slot 1,
+    -- yielding the override to whatever sits on the base bar (e.g. the Single-Button
+    -- Assistant) while the slot the button actually fires is empty. Prefer the
+    -- resolved field so we always evaluate the slot the button truly uses.
+    local resolved = tonumber(btn.action)
+    if resolved and resolved > 0 then return resolved end
     local slot = btn:GetID()
     if not slot or slot == 0 then return nil end
     local page = tonumber(btn:GetAttribute("actionpage")) or 1
@@ -196,8 +206,22 @@ function GSE.ActionBarSlotHasForeignAction(button)
     if not button:GetAttribute("gse-button") then return false end
     local slot = getButtonEffectiveSlot(button)
     if not slot or not GetActionInfo then return false end
-    local actionType = GetActionInfo(slot)
-    if actionType == nil or actionType == "macro" then return false end
+    local actionType, macroIndex = GetActionInfo(slot)
+    -- Empty slot: the override owns it.
+    if actionType == nil then return false end
+    -- A macro slot is "foreign" only when it is NOT one of GSE's own sequence
+    -- macros. Keep the override only for a macro we can positively confirm is a
+    -- GSE sequence; any other macro (or one whose name won't resolve) is the
+    -- player's, so yield to it (the Blizzard action wins and is shown).
+    if actionType == "macro" then
+        if macroIndex and GetMacroInfo then
+            local macroName = GetMacroInfo(macroIndex)
+            if macroName and ((GSE.SequencesExec and GSE.SequencesExec[macroName]) or _G[macroName]) then
+                return false
+            end
+        end
+        return true
+    end
     return true
 end
 
@@ -605,10 +629,9 @@ local function overrideActionButton(savedBind, force)
             string.sub(Button, 1, 4) == "CPB_"
      then
         if _G[Button] and _G[Button].SetState then
-            _G[Button]:SetState(
-                state,
-                "custom",
-                {
+            -- A fresh custom-state config (LAB stores it per state).
+            local function customState()
+                return {
                     func = function(self)
                         if not InCombatLockdown() then
                             self:SetAttribute("type", "click")
@@ -620,7 +643,23 @@ local function overrideActionButton(savedBind, force)
                     type = "click",
                     clickbutton = _G[Sequence]
                 }
-            )
+            end
+            -- LAB bars page the button per stance/form (e.g. Druid Cat = state 7,
+            -- Prowl = state 8, Bear = another) and re-apply that state's action on
+            -- every shift, wiping a single-state override -- which is why the ABO
+            -- died in Prowl on Bartender. Register the GSE override on EVERY state
+            -- the button has so it stays active across all of the bar's paging. A
+            -- user-pinned State still targets just that one state.
+            local stateTypes = _G[Button].state_types
+            if savedBind.State then
+                _G[Button]:SetState(state, "custom", customState())
+            elseif type(stateTypes) == "table" and next(stateTypes) then
+                for st in pairs(stateTypes) do
+                    _G[Button]:SetState(st, "custom", customState())
+                end
+            else
+                _G[Button]:SetState(state, "custom", customState())
+            end
             _G[Button]:SetAttribute("type", "click")
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
             -- Install a secure OnAttributeChanged WrapScript (once per button) that
