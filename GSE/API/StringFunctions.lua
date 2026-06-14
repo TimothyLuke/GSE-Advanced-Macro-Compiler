@@ -171,7 +171,9 @@ function GSE.SplitMeIntoLines(str)
     end
     local function helper(line)
         table.insert(t, line)
+        --@debug@
         GSE.PrintDebugMessage("Line : " .. line, Statics.GSEString)
+        --@end-debug@
         return ""
     end
     helper((str:gsub("(.-)\r?\n", helper)))
@@ -184,18 +186,26 @@ function GSE.SplitCastSequence(str)
     local slen = string.len(str)
     local modblock = false
     local start = 1
+    --@debug@
     GSE.PrintDebugMessage(slen, "Storage")
+    --@end-debug@
     for i = 1, slen, 1 do
         if string.sub(str, i, i) == "[" then
             modblock = true
+            --@debug@
             GSE.PrintDebugMessage("in mod at " .. i, "Storage")
+            --@end-debug@
         elseif string.sub(str, i, i) == "]" then
             modblock = false
+            --@debug@
             GSE.PrintDebugMessage("leaving mod at " .. i, "Storage")
+            --@end-debug@
         elseif string.sub(str, i, i) == "," and not modblock then
             table.insert(tab, string.sub(str, start, i - 1))
             start = i + 1
+            --@debug@
             GSE.PrintDebugMessage("found terminator at " .. i, "Storage")
+            --@end-debug@
         end
     end
     table.insert(tab, string.sub(str, start))

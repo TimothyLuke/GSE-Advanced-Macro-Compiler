@@ -56,8 +56,12 @@ jobs:
         run: |
           busted -o utfTerminal --verbose --coverage
 
+      # Everything past Busted is build / publish / deploy. On a pull request we
+      # run lint + unit tests only and STOP here -- no packaging, no Patreon /
+      # GSE Tools publish, no docs deploy. Each step below is gated on the event
+      # not being a pull_request.
       - name: Log coverage to coveralls.io
-        if: success()
+        if: ${{ success() && github.event_name != 'pull_request' }}
         continue-on-error: true
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,12 +70,16 @@ jobs:
           luacov-coveralls -v -e .luarocks
 
       - name: Setup Node
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/setup-node@v4
       - name: Install SVN
+        if: ${{ github.event_name != 'pull_request' }}
         run: sudo apt-get install -y subversion
       - name: Install Dependencies
+        if: ${{ github.event_name != 'pull_request' }}
         run: npm ci
       - name: Update GSE/API/Patreon.lua
+        if: ${{ github.event_name != 'pull_request' }}
         run: npm run-script run
         env:
           NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
@@ -87,6 +95,7 @@ jobs:
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
 
       - name: Publish Patreon
+        if: ${{ github.event_name != 'pull_request' }}
         run: npm run-script pat
         env:
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK }}
@@ -100,12 +109,14 @@ jobs:
         run: npm run publish-gse
 
       - name: Parse and generate documentation
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           mkdir .pages
           ldoc -d .pages/docs GSE/API/*.lua
           cp pages/* .pages
 
       - name: Deploy API to GitHuib Pages🚀
+        if: ${{ github.event_name != 'pull_request' }}
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages # The branch the action should deploy to.

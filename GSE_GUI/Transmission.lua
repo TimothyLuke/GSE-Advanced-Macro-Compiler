@@ -15,7 +15,9 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   transmissionFrame.frame:SetFrameStrata("MEDIUM")
   transmissionFrame.frame:SetClampedToScreen(true)
 
+  --@debug@
   GSE.PrintDebugMessage("GSE Version " .. GSE.VersionString, Statics.SourceTransmission)
+  --@end-debug@
 
   local transSequencevalue = ""
 

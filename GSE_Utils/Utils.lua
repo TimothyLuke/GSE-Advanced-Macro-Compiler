@@ -49,10 +49,12 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
                     sequence.MetaData.GSEVersion
                 )
             )
+            --@debug@
             GSE.PrintDebugMessage(
                 "Macro Version " .. sequence.MetaData.GSEVersion .. " Required Version: " .. GSE.VersionString,
                 "Storage"
             )
+            --@end-debug@
             return
         end
     end
@@ -60,8 +62,12 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         GSE.SanitizeSequenceEditorMarkup(sequence)
     end
 
+    --@debug@
     GSE.PrintDebugMessage("Attempting to import " .. sequenceName, "Storage")
+    --@end-debug@
+    --@debug@
     GSE.PrintDebugMessage("Classid not supplied - " .. tostring(GSE.isEmpty(classid)), "Storage")
+    --@end-debug@
     -- Remove Spaces or commas from SequenceNames and replace with _'s
     sequenceName = string.gsub(sequenceName, " ", "_")
     sequenceName = string.gsub(sequenceName, ",", "_")
@@ -97,13 +103,17 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
         sequence.MetaData.SpecID = GSE.GetCurrentClassID()
         classid = GSE.GetCurrentClassID()
     end
+    --@debug@
     GSE.PrintDebugMessage("Classid now - " .. tostring(classid or 0), "Storage")
+    --@end-debug@
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
     if not GSE.isEmpty(GSE.Library[classid][sequenceName]) then
         found = true
+        --@debug@
         GSE.PrintDebugMessage("Macro Exists", "Storage")
+        --@end-debug@
     end
     if found then
         -- Existing sequence imports should let the user choose whether to merge,
@@ -114,12 +124,16 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
             GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
         end
     else
+        --@debug@
         GSE.PrintDebugMessage("Creating New Macro", "Storage")
+        --@end-debug@
         -- New Sequence
         GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
     end
     if classid == GSE.GetCurrentClassID() or classid == 0 then
+        --@debug@
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
+        --@end-debug@
         GSE.UpdateSequence(sequenceName, sequence.Versions[sequence.MetaData.Default])
     end
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
@@ -166,18 +180,26 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
             newSequence.Versions = {}
         end
         for k, v in ipairs(newSequence.Versions) do
+            --@debug@
             GSE.PrintDebugMessage("adding " .. k, "Storage")
+            --@end-debug@
             table.insert(GSE.Library[classid][sequenceName].Versions, v)
         end
+        --@debug@
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
+        --@end-debug@
         GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
+        --@debug@
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
+        --@end-debug@
+        --@debug@
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
+        --@end-debug@
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
@@ -187,18 +209,22 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was imported as a new macro."], "Storage")
+        --@debug@
         GSE.PrintDebugMessage(
             "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
             "Storage"
         )
+        --@end-debug@
     else
         GSE.Print(L["No changes were made to "] .. sequenceName, GNOME)
     end
     GSE.Library[classid][sequenceName]["MetaData"].ManualIntervention = false
+    --@debug@
     GSE.PrintDebugMessage(
         "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
         "Storage"
     )
+    --@end-debug@
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
@@ -215,7 +241,9 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
     local numAccountMacros, numCharacterMacros = GetNumMacros()
     if sequenceIndex > 0 then
         -- Sequence exists, do nothing
+        --@debug@
         GSE.PrintDebugMessage("Moving on - macro for " .. sequenceName .. " already exists.", GNOME)
+        --@end-debug@
     else
         -- Create Sequence as a player sequence
         if numCharacterMacros >= MAX_CHARACTER_MACROS and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
@@ -408,7 +436,9 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
     else
         decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
     end
+    --@debug@
     GSE.PrintDebugMessage(string.format("Decomsuccess: %s ", tostring(decompresssuccess)), Statics.SourceTransmission)
+    --@end-debug@
 
     if decompresssuccess and actiontable then
         if actiontable.type == "COLLECTION" then
@@ -453,6 +483,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             GSE.EnqueueOOC(oocaction)
         else
             actiontable.objectType = nil
+            --@debug@
             GSE.PrintDebugMessage(
                 string.format(
                     "tablerows: %s   type cell1 %s cell2 %s",
@@ -462,6 +493,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 ),
                 Statics.SourceTransmission
             )
+            --@end-debug@
             local k, v = actiontable[1], actiontable[2]
             if actiontable.MetaData and actiontable.MetaData.Name then
                 k = actiontable.MetaData.Name
@@ -1722,7 +1754,9 @@ end
 function GSE.ExportSequence(sequence, sequenceName, verbose)
     local returnVal
     if verbose then
+        --@debug@
         GSE.PrintDebugMessage("ExportSequence Sequence Name: " .. sequenceName, "Storage")
+        --@end-debug@
         returnVal = GSE.Dump(GSE.UnEscapeTable(GSE.TranslateSequence(sequence, Statics.TranslatorMode.Current))) .. "\n"
     else
         returnVal =

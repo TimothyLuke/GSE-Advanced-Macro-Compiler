@@ -436,6 +436,119 @@ function GSE.Skin.IsExternalProviderActive()
     return name == "ElvUI" or name == "EllesmereUI"
 end
 
+-- Accent colour of the *active* external skin provider, as r, g, b (0-1), or
+-- nil when no provider is driving the look. ElvUI exposes its value/accent
+-- colour at E.media.rgbvaluecolor; EllesmereUI uses ELLESMERE_GREEN. This is the
+-- single shared source for every host-accent paint site (scrollbar thumb,
+-- dropdown selected-row), which otherwise poked EllesmereUI.ELLESMERE_GREEN
+-- directly and so showed nothing under ElvUI. Callers fall back to the
+-- GSE-Modern class colour when this returns nil, so a missing field is
+-- harmless -- it just renders as before.
+function GSE.Skin.HostAccentColor()
+    if GSE.Skin.providerName == "ElvUI" then
+        local ElvUI = _G.ElvUI
+        local E = type(ElvUI) == "table" and ElvUI[1]
+        local media = type(E) == "table" and E.media
+        local c = type(media) == "table" and media.rgbvaluecolor
+        if type(c) == "table" then
+            return c.r or c[1], c.g or c[2], c.b or c[3]
+        end
+    end
+    local EUI = _G.EllesmereUI
+    if type(EUI) == "table" and type(EUI.ELLESMERE_GREEN) == "table" then
+        local c = EUI.ELLESMERE_GREEN
+        return c.r or 0, c.g or 0.55, c.b or 0.55
+    end
+    return nil
+end
+
+-- Blizzard's stock default font for the current locale. Used under the Native
+-- skin so GSE looks like base Blizzard even when a skin addon (ElvUI/EUI) has
+-- replaced the global GameFont objects GSE's text would otherwise inherit.
+-- Locale-mapped because CJK/Cyrillic clients ship a different default face;
+-- Latin locales use Friz Quadrata.
+local BLIZZARD_DEFAULT_FONTS = {
+    ruRU = "Fonts\\FRIZQT___CYR.TTF",
+    koKR = "Fonts\\2002.TTF",
+    zhCN = "Fonts\\ARKai_T.TTF",
+    zhTW = "Fonts\\blei00d.TTF",
+}
+local function blizzardDefaultFont()
+    local locale = GetLocale and GetLocale()
+    return (locale and BLIZZARD_DEFAULT_FONTS[locale]) or "Fonts\\FRIZQT__.TTF"
+end
+
+-- The font face GSE windows should use -- whatever font is in effect right now,
+-- so GSE text matches the rest of the user's UI. Resolution order:
+--   Native skin mode    -> Blizzard's stock default font for the locale. Native
+--                          is the base-Blizzard look; since ElvUI/EUI may have
+--                          replaced the global GameFont objects, we force the
+--                          real default face here rather than inheriting theirs.
+--   ElvUI active        -> E.media.normFont (the user's chosen ElvUI font).
+--   EllesmereUI active  -> EllesmereUI._font (the face EUI paints its panels
+--                          with; EXPRESSWAY is its bundled fallback). EUI does
+--                          NOT replace GameFontNormal, so it must be read direct.
+--   otherwise (Modern)  -> _G.STANDARD_TEXT_FONT, the WoW global font that any
+--                          font/skin addon overrides; Blizzard's locale default
+--                          when nothing replaced it (then it equals the face GSE
+--                          already used, so applying it is a harmless no-op).
+-- Returns nil only if nothing resolves (callers keep their own font).
+function GSE.Skin.HostFont()
+    if GSE.GetEffectiveSkinMode and GSE.GetEffectiveSkinMode() == "NATIVE" then
+        return blizzardDefaultFont()
+    end
+    if GSE.Skin.providerName == "ElvUI" then
+        local ElvUI = _G.ElvUI
+        local E = type(ElvUI) == "table" and ElvUI[1]
+        local media = type(E) == "table" and E.media
+        if type(media) == "table" and type(media.normFont) == "string" then
+            return media.normFont
+        end
+    end
+    if GSE.Skin.providerName == "EllesmereUI" then
+        local EUI = _G.EllesmereUI
+        if type(EUI) == "table" then
+            if type(EUI._font) == "string" then return EUI._font end
+            if type(EUI.EXPRESSWAY) == "string" then return EUI.EXPRESSWAY end
+        end
+    end
+    if type(_G.STANDARD_TEXT_FONT) == "string" then return _G.STANDARD_TEXT_FONT end
+    if _G.GameFontNormal and _G.GameFontNormal.GetFont then
+        local face = _G.GameFontNormal:GetFont()
+        if type(face) == "string" then return face end
+    end
+    return nil
+end
+
+-- Recursively re-face every FontString in a GSE window's frame tree to the
+-- active global font (GSE.Skin.HostFont), preserving each string's existing
+-- size and flags (only the face changes, so layouts/sizes are untouched).
+-- Called from the window-skin entry points so every GSE window matches the
+-- user's current UI font no matter the skin. No-op only if no font resolves.
+-- If a SetFont call is rejected (bad path), the original face is restored so
+-- text never blanks out.
+function GSE.Skin.ApplyHostFontToTree(frame)
+    local font = GSE.Skin.HostFont and GSE.Skin.HostFont()
+    if not (font and frame) then return end
+    if frame.GetRegions then
+        for _, region in ipairs({frame:GetRegions()}) do
+            if region and region.GetObjectType and region:GetObjectType() == "FontString"
+                and region.GetFont and region.SetFont then
+                local face, size, flags = region:GetFont()
+                if size then
+                    local ok = region:SetFont(font, size, flags)
+                    if ok == false and face then region:SetFont(face, size, flags) end
+                end
+            end
+        end
+    end
+    if frame.GetChildren then
+        for _, child in ipairs({frame:GetChildren()}) do
+            GSE.Skin.ApplyHostFontToTree(child)
+        end
+    end
+end
+
 function GSE.Skin.PaintAccentText(text, fallbackR, fallbackG, fallbackB, fallbackA)
     if not (text and text.SetTextColor) then return end
     local EUI = _G.EllesmereUI

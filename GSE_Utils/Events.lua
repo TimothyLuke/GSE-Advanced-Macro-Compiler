@@ -243,7 +243,9 @@ function GSE.TraceSequence(button, step, spell, blockPath)
         if canAppendToDebugger then
             GSE.GUIDebugAppendEvent(row, legacyExportLine)
         else
+            --@debug@
             GSE.PrintDebugMessage(SequenceDebugColumnLine(row), Statics.SequenceDebug)
+            --@end-debug@
         end
     end
 end
@@ -284,10 +286,14 @@ function GSE:UNIT_SPELLCAST_SUCCEEDED(event, unit, action, sped)
             GCD_Timer,
             function()
                 GCD = nil
+                --@debug@
                 GSE.PrintDebugMessage("GCD OFF")
+                --@end-debug@
             end
         )
+        --@debug@
         GSE.PrintDebugMessage("GCD Delay:" .. " " .. GCD_Timer)
+        --@end-debug@
         GSE.CurrentGCD = GCD_Timer
 
         local foundskill = false
