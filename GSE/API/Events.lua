@@ -199,18 +199,27 @@ local VEHICLE_OAC_LAB = [[
 -- ---------------------------------------------------------------------------
 local function secureArmGSEButton(button, sequenceName)
     if not button then return end
+    -- clickbutton holds the GSE executor frame. It MUST be set from insecure Lua
+    -- with the real frame object, NOT from inside the secure snippet via a frame
+    -- ref. A clickbutton stored from a snippet GetFrameRef resolved to a handle
+    -- that Blizzard's (insecure) SecureActionButton_OnClick could not call ->
+    -- "attempt to call a nil value" on every click of a stock/retail bar. The
+    -- LAB paths (BT4/ElvUI, line ~732) always set clickbutton insecurely, which
+    -- is why only the stock-bar (secureArmGSEButton) path regressed.
+    --
+    -- This does NOT reintroduce the #1931 taint: no secure snippet READS
+    -- clickbutton, so its taint is inert (same as the gse-button string). Only
+    -- the gate flag (gse-secure, read by the snippets) and type (read by
+    -- Blizzard's secure click) need to be set inside the SecureHandler.
+    local executor = sequenceName and _G[sequenceName]
+    if executor and executor ~= button and not InCombatLockdown() then
+        button:SetAttribute("clickbutton", executor)
+    end
     SHBT:SetFrameRef("gseArmButton", button)
-    -- Sentinel to a non-nil ref so a stale ref from a prior call can't leak in;
-    -- the snippet skips clickbutton when the ref is the button itself.
-    SHBT:SetFrameRef("gseArmClick", (sequenceName and _G[sequenceName]) or button)
     SHBT:Execute([[
         local b = self:GetFrameRef("gseArmButton")
         if not b then return end
         b:SetAttribute("gse-secure", true)
-        local click = self:GetFrameRef("gseArmClick")
-        if click and click ~= b then
-            b:SetAttribute("clickbutton", click)
-        end
         b:SetAttribute("type", "click")
     ]])
 end
