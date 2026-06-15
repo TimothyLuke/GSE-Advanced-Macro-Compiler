@@ -127,6 +127,7 @@ local publicProxy = {
     -- Sequences table before handing it to RegisterAddon. Without it the
     -- registration handshake errors before it reaches the two methods above.
     isEmpty = GSE.isEmpty,
+    Statics = {}
 }
 setmetatable(publicProxy, {
     __newindex = function() end,
