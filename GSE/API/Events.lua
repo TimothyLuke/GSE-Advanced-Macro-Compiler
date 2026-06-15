@@ -700,11 +700,7 @@ local function overrideActionButton(savedBind, force)
         GSE.ButtonOverrides[Button] = Sequence
         repaintGSEOverrideButton(_G[Button])
         repaintGSEOverrideButton(_G[Button], true)
-    elseif
-        (string.sub(Button, 1, 3) == "BT4") or string.sub(Button, 1, 5) == "ElvUI" or
-            (string.sub(Button, 1, 4) == "NDui") or
-            string.sub(Button, 1, 4) == "CPB_"
-     then
+    elseif _G[Button].SetState then
         if _G[Button] and _G[Button].SetState then
             -- A fresh custom-state config (LAB stores it per state).
             local function customState()
@@ -851,10 +847,7 @@ local function reevaluateOverrideButtonState(buttonName, sequence)
     if not btn or not btn.GetAttribute or not btn:GetAttribute("gse-button") then return end
     local foreign = GSE.ActionBarSlotHasForeignAction(btn)
     local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
-    -- LAB-managed bars (ElvUI/ConsolePort/Bartender4/NDui) drive type through their
-    -- own state system; leave their type alone and just correct the icon/watermark.
-    local isLAB = string.sub(buttonName, 1, 5) == "ElvUI" or string.sub(buttonName, 1, 4) == "CPB_"
-        or string.sub(buttonName, 1, 3) == "BT4" or string.sub(buttonName, 1, 4) == "NDui"
+    local isLAB = btn.SetState ~= nil
     if not isLAB then
         local desiredType = foreign and "action" or "click"
         if btn:GetAttribute("type") ~= desiredType then
@@ -909,7 +902,6 @@ local function LoadOverrides(force)
         ClearOverrideBindings(GSE_EABBindOwner)
         for k, _ in pairs(GSE.ButtonOverrides) do
             -- revert all buttons
-            if string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" then
                 local state = "1"
                 --_G[Button]:GetAttribute("state"),
                 if string.sub(k, 1, 3) == "BT4" then
