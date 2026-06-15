@@ -902,6 +902,7 @@ local function LoadOverrides(force)
         ClearOverrideBindings(GSE_EABBindOwner)
         for k, _ in pairs(GSE.ButtonOverrides) do
             -- revert all buttons
+            if _G[k] and _G[k].SetState then
                 local state = "1"
                 --_G[Button]:GetAttribute("state"),
                 if string.sub(k, 1, 3) == "BT4" then
