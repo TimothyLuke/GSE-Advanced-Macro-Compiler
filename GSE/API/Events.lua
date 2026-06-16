@@ -365,11 +365,34 @@ local function getGSEButtonIcon(self)
         if texture and not isGSEFallbackTexture(texture) then return texture end
     end
 end
+
+-- Bars that hide empty action buttons (notably Dominos) will hide a GSE override
+-- slot, because the slot holds no real action -- HasAction() is false, so the
+-- bar's "show empty buttons" gate keeps it hidden and the assigned override
+-- vanishes. Dominos gates visibility on a `showgrid` bitmask of "reasons" and
+-- exposes the insecure helper button:SetShowGridInsecure(show, reason, force).
+-- We OR in a private GSE reason bit (clear of Dominos' own 1/2/4/16/32) so the
+-- slot stays shown without disturbing Dominos' grid state; clearing the bit on
+-- removal lets the slot hide again. Feature-detected, so it is a no-op on
+-- Blizzard/other bars that don't provide the method. Combat-guarded by Dominos.
+local GSE_FORCE_SHOWGRID_REASON = 262144 -- 0x40000, a single high bit
+
+local function setOverrideButtonForcedShown(buttonOrName, shown)
+    local btn = type(buttonOrName) == "string" and _G[buttonOrName] or buttonOrName
+    if not btn or not btn.SetShowGridInsecure then return end
+    if InCombatLockdown() then return end
+    btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
+end
+
 local function repaintGSEOverrideButton(button, defer)
     if not button or not button.GetAttribute then return end
 
     local function repaint()
         if not button:GetAttribute("gse-button") then return end
+        -- Keep bars that hide empty buttons (Dominos) from hiding this override
+        -- slot; re-asserted here because Dominos may re-evaluate grid state after
+        -- our initial apply (hence the staggered repaint schedule).
+        setOverrideButtonForcedShown(button, true)
         local btnName = button:GetName()
         local icon = button.icon or (btnName and _G[btnName .. "Icon"])
         if not icon then return end
@@ -672,7 +695,15 @@ local function overrideActionButton(savedBind, force)
             --@end-debug@
         end
     end
-    if string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
+    -- A Dominos action button may be named DominosActionButtonN OR, for action
+    -- slots 25-72 / 133-168 on retail, MultiBar*ActionButtonN (note the "Action"
+    -- infix -- these are Dominos-created frames, not the Blizzard MultiBar*ButtonN
+    -- frames Dominos hides). Detect by the Dominos-only SetShowGridInsecure method
+    -- rather than a name prefix, so every Dominos button takes this path instead
+    -- of falling through to the third-party slot/page logic, which is invalid for
+    -- Dominos buttons (the action slot is a flat secure attribute, not paged).
+    local isDominosButton = _G[Button].SetShowGridInsecure ~= nil
+    if isDominosButton or string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
         -- Dominos and ButtonForge use ActionBarButtonTemplate / SecureActionButtonTemplate;
         -- action slot is a secure attribute only, not a page/slot hierarchy.
         -- Use simplified WrapScript (no GetActionInfo lookup).
@@ -689,6 +720,24 @@ local function overrideActionButton(savedBind, force)
                     end
                 )
                 SHBT:WrapScript(_G[Button], "OnAttributeChanged", BAR_SWAP_OAC)
+            end
+            -- Dominos routes a slot's keybind to a hidden hotkey proxy
+            -- ($parentHotkey) that casts the parent's *action* directly via
+            -- useparent-action -- it ignores the parent's type/clickbutton, so the
+            -- GSE override (which lives on the visible button) is bypassed and the
+            -- key fires the empty slot. Mouse clicks hit the visible button and
+            -- work; the key does not. Re-point the bound key(s) at the visible
+            -- button with a PRIORITY override binding, which supersedes Dominos'
+            -- non-priority proxy binding regardless of apply order. Cleared and
+            -- re-applied on every LoadOverrides via GSE_EABBindOwner. ButtonForge
+            -- is excluded -- it is not affected and has no such proxy.
+            if isDominosButton then
+                local cmd = _G[Button]:GetAttribute("commandName")
+                if cmd then
+                    local k1, k2 = GetBindingKey(cmd)
+                    if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Button) end
+                    if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Button) end
+                end
             end
             -- Arm type/clickbutton + the secure gate from inside the secure
             -- environment so GSE seeds no taint (issue #1931).
@@ -818,6 +867,9 @@ local function overrideActionButton(savedBind, force)
         repaintGSEOverrideButton(_G[Button])
         repaintGSEOverrideButton(_G[Button], true)
     end
+    -- Force the slot to stay visible on bars that hide empty buttons (Dominos);
+    -- a GSE override leaves the action slot empty, so it would otherwise vanish.
+    setOverrideButtonForcedShown(_G[Button], true)
     -- Post-load repaint after GSE action-bar override mapping is populated.
     if GSE.UpdateIcon and _G[Sequence] then
         C_Timer.After(0, function()
@@ -901,6 +953,9 @@ local function LoadOverrides(force)
     if not InCombatLockdown() then
         ClearOverrideBindings(GSE_EABBindOwner)
         for k, _ in pairs(GSE.ButtonOverrides) do
+            -- Drop the forced-shown bit so a no-longer-overridden Dominos slot can
+            -- hide again; it is re-applied below for slots that remain overridden.
+            setOverrideButtonForcedShown(k, false)
             -- revert all buttons
             if _G[k] and _G[k].SetState then
                 local state = "1"

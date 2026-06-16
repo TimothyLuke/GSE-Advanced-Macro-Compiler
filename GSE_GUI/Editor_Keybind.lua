@@ -527,16 +527,38 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
             end
         end
         if Dominos then
-            -- IDs 1-24 and 73-132 are Dominos-owned frames; the other ID ranges
-            -- reuse standard Blizzard frame names already captured above.
+            -- Dominos frame names differ between retail and Classic; list every
+            -- pattern either flavour uses (missing names just never match _G).
+            --   IDs 1-24 / 73-168 : DominosActionButtonN (retail tops out at 132,
+            --     Classic goes to 168).
+            --   IDs 25-72 / 133-168 (retail only): MultiBar*ActionButtonN -- new
+            --     Dominos frames (note the "Action" infix), NOT the Blizzard
+            --     MultiBar*ButtonN frames Dominos hides. On Classic these ranges
+            --     reuse the Blizzard names captured above instead.
             for i = 1, 24 do
                 if _G["DominosActionButton" .. i] then
                     buttonlist["DominosActionButton" .. i] = "DominosActionButton" .. i
                 end
             end
-            for i = 73, 132 do
+            for i = 73, 168 do
                 if _G["DominosActionButton" .. i] then
                     buttonlist["DominosActionButton" .. i] = "DominosActionButton" .. i
+                end
+            end
+            local dominosBlizzPrefixes = {
+                "MultiBarRightActionButton",       -- IDs 25-36
+                "MultiBarLeftActionButton",        -- IDs 37-48
+                "MultiBarBottomRightActionButton", -- IDs 49-60
+                "MultiBarBottomLeftActionButton",  -- IDs 61-72
+                "MultiBar5ActionButton",           -- IDs 133-144
+                "MultiBar6ActionButton",           -- IDs 145-156
+                "MultiBar7ActionButton",           -- IDs 157-168
+            }
+            for _, prefix in ipairs(dominosBlizzPrefixes) do
+                for i = 1, 12 do
+                    if _G[prefix .. i] then
+                        buttonlist[prefix .. i] = prefix .. i
+                    end
                 end
             end
         end

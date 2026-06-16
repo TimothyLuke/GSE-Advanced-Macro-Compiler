@@ -2319,15 +2319,43 @@ do
         end
 
         if Dominos then
-            -- IDs 1-24 and 73-132 are Dominos-owned frames; the rest reuse Blizzard names
-            -- already covered by the buttonPrefixes loop above.
+            -- Dominos frame-name mapping differs between retail and Classic, so
+            -- hook every pattern either flavour can use; the `if btn` guard makes
+            -- names that don't exist on the current client a harmless no-op.
+            --
+            --   IDs       Retail name            Classic name
+            --   1-24      DominosActionButtonN   DominosActionButtonN (1-12 = ActionButtonN, hooked above)
+            --   25-72     MultiBar*ActionButtonN MultiBar*ButtonN (Blizzard, hooked by buttonPrefixes)
+            --   73-168    DominosActionButton73-132 + MultiBar5/6/7ActionButtonN   DominosActionButtonN
+            --
+            -- On retail, Dominos creates its own MultiBar*ActionButtonN frames
+            -- (note the "Action" infix) and hides the Blizzard MultiBar*ButtonN
+            -- frames — so the buttonPrefixes loop above never reaches the visible
+            -- buttons. On Classic, Dominos reuses the Blizzard frames instead.
             for i = 1, 24 do
                 local btn = _G["DominosActionButton" .. i]
                 if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
             end
-            for i = 73, 132 do
+            -- Retail tops out at DominosActionButton132; Classic goes to 168.
+            for i = 73, 168 do
                 local btn = _G["DominosActionButton" .. i]
                 if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            end
+            -- Retail-only Dominos-created frames (absent on Classic → skipped).
+            local dominosBlizzPrefixes = {
+                "MultiBarRightActionButton",       -- IDs 25-36
+                "MultiBarLeftActionButton",        -- IDs 37-48
+                "MultiBarBottomRightActionButton", -- IDs 49-60
+                "MultiBarBottomLeftActionButton",  -- IDs 61-72
+                "MultiBar5ActionButton",           -- IDs 133-144
+                "MultiBar6ActionButton",           -- IDs 145-156
+                "MultiBar7ActionButton",           -- IDs 157-168
+            }
+            for _, prefix in ipairs(dominosBlizzPrefixes) do
+                for i = 1, 12 do
+                    local btn = _G[prefix .. i]
+                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                end
             end
         end
 
