@@ -164,7 +164,10 @@ if GSE.GameMode >= 11 then
     -- standard Blizzard APIs (11.0+); the panel rebuilds each open from
     -- the initializer data so the displayed text always reflects what
     -- was saved.
-    local skyOptions = Settings.RegisterVerticalLayoutSubcategory(
+    -- Prefer the subcategory pre-registered by GSE_Options/Options.lua
+    -- (createBlizzOptions) so this page sits ABOVE Tools & Diagnostics. Fall
+    -- back to registering our own (lands last) if it isn't there for any reason.
+    local skyOptions = GSE.SkyridingOptionsCategory or Settings.RegisterVerticalLayoutSubcategory(
         Settings.GetCategory(GSE.MenuCategoryID),
         L["Skyriding / Vehicle Keybinds"]
     )

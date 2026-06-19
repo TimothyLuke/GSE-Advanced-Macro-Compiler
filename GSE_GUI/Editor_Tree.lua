@@ -1253,14 +1253,35 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         end
         ShowSequenceFooter(editframe)
         if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
-        table.insert(
-            editframe.Sequence.Versions,
-            GSE.CloneSequence(editframe.Sequence.Versions[editframe.Sequence.MetaData.Default])
-        )
-        editframe.GUIDrawMacroEditor(contentcontainer, #editframe.Sequence.Versions, table.concat(path, "\001"))
+        local newVersion = GSE.CloneSequence(editframe.Sequence.Versions[editframe.Sequence.MetaData.Default])
+        table.insert(editframe.Sequence.Versions, newVersion)
+        local newVersionIndex = #editframe.Sequence.Versions
+
+        -- Mirror the new version into the Library display cache so the tree shows
+        -- the node immediately, before any Save (GSESequences is only written on
+        -- explicit Save). Same approach as the version drag-reorder handler above.
+        local numericClassID = tonumber(classid)
+        if numericClassID then
+            GSE.EnsureSequenceLoaded(numericClassID, sequencename)
+            local libSeq = GSE.Library[numericClassID] and GSE.Library[numericClassID][sequencename]
+            if libSeq and libSeq.Versions then
+                table.insert(libSeq.Versions, GSE.CloneSequence(newVersion))
+            end
+        end
+
+        editframe.GUIDrawMacroEditor(contentcontainer, newVersionIndex, table.concat(path, "\001"))
         editframe:SetTitle(
             L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
         )
+
+        -- Rebuild the tree so the new version node appears right away, then select
+        -- it (deferred to avoid re-entering this handler) so it becomes the active
+        -- node for editing. Saving later persists it normally.
+        if editframe.ManageTree then editframe.ManageTree() end
+        local newVersionPath = table.concat(path, "\001") .. "\001" .. tostring(newVersionIndex)
+        C_Timer.After(0, function()
+            GSE.GUI.SelectEditorTreePath(editframe, newVersionPath)
+        end)
     else
         if editframe.OrigSequenceName ~= sequencename then
             GSE.GUILoadEditor(editframe, path[#path])

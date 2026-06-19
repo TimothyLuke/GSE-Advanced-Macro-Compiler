@@ -2136,6 +2136,15 @@ end
 
 local function createBlizzOptions(category, pluginOptions, colourOptions)
     local windowOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Windows & Layout")
+    -- Skyriding / Vehicle Keybinds (Retail only) is registered HERE so it sits
+    -- directly above Tools & Diagnostics. Its slot buttons/initializers are
+    -- populated later by GSE_QoL/QoL.lua, which loads after this runs and picks
+    -- up GSE.SkyridingOptionsCategory rather than registering its own
+    -- subcategory (which would land last, below Tools & Diagnostics).
+    if GSE.GameMode and GSE.GameMode >= 11 then
+        GSE.SkyridingOptionsCategory =
+            Settings.RegisterVerticalLayoutSubcategory(category, L["Skyriding / Vehicle Keybinds"])
+    end
     local troubleOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Tools & Diagnostics")
     AttachTrackerDefaultsHandler(troubleOptions)
     --@debug@
