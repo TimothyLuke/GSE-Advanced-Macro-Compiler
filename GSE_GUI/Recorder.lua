@@ -10,6 +10,7 @@ local recordframe = UI:Create("Frame")
 recordframe:Hide()
 recordframe.frame:SetFrameStrata("MEDIUM")
 recordframe.frame:SetClampedToScreen(true)
+recordframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 GSE.GUIRecordFrame = recordframe
 local recbuttontext = L["Record"]
 

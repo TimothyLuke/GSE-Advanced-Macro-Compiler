@@ -659,6 +659,18 @@ local function processCollection(payload)
       )
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
+        -- Confirm to the user what actually came in. The collection import path
+        -- was previously silent (it only hid the frame); the only feedback was
+        -- the editor's "updated in another window" notice when it happened to
+        -- be open. List the elements the user chose to import.
+        local imported = {}
+        for k in pairs(filteredpayload["Sequences"]) do table.insert(imported, k) end
+        for k in pairs(filteredpayload["Variables"]) do table.insert(imported, k) end
+        for k in pairs(filteredpayload["Macros"]) do table.insert(imported, k) end
+        if #imported > 0 then
+          table.sort(imported)
+          GSE.Print(string.format(L["Imported: %s"], table.concat(imported, ", ")))
+        end
         -- Mark imported by identity so the Companion can prune them from the bridge data
         if importframe.fromQueue then
           if GSE.IncomingQueue and GSE.CompanionMarkImported then
@@ -1374,3 +1386,74 @@ if importframe and importframe.frame and GSE.RegisterUIScaleFrame then
 end
 end
 table.insert(ns.deferred, setup)
+
+--@debug@
+-- Dev-only: /gse compressstring window (relocated from CompressSequence.lua).
+-- Stripped from release builds with the command that opens it.
+local function setupCompressFrame()
+    local GSE = ns.GSE
+    local UI = GSE.UI
+    local L = GSE.L
+
+    local compressframe = UI:Create("Frame")
+    compressframe.frame:SetFrameStrata("MEDIUM")
+    compressframe.frame:SetClampedToScreen(true)
+    compressframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    compressframe:Hide()
+
+    compressframe:SetTitle(L["Gnome Sequencer: Compress a Sequence String."])
+    compressframe:SetStatusText(L["Compress Sequence from Forums"])
+    compressframe:SetCallback(
+      "OnClose",
+      function(widget)
+        compressframe:Hide()
+      end
+    )
+    compressframe:SetLayout("List")
+
+    local importsequencebox = UI:Create("MultiLineEditBox")
+    importsequencebox:SetLabel(L["Sequence to Compress."])
+    importsequencebox:SetNumLines(20)
+    importsequencebox:DisableButton(true)
+    importsequencebox:SetFullWidth(true)
+    compressframe:AddChild(importsequencebox)
+
+    local recButtonGroup = UI:Create("SimpleGroup")
+    recButtonGroup:SetFullWidth(true)
+    recButtonGroup:SetLayout("Flow")
+
+    local recbutton = UI:Create("Button")
+    recbutton:SetText(L["Compress"])
+    recbutton:SetWidth(150)
+    recbutton:SetCallback(
+      "OnClick",
+      function()
+        importsequencebox:SetText(GSE.EncodeMessage(importsequencebox:GetText()))
+      end
+    )
+    local decbutton = UI:Create("Button")
+    decbutton:SetText(L["Decompress"])
+    decbutton:SetWidth(150)
+    decbutton:SetCallback(
+      "OnClick",
+      function()
+        local success, returnval = GSE.DecodeMessage(importsequencebox:GetText())
+        if success then
+          importsequencebox:SetText(IndentationLib.encode(GSE.Dump(returnval)))
+        else
+          GSE.Print("Cant interpret that sequence.")
+        end
+      end
+    )
+    recButtonGroup:AddChild(recbutton)
+    recButtonGroup:AddChild(decbutton)
+
+    compressframe:AddChild(recButtonGroup)
+    GSE.GUICompressFrame = compressframe
+
+    if compressframe and compressframe.frame and GSE.RegisterUIScaleFrame then
+        GSE.RegisterUIScaleFrame(compressframe.frame)
+    end
+end
+table.insert(ns.deferred, setupCompressFrame)
+--@end-debug@

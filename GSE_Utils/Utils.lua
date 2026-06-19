@@ -457,7 +457,6 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                     v.MetaData = v.MetaData or {}
                     if not v.MetaData.Name then v.MetaData.Name = name end
                 end
-                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             for name, v in pairs(actiontable["Macros"] or {}) do
                 if type(v) == "table" and not v.name then v.name = name end
@@ -1989,11 +1988,13 @@ function GSE:GSSlash(input)
         else
             GSE.Print("GSE icon scan is unavailable. Make sure GSE_GUI is loaded, then /reload.")
         end
+    --@debug@
     elseif command == "compressstring" then
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
             GSE.GUICompressFrame:Show()
         end
+    --@end-debug@
     elseif command == "recompilesequences" then
         GSE.ReloadSequences()
     elseif string.lower(command) == "clearoocqueue" then

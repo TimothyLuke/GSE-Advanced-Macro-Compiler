@@ -14,6 +14,7 @@ remoteFrame:Hide()
 remoteFrame.GSEUser = ""
 remoteFrame.SequenceList = {}
 remoteFrame.frame:SetClampedToScreen(true)
+remoteFrame.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 remoteFrame:SetStatusText(L["Select a Sequence"])
 remoteFrame:SetCallback(

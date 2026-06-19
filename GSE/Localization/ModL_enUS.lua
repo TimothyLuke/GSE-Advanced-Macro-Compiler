@@ -195,6 +195,7 @@ L["Checksum invalid - sequence may have been modified"] = true
 L["No checksum"] = true
 
 L["Import"] = true
+L["Imported: %s"] = true
 L["Close"] = true
 L["Debug Output Options"] = true
 L["Enable Debug for the following Modules"] = true

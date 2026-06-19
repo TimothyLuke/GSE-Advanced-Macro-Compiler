@@ -13,6 +13,16 @@ local function DisableCompareColoring(widget)
   end
 end
 
+-- Dump only the Versions of a sequence for the compare panes. Uses the same
+-- translate/unescape pipeline as GSE.ExportSequence(verbose) but strips the
+-- MetaData/KeyPress/etc wrapper so the comparison focuses on the actual
+-- rotation. (A full upstream-style structured diff is a separate follow-up.)
+local function ExportVersionsForCompare(sequence)
+  if GSE.isEmpty(sequence) then return "" end
+  local translated = GSE.UnEscapeTable(GSE.TranslateSequence(sequence, Statics.TranslatorMode.Current))
+  return GSE.Dump(translated.Versions) .. "\n"
+end
+
 function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   local compareframe = UI:Create("Frame")
   compareframe:Hide()
@@ -22,6 +32,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   compareframe.ChosenAction = GSEOptions.DefaultImportAction
   compareframe.frame:SetFrameStrata("MEDIUM")
   compareframe.frame:SetClampedToScreen(true)
+  compareframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
   compareframe:SetTitle(L["Sequence Compare"] .. " - " .. sequenceName)
 

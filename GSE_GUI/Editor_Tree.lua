@@ -951,17 +951,17 @@ local function InitEditorFooterButtons(editframe)
     end)
     debugbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
-    local reloadbutton = UI:Create("Button")
-    reloadbutton:SetText(L["Reload"])
-    reloadbutton:SetWidth(100)
-    if reloadbutton.SetElvUIBackgroundShown then reloadbutton:SetElvUIBackgroundShown(true) end
-    reloadbutton:SetCallback("OnClick", function()
-        if ReloadUI then ReloadUI() end
+    local recordbutton = UI:Create("Button")
+    recordbutton:SetText(L["Record"])
+    recordbutton:SetWidth(100)
+    if recordbutton.SetElvUIBackgroundShown then recordbutton:SetElvUIBackgroundShown(true) end
+    recordbutton:SetCallback("OnClick", function()
+        if GSE.GUIRecordFrame then GSE.GUIRecordFrame:Show() end
     end)
-    reloadbutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Reload"], L["Reload the user interface."], editframe)
+    recordbutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Record"], L["GSE: Record your rotation to a macro."], editframe)
     end)
-    reloadbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    recordbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
     local delbutton = UI:Create("Button")
     delbutton:SetText(L["Delete Sequence"])
@@ -995,7 +995,7 @@ local function InitEditorFooterButtons(editframe)
         editframe:AddFooterChild(editOptionsbutton, 1)
         editframe:AddFooterChild(resourcesButton, 1)
         editframe:AddFooterChild(transbutton, 2)
-        editframe:AddFooterChild(reloadbutton, 2)
+        editframe:AddFooterChild(recordbutton, 2)
         editframe:AddFooterChild(debugbutton, 2)
     end
     -- Cache the sequence button set so ShowSequenceFooter / ShowSectionFooter

@@ -61,14 +61,14 @@ end
 
 local function CheckOOCQueueStatus()
   local output
-  if GSE.isEmpty(GSE.OOCTimer) then
+  if GSE.OOCQueuePaused then
+    -- Only "Paused" when the user has explicitly toggled the queue off. An
+    -- empty/idle queue (no ticker) is still Running, not Paused.
     output = GSEOptions.UNKNOWN .. L["Paused"] .. Statics.StringReset
+  elseif InCombatLockdown() then
+    output = GSEOptions.TitleColour .. L["Paused - In Combat"] .. Statics.StringReset
   else
-    if InCombatLockdown() then
-      output = GSEOptions.TitleColour .. L["Paused - In Combat"] .. Statics.StringReset
-    else
-      output = GSEOptions.CommandColour .. L["Running"] .. Statics.StringReset
-    end
+    output = GSEOptions.CommandColour .. L["Running"] .. Statics.StringReset
   end
   return output
 end

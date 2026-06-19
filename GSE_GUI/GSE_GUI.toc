@@ -43,7 +43,6 @@ Editor_Tree.lua
 Editor.lua
 RemoteMacroBrowser.lua
 GUIFunctions.lua
-CompressSequence.lua
 MacroCompare.lua
 MacroPreview.lua
 SpellCache.lua

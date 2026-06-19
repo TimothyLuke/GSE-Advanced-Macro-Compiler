@@ -1560,6 +1560,7 @@ end
 
 --- Start the OOC Queue Timer
 function GSE.StartOOCTimer()
+    if GSE.OOCQueuePaused then return end
     if GSE.OOCTimer then return end
     local delay = GSEOptions.OOCQueueDelay and GSEOptions.OOCQueueDelay or 7
     GSE.OOCTimer = C_Timer.NewTicker(delay, function() GSE.ProcessOOCQueue() end)
@@ -1691,9 +1692,16 @@ function GSE:ProcessOOCQueue()
 end
 
 function GSE.ToggleOOCQueue()
-    if GSE.isEmpty(GSE.OOCTimer) then
-        GSE.StartOOCTimer()
+    -- Explicit user pause/resume. This is the ONLY thing that "pauses" the
+    -- queue; the ticker itself is stopped automatically whenever the queue
+    -- drains empty (see ProcessOOCQueue), which is idle, not paused.
+    if GSE.OOCQueuePaused then
+        GSE.OOCQueuePaused = false
+        if GSE.OOCQueue and #GSE.OOCQueue > 0 then
+            GSE.StartOOCTimer()
+        end
     else
+        GSE.OOCQueuePaused = true
         GSE.StopOOCTimer()
     end
 end
