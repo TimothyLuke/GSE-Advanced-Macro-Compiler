@@ -432,14 +432,25 @@ end
 function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, forcemerge)
     if type(importstring) == "string" and importstring:sub(1, 7) == "!GSE3!+" then
         local ok, decoded = GSE.DecodeMessage(importstring)
-        local name = ok and type(decoded) == "table"
-            and (decoded[1] or (type(decoded[2]) == "table" and decoded[2].MetaData and decoded[2].MetaData.Name))
-            or nil
-        if name and GSE.StoreEncodedSequence(name, importstring) then
-            -- Confirm the import so a single pasted string isn't stored
-            -- silently (the collection path reports via its own summary).
-            GSE.Print(string.format(L["Imported: %s"], name), GNOME)
-            return true
+        if ok and type(decoded) == "table" then
+            local name, stored
+            if decoded.objectType == "VARIABLE" then
+                name = decoded.name
+                stored = name and GSE.StoreEncodedVariable(name, importstring)
+            elseif decoded.objectType == "MACRO" then
+                name = decoded.name
+                stored = name and GSE.StoreEncodedMacro and GSE.StoreEncodedMacro(name, importstring)
+            else
+                name = decoded[1]
+                    or (type(decoded[2]) == "table" and decoded[2].MetaData and decoded[2].MetaData.Name)
+                stored = name and GSE.StoreEncodedSequence(name, importstring)
+            end
+            if stored then
+                -- Confirm the import so a single pasted string isn't stored
+                -- silently (the collection path reports via its own summary).
+                GSE.Print(string.format(L["Imported: %s"], name), GNOME)
+                return true
+            end
         end
         GSE.Print(L["Unable to interpret sequence."], GNOME)
         return false
@@ -463,8 +474,12 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             -- array wrapper). Propagate the key into the object's identity
             -- field so the recursive call can resolve it.
             for name, v in pairs(actiontable["Variables"] or {}) do
-                if type(v) == "table" and not v.name then v.name = name end
-                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
+                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                    GSE.StoreEncodedVariable(name, v)
+                else
+                    if type(v) == "table" and not v.name then v.name = name end
+                    GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
+                end
             end
             for name, v in pairs(actiontable["Sequences"] or {}) do
                 if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
@@ -478,8 +493,12 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 end
             end
             for name, v in pairs(actiontable["Macros"] or {}) do
-                if type(v) == "table" and not v.name then v.name = name end
-                GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
+                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                    GSE.StoreEncodedMacro(name, v)
+                else
+                    if type(v) == "table" and not v.name then v.name = name end
+                    GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
+                end
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then

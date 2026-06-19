@@ -565,6 +565,34 @@ function GSE.StoreEncodedSequence(name, encoded)
     return true
 end
 
+function GSE.StoreEncodedVariable(name, encoded)
+    if type(name) ~= "string" or type(encoded) ~= "string" then return false end
+    local ok, decoded = GSE.DecodeMessage(encoded)
+    if not ok or type(decoded) ~= "table" then
+        GSE.Print(L["Unable to interpret sequence."] .. " " .. name, GNOME)
+        return false
+    end
+    if GSE.isEmpty(GSEVariables) then GSEVariables = {} end
+    GSEVariables[name] = encoded
+    if GSE.V then GSE.V[name] = nil end
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
+    return true
+end
+
+function GSE.StoreEncodedMacro(name, encoded)
+    if type(name) ~= "string" or type(encoded) ~= "string" then return false end
+    local ok, decoded = GSE.DecodeMessage(encoded)
+    if not ok or type(decoded) ~= "table" then
+        GSE.Print(L["Unable to interpret sequence."] .. " " .. name, GNOME)
+        return false
+    end
+    if GSE.isEmpty(GSEMacros) then GSEMacros = {} end
+    GSEMacros[name] = { GSEProtected = encoded }
+    if GSE.ManageMacros then GSE.ManageMacros() end
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
+    return true
+end
+
 --- Rename a sequence in-place, preserving its PlatformID and all MetaData.
 -- Moves the data from the old key to the new key in both Library and
 -- GSESequences, updates MetaData.Name, and removes the old entry.
@@ -2718,7 +2746,7 @@ local function CleanMacroBookText(text)
     return text
 end
 
-function GSE.UpdateMacro(node, category)
+function GSE.UpdateMacro(node, category, skipStore)
     -- Save-cancels-delete (see UpdateVariable for rationale).
     if node and node.name and GSE.CompanionCancelPendingDelete then
         GSE.CompanionCancelPendingDelete("macro", node.name)
@@ -2738,17 +2766,39 @@ function GSE.UpdateMacro(node, category)
             EditMacro(slot, node.name, node.icon, node.text)
         else
             node.value = CreateMacro(node.name, node.icon, node.text, category)
-            if category then
-                local char, realm = UnitFullName("player")
-                GSEMacros[char .. "-" .. realm][node.name] = node
-            else
-                GSEMacros[node.name] = node
+            if not skipStore then
+                if category then
+                    local char, realm = UnitFullName("player")
+                    GSEMacros[char .. "-" .. realm][node.name] = node
+                else
+                    GSEMacros[node.name] = node
+                end
             end
         end
         GSE:RegisterEvent("UPDATE_MACROS")
         GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)
     end
     return node
+end
+
+local function resolveMacroNode(entry)
+    if type(entry) == "table" and type(entry.GSEProtected) == "string" then
+        local ok, decoded = GSE.DecodeMessage(entry.GSEProtected)
+        if ok and type(decoded) == "table" then return decoded, true end
+        return nil, true
+    end
+    return entry, false
+end
+
+local function materialiseEncodedMacro(name, node, category)
+    if not node then return end
+    local text = node.managedMacro or node.text
+    GSE.UpdateMacro({
+        ["name"] = name,
+        ["icon"] = (node.Managed and GSE.GetManagedMacroStubIcon)
+            and GSE.GetManagedMacroStubIcon(name, node.icon) or node.icon,
+        ["text"] = GSE.CompileMacroText(text, Statics.TranslatorMode.String),
+    }, category, true)
 end
 
 function GSE.ImportMacro(node)
@@ -2894,7 +2944,12 @@ end
 
 function GSE.ManageMacros()
     for k, v in pairs(GSEMacros) do
-        if v.Managed then
+        local pnode, encodedEntry = resolveMacroNode(v)
+        if encodedEntry then
+            -- Entry held in received encoded form: materialise without writing
+            -- a plaintext node back over it (see resolveMacroNode).
+            materialiseEncodedMacro(k, pnode, nil)
+        elseif v.Managed then
             local macroIndex = GetMacroIndexByName(k)
             if macroIndex ~= v.value then
                 v.value = macroIndex
@@ -2942,7 +2997,10 @@ function GSE.ManageMacros()
             if k == "value" then
                 GSEMacros[char .. "-" .. realm][k] = nil
             else
-                if v.Managed then
+                local cpnode, cEncodedEntry = resolveMacroNode(v)
+                if cEncodedEntry then
+                    materialiseEncodedMacro(k, cpnode, true)
+                elseif v.Managed then
                     local macroIndex = GetMacroIndexByName(k)
                     if macroIndex ~= v.value then
                         v.value = macroIndex
