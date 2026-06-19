@@ -6141,6 +6141,32 @@ function GSE.CreateEditor()
                         sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
                     end
                     table.remove(sequence.Versions, version)
+
+                    -- Mirror the deletion into the Library display cache so the
+                    -- tree drops the version node immediately, before any Save
+                    -- (GSESequences is only written on explicit Save). The tree is
+                    -- built from GSE.Library, not editframe.Sequence, so without
+                    -- this the deleted version lingered until save. Same approach
+                    -- as the New Version handler and the drag-reorder handler.
+                    local delClassID = tonumber(editframe.ClassID)
+                    if delClassID then
+                        GSE.EnsureSequenceLoaded(delClassID, editframe.SequenceName)
+                        local libSeq = GSE.Library[delClassID] and GSE.Library[delClassID][editframe.SequenceName]
+                        if libSeq and libSeq.Versions and libSeq.Versions[version] then
+                            table.remove(libSeq.Versions, version)
+                            if libSeq.MetaData then
+                                libSeq.MetaData.Default = sequence.MetaData.Default
+                                local contextKeys = {
+                                    "Raid", "Arena", "Mythic", "MythicPlus", "PVP",
+                                    "Heroic", "Dungeon", "Timewalking", "Party", "Scenario",
+                                }
+                                for _, ck in ipairs(contextKeys) do
+                                    libSeq.MetaData[ck] = sequence.MetaData[ck]
+                                end
+                            end
+                        end
+                    end
+
                     printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
                     editframe.ManageTree()
                     treeContainer:SelectByValue(path)
@@ -6588,32 +6614,22 @@ function GSE.CreateEditor()
 
             if selectedPath and #selectedPath > 0 then
                 if type(selectedAction) == "table" then
-                    if selectedAction.Type == Statics.Actions.Loop or selectedAction.Type == Statics.Actions.If then
-                        local targetPath = CloneMacroBlockPath(selectedPath)
-                        if selectedAction.Type == Statics.Actions.If then
-                            table.insert(targetPath, 1)
+                    -- Always insert the new block as a sibling immediately AFTER
+                    -- the focused block, in the same container. Focusing a Loop or
+                    -- If block therefore adds a new block BELOW it (a sibling), not
+                    -- inside it; to add inside a loop or an If branch, focus one of
+                    -- its child blocks and the new block lands right after that.
+                    local parentPath = ParentMacroBlockPath(selectedPath)
+                    local targetList = GetTopButtonActionList(parentPath)
+                    local selectedIndex = tonumber(selectedPath[#selectedPath])
+                    local insertAt = selectedIndex and selectedIndex + 1
+                    if type(targetList) == "table" and insertAt then
+                        if insertAt > #targetList + 1 then
+                            insertAt = #targetList + 1
                         end
-
-                        local targetList = GetTopButtonActionList(targetPath)
-                        if type(targetList) == "table" then
-                            local insertAt = #targetList + 1
-                            table.insert(targetList, insertAt, newAction)
-                            insertedPath = CloneMacroBlockPath(targetPath)
-                            table.insert(insertedPath, insertAt)
-                        end
-                    else
-                        local parentPath = ParentMacroBlockPath(selectedPath)
-                        local targetList = GetTopButtonActionList(parentPath)
-                        local selectedIndex = tonumber(selectedPath[#selectedPath])
-                        local insertAt = selectedIndex and selectedIndex + 1
-                        if type(targetList) == "table" and insertAt then
-                            if insertAt > #targetList + 1 then
-                                insertAt = #targetList + 1
-                            end
-                            table.insert(targetList, insertAt, newAction)
-                            insertedPath = CloneMacroBlockPath(parentPath)
-                            table.insert(insertedPath, insertAt)
-                        end
+                        table.insert(targetList, insertAt, newAction)
+                        insertedPath = CloneMacroBlockPath(parentPath)
+                        table.insert(insertedPath, insertAt)
                     end
                 end
             end
@@ -7102,7 +7118,7 @@ function GSE.CreateEditor()
         local versionLabel = UI:Create("EditBox")
         versionLabel:SetWidth(150)
         versionLabel:SetHeight(40)
-        if versionLabel.SetFlowOffset then versionLabel:SetFlowOffset(0, 16) end
+        if versionLabel.SetFlowOffset then versionLabel:SetFlowOffset(0, 10) end
         versionLabel:SetLabel(L["Version"] .. " " .. L["Name"])
         versionLabel:SetText(BuildVersionLabel(version, editframe.Sequence.Versions[version].Label, true))
         versionLabel:SetCallback(
@@ -7125,8 +7141,8 @@ function GSE.CreateEditor()
         linegroup1:AddChild(staticHeaderIndent)
         linegroup1:AddChild(addActionButton)
         linegroup1:AddChild(addLoopButton)
-        linegroup1:AddChild(addIfButton)
         linegroup1:AddChild(addPauseButton)
+        linegroup1:AddChild(addIfButton)
         linegroup1:AddChild(addEmbedButton)
         linegroup1:AddChild(moveUpButton)
         linegroup1:AddChild(moveDownButton)
