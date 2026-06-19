@@ -2551,18 +2551,27 @@ function GSE.CreateEditor()
         minimizeBtn:SetPoint("TOPRIGHT", editframe.frame, "TOPRIGHT", -34, -5)
     end
     minimizeBtn:SetFrameLevel(((editframe.closebutton and editframe.closebutton.GetFrameLevel and editframe.closebutton:GetFrameLevel()) or editframe.frame:GetFrameLevel() or 0) + 2)
+    local minimizeBtnExternalSkin =
+        GSE.Skin and (GSE.Skin.providerName == "ElvUI" or GSE.Skin.providerName == "EllesmereUI")
+    local minimizeBtnMuted = minimizeBtnUsesModern or minimizeBtnExternalSkin
     local minimizeBtnTexture = "Interface\\AddOns\\GSE_GUI\\Assets\\minimizearrowdown.png"
     minimizeBtn:SetNormalTexture(minimizeBtnTexture)
     minimizeBtn:SetPushedTexture(minimizeBtnTexture)
-    minimizeBtn:SetHighlightTexture(minimizeBtnTexture, minimizeBtnUsesModern and "BLEND" or "ADD")
-    if minimizeBtnUsesModern then
+    minimizeBtn:SetHighlightTexture(minimizeBtnTexture, minimizeBtnMuted and "BLEND" or "ADD")
+    if minimizeBtnExternalSkin then
+        local normalTex = minimizeBtn:GetNormalTexture()
+        if normalTex then
+            if normalTex.SetDesaturated then normalTex:SetDesaturated(true) end
+            if normalTex.SetVertexColor then normalTex:SetVertexColor(0.55, 0.55, 0.55, 0.82) end
+        end
+    elseif minimizeBtnUsesModern then
         SetModernMiniCloseTexture(minimizeBtn:GetNormalTexture(), false)
         SetModernMiniCloseTexture(minimizeBtn:GetPushedTexture(), true)
         SetModernMiniCloseTexture(minimizeBtn:GetHighlightTexture(), true)
     end
     if minimizeBtn:GetNormalTexture() then minimizeBtn:GetNormalTexture():SetAlpha(1) end
     if minimizeBtn:GetPushedTexture() then minimizeBtn:GetPushedTexture():SetAlpha(1) end
-    if minimizeBtn:GetHighlightTexture() then minimizeBtn:GetHighlightTexture():SetAlpha(minimizeBtnUsesModern and 1 or 0.8) end
+    if minimizeBtn:GetHighlightTexture() then minimizeBtn:GetHighlightTexture():SetAlpha(minimizeBtnMuted and 1 or 0.8) end
     minimizeBtn:Show()
     editframe.minimizeButton = minimizeBtn
     local function collapseEditor()
