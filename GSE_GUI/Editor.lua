@@ -843,7 +843,17 @@ local function macroEditorCursorPositionForLineOffset(text, targetLine, visibleO
     return textLen + 2
 end
 
-local function RefreshMacroEditorColoredText(widget, plainText)
+-- onlyIfNoVisibleChange: live (as-you-type) callers pass true. In that mode we
+-- only ever repaint colour markup and NEVER alter a single visible character.
+-- The macro box always holds the COLOURED text, so re-running the translator
+-- over its own decoded contents is circular and non-idempotent: /castsequence
+-- appends ", " per element (including the empty one a trailing comma makes), so
+-- it compounds into a runaway "Spell, , , , ,"; blank rows and trailing commas
+-- also get normalised away under the caret. Skipping any repaint that would
+-- change the visible text makes the live pass purely cosmetic. Real translation
+-- + normalisation still happens on focus-loss / commit, where the caller omits
+-- this flag.
+local function RefreshMacroEditorColoredText(widget, plainText, onlyIfNoVisibleChange)
     if not (widget and widget.SetText) then return end
 
     local displayText = getMacroEditorColoredDisplayText(plainText)
@@ -856,6 +866,16 @@ local function RefreshMacroEditorColoredText(widget, plainText)
     -- translator on partial words).
     if type(currentText) == "string" and currentText:match("%s$") then return end
     if displayText == currentText then return end  -- normal no-op (editor first load)
+
+    -- Live mode: bail unless the repaint leaves the visible characters identical
+    -- (compare with colour markup stripped from both sides). This is what keeps
+    -- the live pass from deleting a blank row, eating a trailing comma, or
+    -- compounding a /castsequence comma under the user.
+    if onlyIfNoVisibleChange then
+        local visibleDisplay = GSE.DecodeMacroEditorText(displayText)
+        local visibleCurrent = GSE.DecodeMacroEditorText(currentText)
+        if visibleDisplay ~= visibleCurrent then return end
+    end
 
     local cursorPosition = editBox and editBox.GetCursorPosition and editBox:GetCursorPosition() or nil
 
@@ -7380,6 +7400,9 @@ function GSE.CreateEditor()
             macroEditBox:SetCallback(
                 "OnRelease",
                 function(sel)
+                    -- Invalidate any pending debounced re-colour so it can't fire
+                    -- into a recycled widget. See the OnTextChanged handler.
+                    sel.gseRecolourToken = (sel.gseRecolourToken or 0) + 1
                     DisableMultilineEditorColoring(sel)
                     UpdateMacroLimitState(sel, nil, editframe, version)
                 end
@@ -7413,7 +7436,24 @@ function GSE.CreateEditor()
                     -- once on commit. The macro text is already stored above
                     -- (StoreMacroEditorText), so nothing is lost either way.
                     if GSE.ShouldTranslateLive() then
-                        RefreshMacroEditorColoredText(sel, storedMacro)
+                        -- Debounce: colour once the user pauses, never on every
+                        -- keystroke. SetText resets the caret to end of text (WoW
+                        -- behaviour; our restore is deferred a frame), so per-
+                        -- keystroke repaints let a fast follow-up key (holding
+                        -- Backspace toward the top-left) act while the caret was
+                        -- parked at the end. The pass is superseded by the next
+                        -- keystroke (token) and cancelled on release / focus-loss.
+                        -- onlyIfNoVisibleChange = true keeps it cosmetic-only.
+                        sel.gseRecolourToken = (sel.gseRecolourToken or 0) + 1
+                        local recolourToken = sel.gseRecolourToken
+                        local box = sel
+                        local liveText = value
+                        C_Timer.After(0.2, function()
+                            if box.gseRecolourToken ~= recolourToken then return end
+                            if box.SetText then
+                                RefreshMacroEditorColoredText(box, liveText, true)
+                            end
+                        end)
                     end
                     -- Keep the side panel text in sync even if it's not in
                     -- the layout right now ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â saves a re-derive when the
@@ -7440,6 +7480,10 @@ function GSE.CreateEditor()
                 function(sel)
                     -- Apply translation + coloring on focus-loss, not every
                     -- keystroke. See matching comment in MacroToolbar.lua.
+                    -- Cancel any pending debounced live pass so it can't fire
+                    -- after this commit. This commit pass intentionally omits the
+                    -- idempotent flag so spell-name translation is applied here.
+                    sel.gseRecolourToken = (sel.gseRecolourToken or 0) + 1
                     local storedMacro = sequence.Versions[version].Actions[keyPath].macro
                     if storedMacro and GSE.GUI and GSE.GUI.RefreshMacroEditorColoredText then
                         GSE.GUI.RefreshMacroEditorColoredText(sel, storedMacro)

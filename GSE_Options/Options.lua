@@ -1962,7 +1962,7 @@ local function createAboutPanel()
     panel.OnRefresh = function() end
 
     local built = false
-    panel:SetScript("OnShow", function(self)
+    local function buildAboutPanelContent(self)
         if built then return end
         built = true
 
@@ -2109,7 +2109,16 @@ local function createAboutPanel()
             stringHeight(supDesc, 14) + 6 +
             stringHeight(patronList, 14) + padding
         content:SetHeight(math.max(1, contentHeight))
-    end)
+    end
+
+    panel:SetScript("OnShow", buildAboutPanelContent)
+    -- Build eagerly too, not only on first OnShow. A canvas parent that also has
+    -- subcategories (our case: GSE > General/Plugins/...) renders its canvas
+    -- inconsistently in Blizzard's Settings panel, so OnShow doesn't always fire
+    -- when GSE is clicked and the History/About page came up blank. Building now
+    -- (width falls back to 600 while the frame is still unsized) guarantees the
+    -- content exists; OnShow then no-ops via the `built` guard.
+    buildAboutPanelContent(panel)
 
     return panel
 end
