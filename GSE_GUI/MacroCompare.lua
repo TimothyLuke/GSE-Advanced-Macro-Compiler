@@ -30,9 +30,12 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
     GSEOptions.DefaultImportAction = "MERGE"
   end
   compareframe.ChosenAction = GSEOptions.DefaultImportAction
+  compareframe.classid = classid
+  compareframe.sequenceName = sequenceName
   compareframe.frame:SetFrameStrata("MEDIUM")
   compareframe.frame:SetClampedToScreen(true)
   compareframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+  compareframe.frame:SetSize(920, 600)
 
   compareframe:SetTitle(L["Sequence Compare"] .. " - " .. sequenceName)
 
@@ -55,8 +58,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
 
   local leftColumn = UI:Create("MultiLineEditBox")
   compareframe.OrigText = leftColumn
-  leftColumn:SetRelativeWidth(0.5)
-  leftColumn:SetFullHeight(true)
+  leftColumn:SetRelativeWidth(0.48)
   leftColumn:SetNumLines(25)
   leftColumn:DisableButton(true)
   leftColumn:SetLabel(L["Local Macro"])
@@ -65,8 +67,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
 
   local rightColumn = UI:Create("MultiLineEditBox")
   compareframe.NewText = rightColumn
-  rightColumn:SetRelativeWidth(0.5)
-  rightColumn:SetFullHeight(true)
+  rightColumn:SetRelativeWidth(0.48)
   rightColumn:SetNumLines(25)
   rightColumn:DisableButton(true)
   rightColumn:SetLabel(L["Updated Macro"])
@@ -166,8 +167,8 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
         ["RENAME"] = L["Rename New Macro"]
       }
     )
-    compareframe.OrigText:SetText(GSE.ExportSequence(GSE.Library[classid][sequenceName], sequenceName, true))
-    compareframe.NewText:SetText(GSE.ExportSequence(newsequence, sequenceName, true))
+    compareframe.OrigText:SetText(ExportVersionsForCompare(GSE.Library[classid][sequenceName]))
+    compareframe.NewText:SetText(ExportVersionsForCompare(newsequence))
     compareframe:Show()
     if compareframe.frame and GSE.RegisterUIScaleFrame then GSE.RegisterUIScaleFrame(compareframe.frame) end
     compareframe.sequenceName = sequenceName

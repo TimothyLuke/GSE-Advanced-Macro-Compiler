@@ -430,6 +430,20 @@ end
 -- without showing the compare dialog. Mutually exclusive with forcereplace —
 -- if both are true, forcereplace wins (defensive).
 function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, forcemerge)
+    if type(importstring) == "string" and importstring:sub(1, 7) == "!GSE3!+" then
+        local ok, decoded = GSE.DecodeMessage(importstring)
+        local name = ok and type(decoded) == "table"
+            and (decoded[1] or (type(decoded[2]) == "table" and decoded[2].MetaData and decoded[2].MetaData.Name))
+            or nil
+        if name and GSE.StoreEncodedSequence(name, importstring) then
+            -- Confirm the import so a single pasted string isn't stored
+            -- silently (the collection path reports via its own summary).
+            GSE.Print(string.format(L["Imported: %s"], name), GNOME)
+            return true
+        end
+        GSE.Print(L["Unable to interpret sequence."], GNOME)
+        return false
+    end
     local decompresssuccess, actiontable
     if type(importstring) == "table" then
         decompresssuccess, actiontable = true, importstring
@@ -453,9 +467,14 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
             end
             for name, v in pairs(actiontable["Sequences"] or {}) do
-                if type(v) == "table" then
-                    v.MetaData = v.MetaData or {}
-                    if not v.MetaData.Name then v.MetaData.Name = name end
+                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                    GSE.StoreEncodedSequence(name, v)
+                else
+                    if type(v) == "table" then
+                        v.MetaData = v.MetaData or {}
+                        if not v.MetaData.Name then v.MetaData.Name = name end
+                    end
+                    GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
                 end
             end
             for name, v in pairs(actiontable["Macros"] or {}) do

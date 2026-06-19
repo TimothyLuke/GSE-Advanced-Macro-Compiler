@@ -545,6 +545,26 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
+function GSE.StoreEncodedSequence(name, encoded)
+    if type(name) ~= "string" or type(encoded) ~= "string" then return false end
+    local ok, decoded = GSE.DecodeMessage(encoded)
+    if not ok or type(decoded) ~= "table" or type(decoded[2]) ~= "table" then
+        GSE.Print(L["Unable to interpret sequence."] .. " " .. name, GNOME)
+        return false
+    end
+    local seq = decoded[2]
+    local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
+    if GSE.isEmpty(GSESequences) then GSESequences = {} end
+    if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    GSESequences[classid][name] = encoded
+    -- Drop any stale decoded copy so the lazy loader re-decodes from the
+    -- stored string (its canonical migrate + variable-load path).
+    if type(GSE.Library[classid]) == "table" then GSE.Library[classid][name] = nil end
+    GSE.EnsureSequenceLoaded(classid, name)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, name)
+    return true
+end
+
 --- Rename a sequence in-place, preserving its PlatformID and all MetaData.
 -- Moves the data from the old key to the new key in both Library and
 -- GSESequences, updates MetaData.Name, and removes the old entry.

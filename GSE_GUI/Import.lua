@@ -1399,6 +1399,7 @@ local function setupCompressFrame()
     compressframe.frame:SetFrameStrata("MEDIUM")
     compressframe.frame:SetClampedToScreen(true)
     compressframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    compressframe.frame:SetSize(520, 540)
     compressframe:Hide()
 
     compressframe:SetTitle(L["Gnome Sequencer: Compress a Sequence String."])

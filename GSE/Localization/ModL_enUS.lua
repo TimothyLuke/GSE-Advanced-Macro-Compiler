@@ -328,6 +328,7 @@ L["Finished scanning for errors.  If no other messages then no errors were found
 L["Replace"] = true
 L["Paused"] = true
 L["Running"] = true
+L["Idle"] = true
 L["Paused - In Combat"] = true
 L["The GSE Out of Combat queue is %s"] = true
 
