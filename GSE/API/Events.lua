@@ -931,6 +931,37 @@ function GSE:ACTIONBAR_SLOT_CHANGED()
     reevaluateAllOverrideButtons()
 end
 
+-- After a GSE override is removed from a button, force WoW to repaint the
+-- button's REAL action-slot icon. Without this, removing an override cleared the
+-- watermark (removeGSEWatermark) but the GSE-painted icon lingered until the next
+-- ActionButton update -- e.g. the user moused over the button (OnEnter triggers
+-- Blizzard's update). Deferred a frame so any type/attribute resets settle first;
+-- bails if the button was re-armed in the same LoadOverrides pass.
+local function refreshClearedOverrideIcon(button)
+    if not button or not button.GetAttribute then return end
+    C_Timer.After(0, function()
+        if not button or not button.GetAttribute then return end
+        if button:GetAttribute("gse-button") then return end -- re-armed: keep its GSE icon
+        -- Let WoW repaint from the real slot. button:Update() (retail ActionButton
+        -- mixin / LAB) or the global ActionButton_Update (Classic/MoP). Our
+        -- ActionButton_Update hook is a no-op here because gse-button is nil.
+        if type(button.Update) == "function" and pcall(button.Update, button) then return end
+        if ActionButton_Update and pcall(ActionButton_Update, button) then return end
+        -- Fallback: paint straight from the slot, or clear the icon if it's empty.
+        local btnName = button.GetName and button:GetName()
+        local icon = button.icon or (btnName and _G[btnName .. "Icon"])
+        if not icon then return end
+        local slot = getButtonEffectiveSlot(button)
+        local tex = slot and HasAction and HasAction(slot) and GetActionTexture and GetActionTexture(slot)
+        if tex then
+            icon:SetTexture(tex)
+            icon:Show()
+        else
+            icon:SetTexture(nil)
+        end
+    end)
+end
+
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -952,6 +983,12 @@ local function LoadOverrides(force)
     end
     if not InCombatLockdown() then
         ClearOverrideBindings(GSE_EABBindOwner)
+        -- Remember which buttons are currently overridden so we can repaint the
+        -- real icon on any that end up cleared (not re-armed) by this pass.
+        local clearedCandidates = {}
+        for k in pairs(GSE.ButtonOverrides) do
+            clearedCandidates[k] = true
+        end
         for k, _ in pairs(GSE.ButtonOverrides) do
             -- Drop the forced-shown bit so a no-longer-overridden Dominos slot can
             -- hide again; it is re-applied below for slots that remain overridden.
@@ -997,6 +1034,17 @@ local function LoadOverrides(force)
                 for _, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
                     overrideActionButton(v, force)
                 end
+            end
+        end
+
+        -- Repaint the real action icon on any button whose override was just
+        -- removed and NOT re-armed above. removeGSEWatermark() already cleared the
+        -- watermark; without this the GSE-painted icon stuck around until the next
+        -- ActionButton update (the "have to mouse over it to clear" bug).
+        for clearedName in pairs(clearedCandidates) do
+            local b = _G[clearedName]
+            if b and b.GetAttribute and not b:GetAttribute("gse-button") then
+                refreshClearedOverrideIcon(b)
             end
         end
     end
