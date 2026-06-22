@@ -11,6 +11,19 @@ L["GSE Companion"] = true
 L["Auto Accept Companion Updates"] = true
 L["Automatically import sequences pushed from the GSE Companion app without showing the import dialog. Deletes will still require confirmation."] = true
 
+-- Support / Report a Problem (in-game form; uploaded by the GSE Companion)
+L["Support"] = true
+L["Report a Problem"] = true
+L["Open report form"] = true
+L["GSE Support Report"] = true
+L["What is not working?"] = true
+L["Include my addon list (helps diagnose addon conflicts)"] = true
+L["Create Report"] = true
+L["Please describe what is not working."] = true
+L["GSE_SUPPORT_NOTE"] = "This creates a support report that the GSE Companion app uploads for you — it can't be sent from in-game. With the Companion running, it's sent after WoW next saves your data (a /reload or logout). Track its status in the GSE Companion."
+L["GSE_SUPPORT_CONFIRM"] = "Report created. The GSE Companion will upload it after your next /reload or logout — track its status in the Companion."
+L["GSE_SUPPORT_NEEDS_COMPANION"] = "The GSE Companion app is required to send reports — it does the upload, and its in-game addon isn't loaded. Install/enable the GSE Companion, then reopen this."
+
 -- Sequence version / compatibility strings
 L["GSE_SEQUENCE_OLDER_VERSION_TEXT"] = "WARNING: The sequence '%s' was created with an older version of GSE (%s).\n\nIt may need adjustments before it works correctly.\n\nDo you want to proceed with the import anyway?"
 
