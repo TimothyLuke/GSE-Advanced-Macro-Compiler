@@ -63,6 +63,7 @@ API\sha512.lua
 API\ed25519verify.lua
 API\Checksum.lua
 API\Codec.lua
+API\SequenceDelta.lua
 API\Storage.lua
 API\Plugins.lua
 API\Serialisation.lua
