@@ -1233,6 +1233,8 @@ local function startup()
 
     GSE.LoadStorage(GSE.Library)
 
+    if GSE.LoadDeltaForks then GSE.LoadDeltaForks() end
+
     if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
         GSESequences[GSE.GetCurrentClassID()] = {}
     end

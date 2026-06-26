@@ -103,6 +103,7 @@ globals = {
     "GSELegacyLibraryBackup",
     "GSESequences",
     "GSESupportReports",
+    "GSEDeltas",
     "GSE_GUI",
     "GSE_C",
     "GSESpellCache",

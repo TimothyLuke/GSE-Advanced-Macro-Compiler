@@ -129,4 +129,22 @@ describe("Sequence Delta apply", function()
     GSE.ApplySequenceDelta(base, { v = 1, versions = { ["1"] = { actions = { { from = 0, set = { macro = "X" } } } } } })
     assert.are.equal("/cast A", base.Versions[1].Actions[1].macro) -- base unchanged
   end)
+
+  -- Parity (feedback_gse_parity): variables / macros / collections have no
+  -- Versions and reconstruct via the generic `top` path — must NOT gain a
+  -- spurious Versions table.
+  it("variable delta (no Versions injected)", function()
+    local out = GSE.ApplyDelta({ Variable = "x", value = "/cast A", MetaData = { Name = "v" } },
+      { v = 1, top = { value = "/cast B" } })
+    assert.are.equal("/cast B", out.value)
+    assert.is_nil(out.Versions)
+  end)
+
+  it("macro delta (no Versions injected)", function()
+    local out = GSE.ApplyDelta({ macro = "/cast A", icon = 1, MetaData = { Name = "m" } },
+      { v = 1, top = { macro = "/cast A\n/cast B", icon = 2 } })
+    assert.are.equal("/cast A\n/cast B", out.macro)
+    assert.are.equal(2, out.icon)
+    assert.is_nil(out.Versions)
+  end)
 end)

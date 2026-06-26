@@ -65,12 +65,12 @@ local function applyActionList(baseBlocks, overlay)
     return out
 end
 
-function GSE.ApplySequenceDelta(base, delta)
+function GSE.ApplyDelta(base, delta)
     local out = deepcopy(base or {})
     delta = delta or {}
-    out.Versions = out.Versions or {}
 
     if type(delta.versions) == "table" then
+        out.Versions = out.Versions or {}
         for k, op in pairs(delta.versions) do
             local vk = tonumber(k) or k
             if op.op == "remove" then
@@ -98,6 +98,65 @@ function GSE.ApplySequenceDelta(base, delta)
     end
 
     return out
+end
+
+GSE.ApplySequenceDelta = GSE.ApplyDelta
+
+function GSE.DecodeDelta(b64)
+    if type(b64) ~= "string" or b64 == "" then return nil end
+    local ok, result = pcall(function()
+        return C_EncodingUtil.DeserializeCBOR(C_EncodingUtil.DecodeBase64(b64))
+    end)
+    if ok and type(result) == "table" then return result end
+    return nil
+end
+
+function GSE.ReconstructDeltaFork(entry)
+    if type(entry) ~= "table" or type(entry.b) ~= "string" then return nil end
+    local ok, decoded = GSE.DecodeMessage(entry.b)
+    if not ok or type(decoded) ~= "table" then return nil end
+    -- Sequences encode as { name, object }; variables/macros encode as the bare
+    -- node. decoded[2] picks the sequence object; the fallback handles nodes.
+    local base = decoded[2] or decoded
+    local delta = GSE.DecodeDelta(entry.d)
+    if type(delta) ~= "table" then return base end -- empty delta → base unchanged
+    return GSE.ApplyDelta(base, delta)
+end
+
+local function installReconstructed(t, obj)
+    if type(obj) ~= "table" then return end
+    local meta = obj.MetaData or {}
+    local nm = obj.name or meta.Name
+    if not nm then return end
+    if t == "sequence" then
+        local classid = (GSE.GetClassIDforSpec and GSE.GetClassIDforSpec(meta.SpecID)) or 0
+        if type(GSE.Library[classid]) ~= "table" then GSE.Library[classid] = {} end
+        GSE.Library[classid][nm] = obj
+    elseif t == "variable" and GSE.V then
+        GSE.V[nm] = obj
+    elseif t == "macro" and type(GSEMacros) == "table" then
+        GSEMacros[nm] = obj
+    end
+end
+
+function GSE.LoadDeltaForks()
+    if type(GSEDeltas) ~= "table" then return end
+    for _, entry in pairs(GSEDeltas) do
+        if type(entry) == "table" then
+            installReconstructed(entry.t or "sequence", GSE.ReconstructDeltaFork(entry))
+        end
+    end
+end
+
+function GSE.StoreDeltaFork(element)
+    if type(element) ~= "table" or not element.GSEDeltaFork then return false end
+    local pid = element.platformId
+    if type(pid) ~= "string" or pid == "" then return false end
+    if type(GSEDeltas) ~= "table" then GSEDeltas = {} end
+    local entry = { b = element.base, d = element.delta, t = element.contentType or "sequence" }
+    GSEDeltas[pid] = entry
+    installReconstructed(entry.t, GSE.ReconstructDeltaFork(entry))
+    return true
 end
 
 if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("SequenceDelta") end

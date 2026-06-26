@@ -474,7 +474,9 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             -- array wrapper). Propagate the key into the object's identity
             -- field so the recursive call can resolve it.
             for name, v in pairs(actiontable["Variables"] or {}) do
-                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                if type(v) == "table" and v.GSEDeltaFork then
+                    GSE.StoreDeltaFork(v)
+                elseif type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
                     GSE.StoreEncodedVariable(name, v)
                 else
                     if type(v) == "table" and not v.name then v.name = name end
@@ -482,7 +484,11 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 end
             end
             for name, v in pairs(actiontable["Sequences"] or {}) do
-                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                if type(v) == "table" and v.GSEDeltaFork then
+                    -- Fork shipped as { encrypted base + delta }: persist to
+                    -- GSEDeltas (opaque platformId key) + reconstruct in memory.
+                    GSE.StoreDeltaFork(v)
+                elseif type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
                     GSE.StoreEncodedSequence(name, v)
                 else
                     if type(v) == "table" then
@@ -493,7 +499,9 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 end
             end
             for name, v in pairs(actiontable["Macros"] or {}) do
-                if type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
+                if type(v) == "table" and v.GSEDeltaFork then
+                    GSE.StoreDeltaFork(v)
+                elseif type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
                     GSE.StoreEncodedMacro(name, v)
                 else
                     if type(v) == "table" and not v.name then v.name = name end
