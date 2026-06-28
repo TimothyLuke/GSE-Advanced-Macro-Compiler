@@ -538,6 +538,11 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     end
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
+    if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
+        GSE.Library[classid][sequenceName] = sequence
+        GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+        return
+    end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})

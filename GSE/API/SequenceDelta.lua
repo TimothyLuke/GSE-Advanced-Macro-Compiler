@@ -85,6 +85,8 @@ function GSE.ApplyDelta(base, delta)
                 if op.inbuiltVariables ~= nil then
                     v.InbuiltVariables = deepcopy(op.inbuiltVariables)
                 end
+                if op.set then for f, val in pairs(op.set) do v[f] = deepcopy(val) end end
+                if op.unset then for _, f in ipairs(op.unset) do v[f] = nil end end
                 out.Versions[vk] = v
             end
         end
@@ -101,6 +103,172 @@ function GSE.ApplyDelta(base, delta)
 end
 
 GSE.ApplySequenceDelta = GSE.ApplyDelta
+
+
+local function deepEqual(a, b)
+    if a == b then return true end
+    if type(a) ~= "table" or type(b) ~= "table" then return false end
+    for k, v in pairs(a) do if not deepEqual(v, b[k]) then return false end end
+    for k in pairs(b) do if a[k] == nil then return false end end
+    return true
+end
+
+local function fingerprint(block)
+    if type(block) ~= "table" then return "" end
+    local t = block.Type or block.type or ""
+    if t == "Loop" or t == "If" then return t .. "|" end
+    local s = block.macro or block.macrotext or block.Variable or block.Sequence or ""
+    return t .. "|" .. string.sub(tostring(s), 1, 255)
+end
+
+local function matchBlocks(baseBlocks, targetBlocks)
+    local map, usedBase = {}, {}
+    for ti = 1, #targetBlocks do
+        if baseBlocks[ti] and not usedBase[ti] and fingerprint(baseBlocks[ti]) == fingerprint(targetBlocks[ti]) then
+            map[ti] = ti; usedBase[ti] = true
+        end
+    end
+    for ti = 1, #targetBlocks do
+        if not map[ti] then
+            local tfp = fingerprint(targetBlocks[ti])
+            for bi = 1, #baseBlocks do
+                if not usedBase[bi] and fingerprint(baseBlocks[bi]) == tfp then map[ti] = bi; usedBase[bi] = true; break end
+            end
+        end
+    end
+    for ti = 1, #targetBlocks do
+        if not map[ti] then
+            local tt = targetBlocks[ti].Type or targetBlocks[ti].type or ""
+            for bi = 1, #baseBlocks do
+                if not usedBase[bi] then
+                    local bt = baseBlocks[bi].Type or baseBlocks[bi].type or ""
+                    if bt == tt then map[ti] = bi; usedBase[bi] = true; break end
+                end
+            end
+        end
+    end
+    return map
+end
+
+local function diffFields(baseB, targetB)
+    local set, unset, seen = {}, {}, {}
+    for f, v in pairs(targetB) do
+        if type(f) ~= "number" then
+            seen[f] = true
+            if baseB[f] == nil or not deepEqual(baseB[f], v) then set[f] = deepcopy(v) end
+        end
+    end
+    for f in pairs(baseB) do
+        if type(f) ~= "number" and not seen[f] then unset[#unset + 1] = f end
+    end
+    return set, unset
+end
+
+local diffActionList
+diffActionList = function(baseBlocks, targetBlocks, depth)
+    depth = depth or 0
+    local map = matchBlocks(baseBlocks, targetBlocks)
+    local trivial = (#targetBlocks == #baseBlocks)
+    local overlay = {}
+    for ti = 1, #targetBlocks do
+        local tb = targetBlocks[ti]
+        local bi = map[ti]
+        if not bi then
+            trivial = false
+            overlay[ti] = { ["new"] = deepcopy(tb) }
+        else
+            if bi ~= ti then trivial = false end
+            local bb = baseBlocks[bi]
+            local el = { from = bi - 1 } -- 0-based for the delta format
+            local set, unset = diffFields(bb, tb)
+            if next(set) ~= nil then el.set = set; trivial = false end
+            if #unset > 0 then el.unset = unset; trivial = false end
+            local tt = tb.Type or tb.type or ""
+            local bt = bb.Type or bb.type or ""
+            if depth < 5 and (tt == "Loop" or bt == "Loop") then
+                local cd = diffActionList(loopChildren(bb), loopChildren(tb), depth + 1)
+                if cd then el.children = cd; trivial = false end
+            end
+            if depth < 5 and (tt == "If" or bt == "If") then
+                local d1 = diffActionList(ifBranch(bb, 1), ifBranch(tb, 1), depth + 1)
+                local d2 = diffActionList(ifBranch(bb, 2), ifBranch(tb, 2), depth + 1)
+                if d1 then el.branch1 = d1; trivial = false end
+                if d2 then el.branch2 = d2; trivial = false end
+            end
+            overlay[ti] = el
+        end
+    end
+    if trivial then return nil end
+    return overlay
+end
+
+function GSE.DiffDelta(base, target)
+    base = base or {}
+    target = target or {}
+    local delta = { v = 1 }
+
+    if type(base.Versions) == "table" or type(target.Versions) == "table" then
+        local bV = base.Versions or {}
+        local tV = target.Versions or {}
+        local versions, allKeys = {}, {}
+        for k in pairs(bV) do allKeys[k] = true end
+        for k in pairs(tV) do allKeys[k] = true end
+        for k in pairs(allKeys) do
+            local b, t = bV[k], tV[k]
+            if b and not t then
+                versions[k] = { op = "remove" }
+            elseif not b and t then
+                versions[k] = { op = "add", value = deepcopy(t) }
+            else
+                local vd = {}
+                local actions = diffActionList(listOf(b.Actions), listOf(t.Actions), 0)
+                if actions then vd.actions = actions end
+                if not deepEqual(b.InbuiltVariables or {}, t.InbuiltVariables or {}) then
+                    vd.inbuiltVariables = deepcopy(t.InbuiltVariables or {})
+                end
+                -- generic diff of the version's other fields (Label, StepFunction, …)
+                local vset, vunset, vseen = {}, {}, {}
+                for f, val in pairs(t) do
+                    if f ~= "Actions" and f ~= "InbuiltVariables" then
+                        vseen[f] = true
+                        if b[f] == nil or not deepEqual(b[f], val) then vset[f] = deepcopy(val) end
+                    end
+                end
+                for f in pairs(b) do
+                    if f ~= "Actions" and f ~= "InbuiltVariables" and not vseen[f] then vunset[#vunset + 1] = f end
+                end
+                if next(vset) ~= nil then vd.set = vset end
+                if #vunset > 0 then vd.unset = vunset end
+                if next(vd) ~= nil then versions[k] = vd end
+            end
+        end
+        if next(versions) ~= nil then delta.versions = versions end
+    end
+
+    local top, topUnset, seen = {}, {}, {}
+    for f, v in pairs(target) do
+        if f ~= "Versions" then
+            seen[f] = true
+            if base[f] == nil or not deepEqual(base[f], v) then top[f] = deepcopy(v) end
+        end
+    end
+    for f in pairs(base) do
+        if f ~= "Versions" and not seen[f] then topUnset[#topUnset + 1] = f end
+    end
+    if next(top) ~= nil then delta.top = top end
+    if #topUnset > 0 then delta.topUnset = topUnset end
+
+    return delta
+end
+
+function GSE.EncodeDelta(delta)
+    if type(delta) ~= "table" then return nil end
+    local ok, result = pcall(function()
+        return C_EncodingUtil.EncodeBase64(C_EncodingUtil.SerializeCBOR(delta))
+    end)
+    if ok and type(result) == "string" then return result end
+    return nil
+end
 
 function GSE.DecodeDelta(b64)
     if type(b64) ~= "string" or b64 == "" then return nil end
@@ -123,8 +291,12 @@ function GSE.ReconstructDeltaFork(entry)
     return GSE.ApplyDelta(base, delta)
 end
 
-local function installReconstructed(t, obj)
+local function installReconstructed(t, obj, pid)
     if type(obj) ~= "table" then return end
+    if pid then
+        obj.MetaData = obj.MetaData or {}
+        obj.MetaData.PlatformID = pid
+    end
     local meta = obj.MetaData or {}
     local nm = obj.name or meta.Name
     if not nm then return end
@@ -141,9 +313,9 @@ end
 
 function GSE.LoadDeltaForks()
     if type(GSEDeltas) ~= "table" then return end
-    for _, entry in pairs(GSEDeltas) do
+    for pid, entry in pairs(GSEDeltas) do
         if type(entry) == "table" then
-            installReconstructed(entry.t or "sequence", GSE.ReconstructDeltaFork(entry))
+            installReconstructed(entry.t or "sequence", GSE.ReconstructDeltaFork(entry), pid)
         end
     end
 end
@@ -153,9 +325,27 @@ function GSE.StoreDeltaFork(element)
     local pid = element.platformId
     if type(pid) ~= "string" or pid == "" then return false end
     if type(GSEDeltas) ~= "table" then GSEDeltas = {} end
-    local entry = { b = element.base, d = element.delta, t = element.contentType or "sequence" }
+    -- src = the upstream (original) platformId, so the delta is self-describing:
+    -- the Mod reconstructs from `b`, the website/server resolve `src` and apply.
+    local entry = { b = element.base, d = element.delta, t = element.contentType or "sequence", src = element.upstreamId }
     GSEDeltas[pid] = entry
-    installReconstructed(entry.t, GSE.ReconstructDeltaFork(entry))
+    installReconstructed(entry.t, GSE.ReconstructDeltaFork(entry), pid)
+    return true
+end
+
+function GSE.UpdateDeltaFork(obj)
+    if type(GSEDeltas) ~= "table" or type(obj) ~= "table" then return false end
+    local meta = obj.MetaData or {}
+    local pid = meta.PlatformID or obj.PlatformID
+    if type(pid) ~= "string" or type(GSEDeltas[pid]) ~= "table" then return false end
+    local entry = GSEDeltas[pid]
+    local ok, decoded = GSE.DecodeMessage(entry.b)
+    if not ok or type(decoded) ~= "table" then return false end
+    local base = decoded[2] or decoded
+    local d = GSE.EncodeDelta(GSE.DiffDelta(base, obj))
+    if type(d) ~= "string" then return false end
+    entry.d = d
+    GSEDeltas[pid] = entry
     return true
 end
 
