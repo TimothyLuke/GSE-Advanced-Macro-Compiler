@@ -2634,7 +2634,9 @@ function GSE.UpdateVariable(variable, name, status)
     end
     GSE.ComputeVariableDependencies(variable)
     local compressedvariable = GSE.EncodeMessage(variable)
-    GSEVariables[name] = compressedvariable
+    if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(variable)) then
+        GSEVariables[name] = compressedvariable
+    end
     local actualfunct, error = gseLoadstring("return " .. variable.funct)
     if error then
         --@debug@
@@ -2772,11 +2774,13 @@ function GSE.UpdateMacro(node, category, skipStore)
         else
             node.value = CreateMacro(node.name, node.icon, node.text, category)
             if not skipStore then
-                if category then
-                    local char, realm = UnitFullName("player")
-                    GSEMacros[char .. "-" .. realm][node.name] = node
-                else
-                    GSEMacros[node.name] = node
+                if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(node)) then
+                    if category then
+                        local char, realm = UnitFullName("player")
+                        GSEMacros[char .. "-" .. realm][node.name] = node
+                    else
+                        GSEMacros[node.name] = node
+                    end
                 end
             end
         end
