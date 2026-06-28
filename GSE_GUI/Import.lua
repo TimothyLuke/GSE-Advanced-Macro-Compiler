@@ -918,11 +918,10 @@ local function processQueueCollections(collections)
         -- is identical end-to-end to a user pasting the string into the
         -- import box, so any future "manual works / dialog doesn't" gap
         -- is structurally impossible — both paths are the same bytes.
-        if type(v) == "table" then v = GSE.processWAGOImport(v) end
-        -- processWAGOImport returns nil when it refuses (pre-#1853 Macros-
-        -- only records). User-facing message already printed; skip this
-        -- entry so the rest of the batch still imports.
-        if v == nil then return end
+        if not (type(v) == "table" and v.GSEDeltaFork) then
+          if type(v) == "table" then v = GSE.processWAGOImport(v) end
+          if v == nil then return end
+        end
         bucket[category][k] = v
         bucket.n = bucket.n + 1
       end
