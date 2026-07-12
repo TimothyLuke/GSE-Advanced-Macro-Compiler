@@ -221,6 +221,18 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
     end
 end
 
+-- ponytail: drop a seq from the corrupt list so the editor tree stops flagging
+-- it the moment it's deleted. Both delete paths call this.
+function GSE.ForgetCorruptSequence(classid, name)
+    if type(GSE.CorruptSequences) ~= "table" then return end
+    for i = #GSE.CorruptSequences, 1, -1 do
+        local c = GSE.CorruptSequences[i]
+        if c and tonumber(c.classid) == tonumber(classid) and c.name == name then
+            table.remove(GSE.CorruptSequences, i)
+        end
+    end
+end
+
 --- Remove a corrupt sequence from both compressed storage and the live library.
 function GSE.DeleteCorruptSequence(classid, name)
     if type(GSESequences) == "table" and type(GSESequences[classid]) == "table" then
@@ -229,6 +241,7 @@ function GSE.DeleteCorruptSequence(classid, name)
     if type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
         GSE.Library[classid][name] = nil
     end
+    GSE.ForgetCorruptSequence(classid, name)
     GSE.Print(string.format(L["Corrupt sequence '%s' (class %d) deleted."], name, classid))
 end
 
@@ -267,6 +280,7 @@ end
 function GSE.DeleteSequence(classid, sequenceName)
     GSE.Library[tonumber(classid)][sequenceName] = nil
     GSESequences[tonumber(classid)][sequenceName] = nil
+    GSE.ForgetCorruptSequence(classid, sequenceName)
 
     -- Remove any actionbar overrides that reference this sequence
     local overrideChanged = false

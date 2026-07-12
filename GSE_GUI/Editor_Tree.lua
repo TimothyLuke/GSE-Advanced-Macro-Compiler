@@ -599,10 +599,35 @@ local function onRightClick_KEYBINDINGS(editframe, container, group, unique)
     )
 end
 
+-- ponytail: true if a seq is corrupt/unusable — decode-broken (in
+-- GSE.CorruptSequences) or loaded-but-structurally-broken. Matches what the tree
+-- flags red; used to give a Delete-only right-click menu (the normal items call
+-- FindSequence, which DecodeMessages the broken data and errors).
+local function isBrokenSeq(classid, name)
+    local cid = tonumber(classid)
+    if not cid or GSE.isEmpty(name) then return false end
+    for _, c in ipairs(GSE.CorruptSequences or {}) do
+        if tonumber(c.classid) == cid and c.name == name then return true end
+    end
+    local libSeq = GSE.Library[cid] and GSE.Library[cid][name]
+    return libSeq ~= nil and GSE.IsSequenceStructurallyBroken(libSeq)
+end
+
 local function onRightClick_Sequences(editframe, container, group, unique, classid, sequencename)
     MenuUtil.CreateContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
+            -- ponytail: a flagged corrupt/broken seq can't be edited/duplicated/
+            -- exported (those call FindSequence -> DecodeMessage on broken data and
+            -- crash). Offer Delete only.
+            if not GSE.isEmpty(sequencename) and isBrokenSeq(classid, sequencename) then
+                rootDescription:CreateTitle(L["Corrupt Sequence"])
+                rootDescription:CreateButton(L["Delete"], function()
+                    editframe.GUIDeleteSequence(classid, sequencename)
+                    if editframe.ManageTree then editframe.ManageTree() end
+                end)
+                return
+            end
             rootDescription:CreateTitle(L["Sequence Editor"])
             rootDescription:CreateButton(L["New"], function()
                 if editframe.loaded then
@@ -1139,6 +1164,14 @@ end
 
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, sequencename)
     if #unique < 3 then return end
+    -- ponytail: never load a corrupt/broken seq into the editor — the decode
+    -- crashes (Serialisation DecodeMessage on unreadable data). Surface it and
+    -- stop; use right-click -> Delete to remove it.
+    if not GSE.isEmpty(sequencename) and isBrokenSeq(classid, sequencename) then
+        GSE.Print("The sequence '" .. tostring(sequencename) ..
+            "' is corrupt and cannot be opened. Right-click it and choose Delete.")
+        return
+    end
     SaveLastSequenceEditorPath(group, unique)
     ReleaseEditorFooterButtons(editframe)
 
@@ -1407,9 +1440,12 @@ local function ManageTree(editframe)
     }
 
     local classtree = {}
+    local seenSeq = {}
     local names = GSE.GetSequenceNames()
 
     for k, _ in GSE.pairsByKeys(names, GSE.AlphabeticalTableSortAlgorithm) do
+      -- ponytail: isolate each sequence so one corrupt record can't blank the whole tree
+      local ok, err = pcall(function()
         local elements = GSE.split(k, ",")
         local tclassid = tonumber(elements[1])
         local specid = tonumber(elements[2])
@@ -1440,20 +1476,58 @@ local function ManageTree(editframe)
 
         GSE.EnsureSequenceLoaded(tclassid, elements[3])
         local loadedSeq = GSE.Library[tclassid] and GSE.Library[tclassid][elements[3]]
-        if loadedSeq then
-            for i, j in ipairs(loadedSeq["Versions"]) do
-                table.insert(node.children, {
-                    value = i,
-                    text = editframe.BuildVersionLabel(tostring(i), j.Label)
-                })
+        -- ponytail: flag ONLY when the record is actually in the Library and
+        -- structurally broken (the real corruption). loadedSeq==nil is NOT proof
+        -- of corruption — it usually just means the comma-split key didn't resolve
+        -- (e.g. a name that contains a comma), so flagging on nil would false-flag
+        -- a healthy seq. A flagged node gets red text + flag icon and no version /
+        -- "New Version" children (a click can't re-enter the broken editor);
+        -- right-click -> Delete still works (keyed by class+name, not Versions).
+        if loadedSeq and GSE.IsSequenceStructurallyBroken(loadedSeq) then
+            node.text = "|cFFFF3030" .. tostring(elements[3]) .. " |r"
+            node.icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew"  -- swap for any flag texture
+        else
+            if loadedSeq then
+                for i, j in ipairs(loadedSeq.Versions) do
+                    table.insert(node.children, {
+                        value = i,
+                        text = editframe.BuildVersionLabel(tostring(i), j.Label)
+                    })
+                end
             end
+            table.insert(node.children, {
+                text = L["New"] .. " " .. L["Version"],
+                value = "newversion",
+                icon = Statics.ActionsIcons.Add
+            })
         end
-        table.insert(node.children, {
-            text = L["New"] .. " " .. L["Version"],
-            value = "newversion",
-            icon = Statics.ActionsIcons.Add
-        })
         table.insert(classtree[tclassid][specid], node)
+        seenSeq[tclassid .. "|" .. tostring(elements[3])] = true
+      end)
+      if not ok then
+          GSE.PrintDebugMessage("Skipped malformed sequence '" .. tostring(k) .. "': " .. tostring(err), "EDITOR")
+      end
+    end
+
+    -- ponytail: also surface load-corrupt seqs (the decode-broken ones behind the
+    -- corrupt-sequence popup) in the tree, red-flagged + deletable, so a user who
+    -- Skips/dismisses the popup can still find and remove them. They live in
+    -- GSE.CorruptSequences, not the Library, so the loop above never sees them.
+    for _, corrupt in ipairs(GSE.CorruptSequences or {}) do
+        local cid, cname = tonumber(corrupt.classid), corrupt.name
+        if cid and cname and not seenSeq[cid .. "|" .. cname] then
+            seenSeq[cid .. "|" .. cname] = true
+            classtree[cid] = classtree[cid] or {}
+            classtree[cid][0] = classtree[cid][0] or {}
+            table.insert(classtree[cid][0], {
+                value = cid .. ",0," .. cname .. ",0",
+                text = "|cFFFF3030" .. tostring(cname) .. " |r",
+                icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew",
+                children = {
+                    { text = L["Configuration"], value = "config", icon = Statics.ActionsIcons.Settings }
+                }
+            })
+        end
     end
 
     local subtree = {
