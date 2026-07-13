@@ -745,6 +745,18 @@ end
 
 --- Inspects one sequence for structural and content issues.
 -- Returns a list of human-readable issue strings (empty = no problems).
+-- ponytail: the "unusable structure" subset of checkSeqStructure's early-return
+-- cases below. True = the editor can't load it AND /gse checksequencesforerrors
+-- can't repair it -> the tree flags it red for manual deletion. Benign notices
+-- (altered-from-export, missing SpecID) are NOT broken and stay unflagged.
+function GSE.IsSequenceStructurallyBroken(seq)
+    if type(seq) ~= "table" then return true end
+    if type(seq.MetaData) ~= "table" then return true end
+    if seq.Macros ~= nil and seq.Versions == nil then return true end -- pre-#1853 schema
+    if type(seq.Versions) ~= "table" then return true end
+    return false
+end
+
 local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore classlibid seqname
     local issues = {}
 
@@ -1190,12 +1202,19 @@ function GSE.ProcessNextCorruptSequence()
 end
 
 --- Build the dialog queue from GSE.CorruptSequences and show the first dialog.
--- Drains the global list so repeated calls do not double-present the same entries.
+-- ponytail: does NOT drain GSE.CorruptSequences anymore — the editor tree reads
+-- that list to flag corrupt seqs, so a dismissed/Skipped popup still leaves them
+-- findable. Dedup keeps the popup from double-presenting the same entry.
 function GSE.ProcessCorruptSequences()
+    local queued = {}
+    for _, e in ipairs(corruptQueue) do queued[e.classid .. "|" .. e.name] = true end
     for _, entry in ipairs(GSE.CorruptSequences or {}) do
-        table.insert(corruptQueue, entry)
+        local key = entry.classid .. "|" .. entry.name
+        if not queued[key] then
+            table.insert(corruptQueue, entry)
+            queued[key] = true
+        end
     end
-    GSE.CorruptSequences = {}
     if #corruptQueue > 0 then
         GSE.Print(string.format(L["%d corrupt sequence(s) found \226\128\148 showing resolution options."], #corruptQueue))
         GSE.ProcessNextCorruptSequence()
