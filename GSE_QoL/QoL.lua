@@ -126,7 +126,7 @@ local function ShowNativeIconPicker(callback)
     end
     f:Show()
 end
-
+GSE.Patron = true
 -- Appended to the icon context menu in the editor for QoL users.
 GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
     rootDescription:CreateDivider()
