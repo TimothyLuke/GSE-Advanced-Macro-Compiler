@@ -239,6 +239,8 @@ end
 function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
     local sequenceIndex = GetMacroIndexByName(sequenceName)
     local numAccountMacros, numCharacterMacros = GetNumMacros()
+    local maxAccountMacros = GSE.GetMaxAccountMacros()
+    local maxCharacterMacros = GSE.GetMaxCharacterMacros()
     if sequenceIndex > 0 then
         -- Sequence exists, do nothing
         --@debug@
@@ -246,11 +248,11 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
         --@end-debug@
     else
         -- Create Sequence as a player sequence
-        if numCharacterMacros >= MAX_CHARACTER_MACROS and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
+        if numCharacterMacros >= maxCharacterMacros and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
             GSE.Print(
                 GSEOptions.AuthorColour ..
                     L["Close to Maximum Personal Macros.|r  You can have a maximum of "] ..
-                        MAX_CHARACTER_MACROS ..
+                        maxCharacterMacros ..
                             L[" macros per character.  You currently have "] ..
                                 GSEOptions.EmphasisColour ..
                                     numCharacterMacros ..
@@ -260,15 +262,15 @@ function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
                                             GSEOptions.CommandColour .. L["/gse|r again."],
                 GNOME
             )
-        elseif numAccountMacros >= MAX_ACCOUNT_MACROS and GSEOptions.overflowPersonalMacros then
+        elseif numAccountMacros >= maxAccountMacros and GSEOptions.overflowPersonalMacros then
             GSE.Print(
                 L["Close to Maximum Macros.|r  You can have a maximum of "] ..
-                    MAX_CHARACTER_MACROS ..
+                    maxCharacterMacros ..
                         L[" macros per character.  You currently have "] ..
                             GSEOptions.EmphasisColour ..
                                 numCharacterMacros ..
                                     L["|r.  You can also have a  maximum of "] ..
-                                        MAX_ACCOUNT_MACROS ..
+                                        maxAccountMacros ..
                                             L[" macros per Account.  You currently have "] ..
                                                 GSEOptions.EmphasisColour ..
                                                     numAccountMacros ..
@@ -613,7 +615,7 @@ end
 
 --- This function removes any macro stubs that do not relate to a GSE macro
 function GSE.CleanOrphanSequences()
-    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    local maxmacros = GSE.GetMaxAccountMacros() + GSE.GetMaxCharacterMacros() + 2
     local todelete = {}
     for _ = 1, maxmacros do
         local found = false

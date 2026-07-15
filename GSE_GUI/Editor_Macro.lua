@@ -92,7 +92,8 @@ end
 -- buildMacroMenu()  →  "Macros" tree node
 -- ---------------------------------------------------------------------------
 local function buildMacroMenu()
-    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    local maxAccountMacros = GSE.GetMaxAccountMacros()
+    local maxmacros = maxAccountMacros + GSE.GetMaxCharacterMacros() + 2
     local tree = {
         value = "Macro",
         text = L["Macros"],
@@ -121,7 +122,7 @@ local function buildMacroMenu()
                 value = macid,
                 icon = micon
             }
-            if macid <= MAX_ACCOUNT_MACROS then
+            if macid <= maxAccountMacros then
                 table.insert(tree.children[1].children, node)
             else
                 table.insert(tree.children[2].children, node)
@@ -142,7 +143,7 @@ local function showMacro(editframe, node, container)
     local char, realm = UnitFullName("player")
 
     local source = GSEMacros
-    if node.value > MAX_ACCOUNT_MACROS then
+    if node.value > GSE.GetMaxAccountMacros() then
         if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
             GSEMacros[char .. "-" .. realm] = {}
         end

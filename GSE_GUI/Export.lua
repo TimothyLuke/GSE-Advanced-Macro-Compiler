@@ -240,7 +240,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         end
     end
 
-    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    local maxmacros = GSE.GetMaxAccountMacros() + GSE.GetMaxCharacterMacros() + 2
     for macid = 1, maxmacros do
         local mname, _, _ = GetMacroInfo(macid)
         addMacroName(mname)
@@ -544,7 +544,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         source.icon = micon
                         source.text = mbody
                         source.managedMacro = GSE.CompileMacroText(mbody or "", Statics.TranslatorMode.ID)
-                        if mslot > MAX_ACCOUNT_MACROS then
+                        if mslot > GSE.GetMaxAccountMacros() then
                             category = "p"
                         end
                     else

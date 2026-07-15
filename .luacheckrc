@@ -466,6 +466,7 @@ globals = {
     "GetNumMacros",
     "MAX_CHARACTER_MACROS",
     "MAX_ACCOUNT_MACROS",
+    "Constants",
     "CreateMacro",
     "EditMacro",
     "GetMacroInfo",

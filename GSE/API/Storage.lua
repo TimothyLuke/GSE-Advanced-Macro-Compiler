@@ -1260,7 +1260,7 @@ function GSE.SetMacroLocation()
     local _, numCharacterMacros = GetNumMacros()
     local returnval
     returnval = 1
-    if numCharacterMacros >= MAX_CHARACTER_MACROS - 1 and GSEOptions.overflowPersonalMacros then
+    if numCharacterMacros >= GSE.GetMaxCharacterMacros() - 1 and GSEOptions.overflowPersonalMacros then
         returnval = nil
     end
     return returnval

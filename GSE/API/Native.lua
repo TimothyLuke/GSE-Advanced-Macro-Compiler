@@ -12,6 +12,24 @@ local _, GSE = ...
 --     normalizers that unify Vanilla's multi-return signature with
 --     Retail's table return so call sites can use one shape on all
 --     supported game versions.
+--   * GSE.GetMaxAccountMacros / GSE.GetMaxCharacterMacros: cross-version
+--     resolvers for the macro caps. WoW 12.1 moved these onto
+--     Constants.MacroConsts; the old global upvalues are deprecated. Prefer
+--     the namespaced values, fall back to the globals on older clients.
+
+--- Maximum number of account-wide (global) macros the client allows.
+--- Reads Constants.MacroConsts.MAX_ACCOUNT_MACROS (WoW 12.1+) and falls
+--- back to the deprecated MAX_ACCOUNT_MACROS global on older clients.
+function GSE.GetMaxAccountMacros()
+    return (Constants and Constants.MacroConsts and Constants.MacroConsts.MAX_ACCOUNT_MACROS) or MAX_ACCOUNT_MACROS
+end
+
+--- Maximum number of per-character macros the client allows.
+--- Reads Constants.MacroConsts.MAX_CHARACTER_MACROS (WoW 12.1+) and falls
+--- back to the deprecated MAX_CHARACTER_MACROS global on older clients.
+function GSE.GetMaxCharacterMacros()
+    return (Constants and Constants.MacroConsts and Constants.MacroConsts.MAX_CHARACTER_MACROS) or MAX_CHARACTER_MACROS
+end
 
 local function getPreviewMacroOptionCandidate(options)
     for segment in tostring(options or ""):gmatch("([^;]+)") do

@@ -1773,9 +1773,10 @@ end
 function GSE.SequenceIconIsAccountMacro(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
 
-    if GetMacroIndexByName and MAX_ACCOUNT_MACROS then
+    local maxAccountMacros = GSE.GetMaxAccountMacros()
+    if GetMacroIndexByName and maxAccountMacros then
         local macroIndex = GetMacroIndexByName(sequence)
-        if macroIndex and macroIndex > 0 and macroIndex <= MAX_ACCOUNT_MACROS then return true end
+        if macroIndex and macroIndex > 0 and macroIndex <= maxAccountMacros then return true end
     end
 
     local macro = GSEMacros and GSEMacros[sequence]

@@ -1357,7 +1357,8 @@ local function onClick_VARIABLES(editframe, container, group, unique, key)
 end
 
 local function getFirstMacroPath(scope)
-    local maxmacros = MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS + 2
+    local maxAccountMacros = GSE.GetMaxAccountMacros()
+    local maxmacros = maxAccountMacros + GSE.GetMaxCharacterMacros() + 2
     local function findInRange(parent, firstSlot, lastSlot)
         for macid = firstSlot, lastSlot do
             local mname = GetMacroInfo(macid)
@@ -1366,12 +1367,12 @@ local function getFirstMacroPath(scope)
     end
 
     if scope == "A" then
-        return findInRange("A", 1, MAX_ACCOUNT_MACROS)
+        return findInRange("A", 1, maxAccountMacros)
     elseif scope == "P" then
-        return findInRange("P", MAX_ACCOUNT_MACROS + 1, maxmacros)
+        return findInRange("P", maxAccountMacros + 1, maxmacros)
     end
 
-    return findInRange("A", 1, MAX_ACCOUNT_MACROS) or findInRange("P", MAX_ACCOUNT_MACROS + 1, maxmacros)
+    return findInRange("A", 1, maxAccountMacros) or findInRange("P", maxAccountMacros + 1, maxmacros)
 end
 
 local function onClick_Macro(editframe, container, group, unique, key)
