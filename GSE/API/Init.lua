@@ -17,9 +17,6 @@ if GSE.VersionString:find("version") then
 end
 --@end-debug@
 
-if GSE.VersionString:find("Patron") then
-    GSE.Patron = true
-end
 GSE.MediaPath = "Interface\\Addons\\GSE\\Media"
 GSE.Pause = {}
 GSE.OutputQueue = {}
@@ -30,7 +27,7 @@ GSE.GUI = {}
 GSE.V = {}
 GSE.BooleanVariables = {}
 GSE.PlayerEntered = false
-GSE.WagoAnalytics:Switch("Patron", GSE.Patron)
+GSE.WagoAnalytics:Switch("Patron", false)
 local L = GSE.L
 local Statics = GSE.Static
 local GNOME = "|cFFFFFFFFGS|r|cFF00FFFFE|r"

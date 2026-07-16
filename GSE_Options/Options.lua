@@ -1645,56 +1645,6 @@ local function AddOutOfCombatQueueOptions(optionsCategory)
     end
 end
 
-local function AddMSClickTimingHeader(optionsCategory)
-    if not (GSE.Patron or GSE.Developer) then return end
-
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "MS Click Timing" , ["tooltip"]= "Used for PAUSE Block Calculations" }))
-    end
-end
-
-local function AddGlobalClickTimingOptions(optionsCategory)
-    if not (GSE.Patron or GSE.Developer) then return end
-
-    do
-        local function GetValue()
-            GSEOptions.msClickRate = ClampNumber(GSEOptions.msClickRate, 100, 1000, 250)
-            return GSEOptions.msClickRate
-        end
-
-        local function SetValue(value)
-            GSEOptions.msClickRate = ClampNumber(value, 100, 1000, 250)
-        end
-
-        local setting = Settings.RegisterProxySetting(optionsCategory, "msClickRate", Settings.VarType.Number, "Global Default - MS Click Rate", 250, GetValue, SetValue)
-        local options = Settings.CreateSliderOptions(100, 1000, 1)
-        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-        Settings.CreateSlider(optionsCategory, setting, options, L["The milliseconds being used in key click delay."])
-    end
-end
-
-local function AddCharacterClickTimingOptions(optionsCategory)
-    if not (GSE.Patron or GSE.Developer) then return end
-    if GSE.isEmpty(GSE_C) then GSE_C = {} end
-
-    do
-        local function GetValue()
-            GSE_C.msClickRate = ClampNumber(GSE_C.msClickRate, 100, 1000, 250)
-            return GSE_C.msClickRate
-        end
-
-        local function SetValue(value)
-            GSE_C.msClickRate = ClampNumber(value, 100, 1000, 250)
-        end
-
-        local setting = Settings.RegisterProxySetting(optionsCategory, "charmsClickRate", Settings.VarType.Number, "This Character - MS Click Rate", 250, GetValue, SetValue)
-        local options = Settings.CreateSliderOptions(100, 1000, 1)
-        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
-        Settings.CreateSlider(optionsCategory, setting, options, L["The milliseconds being used in key click delay."])
-    end
-end
-
 local function AddCompanionAppOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -3005,9 +2955,7 @@ function GSE:CreateConfigPanels()
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
-        AddMSClickTimingHeader(generalOptions)
-        AddCharacterClickTimingOptions(generalOptions)
-        AddGlobalClickTimingOptions(generalOptions)
+        if GSE.OnBuildClickTimingOptions then GSE.OnBuildClickTimingOptions(generalOptions) end
 
         do
             if GSE.isEmpty(GSEOptions.MacroResetModifiers) then GSE.resetMacroResetModifiers() end

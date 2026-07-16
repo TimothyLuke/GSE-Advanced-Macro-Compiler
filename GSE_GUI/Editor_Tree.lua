@@ -670,27 +670,8 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                 rootDescription:CreateButton(L["Send"], function()
                     GSE.GUIShowTransmissionGui(sequencename, editframe)
                 end)
-                if GSE.Patron then
-                    rootDescription:CreateButton(
-                        string.format(L["Open %s in New Window"], sequencename),
-                        function()
-                            local targetGroup = group
-                            if unique[1] == "Sequences" and #unique == 3 then
-                                targetGroup = group .. "\001config"
-                            elseif unique[#unique] == "newversion" then
-                                targetGroup = table.concat({unique[1], unique[2], unique[3], "config"}, "\001")
-                            end
-
-                            local editor = GSE.CreateEditor()
-                            editor.ManageTree()
-                            editor:Show()
-                            C_Timer.After(0, function()
-                                if GSE.GUI.SelectEditorTreePath then
-                                    GSE.GUI.SelectEditorTreePath(editor, targetGroup)
-                                end
-                            end)
-                        end
-                    )
+                if GSE.OnTreeContextMenuExtras then
+                    GSE.OnTreeContextMenuExtras(rootDescription, {sequencename = sequencename, group = group, unique = unique})
                 end
                 rootDescription:CreateButton(L["Chat Link"], function()
                     GSE.UI.ShowLinkDialog({

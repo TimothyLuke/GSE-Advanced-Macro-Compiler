@@ -63,12 +63,5 @@ end
 function GSE.GUI.PathUtils.child(path, key)
     return path .. "\001" .. tostring(key)
 end
-
---- Feature flag helpers — centralise patron/developer guards.
-GSE.GUI.Feature = {
-    RAW_EDIT     = function() return GSE.Patron or GSE.Developer end,
-    MULTI_WINDOW = function() return GSE.Patron end,
-    TAB_COMPLETE = function() return GSE.Patron end,
-}
 end
 table.insert(ns.deferred, setup)

@@ -266,13 +266,6 @@ GSE.GUI.SyncTrees = function()
         local tc = editor and editor.treeContainer
         if tc and tc.RefreshNavWindow then tc.RefreshNavWindow() end
     end
-    -- Enforce the single active right slideout: only the active editor's slideout
-    -- may be out at a time. Inactive editors hide theirs (keeping locked/detached
-    -- state) and the active editor's pops back as it was.
-    for _, editor in ipairs(gui.editors or {}) do
-        local p = editor and editor.leftPanel
-        if p and p.RefreshSidePanel then p.RefreshSidePanel() end
-    end
     -- When the tree moves to a different editor (gains a tree), open it to the
     -- sequence/version/page that editor is currently on. Only on change, so a
     -- user who scrolled the tree away isn't yanked back on every refresh.
@@ -299,7 +292,7 @@ local function SetActiveEditor(editframe)
     if not editframe then return end
     GSE.GUI.activeEditor = editframe
     if editframe.frame and editframe.frame.Raise then editframe.frame:Raise() end
-    -- Raise navWindow and leftPanel alongside the editor
+    -- Raise navWindow alongside the editor
     local function syncSidePanel(p)
         if not (p and p:IsShown()) then return end
         if p.Raise then p:Raise() end
@@ -311,7 +304,6 @@ local function SetActiveEditor(editframe)
         end
     end
     syncSidePanel(editframe.treeContainer and editframe.treeContainer.navWindowFrame)
-    syncSidePanel(editframe.leftPanel)
     RefreshEditorActivation()
 end
 
@@ -1960,36 +1952,13 @@ function GSE.CreateEditor()
     if GSE.isEmpty(GSE.GUI.editors) then
         GSE.GUI.editors = {}
     end
-    if GSE.GUI.editors[1] and not GSE.Patron then
+    if GSE.GUI.editors[1] and not (GSE.CanMultiWindow and GSE.CanMultiWindow()) then
         return GSE.GUI.editors[1]
     end
     local editframe = UI:Create("Frame")
     table.insert(GSE.GUI.editors, editframe)
     editframe:Hide()
     editframe.editorStrata = EDITOR_DEFAULT_STRATA
-    -- Blank attachable right side window — mirrors the left nav window
-    -- (dock/detach/snap/resize, edge chevron toggle). Fill panel.content with
-    -- buttons; visibility/placement is handled by the window itself + SyncTrees.
-    C_Timer.After(0, function()
-        if not GSE.Patron then return end   -- patron-only window
-        local panel = UI.CreateEditorSidePanel(editframe.frame, editframe.treeContainer and editframe.treeContainer.frame)
-        if panel then
-            editframe.leftPanel = panel
-
-            -- ── Placeholder content ────────────────────────────────────────────
-            -- Replace with real buttons later; the window handles its own
-            -- show/hide, docking and detaching like the left tree.
-            local c = panel.content
-
-            local title = c:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
-            title:SetPoint("TOP", c, "TOP", 0, -2)
-            title:SetText("|cFFFFB300Patreon|r")
-            -- ───────────────────────────────────────────────────────────────────
-
-            -- Establish initial docked/active state.
-            if panel.RefreshSidePanel then panel.RefreshSidePanel() end
-        end
-    end)
     EnsureSequenceEditorRestoreOptions().strata = nil
     editframe.frame:SetFrameStrata(EDITOR_DEFAULT_STRATA)
     editframe.frame:SetClampedToScreen(true)
@@ -2466,27 +2435,8 @@ function GSE.CreateEditor()
             if self.editframe.treeContainer and self.editframe.treeContainer.RefreshNavWindow then
                 self.editframe.treeContainer.RefreshNavWindow()
             end
-            -- Restore the right side window if it was visible before collapsing.
-            -- Refresh now AND after the editor finishes its layout pass: a single
-            -- next-frame refresh can fire before the editor reaches full height, so
-            -- the window would lock onto a transitional (short) height. RefreshSidePanel
-            -- is idempotent — it re-applies the full-height dock (or floating geom).
-            if self.editframe.leftPanel and self.leftPanelWasVisible then
-                local p = self.editframe.leftPanel
-                local function restorePanel()
-                    if not p then return end
-                    if p.RefreshSidePanel then p.RefreshSidePanel()
-                    elseif p.Show then p:Show() end
-                end
-                restorePanel()
-                if GSE.After then
-                    C_Timer.After(0,    restorePanel)
-                    C_Timer.After(0.15, restorePanel)
-                end
-            end
         end
         self.previewWasVisible = nil
-        self.leftPanelWasVisible = nil
     end
     minWidgetExpand:SetScript("OnClick", function(self)
         local widget = self:GetParent()
@@ -2603,12 +2553,6 @@ function GSE.CreateEditor()
         -- Hide the Navigator when editor collapses
         if editframe.treeContainer and editframe.treeContainer.navWindowFrame then
             editframe.treeContainer.navWindowFrame:Hide()
-        end
-        -- Hide the patron side panel alongside the editor, even when locked.
-        -- Remember whether it was visible so expand can restore it.
-        if editframe.leftPanel then
-            minimizedWidget.leftPanelWasVisible = editframe.leftPanel:IsShown()
-            editframe.leftPanel:Hide()
         end
         minimizedWidget:Show()
         if GSE.ClampFrameToScreen then
@@ -5633,46 +5577,12 @@ function GSE.CreateEditor()
                         action.Variable = value
                     end
                 )
-                if GSE.Patron then
-                    booleanEditBox.editbox:SetScript(
-                        "OnTabPressed",
-                        function(widget, button, down)
-                            MenuUtil.CreateContextMenu(
-                                editframe.frame,
-                                function(ownerRegion, rootDescription)
-                                    rootDescription:CreateTitle(L["Insert GSE Variable"])
-                                    for k, _ in pairs(GSEVariables) do
-                                        rootDescription:CreateButton(
-                                            k,
-                                            function()
-                                                booleanEditBox:SetText([[=GSE.V["]] .. k .. [["]()]])
-                                                editframe.Sequence.Versions[version].Actions[keyPath].Variable =
-                                                    [[=GSE.V["]] .. k .. [["]()]]
-                                                action.Variable = [[=GSE.V["]] .. k .. [["]()]]
-                                            end
-                                        )
-                                    end
-                                    rootDescription:CreateTitle(L["Insert Test Case"])
-                                    rootDescription:CreateButton(
-                                        "True",
-                                        function()
-                                            booleanEditBox:SetText([[= true]])
-                                            editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= true]]
-                                            action.Variable = [[= true]]
-                                        end
-                                    )
-                                    rootDescription:CreateButton(
-                                        "False",
-                                        function()
-                                            booleanEditBox:SetText([[= false]])
-                                            editframe.Sequence.Versions[version].Actions[keyPath].Variable = [[= false]]
-                                            action.Variable = [[= true]]
-                                        end
-                                    )
-                                end
-                            )
-                        end
-                    )
+                if GSE.OnEditorBooleanTab then
+                    GSE.OnEditorBooleanTab(booleanEditBox.editbox, editframe.frame, function(value)
+                        booleanEditBox:SetText(value)
+                        editframe.Sequence.Versions[version].Actions[keyPath].Variable = value
+                        action.Variable = value
+                    end)
                 end
                 linegroup1:AddChild(variableLabel)
                 linegroup1:AddChild(booleanEditBox)
@@ -7159,7 +7069,7 @@ function GSE.CreateEditor()
         linegroup1:AddChild(versionLabel)
         linegroup1:AddChild(delversionbutton)
         linegroup1:AddChild(previewMacro)
-        if GSE.Patron or GSE.Developer then
+        if GSE.CanRawEdit and GSE.CanRawEdit() then
             linegroup1:AddChild(raweditbutton)
         end
         resetToolbarRow = CreateCombatResetRow(version)

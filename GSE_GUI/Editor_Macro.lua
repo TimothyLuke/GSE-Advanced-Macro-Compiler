@@ -398,42 +398,8 @@ local function showMacro(editframe, node, container)
             end
         )
 
-        if GSE.Patron then
-            managedMacro.editBox:SetScript(
-                "OnTabPressed",
-                function(widget, button, down)
-                    MenuUtil.CreateContextMenu(
-                        editframe.frame,
-                        function(ownerRegion, rootDescription)
-                            rootDescription:CreateTitle(L["Insert GSE Variable"])
-                            for k, _ in pairs(GSEVariables) do
-                                rootDescription:CreateButton(k, function()
-                                    managedMacro.editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                                end)
-                            end
-                            rootDescription:CreateTitle(L["Insert GSE Sequence"])
-                            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-                                rootDescription:CreateButton(k, function()
-                                    if GSE.GetMacroStringFormat() == "DOWN" then
-                                        managedMacro.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
-                                    else
-                                        managedMacro.editBox:Insert("\n/click " .. k)
-                                    end
-                                end)
-                            end
-                            for k, _ in pairs(GSESequences[0]) do
-                                rootDescription:CreateButton(k, function()
-                                    if GSE.GetMacroStringFormat() == "DOWN" then
-                                        managedMacro.editBox:Insert("\n/click " .. k .. [[LeftButton t]])
-                                    else
-                                        managedMacro.editBox:Insert("\n/click " .. k)
-                                    end
-                                end)
-                            end
-                        end
-                    )
-                end
-            )
+        if GSE.OnEditorMacroTab then
+            GSE.OnEditorMacroTab(managedMacro.editBox, editframe.frame)
         end
 
         -- Match the unmanaged page exactly: show the accept button and drop the

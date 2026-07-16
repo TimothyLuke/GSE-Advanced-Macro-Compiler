@@ -2011,12 +2011,10 @@ function GSE:GSSlash(input)
             GSE.ReloadOverrides()
         end
     elseif command == "export" then
-        if GSE.Patron then
-            GSE.CheckGUI()
-            if GSE.UnsavedOptions["GUI"] and GSE.GUIAdvancedExport then
-                GSE.GUIAdvancedExport(GSE.GUIExportframe)
-                GSE.GUIExportframe:Show()
-            end
+        GSE.CheckGUI()
+        if GSE.UnsavedOptions["GUI"] and GSE.GUIAdvancedExport then
+            GSE.GUIAdvancedExport(GSE.GUIExportframe)
+            GSE.GUIExportframe:Show()
         end
     elseif command == "showdebugoutput" then
         GSE.GUICall("GUIShowDebugOutput")
@@ -2145,14 +2143,11 @@ function GSE:GSSlash(input)
             -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
             if GSEOptions and GSEOptions.ToolbarEnabled == false then
                 -- 1) An editor already exists this session. With multi-window
-                --    support (GSE.GUI.Feature.MULTI_WINDOW) each /gse opens an
-                --    ADDITIONAL editor window, so open another one here. Without
+                --    support each /gse opens an ADDITIONAL editor window; without
                 --    it, CreateEditor returns the single shared editor, so just
-                --    bring the existing one forward. (CreateEditor does not
-                --    dedupe on PatronBuild.)
+                --    bring the existing one forward.
                 if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
-                    local multiWindow = GSE.GUI.Feature and GSE.GUI.Feature.MULTI_WINDOW
-                        and GSE.GUI.Feature.MULTI_WINDOW()
+                    local multiWindow = GSE.CanMultiWindow and GSE.CanMultiWindow()
                     if multiWindow and GSE.ShowSequences then
                         -- Open an additional editor window.
                         GSE.ShowSequences()

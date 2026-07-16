@@ -126,7 +126,16 @@ local function ShowNativeIconPicker(callback)
     end
     f:Show()
 end
-GSE.Patron = true
+if GSE.WagoAnalytics then
+    GSE.WagoAnalytics:Switch("Patron", true)
+end
+
+-- Editor capability: allow more than one editor window open at once.
+GSE.CanMultiWindow = function() return true end
+
+-- Editor capability: show the Raw Edit button.
+GSE.CanRawEdit = function() return true end
+
 -- Appended to the icon context menu in the editor for QoL users.
 GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
     rootDescription:CreateDivider()
@@ -139,10 +148,8 @@ GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
     end)
 end
 
--- Patron feature: stamp the checksum onto the locally saved sequence on every save.
--- Non-patrons only receive a checksum via the export path.
+-- Stamp the checksum onto the locally saved sequence on every save.
 local function onSequenceSaved(_, sequenceName)
-    if not GSE.Patron then return end
     if not GSE.ComputeSequenceChecksum then return end
     for classid = 0, 13 do
         local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
@@ -154,6 +161,115 @@ local function onSequenceSaved(_, sequenceName)
     end
 end
 GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
+
+-- MS Click Timing options, added to GSE's General options page (Options.lua calls
+-- this hook when present). Used for PAUSE block calculations.
+local function ClampNumber(value, minimum, maximum, fallback)
+    value = tonumber(value) or fallback or minimum
+    if value < minimum then value = minimum end
+    if maximum and value > maximum then value = maximum end
+    return math.floor(value + 0.5)
+end
+GSE.OnBuildClickTimingOptions = function(optionsCategory)
+    do
+        local layout = SettingsPanel:GetLayout(optionsCategory)
+        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "MS Click Timing", ["tooltip"] = "Used for PAUSE Block Calculations"}))
+    end
+
+    if GSE.isEmpty(GSE_C) then GSE_C = {} end
+    do
+        local function GetValue()
+            GSE_C.msClickRate = ClampNumber(GSE_C.msClickRate, 100, 1000, 250)
+            return GSE_C.msClickRate
+        end
+        local function SetValue(value)
+            GSE_C.msClickRate = ClampNumber(value, 100, 1000, 250)
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "charmsClickRate", Settings.VarType.Number, "This Character - MS Click Rate", 250, GetValue, SetValue)
+        local options = Settings.CreateSliderOptions(100, 1000, 1)
+        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+        Settings.CreateSlider(optionsCategory, setting, options, L["The milliseconds being used in key click delay."])
+    end
+
+    do
+        local function GetValue()
+            GSEOptions.msClickRate = ClampNumber(GSEOptions.msClickRate, 100, 1000, 250)
+            return GSEOptions.msClickRate
+        end
+        local function SetValue(value)
+            GSEOptions.msClickRate = ClampNumber(value, 100, 1000, 250)
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "msClickRate", Settings.VarType.Number, "Global Default - MS Click Rate", 250, GetValue, SetValue)
+        local options = Settings.CreateSliderOptions(100, 1000, 1)
+        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+        Settings.CreateSlider(optionsCategory, setting, options, L["The milliseconds being used in key click delay."])
+    end
+end
+
+-- Editor tree context-menu extras (right-click a sequence in the editor tree).
+GSE.OnTreeContextMenuExtras = function(rootDescription, ctx)
+    rootDescription:CreateButton(
+        string.format(L["Open %s in New Window"], ctx.sequencename),
+        function()
+            local targetGroup = ctx.group
+            if ctx.unique[1] == "Sequences" and #ctx.unique == 3 then
+                targetGroup = ctx.group .. "\001config"
+            elseif ctx.unique[#ctx.unique] == "newversion" then
+                targetGroup = table.concat({ctx.unique[1], ctx.unique[2], ctx.unique[3], "config"}, "\001")
+            end
+            local editor = GSE.CreateEditor()
+            editor.ManageTree()
+            editor:Show()
+            C_Timer.After(0, function()
+                if GSE.GUI.SelectEditorTreePath then
+                    GSE.GUI.SelectEditorTreePath(editor, targetGroup)
+                end
+            end)
+        end
+    )
+end
+
+-- Editor Tab-completion menus: press Tab in an editor field to insert a GSE
+-- variable / test case (boolean field) or a variable / sequence (managed macro).
+GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
+            end
+            rootDescription:CreateTitle(L["Insert Test Case"])
+            rootDescription:CreateButton("True", function() apply([[= true]]) end)
+            rootDescription:CreateButton("False", function() apply([[= false]]) end)
+        end)
+    end)
+end
+GSE.OnEditorMacroTab = function(editBox, menuOwner)
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function()
+                    editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                end)
+            end
+            local function insertSeq(k)
+                if GSE.GetMacroStringFormat() == "DOWN" then
+                    editBox:Insert("\n/click " .. k .. [[LeftButton t]])
+                else
+                    editBox:Insert("\n/click " .. k)
+                end
+            end
+            rootDescription:CreateTitle(L["Insert GSE Sequence"])
+            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
+                rootDescription:CreateButton(k, function() insertSeq(k) end)
+            end
+            for k, _ in pairs(GSESequences[0]) do
+                rootDescription:CreateButton(k, function() insertSeq(k) end)
+            end
+        end)
+    end)
+end
 
 -- Skyriding Bind Bar for Retail
 if GSE.GameMode >= 11 then
