@@ -58,6 +58,12 @@ local function buildReportWindow()
     modsCheck:SetValue(false)
     frame:AddChild(modsCheck)
 
+    local errorLogsCheck = UI:Create("CheckBox")
+    errorLogsCheck:SetType("checkbox")
+    errorLogsCheck:SetLabel(L["Include my BugSack / BugGrabber error logs (recommended if you are seeing in-game errors)"])
+    errorLogsCheck:SetValue(false)
+    frame:AddChild(errorLogsCheck)
+
     local status = UI:Create("Label")
     status:SetFullWidth(true)
     status:SetText("")
@@ -82,6 +88,7 @@ local function buildReportWindow()
             id = id,
             text = text,
             includeMods = modsCheck:GetValue() and true or false,
+            includeErrorLogs = errorLogsCheck:GetValue() and true or false,
             ts = time(),
             char = UnitName("player"),
             realm = GetRealmName(),
@@ -93,6 +100,7 @@ local function buildReportWindow()
         end
         box:SetText("")
         modsCheck:SetValue(false)
+        errorLogsCheck:SetValue(false)
         status:SetText("|cFF00FF00" .. L["GSE_SUPPORT_CONFIRM"] .. "|r")
     end)
     frame:AddChild(submit)

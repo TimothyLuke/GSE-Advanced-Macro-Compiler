@@ -18,6 +18,7 @@ L["Open report form"] = true
 L["GSE Support Report"] = true
 L["What is not working?"] = true
 L["Include my addon list (helps diagnose addon conflicts)"] = true
+L["Include my BugSack / BugGrabber error logs (recommended if you are seeing in-game errors)"] = true
 L["Create Report"] = true
 L["Please describe what is not working."] = true
 L["GSE_SUPPORT_NOTE"] = "This creates a support report that the GSE Companion app uploads for you — it can't be sent from in-game. With the Companion running, it's sent after WoW next saves your data (a /reload or logout). Track its status in the GSE Companion."
