@@ -102,9 +102,14 @@ function syncQoLVersionFromGSE(done) {
 }
 
 function createArchive(done) {
-  const archiver = require("archiver");
+  // archiver 8 dropped the `archiver("zip", …)` vending function and is
+  // ESM-only, exposing per-format classes instead. Under CJS `require()` those
+  // land as named exports on the module namespace, so construct ZipArchive
+  // directly. (Dependabot #1972 bumped 5.3.1 → 8.0.0; the old call signature
+  // threw "archiver is not a function" on the Patron build.)
+  const { ZipArchive } = require("archiver");
   const output = fs.createWriteStream(`GSE-${BuildNumber}.zip`);
-  const archive = archiver("zip", {
+  const archive = new ZipArchive({
     zlib: { level: 9 }, // Sets the compression level.
   });
 
