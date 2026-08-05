@@ -171,6 +171,12 @@ local VEHICLE_OAC_LAB = [[
     if name ~= "type" then return end
     if value ~= "custom" then return end
     if not self:GetAttribute("gse-button") then return end
+    -- Only restore type="click" for custom states GSE ITSELF registered --
+    -- marked securely as gse-lab-state-<state> when the override is applied.
+    -- The bar addon's own custom states (e.g. ElvUI's leave-vehicle button on
+    -- the vehicle page) must keep their native behaviour.
+    local st = self:GetAttribute("state")
+    if st ~= nil and not self:GetAttribute("gse-lab-state-" .. st) then return end
     -- LAB activated the custom state (type="custom") but the state func is guarded
     -- with InCombatLockdown() so in combat it cannot call SetAttribute.
     -- Complete the type restoration here in the secure execution environment
@@ -772,17 +778,75 @@ local function overrideActionButton(savedBind, force)
             -- died in Prowl on Bartender. Register the GSE override on EVERY state
             -- the button has so it stays active across all of the bar's paging. A
             -- user-pinned State still targets just that one state.
+            --
+            -- EXCEPT temporary bar-swap pages (skyriding, vehicle/possess, temp
+            -- shapeshift, override). WoW parks the swapped bar's real actions in
+            -- those pages' slots and the bar addon registers LAB states for them
+            -- (ElvUI: "[overridebar] 14; [vehicleui][possessbar] 12; ..."), so
+            -- overriding those states hijacked the swapped bar -- e.g. the MoP
+            -- Sunsong Ranch farm tools, where HasVehicleActionBar() is true and
+            -- ElvUI pages bar 1 to the vehicle page, but the GSE click override
+            -- registered on that state kept firing the sequence instead. Detect
+            -- swap states by the action SLOT they page to (portable across LAB
+            -- addons' state numbering), plus custom states keyed by a swap page
+            -- number (ElvUI's leave-vehicle button on button 12).
+            local swapPages = {
+                [11] = true, -- [bonusbar:5] skyriding page; no API accessor
+                [(C_ActionBar and C_ActionBar.GetVehicleBarIndex or GetVehicleBarIndex or function() return 12 end)()] = true,
+                [(C_ActionBar and C_ActionBar.GetTempShapeshiftBarIndex or GetTempShapeshiftBarIndex or function() return 13 end)()] = true,
+                [(C_ActionBar and C_ActionBar.GetOverrideBarIndex or GetOverrideBarIndex or function() return 14 end)()] = true
+            }
             local stateTypes = _G[Button].state_types
+            local stateActions = _G[Button].state_actions
+            local function isSwapState(st)
+                local kind = type(stateTypes) == "table" and stateTypes[st]
+                if kind == "action" then
+                    local slot = type(stateActions) == "table" and stateActions[st]
+                    if type(slot) == "number" and slot > 0 then
+                        return swapPages[math.floor((slot - 1) / 12) + 1] == true
+                    end
+                elseif kind == "custom" then
+                    -- A custom state keyed by a swap page number is the bar
+                    -- addon's own (e.g. ElvUI's leave-vehicle button on the
+                    -- vehicle page) -- never take it over. GSE's own custom
+                    -- states live on non-swap keys and are re-applied normally.
+                    return swapPages[tonumber(st)] == true
+                end
+                return false
+            end
+            -- Register a GSE custom state and mark it from INSIDE the secure
+            -- environment (mark first, so it is visible when SetState triggers
+            -- the type change). VEHICLE_OAC_LAB gates its type="click" restore
+            -- on this mark so it never captures the bar addon's own custom
+            -- states, and gse-lab-state-* stays untainted (see issue #1931).
+            local function applyGSEState(st)
+                SHBT:SetFrameRef("gseArmButton", _G[Button])
+                SHBT:Execute(
+                    "local b = self:GetFrameRef('gseArmButton') " ..
+                        "if b then b:SetAttribute('gse-lab-state-" .. tostring(st) .. "', true) end"
+                )
+                _G[Button]:SetState(st, "custom", customState())
+            end
             if savedBind.State then
-                _G[Button]:SetState(state, "custom", customState())
+                applyGSEState(state)
             elseif type(stateTypes) == "table" and next(stateTypes) then
                 for st in pairs(stateTypes) do
-                    _G[Button]:SetState(st, "custom", customState())
+                    if not isSwapState(st) then
+                        applyGSEState(st)
+                    end
                 end
             else
-                _G[Button]:SetState(state, "custom", customState())
+                applyGSEState(state)
             end
-            _G[Button]:SetAttribute("type", "click")
+            -- Kick the live type only when the button is not currently sitting
+            -- on a swap state (LoadOverrides can fire while on the farm / in a
+            -- vehicle); LAB re-asserts type from labtype-<state> on the next
+            -- state change either way. clickbutton is not state-managed by LAB
+            -- and is ignored while type="action", so it is always safe to set.
+            local currentState = _G[Button]:GetAttribute("state")
+            if currentState == nil or not isSwapState(tostring(currentState)) then
+                _G[Button]:SetAttribute("type", "click")
+            end
             _G[Button]:SetAttribute("clickbutton", _G[Sequence])
             -- Install a secure OnAttributeChanged WrapScript (once per button) that
             -- intercepts LAB's type="custom" transition and immediately restores
