@@ -1950,7 +1950,7 @@ local function createAboutPanel()
         aboutDesc:SetJustifyH("LEFT")
         aboutDesc:SetWordWrap(true)
         aboutDesc:SetPoint("TOPLEFT", histHeader, "BOTTOMLEFT", 0, -6)
-        aboutDesc:SetText(L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TImothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to Lutechi for creating the original WowLazyMacros community."])
+        aboutDesc:SetText(L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TimothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the people who write sequences with it.  Check out https://discord.gg/gseunited for the things that make this mod work.  Special thanks to all the GSE Sequence Creators / Community who helped me make what GSE is today."])
 
         -- Version (anchored below logo)
         local versionHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
