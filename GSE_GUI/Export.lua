@@ -8,7 +8,6 @@ local UI = GSE.UI
 local L = GSE.L
 
 local exportframe = UI:Create("Frame")
-local uncompressedVersion = nil
 exportframe:SetSize(760, 560)
 exportframe:Hide()
 exportframe.classid = 0
@@ -403,11 +402,26 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         "OnValueChanged",
         function(obj, event, key, checked)
             if checked then
-                uncompressedVersion.objectType = "VARIABLE"
-                uncompressedVersion.name = key
-                exportTable["Variables"][key] = GSE.EncodeMessage(uncompressedVersion)
+                if exportTable["Variables"][key] then return end
+                local stored = not GSE.isEmpty(GSEVariables) and GSEVariables[key] or nil
+                local payload
+                if type(stored) == "string" and stored:sub(1, 7) == "!GSE3!+" then
+                    -- Protected variable: ship the packed string untouched so the
+                    -- import side stores it still encrypted.
+                    payload = stored
+                else
+                    local ok, decoded = GSE.DecodeMessage(stored or "")
+                    if not ok or type(decoded) ~= "table" then
+                        GSE.Print(string.format(L["Unable to interpret variable '%s'."], key), "Error")
+                        return
+                    end
+                    decoded.name = key
+                    payload = decoded
+                end
+                exportTable["Variables"][key] = payload
                 exportTable.ElementCount = exportTable.ElementCount + 1
             else
+                if not exportTable["Variables"][key] then return end
                 exportTable["Variables"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end
@@ -446,11 +460,18 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     for vname in pairs(allDeps) do
                         if not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname]) then
                             if not exportTable["Variables"][vname] then
-                                local ok, decoded = GSE.DecodeMessage(GSEVariables[vname])
-                                if ok and decoded then
-                                    exportTable["Variables"][vname] = decoded
+                                local storedVar = GSEVariables[vname]
+                                if type(storedVar) == "string" and storedVar:sub(1, 7) == "!GSE3!+" then
+                                    exportTable["Variables"][vname] = storedVar
                                     exportTable.ElementCount = exportTable.ElementCount + 1
                                     table.insert(included, vname)
+                                else
+                                    local ok, decoded = GSE.DecodeMessage(storedVar)
+                                    if ok and type(decoded) == "table" then
+                                        exportTable["Variables"][vname] = decoded
+                                        exportTable.ElementCount = exportTable.ElementCount + 1
+                                        table.insert(included, vname)
+                                    end
                                 end
                             end
                         else
