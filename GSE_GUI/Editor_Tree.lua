@@ -87,7 +87,15 @@ local RESOURCE_LINKS = {
         contentOffsetX = -12,
         url = "https://discord.gg/gseunited"
     },
-    {
+        {
+        title = "GSE United - Website",
+        icon = Statics.Icons.GSEUnited,
+        iconSize = 58,
+        rowHeight = 58,
+        iconOffsetX = -10,
+        contentOffsetX = -12,
+        url = "https://gseunited.com"
+    },{
         title = "Oak - YouTube",
         icon = Statics.Icons.Oak,
         url = "https://www.youtube.com/@oakensoul"

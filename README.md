@@ -16,11 +16,11 @@ GSE started as a fork of Semlar's GnomeSequencer but has since undergone multipl
 - Localisation support
 - And more...
 
-# Popular Discords
-- GSE Official - For issues with GSE - https://discord.com/invite/yUS9R4ZXZA 
-- GSE United - For Sequences and help creating in GSE - https://discord.gg/gseunuted
-- wago.io - https://wago.io/gse
+# Popular Destinations
+- GSE Official - For issues with GSE - https://discord.com/invite/yUS9R4ZXZA
+- GSE Tools - https://gse.tools 
+- GSE United - For Sequences and help creating in GSE - https://discord.gg/gseunited
+- GSE United Websites - For Sequences and help creating in GSE - https://gseunited.com
   
 # More Information
-- GSE Wiki: https://github.com/TimothyLuke/GSE-Advanced-Macro-Compiler/wiki
-- API Docimentation: Check out the project site at https://timothyluke.github.io/GSE-Advanced-Macro-Compiler/ for API documentation.
+- GSE Wiki: https://gse.tools/help
