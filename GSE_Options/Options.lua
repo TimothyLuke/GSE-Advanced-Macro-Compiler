@@ -46,7 +46,6 @@ local MIN_DEBUGGER_HEIGHT = 500
 local MAX_DEBUGGER_HEIGHT = 2000
 local MIN_DEBUGGER_WIDTH = 700
 local MAX_DEBUGGER_WIDTH = 3000
-local settingsButtonFixInstalled = false
 local settingsLabelButtonFixInstalled = false
 local settingsModernColorRowFixInstalled = false
 local settingsExclusiveRowFixInstalled = false
@@ -169,52 +168,35 @@ local MODERN_CLASS_FILE_BY_ID = {
 -- SECTION 2 -- Blizzard Settings panel patching / shim layer
 --
 -- The Blizzard Settings panel has a few rough edges that GSE works
--- around: a missing "Open this panel from chat" button on Classic /
--- BoA / MoP (InstallSettingsButtonFix), the lack of native exclusive
--- (radio-style) checkbox groups (RegisterExclusiveOptionRow /
--- InstallSettingsExclusiveRowFix), and the absence of a label+button
--- row template (InstallSettingsLabelButtonFix). All three are
--- installed once at GSE init and provide the building blocks for the
--- option panels further down.
+-- around: the lack of native exclusive (radio-style) checkbox groups
+-- (RegisterExclusiveOptionRow / InstallSettingsExclusiveRowFix), and
+-- the absence of a label+button row template
+-- (InstallSettingsLabelButtonFix). Both are installed once at GSE init
+-- and provide the building blocks for the option panels further down.
+--
+-- TAINT RULE FOR EVERYTHING IN THIS SECTION
+--
+-- Never assign over a Blizzard Settings mixin method
+-- (`SomeControlMixin.Init = function(...) end`). Doing so makes *every*
+-- control of that type -- Blizzard's own included -- execute GSE code,
+-- so the entire Settings panel initialises under GSE_Options taint. As
+-- of WoW 12.1 that surfaced as:
+--
+--   * ADDON_ACTION_FORBIDDEN -- AddOn 'GSE_Options' tried to call the
+--     protected function 'IsUserOAuthed()' from
+--     Blizzard_SettingsDefinitions_Frame/Social.lua, because our
+--     replacement Init ran for Blizzard's Social checkboxes.
+--   * "attempt to compare a secret number value (execution tainted by
+--     'GSE_Options')" from Blizzard_TextStatusBar / CompactUnitFrame on
+--     nameplates, once the taint reached CVar-backed settings values.
+--     12.x returns unit health as secret values, which tainted code
+--     cannot compare.
+--
+-- Use hooksecurefunc() instead: Blizzard's Init still runs securely and
+-- our post-hook's taint does not propagate back to the caller. A
+-- post-hook must also bail out early on any row that isn't ours, so we
+-- never write to Blizzard's controls.
 -- =========================================================================
-
-local function InstallSettingsButtonFix()
-    if settingsButtonFixInstalled or not SettingsButtonControlMixin or not SettingsButtonControlMixin.Init then return end
-
-    local originalInit = SettingsButtonControlMixin.Init
-    SettingsButtonControlMixin.Init = function(self, initializer)
-        local data = initializer and initializer.GetData and initializer:GetData()
-        if data and data.gseSettingsButton and self.Button and self.Button.ClearAllPoints then
-            self.Button:ClearAllPoints()
-        end
-
-        local result = originalInit(self, initializer)
-
-        if data and data.gseSettingsButton and self.Button then
-            self.Button:ClearAllPoints()
-            if data.name == "" then
-                self.Button:SetPoint("LEFT", self.Text, "LEFT", 0, 0)
-                if self.Tooltip then self.Tooltip:Hide() end
-            else
-                self.Button:SetPoint("LEFT", self, "CENTER", -40, 0)
-                if self.Tooltip then self.Tooltip:Show() end
-            end
-            self.Button:SetWidth(SETTINGS_BUTTON_WIDTH)
-            self.Button:SetHeight(SETTINGS_BUTTON_HEIGHT)
-            self.Button:SetText(data.buttonText)
-            self.Button:SetScript("OnClick", function(button, ...)
-                if data.buttonClick then
-                    data.buttonClick(button, ...)
-                end
-            end)
-            self.Button:Enable()
-            self.Button:Show()
-        end
-
-        return result
-    end
-    settingsButtonFixInstalled = true
-end
 
 local function RunAfterOptionsUpdate(func)
     C_Timer.After(0, func)
@@ -283,17 +265,16 @@ end
 local function InstallSettingsExclusiveRowFix()
     if settingsExclusiveRowFixInstalled or not SettingsCheckboxControlMixin or not SettingsCheckboxControlMixin.Init then return end
 
-    local originalInit = SettingsCheckboxControlMixin.Init
-    SettingsCheckboxControlMixin.Init = function(self, initializer)
+    -- Post-hook only -- see the taint rule at the top of SECTION 2.
+    hooksecurefunc(SettingsCheckboxControlMixin, "Init", function(self, initializer)
         local data = initializer and initializer.GetData and initializer:GetData()
-        if data then
-            data.name = SafeOptionText(data.name)
-            data.tooltip = SafeOptionText(data.tooltip)
-        end
-        local result = originalInit(self, initializer)
+        -- Act on our own exclusive rows, plus any row the settings frame pool
+        -- has recycled away from us (it still carries our fields, and
+        -- RegisterExclusiveOptionRow clears them). Blizzard's own rows are
+        -- never touched.
+        if not ((data and data.gseExclusiveOptionGroup) or self.GSEExclusiveOptionGroup) then return end
         RegisterExclusiveOptionRow(self, data)
-        return result
-    end
+    end)
 
     settingsExclusiveRowFixInstalled = true
 end
@@ -302,6 +283,10 @@ local function MarkExclusiveCheckboxInitializer(initializer, group, getValue)
     InstallSettingsExclusiveRowFix()
     local data = initializer and initializer.GetData and initializer:GetData()
     if data then
+        -- Previously done inside the replacement mixin Init, which applied it
+        -- to every checkbox row in the game. Only our own rows ever needed it.
+        data.name = SafeOptionText(data.name)
+        data.tooltip = SafeOptionText(data.tooltip)
         data.gseExclusiveOptionGroup = group
         data.gseExclusiveGetValue = getValue
     end
@@ -324,7 +309,6 @@ local function InstallSettingsLabelButtonFix()
     if settingsLabelButtonFixInstalled or not SettingsCheckboxWithButtonControlMixin or
         not SettingsCheckboxWithButtonControlMixin.Init then return end
 
-    local originalInit = SettingsCheckboxWithButtonControlMixin.Init
     local function HideCheckboxFrame(row, frame)
         if not frame or frame == row or frame == row.GSELabelButton then return end
         if frame.Hide then frame:Hide() end
@@ -334,11 +318,15 @@ local function InstallSettingsLabelButtonFix()
         if frame.Text and frame.Text.Hide then frame.Text:Hide() end
     end
 
-    SettingsCheckboxWithButtonControlMixin.Init = function(self, initializer)
+    -- Post-hook only -- see the taint rule at the top of SECTION 2.
+    hooksecurefunc(SettingsCheckboxWithButtonControlMixin, "Init", function(self, initializer)
         local data = initializer and initializer.GetData and initializer:GetData()
-        local result = originalInit(self, initializer)
 
         if not (data and data.gseLabelButton) then
+            -- Only restore rows the settings frame pool has recycled away from
+            -- us. A row we have never dressed up belongs to Blizzard, so we
+            -- leave it entirely alone.
+            if not (self.GSELabelText or self.GSELabelButton) then return end
             if self.GSELabelText then self.GSELabelText:Hide() end
             if self.GSELabelButton then
                 self.GSELabelButton:Hide()
@@ -362,7 +350,7 @@ local function InstallSettingsLabelButtonFix()
                 self.Text:SetText(SafeOptionText(data and data.name))
                 self.Text:Show()
             end
-            return result
+            return
         end
 
         HideCheckboxFrame(self, self.Checkbox or self.CheckBox or self.CheckButton or self.Check)
@@ -427,9 +415,7 @@ local function InstallSettingsLabelButtonFix()
         self.GSELabelButton:Show()
         SkinGSESettingsButton(self.GSELabelButton)
         RunAfterOptionsUpdate(function() SkinGSESettingsButton(self.GSELabelButton) end)
-
-        return result
-    end
+    end)
     settingsLabelButtonFixInstalled = true
 end
 
@@ -452,6 +438,10 @@ local function CreateGSESettingsLabelButtonInitializer(category, settingID, labe
 
     local data = initializer and initializer.GetData and initializer:GetData()
     if data then
+        -- Sanitise here rather than in the Init hook: Blizzard's Init now runs
+        -- first and reads these, so they have to be strings before it does.
+        data.name = SafeOptionText(data.name)
+        data.tooltip = SafeOptionText(data.tooltip)
         data.gseLabelButton = true
         data.gseLabelText = label
         data.gseButtonText = buttonText
@@ -1006,18 +996,21 @@ local function InstallSettingsModernColorRowFix()
     if settingsModernColorRowFixInstalled or not SettingsCheckboxWithButtonControlMixin or
         not SettingsCheckboxWithButtonControlMixin.Init then return end
 
-    local originalInit = SettingsCheckboxWithButtonControlMixin.Init
-    SettingsCheckboxWithButtonControlMixin.Init = function(self, initializer)
+    -- Post-hook only -- see the taint rule at the top of SECTION 2.
+    hooksecurefunc(SettingsCheckboxWithButtonControlMixin, "Init", function(self, initializer)
         local data = initializer and initializer.GetData and initializer:GetData()
-        local result = originalInit(self, initializer)
 
         if not (data and data.gseModernCustomColorRow) then
+            -- Only tidy up rows the settings frame pool has recycled away from
+            -- us; rows we have never dressed up are Blizzard's, leave them be.
+            if not (self.GSEModernColorData or self.GSEModernColorSwatch
+                or self.GSEModernCustomCheck or self.GSEModernCustomLabel) then return end
             self.GSEModernColorData = nil
             self.GSEModernRefreshColorRow = nil
             if self.GSEModernCustomCheck then self.GSEModernCustomCheck:Hide() end
             if self.GSEModernCustomLabel then self.GSEModernCustomLabel:Hide() end
             if self.GSEModernColorSwatch then self.GSEModernColorSwatch:Hide() end
-            return result
+            return
         end
 
         RegisterExclusiveOptionRow(self, data)
@@ -1069,8 +1062,7 @@ local function InstallSettingsModernColorRowFix()
         end
 
         self:GSEModernRefreshColorRow()
-        return result
-    end
+    end)
     settingsModernColorRowFixInstalled = true
 end
 
