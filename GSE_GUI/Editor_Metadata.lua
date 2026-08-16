@@ -814,14 +814,17 @@ local function drawMetadataTab(editframe, container)
         dd:SetCallback(
             "OnValueChanged",
             function(obj, event, key)
-                if editframe.Sequence.MetaData.Default == tonumber(key) then
-                    editframe.Sequence.MetaData[metaKey] = nil
-                else
-                    editframe.Sequence.MetaData[metaKey] = tonumber(key)
-                    -- PVP also mirrors editframe.PVP (original behaviour)
-                    if metaKey == "PVP" then
-                        editframe.PVP = tonumber(key)
-                    end
+                -- Always store the version the user picked. Previously a
+                -- pick equal to the Default was collapsed to nil, but nil
+                -- and an explicit version do not resolve the same at
+                -- runtime (an explicit pin runs the chosen version; nil
+                -- fell back to v1 in a Delve even with Default=2), so the
+                -- setting silently failed to apply. Storing the explicit
+                -- number makes every row behave like the pin that works.
+                editframe.Sequence.MetaData[metaKey] = tonumber(key)
+                -- PVP also mirrors editframe.PVP (original behaviour)
+                if metaKey == "PVP" then
+                    editframe.PVP = tonumber(key)
                 end
             end
         )

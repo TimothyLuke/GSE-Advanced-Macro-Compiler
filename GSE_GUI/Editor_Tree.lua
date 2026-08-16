@@ -1633,21 +1633,17 @@ local function ManageTree(editframe)
                 return v
             end
 
-            -- Update all MetaData fields that hold a version index.
-            -- Context keys that equal Default are stored as nil; re-apply that rule
-            -- after remapping (mirrors the editor's OnValueChanged logic).
+            -- Update all MetaData fields that hold a version index. Keep an
+            -- explicit context version explicit — do NOT collapse it to nil
+            -- when it matches Default (mirrors the editor's OnValueChanged;
+            -- nil and an explicit version do not resolve the same at runtime).
             seq.MetaData.Default = remapVersionIndex(seq.MetaData.Default)
             local contextKeys = {
                 "Raid", "Arena", "Mythic", "MythicPlus", "PVP",
                 "Heroic", "Dungeon", "Timewalking", "Party", "Scenario",
             }
             for _, k in ipairs(contextKeys) do
-                local remapped = remapVersionIndex(seq.MetaData[k])
-                if remapped == seq.MetaData.Default then
-                    seq.MetaData[k] = nil
-                else
-                    seq.MetaData[k] = remapped
-                end
+                seq.MetaData[k] = remapVersionIndex(seq.MetaData[k])
             end
 
             -- Mirror the reorder into the Library copy so ManageTree() draws the
