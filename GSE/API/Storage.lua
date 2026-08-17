@@ -5,14 +5,6 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
--- The global GSE is now a minimal locked proxy (see Plugins.lua) with no .V or
--- internals exposed, to deny in-memory scraping by third-party addons. But user
--- `=GSE.V.X()` action expressions and stored variable functs are compiled with
--- loadstring, which runs in the GLOBAL environment -- so they would resolve GSE
--- to the proxy and never find .V. Compile them in an environment where GSE is
--- the REAL private namespace, falling through to _G for everything else. This
--- restores the pre-privatisation resolution of GSE.V in variable expressions
--- without putting a global GSE handle back where other addons could read it.
 local gseEvalEnv = setmetatable({GSE = GSE}, {__index = _G})
 local function gseLoadstring(code, chunkname)
     local chunk, err = loadstring(code, chunkname)
@@ -24,10 +16,6 @@ local function safeGetSpellInfo(spellIdentifier)
     if spellIdentifier == nil or spellIdentifier == "" then return nil end
     local info = GSE.GetSpellInfo(spellIdentifier)
     if info then return info end
-    -- Cross-class fallback: if a spell name failed to resolve (e.g. viewing
-    -- another class's sequence where C_Spell.GetSpellInfo does not know the
-    -- name), look it up in the saved-variable cache populated by prior
-    -- imports / translator runs, then resolve by the cached numeric ID.
     if type(spellIdentifier) == "string" and not tonumber(spellIdentifier) and type(GSESpellCache) == "table" then
         local locale = GetLocale and GetLocale() or "enUS"
         local cachedID = GSESpellCache[locale] and GSESpellCache[locale][spellIdentifier]
@@ -39,15 +27,8 @@ end
 -- Track which class libraries have been decompressed into GSE.Library.
 GSE.LoadedClasses = GSE.LoadedClasses or {}
 
--- Sequences that failed to decode during load are collected here so the UI can
--- offer the player interactive options (delete / skip) rather than silent loss.
 GSE.CorruptSequences = GSE.CorruptSequences or {}
 
--- Walk an action/version tree and rename legacy `macrotext` ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ `macro`.
--- Platform storage historically emitted `macrotext` (a WoW SecureActionButton
--- runtime attribute name, never a stored-data field). The editor and runtime
--- read `macro`, so blocks that only have `macrotext` fall through the spell
--- branch and crash C_Spell.GetSpellInfo. Returns true if anything changed.
 local function renameMacrotextInTree(node)
     if type(node) ~= "table" then return false end
     local changed = false
@@ -89,19 +70,6 @@ local function renameMacrotextInTree(node)
     return changed
 end
 
---- Per-load checks applied to every sequence:
----  * recursively rename legacy `macrotext` ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ `macro` inside action blocks
----  * clear MetaData.Checksum when anything changed (the stored signature was
----    produced against the pre-rename tree and would no longer verify; the
----    addon's Checksum verifier returns "no_checksum" for an absent sig and
----    suppresses the warning until the sequence is re-exported).
---
--- Returns true when any change was made so the caller can re-save to disk.
--- Returns false, "macros-deprecated" when the sequence still uses the
--- pre-#1853 `Macros` field name. The on-disk MacrosÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢Versions migration
--- has been retired: the addon refuses to interpret a Macros-only record
--- and the caller is expected to surface a "upload to gse.tools to
--- convert" message and skip the sequence.
 local function migrateSequenceVersions(sequence)
     if type(sequence) ~= "table" then return false end
     if sequence["Macros"] ~= nil and sequence.Versions == nil then
@@ -1100,7 +1068,7 @@ function GSE.GetActiveSequenceVersion(sequenceName)
         vers = meta.PVESolo
     end
     for _, ctx in ipairs(contextVersionPriority) do
-        if not GSE.isEmpty(meta[ctx.metaKey]) and GSE[ctx.flag] then
+        if meta[ctx.metaKey] and GSE[ctx.flag] then
             vers = meta[ctx.valueKey]
             break
         end
