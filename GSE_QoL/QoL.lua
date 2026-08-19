@@ -14,6 +14,25 @@ local L = GSE.L
 -- ============================================================================
 
 
+-- Restores the #1752 in-combat editor gate (e2c23552). GSE.ShowSequences
+-- allows opening in combat only when `GSE.PlayerSpellsLoaded` exists and
+-- returns true. The original QoL implementation (a scanned playerSpells
+-- cache) was deleted in a later refactor, leaving the Editor.lua call
+-- dangling on a nil function -- so the editor silently went back to
+-- always refusing to open in combat, while the ungated Keybindings
+-- button opened the very same window in combat without error. Stateless
+-- reimplementation: ask the spellbook directly ("is the spellbook
+-- populated yet" is all the old cache actually answered).
+function GSE.PlayerSpellsLoaded()
+    if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines then
+        return (C_SpellBook.GetNumSpellBookSkillLines() or 0) > 0
+    end
+    if GetNumSpellTabs then
+        return (GetNumSpellTabs() or 0) > 0
+    end
+    return false
+end
+
 -- Native WoW icon picker, owned by GSE.
 --
 -- Pattern lifted from Jaliborc/BagBrother config/panels/ruleEdit.lua Ã¢â‚¬â€
