@@ -1286,7 +1286,11 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         if numericClassID then
             GSE.EnsureSequenceLoaded(numericClassID, sequencename)
             local libSeq = GSE.Library[numericClassID] and GSE.Library[numericClassID][sequencename]
-            if libSeq and libSeq.Versions then
+            -- After a Save, ReplaceSequence stores the editor's own sequence object
+            -- into GSE.Library, so libSeq IS editframe.Sequence (same Versions array).
+            -- Inserting again here created TWO new versions and desynced the index
+            -- (nil-index crash in GUIDrawMacroEditor). Only mirror a distinct copy.
+            if libSeq and libSeq ~= editframe.Sequence and libSeq.Versions then
                 table.insert(libSeq.Versions, GSE.CloneSequence(newVersion))
             end
         end
@@ -1654,7 +1658,10 @@ local function ManageTree(editframe)
             -- correct order.  This does NOT persist to GSESequences.
             GSE.EnsureSequenceLoaded(classid, seqname)
             local libSeq = GSE.Library[classid] and GSE.Library[classid][seqname]
-            if libSeq and libSeq.Versions then
+            -- After a Save, libSeq IS `seq` (same Versions array); a second
+            -- remove/insert would re-move the version and scramble the order.
+            -- Only mirror when the Library holds a distinct copy.
+            if libSeq and libSeq ~= seq and libSeq.Versions then
                 local libMoved = table.remove(libSeq.Versions, srcIdx)
                 table.insert(libSeq.Versions, dstIdx, libMoved)
                 libSeq.MetaData.Default = seq.MetaData.Default

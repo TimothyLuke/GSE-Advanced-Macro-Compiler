@@ -6028,9 +6028,14 @@ function GSE.CreateEditor()
                         printtext = printtext .. " " .. L["Delves and Scenarios setting changed to Default."]
                     end
 
-                    if sequence.MetaData.Default > 1 then
+                    -- Only shift Default down when the deleted version sat at or
+                    -- before it (same rule as the content keys below). It used to
+                    -- decrement unconditionally, so deleting a version AFTER the
+                    -- Default wrongly moved the Default onto a different version.
+                    if sequence.MetaData.Default > 1 and sequence.MetaData.Default >= version then
                         sequence.MetaData.Default = tonumber(sequence.MetaData.Default) - 1
-                    else
+                    end
+                    if GSE.isEmpty(sequence.MetaData.Default) or sequence.MetaData.Default < 1 then
                         sequence.MetaData.Default = 1
                     end
 
@@ -6106,7 +6111,12 @@ function GSE.CreateEditor()
                     if delClassID then
                         GSE.EnsureSequenceLoaded(delClassID, editframe.SequenceName)
                         local libSeq = GSE.Library[delClassID] and GSE.Library[delClassID][editframe.SequenceName]
-                        if libSeq and libSeq.Versions and libSeq.Versions[version] then
+                        -- After a Save, ReplaceSequence stores the editor's own
+                        -- sequence object into GSE.Library, so libSeq IS `sequence`
+                        -- (same table, same Versions array). Removing again here
+                        -- deleted a SECOND version — delete one, lose them all
+                        -- (2 versions -> 0). Only mirror when it's a distinct copy.
+                        if libSeq and libSeq ~= sequence and libSeq.Versions and libSeq.Versions[version] then
                             table.remove(libSeq.Versions, version)
                             if libSeq.MetaData then
                                 libSeq.MetaData.Default = sequence.MetaData.Default
