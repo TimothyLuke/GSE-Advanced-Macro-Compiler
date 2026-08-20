@@ -229,6 +229,69 @@ GSE.OnTreeContextMenuExtras = function(rootDescription, ctx)
     )
 end
 
+-- Player spellbook enumeration for the Tab spell list. The pre-#1914 QoL
+-- kept an event-refreshed playerSpells cache; enumerating on demand at
+-- menu-open time is fast enough (one pass over the spellbook) and cannot
+-- go stale, so the cache and its AceEvent plumbing were not restored.
+local function getPlayerSpells()
+    local spells = {}
+    if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then return spells end
+    for tab = 2, C_SpellBook.GetNumSpellBookSkillLines() do
+        local lineinfo = C_SpellBook.GetSpellBookSkillLineInfo(tab)
+        if not lineinfo then break end
+        local offset = lineinfo.itemIndexOffset
+        for i = 1, lineinfo.numSpellBookItems do
+            local spellinfo = C_SpellBook.GetSpellBookItemInfo(i + offset, 0)
+            if spellinfo and spellinfo.name and not spellinfo.isPassive and not spellinfo.isOffSpec then
+                table.insert(spells, spellinfo.name)
+            end
+        end
+    end
+    table.sort(spells)
+    return spells
+end
+
+-- Tab spell list for the Action block (restores the pre-#1914 Patron
+-- feature lost when the Macro Insertion Toolbar moved to GSE_MacroToolbar).
+-- Spell field: pick a spell (stores via the field's own handlers) or a
+-- variable. Macro commands box: insert the spell name / variable at the
+-- cursor; the box's OnTextChanged owns storage, nothing else is written.
+GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
+    local editBox = widget and (widget.editBox or widget.editbox)
+    if not editBox then return end
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert Spell"])
+            for _, v in ipairs(getPlayerSpells()) do
+                rootDescription:CreateButton(v, function() apply(v) end)
+            end
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
+            end
+        end)
+    end)
+end
+
+GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
+    local editBox = widget and (widget.editBox or widget.editbox)
+    if not editBox then return end
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert Spell"])
+            for _, v in ipairs(getPlayerSpells()) do
+                rootDescription:CreateButton(v, function() editBox:Insert(v) end)
+            end
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function()
+                    editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                end)
+            end
+        end)
+    end)
+end
+
 -- Editor Tab-completion menus: press Tab in an editor field to insert a GSE
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)

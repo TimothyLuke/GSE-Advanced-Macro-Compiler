@@ -7460,6 +7460,19 @@ function GSE.CreateEditor()
                     end
                 end
             )
+            -- QoL Tab spell list (Patron): pop the Insert Spell / Insert GSE
+            -- Variable menu on Tab. The spell field applies via SetText so its
+            -- own OnTextChanged stores the value; the macro box inserts at the
+            -- cursor and its OnTextChanged owns storage. No-ops when GSE_QoL
+            -- is not loaded.
+            if GSE.OnEditorSpellTab then
+                GSE.OnEditorSpellTab(spellEditBox, editframe.frame, function(value)
+                    spellEditBox:SetText(value)
+                end)
+            end
+            if GSE.OnEditorMacroBlockTab then
+                GSE.OnEditorMacroBlockTab(macroEditBox, editframe.frame)
+            end
             return spellEditBox, macroEditBox
         end
     end
