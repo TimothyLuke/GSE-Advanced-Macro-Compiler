@@ -5973,6 +5973,29 @@ function GSE.CreateEditor()
                     )
                     return
                 end
+
+                -- A context override pointing AT this version blocks the delete
+                -- the same way Default does. Silently repointing it at Default
+                -- (what this used to do) changes which macro fires in that
+                -- context without telling the author — they set Raid to version
+                -- 4 deliberately. Make them repoint it first. The key list and
+                -- the rule live in Storage.lua, derived from
+                -- contextVersionPriority, so the editor cannot drift from the
+                -- runtime's idea of which contexts exist.
+                local blocking = GSE.VersionReferencesInUse(sequence.MetaData, version)
+                if #blocking > 0 then
+                    GSE.Print(
+                        string.format(
+                            L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."],
+                            version,
+                            table.concat(blocking, ", "),
+                            #blocking == 1 and L["it"] or L["them"]
+                        ),
+                        Statics.DebugModules["Editor"]
+                    )
+                    return
+                end
+
                 GSE.UI.ShowConfirmDialog({
                     owner       = editframe,
                     title       = L["Delete Version"],
@@ -5987,113 +6010,11 @@ function GSE.CreateEditor()
                     cancelText  = L["Cancel"],
                     onConfirm   = function()
                     local printtext = L["Macro Version %d deleted."]
-                    if sequence.MetaData.PVP == version then
-                        sequence.MetaData.PVP = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["PVP setting changed to Default."]
-                    end
-                    if sequence.MetaData.Arena == version then
-                        sequence.MetaData.Arena = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Arena setting changed to Default."]
-                    end
-                    if sequence.MetaData.Raid == version then
-                        sequence.MetaData.Raid = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Raid setting changed to Default."]
-                    end
-                    if sequence.MetaData.Mythic == version then
-                        sequence.MetaData.Mythic = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Mythic setting changed to Default."]
-                    end
-                    if sequence.MetaData.Heroic == version then
-                        sequence.MetaData.Heroic = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Heroic setting changed to Default."]
-                    end
-                    if sequence.MetaData.Dungeon == version then
-                        sequence.MetaData.Dungeon = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Dungeon setting changed to Default."]
-                    end
-                    if sequence.MetaData.Party == version then
-                        sequence.MetaData.Party = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Party setting changed to Default."]
-                    end
-                    if sequence.MetaData.MythicPlus == version then
-                        sequence.MetaData.MythicPlus = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Mythic+ setting changed to Default."]
-                    end
-                    if sequence.MetaData.Timewalking == version then
-                        sequence.MetaData.Timewalking = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Timewalking setting changed to Default."]
-                    end
-                    if sequence.MetaData.Scenario == version then
-                        sequence.MetaData.Scenario = sequence.MetaData.Default
-                        printtext = printtext .. " " .. L["Delves and Scenarios setting changed to Default."]
-                    end
 
-                    if sequence.MetaData.Default > 1 then
-                        sequence.MetaData.Default = tonumber(sequence.MetaData.Default) - 1
-                    else
-                        sequence.MetaData.Default = 1
-                    end
+                    -- Only references after the deleted version move; see
+                    -- GSE.ShiftVersionReferencesAfterDelete for the three cases.
+                    GSE.ShiftVersionReferencesAfterDelete(sequence.MetaData, version)
 
-                    if
-                        not GSE.isEmpty(sequence.MetaData.PVP) and sequence.MetaData.PVP > 1 and
-                            sequence.MetaData.PVP >= version
-                     then
-                        sequence.MetaData.PVP = tonumber(sequence.MetaData.PVP) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Arena) and sequence.MetaData.Arena > 1 and
-                            sequence.MetaData.Arena >= version
-                     then
-                        sequence.MetaData.Arena = tonumber(sequence.MetaData.Arena) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Raid) and sequence.MetaData.Raid > 1 and
-                            sequence.MetaData.Raid >= version
-                     then
-                        sequence.MetaData.Raid = tonumber(sequence.MetaData.Raid) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Mythic) and sequence.MetaData.Mythic > 1 and
-                            sequence.MetaData.Mythic >= version
-                     then
-                        sequence.MetaData.Mythic = tonumber(sequence.MetaData.Mythic) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.MythicPlus) and sequence.MetaData.MythicPlus > 1 and
-                            sequence.MetaData.MythicPlus >= version
-                     then
-                        sequence.MetaData.MythicPlus = tonumber(sequence.MetaData.MythicPlus) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Timewalking) and sequence.MetaData.Timewalking > 1 and
-                            sequence.MetaData.Timewalking >= version
-                     then
-                        sequence.MetaData.Timewalking = tonumber(sequence.MetaData.Timewalking) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Heroic) and sequence.MetaData.Heroic > 1 and
-                            sequence.MetaData.Heroic >= version
-                     then
-                        sequence.MetaData.Heroic = tonumber(sequence.MetaData.Heroic) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Dungeon) and sequence.MetaData.Dungeon > 1 and
-                            sequence.MetaData.Dungeon >= version
-                     then
-                        sequence.MetaData.Dungeon = tonumber(sequence.MetaData.Dungeon) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Party) and sequence.MetaData.Party > 1 and
-                            sequence.MetaData.Party >= version
-                     then
-                        sequence.MetaData.Party = tonumber(sequence.MetaData.Party) - 1
-                    end
-                    if
-                        not GSE.isEmpty(sequence.MetaData.Scenario) and sequence.MetaData.Scenario > 1 and
-                            sequence.MetaData.Scenario >= version
-                     then
-                        sequence.MetaData.Scenario = tonumber(sequence.MetaData.Scenario) - 1
-                    end
                     table.remove(sequence.Versions, version)
 
                     -- Mirror the deletion into the Library display cache so the
@@ -6110,11 +6031,7 @@ function GSE.CreateEditor()
                             table.remove(libSeq.Versions, version)
                             if libSeq.MetaData then
                                 libSeq.MetaData.Default = sequence.MetaData.Default
-                                local contextKeys = {
-                                    "Raid", "Arena", "Mythic", "MythicPlus", "PVP",
-                                    "Heroic", "Dungeon", "Timewalking", "Party", "Scenario",
-                                }
-                                for _, ck in ipairs(contextKeys) do
+                                for _, ck in ipairs(GSE.GetContextVersionKeys()) do
                                     libSeq.MetaData[ck] = sequence.MetaData[ck]
                                 end
                             end

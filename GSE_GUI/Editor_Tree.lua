@@ -1292,6 +1292,17 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         end
 
         editframe.GUIDrawMacroEditor(contentcontainer, newVersionIndex, table.concat(path, "\001"))
+
+        -- Recompute the Save gate for the version we just drew. The refresh
+        -- higher up in this branch ran BEFORE the insert, so it measured the
+        -- previously selected version: if that one was over the macro-length
+        -- limit, the brand-new version — a copy of Default, comfortably under
+        -- it — inherited a disabled Save button, and nothing re-evaluated it
+        -- until the author happened to edit macro text. GUIDrawMacroEditor
+        -- does not refresh this itself.
+        if editframe.RefreshMacroLimitSaveState then
+            editframe:RefreshMacroLimitSaveState(newVersionIndex)
+        end
         editframe:SetTitle(
             L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["New"] .. " " .. L["Version"] .. ")"
         )

@@ -514,6 +514,20 @@ function GSE.SnapshotDependentMacros(sequence)
 end
 
 --- Replace a current version of a Macro
+--- Store a sequence into the Library and the saved variables.
+--
+-- The Library entry is a CLONE, never the caller's own table. The editor keeps
+-- its working copy in editframe.Sequence and hands that same table here on
+-- Save; storing it directly made the two the same object, and from the first
+-- Save of a session onwards every per-version operation ran twice — once as
+-- the editor's own edit, then again through the "mirror into the Library so
+-- the tree updates before Save" block in each handler, which was by then
+-- writing into the same array. Delete removed two versions, New Version
+-- inserted two, drag reorder moved twice. The extra version also left the
+-- tree pointing at an index the reloaded sequence did not have, which is the
+-- nil-index error on the way back into the editor. Cloning restores the
+-- invariant those mirror blocks were written against: the Library holds a
+-- separate copy that only this function replaces.
 function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.SanitizeSequenceEditorMarkup then
         GSE.SanitizeSequenceEditorMarkup(sequence)
@@ -521,14 +535,14 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
-        GSE.Library[classid][sequenceName] = sequence
+        GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
         GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
         return
     end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
-    GSE.Library[classid][sequenceName] = sequence
+    GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
@@ -1037,6 +1051,70 @@ local contextVersionPriority = {
     { metaKey = "Timewalking", flag = "inTimeWalking", valueKey = "Timewalking" },
     { metaKey = "Party",       flag = "inParty",       valueKey = "Party"       },
 }
+
+--- Every MetaData key that holds a VERSION NUMBER, derived from
+-- contextVersionPriority above rather than repeated. PVP appears twice in
+-- that table (once routing to Arena), so dedupe on valueKey.
+local contextVersionKeys = {}
+do
+    local seen = {}
+    for _, entry in ipairs(contextVersionPriority) do
+        if entry.valueKey and not seen[entry.valueKey] then
+            seen[entry.valueKey] = true
+            contextVersionKeys[#contextVersionKeys + 1] = entry.valueKey
+        end
+    end
+end
+
+--- The context keys, in priority order. Callers must not mutate the result.
+function GSE.GetContextVersionKeys()
+    return contextVersionKeys
+end
+
+--- Which MetaData entries point AT `version`.
+-- Returns a list of key names, empty when nothing references it. Deleting a
+-- version that something points at is refused rather than silently repointed:
+-- an author who set Raid to version 4 chose that, and moving it to Default
+-- behind their back changes which macro fires in a raid.
+function GSE.VersionReferencesInUse(metadata, version)
+    local inUse = {}
+    if type(metadata) ~= "table" then return inUse end
+    version = tonumber(version)
+    if not version then return inUse end
+    if tonumber(metadata.Default) == version then inUse[#inUse + 1] = "Default" end
+    for _, key in ipairs(contextVersionKeys) do
+        if tonumber(metadata[key]) == version then inUse[#inUse + 1] = key end
+    end
+    return inUse
+end
+
+--- Move every version reference down one slot after `version` was deleted.
+--
+-- Only references AFTER the deleted version move — what they point at slid
+-- down by one. A reference BEFORE it cannot be affected: deleting a later
+-- version does not renumber earlier ones. A reference AT it never reaches
+-- here, because VersionReferencesInUse blocks the delete first.
+--
+-- Default used to be decremented unconditionally, so deleting version 5 while
+-- Default was 4 silently moved Default to 3 — the sequence then ran a macro
+-- the author never selected.
+function GSE.ShiftVersionReferencesAfterDelete(metadata, version)
+    if type(metadata) ~= "table" then return end
+    version = tonumber(version)
+    if not version then return end
+    local function shift(value)
+        local n = tonumber(value)
+        if n and n > version then return n - 1 end
+        return value
+    end
+    metadata.Default = shift(metadata.Default)
+    for _, key in ipairs(contextVersionKeys) do
+        if not GSE.isEmpty(metadata[key]) then
+            metadata[key] = shift(metadata[key])
+        end
+    end
+end
+
 
 local function isPVESoloContext()
     return not (

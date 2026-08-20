@@ -264,7 +264,6 @@ L[
     ] = true
 L["Macro Version %d deleted."] = true
 L["This change will not come into effect until you save this macro."] = true
-L["PVP setting changed to Default."] = true
 L["Delete"] = true
 L["Cancel"] = true
 L["Addin Version %s contained versions for the following sequences:"] = true
@@ -353,9 +352,6 @@ L["Gnome Sequencer: Compress a Sequence String."] = true
 L["Compress Sequence from Forums"] = true
 L["Sequence to Compress."] = true
 L["Compress"] = true
-L["Heroic setting changed to Default."] = true
-L["Dungeon setting changed to Default."] = true
-L["Party setting changed to Default."] = true
 L[
         "Macro found by the name %sPVP%s. Rename this macro to a different name to be able to use it.  WOW has a global object called PVP that is referenced instead of this macro."
     ] = true
@@ -365,7 +361,6 @@ L["Random - It will select .... a spell, any spell"] = true
 
 -- GSE 2.3.00
 L["The GUI has not been loaded.  Please activate this plugin amongst WoW's addons to use the GSE GUI."] = true
-L["Arena setting changed to Default."] = true
 L["Arena"] = true
 L["Local Macro"] = true
 L["Updated Macro"] = true
@@ -388,8 +383,6 @@ L[" was imported as a new macro."] = true
 L["New Sequence Name"] = true
 
 -- GSE 2.3.09
-L["Mythic+ setting changed to Default."] = true
-L["Timewalking setting changed to Default."] = true
 
 -- GSE 2.4.01
 L[
@@ -441,8 +434,6 @@ L["Hide Minimap Icon"] = true
 L["Hide Minimap Icon for LibDataBroker (LDB) data text."] = true
 
 -- GSE 2.4.15 - Missing translations
-L["Raid setting changed to Default."] = true
-L["Mythic setting changed to Default."] = true
 
 -- GSE 2.5.0
 L["The milliseconds being used in key click delay."] = true
@@ -457,7 +448,6 @@ L["Version"] = true
 
 -- 2.5.9
 L["The version of this macro to use in Delves and Scenarios."] = true
-L["Delves and Scenarios setting changed to Default."] = true
 
 -- 2.6.01
 L["Variables"] = true
@@ -951,3 +941,6 @@ L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Qu
 L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."] = true
 L["These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."] = true
 L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."] = true
+L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
+L["it"] = true
+L["them"] = true
