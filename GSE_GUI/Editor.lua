@@ -941,6 +941,12 @@ local FORM_SPELL_IDS = {
     [40120] = true, -- Swift Flight Form
     [114282] = true, -- Treant Form
     [165961] = true, -- Stag Form
+    -- Stealth states: sit on the stance bar exactly like stances/forms do.
+    -- A management line like "/cast [nostealth] Stealth; [stealth,nocombat]
+    -- Sprint" resolves to "Stealth" when unstealthed and stole the block
+    -- icon from the real ability below it.
+    [1784]   = true, -- Stealth (Rogue)
+    [5215]   = true, -- Prowl (Druid)
     -- Pet summoning slots: treated the same as forms/stances. A line like
     -- /cast Call Pet 1 should not steal the action icon unless it is the
     -- only valid candidate in the macro block.
@@ -967,6 +973,7 @@ local function isFormSpellCandidate(value)
 
     local lowerCandidate = strlower(candidate)
     return lowerCandidate == "ghost wolf" or lowerCandidate == "tree of life" or
+        lowerCandidate == "stealth" or lowerCandidate == "prowl" or
         lowerCandidate:match("%f[%a]form%f[%A]") ~= nil or
         lowerCandidate:match("%f[%a]stance%f[%A]") ~= nil or
         -- "Call Pet", "Call Pet 1" ... "Call Pet 5"
@@ -1813,6 +1820,33 @@ end
 -- GSE.SaveAllSequenceActionIcons) through the GSE.* namespace.
 
 
+-- Menu-only candidate source: enumerate EVERY conditional branch of a cast
+-- line, ignoring whether its conditionals are true right now. The live
+-- resolver (SecureCmdOptionParse) intentionally drops branches whose
+-- conditionals currently fail, so out of combat a "/cast [combat] Shuriken
+-- Storm" contributed nothing and the Select Icon menu never offered it —
+-- while castsequence lines (enumerated element-wise) offered everything.
+-- The auto-icon keeps using the live resolver; this is just for the menu.
+local function getAllConditionalBranchSpells(line)
+    local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
+    if not cmd or not etc then return nil end
+    cmd = strlower(cmd)
+    if not Statics.CastCmds[cmd] or cmd == "castsequence" then return nil end
+
+    local candidates = {}
+    for _, clause in ipairs(GSE.split(etc, ";")) do
+        local _, _, body = GSE.GetConditionalsFromString(clause)
+        body = trimIconCandidate(body or "")
+        if body ~= "" and not tonumber(body) then
+            local ok, info = pcall(GSE.GetSpellInfo, body)
+            if ok and type(info) == "table" and info.iconID then
+                table.insert(candidates, info)
+            end
+        end
+    end
+    if #candidates > 0 then return candidates end
+end
+
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     local iconSize = 28
     local lbl = UI:Create("Icon")
@@ -1876,6 +1910,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
             local lines = GSE.SplitMeIntoLines(macro)
             for _, v in ipairs(lines) do
                 addIconMenuCandidates(spellinfolist, GSE.GetSpellsFromString(v, true))
+                addIconMenuCandidates(spellinfolist, getAllConditionalBranchSpells(v))
                 addIconMenuCandidates(spellinfolist, getMacroLineFallbackIconInfo(v))
             end
         else
