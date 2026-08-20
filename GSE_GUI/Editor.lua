@@ -7478,96 +7478,87 @@ function GSE.CreateEditor()
 end
 
 function GSE.ShowSequences()
-    if not InCombatLockdown() or (GSE.PlayerSpellsLoaded and GSE.PlayerSpellsLoaded()) then
-        local editframe = GSE.CreateEditor()
-        editframe.ManageTree()
-        if GSE.HydrateLoadedSequenceActionIcons then GSE.HydrateLoadedSequenceActionIcons() end
-        local lastSequencePath = GSE.GUI.GetLastSequenceEditorPath and GSE.GUI.GetLastSequenceEditorPath()
-        local classID = tostring(GSE.GetCurrentClassID and GSE.GetCurrentClassID() or "")
+    local editframe = GSE.CreateEditor()
+    editframe.ManageTree()
+    if GSE.HydrateLoadedSequenceActionIcons then GSE.HydrateLoadedSequenceActionIcons() end
+    local lastSequencePath = GSE.GUI.GetLastSequenceEditorPath and GSE.GUI.GetLastSequenceEditorPath()
+    local classID = tostring(GSE.GetCurrentClassID and GSE.GetCurrentClassID() or "")
 
-        -- Restore the last-opened sequence. In "show all classes" mode the tree
-        -- shows every class, so restore it regardless of the class/spec the player
-        -- is currently on. In current-class mode the tree only shows the current
-        -- class, so only restore the path when it belongs to the current class
-        -- (otherwise it would not be visible); fall back to the current class.
-        -- Paths look like "Sequences\001<classID>\001..." so check segment 2.
-        local showingAllClasses = GSEOptions and GSEOptions.filterList and GSEOptions.filterList[Statics.All]
-        if lastSequencePath and not showingAllClasses then
-            local parts = {("\001"):split(lastSequencePath)}
-            local pathClass = parts[2] and tostring(parts[2]) or ""
-            if pathClass ~= classID then
-                lastSequencePath = nil   -- wrong class, fall back to current class
-            end
+    -- Restore the last-opened sequence. In "show all classes" mode the tree
+    -- shows every class, so restore it regardless of the class/spec the player
+    -- is currently on. In current-class mode the tree only shows the current
+    -- class, so only restore the path when it belongs to the current class
+    -- (otherwise it would not be visible); fall back to the current class.
+    -- Paths look like "Sequences\001<classID>\001..." so check segment 2.
+    local showingAllClasses = GSEOptions and GSEOptions.filterList and GSEOptions.filterList[Statics.All]
+    if lastSequencePath and not showingAllClasses then
+        local parts = {("\001"):split(lastSequencePath)}
+        local pathClass = parts[2] and tostring(parts[2]) or ""
+        if pathClass ~= classID then
+            lastSequencePath = nil   -- wrong class, fall back to current class
         end
-
-        local selectPath = lastSequencePath or "Sequences\001NewSequence"
-        local treeStatus = editframe.treeContainer.status or editframe.treeContainer.localstatus
-
-        -- Attached opening rules: when the tree is DETACHED, a newly opened editor
-        -- opens to wherever the detached tree is already working (e.g. DK Sequence 1)
-        -- instead of refreshing the tree to the normal current-class/last sequence.
-        -- It mirrors the detached tree's expansion + scroll and selects that node
-        -- silently, so opening the window does not refresh or jump the floating menu.
-        local adopted = false
-        if GSE.GUI.navDetached and GSE.GUI.floatOwner and GSE.GUI.floatOwner ~= editframe then
-            local srcTree   = GSE.GUI.floatOwner.treeContainer
-            local srcStatus = srcTree and (srcTree.status or srcTree.localstatus)
-            if srcStatus and srcStatus.selected then
-                -- Mirror expansion + scroll (copy the table, don't share the reference)
-                treeStatus.groups = treeStatus.groups or {}
-                for k in pairs(treeStatus.groups) do treeStatus.groups[k] = nil end
-                for k, v in pairs(srcStatus.groups or {}) do treeStatus.groups[k] = v end
-                treeStatus.scrollvalue = srcStatus.scrollvalue or 0
-                -- Open to the detached tree's current node, silently: SetSelected loads
-                -- the editor content via OnGroupSelected without expanding/RefreshTree.
-                editframe.forceTreeSelection = true
-                if editframe.treeContainer.SetSelected then
-                    editframe.treeContainer:SetSelected(srcStatus.selected)
-                end
-                -- One-shot: stop SyncTrees from RevealSelection-refreshing this tree
-                -- when the float follows to it (its menu already matches the source).
-                editframe.treeContainer.skipNextReveal = true
-                adopted = true
-            end
-        end
-
-        if not adopted then
-            treeStatus.groups["Sequences"] = true
-            if classID ~= "" then
-                treeStatus.groups["Sequences\001" .. classID] = true
-            end
-            -- Also expand the class that owns the sequence we are selecting, so a
-            -- last sequence on a different class (All-classes mode) is revealed.
-            if lastSequencePath then
-                local lp = {("\001"):split(lastSequencePath)}
-                if lp[2] and lp[2] ~= "" then
-                    treeStatus.groups["Sequences\001" .. tostring(lp[2])] = true
-                end
-            end
-            if GSE.GUI.SelectEditorTreePath then
-                GSE.GUI.SelectEditorTreePath(editframe, selectPath)
-            else
-                editframe.treeContainer:SelectByValue(selectPath)
-            end
-        end
-
-        -- Restore last non-sequence area (Variables, Macros, Keybindings) if that was last open
-        local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-        local lastArea = seOpts and seOpts.lastArea
-        if lastArea and lastArea ~= "Sequences" and editframe.RestoreLastNode then
-            C_Timer.After(0.1, function() editframe.RestoreLastNode() end)
-        end
-
-        SetSequenceEditorOpenPreference(true, "sequences")
-        editframe:Show()
-    else
-        GSE.Print(
-            L[
-                "You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."
-            ],
-            Statics.DebugModules["Editor"]
-        )
     end
+
+    local selectPath = lastSequencePath or "Sequences\001NewSequence"
+    local treeStatus = editframe.treeContainer.status or editframe.treeContainer.localstatus
+
+    -- Attached opening rules: when the tree is DETACHED, a newly opened editor
+    -- opens to wherever the detached tree is already working (e.g. DK Sequence 1)
+    -- instead of refreshing the tree to the normal current-class/last sequence.
+    -- It mirrors the detached tree's expansion + scroll and selects that node
+    -- silently, so opening the window does not refresh or jump the floating menu.
+    local adopted = false
+    if GSE.GUI.navDetached and GSE.GUI.floatOwner and GSE.GUI.floatOwner ~= editframe then
+        local srcTree   = GSE.GUI.floatOwner.treeContainer
+        local srcStatus = srcTree and (srcTree.status or srcTree.localstatus)
+        if srcStatus and srcStatus.selected then
+            -- Mirror expansion + scroll (copy the table, don't share the reference)
+            treeStatus.groups = treeStatus.groups or {}
+            for k in pairs(treeStatus.groups) do treeStatus.groups[k] = nil end
+            for k, v in pairs(srcStatus.groups or {}) do treeStatus.groups[k] = v end
+            treeStatus.scrollvalue = srcStatus.scrollvalue or 0
+            -- Open to the detached tree's current node, silently: SetSelected loads
+            -- the editor content via OnGroupSelected without expanding/RefreshTree.
+            editframe.forceTreeSelection = true
+            if editframe.treeContainer.SetSelected then
+                editframe.treeContainer:SetSelected(srcStatus.selected)
+            end
+            -- One-shot: stop SyncTrees from RevealSelection-refreshing this tree
+            -- when the float follows to it (its menu already matches the source).
+            editframe.treeContainer.skipNextReveal = true
+            adopted = true
+        end
+    end
+
+    if not adopted then
+        treeStatus.groups["Sequences"] = true
+        if classID ~= "" then
+            treeStatus.groups["Sequences\001" .. classID] = true
+        end
+        -- Also expand the class that owns the sequence we are selecting, so a
+        -- last sequence on a different class (All-classes mode) is revealed.
+        if lastSequencePath then
+            local lp = {("\001"):split(lastSequencePath)}
+            if lp[2] and lp[2] ~= "" then
+                treeStatus.groups["Sequences\001" .. tostring(lp[2])] = true
+            end
+        end
+        if GSE.GUI.SelectEditorTreePath then
+            GSE.GUI.SelectEditorTreePath(editframe, selectPath)
+        else
+            editframe.treeContainer:SelectByValue(selectPath)
+        end
+    end
+
+    -- Restore last non-sequence area (Variables, Macros, Keybindings) if that was last open
+    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
+    local lastArea = seOpts and seOpts.lastArea
+    if lastArea and lastArea ~= "Sequences" and editframe.RestoreLastNode then
+        C_Timer.After(0.1, function() editframe.RestoreLastNode() end)
+    end
+
+    SetSequenceEditorOpenPreference(true, "sequences")
+    editframe:Show()
 end
 
 local function remoteSeqences(message, seqName)

@@ -836,7 +836,6 @@ Authors who enable |cFF00BFFFAuto-Accept|r in GSE Options will have incoming upd
 -- =========================================================================
 
 -- Used in GSE_GUI/Editor.lua
-L["You cannot open a new Sequence Editor window while you are in combat.  Please exit combat and then try again."] = true
 
 -- Used in GSE_GUI/Editor_Macro.lua
 L["Used by Sequences"] = true
