@@ -40,11 +40,17 @@ ignore:
   - App
   - patreonUpdate.js
   - patreonBuild.js
+  - config.ld
+  - publishGSETools.js
+  - uploadLocale.js
   - pages
   - package.*
   - package-lock.*
   - GSE/patreonUpdate.js
   - GSE/patreonBuild.js
+  - GSE/config.ld
+  - GSE/publishGSETools.js
+  - GSE/uploadLocale.js
   - GSE/pages
   - GSE/package.*
   - GSE/package-lock.*
