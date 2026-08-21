@@ -17,7 +17,10 @@ const fs = require('fs');
 
 const LOCALE_FILE = 'GSE/Localization/ModL_enUS.lua';
 const TOC_FILE = 'GSE/GSE.toc';
-const API = 'https://wow.curseforge.com/api';
+// legacy.curseforge.com is where the upload API actually lives; the docs page
+// still says wow.curseforge.com. Overridable so the request can be pointed at
+// a local echo server to verify its shape.
+const API = process.env.CF_API_BASE || 'https://legacy.curseforge.com/api';
 
 // ── Lua literal parsing ─────────────────────────────────────────────────────
 const ESCAPES = { n: '\n', r: '\r', t: '\t', a: '\x07', b: '\b', f: '\f', v: '\v', '\\': '\\', '"': '"', "'": "'" };
@@ -190,28 +193,30 @@ async function main() {
   // CF_LOCALE_MISSING_HANDLING=DoNothing.
   const missingHandling = process.env.CF_LOCALE_MISSING_HANDLING || 'DeletePhrase';
 
-  const body = JSON.stringify({
-    metadata: {
-      language: 'enUS',
-      formatType: 'TableAdditions',
-      'missing-phrase-handling': missingHandling,
-    },
-    localizations: blob,
-  });
+  // multipart/form-data with two named parts, NOT the raw JSON body the docs
+  // describe — posting JSON returns HTTP 500 "unhandled exception" from their
+  // side (observed 2026-08-21). metadata rides as a JSON *string* part.
+  // formatType is left off entirely: TableAdditions is the default and the
+  // known-good client omits it.
+  const metadata = { language: 'enUS', 'missing-phrase-handling': missingHandling };
+  const form = new FormData();
+  form.append('metadata', JSON.stringify(metadata));
+  form.append('localizations', blob);
 
   if (dryRun) {
     console.log(`[locale] DRY RUN — would POST ${blob.length} bytes to project ${projectId}`);
-    console.log('[locale] metadata:', JSON.parse(body).metadata);
+    console.log('[locale] metadata:', metadata);
     console.log(`[locale] ${seen.size} phrases; first three lines:`);
     for (const line of blob.split('\n').slice(0, 3)) console.log('   ' + line.slice(0, 120));
     return;
   }
 
   console.log(`[locale] uploading ${seen.size} enUS phrases to project ${projectId} (${missingHandling})`);
+  // No explicit Content-Type — fetch sets multipart/form-data with the boundary.
   const res = await fetch(`${API}/projects/${projectId}/localization/import`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Api-Token': token },
-    body,
+    headers: { 'X-Api-Token': token },
+    body: form,
   });
   const text = await res.text().catch(() => '');
   if (!res.ok) {
