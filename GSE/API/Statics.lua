@@ -293,7 +293,24 @@ Statics.StringFormatEscapes = {
     ["{.-}"] = "" -- Raid target icons
 }
 
+-- Manual-reset snippet, in two forms. This is secure-environment code stamped
+-- onto the button at build time, so it cannot read GSEOptions when it runs —
+-- which form to use is chosen in GSE.GetMacroResetImplementation while still in
+-- normal Lua.
+--
+-- Silent is the default: the announcement fires on every manual reset, and a
+-- reset is something the user just did on purpose, so telling them about it in
+-- chat is noise for anyone who resets often (#1991).
 Statics.MacroResetSkeleton =
+    [[
+if %s then
+	self:SetAttribute('step', 1)
+end
+]]
+
+-- Opt-in via GSEOptions.AnnounceMacroReset — useful when you are working out
+-- whether a reset binding is firing at all.
+Statics.MacroResetSkeletonAnnounced =
     [[
 if %s then
 	self:SetAttribute('step', 1)

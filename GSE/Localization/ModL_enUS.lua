@@ -929,3 +929,5 @@ L["This is a common WoW setting used by all addons; it controls when your action
 L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
 L["it"] = true
 L["them"] = true
+L["Announce Manual Sequence Resets"] = true
+L["When enabled, GSE prints a chat message each time a manual reset returns a sequence to step 1."] = true

@@ -2002,7 +2002,13 @@ function GSE.GetMacroResetImplementation()
         end
     end
     if flagactive then
-        returnstring = string.format(Statics.MacroResetSkeleton, table.concat(activemods, " and "))
+        -- Chosen here, not in the snippet: the snippet runs in the secure
+        -- environment and cannot see GSEOptions. Changing the option therefore
+        -- needs the button rebuilding, which is why the setting prompts for a
+        -- reload (same as the modifier-pause toggles).
+        local skeleton = GSEOptions.AnnounceMacroReset and Statics.MacroResetSkeletonAnnounced
+            or Statics.MacroResetSkeleton
+        returnstring = string.format(skeleton, table.concat(activemods, " and "))
     end
     return returnstring
 end

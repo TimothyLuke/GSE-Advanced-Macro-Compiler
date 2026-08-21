@@ -2151,6 +2151,24 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."])
         end
         do
+            -- Manual sequence reset announcement (#1991). Off by default: a
+            -- manual reset is something the user just did deliberately, so the
+            -- chat line is noise for anyone who resets often. Turning it on is
+            -- for working out whether a reset binding is firing at all.
+            --
+            -- Same reload requirement as the pause toggles above — the message
+            -- lives in a secure snippet stamped onto the button at build time
+            -- (Statics.MacroResetSkeleton), so it only changes once the button
+            -- is rebuilt.
+            local function GetValue() return GSEOptions.AnnounceMacroReset == true end
+            local function SetValue(val)
+                GSEOptions.AnnounceMacroReset = val
+                GSE.GUICall("GUIConfirmReloadUI")
+            end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "announceMacroReset", Settings.VarType.Boolean, L["Announce Manual Sequence Resets"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, L["When enabled, GSE prints a chat message each time a manual reset returns a sequence to step 1."])
+        end
+        do
             -- Section header so the spell-translation control reads as its own
             -- group, between "Modifier Hold to Pause" and "Spell Cache".
             local layout = SettingsPanel:GetLayout(troubleOptions)
