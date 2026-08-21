@@ -7381,14 +7381,19 @@ function GSE.CreateEditor()
             -- Variable menu on Tab. The spell field applies via SetText so its
             -- own OnTextChanged stores the value; the macro box inserts at the
             -- cursor and its OnTextChanged owns storage. No-ops when GSE_QoL
-            -- is not loaded.
+            -- is not loaded. Pass `frame` (the CURRENT editor's frame, supplied
+            -- by the caller) -- not editframe.frame: this factory is defined
+            -- once inside the first editor ever created, so that upvalue is
+            -- the FIRST editor's frame forever. After the editor is re-created
+            -- it is hidden, and Blizzard refuses to open a context menu on a
+            -- hidden owner -- the Tab menu silently stopped appearing.
             if GSE.OnEditorSpellTab then
-                GSE.OnEditorSpellTab(spellEditBox, editframe.frame, function(value)
+                GSE.OnEditorSpellTab(spellEditBox, frame, function(value)
                     spellEditBox:SetText(value)
                 end)
             end
             if GSE.OnEditorMacroBlockTab then
-                GSE.OnEditorMacroBlockTab(macroEditBox, editframe.frame)
+                GSE.OnEditorMacroBlockTab(macroEditBox, frame)
             end
             return spellEditBox, macroEditBox
         end

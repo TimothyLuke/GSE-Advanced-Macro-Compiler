@@ -309,7 +309,7 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Spell"])
             for _, v in ipairs(getPlayerSpells()) do
                 rootDescription:CreateButton(v, function() apply(v) end)
@@ -326,7 +326,7 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Spell"])
             for _, v in ipairs(getPlayerSpells()) do
                 rootDescription:CreateButton(v, function() editBox:Insert(v) end)
@@ -345,7 +345,7 @@ end
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert GSE Variable"])
             for k, _ in pairs(GSEVariables) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
@@ -358,7 +358,7 @@ GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
 end
 GSE.OnEditorMacroTab = function(editBox, menuOwner)
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert GSE Variable"])
             for k, _ in pairs(GSEVariables) do
                 rootDescription:CreateButton(k, function()
