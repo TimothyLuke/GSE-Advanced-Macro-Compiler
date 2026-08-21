@@ -229,6 +229,118 @@ GSE.OnTreeContextMenuExtras = function(rootDescription, ctx)
     )
 end
 
+-- Player spellbook enumeration for the Tab spell list. The pre-#1914 QoL
+-- kept an event-refreshed playerSpells cache; enumerating on demand at
+-- menu-open time is fast enough (one pass over the spellbook) and cannot
+-- go stale, so the cache and its AceEvent plumbing were not restored.
+--
+-- Two spellbook APIs, and the choice is made per FUNCTION rather than per
+-- table. Checking `C_SpellBook` alone is not enough: TBC Classic Anniversary
+-- and MoP Classic expose C_SpellBook while missing parts of it — the same
+-- trap that produced ~179 errors per save in #1925, see the comment on
+-- spellIDIsInSpellBook in GSE/API/translator.lua. A client with a partial
+-- C_SpellBook needs the legacy path, so require every function the modern
+-- loop actually calls before choosing it.
+local function getPlayerSpells()
+    local spells, seen = {}, {}
+    local function add(name)
+        -- Dedupe by name. Classic lists one entry per RANK, and a macro wants
+        -- the name only — /cast <name> already picks the highest rank known.
+        if name and name ~= "" and not seen[name] then
+            seen[name] = true
+            spells[#spells + 1] = name
+        end
+    end
+
+    local numSkillLines = C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines
+    local skillLineInfo = C_SpellBook and C_SpellBook.GetSpellBookSkillLineInfo
+    local modernItemInfo = C_SpellBook and C_SpellBook.GetSpellBookItemInfo
+
+    if numSkillLines and skillLineInfo and modernItemInfo then
+        -- Retail and any Classic client with the full modern API. Skill line 1
+        -- is General; the pre-#1914 list started at 2 and that is kept.
+        for tab = 2, numSkillLines() do
+            local lineinfo = skillLineInfo(tab)
+            if not lineinfo then break end
+            local offset = lineinfo.itemIndexOffset or 0
+            for i = 1, lineinfo.numSpellBookItems or 0 do
+                local spellinfo = modernItemInfo(i + offset, 0)
+                if spellinfo and spellinfo.name and not spellinfo.isPassive and not spellinfo.isOffSpec then
+                    add(spellinfo.name)
+                end
+            end
+        end
+    elseif GetNumSpellTabs and GetSpellTabInfo and GetSpellBookItemName then
+        -- Classic: tabs instead of skill lines, every lookup takes a book type,
+        -- and passive/offspec live behind separate calls rather than fields on
+        -- an info table. Before this, Classic fell through the C_SpellBook
+        -- guard and the menu offered an empty Insert Spell list.
+        local bookType = BOOKTYPE_SPELL or "spell"
+        for tab = 2, GetNumSpellTabs() do
+            local _, _, offset, numSlots, _, offSpecID = GetSpellTabInfo(tab)
+            -- offSpecID is Cata+ only; nil on older clients, 0 for the active
+            -- spec. Anything else is another spec's book and is skipped, which
+            -- is what isOffSpec does on the modern path.
+            if offset and numSlots and (offSpecID == nil or offSpecID == 0) then
+                for i = offset + 1, offset + numSlots do
+                    -- "FUTURESPELL" is a not-yet-learned row shown greyed out;
+                    -- only "SPELL" is castable. A client without the info call
+                    -- still lists names rather than nothing.
+                    local itemType = GetSpellBookItemInfo and GetSpellBookItemInfo(i, bookType)
+                    local passive = IsPassiveSpell and IsPassiveSpell(i, bookType)
+                    if (itemType == nil or itemType == "SPELL") and not passive then
+                        add((GetSpellBookItemName(i, bookType)))
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(spells)
+    return spells
+end
+
+-- Tab spell list for the Action block (restores the pre-#1914 Patron
+-- feature lost when the Macro Insertion Toolbar moved to GSE_MacroToolbar).
+-- Spell field: pick a spell (stores via the field's own handlers) or a
+-- variable. Macro commands box: insert the spell name / variable at the
+-- cursor; the box's OnTextChanged owns storage, nothing else is written.
+GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
+    local editBox = widget and (widget.editBox or widget.editbox)
+    if not editBox then return end
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert Spell"])
+            for _, v in ipairs(getPlayerSpells()) do
+                rootDescription:CreateButton(v, function() apply(v) end)
+            end
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
+            end
+        end)
+    end)
+end
+
+GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
+    local editBox = widget and (widget.editBox or widget.editbox)
+    if not editBox then return end
+    editBox:SetScript("OnTabPressed", function()
+        MenuUtil.CreateContextMenu(menuOwner, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert Spell"])
+            for _, v in ipairs(getPlayerSpells()) do
+                rootDescription:CreateButton(v, function() editBox:Insert(v) end)
+            end
+            rootDescription:CreateTitle(L["Insert GSE Variable"])
+            for k, _ in pairs(GSEVariables) do
+                rootDescription:CreateButton(k, function()
+                    editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                end)
+            end
+        end)
+    end)
+end
+
 -- Editor Tab-completion menus: press Tab in an editor field to insert a GSE
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)

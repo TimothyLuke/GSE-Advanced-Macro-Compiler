@@ -488,6 +488,13 @@ globals = {
     "CastingInfo",
     "UnitIsPVP",
     "GetSpellBookItemInfo",
+    -- Classic spellbook enumeration (GSE_QoL Tab spell list). Retail uses
+    -- C_SpellBook; Classic clients keep these top-level globals.
+    "GetNumSpellTabs",
+    "GetSpellTabInfo",
+    "GetSpellBookItemName",
+    "IsPassiveSpell",
+    "BOOKTYPE_SPELL",
     "UnitInParty",
     "UnitInRaid",
     "hooksecurefunc",
