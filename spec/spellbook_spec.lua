@@ -16,6 +16,15 @@ local function loadGetPlayerSpells(env)
   local e = src:find("\nend", src:find("table%.sort%(spells%)"))
   local chunk = src:sub(s, e + 3) .. "\nreturn getPlayerSpells\n"
   env.table, env.ipairs, env.pairs = table, ipairs, pairs
+  -- CI runs Lua 5.1, where `load` takes a reader FUNCTION: a string chunk goes
+  -- through loadstring and its environment is attached with setfenv. 5.2+
+  -- removed both and added load(chunk, name, mode, env). Support whichever the
+  -- interpreter offers rather than assuming the one on this machine.
+  if _G.setfenv then
+    local fn = assert(_G.loadstring(chunk, "getPlayerSpells"))
+    _G.setfenv(fn, env)
+    return fn()
+  end
   return assert(load(chunk, "getPlayerSpells", "t", env))()
 end
 
