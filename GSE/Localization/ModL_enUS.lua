@@ -243,7 +243,6 @@ L["Reset Sequences when out of combat"] = true
 L["Record Macro"] = true
 L["Actions"] = true
 L["Record"] = true
-L["Pause"] = true
 L["Create Macro"] = true
 L["Stop"] = true
 
@@ -608,7 +607,6 @@ L["/gse|r again."] = true
 
 --1248
 L["Clear Spell Cache"] = true
-L["Clear"] = true
 L["This function will clear the spell cache and any mappings between individual spellIDs and spellnames."] = true
 L["This function will open a window enabling you to edit the spell cache and any mappings between individual spellIDs and spellnames."] = true
 L["Edit Spell Cache"] = true
@@ -625,7 +623,6 @@ L["Spell Name"] = true
 
 -------------------------
 L["Unit Name"] = true
-L["Disable Sequence"] = true
 L["Do not compile this Sequence at startup."] = true
 L["There was an error processing "] = true
 L["Export Variable"] = true
@@ -660,7 +657,6 @@ L["Print Active Modifiers on Click"] = true
 L["Store output of debug messages in a Global Variable that can be referrenced by other mods."] = true
 L["This option dumps extra trace information to your chat window to help troubleshoot problems with the mod"] = true
 L["Enable Mod Debug Mode"] = true
-L["Command Colour"] = true
 L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."] =
     true
 L["Repeat"] = true
@@ -693,8 +689,6 @@ L["Enter the implementation link for this variable. Use '= true' or '= false' to
 L["Insert Test Case"] = true
 
 -- #1525
-L["Left Mouse Button"] = true
-L["Right Mouse Button"] = true
 L["Talent Loadout"] = true
 L["All Talent Loadouts"] = true
 
@@ -931,15 +925,6 @@ L["Specialisation / Class ID"] = true
 -- appear at runtime (Options tooltips, About panel, supporter list, OOC update
 -- prompt, auto-repair chat print); they previously fell through AceLocale's
 -- key-as-value fallback.
-L["Auto-repaired %d sequence(s) with structurally invalid Versions (index-0 keys remapped to 1-based)."] = true
-L["By setting this value the Sequence Editor will show every sequence for your class.  Turning this off will only show the class sequences for your current specialisation."] = true
-L["GSE has a LibDataBroker (LDB) data feed.  List Other GSE Users and their version when in a group on the tooltip to this feed."] = true
-L["GSE is out of date. You can download the newest version from https://www.curseforge.com/wow/addons/gse-gnome-sequencer-enhanced-advanced-macros."] = true
-L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."] = true
-L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."] = true
-L["The delay in seconds between Out of Combat Queue Polls.  The Out of Combat Queue saves changes and updates sequences.  When you hit save or change zones, these actions enter a queue which checks that first you are not in combat before proceeding to complete their task.  After checking the queue it goes to sleep for x seconds before rechecking what is in the queue."] = true
-L["The following people donate monthly via Patreon for the ongoing maintenance and development of GSE.  Their support is greatly appreciated."] = true
-L["These options combine to allow you to reset a sequence while it is running.  These options are Cumulative ie they add to each other.  Options Like LeftClick and RightClick won't work together very well."] = true
 L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."] = true
 L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
 L["it"] = true

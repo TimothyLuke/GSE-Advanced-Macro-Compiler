@@ -11,6 +11,7 @@
   "scripts": {
     "run": "node patreonUpdate.js",
     "pat": "node patreonBuild.js",
-    "publish-gse": "node publishGSETools.js"
+    "publish-gse": "node publishGSETools.js",
+    "upload-locale": "node uploadLocale.js"
   }
 }

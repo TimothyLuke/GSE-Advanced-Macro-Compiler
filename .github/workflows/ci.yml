@@ -84,6 +84,19 @@ jobs:
         env:
           NODE_PATREON_TOKEN: ${{secrets.PATREON_CAT }}
 
+      # Before packaging: hand CurseForge the enUS phrase list this build was
+      # made from. CF holds the master list translators work against and only
+      # learns about new or changed strings when they are uploaded, so without
+      # this a release can ship strings nobody was ever offered a translation
+      # for. missing-phrase-handling is DoNothing — a phrase dropped from the
+      # addon still has community translations attached over there.
+      - name: Upload enUS localization to CurseForge
+        if: ${{ github.event_name != 'pull_request' }}
+        continue-on-error: true
+        run: npm run upload-locale
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+
       # Runs a set of commands using the runners shell
       - name: Create Package Retail
         uses: BigWigsMods/packager@master
