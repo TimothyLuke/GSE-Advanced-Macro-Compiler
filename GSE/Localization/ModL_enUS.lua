@@ -401,7 +401,7 @@ L["Send this macro to another GSE player who is on the same server as you are."]
 L["Save the changes made to this macro"] = true
 L["What class or spec is this macro for?  If it is for all classes choose Global."] = true
 L[
-        "Notes and help on how this macro works.  What things to remember.  This information is shown in the sequence browser."
+        "Notes and help on how this sequence works.  What things to remember.  This information is shown in the sequence browser."
     ] = true
 L["Website or forum URL where a player can get more information or ask questions about this macro."] = true
 L["The version of this macro that will be used where no other version has been configured."] = true

@@ -638,7 +638,7 @@ local function addHelpInformationEditor(editframe, container)
         function()
             GSE.CreateToolTip(
                 T("Help Information"),
-                T("Notes and help on how this macro works.  What things to remember.  This information is shown in the sequence browser."),
+                T("Notes and help on how this sequence works.  What things to remember.  This information is shown in the sequence browser."),
                 editframe
             )
         end
