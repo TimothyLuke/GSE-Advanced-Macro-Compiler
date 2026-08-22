@@ -326,15 +326,28 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
+        -- Remember where the caret was when Tab was pressed. Between now and the
+        -- pick, the editor's debounced live repaint (or a focus-loss commit
+        -- repaint) can SetText the box, which parks the caret at the END --
+        -- so a plain Insert landed at the end of the last row. Cancel any
+        -- pending live repaint via the token the recolour already honours,
+        -- then restore focus + caret right before inserting.
+        local cursor = editBox.GetCursorPosition and editBox:GetCursorPosition()
+        widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+        local function insertAtCaret(text)
+            if editBox.SetFocus then editBox:SetFocus() end
+            if cursor and editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
+            editBox:Insert(text)
+        end
         MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Spell"])
             for _, v in ipairs(getPlayerSpells()) do
-                rootDescription:CreateButton(v, function() editBox:Insert(v) end)
+                rootDescription:CreateButton(v, function() insertAtCaret(v) end)
             end
             rootDescription:CreateTitle(L["Insert GSE Variable"])
             for k, _ in pairs(GSEVariables) do
                 rootDescription:CreateButton(k, function()
-                    editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+                    insertAtCaret("\n" .. [[=GSE.V["]] .. k .. [["]()]])
                 end)
             end
         end)
