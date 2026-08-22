@@ -616,8 +616,27 @@ end
 -- box), never more than MACRO_BOX_MAX_LINES (a huge block scrolls instead
 -- of swallowing the window). Re-fitted as the user types; only re-lays out
 -- when the row count actually changes so fast typing stays cheap.
-local MACRO_BOX_MIN_LINES = 5
+local MACRO_BOX_MIN_LINES = 3
 local MACRO_BOX_MAX_LINES = 24
+-- Rows the widget is BUILT at, before the first fit runs. This has to stay in
+-- step with macrolayout's SetHeight(108) below -- NativeUI's SetNumLines(n) is
+-- n * 16 + STYLE.frameContentTop (28), so 5 rows is exactly 108. The fit pushes
+-- the DELTA from this baseline up through the fixed-height ancestors, so a
+-- baseline that disagrees with the container leaves that much dead space under
+-- the box. It is NOT the minimum -- MACRO_BOX_MIN_LINES is, and is free to move
+-- on its own.
+local MACRO_BOX_BASE_LINES = 5
+-- Slack the fitted frame carries over the measured text, and the floor NativeUI
+-- clamps the inner editbox to (updateEditBoxSize). At a small chat font the
+-- min-row fit lands under that floor and the bottom row would render outside
+-- the visible scroll area, so the frame is never asked for less.
+local MACRO_BOX_CHROME_SLACK = 6
+local MACRO_BOX_MIN_INNER = 40
+-- Rows -> pixels in the box's OWN font: a row is the measured line height, and
+-- every row after the first also carries the editbox's line spacing.
+local function MacroBoxRowsHeight(rows, oneRow, spacing)
+    return rows * oneRow + math.max(rows - 1, 0) * spacing
+end
 local function FitMacroEditBoxToContent(macroEditBox, text)
     if not (macroEditBox and macroEditBox.SetHeight) then return end
     local eb = macroEditBox.editBox or macroEditBox.editbox
@@ -644,7 +663,8 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     end
     local fontPath, fontSize, fontFlags = eb:GetFont()
     if fontPath then meter:SetFont(fontPath, fontSize or 14, fontFlags or "") end
-    if eb.GetSpacing and meter.SetSpacing then meter:SetSpacing(eb:GetSpacing() or 0) end
+    local spacing = (eb.GetSpacing and eb:GetSpacing()) or 0
+    if meter.SetSpacing then meter:SetSpacing(spacing) end
     meter:SetWordWrap(true)
     local width = eb:GetWidth() or 0
     meter:SetWidth(width > 50 and width or 600)
@@ -653,10 +673,16 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     if oneRow <= 0 then oneRow = fontSize or 14 end
     meter:SetText(body ~= "" and body or "X")
     local textHeight = meter:GetStringHeight() or oneRow
-    if typingOnTrailingRow then textHeight = textHeight + oneRow end
-    textHeight = math.max(oneRow * MACRO_BOX_MIN_LINES, math.min(oneRow * MACRO_BOX_MAX_LINES, textHeight))
+    if typingOnTrailingRow then textHeight = textHeight + oneRow + spacing end
+    textHeight =
+        math.max(
+            MacroBoxRowsHeight(MACRO_BOX_MIN_LINES, oneRow, spacing),
+            math.min(MacroBoxRowsHeight(MACRO_BOX_MAX_LINES, oneRow, spacing), textHeight)
+        )
+    textHeight = math.max(textHeight, MACRO_BOX_MIN_INNER - MACRO_BOX_CHROME_SLACK)
 
-    local chrome = (macroEditBox.labelHeight or 12) + (macroEditBox.verticalOffset or 2) * 3 + 6
+    local chrome =
+        (macroEditBox.labelHeight or 12) + (macroEditBox.verticalOffset or 2) * 3 + MACRO_BOX_CHROME_SLACK
     local newHeight = math.ceil(textHeight + chrome)
     if macroEditBox.gseFitHeight == newHeight then return end
     macroEditBox.gseFitHeight = newHeight
@@ -5230,6 +5256,8 @@ function GSE.CreateEditor()
 			local macrolayout = UI:Create("SimpleGroup")
 			macrolayout:SetLayout("Flow")
 			macrolayout:SetFullWidth(true)
+			-- 108 == a MACRO_BOX_BASE_LINES-row macro box (SetNumLines: rows * 16 +
+			-- frameContentTop); the auto-fit measures its delta from that pairing.
 			macrolayout:SetHeight(108)
 			if macrolayout.SetFlowOffset then macrolayout:SetFlowOffset(0, 4) end
 			if macrolayout.SetFlowPadding then macrolayout:SetFlowPadding(4, 0, 4, 0) end
@@ -7350,7 +7378,7 @@ function GSE.CreateEditor()
             DisableMultilineEditorColoring(macroEditBox)
             macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
             macroEditBox:DisableButton(true)
-            macroEditBox:SetNumLines(MACRO_BOX_MIN_LINES)
+            macroEditBox:SetNumLines(MACRO_BOX_BASE_LINES)
             macroEditBox:SetRelativeWidth(0.5)
             macroEditBox:SetText(spelltext)
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
