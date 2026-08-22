@@ -1270,7 +1270,7 @@ function GSE.OOCUpdateSequence(name, sequence)
         GSE.Print(
             string.format(
                 L[
-                    "%s macro may cause a 'RestrictedExecution.lua:431' error as it has %s actions when compiled.  This get interesting when you go past 255 actions.  You may need to simplify this macro."
+                    "%s sequence may cause a 'RestrictedExecution.lua:431' error as it has %s actions when compiled.  This get interesting when you go past 255 actions.  You may need to simplify this sequence."
                 ],
                 name,
                 actionCount
@@ -2273,7 +2273,7 @@ function GSE.processAction(action, metaData, variables, path)
     elseif action.Type == Statics.Actions.If then
         -- process repeats for the block
         if GSE.isEmpty(action.Variable) then
-            GSE.Print(L["If Blocks Require a variable."], L["Macro Compile Error"])
+            GSE.Print(L["If Blocks Require a variable."], L["Sequence Compile Error"])
             return
         end
         local funct = action.Variable
@@ -2633,7 +2633,7 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset)
         GSE.Print(
             string.format(
                 "%s " ..
-                    L["was unable to be programmed.  This macro will not fire until errors in the macro are corrected."],
+                    L["was unable to be programmed.  This sequence will not fire until errors in the sequence are corrected."],
                 name
             ),
             "BROKEN MACRO"

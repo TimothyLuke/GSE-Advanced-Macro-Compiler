@@ -12,6 +12,11 @@ if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 local DecodeMacroEditorText = GSE.DecodeMacroEditorText
 local StoreMacroEditorText = GSE.StoreMacroEditorText
 
+-- Read-only rendered notes stand in for a 3-line editable box. Taller than the
+-- box because rendered notes are prose: NativeUI's SetNumLines(3) is 76px, which
+-- shows barely two wrapped lines once the panel's own padding is taken out.
+local INLINE_NOTES_PANEL_HEIGHT = 120
+
 local function SetEditBoxLabelGap(widget, gap)
     if not (widget and widget.label and widget.editBox and widget.frame) then return end
     local labelHeight = widget.label:GetStringHeight()
@@ -306,24 +311,39 @@ local function showMacro(editframe, node, container)
     -- Help Information shows on the first macro page too (matching the managed page).
     -- source[node.name] is always populated above, so writing .comments is safe even
     -- before "Manage Macro with GSE" is checked.
-    local commentsEditBox = UI:Create("MultiLineEditBox")
-    commentsEditBox:SetLabel(L["Help Information"])
-    ConfigureMacroFieldLabel(commentsEditBox)
-    SetMultiLineLabelGap(commentsEditBox, 2)
-    SetMultiLineContentPadding(commentsEditBox, 2)
-    commentsEditBox:SetNumLines(3)
-    commentsEditBox:SetFullWidth(true)
-    commentsEditBox:DisableButton(true)
-    if source[node.name].comments then
-        commentsEditBox:SetText(source[node.name].comments)
+    --
+    -- Notes written on gse.tools arrive as markdown in `comments`, with the
+    -- server's WoW-escape rendering alongside in `commentsHelp`. Show the
+    -- rendering read-only: raw markdown is unreadable in-game, and an in-game
+    -- edit is discarded anyway -- the server re-derives commentsHelp from
+    -- comments, which is only editable on the website.
+    if not GSE.isEmpty(source[node.name].commentsHelp) and GSE.GUI.CreateReadOnlyNotesPanel then
+        GSE.GUI.CreateReadOnlyNotesPanel(
+            container,
+            L["Help Information"],
+            source[node.name].commentsHelp,
+            {height = INLINE_NOTES_PANEL_HEIGHT}
+        )
+    else
+        local commentsEditBox = UI:Create("MultiLineEditBox")
+        commentsEditBox:SetLabel(L["Help Information"])
+        ConfigureMacroFieldLabel(commentsEditBox)
+        SetMultiLineLabelGap(commentsEditBox, 2)
+        SetMultiLineContentPadding(commentsEditBox, 2)
+        commentsEditBox:SetNumLines(3)
+        commentsEditBox:SetFullWidth(true)
+        commentsEditBox:DisableButton(true)
+        if source[node.name].comments then
+            commentsEditBox:SetText(source[node.name].comments)
+        end
+        commentsEditBox:SetCallback("OnTextChanged", function(self, event, text)
+            source[node.name].comments = text
+        end)
+        commentsEditBox:SetCallback("OnEditFocusLost", function()
+            source[node.name].comments = commentsEditBox:GetText()
+        end)
+        container:AddChild(commentsEditBox)
     end
-    commentsEditBox:SetCallback("OnTextChanged", function(self, event, text)
-        source[node.name].comments = text
-    end)
-    commentsEditBox:SetCallback("OnEditFocusLost", function()
-        source[node.name].comments = commentsEditBox:GetText()
-    end)
-    container:AddChild(commentsEditBox)
 
     if managed then
         local managedMacro = UI:Create("MultiLineEditBox")

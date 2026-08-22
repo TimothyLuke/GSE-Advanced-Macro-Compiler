@@ -46,8 +46,20 @@ local CONFIG_TAB_VISUAL_GAP = 2
 local CONFIG_TAB_TEMPLATE_SIDE_PAD = 10
 local CONFIG_TAB_GAP = CONFIG_TAB_VISUAL_GAP - (CONFIG_TAB_TEMPLATE_SIDE_PAD * 2)
 local NOTES_HELP_LINES = 19
+-- Height of the read-only rendered notes panel. Matched to the editable box it
+-- stands in for -- NativeUI's SetNumLines(n) is n * 16 + frameContentTop(28) --
+-- so the tab keeps the same shape whether the sequence carries website notes
+-- or locally typed help.
+local NOTES_RENDERED_HEIGHT = (NOTES_HELP_LINES * 16) + 28
+local NOTES_RENDERED_SIDE_ALLOWANCE = 60
+-- Grey (WoW's "poor" quality colour) for the read-only hint beside the heading,
+-- so it reads as a state note and not as part of the author's own text.
+local NOTES_READONLY_HINT_COLOUR = "|cFF9D9D9D"
 
 local GUIDrawMetadataEditor
+-- Forward-declared: currentConfigSubTab decides the landing tab from it, and
+-- sits above the notes helpers that define it.
+local markdownNotesText
 
 local function T(key)
     local value = L[key]
@@ -285,17 +297,17 @@ local function applyDependencyHeader(dependencyBox, hideAuthor, hideType)
 end
 
 local pveVersionConfigs = {
-    {key="PVESolo",     label=T("Solo"),        tip=T("The version of this macro to use while solo in PvE.")},
-    {key="Scenario",    label=T("Delves/Scenarios"), tip=T("The version of this macro to use in Delves and Scenarios.")},
-    {key="Timewalking", label=T("Timewalking"), tip=T("The version of this macro to use when in time walking dungeons.")},
-    {key="Dungeon",     label=T("Dungeon"),     tip=T("The version of this macro to use in normal dungeons.")},
-    {key="MythicPlus",  label=T("Mythic+"),     tip=T("The version of this macro to use in Mythic+ Dungeons.")},
-    {key="Raid",        label=T("Raid"),        tip=T("The version of this macro that will be used when you enter raids.")},
+    {key="PVESolo",     label=T("Solo"),        tip=T("The version of this sequence to use while solo in PvE.")},
+    {key="Scenario",    label=T("Delves/Scenarios"), tip=T("The version of this sequence to use in Delves and Scenarios.")},
+    {key="Timewalking", label=T("Timewalking"), tip=T("The version of this sequence to use when in time walking dungeons.")},
+    {key="Dungeon",     label=T("Dungeon"),     tip=T("The version of this sequence to use in normal dungeons.")},
+    {key="MythicPlus",  label=T("Mythic+"),     tip=T("The version of this sequence to use in Mythic+ Dungeons.")},
+    {key="Raid",        label=T("Raid"),        tip=T("The version of this sequence that will be used when you enter raids.")},
 }
 
 local pvpVersionConfigs = {
-    {key="PVP",         label=T("Solo"),        tip=T("The version of this macro to use in PVP.")},
-    {key="Arena",       label=T("Arena"),       tip=T("The version of this macro to use in Arenas.  If this is not specified, GSE will look for a PVP version before the default.")},
+    {key="PVP",         label=T("Solo"),        tip=T("The version of this sequence to use in PVP.")},
+    {key="Arena",       label=T("Arena"),       tip=T("The version of this sequence to use in Arenas.  If this is not specified, GSE will look for a PVP version before the default.")},
 }
 
 local function dependencyData(editframe)
@@ -481,7 +493,19 @@ local function addDependencyWindow(editframe, container, deps, hasDeps, usedBy)
 end
 
 local function currentConfigSubTab(editframe)
+    -- A tab click belongs to the sequence it was made on. Without this the
+    -- first Config click would stick for every sequence opened afterwards and
+    -- the notes default below would fire exactly once per editor session.
+    if editframe.ConfigurationSubTabFor ~= editframe.OrigSequenceName then
+        editframe.ConfigurationSubTabFor = editframe.OrigSequenceName
+        editframe.ConfigurationSubTab = nil
+    end
     local tab = editframe.ConfigurationSubTab
+    -- A sequence installed from gse.tools opens ON its notes: they are the
+    -- author's documentation for it, and they are read-only here, so the
+    -- config form is the wrong first screen. An explicit click still wins --
+    -- this only decides where a freshly selected sequence lands.
+    if tab == nil and markdownNotesText(editframe.Sequence) then tab = "notes" end
     if tab ~= "notes" then tab = "metadata" end
     editframe.ConfigurationSubTab = tab
     return tab
@@ -550,7 +574,7 @@ local function addSequenceNameEditor(editframe, container)
         GSE.CreateToolTip(
             T("Sequence Name"),
             T(
-                "The name of your macro.  This name has to be unique and can only be used for one object.\nYou can copy this entire macro by changing the name and choosing Save."
+                "The name of your sequence.  This name has to be unique and can only be used for one object.\nYou can copy this entire sequence by changing the name and choosing Save."
             ),
             editframe
         )
@@ -569,7 +593,7 @@ local function addAuthorEditor(editframe, container)
     authoreditbox:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(T("Author"), T("The author of this macro."), editframe)
+            GSE.CreateToolTip(T("Author"), T("The author of this sequence."), editframe)
         end
     )
     authoreditbox:SetCallback(
@@ -601,7 +625,7 @@ local function addHelpLinkEditor(editframe, container)
         function()
             GSE.CreateToolTip(
                 T("Help Link"),
-                T("Website or forum URL where a player can get more information or ask questions about this macro."),
+                T("Website or forum URL where a player can get more information or ask questions about this sequence."),
                 editframe
             )
         end
@@ -626,7 +650,109 @@ local function addHelpLinkEditor(editframe, container)
     container:AddChild(helplinkeditbox)
 end
 
+-- gse.tools keeps the author's notes as markdown in MetaData.Notes and renders
+-- them to WoW escape sequences into MetaData.Help on every write. So Notes
+-- means "this text came from the website" and Help is the rendering to show.
+-- Returns the text to render, or nil when the sequence has no website notes.
+--
+-- This is also why the box is read-only in that case: an in-game edit only
+-- changes Help, the server rebuilds Help from the untouched Notes on the next
+-- sync, and the typing is silently discarded. Better to not offer the field.
+function markdownNotesText(sequence)
+    local meta = sequence and sequence.MetaData
+    if not meta or GSE.isEmpty(meta.Notes) then return nil end
+    -- Help is the rendering; fall back to the markdown source if a record ever
+    -- arrives without one so the notes are still readable, just unformatted.
+    if not GSE.isEmpty(meta.Help) then return meta.Help end
+    return meta.Notes
+end
+
+-- Read-only rendered notes. The text is already WoW escape sequences, so a
+-- FontString shows the author's headings, emphasis and links as formatting --
+-- an EditBox would print the raw |cFFffff00... codes, which is the whole
+-- reason this replaces the editable box rather than just disabling it.
+--
+-- The label is given an explicit width BEFORE its text: Label:SetText measures
+-- GetStringHeight at the frame's current width, and the list layout reads that
+-- height back rather than re-measuring, so a full-width label would be sized
+-- for the placeholder width and clip its last lines.
+-- `label` is the field name; the read-only hint is appended here so the three
+-- editors that show notes cannot drift apart on wording or colour.
+local function addRenderedNotesPanel(container, label, text, options)
+    local gap        = (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
+    local boxHeight  = (options and options.height) or NOTES_RENDERED_HEIGHT
+    local width      = options and options.width or 0
+    if width <= 0 then
+        width = container and container.frame and container.frame.GetWidth and container.frame:GetWidth() or 0
+    end
+    width = math.max(120, width - NOTES_RENDERED_SIDE_ALLOWANCE)
+
+    local wrapper = UI:Create("SimpleGroup")
+    wrapper:SetLayout("List")
+    wrapper:SetFullWidth(true)
+    if wrapper.SetListPadding then wrapper:SetListPadding(0, 0, 0, 0) end
+    if wrapper.SetListGap     then wrapper:SetListGap(gap) end
+
+    if not GSE.isEmpty(label) then
+        local headingLabel = UI:Create("Label")
+        headingLabel:SetText(
+            label .. "   " .. NOTES_READONLY_HINT_COLOUR ..
+                T("Read only - these notes are edited on gse.tools") .. Statics.StringReset
+        )
+        headingLabel:SetFullWidth(true)
+        if headingLabel.SetFontObject then headingLabel:SetFontObject(GameFontNormalSmall) end
+        if headingLabel.SetHeight then headingLabel:SetHeight(20) end
+        if headingLabel.SetJustifyV then headingLabel:SetJustifyV("BOTTOM") end
+        if headingLabel.label and headingLabel.frame then
+            headingLabel.label:ClearAllPoints()
+            headingLabel.label:SetPoint("TOPLEFT",     headingLabel.frame, "TOPLEFT",     2, 0)
+            headingLabel.label:SetPoint("BOTTOMRIGHT", headingLabel.frame, "BOTTOMRIGHT", 0, 0)
+        end
+        disableTextWrap(headingLabel)
+        wrapper:AddChild(headingLabel)
+    end
+
+    local box = UI:Create("InlineGroup")
+    box:SetTitle(" ")
+    box:SetFullWidth(true)
+    box:SetHeight(boxHeight)
+    box:SetLayout("Fill")
+    if box.title then box.title:SetText("") end
+    if box.SetListPadding then box:SetListPadding(0, 0, 0, 0) end
+
+    local scroll = UI:Create("ScrollFrame")
+    scroll:SetFullWidth(true)
+    scroll:SetFullHeight(true)
+    scroll:SetLayout("List")
+    if scroll.SetScrollBarEnabled then scroll:SetScrollBarEnabled(true) end
+    if scroll.SetListPadding then scroll:SetListPadding(6, 6, 6, 6) end
+    if scroll.SetListGap then scroll:SetListGap(0) end
+    nudgeWidgetScrollBar(scroll, 3)
+
+    local body = UI:Create("Label")
+    if body.SetFontObject then body:SetFontObject(GameFontHighlight) end
+    body:SetWidth(width)
+    body:SetText(text)
+    scroll:AddChild(body)
+
+    box:AddChild(scroll)
+    wrapper:AddChild(box)
+    container:AddChild(wrapper)
+    return wrapper
+end
+
 local function addHelpInformationEditor(editframe, container)
+    local rendered = markdownNotesText(editframe.Sequence)
+    if rendered then
+        addRenderedNotesPanel(
+            container,
+            T("Help Information"),
+            rendered,
+            {width = metadataContentWidth(editframe, container)}
+        )
+        return
+    end
+
     local helpeditbox = UI:Create("MultiLineEditBox")
     helpeditbox:SetLabel(T("Help Information"))
     helpeditbox:SetWidth(FIELD_WIDTH)
@@ -739,7 +865,7 @@ local function drawMetadataTab(editframe, container)
         function()
             GSE.CreateToolTip(
                 T("Specialization/Class ID"),
-                T("What class or spec is this macro for?  If it is for all classes choose Global."),
+                T("What class or spec is this sequence for?  If it is for all classes choose Global."),
                 editframe
             )
         end
@@ -786,7 +912,7 @@ local function drawMetadataTab(editframe, container)
         function()
             GSE.CreateToolTip(
                 T("Default Version"),
-                T("The version of this macro that will be used where no other version has been configured."),
+                T("The version of this sequence that will be used where no other version has been configured."),
                 editframe
             )
         end
@@ -883,6 +1009,14 @@ function GSE.GUI.SetupMetadata(editframe)
     editframe.GUIDrawMetadataEditor = function(container)
         GUIDrawMetadataEditor(editframe, container)
     end
+end
+
+-- Shared: the read-only rendered notes panel, for the macro and variable
+-- editors. `text` must already be WoW escape sequences (the server renders the
+-- markdown: MetaData.Notes -> MetaData.Help for sequences, comments ->
+-- commentsHelp for macros and variables).
+function GSE.GUI.CreateReadOnlyNotesPanel(container, label, text, options)
+    return addRenderedNotesPanel(container, label, text, options)
 end
 
 -- Shared: lets Editor_Variable (and others) build the same styled dependency box.

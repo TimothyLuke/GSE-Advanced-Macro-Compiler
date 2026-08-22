@@ -1689,7 +1689,7 @@ local function AddImportExportOptions(optionsCategory)
             container:Add("MERGE",   L["Merge"])
             container:Add("REPLACE", L["Replace"])
             container:Add("IGNORE",  L["Ignore"])
-            container:Add("RENAME",  L["Rename New Macro"])
+            container:Add("RENAME",  L["Rename New Sequence"])
             return container:GetData()
         end
         Settings.CreateDropdown(optionsCategory, setting, GetOptions, L["Pre-selected action when an imported sequence collides with one you already have. Merge appends new versions to the existing sequence; Replace overwrites it; Ignore skips the import; Rename brings the new sequence in under a different name."])
@@ -2172,7 +2172,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             -- Section header so the spell-translation control reads as its own
             -- group, between "Modifier Hold to Pause" and "Spell Cache".
             local layout = SettingsPanel:GetLayout(troubleOptions)
-            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Spell Translations", tooltip = L["How the macro editor turns spell IDs into spell names as you edit."]}))
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Spell Translations", tooltip = L["How the sequence editor turns spell IDs into spell names as you edit."]}))
         end
         do
             -- Delayed spell translation toggle (GSEOptions.DelayedSpellTranslations),
@@ -2186,7 +2186,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local function GetValue() return GSEOptions.DelayedSpellTranslations == true end
             local function SetValue(val) GSEOptions.DelayedSpellTranslations = val end
             local setting = Settings.RegisterProxySetting(troubleOptions, "delayedSpellTranslations", Settings.VarType.Boolean, L["Delayed Spell Translations"], false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, L["Delay spell translations to reduce lag for users with older machines. When on, the macro editor waits until you click out of a box to translate and colour spell IDs and names instead of doing it as you type. Off by default (live as you type while editing). This only affects the editor; nothing is translated during normal gameplay."])
+            Settings.CreateCheckbox(troubleOptions, setting, L["Delay spell translations to reduce lag for users with older machines. When on, the sequence editor waits until you click out of a box to translate and colour spell IDs and names instead of doing it as you type. Off by default (live as you type while editing). This only affects the editor; nothing is translated during normal gameplay."])
         end
 
         do

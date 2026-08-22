@@ -865,7 +865,7 @@ local function InitEditorFooterButtons(editframe)
     transbutton:SetCallback("OnEnter", function()
         GSE.CreateToolTip(
             L["Send"],
-            L["Send this macro to another GSE player who is on the same server as you are."],
+            L["Send this sequence to another GSE player who is on the same server as you are."],
             editframe
         )
     end)
@@ -914,14 +914,14 @@ local function InitEditorFooterButtons(editframe)
                 end
             else
                 GSE.Print(
-                    L["Error processing Custom Pause Value.  You will need to recheck your macros."],
+                    L["Error processing Custom Pause Value.  You will need to recheck your sequences."],
                     "ERROR"
                 )
             end
         end
     )
     savebutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Save"], L["Save the changes made to this macro"], editframe)
+        GSE.CreateToolTip(L["Save"], L["Save the changes made to this sequence"], editframe)
     end)
     savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
     editframe.SaveButton = savebutton
@@ -973,7 +973,7 @@ local function InitEditorFooterButtons(editframe)
         if GSE.GUIRecordFrame then GSE.GUIRecordFrame:Show() end
     end)
     recordbutton:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(L["Record"], L["GSE: Record your rotation to a macro."], editframe)
+        GSE.CreateToolTip(L["Record"], L["GSE: Record your rotation to a sequence."], editframe)
     end)
     recordbutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 

@@ -61,7 +61,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   leftColumn:SetRelativeWidth(0.48)
   leftColumn:SetNumLines(25)
   leftColumn:DisableButton(true)
-  leftColumn:SetLabel(L["Local Macro"])
+  leftColumn:SetLabel(L["Local Sequence"])
   IndentationLib.enable(leftColumn.editBox, Statics.IndentationColorTable, 4)
   leftColumn:SetCallback("OnRelease", DisableCompareColoring)
 
@@ -70,7 +70,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
   rightColumn:SetRelativeWidth(0.48)
   rightColumn:SetNumLines(25)
   rightColumn:DisableButton(true)
-  rightColumn:SetLabel(L["Updated Macro"])
+  rightColumn:SetLabel(L["Updated Sequence"])
   IndentationLib.enable(rightColumn.editBox, Statics.IndentationColorTable, 4)
   rightColumn:SetCallback("OnRelease", DisableCompareColoring)
 
@@ -95,7 +95,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
       ["MERGE"] = L["Merge"],
       ["REPLACE"] = L["Replace"],
       ["IGNORE"] = L["Ignore"],
-      ["RENAME"] = L["Rename New Macro"]
+      ["RENAME"] = L["Rename New Sequence"]
     }
   )
   actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
@@ -164,7 +164,7 @@ function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
         ["MERGE"] = L["Merge"],
         ["REPLACE"] = L["Replace"],
         ["IGNORE"] = L["Ignore"],
-        ["RENAME"] = L["Rename New Macro"]
+        ["RENAME"] = L["Rename New Sequence"]
       }
     )
     compareframe.OrigText:SetText(ExportVersionsForCompare(GSE.Library[classid][sequenceName]))

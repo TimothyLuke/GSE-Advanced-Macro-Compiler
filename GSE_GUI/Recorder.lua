@@ -17,8 +17,8 @@ local recbuttontext = L["Record"]
 
 -- Record Frame
 
-recordframe:SetTitle(L["Record Macro"])
-recordframe:SetStatusText(L["GSE: Record your rotation to a macro."])
+recordframe:SetTitle(L["Record Sequence"])
+recordframe:SetStatusText(L["GSE: Record your rotation to a sequence."])
 recordframe:SetCallback(
   "OnClose",
   function(widget)
@@ -50,7 +50,7 @@ recbutton:SetCallback(
 recButtonGroup:AddChild(recbutton)
 
 local createmacrobutton = UI:Create("Button")
-createmacrobutton:SetText(L["Create Macro"])
+createmacrobutton:SetText(L["Create Sequence"])
 createmacrobutton:SetWidth(150)
 createmacrobutton:SetCallback(
   "OnClick",

@@ -44,7 +44,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
             GSE.Print(
                 string.format(
                     L[
-                        "This macro uses features that are not available in this version. You need to update GSE to %s in order to use this macro."
+                        "This sequence uses features that are not available in this version. You need to update GSE to %s in order to use this sequence."
                     ],
                     sequence.MetaData.GSEVersion
                 )
@@ -160,7 +160,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.Print(
             string.format(
                 L[
-                    "Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that your macro will work."
+                    "Your sequence name was longer than 27 characters.  It has been shortened from %s to %s so that the in-game macro GSE creates for it will work."
                 ],
                 sequenceName,
                 tempseqName
@@ -188,7 +188,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         --@debug@
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         --@end-debug@
-        GSE.Print(string.format(L["Extra Macro Versions of %s has been added."], sequenceName), GNOME)
+        GSE.Print(string.format(L["Extra Sequence Versions of %s have been added."], sequenceName), GNOME)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
@@ -208,7 +208,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.Library[classid][sequenceName] = newSequence
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
-        GSE.Print(sequenceName .. L[" was imported as a new macro."], "Storage")
+        GSE.Print(sequenceName .. L[" was imported as a new sequence."], "Storage")
         --@debug@
         GSE.PrintDebugMessage(
             "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
@@ -569,7 +569,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 end
             else
                 GSE.Print(
-                        L["This macro is not compatible with this version of the game and cannot be imported."],
+                        L["This sequence is not compatible with this version of the game and cannot be imported."],
                         L["Import"]
                     )
                 return
@@ -1858,7 +1858,7 @@ function GSE.PrintGnomeHelp()
         L["To get started "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse|r will list any macros available to your spec.  This will also add any macros available for your current spec to the macro interface."
+                    "/gse|r will list any sequences available to your spec.  This will also add an in-game macro for each sequence available to your current spec to the macro interface."
                 ],
         GNOME
     )
@@ -1866,7 +1866,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing macros."
+                "/gse showspec|r will show your current Specialisation and the SPECID needed to tag any existing sequences."
                 ],
         GNOME
     )
@@ -1882,7 +1882,7 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse checksequencesforerrors|r will loop through your macros and check for corrupt macro versions.  This will then show how to correct these issues."
+                    "/gse checksequencesforerrors|r will loop through your sequences and check for corrupt sequence versions.  This will then show how to correct these issues."
                 ],
         GNOME
     )

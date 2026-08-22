@@ -421,8 +421,8 @@ importframe.frame:ClearAllPoints()
 importframe.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 importframe:Hide()
-importframe:SetTitle(L["GSE: Import a Macro String."])
-importframe:SetStatusText(L["Import Macro from Forums"])
+importframe:SetTitle(L["GSE: Import a Sequence String."])
+importframe:SetStatusText(L["Import Sequence from Forums"])
 prepareImportFrame()
 importframe:SetCallback(
   "OnClose",

@@ -4909,7 +4909,7 @@ function GSE.CreateEditor()
                 clicksdropdown:SetLabel(L["Measure"])
                 clicksdropdown:SetWidth(270)
                 local clickdroplist = {
-                    [L["Clicks"]] = L["How many macro Clicks to pause for?"],
+                    [L["Clicks"]] = L["How many clicks of this sequence to pause for?"],
                     [L["Milliseconds"]] = L["How many milliseconds to pause for?"],
                     ["GCD"] = L["Pause for the GCD."]
                 }
@@ -5557,7 +5557,7 @@ function GSE.CreateEditor()
                         GSE.CreateToolTip(
                             L["Step Function"],
                             L[
-                                "The step function determines how your macro executes.  Each time you click your macro GSE will go to the next line.  \nThe next line it chooses varies.  If Random then it will choose any line.  If Sequential it will go to the next line.  \nIf Priority it will try some spells more often than others."
+                                "The step function determines how your sequence executes.  Each time you click your sequence GSE will go to the next line.  \nThe next line it chooses varies.  If Random then it will choose any line.  If Sequential it will go to the next line.  \nIf Priority it will try some spells more often than others."
                             ],
                             editframe
                         )
@@ -6077,14 +6077,14 @@ function GSE.CreateEditor()
                 local sequence = editframe.Sequence
                 if #sequence.Versions <= 1 then
                     GSE.Print(
-                        L["This is the only version of this macro.  Delete the entire macro to delete this version."]
+                        L["This is the only version of this sequence.  Delete the entire sequence to delete this version."]
                     )
                     return
                 end
                 if sequence.MetaData.Default == version then
                     GSE.Print(
                         L[
-                            "You cannot delete the Default version of this macro.  Please choose another version to be the Default on the Configuration tab."
+                            "You cannot delete the Default version of this sequence.  Please choose another version to be the Default on the Configuration tab."
                         ]
                     )
                     return
@@ -6125,7 +6125,7 @@ function GSE.CreateEditor()
                     confirmText = L["Delete"],
                     cancelText  = L["Cancel"],
                     onConfirm   = function()
-                    local printtext = L["Macro Version %d deleted."]
+                    local printtext = L["Sequence Version %d deleted."]
 
                     -- Only references after the deleted version move; see
                     -- GSE.ShiftVersionReferencesAfterDelete for the three cases.
@@ -6154,7 +6154,7 @@ function GSE.CreateEditor()
                         end
                     end
 
-                    printtext = printtext .. " " .. L["This change will not come into effect until you save this macro."]
+                    printtext = printtext .. " " .. L["This change will not come into effect until you save this sequence."]
                     editframe.ManageTree()
                     treeContainer:SelectByValue(path)
                     editframe:SetStatusText(string.format(printtext, version))
@@ -6174,7 +6174,7 @@ function GSE.CreateEditor()
                 GSE.CreateToolTip(
                     L["Delete Version"],
                     L[
-                        "Delete this version of the macro.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire macro."
+                        "Delete this version of the sequence.  This can be undone by closing this window and not saving the change.  \nThis is different to the Delete button below which will delete this entire sequence."
                     ],
                     editframe
                 )
@@ -6219,7 +6219,7 @@ function GSE.CreateEditor()
                 GSE.CreateToolTip(
                     L["Raw Edit"],
                     L[
-                        "Edit this macro directly in Lua. WARNING: This may render the macro unable to operate and can crash your Game Session."
+                        "Edit this sequence directly in Lua. WARNING: This may render the sequence unable to operate and can crash your Game Session."
                     ],
                     editframe
                 )
@@ -6248,7 +6248,7 @@ function GSE.CreateEditor()
         previewMacro:SetCallback(
             "OnEnter",
             function()
-                GSE.CreateToolTip(L["Compiled Template"], L["Show the compiled version of this macro."], editframe)
+                GSE.CreateToolTip(L["Compiled Template"], L["Show the compiled version of this sequence."], editframe)
             end
         )
         previewMacro:SetCallback(

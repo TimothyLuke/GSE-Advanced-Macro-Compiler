@@ -86,8 +86,8 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
         "OnEnter",
         function()
             GSE.CreateToolTip(
-                L["Request Macro"],
-                L["Request that the user sends you a copy of this macro."],
+                L["Request Sequence"],
+                L["Request that the user sends you a copy of this sequence."],
                 remoteFrame
             )
         end
@@ -183,7 +183,7 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
             addKeyPairRow(contentcontainer, columnWidth, name, desc, lClassID)
         end
     end
-    remoteFrame:SetTitle(string.format(L["GSE - %s's Macros"], remoteFrame.GSEUser))
+    remoteFrame:SetTitle(string.format(L["GSE - %s's Sequences"], remoteFrame.GSEUser))
 
     remoteFrame:Show()
 end
