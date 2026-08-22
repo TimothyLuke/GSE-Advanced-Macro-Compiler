@@ -882,18 +882,35 @@ local function RefreshMacroEditorColoredText(widget, plainText, onlyIfNoVisibleC
     widget.GSEMacroEditorColoring = true
     if editBox then editBox.GSEMacroEditorColoring = true end
     widget:SetText(displayText)
-    -- Defer cursor restore to the next frame so WoW's internal post-SetText
-    -- caret handling (scroll/layout recalculation done in C after Lua returns)
-    -- runs first and our SetCursorPosition wins. Same pattern as
-    -- Export.lua:351 and DebugWindow.lua:2799.
+    -- Restore the caret IMMEDIATELY after SetText. SetText parks the caret at
+    -- the end of the text; if a frame renders before it is moved back, the
+    -- caret (and the scroll view chasing it) visibly jumps to the end of the
+    -- bottom line and back on every live repaint, and a fast follow-up key
+    -- acts at the end of the text. A synchronous restore in the same Lua
+    -- frame closes that window (the SetText+SetCursorPosition-in-one-go
+    -- approach IndentationLib has used for years).
+    --
+    -- The deferred restore is kept ONLY as a backstop for a client where the
+    -- synchronous one is overridden by WoW's post-SetText handling, and it
+    -- must never fight a newer keystroke: it is scheduled only when the
+    -- immediate restore visibly did not take, and it re-checks that the text
+    -- is still the text it was computed for before touching the caret.
+    -- (With an unconditional deferred restore, typing/deleting fast yanked
+    -- the caret back to a stale position one frame later.)
     if editBox and editBox.SetCursorPosition and editBox.HasFocus and editBox:HasFocus() then
-        local capturedBox    = editBox
-        local capturedCursor = newCursor
-        C_Timer.After(0, function()
-            if capturedBox and capturedBox.SetCursorPosition then
-                capturedBox:SetCursorPosition(capturedCursor)
-            end
-        end)
+        editBox:SetCursorPosition(newCursor)
+        local took = editBox.GetCursorPosition and editBox:GetCursorPosition() == newCursor
+        if not took then
+            local capturedBox    = editBox
+            local capturedCursor = newCursor
+            local capturedText   = displayText
+            C_Timer.After(0, function()
+                if capturedBox and capturedBox.SetCursorPosition
+                    and capturedBox.GetText and capturedBox:GetText() == capturedText then
+                    capturedBox:SetCursorPosition(capturedCursor)
+                end
+            end)
+        end
     end
     if editBox then editBox.GSEMacroEditorColoring = nil end
     widget.GSEMacroEditorColoring = nil
