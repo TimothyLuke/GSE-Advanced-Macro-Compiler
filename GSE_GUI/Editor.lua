@@ -611,6 +611,73 @@ end
 -- Inline "X/255" indicator anchored to the top-right of the macro edit box,
 -- replacing the old side-panel that listed compiled output. Created on first
 -- call; subsequent calls just retext + recolour.
+-- Size the macro-commands box to its content: one row per line of macro
+-- text, never fewer than MACRO_BOX_MIN_LINES (short blocks keep a usable
+-- box), never more than MACRO_BOX_MAX_LINES (a huge block scrolls instead
+-- of swallowing the window). Re-fitted as the user types; only re-lays out
+-- when the row count actually changes so fast typing stays cheap.
+local MACRO_BOX_MIN_LINES = 5
+local MACRO_BOX_MAX_LINES = 24
+local function FitMacroEditBoxToContent(macroEditBox, text)
+    if not (macroEditBox and macroEditBox.SetHeight) then return end
+    local eb = macroEditBox.editBox or macroEditBox.editbox
+    if not eb then return end
+    local plain = text or ""
+    if GSE.DecodeMacroEditorText then plain = GSE.DecodeMacroEditorText(plain) or plain end
+    plain = tostring(plain)
+    -- Stored macro text commonly ends with a newline; that trailing newline is
+    -- not a row the author sees as content, so it is not measured -- EXCEPT
+    -- while the author is typing on that last empty row (box focused, caret at
+    -- the end), so pressing Enter at the bottom still opens the new row.
+    local body = plain:gsub("\n+$", "")
+    local typingOnTrailingRow = #body < #plain and eb.HasFocus and eb:HasFocus()
+        and eb.GetCursorPosition and eb.GetText and eb:GetCursorPosition() >= #(eb:GetText() or "")
+
+    -- MEASURE the rendered text height with a hidden FontString in the box's
+    -- own font (wraps included) instead of estimating rows x font size --
+    -- estimates drifted by about a row and showed a spare empty line.
+    local meter = macroEditBox.gseHeightMeter
+    if not meter then
+        meter = macroEditBox.frame:CreateFontString(nil, "ARTWORK")
+        meter:Hide()
+        macroEditBox.gseHeightMeter = meter
+    end
+    local fontPath, fontSize, fontFlags = eb:GetFont()
+    if fontPath then meter:SetFont(fontPath, fontSize or 14, fontFlags or "") end
+    if eb.GetSpacing and meter.SetSpacing then meter:SetSpacing(eb:GetSpacing() or 0) end
+    meter:SetWordWrap(true)
+    local width = eb:GetWidth() or 0
+    meter:SetWidth(width > 50 and width or 600)
+    meter:SetText("X")
+    local oneRow = meter:GetStringHeight() or (fontSize or 14)
+    if oneRow <= 0 then oneRow = fontSize or 14 end
+    meter:SetText(body ~= "" and body or "X")
+    local textHeight = meter:GetStringHeight() or oneRow
+    if typingOnTrailingRow then textHeight = textHeight + oneRow end
+    textHeight = math.max(oneRow * MACRO_BOX_MIN_LINES, math.min(oneRow * MACRO_BOX_MAX_LINES, textHeight))
+
+    local chrome = (macroEditBox.labelHeight or 12) + (macroEditBox.verticalOffset or 2) * 3 + 6
+    local newHeight = math.ceil(textHeight + chrome)
+    if macroEditBox.gseFitHeight == newHeight then return end
+    macroEditBox.gseFitHeight = newHeight
+    local delta = newHeight - (macroEditBox.height or newHeight)
+    macroEditBox:SetHeight(newHeight)
+    -- The box sits under several EXPLICIT-height containers (macrolayout,
+    -- macroFields, macroBody -- sized at draw time); auto-height ancestors
+    -- above them only follow if those grow too. Push the delta up through
+    -- every fixed-height ancestor, relaying out as we go.
+    local parent = macroEditBox.parent
+    while parent do
+        if delta ~= 0 and parent.explicitHeight and not parent.autoAdjustHeight
+            and parent.height and parent.SetHeight then
+            parent:SetHeight(parent.height + delta)
+        elseif parent.DoLayout then
+            parent:DoLayout()
+        end
+        parent = parent.parent
+    end
+end
+
 local function SetMacroCountText(macroEditBox, lenMacro)
     if not (macroEditBox and macroEditBox.frame) then return end
 
@@ -5226,6 +5293,10 @@ function GSE.CreateEditor()
 			macroFields:AddChild(macrolayout)
 			macroBody:AddChild(macroRail)
 			macroBody:AddChild(macroFields)
+			-- Fit the macro box to its content now that it sits under its containers:
+			-- the fit pushes the height delta up through macrolayout/macroFields/
+			-- macroBody (all explicit-height, sized above for the 108px baseline).
+			FitMacroEditBoxToContent(macroeditbox, macroeditbox:GetText())
 			spellcontainer:AddChild(macroBody)
 			-- Report the COMPILED macro body length (after spell-name translation)
 			-- so the "X/255" indicator matches the over-limit trigger and what WoW
@@ -7279,7 +7350,7 @@ function GSE.CreateEditor()
             DisableMultilineEditorColoring(macroEditBox)
             macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
             macroEditBox:DisableButton(true)
-            macroEditBox:SetNumLines(5)
+            macroEditBox:SetNumLines(MACRO_BOX_MIN_LINES)
             macroEditBox:SetRelativeWidth(0.5)
             macroEditBox:SetText(spelltext)
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
@@ -7359,6 +7430,7 @@ function GSE.CreateEditor()
                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
                     end
                     SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
+                    FitMacroEditBoxToContent(macroEditBox, value)
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
                 end
             )
