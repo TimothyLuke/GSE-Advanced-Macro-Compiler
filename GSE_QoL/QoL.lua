@@ -485,13 +485,18 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
             local f = editBox:GetText() or ""
             return (f:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
         end
-        local function rowBeforeCaret()
-            local full = plainFull()
-            return full:sub(1, math.min(cursor, #full)):match("([^\n]*)$") or ""
-        end
         -- "Need Stuff Here" is the new-block placeholder, not content.
         local rawBox = decoded
         local boxIsPlaceholder = tostring(rawBox):match("^%s*Need Stuff Here%s*$") ~= nil
+        -- The placeholder is not a row of content: report the row as EMPTY so a
+        -- command lands IN it rather than on a new line under it (the splice
+        -- replaces the placeholder outright, which would leave that newline
+        -- stranded at the top of the block).
+        local function rowBeforeCaret()
+            if boxIsPlaceholder then return "" end
+            local full = plainFull()
+            return full:sub(1, math.min(cursor, #full)):match("([^\n]*)$") or ""
+        end
 
         -- One undo step per pick: the text IS the state (adoptClause re-derives
         -- everything from it), so snapshotting text + caret is enough to walk
