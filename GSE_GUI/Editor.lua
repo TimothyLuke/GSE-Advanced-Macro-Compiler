@@ -692,9 +692,17 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- macroFields, macroBody -- sized at draw time); auto-height ancestors
     -- above them only follow if those grow too. Push the delta up through
     -- every fixed-height ancestor, relaying out as we go.
+    -- ...but ONLY within this block. The first auto-height ancestor is the block
+    -- panel, which recomputes its height from its children; everything above it
+    -- (the block list, the scroll frame, the window) is SHARED chrome. Resizing
+    -- those by the delta made every block on load shrink the same containers
+    -- again, collapsing the list so it no longer filled the window. Past that
+    -- boundary we only re-lay out, never resize.
     local parent = macroEditBox.parent
+    local sharedChrome = false
     while parent do
-        if delta ~= 0 and parent.explicitHeight and not parent.autoAdjustHeight
+        if parent.autoAdjustHeight then sharedChrome = true end
+        if not sharedChrome and delta ~= 0 and parent.explicitHeight
             and parent.height and parent.SetHeight then
             parent:SetHeight(parent.height + delta)
         elseif parent.DoLayout then
