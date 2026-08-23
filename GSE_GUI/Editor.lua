@@ -674,6 +674,11 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     meter:SetText(body ~= "" and body or "X")
     local textHeight = meter:GetStringHeight() or oneRow
     if typingOnTrailingRow then textHeight = textHeight + oneRow + spacing end
+    -- The box fits its content, so its scrollbar is dead weight: hide it. (A
+    -- 255-char block cannot realistically reach the row cap; one that did needs
+    -- rethinking, not a scrollbar.)
+    local bar = macroEditBox.scrollBar
+    if bar and bar.Hide then bar:Hide() end
     textHeight =
         math.max(
             MacroBoxRowsHeight(MACRO_BOX_MIN_LINES, oneRow, spacing),
@@ -5350,6 +5355,23 @@ function GSE.CreateEditor()
 			-- the fit pushes the height delta up through macrolayout/macroFields/
 			-- macroBody (all explicit-height, sized above for the 108px baseline).
 			FitMacroEditBoxToContent(macroeditbox, macroeditbox:GetText())
+			-- Keep the action icon vertically centred on the macro box as the box
+			-- resizes: anchor the icon's centre to the box's left edge -- a live WoW
+			-- anchor follows every height change with no per-resize math -- and
+			-- re-apply it after any re-layout of the icon slot, which would
+			-- otherwise snap the icon back to its static slot position.
+			local function centreIconOnMacroBox()
+				local target = macroeditbox and (macroeditbox.scrollBG or macroeditbox.frame)
+				if not (actionicon and actionicon.frame and target) then return end
+				actionicon.frame:ClearAllPoints()
+				actionicon.frame:SetPoint("CENTER", target, "LEFT", -(macroRailWidth / 2 + 6), 0)
+			end
+			local slotDoLayout = iconSlot.DoLayout
+			iconSlot.DoLayout = function(self, ...)
+				if slotDoLayout then slotDoLayout(self, ...) end
+				centreIconOnMacroBox()
+			end
+			centreIconOnMacroBox()
 			spellcontainer:AddChild(macroBody)
 			-- Report the COMPILED macro body length (after spell-name translation)
 			-- so the "X/255" indicator matches the over-limit trigger and what WoW
