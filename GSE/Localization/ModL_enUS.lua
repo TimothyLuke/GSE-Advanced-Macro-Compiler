@@ -648,6 +648,20 @@ L["Manage Variables"] = true
 L["Insert GSE Sequence"] = true
 L["Insert GSE Variable"] = true
 L["Insert Spell"] = true
+L["Commands"] = true
+L["Conditionals"] = true
+L["Spells"] = true
+L["GSE Variables"] = true
+L["Reset"] = true
+L["Only valid after a /castsequence command."] = true
+L["Requires a reset= on the line."] = true
+L["Start the line with a command first."] = true
+L["Undo Last"] = true
+L["Boiler Plates"] = true
+L["Nothing to undo yet."] = true
+L["Only valid after a spell."] = true
+L["Must be alone in the block - clear the block first."] = true
+L["The block holds a macro name or variable - it must stay alone."] = true
 L[
         "The UI has been set to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)  You will need to check your macros and adjust your click commands."
     ] = true

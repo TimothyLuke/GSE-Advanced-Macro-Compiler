@@ -7482,6 +7482,12 @@ function GSE.CreateEditor()
             macroEditBox:SetCallback(
                 "OnEditFocusLost",
                 function(sel)
+                    -- During a Tab line-builder session the commit repaint would
+                    -- inject colour codes mid-build and shift the session's raw
+                    -- caret offsets; the session suppresses it and it runs on the
+                    -- next real focus-loss after the menu is gone.
+                    local eb = sel and (sel.editBox or sel.editbox)
+                    if eb and (eb.gseTabSessionUntil or 0) > GetTime() then return end
                     -- Apply translation + coloring on focus-loss, not every
                     -- keystroke. See matching comment in MacroToolbar.lua.
                     -- Cancel any pending debounced live pass so it can't fire
