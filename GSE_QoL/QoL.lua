@@ -322,35 +322,639 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
     end)
 end
 
+-- ---------------------------------------------------------------------------
+-- Tab autofill menu for the macro-commands box (Patron). Five top-level
+-- categories with flyouts: Commands / Conditionals / Spells / Macros /
+-- GSE Variables. Static lists are authored by Larry; Spells, Macros and
+-- Variables are live. Insertion is caret-aware (see insertSmart).
+-- ---------------------------------------------------------------------------
+local TAB_COMMANDS = {
+    "/cast", "/castsequence", "/use", "/stopmacro", "/stopcasting", "/cancelaura",
+    "/cancelform", "/targetenemy", "/targetlasttarget", "/cleartarget", "/focus",
+    "/startattack", "/stopattack", "/petattack", "/petfollow", "/petpassive", "/ping",
+}
+local TAB_RESET_VALUES = { "combat", "target", "5", "10", "15", "20", "30", "45", "60" }
+-- Whole lines people write over and over in sequences: inserted exactly as
+-- written, as their own row.
+local TAB_BOILERPLATES = {
+    "/targetenemy [noharm][dead]",
+    "/startattack",
+    "/stopmacro",
+    "/stopmacro [channeling]",
+    "/stopmacro [@playertarget,noexists][channeling]",
+    "/cqs",
+    "/cast [@player]",
+    "/cast [@cursor]",
+    "/cast [nomounted]",
+    "/cast [nostealth] Stealth",
+    "/cast [@mouseover,combat][@targettarget,combat][combat]",
+    "/cast [help,@mouseover,exists]",
+    "/cast [harm,@mouseover,exists]",
+    "/cast [help,@focus,nodead,exists]",
+    "/cast [help,@focus,exists,combat][combat]",
+    "/castsequence [help,@mouseover,exists]",
+    "/castsequence [harm,@mouseover,exists]",
+    "/use [combat]",
+    "/use [@pet,dead]",
+    "/use [nopet,nodead] Call Pet",
+    "/petattack [harm,combat]",
+    "/ping [harm,@target,exists,group:scenario] attack",
+    "/cast [harm] Single-Button Assistant",
+}
+local TAB_CONDITIONALS = {
+    { "Modifiers", {
+        "mod", "nomod", "mod:shift", "mod:shiftctrl", "mod:shiftalt",
+        "mod:ctrl", "mod:ctrlalt", "mod:alt",
+    }},
+    { "Combat", {
+        "combat", "nocombat", "stealth", "nostealth", "pvpcombat",
+        "channeling", "nochanneling", "mounted", "nomounted", "flying", "noflying",
+        "swimming", "indoors", "outdoors",
+    }},
+    { "Target", {
+        "@target", "@targettarget", "@focus", "@focustarget", "@mouseover", "@mouseovertarget",
+        "@pet", "@pettarget", "@player", "@cursor",
+        "exists", "noexists", "help", "nohelp", "harm", "noharm", "dead", "nodead",
+        "party", "noparty", "raid", "noraid",
+        "@none", "@arena1", "@arena2", "@arena3", "@boss1", "@boss2",
+        "@party1", "@party2", "@party3", "@party4",
+    }},
+    { "Character", {
+        "spec:1", "spec:2", "spec:3", "spec:4",
+        "form:0", "form:1", "form:2", "form:3", "form:4", "form:5", "form:6",
+        "stance:0", "stance:1", "stance:2", "stance:3",
+        "known:ID", "pet", "nopet", "group:party", "group:raid", "group:scenario", "nogroup",
+        "flyable", "advflyable", "canexitvehicle",
+    }},
+}
+
+-- Names of GSE-managed in-game macros (the editor's Macros section).
+local function getManagedMacroNames()
+    local names, seen = {}, {}
+    local function isMacroNode(v)
+        return type(v) == "table" and (v.text ~= nil or v.icon ~= nil or v.value ~= nil
+            or v.Managed ~= nil or v.managedMacro ~= nil or v.manageMacro ~= nil)
+    end
+    if type(GSEMacros) == "table" then
+        for k, v in pairs(GSEMacros) do
+            if isMacroNode(v) then
+                if not seen[k] then seen[k] = true; names[#names + 1] = k end
+            elseif type(v) == "table" then -- per-character bucket
+                for k2, v2 in pairs(v) do
+                    if isMacroNode(v2) and not seen[k2] then seen[k2] = true; names[#names + 1] = k2 end
+                end
+            end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
 GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
-        -- Remember where the caret was when Tab was pressed. Between now and the
-        -- pick, the editor's debounced live repaint (or a focus-loss commit
-        -- repaint) can SetText the box, which parks the caret at the END --
-        -- so a plain Insert landed at the end of the last row. Cancel any
-        -- pending live repaint via the token the recolour already honours,
-        -- then restore focus + caret right before inserting.
-        local cursor = editBox.GetCursorPosition and editBox:GetCursorPosition()
-        widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
-        local function insertAtCaret(text)
-            if editBox.SetFocus then editBox:SetFocus() end
-            if cursor and editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
-            editBox:Insert(text)
-        end
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
-            rootDescription:CreateTitle(L["Insert Spell"])
-            for _, v in ipairs(getPlayerSpells()) do
-                rootDescription:CreateButton(v, function() insertAtCaret(v) end)
+        -- Line-builder session. The bracket group is NEVER left open in the text:
+        -- every conditional pick rewrites the whole group in place ([a] -> [a,b]),
+        -- so the text is always valid and no menu-close event is needed (Blizzard
+        -- menus release/re-acquire unpredictably during navigation and refresh --
+        -- probe-proven -- so nothing here depends on their lifecycle).
+        local buildMenu -- forward declaration: pickCommand reopens the menu with it
+        -- Every gate-changing pick reopens the menu, and MenuUtil.CreateContextMenu
+        -- anchors at the MOUSE -- so each reopen re-anchored under the row just
+        -- clicked and the menu walked across the screen. Blizzard's manager takes
+        -- an explicit anchor (MenuManagerMixin:OpenMenu, public via the proxy), so
+        -- pin the menu under the macro box for the whole build session. Falls back
+        -- to the cursor-anchored path if any piece is missing on older flavours.
+        local function openMenu()
+            local mgr = Menu and Menu.GetManager and Menu.GetManager()
+            if mgr and mgr.OpenMenu and AnchorUtil and AnchorUtil.CreateAnchor
+                and MenuUtil.CreateRootMenuDescription and Menu.PopulateDescription then
+                local mixin = editBox.menuMixin
+                    or (MenuVariants and MenuVariants.GetDefaultContextMenuMixin
+                        and MenuVariants.GetDefaultContextMenuMixin())
+                local desc = MenuUtil.CreateRootMenuDescription(mixin)
+                Menu.PopulateDescription(buildMenu, editBox, desc)
+                mgr:OpenMenu(editBox, desc, AnchorUtil.CreateAnchor("TOPLEFT", editBox, "BOTTOMLEFT", 0, -2))
+                return
             end
-            rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
-                rootDescription:CreateButton(k, function()
-                    insertAtCaret("\n" .. [[=GSE.V["]] .. k .. [["]()]])
+            MenuUtil.CreateContextMenu(editBox, buildMenu)
+        end
+        -- Start every session on DECODED text: colour codes injected by repaints
+        -- between sessions make raw offsets lie (splices landed inside escape
+        -- sequences and shredded them). Strip the codes, remap the caret to its
+        -- visible position, and run all session math on plain text; colouring
+        -- returns after the session via the normal repaint paths.
+        local function stripCodes(t)
+            t = t:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            t = t:gsub("|c%x*$", ""):gsub("|$", "")
+            return t
+        end
+        local rawText = editBox:GetText() or ""
+        local caretPos = (editBox.GetCursorPosition and editBox:GetCursorPosition()) or #rawText
+        local decoded = (GSE.DecodeMacroEditorText and GSE.DecodeMacroEditorText(rawText)) or stripCodes(rawText)
+        if decoded ~= rawText then
+            local mapped = #stripCodes(rawText:sub(1, caretPos))
+            editBox:SetText(decoded)
+            if editBox.SetCursorPosition then editBox:SetCursorPosition(mapped) end
+            caretPos = mapped
+            widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+        end
+        local cursor = caretPos
+        -- the builder always appends to the caret's LINE END (rule of thumb:
+        -- Commands > Conditionals > Reset > Spells; a parked mid-line caret
+        -- must not scatter picks into the middle of the line)
+        local groupTokens = {}
+        local groupStart, groupLen = nil, 0
+        local resetStart, resetLen, resetValues = nil, 0, {}
+        local condBase -- canonical slot for a new group: right after the command
+
+        -- Editor.lua's focus-loss commit repaint would inject colour codes and
+        -- shift these raw offsets; suppress it with a rolling deadline that
+        -- self-expires shortly after the last pick.
+        local function touchSession()
+            editBox.gseTabSessionUntil = GetTime() + 2
+        end
+        touchSession()
+
+        -- A repaint can sneak colour codes back into the box mid-session
+        -- (probe-proven: 47 plain chars -> 95 coloured between two picks), so
+        -- EVERY session read runs on decoded text and every splice writes
+        -- decoded text back -- the session is colour-proof by construction.
+        local function plainFull()
+            local f = editBox:GetText() or ""
+            return (f:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+        end
+        -- "Need Stuff Here" is the new-block placeholder, not content.
+        local rawBox = decoded
+        local boxIsPlaceholder = tostring(rawBox):match("^%s*Need Stuff Here%s*$") ~= nil
+        -- The placeholder is not a row of content: report the row as EMPTY so a
+        -- command lands IN it rather than on a new line under it (the splice
+        -- replaces the placeholder outright, which would leave that newline
+        -- stranded at the top of the block).
+        local function rowBeforeCaret()
+            if boxIsPlaceholder then return "" end
+            local full = plainFull()
+            return full:sub(1, math.min(cursor, #full)):match("([^\n]*)$") or ""
+        end
+
+        -- One undo step per pick: the text IS the state (adoptClause re-derives
+        -- everything from it), so snapshotting text + caret is enough to walk
+        -- back a misclick.
+        local history = {}
+        local function pushHistory()
+            history[#history + 1] = {
+                -- decoded: cursor offsets are plain-text offsets, so a snapshot
+                -- that still held colour codes would restore a shifted caret
+                text = plainFull(),
+                cursor = cursor,
+                placeholder = boxIsPlaceholder,
+            }
+        end
+        -- Splice `text` in at [at, at+replacing) via SetText: Insert() depends on
+        -- the live caret and the box is unfocused while the menu is up.
+        local function splice(at, replacing, text)
+            touchSession()
+            pushHistory()
+            if boxIsPlaceholder then
+                editBox:SetText(text)
+                boxIsPlaceholder = false
+                cursor = #text
+            else
+                local full = plainFull()
+                at = math.max(0, math.min(at, #full))
+                editBox:SetText(full:sub(1, at) .. text .. full:sub(at + replacing + 1))
+                cursor = at + #text
+            end
+            if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
+            -- cancel the debounced live repaint the SetText just scheduled
+            widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+        end
+        local function resetGroup() groupTokens = {}; groupStart, groupLen = nil, 0 end
+        local function undoLast()
+            local prev = table.remove(history)
+            if not prev then return MenuResponse.Refresh end
+            touchSession()
+            editBox:SetText(prev.text)
+            cursor = prev.cursor
+            boxIsPlaceholder = prev.placeholder
+            if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
+            widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+            -- every gate can change on an undo, so rebuild the menu
+            C_Timer.After(0, openMenu)
+            return MenuResponse.Close
+        end
+        -- True end of the current row (next newline after the build cursor, or
+        -- end of text): ,nil and ; must land at the END of the line regardless
+        -- of where the build cursor sits.
+        local function lineEndPos()
+            local full = plainFull()
+            local at = math.min(cursor, #full)
+            local nl = full:find("\n", at + 1, true)
+            return (nl and nl - 1) or #full
+        end
+        local function currentLineText()
+            local full = plainFull()
+            local endPos = lineEndPos()
+            local startPos = 1
+            for i = math.min(cursor, #full), 1, -1 do
+                if full:sub(i, i) == string.char(10) then startPos = i + 1 break end
+            end
+            return full:sub(startPos, endPos)
+        end
+        cursor = lineEndPos()
+        -- Stored macro text often ends with a newline; a caret parked on that
+        -- blank trailing line would make the session build on an empty row and
+        -- grey every clause-gated entry. Snap to the end of the last line that
+        -- has content (a Command pick still starts its own new row from there).
+        if currentLineText():match("^%s*$") then
+            local fullText = plainFull()
+            local lastContent = fullText:find("%S%s*$")
+            if lastContent then
+                cursor = lastContent
+                cursor = lineEndPos()
+            end
+        end
+        -- Re-derive the clause state from the LIVE text -- the text is the single
+        -- source of truth. Tracked offsets go stale the moment a pick ends a
+        -- clause (a spell or ';' clears the group) or the author types between
+        -- picks, which is how a second conditional ended up in its own bracket
+        -- instead of merging into the one already on the line. Run at session
+        -- start AND before every conditional/reset pick so the canonical order
+        -- (Command > Conditionals > Reset > Spells) always holds: an existing
+        -- [group] is merged into, an existing reset= extended, and a new group
+        -- opens right after the command (or the "; ") -- never after the spells.
+        local function adoptClause()
+            groupTokens, groupStart, groupLen = {}, nil, 0
+            resetStart, resetLen, resetValues = nil, 0, {}
+            condBase = nil
+            local endPos = lineEndPos()
+            local line = currentLineText()
+            local lineStart0 = endPos - #line
+            local ci, cj = line:find("^%s*/%S+%s?")
+            if cj then condBase = lineStart0 + cj end
+            -- a ';' starts a new clause with its own group + reset=: adopt only
+            -- the tail after the LAST ';' so a re-Tab keeps building the clause
+            -- in progress instead of merging into an earlier one.
+            local base = line:find(";[^;]*$") or 0
+            if base > 0 then
+                condBase = lineStart0 + base + #(line:sub(base + 1):match("^%s*") or "")
+            end
+            local tail = line:sub(base + 1)
+            local gi, gj = tail:find("%[.-%]")
+            if gi then
+                local seg = tail:sub(gi + 1, gj - 1)
+                if tail:sub(gj + 1, gj + 1) == " " then gj = gj + 1 end
+                groupStart = lineStart0 + base + gi - 1
+                groupLen = gj - gi + 1
+                for tok in seg:gmatch("[^,]+") do
+                    groupTokens[#groupTokens + 1] = tok:match("^%s*(.-)%s*$")
+                end
+            end
+            local ri, rj = tail:find("reset=%S+")
+            if ri then
+                local vals = tail:sub(ri + 6, rj)
+                if tail:sub(rj + 1, rj + 1) == " " then rj = rj + 1 end
+                resetStart = lineStart0 + base + ri - 1
+                resetLen = rj - ri + 1
+                for v in vals:gmatch("[^/]+") do resetValues[#resetValues + 1] = v end
+            end
+        end
+        adoptClause()
+
+        -- Command: inline on an empty row, otherwise a new row. Starts a fresh line build.
+        local function pickCommand(cmd)
+            resetGroup()
+            resetStart, resetLen, resetValues = nil, 0, {}
+            local row = rowBeforeCaret()
+            if row:match("^%s*$") then splice(cursor, 0, cmd .. " ")
+            else splice(cursor, 0, "\n" .. cmd .. " ") end
+            -- Refresh does not reliably re-run the root generator (probe-proven),
+            -- so gates like Reset would stay stale: close and reopen for a full
+            -- regeneration instead.
+            condBase = cursor
+            C_Timer.After(0, openMenu)
+            return MenuResponse.Close
+        end
+        -- Boiler plate: a whole ready-made line, inserted verbatim. Same
+        -- placement rule as a command pick (inline on an empty row, otherwise a
+        -- new row); the menu reopens so the line can be built on further.
+        local function pickBoilerplate(text)
+            resetGroup()
+            resetStart, resetLen, resetValues = nil, 0, {}
+            local row = rowBeforeCaret()
+            if row:match("^%s*$") then splice(cursor, 0, text)
+            else splice(cursor, 0, "\n" .. text) end
+            C_Timer.After(0, openMenu)
+            return MenuResponse.Close
+        end
+        -- Conditional: rewrite the group in place, always closed: [a] -> [a,b] -> [a,b,c]
+        local function pickConditional(token)
+            adoptClause()
+            -- Conditionals belong BEFORE reset=: if a reset segment already
+            -- exists, open the group at its start and push it right.
+            if not groupStart then groupStart = condBase or resetStart or cursor end
+            -- Same-family colon tokens collapse into WoW's multi-value form:
+            -- picking spec:1 then spec:2 yields spec:1/2 (an OR), never
+            -- spec:1,spec:2 (an AND that could not be true). Applies to any
+            -- prefix:value family (spec/form/stance/mod/group/known...).
+            local prefix, value = token:match("^([^:]+):(.+)$")
+            local collapsed = false
+            if prefix then
+                for i, existing in ipairs(groupTokens) do
+                    if existing == prefix or existing:match("^([^:]+):") == prefix then
+                        -- dedupe: picking the same value twice adds it once
+                        local values = existing:match("^[^:]+:(.+)$") or ""
+                        local dupe = false
+                        for v in (values .. "/"):gmatch("([^/]+)/") do
+                            if v == value then dupe = true break end
+                        end
+                        if not dupe then
+                            groupTokens[i] = existing:find(":") and (existing .. "/" .. value)
+                                or (existing .. ":" .. value)
+                        end
+                        collapsed = true
+                        break
+                    end
+                end
+            end
+            if not collapsed then groupTokens[#groupTokens + 1] = token end
+            local segment = "[" .. table.concat(groupTokens, ",") .. "] "
+            splice(groupStart, groupLen, segment)
+            local delta = #segment - groupLen
+            groupLen = #segment
+            if resetStart and resetStart >= groupStart then
+                resetStart = resetStart + delta
+            end
+            -- keep the build caret at the END of the line (after any reset=)
+            cursor = resetStart and (resetStart + resetLen) or (groupStart + groupLen)
+            if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
+            return MenuResponse.Refresh
+        end
+        -- reset= (castsequence only): its own tracked segment, values collapse
+        -- into one reset= token with "/" and dedupe, e.g. reset=combat/target/5.
+        local function pickReset(value)
+            adoptClause()
+            for _, v in ipairs(resetValues) do if v == value then return MenuResponse.Refresh end end
+            local firstReset = not resetStart
+            -- canonical slot: reset= sits AFTER the [group] (or the command /
+            -- the "; " that opened this clause) and BEFORE the spells -- never
+            -- at the caret, which may sit past spells already on the clause.
+            if not resetStart then
+                resetStart = (groupStart and (groupStart + groupLen)) or condBase or cursor
+            end
+            -- only ONE number is valid in a reset=; a second numeric pick
+            -- REPLACES the existing number instead of adding another
+            local replaced = false
+            if tonumber(value) then
+                for i, v in ipairs(resetValues) do
+                    if tonumber(v) then resetValues[i] = value; replaced = true; break end
+                end
+            end
+            if not replaced then resetValues[#resetValues + 1] = value end
+            local segment = "reset=" .. table.concat(resetValues, "/") .. " "
+            splice(resetStart, resetLen, segment)
+            resetLen = #segment
+            if firstReset then
+                -- the ,nil gate depends on reset= being present; a plain Refresh
+                -- does not re-run the root generator, so reopen for a fresh build
+                C_Timer.After(0, openMenu)
+                return MenuResponse.Close
+            end
+            return MenuResponse.Refresh
+        end
+        -- True when the text after the LAST ';' ends with a spell name --
+        -- the shared test for "does a ', ' separator / a ';' belong here".
+        -- ';' starts a fresh clause, so only the tail after it counts.
+        local function clauseEndsWithSpell(line)
+            local clause = line:gsub("%s+$", "")
+            if clause == "" or not clause:find("/", 1, true) then return false end
+            local tail = (clause:match("[^;]*$") or ""):gsub("^%s+", ""):gsub("%s+$", "")
+            return tail ~= ""
+                and tail:match("/%S+$") == nil          -- not just the command
+                and tail:match("%]$") == nil            -- not ending on a bracket group
+                and tail:match("reset=%S*$") == nil     -- not ending on reset=
+                and tail:match(",%s*nil$") == nil       -- not after a ,nil ender
+        end
+        -- An empty [] group closes the line's conditions: it lands at the END of
+        -- the bracket run ("[stuff,stuff][]"), or opens one on a bare command
+        -- ("/cast []"). A run already ending in [] is left alone.
+        local function pickEmptyGroup()
+            adoptClause()
+            if not groupStart then
+                splice(condBase or resetStart or cursor, 0, "[] ")
+                return MenuResponse.Refresh
+            end
+            local full = plainFull()
+            local pos, last = groupStart + 1, nil
+            while true do
+                local i, j = full:find("^%s*%[[^%]]*%]", pos)
+                if not i then break end
+                last = j
+                pos = j + 1
+            end
+            if not last then return MenuResponse.Refresh end
+            if full:sub(last - 1, last) == "[]" then return MenuResponse.Refresh end
+            splice(last, 0, "[]")
+            return MenuResponse.Refresh
+        end
+        -- Spell: lands at the line end -- but BEFORE a trailing ", nil" line
+        -- ender -- and takes a ", " separator when the clause already ends
+        -- with a spell (castsequence style). Ends the session.
+        local function pickSpell(name)
+            local endPos = lineEndPos()
+            local line = currentLineText()
+            local insertAt = endPos
+            local clause = line
+            local nilS = line:find(",%s*nil%s*$")
+            if nilS then
+                insertAt = endPos - (#line - nilS + 1)
+                clause = line:sub(1, nilS - 1)
+            end
+            local text = (clauseEndsWithSpell(clause) and ", " or "") .. name
+            splice(insertAt, 0, text)
+            cursor = lineEndPos()
+            if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
+            resetGroup()
+            -- the ';' and ', nil' gates change once a spell lands; a plain
+            -- Refresh does not re-run the root generator, so reopen fresh
+            C_Timer.After(0, openMenu)
+            return MenuResponse.Close
+        end
+
+        -- Block-content rules: a block is EITHER macro text OR a lone macro
+        -- name / lone variable call.
+        local boxText = tostring(rawBox)
+        local boxHasText = not boxText:match("^%s*$") and not boxIsPlaceholder
+        local firstChar = boxText:match("^%s*(.)")
+        local boxIsNameOrVar = boxHasText and firstChar ~= "/"
+
+        local function greyed(parent, label, why)
+            local b = parent:CreateButton("|cFF808080" .. label .. "|r", function() end)
+            if b.SetEnabled then b:SetEnabled(false) end
+            if b.SetTooltip then
+                b:SetTooltip(function(tooltip)
+                    GameTooltip_SetTitle(tooltip, label)
+                    GameTooltip_AddNormalLine(tooltip, why)
                 end)
             end
-        end)
+            return b
+        end
+        local NAME_ONLY = L["Must be alone in the block - clear the block first."]
+        local TEXT_ONLY = L["The block holds a macro name or variable - it must stay alone."]
+
+        local function pickSemicolon()
+            -- no space before the ; -- swallow any trailing spaces first
+            local endPos = lineEndPos()
+            local full = editBox:GetText() or ""
+            local wsStart = endPos
+            while wsStart > 0 and full:sub(wsStart, wsStart) == " " do wsStart = wsStart - 1 end
+            splice(wsStart, endPos - wsStart, "; ")
+            -- a ; starts a new clause on the same command: fresh group + reset,
+            -- and new conditionals/reset= belong right after the "; "
+            resetGroup()
+            resetStart, resetLen, resetValues = nil, 0, {}
+            condBase = cursor
+            -- the ';'/', nil' gates change (new clause is empty); Refresh does
+            -- not re-run the root generator, so reopen for a fresh build
+            C_Timer.After(0, openMenu)
+            return MenuResponse.Close
+        end
+        local function pickNil()
+            splice(lineEndPos(), 0, ", nil")
+            editBox.gseTabSessionUntil = 0
+            return MenuResponse.Close
+        end
+
+        buildMenu = function(ownerRegion, rootDescription)
+            -- Block-state rules are evaluated FRESH on every build: the menu is
+            -- reopened mid-session (command picks) and a session that started on
+            -- an empty block must not leave Macros/Variables open after the
+            -- author has built a line into it.
+            local live = (editBox:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            local liveIsPlaceholder = live:match("^%s*Need Stuff Here%s*$") ~= nil
+            local liveHasText = not live:match("^%s*$") and not liveIsPlaceholder
+            local liveFirst = live:match("^%s*(.)")
+            local liveIsNameOrVar = liveHasText and liveFirst ~= "/"
+            -- A fresh line must start with a command before conditionals/spells
+            -- can land on it (macros/variables are the whole-block case).
+            local NEEDS_CMD = L["Start the line with a command first."]
+            local rowHasCmd = currentLineText():match("^%s*/%S") ~= nil
+
+            -- Undo sits at the top: a misclick is fixed without leaving the menu.
+            if #history > 0 then
+                rootDescription:CreateButton(L["Undo Last"], undoLast)
+            else
+                greyed(rootDescription, L["Undo Last"], L["Nothing to undo yet."])
+            end
+            rootDescription:CreateDivider()
+
+            -- Boiler plates: whole lines, so no command is needed on the row first.
+            if liveIsNameOrVar then
+                greyed(rootDescription, L["Boiler Plates"], TEXT_ONLY)
+            else
+                local plates = rootDescription:CreateButton(L["Boiler Plates"])
+                for _, text in ipairs(TAB_BOILERPLATES) do
+                    plates:CreateButton(text, function() return pickBoilerplate(text) end)
+                end
+            end
+
+            -- Macros / GSE Variables: must be ALONE in the block.
+            if liveHasText then
+                greyed(rootDescription, L["Macros"], NAME_ONLY)
+                greyed(rootDescription, L["GSE Variables"], NAME_ONLY)
+            else
+                local function setWhole(content)
+                    touchSession()
+                    editBox:SetText(content)
+                    if editBox.SetCursorPosition then editBox:SetCursorPosition(#content) end
+                    widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+                    editBox.gseTabSessionUntil = 0
+                    return MenuResponse.Close
+                end
+                local macros = rootDescription:CreateButton(L["Macros"])
+                for _, name in ipairs(getManagedMacroNames()) do
+                    macros:CreateButton(name, function() return setWhole(name) end)
+                end
+                local vars = rootDescription:CreateButton(L["GSE Variables"])
+                for k, _ in pairs(GSEVariables or {}) do
+                    vars:CreateButton(k, function() return setWhole([[=GSE.V["]] .. k .. [["]()]]) end)
+                end
+            end
+
+            if liveIsNameOrVar then
+                -- the block holds a macro name / variable: nothing else may join it
+                greyed(rootDescription, L["Commands"], TEXT_ONLY)
+                greyed(rootDescription, L["Conditionals"], TEXT_ONLY)
+                greyed(rootDescription, L["Reset"], TEXT_ONLY)
+                greyed(rootDescription, L["Spells"], TEXT_ONLY)
+                greyed(rootDescription, ";", TEXT_ONLY)
+                greyed(rootDescription, ", nil", TEXT_ONLY)
+                return
+            end
+
+            local cmds = rootDescription:CreateButton(L["Commands"])
+            for _, c in ipairs(TAB_COMMANDS) do
+                cmds:CreateButton(c, function() return pickCommand(c) end)
+            end
+
+            if rowHasCmd then
+                local conds = rootDescription:CreateButton(L["Conditionals"])
+                for _, group in ipairs(TAB_CONDITIONALS) do
+                    local sub = conds:CreateButton(group[1])
+                    for _, token in ipairs(group[2]) do
+                        sub:CreateButton(token, function() return pickConditional(token) end)
+                    end
+                end
+                conds:CreateButton("[]", function() return pickEmptyGroup() end)
+            else
+                greyed(rootDescription, L["Conditionals"], NEEDS_CMD)
+            end
+
+            -- Reset: only meaningful on a /castsequence line.
+            if rowBeforeCaret():find("/castsequence", 1, true) then
+                local resets = rootDescription:CreateButton(L["Reset"])
+                for _, v in ipairs(TAB_RESET_VALUES) do
+                    resets:CreateButton("reset=" .. v, function() return pickReset(v) end)
+                end
+            else
+                greyed(rootDescription, L["Reset"], L["Only valid after a /castsequence command."])
+            end
+
+            if rowHasCmd then
+                local spells = rootDescription:CreateButton(L["Spells"])
+                for _, v in ipairs(getPlayerSpells()) do
+                    spells:CreateButton(v, function() return pickSpell(v) end)
+                end
+            else
+                greyed(rootDescription, L["Spells"], NEEDS_CMD)
+            end
+
+            -- ; ends the current clause and starts a new one on the same
+            -- command (its own conditionals/reset), at the end of the line.
+            local clause = currentLineText():gsub("%s+$", "")
+            if clauseEndsWithSpell(clause) then
+                rootDescription:CreateButton(";", function() return pickSemicolon() end)
+            else
+                greyed(rootDescription, ";", L["Only valid after a spell."])
+            end
+
+            -- ,nil line-ender: the sequence sticks on nil until the reset fires,
+            -- so the spell(s) cast once per reset. Valid only at the end of a
+            -- /castsequence clause that has its OWN reset= (';' starts a fresh
+            -- clause) and already ends with a spell.
+            local row = currentLineText()
+            local tailHasReset = (row:match("[^;]*$") or ""):find("reset=", 1, true) ~= nil
+            local isCastseq = row:match("^%s*/castsequence") ~= nil
+            if isCastseq and tailHasReset and clauseEndsWithSpell(row) then
+                rootDescription:CreateButton(", nil", function() return pickNil() end)
+            elseif not (isCastseq and tailHasReset) then
+                greyed(rootDescription, ", nil", L["Requires a reset= on the line."])
+            else
+                greyed(rootDescription, ", nil", L["Only valid after a spell."])
+            end
+        end
+        openMenu()
     end)
 end
 
