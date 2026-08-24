@@ -940,14 +940,16 @@ local function drawMetadataTab(editframe, container)
         dd:SetCallback(
             "OnValueChanged",
             function(obj, event, key)
-                if editframe.Sequence.MetaData.Default == tonumber(key) then
-                    editframe.Sequence.MetaData[metaKey] = nil
-                else
-                    editframe.Sequence.MetaData[metaKey] = tonumber(key)
-                    -- PVP also mirrors editframe.PVP (original behaviour)
-                    if metaKey == "PVP" then
-                        editframe.PVP = tonumber(key)
-                    end
+                -- Store what the author picked, even when it equals the Default.
+                -- Dropping it looked harmless (both resolve to the same version
+                -- today) but it is not: an unset context falls THROUGH to the
+                -- next matching rule, so a lower-priority key -- Party, say --
+                -- silently wins the content the author just configured. It also
+                -- means the setting quietly follows any later Default change.
+                editframe.Sequence.MetaData[metaKey] = tonumber(key)
+                -- PVP also mirrors editframe.PVP (original behaviour)
+                if metaKey == "PVP" then
+                    editframe.PVP = tonumber(key)
                 end
             end
         )

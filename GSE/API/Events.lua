@@ -1588,6 +1588,15 @@ function GSE:PLAYER_TALENT_UPDATE()
 end
 
 function GSE:GROUP_ROSTER_UPDATE(...)
+    -- inParty is read by the version resolver but was only refreshed on a zone
+    -- change, so joining or leaving a group in the same zone left the sequence
+    -- on the version for the group state it no longer had. Re-resolve when the
+    -- state actually flips -- not on every roster tick.
+    local grouped = IsInGroup() and true or false
+    if grouped ~= GSE.inParty then
+        GSE.inParty = grouped
+        GSE.ReloadSequences()
+    end
     -- Serialisation stuff
     GSE.sendVersionCheck()
     for k, _ in pairs(GSE.UnsavedOptions["PartyUsers"]) do

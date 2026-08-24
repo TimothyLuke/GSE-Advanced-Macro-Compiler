@@ -1145,10 +1145,31 @@ function GSE.GetActiveSequenceVersion(sequenceName)
     if not GSE.isEmpty(meta.PVESolo) and isPVESoloContext() then
         vers = meta.PVESolo
     end
+    -- "Party" means in a party IN THE WORLD, but GSE.inParty is IsInGroup(),
+    -- which is equally true inside every delve, dungeon and raid. It is also the
+    -- LAST rule, so it used to pick up any instance whose own rule named no
+    -- version -- claiming content the author had configured elsewhere. Instance
+    -- content is never "the world": rule it out there.
+    local inInstanceContent = GSE.inScenario or GSE.inRaid or GSE.inDungeon
+        or GSE.inHeroic or GSE.inMythic or GSE.inMythicPlus or GSE.inTimeWalking
+        or GSE.inArena
     for _, ctx in ipairs(contextVersionPriority) do
-        if meta[ctx.metaKey] and GSE[ctx.flag] then
-            vers = meta[ctx.valueKey]
+        if ctx.flag == "inParty" and inInstanceContent then
             break
+        end
+        -- A context only claims the sequence if it names a REAL version. Bare
+        -- truthiness is not enough: "" and 0 are both truthy in Lua, so a key
+        -- left empty by an import or an older save would win here and resolve
+        -- to nothing (or to 1, via the zero check below) instead of falling
+        -- through to the Default. The VALUE is checked too, not just the key,
+        -- because a row can read a different field than it tests -- PVP tested
+        -- in an arena reads Arena, which may never have been set.
+        if GSE[ctx.flag] and not GSE.isEmpty(meta[ctx.metaKey]) and meta[ctx.metaKey] ~= 0 then
+            local contextVersion = meta[ctx.valueKey]
+            if not GSE.isEmpty(contextVersion) and contextVersion ~= 0 then
+                vers = contextVersion
+                break
+            end
         end
     end
     return (vers == 0) and 1 or vers
