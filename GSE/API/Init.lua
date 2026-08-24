@@ -160,6 +160,20 @@ function GSE.PrintDebugMessage(message, module)
     end
 end
 
+--@debug@
+--- Monotonic wall-clock milliseconds, for timing UI phases. Source builds only:
+-- everything that calls it is stripped from a packaged build too.
+-- NOT debugprofilestop(): that counter is relative to the last
+-- debugprofilestart(), which is a shared global any addon may call -- a
+-- profiler reset from BigWigs or DBM mid-measurement silently shrinks the
+-- result, which is how a 24-second editor open first measured as 576ms.
+-- GetTimePreciseSec is monotonic and per-session; fall back on older clients.
+function GSE.NowMs()
+    if GetTimePreciseSec then return GetTimePreciseSec() * 1000 end
+    return debugprofilestop()
+end
+--@end-debug@
+
 function GSE.DebugProfile(event)
     local currentTimeStop = debugprofilestop()
     if GSE.ProfileStop then

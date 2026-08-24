@@ -11,6 +11,9 @@ local L = GSE.L
 local origToggle = nil
 local widgetId = 0
 local layoutSuspended = 0
+-- Call counters for the editor-open probe. Two increments; no gating needed.
+-- A hard lock "running our code" is either one slow pass or a great many fast
+-- ones, and these tell the two apart without a profiler.
 local layoutResumeScheduled = false
 local frameTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
@@ -1714,6 +1717,15 @@ function baseMethods:AddChild(child)
     child.parent = self
     child.frame:SetParent(self.content or self.frame)
     table.insert(self.children, child)
+    -- TWO full layout passes per child added, and the first is redundant: the
+    -- parent's pass lays `self` out again as one of its own children. Building
+    -- a panel of n widgets therefore costs 2n cascading layouts, and a nested
+    -- shape (a priority Loop holding ten child blocks) pays it at every level.
+    --
+    -- DrawSequenceEditor already brackets its build in Suspend/ResumeLayout so
+    -- these collapse to nothing and it lays out once at the end. Everything
+    -- that builds widgets OUTSIDE such a bracket -- the editor's own
+    -- construction, the config/metadata panel -- pays the full 2n.
     self:DoLayout()
     if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
 end
@@ -2284,6 +2296,15 @@ local function createFrame()
     end
 
     function widget:DoLayout()
+        -- Honour the suspend flag exactly as baseMethods:DoLayout does. This
+        -- override did not, so it was the one hole in the batching: the sequence
+        -- editor suspends layout for the whole block draw and lays out once at
+        -- the end, but every macro box's height fit walks its ancestors to the
+        -- top and reached this. The recursion into children stops at the guard
+        -- one level down, so the leak was a window pass plus a footer pass per
+        -- fit rather than a full tree -- real work, done once per block, thrown
+        -- away by the layout that finishDraw does anyway.
+        if layoutSuspended > 0 then return end
         doLayout(self)
         layoutFooterChildren()
     end
@@ -4582,11 +4603,15 @@ local function createTreeButton(widget)
                 local status = widget.status or widget.localstatus
                 if status.groups[self.uniquevalue] then
                     status.groups[self.uniquevalue] = nil
+                    widget:Fire("OnGroupExpanded", self.uniquevalue, false)
                     widget:RefreshTree()
                     UI:ClearFocus()
                     return
                 end
                 status.groups[self.uniquevalue] = true
+                -- BEFORE the refresh: a listener may add children to this node,
+                -- and the refresh has to draw them.
+                widget:Fire("OnGroupExpanded", self.uniquevalue, true)
                 if not self.selected then widget:SetSelected(self.uniquevalue) end
                 widget:RefreshTree()
                 UI:ClearFocus()
@@ -4600,6 +4625,7 @@ local function createTreeButton(widget)
                 if self.hasChildren then
                     local status = widget.status or widget.localstatus
                     status.groups[self.uniquevalue] = not status.groups[self.uniquevalue]
+                    widget:Fire("OnGroupExpanded", self.uniquevalue, status.groups[self.uniquevalue] and true or false)
                     widget:RefreshTree()
                 end
             elseif mouseButton == "RightButton" then
@@ -4616,6 +4642,7 @@ local function createTreeButton(widget)
             if not self.hasChildren then return end
             local status = widget.status or widget.localstatus
             status.groups[self.uniquevalue] = not status.groups[self.uniquevalue]
+            widget:Fire("OnGroupExpanded", self.uniquevalue, status.groups[self.uniquevalue] and true or false)
             widget:RefreshTree()
         end
     )
@@ -5399,7 +5426,22 @@ local function createTreeGroup()
             scrollbar:SetValue(math.min(math.max(value - delta, minValue), maxValue))
         end
     )
-    treeframe:SetScript("OnSizeChanged", function() widget:RefreshTree() end)
+    treeframe:SetScript("OnSizeChanged", function()
+        -- RefreshTree's content auto-fit calls treeframe:SetWidth() itself, and
+        -- WoW fires OnSizeChanged SYNCHRONOUSLY, so that lands straight back
+        -- here and rebuilds the whole tree again -- measuring every visible
+        -- row's text -- to arrive at the width it just set. It terminates
+        -- (getTreeTextWidth rules the FULL text, so the result does not depend
+        -- on the current width), but it doubles every tree rebuild that changes
+        -- width, and it nests: the second refresh runs INSIDE the first.
+        --
+        -- Only react to a size we did NOT just set. A real user drag still
+        -- differs from st.treewidth and still refreshes.
+        local st = widget.status or widget.localstatus
+        local w = treeframe:GetWidth() or 0
+        if st and st.treewidth and math.abs(w - st.treewidth) <= 2 then return end
+        widget:RefreshTree()
+    end)
 
     local function setModernTreeDraggerColor(state)
         if not (shouldUseElvUISkin() or getModernClassColor(1)) then return end
