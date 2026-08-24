@@ -637,6 +637,61 @@ local MACRO_BOX_MIN_INNER = 40
 local function MacroBoxRowsHeight(rows, oneRow, spacing)
     return rows * oneRow + math.max(rows - 1, 0) * spacing
 end
+-- The ancestor push a fitted box needs, run OUTSIDE the frame that drew it.
+-- Walking the ancestors per box DURING the draw was the version-click stall:
+-- the walk itself costs almost no Lua, but each mid-draw ancestor resize
+-- feeds the engine's layout/anchor invalidation, and per-box walks multiplied
+-- that into a 0.5-1.2 s blocked frame (proven by bisection: draw with the
+-- walk skipped is stall-free, everything else unchanged). Pushes are queued
+-- and flushed in ONE batch per frame instead.
+--   ...and ONLY within the block. The first auto-height ancestor is the block
+-- panel, which recomputes its height from its children; everything above it
+-- (the block list, the scroll frame, the window) is SHARED chrome -- resizing
+-- those per block collapsed the editor (issue #2002). Past that boundary we
+-- only re-lay out, never resize.
+-- layoutQueue/layoutSeen: the shared ancestors (block list, scroll frame...)
+-- are common to EVERY box, and re-laying them out once per box is the SetPoint
+-- storm that stalled the client. Each container is queued ONCE per flush, in
+-- discovery order (inner containers first), and laid out after all height
+-- pushes have been applied.
+local function ApplyFitPush(macroEditBox, delta, layoutQueue, layoutSeen)
+    local parent = macroEditBox.parent
+    local sharedChrome = false
+    while parent do
+        if parent.autoAdjustHeight then sharedChrome = true end
+        if not sharedChrome and delta ~= 0 and parent.explicitHeight
+            and parent.height and parent.SetHeight then
+            parent:SetHeight(parent.height + delta)
+        elseif parent.DoLayout and not layoutSeen[parent] then
+            layoutSeen[parent] = true
+            layoutQueue[#layoutQueue + 1] = parent
+        end
+        parent = parent.parent
+    end
+end
+local pendingFitPushes = {}
+local fitFlushDriver = CreateFrame("Frame")
+fitFlushDriver:Hide()
+fitFlushDriver:SetScript("OnUpdate", function(self)
+    local pushes = pendingFitPushes
+    pendingFitPushes = {}
+    self:Hide()
+    local layoutQueue, layoutSeen = {}, {}
+    for _, push in ipairs(pushes) do
+        -- A widget released (or pooled) since queueing has no parent chain of
+        -- its own any more; its push is meaningless, skip it.
+        if push[1].parent then
+            ApplyFitPush(push[1], push[2], layoutQueue, layoutSeen)
+        end
+    end
+    for _, container in ipairs(layoutQueue) do
+        container:DoLayout()
+    end
+end)
+local function QueueFitPush(macroEditBox, delta)
+    pendingFitPushes[#pendingFitPushes + 1] = { macroEditBox, delta }
+    fitFlushDriver:Show()
+end
 local function FitMacroEditBoxToContent(macroEditBox, text)
     if not (macroEditBox and macroEditBox.SetHeight) then return end
     local eb = macroEditBox.editBox or macroEditBox.editbox
@@ -678,7 +733,17 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- 255-char block cannot realistically reach the row cap; one that did needs
     -- rethinking, not a scrollbar.)
     local bar = macroEditBox.scrollBar
-    if bar and bar.Hide then bar:Hide() end
+    if bar and bar.Hide then
+        bar:Hide()
+        -- The scroll template re-Shows the bar whenever the text's scroll
+        -- range changes (SetText on a reused box, typing past the cap...).
+        -- A one-time Hide loses that race, so make Show itself hide: the bar
+        -- stays dead for the widget's whole life, pooled reuses included.
+        if not bar.gseHardHidden then
+            bar.gseHardHidden = true
+            bar.Show = bar.Hide
+        end
+    end
     textHeight =
         math.max(
             MacroBoxRowsHeight(MACRO_BOX_MIN_LINES, oneRow, spacing),
@@ -697,24 +762,7 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- macroFields, macroBody -- sized at draw time); auto-height ancestors
     -- above them only follow if those grow too. Push the delta up through
     -- every fixed-height ancestor, relaying out as we go.
-    -- ...but ONLY within this block. The first auto-height ancestor is the block
-    -- panel, which recomputes its height from its children; everything above it
-    -- (the block list, the scroll frame, the window) is SHARED chrome. Resizing
-    -- those by the delta made every block on load shrink the same containers
-    -- again, collapsing the list so it no longer filled the window. Past that
-    -- boundary we only re-lay out, never resize.
-    local parent = macroEditBox.parent
-    local sharedChrome = false
-    while parent do
-        if parent.autoAdjustHeight then sharedChrome = true end
-        if not sharedChrome and delta ~= 0 and parent.explicitHeight
-            and parent.height and parent.SetHeight then
-            parent:SetHeight(parent.height + delta)
-        elseif parent.DoLayout then
-            parent:DoLayout()
-        end
-        parent = parent.parent
-    end
+    QueueFitPush(macroEditBox, delta)
 end
 
 local function SetMacroCountText(macroEditBox, lenMacro)
