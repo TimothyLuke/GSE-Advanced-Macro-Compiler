@@ -549,40 +549,13 @@ local function GetEditorScrollContainer(frame)
     return editor and editor.scrollContainer
 end
 
--- When the macro edit box has focus, wheel scrolls inside it; otherwise
--- forward to the editor's outer scroll container.
-local function ScrollFocusedMacroEditor(macroEditBox, delta)
-    local editBox = macroEditBox and macroEditBox.editBox
-    if not (editBox and editBox.HasFocus and editBox:HasFocus()) then return false end
-
-    local scrollFrame = macroEditBox.scrollFrame
-    if not (scrollFrame and scrollFrame.GetVerticalScroll and scrollFrame.SetVerticalScroll) then return true end
-
-    local range = (scrollFrame.GetVerticalScrollRange and scrollFrame:GetVerticalScrollRange()) or 0
-    if range <= 0 then return true end
-
-    local current = scrollFrame:GetVerticalScroll() or 0
-    local wheelDelta = delta or 0
-    if wheelDelta > 0 then
-        wheelDelta = 1
-    elseif wheelDelta < 0 then
-        wheelDelta = -1
-    end
-    local step = math.max(1, math.min(MACRO_EDITOR_SCROLL_PIXELS, range / 10))
-    local target = current - (wheelDelta * step)
-    if target < 0 then
-        target = 0
-    elseif target > range then
-        target = range
-    end
-    scrollFrame:SetVerticalScroll(target)
-    return true
-end
-
 local function MacroEditor_OnMouseWheel(mouseFrame, delta)
+    -- Macro boxes auto-fit their content (#1998), so there is nothing left to
+    -- scroll INSIDE one: the wheel always drives the outer block list, making
+    -- scrolling identical wherever the cursor hovers in the editor. (The old
+    -- focused-box inner scroll predates the auto-fit and made wheel behaviour
+    -- change depending on what the mouse happened to be over.)
     local macroEditBox = mouseFrame and mouseFrame.gseWheelForwardWidget
-    if ScrollFocusedMacroEditor(macroEditBox, delta) then return end
-
     local scrollContainer = GetEditorScrollContainer(macroEditBox and macroEditBox.gseWheelForwardFrame)
     if scrollContainer and scrollContainer.MoveScroll then
         scrollContainer:MoveScroll(delta)
