@@ -607,6 +607,20 @@ local MACRO_BOX_CHROME_SLACK = 6
 local MACRO_BOX_MIN_INNER = 40
 -- Rows -> pixels in the box's OWN font: a row is the measured line height, and
 -- every row after the first also carries the editbox's line spacing.
+-- Height meters, keyed by the box's frame rather than stored ON it.
+--
+-- A WoW FontString cannot be destroyed, so the meter has to be created once per
+-- frame and found again on reuse. It lived on the widget table first -- #2014's
+-- pool strips post-construction keys, so that leaked one FontString per reuse --
+-- and then on the frame, which this branch's reset now sweeps too, which would
+-- leak it again exactly the same way. Neither table is a safe home, so it lives
+-- here. Weak keys: the frame is the only thing that should keep an entry alive.
+--
+-- Left as a warning for the next caller that caches a region on a widget or its
+-- frame: the pool is now entitled to remove it, and the failure is silent and
+-- cumulative -- an orphan FontString per reuse, each one another entry in the
+-- GetRegions() walk that the reset itself runs on every reuse.
+local macroBoxHeightMeters = setmetatable({}, {__mode = "k"})
 local function MacroBoxRowsHeight(rows, oneRow, spacing)
     return rows * oneRow + math.max(rows - 1, 0) * spacing
 end
@@ -696,18 +710,11 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- MEASURE the rendered text height with a hidden FontString in the box's
     -- own font (wraps included) instead of estimating rows x font size --
     -- estimates drifted by about a row and showed a spare empty line.
-    -- On the FRAME, not the widget table. Since #2014 MultiLineEditBox is a
-    -- pooled type, and resetForReuse strips every key added after construction
-    -- -- including this one. A FontString cannot be destroyed, so caching it on
-    -- the widget meant a fresh one on every reuse, piling up hidden regions on a
-    -- frame that is reused forever. That also slows the pool down: its reset
-    -- walks {frame:GetRegions()} each time. The frame object survives reuse
-    -- unchanged, so the meter parked on it is found again.
-    local meter = macroEditBox.frame.gseHeightMeter
+    local meter = macroBoxHeightMeters[macroEditBox.frame]
     if not meter then
         meter = macroEditBox.frame:CreateFontString(nil, "ARTWORK")
         meter:Hide()
-        macroEditBox.frame.gseHeightMeter = meter
+        macroBoxHeightMeters[macroEditBox.frame] = meter
     end
     local fontPath, fontSize, fontFlags = eb:GetFont()
     if fontPath then meter:SetFont(fontPath, fontSize or 14, fontFlags or "") end
