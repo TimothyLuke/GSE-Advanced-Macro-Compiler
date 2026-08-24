@@ -1444,12 +1444,46 @@ local function ManageTree(editframe)
     local seenSeq = {}
     local names = GSE.GetSequenceNames()
 
-    for k, _ in GSE.pairsByKeys(names, GSE.AlphabeticalTableSortAlgorithm) do
-      -- ponytail: isolate each sequence so one corrupt record can't blank the whole tree
-      local ok, err = pcall(function()
+    -- Version children are built ONLY for the sequence the user is looking at.
+    --
+    -- Building them for every sequence meant calling GSE.EnsureSequenceLoaded --
+    -- i.e. GSE.DecodeMessage, decompress + deserialise -- once per sequence, so
+    -- opening the editor decompressed the whole filtered library to populate
+    -- children that are not drawn unless a node is expanded. Measured on a real
+    -- library: 874 ms of a 1490 ms open, and most of its +39 MB.
+    --
+    -- A node still gets its Configuration and New Version children, so it still
+    -- draws an expand toggle; expanding fires OnGroupExpanded (registered below)
+    -- which rebuilds the tree with that one sequence loaded.
+    local treeStatus = treeContainer.status or treeContainer.localstatus
+    local expandedGroups = (treeStatus and treeStatus.groups) or {}
+    local selectedPath = (treeStatus and treeStatus.selected) or ""
+    -- Which case are we in? LoadStorage decompresses only Global and the
+    -- current class at login, so EnsureSequenceLoaded is free for those. Under
+    -- the All-classes filter, foreign classes are enumerated straight from the
+    -- compressed store and every one of them WOULD be decompressed here.
+    -- `loads` counts the ones this build actually had to decompress.
+--@debug@
+    local treeSequences, treeLoads = 0, 0
+--@end-debug@
+    local specIconCache = {}
+    local function versionsWanted(nodePath)
+        if expandedGroups[nodePath] then return true end
+        -- The restore path selects a version node directly, so its parent must
+        -- carry version children or the selection has nothing to land on.
+        if selectedPath == nodePath then return true end
+        return selectedPath:sub(1, #nodePath + 1) == nodePath .. "\001"
+    end
+
+    -- Hoisted out of the loop: this used to be an anonymous function built
+    -- fresh for every sequence, so a large library allocated one closure per
+    -- sequence per tree build purely to give pcall something to call.
+    local function buildSequenceNode(k)
         local elements = GSE.split(k, ",")
         local tclassid = tonumber(elements[1])
         local specid = tonumber(elements[2])
+        local nodePath = "Sequences\001" .. tostring(tclassid) .. "\001" .. k
+        local wantVersions = versionsWanted(nodePath)
         if tclassid and GSE.isEmpty(classtree[tclassid]) then
             classtree[tclassid] = {}
         end
@@ -1468,14 +1502,25 @@ local function ManageTree(editframe)
             }
         }
 
-        local id, _, _, sicon = GetSpecializationInfoForSpecID(specid)
-        if id then
-            node.icon = sicon
-        else
-            node.icon = GSE.GetClassIcon(tclassid)
+        -- Cached per specid: an API call per sequence, for a value that only
+        -- ever depends on the spec.
+        local icon = specIconCache[specid]
+        if icon == nil then
+            local id, _, _, sicon = GetSpecializationInfoForSpecID(specid)
+            icon = (id and sicon) or GSE.GetClassIcon(tclassid) or false
+            specIconCache[specid] = icon
         end
+        node.icon = icon or nil
 
-        GSE.EnsureSequenceLoaded(tclassid, elements[3])
+        -- Only force the decompress when this node's versions are actually
+        -- going to be drawn. Otherwise take the sequence if it happens to be in
+        -- memory already, and leave it alone if it is not.
+        if wantVersions and not (GSE.Library[tclassid] and GSE.Library[tclassid][elements[3]]) then
+            --@debug@
+            treeLoads = treeLoads + 1
+            --@end-debug@
+            GSE.EnsureSequenceLoaded(tclassid, elements[3])
+        end
         local loadedSeq = GSE.Library[tclassid] and GSE.Library[tclassid][elements[3]]
         -- ponytail: flag ONLY when the record is actually in the Library and
         -- structurally broken (the real corruption). loadedSeq==nil is NOT proof
@@ -1488,7 +1533,7 @@ local function ManageTree(editframe)
             node.text = "|cFFFF3030" .. tostring(elements[3]) .. " |r"
             node.icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew"  -- swap for any flag texture
         else
-            if loadedSeq then
+            if loadedSeq and wantVersions then
                 for i, j in ipairs(loadedSeq.Versions) do
                     table.insert(node.children, {
                         value = i,
@@ -1504,11 +1549,19 @@ local function ManageTree(editframe)
         end
         table.insert(classtree[tclassid][specid], node)
         seenSeq[tclassid .. "|" .. tostring(elements[3])] = true
-      end)
+    end
+
+    for k, _ in GSE.pairsByKeys(names, GSE.AlphabeticalTableSortAlgorithm) do
+      --@debug@
+      treeSequences = treeSequences + 1
+      --@end-debug@
+      -- ponytail: isolate each sequence so one corrupt record can't blank the whole tree
+      local ok, err = pcall(buildSequenceNode, k)
       if not ok then
           GSE.PrintDebugMessage("Skipped malformed sequence '" .. tostring(k) .. "': " .. tostring(err), "EDITOR")
       end
     end
+
 
     -- ponytail: also surface load-corrupt seqs (the decode-broken ones behind the
     -- corrupt-sequence popup) in the tree, red-flagged + deletable, so a user who
@@ -1572,12 +1625,41 @@ local function ManageTree(editframe)
     table.insert(tree, editframe.buildMacroMenu())
 
     treeContainer:SetTree(tree)
+    --@debug@
+    editframe.lastTreeSequences, editframe.lastTreeLoads = treeSequences, treeLoads
+    --@end-debug@
     treeContainer:SetCallback(
         "OnClick",
         function(container, event, group)
             if group == "Import" and GSE.ShowImport then
                 GSE.ShowImport()
             end
+        end
+    )
+    -- A sequence node is built without its version children (see versionsWanted
+    -- above). When one is expanded, rebuild the tree so that ONE sequence gets
+    -- loaded and its versions appear. Only for sequence nodes -- a 4-segment
+    -- path is a version, 2 is a class -- and only on expand, not collapse.
+    treeContainer:SetCallback(
+        "OnGroupExpanded",
+        function(container, event, path, expanded)
+            if not (expanded and path) then return end
+            local parts = {("\001"):split(path)}
+            if parts[1] ~= "Sequences" or #parts ~= 3 then return end
+            if not tonumber(parts[2]) then return end
+            -- Rebuild unconditionally. The first cut of this skipped the rebuild
+            -- when the sequence was already in GSE.Library, on the reasoning
+            -- that a loaded sequence must already have had its versions drawn.
+            -- That is false, and backwards: LoadStorage loads the CURRENT class
+            -- at login, so every sequence you actually use took the skip and
+            -- expanded to Configuration + New Version with no versions between
+            -- them. What decides whether versions were built is versionsWanted
+            -- -- i.e. whether the node was expanded -- and it was not, which is
+            -- exactly why we are here. The rebuild is cheap now.
+            --
+            -- The click handler sets status.groups BEFORE firing this, so the
+            -- rebuild sees the node as expanded and builds its versions.
+            if editframe.ManageTree then editframe.ManageTree() end
         end
     )
     treeContainer:SetCallback(
@@ -1778,7 +1860,27 @@ end
 -- ---------------------------------------------------------------------------
 function GSE.GUI.SetupTree(editframe)
     editframe.ManageTree = function()
+        -- Timed because the tree rebuild is O(sequences) and runs on open and on
+        -- most edits, so it is the first thing to rule in or out when someone
+        -- reports the editor being slow to appear. PrintDebugMessage -- NOT
+        -- GSE.Print, which prints unconditionally and would put this in every
+        -- user's chat -- so it is silent unless debug + the Editor module are on.
+        --@debug@
+        local startedAt = GSE.NowMs()
+        --@end-debug@
         ManageTree(editframe)
+        -- `decompressed` is the count this build had to pull out of the
+        -- compressed store. It should stay at or near zero: version children are
+        -- built lazily precisely so the tree stops decompressing the library.
+        -- A number that climbs with the library size means that has regressed.
+        --@debug@
+        GSE.PrintDebugMessage(
+            string.format("ManageTree: %.0f ms, %d sequences, %d decompressed",
+                GSE.NowMs() - startedAt,
+                editframe.lastTreeSequences or 0, editframe.lastTreeLoads or 0),
+            Statics.DebugModules["Editor"]
+        )
+        --@end-debug@
     end
 
     -- Restore last visited node after the tree finishes building

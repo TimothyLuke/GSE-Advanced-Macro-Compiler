@@ -635,6 +635,16 @@ local function ApplyFitPush(macroEditBox, delta, layoutQueue, layoutSeen)
         if not sharedChrome and delta ~= 0 and parent.explicitHeight
             and parent.height and parent.SetHeight then
             parent:SetHeight(parent.height + delta)
+            -- A resized ancestor still has to re-place its children, so it goes
+            -- on the SAME queue as the pass-through ones. Previously it was laid
+            -- out by SetHeight itself, twice (baseMethods:SetHeight lays out
+            -- self AND self.parent) and immediately -- outside the dedupe, once
+            -- per box. Measured: 90 of one open's 289 layout passes came from
+            -- those two lines alone.
+            if not layoutSeen[parent] then
+                layoutSeen[parent] = true
+                layoutQueue[#layoutQueue + 1] = parent
+            end
         elseif parent.DoLayout and not layoutSeen[parent] then
             layoutSeen[parent] = true
             layoutQueue[#layoutQueue + 1] = parent
@@ -650,6 +660,8 @@ fitFlushDriver:SetScript("OnUpdate", function(self)
     pendingFitPushes = {}
     self:Hide()
     local layoutQueue, layoutSeen = {}, {}
+    local batched = UI and UI.SuspendLayout
+    if batched then UI:SuspendLayout() end
     for _, push in ipairs(pushes) do
         -- A widget released (or pooled) since queueing has no parent chain of
         -- its own any more; its push is meaningless, skip it.
@@ -657,6 +669,7 @@ fitFlushDriver:SetScript("OnUpdate", function(self)
             ApplyFitPush(push[1], push[2], layoutQueue, layoutSeen)
         end
     end
+    if batched and UI.ResumeLayout then UI:ResumeLayout() end
     for _, container in ipairs(layoutQueue) do
         container:DoLayout()
     end
@@ -683,11 +696,18 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- MEASURE the rendered text height with a hidden FontString in the box's
     -- own font (wraps included) instead of estimating rows x font size --
     -- estimates drifted by about a row and showed a spare empty line.
-    local meter = macroEditBox.gseHeightMeter
+    -- On the FRAME, not the widget table. Since #2014 MultiLineEditBox is a
+    -- pooled type, and resetForReuse strips every key added after construction
+    -- -- including this one. A FontString cannot be destroyed, so caching it on
+    -- the widget meant a fresh one on every reuse, piling up hidden regions on a
+    -- frame that is reused forever. That also slows the pool down: its reset
+    -- walks {frame:GetRegions()} each time. The frame object survives reuse
+    -- unchanged, so the meter parked on it is found again.
+    local meter = macroEditBox.frame.gseHeightMeter
     if not meter then
         meter = macroEditBox.frame:CreateFontString(nil, "ARTWORK")
         meter:Hide()
-        macroEditBox.gseHeightMeter = meter
+        macroEditBox.frame.gseHeightMeter = meter
     end
     local fontPath, fontSize, fontFlags = eb:GetFont()
     if fontPath then meter:SetFont(fontPath, fontSize or 14, fontFlags or "") end
@@ -1752,6 +1772,18 @@ function GSE.HydrateClassActionIcons(classid)
         end
         if sequenceChangedIcons > 0 then
             actionIconDirtySequences[sequence] = (actionIconDirtySequences[sequence] or 0) + sequenceChangedIcons
+        end
+    end
+end
+
+-- One sequence's worth of the hydration below. This is what the editor
+-- actually needs -- the icons for the sequence on screen -- and it is called
+-- as each sequence is opened rather than sweeping the library on every open.
+local function hydrateSequenceIcons(sequence)
+    if type(sequence) ~= "table" or type(sequence.Versions) ~= "table" then return end
+    for _, versionData in ipairs(sequence.Versions) do
+        if type(versionData) == "table" then
+            hydrateActionIcons(versionData.Actions)
         end
     end
 end
@@ -3247,6 +3279,12 @@ function GSE.CreateEditor()
         editframe.pendingScrollRestore = nil
         local batchLayout = not _G.GSE_NoLayoutBatch
         if batchLayout and UI and UI.SuspendLayout then UI:SuspendLayout() end
+        -- Paired with the report in finishDraw. Same reasoning as ManageTree's:
+        -- block count and elapsed time are what turn "the editor freezes" into a
+        -- number. Silent unless the Editor debug module is on.
+        --@debug@
+        local drawStartedAt = GSE.NowMs()
+        --@end-debug@
         editframe.rawEditor = nil
         SetOuterEditorScrollBarEnabled(true)
         if tcontainer.SetListPadding then
@@ -4834,6 +4872,14 @@ function GSE.CreateEditor()
             return layoutcontainer, finalizeToolbar, CreateAddButtonRow, CreateChildAddButtonRow
         end
         local function drawAction(pcontainer, action, version, keyPath, treepath)
+            -- Counted against CountActionBlocks below. The chunk-vs-synchronous
+            -- gate trusts that count, so if it undercounts, a big sequence
+            -- silently skips chunking and builds every block in one frame --
+            -- exactly the freeze the chunking exists to prevent. Divergence
+            -- between the two numbers is the tell.
+            --@debug@
+            editframe.lastDrawnBlocks = (editframe.lastDrawnBlocks or 0) + 1
+            --@end-debug@
             local function drawChild(childContainer, childAction, childKeyPath, childTreepath)
                 local q = editframe.incBuildQueue
                 if q then
@@ -5962,6 +6008,15 @@ function GSE.CreateEditor()
 
         local function finishDraw()
             if tcontainer.DoLayout then tcontainer:DoLayout() end
+            --@debug@
+            GSE.PrintDebugMessage(
+                string.format("DrawSequenceEditor: %d blocks counted, %d drawn, %s, in %.0f ms",
+                    editframe.lastDrawBlockCount or 0, editframe.lastDrawnBlocks or 0,
+                    (editframe.lastDrawBlockCount or 0) > 12 and "chunked" or "one frame",
+                    GSE.NowMs() - drawStartedAt),
+                Statics.DebugModules["Editor"]
+            )
+            --@end-debug@
             if editframe.scrollContainer and editframe.scrollContainer.DoLayout then
                 editframe.scrollContainer:DoLayout()
                 if editframe.scrollContainer.SetScroll then
@@ -5994,6 +6049,10 @@ function GSE.CreateEditor()
             return n
         end
         local totalBlocks = CountActionBlocks(macro)
+        --@debug@
+        editframe.lastDrawBlockCount = totalBlocks
+        editframe.lastDrawnBlocks = 0
+        --@end-debug@
 
         local INCREMENTAL_MIN_BLOCKS = 12
         if not (C_Timer and C_Timer.After) or totalBlocks <= INCREMENTAL_MIN_BLOCKS then
@@ -7621,10 +7680,55 @@ function GSE.CreateEditor()
     return editframe
 end
 
+-- An open this slow is a defect, not a preference, so it is reported to the
+-- user even with debug off -- once, with the numbers needed to act on it.
+-- Below the threshold it stays on the debug module like every other timing.
+--@debug@
+local EDITOR_SLOW_OPEN_MS = 2000
+local function ReportOpenTiming(message, elapsed)
+    if elapsed and elapsed > EDITOR_SLOW_OPEN_MS then
+        GSE.Print(message, Statics.DebugModules["Editor"])
+    else
+        GSE.PrintDebugMessage(message, Statics.DebugModules["Editor"])
+    end
+end
+
+--@end-debug@
+
 function GSE.ShowSequences()
+    -- End-to-end open cost. ManageTree and DrawSequenceEditor time themselves;
+    -- this brackets everything, so a gap between them and this total says the
+    -- time is going somewhere neither of those covers -- which is exactly how
+    -- the whole-library icon scan below was found (14ms + 123ms inside a
+    -- seventeen second open).
+    --@debug@
+    local openStartedAt = GSE.NowMs()
+    --@end-debug@
     local editframe = GSE.CreateEditor()
+    --@debug@
+    local afterCreate = GSE.NowMs()
+    --@end-debug@
     editframe.ManageTree()
-    if GSE.HydrateLoadedSequenceActionIcons then GSE.HydrateLoadedSequenceActionIcons() end
+    --@debug@
+    local afterTree = GSE.NowMs()
+    --@end-debug@
+    -- The whole-library icon hydration used to run HERE, on every open, and it
+    -- was the freeze: it force-loads every class (GSE.EnsureClassLoaded ->
+    -- DecodeMessage per sequence, i.e. decompress + deserialise the entire
+    -- library) and then walks every action of every version of every sequence
+    -- resolving icons, synchronously, before the window appears. A large
+    -- library made that seventeen seconds -- with ManageTree at 14ms and the
+    -- block draw at 123ms on the same open, so all of it was this.
+    --
+    -- Nothing on screen needs it: the tree carries sequence icons, not action
+    -- icons, and it built fine before this ran. Action icons are needed only
+    -- for the sequence actually being drawn, so hydration moved to
+    -- GSE.GUILoadEditor, per sequence, as each one is opened. That also
+    -- restores the lazy-load design this pass was defeating -- every other
+    -- read path uses GSE.EnsureSequenceLoaded for one sequence at a time.
+    --
+    -- The full-library pass is still available to the icon-scan diagnostic,
+    -- which is a deliberate, user-initiated sweep and reports what it changed.
     local lastSequencePath = GSE.GUI.GetLastSequenceEditorPath and GSE.GUI.GetLastSequenceEditorPath()
     local classID = tostring(GSE.GetCurrentClassID and GSE.GetCurrentClassID() or "")
 
@@ -7703,6 +7807,20 @@ function GSE.ShowSequences()
 
     SetSequenceEditorOpenPreference(true, "sequences")
     editframe:Show()
+    -- Split, because "the open is slow" has three candidates and they behave
+    -- very differently: CreateEditor builds the whole window and only on the
+    -- FIRST open (later opens reuse it -- which is why Keybindings feels
+    -- instant if Sequences was opened first), ManageTree is O(sequences), and
+    -- select+show covers loading the sequence and drawing its blocks.
+    --@debug@
+    local openTotal = GSE.NowMs() - openStartedAt
+    ReportOpenTiming(
+        string.format("ShowSequences: %.0f ms (CreateEditor %.0f, ManageTree %.0f, select+show %.0f)",
+            openTotal, afterCreate - openStartedAt,
+            afterTree - afterCreate, GSE.NowMs() - afterTree),
+        openTotal
+    )
+    --@end-debug@
 end
 
 local function remoteSeqences(message, seqName)
@@ -7779,6 +7897,10 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     editor.newname          = nil
     editor.Sequence         = sequence
     editor.ClassID          = classid
+    -- A recorded sequence arrives with actions and no icons, and the tree lands
+    -- on its config node, so nothing would call GUILoadEditor for it this
+    -- session. Hydrate it here or its blocks draw blank until the next open.
+    hydrateSequenceIcons(sequence)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
     editor.ManageTree()
     editor.treeContainer:SelectByValue(
@@ -7861,6 +7983,9 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.newname = nil
     editor.Sequence = sequence
     editor.ClassID = classid
+    -- Fill in any missing action icons for THIS sequence only, now that it is
+    -- decoded and before its blocks draw -- see the note in GSE.ShowSequences.
+    hydrateSequenceIcons(sequence)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
 end
 

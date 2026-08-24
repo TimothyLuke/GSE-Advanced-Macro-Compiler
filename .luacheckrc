@@ -368,6 +368,7 @@ globals = {
     "GetSpellTexture",
     "GetSubZoneText",
     "GetTime",
+    "GetTimePreciseSec",
     "GetUnitName",
     "GetZoneText",
     "IsAddOnLoaded",
