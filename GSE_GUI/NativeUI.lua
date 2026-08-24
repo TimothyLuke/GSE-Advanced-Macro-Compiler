@@ -1741,6 +1741,16 @@ function baseMethods:Release()
     self.frame:Hide()
     self.frame:ClearAllPoints()
     self.frame:SetParent(UIParent)
+    -- Bank poolable widgets for reuse (see the widget pool block above).
+    -- __gsePristineKeys marks a pooled type; the InPool flag guards a double
+    -- Release from banking the same widget twice (two acquirers would then
+    -- share one frame).
+    if not _G.GSE_NoWidgetPool and self.__gsePristineKeys and not self.__gseInPool then
+        self.__gseInPool = true
+        local pool = UI.widgetPool[self.type]
+        if not pool then pool = {}; UI.widgetPool[self.type] = pool end
+        pool[#pool + 1] = self
+    end
 end
 
 function baseMethods:DoLayout()
@@ -5750,7 +5760,7 @@ local function createTreeGroup()
     return widget
 end
 
-function UI:Create(typeName)
+local function constructWidget(typeName)
     if typeName == "Frame" or typeName == "Window" then
         return createFrame()
     elseif typeName == "SimpleGroup" or typeName == "InlineGroup" or typeName == "Spacer" then
@@ -5784,6 +5794,133 @@ function UI:Create(typeName)
     end
 
     error(("GSE.UI does not implement widget type '%s' yet."):format(tostring(typeName)), 2)
+end
+
+-- ---------------------------------------------------------------------------
+-- Widget pool. WoW frames can never be destroyed, and Release() used to just
+-- hide them -- so every editor redraw leaked its entire widget set (measured:
+-- +238 widgets and ~12 MB of Lua memory PER VERSION CLICK, a 1.2 GB session,
+-- and 0.3-1.2 s unattributable GC/engine stalls after every click). Widgets
+-- are plain tables of closures over their own frame, so the SAME table can be
+-- reused: on release it is reset to its just-constructed state and banked; on
+-- Create it is handed back out instead of building new frames.
+--
+-- Reset contract, in order:
+--   * every key added after construction is removed (callers decorate widgets
+--     with fields and wrapped methods; a reused widget must not carry them)
+--   * callbacks/children become fresh tables
+--   * frame scripts recorded at construction are restored on every subframe
+--     the widget exposes (callers SetScript extra handlers, e.g. OnTabPressed)
+--   * the frame is hidden, unanchored, reparented and restored to its
+--     construction size; editbox text and label text are cleared
+-- HookScript cannot be undone, but every HookScript site in GSE_GUI guards
+-- with a once-only flag on the frame (audited), so reuse cannot stack hooks.
+-- Kill switch for soak-testing: /run GSE_NoWidgetPool = true (then /reload).
+-- Only high-churn leaf/container types pool; window-level widgets (Frame,
+-- ScrollFrame, TabGroup, tree) keep their old behaviour.
+local POOLED_TYPES = {
+    SimpleGroup = true, InlineGroup = true, Spacer = true,
+    Label = true, Heading = true, InteractiveLabel = true,
+    CheckBox = true, Icon = true, Button = true, Dropdown = true,
+    EditBox = true, EditBoxExampleAll = true, MultiLineEditBox = true,
+}
+local widgetPool = {}
+UI.widgetPool = widgetPool
+
+local SCRIPT_HANDLERS = {
+    "OnUpdate", "OnEvent", "OnShow", "OnHide", "OnEnter", "OnLeave", "OnClick",
+    "OnMouseDown", "OnMouseUp", "OnMouseWheel", "OnSizeChanged",
+    "OnDragStart", "OnDragStop", "OnTextChanged", "OnEnterPressed",
+    "OnEscapePressed", "OnEditFocusGained", "OnEditFocusLost", "OnTabPressed",
+    "OnKeyDown", "OnKeyUp", "OnChar", "OnCursorChanged",
+}
+
+local function snapshotPristine(widget)
+    local keys, scripts, seen = {}, {}, {}
+    for k, v in pairs(widget) do
+        keys[k] = true
+        if type(v) == "table" and v.GetScript and v.SetScript and not seen[v] then
+            seen[v] = true
+            local rec = {}
+            for _, h in ipairs(SCRIPT_HANDLERS) do
+                local ok, fn = pcall(v.GetScript, v, h)
+                if ok and fn then rec[h] = fn end
+            end
+            scripts[#scripts + 1] = { v, rec }
+        end
+    end
+    -- Callers also hang REGIONS (FontStrings, Textures) and child FRAMES
+    -- directly off the widget's frame (frame:CreateFontString, CreateFrame
+    -- with the frame as parent). Those are invisible to the key sweep -- they
+    -- live on the frame, not in the widget table -- and a reused widget would
+    -- keep rendering them (e.g. a dependency header bleeding into a macro
+    -- block). Record what the frame owned at construction; anything else gets
+    -- hidden on reuse.
+    local owned = {}
+    for _, region in ipairs({ widget.frame:GetRegions() }) do owned[region] = true end
+    for _, child in ipairs({ widget.frame:GetChildren() }) do owned[child] = true end
+    widget.__gsePristineOwned = owned
+    widget.__gsePristineKeys = keys
+    widget.__gsePristineScripts = scripts
+    widget.__gsePristineW, widget.__gsePristineH = widget.frame:GetSize()
+    keys.__gsePristineKeys, keys.__gsePristineScripts = true, true
+    keys.__gsePristineW, keys.__gsePristineH = true, true
+    keys.__gsePristineOwned = true
+end
+
+local function resetForReuse(widget)
+    local keys = widget.__gsePristineKeys
+    for k in pairs(widget) do
+        if not keys[k] then widget[k] = nil end
+    end
+    widget.callbacks = {}
+    widget.children = {}
+    for _, entry in ipairs(widget.__gsePristineScripts) do
+        local target, rec = entry[1], entry[2]
+        for _, h in ipairs(SCRIPT_HANDLERS) do
+            pcall(target.SetScript, target, h, rec[h])
+        end
+    end
+    local frame = widget.frame
+    local owned = widget.__gsePristineOwned
+    if owned then
+        for _, region in ipairs({ frame:GetRegions() }) do
+            if not owned[region] then region:Hide() end
+        end
+        for _, child in ipairs({ frame:GetChildren() }) do
+            if not owned[child] then child:Hide() end
+        end
+    end
+    frame:Hide()
+    frame:ClearAllPoints()
+    frame:SetParent(UIParent)
+    if frame.SetAlpha then frame:SetAlpha(1) end
+    frame:SetSize(widget.__gsePristineW, widget.__gsePristineH)
+    local eb = widget.editBox or widget.editbox
+    if eb then
+        if eb.ClearFocus then pcall(eb.ClearFocus, eb) end
+        if eb.SetText then pcall(eb.SetText, eb, "") end
+    end
+    if widget.label and widget.label.SetText then pcall(widget.label.SetText, widget.label, "") end
+    if widget.text and widget.text ~= widget.label and widget.text.SetText then
+        pcall(widget.text.SetText, widget.text, "")
+    end
+end
+
+function UI:Create(typeName)
+    if not _G.GSE_NoWidgetPool and POOLED_TYPES[typeName] then
+        local pool = widgetPool[typeName]
+        if pool and #pool > 0 then
+            local widget = table.remove(pool)
+            resetForReuse(widget)
+            return widget
+        end
+    end
+    local widget = constructWidget(typeName)
+    if POOLED_TYPES[typeName] then
+        snapshotPristine(widget)
+    end
+    return widget
 end
 
 function UI:Release(widget)
