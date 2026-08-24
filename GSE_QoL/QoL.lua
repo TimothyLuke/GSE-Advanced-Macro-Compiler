@@ -893,6 +893,55 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             local NEEDS_CMD = L["Start the line with a command first."]
             local rowHasCmd = currentLineText():match("^%s*/%S") ~= nil
 
+            -- Macros / GSE Variables live at the BOTTOM of the menu; they must
+            -- be ALONE in the block, so they are emitted on both paths.
+            local function addNameEntries()
+                if macroMode then
+                    -- These land as their OWN LINE rather than replacing the box.
+                    -- No Macros section: a managed-macro name is a block-only
+                    -- construct (a block may BE a macro name), meaningless as a
+                    -- line of WoW macro text.
+                    local function insertLine(content)
+                        local blankRow = currentLineText():match("^%s*$") ~= nil
+                        splice(lineEndPos(), 0, (blankRow and "" or "\n") .. content)
+                        editBox.gseTabSessionUntil = 0
+                        return MenuResponse.Close
+                    end
+                    if offerVariables then
+                        local vars = rootDescription:CreateButton(L["GSE Variables"])
+                        for k, _ in pairs(GSEVariables or {}) do
+                            vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
+                        end
+                    end
+                    if offerSequences then
+                        local seqs = rootDescription:CreateButton(L["GSE Sequences"])
+                        for _, name in ipairs(getSequenceNames()) do
+                            seqs:CreateButton(name, function() return insertLine(sequenceClickLine(name)) end)
+                        end
+                    end
+                elseif liveHasText then
+                    greyed(rootDescription, L["Macros"], NAME_ONLY)
+                    greyed(rootDescription, L["GSE Variables"], NAME_ONLY)
+                else
+                    local function setWhole(content)
+                        touchSession()
+                        editBox:SetText(content)
+                        if editBox.SetCursorPosition then editBox:SetCursorPosition(#content) end
+                        widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+                        editBox.gseTabSessionUntil = 0
+                        return MenuResponse.Close
+                    end
+                    local macros = rootDescription:CreateButton(L["Macros"])
+                    for _, name in ipairs(getManagedMacroNames()) do
+                        macros:CreateButton(name, function() return setWhole(name) end)
+                    end
+                    local vars = rootDescription:CreateButton(L["GSE Variables"])
+                    for k, _ in pairs(GSEVariables or {}) do
+                        vars:CreateButton(k, function() return setWhole([[=GSE.V["]] .. k .. [["]()]]) end)
+                    end
+                end
+            end
+
             -- Undo sits at the top: a misclick is fixed without leaving the menu.
             if #history > 0 then
                 rootDescription:CreateButton(L["Undo Last"], undoLast)
@@ -911,52 +960,6 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 end
             end
 
-            -- Macros / GSE Variables: must be ALONE in the block.
-            if macroMode then
-                -- These land as their OWN LINE rather than replacing the box.
-                -- No Macros section: a managed-macro name is a block-only
-                -- construct (a block may BE a macro name), meaningless as a
-                -- line of WoW macro text.
-                local function insertLine(content)
-                    local blankRow = currentLineText():match("^%s*$") ~= nil
-                    splice(lineEndPos(), 0, (blankRow and "" or "\n") .. content)
-                    editBox.gseTabSessionUntil = 0
-                    return MenuResponse.Close
-                end
-                if offerVariables then
-                    local vars = rootDescription:CreateButton(L["GSE Variables"])
-                    for k, _ in pairs(GSEVariables or {}) do
-                        vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
-                    end
-                end
-                if offerSequences then
-                    local seqs = rootDescription:CreateButton(L["GSE Sequences"])
-                    for _, name in ipairs(getSequenceNames()) do
-                        seqs:CreateButton(name, function() return insertLine(sequenceClickLine(name)) end)
-                    end
-                end
-            elseif liveHasText then
-                greyed(rootDescription, L["Macros"], NAME_ONLY)
-                greyed(rootDescription, L["GSE Variables"], NAME_ONLY)
-            else
-                local function setWhole(content)
-                    touchSession()
-                    editBox:SetText(content)
-                    if editBox.SetCursorPosition then editBox:SetCursorPosition(#content) end
-                    widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
-                    editBox.gseTabSessionUntil = 0
-                    return MenuResponse.Close
-                end
-                local macros = rootDescription:CreateButton(L["Macros"])
-                for _, name in ipairs(getManagedMacroNames()) do
-                    macros:CreateButton(name, function() return setWhole(name) end)
-                end
-                local vars = rootDescription:CreateButton(L["GSE Variables"])
-                for k, _ in pairs(GSEVariables or {}) do
-                    vars:CreateButton(k, function() return setWhole([[=GSE.V["]] .. k .. [["]()]]) end)
-                end
-            end
-
             if liveIsNameOrVar then
                 -- the block holds a macro name / variable: nothing else may join it
                 greyed(rootDescription, L["Commands"], TEXT_ONLY)
@@ -965,6 +968,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 greyed(rootDescription, L["Spells"], TEXT_ONLY)
                 greyed(rootDescription, ";", TEXT_ONLY)
                 greyed(rootDescription, ", nil", TEXT_ONLY)
+                addNameEntries()
                 return
             end
 
@@ -1028,6 +1032,8 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             else
                 greyed(rootDescription, ", nil", L["Only valid after a spell."])
             end
+
+            addNameEntries()
         end
         openMenu()
     end)
