@@ -5849,23 +5849,54 @@ local function snapshotPristine(widget)
             scripts[#scripts + 1] = { v, rec }
         end
     end
-    -- Callers also hang REGIONS (FontStrings, Textures) and child FRAMES
-    -- directly off the widget's frame (frame:CreateFontString, CreateFrame
-    -- with the frame as parent). Those are invisible to the key sweep -- they
-    -- live on the frame, not in the widget table -- and a reused widget would
-    -- keep rendering them (e.g. a dependency header bleeding into a macro
-    -- block). Record what the frame owned at construction; anything else gets
-    -- hidden on reuse.
-    local owned = {}
-    for _, region in ipairs({ widget.frame:GetRegions() }) do owned[region] = true end
-    for _, child in ipairs({ widget.frame:GetChildren() }) do owned[child] = true end
-    widget.__gsePristineOwned = owned
+    -- Callers also hang REGIONS (FontStrings, Textures), child FRAMES and
+    -- plain FLAGS directly off the widget's frames -- the TOP frame and its
+    -- exposed subframes alike (frame:CreateFontString, CreateFrame with the
+    -- frame as parent, editBox.GSEMacroEditorColoring = true...). All of that
+    -- is invisible to the widget-table key sweep and survives into the next
+    -- life: dependency headers bled into macro blocks, block rail art bled
+    -- into the Config panel, and the macro-colouring flag turned the NOTES
+    -- box into a macro editor. Record, for every frame the widget exposes,
+    -- its construction-time key set, regions and children; on reuse, sweep
+    -- added keys and hide stranger regions/children.
+    local frames = {}
+    for _, v in pairs(widget) do
+        if type(v) == "table" and v.GetScript and v.SetScript and v.CreateFontString and not frames[v] then
+            local fkeys = {}
+            for k in pairs(v) do fkeys[k] = true end
+            local owned = {}
+            for _, region in ipairs({ v:GetRegions() }) do owned[region] = true end
+            for _, child in ipairs({ v:GetChildren() }) do owned[child] = true end
+            frames[v] = { keys = fkeys, owned = owned }
+        end
+    end
+    widget.__gsePristineFrames = frames
+    -- Callers also restyle the widget's FontStrings (class colours, heading
+    -- fonts, justification). Record each construction-time text region's font,
+    -- colour and justify so a reused label does not wear its previous life's
+    -- styling.
+    local texts = {}
+    for _, v in pairs(widget) do
+        -- FontStrings only: they carry SetFont/SetText but -- unlike Frames and
+        -- EditBoxes, which also have font APIs -- cannot CreateFontString.
+        -- (Filtering on "no SetScript" was wrong: FontStrings are ScriptRegions
+        -- and DO have SetScript, so nothing was ever captured.)
+        if type(v) == "table" and v.GetFont and v.SetText and not v.CreateFontString and not texts[v] then
+            texts[v] = {
+                font = { v:GetFont() },
+                color = { v:GetTextColor() },
+                justifyH = v.GetJustifyH and v:GetJustifyH() or nil,
+                justifyV = v.GetJustifyV and v:GetJustifyV() or nil,
+            }
+        end
+    end
+    widget.__gsePristineTexts = texts
     widget.__gsePristineKeys = keys
     widget.__gsePristineScripts = scripts
     widget.__gsePristineW, widget.__gsePristineH = widget.frame:GetSize()
     keys.__gsePristineKeys, keys.__gsePristineScripts = true, true
     keys.__gsePristineW, keys.__gsePristineH = true, true
-    keys.__gsePristineOwned = true
+    keys.__gsePristineFrames, keys.__gsePristineTexts = true, true
 end
 
 local function resetForReuse(widget)
@@ -5882,13 +5913,17 @@ local function resetForReuse(widget)
         end
     end
     local frame = widget.frame
-    local owned = widget.__gsePristineOwned
-    if owned then
-        for _, region in ipairs({ frame:GetRegions() }) do
-            if not owned[region] then region:Hide() end
+    for subframe, rec in pairs(widget.__gsePristineFrames or {}) do
+        -- Sweep caller-added fields off the frame itself ([0] is the engine
+        -- userdata; construction-time keys stay).
+        for k in pairs(subframe) do
+            if not rec.keys[k] and k ~= 0 then subframe[k] = nil end
         end
-        for _, child in ipairs({ frame:GetChildren() }) do
-            if not owned[child] then child:Hide() end
+        for _, region in ipairs({ subframe:GetRegions() }) do
+            if not rec.owned[region] then region:Hide() end
+        end
+        for _, child in ipairs({ subframe:GetChildren() }) do
+            if not rec.owned[child] then child:Hide() end
         end
     end
     frame:Hide()
@@ -5904,6 +5939,12 @@ local function resetForReuse(widget)
     if widget.label and widget.label.SetText then pcall(widget.label.SetText, widget.label, "") end
     if widget.text and widget.text ~= widget.label and widget.text.SetText then
         pcall(widget.text.SetText, widget.text, "")
+    end
+    for fontString, style in pairs(widget.__gsePristineTexts or {}) do
+        if style.font[1] then pcall(fontString.SetFont, fontString, unpack(style.font)) end
+        pcall(fontString.SetTextColor, fontString, unpack(style.color))
+        if style.justifyH then pcall(fontString.SetJustifyH, fontString, style.justifyH) end
+        if style.justifyV then pcall(fontString.SetJustifyV, fontString, style.justifyV) end
     end
 end
 
