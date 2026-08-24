@@ -229,9 +229,22 @@ tabgrp:SetCallback(
 tabgrp:SetFullWidth(true)
 tabgrp:SetFullHeight(true)
 
-if cacheTabs[1] then
-    tabgrp:SelectTab(cacheTabs[1].value)
-end
+-- Draw the tab's contents when the window is first SHOWN, not while the addon
+-- loads. SelectTab fires GUISelectCacheTab -> GUIDrawSpellCacheEditor, which
+-- builds two EditBoxes plus labels for EVERY cached spell. This frame starts
+-- hidden and most authors never open it, so doing that during the on-demand
+-- LoadAddOn (which is what opening the GSE menu triggers) stalled the client
+-- for seconds on a cache built up over years.
+local pendingInitialTab = cacheTabs[1] and cacheTabs[1].value
+cacheFrame.frame:HookScript(
+    "OnShow",
+    function()
+        if not pendingInitialTab then return end
+        local tab = pendingInitialTab
+        pendingInitialTab = nil
+        tabgrp:SelectTab(tab)
+    end
+)
 cacheFrame:AddChild(tabgrp)
 
 if cacheFrame and cacheFrame.frame and GSE.RegisterUIScaleFrame then
