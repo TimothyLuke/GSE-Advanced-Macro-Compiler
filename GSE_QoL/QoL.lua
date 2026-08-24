@@ -410,8 +410,53 @@ local function getManagedMacroNames()
     return names
 end
 
-GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
-    local editBox = widget and (widget.editBox or widget.editbox)
+-- Sequences available to this character, for the Macro editor's /click list.
+local function getSequenceNames()
+    local names, seen = {}, {}
+    for _, bucket in ipairs({GSESequences and GSESequences[GSE.GetCurrentClassID()], GSESequences and GSESequences[0]}) do
+        if type(bucket) == "table" then
+            for k in pairs(bucket) do
+                if not seen[k] then seen[k] = true; names[#names + 1] = k end
+            end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+-- The /click line that fires a sequence. Its shape depends on KeyUp vs KeyDown
+-- AND on which reset modifiers are enabled, and GSE.CreateMacroString is where
+-- that logic lives -- so lift its /click line instead of rebuilding the string.
+-- The Tab menu this replaces hand-built `"/click " .. name .. "LeftButton t"`,
+-- which is missing the space before LeftButton and so never matched a button.
+local function sequenceClickLine(name)
+    local full = (GSE.CreateMacroString and GSE.CreateMacroString(name)) or ""
+    local click = full:match("([^\n]*/click[^\n]*)")
+    if click and click ~= "" then return click end
+    return "/click " .. name
+end
+
+-- Tab line builder. Shared by the sequence editor's macro block and by the
+-- Macro editor's boxes; `opts` carries the two differences between them:
+--   opts.macroMode  the gates read the CURRENT LINE instead of the whole box.
+--                   A block holds one line's worth and may BE a macro name or a
+--                   variable; a WoW macro is a stack of lines that legitimately
+--                   opens with #showtooltip, and whole-box gating greys the
+--                   entire menu out the moment such a line exists.
+--   opts.variables  offer GSE variables. A managed macro is compiled through
+--                   GSE.CompileMacroText, which evaluates a leading "=" -- an
+--                   unmanaged box is raw WoW macro text and is not.
+--   opts.sequences  offer the /click line that fires a GSE sequence.
+local function attachMacroLineBuilder(widget, menuOwner, opts)
+    opts = opts or {}
+    local macroMode      = opts.macroMode and true or false
+    local offerVariables = macroMode and (opts.variables and true or false) or true
+    local offerSequences = opts.sequences and true or false
+    -- Tolerant on purpose: the Macro editor's original hook was called with the
+    -- editbox itself, and resolving only widget.editBox would turn Tab into a
+    -- silent no-op for any caller that still passes one.
+    local editBox = widget and (widget.editBox or widget.editbox
+        or (widget.SetScript and widget.GetText and widget))
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
         -- Line-builder session. The bracket group is NEVER left open in the text:
@@ -487,7 +532,11 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
         end
         -- "Need Stuff Here" is the new-block placeholder, not content.
         local rawBox = decoded
-        local boxIsPlaceholder = tostring(rawBox):match("^%s*Need Stuff Here%s*$") ~= nil
+        -- Block-only: "Need Stuff Here" is the empty-block placeholder, and the
+        -- branch it drives in splice() REPLACES the whole box. A WoW macro must
+        -- never take that path, however its text happens to read.
+        local boxIsPlaceholder = (not macroMode)
+            and tostring(rawBox):match("^%s*Need Stuff Here%s*$") ~= nil
         -- The placeholder is not a row of content: report the row as EMPTY so a
         -- command lands IN it rather than on a new line under it (the splice
         -- replaces the placeholder outright, which would leave that newline
@@ -782,12 +831,9 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
             return MenuResponse.Close
         end
 
-        -- Block-content rules: a block is EITHER macro text OR a lone macro
-        -- name / lone variable call.
-        local boxText = tostring(rawBox)
-        local boxHasText = not boxText:match("^%s*$") and not boxIsPlaceholder
-        local firstChar = boxText:match("^%s*(.)")
-        local boxIsNameOrVar = boxHasText and firstChar ~= "/"
+        -- Block-content rules (a block is EITHER macro text OR a lone macro
+        -- name / lone variable call) are evaluated per build inside buildMenu,
+        -- from the live text -- see the live* locals there.
 
         local function greyed(parent, label, why)
             local b = parent:CreateButton("|cFF808080" .. label .. "|r", function() end)
@@ -831,11 +877,17 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
             -- reopened mid-session (command picks) and a session that started on
             -- an empty block must not leave Macros/Variables open after the
             -- author has built a line into it.
-            local live = (editBox:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-            local liveIsPlaceholder = live:match("^%s*Need Stuff Here%s*$") ~= nil
+            -- Block mode reads the whole box because a block IS one line's
+            -- worth. Macro mode reads the current line: a WoW macro's other
+            -- lines are none of this row's business, and its "macro name or
+            -- variable" rules do not exist there at all (a #showtooltip line
+            -- would otherwise read as a name and grey the whole menu out).
+            local live = macroMode and currentLineText()
+                or (editBox:GetText() or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            local liveIsPlaceholder = (not macroMode) and live:match("^%s*Need Stuff Here%s*$") ~= nil
             local liveHasText = not live:match("^%s*$") and not liveIsPlaceholder
             local liveFirst = live:match("^%s*(.)")
-            local liveIsNameOrVar = liveHasText and liveFirst ~= "/"
+            local liveIsNameOrVar = (not macroMode) and liveHasText and liveFirst ~= "/"
             -- A fresh line must start with a command before conditionals/spells
             -- can land on it (macros/variables are the whole-block case).
             local NEEDS_CMD = L["Start the line with a command first."]
@@ -860,7 +912,30 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
             end
 
             -- Macros / GSE Variables: must be ALONE in the block.
-            if liveHasText then
+            if macroMode then
+                -- These land as their OWN LINE rather than replacing the box.
+                -- No Macros section: a managed-macro name is a block-only
+                -- construct (a block may BE a macro name), meaningless as a
+                -- line of WoW macro text.
+                local function insertLine(content)
+                    local blankRow = currentLineText():match("^%s*$") ~= nil
+                    splice(lineEndPos(), 0, (blankRow and "" or "\n") .. content)
+                    editBox.gseTabSessionUntil = 0
+                    return MenuResponse.Close
+                end
+                if offerVariables then
+                    local vars = rootDescription:CreateButton(L["GSE Variables"])
+                    for k, _ in pairs(GSEVariables or {}) do
+                        vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
+                    end
+                end
+                if offerSequences then
+                    local seqs = rootDescription:CreateButton(L["GSE Sequences"])
+                    for _, name in ipairs(getSequenceNames()) do
+                        seqs:CreateButton(name, function() return insertLine(sequenceClickLine(name)) end)
+                    end
+                end
+            elseif liveHasText then
                 greyed(rootDescription, L["Macros"], NAME_ONLY)
                 greyed(rootDescription, L["GSE Variables"], NAME_ONLY)
             else
@@ -958,6 +1033,12 @@ GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
     end)
 end
 
+-- The sequence editor's macro block: whole-box gating, no /click list (a
+-- sequence embeds another sequence with an Embed block, not a click).
+GSE.OnEditorMacroBlockTab = function(widget, menuOwner)
+    attachMacroLineBuilder(widget, menuOwner)
+end
+
 -- Editor Tab-completion menus: press Tab in an editor field to insert a GSE
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
@@ -973,31 +1054,15 @@ GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
         end)
     end)
 end
-GSE.OnEditorMacroTab = function(editBox, menuOwner)
-    editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
-            rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
-                rootDescription:CreateButton(k, function()
-                    editBox:Insert("\n" .. [[=GSE.V["]] .. k .. [["]()]])
-                end)
-            end
-            local function insertSeq(k)
-                if GSE.GetMacroStringFormat() == "DOWN" then
-                    editBox:Insert("\n/click " .. k .. [[LeftButton t]])
-                else
-                    editBox:Insert("\n/click " .. k)
-                end
-            end
-            rootDescription:CreateTitle(L["Insert GSE Sequence"])
-            for k, _ in pairs(GSESequences[GSE.GetCurrentClassID()]) do
-                rootDescription:CreateButton(k, function() insertSeq(k) end)
-            end
-            for k, _ in pairs(GSESequences[0]) do
-                rootDescription:CreateButton(k, function() insertSeq(k) end)
-            end
-        end)
-    end)
+-- The Macro editor's boxes get the same builder, line-scoped, plus the /click
+-- sequence list. `opts.variables` for the managed box only -- see the compile
+-- note on attachMacroLineBuilder.
+GSE.OnEditorMacroTab = function(widget, menuOwner, opts)
+    attachMacroLineBuilder(widget, menuOwner, {
+        macroMode = true,
+        sequences = true,
+        variables = opts and opts.variables or false,
+    })
 end
 
 -- Skyriding Bind Bar for Retail

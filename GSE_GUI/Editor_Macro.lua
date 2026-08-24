@@ -405,6 +405,27 @@ local function showMacro(editframe, node, container)
         managedMacro:SetCallback(
             "OnEditFocusLost",
             function()
+                -- Opening the Tab line builder takes focus off the box, so this
+                -- fires at the START of a build. Compiling then would queue an
+                -- in-game macro update per pick off half-built text.
+                --
+                -- Unlike Editor.lua's guard, this cannot simply wait for "the
+                -- next real focus loss": the box does not necessarily regain
+                -- focus when the menu closes, and what is deferred here is the
+                -- compiled macro WoW actually fires, not a repaint. So retry
+                -- once the session's deadline passes. The session zeroes the
+                -- deadline on a terminal pick, so the usual path is one short
+                -- hop, and re-reading GetText() at that point picks up
+                -- everything the builder wrote.
+                local eb = managedMacro.editBox or managedMacro.editbox
+                local until_ = (eb and eb.gseTabSessionUntil) or 0
+                if until_ > GetTime() then
+                    C_Timer.After((until_ - GetTime()) + 0.1, function()
+                        if (eb.gseTabSessionUntil or 0) > GetTime() then return end
+                        commitManagedMacroCompile(managedMacro:GetText())
+                    end)
+                    return
+                end
                 -- Always reconcile on focus-loss so the compiled macro is current
                 -- regardless of mode/combat (a harmless repeat when live already ran).
                 commitManagedMacroCompile(managedMacro:GetText())
@@ -418,8 +439,12 @@ local function showMacro(editframe, node, container)
             end
         )
 
+        -- Tab line builder. Pass the WIDGET, not its editbox -- the builder
+        -- resolves widget.editBox. Variables are offered here and not on the
+        -- unmanaged page below: commitManagedMacroCompile runs this text
+        -- through GSE.CompileMacroText, which evaluates a leading "=".
         if GSE.OnEditorMacroTab then
-            GSE.OnEditorMacroTab(managedMacro.editBox, editframe.frame)
+            GSE.OnEditorMacroTab(managedMacro, editframe.frame, {variables = true})
         end
 
         -- Match the unmanaged page exactly: show the accept button and drop the
@@ -461,6 +486,12 @@ local function showMacro(editframe, node, container)
                 GSE.EnqueueOOC(oocaction)
             end
         )
+        -- This page had no Tab handler at all. Same builder as the managed
+        -- page, minus GSE variables: this text goes to the in-game macro as
+        -- written, so a "=GSE.V[...]()" line would never be evaluated.
+        if GSE.OnEditorMacroTab then
+            GSE.OnEditorMacroTab(macro, editframe.frame)
+        end
         macro:DisableButton(false)
         -- Push the Macro box down 3px (negative y = down) to match the managed page.
         if macro.SetFlowOffset then macro:SetFlowOffset(0, -3) end

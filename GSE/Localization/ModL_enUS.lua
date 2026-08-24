@@ -645,13 +645,13 @@ L["Manage Macro with GSE"] = true
 L["%s/255 Characters Used"] = true
 L["Macro"] = true
 L["Manage Variables"] = true
-L["Insert GSE Sequence"] = true
 L["Insert GSE Variable"] = true
 L["Insert Spell"] = true
 L["Commands"] = true
 L["Conditionals"] = true
 L["Spells"] = true
 L["GSE Variables"] = true
+L["GSE Sequences"] = true
 L["Reset"] = true
 L["Only valid after a /castsequence command."] = true
 L["Requires a reset= on the line."] = true
