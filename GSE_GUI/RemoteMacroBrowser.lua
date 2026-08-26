@@ -27,6 +27,12 @@ remoteFrame:SetLayout("List")
 
 remoteFrame.Height = seOpts.height or 500
 remoteFrame.Width = seOpts.width or 700
+-- These two fields drive every width below, but nothing ever applied them to
+-- the frame, which stayed at UI:Create("Frame")'s default 500x400. The table
+-- was therefore sized for a 700px window and drawn inside a 500px one -- worth
+-- ~200px of overflow before any of the column arithmetic even ran.
+remoteFrame.frame:SetHeight(remoteFrame.Height)
+remoteFrame.frame:SetWidth(remoteFrame.Width)
 
 local layoutcontainer = UI:Create("SimpleGroup")
 layoutcontainer:SetFullWidth(true)
@@ -45,36 +51,71 @@ scrollcontainer:AddChild(contentcontainer)
 layoutcontainer:AddChild(scrollcontainer)
 remoteFrame:AddChild(layoutcontainer)
 
+-- One column model for the header row AND every data row. They used to
+-- disagree twice over: the headings were sized 0.25/0.75 of two DIFFERENT
+-- bases ((columnWidth - 25) and (columnWidth - 45)) while the cells below used
+-- columnWidth - 70, so no column sat under its heading; and neither total left
+-- room for the Flow layout's own 10px gap between every child plus 6px of
+-- padding each side, so both rows overflowed and wrapped.
+local COLUMN_GAP = 8
+local ACTION_ICON_SIZE = 20
+-- Flow wraps a child when x + width > contentWidth, so a row that adds up to
+-- EXACTLY its container is decided by float rounding. Keep a few pixels back.
+local ROW_SLACK = 6
+
+local function remoteColumnWidths(rowWidth)
+    local usable = rowWidth - ACTION_ICON_SIZE - (COLUMN_GAP * 2) - ROW_SLACK
+    if usable < 160 then
+        usable = 160
+    end
+    local nameWidth = math.floor(usable * 0.3)
+    return nameWidth, math.floor(usable - nameWidth)
+end
+
+-- Flow's defaults (10px between children, 6px each side) are tuned for forms,
+-- not tables: they add width no column model can predict. Zero the padding and
+-- own the gap so a row is exactly its own columns. No explicit height -- a
+-- SimpleGroup without one auto-sizes, which lets long help text wrap and the
+-- row grow with it instead of being clipped.
+local function newRemoteRow(rowWidth)
+    local row = UI:Create("SimpleGroup")
+    row:SetLayout("Flow")
+    row:SetWidth(rowWidth)
+    if row.SetFlowGap then
+        row:SetFlowGap(COLUMN_GAP)
+    end
+    if row.SetFlowPadding then
+        row:SetFlowPadding(0, 0, 0, 0)
+    end
+    return row
+end
+
 local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
-    local linegroup1 = UI:Create("SimpleGroup")
-    linegroup1:SetLayout("Flow")
-    linegroup1:SetWidth(rowWidth)
-    rowWidth = rowWidth - 70
+    local nameWidth, helpWidth = remoteColumnWidths(rowWidth)
+    local linegroup1 = newRemoteRow(rowWidth)
 
     local keyEditBox = UI:Create("Label")
     keyEditBox:SetText(SequenceName)
-    keyEditBox:SetWidth(rowWidth * 0.25)
+    keyEditBox:SetWidth(nameWidth)
 
     linegroup1:AddChild(keyEditBox)
 
-    local spacerlabel1 = UI:Create("Label")
-    spacerlabel1:SetWidth(5)
-    linegroup1:AddChild(spacerlabel1)
-
     local helpLabel = UI:Create("Label")
     helpLabel:SetText(Help)
-    helpLabel:SetWidth(rowWidth * 0.75)
+    helpLabel:SetWidth(helpWidth)
     linegroup1:AddChild(helpLabel)
 
-    local spacerlabel2 = UI:Create("Label")
-    spacerlabel2:SetWidth(8)
-    linegroup1:AddChild(spacerlabel2)
-
     local testRowButton = UI:Create("Icon")
-    testRowButton:SetImageSize(20, 20)
-    testRowButton:SetWidth(20)
-    testRowButton:SetHeight(20)
+    testRowButton:SetImageSize(ACTION_ICON_SIZE, ACTION_ICON_SIZE)
+    testRowButton:SetWidth(ACTION_ICON_SIZE)
+    testRowButton:SetHeight(ACTION_ICON_SIZE)
     testRowButton:SetImage("Interface\\Icons\\inv_misc_punchcards_blue")
+    -- Pinned to the row's right edge. layoutFlow exempts right-aligned children
+    -- from the wrap test entirely, so however the columns round, the request
+    -- button cannot be pushed onto a second line.
+    if testRowButton.SetFlowRightAlign then
+        testRowButton:SetFlowRightAlign(true)
+    end
 
     testRowButton:SetCallback(
         "OnClick",
@@ -122,34 +163,28 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
 end
 
 function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
-    local classlinegroup = UI:Create("SimpleGroup")
-    classlinegroup:SetLayout("Flow")
-    local columnWidth = remoteFrame.Width - 55
+    -- Start from empty. Only OnClose cleared the list, so a second
+    -- ShowRemoteWindow while the window was already open -- another player's
+    -- sequences arriving, or the same player re-sending -- appended a whole
+    -- second copy underneath the first.
+    contentcontainer:ReleaseChildren()
 
-    classlinegroup:SetWidth(remoteFrame.Width - 50)
+    local columnWidth = remoteFrame.Width - 55
+    local nameWidth, helpWidth = remoteColumnWidths(columnWidth)
+
+    -- Two headings, not three: the request button is self-explanatory and an
+    -- "Actions" title over a single icon earns nothing.
+    local classlinegroup = newRemoteRow(columnWidth)
 
     local nameLabel = UI:Create("Heading")
     nameLabel:SetText(L["Name"])
-    nameLabel:SetWidth((columnWidth - 25) * 0.25)
+    nameLabel:SetWidth(nameWidth)
     classlinegroup:AddChild(nameLabel)
-
-    local spacerlabel1 = UI:Create("Label")
-    spacerlabel1:SetWidth(5)
-    classlinegroup:AddChild(spacerlabel1)
 
     local valueLabel = UI:Create("Heading")
     valueLabel:SetText(L["Help Information"])
-    valueLabel:SetWidth((columnWidth - 45) * 0.75 - 18)
+    valueLabel:SetWidth(helpWidth)
     classlinegroup:AddChild(valueLabel)
-
-    local spacerlabel2 = UI:Create("Label")
-    spacerlabel2:SetWidth(5)
-    classlinegroup:AddChild(spacerlabel2)
-
-    local delLabel = UI:Create("Heading")
-    delLabel:SetText(L["Actions"])
-    delLabel:SetWidth(25)
-    classlinegroup:AddChild(delLabel)
 
     contentcontainer:AddChild(classlinegroup)
 
@@ -158,14 +193,12 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
     remoteFrame.Channel = channel
     for ClassID, v in ipairs(remoteFrame.SequenceList) do
         local lClassID = tonumber(ClassID)
-        local linegroup1 = UI:Create("SimpleGroup")
-        linegroup1:SetLayout("Flow")
-        linegroup1:SetWidth(columnWidth)
+        local linegroup1 = newRemoteRow(columnWidth)
         if lClassID > 0 then
             local classbutton = UI:Create("Icon")
-            classbutton:SetImageSize(20, 20)
-            classbutton:SetWidth(20)
-            classbutton:SetHeight(20)
+            classbutton:SetImageSize(ACTION_ICON_SIZE, ACTION_ICON_SIZE)
+            classbutton:SetWidth(ACTION_ICON_SIZE)
+            classbutton:SetHeight(ACTION_ICON_SIZE)
             classbutton:SetImage(GSE.GetClassIcon(lClassID))
             linegroup1:AddChild(classbutton)
         end
@@ -173,7 +206,20 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
         classLabel:SetText(Statics.SpecIDList[lClassID])
         linegroup1:AddChild(classLabel)
         contentcontainer:AddChild(linegroup1)
-        for name, value in pairs(v) do
+        -- Sorted, not pairs(): hash order meant the same player's sequence
+        -- list came back in a different order every time it was opened.
+        local names = {}
+        for name in pairs(v) do
+            names[#names + 1] = name
+        end
+        table.sort(
+            names,
+            function(a, b)
+                return tostring(a) < tostring(b)
+            end
+        )
+        for _, name in ipairs(names) do
+            local value = v[name]
             local desc = value.Help
 
             if GSE.isEmpty(value.Help) then

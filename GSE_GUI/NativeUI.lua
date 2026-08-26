@@ -1748,6 +1748,17 @@ end
 
 function baseMethods:Release()
     self:Fire("OnRelease")
+    -- A POOLED widget's callbacks die with the widget, not when it is next
+    -- handed out. Everything below -- ReleaseChildren, Hide, ClearAllPoints,
+    -- SetParent -- can still make the frame talk back: hiding or reparenting a
+    -- focused EditBox fires OnEditFocusLost, so the previous owner's handler
+    -- ran on a widget already on its way into the pool. The Spell Cache
+    -- editor's handler writes to GSESpellCache, which made that a data-loss
+    -- window. Cut the callbacks here; resetForReuse still clears them again on
+    -- the way out. Non-pooled widgets keep their existing behaviour.
+    if self.__gsePristineKeys then
+        self.callbacks = {}
+    end
     self:ReleaseChildren()
     self.parent = nil
     self.frame:Hide()
@@ -1862,6 +1873,19 @@ local function createContainer(typeName)
         if content.SetClipsChildren then content:SetClipsChildren(true) end
         widget.content = content
         frame:SetHeight(60)
+    end
+
+    -- Pool reset (see resetForReuse). Show/Hide of the title and rail is
+    -- restored generically; their CONTENT is not -- SetTitle leaves the old
+    -- caption and SetLeftBorderColor leaves the old width and colour.
+    widget.__gseReset = function()
+        if widget.title then widget.title:SetText("") end
+        if widget.leftBorder then
+            widget.leftBorder:SetWidth(STYLE.padInset)
+            widget.leftBorder:ClearAllPoints()
+            widget.leftBorder:SetPoint("TOPLEFT", frame, "TOPLEFT", STYLE.padInset, -STYLE.padInset)
+            widget.leftBorder:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", STYLE.padInset, STYLE.padInset)
+        end
     end
 
     return widget
@@ -2344,6 +2368,11 @@ local function createButton()
         if shouldUseElvUISkin() then applyElvUIButtonSkin(button) else applyNormalAccentButtonText(button) end
     end
 
+    widget.__gseReset = function()
+        button:SetText("")
+        applyNormalAccentButtonText(button)
+    end
+
     if GSE.Skin and GSE.Skin.Button then GSE.Skin.Button(button) end
     return widget
 end
@@ -2589,6 +2618,18 @@ local function createLabel(typeName, fontObject)
         text:SetTextColor(r, g, b, a or 1)
     end
 
+    -- Pool reset. Font, colour and justification come back generically; the
+    -- ANCHORS do not, and callers re-anchor label text to build inline
+    -- captions, so a reused Label kept the previous life's geometry.
+    widget.__gseReset = function()
+        text:SetText("")
+        text:ClearAllPoints()
+        text:SetPoint("TOPLEFT")
+        text:SetPoint("BOTTOMRIGHT")
+        if text.SetWordWrap then text:SetWordWrap(true) end
+        if text.SetMaxLines then text:SetMaxLines(0) end
+    end
+
     return widget
 end
 
@@ -2699,6 +2740,28 @@ local function createEditBox()
         else
             editBox:SetTextColor(1, 1, 1)
         end
+    end
+
+    -- Pool reset. compactNoLabel lives on the widget table and IS swept, but
+    -- the anchors and the hidden label it produced were left behind, so a
+    -- reused box mixed a compact row with a labelled one -- the Spell Cache
+    -- rows sitting at two different heights (#2020). Numeric/max-letters and
+    -- SetDisabled's grey text and dead mouse are frame state, invisible to the
+    -- key sweep for the same reason.
+    widget.__gseReset = function()
+        widget.compactNoLabel = false
+        widget.labelBoxPadding = nil
+        widget.labelHeight = labelHeight
+        editBox:ClearFocus()
+        editBox:SetText("")
+        editBox:SetAutoFocus(false)
+        editBox:SetMaxLetters(0)
+        if editBox.SetNumeric then editBox:SetNumeric(false) end
+        editBox:SetJustifyH("LEFT")
+        editBox:SetTextColor(1, 1, 1)
+        editBox:SetHeight(STYLE.compactControlHeight)
+        label:SetText("")
+        positionEditBox()
     end
 
     if GSE.Skin and GSE.Skin.EditBox then GSE.Skin.EditBox(editBox) end
@@ -2854,6 +2917,27 @@ local function createMultiLineEditBox()
         editBox:SetTextColor(disabled and 0.5 or 1, disabled and 0.5 or 1, disabled and 0.5 or 1)
     end
 
+    -- Pool reset. The macro editor re-fonts this box and paints it grey via
+    -- SetDisabled; both are EditBox state, and the scroll offset is the
+    -- scroll frame's. None of it is reachable by a key sweep.
+    widget.__gseReset = function()
+        widget.verticalOffset = verticalOffset
+        widget.leftOffset = leftOffset
+        widget.rightOffset = rightOffset
+        widget.scrollBarReserve = scrollBarReserve
+        widget.labelHeight = labelHeight
+        editBox:ClearFocus()
+        editBox:SetText("")
+        editBox:SetAutoFocus(false)
+        editBox:SetMultiLine(true)
+        editBox:SetMaxLetters(0)
+        editBox:SetFontObject(ChatFontNormal)
+        editBox:SetTextColor(1, 1, 1)
+        editBox:SetWidth(260)
+        label:SetText("")
+        scrollFrame:SetVerticalScroll(0)
+    end
+
     if GSE.Skin and GSE.Skin.EditBox then GSE.Skin.EditBox(editBox) end
     return widget
 end
@@ -2941,6 +3025,20 @@ local function createCheckBox()
             check:Enable()
             text:SetTextColor(1, 1, 1)
             applyNormalAccentCheckBoxText(check, text)
+        end
+    end
+
+    -- Pool reset. The CHECKED state is the important one: it lives entirely on
+    -- the CheckButton, so every reused checkbox came out of the pool still
+    -- ticked from whatever it was last time.
+    widget.__gseReset = function()
+        check:SetChecked(false)
+        check:SetSize(STYLE.checkBoxSize, STYLE.checkBoxSize)
+        if text then
+            text:SetText("")
+            text:ClearAllPoints()
+            text:SetPoint("LEFT", check, "RIGHT", 0, 0)
+            text:SetJustifyV("MIDDLE")
         end
     end
 
@@ -3095,6 +3193,28 @@ local function createIcon()
         self.disabled = disabled
         button:EnableMouse(not disabled)
         texture:SetDesaturated(disabled and true or false)
+        refreshIconVisualSize()
+    end
+
+    -- Pool reset. Every one of these is a CONSTRUCTOR UPVALUE, so no sweep of
+    -- the widget table or of the button's fields could ever have reached them:
+    -- a reused Icon kept its previous size, hover size, hover lock, square
+    -- flag, desaturation -- and its previous TEXTURE, which is how the keybind
+    -- "Key" art turned up on icons whose caller never set an image (#2020).
+    widget.__gseReset = function()
+        normalImageWidth = STYLE.defaultIconSize
+        normalImageHeight = STYLE.defaultIconSize
+        hoverImageWidth = nil
+        hoverImageHeight = nil
+        hoverLocked = false
+        hovered = false
+        squareIcon = false
+        button.GSELastIconPath = nil
+        button:SetSize(STYLE.defaultIconSize, STYLE.defaultIconSize)
+        texture:SetTexture(nil)
+        if texture.SetDesaturated then texture:SetDesaturated(false) end
+        if texture.SetVertexColor then texture:SetVertexColor(1, 1, 1, 1) end
+        texture:SetTexCoord(0, 1, 0, 1)
         refreshIconVisualSize()
     end
 
@@ -4252,6 +4372,44 @@ local function createDropdown()
                 UIDropDownMenu_EnableDropDown(self.nativeDropdown)
             end
         end
+    end
+
+    -- The list and the click-eating dismiss frame are built on demand and
+    -- parented to UIParent so they float above everything, which puts them out
+    -- of isOwnedArt's reach. Without this the sweep dropped the cache keys and
+    -- every reuse built a fresh pair, stranding the old ones forever.
+    widget.__gsePreserve = {
+        listFrame = true,
+        dropdownDismissFrame = true,
+        nativeDropdown = true,
+        dropdownClickOverlay = true,
+    }
+
+    -- Pool reset. list/order/disabledItems/buttonTextMap are construction-time
+    -- keys holding TABLES, so the sweep keeps them -- contents and all -- and
+    -- so does the scalar restore, which only rewrites the value. A reused
+    -- dropdown therefore came back holding the previous menu's options, its
+    -- per-item disabled flags and its multiselect mode, until whoever
+    -- acquired it next happened to call SetList.
+    widget.__gseReset = function()
+        hideDropdownList()
+        widget.list = {}
+        widget.order = {}
+        widget.disabledItems = {}
+        widget.buttonTextMap = {}
+        widget.value = nil
+        widget.multiselect = false
+        widget.useDropdownList = false
+        widget.maxVisibleItems = nil
+        label:SetText("")
+        if widget.dropdownClickOverlay then widget.dropdownClickOverlay:Hide() end
+        if widget.nativeDropdown and UIDropDownMenu_EnableDropDown then
+            UIDropDownMenu_EnableDropDown(widget.nativeDropdown)
+        end
+        if not applyNativeDropdownStyle(false) then
+            applyDropdownStyle(false)
+        end
+        refresh()
     end
 
     -- Try Blizzard native dropdown first; fall back to custom implementation when
@@ -5848,16 +6006,29 @@ end
 -- Create it is handed back out instead of building new frames.
 --
 -- Reset contract, in order:
---   * every key added after construction is removed (callers decorate widgets
---     with fields and wrapped methods; a reused widget must not carry them)
+--   * every key added after construction is removed, and every key the
+--     constructor DID set is restored to its construction value -- methods
+--     included, so a caller that wrapped or replaced one of the widget's own
+--     methods does not leave that closure behind (callers decorate widgets
+--     with fields and wrapped methods; a reused widget must not carry them).
+--     Cached art the widget owns is exempt -- see isOwnedArt
 --   * callbacks/children become fresh tables
 --   * frame scripts recorded at construction are restored on every subframe
 --     the widget exposes (callers SetScript extra handlers, e.g. OnTabPressed)
+--   * every subframe goes back to its construction-time mouse/wheel/enabled/
+--     alpha state, and each of its regions and children back to the visibility
+--     it was built with -- shown OR hidden; strangers are hidden
 --   * the frame is hidden, unanchored, reparented and restored to its
 --     construction size; editbox text and label text are cleared
+--   * finally the widget type's own __gseReset runs. This is the only part
+--     that can reach a constructor's UPVALUES (an Icon's sizes and hover
+--     state, a Dropdown's open list), so anything a widget remembers outside
+--     its own table or frames belongs there and nowhere else
 -- HookScript cannot be undone, but every HookScript site in GSE_GUI guards
 -- with a once-only flag on the frame (audited), so reuse cannot stack hooks.
 -- Kill switch for soak-testing: /run GSE_NoWidgetPool = true (then /reload).
+-- Leftover-state report: /run GSE_WidgetPoolAudit = true (takes effect at
+-- once) names every widget handed out still carrying previous-life state.
 -- Only high-churn leaf/container types pool; window-level widgets (Frame,
 -- ScrollFrame, TabGroup, tree) keep their old behaviour.
 local POOLED_TYPES = {
@@ -5877,10 +6048,39 @@ local SCRIPT_HANDLERS = {
     "OnKeyDown", "OnKeyUp", "OnChar", "OnCursorChanged",
 }
 
+-- A region or child frame a caller CACHES on a widget (or on one of the
+-- widget's frames) after construction is that widget's own art: a highlight
+-- texture, a square-icon backdrop, an ElvUI chrome frame, a lazily built
+-- dropdown list. Nil-ing the cache key does not destroy the object -- WoW
+-- frames and regions cannot be destroyed -- it only makes the next life build
+-- ANOTHER one, so the widget accumulates one hidden orphan per reuse and every
+-- {frame:GetRegions()} walk in the reset below gets longer (the exact failure
+-- FitMacroEditBoxToContent's height meter hit in #2018). Keep the key when the
+-- value is parented to one of the widget's own frames; the visibility sweep
+-- still hides it, which is all reset actually needs.
+local function isOwnedArt(value, frames)
+    if type(value) ~= "table" or not value.GetParent then return false end
+    local ok, parent = pcall(value.GetParent, value)
+    return ok and parent ~= nil and frames[parent] == true or false
+end
+
 local function snapshotPristine(widget)
-    local keys, scripts, seen = {}, {}, {}
+    local keys, values, scripts, seen = {}, {}, {}, {}
     for k, v in pairs(widget) do
         keys[k] = true
+        -- Construction-time values are restored BY VALUE, not merely kept.
+        -- The key sweep only deletes keys a caller ADDS, so anything a caller
+        -- wrote OVER a key the constructor had already set survived into the
+        -- next life: SetLayout turned every reused SimpleGroup's `layout` from
+        -- "List" to "Flow" permanently, SetLabelBoxPadding stuck to edit boxes
+        -- the same way -- and, worst, a caller REPLACING one of the widget's
+        -- own methods stuck too. CreateIconControl does exactly that
+        -- (lbl:SetText re-routes the AceGUI texture-string API to setIcon), so
+        -- every Icon that had once been an action icon carried that closure --
+        -- over a long-dead action -- into whatever it was used for next.
+        -- Tables are left alone: those are the widget's frames, regions and
+        -- callback/children tables, handled below by identity.
+        if type(v) ~= "table" then values[k] = v end
         if type(v) == "table" and v.GetScript and v.SetScript and not seen[v] then
             seen[v] = true
             local rec = {}
@@ -5906,10 +6106,35 @@ local function snapshotPristine(widget)
         if type(v) == "table" and v.GetScript and v.SetScript and v.CreateFontString and not frames[v] then
             local fkeys = {}
             for k in pairs(v) do fkeys[k] = true end
-            local owned = {}
-            for _, region in ipairs({ v:GetRegions() }) do owned[region] = true end
-            for _, child in ipairs({ v:GetChildren() }) do owned[child] = true end
-            frames[v] = { keys = fkeys, owned = owned }
+            -- Record each construction-time region/child's VISIBILITY, not just
+            -- its identity. Hiding strangers was only half the job: callers
+            -- also Hide() and Show() the widget's OWN parts, and those survived
+            -- into the next life. SetCompactNoLabel(true) hides an EditBox's
+            -- label frame -- so a reused box kept the label hidden and its text
+            -- anchored to the compact position, which is what made the Spell
+            -- Cache rows sit at two different heights (#2020) -- and
+            -- SetLeftBorderColor Show()s an InlineGroup's rail for good.
+            local shown = {}
+            for _, region in ipairs({ v:GetRegions() }) do
+                shown[region] = region:IsShown() and true or false
+            end
+            for _, child in ipairs({ v:GetChildren() }) do
+                shown[child] = child:IsShown() and true or false
+            end
+            frames[v] = {
+                keys = fkeys,
+                -- Doubles as the old `owned` set: a key present here is a part
+                -- the widget was built with, absent means stranger.
+                shown = shown,
+                -- SetDisabled leaves its mark on the FRAME, not on the widget
+                -- table, so sweeping widget.disabled never undid it: a disabled
+                -- then reused EditBox came back mouse-dead, and a disabled
+                -- CheckBox came back Disable()d.
+                mouse = v.IsMouseEnabled and v:IsMouseEnabled() and true or false,
+                wheel = v.IsMouseWheelEnabled and v:IsMouseWheelEnabled() and true or false,
+                enabled = v.IsEnabled and (v:IsEnabled() and true or false) or nil,
+                alpha = v.GetAlpha and v:GetAlpha() or nil,
+            }
         end
     end
     widget.__gsePristineFrames = frames
@@ -5919,11 +6144,14 @@ local function snapshotPristine(widget)
     -- styling.
     local texts = {}
     for _, v in pairs(widget) do
-        -- FontStrings only: they carry SetFont/SetText but -- unlike Frames and
-        -- EditBoxes, which also have font APIs -- cannot CreateFontString.
+        -- FontStrings AND EditBoxes -- anything implementing FontInstance.
         -- (Filtering on "no SetScript" was wrong: FontStrings are ScriptRegions
-        -- and DO have SetScript, so nothing was ever captured.)
-        if type(v) == "table" and v.GetFont and v.SetText and not v.CreateFontString and not texts[v] then
+        -- and DO have SetScript, so nothing was ever captured. Excluding
+        -- everything that can CreateFontString was wrong too: it fixed
+        -- FontStrings but skipped EditBoxes, whose text colour is exactly what
+        -- SetDisabled repaints -- which is why some Spell Cache boxes came back
+        -- grey and others white, #2020.)
+        if type(v) == "table" and v.GetFont and v.GetTextColor and v.SetText and not texts[v] then
             texts[v] = {
                 font = { v:GetFont() },
                 color = { v:GetTextColor() },
@@ -5934,18 +6162,64 @@ local function snapshotPristine(widget)
     end
     widget.__gsePristineTexts = texts
     widget.__gsePristineKeys = keys
+    widget.__gsePristineValues = values
     widget.__gsePristineScripts = scripts
     widget.__gsePristineW, widget.__gsePristineH = widget.frame:GetSize()
     keys.__gsePristineKeys, keys.__gsePristineScripts = true, true
     keys.__gsePristineW, keys.__gsePristineH = true, true
     keys.__gsePristineFrames, keys.__gsePristineTexts = true, true
+    keys.__gsePristineValues = true
+end
+
+-- /run GSE_WidgetPoolAudit = true  (no reload needed) reports anything the
+-- reset above could not put back, every time a widget is handed out. Off by
+-- default: it re-walks every frame's regions and children. This is the tool
+-- for the next "a widget came back wearing its last life's clothes" report --
+-- it names the widget type and the exact leftover key or region.
+local function auditReuse(widget)
+    local frames = widget.__gsePristineFrames or {}
+    local preserve = widget.__gsePreserve
+    local leftovers = {}
+    for k, v in pairs(widget) do
+        if not widget.__gsePristineKeys[k] and not (preserve and preserve[k]) and not isOwnedArt(v, frames) then
+            leftovers[#leftovers + 1] = "widget." .. tostring(k)
+        end
+    end
+    for subframe, rec in pairs(frames) do
+        for k, v in pairs(subframe) do
+            if not rec.keys[k] and k ~= 0 and not isOwnedArt(v, frames) then
+                leftovers[#leftovers + 1] = "frame." .. tostring(k)
+            end
+        end
+        for _, region in ipairs({ subframe:GetRegions() }) do
+            if rec.shown[region] == nil and region:IsShown() then
+                leftovers[#leftovers + 1] = "visible stray region"
+            end
+        end
+    end
+    if #leftovers > 0 then
+        GSE.Print(
+            ("widget pool: reused %s still carrying %d item(s): %s"):format(
+                tostring(widget.type), #leftovers, table.concat(leftovers, ", ")),
+            "WidgetPool"
+        )
+    end
 end
 
 local function resetForReuse(widget)
     local keys = widget.__gsePristineKeys
-    for k in pairs(widget) do
-        if not keys[k] then widget[k] = nil end
+    local frames = widget.__gsePristineFrames or {}
+    -- Keys a constructor declares as its own lazily-built furniture. Same
+    -- reason as isOwnedArt, for the pieces that are NOT parented to one of the
+    -- widget's frames (a dropdown's list and its click-eating dismiss frame
+    -- both hang off UIParent so they can float above everything).
+    local preserve = widget.__gsePreserve
+    for k, v in pairs(widget) do
+        if not keys[k] and not (preserve and preserve[k]) and not isOwnedArt(v, frames) then
+            widget[k] = nil
+        end
     end
+    for k, v in pairs(widget.__gsePristineValues or {}) do widget[k] = v end
     widget.callbacks = {}
     widget.children = {}
     for _, entry in ipairs(widget.__gsePristineScripts) do
@@ -5955,18 +6229,31 @@ local function resetForReuse(widget)
         end
     end
     local frame = widget.frame
-    for subframe, rec in pairs(widget.__gsePristineFrames or {}) do
+    for subframe, rec in pairs(frames) do
         -- Sweep caller-added fields off the frame itself ([0] is the engine
-        -- userdata; construction-time keys stay).
-        for k in pairs(subframe) do
-            if not rec.keys[k] and k ~= 0 then subframe[k] = nil end
+        -- userdata; construction-time keys stay, and so does cached art the
+        -- widget owns -- see isOwnedArt).
+        for k, v in pairs(subframe) do
+            if not rec.keys[k] and k ~= 0 and not isOwnedArt(v, frames) then
+                subframe[k] = nil
+            end
         end
+        -- Strangers are hidden; the widget's own parts go back to the
+        -- visibility they had at construction, in BOTH directions.
         for _, region in ipairs({ subframe:GetRegions() }) do
-            if not rec.owned[region] then region:Hide() end
+            local was = rec.shown[region]
+            if was == nil then region:Hide() else region:SetShown(was) end
         end
         for _, child in ipairs({ subframe:GetChildren() }) do
-            if not rec.owned[child] then child:Hide() end
+            local was = rec.shown[child]
+            if was == nil then child:Hide() else child:SetShown(was) end
         end
+        if subframe.EnableMouse then subframe:EnableMouse(rec.mouse) end
+        if subframe.EnableMouseWheel then subframe:EnableMouseWheel(rec.wheel) end
+        if rec.enabled ~= nil and subframe.Enable and subframe.Disable then
+            if rec.enabled then subframe:Enable() else subframe:Disable() end
+        end
+        if rec.alpha and subframe.SetAlpha then subframe:SetAlpha(rec.alpha) end
     end
     frame:Hide()
     frame:ClearAllPoints()
@@ -5988,6 +6275,21 @@ local function resetForReuse(widget)
         if style.justifyH then pcall(fontString.SetJustifyH, fontString, style.justifyH) end
         if style.justifyV then pcall(fontString.SetJustifyV, fontString, style.justifyV) end
     end
+    -- Last: the type's OWN reset. Everything above is generic and works off a
+    -- snapshot of tables and frames; it cannot reach a constructor's upvalues.
+    -- An Icon keeps its size, hover size, square flag and texture there, a
+    -- Dropdown its list and selection, an EditBox its compact-label mode --
+    -- none of it visible to any sweep, all of it worn into the next life.
+    if widget.__gseReset then
+        -- pcall so one type's reset cannot take down a whole redraw, but say
+        -- so: a silently failing reset is how a widget starts coming back
+        -- dressed in its last life's clothes with nothing to point at.
+        local ok, err = pcall(widget.__gseReset)
+        if not ok then
+            GSE.PrintDebugMessage(("widget pool: %s reset failed: %s"):format(tostring(widget.type), tostring(err)), "WidgetPool")
+        end
+    end
+    if _G.GSE_WidgetPoolAudit then auditReuse(widget) end
 end
 
 function UI:Create(typeName)

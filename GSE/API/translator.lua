@@ -89,6 +89,39 @@ local function canCacheSpellLookup(spellstring, spellID, rawSpellID)
     return spellIDIsInSpellBook(spellID)
 end
 
+--- Record a locale spell NAME -> spell ID pair in the shared cache.
+--
+-- This cache is not a lookup shortcut. It is the only way GSE can resolve a
+-- spell name written in another client's language: Blizzard's API translates
+-- solely between the RUNNING client's locale and IDs, so hand an enUS client a
+-- deDE spell name and there is nothing to ask it. A deDE player's cache,
+-- broadcast to the group on join (GSE.SendSpellCache), is what lets an enUS
+-- player run a sequence written in German. Every pair a client can learn is
+-- therefore worth keeping, whichever direction the lookup was asked in.
+local function rememberSpellName(spellName, spellID)
+    if GSE.isEmpty(spellName) or GSE.isEmpty(spellID) then
+        return
+    end
+    -- The KEY must be a name. A numeric key would be indistinguishable from an
+    -- ID to every consumer of this table.
+    if tonumber(spellName) ~= nil then
+        return
+    end
+    local baseID = findBaseSpellID(spellID) or spellID
+    if not canCacheSpellLookup(spellName, baseID, spellID) then
+        return
+    end
+    local cache = GSESpellCache and GSESpellCache[GetLocale()]
+    if type(cache) ~= "table" then
+        return
+    end
+    -- Store the BASE id, matching what GSE.SanitizeSpellCache normalises the
+    -- table to on every login.
+    if cache[spellName] ~= baseID then
+        cache[spellName] = baseID
+    end
+end
+
 function GSE.GetBaseSpellID(spell)
     local spellID = tonumber(spell) or getSpellInfoID(spell)
     return findBaseSpellID(spellID)
@@ -490,6 +523,38 @@ function GSE.GetConditionalsFromString(str)
 end
 
 --- Converts a string spell name to an id and back again.
+--- Find a spell ID for a name in ANY locale table we hold.
+--
+-- The point of receiving other players' caches is that their locale's names
+-- become resolvable here, and the old fallback never reached them: it tried
+-- GSESpellCache[GetLocale()] and then "the enUS cache" -- which on an enUS
+-- client is the SAME table twice, so a deDE name from a group member's cache
+-- could never be found. Try this client's locale first (most likely, and the
+-- authoritative one), then enUS, then everything else.
+--
+-- It also stopped indexing a locale table that does not exist. A client whose
+-- cache arrived entirely from a foreign group member has no ["enUS"] key, and
+-- the old line indexed it unguarded.
+local function lookupCachedSpellID(spellName)
+    if GSE.isEmpty(spellName) or type(GSESpellCache) ~= "table" then
+        return nil
+    end
+    for _, locale in ipairs({GetLocale(), "enUS"}) do
+        local cache = GSESpellCache[locale]
+        if type(cache) == "table" and not GSE.isEmpty(cache[spellName]) then
+            return cache[spellName]
+        end
+    end
+    for locale, cache in pairs(GSESpellCache) do
+        if locale ~= GetLocale() and locale ~= "enUS" and type(cache) == "table" then
+            if not GSE.isEmpty(cache[spellName]) then
+                return cache[spellName]
+            end
+        end
+    end
+    return nil
+end
+
 function GSE.GetSpellId(spellstring, mode, absolute)
     if GSE.isEmpty(mode) then
         mode = Statics.TranslatorMode.ID
@@ -515,14 +580,19 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     local returnval, name, rank, spellId, rawSpellId
 
     local spellinfo = GSE.GetSpellInfo(spellstring)
+    -- Whether the CLIENT resolved this, as opposed to the fallback below
+    -- reflecting the input back with an ID read out of the cache. Only a real
+    -- client resolution teaches us anything new.
+    local resolvedFromClient = spellinfo ~= nil
     if not spellinfo then
         if type(spellstring) == "string" then
             ---@diagnostic disable-next-line: missing-fields
             spellinfo = {}
             spellinfo.name = spellstring
-            if GSESpellCache[GetLocale()][spellstring] then
-                spellinfo.spellID = GSESpellCache[GetLocale()][spellstring]
-            end
+            -- Any locale's table, not just this client's: a name the client
+            -- cannot resolve is very often a name from someone else's locale,
+            -- which is the whole reason those tables are shared.
+            spellinfo.spellID = lookupCachedSpellID(spellstring) or spellinfo.spellID
         else
             -- Numeric spell ID that the client doesn't know about: nothing
             -- meaningful to return. Bail rather than indexing nil below.
@@ -533,6 +603,16 @@ function GSE.GetSpellId(spellstring, mode, absolute)
     rawSpellId = normaliseSpellIDValue(spellinfo.spellID)
     spellId = rawSpellId
     name = spellinfo.name
+    -- Learn the pair here, before the mode branch, because a successful lookup
+    -- yields BOTH halves whichever way round it was asked. The write below is
+    -- gated on ID mode, so everything GSE translates the other way was
+    -- discarded: rendering a sequence's macro body runs CompileMacroText in
+    -- String mode (Storage.lua), which turns every stored ID back into a name
+    -- and threw that pair away. On a deDE client those are exactly the deDE
+    -- name -> ID pairs an enUS group member has no other way to obtain.
+    if resolvedFromClient then
+        rememberSpellName(name, rawSpellId)
+    end
     if mode ~= Statics.TranslatorMode.ID then
         if not GSE.isEmpty(rank) then
             returnval = name .. "(" .. rank .. ")"
@@ -568,15 +648,9 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             --@debug@
             GSE.PrintDebugMessage(spellstring .. " was not found", "Translator")
             --@end-debug@
-            if not GSE.isEmpty(GSESpellCache[GetLocale()][spellstring]) then
-                returnval = GSESpellCache[GetLocale()][spellstring]
-            end
-            if GSE.isEmpty(returnval) then
-                -- hail mary - try the enUS cache
-                if not GSE.isEmpty(GSESpellCache["enUS"][spellstring]) then
-                    returnval = GSESpellCache["enUS"][spellstring]
-                end
-            end
+            -- Last resort: any locale table we hold. This is where a name
+            -- from another client's language gets resolved.
+            returnval = lookupCachedSpellID(spellstring)
         else
             --@debug@
             GSE.PrintDebugMessage("Nothing was there to be found", "Translator")
