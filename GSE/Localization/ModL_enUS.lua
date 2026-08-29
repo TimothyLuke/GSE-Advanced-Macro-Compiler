@@ -946,6 +946,7 @@ L["Specialisation / Class ID"] = true
 -- key-as-value fallback.
 L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."] = true
 L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
+L["Cleared hidden version reference(s) with no Configuration row: %s.  Those contexts now follow the Default version."] = true
 L["it"] = true
 L["them"] = true
 L["Announce Manual Sequence Resets"] = true

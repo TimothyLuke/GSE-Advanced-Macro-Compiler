@@ -1076,6 +1076,15 @@ end
 -- version that something points at is refused rather than silently repointed:
 -- an author who set Raid to version 4 chose that, and moving it to Default
 -- behind their back changes which macro fires in a raid.
+-- Context keys the resolver honours but the Configuration tab has NO row for
+-- (Editor_Metadata's pve/pvpVersionConfigs stop at Raid/Arena). A version
+-- referenced only by one of these cannot be repointed by the user -- the
+-- delete guard's "point it at another version on the Configuration tab"
+-- instruction is unfollowable -- so version deletes CLEAR them (the context
+-- falls back to Default) instead of blocking. These values arrive from older
+-- releases and imports; nothing in the current UI can set them.
+local hiddenContextKeys = { Party = true, Heroic = true, Mythic = true }
+
 function GSE.VersionReferencesInUse(metadata, version)
     local inUse = {}
     if type(metadata) ~= "table" then return inUse end
@@ -1083,9 +1092,29 @@ function GSE.VersionReferencesInUse(metadata, version)
     if not version then return inUse end
     if tonumber(metadata.Default) == version then inUse[#inUse + 1] = "Default" end
     for _, key in ipairs(contextVersionKeys) do
-        if tonumber(metadata[key]) == version then inUse[#inUse + 1] = key end
+        if not hiddenContextKeys[key] and tonumber(metadata[key]) == version then
+            inUse[#inUse + 1] = key
+        end
     end
     return inUse
+end
+
+--- Clear hidden context keys (no Configuration row) that reference `version`,
+--- so a delete is not blocked by a value the user can neither see nor change.
+--- Returns the list of cleared key names for the caller to report.
+function GSE.ClearHiddenVersionReferences(metadata, version)
+    local cleared = {}
+    if type(metadata) ~= "table" then return cleared end
+    version = tonumber(version)
+    if not version then return cleared end
+    for key in pairs(hiddenContextKeys) do
+        if tonumber(metadata[key]) == version then
+            metadata[key] = nil
+            cleared[#cleared + 1] = key
+        end
+    end
+    table.sort(cleared)
+    return cleared
 end
 
 --- Move every version reference down one slot after `version` was deleted.

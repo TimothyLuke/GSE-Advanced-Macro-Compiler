@@ -6215,6 +6215,22 @@ function GSE.CreateEditor()
                 -- the rule live in Storage.lua, derived from
                 -- contextVersionPriority, so the editor cannot drift from the
                 -- runtime's idea of which contexts exist.
+                -- Hidden context keys (no Configuration row: Party/Heroic/
+                -- Mythic, from older releases/imports) cannot be repointed by
+                -- the user, so they are cleared -- that context falls back to
+                -- the Default -- rather than blocking on an instruction the
+                -- Configuration tab cannot satisfy.
+                local hiddenCleared = GSE.ClearHiddenVersionReferences
+                    and GSE.ClearHiddenVersionReferences(sequence.MetaData, version) or {}
+                if #hiddenCleared > 0 then
+                    GSE.Print(
+                        string.format(
+                            L["Cleared hidden version reference(s) with no Configuration row: %s.  Those contexts now follow the Default version."],
+                            table.concat(hiddenCleared, ", ")
+                        ),
+                        Statics.DebugModules["Editor"]
+                    )
+                end
                 local blocking = GSE.VersionReferencesInUse(sequence.MetaData, version)
                 if #blocking > 0 then
                     GSE.Print(
