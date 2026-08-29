@@ -498,12 +498,43 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         local rawText = editBox:GetText() or ""
         local caretPos = (editBox.GetCursorPosition and editBox:GetCursorPosition()) or #rawText
         local decoded = (GSE.DecodeMacroEditorText and GSE.DecodeMacroEditorText(rawText)) or stripCodes(rawText)
+        -- The session's anchor is the caret's LINE INDEX (0-based), not a byte
+        -- offset. Byte offsets die the moment anything rewrites the box under
+        -- the open menu -- probe-proven: the macro editor's deferred compile
+        -- fired mid-session (143 -> 131 chars) and a cursor of 77 silently
+        -- slid off "/cast [combat]" onto the "/petattack" line. Newlines
+        -- survive recolouring AND compile normalisation, so the line number is
+        -- stable; every read below re-derives fresh offsets from it.
+        local sessionLine
         if decoded ~= rawText then
-            local mapped = #stripCodes(rawText:sub(1, caretPos))
+            -- Only the caret's LINE matters here: the session snaps to the
+            -- line END right after this. Visible-character remapping across
+            -- formats is fragile (any markup beyond |c..|r that decoding
+            -- strips -- links, textures -- makes the counted offset overshoot
+            -- and fall off the end, which is how picks landed on the box's
+            -- LAST line). Newlines survive every encode/decode untouched, so
+            -- count them instead: same line index in both texts, always.
+            local _, lineIndex = rawText:sub(1, caretPos):gsub("\n", "")
+            sessionLine = lineIndex
+            local mapped = 0
+            for _ = 1, lineIndex do
+                local nl = decoded:find("\n", mapped + 1, true)
+                if not nl then mapped = #decoded break end
+                mapped = nl
+            end
+            -- ...and land the visible caret at that line's END, not its start:
+            -- the session builds at the line end anyway, and a caret visibly
+            -- jumping to the front of the line reads as a bug.
+            local lineEndNl = decoded:find("\n", mapped + 1, true)
+            mapped = (lineEndNl and lineEndNl - 1) or #decoded
             editBox:SetText(decoded)
             if editBox.SetCursorPosition then editBox:SetCursorPosition(mapped) end
             caretPos = mapped
             widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
+        end
+        if not sessionLine then
+            local _, n = rawText:sub(1, caretPos):gsub("\n", "")
+            sessionLine = n
         end
         local cursor = caretPos
         -- the builder always appends to the caret's LINE END (rule of thumb:
@@ -541,10 +572,12 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         -- command lands IN it rather than on a new line under it (the splice
         -- replaces the placeholder outright, which would leave that newline
         -- stranded at the top of the block).
+        local currentLineText -- assigned below, once lineBounds exists
+        -- The session's row, by line index -- byte-offset backscans went stale
+        -- whenever the box was rewritten under the menu (see sessionLine).
         local function rowBeforeCaret()
             if boxIsPlaceholder then return "" end
-            local full = plainFull()
-            return full:sub(1, math.min(cursor, #full)):match("([^\n]*)$") or ""
+            return currentLineText and currentLineText() or ""
         end
 
         -- One undo step per pick: the text IS the state (adoptClause re-derives
@@ -557,6 +590,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 -- that still held colour codes would restore a shifted caret
                 text = plainFull(),
                 cursor = cursor,
+                line = sessionLine,
                 placeholder = boxIsPlaceholder,
             }
         end
@@ -580,12 +614,28 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
         end
         local function resetGroup() groupTokens = {}; groupStart, groupLen = nil, 0 end
+        -- splice()'s own trailing token-bump exists to invalidate a STALE
+        -- debounce queued by an EARLIER edit (so it can't paint a now-wrong
+        -- "liveText" over this pick) -- but it also cancels the repaint our
+        -- own SetText just queued, so the box never recoloured once a pick
+        -- produced usable text. Waiting for a natural OnEditFocusLost to do it
+        -- instead does not work: the box already lost focus once, when the Tab
+        -- menu first opened, and nothing gives it focus back -- there is no
+        -- second focus-loss event left to fire the commit repaint. The session
+        -- is colour-proof by construction (every read re-decodes), so it is
+        -- safe to repaint explicitly, reopened-menu picks included.
+        local function commitRecolour()
+            if GSE.GUI and GSE.GUI.RefreshMacroEditorColoredText then
+                GSE.GUI.RefreshMacroEditorColoredText(widget, plainFull(), true)
+            end
+        end
         local function undoLast()
             local prev = table.remove(history)
             if not prev then return MenuResponse.Refresh end
             touchSession()
             editBox:SetText(prev.text)
             cursor = prev.cursor
+            sessionLine = prev.line or sessionLine
             boxIsPlaceholder = prev.placeholder
             if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
             widget.gseRecolourToken = (widget.gseRecolourToken or 0) + 1
@@ -593,34 +643,44 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             C_Timer.After(0, openMenu)
             return MenuResponse.Close
         end
-        -- True end of the current row (next newline after the build cursor, or
-        -- end of text): ,nil and ; must land at the END of the line regardless
-        -- of where the build cursor sits.
-        local function lineEndPos()
+        -- Bounds of the session's line, re-derived from the LIVE text on every
+        -- read: [startPos, endPos] plus the text itself. sessionLine is clamped
+        -- to the last real line, so a rewrite that removed lines cannot walk
+        -- the anchor off the end.
+        local function lineBounds()
             local full = plainFull()
-            local at = math.min(cursor, #full)
-            local nl = full:find("\n", at + 1, true)
-            return (nl and nl - 1) or #full
-        end
-        local function currentLineText()
-            local full = plainFull()
-            local endPos = lineEndPos()
-            local startPos = 1
-            for i = math.min(cursor, #full), 1, -1 do
-                if full:sub(i, i) == string.char(10) then startPos = i + 1 break end
+            local startPos, walked = 1, 0
+            while walked < sessionLine do
+                local nl = full:find("\n", startPos, true)
+                if not nl then break end
+                startPos = nl + 1
+                walked = walked + 1
             end
+            local nl = full:find("\n", startPos, true)
+            local endPos = (nl and nl - 1) or #full
+            return startPos, endPos, full
+        end
+        -- True end of the session's row: ,nil and ; must land at the END of
+        -- the line regardless of where the visible caret sits.
+        local function lineEndPos()
+            local _, endPos = lineBounds()
+            return endPos
+        end
+        currentLineText = function()
+            local startPos, endPos, full = lineBounds()
             return full:sub(startPos, endPos)
         end
         cursor = lineEndPos()
         -- Stored macro text often ends with a newline; a caret parked on that
         -- blank trailing line would make the session build on an empty row and
-        -- grey every clause-gated entry. Snap to the end of the last line that
-        -- has content (a Command pick still starts its own new row from there).
+        -- grey every clause-gated entry. Snap to the LINE of the last content
+        -- (a Command pick still starts its own new row from there).
         if currentLineText():match("^%s*$") then
             local fullText = plainFull()
             local lastContent = fullText:find("%S%s*$")
             if lastContent then
-                cursor = lastContent
+                local _, n = fullText:sub(1, lastContent):gsub("\n", "")
+                sessionLine = n
                 cursor = lineEndPos()
             end
         end
@@ -676,12 +736,16 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             resetGroup()
             resetStart, resetLen, resetValues = nil, 0, {}
             local row = rowBeforeCaret()
-            if row:match("^%s*$") then splice(cursor, 0, cmd .. " ")
-            else splice(cursor, 0, "\n" .. cmd .. " ") end
+            if row:match("^%s*$") then splice(lineEndPos(), 0, cmd .. " ")
+            else
+                splice(lineEndPos(), 0, "\n" .. cmd .. " ")
+                sessionLine = sessionLine + 1 -- the build moved onto the new row
+            end
             -- Refresh does not reliably re-run the root generator (probe-proven),
             -- so gates like Reset would stay stale: close and reopen for a full
             -- regeneration instead.
             condBase = cursor
+            commitRecolour()
             C_Timer.After(0, openMenu)
             return MenuResponse.Close
         end
@@ -692,8 +756,12 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             resetGroup()
             resetStart, resetLen, resetValues = nil, 0, {}
             local row = rowBeforeCaret()
-            if row:match("^%s*$") then splice(cursor, 0, text)
-            else splice(cursor, 0, "\n" .. text) end
+            if row:match("^%s*$") then splice(lineEndPos(), 0, text)
+            else
+                splice(lineEndPos(), 0, "\n" .. text)
+                sessionLine = sessionLine + 1 -- the build moved onto the new row
+            end
+            commitRecolour()
             C_Timer.After(0, openMenu)
             return MenuResponse.Close
         end
@@ -702,7 +770,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             adoptClause()
             -- Conditionals belong BEFORE reset=: if a reset segment already
             -- exists, open the group at its start and push it right.
-            if not groupStart then groupStart = condBase or resetStart or cursor end
+            if not groupStart then groupStart = condBase or resetStart or lineEndPos() end
             -- Same-family colon tokens collapse into WoW's multi-value form:
             -- picking spec:1 then spec:2 yields spec:1/2 (an OR), never
             -- spec:1,spec:2 (an AND that could not be true). Applies to any
@@ -750,7 +818,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             -- the "; " that opened this clause) and BEFORE the spells -- never
             -- at the caret, which may sit past spells already on the clause.
             if not resetStart then
-                resetStart = (groupStart and (groupStart + groupLen)) or condBase or cursor
+                resetStart = (groupStart and (groupStart + groupLen)) or condBase or lineEndPos()
             end
             -- only ONE number is valid in a reset=; a second numeric pick
             -- REPLACES the existing number instead of adding another
@@ -767,6 +835,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             if firstReset then
                 -- the ,nil gate depends on reset= being present; a plain Refresh
                 -- does not re-run the root generator, so reopen for a fresh build
+                commitRecolour()
                 C_Timer.After(0, openMenu)
                 return MenuResponse.Close
             end
@@ -791,7 +860,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         local function pickEmptyGroup()
             adoptClause()
             if not groupStart then
-                splice(condBase or resetStart or cursor, 0, "[] ")
+                splice(condBase or resetStart or lineEndPos(), 0, "[] ")
                 return MenuResponse.Refresh
             end
             local full = plainFull()
@@ -820,11 +889,21 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 insertAt = endPos - (#line - nilS + 1)
                 clause = line:sub(1, nilS - 1)
             end
-            local text = (clauseEndsWithSpell(clause) and ", " or "") .. name
+            -- Supply the separator ourselves: the compile that can rewrite the
+            -- box mid-session TRIMS trailing spaces, so "ends with a space"
+            -- cannot be assumed ("/cast [combat]" + pick gave "[combat]Spell").
+            local sep = ""
+            if clauseEndsWithSpell(clause) then
+                sep = ", "
+            elseif clause ~= "" and not clause:match("%s$") then
+                sep = " "
+            end
+            local text = sep .. name
             splice(insertAt, 0, text)
             cursor = lineEndPos()
             if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
             resetGroup()
+            commitRecolour()
             -- the ';' and ', nil' gates change once a spell lands; a plain
             -- Refresh does not re-run the root generator, so reopen fresh
             C_Timer.After(0, openMenu)
@@ -861,6 +940,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             resetGroup()
             resetStart, resetLen, resetValues = nil, 0, {}
             condBase = cursor
+            commitRecolour()
             -- the ';'/', nil' gates change (new clause is empty); Refresh does
             -- not re-run the root generator, so reopen for a fresh build
             C_Timer.After(0, openMenu)
@@ -869,6 +949,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         local function pickNil()
             splice(lineEndPos(), 0, ", nil")
             editBox.gseTabSessionUntil = 0
+            commitRecolour()
             return MenuResponse.Close
         end
 
@@ -904,7 +985,9 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                     local function insertLine(content)
                         local blankRow = currentLineText():match("^%s*$") ~= nil
                         splice(lineEndPos(), 0, (blankRow and "" or "\n") .. content)
+                        if not blankRow then sessionLine = sessionLine + 1 end
                         editBox.gseTabSessionUntil = 0
+                        commitRecolour()
                         return MenuResponse.Close
                     end
                     if offerVariables then
