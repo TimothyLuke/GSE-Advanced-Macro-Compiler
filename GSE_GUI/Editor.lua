@@ -7591,7 +7591,11 @@ function GSE.CreateEditor()
                         compiledMacro:SetText(body)
                         if compiledMacro.parent and compiledMacro.parent.DoLayout then compiledMacro.parent:DoLayout() end
                     end
-                    SetMacroCountText(macroEditBox, GSE.GetMacroEditorTextLength(value or ""))
+                    -- COMPILED length, same ruler as the over-limit backdrop and
+                    -- the Save gate (and as the draw-time count). Counting the raw
+                    -- display text here let the counter drop under 255 while the
+                    -- compiled body stayed over -- so Save "never un-greyed".
+                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(storedMacro))
                     FitMacroEditBoxToContent(macroEditBox, value)
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
                 end
