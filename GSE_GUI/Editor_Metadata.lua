@@ -36,7 +36,11 @@ local DEPENDENCY_COLUMN_GAP_WIDTH = 8
 local DEPENDENCY_TABLE_LEFT = 10
 local DEPENDENCY_HEADER_TOP = -4
 local DEPENDENCY_HEADER_HEIGHT = 15
-local DEPENDENCY_DATA_TOP_PADDING = 8
+-- Must clear the header band drawn on the box frame (DEPENDENCY_HEADER_TOP 4
+-- + DEPENDENCY_HEADER_HEIGHT 15) -- at 8 the first row overlapped the column
+-- titles. The scroll content already starts inset below the frame top, so the
+-- padding needed here is less than the band's full 19.
+local DEPENDENCY_DATA_TOP_PADDING = 12
 local METADATA_BOTTOM_PADDING = 12
 local METADATA_LAYOUT_GAP_ALLOWANCE = 24
 local CONFIG_TAB_ROW_HEIGHT = 42
@@ -138,7 +142,7 @@ local function dependencyColumnLabel(text, width, justify)
     local label = UI:Create("Label")
     label:SetText(text or "")
     label:SetWidth(width)
-    if label.SetHeight then label:SetHeight(20) end
+    if label.SetHeight then label:SetHeight(16) end
     if label.SetColor then label:SetColor(1, 1, 1, 1) end
     if label.SetJustifyH then label:SetJustifyH(justify or "LEFT") end
     disableTextWrap(label)
@@ -212,7 +216,9 @@ local function addDependencyRow(container, name, dependencyType, author, updated
     local row = UI:Create("SimpleGroup")
     row:SetLayout("Flow")
     row:SetFullWidth(true)
-    row:SetHeight(22)
+    -- 16 fits the single line of GameFont text; 22 + list gap read as
+    -- double-spaced rows.
+    row:SetHeight(16)
     if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
     if row.SetFlowGap then row:SetFlowGap(DEPENDENCY_COLUMN_GAP_WIDTH) end
     if row.SetFlowVAlign then row:SetFlowVAlign("MIDDLE") end
@@ -483,7 +489,7 @@ local function addDependencyWindow(editframe, container, deps, hasDeps, usedBy)
     dependencyScroll:SetLayout("List")
     if dependencyScroll.SetScrollBarEnabled then dependencyScroll:SetScrollBarEnabled(true) end
     if dependencyScroll.SetListPadding then dependencyScroll:SetListPadding(2, DEPENDENCY_DATA_TOP_PADDING, 4, 2) end
-    if dependencyScroll.SetListGap then dependencyScroll:SetListGap(2) end
+    if dependencyScroll.SetListGap then dependencyScroll:SetListGap(0) end
     nudgeWidgetScrollBar(dependencyScroll, 3)
 
     addDependencyLabels(editframe, dependencyScroll, deps, hasDeps, usedBy, false)
@@ -1070,7 +1076,7 @@ function GSE.GUI.CreateDependencyWindow(container, heading, rows, options)
     depScroll:SetLayout("List")
     if depScroll.SetScrollBarEnabled then depScroll:SetScrollBarEnabled(true) end
     if depScroll.SetListPadding then depScroll:SetListPadding(2, DEPENDENCY_DATA_TOP_PADDING, 4, 2) end
-    if depScroll.SetListGap then depScroll:SetListGap(2) end
+    if depScroll.SetListGap then depScroll:SetListGap(0) end
     nudgeWidgetScrollBar(depScroll, 3)
 
     for _, row in ipairs(rows) do
