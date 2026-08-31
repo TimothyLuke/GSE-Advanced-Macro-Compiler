@@ -754,7 +754,17 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     local chrome =
         (macroEditBox.labelHeight or 12) + (macroEditBox.verticalOffset or 2) * 3 + MACRO_BOX_CHROME_SLACK
     local newHeight = math.ceil(textHeight + chrome)
-    if macroEditBox.gseFitHeight == newHeight then return end
+    -- The no-op check must also verify the FRAME still holds that height: a
+    -- later layout pass can shrink the frame while gseFitHeight remembers the
+    -- correct number, and then every subsequent fit -- typing included --
+    -- computed the same value, matched the cache, and returned without
+    -- repairing the frame. (Repro: the LAST block of a version drew at
+    -- baseline height and nothing would ever grow it.)
+    if macroEditBox.gseFitHeight == newHeight then
+        local frameHeight = macroEditBox.frame and macroEditBox.frame.GetHeight
+            and macroEditBox.frame:GetHeight() or 0
+        if math.abs(frameHeight - newHeight) < 1 then return end
+    end
     macroEditBox.gseFitHeight = newHeight
     local delta = newHeight - (macroEditBox.height or newHeight)
     macroEditBox:SetHeight(newHeight)
