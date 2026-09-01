@@ -48,14 +48,17 @@ describe(
               seen[k] = true
             end
             -- PVP routes to Arena in one priority entry and to PVP in another;
-            -- both names must still be offered exactly once each.
+            -- both names must still be offered exactly once each. PVESolo is
+            -- not in the priority table (solo is the absence of every flag)
+            -- but is a version reference the resolver reads, so the guard and
+            -- the renumber must see it too.
             for _, expected in ipairs({
-              "Scenario", "Arena", "PVP", "Raid", "Mythic",
+              "PVESolo", "Scenario", "Arena", "PVP", "Raid", "Mythic",
               "MythicPlus", "Heroic", "Dungeon", "Timewalking", "Party",
             }) do
               assert.is_true(seen[expected] == true, "missing key " .. expected)
             end
-            assert.equals(10, #keys)
+            assert.equals(11, #keys)
           end
         )
       end
@@ -89,6 +92,18 @@ describe(
             table.sort(inUse)
             assert.equals("Arena", inUse[1])
             assert.equals("Raid", inUse[2])
+          end
+        )
+        it(
+          "reports keys by their Configuration row label, not the raw key",
+          function()
+            local meta = {Default = 1, PVESolo = 3, Party = 3, Scenario = 3}
+            local inUse = GSE.VersionReferencesInUse(meta, 3)
+            assert.equals(3, #inUse)
+            table.sort(inUse)
+            assert.equals("Delves/Scenarios", inUse[1])
+            assert.equals("In a group", inUse[2])
+            assert.equals("Solo", inUse[3])
           end
         )
         it(
@@ -194,6 +209,43 @@ describe(
             -- A mirror write into the Library must not touch the editor's copy.
             table.insert(stored.Versions, {Actions = {}})
             assert.equals(1, #seq.Versions)
+          end
+        )
+      end
+    )
+    describe(
+      "GSE.RepairDanglingVersionReferences",
+      function()
+        it(
+          "moves references outside the version list back to the Default",
+          function()
+            local seq = {
+              MetaData = {Default = 1, PVESolo = 2, Raid = 5},
+              Versions = {{}, {}}
+            }
+            local repaired = GSE.RepairDanglingVersionReferences(seq)
+            assert.equals(1, #repaired)
+            assert.equals("Raid", repaired[1])
+            assert.is_nil(seq.MetaData.Raid)
+            assert.equals(2, seq.MetaData.PVESolo)
+          end
+        )
+        it(
+          "repairs a dangling Default to version 1",
+          function()
+            local seq = {MetaData = {Default = 9}, Versions = {{}}}
+            local repaired = GSE.RepairDanglingVersionReferences(seq)
+            assert.equals(1, #repaired)
+            assert.equals("Default", repaired[1])
+            assert.equals(1, seq.MetaData.Default)
+          end
+        )
+        it(
+          "is safe on rubbish input",
+          function()
+            assert.equals(0, #GSE.RepairDanglingVersionReferences(nil))
+            assert.equals(0, #GSE.RepairDanglingVersionReferences({}))
+            assert.equals(0, #GSE.RepairDanglingVersionReferences({MetaData = {}, Versions = {}}))
           end
         )
       end
