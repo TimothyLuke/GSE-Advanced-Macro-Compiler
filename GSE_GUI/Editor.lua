@@ -2911,6 +2911,23 @@ function GSE.CreateEditor()
                     editframe.nameeditbox:SetFocus()
                     return false
                 end
+                -- A class/spec move (including to or from Global) writes the
+                -- record under the NEW classid, and nothing removed it from the
+                -- old one -- so a moved sequence came back under BOTH branches
+                -- on the next reload. Keyed on the ORIGINAL name so this also
+                -- covers a rename and a move in the same save; the rename
+                -- branch below returns early, so this has to run before it.
+                local origClassID = editframe.OrigClassID
+                if origClassID and origClassID ~= classid then
+                    local oldName = editframe.OrigSequenceName or plainName
+                    if GSESequences[origClassID] then
+                        GSESequences[origClassID][oldName] = nil
+                    end
+                    if GSE.Library[origClassID] then
+                        GSE.Library[origClassID][oldName] = nil
+                    end
+                    editframe.OrigClassID = classid
+                end
                 if editframe.newname then
                     -- True in-place rename: keep PlatformID so the GSE.Tools
                     -- record stays bound to this sequence under its new name.
@@ -7969,6 +7986,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     editor.newname          = nil
     editor.Sequence         = sequence
     editor.ClassID          = classid
+    editor.OrigClassID      = classid
     -- A recorded sequence arrives with actions and no icons, and the tree lands
     -- on its config node, so nothing would call GUILoadEditor for it this
     -- session. Hydrate it here or its blocks draw blank until the next open.
@@ -8055,6 +8073,10 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.newname = nil
     editor.Sequence = sequence
     editor.ClassID = classid
+    -- Where this sequence currently LIVES. The Specialization/Class dropdown
+    -- reassigns editor.ClassID in place, so without this the save cannot tell
+    -- that the record moved and leaves the original behind.
+    editor.OrigClassID = classid
     -- Fill in any missing action icons for THIS sequence only, now that it is
     -- decoded and before its blocks draw -- see the note in GSE.ShowSequences.
     hydrateSequenceIcons(sequence)
