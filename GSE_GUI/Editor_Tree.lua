@@ -1482,7 +1482,14 @@ local function ManageTree(editframe)
         local elements = GSE.split(k, ",")
         local tclassid = tonumber(elements[1])
         local specid = tonumber(elements[2])
-        local nodePath = "Sequences\001" .. tostring(tclassid) .. "\001" .. k
+        -- The Global class node tree value is the string "GLOBAL", not 0, so
+        -- the runtime path of its sequences is Sequences\001GLOBAL\001<k>.
+        -- Deriving the path from the classid built Sequences\0010\001<k> instead,
+        -- which never matched the expanded/selected state: Global sequences
+        -- never got version children, and (with the guard below) expanding
+        -- could not repair it either.
+        local pathClass = tclassid == 0 and "GLOBAL" or tostring(tclassid)
+        local nodePath = "Sequences\001" .. pathClass .. "\001" .. k
         local wantVersions = versionsWanted(nodePath)
         if tclassid and GSE.isEmpty(classtree[tclassid]) then
             classtree[tclassid] = {}
@@ -1646,7 +1653,7 @@ local function ManageTree(editframe)
             if not (expanded and path) then return end
             local parts = {("\001"):split(path)}
             if parts[1] ~= "Sequences" or #parts ~= 3 then return end
-            if not tonumber(parts[2]) then return end
+            if not tonumber(parts[2]) and parts[2] ~= "GLOBAL" then return end
             -- Rebuild unconditionally. The first cut of this skipped the rebuild
             -- when the sequence was already in GSE.Library, on the reasoning
             -- that a loaded sequence must already have had its versions drawn.
