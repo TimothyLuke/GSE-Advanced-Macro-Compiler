@@ -6227,11 +6227,21 @@ function GSE.CreateEditor()
                 -- runtime's idea of which contexts exist.
                 local blocking = GSE.VersionReferencesInUse(sequence.MetaData, version)
                 if #blocking > 0 then
+                    -- Name each context the way the Configuration tab labels it,
+                    -- not by its raw MetaData key. "Point MythicPlus at another
+                    -- version" sent the author looking for a row that reads
+                    -- "Mythic+", and "PVP" for one that read "Solo" (#2023).
+                    local blockingLabels = {}
+                    for _, contextKey in ipairs(blocking) do
+                        local label = contextKey == "Default" and "Default"
+                            or GSE.GetContextVersionLabel(contextKey)
+                        blockingLabels[#blockingLabels + 1] = L[label] or label
+                    end
                     GSE.Print(
                         string.format(
                             L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."],
                             version,
-                            table.concat(blocking, ", "),
+                            table.concat(blockingLabels, ", "),
                             #blocking == 1 and L["it"] or L["them"]
                         ),
                         Statics.DebugModules["Editor"]

@@ -29,6 +29,8 @@ describe(
         require("../GSE/API/Statics")
         require("../GSE/API/InitialOptions")   -- sets GSEOptions, GSE.OOCQueue
         require("../GSE/API/StringFunctions")  -- provides GSE.UnEscapeString
+        require("../GSE/API/CharacterFunctions")
+        require("../GSE/API/Storage")          -- provides GSE.GetContextVersionKeys
 
         Statics = GSE.Static
 

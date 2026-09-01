@@ -302,19 +302,20 @@ local function applyDependencyHeader(dependencyBox, hideAuthor, hideType)
     addDependencyHeaderColumn(frame, T("Date Last Updated"), dateLeft, DEPENDENCY_DATE_WIDTH)
 end
 
-local pveVersionConfigs = {
-    {key="PVESolo",     label=T("Solo"),        tip=T("The version of this sequence to use while solo in PvE.")},
-    {key="Scenario",    label=T("Delves/Scenarios"), tip=T("The version of this sequence to use in Delves and Scenarios.")},
-    {key="Timewalking", label=T("Timewalking"), tip=T("The version of this sequence to use when in time walking dungeons.")},
-    {key="Dungeon",     label=T("Dungeon"),     tip=T("The version of this sequence to use in normal dungeons.")},
-    {key="MythicPlus",  label=T("Mythic+"),     tip=T("The version of this sequence to use in Mythic+ Dungeons.")},
-    {key="Raid",        label=T("Raid"),        tip=T("The version of this sequence that will be used when you enter raids.")},
-}
-
-local pvpVersionConfigs = {
-    {key="PVP",         label=T("Solo"),        tip=T("The version of this sequence to use in PVP.")},
-    {key="Arena",       label=T("Arena"),       tip=T("The version of this sequence to use in Arenas.  If this is not specified, GSE will look for a PVP version before the default.")},
-}
+-- The version rows are NOT listed here any more. They are built from
+-- GSE.GetContextVersionDisplay(), which is derived from the same key list the
+-- runtime resolves against, because the hand-maintained table this replaced had
+-- drifted away from it: it offered a PVESolo row for a context GSE does not
+-- have, and had no row at all for Mythic, Heroic or Party, which GSE does
+-- honour. A sequence carrying one of those was unreadable and uneditable here,
+-- and refused to let its version be deleted while naming a row that was not on
+-- the screen (#2023). Labels come from the same place, so the row you are told
+-- to change is the row you can see.
+local pveVersionConfigs, pvpVersionConfigs = {}, {}
+for _, entry in ipairs(GSE.GetContextVersionDisplay()) do
+    local cfg = {key = entry.key, label = T(entry.label), tip = T(entry.tip)}
+    table.insert(entry.section == "PVP" and pvpVersionConfigs or pveVersionConfigs, cfg)
+end
 
 local function dependencyData(editframe)
     local raw = editframe.Sequence.MetaData and editframe.Sequence.MetaData.Dependencies

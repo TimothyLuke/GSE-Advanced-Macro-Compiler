@@ -1071,6 +1071,70 @@ function GSE.GetContextVersionKeys()
     return contextVersionKeys
 end
 
+--- How each context key is PRESENTED: the Configuration tab section it is
+-- drawn under, the row label, and its tooltip. `label` and `tip` are
+-- localisation keys (English source strings), translated by whoever displays
+-- them, so this table stays free of any locale dependency.
+--
+-- It lives here, beside the keys themselves, because #2023 was the two lists
+-- drifting apart: the editor kept its OWN row table, which had grown a PVESolo
+-- row the runtime has no context for and LOST the rows for Mythic, Heroic and
+-- Party -- all three of which the runtime still honours. An author who had set
+-- one of those (or imported a sequence that had) could not see it, could not
+-- change it, and was refused when deleting the version it pointed at, with a
+-- message naming a row that was not on screen. Deriving the rows from here
+-- means a key cannot exist without somewhere to set it.
+--
+-- Order is display order, not priority order (priority lives in
+-- contextVersionPriority above and is the runtime's business, not the user's).
+local contextVersionDisplay = {
+    { key = "Scenario",    section = "PVE", label = "Delves/Scenarios", tip = "The version of this sequence to use in Delves and Scenarios." },
+    { key = "Party",       section = "PVE", label = "Party",            tip = "The version of this sequence to use when in a party in the world." },
+    { key = "Dungeon",     section = "PVE", label = "Dungeon",          tip = "The version of this sequence to use in normal dungeons." },
+    { key = "Heroic",      section = "PVE", label = "Heroic",           tip = "The version of this sequence to use in heroic dungeons." },
+    { key = "Mythic",      section = "PVE", label = "Mythic",           tip = "The version of this sequence to use in Mythic Dungeons." },
+    { key = "MythicPlus",  section = "PVE", label = "Mythic+",          tip = "The version of this sequence to use in Mythic+ Dungeons." },
+    { key = "Timewalking", section = "PVE", label = "Timewalking",      tip = "The version of this sequence to use when in time walking dungeons." },
+    { key = "Raid",        section = "PVE", label = "Raid",             tip = "The version of this sequence that will be used when you enter raids." },
+    { key = "PVP",         section = "PVP", label = "PVP",              tip = "The version of this sequence to use in PVP." },
+    { key = "Arena",       section = "PVP", label = "Arena",            tip = "The version of this sequence to use in Arenas.  If this is not specified, GSE will look for a PVP version before the default." },
+}
+
+--- Display entries for every context key, in display order.
+--
+-- Built from contextVersionKeys, NOT from the table above: a key added to
+-- contextVersionPriority and forgotten here still gets an entry (labelled with
+-- its raw key, in PvE) rather than silently vanishing from the Configuration
+-- tab, which is the failure this whole pair exists to prevent. Returns a fresh
+-- table each call; callers may keep it but must not expect it to update.
+function GSE.GetContextVersionDisplay()
+    local known, emitted, display = {}, {}, {}
+    for _, key in ipairs(contextVersionKeys) do known[key] = true end
+    for _, entry in ipairs(contextVersionDisplay) do
+        -- Skip a display entry whose key the runtime no longer knows about --
+        -- the reverse drift, a row nothing reads.
+        if known[entry.key] then
+            emitted[entry.key] = true
+            display[#display + 1] = { key = entry.key, section = entry.section, label = entry.label, tip = entry.tip }
+        end
+    end
+    for _, key in ipairs(contextVersionKeys) do
+        if not emitted[key] then
+            display[#display + 1] = { key = key, section = "PVE", label = key, tip = key }
+        end
+    end
+    return display
+end
+
+--- The label a context key is shown under, for messages that have to name one.
+-- Falls back to the key so a caller always gets something printable.
+function GSE.GetContextVersionLabel(key)
+    for _, entry in ipairs(contextVersionDisplay) do
+        if entry.key == key then return entry.label end
+    end
+    return key
+end
+
 --- Which MetaData entries point AT `version`.
 -- Returns a list of key names, empty when nothing references it. Deleting a
 -- version that something points at is refused rather than silently repointed:
@@ -1116,21 +1180,6 @@ function GSE.ShiftVersionReferencesAfterDelete(metadata, version)
 end
 
 
-local function isPVESoloContext()
-    return not (
-        GSE.inScenario or
-        GSE.inArena or
-        GSE.PVPFlag or
-        GSE.inRaid or
-        GSE.inMythic or
-        GSE.inMythicPlus or
-        GSE.inHeroic or
-        GSE.inDungeon or
-        GSE.inTimeWalking or
-        GSE.inParty
-    )
-end
-
 --- Return the Active Sequence Version for a Sequence.
 function GSE.GetActiveSequenceVersion(sequenceName)
     local classid = GSE.GetCurrentClassID()
@@ -1141,10 +1190,12 @@ function GSE.GetActiveSequenceVersion(sequenceName)
         return
     end
     local meta = GSE.Library[classid][sequenceName]["MetaData"]
+    -- PVESolo is gone: it was never one of GSE's contexts (it is absent from
+    -- contextVersionPriority), only an editor row plus this special case, and
+    -- "solo" is what Default already means -- no context flag set. A sequence
+    -- saved with a PVESolo value now follows Default when solo, like every
+    -- sequence that never had one.
     local vers = (not GSE.isEmpty(meta.Default)) and meta.Default or 1
-    if not GSE.isEmpty(meta.PVESolo) and isPVESoloContext() then
-        vers = meta.PVESolo
-    end
     for _, ctx in ipairs(contextVersionPriority) do
         if meta[ctx.metaKey] and GSE[ctx.flag] then
             vers = meta[ctx.valueKey]

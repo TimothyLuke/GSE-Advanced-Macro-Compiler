@@ -674,10 +674,16 @@ end
 -- ============================================================
 
 --- MetaData keys that store Macros array index references.
-local seqContextKeys = {
-    "Default", "PVESolo", "Scenario", "Arena", "PVP", "Raid",
-    "Normal", "Dungeon", "Heroic", "Mythic", "MythicPlus", "Timewalking", "Party"
-}
+--
+-- Derived from the runtime's own context list rather than typed out again: the
+-- hand-written version had drifted, checking a PVESolo key GSE no longer has a
+-- context for and a "Normal" key nothing in the codebase has ever read, while
+-- the real list lives in Storage.lua (#2023). Default is not a context, so it
+-- is prepended here.
+local seqContextKeys = {"Default"}
+for _, key in ipairs(GSE.GetContextVersionKeys()) do
+    seqContextKeys[#seqContextKeys + 1] = key
+end
 
 --- Set of valid WoW macro slash commands (warcraft.wiki.gg/wiki/Macro_commands).
 -- Built once at load time from Statics + comprehensive wiki list.

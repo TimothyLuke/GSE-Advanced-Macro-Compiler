@@ -61,6 +61,74 @@ describe(
       end
     )
 
+    -- #2023: the editor kept its own list of Configuration rows, which drifted
+    -- from the keys the runtime resolves against -- it had grown a row for a
+    -- PVESolo context GSE does not have and lost the rows for Mythic, Heroic
+    -- and Party, which GSE does honour. An author who had one of those set
+    -- could not see or change it, and was refused when deleting the version it
+    -- pointed at with a message naming a row that was not on screen. The rows
+    -- and the message are built from GetContextVersionDisplay now, so these
+    -- assert the two lists cannot come apart again.
+    describe(
+      "GSE.GetContextVersionDisplay",
+      function()
+        it(
+          "covers every context key exactly once",
+          function()
+            local display = GSE.GetContextVersionDisplay()
+            local seen = {}
+            for _, entry in ipairs(display) do
+              assert.is_nil(seen[entry.key], "duplicate display entry for " .. tostring(entry.key))
+              seen[entry.key] = true
+            end
+            for _, key in ipairs(GSE.GetContextVersionKeys()) do
+              assert.is_true(seen[key] == true, "no Configuration row for context key " .. key)
+            end
+            assert.equals(#GSE.GetContextVersionKeys(), #display)
+          end
+        )
+        it(
+          "offers no row for a context GSE cannot resolve",
+          function()
+            for _, entry in ipairs(GSE.GetContextVersionDisplay()) do
+              assert.is_not.equals("PVESolo", entry.key)
+            end
+          end
+        )
+        it(
+          "gives every row a section and a label",
+          function()
+            for _, entry in ipairs(GSE.GetContextVersionDisplay()) do
+              assert.is_true(entry.section == "PVE" or entry.section == "PVP",
+                entry.key .. " has no Configuration section")
+              assert.is_true(type(entry.label) == "string" and entry.label ~= "",
+                entry.key .. " has no label")
+            end
+          end
+        )
+      end
+    )
+
+    describe(
+      "GSE.GetContextVersionLabel",
+      function()
+        it(
+          "names a context the way the Configuration tab labels it",
+          function()
+            assert.equals("Mythic+", GSE.GetContextVersionLabel("MythicPlus"))
+            assert.equals("Delves/Scenarios", GSE.GetContextVersionLabel("Scenario"))
+            assert.equals("Party", GSE.GetContextVersionLabel("Party"))
+          end
+        )
+        it(
+          "falls back to the key so a message always has something to print",
+          function()
+            assert.equals("Nonsense", GSE.GetContextVersionLabel("Nonsense"))
+          end
+        )
+      end
+    )
+
     describe(
       "GSE.VersionReferencesInUse",
       function()
