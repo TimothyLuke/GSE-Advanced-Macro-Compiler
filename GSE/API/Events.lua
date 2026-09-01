@@ -1469,6 +1469,16 @@ function GSE:PLAYER_LEAVING_WORLD()
 end
 
 function GSE:PLAYER_LOGOUT()
+    -- "Forget Last Opened Sequence on Logout": the editor writes its
+    -- where-was-I state to GSEOptions as you click around, so honouring the
+    -- option means clearing that state on the way out rather than declining to
+    -- save it. Deliberately outside the UnsavedOptions["GUI"] block below --
+    -- that gate is about writing frame positions, and this has to run whether
+    -- or not it does.
+    if GSEOptions and GSEOptions.forgetLastSequenceOnLogout
+        and GSE.GUI and GSE.GUI.ForgetLastSequenceEditorNode then
+        GSE.GUI.ForgetLastSequenceEditorNode()
+    end
     if not GSE.UnsavedOptions["GUI"] then
         if GSE["MenuFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations) then

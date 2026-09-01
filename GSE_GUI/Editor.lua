@@ -7759,11 +7759,18 @@ function GSE.ShowSequences()
     -- class, so only restore the path when it belongs to the current class
     -- (otherwise it would not be visible); fall back to the current class.
     -- Paths look like "Sequences\001<classID>\001..." so check segment 2.
+    --
+    -- Class 0 (Global) is the exception: the tree draws it alongside the
+    -- current class whenever the Global filter is on, so a Global path IS
+    -- visible and must survive this test. It never did -- classID is the
+    -- player's class, never 0 -- so the last sequence you opened was silently
+    -- dropped whenever it was a Global one.
     local showingAllClasses = GSEOptions and GSEOptions.filterList and GSEOptions.filterList[Statics.All]
+    local showingGlobal = GSEOptions and GSEOptions.filterList and GSEOptions.filterList[Statics.Global]
     if lastSequencePath and not showingAllClasses then
         local parts = {("\001"):split(lastSequencePath)}
         local pathClass = parts[2] and tostring(parts[2]) or ""
-        if pathClass ~= classID then
+        if pathClass ~= classID and not (showingGlobal and tonumber(pathClass) == 0) then
             lastSequencePath = nil   -- wrong class, fall back to current class
         end
     end

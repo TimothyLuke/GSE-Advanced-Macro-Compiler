@@ -242,6 +242,7 @@ L["Reset Sequences when out of combat"] = true
 -- 1.4.4
 L["Record Sequence"] = true
 L["Actions"] = true
+L["%s's initialisation hook was replaced by %s, so GSE has not loaded %s. GSE does not hand its internals to another addon. Disable %s to restore it."] = true
 L["Record"] = true
 L["Create Sequence"] = true
 L["Stop"] = true
@@ -950,3 +951,7 @@ L["it"] = true
 L["them"] = true
 L["Announce Manual Sequence Resets"] = true
 L["When enabled, GSE prints a chat message each time a manual reset returns a sequence to step 1."] = true
+
+-- Editor: forget the last opened node at logout
+L["Forget Last Opened Sequence on Logout"] = true
+L["When enabled, GSE forgets which sequence you had open when you log out or reload, so the editor opens fresh next session instead of returning to where you left off.  Within a session the editor still reopens where you were."] = true

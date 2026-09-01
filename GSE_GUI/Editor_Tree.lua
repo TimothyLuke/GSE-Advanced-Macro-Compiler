@@ -510,9 +510,36 @@ end
 function GSE.GUI.GetLastSequenceEditorPath()
     local opts = GetSequenceEditorOptions()
     local path = opts and opts.lastSequencePath
+    -- Builds before #2036 wrote the Global class node as the string "GLOBAL";
+    -- it is the classid, 0, now. Rewrite a path saved by one of those so the
+    -- first session after upgrading still lands on the node it names. Drop this
+    -- once those saved variables have aged out.
+    if path then
+        local migrated = path:gsub("^Sequences\001GLOBAL\001", "Sequences\0010\001")
+        if migrated ~= path then
+            path = migrated
+            opts.lastSequencePath = path
+        end
+    end
     if SequenceEditorPathExists(path) then return path end
     if opts then opts.lastSequencePath = nil end
     return nil
+end
+
+-- Drop everything the editor remembers about where the user last was: the
+-- sequence path used by GSE.ShowSequences, and the area/key/classid trio
+-- RestoreLastNode uses for the Variables, Macros and Keybindings tabs. Both
+-- live in the same saved-variable table and are written as you click around,
+-- so forgetting means clearing all four. Called from PLAYER_LOGOUT when
+-- GSEOptions.forgetLastSequenceOnLogout is set; the state is still kept during
+-- the session, so only the next login sees a fresh editor.
+function GSE.GUI.ForgetLastSequenceEditorNode()
+    local opts = GetSequenceEditorOptions()
+    if not opts then return end
+    opts.lastSequencePath = nil
+    opts.lastArea = nil
+    opts.lastKey = nil
+    opts.lastClassId = nil
 end
 
 function GSE.GUI.SelectEditorTreePath(editor, path)
@@ -1605,8 +1632,15 @@ local function ManageTree(editframe)
                 children = {}
             }
         elseif k == 0 then
+            -- value is the classid, 0, NOT the string "GLOBAL" it used to be.
+            -- Node values are what AceGUI concatenates into a node's path, and
+            -- every other producer and consumer of these paths -- the version
+            -- children built above, the OnGroupExpanded rebuild below -- spells
+            -- segment 2 as a number. "GLOBAL" agreed with none of them, so no
+            -- Global sequence ever matched its own path and none of them ever
+            -- showed a version (#2036). Only `text` is user-facing.
             tnode = {
-                value = "GLOBAL",
+                value = k,
                 text = L["Global"],
                 children = {}
             }

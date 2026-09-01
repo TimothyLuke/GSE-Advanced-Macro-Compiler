@@ -1725,6 +1725,20 @@ function AddEditorSequenceListOptions(optionsCategory)
         setting:SetValueChangedCallback(RefreshOpenEditorContent)
         Settings.CreateCheckbox(optionsCategory, setting, L["GSE stores the base spell and asks WoW to use that ability.  WoW will then choose the current version of the spell.  This toggle switches between showing the Base Spell or the Current Spell."])
     end
+    -- forgetLastSequenceOnLogout
+    do
+        -- SetDefaultOptions only fires on a fresh install (it is gated on
+        -- DebugModules), so an upgraded GSEOptions has no key here at all.
+        -- Normalise it to a real boolean before registering, otherwise the
+        -- checkbox is bound to a nil variable on every existing install.
+        if GSEOptions.forgetLastSequenceOnLogout == nil then
+            GSEOptions.forgetLastSequenceOnLogout = false
+        end
+        -- No value-changed callback: nothing on screen depends on this. It is
+        -- read once, at PLAYER_LOGOUT (GSE/API/Events.lua).
+        local setting = Settings.RegisterAddOnSetting(optionsCategory, "forgetLastSequenceOnLogout", "forgetLastSequenceOnLogout", GSEOptions, Settings.VarType.Boolean, L["Forget Last Opened Sequence on Logout"], false)
+        Settings.CreateCheckbox(optionsCategory, setting, L["When enabled, GSE forgets which sequence you had open when you log out or reload, so the editor opens fresh next session instead of returning to where you left off.  Within a session the editor still reopens where you were."])
+    end
     -- Focus Highlight Tint (master toggle for the rail-color fill on the
     -- focused block — sits above Focus Highlight Proc because it gates
     -- whether the tint shows at all; the Proc + Brightness controls below
