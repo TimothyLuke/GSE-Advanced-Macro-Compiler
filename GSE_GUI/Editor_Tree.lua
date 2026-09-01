@@ -1560,7 +1560,14 @@ local function ManageTree(editframe)
             node.text = "|cFFFF3030" .. tostring(elements[3]) .. " |r"
             node.icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew"  -- swap for any flag texture
         else
-            if loadedSeq and wantVersions then
+            -- Build version children for ANY sequence already in memory. The
+            -- expensive half of laziness is the decompress above (still gated
+            -- on wantVersions); assembling children for a record already in the
+            -- Library is a few table inserts. Gating the children on the tree
+            -- path too left a just-created sequence showing Configuration and
+            -- New Version with nothing between them, because it is neither
+            -- expanded nor selected at the moment ManageTree runs.
+            if loadedSeq then
                 for i, j in ipairs(loadedSeq.Versions) do
                     table.insert(node.children, {
                         value = i,
