@@ -7739,9 +7739,23 @@ function GSE.ShowSequences()
     --@debug@
     local afterCreate = GSE.NowMs()
     --@end-debug@
-    editframe.ManageTree()
+    -- The tree build moved BELOW the expansion/selection restore: version
+    -- children are built lazily (versionsWanted reads the tree's expanded +
+    -- selected state), so building here -- before that state is restored --
+    -- gave the restored sequence a node with Configuration and New Version but
+    -- NO version children. The expand-click rebuild never fires on restore.
+    --
+    -- Its timestamps move with it, to the call sites below. Left here they
+    -- bracketed nothing and reported ManageTree as 0 ms while its real cost
+    -- went silently into the select+show bucket -- and this instrumentation
+    -- exists precisely to say which of the three is responsible for a slow
+    -- open. Seeded to afterCreate so the arithmetic is still safe on any path
+    -- that somehow reaches the report without building (there is none today).
+    -- The restore work in between belongs to neither bucket, so it shows up as
+    -- the gap between the three numbers and the total, which is what the
+    -- comment above openStartedAt says to read that gap as.
     --@debug@
-    local afterTree = GSE.NowMs()
+    local beforeTree, afterTree = afterCreate, afterCreate
     --@end-debug@
     -- The whole-library icon hydration used to run HERE, on every open, and it
     -- was the freeze: it force-loads every class (GSE.EnsureClassLoaded ->
@@ -7806,6 +7820,13 @@ function GSE.ShowSequences()
             -- Open to the detached tree's current node, silently: SetSelected loads
             -- the editor content via OnGroupSelected without expanding/RefreshTree.
             editframe.forceTreeSelection = true
+            --@debug@
+            beforeTree = GSE.NowMs()
+            --@end-debug@
+            editframe.ManageTree()
+            --@debug@
+            afterTree = GSE.NowMs()
+            --@end-debug@
             if editframe.treeContainer.SetSelected then
                 editframe.treeContainer:SetSelected(srcStatus.selected)
             end
@@ -7828,7 +7849,20 @@ function GSE.ShowSequences()
             if lp[2] and lp[2] ~= "" then
                 treeStatus.groups["Sequences\001" .. tostring(lp[2])] = true
             end
+            -- Expand the restored SEQUENCE node itself: versionsWanted builds a
+            -- node's version children only when it is expanded or selected at
+            -- build time, and the selection has not happened yet.
+            if lp[3] and lp[3] ~= "" then
+                treeStatus.groups["Sequences\001" .. tostring(lp[2]) .. "\001" .. tostring(lp[3])] = true
+            end
         end
+        --@debug@
+        beforeTree = GSE.NowMs()
+        --@end-debug@
+        editframe.ManageTree()
+        --@debug@
+        afterTree = GSE.NowMs()
+        --@end-debug@
         if GSE.GUI.SelectEditorTreePath then
             GSE.GUI.SelectEditorTreePath(editframe, selectPath)
         else
@@ -7855,7 +7889,7 @@ function GSE.ShowSequences()
     ReportOpenTiming(
         string.format("ShowSequences: %.0f ms (CreateEditor %.0f, ManageTree %.0f, select+show %.0f)",
             openTotal, afterCreate - openStartedAt,
-            afterTree - afterCreate, GSE.NowMs() - afterTree),
+            afterTree - beforeTree, GSE.NowMs() - afterTree),
         openTotal
     )
     --@end-debug@
