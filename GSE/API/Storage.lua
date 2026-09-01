@@ -1058,6 +1058,14 @@ local contextVersionPriority = {
 local contextVersionKeys = {}
 do
     local seen = {}
+    -- PVESolo is a version reference like any other -- the resolver reads it
+    -- for the solo context -- but it is NOT in contextVersionPriority (solo is
+    -- decided by isPVESoloContext, not by a flag entry). Left out of this list
+    -- it was invisible to BOTH the delete guard and the post-delete shifter, so
+    -- deleting the version the Solo row pointed at was allowed and left Solo
+    -- dangling at an index that no longer exists.
+    seen.PVESolo = true
+    contextVersionKeys[1] = "PVESolo"
     for _, entry in ipairs(contextVersionPriority) do
         if entry.valueKey and not seen[entry.valueKey] then
             seen[entry.valueKey] = true
@@ -1076,6 +1084,22 @@ end
 -- version that something points at is refused rather than silently repointed:
 -- an author who set Raid to version 4 chose that, and moving it to Default
 -- behind their back changes which macro fires in a raid.
+local contextKeyDisplayNames = {
+    -- Rowless rules, named for what they mean to the author.
+    Party    = "In a group",
+    Heroic   = "Heroic dungeons",
+    Mythic   = "Mythic dungeons",
+    -- Keys whose Configuration row is labelled differently from the key name.
+    PVESolo  = "Solo",
+    Scenario = "Delves/Scenarios",
+    MythicPlus = "Mythic+",
+    PVP      = "PvP Solo",
+}
+
+function GSE.ContextVersionKeyDisplayName(key)
+    return contextKeyDisplayNames[key] or key
+end
+
 function GSE.VersionReferencesInUse(metadata, version)
     local inUse = {}
     if type(metadata) ~= "table" then return inUse end
@@ -1083,9 +1107,42 @@ function GSE.VersionReferencesInUse(metadata, version)
     if not version then return inUse end
     if tonumber(metadata.Default) == version then inUse[#inUse + 1] = "Default" end
     for _, key in ipairs(contextVersionKeys) do
-        if tonumber(metadata[key]) == version then inUse[#inUse + 1] = key end
+        if tonumber(metadata[key]) == version then
+            inUse[#inUse + 1] = GSE.ContextVersionKeyDisplayName(key)
+        end
     end
     return inUse
+end
+
+--- Repair references that point past the end of the version list.
+---
+--- Data already broken before PVESolo joined contextVersionKeys can carry a
+--- reference to a version that no longer exists (deleting the version the Solo
+--- row pointed at was allowed, and the shifter did not touch it). The resolver
+--- would then select a missing version. Anything out of range falls back to
+--- the Default, which is the behaviour an unset context already has.
+--- Returns the list of repaired display names.
+function GSE.RepairDanglingVersionReferences(sequence)
+    local repaired = {}
+    if type(sequence) ~= "table" then return repaired end
+    local metadata, versions = sequence.MetaData, sequence.Versions
+    if type(metadata) ~= "table" or type(versions) ~= "table" then return repaired end
+    local count = #versions
+    if count < 1 then return repaired end
+
+    local default = tonumber(metadata.Default)
+    if default and not versions[default] then
+        metadata.Default = 1
+        repaired[#repaired + 1] = "Default"
+    end
+    for _, key in ipairs(contextVersionKeys) do
+        local value = tonumber(metadata[key])
+        if value and not versions[value] then
+            metadata[key] = nil
+            repaired[#repaired + 1] = GSE.ContextVersionKeyDisplayName(key)
+        end
+    end
+    return repaired
 end
 
 --- Move every version reference down one slot after `version` was deleted.

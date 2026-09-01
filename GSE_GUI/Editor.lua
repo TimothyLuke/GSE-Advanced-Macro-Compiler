@@ -6229,7 +6229,7 @@ function GSE.CreateEditor()
                 if #blocking > 0 then
                     GSE.Print(
                         string.format(
-                            L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."],
+                            L["Version %d is in use by: %s.  Point %s at another version before deleting this one."],
                             version,
                             table.concat(blocking, ", "),
                             #blocking == 1 and L["it"] or L["them"]
@@ -6260,6 +6260,13 @@ function GSE.CreateEditor()
 
                     table.remove(sequence.Versions, version)
 
+                    -- After the removal and the renumber, ANY reference still
+                    -- pointing outside the list falls back to the Default, so a
+                    -- row can never display (or resolve to) a version that no
+                    -- longer exists.
+                    local repaired = GSE.RepairDanglingVersionReferences
+                        and GSE.RepairDanglingVersionReferences(sequence) or {}
+
                     -- Mirror the deletion into the Library display cache so the
                     -- tree drops the version node immediately, before any Save
                     -- (GSESequences is only written on explicit Save). The tree is
@@ -6281,9 +6288,28 @@ function GSE.CreateEditor()
                         end
                     end
 
+                    if #repaired > 0 then
+                        GSE.Print(
+                            string.format(
+                                L["%s now follow the Default version."],
+                                table.concat(repaired, ", ")
+                            ),
+                            Statics.DebugModules["Editor"]
+                        )
+                    end
                     printtext = printtext .. " " .. L["This change will not come into effect until you save this sequence."]
                     editframe.ManageTree()
-                    treeContainer:SelectByValue(path)
+                    -- Re-select the CONFIG node, not `path`: path points at the
+                    -- version just deleted, so re-selecting it left the panel
+                    -- showing stale dropdown values (rows still displaying a
+                    -- version that no longer exists). The config page redraws
+                    -- from the repaired metadata.
+                    local reselect = path
+                    local parts = {("\001"):split(path or "")}
+                    if #parts >= 3 then
+                        reselect = table.concat({parts[1], parts[2], parts[3]}, "\001") .. "\001config"
+                    end
+                    treeContainer:SelectByValue(reselect)
                     editframe:SetStatusText(string.format(printtext, version))
                     C_Timer.After(
                         5,
@@ -7997,6 +8023,21 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
 
     if GSE.isEmpty(sequence.WeakAuras) then
         sequence.WeakAuras = {}
+    end
+    -- Heal references left pointing at a version that no longer exists (the
+    -- Solo row could do this before PVESolo was guarded). They fall back to the
+    -- Default; tell the author what changed so a silent edit never happens.
+    if GSE.RepairDanglingVersionReferences then
+        local repaired = GSE.RepairDanglingVersionReferences(sequence)
+        if #repaired > 0 then
+            GSE.Print(
+                string.format(
+                    L["%s pointed at a version that no longer exists and now follows the Default.  Save to keep this."],
+                    table.concat(repaired, ", ")
+                ),
+                Statics.DebugModules["Editor"]
+            )
+        end
     end
     editor:SetStatusText("GSE: " .. GSE.VersionString)
     editor.SequenceName = sequenceName
