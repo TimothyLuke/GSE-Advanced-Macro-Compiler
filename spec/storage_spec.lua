@@ -81,13 +81,14 @@ describe(
             local saveSendMessage, saveDeps = GSE.SendMessage, GSE.ComputeSequenceDependencies
             GSE.SendMessage = function(_, msg, name) sent[#sent + 1] = msg end
             GSE.ComputeSequenceDependencies = function() end
-            GSESequences = {[1] = {}}
+            -- busted sandboxes spec globals; the module reads the real _G.
+            _G.GSESequences = {[1] = {}}
             GSE.Library = {[1] = {}}
             local seq = {MetaData = {Author = "Bob@Realm", Default = 1}, Versions = {{Actions = {}}}}
             GSE.ReplaceSequence(1, "SBA", seq)
             assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA"].MetaData.OriginKey)
             -- the mock codec is an identity; the real one returns ok, table
-            local decoded = {GSE.DecodeMessage(GSESequences[1]["SBA"])}
+            local decoded = {GSE.DecodeMessage(_G.GSESequences[1]["SBA"])}
             local stored = type(decoded[1]) == "table" and decoded[1] or decoded[2]
             assert.are.equal("SBA|Bob@Realm", stored[2].MetaData.OriginKey)
             -- a later save under a new name keeps the birth key
