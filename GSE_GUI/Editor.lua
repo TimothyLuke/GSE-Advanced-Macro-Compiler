@@ -1099,7 +1099,12 @@ local function isInGameMacroBody(macro)
     macro = trimIconCandidate(macro)
     if macro == "" then return false end
 
-    local firstCharacter = string.sub(macro, 1, 1)
+    -- Looks past the #showtooltip / #show lines GSE never executes, so a
+    -- `#showtooltip Spell` header no longer files the block as the NAME of an
+    -- in-game macro. A body that is nothing BUT directives has no lead char
+    -- and is not a macro name either.
+    local firstCharacter = GSE.GetMacroBodyLeadChar(macro)
+    if firstCharacter == "" then return false end
     return firstCharacter ~= "/" and firstCharacter ~= "="
 end
 
@@ -1474,7 +1479,7 @@ local function shouldReplaceFormActionIcon(action)
     if GSE.isEmpty(action.macro) then return false end
 
     local macro = getResolvedMacroBody(action)
-    if string.sub(macro, 1, 1) ~= "/" then return false end
+    if not GSE.IsMacroTextBody(macro) then return false end
 
     local formIconInfo = getFirstMacroFormIconInfo(macro)
     if not formIconInfo then return false end
@@ -1558,7 +1563,7 @@ local function getActionAutoIcon(action)
         end
 
         local macro = getResolvedMacroBody(action)
-        if string.sub(macro, 1, 1) == "/" then
+        if GSE.IsMacroTextBody(macro) then
             local spellstuff = getFirstMacroLineIconInfo(macro, true) or getOnlyMacroFormIconInfo(macro)
             return notQuestionMark(spellstuff and spellstuff.iconID)
         else
@@ -1673,20 +1678,40 @@ local function addIconScanMiss(scanStats, action)
 end
 
 local function hydrateActionIcons(actions, scanStats)
-    if type(actions) ~= "table" then return false, 0, 0 end
+    if type(actions) ~= "table" then return false, 0, 0, 0 end
 
     local changed = false
     local changedIcons = 0
     local scannedActions = 0
+    -- Counted apart from changedIcons because these are a DATA migration, not
+    -- an icon nicety: icon hydration is deliberately not saved at login (the
+    -- user flushes it with /gsesaveallsequences), but a stripped #showtooltip
+    -- has to reach GSESequences or it is redone every session. See
+    -- GSE.HydrateClassActionIcons.
+    local showTooltipChanges = 0
 
-    local function mergeScanResult(childChanged, childChangedIcons, childScannedActions)
+    local function mergeScanResult(childChanged, childChangedIcons, childScannedActions, childShowTooltipChanges)
         if childChanged then changed = true end
         changedIcons = changedIcons + (childChangedIcons or 0)
         scannedActions = scannedActions + (childScannedActions or 0)
+        showTooltipChanges = showTooltipChanges + (childShowTooltipChanges or 0)
     end
 
     for _, action in ipairs(actions) do
         if type(action) == "table" then
+            -- Retry the #showtooltip strip. The lazy decode in Storage.lua runs
+            -- it first, but that happens before GSE_GUI loads and often before
+            -- spell data is queryable, so a directive naming a spell that could
+            -- not be resolved then was deliberately left in place. Here the
+            -- client is warm. Anything reaching this point had an argument (a
+            -- bare directive always strips at decode time), so a successful
+            -- retry always sets an icon and counting it as one is accurate.
+            -- Runs before the derivation below so that sees a slash-led body.
+            if GSE.ApplyShowTooltipToAction and GSE.ApplyShowTooltipToAction(action) then
+                changed = true
+                changedIcons = changedIcons + 1
+                showTooltipChanges = showTooltipChanges + 1
+            end
             if isIconBearingAction(action) and (shouldAutoFillActionIcon(action) or shouldReplaceFormActionIcon(action) or shouldUseCategorisedActionIcon(action)) then
                 scannedActions = scannedActions + 1
                 local icon = getActionAutoIcon(action)
@@ -1712,7 +1737,7 @@ local function hydrateActionIcons(actions, scanStats)
             end
         end
     end
-    return changed, changedIcons, scannedActions
+    return changed, changedIcons, scannedActions, showTooltipChanges
 end
 
 local function resetActionIcons(actions, scanStats)
@@ -1777,15 +1802,30 @@ end
 function GSE.HydrateClassActionIcons(classid)
     if not classid then return end
     if type(GSE.Library) ~= "table" or type(GSE.Library[classid]) ~= "table" then return end
-    for _, sequence in pairs(GSE.Library[classid]) do
+    for sequenceName, sequence in pairs(GSE.Library[classid]) do
         local sequenceChangedIcons = 0
+        local sequenceShowTooltipChanges = 0
         if type(sequence) == "table" and type(sequence.Versions) == "table" then
             for _, versionData in ipairs(sequence.Versions) do
                 if type(versionData) == "table" then
-                    local _, versionChangedIcons = hydrateActionIcons(versionData.Actions, nil)
+                    local _, versionChangedIcons, _, versionShowTooltipChanges =
+                        hydrateActionIcons(versionData.Actions, nil)
                     sequenceChangedIcons = sequenceChangedIcons + (versionChangedIcons or 0)
+                    sequenceShowTooltipChanges = sequenceShowTooltipChanges + (versionShowTooltipChanges or 0)
                 end
             end
+        end
+        -- A stripped #showtooltip is a one-way migration of the stored body, so
+        -- it writes through here rather than waiting on /gsesaveallsequences.
+        -- Same persist step loadOneClass already performs when
+        -- migrateSequenceVersions changes a sequence; this only extends it to
+        -- the retry, which has to run after GSE_GUI and warm spell data. Icon
+        -- hydration keeps its existing deferred-save policy untouched.
+        if sequenceShowTooltipChanges > 0 and GSESequences and GSESequences[classid] and
+            GSESequences[classid][sequenceName] then
+            if type(sequence.MetaData) == "table" then sequence.MetaData.Checksum = nil end
+            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+            sequenceChangedIcons = sequenceChangedIcons - sequenceShowTooltipChanges
         end
         if sequenceChangedIcons > 0 then
             actionIconDirtySequences[sequence] = (actionIconDirtySequences[sequence] or 0) + sequenceChangedIcons
@@ -2099,7 +2139,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
         end
 
         local macro = GSE.UnEscapeString(action.macro)
-        if macro and string.sub(macro, 1, 1) == "/" then
+        if macro and GSE.IsMacroTextBody(macro) then
             local lines = GSE.SplitMeIntoLines(macro)
             for _, v in ipairs(lines) do
                 addIconMenuCandidates(spellinfolist, GSE.GetSpellsFromString(v, true))
@@ -7460,7 +7500,7 @@ function GSE.CreateEditor()
                 if repairedMacro ~= action.macro then
                     action.macro = repairedMacro
                 end
-                if string.sub(GSE.UnEscapeString(action.macro), 1, 1) == "/" then
+                if GSE.IsMacroTextBody(GSE.UnEscapeString(action.macro)) then
                     spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
                 else
                     spelltext = GSE.UnEscapeString(action.macro)
@@ -7652,6 +7692,17 @@ function GSE.CreateEditor()
                     -- after this commit. This commit pass intentionally omits the
                     -- idempotent flag so spell-name translation is applied here.
                     sel.gseRecolourToken = (sel.gseRecolourToken or 0) + 1
+                    -- Strip the #showtooltip / #show lines GSE ignores, promoting a
+                    -- resolvable argument to the block icon. On commit rather than
+                    -- in OnTextChanged, which would eat the line out from under
+                    -- someone still typing it. Re-read the body afterwards so the
+                    -- repaint below shows the stripped text.
+                    if GSE.ApplyShowTooltipToAction and
+                        GSE.ApplyShowTooltipToAction(sequence.Versions[version].Actions[keyPath]) then
+                        if GSE.GUI.RefreshActionIconFor then
+                            GSE.GUI.RefreshActionIconFor(sequence, version, keyPath)
+                        end
+                    end
                     local storedMacro = sequence.Versions[version].Actions[keyPath].macro
                     if storedMacro and GSE.GUI and GSE.GUI.RefreshMacroEditorColoredText then
                         GSE.GUI.RefreshMacroEditorColoredText(sel, storedMacro)

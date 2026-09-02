@@ -1652,6 +1652,23 @@ local function getMacroLineResolvedIconInfo(line, suppressUIErrors)
     return getMacroIconFallbackCandidateInfo(resolved, preferItem)
 end
 
+--- Resolve the icon a `#showtooltip <thing>` directive was asking for.
+-- GSE never executes the directive, so once GSE.ApplyShowTooltipToAction
+-- strips the line its argument is the only surviving record of the icon the
+-- author picked. Same candidate resolution the /cast path uses: conditionals
+-- stripped, spell name or id first, item last.
+function GSE.GetShowTooltipIconInfo(argument, suppressUIErrors)
+    if type(argument) ~= "string" then return nil end
+    local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(argument, suppressUIErrors)
+    resolved = trimMacroIconCandidate(resolved)
+    -- SecureCmdOptionParse returns nil when every clause is false right now
+    -- (e.g. `[combat] Spell` out of combat). The literal text still names the
+    -- icon the author wanted, so fall back to it.
+    if resolved == "" then resolved = trimMacroIconCandidate(argument) end
+    if resolved == "" then return nil end
+    return getMacroIconFallbackCandidateInfo(resolved, false)
+end
+
 function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
     if string.sub(str or "", 14) == "/click GSE.Pau" then
         return {
@@ -2183,7 +2200,7 @@ local function buildAction(action, metaData, blockPath)
                     if GSE.DecodeMacroEditorText then
                         value = GSE.DecodeMacroEditorText(value)
                     end
-                    if string.sub(GSE.UnEscapeString(value), 1, 1) == "/" then
+                    if GSE.IsMacroTextBody(GSE.UnEscapeString(value)) then
                         -- we have a line of macrotext
                         spelllist["macrotext"] =
                             GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
