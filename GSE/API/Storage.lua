@@ -70,12 +70,39 @@ local function renameMacrotextInTree(node)
     return changed
 end
 
-local function migrateSequenceVersions(sequence)
+--- The origin key a sequence is born with.
+--
+-- FROZEN at first sight and never recomputed. A key derived from Name|Author
+-- at read time does not survive a round trip: a rename changes the name, and
+-- gse.tools rewrites Author to the uploader's site nickname on every install,
+-- so the same sequence yields a different key depending on where you ask.
+-- That is why the platform resolves records by their id and treats this as
+-- provenance only -- it is recorded so a record's beginnings stay legible,
+-- never so anything can be looked up by it.
+function GSE.MintOriginKey(name, author)
+    return tostring(name or "") .. "|" .. tostring(author or "")
+end
+
+--- Stamp MetaData.OriginKey if the sequence has none. Returns true if it wrote.
+-- Idempotent: once set, it is left alone for the life of the sequence.
+function GSE.StampOriginKey(sequence, name)
+    if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return false end
+    if not GSE.isEmpty(sequence.MetaData.OriginKey) then return false end
+    local seqName = name or sequence.MetaData.Name
+    if GSE.isEmpty(seqName) then return false end
+    sequence.MetaData.OriginKey = GSE.MintOriginKey(seqName, sequence.MetaData.Author)
+    return true
+end
+
+local function migrateSequenceVersions(sequence, sequenceName)
     if type(sequence) ~= "table" then return false end
     if sequence["Macros"] ~= nil and sequence.Versions == nil then
         return false, "macros-deprecated"
     end
     local changed = false
+    -- Backfills existing sequences on first load; new ones get it here too,
+    -- so every creation path is covered without each one remembering to.
+    if GSE.StampOriginKey(sequence, sequenceName) then changed = true end
     if type(sequence.Versions) == "table" then
         for _, version in pairs(sequence.Versions) do
             if renameMacrotextInTree(version) then
@@ -108,7 +135,7 @@ local function loadOneClass(classid)
             function()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
                 GSE.Library[classid][i] = uncompressedVersion[2]
-                local changed, reason = migrateSequenceVersions(GSE.Library[classid][i])
+                local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
                 if reason == "macros-deprecated" then
                     -- Refuse to load. The on-disk record uses the old
                     -- 'Macros' field; the addon no longer auto-renames.
@@ -158,7 +185,7 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
-                local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName])
+                local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
                 if reason == "macros-deprecated" then
                     GSE.Library[classid][sequenceName] = nil
                     error(string.format(
@@ -725,6 +752,9 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
     -- PlatformID; otherwise the copy and the original would share one server
     -- id and bounce against each other on the next Companion sync.
     clone.MetaData.PlatformID = nil
+    -- Same reasoning: a duplicate begins its own history, so it mints its own
+    -- origin key rather than inheriting the one it was copied from.
+    clone.MetaData.OriginKey = GSE.MintOriginKey(newName, clone.MetaData.Author)
     clone.LastUpdated = GSE.GetTimestamp()
 
     -- Store synchronously (table writes only — safe in or out of combat).
