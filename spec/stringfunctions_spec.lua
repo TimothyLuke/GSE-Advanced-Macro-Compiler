@@ -253,6 +253,17 @@ helpTxt = 'Talents: 3331222',]]
         )
 
         it(
+          "walks an Actions array carrying the editor's path metatable without erroring",
+          function()
+            -- The editor sets Statics.TableMetadataFunction on Versions[n].Actions;
+            -- its __index only understands table (path) keys, so a plain
+            -- `actions.Type` lookup dies inside ipairs on the game's Lua 5.1.
+            local actions = setmetatable({{Type = "Action", type = "macro", macro = "/cast Sunfire"}}, GSE.Static.TableMetadataFunction)
+            assert.is_false(GSE.ApplyShowTooltipToAction(actions))
+          end
+        )
+
+        it(
           "does not re-flag an icon the user picked themselves",
           function()
             GSE.GetShowTooltipIconInfo = function() return {name = "Sunfire", iconID = 535045} end
