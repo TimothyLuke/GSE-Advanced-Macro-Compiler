@@ -177,13 +177,17 @@ end
 --- meaningful and must survive.
 function GSE.ApplyShowTooltipToAction(action)
     if type(action) ~= "table" then return false end
-    if action.Type ~= Statics.Actions.Action and action.Type ~= Statics.Actions.Repeat then
+    -- rawget: the editor puts Statics.TableMetadataFunction on the Actions
+    -- array, and that __index only understands table (path) keys -- a plain
+    -- string key errors inside ipairs.
+    local actionType = rawget(action, "Type")
+    if actionType ~= Statics.Actions.Action and actionType ~= Statics.Actions.Repeat then
         return false
     end
 
     local changed = false
     for _, key in ipairs({"macro", "macrotext"}) do
-        local body = action[key]
+        local body = rawget(action, key)
         if type(body) == "string" and body ~= "" then
             local stripped, argument, found = GSE.SplitShowTooltipDirectives(body)
             if found then
