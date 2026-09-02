@@ -169,6 +169,9 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         )
         sequenceName = tempseqName
     end
+    -- Every new and imported sequence lands here. Stamp it under the name it
+    -- is stored as, before the next load would; an existing stamp is kept.
+    GSE.StampOriginKey(newSequence, sequenceName)
     if action == "MERGE" then
         -- Both sides need a Versions table. Migration above set them up;
         -- belt-and-braces: if either is still nil, init/empty out so the

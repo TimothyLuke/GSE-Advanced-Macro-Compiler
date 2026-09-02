@@ -73,6 +73,31 @@ describe(
         )
 
         it(
+          "is stamped on save, not only on the next load",
+          function()
+            -- A sequence created, exported or renamed within one session never
+            -- goes through the loader; the save path must stamp it itself.
+            local sent = {}
+            local saveSendMessage, saveDeps = GSE.SendMessage, GSE.ComputeSequenceDependencies
+            GSE.SendMessage = function(_, msg, name) sent[#sent + 1] = msg end
+            GSE.ComputeSequenceDependencies = function() end
+            GSESequences = {[1] = {}}
+            GSE.Library = {[1] = {}}
+            local seq = {MetaData = {Author = "Bob@Realm", Default = 1}, Versions = {{Actions = {}}}}
+            GSE.ReplaceSequence(1, "SBA", seq)
+            assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA"].MetaData.OriginKey)
+            -- the mock codec is an identity; the real one returns ok, table
+            local decoded = {GSE.DecodeMessage(GSESequences[1]["SBA"])}
+            local stored = type(decoded[1]) == "table" and decoded[1] or decoded[2]
+            assert.are.equal("SBA|Bob@Realm", stored[2].MetaData.OriginKey)
+            -- a later save under a new name keeps the birth key
+            GSE.ReplaceSequence(1, "SBA-Renamed", GSE.Library[1]["SBA"])
+            assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA-Renamed"].MetaData.OriginKey)
+            GSE.SendMessage, GSE.ComputeSequenceDependencies = saveSendMessage, saveDeps
+          end
+        )
+
+        it(
           "survives the author being rewritten to a site nickname",
           function()
             -- What exportGSE does to every installed sequence. The stored key
