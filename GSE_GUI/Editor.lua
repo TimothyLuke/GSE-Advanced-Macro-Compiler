@@ -603,7 +603,7 @@ local MACRO_BOX_BASE_LINES = 5
 -- clamps the inner editbox to (updateEditBoxSize). At a small chat font the
 -- min-row fit lands under that floor and the bottom row would render outside
 -- the visible scroll area, so the frame is never asked for less.
-local MACRO_BOX_CHROME_SLACK = 6
+local MACRO_BOX_CHROME_SLACK = 2
 local MACRO_BOX_MIN_INNER = 40
 -- Rows -> pixels in the box's OWN font: a row is the measured line height, and
 -- every row after the first also carries the editbox's line spacing.
@@ -728,6 +728,14 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     if oneRow <= 0 then oneRow = fontSize or 14 end
     meter:SetText(body ~= "" and body or "X")
     local textHeight = meter:GetStringHeight() or oneRow
+    -- The meter is an estimate; the editbox is the truth. It is the scroll
+    -- child and sizes itself to its own rendered text, and it wraps lines the
+    -- meter does not (measured: a 4-line block the meter called 4 rows at 548px
+    -- rendered at 5 -- ebH 69 against a 66px visible area, last line cut).
+    -- Take whichever is taller: the box must never be shorter than what the
+    -- editbox actually draws.
+    local rendered = eb.GetHeight and eb:GetHeight() or 0
+    if rendered > textHeight then textHeight = rendered end
     if typingOnTrailingRow then textHeight = textHeight + oneRow + spacing end
     -- The box fits its content, so its scrollbar is dead weight: hide it. (A
     -- 255-char block cannot realistically reach the row cap; one that did needs
