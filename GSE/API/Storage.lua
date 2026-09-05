@@ -559,6 +559,10 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.SanitizeSequenceEditorMarkup then
         GSE.SanitizeSequenceEditorMarkup(sequence)
     end
+    -- Stamp on save, not only on the next load: a sequence created, exported
+    -- or renamed within one session must already carry the key it was born
+    -- with. Idempotent -- an existing stamp is left alone.
+    GSE.StampOriginKey(sequence, sequenceName)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
