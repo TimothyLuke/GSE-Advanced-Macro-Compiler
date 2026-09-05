@@ -1144,6 +1144,18 @@ local function LoadKeyBindings(payload)
         GSE_C["KeyBindings"][GetSpec()] = {}
     end
 
+    -- This loop only ADDS override-click bindings for keys still present in
+    -- GSE_C["KeyBindings"]. A key that was deleted or rebound away never gets
+    -- its OLD override cleared -- SetOverrideBindingClick has no per-key
+    -- "remove" call, and the override layer sits above the normal binding set,
+    -- so the phantom bind keeps firing the old sequence even after SetBinding()
+    -- clears the base binding and the editor tree shows it gone. Clear every
+    -- override on our owner frame first; the loop below re-adds exactly the
+    -- ones that still exist.
+    if GSE.GameMode == 5 and keybindingframe and not InCombatLockdown() then
+        ClearOverrideBindings(keybindingframe)
+    end
+
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
             local target = GSE.GetKeybindClickTarget(v)
@@ -1232,6 +1244,32 @@ end
 
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
+end
+
+--- Release a physical key GSE had bound to a sequence. ONE path for every
+--- delete/rebind in the editor (tree right-click, panel Delete, panel Save):
+---  * normalises legacy mouse-button names, so the key that is actually bound
+---    is the one cleared (#1954 normalised on load only);
+---  * persists into the binding set the character really uses -- a hard-coded
+---    SaveBindings(2) would silently switch an account-wide user to
+---    character-specific bindings;
+---  * rebuilds the keybind tables afterwards so no override entry survives;
+---  * in combat, where SetBinding is protected, defers itself to the OOC queue
+---    instead of silently doing nothing (which is exactly how a "deleted" key
+---    kept firing its old sequence). Callers remove the GSE_C entry FIRST so
+---    the rebuild cannot re-add it.
+function GSE.ClearKeyBinding(key)
+    if GSE.isEmpty(key) then return false end
+    key = normalizeBindKey(key)
+    if InCombatLockdown() then
+        GSE.EnqueueOOC({ action = "clearkeybind", key = key })
+        GSE.Print(string.format(L["Keybind %s will be cleared when combat ends."], key))
+        return false
+    end
+    SetBinding(key)
+    SaveBindings((GetCurrentBindingSet and GetCurrentBindingSet()) or 2)
+    LoadKeyBindings(true)
+    return true
 end
 
 function GSE:PLAYER_ENTERING_WORLD()
@@ -1765,6 +1803,8 @@ function GSE:ProcessOOCQueue()
                 if GSE.OpenOptionsPanel then
                     GSE.OpenOptionsPanel()
                 end
+            elseif v.action == "clearkeybind" then
+                GSE.ClearKeyBinding(v.key)
             elseif v.action == "deletesequence" then
                 -- Generic OOC sequence delete. Used by the Companion bridge
                 -- after the user confirms a delete (the website record has

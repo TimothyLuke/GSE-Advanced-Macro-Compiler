@@ -258,6 +258,10 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
             end
         end
         local initialbind = bind
+        -- The loadout this row was opened FROM. `loadout` is mutated by the
+        -- dropdown below, so on a rebind the old entry must be removed from the
+        -- table it actually lives in, not whichever loadout is now selected.
+        local initialloadout = loadout
         rightContainer:ReleaseChildren()
 
         local keybind = UI:Create("ControllerKeybinding")
@@ -346,9 +350,19 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                         end
                         destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
                     end
-                    if initialbind and bind ~= initialbind and not InCombatLockdown() then
-                        SetBinding(initialbind)
-                        destination[bind] = nil
+                    local rebound = initialbind and bind ~= initialbind
+                    if rebound then
+                        -- This used to clear destination[bind] -- the NEW key --
+                        -- so the OLD key stayed in GSE_C and the very next
+                        -- rebuild bound it again: a rebound key kept firing its
+                        -- sequence on every version. Remove the old entry from
+                        -- the table it was loaded from.
+                        local origin = GSE_C["KeyBindings"][tostring(specialization)]
+                        if initialloadout and initialloadout ~= "ALL" and origin
+                            and origin["LoadOuts"] and origin["LoadOuts"][initialloadout] then
+                            origin = origin["LoadOuts"][initialloadout]
+                        end
+                        if origin then origin[initialbind] = nil end
                     end
                     if destination then
                         destination[bind] = button
@@ -378,7 +392,13 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                     if keypath then
                         editframe.treeContainer:SelectByValue(keypath)
                     end
-                    GSE.ReloadKeyBindings()
+                    if rebound then
+                        -- Clears the old key live, persists, and rebuilds (which
+                        -- binds the new key). Defers itself in combat.
+                        GSE.ClearKeyBinding(initialbind)
+                    else
+                        GSE.ReloadKeyBindings()
+                    end
                 end
             end
         )
@@ -388,9 +408,6 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
         delbutton:SetCallback(
             "OnClick",
             function()
-                if initialbind and not InCombatLockdown() then
-                    SetBinding(initialbind)
-                end
                 if loadout ~= "ALL" and loadout then
                     GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
                     local empty = true
@@ -408,6 +425,9 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                         GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
                     end
                 end
+                -- GSE_C entry is gone above; now release the key itself (live
+                -- clear + persist + rebuild, or deferred to combat end).
+                GSE.ClearKeyBinding(initialbind)
                 rightContainer:ReleaseChildren()
                 editframe.ManageTree()
             end
