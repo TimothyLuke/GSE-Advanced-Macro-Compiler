@@ -139,6 +139,25 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
 
+--- Store the result of a merge action, unless that would put protected content
+-- on disk in the clear.
+--
+-- This path only ever holds a DECODED body -- the import dialog hands over the
+-- sequence, not the envelope it arrived in -- so there is no sealed blob here
+-- to carry across the way a rename or an edit can. When the content is
+-- protected the write is declined and a repack request is left instead: the
+-- session keeps working from the Library, and the Companion fetches the sealed
+-- blob from gse.tools to put the record straight.
+local function storeMergedSequence(classid, sequenceName, reason)
+    local seq = GSE.Library[classid][sequenceName]
+    if GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
+        GSE.QueueRepack("sequence", classid, sequenceName, seq, reason)
+        return false
+    end
+    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+    return true
+end
+
 function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
     -- Refuse to merge/replace with a Macros-only payload. Auto-rename
     -- has been retired; the user must re-export through gse.tools so
@@ -190,7 +209,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         --@end-debug@
         GSE.Print(string.format(L["Extra Sequence Versions of %s have been added."], sequenceName), GNOME)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        storeMergedSequence(classid, sequenceName, "merge-needs-repack")
     elseif action == "REPLACE" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
@@ -201,13 +220,13 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         --@end-debug@
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        storeMergedSequence(classid, sequenceName, "replace-needs-repack")
         GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
     elseif action == "RENAME" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        storeMergedSequence(classid, sequenceName, "rename-needs-repack")
         GSE.Print(sequenceName .. L[" was imported as a new sequence."], "Storage")
         --@debug@
         GSE.PrintDebugMessage(

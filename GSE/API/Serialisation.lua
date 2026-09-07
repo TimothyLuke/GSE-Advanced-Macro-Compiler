@@ -9,6 +9,44 @@ function GSE.EncodeMessage(tab)
         return result
 end
 
+--- True when a stored blob carries the packed (!GSE3!+) envelope.
+--
+-- GSE decrypts this envelope so it can run the macro; it never produces one.
+-- The key ships in Codec.lua and is symmetric, so anything that could seal
+-- content here could be lifted wholesale, and a stream cipher under one fixed
+-- key is unforgiving of a weak nonce. Sealing stays with gse.tools, which is
+-- the only party that has somewhere safe to do it.
+function GSE.IsPackedBlob(blob)
+    return type(blob) == "string" and string.sub(blob, 1, 7) == "!GSE3!+"
+end
+
+--- True when a decoded body is protected content -- a copy gse.tools sent to
+-- someone who does not own it. Accepts the bare object or the {name, object}
+-- tuple sequences are stored as.
+function GSE.IsProtectedContent(obj)
+    if type(obj) ~= "table" then return false end
+    local meta = obj.MetaData
+    if type(meta) ~= "table" and type(obj[2]) == "table" then meta = obj[2].MetaData end
+    return type(meta) == "table" and meta.noExport and true or false
+end
+
+--- The gate every at-rest write consults. True means "leave the stored blob
+-- exactly as it is".
+--
+-- Two ways in. The blob on disk is already packed, so rewriting it plain would
+-- strip the envelope -- the bug in #2054. Or the body says noExport, so it is
+-- protected content that must not be written in the clear even if a shipped
+-- build already downgraded it.
+--
+-- Callers do not lose anything by honouring this. Every at-rest write GSE makes
+-- to protected content persists a DERIVED value -- the OriginKey stamp, the
+-- macrotext rename migration, editor-markup sanitisation, a nil'd checksum, a
+-- resolved icon -- and every one of them is recomputed from the body on the
+-- next load. Real edits take the delta path instead; see GSE.ReplaceSequence.
+function GSE.IsProtectedAtRest(blob, obj)
+    return GSE.IsPackedBlob(blob) or GSE.IsProtectedContent(obj)
+end
+
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
 function GSE.DecodeMessage(data)
     if string.sub(data, 1, 7) == "!GSE3!+" then

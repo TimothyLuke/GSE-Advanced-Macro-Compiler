@@ -333,6 +333,55 @@ function GSE.StoreDeltaFork(element)
     return true
 end
 
+--- Reconstruct `obj` from its stored delta fork, or nil when it has none.
+--
+-- The stored blob is only ever the STARTING POINT for content that has been
+-- edited locally; GSEDeltas holds the divergence. A load path that assigned
+-- the decoded blob straight into the Library would silently discard the edit,
+-- so every load path asks this first and prefers what it returns.
+function GSE.ApplyStoredDeltaFork(obj)
+    if type(GSEDeltas) ~= "table" or type(obj) ~= "table" then return nil end
+    local meta = obj.MetaData or {}
+    local pid = meta.PlatformID or obj.PlatformID
+    if type(pid) ~= "string" or type(GSEDeltas[pid]) ~= "table" then return nil end
+    return GSE.ReconstructDeltaFork(GSEDeltas[pid])
+end
+
+--- Open a delta fork for content that does not have one yet, keyed by its own
+--- PlatformID, using the stored blob as the base.
+--
+-- The base is carried across VERBATIM, and that is the entire point: for
+-- protected content the packed !GSE3!+ blob moves into `b` still sealed. The
+-- reconstruct side already copes, because it reads the base through
+-- GSE.DecodeMessage, which dispatches the packed envelope to
+-- DecodePackedMessage. So an edit to protected content can be persisted
+-- without the addon ever producing an envelope.
+--
+-- Only the divergence lands in `d`, and DiffDelta emits untouched blocks as
+-- {from = n} back-references rather than copies, so the delta carries what the
+-- user actually typed and not the protected body around it.
+--
+-- `src` is the upstream this diverged from. Editing in place rather than
+-- forking to a new identity means that is the record's own id: "this content,
+-- changed locally". Returns false when there is no PlatformID to key by --
+-- the caller then falls back to a repack request.
+function GSE.SeedDeltaFork(baseBlob, obj, contentType)
+    if type(obj) ~= "table" or type(baseBlob) ~= "string" then return false end
+    local meta = obj.MetaData or {}
+    local pid = meta.PlatformID or obj.PlatformID
+    if type(pid) ~= "string" or pid == "" then return false end
+    if type(GSEDeltas) ~= "table" then GSEDeltas = {} end
+    -- Already forked: this is just another edit on top.
+    if type(GSEDeltas[pid]) == "table" then return GSE.UpdateDeltaFork(obj) end
+    local ok, decoded = GSE.DecodeMessage(baseBlob)
+    if not ok or type(decoded) ~= "table" then return false end
+    local base = decoded[2] or decoded
+    local d = GSE.EncodeDelta(GSE.DiffDelta(base, obj))
+    if type(d) ~= "string" then return false end
+    GSEDeltas[pid] = {b = baseBlob, d = d, t = contentType or "sequence", src = pid}
+    return true
+end
+
 function GSE.UpdateDeltaFork(obj)
     if type(GSEDeltas) ~= "table" or type(obj) ~= "table" then return false end
     local meta = obj.MetaData or {}
