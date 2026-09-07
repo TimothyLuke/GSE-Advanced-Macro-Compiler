@@ -5946,6 +5946,10 @@ local function snapshotPristine(widget)
     widget.__gsePristineTexts = texts
     widget.__gsePristineKeys = keys
     widget.__gsePristineScripts = scripts
+    local pEb = widget.editBox or widget.editbox
+    if pEb and pEb.GetMaxLetters then
+        widget.__gsePristineMaxLetters = pEb:GetMaxLetters() or 0
+    end
     widget.__gsePristineW, widget.__gsePristineH = widget.frame:GetSize()
     keys.__gsePristineKeys, keys.__gsePristineScripts = true, true
     keys.__gsePristineW, keys.__gsePristineH = true, true
@@ -5995,6 +5999,14 @@ local function resetForReuse(widget)
     if eb then
         if eb.ClearFocus then pcall(eb.ClearFocus, eb) end
         if eb.SetText then pcall(eb.SetText, eb, "") end
+        -- Restore the character cap. A caller that narrowed it (the loop-limit
+        -- box is SetMaxLetters(4)) left that cap on the pooled widget for the
+        -- rest of the session, so the next consumer -- the Spell field, say --
+        -- silently truncated everything to four characters. 0 is Blizzard's
+        -- "no limit", which is what a freshly created EditBox has.
+        if eb.SetMaxLetters then
+            pcall(eb.SetMaxLetters, eb, widget.__gsePristineMaxLetters or 0)
+        end
     end
     if widget.label and widget.label.SetText then pcall(widget.label.SetText, widget.label, "") end
     if widget.text and widget.text ~= widget.label and widget.text.SetText then
