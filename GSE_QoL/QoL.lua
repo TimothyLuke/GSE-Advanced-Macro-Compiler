@@ -155,7 +155,11 @@ local function onSequenceSaved(_, sequenceName)
         local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
         if seq and seq.MetaData then
             seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
-            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            -- The checksum is computed from the body, so it is recovered on the
+            -- next load; protected content keeps its sealed blob instead.
+            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
+                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            end
             break
         end
     end

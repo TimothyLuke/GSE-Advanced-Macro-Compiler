@@ -255,6 +255,38 @@ GSE.DecodeMessage = function (tab)
   return tab
 end
 
+-- The at-rest gate lives in Serialisation.lua, which the specs do not load
+-- (they stub EncodeMessage/DecodeMessage instead). These three are pure
+-- predicates over a string and a table, so the mock carries the REAL logic
+-- rather than a stub that always says false -- otherwise every spec would
+-- exercise the unprotected branch and the gate would be untested.
+--
+-- Note the mock's EncodeMessage returns the table unchanged, so a "stored
+-- blob" in a spec is usually a table, not a string. IsPackedBlob answering
+-- false for that is correct: the protection then rests on MetaData.noExport,
+-- which is what the specs set.
+GSE.IsPackedBlob = function(blob)
+  return type(blob) == "string" and string.sub(blob, 1, 7) == "!GSE3!+"
+end
+
+GSE.IsProtectedContent = function(obj)
+  if type(obj) ~= "table" then return false end
+  local meta = obj.MetaData
+  if type(meta) ~= "table" and type(obj[2]) == "table" then meta = obj[2].MetaData end
+  return type(meta) == "table" and meta.noExport and true or false
+end
+
+GSE.IsProtectedAtRest = function(blob, obj)
+  return GSE.IsPackedBlob(blob) or GSE.IsProtectedContent(obj)
+end
+
+-- SequenceDelta.lua is not loaded either. Returning false sends the protected
+-- branch down its documented fallback -- a repack request -- which is the
+-- behaviour the specs assert on.
+GSE.SeedDeltaFork = function()
+  return false
+end
+
 function C_SpellBook.FindBaseSpellByID(stuff)
   return stuff
 end

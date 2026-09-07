@@ -94,6 +94,71 @@ function GSE.StampOriginKey(sequence, name)
     return true
 end
 
+--- GSERepackQueue -- what GSE asks the Companion to re-seal on its behalf.
+--
+-- The addon does not produce packed envelopes (see GSE.IsPackedBlob), so when
+-- protected content genuinely needs one written it says so here and the
+-- Companion services it: resolve the record on gse.tools, fetch the sealed
+-- blob the server produces, write it back. The key never has to exist on this
+-- side of the wire.
+--
+-- Entries carry IDENTITY ONLY -- never a decoded body. Putting the plaintext
+-- in the request would recreate the exact exposure #2054 is about, in a second
+-- place.
+--
+-- Keyed so a request is idempotent: logging in ten times with the same damaged
+-- library leaves one entry, not ten.
+local function repackKey(contentType, classid, name)
+    return tostring(contentType) .. ":" .. tostring(classid or "") .. ":" .. tostring(name)
+end
+
+function GSE.QueueRepack(contentType, classid, name, obj, reason)
+    if GSE.isEmpty(name) then return false end
+    if type(GSERepackQueue) ~= "table" then GSERepackQueue = {} end
+    local meta = (type(obj) == "table" and obj.MetaData) or {}
+    local key = repackKey(contentType, classid, name)
+    -- Keep the first sighting's timestamp; this is a standing request, and a
+    -- fresh stamp on every login would make it look perpetually new.
+    local existing = GSERepackQueue[key]
+    GSERepackQueue[key] = {
+        t = contentType,
+        classid = classid,
+        name = name,
+        -- Protected content is content gse.tools sent here, so it arrives with
+        -- a PlatformID already on it. That is the record the Companion asks the
+        -- server to re-seal, and the only identity this request needs.
+        platformId = meta.PlatformID,
+        reason = reason,
+        stamp = (existing and existing.stamp) or GSE.GetTimestamp(),
+    }
+    return true
+end
+
+function GSE.ClearRepackRequest(contentType, classid, name)
+    if type(GSERepackQueue) ~= "table" then return end
+    GSERepackQueue[repackKey(contentType, classid, name)] = nil
+end
+
+--- Called on every load, whatever else happens to the record.
+--
+-- Protected content sitting in the clear is the damage a shipped build already
+-- did (#2054) and it cannot be repaired here, so it is reported. Anything
+-- correctly sealed clears its request, which is what makes the queue
+-- self-draining: once the Companion writes the sealed blob back, the next login
+-- removes the entry rather than leaving it to be serviced forever.
+function GSE.AuditProtectedAtRest(contentType, classid, name, blob, obj)
+    if not GSE.IsProtectedContent(obj) then
+        GSE.ClearRepackRequest(contentType, classid, name)
+        return false
+    end
+    if GSE.IsPackedBlob(blob) then
+        GSE.ClearRepackRequest(contentType, classid, name)
+        return false
+    end
+    GSE.QueueRepack(contentType, classid, name, obj, "plaintext-at-rest")
+    return true
+end
+
 local function migrateSequenceVersions(sequence, sequenceName)
     if type(sequence) ~= "table" then return false end
     if sequence["Macros"] ~= nil and sequence.Versions == nil then
@@ -135,6 +200,12 @@ local function loadOneClass(classid)
             function()
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
                 GSE.Library[classid][i] = uncompressedVersion[2]
+                -- A locally-edited copy lives in GSEDeltas; the stored blob is
+                -- only its base. Prefer the reconstruction or the edit is lost
+                -- the first time this class is loaded lazily.
+                local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(GSE.Library[classid][i])
+                if forked then GSE.Library[classid][i] = forked end
+                GSE.AuditProtectedAtRest("sequence", classid, i, j, GSE.Library[classid][i])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
                 if reason == "macros-deprecated" then
                     -- Refuse to load. The on-disk record uses the old
@@ -144,7 +215,11 @@ local function loadOneClass(classid)
                         L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
                         i))
                 end
-                if changed then
+                -- Migration results are derived and recomputed on every load,
+                -- so declining to persist them costs nothing. Rewriting them
+                -- over protected content, on the other hand, is what stripped
+                -- the packed envelope in #2054.
+                if changed and not GSE.IsProtectedAtRest(GSESequences[classid][i], GSE.Library[classid][i]) then
                     GSESequences[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
                 end
             end
@@ -185,6 +260,11 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
+                local forked = GSE.ApplyStoredDeltaFork
+                    and GSE.ApplyStoredDeltaFork(GSE.Library[classid][sequenceName])
+                if forked then GSE.Library[classid][sequenceName] = forked end
+                GSE.AuditProtectedAtRest("sequence", classid, sequenceName,
+                    GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
                 if reason == "macros-deprecated" then
                     GSE.Library[classid][sequenceName] = nil
@@ -192,7 +272,8 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
                         L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
                         sequenceName))
                 end
-                if changed then
+                if changed and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName],
+                    GSE.Library[classid][sequenceName]) then
                     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
                 end
             end
@@ -559,9 +640,29 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.SanitizeSequenceEditorMarkup then
         GSE.SanitizeSequenceEditorMarkup(sequence)
     end
+    -- Stamp on save, not only on the next load: a sequence created or renamed
+    -- within one session must already carry the key it was born with, rather
+    -- than acquiring it whenever it is next read back. Idempotent -- an
+    -- existing stamp is left alone.
+    GSE.StampOriginKey(sequence, sequenceName)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
+        GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
+        GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+        return
+    end
+    -- Protected content is never rewritten in the clear, so an edit to it is
+    -- stored as a delta over the sealed blob instead: the packed base moves
+    -- into the fork verbatim and only the divergence is written beside it.
+    -- This branch is for protected content ONLY -- an ordinary sequence falls
+    -- through to the plain replace below, exactly as before.
+    if GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
+        if not GSE.SeedDeltaFork(GSESequences[classid][sequenceName], sequence, "sequence") then
+            -- Nothing to key a fork by, so the edit cannot be persisted here.
+            -- Say so rather than writing it out in the clear.
+            GSE.QueueRepack("sequence", classid, sequenceName, sequence, "edit-needs-repack")
+        end
         GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
         GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
         return
@@ -639,8 +740,23 @@ function GSE.RenameSequence(classid, oldName, newName, sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
 
-    -- Write under the new key.
-    GSESequences[classid][newName] = GSE.EncodeMessage({newName, sequence})
+    -- Write under the new key. A rename is a change of TABLE KEY, so protected
+    -- content moves as the string it already is -- the sealed blob is carried
+    -- across untouched and nothing needs encoding. The name inside the body is
+    -- MetaData.Name, which the caller has already updated.
+    if GSE.IsProtectedAtRest(GSESequences[classid][oldName], sequence) then
+        -- Only a blob that actually exists can be carried. A protected body
+        -- with nothing stored under the old key has nothing to move, and
+        -- assigning the nil across would drop the sequence from storage
+        -- altogether, so ask for a repack instead.
+        if GSESequences[classid][oldName] ~= nil then
+            GSESequences[classid][newName] = GSESequences[classid][oldName]
+        else
+            GSE.QueueRepack("sequence", classid, newName, sequence, "rename-needs-repack")
+        end
+    else
+        GSESequences[classid][newName] = GSE.EncodeMessage({newName, sequence})
+    end
     GSE.Library[classid][newName] = sequence
 
     -- Remove the old key so the old name is no longer in use.
@@ -822,6 +938,10 @@ local function loadOneVariable(k, v)
         function()
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
             if not localsuccess then return end
+            -- This path never writes back -- which is why variables kept their
+            -- envelope where sequences lost it -- so there is nothing to gate,
+            -- only damage from an earlier build to report.
+            GSE.AuditProtectedAtRest("variable", nil, k, v, uncompressedVersion)
             GSE.V[k] = gseLoadstring("return " .. uncompressedVersion.funct)()
             if type(GSE.V[k]()) == "boolean" then
                 GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
@@ -2797,9 +2917,21 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.CompanionCancelPendingDelete("variable", name)
     end
     GSE.ComputeVariableDependencies(variable)
-    local compressedvariable = GSE.EncodeMessage(variable)
-    if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(variable)) then
-        GSEVariables[name] = compressedvariable
+    local storedVariable = GSEVariables and GSEVariables[name]
+    if GSE.IsProtectedAtRest(storedVariable, variable) then
+        -- Same rule as a sequence: the sealed blob stays, the edit becomes a
+        -- delta over it, and if there is nothing to key a fork by we ask for a
+        -- repack rather than writing the variable out in the clear. A nil
+        -- stored value reaches SeedDeltaFork as nil and is refused there,
+        -- which lands on the same fallback.
+        if not GSE.SeedDeltaFork(storedVariable, variable, "variable") then
+            GSE.QueueRepack("variable", nil, name, variable, "edit-needs-repack")
+        end
+    else
+        local compressedvariable = GSE.EncodeMessage(variable)
+        if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(variable)) then
+            GSEVariables[name] = compressedvariable
+        end
     end
     local actualfunct, error = gseLoadstring("return " .. variable.funct)
     if error then
@@ -2844,7 +2976,13 @@ function GSE.BackfillLastUpdated()
         for classid, classLib in pairs(GSE.Library) do
             if type(classLib) == "table" then
                 for name, seq in pairs(classLib) do
-                    if type(seq) == "table" and not seq.LastUpdated then
+                    -- Skip protected content outright. There is no way to
+                    -- persist the stamp without rewriting the sealed blob, and
+                    -- an unwritten LastUpdated would be re-minted to a new
+                    -- `now` on every load anyway -- drift, not a backfill.
+                    if type(seq) == "table" and not seq.LastUpdated
+                        and not (GSESequences and GSESequences[classid]
+                            and GSE.IsProtectedAtRest(GSESequences[classid][name], seq)) then
                         seq.LastUpdated = now
                         if GSESequences and GSESequences[classid] then
                             GSESequences[classid][name] = GSE.EncodeMessage({name, seq})
