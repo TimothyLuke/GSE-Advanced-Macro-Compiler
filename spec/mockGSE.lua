@@ -255,6 +255,17 @@ GSE.DecodeMessage = function (tab)
   return tab
 end
 
+-- Storage's at-rest writes go through EncodeLike (packed for noExport
+-- content, plain otherwise). The specs assert on the stored table, not on an
+-- envelope, so this mirrors the EncodeMessage stub and returns it unchanged.
+GSE.EncodeLike = function(existing, tab)
+  return tab
+end
+
+GSE.NeedsRepack = function()
+  return false
+end
+
 function C_SpellBook.FindBaseSpellByID(stuff)
   return stuff
 end
