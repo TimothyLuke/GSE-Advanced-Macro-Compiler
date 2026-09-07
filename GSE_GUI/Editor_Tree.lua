@@ -587,7 +587,6 @@ local function onRightClick_KEYBINDINGS(editframe, container, group, unique)
                     end
                 end
                 if kbtype == "KB" then
-                    SetBinding(bind)
                     if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and
                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
@@ -609,7 +608,14 @@ local function onRightClick_KEYBINDINGS(editframe, container, group, unique)
                             GSE_C["KeyBindings"][tostring(specialization)][bind] = nil
                         end
                     end
-                elseif kbtype == "AO" then
+                end
+                if kbtype == "KB" then
+                    -- GSE_C entry removed above; release the key (live clear,
+                    -- persist, rebuild -- or deferred to combat end, where
+                    -- SetBinding is protected and used to be called anyway).
+                    GSE.ClearKeyBinding(bind)
+                end
+                if kbtype == "AO" then
                     if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and
                        GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]

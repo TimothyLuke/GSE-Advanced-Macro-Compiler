@@ -1114,6 +1114,34 @@ local function LoadOverrides(force)
     end
 end
 
+-- Every key LoadKeyBindings bound on its last run. The rebuild is otherwise
+-- add-only: it re-binds what is in GSE_C now and never releases what it bound
+-- before, so a key that was deleted, rebound, or belonged to the loadout you
+-- just switched away from keeps firing its old sequence for the rest of the
+-- session. Session scope only -- GSE keybinds are rebuilt from GSE_C on every
+-- login, so nothing needs to survive one.
+local boundKeys = {}
+
+-- Which spec + saved talent loadout the last rebuild bound for, and whether a
+-- re-check is already scheduled. Blizzard updates BOTH GetSpecialization and
+-- GetLastSelectedSavedConfigID only AFTER the events GSE rebuilds on, so a
+-- rebuild triggered by a spec change or a loadout swap still reads the one
+-- being left and re-binds its keys over the one moved to -- which is why those
+-- keys kept firing until a reload. The rebuild releases before it adds, so
+-- running it again once the API has caught up is all that is needed.
+local lastBindingContext, bindingRecheckPending
+local LoadKeyBindings, scheduleBindingRecheck
+local BINDING_RECHECK_INTERVAL, BINDING_RECHECK_ATTEMPTS = 0.5, 20
+
+local function currentBindingContext()
+    local loadoutId = ""
+    local spec = playerSpec()
+    if spec and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+        loadoutId = tostring(C_ClassTalents.GetLastSelectedSavedConfigID(spec))
+    end
+    return GetSpec() .. "\001" .. loadoutId
+end
+
 local keybindingframe
 if GSE.GameMode == 5 then
     keybindingframe = CreateFrame("Frame", "GSEKeyBinds", UIParent)
@@ -1132,7 +1160,7 @@ local function normalizeBindKey(key)
     return (key:gsub("MiddleButton", "BUTTON3"):gsub("Button4", "BUTTON4"):gsub("Button5", "BUTTON5"))
 end
 
-local function LoadKeyBindings(payload)
+function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
@@ -1144,11 +1172,32 @@ local function LoadKeyBindings(payload)
         GSE_C["KeyBindings"][GetSpec()] = {}
     end
 
+    -- What this rebuild is about to bind for. See scheduleBindingRecheck.
+    lastBindingContext = currentBindingContext()
+
+    -- Release everything the previous rebuild bound, then let the loops below
+    -- re-bind exactly what still exists. Without this the rebuild only ever
+    -- adds: deleting a keybind, rebinding it to another key, or switching to a
+    -- talent loadout that does not define it all leave the old key bound and
+    -- still firing the old sequence. On MoP the same keys also sit in the
+    -- override layer, which has no per-key remove call, so drop the whole
+    -- layer for our owner frame as well.
+    if not InCombatLockdown() then
+        for k in pairs(boundKeys) do
+            SetBinding(k)
+        end
+        wipe(boundKeys)
+        if GSE.GameMode == 5 and keybindingframe then
+            ClearOverrideBindings(keybindingframe)
+        end
+    end
+
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
         if k ~= "LoadOuts" and not InCombatLockdown() then
             local target = GSE.GetKeybindClickTarget(v)
             k = normalizeBindKey(k)
             SetBindingClick(k, target, "LeftButton")
+            boundKeys[k] = true
             if GSE.GameMode == 5 then
                 SetOverrideBindingClick(keybindingframe, false, k, target)
             end
@@ -1174,12 +1223,17 @@ local function LoadKeyBindings(payload)
                     SetBinding(k)
                     local target = GSE.GetKeybindClickTarget(v)
                     SetBindingClick(k, target, "LeftButton")
+                    boundKeys[k] = true
                     if GSE.GameMode == 5 then
                         SetOverrideBindingClick(keybindingframe, false, k, target)
                     end
                 end
             end
         end
+        -- The spec and loadout read above may still name the ones being left,
+        -- and can stay stale for seconds. See scheduleBindingRecheck.
+        scheduleBindingRecheck(BINDING_RECHECK_ATTEMPTS)
+
         -- A freshly (re)loaded override whose slot already holds a real action
         -- must start yielded, not behind the override. Defer one frame so the
         -- action-bar slots are populated before we read them.
@@ -1230,8 +1284,63 @@ function GSE.RemoveActionBarOverride(buttonName)
     GSE.ReloadOverrides()
 end
 
+--- Watch the spec + loadout the game reports until it catches up with what the
+--- player actually swapped to, and rebuild when it does. Blizzard updates both
+--- only after the events GSE rebuilds on, so those rebuilds bind the previous
+--- spec's or loadout's keys; how long that lags is not fixed, hence a bounded
+--- watch rather than one delayed look. A rebuild records the new context, so
+--- the next check matches and the watch stops.
+function scheduleBindingRecheck(attempts)
+    if bindingRecheckPending or attempts < 1 or not C_Timer then
+        return
+    end
+    bindingRecheckPending = true
+    C_Timer.After(
+        BINDING_RECHECK_INTERVAL,
+        function()
+            bindingRecheckPending = false
+            if InCombatLockdown() then
+                return
+            end
+            if currentBindingContext() ~= lastBindingContext then
+                -- LoadKeyBindings arms the next watch itself.
+                LoadKeyBindings(true)
+            else
+                scheduleBindingRecheck(attempts - 1)
+            end
+        end
+    )
+end
+
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
+end
+
+--- Release a physical key GSE had bound to a sequence. ONE path for every
+--- delete/rebind in the editor (tree right-click, panel Delete, panel Save):
+---  * normalises legacy mouse-button names, so the key that is actually bound
+---    is the one cleared (#1954 normalised on load only);
+---  * rebuilds the keybind tables afterwards, which releases every key the last
+---    rebuild bound before re-adding the ones that survive;
+---  * in combat, where SetBinding is protected, defers itself to the OOC queue
+---    instead of silently doing nothing (which is exactly how a "deleted" key
+---    kept firing its old sequence). Callers remove the GSE_C entry FIRST so
+---    the rebuild cannot re-add it.
+--- Deliberately does NOT call SaveBindings: GSE_C is the source of truth and
+--- the rebuild on login is the persistence. Writing the live binding table to
+--- bindings-cache.wtf would bake whatever GSE has bound right now into the
+--- character's (or, on an account-wide set, every character's) saved bindings.
+function GSE.ClearKeyBinding(key)
+    if GSE.isEmpty(key) then return false end
+    key = normalizeBindKey(key)
+    if InCombatLockdown() then
+        GSE.EnqueueOOC({ action = "clearkeybind", key = key })
+        GSE.Print(string.format(L["Keybind %s will be cleared when combat ends."], key))
+        return false
+    end
+    SetBinding(key)
+    LoadKeyBindings(true)
+    return true
 end
 
 function GSE:PLAYER_ENTERING_WORLD()
@@ -1765,6 +1874,8 @@ function GSE:ProcessOOCQueue()
                 if GSE.OpenOptionsPanel then
                     GSE.OpenOptionsPanel()
                 end
+            elseif v.action == "clearkeybind" then
+                GSE.ClearKeyBinding(v.key)
             elseif v.action == "deletesequence" then
                 -- Generic OOC sequence delete. Used by the Companion bridge
                 -- after the user confirms a delete (the website record has

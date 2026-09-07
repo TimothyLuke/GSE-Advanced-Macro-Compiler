@@ -258,6 +258,10 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
             end
         end
         local initialbind = bind
+        -- The loadout this row was opened FROM. `loadout` is mutated by the
+        -- dropdown below, so on a rebind the old entry must be removed from the
+        -- table it actually lives in, not whichever loadout is now selected.
+        local initialloadout = loadout
         rightContainer:ReleaseChildren()
 
         local keybind = UI:Create("ControllerKeybinding")
@@ -346,12 +350,46 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                         end
                         destination = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
                     end
-                    if initialbind and bind ~= initialbind and not InCombatLockdown() then
-                        SetBinding(initialbind)
-                        destination[bind] = nil
+                    local rebound = initialbind and bind ~= initialbind
+                    -- Both dropdown sentinels mean "every loadout": the list key
+                    -- is "All" and the saved value is nil, but older rows can
+                    -- still carry "ALL".
+                    local initialscope = (initialloadout ~= "ALL" and initialloadout ~= "All") and initialloadout or nil
+                    local newscope = (loadout ~= "ALL" and loadout ~= "All") and loadout or nil
+                    -- Save used to remove the old entry only when the KEY
+                    -- changed, so changing just the Talent Loadout dropdown
+                    -- COPIED the bind instead of moving it: the same key ended
+                    -- up under All Talent Loadouts and under every loadout it
+                    -- had ever been saved to, and the spec-level copy then
+                    -- fired under every loadout regardless of which one was
+                    -- selected. Treat a changed scope exactly like a changed
+                    -- key and drop the old entry from the table this row was
+                    -- loaded from.
+                    if initialbind and (rebound or initialscope ~= newscope) then
+                        local origin = GSE_C["KeyBindings"][tostring(specialization)]
+                        if initialscope and origin and origin["LoadOuts"] and origin["LoadOuts"][initialscope] then
+                            origin = origin["LoadOuts"][initialscope]
+                        end
+                        if origin then origin[initialbind] = nil end
                     end
                     if destination then
                         destination[bind] = button
+                        -- Moving the last bind OUT of a loadout leaves an empty
+                        -- table that the tree still draws as a childless loadout
+                        -- node; Delete already prunes those. Only after the new
+                        -- entry is written, and only on a real scope change --
+                        -- pruning before the write deleted the loadout out from
+                        -- under a plain rebind within it.
+                        local loadouts = GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"]
+                        if initialscope and initialscope ~= newscope and loadouts and loadouts[initialscope] then
+                            local empty = true
+                            for _, _ in pairs(loadouts[initialscope]) do
+                                empty = false
+                            end
+                            if empty then
+                                loadouts[initialscope] = nil
+                            end
+                        end
                     else
                         --@debug@
                         GSE.PrintDebugMessage(
@@ -361,24 +399,39 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                         --@end-debug@
                     end
                     editframe.ManageTree()
+                    -- A keybind's tree node is "<key>\001<sequence>", so the path
+                    -- has to end in the sequence name as well. Without it the
+                    -- path was one segment short, and onClick_KEYBINDINGS keys
+                    -- off the segment count: it read the loadout id as the key
+                    -- and the key as the sequence, which is how a talent-loadout
+                    -- config id turned up in "Set Key to Bind" right after a
+                    -- save. Test GetSpecializationInfo too -- that is the call
+                    -- the tree builder uses to decide whether a spec-level node
+                    -- was inserted, so it decides the segment count.
                     local keypath
-                    if loadout ~= "ALL" and loadout then
-                        if GetSpecialization then
-                            keypath = table.concat({"KEYBINDINGS", "KB", specialization, loadout, bind}, "\001")
+                    if newscope then
+                        if GetSpecializationInfo then
+                            keypath = table.concat({"KEYBINDINGS", "KB", specialization, newscope, bind, button}, "\001")
                         else
-                            keypath = table.concat({"KEYBINDINGS", "KB", loadout, bind}, "\001")
+                            keypath = table.concat({"KEYBINDINGS", "KB", newscope, bind, button}, "\001")
                         end
                     else
-                        if GetSpecialization then
-                            keypath = table.concat({"KEYBINDINGS", "KB", specialization, bind}, "\001")
+                        if GetSpecializationInfo then
+                            keypath = table.concat({"KEYBINDINGS", "KB", specialization, bind, button}, "\001")
                         else
-                            keypath = table.concat({"KEYBINDINGS", "KB", bind}, "\001")
+                            keypath = table.concat({"KEYBINDINGS", "KB", bind, button}, "\001")
                         end
                     end
                     if keypath then
                         editframe.treeContainer:SelectByValue(keypath)
                     end
-                    GSE.ReloadKeyBindings()
+                    if rebound then
+                        -- Clears the old key live, persists, and rebuilds (which
+                        -- binds the new key). Defers itself in combat.
+                        GSE.ClearKeyBinding(initialbind)
+                    else
+                        GSE.ReloadKeyBindings()
+                    end
                 end
             end
         )
@@ -388,9 +441,6 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
         delbutton:SetCallback(
             "OnClick",
             function()
-                if initialbind and not InCombatLockdown() then
-                    SetBinding(initialbind)
-                end
                 if loadout ~= "ALL" and loadout then
                     GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
                     local empty = true
@@ -408,6 +458,9 @@ local function showKeybind(editframe, bind, button, specialization, loadout, typ
                         GSE_C["KeyBindings"][tostring(specialization)][initialbind] = nil
                     end
                 end
+                -- GSE_C entry is gone above; now release the key itself (live
+                -- clear + persist + rebuild, or deferred to combat end).
+                GSE.ClearKeyBinding(initialbind)
                 rightContainer:ReleaseChildren()
                 editframe.ManageTree()
             end
