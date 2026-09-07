@@ -5232,6 +5232,16 @@ function GSE.CreateEditor()
                 unitEditBox:SetWidth(ACTION_SPELL_UNIT_FIELD_WIDTH)
                 unitEditBox:DisableButton(true)
                 unitEditBox:SetText(action.unit)
+                -- Tab menu, same contract as the spell field: apply does
+                -- SetText and the box's own OnTextChanged owns storage. Owner
+                -- is editframe.frame -- the same frame handed to
+                -- CreateSpellEditBox above, so the menu cannot be anchored to
+                -- a stale editor. No-op when GSE_QoL is not loaded.
+                if GSE.OnEditorUnitTab then
+                    GSE.OnEditorUnitTab(unitEditBox, editframe.frame, function(value)
+                        unitEditBox:SetText(value)
+                    end, action)
+                end
                 --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Versions[version])
                 unitEditBox:SetCallback(
                     "OnTextChanged",
