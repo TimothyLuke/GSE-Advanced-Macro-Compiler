@@ -1122,22 +1122,24 @@ end
 -- login, so nothing needs to survive one.
 local boundKeys = {}
 
--- The saved talent loadout the last rebuild bound for, and whether a re-check
--- is already scheduled. Blizzard updates GetLastSelectedSavedConfigID AFTER the
--- talent events GSE listens to, so a rebuild triggered by a loadout swap still
--- reads the loadout you just LEFT and re-binds its keys over the one you moved
--- to. The rebuild releases before it adds, so simply running it again once the
--- API has caught up is enough.
-local lastLoadoutId, loadoutRecheckPending
-local LoadKeyBindings, scheduleLoadoutRecheck
-local LOADOUT_RECHECK_INTERVAL, LOADOUT_RECHECK_ATTEMPTS = 0.5, 20
+-- Which spec + saved talent loadout the last rebuild bound for, and whether a
+-- re-check is already scheduled. Blizzard updates BOTH GetSpecialization and
+-- GetLastSelectedSavedConfigID only AFTER the events GSE rebuilds on, so a
+-- rebuild triggered by a spec change or a loadout swap still reads the one
+-- being left and re-binds its keys over the one moved to -- which is why those
+-- keys kept firing until a reload. The rebuild releases before it adds, so
+-- running it again once the API has caught up is all that is needed.
+local lastBindingContext, bindingRecheckPending
+local LoadKeyBindings, scheduleBindingRecheck
+local BINDING_RECHECK_INTERVAL, BINDING_RECHECK_ATTEMPTS = 0.5, 20
 
-local function currentLoadoutId()
+local function currentBindingContext()
+    local loadoutId = ""
     local spec = playerSpec()
-    if not (spec and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID) then
-        return nil
+    if spec and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
+        loadoutId = tostring(C_ClassTalents.GetLastSelectedSavedConfigID(spec))
     end
-    return tostring(C_ClassTalents.GetLastSelectedSavedConfigID(spec))
+    return GetSpec() .. "\001" .. loadoutId
 end
 
 local keybindingframe
@@ -1169,6 +1171,9 @@ function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
         GSE_C["KeyBindings"][GetSpec()] = {}
     end
+
+    -- What this rebuild is about to bind for. See scheduleBindingRecheck.
+    lastBindingContext = currentBindingContext()
 
     -- Release everything the previous rebuild bound, then let the loops below
     -- re-bind exactly what still exists. Without this the rebuild only ever
@@ -1203,7 +1208,6 @@ function LoadKeyBindings(payload)
     if payload and not InCombatLockdown() then
         if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
             local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
-            lastLoadoutId = selected
             if
                 selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
@@ -1226,9 +1230,9 @@ function LoadKeyBindings(payload)
                 end
             end
         end
-        -- See lastLoadoutId: the config id read above may still name the
-        -- loadout being swapped away from, and it can stay stale for seconds.
-        scheduleLoadoutRecheck(LOADOUT_RECHECK_ATTEMPTS)
+        -- The spec and loadout read above may still name the ones being left,
+        -- and can stay stale for seconds. See scheduleBindingRecheck.
+        scheduleBindingRecheck(BINDING_RECHECK_ATTEMPTS)
 
         -- A freshly (re)loaded override whose slot already holds a real action
         -- must start yielded, not behind the override. Defer one frame so the
@@ -1280,32 +1284,29 @@ function GSE.RemoveActionBarOverride(buttonName)
     GSE.ReloadOverrides()
 end
 
---- Watch GetLastSelectedSavedConfigID until it catches up with the loadout the
---- player actually swapped to, and rebuild when it does. Blizzard updates it
---- after the talent events fire, so the rebuild those events trigger binds the
---- previous loadout's keys; how long it lags is not fixed, hence a bounded
---- watch rather than a single delayed look. A rebuild records the new id, so
+--- Watch the spec + loadout the game reports until it catches up with what the
+--- player actually swapped to, and rebuild when it does. Blizzard updates both
+--- only after the events GSE rebuilds on, so those rebuilds bind the previous
+--- spec's or loadout's keys; how long that lags is not fixed, hence a bounded
+--- watch rather than one delayed look. A rebuild records the new context, so
 --- the next check matches and the watch stops.
-function scheduleLoadoutRecheck(attempts)
-    if loadoutRecheckPending or attempts < 1 then
+function scheduleBindingRecheck(attempts)
+    if bindingRecheckPending or attempts < 1 or not C_Timer then
         return
     end
-    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and C_Timer) then
-        return
-    end
-    loadoutRecheckPending = true
+    bindingRecheckPending = true
     C_Timer.After(
-        LOADOUT_RECHECK_INTERVAL,
+        BINDING_RECHECK_INTERVAL,
         function()
-            loadoutRecheckPending = false
+            bindingRecheckPending = false
             if InCombatLockdown() then
                 return
             end
-            if currentLoadoutId() ~= lastLoadoutId then
+            if currentBindingContext() ~= lastBindingContext then
                 -- LoadKeyBindings arms the next watch itself.
                 LoadKeyBindings(true)
             else
-                scheduleLoadoutRecheck(attempts - 1)
+                scheduleBindingRecheck(attempts - 1)
             end
         end
     )
