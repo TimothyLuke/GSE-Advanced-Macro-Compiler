@@ -155,7 +155,11 @@ local function onSequenceSaved(_, sequenceName)
         local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
         if seq and seq.MetaData then
             seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
-            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            -- The checksum is computed from the body, so it is recovered on the
+            -- next load; protected content keeps its sealed blob instead.
+            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
+                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            end
             break
         end
     end
@@ -318,6 +322,87 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
             for k, _ in pairs(GSEVariables) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
             end
+        end)
+    end)
+end
+
+-- Unit tokens for the Action block's Unit Name field. BARE tokens, not the
+-- @-prefixed conditional form: the value goes straight to the secure button as
+-- SetAttribute("unit", v) (Storage.lua:2587), which is Blizzard's unit
+-- attribute. "@target" is macro-conditional syntax and is not valid here.
+-- Grouped to match the Conditionals flyouts. raid1-40 is deliberately not
+-- listed in full -- it would bury the useful entries; raid1-5 covers the
+-- common case and anything past that is typed.
+--
+-- `types` filters the group by the Action block's Type. A pet ability has no
+-- use for arena/boss units, a toy is cast on yourself, and an item is usually
+-- used on a friendly target -- so the menu only offers what suits the type
+-- rather than every token Blizzard would technically accept. nil = all types.
+local TAB_UNITS = {
+    { "Self",      { "player" } },
+    { "Pet",       { "pet", "pettarget" },
+                   types = { spell = true, pet = true, macro = true } },
+    { "Target",    { "target", "targettarget", "focus", "focustarget" },
+                   types = { spell = true, item = true, pet = true, macro = true } },
+    { "Mouseover", { "mouseover", "mouseovertarget" },
+                   types = { spell = true, item = true, pet = true, macro = true } },
+    { "Party",     { "party1", "party2", "party3", "party4",
+                     "party1target", "party2target", "party3target", "party4target" },
+                   types = { spell = true, item = true, macro = true } },
+    { "Raid",      { "raid1", "raid2", "raid3", "raid4", "raid5" },
+                   types = { spell = true, item = true, macro = true } },
+    { "Arena",     { "arena1", "arena2", "arena3" },
+                   types = { spell = true, macro = true } },
+    { "Boss",      { "boss1", "boss2", "boss3", "boss4" },
+                   types = { spell = true, macro = true } },
+}
+-- No "none" entry: a one-item flyout is clutter and the Clear action below
+-- already empties the field. An empty field means no unit attribute at all,
+-- which is what "none" was standing in for.
+
+--- The Action block's Type, read LIVE from the action table so the menu
+--- reflects the radio buttons as they are now, not as they were when the
+--- block was drawn. Mirrors inferActionType in Editor.lua.
+local function actionTypeOf(action)
+    if type(action) ~= "table" then return "spell" end
+    if action.type and action.type ~= "" then return action.type end
+    if not GSE.isEmpty(action.toy) then return "toy" end
+    if not GSE.isEmpty(action.item) then return "item" end
+    if not GSE.isEmpty(action.pet) then return "pet" end
+    if not GSE.isEmpty(action.spell) then return "spell" end
+    return "macro"
+end
+
+-- Tab menu for the Action block's Unit Name field (Patron). Sibling of
+-- GSE.OnEditorSpellTab: same signature plus the action, same contract --
+-- `apply` receives the chosen token and the field's own OnTextChanged owns
+-- storage.
+GSE.OnEditorUnitTab = function(widget, menuOwner, apply, action)
+    local editBox = widget and (widget.editBox or widget.editbox)
+    if not editBox then return end
+    editBox:SetScript("OnTabPressed", function()
+        local atype = actionTypeOf(action)
+        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Insert Unit"])
+            for _, group in ipairs(TAB_UNITS) do
+                if not group.types or group.types[atype] then
+                    -- Every group is a flyout, even a single-token one: the
+                    -- category name is what the author scans for, so keeping
+                    -- the shape uniform is worth more than saving a click.
+                    local sub = rootDescription:CreateButton(group[1])
+                    for _, token in ipairs(group[2]) do
+                        sub:CreateButton(token, function()
+                            apply(token)
+                            return MenuResponse.Close
+                        end)
+                    end
+                end
+            end
+            rootDescription:CreateDivider()
+            rootDescription:CreateButton(L["Clear"], function()
+                apply("")
+                return MenuResponse.Close
+            end)
         end)
     end)
 end

@@ -1832,7 +1832,11 @@ function GSE.HydrateClassActionIcons(classid)
         if sequenceShowTooltipChanges > 0 and GSESequences and GSESequences[classid] and
             GSESequences[classid][sequenceName] then
             if type(sequence.MetaData) == "table" then sequence.MetaData.Checksum = nil end
-            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+            -- Resolved icons are a cache, re-derived on every load, so leaving
+            -- protected content sealed costs one re-hydrate and nothing else.
+            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
+                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+            end
             sequenceChangedIcons = sequenceChangedIcons - sequenceShowTooltipChanges
         end
         if sequenceChangedIcons > 0 then
@@ -1892,7 +1896,8 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
 
                 local pendingIconSaves = actionIconDirtySequences[sequence] or 0
                 if saveChanges then
-                    if (changed or pendingIconSaves > 0) and GSESequences and GSESequences[classid] then
+                    if (changed or pendingIconSaves > 0) and GSESequences and GSESequences[classid]
+                        and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
                         GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
                         savedSequences = savedSequences + 1
                         savedIcons = savedIcons + sequenceChangedIcons + pendingIconSaves
@@ -1952,7 +1957,8 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
                     changedSequences = changedSequences + 1
                 end
 
-                if saveChanges and changed and GSESequences and GSESequences[classid] then
+                if saveChanges and changed and GSESequences and GSESequences[classid]
+                    and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
                     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
                     savedSequences = savedSequences + 1
                     savedIcons = savedIcons + sequenceRefreshedIcons + sequenceClearedUserSelections
@@ -5232,6 +5238,16 @@ function GSE.CreateEditor()
                 unitEditBox:SetWidth(ACTION_SPELL_UNIT_FIELD_WIDTH)
                 unitEditBox:DisableButton(true)
                 unitEditBox:SetText(action.unit)
+                -- Tab menu, same contract as the spell field: apply does
+                -- SetText and the box's own OnTextChanged owns storage. Owner
+                -- is editframe.frame -- the same frame handed to
+                -- CreateSpellEditBox above, so the menu cannot be anchored to
+                -- a stale editor. No-op when GSE_QoL is not loaded.
+                if GSE.OnEditorUnitTab then
+                    GSE.OnEditorUnitTab(unitEditBox, editframe.frame, function(value)
+                        unitEditBox:SetText(value)
+                    end, action)
+                end
                 --local compiledAction = GSE.CompileAction(action, editframe.Sequence.Versions[version])
                 unitEditBox:SetCallback(
                     "OnTextChanged",

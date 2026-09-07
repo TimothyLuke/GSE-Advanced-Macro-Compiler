@@ -91,6 +91,24 @@ function luassert.is_truthy(v, msg) if not v then error((msg or "") .. " expecte
 function luassert.is_falsy(v, msg) if v then error((msg or "") .. " expected falsy, got " .. tostring(v), 2) end end
 luassert.truthy, luassert.falsy = luassert.is_truthy, luassert.is_falsy
 
+-- assert.is_not.equals(a, b) / assert.is_not.same(a, b). busted has the whole
+-- negated namespace; the specs use these, so the shim carries them rather than
+-- the specs working around a gap that only exists under 5.1.
+luassert.is_not = {
+  equals = function(expected, actual, msg)
+    if expected == actual then
+      error((msg or "") .. " expected anything but " .. render(expected), 2)
+    end
+  end,
+  same = function(expected, actual, msg)
+    if deepEqual(expected, actual) then
+      error((msg or "") .. " expected anything but " .. render(expected), 2)
+    end
+  end,
+}
+luassert.is_not.equal = luassert.is_not.equals
+luassert.are_not = luassert.is_not
+
 -- assert.has.errors(fn) / assert.has_no.errors(fn)
 luassert.has = {
   errors = function(fn, msg)

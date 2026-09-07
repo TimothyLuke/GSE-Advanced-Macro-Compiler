@@ -104,6 +104,7 @@ globals = {
     "GSESequences",
     "GSESupportReports",
     "GSEDeltas",
+    "GSERepackQueue",
     "GSE_GUI",
     "GSE_C",
     "GSESpellCache",
