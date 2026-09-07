@@ -1114,6 +1114,32 @@ local function LoadOverrides(force)
     end
 end
 
+-- Every key LoadKeyBindings bound on its last run. The rebuild is otherwise
+-- add-only: it re-binds what is in GSE_C now and never releases what it bound
+-- before, so a key that was deleted, rebound, or belonged to the loadout you
+-- just switched away from keeps firing its old sequence for the rest of the
+-- session. Session scope only -- GSE keybinds are rebuilt from GSE_C on every
+-- login, so nothing needs to survive one.
+local boundKeys = {}
+
+-- The saved talent loadout the last rebuild bound for, and whether a re-check
+-- is already scheduled. Blizzard updates GetLastSelectedSavedConfigID AFTER the
+-- talent events GSE listens to, so a rebuild triggered by a loadout swap still
+-- reads the loadout you just LEFT and re-binds its keys over the one you moved
+-- to. The rebuild releases before it adds, so simply running it again once the
+-- API has caught up is enough.
+local lastLoadoutId, loadoutRecheckPending
+local LoadKeyBindings, scheduleLoadoutRecheck
+local LOADOUT_RECHECK_INTERVAL, LOADOUT_RECHECK_ATTEMPTS = 0.5, 20
+
+local function currentLoadoutId()
+    local spec = playerSpec()
+    if not (spec and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID) then
+        return nil
+    end
+    return tostring(C_ClassTalents.GetLastSelectedSavedConfigID(spec))
+end
+
 local keybindingframe
 if GSE.GameMode == 5 then
     keybindingframe = CreateFrame("Frame", "GSEKeyBinds", UIParent)
@@ -1132,7 +1158,7 @@ local function normalizeBindKey(key)
     return (key:gsub("MiddleButton", "BUTTON3"):gsub("Button4", "BUTTON4"):gsub("Button5", "BUTTON5"))
 end
 
-local function LoadKeyBindings(payload)
+function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
     end
@@ -1144,16 +1170,21 @@ local function LoadKeyBindings(payload)
         GSE_C["KeyBindings"][GetSpec()] = {}
     end
 
-    -- This loop only ADDS override-click bindings for keys still present in
-    -- GSE_C["KeyBindings"]. A key that was deleted or rebound away never gets
-    -- its OLD override cleared -- SetOverrideBindingClick has no per-key
-    -- "remove" call, and the override layer sits above the normal binding set,
-    -- so the phantom bind keeps firing the old sequence even after SetBinding()
-    -- clears the base binding and the editor tree shows it gone. Clear every
-    -- override on our owner frame first; the loop below re-adds exactly the
-    -- ones that still exist.
-    if GSE.GameMode == 5 and keybindingframe and not InCombatLockdown() then
-        ClearOverrideBindings(keybindingframe)
+    -- Release everything the previous rebuild bound, then let the loops below
+    -- re-bind exactly what still exists. Without this the rebuild only ever
+    -- adds: deleting a keybind, rebinding it to another key, or switching to a
+    -- talent loadout that does not define it all leave the old key bound and
+    -- still firing the old sequence. On MoP the same keys also sit in the
+    -- override layer, which has no per-key remove call, so drop the whole
+    -- layer for our owner frame as well.
+    if not InCombatLockdown() then
+        for k in pairs(boundKeys) do
+            SetBinding(k)
+        end
+        wipe(boundKeys)
+        if GSE.GameMode == 5 and keybindingframe then
+            ClearOverrideBindings(keybindingframe)
+        end
     end
 
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
@@ -1161,6 +1192,7 @@ local function LoadKeyBindings(payload)
             local target = GSE.GetKeybindClickTarget(v)
             k = normalizeBindKey(k)
             SetBindingClick(k, target, "LeftButton")
+            boundKeys[k] = true
             if GSE.GameMode == 5 then
                 SetOverrideBindingClick(keybindingframe, false, k, target)
             end
@@ -1171,6 +1203,7 @@ local function LoadKeyBindings(payload)
     if payload and not InCombatLockdown() then
         if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
             local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
+            lastLoadoutId = selected
             if
                 selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
@@ -1186,12 +1219,17 @@ local function LoadKeyBindings(payload)
                     SetBinding(k)
                     local target = GSE.GetKeybindClickTarget(v)
                     SetBindingClick(k, target, "LeftButton")
+                    boundKeys[k] = true
                     if GSE.GameMode == 5 then
                         SetOverrideBindingClick(keybindingframe, false, k, target)
                     end
                 end
             end
         end
+        -- See lastLoadoutId: the config id read above may still name the
+        -- loadout being swapped away from, and it can stay stale for seconds.
+        scheduleLoadoutRecheck(LOADOUT_RECHECK_ATTEMPTS)
+
         -- A freshly (re)loaded override whose slot already holds a real action
         -- must start yielded, not behind the override. Defer one frame so the
         -- action-bar slots are populated before we read them.
@@ -1242,6 +1280,37 @@ function GSE.RemoveActionBarOverride(buttonName)
     GSE.ReloadOverrides()
 end
 
+--- Watch GetLastSelectedSavedConfigID until it catches up with the loadout the
+--- player actually swapped to, and rebuild when it does. Blizzard updates it
+--- after the talent events fire, so the rebuild those events trigger binds the
+--- previous loadout's keys; how long it lags is not fixed, hence a bounded
+--- watch rather than a single delayed look. A rebuild records the new id, so
+--- the next check matches and the watch stops.
+function scheduleLoadoutRecheck(attempts)
+    if loadoutRecheckPending or attempts < 1 then
+        return
+    end
+    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and C_Timer) then
+        return
+    end
+    loadoutRecheckPending = true
+    C_Timer.After(
+        LOADOUT_RECHECK_INTERVAL,
+        function()
+            loadoutRecheckPending = false
+            if InCombatLockdown() then
+                return
+            end
+            if currentLoadoutId() ~= lastLoadoutId then
+                -- LoadKeyBindings arms the next watch itself.
+                LoadKeyBindings(true)
+            else
+                scheduleLoadoutRecheck(attempts - 1)
+            end
+        end
+    )
+end
+
 function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
@@ -1250,14 +1319,16 @@ end
 --- delete/rebind in the editor (tree right-click, panel Delete, panel Save):
 ---  * normalises legacy mouse-button names, so the key that is actually bound
 ---    is the one cleared (#1954 normalised on load only);
----  * persists into the binding set the character really uses -- a hard-coded
----    SaveBindings(2) would silently switch an account-wide user to
----    character-specific bindings;
----  * rebuilds the keybind tables afterwards so no override entry survives;
+---  * rebuilds the keybind tables afterwards, which releases every key the last
+---    rebuild bound before re-adding the ones that survive;
 ---  * in combat, where SetBinding is protected, defers itself to the OOC queue
 ---    instead of silently doing nothing (which is exactly how a "deleted" key
 ---    kept firing its old sequence). Callers remove the GSE_C entry FIRST so
 ---    the rebuild cannot re-add it.
+--- Deliberately does NOT call SaveBindings: GSE_C is the source of truth and
+--- the rebuild on login is the persistence. Writing the live binding table to
+--- bindings-cache.wtf would bake whatever GSE has bound right now into the
+--- character's (or, on an account-wide set, every character's) saved bindings.
 function GSE.ClearKeyBinding(key)
     if GSE.isEmpty(key) then return false end
     key = normalizeBindKey(key)
@@ -1267,7 +1338,6 @@ function GSE.ClearKeyBinding(key)
         return false
     end
     SetBinding(key)
-    SaveBindings((GetCurrentBindingSet and GetCurrentBindingSet()) or 2)
     LoadKeyBindings(true)
     return true
 end

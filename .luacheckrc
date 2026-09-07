@@ -483,7 +483,6 @@ globals = {
     "UnitSpellHaste",
     "GetClassInfo",
     "GetTalentTierInfo",
-    "GetCurrentBindingSet",
     "SaveBindings",
     "SetBinding",
     "QueryCastSequence",
