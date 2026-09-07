@@ -155,7 +155,7 @@ local function onSequenceSaved(_, sequenceName)
         local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
         if seq and seq.MetaData then
             seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
-            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, seq})
             break
         end
     end

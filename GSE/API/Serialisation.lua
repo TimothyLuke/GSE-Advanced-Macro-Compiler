@@ -10,6 +10,58 @@ function GSE.EncodeMessage(tab)
 end
 
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
+--- Encode for STORAGE (GSESequences / GSEVariables).
+---
+--- The envelope follows ONE fact: is this protected content (MetaData.noExport,
+--- set by gse.tools on copies sent to someone who does not own them). It is NOT
+--- inherited from whatever was on disk -- inheriting makes the envelope sticky,
+--- so a blob packed by an over-broad build could never return to plain.
+---
+--- Protected content is packed; the author's OWN content stays plain, on
+--- purpose. The GSE Companion desktop app decodes GSE.lua directly and is
+--- deliberately blind to !GSE3!+ ("opaque to the Companion by design -- no
+--- key", wow.js:438). Packing only protected content is exactly what it
+--- already ignores, so it needs no change and the key stays in one binary.
+---
+--- Every write that replaces a stored blob goes through here, so a migration,
+--- edit, rename or backfill can no longer downgrade protected content to
+--- plaintext. Wire and export encodes are NOT routed here (Serialisation:95,
+--- Export.lua:31, Utils.lua:1838) -- those stay plain by policy.
+local function isProtected(tab)
+    local meta = type(tab) == "table"
+        and (tab.MetaData or (type(tab[2]) == "table" and tab[2].MetaData))
+    return type(meta) == "table" and meta.noExport and true or false
+end
+
+--- Key id is carried forward only when re-packing something already packed
+--- under a non-default key; today "1" is the only key issued.
+function GSE.EncodeLike(existing, tab)
+    if isProtected(tab) then
+        local keyId = "1"
+        if type(existing) == "string" and string.sub(existing, 1, 7) == "!GSE3!+" then
+            keyId = string.sub(existing, 8, 8)
+        end
+        return GSE.EncodePackedMessage(tab, keyId)
+    end
+    return GSE.EncodeMessage(tab)
+end
+
+--- True when a stored blob is protected content still sitting in the clear,
+--- so the load path can re-pack it. Own content returns false and is left
+--- alone. `decoded` is the already-decoded object, so this costs nothing.
+function GSE.NeedsRepack(blob, decoded)
+    if type(blob) ~= "string" then return false end
+    local packed = string.sub(blob, 1, 7) == "!GSE3!+"
+    local protected = isProtected(decoded)
+    -- Protected but in the clear -> pack it.
+    if not packed and protected then return true end
+    -- Packed but NOT protected -> the author's own content, which must stay
+    -- plain so the Companion can read it (wow.js:438 has no key). Rewrite it
+    -- plain. This also unwinds an over-broad pack from an earlier build.
+    if packed and not protected then return true end
+    return false
+end
+
 function GSE.DecodeMessage(data)
     if string.sub(data, 1, 7) == "!GSE3!+" then
         return pcall(GSE.DecodePackedMessage, data)

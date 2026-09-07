@@ -1832,7 +1832,7 @@ function GSE.HydrateClassActionIcons(classid)
         if sequenceShowTooltipChanges > 0 and GSESequences and GSESequences[classid] and
             GSESequences[classid][sequenceName] then
             if type(sequence.MetaData) == "table" then sequence.MetaData.Checksum = nil end
-            GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+            GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, sequence})
             sequenceChangedIcons = sequenceChangedIcons - sequenceShowTooltipChanges
         end
         if sequenceChangedIcons > 0 then
@@ -1893,7 +1893,7 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
                 local pendingIconSaves = actionIconDirtySequences[sequence] or 0
                 if saveChanges then
                     if (changed or pendingIconSaves > 0) and GSESequences and GSESequences[classid] then
-                        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                        GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, sequence})
                         savedSequences = savedSequences + 1
                         savedIcons = savedIcons + sequenceChangedIcons + pendingIconSaves
                         actionIconDirtySequences[sequence] = nil
@@ -1953,7 +1953,7 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
                 end
 
                 if saveChanges and changed and GSESequences and GSESequences[classid] then
-                    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                    GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, sequence})
                     savedSequences = savedSequences + 1
                     savedIcons = savedIcons + sequenceRefreshedIcons + sequenceClearedUserSelections
                     actionIconDirtySequences[sequence] = nil
@@ -8037,7 +8037,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
         sequence.Versions[1]["Actions"] = recordedMacro
     end
     if GSE.isEmpty(sequence.WeakAuras) then sequence.WeakAuras = {} end
-    GSESequences[classid][name] = GSE.EncodeMessage({name, sequence})
+    GSESequences[classid][name] = GSE.EncodeLike(GSESequences[classid][name], {name, sequence})
     GSE.Library[classid][name]  = sequence
     editor:SetStatusText("GSE: " .. GSE.VersionString)
     editor.SequenceName     = name

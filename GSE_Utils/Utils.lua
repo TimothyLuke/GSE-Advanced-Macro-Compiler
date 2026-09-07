@@ -169,6 +169,9 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         )
         sequenceName = tempseqName
     end
+    -- Every new and imported sequence lands here. Stamp it under the name it
+    -- is stored as, before the next load would; an existing stamp is kept.
+    GSE.StampOriginKey(newSequence, sequenceName)
     if action == "MERGE" then
         -- Both sides need a Versions table. Migration above set them up;
         -- belt-and-braces: if either is still nil, init/empty out so the
@@ -190,7 +193,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         --@end-debug@
         GSE.Print(string.format(L["Extra Sequence Versions of %s have been added."], sequenceName), GNOME)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, GSE.Library[classid][sequenceName]})
     elseif action == "REPLACE" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
@@ -201,13 +204,13 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         --@end-debug@
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
     elseif action == "RENAME" then
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+        GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, GSE.Library[classid][sequenceName]})
         GSE.Print(sequenceName .. L[" was imported as a new sequence."], "Storage")
         --@debug@
         GSE.PrintDebugMessage(

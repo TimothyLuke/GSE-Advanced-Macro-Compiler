@@ -136,6 +136,13 @@ local function loadOneClass(classid)
                 local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
                 GSE.Library[classid][i] = uncompressedVersion[2]
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
+                -- Self-heal: protected content stored in the clear (by a build
+                -- without this fix) is rewritten packed on load. Own content
+                -- is left plain -- see GSE.EncodeLike.
+                if not changed and reason == nil
+                    and GSE.NeedsRepack(GSESequences[classid][i], GSE.Library[classid][i]) then
+                    changed = true
+                end
                 if reason == "macros-deprecated" then
                     -- Refuse to load. The on-disk record uses the old
                     -- 'Macros' field; the addon no longer auto-renames.
@@ -145,7 +152,7 @@ local function loadOneClass(classid)
                         i))
                 end
                 if changed then
-                    GSESequences[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
+                    GSESequences[classid][i] = GSE.EncodeLike(GSESequences[classid][i], {i, GSE.Library[classid][i]})
                 end
             end
         )
@@ -186,6 +193,12 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
+                -- Self-heal: protected content stored in the clear is rewritten
+                -- packed on load; own content is left plain.
+                if not changed and reason == nil
+                    and GSE.NeedsRepack(GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName]) then
+                    changed = true
+                end
                 if reason == "macros-deprecated" then
                     GSE.Library[classid][sequenceName] = nil
                     error(string.format(
@@ -193,7 +206,7 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
                         sequenceName))
                 end
                 if changed then
-                    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+                    GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, GSE.Library[classid][sequenceName]})
                 end
             end
         end
@@ -559,6 +572,10 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.SanitizeSequenceEditorMarkup then
         GSE.SanitizeSequenceEditorMarkup(sequence)
     end
+    -- Stamp on save, not only on the next load: a sequence created, exported
+    -- or renamed within one session must already carry the key it was born
+    -- with. Idempotent -- an existing stamp is left alone.
+    GSE.StampOriginKey(sequence, sequenceName)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
@@ -568,7 +585,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
-    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+    GSESequences[classid][sequenceName] = GSE.EncodeLike(GSESequences[classid][sequenceName], {sequenceName, sequence})
     GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
@@ -640,7 +657,7 @@ function GSE.RenameSequence(classid, oldName, newName, sequence)
     GSE.SnapshotDependentMacros(sequence)
 
     -- Write under the new key.
-    GSESequences[classid][newName] = GSE.EncodeMessage({newName, sequence})
+    GSESequences[classid][newName] = GSE.EncodeLike(GSESequences[classid][oldName], {newName, sequence})
     GSE.Library[classid][newName] = sequence
 
     -- Remove the old key so the old name is no longer in use.
@@ -823,6 +840,11 @@ local function loadOneVariable(k, v)
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
             if not localsuccess then return end
             GSE.V[k] = gseLoadstring("return " .. uncompressedVersion.funct)()
+            -- Self-heal: a protected variable stored in the clear is rewritten
+            -- packed on load; the author's own variables stay plain.
+            if GSE.NeedsRepack(v, uncompressedVersion) then
+                GSEVariables[k] = GSE.EncodeLike(v, uncompressedVersion)
+            end
             if type(GSE.V[k]()) == "boolean" then
                 GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
             end
@@ -2797,7 +2819,7 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.CompanionCancelPendingDelete("variable", name)
     end
     GSE.ComputeVariableDependencies(variable)
-    local compressedvariable = GSE.EncodeMessage(variable)
+    local compressedvariable = GSE.EncodeLike(GSEVariables and GSEVariables[name], variable)
     if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(variable)) then
         GSEVariables[name] = compressedvariable
     end
@@ -2847,7 +2869,7 @@ function GSE.BackfillLastUpdated()
                     if type(seq) == "table" and not seq.LastUpdated then
                         seq.LastUpdated = now
                         if GSESequences and GSESequences[classid] then
-                            GSESequences[classid][name] = GSE.EncodeMessage({name, seq})
+                            GSESequences[classid][name] = GSE.EncodeLike(GSESequences[classid][name], {name, seq})
                         end
                         touched = touched + 1
                     end
