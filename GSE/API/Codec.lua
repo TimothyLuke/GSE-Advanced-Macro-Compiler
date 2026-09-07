@@ -81,27 +81,4 @@ function GSE.DecodePackedMessage(data)
     return C_EncodingUtil.DeserializeCBOR(C_EncodingUtil.DecompressString(plain))
 end
 
-local DEFAULT_KEY_ID = "1"
-
-local function randomNonce()
-    local t = {}
-    for i = 1, 12 do t[i] = schar(math.random(0, 255)) end
-    return concat(t)
-end
-
---- Inverse of GSE.DecodePackedMessage. Identical layout:
----   "!GSE3!+" .. keyid .. base64( nonce[12] .. chacha20(key, nonce, 0, deflate(cbor(tab))) )
---- ChaCha20 is a stream cipher, so TransformBytes both encrypts and decrypts;
---- this is the same call DecodePackedMessage makes, in the other direction.
---- Lives here because `keys` is file-local.
-function GSE.EncodePackedMessage(tab, keyid)
-    keyid = keyid or DEFAULT_KEY_ID
-    local key = keys[keyid]
-    if not key then error("unsupported encoding") end
-    local plain = C_EncodingUtil.CompressString(C_EncodingUtil.SerializeCBOR(tab))
-    local nonce = randomNonce()
-    local body = GSE.TransformBytes(key, nonce, 0, plain)
-    return "!GSE3!+" .. keyid .. C_EncodingUtil.EncodeBase64(nonce .. body)
-end
-
 if type(GSE.DebugProfile) == "function" then GSE.DebugProfile("Codec") end
