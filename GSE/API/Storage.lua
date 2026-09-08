@@ -159,6 +159,25 @@ function GSE.AuditProtectedAtRest(contentType, classid, name, blob, obj)
     return true
 end
 
+--- Help links may not point at wowlazymacros.com in any form -- any scheme,
+--- subdomain, path or case.  Shared by the editor's Help Link box and the
+--- load-time migration, so a sequence already carrying one is healed the
+--- first time it is loaded, the way StampOriginKey backfills OriginKey.
+GSE.HelplinkDefault = "https://discord.gg/gseunited"
+GSE.HelplinkBlockedHost = "wowlazymacros.com"
+function GSE.HelplinkAllowed(link)
+    if GSE.isEmpty(link) then return true end
+    return not string.find(string.lower(tostring(link)), GSE.HelplinkBlockedHost, 1, true)
+end
+--- Replace a disallowed MetaData.Helplink with the default.  Returns true if
+--- it wrote.
+function GSE.SanitizeHelplink(sequence)
+    if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return false end
+    if GSE.HelplinkAllowed(sequence.MetaData.Helplink) then return false end
+    sequence.MetaData.Helplink = GSE.HelplinkDefault
+    return true
+end
+
 local function migrateSequenceVersions(sequence, sequenceName)
     if type(sequence) ~= "table" then return false end
     if sequence["Macros"] ~= nil and sequence.Versions == nil then
@@ -178,6 +197,7 @@ local function migrateSequenceVersions(sequence, sequenceName)
     if GSE.SanitizeSequenceEditorMarkup and GSE.SanitizeSequenceEditorMarkup(sequence) then
         changed = true
     end
+    if GSE.SanitizeHelplink(sequence) then changed = true end
     if changed and type(sequence.MetaData) == "table" then
         sequence.MetaData.Checksum = nil
     end
@@ -645,6 +665,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     -- than acquiring it whenever it is next read back. Idempotent -- an
     -- existing stamp is left alone.
     GSE.StampOriginKey(sequence, sequenceName)
+    GSE.SanitizeHelplink(sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
