@@ -1428,12 +1428,39 @@ local function isMacroLineFormOrStance(line)
     return isFormSpellCandidate(getMacroLineResolvedIconCandidate(line))
 end
 
+-- A macro line whose cast is gated on a conditional -- "/cast [mod:alt] X".
+-- A bracket group before the spell means the line only fires in that state,
+-- so it does not represent what the block normally does.  Comment lines and
+-- the target-only form "/cast [@player]" are not conditionals in this sense,
+-- but the bracket test does not need to tell them apart: any bracketed line
+-- loses to an unbracketed one, and if every line is bracketed the original
+-- first-line order still decides.
+local function isMacroLineConditional(line)
+    if type(line) ~= "string" then return false end
+    -- Strip the command word, then look for a bracket group before anything
+    -- else: "/cast [mod:alt] X" yes, "/cast Mortal Strike" no.
+    local remainder = string.match(line, "^%s*/%a+%s+(.*)$")
+    if not remainder then return false end
+    return string.match(remainder, "^%[") ~= nil
+end
+
+-- The icon a macro block shows.  Two passes: the first takes the first line
+-- that is NOT gated on a conditional, because a block that opens with a
+-- string of "[mod:...]" lines and ends in its real cast should show the real
+-- cast -- otherwise every block sharing the same modifier preamble draws the
+-- same icon.  The second pass is the original behaviour, for macros where
+-- every line is conditional.
 local function getFirstMacroLineIconInfo(macro, skipForms)
-    for _, line in ipairs(GSE.SplitMeIntoLines(macro or "")) do
-        if not (skipForms and isMacroLineFormOrStance(line)) then
-            local spellinfo = GSE.GetSpellsFromString(line, true)
-            local iconInfo = getMacroLineResolvedIconInfo(line, skipForms) or getFirstIconInfo(spellinfo, skipForms) or getMacroLineFallbackIconInfo(line, skipForms)
-            if iconInfo then return iconInfo end
+    local lines = GSE.SplitMeIntoLines(macro or "")
+    for pass = 1, 2 do
+        for _, line in ipairs(lines) do
+            local skip = (skipForms and isMacroLineFormOrStance(line)) or
+                (pass == 1 and isMacroLineConditional(line))
+            if not skip then
+                local spellinfo = GSE.GetSpellsFromString(line, true)
+                local iconInfo = getMacroLineResolvedIconInfo(line, skipForms) or getFirstIconInfo(spellinfo, skipForms) or getMacroLineFallbackIconInfo(line, skipForms)
+                if iconInfo then return iconInfo end
+            end
         end
     end
 end
