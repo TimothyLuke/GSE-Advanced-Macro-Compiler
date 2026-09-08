@@ -455,6 +455,9 @@ Statics.ActionsIcons.Pause = "Interface\\Addons\\GSE_GUI\\Assets\\pause.png"
 Statics.ActionsIcons.If = "Interface\\Addons\\GSE_GUI\\Assets\\if.png"
 Statics.ActionsIcons.Embed = "Interface\\Addons\\GSE_GUI\\Assets\\embed.png"
 Statics.ActionsIcons.Delete = "Interface\\Addons\\GSE_GUI\\Assets\\delete.png"
+-- Flat red X, for removing one row from a list.  Distinct from Delete above,
+-- which is the framed trash-can button used on tree nodes and toolbars.
+Statics.ActionsIcons.DeleteX = "Interface\\Addons\\GSE_GUI\\Assets\\delete-x.png"
 Statics.ActionsIcons.Key = "Interface\\Addons\\GSE_GUI\\Assets\\key.png"
 Statics.ActionsIcons.Settings = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
 
@@ -487,6 +490,15 @@ Statics.Icons.GSE_Logo_Dark = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_512x512-T
 -- comes to repoint everything to the new artwork, GSE_Logo_Dark
 -- becomes the rebrand vehicle and this can be retired.
 Statics.Icons.MinimapIcon = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png"
+-- Screenshot of the right-click "Change Sequence" menu on an action button,
+-- 148x181, drawn 1:1: the quickest way to set an override, shown on the chooser.
+Statics.Icons.OverrideMenu = "Interface\\Addons\\GSE_GUI\\Assets\\abokey.png"
+-- Hand clicking a key, 200x189, drawn 1:1: the keybind picture on the chooser.
+Statics.Icons.HandClick = "Interface\\Addons\\GSE_GUI\\Assets\\handclick.png"
+-- 9-slice edge strip (Blizzard edgeFile layout, 16px slices) with quarter-
+-- circle corners, white: a rounded-rectangle backdrop at any size, tinted
+-- by SetBackdropColor / SetBackdropBorderColor.
+Statics.Icons.RoundedEdge = "Interface\\Addons\\GSE_GUI\\Assets\\rounded-edge.png"
 
 Statics.TranslatorMode = {}
 Statics.TranslatorMode.Current = "CURRENT"

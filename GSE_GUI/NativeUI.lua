@@ -1657,6 +1657,14 @@ function baseMethods:SetFlowVAlign(align)
     if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
 end
 
+-- The Flow layout already honours container.flowHAlign ("CENTER"/"RIGHT");
+-- this is the setter for it, alongside the vertical one.
+function baseMethods:SetFlowHAlign(align)
+    self.flowHAlign = align and tostring(align):upper() or nil
+    self:DoLayout()
+    if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
+end
+
 function baseMethods:SetFlowRightAlign(value)
     self.flowRightAlign = value and true or false
     if self.parent and self.parent.DoLayout then self.parent:DoLayout() end
@@ -1750,6 +1758,13 @@ function baseMethods:Release()
     self:Fire("OnRelease")
     self:ReleaseChildren()
     self.parent = nil
+    -- Widget-specific teardown, the same hook resetForReuse calls.  That only
+    -- runs for POOLED types when they are handed back out, so an unpooled
+    -- widget -- ControllerKeybinding -- was released still holding whatever
+    -- global state it had armed: EnableKeyboard(true) on its button and its
+    -- "press a key to bind" popup, which is parented to UIParent and so is not
+    -- hidden by hiding this frame.  Release it here too.
+    if self.__gseResetState then pcall(self.__gseResetState) end
     self.frame:Hide()
     self.frame:ClearAllPoints()
     self.frame:SetParent(UIParent)
@@ -3009,6 +3024,27 @@ local function createIcon()
     end
     refreshIconVisualSize()
 
+    -- Icon is POOLED, but this widget's visual state lives in closure upvalues,
+    -- which resetForReuse cannot see -- it only wipes widget fields.  So an
+    -- Icon released by GSE.CreateIconControl (Editor.lua, SetSquareIcon(true))
+    -- came back out of the pool still square: setIconVisualSize then applied
+    -- the 0.08-0.92 crop, which zooms the artwork ~1.19x, and re-showed the
+    -- black backdrop.  That is why identical rows drew different sized icons,
+    -- depending on what happened to be in the pool.  Reset the upvalues here;
+    -- resetForReuse and Release both call this hook.
+    widget.__gseResetState = function()
+        squareIcon = false
+        hovered = false
+        hoverLocked = false
+        hoverImageWidth = nil
+        hoverImageHeight = nil
+        normalImageWidth = STYLE.defaultIconSize
+        normalImageHeight = STYLE.defaultIconSize
+        if button.GSESquareIconBackdrop then button.GSESquareIconBackdrop:Hide() end
+        texture:SetTexCoord(0, 1, 0, 1)
+        refreshIconVisualSize()
+    end
+
     button:SetScript("OnClick", function(_, mouseButton) widget:Fire("OnClick", mouseButton) end)
     button:SetScript(
         "OnEnter",
@@ -3158,7 +3194,18 @@ local function createScrollFrame()
         local downArrowHeight = downArrow:GetHeight()
         if downArrowHeight and downArrowHeight > 0 then arrowInset = downArrowHeight end
     end
-    anchorModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, arrowInset)
+    -- The top was left flush on the assumption that the up arrow sits behind
+    -- the editor header.  That is not true of every pane -- on the section
+    -- panels the bar starts at the frame's own top edge, so the up arrow was
+    -- clipped exactly the way the down arrow was.  Measure it the same way.
+    local topArrowInset = STYLE.scrollArrowInset
+    local upArrow = widget.scrollbar and (widget.scrollbar.ScrollUpButton
+        or getNamedChild(widget.scrollbar, "ScrollUpButton"))
+    if upArrow and upArrow.GetHeight then
+        local upArrowHeight = upArrow:GetHeight()
+        if upArrowHeight and upArrowHeight > 0 then topArrowInset = upArrowHeight end
+    end
+    anchorModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, topArrowInset, arrowInset)
     applyModernSlimScrollBar(widget.scrollbar, frame, -STYLE.padXL, 0, 0)
     widget.localstatus = {scrollvalue = 0}
     widget.scrollBarShown = false
@@ -4369,6 +4416,21 @@ local function createControllerKeybinding()
     button:EnableKeyboard(false)
     button:EnableMouseWheel(false)
 
+    -- Propagation is the half EnableKeyboard(false) does not cover.  A frame
+    -- with an OnKeyDown script and propagation OFF -- the default -- eats
+    -- every keypress in the game the moment the client routes keys to it,
+    -- whether or not this widget thinks it is capturing.  With several of
+    -- these on one panel that is the whole UI going deaf.  SLG-SBAssist's
+    -- keybind button (Panel.lua, StopCapture) is the proven shape: propagate
+    -- ON at rest, OFF only for the duration of a capture.  pcall because the
+    -- call is combat-locked on current clients.
+    local function propagateKeys(enabled)
+        if button.SetPropagateKeyboardInput then
+            pcall(button.SetPropagateKeyboardInput, button, enabled)
+        end
+    end
+    propagateKeys(true)
+
     label:ClearAllPoints()
     label:SetPoint("BOTTOMLEFT", button, "TOPLEFT", 0, STYLE.padXXS)
     label:SetPoint("BOTTOMRIGHT", button, "TOPRIGHT", 0, STYLE.padXXS)
@@ -4391,11 +4453,18 @@ local function createControllerKeybinding()
 
     local function stopCapture()
         button:EnableKeyboard(false)
+        propagateKeys(true)
         button:EnableMouseWheel(false)
         msgframe:Hide()
         button:UnlockHighlight()
         widget.waitingForKey = nil
     end
+
+    -- Capture state lives on the button (EnableKeyboard) and on a popup parented
+    -- to UIParent, so neither is undone by the pool's generic reset: a widget
+    -- released while waiting for a key came back with the keyboard still
+    -- enabled and swallowed every keypress in the UI. resetForReuse calls this.
+    widget.__gseResetState = stopCapture
 
     local function applyKey(key)
         if key == "ESCAPE" then
@@ -4423,6 +4492,7 @@ local function createControllerKeybinding()
                 stopCapture()
             else
                 button:EnableKeyboard(true)
+                propagateKeys(false)
                 button:EnableMouseWheel(true)
                 msgframe:Show()
                 button:LockHighlight()
@@ -4432,6 +4502,9 @@ local function createControllerKeybinding()
         end
     )
     button:SetScript("OnKeyDown", function(_, key) if widget.waitingForKey then applyKey(key) end end)
+    -- Closing the panel, or the row being rebuilt, must never leave a capture
+    -- armed; the pool hooks cover Release, this covers plain Hide.
+    button:SetScript("OnHide", stopCapture)
     button:SetScript(
         "OnMouseDown",
         function(_, mouseButton)
@@ -4447,7 +4520,14 @@ local function createControllerKeybinding()
         end
     )
     button:SetScript("OnMouseWheel", function(_, direction) applyKey(direction >= 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN") end)
-    button:SetScript("OnGamePadButtonDown", function(_, key) applyKey(key) end)
+    button:SetScript(
+        "OnGamePadButtonDown",
+        function(_, key)
+            -- Guarded like OnKeyDown: without this, a gamepad press rebound
+            -- every keybind widget on screen, not the one being edited.
+            if widget.waitingForKey then applyKey(key) end
+        end
+    )
     button:SetScript("OnEnter", function() widget:Fire("OnEnter") end)
     button:SetScript("OnLeave", function() widget:Fire("OnLeave") end)
 
@@ -4562,6 +4642,12 @@ local function createTreeButton(widget)
 
     button.icon = button:CreateTexture(nil, "ARTWORK")
     button.icon:SetSize(TREE_ROW_ICON_SIZE, TREE_ROW_ICON_SIZE)
+    -- Optional ring over the icon (line.iconRing, an atlas name): the hero
+    -- talent medallions are round with transparent corners and read as
+    -- floating without one.  Hidden on every line that does not ask for it.
+    button.iconRing = button:CreateTexture(nil, "OVERLAY")
+    button.iconRing:SetAllPoints(button.icon)
+    button.iconRing:Hide()
 
     button.text = button:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     button.text:SetPoint("RIGHT", -STYLE.padSmall, 0)
@@ -4709,9 +4795,16 @@ local function updateTreeButton(button, line, selected, expanded)
         button.icon:SetTexCoord(unpack(line.iconCoords or {0, 1, 0, 1}))
         button.icon:SetPoint("LEFT", x, 0)
         button.icon:Show()
+        if line.iconRing and button.iconRing then
+            button.iconRing:SetAtlas(line.iconRing)
+            button.iconRing:Show()
+        elseif button.iconRing then
+            button.iconRing:Hide()
+        end
         x = x + TREE_ROW_ICON_SIZE + STYLE.treeIconGap
     else
         button.icon:Hide()
+        if button.iconRing then button.iconRing:Hide() end
     end
 
     button.text:ClearAllPoints()
@@ -5380,6 +5473,7 @@ local function createTreeGroup()
                         text = node.text,
                         icon = node.icon,
                         iconCoords = node.iconCoords,
+                        iconRing = node.iconRing,
                         disabled = node.disabled,
                         level = level,
                         parent = parent,
@@ -5396,6 +5490,7 @@ local function createTreeGroup()
                     text = node.text,
                     icon = node.icon,
                     iconCoords = node.iconCoords,
+                    iconRing = node.iconRing,
                     disabled = node.disabled,
                     level = level,
                     parent = parent,
@@ -6008,6 +6103,8 @@ local function resetForReuse(widget)
             pcall(eb.SetMaxLetters, eb, widget.__gsePristineMaxLetters or 0)
         end
     end
+    -- Widget-specific teardown the generic sweep above cannot reach.
+    if widget.__gseResetState then pcall(widget.__gseResetState) end
     if widget.label and widget.label.SetText then pcall(widget.label.SetText, widget.label, "") end
     if widget.text and widget.text ~= widget.label and widget.text.SetText then
         pcall(widget.text.SetText, widget.text, "")

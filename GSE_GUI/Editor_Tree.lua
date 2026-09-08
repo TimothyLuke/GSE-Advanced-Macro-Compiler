@@ -552,98 +552,6 @@ end
 -- Right-click context menus, keyed by tree "area" (unique[1])
 -- ---------------------------------------------------------------------------
 
-local function onRightClick_KEYBINDINGS(editframe, container, group, unique)
-    if #unique <= 3 then return end
-    MenuUtil.CreateContextMenu(
-        editframe.frame,
-        function(ownerRegion, rootDescription)
-            rootDescription:CreateButton(L["New KeyBind"], function()
-                local rightContainer = UI:Create("SimpleGroup")
-                rightContainer:SetFullWidth(true)
-                rightContainer:SetLayout("List")
-                editframe.showKeybind(nil, nil, nil, nil, "KB", rightContainer)
-            end)
-            rootDescription:CreateButton(L["New Actionbar Override"], function()
-                local rightContainer = UI:Create("SimpleGroup")
-                rightContainer:SetFullWidth(true)
-                rightContainer:SetLayout("List")
-                editframe.showKeybind(nil, nil, nil, nil, "AO", rightContainer)
-            end)
-            rootDescription:CreateButton(L["Delete"], function()
-                local bind, specialization, loadout, kbtype
-                kbtype = unique[2]
-                specialization = unique[3]
-                if GetSpecialization then
-                    bind = unique[4]
-                    if unique[6] then loadout = unique[6] end
-                else
-                    specialization = "1"
-                    if unique[5] then
-                        loadout = unique[5]
-                        bind = unique[4]
-                    else
-                        loadout = unique[4]
-                        bind = unique[3]
-                    end
-                end
-                if kbtype == "KB" then
-                    if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
-                       GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and
-                       GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                    then
-                        if GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] then
-                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout][bind] = nil
-                        end
-                        local empty = true
-                        for _, _ in pairs(GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]) do
-                            empty = false
-                        end
-                        if empty then
-                            GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout] = nil
-                        end
-                    else
-                        if GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
-                           GSE_C["KeyBindings"][tostring(specialization)][bind]
-                        then
-                            GSE_C["KeyBindings"][tostring(specialization)][bind] = nil
-                        end
-                    end
-                end
-                if kbtype == "KB" then
-                    -- GSE_C entry removed above; release the key (live clear,
-                    -- persist, rebuild -- or deferred to combat end, where
-                    -- SetBinding is protected and used to be called anyway).
-                    GSE.ClearKeyBinding(bind)
-                end
-                if kbtype == "AO" then
-                    if loadout and GSE_C["KeyBindings"] and GSE_C["KeyBindings"][tostring(specialization)] and
-                       GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"] and
-                       GSE_C["KeyBindings"][tostring(specialization)]["LoadOuts"][loadout]
-                    then
-                        GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout][bind] = nil
-                        local empty = true
-                        for _, _ in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout]) do
-                            empty = false
-                        end
-                        if empty then
-                            GSE_C["ActionBarBinds"]["LoadOuts"][tostring(specialization)][loadout] = nil
-                        end
-                    else
-                        GSE_C["ActionBarBinds"]["Specialisations"][tostring(specialization)][bind] = nil
-                    end
-                    GSE.ButtonOverrides[bind] = nil
-                end
-                editframe.ManageTree()
-                GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, bind)
-            end)
-        end
-    )
-end
-
--- ponytail: true if a seq is corrupt/unusable — decode-broken (in
--- GSE.CorruptSequences) or loaded-but-structurally-broken. Matches what the tree
--- flags red; used to give a Delete-only right-click menu (the normal items call
--- FindSequence, which DecodeMessages the broken data and errors).
 local function isBrokenSeq(classid, name)
     local cid = tonumber(classid)
     if not cid or GSE.isEmpty(name) then return false end
@@ -1114,40 +1022,38 @@ local function ShowSectionFooter(editframe)
 end
 
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
-    if not unique or #unique < 2 then return end
+    if not unique then return end
+
+    -- The Keybindings node itself fell through the guard below and left the
+    -- pane blank.  Land on the chooser instead: two tiles that select the
+    -- Actionbar Overrides or Keybindings node for you.
+    if #unique == 1 then
+        ShowSectionFooter(editframe)
+        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
+        local rc = makeScrollableRightPane(container)
+        addSectionDivider(rc, L["Keybindings"] or "Keybindings", Statics.Icons.Keybindings)
+        editframe.showKeybindChooser(rc)
+        editframe.loaded = true
+        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
+        return
+    end
+
+    if #unique < 2 then return end
     ShowSectionFooter(editframe)
 
-    local bind, loadout, kbtype, button
-    kbtype = unique[2]
-    local specialization = unique[3]
-    -- Use the same API check as buildKeybindMenu: GetSpecializationInfo determines
-    -- whether a spec-level intermediate node was inserted into the tree.
+    -- The tree stops at spec, and at the spec's talent loadouts.  Paths are
+    -- KEYBINDINGS \001 <KB|AO> [\001 <spec>] [\001 <loadout>] -- the spec
+    -- segment only exists where buildKeybindMenu inserted a spec node, which
+    -- is the same GetSpecializationInfo test it uses.  Everything below a
+    -- scope is a row on the panel now, so there is nothing deeper to parse.
+    local kbtype = unique[2]
+    local specialization, loadout
     if GetSpecializationInfo then
-        bind = unique[4]
-        if #unique == 6 then
-            loadout = unique[4]
-            bind = unique[5]
-            if unique[2] == "AO" and bind then
-                button = GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout][bind]
-            else
-                button = unique[6]
-            end
-        else
-            if unique[2] == "AO" and bind then
-                local aoSpecs = GSE_C["ActionBarBinds"]["Specialisations"]
-                button = aoSpecs and aoSpecs[specialization] and aoSpecs[specialization][bind]
-            else
-                button = unique[5]
-            end
-        end
+        specialization = unique[3]
+        loadout = unique[4]
     else
         specialization = "1"
-        bind = unique[3]
-        button = unique[4]
-        if kbtype == "AO" and bind then
-            local aoSpecs = GSE_C["ActionBarBinds"]["Specialisations"]
-            button = aoSpecs and aoSpecs[specialization] and aoSpecs[specialization][bind]
-        end
+        loadout = unique[3]
     end
 
     local function makeRightContainer(withDivider)
@@ -1161,26 +1067,18 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return rc
     end
 
-    if unique[#unique] == "NKB" then
+    if kbtype == "KB" and specialization then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
-        editframe.showKeybind(nil, nil, nil, nil, "KB", rc)
+        editframe.showKeybind(nil, nil, specialization, loadout, "KB", rc)
         editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (L["New KeyBind"] or "New Keybind"))
-    elseif unique[#unique] == "NAO" then
+        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
+    elseif kbtype == "AO" and specialization then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Actionbar Overrides"] or "Actionbar Overrides", icon = Statics.Icons.Button})
-        editframe.showKeybind(nil, nil, nil, nil, "AO", rc)
+        editframe.showKeybind(nil, nil, specialization, loadout, "AO", rc)
         editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Actionbar Overrides"] or "Actionbar Overrides") .. ": " .. (L["New Actionbar Override"] or "New Override"))
-    else
-        if bind and button and kbtype then
-            if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-            local rc = makeRightContainer()
-            editframe.showKeybind(bind, button, specialization, loadout, kbtype, rc)
-            editframe.loaded = true
-            editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings") .. ": " .. (bind or L["Keybind"] or "Keybind"))
-        end
+        editframe:SetTitle("GSE: " .. (L["Actionbar Overrides"] or "Actionbar Overrides"))
     end
 end
 
@@ -1848,9 +1746,9 @@ local function ManageTree(editframe)
 
             if mbutton == "RightButton" then
                 -- Dispatch table for right-click by area
-                if area == "KEYBINDINGS" then
-                    onRightClick_KEYBINDINGS(editframe, container, group, unique)
-                elseif area == "Sequences" then
+                -- KEYBINDINGS has no per-bind leaves any more (both areas are
+                -- panels), so there is nothing a right-click could act on.
+                if area == "Sequences" then
                     onRightClick_Sequences(editframe, container, group, unique, classid, sequencename)
                 elseif area == "VARIABLES" then
                     onRightClick_VARIABLES(editframe, container, group, unique, key)
