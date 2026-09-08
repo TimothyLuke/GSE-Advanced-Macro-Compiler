@@ -255,6 +255,16 @@ GSE.DecodeMessage = function (tab)
   return tab
 end
 
+
+-- Storage's macro store asks the same question EncodeLike answers: is this
+-- protected content (MetaData.noExport)?  Same shape as the real one in
+-- Serialisation.lua, which the specs never load.
+GSE.IsProtectedContent = function(tab)
+    local meta = type(tab) == "table"
+        and (tab.MetaData or (type(tab[2]) == "table" and tab[2].MetaData))
+    return type(meta) == "table" and meta.noExport and true or false
+end
+
 -- The at-rest gate lives in Serialisation.lua, which the specs do not load
 -- (they stub EncodeMessage/DecodeMessage instead). These three are pure
 -- predicates over a string and a table, so the mock carries the REAL logic

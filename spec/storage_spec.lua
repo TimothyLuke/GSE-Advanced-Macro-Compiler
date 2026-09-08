@@ -113,5 +113,65 @@ describe(
       end
     )
 
+    describe(
+      "macro rest shape",
+      function()
+        local realDecode, realImport, realManage, imported
+        before_each(
+          function()
+            realDecode, realImport, realManage = GSE.DecodeMessage, GSE.ImportMacro, GSE.ManageMacros
+            imported = nil
+            -- The sealed path refreshes the macro book afterwards; that is
+            -- the WoW API's business, not this test's.
+            GSE.ManageMacros = function() end
+            if not GSE.SendMessage then GSE.SendMessage = function() end end
+            -- "encoded" strings decode to the table they name, so a case can
+            -- hand StoreEncodedMacro whatever content it wants to test.
+            GSE.DecodeMessage = function(blob)
+              if blob == "own" then return true, {name = "Own", text = "/cast X", icon = 1} end
+              if blob == "sealed" then return true, {name = "Sealed", text = "/cast Y", MetaData = {noExport = true}} end
+              return false
+            end
+            GSE.ImportMacro = function(node) imported = node end
+            GSEMacros = {}
+          end
+        )
+        after_each(
+          function()
+            GSE.DecodeMessage, GSE.ImportMacro, GSE.ManageMacros = realDecode, realImport, realManage
+          end
+        )
+
+        it(
+          "stores the author's own macro plain, however it arrived",
+          function()
+            assert.is_true(GSE.StoreEncodedMacro("Own", "own"))
+            assert.is_not_nil(imported)
+            assert.are.equal("Own", imported.name)
+            assert.are.equal("/cast X", imported.text)
+            assert.is_nil(GSEMacros["Own"])
+          end
+        )
+
+        it(
+          "keeps protected content sealed",
+          function()
+            assert.is_true(GSE.StoreEncodedMacro("Sealed", "sealed"))
+            assert.is_nil(imported)
+            assert.are.same({GSEProtected = "sealed"}, GSEMacros["Sealed"])
+          end
+        )
+
+        it(
+          "refuses a blob it cannot read",
+          function()
+            assert.is_false(GSE.StoreEncodedMacro("Bad", "garbage"))
+            assert.is_nil(imported)
+            assert.is_nil(GSEMacros["Bad"])
+          end
+        )
+      end
+    )
+
   end
 )

@@ -29,6 +29,9 @@ function GSE.IsProtectedContent(obj)
     if type(meta) ~= "table" and type(obj[2]) == "table" then meta = obj[2].MetaData end
     return type(meta) == "table" and meta.noExport and true or false
 end
+--- The same test, for the macro store: packed iff MetaData.noExport, never
+--- inherited from the envelope it arrived in.  One rule for all three stores.
+GSE.IsProtectedContent = isProtected
 
 --- The gate every at-rest write consults. True means "leave the stored blob
 -- exactly as it is".

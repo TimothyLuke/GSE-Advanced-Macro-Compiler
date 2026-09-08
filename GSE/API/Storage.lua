@@ -715,6 +715,17 @@ function GSE.StoreEncodedMacro(name, encoded)
         GSE.Print(L["Unable to interpret sequence."] .. " " .. name, GNOME)
         return false
     end
+    -- The envelope a macro arrived in does not decide how it rests -- the
+    -- same rule as sequences and variables does: sealed iff the content is
+    -- protected.  The author's own macro, which the site ships pre-encoded
+    -- like everything else, is stored plain, exactly as if it had arrived as
+    -- a table (#2054's rule, applied to the one store that missed it).
+    if not (GSE.IsProtectedContent and GSE.IsProtectedContent(decoded)) then
+        decoded.objectType = nil
+        if not decoded.name then decoded.name = name end
+        GSE.ImportMacro(decoded)
+        return true
+    end
     if GSE.isEmpty(GSEMacros) then GSEMacros = {} end
     GSEMacros[name] = { GSEProtected = encoded }
     if GSE.ManageMacros then GSE.ManageMacros() end
@@ -3101,6 +3112,20 @@ local function resolveMacroNode(entry)
     return entry, false
 end
 
+--- Self-heal for the macro store, mirroring NeedsRepack for sequences and
+--- variables: an entry sealed on receipt that is NOT protected content is
+--- the author's own macro and must rest plain, or the Companion (which has
+--- no key) cannot see it.  Returns the plain node to carry on with, or nil
+--- when the entry is genuinely protected and stays sealed.
+local function unsealOwnMacro(bucket, name, node)
+    if type(node) ~= "table" then return nil end
+    if GSE.IsProtectedContent and GSE.IsProtectedContent(node) then return nil end
+    node.objectType = nil
+    if not node.name then node.name = name end
+    bucket[name] = node
+    return node
+end
+
 local function materialiseEncodedMacro(name, node, category)
     if not node then return end
     local text = node.managedMacro or node.text
@@ -3258,8 +3283,10 @@ function GSE.ManageMacros()
         local pnode, encodedEntry = resolveMacroNode(v)
         if encodedEntry then
             -- Entry held in received encoded form: materialise without writing
-            -- a plaintext node back over it (see resolveMacroNode).
+            -- a plaintext node back over it (see resolveMacroNode) -- unless
+            -- it is the author's own, which is unsealed to rest plain.
             materialiseEncodedMacro(k, pnode, nil)
+            unsealOwnMacro(GSEMacros, k, pnode)
         elseif v.Managed then
             local macroIndex = GetMacroIndexByName(k)
             if macroIndex ~= v.value then
@@ -3311,6 +3338,7 @@ function GSE.ManageMacros()
                 local cpnode, cEncodedEntry = resolveMacroNode(v)
                 if cEncodedEntry then
                     materialiseEncodedMacro(k, cpnode, true)
+                    unsealOwnMacro(GSEMacros[char .. "-" .. realm], k, cpnode)
                 elseif v.Managed then
                     local macroIndex = GetMacroIndexByName(k)
                     if macroIndex ~= v.value then
