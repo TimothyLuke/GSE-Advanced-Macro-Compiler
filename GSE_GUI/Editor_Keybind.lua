@@ -430,7 +430,7 @@ local showKeybindPanel
 showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
-    local rows, dirty = {}, false
+    local rows = {}
     local saveButton, rowContainer, redraw
     -- Per-row {field, icon} pairs, so the post-layout pass can hang each X off
     -- the dropdown's real right edge.  Rebuilt by every redraw.
@@ -473,7 +473,6 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     end
 
     local function markDirty()
-        dirty = true
         if saveButton then saveButton:SetDisabled(false) end
     end
 
@@ -522,7 +521,6 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         -- The rebuild releases every key the previous one bound before adding
         -- back what survives, so rows removed here go dead immediately.
         GSE.ReloadKeyBindings()
-        dirty = false
         if saveButton then saveButton:SetDisabled(true) end
         loadRows()
         redraw()
@@ -1041,7 +1039,7 @@ local showOverridePanel
 showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
-    local rows, dirty = {}, false
+    local rows = {}
     local saveButton, rowContainer, redraw
     -- One chain per row: the row's frames left to right, and for each frame
     -- that is a dropdown, the frame + pad whose RIGHT edge is its visible
@@ -1130,7 +1128,6 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     end
 
     local function markDirty()
-        dirty = true
         if saveButton then saveButton:SetDisabled(false) end
     end
 
@@ -1194,7 +1191,6 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         for _, r in ipairs(rows) do
             if not GSE.isEmpty(r.seq) and _G[r.seq] and GSE.UpdateIcon then GSE.UpdateIcon(_G[r.seq]) end
         end
-        dirty = false
         if saveButton then saveButton:SetDisabled(true) end
         loadRows()
         redraw()
