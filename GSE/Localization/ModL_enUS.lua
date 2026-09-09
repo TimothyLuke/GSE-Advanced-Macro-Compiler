@@ -696,6 +696,7 @@ L["Save pending for "] = true
 L["Advanced Export"] = true
 L["Set Key to Bind"] = true
 L["Keybind"] = true
+L["%s was not saved: it still needs a %s."] = true
 L["Keybindings"] = true
 L["Spell"] = true
 L["Item"] = true

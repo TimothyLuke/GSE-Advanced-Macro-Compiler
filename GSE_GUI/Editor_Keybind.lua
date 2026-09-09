@@ -504,6 +504,19 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
             end
         end
 
+        -- A row binds only once it has BOTH halves.  One that does not is a
+        -- row still being filled in: keep it on screen instead of writing it.
+        -- Silently dropping it is what made new binds look like they vanished
+        -- -- the write skipped them, and the reload below, which reads back
+        -- only what was stored, then wiped them off the panel.
+        local incomplete = {}
+        for _, r in ipairs(rows) do
+            local hasKey, hasSeq = not GSE.isEmpty(r.key), not GSE.isEmpty(r.seq)
+            if hasKey ~= hasSeq then
+                table.insert(incomplete, {key = r.key, seq = r.seq})
+            end
+        end
+
         local scope = keybindScope(specialization, loadout, true)
         for k in pairs(scope) do
             if k ~= "LoadOuts" then scope[k] = nil end
@@ -513,8 +526,10 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
                 scope[r.key] = r.seq
             end
         end
-        -- An emptied loadout would stay in the tree as a childless node.
-        if loadout and not next(scope) then
+        -- An emptied loadout would stay in the tree as a childless node -- but
+        -- only drop it when nothing is still being filled in, or a half-set row
+        -- would take the whole loadout with it.
+        if loadout and not next(scope) and #incomplete == 0 then
             GSE_C["KeyBindings"][specialization]["LoadOuts"][loadout] = nil
         end
 
@@ -523,6 +538,15 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         GSE.ReloadKeyBindings()
         if saveButton then saveButton:SetDisabled(true) end
         loadRows()
+        -- Put the half-set rows back, so Save never makes a row disappear, and
+        -- say what each one is still missing rather than leaving it a mystery.
+        for _, r in ipairs(incomplete) do
+            table.insert(rows, r)
+            GSE.Print(string.format(L["%s was not saved: it still needs a %s."],
+                GSE.isEmpty(r.key) and r.seq or r.key,
+                GSE.isEmpty(r.key) and L["Keybind"] or L["Sequence"]))
+        end
+        if #incomplete > 0 and saveButton then saveButton:SetDisabled(false) end
         redraw()
         editframe.ManageTree()
     end
@@ -753,7 +777,11 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- controls doing one job.
     -- A loadout-specific panel carries that loadout's hero talent art, the
     -- same icon its tree row shows; All Talent Loadouts keeps the generic one.
-    local loadoutName = L["All Talent Loadouts"]
+    -- Guillemets mark the all-loadouts scope as a state rather than a name, so
+    -- it does not read like a loadout called "All Talent Loadouts".  Not the
+    -- ASCII tilde: that glyph is drawn at cap height, so it floated above the
+    -- text no matter how the label was aligned.
+    local loadoutName = "« " .. L["All Talent Loadouts"] .. " »"
     local loadoutArt
     if loadout then
         local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(tonumber(loadout))
@@ -784,7 +812,9 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         loadoutRow:AddChild(loadoutLabel)
     else
         loadoutLabel:SetWidth(KB_ROW_WIDTH)
-        loadoutLabel:SetText(heroIconText(loadoutArt, Statics.Icons.Talents, loadoutText, 20))
+        -- No icon on the all-loadouts header: the guillemets already say it is
+        -- a scope, and the generic talent icon read as a loadout of its own.
+        loadoutLabel:SetText(heroIconText(loadoutArt, nil, loadoutText, 20))
     end
 
     saveButton = UI:Create("Button")
@@ -1405,7 +1435,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     headerLabel:SetJustifyV("MIDDLE")
     headerLabel:SetText(headerText)
 
-    local loadoutName, loadoutArt = L["All Talent Loadouts"], nil
+    local loadoutName, loadoutArt = "« " .. L["All Talent Loadouts"] .. " »", nil
     if loadout then
         local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(tonumber(loadout))
         loadoutName = (info and info.name) or tostring(loadout)
@@ -1439,7 +1469,9 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         loadoutRow:AddChild(loadoutLabel)
     else
         loadoutLabel:SetWidth(AO_ROW_WIDTH)
-        loadoutLabel:SetText(heroIconText(loadoutArt, Statics.Icons.Talents, loadoutText, 20))
+        -- No icon on the all-loadouts header: the guillemets already say it is
+        -- a scope, and the generic talent icon read as a loadout of its own.
+        loadoutLabel:SetText(heroIconText(loadoutArt, nil, loadoutText, 20))
         loadoutRow = centeredRow(loadoutLabel)
     end
 
