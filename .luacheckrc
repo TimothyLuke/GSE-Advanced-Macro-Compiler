@@ -362,6 +362,8 @@ globals = {
     "GetSavedInstanceInfo",
     "GetSpecialization",
     "GetSpecializationInfo",
+    "UnitRace",
+    "IsSpellKnown",
     "GetSpecializationInfoByID",
     "GetSpecializationRole",
     "GetSpellCooldown",

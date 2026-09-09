@@ -262,7 +262,11 @@ local function getPlayerSpells()
 
     if numSkillLines and skillLineInfo and modernItemInfo then
         -- Retail and any Classic client with the full modern API. Skill line 1
-        -- is General; the pre-#1914 list started at 2 and that is kept.
+        -- is General; the pre-#1914 list started at 2 and that is kept -- it is
+        -- mostly Hero's Path, Warbands, Mobile Banking and the like, which are
+        -- noise in a macro's spell list. Single-Button Assistant is the one
+        -- thing worth having from that area and it is not a spellbook row at
+        -- all; it is added by name below.
         for tab = 2, numSkillLines() do
             local lineinfo = skillLineInfo(tab)
             if not lineinfo then break end
@@ -297,6 +301,50 @@ local function getPlayerSpells()
                     end
                 end
             end
+        end
+    end
+
+    -- Racials live in the General skill line, which the walk above skips
+    -- because the rest of it (Hero's Path, Warbands, Mobile Banking...) is
+    -- noise in a macro's spell list. Nothing in the API marks a spell as
+    -- racial, so the ones for the player's race are named by id -- by ID and
+    -- not by name, because a name test would only work in English.
+    local RACE_RACIALS = {
+        Human = {59752}, Dwarf = {20594}, NightElf = {58984}, Gnome = {20589},
+        Draenei = {59544, 59545, 59543, 59542, 59547, 59548, 28880, 121093, 370626, 416250},
+        Worgen = {68992}, Pandaren = {107079}, KulTiran = {287712},
+        DarkIronDwarf = {265221}, VoidElf = {256948}, LightforgedDraenei = {255647},
+        Mechagnome = {312924}, Orc = {20572, 33697, 33702}, Scourge = {7744},
+        Tauren = {20549}, Troll = {26297}, BloodElf = {202719, 50613, 25046, 69179,
+            80483, 155145, 129597, 232633, 28730},
+        Goblin = {69070}, Nightborne = {260364}, HighmountainTauren = {255654},
+        MagharOrc = {274738}, ZandalariTroll = {291944}, Vulpera = {312411},
+        Dracthyr = {357214}, EarthenDwarf = {436344}, Haranir = {1237885},
+    }
+    -- Not "UnitRace and UnitRace(...)": `and` yields a SINGLE value, so the
+    -- second return -- the race token this table is keyed on -- was dropped
+    -- and no racial ever matched.
+    local raceToken
+    if UnitRace then raceToken = select(2, UnitRace("player")) end
+    for _, spellID in ipairs(raceToken and RACE_RACIALS[raceToken] or {}) do
+        -- Known-only: a race with several racials (Draenei, Blood Elf) has just
+        -- one in this character's book, and the rest would be uncastable.
+        if not IsSpellKnown or IsSpellKnown(spellID) then
+            local info = GSE.GetSpellInfo and GSE.GetSpellInfo(spellID)
+            add(info and info.name)
+        end
+    end
+
+    -- Single-Button Assistant is not a spellbook row -- it is its own action
+    -- type, surfaced only through C_AssistedCombat -- so no walk of the book
+    -- can find it however many skill lines it covers. It is castable by name
+    -- (/cast Single-Button Assistant), which is exactly what this menu
+    -- inserts, so add it from the API that owns it.
+    if C_AssistedCombat and C_AssistedCombat.GetActionSpell then
+        local ok, assistID = pcall(C_AssistedCombat.GetActionSpell)
+        if ok and assistID then
+            local info = GSE.GetSpellInfo and GSE.GetSpellInfo(assistID)
+            add(info and info.name)
         end
     end
 
@@ -422,54 +470,52 @@ local TAB_RESET_VALUES = { "combat", "target", "5", "10", "15", "20", "30", "45"
 -- Whole lines people write over and over in sequences: inserted exactly as
 -- written, as their own row.
 local TAB_BOILERPLATES = {
-    "/targetenemy [noharm][dead]",
-    "/startattack",
-    "/stopmacro",
-    "/stopmacro [channeling]",
-    "/stopmacro [@playertarget,noexists][channeling]",
-    "/cqs",
-    "/cast [@player]",
     "/cast [@cursor]",
+    "/cast [@mouseover,combat][@targettarget,combat][combat]",
+    "/cast [@player]",
+    "/cast [harm,@mouseover,exists]",
+    "/cast [harm] Single-Button Assistant",
+    "/cast [help,@focus,exists,combat][combat]",
+    "/cast [help,@focus,nodead,exists]",
+    "/cast [help,@mouseover,exists]",
     "/cast [nomounted]",
     "/cast [nostealth] Stealth",
-    "/cast [@mouseover,combat][@targettarget,combat][combat]",
-    "/cast [help,@mouseover,exists]",
-    "/cast [harm,@mouseover,exists]",
-    "/cast [help,@focus,nodead,exists]",
-    "/cast [help,@focus,exists,combat][combat]",
-    "/castsequence [help,@mouseover,exists]",
     "/castsequence [harm,@mouseover,exists]",
-    "/use [combat]",
-    "/use [@pet,dead]",
-    "/use [nopet,nodead] Call Pet",
+    "/castsequence [help,@mouseover,exists]",
+    "/cqs",
     "/petattack [harm,combat]",
     "/ping [harm,@target,exists,group:scenario] attack",
-    "/cast [harm] Single-Button Assistant",
+    "/startattack",
+    "/stopmacro",
+    "/stopmacro [@playertarget,noexists][channeling]",
+    "/stopmacro [channeling]",
+    "/targetenemy [noharm][dead]",
+    "/use [@pet,dead]",
+    "/use [combat]",
+    "/use [nopet,nodead] Call Pet",
 }
 local TAB_CONDITIONALS = {
     { "Modifiers", {
-        "mod", "nomod", "mod:shift", "mod:shiftctrl", "mod:shiftalt",
-        "mod:ctrl", "mod:ctrlalt", "mod:alt",
+        "mod", "mod:alt", "mod:ctrl", "mod:ctrlalt", "mod:shift", "mod:shiftalt",
+        "mod:shiftctrl", "nomod",
     }},
     { "Combat", {
-        "combat", "nocombat", "stealth", "nostealth", "pvpcombat",
-        "channeling", "nochanneling", "mounted", "nomounted", "flying", "noflying",
-        "swimming", "indoors", "outdoors",
+        "channeling", "combat", "flying", "indoors", "mounted", "nochanneling", "nocombat",
+        "noflying", "nomounted", "nostealth", "outdoors", "pvpcombat", "stealth",
+        "swimming",
     }},
     { "Target", {
-        "@target", "@targettarget", "@focus", "@focustarget", "@mouseover", "@mouseovertarget",
-        "@pet", "@pettarget", "@player", "@cursor",
-        "exists", "noexists", "help", "nohelp", "harm", "noharm", "dead", "nodead",
-        "party", "noparty", "raid", "noraid",
-        "@none", "@arena1", "@arena2", "@arena3", "@boss1", "@boss2",
-        "@party1", "@party2", "@party3", "@party4",
+        "@arena1", "@arena2", "@arena3", "@boss1", "@boss2", "@cursor", "@focus",
+        "@focustarget", "@mouseover", "@mouseovertarget", "@none", "@party1", "@party2",
+        "@party3", "@party4", "@pet", "@pettarget", "@player", "@target", "@targettarget",
+        "dead", "exists", "harm", "help", "nodead", "noexists", "noharm", "nohelp",
+        "noparty", "noraid", "party", "raid",
     }},
     { "Character", {
-        "spec:1", "spec:2", "spec:3", "spec:4",
-        "form:0", "form:1", "form:2", "form:3", "form:4", "form:5", "form:6",
+        "advflyable", "canexitvehicle", "flyable", "form:0", "form:1", "form:2", "form:3",
+        "form:4", "form:5", "form:6", "group:party", "group:raid", "group:scenario",
+        "known:ID", "nogroup", "nopet", "pet", "spec:1", "spec:2", "spec:3", "spec:4",
         "stance:0", "stance:1", "stance:2", "stance:3",
-        "known:ID", "pet", "nopet", "group:party", "group:raid", "group:scenario", "nogroup",
-        "flyable", "advflyable", "canexitvehicle",
     }},
 }
 
@@ -607,11 +653,25 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 if not nl then mapped = #decoded break end
                 mapped = nl
             end
-            -- ...and land the visible caret at that line's END, not its start:
-            -- the session builds at the line end anyway, and a caret visibly
-            -- jumping to the front of the line reads as a bug.
-            local lineEndNl = decoded:find("\n", mapped + 1, true)
-            mapped = (lineEndNl and lineEndNl - 1) or #decoded
+            -- ...and keep the caret on the COLUMN it was on. It used to snap
+            -- to the line's end because the session builds there, but moving
+            -- someone's caret when they press Tab is the more surprising half
+            -- of that trade. Count the visible characters before the caret
+            -- within its own line -- line-scoped, so the whole-text remap the
+            -- note above rejects is not in play -- and clamp to the line end,
+            -- which absorbs any markup stripped by decoding that would
+            -- otherwise overshoot.
+            local lineStart = mapped
+            local rawLineStart = 0
+            for _ = 1, lineIndex do
+                local nl = rawText:find("\n", rawLineStart + 1, true)
+                if not nl then rawLineStart = #rawText break end
+                rawLineStart = nl
+            end
+            local visibleCol = #stripCodes(rawText:sub(rawLineStart + 1, caretPos))
+            local lineEndNl = decoded:find("\n", lineStart + 1, true)
+            local lineEnd = (lineEndNl and lineEndNl - 1) or #decoded
+            mapped = math.min(lineStart + visibleCol, lineEnd)
             editBox:SetText(decoded)
             if editBox.SetCursorPosition then editBox:SetCursorPosition(mapped) end
             caretPos = mapped
@@ -755,20 +815,19 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             local startPos, endPos, full = lineBounds()
             return full:sub(startPos, endPos)
         end
-        cursor = lineEndPos()
-        -- Stored macro text often ends with a newline; a caret parked on that
-        -- blank trailing line would make the session build on an empty row and
-        -- grey every clause-gated entry. Snap to the LINE of the last content
-        -- (a Command pick still starts its own new row from there).
-        if currentLineText():match("^%s*$") then
-            local fullText = plainFull()
-            local lastContent = fullText:find("%S%s*$")
-            if lastContent then
-                local _, n = fullText:sub(1, lastContent):gsub("\n", "")
-                sessionLine = n
-                cursor = lineEndPos()
-            end
+        -- Keep the caret where the author left it, clamped into this line.
+        -- ,nil and ';' still use lineEndPos() explicitly -- they belong at the
+        -- row's end wherever the caret is -- but a spell now lands at the
+        -- caret, so the session must not move it first.
+        do
+            local startPos, endPos = lineBounds()
+            cursor = math.max(startPos - 1, math.min(cursor, endPos))
         end
+        -- A blank line is a row the author chose, and it is buildable: a spell
+        -- pick supplies the "/cast", and Command/Boilerplate already insert
+        -- inline on an empty row via rowBeforeCaret(). Session start used to
+        -- snap off a blank line onto the last line with content, which put the
+        -- pick at the end of the row ABOVE the caret.
         -- Re-derive the clause state from the LIVE text -- the text is the single
         -- source of truth. Tracked offsets go stale the moment a pick ends a
         -- clause (a spell or ';' clears the group) or the author types between
@@ -961,11 +1020,15 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             splice(last, 0, "[]")
             return MenuResponse.Refresh
         end
-        -- Spell: lands at the line end -- but BEFORE a trailing ", nil" line
-        -- ender -- and takes a ", " separator when the clause already ends
-        -- with a spell (castsequence style). Ends the session.
+        -- Spell: lands AT THE CARET when the caret sits mid-line, so a spell
+        -- can be dropped between two others; otherwise at the line end -- but
+        -- BEFORE a trailing ", nil" line ender. Takes a ", " separator when
+        -- the text it follows already ends with a spell (castsequence style),
+        -- and another when it lands in front of more spell text. Ends the
+        -- session.
         local function pickSpell(name)
             local endPos = lineEndPos()
+            local startPos = lineBounds()
             local line = currentLineText()
             local insertAt = endPos
             local clause = line
@@ -974,18 +1037,57 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 insertAt = endPos - (#line - nilS + 1)
                 clause = line:sub(1, nilS - 1)
             end
+            -- Mid-line: only past the command word and outside any bracket
+            -- group, so a caret inside "[combat]" still appends at the end
+            -- rather than splitting the conditional.
+            local trailing = ""
+            if cursor > startPos - 1 and cursor < insertAt then
+                local before = line:sub(1, cursor - startPos + 1)
+                local after = line:sub(cursor - startPos + 2)
+                local openBracket = select(2, before:gsub("%[", "")) > select(2, before:gsub("%]", ""))
+                if before:find("/%S+%s") and not openBracket then
+                    -- Never split a word: a caret sitting inside one drops the
+                    -- pick in BEFORE it, so "Alpha, Bra|vo" gives
+                    -- "Alpha, Pick, Bravo" rather than "Alpha, Bra, Pick, vo".
+                    local head = before:match("[%w:'%-]+$")
+                    if head and after:match("^[%w:'%-]") then
+                        before = before:sub(1, #before - #head)
+                        after = head .. after
+                        cursor = cursor - #head
+                    end
+                    insertAt = cursor
+                    clause = before
+                    -- Spell text after the caret needs its own separator, or
+                    -- the pick runs into the word that follows it.
+                    local nextChar = after:match("^%s*(.)")
+                    if nextChar and nextChar ~= "," and nextChar ~= ";" then
+                        trailing = ", "
+                    end
+                end
+            end
             -- Supply the separator ourselves: the compile that can rewrite the
             -- box mid-session TRIMS trailing spaces, so "ends with a space"
             -- cannot be assumed ("/cast [combat]" + pick gave "[combat]Spell").
             local sep = ""
-            if clauseEndsWithSpell(clause) then
+            if clause:match("^%s*$") then
+                -- Blank line: a bare spell name is not a macro line. Give it
+                -- the command, the way a hand-typed line would start.
+                sep = "/cast "
+            elseif clause:match(",%s*$") or clause:match("%s$") then
+                -- already separated -- a mid-line drop lands right after the
+                -- comma of the item before it
+                sep = ""
+            elseif clauseEndsWithSpell(clause) then
                 sep = ", "
-            elseif clause ~= "" and not clause:match("%s$") then
+            elseif clause ~= "" then
                 sep = " "
             end
-            local text = sep .. name
+            local text = sep .. name .. trailing
             splice(insertAt, 0, text)
-            cursor = lineEndPos()
+            -- Leave the caret just after what was inserted, so a run of picks
+            -- builds left to right instead of jumping to the row's end.
+            cursor = insertAt + #text
+            if trailing ~= "" then cursor = cursor - #trailing end
             if editBox.SetCursorPosition then editBox:SetCursorPosition(cursor) end
             resetGroup()
             commitRecolour()
