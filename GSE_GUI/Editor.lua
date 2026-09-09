@@ -8138,6 +8138,15 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     if seq then
         sequence = seq[2]
     end
+    -- An edit to protected content is stored as a delta over the sealed blob,
+    -- never written back into GSESequences, so the stored blob is only ever the
+    -- BASE. Storage's two load paths already prefer the reconstruction; the
+    -- editor has to as well, or every open hands back the pristine original and
+    -- the user's edit looks like it was never saved.
+    if sequence and GSE.ApplyStoredDeltaFork then
+        local forked = GSE.ApplyStoredDeltaFork(sequence)
+        if forked then sequence = forked end
+    end
 
     if GSE.isEmpty(sequence.WeakAuras) then
         sequence.WeakAuras = {}
