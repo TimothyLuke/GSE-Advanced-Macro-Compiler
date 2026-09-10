@@ -344,34 +344,186 @@ function GSE.ApplyStoredDeltaFork(obj, storedBlob)
     local meta = obj.MetaData or {}
     local pid = meta.PlatformID or obj.PlatformID
     if type(pid) ~= "string" or type(GSEDeltas[pid]) ~= "table" then return nil end
-    -- The fork only describes the divergence from ONE base. If the caller says
-    -- what is on disk now and it is not that base, the record has been replaced
-    -- since the fork was taken -- a re-import, or an updated copy from the
-    -- platform -- and rebuilding from the old base would resurrect the version
-    -- the user just replaced. A PlatformID is stable across those, so matching
-    -- on the id alone is not enough.
-    if storedBlob ~= nil and GSEDeltas[pid].b ~= storedBlob then return nil end
+    -- The fork describes the divergence from ONE base. If the caller says what
+    -- is on disk now and it is not that base, the author has published a new
+    -- version since the fork was taken.
+    --
+    -- Do NOT merge it here. This runs from the load paths -- loadOneClass and
+    -- EnsureSequenceLoaded -- where there is no one to ask, and a player who
+    -- logs in mid-pull would have the sequence they are holding change shape
+    -- under them. Being one version behind is recoverable; that is not.
+    --
+    -- So park the new blob and keep serving what they had. Nothing is lost:
+    -- `b` still holds the base this fork was cut from, so the reconstruction
+    -- below is exactly the sequence they were running before the update
+    -- landed. GSE.RebaseDeltaFork merges it, and only when the user says so.
+    if storedBlob ~= nil and GSEDeltas[pid].b ~= storedBlob then
+        GSEDeltas[pid].pending = storedBlob
+    elseif storedBlob ~= nil then
+        -- Back in step (the update was accepted, or the record was reverted).
+        GSEDeltas[pid].pending = nil
+    end
     return GSE.ReconstructDeltaFork(GSEDeltas[pid])
 end
 
---- Drop the delta fork for `subject`, which may be the object or its
---- PlatformID. Called whenever the thing the fork describes is removed.
---
--- GSEDeltas is a sidecar keyed by PlatformID, and a deleted record left its
--- entry behind forever: nothing else ever removes one. That is litter until
--- something is installed under the same id, at which point the stale fork is
--- adopted and the "fresh" copy silently carries the previous edits.
-function GSE.ForgetDeltaFork(subject)
-    if type(GSEDeltas) ~= "table" then return false end
-    local pid = subject
-    if type(subject) == "table" then
-        local meta = subject.MetaData or {}
-        pid = meta.PlatformID or subject.PlatformID
+--- The update waiting on this fork, or nil. The editor asks; nothing else does.
+function GSE.PendingDeltaUpdate(pid)
+    if type(GSEDeltas) ~= "table" or type(pid) ~= "string" then return nil end
+    local entry = GSEDeltas[pid]
+    return type(entry) == "table" and entry.pending or nil
+end
+
+-- A plain record -- MetaData, InbuiltVariables -- as opposed to a list of
+-- blocks. Records merge field by field; lists are merged by mergeActionList or
+-- taken whole, because a positional compare of two lists says nothing useful.
+local function isRecord(t)
+    return type(t) == "table" and t[1] == nil
+end
+
+-- Three-way field merge for one block. `old` is the base both sides started
+-- from, so "changed" is answerable per field instead of guessed.
+-- `skip` names the fields merged elsewhere -- Versions at the top, Actions
+-- within a version. Without it they are compared here as ordinary values, and
+-- since a list is never a record, every one of them lands as a conflict before
+-- the real merge overwrites it.
+local mergeFields
+mergeFields = function(old, ours, theirs, path, conflicts, skip)
+    local out, seen = {}, {}
+    for _, t in ipairs({old, ours, theirs}) do
+        for f in pairs(t) do
+            if type(f) ~= "number" and not (skip and skip[f]) then seen[f] = true end
+        end
     end
-    if type(pid) ~= "string" or pid == "" then return false end
-    if GSEDeltas[pid] == nil then return false end
-    GSEDeltas[pid] = nil
-    return true
+    for f in pairs(seen) do
+        local o, a, b = old[f], ours[f], theirs[f]
+        if deepEqual(a, b) then out[f] = deepcopy(a)
+        elseif deepEqual(a, o) then out[f] = deepcopy(b)   -- only they moved
+        elseif deepEqual(b, o) then out[f] = deepcopy(a)   -- only we moved
+        elseif isRecord(a) and isRecord(b) and (o == nil or isRecord(o)) then
+            -- Both moved, but this is a record: recurse, or a note the author
+            -- changed would conflict with an unrelated field the user changed
+            -- and take the whole of MetaData with it.
+            out[f] = mergeFields(o or {}, a, b, path .. "/" .. tostring(f), conflicts)
+        else
+            -- Both moved, differently. Keep the local value -- an override
+            -- that an update can silently revert is not an override -- and
+            -- record it so the editor can offer the choice.
+            out[f] = deepcopy(a)
+            conflicts[#conflicts + 1] = {
+                path = path, field = f,
+                base = deepcopy(o), ours = deepcopy(a), theirs = deepcopy(b),
+            }
+        end
+    end
+    return out
+end
+
+local mergeActionList
+local function mergeBlock(old, ours, theirs, path, conflicts, depth)
+    local out = mergeFields(old, ours, theirs, path, conflicts)
+    local tt = theirs.Type or theirs.type or ""
+    local ot = old.Type or old.type or ""
+    if depth < 5 and (tt == "Loop" or ot == "Loop") then
+        local merged = mergeActionList(loopChildren(old), loopChildren(ours), loopChildren(theirs),
+            path .. "/loop", conflicts, depth + 1)
+        for i = 1, #merged do out[i] = merged[i] end
+    elseif depth < 5 and (tt == "If" or ot == "If") then
+        for n = 1, 2 do
+            out[n] = mergeActionList(ifBranch(old, n), ifBranch(ours, n), ifBranch(theirs, n),
+                path .. "/if" .. n, conflicts, depth + 1)
+        end
+    else
+        for i, v in ipairs(theirs) do out[i] = deepcopy(v) end
+    end
+    return out
+end
+
+-- Blocks are paired by CONTENT, through the same matchBlocks the differ uses,
+-- so a block the author moved or inserted above is found by what it is rather
+-- than by an index that no longer means anything.
+mergeActionList = function(oldL, ourL, theirL, path, conflicts, depth)
+    local mapTheirs = matchBlocks(oldL, theirL)   -- theirIdx -> oldIdx
+    local mapOurs = matchBlocks(oldL, ourL)       -- ourIdx   -> oldIdx
+    local ourByOld, usedOur, out = {}, {}, {}
+    for ourIdx, oldIdx in pairs(mapOurs) do ourByOld[oldIdx] = ourIdx end
+    for ti = 1, #theirL do
+        local oldIdx = mapTheirs[ti]
+        if not oldIdx then
+            out[#out + 1] = deepcopy(theirL[ti])          -- the author added it
+        else
+            local ourIdx = ourByOld[oldIdx]
+            if ourIdx then
+                usedOur[ourIdx] = true
+                out[#out + 1] = mergeBlock(oldL[oldIdx], ourL[ourIdx], theirL[ti],
+                    path .. "/" .. ti, conflicts, depth)
+            end
+            -- else: we deleted this block, so it stays deleted
+        end
+    end
+    for ourIdx = 1, #ourL do                              -- blocks we added
+        if not mapOurs[ourIdx] and not usedOur[ourIdx] then out[#out + 1] = deepcopy(ourL[ourIdx]) end
+    end
+    return out
+end
+
+--- Merge the parked update into the fork, keeping what the local edit did.
+--
+-- Three-way: `old` is the base the fork was cut from (kept in `b` for exactly
+-- this), `ours` is the reconstruction, `theirs` is the new version. A field
+-- only one side moved takes that side; a field both moved to the same value
+-- takes it; a field both moved differently keeps OURS and is reported.
+--
+-- Re-diffing or replaying instead of merging cannot work: replaying the stored
+-- overlay uses positional `from` indices into a block list that no longer
+-- exists, and re-diffing ours against the new base just reproduces ours and
+-- throws the author's version away.
+--
+-- Returns merged, conflicts. On success the entry is rebased onto the new
+-- blob and `pending` is cleared. Returns nil if either side will not decode,
+-- leaving the entry untouched.
+function GSE.RebaseDeltaFork(pid, newBlob)
+    if type(GSEDeltas) ~= "table" or type(pid) ~= "string" then return nil end
+    local entry = GSEDeltas[pid]
+    if type(entry) ~= "table" then return nil end
+    newBlob = newBlob or entry.pending
+    if type(newBlob) ~= "string" then return nil end
+
+    local ours = GSE.ReconstructDeltaFork(entry)
+    if type(ours) ~= "table" then return nil end
+    local okOld, oldDecoded = GSE.DecodeMessage(entry.b)
+    local okNew, newDecoded = GSE.DecodeMessage(newBlob)
+    if not okOld or type(oldDecoded) ~= "table" then return nil end
+    if not okNew or type(newDecoded) ~= "table" then return nil end
+    local old = oldDecoded[2] or oldDecoded
+    local theirs = newDecoded[2] or newDecoded
+
+    local conflicts = {}
+    local merged = mergeFields(old, ours, theirs, "", conflicts, {Versions = true})
+    local oV, aV, bV = old.Versions or {}, ours.Versions or {}, theirs.Versions or {}
+    local versions, keys = {}, {}
+    for k in pairs(aV) do keys[k] = true end
+    for k in pairs(bV) do keys[k] = true end
+    for k in pairs(keys) do
+        local o, a, b = oV[k] or {}, aV[k], bV[k]
+        if a and b then
+            local v = mergeFields(o, a, b, "v" .. tostring(k), conflicts, {Actions = true})
+            v.Actions = mergeActionList(listOf(o.Actions), listOf(a.Actions), listOf(b.Actions),
+                "v" .. tostring(k), conflicts, 0)
+            versions[k] = v
+        elseif a and not b then
+            -- Only ours has it: a version we added stays; one the author
+            -- removed and we never touched goes with it.
+            if oV[k] == nil then versions[k] = deepcopy(a) end
+        elseif b and not a then
+            if oV[k] == nil then versions[k] = deepcopy(b) end
+        end
+    end
+    if next(versions) ~= nil then merged.Versions = versions end
+
+    local d = GSE.EncodeDelta(GSE.DiffDelta(theirs, merged))
+    if type(d) ~= "string" then return nil end
+    GSEDeltas[pid] = {b = newBlob, d = d, t = entry.t, src = entry.src}
+    return merged, conflicts
 end
 
 --- Open a delta fork for content that does not have one yet, keyed by its own
