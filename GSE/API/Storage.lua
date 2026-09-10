@@ -698,6 +698,21 @@ function GSE.StoreEncodedSequence(name, encoded)
     local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
     if GSE.isEmpty(GSESequences) then GSESequences = {} end
     if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    -- Arriving in the CLEAR for something we hold a fork of means the server
+    -- flattened it: this is the owner's own work, their edit was applied to
+    -- their record, and what just came back already contains it. The fork
+    -- described a divergence from a sealed base that no longer exists, so
+    -- keeping it would replay the edit on top of itself.
+    --
+    -- Only ever on plaintext. A sealed blob is still somebody else's content
+    -- and its fork is still the local divergence from it.
+    if GSE.ForgetDeltaFork and not (GSE.IsPackedBlob and GSE.IsPackedBlob(encoded)) then
+        local meta = seq.MetaData or {}
+        local pid = meta.PlatformID or seq.PlatformID
+        if type(pid) == "string" and type(GSEDeltas) == "table" and GSEDeltas[pid] then
+            GSE.ForgetDeltaFork(pid)
+        end
+    end
     GSESequences[classid][name] = encoded
     -- Drop any stale decoded copy so the lazy loader re-decodes from the
     -- stored string (its canonical migrate + variable-load path).

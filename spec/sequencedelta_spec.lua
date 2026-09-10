@@ -550,4 +550,44 @@ describe("Delta fork updates", function()
       end)
     end)
   end)
+
+  -- The owner's own work coming home.
+  --
+  -- A website export comes back sealed even to its author, so an edit they
+  -- make in game becomes a fork of themselves. The Companion is the only thing
+  -- that sees both the signed-in owner and the SavedVariables, so it uploads
+  -- the delta; the server applies it to their record and sends it back IN THE
+  -- CLEAR. Plaintext arriving for something we hold a fork of is that round
+  -- trip completing: the record already contains the edit, and replaying the
+  -- fork on top of it would apply the same change twice.
+  describe("a flattened record coming back", function()
+    it("drops the fork when the content arrives in the clear", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        assert.is_not_nil(GSEDeltas.pid1)
+        -- What the server sends back: the edit, unsealed.
+        assert.is_true(GSE.ForgetDeltaFork("pid1"))
+        assert.is_nil(GSEDeltas.pid1)
+      end)
+    end)
+
+    it("forgets by object as well as by id", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Beta") }))
+        assert.is_true(GSE.ForgetDeltaFork({ MetaData = { PlatformID = "pid1" } }))
+        assert.is_nil(GSEDeltas.pid1)
+      end)
+    end)
+
+    it("leaves a fork alone when there is nothing to forget", function()
+      withStubs(function()
+        _G.GSEDeltas = {}
+        assert.is_false(GSE.ForgetDeltaFork("pid1"))
+        assert.is_false(GSE.ForgetDeltaFork(nil))
+        assert.is_false(GSE.ForgetDeltaFork({}))
+      end)
+    end)
+  end)
 end)

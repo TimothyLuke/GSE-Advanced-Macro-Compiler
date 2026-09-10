@@ -366,6 +366,30 @@ function GSE.ApplyStoredDeltaFork(obj, storedBlob)
     return GSE.ReconstructDeltaFork(GSEDeltas[pid])
 end
 
+--- Drop the delta fork for `subject`, which may be the object or its
+--- PlatformID. Called whenever the thing the fork describes is removed.
+--
+-- GSEDeltas is a sidecar keyed by PlatformID, and a deleted record left its
+-- entry behind forever: nothing else ever removes one. That is litter until
+-- something is installed under the same id, at which point the stale fork is
+-- adopted and the "fresh" copy silently carries the previous edits.
+--
+-- Also the end of the owner's round trip: their own work comes back from the
+-- server flattened and in the clear, so the fork that described a divergence
+-- from a sealed base has nothing left to describe.
+function GSE.ForgetDeltaFork(subject)
+    if type(GSEDeltas) ~= "table" then return false end
+    local pid = subject
+    if type(subject) == "table" then
+        local meta = subject.MetaData or {}
+        pid = meta.PlatformID or subject.PlatformID
+    end
+    if type(pid) ~= "string" or pid == "" then return false end
+    if GSEDeltas[pid] == nil then return false end
+    GSEDeltas[pid] = nil
+    return true
+end
+
 --- The update waiting on this fork, or nil. The editor asks; nothing else does.
 function GSE.PendingDeltaUpdate(pid)
     if type(GSEDeltas) ~= "table" or type(pid) ~= "string" then return nil end
