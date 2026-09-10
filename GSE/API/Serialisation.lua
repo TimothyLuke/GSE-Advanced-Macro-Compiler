@@ -47,6 +47,28 @@ function GSE.IsProtectedAtRest(blob, obj)
     return GSE.IsPackedBlob(blob) or GSE.IsProtectedContent(obj)
 end
 
+--- The form an incoming blob should be STORED in.
+--
+-- A packed envelope is what the website puts on every export, the owner's
+-- included -- it says where the string came from, not what it is. Only the
+-- body can say whether the content is protected. So a packed blob whose body
+-- does not say noExport is re-encoded plain, exactly as the addon would have
+-- written it itself; anything else -- protected, or not packed to begin with
+-- -- is returned untouched.
+--
+-- Keeping such a blob sealed was not harmless: IsProtectedAtRest reads the
+-- envelope as proof, so the user's own sequence was treated as protected on
+-- every save and each edit was diverted into a delta fork for good.
+--
+-- `plain` is the table to encode when unpacking; the caller knows the shape
+-- ({name, sequence} for a sequence, the object itself for a variable).
+function GSE.StorableForm(encoded, body, plain)
+    if GSE.IsPackedBlob(encoded) and not GSE.IsProtectedContent(body) then
+        return GSE.EncodeMessage(plain)
+    end
+    return encoded
+end
+
 -- This decodes a string into a LUA Table.  This returns a bool (success) and an object that contains the results.
 function GSE.DecodeMessage(data)
     if string.sub(data, 1, 7) == "!GSE3!+" then

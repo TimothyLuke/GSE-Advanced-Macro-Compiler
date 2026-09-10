@@ -159,6 +159,34 @@ function GSE.AuditProtectedAtRest(contentType, classid, name, blob, obj)
     return true
 end
 
+--- The other mismatch, the mirror of the audit above: a blob still wearing the
+--- site's envelope whose body does NOT say it is protected. That is the user's
+--- own content, imported before StorableForm existed, and every save since has
+--- been diverted into a delta fork because IsProtectedAtRest reads the envelope
+--- as proof. Rewrite it plain, the way the addon writes its own.
+--
+-- `obj` must already have any delta fork applied -- the callers do that -- so
+-- the user's edits fold into the record. The fork is then retired: a plain
+-- record is saved in place from here on. Returns the plain blob, or nil when
+-- there was nothing to heal.
+function GSE.HealOwnContentAtRest(contentType, classid, name, blob, obj)
+    if not GSE.IsPackedBlob(blob) or GSE.IsProtectedContent(obj) then return nil end
+    local plain
+    if contentType == "sequence" then
+        if type(GSESequences) ~= "table" or type(GSESequences[classid]) ~= "table" then return nil end
+        plain = GSE.EncodeMessage({name, obj})
+        GSESequences[classid][name] = plain
+    elseif contentType == "variable" then
+        if type(GSEVariables) ~= "table" then return nil end
+        plain = GSE.EncodeMessage(obj)
+        GSEVariables[name] = plain
+    else
+        return nil
+    end
+    if GSE.ForgetDeltaFork then GSE.ForgetDeltaFork(obj) end
+    return plain
+end
+
 local function migrateSequenceVersions(sequence, sequenceName)
     if type(sequence) ~= "table" then return false end
     if sequence["Macros"] ~= nil and sequence.Versions == nil then
@@ -206,6 +234,7 @@ local function loadOneClass(classid)
                 local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(GSE.Library[classid][i], j)
                 if forked then GSE.Library[classid][i] = forked end
                 GSE.AuditProtectedAtRest("sequence", classid, i, j, GSE.Library[classid][i])
+                GSE.HealOwnContentAtRest("sequence", classid, i, j, GSE.Library[classid][i])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
                 if reason == "macros-deprecated" then
                     -- Refuse to load. The on-disk record uses the old
@@ -265,6 +294,8 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
                         GSESequences[classid][sequenceName])
                 if forked then GSE.Library[classid][sequenceName] = forked end
                 GSE.AuditProtectedAtRest("sequence", classid, sequenceName,
+                    GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName])
+                GSE.HealOwnContentAtRest("sequence", classid, sequenceName,
                     GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
                 if reason == "macros-deprecated" then
@@ -698,6 +729,9 @@ function GSE.StoreEncodedSequence(name, encoded)
     local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
     if GSE.isEmpty(GSESequences) then GSESequences = {} end
     if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    -- The user's own content arrives packed like everything else the site
+    -- exports; store it plain unless the body itself says it is protected.
+    encoded = GSE.StorableForm(encoded, decoded, {name, seq})
     GSESequences[classid][name] = encoded
     -- Drop any stale decoded copy so the lazy loader re-decodes from the
     -- stored string (its canonical migrate + variable-load path).
@@ -715,6 +749,7 @@ function GSE.StoreEncodedVariable(name, encoded)
         return false
     end
     if GSE.isEmpty(GSEVariables) then GSEVariables = {} end
+    encoded = GSE.StorableForm(encoded, decoded, decoded)
     GSEVariables[name] = encoded
     if GSE.V then GSE.V[name] = nil end
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
@@ -951,10 +986,15 @@ local function loadOneVariable(k, v)
         function()
             local localsuccess, uncompressedVersion = GSE.DecodeMessage(v)
             if not localsuccess then return end
-            -- This path never writes back -- which is why variables kept their
-            -- envelope where sequences lost it -- so there is nothing to gate,
-            -- only damage from an earlier build to report.
+            -- A variable edited while sealed keeps its edit in a delta fork,
+            -- the same as a sequence. Fold it in before anything reads the
+            -- body -- the heal below persists it, and the compile must see it.
+            local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(uncompressedVersion, v)
+            if forked then uncompressedVersion = forked end
+            -- The audit only reports damage from an earlier build; the heal is
+            -- the one write this path makes, and only for the user's own content.
             GSE.AuditProtectedAtRest("variable", nil, k, v, uncompressedVersion)
+            GSE.HealOwnContentAtRest("variable", nil, k, v, uncompressedVersion)
             GSE.V[k] = gseLoadstring("return " .. uncompressedVersion.funct)()
             if type(GSE.V[k]()) == "boolean" then
                 GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
