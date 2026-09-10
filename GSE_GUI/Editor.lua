@@ -8149,7 +8149,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     -- reconstruction directly would make those edits land in whatever table the
     -- fork was rebuilt into, before the user has pressed anything.
     if sequence and GSE.ApplyStoredDeltaFork then
-        local forked = GSE.ApplyStoredDeltaFork(sequence)
+        local forked = GSE.ApplyStoredDeltaFork(sequence, GSESequences[classid][sequenceName])
         if forked then sequence = GSE.CloneSequence(forked) end
     end
 

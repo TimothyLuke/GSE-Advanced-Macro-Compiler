@@ -339,12 +339,39 @@ end
 -- edited locally; GSEDeltas holds the divergence. A load path that assigned
 -- the decoded blob straight into the Library would silently discard the edit,
 -- so every load path asks this first and prefers what it returns.
-function GSE.ApplyStoredDeltaFork(obj)
+function GSE.ApplyStoredDeltaFork(obj, storedBlob)
     if type(GSEDeltas) ~= "table" or type(obj) ~= "table" then return nil end
     local meta = obj.MetaData or {}
     local pid = meta.PlatformID or obj.PlatformID
     if type(pid) ~= "string" or type(GSEDeltas[pid]) ~= "table" then return nil end
+    -- The fork only describes the divergence from ONE base. If the caller says
+    -- what is on disk now and it is not that base, the record has been replaced
+    -- since the fork was taken -- a re-import, or an updated copy from the
+    -- platform -- and rebuilding from the old base would resurrect the version
+    -- the user just replaced. A PlatformID is stable across those, so matching
+    -- on the id alone is not enough.
+    if storedBlob ~= nil and GSEDeltas[pid].b ~= storedBlob then return nil end
     return GSE.ReconstructDeltaFork(GSEDeltas[pid])
+end
+
+--- Drop the delta fork for `subject`, which may be the object or its
+--- PlatformID. Called whenever the thing the fork describes is removed.
+--
+-- GSEDeltas is a sidecar keyed by PlatformID, and a deleted record left its
+-- entry behind forever: nothing else ever removes one. That is litter until
+-- something is installed under the same id, at which point the stale fork is
+-- adopted and the "fresh" copy silently carries the previous edits.
+function GSE.ForgetDeltaFork(subject)
+    if type(GSEDeltas) ~= "table" then return false end
+    local pid = subject
+    if type(subject) == "table" then
+        local meta = subject.MetaData or {}
+        pid = meta.PlatformID or subject.PlatformID
+    end
+    if type(pid) ~= "string" or pid == "" then return false end
+    if GSEDeltas[pid] == nil then return false end
+    GSEDeltas[pid] = nil
+    return true
 end
 
 --- Open a delta fork for content that does not have one yet, keyed by its own
