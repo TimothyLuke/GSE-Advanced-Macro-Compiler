@@ -998,6 +998,21 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 and tail:match("reset=%S*$") == nil     -- not ending on reset=
                 and tail:match(",%s*nil$") == nil       -- not after a ,nil ender
         end
+        -- Comma-separated spells are /castsequence syntax and nothing else.
+        -- Every other command takes ONE action per clause, so a comma there
+        -- does not mean two casts -- it makes one spell name that cannot
+        -- exist. The translator draws the same line: it splits a castsequence
+        -- on its commas and resolves each element (a bad one comes back in
+        -- GSEOptions.UNKNOWN, which is how the author finds out), and does no
+        -- such thing for any other command. So a comma the menu adds anywhere
+        -- else is text the author gets no warning about.
+        --
+        -- One action per CLAUSE, not per row: ';' is an else, so
+        -- "/cast [mod] Spella; Spellb" holds two spells legitimately. That is
+        -- what joins a spell to a non-castsequence row that already has one.
+        local function isCastSequenceRow(row)
+            return row:match("^%s*/castsequence") ~= nil
+        end
         -- An empty [] group closes the line's conditions: it lands at the END of
         -- the bracket run ("[stuff,stuff][]"), or opens one on a bare command
         -- ("/cast []"). A run already ending in [] is left alone.
@@ -1020,12 +1035,22 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             splice(last, 0, "[]")
             return MenuResponse.Refresh
         end
-        -- Spell: lands AT THE CARET when the caret sits mid-line, so a spell
-        -- can be dropped between two others; otherwise at the line end -- but
-        -- BEFORE a trailing ", nil" line ender. Takes a ", " separator when
-        -- the text it follows already ends with a spell (castsequence style),
-        -- and another when it lands in front of more spell text. Ends the
-        -- session.
+        -- Spell: lands AT THE CARET, wherever the caret is -- the same
+        -- contract as pasting, and for the same reason. The caret is the one
+        -- statement the author makes about where text goes, so the pick does
+        -- not second-guess it: it does not hop out of a word it was left
+        -- inside, and it does not fall back to the line end from inside a
+        -- bracket group. Splitting a word is safe to allow because the editor
+        -- already says so: the translator resolves a castsequence element by
+        -- element, so both halves come back in GSEOptions.UNKNOWN -- "Bra" and
+        -- "vo" go red, which is true, and the author fixes it. A pick that
+        -- quietly ignores the caret produces no such signal.
+        -- The line end is the fallback only when there is no caret on this row
+        -- to honour, and a trailing ", nil" ender keeps the last word on the
+        -- row. Joining to text that is already a spell uses the syntax the
+        -- row's command actually has: ", " on a /castsequence, and "; " -- the
+        -- else -- on anything else, because one clause casts one thing. Ends
+        -- the session.
         local function pickSpell(name)
             local endPos = lineEndPos()
             local startPos = lineBounds()
@@ -1037,48 +1062,55 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 insertAt = endPos - (#line - nilS + 1)
                 clause = line:sub(1, nilS - 1)
             end
-            -- Mid-line: only past the command word and outside any bracket
-            -- group, so a caret inside "[combat]" still appends at the end
-            -- rather than splitting the conditional.
+            -- The caret is on this row, so that is where the spell goes.
+            local listRow = isCastSequenceRow(line)
+            local joiner = listRow and ", " or "; "
             local trailing = ""
-            if cursor > startPos - 1 and cursor < insertAt then
-                local before = line:sub(1, cursor - startPos + 1)
+            if cursor >= startPos - 1 and cursor < insertAt then
+                insertAt = cursor
+                clause = line:sub(1, cursor - startPos + 1)
                 local after = line:sub(cursor - startPos + 2)
-                local openBracket = select(2, before:gsub("%[", "")) > select(2, before:gsub("%]", ""))
-                if before:find("/%S+%s") and not openBracket then
-                    -- Never split a word: a caret sitting inside one drops the
-                    -- pick in BEFORE it, so "Alpha, Bra|vo" gives
-                    -- "Alpha, Pick, Bravo" rather than "Alpha, Bra, Pick, vo".
-                    local head = before:match("[%w:'%-]+$")
-                    if head and after:match("^[%w:'%-]") then
-                        before = before:sub(1, #before - #head)
-                        after = head .. after
-                        cursor = cursor - #head
-                    end
-                    insertAt = cursor
-                    clause = before
-                    -- Spell text after the caret needs its own separator, or
-                    -- the pick runs into the word that follows it.
-                    local nextChar = after:match("^%s*(.)")
-                    if nextChar and nextChar ~= "," and nextChar ~= ";" then
-                        trailing = ", "
-                    end
+                -- Text after the caret needs its own separator, or the pick
+                -- runs into whatever follows it.
+                local nextChar = after:match("^%s*(.)")
+                if nextChar and nextChar ~= "," and nextChar ~= ";" then
+                    -- Only once there is a command to be a clause OF: with the
+                    -- caret in front of the command word there is nothing for
+                    -- a ';' to be the else of.
+                    trailing = clause:find("/", 1, true) and joiner or " "
                 end
+            end
+            -- Inside a condition the separator is a comma, because that is what
+            -- a comma means there: a condition holds conditionals separated by
+            -- commas. A ';' would not make a bad spell name, it would end the
+            -- clause -- the row is split into alternatives on ';' before the
+            -- brackets are read, so "[com; Pick; bat] Foo" is three clauses
+            -- with "[com" left unterminated. "[com, Pick, bat] Foo" stays one
+            -- condition that simply fails, which is the mistake shown in place.
+            -- This picks the separator; it does NOT move the insert, which
+            -- stays where the author put it.
+            if joiner == "; " and select(2, clause:gsub("%[", "")) > select(2, clause:gsub("%]", "")) then
+                joiner = ", "
+                if trailing == "; " then trailing = ", " end
             end
             -- Supply the separator ourselves: the compile that can rewrite the
             -- box mid-session TRIMS trailing spaces, so "ends with a space"
             -- cannot be assumed ("/cast [combat]" + pick gave "[combat]Spell").
             local sep = ""
-            if clause:match("^%s*$") then
-                -- Blank line: a bare spell name is not a macro line. Give it
-                -- the command, the way a hand-typed line would start.
+            if line:match("^%s*$") then
+                -- Blank ROW. Tested on the line and not on the text before the
+                -- caret: now that a caret at column 0 inserts there rather than
+                -- at the line end, testing `clause` would prepend a second
+                -- "/cast" to a row that already had one.
+                -- A bare spell name is not a macro line, so give it the
+                -- command the way a hand-typed line would start.
                 sep = "/cast "
             elseif clause:match(",%s*$") or clause:match("%s$") then
                 -- already separated -- a mid-line drop lands right after the
                 -- comma of the item before it
                 sep = ""
             elseif clauseEndsWithSpell(clause) then
-                sep = ", "
+                sep = joiner
             elseif clause ~= "" then
                 sep = " "
             end
@@ -1294,7 +1326,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
             -- clause) and already ends with a spell.
             local row = currentLineText()
             local tailHasReset = (row:match("[^;]*$") or ""):find("reset=", 1, true) ~= nil
-            local isCastseq = row:match("^%s*/castsequence") ~= nil
+            local isCastseq = isCastSequenceRow(row)
             if isCastseq and tailHasReset and clauseEndsWithSpell(row) then
                 rootDescription:CreateButton(", nil", function() return pickNil() end)
             elseif not (isCastseq and tailHasReset) then
