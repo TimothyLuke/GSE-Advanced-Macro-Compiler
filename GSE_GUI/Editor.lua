@@ -5964,7 +5964,12 @@ function GSE.CreateEditor()
                 local stepRow = UI:Create("SimpleGroup")
                 stepRow:SetLayout("Flow")
                 stepRow:SetFullWidth(true)
-                stepRow:SetHeight(24)
+                -- STYLE.flowPadY above and below the tallest child, which is
+                -- the 26px Repeat box. A row set to the child's own height has
+                -- nowhere to put that padding: layoutFlow still starts the
+                -- child flowPadY down, so it overhangs the bottom edge and the
+                -- block border closes up right under it.
+                stepRow:SetHeight(36)
                 if stepRow.SetFlowGap then stepRow:SetFlowGap(6) end
                 if stepRow.SetFlowVAlign then stepRow:SetFlowVAlign("CENTER") end
                 if stepRow.SetFlowOffset then stepRow:SetFlowOffset(7, 0) end
@@ -5976,24 +5981,22 @@ function GSE.CreateEditor()
                 if stepRowLabel.SetJustifyV then stepRowLabel:SetJustifyV("MIDDLE") end
                 stepRow:AddChild(stepRowLabel)
                 stepRow:AddChild(stepdropdown)
-                layout3:AddChild(stepRow)
-
-                local repeatRow = UI:Create("SimpleGroup")
-                repeatRow:SetLayout("Flow")
-                repeatRow:SetFullWidth(true)
-                repeatRow:SetHeight(26)
-                if repeatRow.SetFlowGap then repeatRow:SetFlowGap(6) end
-                if repeatRow.SetFlowVAlign then repeatRow:SetFlowVAlign("CENTER") end
-                if repeatRow.SetFlowOffset then repeatRow:SetFlowOffset(7, 0) end
+                -- Repeat rides on the step row rather than a row of its own.
+                -- Two one-control rows cost a whole line of block height each
+                -- and the pair reads as one setting anyway: how the block
+                -- steps, and how many times.
                 local repeatRowLabel = UI:Create("Label")
                 repeatRowLabel:SetText(L["Repeat"])
-                repeatRowLabel:SetWidth(loopControlLabelWidth)
+                -- Its own width, not loopControlLabelWidth: 82 is the leading
+                -- column that lines the block's labels up down the left edge,
+                -- and a second one that wide pushes the box off the row.
+                repeatRowLabel:SetWidth(46)
                 repeatRowLabel:SetHeight(24)
                 repeatRowLabel:SetColor(keywordColor())
                 if repeatRowLabel.SetJustifyV then repeatRowLabel:SetJustifyV("MIDDLE") end
-                repeatRow:AddChild(repeatRowLabel)
-                repeatRow:AddChild(looplimit)
-                layout3:AddChild(repeatRow)
+                stepRow:AddChild(repeatRowLabel)
+                stepRow:AddChild(looplimit)
+                layout3:AddChild(stepRow)
 
                 local macroGroup = UI:Create("SimpleGroup")
                 macroGroup:SetFullWidth(true)
