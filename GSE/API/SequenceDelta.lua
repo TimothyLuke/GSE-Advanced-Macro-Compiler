@@ -511,10 +511,17 @@ function GSE.RebaseDeltaFork(pid, newBlob)
                 "v" .. tostring(k), conflicts, 0)
             versions[k] = v
         elseif a and not b then
-            -- Only ours has it: a version we added stays; one the author
-            -- removed and we never touched goes with it.
-            if oV[k] == nil then versions[k] = deepcopy(a) end
+            -- Ours only. One we added stays. One the author deleted goes with
+            -- them ONLY if we never touched it -- an edited version is work,
+            -- and an update that silently deletes work is the thing this whole
+            -- design exists to stop. A version cannot be half-kept, so there is
+            -- no per-field conflict to raise here: it survives, and the author
+            -- deleting it again is a decision they can make next time.
+            if oV[k] == nil or not deepEqual(a, oV[k]) then versions[k] = deepcopy(a) end
         elseif b and not a then
+            -- Theirs only. One the author added arrives; one WE deleted stays
+            -- deleted, even if they edited it -- deleting it was the local
+            -- change, and the local change is what a fork is.
             if oV[k] == nil then versions[k] = deepcopy(b) end
         end
     end

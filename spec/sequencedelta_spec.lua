@@ -486,4 +486,68 @@ describe("Delta fork updates", function()
       end)
     end)
   end)
+
+  -- A version exists on one side and not the other. Four ways that happens,
+  -- and they do not resolve the same way: added is additive, deleted is a
+  -- decision, and a deletion must never take work with it silently.
+  describe("a version added or removed on one side", function()
+    local function seq2(v1Actions, v2Actions, notes)
+      local s = seq(v1Actions, notes)
+      if v2Actions then s.Versions[2] = { Actions = v2Actions } end
+      return s
+    end
+
+    it("keeps a version we added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq2({ act("/cast Alpha") }, { act("/cast Mine") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_not_nil(merged.Versions[2], "our own version is not the author's to remove")
+        assert.are.equal("/cast Mine", merged.Versions[2].Actions[1].macro)
+      end)
+    end)
+
+    it("takes a version the author added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        local v2 = seq2({ act("/cast Alpha") }, { act("/cast Theirs") }, "v2")
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.are.equal("/cast Theirs", merged.Versions[2].Actions[1].macro)
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro,
+          "and our edit to version 1 is still there")
+      end)
+    end)
+
+    it("honours the author deleting a version we never touched", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        -- Our fork edits version 1 only; version 2 is untouched.
+        fork(blob("v1", base), base, seq2({ act("/cast [mod:alt] Alpha") }, { act("/cast Second") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_nil(merged.Versions[2], "nothing of ours was in it")
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro)
+      end)
+    end)
+
+    it("keeps a version we edited even when the author deletes it", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        fork(blob("v1", base), base, seq2({ act("/cast Alpha") }, { act("/cast [mod:alt] Second") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_not_nil(merged.Versions[2], "an update must not delete work silently")
+        assert.are.equal("/cast [mod:alt] Second", merged.Versions[2].Actions[1].macro)
+      end)
+    end)
+
+    it("leaves a version we deleted deleted, even if the author edits it", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        fork(blob("v1", base), base, seq({ act("/cast Alpha") }))
+        local v2 = seq2({ act("/cast Alpha") }, { act("/cast Second Revised") }, "v2")
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.is_nil(merged.Versions[2], "deleting it was the local change")
+      end)
+    end)
+  end)
 end)
