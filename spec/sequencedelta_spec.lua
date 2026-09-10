@@ -148,3 +148,446 @@ describe("Sequence Delta apply", function()
     assert.is_nil(out.Versions)
   end)
 end)
+
+
+-- ---------------------------------------------------------------------------
+-- Parked updates and the three-way merge.
+--
+-- A local change is meant to survive the author's next version: SLG ships
+-- [mod:shift], you change it to [mod:alt], SLG publishes an update -- your
+-- [mod:alt] belongs on the new version.
+--
+-- But not at load time. ApplyStoredDeltaFork runs from loadOneClass and
+-- EnsureSequenceLoaded, so a player logging in mid-pull would have the
+-- sequence in their hands change shape. The update is parked and the old
+-- version keeps running until the user accepts it.
+-- ---------------------------------------------------------------------------
+describe("Delta fork updates", function()
+  -- The real DecodeMessage returns (ok, decoded); the mock returns just the
+  -- table, so these carry the real contract. Deltas live in a registry rather
+  -- than being serialised -- C_EncodingUtil is in-game only, and the codec is
+  -- not what is under test. DiffDelta/ApplyDelta/matchBlocks are the real ones.
+  local function withStubs(fn)
+    local rDecode, rEncodeD, rDecodeD = GSE.DecodeMessage, GSE.EncodeDelta, GSE.DecodeDelta
+    local blobs, deltas, n = {}, {}, 0
+    GSE.DecodeMessage = function(b)
+      if not blobs[b] then return false, nil end
+      return true, blobs[b]
+    end
+    GSE.EncodeDelta = function(t)
+      if type(t) ~= "table" then return nil end
+      n = n + 1; deltas["delta#" .. n] = t; return "delta#" .. n
+    end
+    GSE.DecodeDelta = function(k) return deltas[k] end
+    local function blob(name, obj)
+      local key = "!GSE3!+" .. name
+      blobs[key] = {name, obj}
+      return key
+    end
+    local ok, err = pcall(fn, blob)
+    GSE.DecodeMessage, GSE.EncodeDelta, GSE.DecodeDelta = rDecode, rEncodeD, rDecodeD
+    if not ok then error(err, 0) end
+  end
+
+  local function seq(actions, notes)
+    return {
+      MetaData = { PlatformID = "pid1", Name = "SLG_Seq", Notes = notes or "v1" },
+      Versions = { [1] = { Actions = actions } },
+    }
+  end
+  local function act(macro) return { Type = "Action", type = "macro", macro = macro } end
+  -- Through _G on purpose. busted runs the spec chunk in a proxy environment,
+  -- so a bare `GSEDeltas = ...` here is written somewhere SequenceDelta.lua --
+  -- required into the outer environment -- cannot see, and every call reads a
+  -- nil GSEDeltas and bails. run51 shares _G, so it passed there and only
+  -- busted showed it. Reads still resolve normally through the proxy.
+  local function fork(blob, base, edited)
+    _G.GSEDeltas = { pid1 = { b = blob, t = "sequence", src = "pid1",
+      d = GSE.EncodeDelta(GSE.DiffDelta(base, edited)) } }
+  end
+
+  describe("at load", function()
+    it("keeps the running version and parks the update", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        local mine = seq({ act("/cast [mod:alt] Alpha") })
+        fork(blob("v1", v1), v1, mine)
+
+        local v2 = seq({ act("/cast [mod:shift] Alpha"), act("/cast Bravo") }, "v2")
+        local b2 = blob("v2", v2)
+        local out = GSE.ApplyStoredDeltaFork(v2, b2)
+
+        -- What the player had, unchanged. Nothing new appears mid-combat.
+        assert.are.equal("/cast [mod:alt] Alpha", out.Versions[1].Actions[1].macro)
+        assert.is_nil(out.Versions[1].Actions[2], "the author's new block waits")
+        assert.are.equal(b2, GSE.PendingDeltaUpdate("pid1"), "and is parked")
+        assert.are.equal(blob("v1", v1), GSEDeltas.pid1.b, "base not moved yet")
+      end)
+    end)
+
+    it("clears the park once the blob matches again", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        local b1 = blob("v1", v1)
+        fork(b1, v1, seq({ act("/cast [mod:alt] Alpha") }))
+        GSEDeltas.pid1.pending = "!GSE3!+stale"
+        GSE.ApplyStoredDeltaFork(v1, b1)
+        assert.is_nil(GSE.PendingDeltaUpdate("pid1"))
+      end)
+    end)
+
+    it("reconstructs as before when no blob is offered", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        local out = GSE.ApplyStoredDeltaFork(v1)
+        assert.are.equal("/cast [mod:alt] Alpha", out.Versions[1].Actions[1].macro)
+        assert.is_nil(GSE.PendingDeltaUpdate("pid1"))
+      end)
+    end)
+  end)
+
+  describe("on accept", function()
+    it("carries the local edit onto the author's new version", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        local v2 = seq({ act("/cast [mod:shift] Alpha"), act("/cast Bravo") }, "v2")
+        local b2 = blob("v2", v2)
+        GSE.ApplyStoredDeltaFork(v2, b2)
+
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1")   -- takes the parked blob
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro,
+          "the override survived the update")
+        assert.are.equal("/cast Bravo", merged.Versions[1].Actions[2].macro,
+          "the author's new action arrived")
+        assert.are.equal("v2", merged.MetaData.Notes, "the author's other changes arrived")
+        assert.are.equal(0, #conflicts)
+        assert.are.equal(b2, GSEDeltas.pid1.b, "rebased onto the new blob")
+        assert.is_nil(GSEDeltas.pid1.pending, "park cleared")
+      end)
+    end)
+
+    it("keeps the edit on its block when the author inserts one above", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast [mod:alt] Bravo") }))
+        local v2 = seq({ act("/cast Opener"), act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+
+        assert.are.equal("/cast Opener", merged.Versions[1].Actions[1].macro)
+        assert.are.equal("/cast Alpha", merged.Versions[1].Actions[2].macro)
+        assert.are.equal("/cast [mod:alt] Bravo", merged.Versions[1].Actions[3].macro,
+          "the edit followed its block, not its old index")
+      end)
+    end)
+
+    it("keeps the local value on a clash and reports it", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        -- The author changed the very thing that was overridden.
+        local v2 = seq({ act("/cast [mod:ctrl] Alpha") })
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro,
+          "an override an update can silently revert is not an override")
+        assert.are.equal(1, #conflicts)
+        assert.are.equal("macro", conflicts[1].field)
+        assert.are.equal("/cast [mod:shift] Alpha", conflicts[1].base)
+        assert.are.equal("/cast [mod:alt] Alpha", conflicts[1].ours)
+        assert.are.equal("/cast [mod:ctrl] Alpha", conflicts[1].theirs,
+          "so the editor can offer theirs")
+      end)
+    end)
+
+    it("takes the author's change to a field nobody overrode", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))  -- Notes untouched
+        local v2 = seq({ act("/cast [mod:shift] Alpha") }, "v2")
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.are.equal("v2", merged.MetaData.Notes)
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro)
+        assert.are.equal(0, #conflicts)
+      end)
+    end)
+
+    it("keeps a block the author added and one we added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast Mine") }))
+        local v2 = seq({ act("/cast Alpha"), act("/cast Theirs") })
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        local macros = {}
+        for _, a in ipairs(merged.Versions[1].Actions) do macros[#macros + 1] = a.macro end
+        assert.are.same({"/cast Alpha", "/cast Theirs", "/cast Mine"}, macros)
+      end)
+    end)
+
+    it("refuses what it cannot decode, leaving the fork alone", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        local b1 = blob("v1", v1)
+        fork(b1, v1, seq({ act("/cast Mine") }))
+        local d1 = GSEDeltas.pid1.d
+        assert.is_nil(GSE.RebaseDeltaFork("pid1", "!GSE3!+never-registered"))
+        assert.are.equal(b1, GSEDeltas.pid1.b)
+        assert.are.equal(d1, GSEDeltas.pid1.d)
+        assert.is_nil(GSE.RebaseDeltaFork("nosuchpid", b1))
+        assert.is_nil(GSE.RebaseDeltaFork(nil, b1))
+      end)
+    end)
+  end)
+
+  describe("describing the fork for the editor", function()
+    local function byField(list)
+      local m = {}
+      for _, e in ipairs(list or {}) do m[e.field] = e end
+      return m
+    end
+
+    it("reports a changed field against the block it was changed on", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast [mod:alt] Bravo") }))
+
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_nil(r.versions[1].blocks[1], "the untouched block reports nothing")
+        local f = byField(r.versions[1].blocks[2])
+        assert.are.equal("/cast [mod:shift] Bravo", f.macro.from, "the author's value")
+        assert.are.equal("/cast [mod:alt] Bravo", f.macro.to, "and yours")
+      end)
+    end)
+
+    it("pairs by content, so a moved block still reports on itself", function()
+      withStubs(function(blob)
+        -- The author's block order differs from ours; the edit must be
+        -- reported against the block it belongs to, not the index.
+        local v1 = seq({ act("/cast Opener"), act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast [mod:alt] Bravo") }))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_nil(r.versions[1].blocks[1])
+        assert.are.equal("/cast [mod:alt] Bravo", byField(r.versions[1].blocks[2]).macro.to)
+      end)
+    end)
+
+    it("marks a block we added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast Mine") }))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_true(r.versions[1].added[2])
+      end)
+    end)
+
+    it("reports top-level changes without dragging Versions in", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Beta") }, "mine"))
+        local r = GSE.DescribeForkChanges("pid1")
+        for _, e in ipairs(r.top) do
+          assert.is_not.equals("Versions", e.field, "Versions is the blocks' business")
+        end
+      end)
+    end)
+
+    it("carries the conflicts the last merge parked", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast [mod:ctrl] Alpha") })))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.are.equal(1, #r.conflicts)
+        assert.are.equal("/cast [mod:ctrl] Alpha", r.conflicts[1].theirs)
+      end)
+    end)
+
+    it("says nothing when there is no fork", function()
+      withStubs(function()
+        _G.GSEDeltas = {}
+        assert.is_nil(GSE.DescribeForkChanges("pid1"))
+        assert.is_nil(GSE.DescribeForkChanges(nil))
+      end)
+    end)
+  end)
+
+  -- Keeping the local value on a clash is a DEFAULT, not a verdict. This is
+  -- how the other choice gets made -- per field, which is the only grain that
+  -- answers "who wins" honestly. Sequence-wide keep-all / discard-all cannot.
+  describe("resolving one conflicted field the other way", function()
+    local function clashed(blob)
+      local v1 = seq({ act("/cast [mod:shift] Alpha"), act("/cast Bravo") })
+      fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha"), act("/cast Bravo") }))
+      local v2 = seq({ act("/cast [mod:ctrl] Alpha"), act("/cast Bravo") }, "v2")
+      local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+      return merged, conflicts
+    end
+
+    it("writes the author's value onto the block the conflict names", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        assert.are.equal(1, #conflicts)
+        local c = conflicts[1]
+        assert.is_true(GSE.ResolveForkConflict("pid1", merged, c.path, c.field))
+        assert.are.equal("/cast [mod:ctrl] Alpha", merged.Versions[1].Actions[1].macro)
+        assert.are.equal("/cast Bravo", merged.Versions[1].Actions[2].macro, "its neighbour is untouched")
+      end)
+    end)
+
+    it("drops the conflict once it is decided", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        GSE.ResolveForkConflict("pid1", merged, conflicts[1].path, conflicts[1].field)
+        assert.is_nil(GSEDeltas.pid1.conflicts, "the last one clears the list")
+        assert.is_nil(GSE.DescribeForkChanges("pid1").conflicts)
+      end)
+    end)
+
+    it("leaves the others alone when there is more than one", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1,
+          seq({ act("/cast [mod:alt] Alpha"), act("/cast [mod:alt] Bravo") }))
+        local v2 = seq({ act("/cast [mod:ctrl] Alpha"), act("/cast [mod:ctrl] Bravo") })
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.are.equal(2, #conflicts)
+
+        local first = conflicts[1]
+        GSE.ResolveForkConflict("pid1", merged, first.path, first.field)
+        assert.are.equal(1, #GSEDeltas.pid1.conflicts, "only the decided one goes")
+        assert.are.equal(first.path ~= GSEDeltas.pid1.conflicts[1].path, true,
+          "and it is the other one that remains")
+      end)
+    end)
+
+    it("refuses a path or field it does not hold", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        assert.is_false(GSE.ResolveForkConflict("pid1", merged, "v1/99", conflicts[1].field))
+        assert.is_false(GSE.ResolveForkConflict("pid1", merged, conflicts[1].path, "nosuchfield"))
+        assert.is_false(GSE.ResolveForkConflict("nosuchpid", merged, conflicts[1].path, conflicts[1].field))
+        assert.are.equal(1, #GSEDeltas.pid1.conflicts, "nothing was consumed")
+      end)
+    end)
+
+    it("honours the author removing a field", function()
+      withStubs(function(blob)
+        local withIcon = { Type = "Action", type = "macro", macro = "/cast Alpha", Icon = 5 }
+        local v1 = seq({ withIcon })
+        fork(blob("v1", v1), v1, seq({ { Type = "Action", type = "macro", macro = "/cast Alpha", Icon = 9 } }))
+        local v2 = seq({ { Type = "Action", type = "macro", macro = "/cast Alpha" } })
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        local c
+        for _, x in ipairs(conflicts) do if x.field == "Icon" then c = x end end
+        assert.is_not_nil(c, "Icon 5 -> 9 locally, removed upstream, is a clash")
+        assert.is_true(GSE.ResolveForkConflict("pid1", merged, c.path, c.field))
+        assert.is_nil(merged.Versions[1].Actions[1].Icon)
+      end)
+    end)
+  end)
+
+  -- A version exists on one side and not the other. Four ways that happens,
+  -- and they do not resolve the same way: added is additive, deleted is a
+  -- decision, and a deletion must never take work with it silently.
+  describe("a version added or removed on one side", function()
+    local function seq2(v1Actions, v2Actions, notes)
+      local s = seq(v1Actions, notes)
+      if v2Actions then s.Versions[2] = { Actions = v2Actions } end
+      return s
+    end
+
+    it("keeps a version we added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq2({ act("/cast Alpha") }, { act("/cast Mine") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_not_nil(merged.Versions[2], "our own version is not the author's to remove")
+        assert.are.equal("/cast Mine", merged.Versions[2].Actions[1].macro)
+      end)
+    end)
+
+    it("takes a version the author added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        local v2 = seq2({ act("/cast Alpha") }, { act("/cast Theirs") }, "v2")
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.are.equal("/cast Theirs", merged.Versions[2].Actions[1].macro)
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro,
+          "and our edit to version 1 is still there")
+      end)
+    end)
+
+    it("honours the author deleting a version we never touched", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        -- Our fork edits version 1 only; version 2 is untouched.
+        fork(blob("v1", base), base, seq2({ act("/cast [mod:alt] Alpha") }, { act("/cast Second") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_nil(merged.Versions[2], "nothing of ours was in it")
+        assert.are.equal("/cast [mod:alt] Alpha", merged.Versions[1].Actions[1].macro)
+      end)
+    end)
+
+    it("keeps a version we edited even when the author deletes it", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        fork(blob("v1", base), base, seq2({ act("/cast Alpha") }, { act("/cast [mod:alt] Second") }))
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast Alpha") }, "v2")))
+        assert.is_not_nil(merged.Versions[2], "an update must not delete work silently")
+        assert.are.equal("/cast [mod:alt] Second", merged.Versions[2].Actions[1].macro)
+      end)
+    end)
+
+    it("leaves a version we deleted deleted, even if the author edits it", function()
+      withStubs(function(blob)
+        local base = seq2({ act("/cast Alpha") }, { act("/cast Second") })
+        fork(blob("v1", base), base, seq({ act("/cast Alpha") }))
+        local v2 = seq2({ act("/cast Alpha") }, { act("/cast Second Revised") }, "v2")
+        local merged = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.is_nil(merged.Versions[2], "deleting it was the local change")
+      end)
+    end)
+  end)
+
+  -- The owner's own work coming home.
+  --
+  -- A website export comes back sealed even to its author, so an edit they
+  -- make in game becomes a fork of themselves. The Companion is the only thing
+  -- that sees both the signed-in owner and the SavedVariables, so it uploads
+  -- the delta; the server applies it to their record and sends it back IN THE
+  -- CLEAR. Plaintext arriving for something we hold a fork of is that round
+  -- trip completing: the record already contains the edit, and replaying the
+  -- fork on top of it would apply the same change twice.
+  describe("a flattened record coming back", function()
+    it("drops the fork when the content arrives in the clear", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        assert.is_not_nil(GSEDeltas.pid1)
+        -- What the server sends back: the edit, unsealed.
+        assert.is_true(GSE.ForgetDeltaFork("pid1"))
+        assert.is_nil(GSEDeltas.pid1)
+      end)
+    end)
+
+    it("forgets by object as well as by id", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Beta") }))
+        assert.is_true(GSE.ForgetDeltaFork({ MetaData = { PlatformID = "pid1" } }))
+        assert.is_nil(GSEDeltas.pid1)
+      end)
+    end)
+
+    it("leaves a fork alone when there is nothing to forget", function()
+      withStubs(function()
+        _G.GSEDeltas = {}
+        assert.is_false(GSE.ForgetDeltaFork("pid1"))
+        assert.is_false(GSE.ForgetDeltaFork(nil))
+        assert.is_false(GSE.ForgetDeltaFork({}))
+      end)
+    end)
+  end)
+end)

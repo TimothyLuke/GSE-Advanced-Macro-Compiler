@@ -998,3 +998,33 @@ L["%s is not an actionbar button on this client."] = true
 L["Works with any action bar addon, and with key-up or key-down."] = true
 -- The section holding BOTH; its children keep their own names.
 L["Bindings"] = true
+
+-- Delta forks: the local-changes view and its actions
+L["Local Changes"] = true
+L["Local Changes:"] = true
+L["Show"] = true
+L["Hide"] = true
+L["Discard"] = true
+L["Take Update"] = true
+L["Show what you changed on this sequence, beside the block you changed it on."] = true
+L["No local changes."] = true
+L["This block is unchanged."] = true
+L["You added this block."] = true
+L["Your changes"] = true
+L["Sequence settings"] = true
+L["The author published an update"] = true
+L["Take the Update"] = true
+L["Merge the author's new version, keeping your changes.  Anything you both changed is kept as yours and listed for you to decide."] = true
+L["Discard Local Changes"] = true
+L["Throw your changes away and go back to the author's version.  This cannot be undone."] = true
+L["The author also changed this"] = true
+L["theirs"] = true
+L["yours"] = true
+L["removed"] = true
+L["Update taken.  %d change you both made was kept as yours."] = true
+L["Update taken.  %d changes you both made were kept as yours."] = true
+L["Update taken."] = true
+L["Local changes discarded."] = true
+
+L["Use the author's %s"] = true
+L["Replace your %s on this block with the author's.  Your other changes stay."] = true

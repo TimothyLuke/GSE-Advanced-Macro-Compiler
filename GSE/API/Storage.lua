@@ -203,7 +203,7 @@ local function loadOneClass(classid)
                 -- A locally-edited copy lives in GSEDeltas; the stored blob is
                 -- only its base. Prefer the reconstruction or the edit is lost
                 -- the first time this class is loaded lazily.
-                local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(GSE.Library[classid][i])
+                local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(GSE.Library[classid][i], j)
                 if forked then GSE.Library[classid][i] = forked end
                 GSE.AuditProtectedAtRest("sequence", classid, i, j, GSE.Library[classid][i])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
@@ -261,7 +261,8 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
                 local forked = GSE.ApplyStoredDeltaFork
-                    and GSE.ApplyStoredDeltaFork(GSE.Library[classid][sequenceName])
+                    and GSE.ApplyStoredDeltaFork(GSE.Library[classid][sequenceName],
+                        GSESequences[classid][sequenceName])
                 if forked then GSE.Library[classid][sequenceName] = forked end
                 GSE.AuditProtectedAtRest("sequence", classid, sequenceName,
                     GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName])
@@ -311,6 +312,9 @@ end
 
 --- Remove a corrupt sequence from both compressed storage and the live library.
 function GSE.DeleteCorruptSequence(classid, name)
+    if GSE.ForgetDeltaFork and type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
+        GSE.ForgetDeltaFork(GSE.Library[classid][name])
+    end
     if type(GSESequences) == "table" and type(GSESequences[classid]) == "table" then
         GSESequences[classid][name] = nil
     end
@@ -333,6 +337,10 @@ function GSE.DeleteVariable(name)
     -- Companion sidecar: name ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ server-id map. Clearing it stops the
     -- next sync from re-uploading the deleted variable on the basis of
     -- a stale stamp.
+    -- A variable can carry a fork for the same reason a sequence can.
+    if GSE.ForgetDeltaFork and GSEVariablePlatformIDs then
+        GSE.ForgetDeltaFork(GSEVariablePlatformIDs[name])
+    end
     if GSEVariablePlatformIDs then GSEVariablePlatformIDs[name] = nil end
 end
 
@@ -354,6 +362,11 @@ end
 
 --- Delete a sequence from the library
 function GSE.DeleteSequence(classid, sequenceName)
+    -- Read the id before the record goes, or there is nothing left to key by.
+    if GSE.ForgetDeltaFork then
+        GSE.ForgetDeltaFork(GSE.Library[tonumber(classid)]
+            and GSE.Library[tonumber(classid)][sequenceName])
+    end
     GSE.Library[tonumber(classid)][sequenceName] = nil
     GSESequences[tonumber(classid)][sequenceName] = nil
     GSE.ForgetCorruptSequence(classid, sequenceName)
@@ -685,6 +698,21 @@ function GSE.StoreEncodedSequence(name, encoded)
     local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
     if GSE.isEmpty(GSESequences) then GSESequences = {} end
     if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    -- Arriving in the CLEAR for something we hold a fork of means the server
+    -- flattened it: this is the owner's own work, their edit was applied to
+    -- their record, and what just came back already contains it. The fork
+    -- described a divergence from a sealed base that no longer exists, so
+    -- keeping it would replay the edit on top of itself.
+    --
+    -- Only ever on plaintext. A sealed blob is still somebody else's content
+    -- and its fork is still the local divergence from it.
+    if GSE.ForgetDeltaFork and not (GSE.IsPackedBlob and GSE.IsPackedBlob(encoded)) then
+        local meta = seq.MetaData or {}
+        local pid = meta.PlatformID or seq.PlatformID
+        if type(pid) == "string" and type(GSEDeltas) == "table" and GSEDeltas[pid] then
+            GSE.ForgetDeltaFork(pid)
+        end
+    end
     GSESequences[classid][name] = encoded
     -- Drop any stale decoded copy so the lazy loader re-decodes from the
     -- stored string (its canonical migrate + variable-load path).

@@ -581,6 +581,87 @@ local function ForwardMacroEditorMouseWheel(macroEditBox, frame)
     end
 end
 
+-- Local-changes view.
+--
+-- An edit to protected content never reaches GSESequences; it is kept as a
+-- delta beside it, so the sequence on screen is a reconstruction and nothing
+-- until now said which parts of it were the author's and which were yours.
+-- This renders that answer into the column that already sits beside each block
+-- showing its compiled output -- the edit is read where it was made, rather
+-- than as one opaque blob somewhere else.
+--
+-- The report is built once per redraw and cached on the editor: it decodes the
+-- packed base and replays the delta, which is not work to repeat for every
+-- block on the page. `false` is the cached "asked, and there is no fork",
+-- distinct from nil meaning "not asked yet".
+local function ForkReportFor(editframe)
+    if editframe.forkReport ~= nil then return editframe.forkReport or nil end
+    local meta = (editframe.Sequence and editframe.Sequence.MetaData) or {}
+    local pid = meta.PlatformID or (editframe.Sequence and editframe.Sequence.PlatformID)
+    local report = (pid and GSE.DescribeForkChanges) and GSE.DescribeForkChanges(pid) or nil
+    editframe.forkReport = report or false
+    return report
+end
+
+local function forkValueText(v)
+    if v == nil then return GSEOptions.UNKNOWN .. L["removed"] .. Statics.StringReset end
+    if type(v) == "table" then return "{...}" end
+    return tostring(v)
+end
+
+-- The conflicts parked against ONE block, so the panel can offer a control per
+-- field rather than only describing them.
+local function LocalChangeConflicts(editframe, version, keyPath)
+    local report = ForkReportFor(editframe)
+    if not report or not report.conflicts then return {} end
+    local idx = (type(keyPath) == "table" and #keyPath == 1) and keyPath[1] or nil
+    if not idx then return {} end
+    local path = "v" .. tostring(version) .. "/" .. tostring(idx)
+    local out = {}
+    for _, c in ipairs(report.conflicts) do
+        if c.path == path then out[#out + 1] = c end
+    end
+    return out
+end
+
+-- One block's entry in the report, as the text the side panel shows.
+local function LocalChangesText(editframe, version, keyPath)
+    local report = ForkReportFor(editframe)
+    if not report then return L["No local changes."] end
+    -- Nested blocks are reported against their top-level parent for now; the
+    -- report keys top-level positions, which is what this column lines up with.
+    local idx = (type(keyPath) == "table" and #keyPath == 1) and keyPath[1] or nil
+    local v = report.versions[version] or report.versions[tostring(version)]
+    local out = {}
+    if idx and v then
+        if v.added[idx] then
+            out[#out + 1] = GSEOptions.KEYWORD .. L["You added this block."] .. Statics.StringReset
+        end
+        for _, e in ipairs(v.blocks[idx] or {}) do
+            out[#out + 1] = string.format("%s%s%s: %s  %s>%s  %s",
+                GSEOptions.KEYWORD, tostring(e.field), Statics.StringReset,
+                forkValueText(e.from), GSEOptions.UNKNOWN, Statics.StringReset, forkValueText(e.to))
+        end
+    end
+    -- Anything the author changed underneath you, on this block, still waiting
+    -- on a decision. Shown here because this is where it can be judged.
+    local path = "v" .. tostring(version) .. "/" .. tostring(idx)
+    local clashes = {}
+    for _, c in ipairs(report.conflicts or {}) do
+        if c.path == path then clashes[#clashes + 1] = c end
+    end
+    if #clashes > 0 then
+        out[#out + 1] = ""
+        out[#out + 1] = GSEOptions.UNKNOWN .. L["The author also changed this"] .. Statics.StringReset
+        for _, c in ipairs(clashes) do
+            out[#out + 1] = string.format("%s: %s %s / %s %s", tostring(c.field),
+                L["theirs"], forkValueText(c.theirs), L["yours"], forkValueText(c.ours))
+        end
+    end
+    if #out == 0 then return L["This block is unchanged."] end
+    return table.concat(out, "\n")
+end
+
 -- Inline "X/255" indicator anchored to the top-right of the macro edit box,
 -- replacing the old side-panel that listed compiled output. Created on first
 -- call; subsequent calls just retext + recolour.
@@ -3089,7 +3170,17 @@ function GSE.CreateEditor()
         resetToolbarRow:SetHeight(28)
         if resetToolbarRow.SetFlowGap then resetToolbarRow:SetFlowGap(4) end
         if resetToolbarRow.SetFlowVAlign then resetToolbarRow:SetFlowVAlign("CENTER") end
-        if resetToolbarRow.SetFlowOffset then resetToolbarRow:SetFlowOffset(0, 4) end
+        -- Y here is inverted: a LARGER number lifts the row. 5 sits it 3 lower
+        -- than the 8 that matches topToolbarSpacer. The container's list gap is
+        -- 0, so this is the whole of the row's top spacing.
+        if resetToolbarRow.SetFlowOffset then resetToolbarRow:SetFlowOffset(0, 5) end
+        -- No trailing space after the last button: the row's default right
+        -- flow padding is 6, and the spec for this row ends at Discard.
+        -- No vertical padding: 5 top and bottom on a 28px row holding 24px
+        -- controls leaves FlowVAlign nothing to centre within, so everything
+        -- sat against the top. Left 6 keeps the indent, right 0 keeps the row
+        -- ending at Discard.
+        if resetToolbarRow.SetFlowPadding then resetToolbarRow:SetFlowPadding(6, 0, 0, 0) end
 
         if GSE.isEmpty(editframe.Sequence.Versions[version].InbuiltVariables) then
             editframe.Sequence.Versions[version].InbuiltVariables = {}
@@ -3138,6 +3229,10 @@ function GSE.CreateEditor()
         resetToolbarRow:AddChild(resetHeaderIndent)
         resetToolbarRow:AddChild(resetLabel)
         resetToolbarRow:AddChild(combatResetDropdown)
+        -- The fork controls are added to this row by the caller, and need to
+        -- know where the left-hand content ends. The dropdown is local to this
+        -- function, so hand it over on the row itself.
+        resetToolbarRow.gseResetDropdown = combatResetDropdown
         combatResetDropdown:SetValue(combatResetKey(editframe.Sequence.Versions[version].InbuiltVariables.Combat))
         combatResetDropdown:SetCallback(
             "OnValueChanged",
@@ -5475,9 +5570,16 @@ function GSE.CreateEditor()
                         charcount = string.format(L["%s/255 Characters Used"], compiledLen)
                     end
                     compiledMacro.label:SetNonSpaceWrap(true)
-                    compiledMacro:SetText(compiledmacrotext .. "\n\n" .. charcount)
+                    if editframe.ShowLocalChanges then
+                        compiledMacro:SetText(LocalChangesText(editframe, version, keyPath))
+                    else
+                        compiledMacro:SetText(compiledmacrotext .. "\n\n" .. charcount)
+                    end
 
-                    local previewOpen = editframe.PreviewFrame and editframe.PreviewFrame:IsShown()
+                    -- The column is the compiled preview's, and the
+                    -- local-changes view borrows it: either reason opens it.
+                    local previewOpen = (editframe.PreviewFrame and editframe.PreviewFrame:IsShown())
+                        or editframe.ShowLocalChanges
                     if previewOpen then
                         local previewYOffset = (macroeditbox.labelHeight or 12) + (macroeditbox.verticalOffset or 4) - 2
                         local previewHeight =
@@ -5488,6 +5590,17 @@ function GSE.CreateEditor()
                         local compiledPreview = UI:Create("ScrollFrame")
                         compiledPreview:SetRelativeWidth(0.45)
                         compiledPreview:SetHeight(previewHeight)
+                        -- No scrollbar. This column is sized from the macro
+                        -- box beside it, and that box fits itself to its
+                        -- content -- so the bar is furniture on a panel that
+                        -- is already the right height. The wheel still scrolls
+                        -- it (EnableMouseWheel is on the scroll frame, not the
+                        -- bar) for the rare block whose preview runs long, and
+                        -- turning the bar off also gives the text back the
+                        -- 24px the bar was reserving.
+                        if compiledPreview.SetScrollBarEnabled then
+                            compiledPreview:SetScrollBarEnabled(false)
+                        end
                         if compiledPreview.SetFlowOffset then compiledPreview:SetFlowOffset(0, -previewYOffset) end
                         if compiledPreview.SetListPadding then compiledPreview:SetListPadding(0, 0, 0, 0) end
                         if compiledPreview.SetListGap then compiledPreview:SetListGap(0) end
@@ -5497,6 +5610,41 @@ function GSE.CreateEditor()
                         macroeditbox:SetRelativeWidth(0.5)
                         if macrolayout.SetFlowGap then macrolayout:SetFlowGap(6) end
                         compiledPreview:AddChild(compiledMacro)
+                        -- One button per field you and the author both changed.
+                        -- The merge kept yours; this is how the other choice is
+                        -- made, per field, on the block it belongs to. Anything
+                        -- coarser cannot answer "who wins" -- it is either all
+                        -- of your work or none of it.
+                        if editframe.ShowLocalChanges then
+                            for _, c in ipairs(LocalChangeConflicts(editframe, version, keyPath)) do
+                                local takeField = UI:Create("Button")
+                                takeField:SetFullWidth(true)
+                                takeField:SetText(string.format(L["Use the author's %s"], tostring(c.field)))
+                                takeField:SetCallback("OnClick", function()
+                                    if InCombatLockdown() then
+                                        GSE.Print(L["Local Changes"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+                                        return
+                                    end
+                                    local pid = (editframe.Sequence.MetaData or {}).PlatformID
+                                    if not GSE.ResolveForkConflict(pid, editframe.Sequence, c.path, c.field) then return end
+                                    -- Persist through the normal save: for
+                                    -- protected content ReplaceSequence re-diffs
+                                    -- the fork, so there stays one story about
+                                    -- how an edit is written.
+                                    GSE.ReplaceSequence(editframe.ClassID or GSE.GetCurrentClassID(),
+                                        editframe.SequenceName, editframe.Sequence)
+                                    editframe.forkReport = nil
+                                    if editframe.RefreshCurrentVersion then editframe.RefreshCurrentVersion() end
+                                end)
+                                takeField:SetCallback("OnEnter", function()
+                                    GSE.CreateToolTip(string.format(L["Use the author's %s"], tostring(c.field)),
+                                        string.format(L["Replace your %s on this block with the author's.  Your other changes stay."],
+                                            tostring(c.field)), editframe)
+                                end)
+                                takeField:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+                                compiledPreview:AddChild(takeField)
+                            end
+                        end
                         macrolayout:AddChild(macroeditbox)
                         macrolayout:AddChild(compiledPreview)
 			else
@@ -6254,6 +6402,8 @@ function GSE.CreateEditor()
         layoutcontainer:SetFullWidth(true)
         layoutcontainer:SetLayout("List")
         if layoutcontainer.SetFlowOffset then layoutcontainer:SetFlowOffset(0, 4) end
+        -- Rows state their own top padding; the default gap would stack on it.
+        if layoutcontainer.SetListGap then layoutcontainer:SetListGap(0) end
 
         local linegroup1 = UI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
@@ -6463,6 +6613,114 @@ function GSE.CreateEditor()
                 GSE.WagoAnalytics:Switch("Compile Template", true)
             end
         )
+        -- Fork controls. Only for a sequence that HAS a fork -- for everything
+        -- else there is nothing to show, take or discard, and three dead
+        -- buttons on every sequence would be worse than none.
+        local forkMeta = (editframe.Sequence and editframe.Sequence.MetaData) or {}
+        local forkPid = forkMeta.PlatformID or (editframe.Sequence and editframe.Sequence.PlatformID)
+        local hasFork = forkPid and type(GSEDeltas) == "table" and type(GSEDeltas[forkPid]) == "table"
+        -- `rebuildTree` only for the actions that change the SEQUENCE. Toggling
+        -- the local-changes view changes which text the preview column renders
+        -- and nothing else -- no name, no version list, no fork state -- so
+        -- rebuilding the tree for it is a visible flicker buying nothing.
+        local function afterForkAction(rebuildTree)
+            editframe.forkReport = nil
+            if editframe.RefreshCurrentVersion then editframe.RefreshCurrentVersion() end
+            if rebuildTree and editframe.ManageTree then editframe.ManageTree() end
+        end
+
+        local localChanges
+        if hasFork then
+            localChanges = UI:Create("Button")
+            -- The row's label says what these act on, so the button only has to
+            -- say what the click does -- and it says the ACTION, not the state.
+            localChanges:SetText(editframe.ShowLocalChanges and L["Hide"] or L["Show"])
+            localChanges:SetWidth(70)
+            if localChanges.SetElvUIBackgroundShown then localChanges:SetElvUIBackgroundShown(true) end
+            localChanges:SetCallback("OnClick", function()
+                editframe.ShowLocalChanges = not editframe.ShowLocalChanges
+                afterForkAction()
+            end)
+            localChanges:SetCallback("OnEnter", function()
+                GSE.CreateToolTip(L["Local Changes"],
+                    L["Show what you changed on this sequence, beside the block you changed it on."], editframe)
+            end)
+            localChanges:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        end
+
+        -- An update the author published, parked at load rather than applied:
+        -- nothing changes a sequence under the player, so taking it is a
+        -- deliberate act and this is the button for it.
+        local takeUpdate
+        if hasFork and GSE.PendingDeltaUpdate and GSE.PendingDeltaUpdate(forkPid) then
+            takeUpdate = UI:Create("Button")
+            takeUpdate:SetText(L["Take Update"])
+            takeUpdate:SetWidth(110)
+            if takeUpdate.SetElvUIBackgroundShown then takeUpdate:SetElvUIBackgroundShown(true) end
+            takeUpdate:SetCallback("OnClick", function()
+                if InCombatLockdown() then
+                    GSE.Print(L["The author published an update"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+                    return
+                end
+                local merged, conflicts = GSE.RebaseDeltaFork(forkPid)
+                if not merged then return end
+                local classid = editframe.ClassID or GSE.GetCurrentClassID()
+                GSE.Library[classid][editframe.SequenceName] = merged
+                editframe.Sequence = merged
+                local n = conflicts and #conflicts or 0
+                if n == 0 then
+                    GSE.Print(L["Update taken."])
+                else
+                    -- Both of you changed the same field. Yours was kept; the
+                    -- panel lists them so the choice is an informed one.
+                    GSE.Print(string.format(n == 1
+                        and L["Update taken.  %d change you both made was kept as yours."]
+                        or L["Update taken.  %d changes you both made were kept as yours."], n))
+                    editframe.ShowLocalChanges = true
+                end
+                afterForkAction(true)
+            end)
+            takeUpdate:SetCallback("OnEnter", function()
+                GSE.CreateToolTip(L["Take the Update"],
+                    L["Merge the author's new version, keeping your changes.  Anything you both changed is kept as yours and listed for you to decide."], editframe)
+            end)
+            takeUpdate:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        end
+
+        local discardFork
+        if hasFork then
+            discardFork = UI:Create("Button")
+            discardFork:SetText(L["Discard"])
+            discardFork:SetWidth(80)
+            if discardFork.SetElvUIBackgroundShown then discardFork:SetElvUIBackgroundShown(true) end
+            discardFork:SetCallback("OnClick", function()
+                if InCombatLockdown() then
+                    GSE.Print(L["Discard Local Changes"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+                    return
+                end
+                UI.ShowConfirmDialog({
+                    owner = editframe,
+                    title = L["Discard Local Changes"],
+                    message = L["Throw your changes away and go back to the author's version.  This cannot be undone."],
+                    confirmText = L["Discard Local Changes"],
+                    onConfirm = function()
+                        local classid = editframe.ClassID or GSE.GetCurrentClassID()
+                        if GSE.DiscardDeltaFork(classid, editframe.SequenceName) then
+                            editframe.Sequence = GSE.Library[classid][editframe.SequenceName]
+                            editframe.ShowLocalChanges = false
+                            GSE.Print(L["Local changes discarded."])
+                        end
+                        afterForkAction(true)
+                    end,
+                })
+            end)
+            discardFork:SetCallback("OnEnter", function()
+                GSE.CreateToolTip(L["Discard Local Changes"],
+                    L["Throw your changes away and go back to the author's version.  This cannot be undone."], editframe)
+            end)
+            discardFork:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        end
+
         previewMacro:SetCallback(
             "OnEnter",
             function()
@@ -7358,7 +7616,41 @@ function GSE.CreateEditor()
         if GSE.CanRawEdit and GSE.CanRawEdit() then
             linegroup1:AddChild(raweditbutton)
         end
+
+        -- Fork controls get a row of their own, under the toolbar and ending
+        -- flush with it. They cannot go ON the toolbar -- it is already 697px
+        -- of buttons against an editor that can be 800 wide -- and beside
+        -- "Resets Combat" they left the dropdown no room.
+        --
         resetToolbarRow = CreateCombatResetRow(version)
+        -- Fork controls live on the combat-reset row:
+        --   7 indent + 110 label + 235 dropdown + 59 spacer
+        --   + 105 "Local Changes:" + 70 Show + 80 Discard + six 4px flow gaps
+        local forkSpacer
+        if localChanges or takeUpdate or discardFork then
+            forkSpacer = UI:Create("Spacer")
+            forkSpacer:SetWidth(59)
+            forkSpacer:SetHeight(1)
+            resetToolbarRow:AddChild(forkSpacer)
+
+            local forkLabel = UI:Create("Label")
+            forkLabel:SetText(L["Local Changes:"])
+            forkLabel:SetWidth(105)
+            forkLabel:SetHeight(24)
+            if forkLabel.SetJustifyV then forkLabel:SetJustifyV("MIDDLE") end
+            if forkLabel.SetJustifyH then forkLabel:SetJustifyH("RIGHT") end
+            -- Gold, not keywordColor(): that returns white under EllesmereUI
+            -- and the theme's KEYWORD accent elsewhere, neither of which is gold.
+            forkLabel:SetColor(1, 0.82, 0)
+            resetToolbarRow:AddChild(forkLabel)
+            -- Take Update first: it is the one that says something happened,
+            -- and it is only built when it has. Discard is last, being the
+            -- destructive one -- and last is what makes it the widget whose
+            -- right edge is measured.
+            if takeUpdate then resetToolbarRow:AddChild(takeUpdate) end
+            if localChanges then resetToolbarRow:AddChild(localChanges) end
+            if discardFork then resetToolbarRow:AddChild(discardFork) end
+        end
 
         local topToolbarSpacer = UI:Create("Spacer")
         topToolbarSpacer:SetHeight(8)
@@ -8149,7 +8441,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     -- reconstruction directly would make those edits land in whatever table the
     -- fork was rebuilt into, before the user has pressed anything.
     if sequence and GSE.ApplyStoredDeltaFork then
-        local forked = GSE.ApplyStoredDeltaFork(sequence)
+        local forked = GSE.ApplyStoredDeltaFork(sequence, GSESequences[classid][sequenceName])
         if forked then sequence = GSE.CloneSequence(forked) end
     end
 
