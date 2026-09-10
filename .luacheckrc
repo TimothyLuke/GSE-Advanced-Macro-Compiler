@@ -363,6 +363,8 @@ globals = {
     "GetSpecialization",
     "GetSpecializationInfo",
     "GetNumSpecializations",
+    "UnitRace",
+    "IsSpellKnown",
     "GetSpecializationInfoByID",
     "GetSpecializationRole",
     "GetSpellCooldown",

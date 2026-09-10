@@ -994,6 +994,24 @@ local function actionButtonNames()
             if f and f:IsObjectType("CheckButton") then buttonlist["ButtonForge" .. i] = "ButtonForge" .. i end
         end
     end
+    -- EllesmereUI's action bars are its own frames, not Blizzard's, so no
+    -- prefix above finds them. Created as "EABButton" .. slot by
+    -- EllesmereUIActionBars (GetOrCreateButton); 180 is the slot ceiling that
+    -- addon scans to itself.
+    --
+    -- Tested for by frame, the way the rest of GSE tests for these: Utils.lua
+    -- gates its OnClick hook on _G["EABButton1"] and Events.lua matches the
+    -- name with string.sub(Button, 1, 9) == "EABButton". Neither reads a bare
+    -- EllesmereUI global -- which is why none is declared in .luacheckrc, and
+    -- why reading one here would be the only such access in the addon. It
+    -- would also be the wrong question: the frames are made by
+    -- EllesmereUIActionBars, a different addon from EllesmereUI. No outer gate
+    -- at all, so a setup whose first built slot is not 1 still lists.
+    -- Grouping is automatic -- actionButtonGroups splits the trailing number,
+    -- so these land under one "EABButton" submenu.
+    for i = 1, 180 do
+        if _G["EABButton" .. i] then buttonlist["EABButton" .. i] = "EABButton" .. i end
+    end
     -- Anything a saved override names that exists but was not auto-detected.
     local binds = GSE_C["ActionBarBinds"] or {}
     for _, buttons in pairs(binds["Specialisations"] or {}) do
