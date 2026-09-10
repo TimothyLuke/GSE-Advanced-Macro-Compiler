@@ -1003,6 +1003,11 @@ L["%s is not an actionbar button on this client."] = true
 
 -- Delta forks: the local-changes view and its actions
 L["Local Changes"] = true
+L["Local Changes:"] = true
+L["Show"] = true
+L["Hide"] = true
+L["Discard"] = true
+L["Take Update"] = true
 L["Show what you changed on this sequence, beside the block you changed it on."] = true
 L["No local changes."] = true
 L["This block is unchanged."] = true

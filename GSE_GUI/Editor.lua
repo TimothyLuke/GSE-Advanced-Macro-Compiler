@@ -3170,7 +3170,17 @@ function GSE.CreateEditor()
         resetToolbarRow:SetHeight(28)
         if resetToolbarRow.SetFlowGap then resetToolbarRow:SetFlowGap(4) end
         if resetToolbarRow.SetFlowVAlign then resetToolbarRow:SetFlowVAlign("CENTER") end
-        if resetToolbarRow.SetFlowOffset then resetToolbarRow:SetFlowOffset(0, 4) end
+        -- Y here is inverted: a LARGER number lifts the row. 5 sits it 3 lower
+        -- than the 8 that matches topToolbarSpacer. The container's list gap is
+        -- 0, so this is the whole of the row's top spacing.
+        if resetToolbarRow.SetFlowOffset then resetToolbarRow:SetFlowOffset(0, 5) end
+        -- No trailing space after the last button: the row's default right
+        -- flow padding is 6, and the spec for this row ends at Discard.
+        -- No vertical padding: 5 top and bottom on a 28px row holding 24px
+        -- controls leaves FlowVAlign nothing to centre within, so everything
+        -- sat against the top. Left 6 keeps the indent, right 0 keeps the row
+        -- ending at Discard.
+        if resetToolbarRow.SetFlowPadding then resetToolbarRow:SetFlowPadding(6, 0, 0, 0) end
 
         if GSE.isEmpty(editframe.Sequence.Versions[version].InbuiltVariables) then
             editframe.Sequence.Versions[version].InbuiltVariables = {}
@@ -3219,6 +3229,10 @@ function GSE.CreateEditor()
         resetToolbarRow:AddChild(resetHeaderIndent)
         resetToolbarRow:AddChild(resetLabel)
         resetToolbarRow:AddChild(combatResetDropdown)
+        -- The fork controls are added to this row by the caller, and need to
+        -- know where the left-hand content ends. The dropdown is local to this
+        -- function, so hand it over on the row itself.
+        resetToolbarRow.gseResetDropdown = combatResetDropdown
         combatResetDropdown:SetValue(combatResetKey(editframe.Sequence.Versions[version].InbuiltVariables.Combat))
         combatResetDropdown:SetCallback(
             "OnValueChanged",
@@ -5576,6 +5590,17 @@ function GSE.CreateEditor()
                         local compiledPreview = UI:Create("ScrollFrame")
                         compiledPreview:SetRelativeWidth(0.45)
                         compiledPreview:SetHeight(previewHeight)
+                        -- No scrollbar. This column is sized from the macro
+                        -- box beside it, and that box fits itself to its
+                        -- content -- so the bar is furniture on a panel that
+                        -- is already the right height. The wheel still scrolls
+                        -- it (EnableMouseWheel is on the scroll frame, not the
+                        -- bar) for the rare block whose preview runs long, and
+                        -- turning the bar off also gives the text back the
+                        -- 24px the bar was reserving.
+                        if compiledPreview.SetScrollBarEnabled then
+                            compiledPreview:SetScrollBarEnabled(false)
+                        end
                         if compiledPreview.SetFlowOffset then compiledPreview:SetFlowOffset(0, -previewYOffset) end
                         if compiledPreview.SetListPadding then compiledPreview:SetListPadding(0, 0, 0, 0) end
                         if compiledPreview.SetListGap then compiledPreview:SetListGap(0) end
@@ -6377,6 +6402,8 @@ function GSE.CreateEditor()
         layoutcontainer:SetFullWidth(true)
         layoutcontainer:SetLayout("List")
         if layoutcontainer.SetFlowOffset then layoutcontainer:SetFlowOffset(0, 4) end
+        -- Rows state their own top padding; the default gap would stack on it.
+        if layoutcontainer.SetListGap then layoutcontainer:SetListGap(0) end
 
         local linegroup1 = UI:Create("SimpleGroup")
         linegroup1:SetLayout("Flow")
@@ -6592,19 +6619,24 @@ function GSE.CreateEditor()
         local forkMeta = (editframe.Sequence and editframe.Sequence.MetaData) or {}
         local forkPid = forkMeta.PlatformID or (editframe.Sequence and editframe.Sequence.PlatformID)
         local hasFork = forkPid and type(GSEDeltas) == "table" and type(GSEDeltas[forkPid]) == "table"
-        local function afterForkAction()
+        -- `rebuildTree` only for the actions that change the SEQUENCE. Toggling
+        -- the local-changes view changes which text the preview column renders
+        -- and nothing else -- no name, no version list, no fork state -- so
+        -- rebuilding the tree for it is a visible flicker buying nothing.
+        local function afterForkAction(rebuildTree)
             editframe.forkReport = nil
             if editframe.RefreshCurrentVersion then editframe.RefreshCurrentVersion() end
-            if editframe.ManageTree then editframe.ManageTree() end
+            if rebuildTree and editframe.ManageTree then editframe.ManageTree() end
         end
 
         local localChanges
         if hasFork then
             localChanges = UI:Create("Button")
-            localChanges:SetText(L["Local Changes"])
-            localChanges:SetWidth(150)
+            -- The row's label says what these act on, so the button only has to
+            -- say what the click does -- and it says the ACTION, not the state.
+            localChanges:SetText(editframe.ShowLocalChanges and L["Hide"] or L["Show"])
+            localChanges:SetWidth(70)
             if localChanges.SetElvUIBackgroundShown then localChanges:SetElvUIBackgroundShown(true) end
-            if localChanges.SetFlowOffset then localChanges:SetFlowOffset(0, -2) end
             localChanges:SetCallback("OnClick", function()
                 editframe.ShowLocalChanges = not editframe.ShowLocalChanges
                 afterForkAction()
@@ -6622,10 +6654,9 @@ function GSE.CreateEditor()
         local takeUpdate
         if hasFork and GSE.PendingDeltaUpdate and GSE.PendingDeltaUpdate(forkPid) then
             takeUpdate = UI:Create("Button")
-            takeUpdate:SetText(L["Take the Update"])
-            takeUpdate:SetWidth(150)
+            takeUpdate:SetText(L["Take Update"])
+            takeUpdate:SetWidth(110)
             if takeUpdate.SetElvUIBackgroundShown then takeUpdate:SetElvUIBackgroundShown(true) end
-            if takeUpdate.SetFlowOffset then takeUpdate:SetFlowOffset(0, -2) end
             takeUpdate:SetCallback("OnClick", function()
                 if InCombatLockdown() then
                     GSE.Print(L["The author published an update"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
@@ -6647,7 +6678,7 @@ function GSE.CreateEditor()
                         or L["Update taken.  %d changes you both made were kept as yours."], n))
                     editframe.ShowLocalChanges = true
                 end
-                afterForkAction()
+                afterForkAction(true)
             end)
             takeUpdate:SetCallback("OnEnter", function()
                 GSE.CreateToolTip(L["Take the Update"],
@@ -6659,10 +6690,9 @@ function GSE.CreateEditor()
         local discardFork
         if hasFork then
             discardFork = UI:Create("Button")
-            discardFork:SetText(L["Discard Local Changes"])
-            discardFork:SetWidth(190)
+            discardFork:SetText(L["Discard"])
+            discardFork:SetWidth(80)
             if discardFork.SetElvUIBackgroundShown then discardFork:SetElvUIBackgroundShown(true) end
-            if discardFork.SetFlowOffset then discardFork:SetFlowOffset(0, -2) end
             discardFork:SetCallback("OnClick", function()
                 if InCombatLockdown() then
                     GSE.Print(L["Discard Local Changes"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
@@ -6680,7 +6710,7 @@ function GSE.CreateEditor()
                             editframe.ShowLocalChanges = false
                             GSE.Print(L["Local changes discarded."])
                         end
-                        afterForkAction()
+                        afterForkAction(true)
                     end,
                 })
             end)
@@ -7583,15 +7613,44 @@ function GSE.CreateEditor()
         linegroup1:AddChild(versionLabel)
         linegroup1:AddChild(delversionbutton)
         linegroup1:AddChild(previewMacro)
-        -- After the compiled-template button: it is the same column they act
-        -- on, and they only exist when the sequence is forked.
-        if localChanges then linegroup1:AddChild(localChanges) end
-        if takeUpdate then linegroup1:AddChild(takeUpdate) end
-        if discardFork then linegroup1:AddChild(discardFork) end
         if GSE.CanRawEdit and GSE.CanRawEdit() then
             linegroup1:AddChild(raweditbutton)
         end
+
+        -- Fork controls get a row of their own, under the toolbar and ending
+        -- flush with it. They cannot go ON the toolbar -- it is already 697px
+        -- of buttons against an editor that can be 800 wide -- and beside
+        -- "Resets Combat" they left the dropdown no room.
+        --
         resetToolbarRow = CreateCombatResetRow(version)
+        -- Fork controls live on the combat-reset row:
+        --   7 indent + 110 label + 235 dropdown + 59 spacer
+        --   + 105 "Local Changes:" + 70 Show + 80 Discard + six 4px flow gaps
+        local forkSpacer
+        if localChanges or takeUpdate or discardFork then
+            forkSpacer = UI:Create("Spacer")
+            forkSpacer:SetWidth(59)
+            forkSpacer:SetHeight(1)
+            resetToolbarRow:AddChild(forkSpacer)
+
+            local forkLabel = UI:Create("Label")
+            forkLabel:SetText(L["Local Changes:"])
+            forkLabel:SetWidth(105)
+            forkLabel:SetHeight(24)
+            if forkLabel.SetJustifyV then forkLabel:SetJustifyV("MIDDLE") end
+            if forkLabel.SetJustifyH then forkLabel:SetJustifyH("RIGHT") end
+            -- Gold, not keywordColor(): that returns white under EllesmereUI
+            -- and the theme's KEYWORD accent elsewhere, neither of which is gold.
+            forkLabel:SetColor(1, 0.82, 0)
+            resetToolbarRow:AddChild(forkLabel)
+            -- Take Update first: it is the one that says something happened,
+            -- and it is only built when it has. Discard is last, being the
+            -- destructive one -- and last is what makes it the widget whose
+            -- right edge is measured.
+            if takeUpdate then resetToolbarRow:AddChild(takeUpdate) end
+            if localChanges then resetToolbarRow:AddChild(localChanges) end
+            if discardFork then resetToolbarRow:AddChild(discardFork) end
+        end
 
         local topToolbarSpacer = UI:Create("Spacer")
         topToolbarSpacer:SetHeight(8)
