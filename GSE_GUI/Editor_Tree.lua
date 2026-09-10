@@ -1026,15 +1026,17 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
 
     -- The Keybindings node itself fell through the guard below and left the
     -- pane blank.  Land on the chooser instead: two tiles that select the
-    -- Actionbar Overrides or Keybindings node for you.
+    -- Button Bindings or Keybindings node for you.
     if #unique == 1 then
         ShowSectionFooter(editframe)
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeScrollableRightPane(container)
-        addSectionDivider(rc, L["Keybindings"] or "Keybindings", Statics.Icons.Keybindings)
+        -- The chooser covers both, so it is titled for both.
+        local sectionName = L["Bindings"] or "Bindings"
+        addSectionDivider(rc, sectionName, Statics.Icons.Keybindings)
         editframe.showKeybindChooser(rc)
         editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
+        editframe:SetTitle("GSE: " .. sectionName)
         return
     end
 
@@ -1075,10 +1077,10 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
     elseif kbtype == "AO" and specialization then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer({title = L["Actionbar Overrides"] or "Actionbar Overrides", icon = Statics.Icons.Button})
+        local rc = makeRightContainer({title = L["Button Bindings"] or "Button Bindings", icon = Statics.Icons.Button})
         editframe.showKeybind(nil, nil, specialization, loadout, "AO", rc)
         editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Actionbar Overrides"] or "Actionbar Overrides"))
+        editframe:SetTitle("GSE: " .. (L["Button Bindings"] or "Button Bindings"))
     end
 end
 

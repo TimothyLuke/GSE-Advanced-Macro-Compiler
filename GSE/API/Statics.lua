@@ -492,9 +492,7 @@ Statics.Icons.GSE_Logo_Dark = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_512x512-T
 Statics.Icons.MinimapIcon = "Interface\\Addons\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png"
 -- Screenshot of the right-click "Change Sequence" menu on an action button,
 -- 148x181, drawn 1:1: the quickest way to set an override, shown on the chooser.
-Statics.Icons.OverrideMenu = "Interface\\Addons\\GSE_GUI\\Assets\\abokey.png"
 -- Hand clicking a key, 200x189, drawn 1:1: the keybind picture on the chooser.
-Statics.Icons.HandClick = "Interface\\Addons\\GSE_GUI\\Assets\\handclick.png"
 -- 9-slice edge strip (Blizzard edgeFile layout, 16px slices) with quarter-
 -- circle corners, white: a rounded-rectangle backdrop at any size, tinted
 -- by SetBackdropColor / SetBackdropBorderColor.
