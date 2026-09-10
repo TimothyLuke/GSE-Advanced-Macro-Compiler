@@ -194,7 +194,7 @@ local function buildKeybindMenu()
     local tree = {
         {
             value = "AO",
-            text = L["Actionbar Overrides"],
+            text = L["Button Bindings"],
             icon = Statics.Icons.Button,
             children = {}
         },
@@ -206,7 +206,7 @@ local function buildKeybindMenu()
         }
     }
 
-    -- Actionbar Overrides nodes.  Same shape as the keybind nodes below: the
+    -- Button Bindings nodes.  Same shape as the keybind nodes below: the
     -- tree stops at spec and its talent loadouts; every override in a scope is
     -- a row on the panel.  Overrides whose sequence no longer exists are
     -- pruned here in one pass, as the leaf builder used to do.
@@ -313,9 +313,13 @@ local function buildKeybindMenu()
         end
     end
 
+    -- Covers BOTH of its children: an override binds a sequence to a button,
+    -- a keybind binds it to a key. Naming the parent "Keybindings" put a
+    -- child of the same name inside it and read as though the Actionbar
+    -- Overrides beside it were something else again.
     return {
         value = "KEYBINDINGS",
-        text = L["Keybindings"],
+        text = L["Bindings"],
         icon = Statics.Icons.Keybindings,
         children = tree
     }
@@ -932,7 +936,7 @@ end
 
 
 -- ---------------------------------------------------------------------------
--- Actionbar Overrides: the same panel shape as keybinds.
+-- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
 local AO_COL_BUTTON, AO_COL_STATE, AO_COL_SEQ = 200, 110, 220
 local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 24
@@ -1202,7 +1206,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     local function save()
         if InCombatLockdown() then
-            GSE.Print(L["Actionbar Overrides"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+            GSE.Print(L["Button Bindings"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
             return
         end
         local seen = {}
@@ -1404,7 +1408,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                                 if not (frame and type(frame) == "table" and frame.IsObjectType
                                     and frame:IsObjectType("Button")) then
                                     GSE.Print(string.format(
-                                        L["%s is not an actionbar button on this client."], name), L["Actionbar Overrides"])
+                                        L["%s is not an actionbar button on this client."], name), L["Button Bindings"])
                                     return
                                 end
                                 choose(name)
@@ -1626,7 +1630,7 @@ end
 -- ---------------------------------------------------------------------------
 -- showKeybindChooser(editframe, rightContainer)
 -- The landing panel for the Keybindings tree node itself, which used to leave
--- a blank pane.  Two tiles -- Actionbar Overrides and Keybindings -- each an
+-- a blank pane.  Two tiles -- Button Bindings and Keybindings -- each an
 -- icon over its own description.  Clicking one SELECTS that area's tree node
 -- rather than drawing its window here, so the tree and the pane stay in step
 -- and there is only ever one copy of each panel's build code.
@@ -1671,58 +1675,9 @@ local function fitParagraphs(rightContainer)
     if rightContainer and rightContainer.DoLayout then rightContainer:DoLayout() end
 end
 
--- A centred picture at its own aspect, as a fixed-size group.  Raw texture on
--- the group's frame, cached per frame in a weak table because SimpleGroup is
--- pooled and the pool sweeps caller fields (same as heroBadge).
-local pictureArt = setmetatable({}, {__mode = "k"})
-local function picture(path, width, height, xOffset)
-    local host = UI:Create("SimpleGroup")
-    host:SetWidth(width)
-    host:SetHeight(height)
-    -- Flow layout honours child.flowXOffset: a sideways nudge from where the
-    -- cell would otherwise centre it.
-    host.flowXOffset = xOffset
-    local art = pictureArt[host.frame]
-    if not art then
-        art = host.frame:CreateTexture(nil, "ARTWORK")
-        art:SetAllPoints(host.frame)
-        -- A UI capture goes to mud when scaled or snapped to the pixel grid;
-        -- drawn 1:1 with snapping off it stays as sharp as the capture.
-        if art.SetSnapToPixelGrid then art:SetSnapToPixelGrid(false) end
-        if art.SetTexelSnappingBias then art:SetTexelSnappingBias(0) end
-        pictureArt[host.frame] = art
-    end
-    art:SetTexture(path)
-    art:SetTexCoord(0, 1, 0, 1)
-    art:Show()
-    return host
-end
-
--- Caption under the bullets, arrows on the OUTSIDE of their words so the
--- line reads "[down] KEY-DOWN / KEY-UP [up]": part.after puts the arrow
--- after the word, otherwise it leads.  Inline so each pair stays together.
-local KB_CAPTION_ICON_SIZE = 18
-local function keyCaption(parts)
-    local label = UI:Create("Label")
-    label:SetFullWidth(true)
-    label:SetJustifyH("CENTER")
-    label:SetHeight(KB_CAPTION_ICON_SIZE + 10)
-    label:SetJustifyV("MIDDLE")
-    -- An inline |T| already centres on the text line; a vertical offset here
-    -- only moves it OFF that line (a -3 "correction" put the arrows 3px low).
-    local pieces = {}
-    for _, part in ipairs(parts) do
-        local arrow = "|T" .. part.icon .. ":" .. KB_CAPTION_ICON_SIZE .. ":" .. KB_CAPTION_ICON_SIZE .. "|t"
-        local word = "|cffffd100" .. part.text .. Statics.StringReset
-        pieces[#pieces + 1] = part.after and (word .. " " .. arrow) or (arrow .. " " .. word)
-    end
-    label:SetText(table.concat(pieces, "   /   "))
-    return label
-end
-
 -- Two half-width cells on one row, each centring whatever it holds, so the
--- captions -- and the picture -- line up across the two tiles regardless of
--- how far each tile's bullets wrapped.
+-- two tiles line up across the pane regardless of how far each one's bullets
+-- wrapped.
 local function halfRow(leftChild, rightChild, topPad, vCenter)
     local row = UI:Create("SimpleGroup")
     row:SetFullWidth(true)
@@ -1889,10 +1844,10 @@ local function showKeybindChooser(editframe, rightContainer)
         and ("KEYBINDINGS\001AO\001" .. tostring(defaultSpecIndex()))
         or "KEYBINDINGS\001AO"
 
-    -- Content from the GSE wiki, KeyBinding and Actionbar Overrides.
+    -- Content from the GSE wiki, KeyBinding and Button Bindings.
     local overrideTop, overrideNote, overrideBullets = chooserTile(
         Statics.Icons.Button,
-        L["Actionbar Overrides"],
+        L["Button Bindings"],
         L["Puts a sequence on an action bar button, so the button fires the sequence.  Right-click a button on your bar and pick the sequence; that is the quickest setup."],
         {
             L["Right Click an Empty Action Button"],
@@ -1903,9 +1858,7 @@ local function showKeybindChooser(editframe, rightContainer)
             L["Class / Spec / State"],
         },
         {
-            L["Works with the standard bars, ElvUI, NDui, Bartender4, Dominos and ConsolePort."],
-            L["After dismounting in combat the button cannot swap back to the sequence until combat ends."],
-            L["Needs the ActionButtonUseKeyDown CVar off (Key Up)."],
+            L["Works with any action bar addon, and with key-up or key-down."],
         },
         function() goTo(overridePath) end
     )
@@ -1921,7 +1874,7 @@ local function showKeybindChooser(editframe, rightContainer)
         {
             L["Binds are per spec, and optionally per talent loadout; the spec binds are the fallback."],
             L["Controllers work: /console GamePadEnable 1.  PAD1-4 are A, B, X, Y."],
-            L["Keys 1-7 stop driving the Sky Riding bar.  Use [flying] in the sequence, or /click ActionButton2."],
+            L["When flying, the Sky Riding bar's own binds override these on keys 1-7.  The alternative is to use [flying] in the sequence, eg /click [flying] ActionButton2."],
         },
         function() goTo(keybindPath) end
     )
@@ -1929,29 +1882,16 @@ local function showKeybindChooser(editframe, rightContainer)
     local topRow, overrideTopCell, keybindTopCell = halfRow(overrideTop, keybindTop)
     rightContainer:AddChild(topRow)
     rightContainer:AddChild(halfRow(overrideNote, keybindNote, 6, true))
-    rightContainer:AddChild(halfRow(overrideBullets, keybindBullets, 6))
-
-    -- Captions on one shared row so they sit level, then the picture in the
-    -- Overrides column under its caption.
-    local captionRow = halfRow(
-        keyCaption({{text = L["KEY-UP"], icon = Statics.ActionsIcons.Up, after = true}}),
-        keyCaption({{text = L["KEY-DOWN"], icon = Statics.ActionsIcons.Down}, {text = L["KEY-UP"], icon = Statics.ActionsIcons.Up, after = true}}),
-        8)
-    rightContainer:AddChild(captionRow)
-    -- The right-click menu, captured at 148x181 and drawn 1:1 -- small enough
-    -- that the chooser fits the pane without a scrollbar, and unresampled.
-    -- Keybinds gets the hand-on-key icon at the capture's height, and the row
-    -- centres its cells vertically, so the two sit level and the icon is in
-    -- the middle of the space either way.
-    local pictureRow_, overridePictureCell, keybindPictureCell = halfRow(
-        picture(Statics.Icons.OverrideMenu, 148, 181),
-        picture(Statics.Icons.HandClick, 200, 189, 20), 6, true)
-    rightContainer:AddChild(pictureRow_)
+    -- The bullets are the bottom of each column now: the two pictures below
+    -- them illustrated the key-up / key-down split, and that split is gone.
+    local bulletRow, overrideBulletCell, keybindBulletCell =
+        halfRow(overrideBullets, keybindBullets, 6)
+    rightContainer:AddChild(bulletRow)
 
     -- Hover + click over each whole column, both running to the bottom of
     -- the pane.
-    columnHotspot(rightContainer, 1, overrideTopCell, overridePictureCell, function() goTo(overridePath) end)
-    columnHotspot(rightContainer, 2, keybindTopCell, keybindPictureCell, function() goTo(keybindPath) end)
+    columnHotspot(rightContainer, 1, overrideTopCell, overrideBulletCell, function() goTo(overridePath) end)
+    columnHotspot(rightContainer, 2, keybindTopCell, keybindBulletCell, function() goTo(keybindPath) end)
 
     -- Heights are only right once the widths are: once now for the case
     -- where layout is live, and once more after the editor's suspended

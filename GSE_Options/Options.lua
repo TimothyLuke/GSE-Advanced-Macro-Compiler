@@ -1560,7 +1560,7 @@ local function AddActionBarWatermarkOption(optionsCategory)
                 GSE.SetActionBarWatermarkEnabled(GSEOptions.showActionBarWatermark ~= false)
             end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarWatermark", Settings.VarType.Boolean, L["Show Actionbar Override Watermark"], true, GetValue, SetValue)
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarWatermark", Settings.VarType.Boolean, L["Show Button Binding Watermark"], true, GetValue, SetValue)
         Settings.CreateCheckbox(optionsCategory, setting, L["Show the GSE logo as a small watermark on actionbar override buttons."])
     end
 end
@@ -1576,7 +1576,7 @@ local function AddActionBarLabelOption(optionsCategory)
                 GSE.SetActionBarLabelEnabled()
             end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Actionbar Override Label"], true, GetValue, SetValue)
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Button Binding Label"], true, GetValue, SetValue)
         Settings.CreateCheckbox(optionsCategory, setting, L["Show the sequence name as a text label on actionbar override buttons."])
     end
 end
@@ -1611,7 +1611,7 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
             end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Actionbar Overrides and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."])
+        Settings.CreateCheckbox(optionsCategory, setting, L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Button Bindings and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."])
     end
 end
 
@@ -2969,9 +2969,9 @@ function GSE:CreateConfigPanels()
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
         end
-        -- Actionbar Override Popup (Retail only - Classic requires a different menu API)
+        -- Button Binding popup (Retail only - Classic requires a different menu API)
         if GSE.GameMode > 10 then
-            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Actionbar Override Popup"], true)
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Button Binding Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
         AddActionBarWatermarkOption(generalOptions)
