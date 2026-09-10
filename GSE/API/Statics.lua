@@ -446,6 +446,10 @@ Statics.Actions.Embed = "Embed"
 
 Statics.ActionsIcons = {}
 Statics.ActionsIcons.Add = "Interface\\Addons\\GSE_GUI\\Assets\\add.png"
+-- Local-changes controls: view / take the update / discard.
+Statics.ActionsIcons.View = "Interface\\Addons\\GSE_GUI\\Assets\\view.png"
+Statics.ActionsIcons.Check = "Interface\\Addons\\GSE_GUI\\Assets\\check.png"
+Statics.ActionsIcons.DeleteRed = "Interface\\Addons\\GSE_GUI\\Assets\\discard.png"
 Statics.ActionsIcons.Up = "Interface\\Addons\\GSE_GUI\\Assets\\up.png"
 Statics.ActionsIcons.Down = "Interface\\Addons\\GSE_GUI\\Assets\\down.png"
 Statics.ActionsIcons.Mouse = "Interface\\Addons\\GSE_GUI\\Assets\\drag.png"

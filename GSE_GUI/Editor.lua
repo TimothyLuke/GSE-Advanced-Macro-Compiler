@@ -6627,6 +6627,8 @@ function GSE.CreateEditor()
         -- Fork controls. Only for a sequence that HAS a fork -- for everything
         -- else there is nothing to show, take or discard, and three dead
         -- buttons on every sequence would be worse than none.
+        local FORK_ICON_SIZE = 24
+        local FORK_SPACER = 59
         local forkMeta = (editframe.Sequence and editframe.Sequence.MetaData) or {}
         local forkPid = forkMeta.PlatformID or (editframe.Sequence and editframe.Sequence.PlatformID)
         local hasFork = forkPid and type(GSEDeltas) == "table" and type(GSEDeltas[forkPid]) == "table"
@@ -6642,18 +6644,23 @@ function GSE.CreateEditor()
 
         local localChanges
         if hasFork then
-            localChanges = UI:Create("Button")
-            -- The row's label says what these act on, so the button only has to
-            -- say what the click does -- and it says the ACTION, not the state.
-            localChanges:SetText(editframe.ShowLocalChanges and L["Hide"] or L["Show"])
-            localChanges:SetWidth(70)
-            if localChanges.SetElvUIBackgroundShown then localChanges:SetElvUIBackgroundShown(true) end
+            -- No flowYOffset: the row is FlowVAlign CENTER and these are 24px
+            -- in a 28px row, so it already centres them. The keybind panel's
+            -- remove icon carries a +2 for its own row height; copying that
+            -- here just pushed them 2px low.
+            localChanges = UI:Create("Icon")
+            localChanges:SetImage(Statics.ActionsIcons.View)
+            localChanges:SetImageSize(FORK_ICON_SIZE, FORK_ICON_SIZE)
+            localChanges:SetWidth(FORK_ICON_SIZE)
+            localChanges:SetHeight(FORK_ICON_SIZE)
             localChanges:SetCallback("OnClick", function()
                 editframe.ShowLocalChanges = not editframe.ShowLocalChanges
                 afterForkAction()
             end)
             localChanges:SetCallback("OnEnter", function()
-                GSE.CreateToolTip(L["Local Changes"],
+                -- The tooltip is the whole explanation now: the control is an
+                -- icon, so it says which state the click moves TO.
+                GSE.CreateToolTip(editframe.ShowLocalChanges and L["Hide"] or L["Show"],
                     L["Show what you changed on this sequence, beside the block you changed it on."], editframe)
             end)
             localChanges:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
@@ -6664,10 +6671,11 @@ function GSE.CreateEditor()
         -- deliberate act and this is the button for it.
         local takeUpdate
         if hasFork and GSE.PendingDeltaUpdate and GSE.PendingDeltaUpdate(forkPid) then
-            takeUpdate = UI:Create("Button")
-            takeUpdate:SetText(L["Take Update"])
-            takeUpdate:SetWidth(110)
-            if takeUpdate.SetElvUIBackgroundShown then takeUpdate:SetElvUIBackgroundShown(true) end
+            takeUpdate = UI:Create("Icon")
+            takeUpdate:SetImage(Statics.ActionsIcons.Check)
+            takeUpdate:SetImageSize(FORK_ICON_SIZE, FORK_ICON_SIZE)
+            takeUpdate:SetWidth(FORK_ICON_SIZE)
+            takeUpdate:SetHeight(FORK_ICON_SIZE)
             takeUpdate:SetCallback("OnClick", function()
                 if InCombatLockdown() then
                     GSE.Print(L["The author published an update"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
@@ -6700,10 +6708,11 @@ function GSE.CreateEditor()
 
         local discardFork
         if hasFork then
-            discardFork = UI:Create("Button")
-            discardFork:SetText(L["Discard"])
-            discardFork:SetWidth(80)
-            if discardFork.SetElvUIBackgroundShown then discardFork:SetElvUIBackgroundShown(true) end
+            discardFork = UI:Create("Icon")
+            discardFork:SetImage(Statics.ActionsIcons.DeleteRed)
+            discardFork:SetImageSize(FORK_ICON_SIZE, FORK_ICON_SIZE)
+            discardFork:SetWidth(FORK_ICON_SIZE)
+            discardFork:SetHeight(FORK_ICON_SIZE)
             discardFork:SetCallback("OnClick", function()
                 if InCombatLockdown() then
                     GSE.Print(L["Discard Local Changes"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
@@ -7635,14 +7644,19 @@ function GSE.CreateEditor()
         --
         resetToolbarRow = CreateCombatResetRow(version)
         -- Fork controls live on the combat-reset row:
-        --   7 indent + 110 label + 235 dropdown + 59 spacer
-        --   + 105 "Local Changes:" + 70 Show + 80 Discard + six 4px flow gaps
+        --   7 indent + 110 label + 235 dropdown + 0 spacer
+        --   + 105 "Local Changes:" + up to three 24px icons + 4px flow gaps.
+        -- Icons rather than words is what lets all three fit alongside the
+        -- label; as text buttons the third one wrapped the row.
         local forkSpacer
         if localChanges or takeUpdate or discardFork then
             forkSpacer = UI:Create("Spacer")
-            forkSpacer:SetWidth(59)
+            forkSpacer:SetWidth(FORK_SPACER)
             forkSpacer:SetHeight(1)
             resetToolbarRow:AddChild(forkSpacer)
+            -- Widened after layout to sit the group under the middle of
+            -- Compiled Template .. Raw Edit; see centreForkGroup below.
+            resetToolbarRow.gseForkSpacer = forkSpacer
 
             local forkLabel = UI:Create("Label")
             forkLabel:SetText(L["Local Changes:"])
@@ -7651,15 +7665,14 @@ function GSE.CreateEditor()
             if forkLabel.SetJustifyV then forkLabel:SetJustifyV("MIDDLE") end
             if forkLabel.SetJustifyH then forkLabel:SetJustifyH("RIGHT") end
             -- Gold, not keywordColor(): that returns white under EllesmereUI
-            -- and the theme's KEYWORD accent elsewhere, neither of which is gold.
+            -- and the theme's KEYWORD accent elsewhere, neither is gold.
             forkLabel:SetColor(1, 0.82, 0)
             resetToolbarRow:AddChild(forkLabel)
-            -- Take Update first: it is the one that says something happened,
-            -- and it is only built when it has. Discard is last, being the
-            -- destructive one -- and last is what makes it the widget whose
-            -- right edge is measured.
-            if takeUpdate then resetToolbarRow:AddChild(takeUpdate) end
+            -- view, check, delete. View first because it is the one always
+            -- present and the only non-committal one; check appears between
+            -- them when there is an update; delete last, being destructive.
             if localChanges then resetToolbarRow:AddChild(localChanges) end
+            if takeUpdate then resetToolbarRow:AddChild(takeUpdate) end
             if discardFork then resetToolbarRow:AddChild(discardFork) end
         end
 
@@ -7681,6 +7694,46 @@ function GSE.CreateEditor()
         end
 
         layoutcontainer:AddChild(resetToolbarRow)
+        if resetToolbarRow.gseForkSpacer then
+            -- The group hangs under the two buttons it belongs with, centred on
+            -- them. Their position is measured rather than derived: the toolbar
+            -- wraps at the editor's smaller sizes, so any number worked out
+            -- from the widths above lands somewhere else once it does.
+            local forkIcons = 1                                  -- view is always there
+            if takeUpdate then forkIcons = forkIcons + 1 end
+            if discardFork then forkIcons = forkIcons + 1 end
+            local forkGroupWidth = 105 + forkIcons * (4 + FORK_ICON_SIZE)
+            local function centreForkGroup()
+                local spacer = resetToolbarRow.gseForkSpacer
+                local rowFrame = resetToolbarRow.frame
+                local dropdown = resetToolbarRow.gseResetDropdown
+                local left = previewMacro and previewMacro.frame
+                local right = (GSE.CanRawEdit and GSE.CanRawEdit() and raweditbutton and raweditbutton.frame)
+                    or (previewMacro and previewMacro.frame)
+                if not (spacer and rowFrame and dropdown and dropdown.frame and left and right) then return end
+                local pairLeft = left.GetLeft and left:GetLeft()
+                local pairRight = right.GetRight and right:GetRight()
+                local dropRight = dropdown.frame.GetRight and dropdown.frame:GetRight()
+                local rowRight = rowFrame.GetRight and rowFrame:GetRight()
+                if not (pairLeft and pairRight and dropRight and rowRight) then return end
+
+                -- Straight from the geometry: where the group has to start for
+                -- its middle to line up with the pair's middle.
+                local groupLeft = ((pairLeft + pairRight) / 2) - (forkGroupWidth / 2)
+                local width = groupLeft - dropRight - 8          -- the gaps either side
+                -- Never wider than the row can hold. Sitting left of centre on
+                -- a narrow editor is the acceptable failure; wrapping puts an
+                -- icon on top of the block below.
+                width = math.max(1, math.min(width, rowRight - dropRight - 8 - forkGroupWidth))
+                if math.abs(width - (spacer.width or 1)) < 1 then return end
+                spacer:SetWidth(width)
+                if resetToolbarRow.DoLayout then resetToolbarRow:DoLayout() end
+            end
+            centreForkGroup()
+            -- The editor builds under SuspendLayout: nothing has a real
+            -- position until the layout lands a frame later.
+            C_Timer.After(0, centreForkGroup)
+        end
         DrawSequenceEditor(macrocontainer, version, path)
         if not editframe.Sequence.MetaData.DisableEditor then
             layoutcontainer:AddChild(macrocontainer)
