@@ -522,8 +522,88 @@ function GSE.RebaseDeltaFork(pid, newBlob)
 
     local d = GSE.EncodeDelta(GSE.DiffDelta(theirs, merged))
     if type(d) ~= "string" then return nil end
-    GSEDeltas[pid] = {b = newBlob, d = d, t = entry.t, src = entry.src}
+    GSEDeltas[pid] = {b = newBlob, d = d, t = entry.t, src = entry.src,
+        conflicts = (#conflicts > 0) and conflicts or nil}
     return merged, conflicts
+end
+
+--- What the local fork changed, per block, for the editor to show.
+--
+-- The panel beside each block already renders that block's compiled output;
+-- this is the same shape of answer for "and what did I change here", so a
+-- fork can be read where the edit was made instead of as one opaque blob.
+--
+-- Returns nil when there is no fork. Otherwise:
+--   { top      = { {field, from, to}, ... },
+--     versions = { [k] = { [blockIndex] = { {field, from, to}, ... },
+--                          added = { [blockIndex] = true } } },
+--     conflicts = the list parked by the last merge, or nil }
+--
+-- `from` is the author's value, `to` is the local one. Blocks are paired by
+-- content through matchBlocks, so an edit is reported against the block it was
+-- made to even when the author's version has moved it.
+function GSE.DescribeForkChanges(pid)
+    if type(GSEDeltas) ~= "table" or type(pid) ~= "string" then return nil end
+    local entry = GSEDeltas[pid]
+    if type(entry) ~= "table" then return nil end
+    local ours = GSE.ReconstructDeltaFork(entry)
+    if type(ours) ~= "table" then return nil end
+    local ok, decoded = GSE.DecodeMessage(entry.b)
+    if not ok or type(decoded) ~= "table" then return nil end
+    local base = decoded[2] or decoded
+
+    local function fieldList(from, to)
+        local out = {}
+        local set, unset = diffFields(from, to)
+        for f, v in pairs(set) do out[#out + 1] = {field = f, from = from[f], to = v} end
+        for _, f in ipairs(unset) do out[#out + 1] = {field = f, from = from[f], to = nil} end
+        sort(out, function(a, b) return tostring(a.field) < tostring(b.field) end)
+        return out
+    end
+
+    local report = {top = {}, versions = {}, conflicts = entry.conflicts}
+    for _, e in ipairs(fieldList(base, ours)) do
+        if e.field ~= "Versions" then report.top[#report.top + 1] = e end
+    end
+
+    local bV, oV = base.Versions or {}, ours.Versions or {}
+    for k, ourV in pairs(oV) do
+        local baseV = bV[k] or {}
+        local blocks, added = {}, {}
+        local baseA, ourA = listOf(baseV.Actions), listOf(ourV.Actions)
+        local map = matchBlocks(baseA, ourA)           -- ourIdx -> baseIdx
+        for i = 1, #ourA do
+            local bi = map[i]
+            if bi then
+                local changes = fieldList(baseA[bi], ourA[i])
+                if #changes > 0 then blocks[i] = changes end
+            else
+                added[i] = true
+            end
+        end
+        if next(blocks) ~= nil or next(added) ~= nil then
+            report.versions[k] = {blocks = blocks, added = added}
+        end
+    end
+    return report
+end
+
+--- Throw the local fork away and go back to the author's version.
+--
+-- Forgetting alone is not enough: GSE.Library still holds the reconstruction,
+-- so the edits stay on screen and in play until something reloads the record.
+-- Dropping the decoded copy and re-running the lazy loader is what actually
+-- puts the author's version back, and it is the same path a fresh import takes.
+function GSE.DiscardDeltaFork(classid, sequenceName)
+    classid = tonumber(classid)
+    if not classid or type(sequenceName) ~= "string" then return false end
+    local seq = GSE.Library and GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    local meta = type(seq) == "table" and seq.MetaData or {}
+    local pid = meta.PlatformID or (type(seq) == "table" and seq.PlatformID)
+    if not GSE.ForgetDeltaFork or not GSE.ForgetDeltaFork(pid) then return false end
+    GSE.Library[classid][sequenceName] = nil
+    if GSE.EnsureSequenceLoaded then GSE.EnsureSequenceLoaded(classid, sequenceName) end
+    return true
 end
 
 --- Open a delta fork for content that does not have one yet, keyed by its own

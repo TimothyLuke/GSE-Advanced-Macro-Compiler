@@ -339,4 +339,76 @@ describe("Delta fork updates", function()
       end)
     end)
   end)
+
+  describe("describing the fork for the editor", function()
+    local function byField(list)
+      local m = {}
+      for _, e in ipairs(list or {}) do m[e.field] = e end
+      return m
+    end
+
+    it("reports a changed field against the block it was changed on", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast [mod:alt] Bravo") }))
+
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_nil(r.versions[1].blocks[1], "the untouched block reports nothing")
+        local f = byField(r.versions[1].blocks[2])
+        assert.are.equal("/cast [mod:shift] Bravo", f.macro.from, "the author's value")
+        assert.are.equal("/cast [mod:alt] Bravo", f.macro.to, "and yours")
+      end)
+    end)
+
+    it("pairs by content, so a moved block still reports on itself", function()
+      withStubs(function(blob)
+        -- The author's block order differs from ours; the edit must be
+        -- reported against the block it belongs to, not the index.
+        local v1 = seq({ act("/cast Opener"), act("/cast Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast [mod:alt] Bravo") }))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_nil(r.versions[1].blocks[1])
+        assert.are.equal("/cast [mod:alt] Bravo", byField(r.versions[1].blocks[2]).macro.to)
+      end)
+    end)
+
+    it("marks a block we added", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Alpha"), act("/cast Mine") }))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.is_true(r.versions[1].added[2])
+      end)
+    end)
+
+    it("reports top-level changes without dragging Versions in", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast Beta") }, "mine"))
+        local r = GSE.DescribeForkChanges("pid1")
+        for _, e in ipairs(r.top) do
+          assert.is_not.equals("Versions", e.field, "Versions is the blocks' business")
+        end
+      end)
+    end)
+
+    it("carries the conflicts the last merge parked", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha") })
+        fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha") }))
+        GSE.RebaseDeltaFork("pid1", blob("v2", seq({ act("/cast [mod:ctrl] Alpha") })))
+        local r = GSE.DescribeForkChanges("pid1")
+        assert.are.equal(1, #r.conflicts)
+        assert.are.equal("/cast [mod:ctrl] Alpha", r.conflicts[1].theirs)
+      end)
+    end)
+
+    it("says nothing when there is no fork", function()
+      withStubs(function()
+        _G.GSEDeltas = {}
+        assert.is_nil(GSE.DescribeForkChanges("pid1"))
+        assert.is_nil(GSE.DescribeForkChanges(nil))
+      end)
+    end)
+  end)
 end)
