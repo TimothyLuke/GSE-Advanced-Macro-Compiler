@@ -211,6 +211,10 @@ L["No checksum"] = true
 
 L["Import"] = true
 L["Imported: %s"] = true
+L["Imported %d of %d: %s"] = true
+L["Restored %d of %d: %s"] = true
+L["Nothing in this collection could be restored."] = true
+L["Nothing in this collection could be imported."] = true
 L["Close"] = true
 L["Debug Output Options"] = true
 L["Enable Debug for the following Modules"] = true
