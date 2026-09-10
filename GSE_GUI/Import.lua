@@ -659,18 +659,10 @@ local function processCollection(payload)
       )
       local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
       if success then
-        -- Confirm to the user what actually came in. The collection import path
-        -- was previously silent (it only hid the frame); the only feedback was
-        -- the editor's "updated in another window" notice when it happened to
-        -- be open. List the elements the user chose to import.
-        local imported = {}
-        for k in pairs(filteredpayload["Sequences"]) do table.insert(imported, k) end
-        for k in pairs(filteredpayload["Variables"]) do table.insert(imported, k) end
-        for k in pairs(filteredpayload["Macros"]) do table.insert(imported, k) end
-        if #imported > 0 then
-          table.sort(imported)
-          GSE.Print(string.format(L["Imported: %s"], table.concat(imported, ", ")))
-        end
+        -- No list here: this one named what the user TICKED, before any
+        -- conflict dialog had been answered. The collection import prints its
+        -- own summary of what actually went in, which is the honest one.
+
         -- Mark imported by identity so the Companion can prune them from the bridge data
         if importframe.fromQueue then
           if GSE.IncomingQueue and GSE.CompanionMarkImported then
@@ -1149,6 +1141,9 @@ processQueue = function()
 end
 
 local function LandingPage()
+  -- Back at the start: anything from here is a plain import, not the tail of
+  -- a Restore the user abandoned.
+  GSE.RestoreInProgress = nil
   importframe:ReleaseChildren()
   prepareImportFrame()
   importframe.fromQueue = false
@@ -1256,6 +1251,19 @@ local function LandingPage()
   importframe:AddChild(recButtonGroup)
 
   importframe:Show()
+end
+
+--- Open the Import window on a collection's review page.
+--
+-- The same page a pasted collection lands on: every sequence listed with a
+-- checkbox and the ones already installed marked. Anything that ships a
+-- collection can use it instead of importing the lot silently -- the plugin
+-- panel's Restore does.
+function GSE.GUIShowCollectionImport(payload)
+  if type(payload) ~= "table" then return false end
+  GSE.ShowImport()
+  processCollection(payload)
+  return true
 end
 
 function GSE.ShowImport()

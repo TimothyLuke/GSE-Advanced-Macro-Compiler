@@ -5347,6 +5347,17 @@ function GSE.CreateEditor()
                 unitEditBox:SetCallback(
                     "OnTextChanged",
                     function(sel, object, value)
+                        -- The editor can be rebuilt under this box while the
+                        -- box still exists: importing over the sequence it is
+                        -- showing tears the editor down, and the pooled widget
+                        -- fires OnTextChanged once more as it is reset. There
+                        -- is nothing to write to at that point.
+                        if not (editframe.Sequence and editframe.Sequence.Versions
+                            and editframe.Sequence.Versions[version]
+                            and editframe.Sequence.Versions[version].Actions
+                            and editframe.Sequence.Versions[version].Actions[keyPath]) then
+                            return
+                        end
                         SelectMacroBlockPath(keyPath)
                         editframe.Sequence.Versions[version].Actions[keyPath].unit = value
                         --compiledAction = GSE.CompileAction(returnAction, editframe.Sequence.Versions[version])

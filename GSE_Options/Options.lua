@@ -2636,10 +2636,21 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                             L["Restore"],
                             function()
                                 local seq = capturedV.Sequences and capturedV.Sequences[capturedSeqName]
-                                if seq then
-                                    GSE.ImportSerialisedSequence(seq, false)
-                                    GSE.PerformReloadSequences()
+                                if not seq then return end
+                                -- A plugin entry is usually a COLLECTION. Send
+                                -- it to the Import window's review page, the
+                                -- same place a pasted collection goes, rather
+                                -- than importing every member without asking.
+                                local ok, decoded = GSE.DecodeMessage(seq)
+                                if ok and type(decoded) == "table" and decoded.type == "COLLECTION"
+                                    and GSE.GUIShowCollectionImport then
+                                    GSE.RestoreInProgress = true
+                                    GSE.GUIShowCollectionImport(decoded.payload)
+                                    return
                                 end
+                                GSE.RestoreInProgress = true
+                                GSE.ImportSerialisedSequence(seq, false)
+                                GSE.PerformReloadSequences()
                             end,
                             seqDesc,
                             false

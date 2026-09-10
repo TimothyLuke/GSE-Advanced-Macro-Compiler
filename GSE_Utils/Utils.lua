@@ -148,8 +148,18 @@ end
 -- protected the write is declined and a repack request is left instead: the
 -- session keeps working from the Library, and the Companion fetches the sealed
 -- blob from gse.tools to put the record straight.
-local function storeMergedSequence(classid, sequenceName, reason)
+local function storeMergedSequence(classid, sequenceName, reason, sealed)
     local seq = GSE.Library[classid][sequenceName]
+    -- A REPLACE from a sealed import stores the blob it arrived in. The body
+    -- on disk is exactly what was imported, so the envelope still describes
+    -- it, and this is the one merge outcome where that is true -- MERGE and
+    -- RENAME produce something the addon cannot seal, and fall through to the
+    -- repack request below.
+    if sealed then
+        GSESequences[classid] = GSESequences[classid] or {}
+        GSESequences[classid][sequenceName] = sealed
+        return true
+    end
     if GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
         GSE.QueueRepack("sequence", classid, sequenceName, seq, reason)
         return false
@@ -209,6 +219,7 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         --@end-debug@
         GSE.Print(string.format(L["Extra Sequence Versions of %s have been added."], sequenceName), GNOME)
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
+        if GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
         storeMergedSequence(classid, sequenceName, "merge-needs-repack")
     elseif action == "REPLACE" then
         GSE.Library[classid][sequenceName] = {}
@@ -220,12 +231,36 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
         --@end-debug@
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
-        storeMergedSequence(classid, sequenceName, "replace-needs-repack")
+        do
+            -- Claim the sealed original this import arrived in, if it had one.
+            local sealed = GSE.PendingSealedImports and GSE.PendingSealedImports[sequenceName]
+            if sealed and GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
+            storeMergedSequence(classid, sequenceName, "replace-needs-repack", sealed)
+        end
         GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
     elseif action == "RENAME" then
+        -- Same rule as GSE.DuplicateSequence: a renamed import is a new work
+        -- under a new name, so it mints its own record rather than sharing the
+        -- original's. Keeping the id meant both sequences resolved to one
+        -- server record and the later sync overwrote the other (#2077).
+        --
+        -- Safe to mint here because the dialog does not offer Rename for
+        -- protected content -- that is checked again rather than assumed, so
+        -- any other caller cannot use this path to strip an author's identity.
+        if not (GSE.IsProtectedContent and GSE.IsProtectedContent(newSequence)) then
+            if type(newSequence.MetaData) ~= "table" then newSequence.MetaData = {} end
+            newSequence.MetaData.Name = sequenceName
+            newSequence.MetaData.PlatformID = nil
+            if GSE.MintOriginKey then
+                newSequence.MetaData.OriginKey =
+                    GSE.MintOriginKey(sequenceName, newSequence.MetaData.Author)
+            end
+            newSequence.LastUpdated = GSE.GetTimestamp()
+        end
         GSE.Library[classid][sequenceName] = {}
         GSE.Library[classid][sequenceName] = newSequence
         GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
+        if GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
         storeMergedSequence(classid, sequenceName, "rename-needs-repack")
         GSE.Print(sequenceName .. L[" was imported as a new sequence."], "Storage")
         --@debug@
@@ -442,6 +477,19 @@ function GSE.processWAGOImport(input, dontencode)
     end
 end
 
+--- True when a sequence of this name is already stored, in any class.
+--
+-- GSESequences is the store, so this answers without decoding anything or
+-- forcing a lazy class load -- the name is the table KEY and is always in the
+-- clear, even for sealed content.
+local function sealedImportCollides(name)
+    if type(GSESequences) ~= "table" then return false end
+    for _, bucket in pairs(GSESequences) do
+        if type(bucket) == "table" and bucket[name] ~= nil then return true end
+    end
+    return false
+end
+
 --- Load a serialised Sequence
 -- skipDialogs: when true, suppress per-sequence StaticPopup confirmation dialogs
 -- (version-mismatch and checksum warnings). Used by collection imports so that
@@ -464,12 +512,35 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             else
                 name = decoded[1]
                     or (type(decoded[2]) == "table" and decoded[2].MetaData and decoded[2].MetaData.Name)
+                local body = type(decoded[2]) == "table" and decoded[2] or nil
+                -- Sealed content is not exempt from the import dialog. Stored
+                -- straight over the top, an import silently replaced whatever
+                -- held that name -- for a pasted website export, and for every
+                -- member of a plugin's Collection, which is the same path.
+                --
+                -- The body is only needed to compare against what is already
+                -- installed; the ENVELOPE is what gets stored, so the sealed
+                -- original is remembered for the action the user picks.
+                if name and body and sealedImportCollides(name) and not forcereplace then
+                    GSE.PendingSealedImports = GSE.PendingSealedImports or {}
+                    GSE.PendingSealedImports[name] = importstring
+                    GSE.AddSequenceToCollection(name, body)
+                    -- Truthy, so callers testing success still pass, but not
+                    -- `true`: nothing has been stored yet and the summary must
+                    -- not claim it has. The user has still to choose.
+                    return "review"
+                end
                 stored = name and GSE.StoreEncodedSequence(name, importstring)
             end
             if stored then
-                -- Confirm the import so a single pasted string isn't stored
-                -- silently (the collection path reports via its own summary).
-                GSE.Print(string.format(L["Imported: %s"], name), GNOME)
+                -- Confirm a STANDALONE import. Inside a collection the summary
+                -- at the end of that branch lists everything, and printing per
+                -- member as well gave four lines plus two summaries for one
+                -- four-sequence import. skipDialogs is what the collection
+                -- loop passes, so it doubles as "someone else is reporting".
+                if not skipDialogs then
+                    GSE.Print(string.format(L["Imported: %s"], name), GNOME)
+                end
                 return true
             end
         end
@@ -490,6 +561,20 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload or {}
             scrubCollectionPayload(actiontable)
+            -- A collection reported nothing at all: COLLECTION_IMPORTED only
+            -- refreshes an open editor tree. Count what actually goes in so
+            -- the user is told, the way a single sealed import already is.
+            local importedNames, seenCount = {}, 0
+            local function noteImport(memberName, wentIn)
+                seenCount = seenCount + 1
+                -- Only a real store counts. A member routed to the import
+                -- dialog returns "review": the user has not answered yet, and
+                -- reporting it as imported was a lie -- choosing Ignore on all
+                -- four still printed "Imported 4 of 4".
+                if wentIn == true and memberName then
+                    importedNames[#importedNames + 1] = tostring(memberName)
+                end
+            end
             -- Sequences/Variables/Macros in a COLLECTION payload are keyed by
             -- name and their values are the raw data tables (no {name, data}
             -- array wrapper). Propagate the key into the object's identity
@@ -498,10 +583,10 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 if type(v) == "table" and v.GSEDeltaFork then
                     GSE.StoreDeltaFork(v)
                 elseif type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
-                    GSE.StoreEncodedVariable(name, v)
+                    noteImport(name, GSE.StoreEncodedVariable(name, v))
                 else
                     if type(v) == "table" and not v.name then v.name = name end
-                    GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
+                    noteImport(name, GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge))
                 end
             end
             for name, v in pairs(actiontable["Sequences"] or {}) do
@@ -510,7 +595,12 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                     -- GSEDeltas (opaque platformId key) + reconstruct in memory.
                     GSE.StoreDeltaFork(v)
                 elseif type(v) == "string" and v:sub(1, 7) == "!GSE3!+" then
-                    GSE.StoreEncodedSequence(name, v)
+                    -- Through the importer, not straight to the store: a
+                    -- sealed member is still an import, and writing it here
+                    -- skipped the collision check, so a plugin's Restore
+                    -- overwrote existing sequences with no dialog and nothing
+                    -- to say it had happened.
+                    noteImport(name, GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge))
                 else
                     if type(v) == "table" then
                         v.MetaData = v.MetaData or {}
@@ -528,6 +618,23 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                     if type(v) == "table" and not v.name then v.name = name end
                     GSE.ImportSerialisedSequence(v, forcereplace, true, forcemerge)
                 end
+            end
+            if seenCount > 0 then
+                -- "Restored" when the plugin panel started this: the content
+                -- came back from the plugin that ships it rather than arriving
+                -- from outside. The flag is consumed here so the next import
+                -- reports itself honestly.
+                local restoring = GSE.RestoreInProgress
+                GSE.RestoreInProgress = nil
+                if #importedNames > 0 then
+                    GSE.Print(string.format(
+                        restoring and L["Restored %d of %d: %s"] or L["Imported %d of %d: %s"],
+                        #importedNames, seenCount, table.concat(importedNames, ", ")), GNOME)
+                end
+                -- Silent when everything went to a dialog: each one reports its
+                -- own outcome ("was updated", "No changes were made", "Extra
+                -- Sequence Versions ... added"), which is the truth about what
+                -- happened. A summary here could only guess ahead of the user.
             end
             GSE:SendMessage(Statics.Messages.COLLECTION_IMPORTED)
         elseif actiontable.objectType == "MACRO" then
