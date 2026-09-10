@@ -3168,8 +3168,13 @@ local function createScrollFrame()
         return widget.scrollBarEnabled == false and 0 or -STYLE.scrollBarReserve
     end
 
+    -- Must subtract the SAME reserve the viewport is inset by (scrollBarInset
+    -- above, scrollBarReserve = 24), not scrollBarVisibleReserve = 18. Sizing
+    -- the content 6px wider than the window it is clipped to meant every
+    -- full-width child -- a macro block, say -- lost its right edge to
+    -- SetClipsChildren.
     local function contentWidth(width)
-        return math.max(1, (width or safeWidth(frame, widget.width or 300)) - (widget.scrollBarEnabled == false and 0 or STYLE.scrollBarVisibleReserve))
+        return math.max(1, (width or safeWidth(frame, widget.width or 300)) - (widget.scrollBarEnabled == false and 0 or STYLE.scrollBarReserve))
     end
 
     local function updateScrollFrameInset()
