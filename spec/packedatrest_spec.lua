@@ -139,6 +139,72 @@ describe(
             assert.equals(SEALED, _G.GSESequences[1]["Sealed"])
           end
         )
+
+        -- A fork exists only because the record was protected when the first
+        -- edit landed. The record can stop being protected afterwards -- the
+        -- owner's own work comes back from the server flattened and in the
+        -- clear -- and the fork then describes a divergence from a base that
+        -- is no longer there. Consulting it before asking about protection
+        -- meant every later edit was swallowed by a fork the record had
+        -- outgrown, so the owner saw local-changes controls on their own
+        -- unsealed sequence and no amount of editing cleared them.
+        describe(
+          "once the record is no longer protected",
+          function()
+            local forked, forgotten
+
+            before_each(
+              function()
+                forked, forgotten = false, false
+                GSE.UpdateDeltaFork = function() forked = true; return true end
+                GSE.ForgetDeltaFork = function() forgotten = true; return true end
+              end
+            )
+
+            after_each(
+              function()
+                GSE.UpdateDeltaFork = nil
+                GSE.ForgetDeltaFork = nil
+              end
+            )
+
+            it(
+              "writes the edit into the record instead of the fork",
+              function()
+                local seq = ownSeq("Mine")
+                _G.GSESequences[1]["Mine"] = "!GSE3!PLAINRECORD"
+                GSE.ReplaceSequence(1, "Mine", seq)
+                assert.is_false(forked)
+                assert.is_true(forgotten)
+                assert.are_not.equals("!GSE3!PLAINRECORD", _G.GSESequences[1]["Mine"])
+              end
+            )
+
+            it(
+              "still routes the edit to the fork while the blob is sealed",
+              function()
+                local seq = ownSeq("Sealed")
+                _G.GSESequences[1]["Sealed"] = SEALED
+                GSE.ReplaceSequence(1, "Sealed", seq)
+                assert.is_true(forked)
+                assert.is_false(forgotten)
+                assert.equals(SEALED, _G.GSESequences[1]["Sealed"])
+              end
+            )
+
+            it(
+              "still routes the edit to the fork while the body says noExport",
+              function()
+                local seq = protectedSeq("Prot")
+                _G.GSESequences[1]["Prot"] = "!GSE3!PLAINRECORD"
+                GSE.ReplaceSequence(1, "Prot", seq)
+                assert.is_true(forked)
+                assert.is_false(forgotten)
+                assert.equals("!GSE3!PLAINRECORD", _G.GSESequences[1]["Prot"])
+              end
+            )
+          end
+        )
       end
     )
 

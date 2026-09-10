@@ -660,7 +660,14 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE.StampOriginKey(sequence, sequenceName)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
-    if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
+    -- Asked ONCE, before the fork is consulted. A fork only exists because the
+    -- record was protected when the first edit landed, and it used to be read
+    -- first -- so a record that has since come back in the clear still had
+    -- every later edit swallowed by the fork it had outgrown. The owner then
+    -- sees local-changes controls on their own unsealed sequence, and no
+    -- amount of editing clears them, because each edit re-enters the fork.
+    local protectedAtRest = GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence)
+    if protectedAtRest and GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
         GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
         GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
         return
@@ -670,7 +677,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     -- into the fork verbatim and only the divergence is written beside it.
     -- This branch is for protected content ONLY -- an ordinary sequence falls
     -- through to the plain replace below, exactly as before.
-    if GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
+    if protectedAtRest then
         if not GSE.SeedDeltaFork(GSESequences[classid][sequenceName], sequence, "sequence") then
             -- Nothing to key a fork by, so the edit cannot be persisted here.
             -- Say so rather than writing it out in the clear.
@@ -680,6 +687,13 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
         GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
         return
     end
+    -- Nothing left to protect, so the fork has nothing left to describe: this
+    -- write puts the edit -- which IS the reconstructed fork, the editor loads
+    -- through GSE.ApplyStoredDeltaFork -- into the record in the clear. The
+    -- same end-of-round-trip GSE.StoreEncodedSequence already handles when the
+    -- flattened copy arrives from the server; this is the local half of it.
+    -- Order matters: forget only once the plain write is about to happen.
+    if GSE.ForgetDeltaFork then GSE.ForgetDeltaFork(sequence) end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
     GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
