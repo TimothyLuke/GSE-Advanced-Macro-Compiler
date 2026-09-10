@@ -1022,3 +1022,6 @@ L["Update taken.  %d change you both made was kept as yours."] = true
 L["Update taken.  %d changes you both made were kept as yours."] = true
 L["Update taken."] = true
 L["Local changes discarded."] = true
+
+L["Use the author's %s"] = true
+L["Replace your %s on this block with the author's.  Your other changes stay."] = true

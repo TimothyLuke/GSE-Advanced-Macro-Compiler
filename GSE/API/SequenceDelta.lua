@@ -588,6 +588,70 @@ function GSE.DescribeForkChanges(pid)
     return report
 end
 
+-- Walk a conflict's path back to the table it names. The paths are the ones
+-- the merge wrote: "" is the sequence, "v1" a version, "v1/2" the second block
+-- of it, then "/loop/<n>" or "/if1/<n>" for nested lists. listOf copies the
+-- array but keeps the element references, so a field written through this
+-- lands on the real block.
+local function nodeForPath(obj, path)
+    if type(obj) ~= "table" then return nil end
+    if path == nil or path == "" then return obj end
+    local parts = {}
+    for seg in string.gmatch(path, "[^/]+") do parts[#parts + 1] = seg end
+    local vk = parts[1] and parts[1]:match("^v(.+)$")
+    if not vk then return nil end
+    local versions = obj.Versions or {}
+    local node = versions[tonumber(vk) or vk]
+    if type(node) ~= "table" then return nil end
+    local i = 2
+    if parts[i] then
+        node = listOf(node.Actions)[tonumber(parts[i])]
+        i = i + 1
+    end
+    while type(node) == "table" and parts[i] do
+        local seg, idx = parts[i], tonumber(parts[i + 1])
+        if not idx then return nil end
+        if seg == "loop" then
+            node = loopChildren(node)[idx]
+        elseif seg:match("^if%d+$") then
+            node = ifBranch(node, tonumber(seg:sub(3)))[idx]
+        else
+            return nil
+        end
+        i = i + 2
+    end
+    return type(node) == "table" and node or nil
+end
+
+--- Take the author's value for ONE conflicted field.
+--
+-- The merge keeps the local value on a clash and parks the pair, because an
+-- override an update can silently revert is not an override. That is a default,
+-- not a verdict: this is how the other choice is made, one field at a time,
+-- rather than the sequence-wide "keep everything" or "discard everything" that
+-- would otherwise be the only options.
+--
+-- Writes into `obj` and drops the conflict. It does NOT persist -- the caller
+-- saves through the normal path (ReplaceSequence), which re-diffs the fork and
+-- keeps one story about how an edit is written.
+function GSE.ResolveForkConflict(pid, obj, path, field)
+    if type(GSEDeltas) ~= "table" or type(pid) ~= "string" then return false end
+    local entry = GSEDeltas[pid]
+    if type(entry) ~= "table" or type(entry.conflicts) ~= "table" then return false end
+    for i, c in ipairs(entry.conflicts) do
+        if c.path == path and c.field == field then
+            local node = nodeForPath(obj, path)
+            if not node then return false end
+            -- A nil `theirs` is the author removing the field; honour that.
+            node[field] = (c.theirs ~= nil) and deepcopy(c.theirs) or nil
+            table.remove(entry.conflicts, i)
+            if #entry.conflicts == 0 then entry.conflicts = nil end
+            return true
+        end
+    end
+    return false
+end
+
 --- Throw the local fork away and go back to the author's version.
 --
 -- Forgetting alone is not enough: GSE.Library still holds the reconstruction,

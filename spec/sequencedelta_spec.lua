@@ -411,4 +411,79 @@ describe("Delta fork updates", function()
       end)
     end)
   end)
+
+  -- Keeping the local value on a clash is a DEFAULT, not a verdict. This is
+  -- how the other choice gets made -- per field, which is the only grain that
+  -- answers "who wins" honestly. Sequence-wide keep-all / discard-all cannot.
+  describe("resolving one conflicted field the other way", function()
+    local function clashed(blob)
+      local v1 = seq({ act("/cast [mod:shift] Alpha"), act("/cast Bravo") })
+      fork(blob("v1", v1), v1, seq({ act("/cast [mod:alt] Alpha"), act("/cast Bravo") }))
+      local v2 = seq({ act("/cast [mod:ctrl] Alpha"), act("/cast Bravo") }, "v2")
+      local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+      return merged, conflicts
+    end
+
+    it("writes the author's value onto the block the conflict names", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        assert.are.equal(1, #conflicts)
+        local c = conflicts[1]
+        assert.is_true(GSE.ResolveForkConflict("pid1", merged, c.path, c.field))
+        assert.are.equal("/cast [mod:ctrl] Alpha", merged.Versions[1].Actions[1].macro)
+        assert.are.equal("/cast Bravo", merged.Versions[1].Actions[2].macro, "its neighbour is untouched")
+      end)
+    end)
+
+    it("drops the conflict once it is decided", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        GSE.ResolveForkConflict("pid1", merged, conflicts[1].path, conflicts[1].field)
+        assert.is_nil(GSEDeltas.pid1.conflicts, "the last one clears the list")
+        assert.is_nil(GSE.DescribeForkChanges("pid1").conflicts)
+      end)
+    end)
+
+    it("leaves the others alone when there is more than one", function()
+      withStubs(function(blob)
+        local v1 = seq({ act("/cast [mod:shift] Alpha"), act("/cast [mod:shift] Bravo") })
+        fork(blob("v1", v1), v1,
+          seq({ act("/cast [mod:alt] Alpha"), act("/cast [mod:alt] Bravo") }))
+        local v2 = seq({ act("/cast [mod:ctrl] Alpha"), act("/cast [mod:ctrl] Bravo") })
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        assert.are.equal(2, #conflicts)
+
+        local first = conflicts[1]
+        GSE.ResolveForkConflict("pid1", merged, first.path, first.field)
+        assert.are.equal(1, #GSEDeltas.pid1.conflicts, "only the decided one goes")
+        assert.are.equal(first.path ~= GSEDeltas.pid1.conflicts[1].path, true,
+          "and it is the other one that remains")
+      end)
+    end)
+
+    it("refuses a path or field it does not hold", function()
+      withStubs(function(blob)
+        local merged, conflicts = clashed(blob)
+        assert.is_false(GSE.ResolveForkConflict("pid1", merged, "v1/99", conflicts[1].field))
+        assert.is_false(GSE.ResolveForkConflict("pid1", merged, conflicts[1].path, "nosuchfield"))
+        assert.is_false(GSE.ResolveForkConflict("nosuchpid", merged, conflicts[1].path, conflicts[1].field))
+        assert.are.equal(1, #GSEDeltas.pid1.conflicts, "nothing was consumed")
+      end)
+    end)
+
+    it("honours the author removing a field", function()
+      withStubs(function(blob)
+        local withIcon = { Type = "Action", type = "macro", macro = "/cast Alpha", Icon = 5 }
+        local v1 = seq({ withIcon })
+        fork(blob("v1", v1), v1, seq({ { Type = "Action", type = "macro", macro = "/cast Alpha", Icon = 9 } }))
+        local v2 = seq({ { Type = "Action", type = "macro", macro = "/cast Alpha" } })
+        local merged, conflicts = GSE.RebaseDeltaFork("pid1", blob("v2", v2))
+        local c
+        for _, x in ipairs(conflicts) do if x.field == "Icon" then c = x end end
+        assert.is_not_nil(c, "Icon 5 -> 9 locally, removed upstream, is a clash")
+        assert.is_true(GSE.ResolveForkConflict("pid1", merged, c.path, c.field))
+        assert.is_nil(merged.Versions[1].Actions[1].Icon)
+      end)
+    end)
+  end)
 end)

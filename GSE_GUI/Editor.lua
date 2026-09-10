@@ -609,6 +609,21 @@ local function forkValueText(v)
     return tostring(v)
 end
 
+-- The conflicts parked against ONE block, so the panel can offer a control per
+-- field rather than only describing them.
+local function LocalChangeConflicts(editframe, version, keyPath)
+    local report = ForkReportFor(editframe)
+    if not report or not report.conflicts then return {} end
+    local idx = (type(keyPath) == "table" and #keyPath == 1) and keyPath[1] or nil
+    if not idx then return {} end
+    local path = "v" .. tostring(version) .. "/" .. tostring(idx)
+    local out = {}
+    for _, c in ipairs(report.conflicts) do
+        if c.path == path then out[#out + 1] = c end
+    end
+    return out
+end
+
 -- One block's entry in the report, as the text the side panel shows.
 local function LocalChangesText(editframe, version, keyPath)
     local report = ForkReportFor(editframe)
@@ -5570,6 +5585,41 @@ function GSE.CreateEditor()
                         macroeditbox:SetRelativeWidth(0.5)
                         if macrolayout.SetFlowGap then macrolayout:SetFlowGap(6) end
                         compiledPreview:AddChild(compiledMacro)
+                        -- One button per field you and the author both changed.
+                        -- The merge kept yours; this is how the other choice is
+                        -- made, per field, on the block it belongs to. Anything
+                        -- coarser cannot answer "who wins" -- it is either all
+                        -- of your work or none of it.
+                        if editframe.ShowLocalChanges then
+                            for _, c in ipairs(LocalChangeConflicts(editframe, version, keyPath)) do
+                                local takeField = UI:Create("Button")
+                                takeField:SetFullWidth(true)
+                                takeField:SetText(string.format(L["Use the author's %s"], tostring(c.field)))
+                                takeField:SetCallback("OnClick", function()
+                                    if InCombatLockdown() then
+                                        GSE.Print(L["Local Changes"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+                                        return
+                                    end
+                                    local pid = (editframe.Sequence.MetaData or {}).PlatformID
+                                    if not GSE.ResolveForkConflict(pid, editframe.Sequence, c.path, c.field) then return end
+                                    -- Persist through the normal save: for
+                                    -- protected content ReplaceSequence re-diffs
+                                    -- the fork, so there stays one story about
+                                    -- how an edit is written.
+                                    GSE.ReplaceSequence(editframe.ClassID or GSE.GetCurrentClassID(),
+                                        editframe.SequenceName, editframe.Sequence)
+                                    editframe.forkReport = nil
+                                    if editframe.RefreshCurrentVersion then editframe.RefreshCurrentVersion() end
+                                end)
+                                takeField:SetCallback("OnEnter", function()
+                                    GSE.CreateToolTip(string.format(L["Use the author's %s"], tostring(c.field)),
+                                        string.format(L["Replace your %s on this block with the author's.  Your other changes stay."],
+                                            tostring(c.field)), editframe)
+                                end)
+                                takeField:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+                                compiledPreview:AddChild(takeField)
+                            end
+                        end
                         macrolayout:AddChild(macroeditbox)
                         macrolayout:AddChild(compiledPreview)
 			else
