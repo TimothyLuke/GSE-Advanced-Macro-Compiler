@@ -992,3 +992,11 @@ L["When enabled, GSE prints a chat message each time a manual reset returns a se
 -- Editor: forget the last opened node at logout
 L["Forget Last Opened Sequence on Logout"] = true
 L["When enabled, GSE forgets which sequence you had open when you log out or reload, so the editor opens fresh next session instead of returning to where you left off.  Within a session the editor still reopens where you were."] = true
+
+-- Actionbar Overrides: name a button the auto-detection does not know
+L["Type a button name..."] = true
+L["Name an Actionbar Button"] = true
+L["Enter the frame name of the button:"] = true
+L["For a bar addon GSE does not detect yet.  The button must exist right now -- /fstack over it in game to read its name."] = true
+L["Use"] = true
+L["%s is not an actionbar button on this client."] = true

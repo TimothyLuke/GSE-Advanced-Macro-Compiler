@@ -1377,6 +1377,41 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                         end
                     end
                 end
+                -- Everything above is a prefix GSE knows. A bar addon released
+                -- after this build is not on that list, and waiting for a GSE
+                -- release to bind to it is a poor answer when the frame is
+                -- sitting there in game -- so let it be named directly.
+                --
+                -- It has to EXIST and be a Button: the apply path calls
+                -- _G[name]:SetAttribute("gse-button", ...) (Events.lua), which
+                -- a typo or a bar that is not loaded would error on. Checking
+                -- here turns that into a message. CheckButton passes -- it is a
+                -- Button -- which is what every bar addon actually creates.
+                if UI and UI.ShowInputDialog then
+                    root:CreateDivider()
+                    root:CreateButton(L["Type a button name..."], function()
+                        UI.ShowInputDialog({
+                            owner      = editframe,
+                            title      = L["Name an Actionbar Button"],
+                            prompt     = L["Enter the frame name of the button:"],
+                            note       = L["For a bar addon GSE does not detect yet.  The button must exist right now -- /fstack over it in game to read its name."],
+                            default    = model.bind,
+                            acceptText = L["Use"],
+                            maxLetters = 80,
+                            onAccept   = function(name)
+                                if GSE.isEmpty(name) then return end
+                                local frame = _G[name]
+                                if not (frame and type(frame) == "table" and frame.IsObjectType
+                                    and frame:IsObjectType("Button")) then
+                                    GSE.Print(string.format(
+                                        L["%s is not an actionbar button on this client."], name), L["Actionbar Overrides"])
+                                    return
+                                end
+                                choose(name)
+                            end,
+                        })
+                    end)
+                end
             end)
         end)
         refreshButtonText()
