@@ -1234,6 +1234,16 @@ function LoadKeyBindings(payload)
         -- and can stay stale for seconds. See scheduleBindingRecheck.
         scheduleBindingRecheck(BINDING_RECHECK_ATTEMPTS)
 
+        -- The keybind tree lists the spec's talent loadouts, so one created or
+        -- deleted while an editor is open would otherwise not show until the
+        -- editor was reopened. Only costs anything when an editor is actually
+        -- open, which is the rare case.
+        if GSE.GUI and GSE.GUI.editors then
+            for _, editor in ipairs(GSE.GUI.editors) do
+                if editor.ManageTree then editor.ManageTree() end
+            end
+        end
+
         -- A freshly (re)loaded override whose slot already holds a real action
         -- must start yielded, not behind the override. Defer one frame so the
         -- action-bar slots are populated before we read them.

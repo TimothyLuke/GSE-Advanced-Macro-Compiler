@@ -16,11 +16,15 @@
 -- they cannot be required. This slices the REAL bodies out of QoL.lua and runs
 -- them under stubs, rather than testing a copy that drifts the first time
 -- somebody edits the addon and not the spec.
+-- .gitattributes pins *.lua to eol=crlf, so a real checkout of QoL.lua has
+-- CRLF line endings whatever this file happens to have. The slicer below
+-- matches on "\n        end\n", so read the source with the endings
+-- normalised rather than only working on a working copy that happens to be LF.
 local function readFile(path)
-  local f = assert(io.open(path, "r"), "cannot open " .. path)
+  local f = assert(io.open(path, "rb"), "cannot open " .. path)
   local s = f:read("*a")
   f:close()
-  return s
+  return (s:gsub("\r\n", "\n"))
 end
 
 local src = readFile("GSE_QoL/QoL.lua")

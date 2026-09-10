@@ -653,6 +653,7 @@ L["Self"] = true
 L["Target"] = true
 L["Mouseover"] = true
 L["Boss"] = true
+L["None"] = true
 L["Commands"] = true
 L["Conditionals"] = true
 L["Spells"] = true
@@ -695,6 +696,7 @@ L["Save pending for "] = true
 L["Advanced Export"] = true
 L["Set Key to Bind"] = true
 L["Keybind"] = true
+L["%s was not saved: it still needs a %s."] = true
 L["Keybindings"] = true
 L["Spell"] = true
 L["Item"] = true
@@ -715,7 +717,37 @@ L["Insert Test Case"] = true
 
 -- #1525
 L["Talent Loadout"] = true
+L["%s is bound more than once.  Change or remove one before saving."] = true
 L["All Talent Loadouts"] = true
+L["Replace an action bar button with a sequence."] = true
+L["Bind a key straight to a sequence."] = true
+L["KEY-UP"] = true
+L["KEY-DOWN"] = true
+L["State"] = true
+L["Add"] = true
+L["Remove"] = true
+L["Add a row below this one."] = true
+L["Clear this row."] = true
+L["Remove this row."] = true
+L["Pick a button"] = true
+L["Limit of %d rows."] = true
+L["Set All of your Binds and Click Save!"] = true
+L["Right Click an Empty Action Button"] = true
+L["Assign a Sequence / Same for Clearing"] = true
+L["-or-"] = true
+L["Set in the Left Menu"] = true
+L["Sets Store by:"] = true
+L["Class / Spec"] = true
+L["Class / Spec / State"] = true
+L["%s is overridden more than once.  Change or remove one before saving."] = true
+L["Puts a sequence on an action bar button, so the button fires the sequence.  Right-click a button on your bar and pick the sequence; that is the quickest setup."] = true
+L["Works with the standard bars, ElvUI, NDui, Bartender4, Dominos and ConsolePort."] = true
+L["After dismounting in combat the button cannot swap back to the sequence until combat ends."] = true
+L["Needs the ActionButtonUseKeyDown CVar off (Key Up)."] = true
+L["Binds a key straight to a sequence, bypassing the action bar.  This is what The War Within requires: a macro can no longer call another macro."] = true
+L["Binds are per spec, and optionally per talent loadout; the spec binds are the fallback."] = true
+L["Controllers work: /console GamePadEnable 1.  PAD1-4 are A, B, X, Y."] = true
+L["Keys 1-7 stop driving the Sky Riding bar.  Use [flying] in the sequence, or /click ActionButton2."] = true
 
 L["Processing Collection of %s Elements."] = true
 L["Already Known"] = true
@@ -724,7 +756,6 @@ L[" was imported."] = true
 -- #1617
 L["Actionbar Overrides"] = true
 L["Actionbar Buttons"] = true
-L["New KeyBind"] = true
 L["New Actionbar Override"] = true
 
 L["Missing Variable "] = true
@@ -961,3 +992,11 @@ L["When enabled, GSE prints a chat message each time a manual reset returns a se
 -- Editor: forget the last opened node at logout
 L["Forget Last Opened Sequence on Logout"] = true
 L["When enabled, GSE forgets which sequence you had open when you log out or reload, so the editor opens fresh next session instead of returning to where you left off.  Within a session the editor still reopens where you were."] = true
+
+-- Actionbar Overrides: name a button the auto-detection does not know
+L["Type a button name..."] = true
+L["Name an Actionbar Button"] = true
+L["Enter the frame name of the button:"] = true
+L["For a bar addon GSE does not detect yet.  The button must exist right now -- /fstack over it in game to read its name."] = true
+L["Use"] = true
+L["%s is not an actionbar button on this client."] = true
