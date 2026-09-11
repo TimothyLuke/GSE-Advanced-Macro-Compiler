@@ -16,13 +16,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Two merges close together ran two CI jobs that both force-pushed gh-pages, and
-# the second lost the ref lock:
-#   ! [remote rejected] ... cannot lock ref 'refs/heads/gh-pages':
-#     is at 23ff128f but expected 224bfec0
-# Nothing was wrong with the build -- it is a race on one branch. Queue the runs
-# instead. NOT cancel-in-progress: a superseded run has usually already
-# published to Patreon / GSE Tools, and killing it half way is worse than
+# Two merges close together ran two CI jobs concurrently, and they raced each
+# other publishing. The gh-pages deploy is the one that failed visibly -- the
+# second run lost the ref lock -- and that step has since gone, but the Patreon
+# and GSE Tools publishes are the same shape of hazard and are still here.
+# Queue the runs. NOT cancel-in-progress: by the time a second run starts the
+# first has usually already published, and killing it half way is worse than
 # letting it finish.
 concurrency:
   group: ci-${{ github.ref }}
@@ -61,7 +60,6 @@ jobs:
           luarocks install luacov
           luarocks install luacov-coveralls
           luarocks install penlight
-          luarocks install ldoc
         # luarocks install rockspecs/luacov-coveralls-scm-0.rockspec
 
       - name: Run Busted UnitTests
@@ -133,16 +131,3 @@ jobs:
           GSE_FILE_API_URL: ${{ secrets.GSE_FILE_API_URL || 'https://api.qik.dev' }}
         run: npm run publish-gse
 
-      - name: Parse and generate documentation
-        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          mkdir .pages
-          ldoc -d .pages/docs GSE/API/*.lua
-          cp pages/* .pages
-
-      - name: Deploy API to GitHuib Pages🚀
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: JamesIves/github-pages-deploy-action@4.1.4
-        with:
-          branch: gh-pages # The branch the action should deploy to.
-          folder: .pages # The folder the action should deploy.
