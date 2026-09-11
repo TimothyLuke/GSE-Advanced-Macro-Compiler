@@ -435,13 +435,30 @@ describe(
         )
 
         it(
-          "prints the FixSequenceStructure command for sequences with issues",
+          "prints a repair command the user can actually run",
           function()
             local seq = makeSeq()
             seq.MetaData.SpecID = nil
             GSE.Library[0]["NeedsFixing"] = seq
             GSE.ScanMacrosForErrors()
-            assert.is_true(hasMsg('GSE.FixSequenceStructure(0, "NeedsFixing")'))
+            assert.is_true(hasMsg("/gse fixsequence 0 NeedsFixing"))
+          end
+        )
+
+        it(
+          "never tells the user to /run an internal",
+          function()
+            -- GSE is the addon's private namespace. The only global is the
+            -- locked plugin proxy (API/Plugins.lua): RegisterAddon,
+            -- GetSequenceNamesFromLibrary, isEmpty, Statics -- and nothing
+            -- else. So "/run GSE.FixSequenceStructure(...)" found the proxy,
+            -- found no such field, and answered "attempt to call a nil value"
+            -- for every user who followed the advice.
+            local seq = makeSeq()
+            seq.MetaData.SpecID = nil
+            GSE.Library[0]["NeedsFixing"] = seq
+            GSE.ScanMacrosForErrors()
+            assert.is_false(hasMsg("/run GSE."))
           end
         )
 

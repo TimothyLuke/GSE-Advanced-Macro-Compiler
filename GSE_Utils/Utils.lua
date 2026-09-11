@@ -1429,7 +1429,7 @@ function GSE.ScanMacrosForErrors()
                     end
                     GSE.Print(
                         string.format(
-                            L["To attempt automatic repair run: %s/run GSE.FixSequenceStructure(%d, \"%s\")%s"],
+                            L["To attempt automatic repair run: %s/gse fixsequence %d %s%s"],
                             GSEOptions.CommandColour,
                             classlibid,
                             seqname,
@@ -1744,7 +1744,8 @@ end
 -- 5. Re-indexes each Macro version's Actions array to remove gaps
 -- 6. Updates MetaData context version references to match the new indices
 -- 7. Saves the repaired sequence and queues a recompile
--- Usage: /run GSE.FixSequenceStructure(classLibraryID, "SequenceName")
+-- Usage: /gse fixsequence <classLibraryID> <SequenceName>  (the slash command
+-- is the only reachable route: GSE is private and _G.GSE is the plugin proxy)
 -- silent: when true, suppress informational/success prints. Errors
 -- (invalid class id, missing sequence, schema-incompatible) still print
 -- because they signal the caller's request couldn't be honoured. Used
@@ -2194,6 +2195,29 @@ function GSE:GSSlash(input)
         GSE.MoveMacroToClassFromGlobal()
     elseif command == "checksequencesforerrors" then
         GSE.ScanMacrosForErrors()
+    elseif command == "fixsequence" then
+        -- The repair the error report points at. It has to be reachable from a
+        -- slash command: GSE is the addon's private namespace and the only
+        -- global is the locked plugin proxy (API/Plugins.lua), which carries
+        -- RegisterAddon, GetSequenceNamesFromLibrary and isEmpty and nothing
+        -- else. So the old advice -- /run GSE.FixSequenceStructure(...) --
+        -- found the proxy, found no such field, and answered "attempt to call
+        -- a nil value" for everyone who tried it.
+        --
+        -- The name is everything after the class id, unsplit: sequence names
+        -- contain spaces and params splits on them.
+        local classid = tonumber(params[2])
+        local seqname = nil
+        if #params > 2 then
+            seqname = table.concat(params, " ", 3)
+        end
+        if not classid or GSE.isEmpty(seqname) then
+            GSE.Print(L["Usage: /gse fixsequence <classid> <sequence name>"], GNOME)
+        elseif not (GSE.Library[classid] and GSE.Library[classid][seqname]) then
+            GSE.Print(string.format(L["No sequence '%s' in class library %d."], seqname, classid), GNOME)
+        else
+            GSE.FixSequenceStructure(classid, seqname)
+        end
     elseif command == "scanicons" then
         if GSE.ScanSequenceActionIcons then
             GSE.ScanSequenceActionIcons()
