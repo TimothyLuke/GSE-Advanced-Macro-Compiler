@@ -2647,6 +2647,13 @@ function GSE.CompileTemplate(macro)
         template.Actions,
         {
             __index = function(t, k)
+                -- The key is a PATH (a list of indices); this walks it. A plain
+                -- index is simply absent, which is what a raw read would have
+                -- said. Lua 5.1's ipairs is raw and never reaches here, so the
+                -- guard has never been needed in game -- but 5.3+ honours
+                -- __index, and a numeric key then arrived at ipairs(k) and
+                -- errored. Off-game test runners are 5.4.
+                if type(k) ~= "table" then return nil end
                 for _, v in ipairs(k) do
                     if not t then
                         error("attempt to index nil")
