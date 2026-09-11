@@ -54,11 +54,14 @@ return {
     'block$',
     'file_loader$',
     '.luarocks$',
-    '$lua_install$',
-    '.lua$',
   },
 
+ -- Lua patterns, matched against the file path. 'GSE$' meant "ends with GSE",
+ -- which matches no file in this addon -- GSE/API/Storage does not end in GSE --
+ -- so the include filter never fired and the report covered every rock busted
+ -- had loaded. '^GSE' is the addon's own trees: GSE, GSE_GUI, GSE_Utils,
+ -- GSE_LDB, GSE_Options, GSE_QoL, GSE_Companion.
  ['include'] = {
-   'GSE$',
+   '^GSE',
  }
 }

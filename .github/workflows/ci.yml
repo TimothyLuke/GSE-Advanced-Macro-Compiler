@@ -16,6 +16,18 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Two merges close together ran two CI jobs that both force-pushed gh-pages, and
+# the second lost the ref lock:
+#   ! [remote rejected] ... cannot lock ref 'refs/heads/gh-pages':
+#     is at 23ff128f but expected 224bfec0
+# Nothing was wrong with the build -- it is a race on one branch. Queue the runs
+# instead. NOT cancel-in-progress: a superseded run has usually already
+# published to Patreon / GSE Tools, and killing it half way is worse than
+# letting it finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
