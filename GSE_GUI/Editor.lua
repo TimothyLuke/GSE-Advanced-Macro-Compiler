@@ -2530,7 +2530,7 @@ function GSE.CreateEditor()
     end
 
     --- This function pops up a confirmation dialog.
-    local function GUIDeleteSequence(classid, sequenceName)
+    local function GUIDeleteSequence(classid, sequenceName, afterDelete)
         GSE.UI.ShowConfirmDialog({
             owner       = editframe,
             title       = L["Delete Sequence"],
@@ -2545,6 +2545,9 @@ function GSE.CreateEditor()
             cancelText  = L["Cancel"],
             onConfirm   = function()
                 GUIConfirmDeleteSequence(classid, sequenceName)
+                -- Optional, and only after the user has said yes: lets a caller
+                -- tidy up after itself, e.g. the corrupt-sequence panel closing.
+                if afterDelete then afterDelete() end
             end,
         })
     end
