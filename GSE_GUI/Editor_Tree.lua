@@ -1084,14 +1084,217 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     end
 end
 
+-- The corrupt-sequence panels' fonts, shared by every one of them: all text at
+-- GSE's Huge size, the "GSE Addon" header half again as big, same face.
+--
+-- Applied with SetFont, never SetFontObject -- the same way addSectionDivider
+-- sizes its title. Labels are pooled, and resetForReuse hands one back with its
+-- original font set explicitly; an explicit font outranks SetFontObject, so on a
+-- recycled label the bigger font silently did nothing. It only ever showed on a
+-- freshly built one, which is why it looked right once and then went away.
+local function CorruptPanelFonts()
+    local file, size, flags = GameFontNormalHuge:GetFont()
+    size = size or 20
+    return {header = {file, math.floor(size * 1.5), flags}, text = {file, size, flags}}
+end
+
+-- The spec names a sequence stored under class `cid` can take without having
+-- to move class: that class's own specs plus its class-wide entry (a class ID
+-- doubles as a SpecID), or just Global for class 0. The same names and IDs the
+-- editor's Specialization/Class ID dropdown uses.
+local function specNamesForClass(cid)
+    local list = {}
+    for name in pairs(GSE.GetSpecNames()) do
+        local sid = tonumber(Statics.SpecIDHashList[name])
+        if sid then
+            local classOf = sid <= 13 and sid or GSE.GetClassIDforSpec(sid)
+            if classOf == cid then list[name] = name end
+        end
+    end
+    return list
+end
+
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, sequencename)
     if #unique < 3 then return end
     -- ponytail: never load a corrupt/broken seq into the editor — the decode
     -- crashes (Serialisation DecodeMessage on unreadable data). Surface it and
     -- stop; use right-click -> Delete to remove it.
     if not GSE.isEmpty(sequencename) and isBrokenSeq(classid, sequencename) then
-        GSE.Print("The sequence '" .. tostring(sequencename) ..
-            "' is corrupt and cannot be opened. Right-click it and choose Delete.")
+        -- Say so in the editor rather than in chat, and offer the two ways out.
+        ReleaseEditorFooterButtons(editframe)
+        container:ReleaseChildren()
+        editframe.loaded = nil
+        local function closePanel()
+            container:ReleaseChildren()
+            editframe.loaded = nil
+            if editframe.ManageTree then editframe.ManageTree() end
+        end
+        local rc = makeScrollableRightPane(container)
+        addSectionDivider(rc, L["Corrupt Sequence"], "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
+        -- The same lines /gse checksequencesforerrors prints for this sequence.
+        -- One that failed to decode is not in the Library to check; it gets the
+        -- text the load-time corrupt-sequence popup shows for it.
+        local cid = tonumber(classid)
+        local seq = cid and GSE.Library[cid] and GSE.Library[cid][sequencename]
+        local lines, issues = {}, {}
+        if seq and GSE.CheckSequenceStructure then
+            lines[1] = string.format(L["Issues found in '%s' (class library %d):"], tostring(sequencename), cid)
+            for _, issue in ipairs(GSE.CheckSequenceStructure(cid, sequencename, seq)) do
+                lines[#lines + 1] = "  - " .. issue
+                issues[#issues + 1] = issue
+            end
+        else
+            lines[1] = string.format(L["GSE_CORRUPT_SEQUENCE_TEXT"], tostring(sequencename), cid or 0)
+        end
+
+        -- The panel lays the same words out to read at a glance. It is cut from
+        -- the translated message at the quoted name rather than retyped, so it
+        -- keeps following whatever the scan says; a translation that does not
+        -- quote the name that way just stays on one line.
+        local panelLabels = {}   -- re-measured once shown; see below
+        local header = UI:Create("Label")
+        header:SetFullWidth(true)
+        if header.SetFont then header:SetFont(unpack(CorruptPanelFonts().header)) end
+        if header.SetJustifyH then header:SetJustifyH("CENTER") end
+        header:SetText(Statics.GSEString .. " Addon")
+        -- Sized once the panel has laid out, to centre the block on the panel.
+        local centreSpacer = UI:Create("Spacer")
+        if centreSpacer.SetFullWidth then centreSpacer:SetFullWidth(true) end
+        centreSpacer:SetHeight(1)
+        rc:AddChild(centreSpacer)
+        rc:AddChild(header)
+        panelLabels[#panelLabels + 1] = header
+
+        local quoted = "'" .. tostring(sequencename) .. "'"
+        local headline = lines[1]:gsub(":%s*$", "")
+        local body = headline
+        local qStart, qEnd = headline:find(quoted, 1, true)
+        if seq and qStart then
+            local before = headline:sub(1, qStart - 1):gsub("%s+$", "")
+            local after = headline:sub(qEnd + 1):gsub("^%s+", "")
+            body = GSEOptions.CommandColour .. "Error" .. Statics.StringReset .. " " .. before
+                .. "\n|cFFFFFFFF" .. quoted .. "|r\n" .. after
+        end
+        for _, issue in ipairs(issues) do
+            body = body .. "\n\n- " .. issue .. " -"
+        end
+        local message = UI:Create("Label")
+        message:SetFullWidth(true)
+        if message.SetFont then message:SetFont(unpack(CorruptPanelFonts().text)) end
+        if message.SetJustifyH then message:SetJustifyH("CENTER") end
+        message:SetText(body)
+        rc:AddChild(message)
+        panelLabels[#panelLabels + 1] = message
+        -- ...and in chat too, printed the way the scan prints them.
+        GSE.Print(lines[1], "Error")
+        for i = 2, #lines do GSE.Print(lines[i]) end
+        -- A missing spec is fixable right here: offer the spec rather than make
+        -- Delete the only way out. Tested with the tree's own rule -- would the
+        -- same sequence, given a spec, still be broken? -- so the picker shows
+        -- only when choosing one actually fixes it.
+        local specFixes = seq and type(seq.MetaData) == "table" and GSE.isEmpty(seq.MetaData.SpecID)
+            and not GSE.IsSequenceStructurallyBroken({MetaData = {SpecID = 0}, Versions = seq.Versions, Macros = seq.Macros})
+        if specFixes then
+            local pickLabel = UI:Create("Label")
+            pickLabel:SetFullWidth(true)
+            if pickLabel.SetFont then pickLabel:SetFont(unpack(CorruptPanelFonts().text)) end
+            if pickLabel.SetJustifyH then pickLabel:SetJustifyH("CENTER") end
+            pickLabel:SetText(L["Pick a Spec"])
+            rc:AddChild(pickLabel)
+            panelLabels[#panelLabels + 1] = pickLabel
+            local specRow = UI:Create("SimpleGroup")
+            specRow:SetFullWidth(true)
+            specRow:SetLayout("Flow")
+            if specRow.SetFlowHAlign then specRow:SetFlowHAlign("CENTER") end
+            local specPicker = UI:Create("Dropdown")
+            specPicker:SetLabel("")
+            specPicker:SetWidth(250)
+            if specPicker.SetDropdownStyle then specPicker:SetDropdownStyle(true) end
+            specPicker:SetList(specNamesForClass(cid))
+            specPicker:SetCallback("OnValueChanged", function(_, _, key)
+                local sid = Statics.SpecIDHashList[key]
+                if not sid then return end
+                seq.MetaData.SpecID = sid
+                seq.LastUpdated = GSE.GetTimestamp()
+                -- Saved the way the editor's Save does it: queued, so the
+                -- write and recompile land out of combat.
+                GSE.EnqueueOOC({action = "Replace", sequencename = sequencename, sequence = seq, classid = cid})
+                closePanel()
+            end)
+            specRow:AddChild(specPicker)
+            rc:AddChild(specRow)
+            local orLabel = UI:Create("Label")
+            orLabel:SetFullWidth(true)
+            if orLabel.SetFont then orLabel:SetFont(unpack(CorruptPanelFonts().text)) end
+            if orLabel.SetJustifyH then orLabel:SetJustifyH("CENTER") end
+            orLabel:SetText(L["Or"])
+            rc:AddChild(orLabel)
+            panelLabels[#panelLabels + 1] = orLabel
+        end
+        local buttons = UI:Create("SimpleGroup")
+        buttons:SetFullWidth(true)
+        buttons:SetLayout("Flow")
+        if buttons.SetFlowHAlign then buttons:SetFlowHAlign("CENTER") end
+        local deleteButton = UI:Create("Button")
+        deleteButton:SetText(L["Delete"])
+        deleteButton:SetWidth(150)
+        deleteButton:SetCallback("OnClick", function()
+            editframe.GUIDeleteSequence(classid, sequencename, closePanel)
+        end)
+        buttons:AddChild(deleteButton)
+        -- Repair only when it can actually fix something here; otherwise
+        -- Delete is the only way out and is the only button shown.
+        local canRepair = false
+        for _, issue in ipairs(issues) do
+            if GSE.IsAutoFixableSequenceIssue and GSE.IsAutoFixableSequenceIssue(issue) then
+                canRepair = true
+            end
+        end
+        if canRepair then
+            local repairButton = UI:Create("Button")
+            repairButton:SetText(L["Repair"])
+            repairButton:SetWidth(150)
+            repairButton:SetCallback("OnClick", function()
+                GSE.ScanMacrosForErrors()
+                closePanel()
+            end)
+            buttons:AddChild(repairButton)
+        end
+        rc:AddChild(buttons)
+        -- Centre the block vertically on the whole panel, title area included.
+        -- Measured a frame later, once layout has landed, and straight from the
+        -- geometry: the panel is the viewport's top to bottom, the block is the
+        -- header's top to the buttons' bottom, measured with the spacer at 1px.
+        -- The spacer grows by how far the block sits above centre -- one direct
+        -- computation, not a loop chasing its own result.
+        C_Timer.After(0, function()
+            -- Clicked away already: these widgets may be back in the pool.
+            if centreSpacer.parent ~= rc or not rc.scrollframe then return end
+            -- Re-measure every label now that it is on screen at full width.
+            -- A label sizes itself when its text is set, and one fresh out of
+            -- the pool gets that text before it is shown or widened -- the big
+            -- font could then measure as a single line, and the rest of the
+            -- message was cut off behind "...". Depended on the pool, so only
+            -- sometimes.
+            for _, label in ipairs(panelLabels) do label:SetText(label:GetText()) end
+            if rc.DoLayout then rc:DoLayout() end
+            -- Centre a frame later again, once the re-measured layout has landed.
+            C_Timer.After(0, function()
+                if centreSpacer.parent ~= rc or not rc.scrollframe then return end
+                local viewTop = rc.scrollframe:GetTop()
+                local viewBottom = rc.scrollframe:GetBottom()
+                local blockTop = header.frame:GetTop()
+                local blockBottom = buttons.frame:GetBottom()
+                if not (viewTop and viewBottom and blockTop and blockBottom) then return end
+                -- Where the block's top has to be for its middle to sit on the
+                -- panel's middle; the 1px spacer grows by the difference.
+                local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
+                centreSpacer:SetHeight(math.max(1, math.floor(1 + blockTop - wantTop)))
+                if rc.DoLayout then rc:DoLayout() end
+            end)
+        end)
+        editframe.loaded = true
+        editframe:SetTitle("GSE: " .. L["Corrupt Sequence"])
         return
     end
     SaveLastSequenceEditorPath(group, unique)

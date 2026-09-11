@@ -880,14 +880,20 @@ end
 --- Inspects one sequence for structural and content issues.
 -- Returns a list of human-readable issue strings (empty = no problems).
 -- ponytail: the "unusable structure" subset of checkSeqStructure's early-return
--- cases below. True = the editor can't load it AND /gse checksequencesforerrors
--- can't repair it -> the tree flags it red for manual deletion. Benign notices
--- (altered-from-export, missing SpecID) are NOT broken and stay unflagged.
+-- cases below. True = the tree flags it red and routes a click to the
+-- corrupt-sequence panel instead of the editor. A missing SpecID counts, tested
+-- exactly as checkSeqStructure reports it (isEmpty: nil or "", so a Global
+-- sequence's SpecID 0 is not missing). So do versions numbered from 0, tested
+-- as the scan tests them (Versions[0] ~= nil): they read as no versions at all,
+-- and it is the one case Repair fixes, so the panel offers Repair for it.
+-- Other benign notices, such as altered-from-export, stay unflagged.
 function GSE.IsSequenceStructurallyBroken(seq)
     if type(seq) ~= "table" then return true end
     if type(seq.MetaData) ~= "table" then return true end
+    if GSE.isEmpty(seq.MetaData.SpecID) then return true end
     if seq.Macros ~= nil and seq.Versions == nil then return true end -- pre-#1853 schema
     if type(seq.Versions) ~= "table" then return true end
+    if seq.Versions[0] ~= nil then return true end
     return false
 end
 
@@ -1355,6 +1361,17 @@ function GSE.ProcessCorruptSequences()
     end
 end
 
+-- The editor's corrupt-sequence panel lists the same issues this scan prints,
+-- so it asks the same function rather than a second copy of the rules.
+GSE.CheckSequenceStructure = checkSeqStructure
+
+-- Whether /gse checksequencesforerrors can fix an issue by itself. One rule,
+-- shared: the scan uses it to decide what to repair, and the editor's
+-- corrupt-sequence panel uses it to decide whether to offer Repair at all.
+function GSE.IsAutoFixableSequenceIssue(issue)
+    return type(issue) == "string" and issue:find("Versions starts at index 0", 1, true) ~= nil
+end
+
 --- Scans all sequences in GSE.Library for structural and content issues,
 -- then checks GSESequences entries for valid encoding.
 function GSE.ScanMacrosForErrors()
@@ -1370,9 +1387,7 @@ function GSE.ScanMacrosForErrors()
     -- prefix of the localised string; if a translator drops the prefix
     -- the auto-fix simply doesn't trigger and the user gets the manual
     -- /run hint as before — not a regression.
-    local function isAutoFixableIssue(issue)
-        return type(issue) == "string" and issue:find("Versions starts at index 0", 1, true) ~= nil
-    end
+    local isAutoFixableIssue = GSE.IsAutoFixableSequenceIssue
 
     -- 1. Structural / content checks on GSE.Library (all class IDs, including 0 = global)
     for classlibid = 0, 13 do
