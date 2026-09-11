@@ -206,3 +206,80 @@ describe("Storage lifecycle", function()
     end)
   end)
 end)
+
+-- ── duplicating ─────────────────────────────────────────────────────────────
+-- A duplicate must become its OWN record. Inheriting the source's PlatformID
+-- would have the copy and the original resolve to one server record and
+-- overwrite each other on the next Companion sync (#2077 is the import-rename
+-- form of the same fault).
+describe("GSE.DuplicateSequence", function()
+  setup(function()
+    GSE.GetCurrentClassID = GSE.GetCurrentClassID or function() return 1 end
+    GSE.UpdateSequence = function() end
+    GSE.GetActiveSequenceVersion = function() return 1 end
+    GSE.FindSequence = function(name)
+      for _, bucket in pairs(GSE.Library) do
+        if type(bucket) == "table" and bucket[name] then return bucket[name] end
+      end
+    end
+  end)
+
+  local function source(name)
+    return {
+      MetaData = {Name = name, Author = "Bob@Realm", Default = 1,
+                  PlatformID = "pid-source", OriginKey = "SRC|Bob@Realm"},
+      Versions = {{Actions = {{macro = "/cast Alpha"}}}},
+    }
+  end
+
+  it("mints its own identity instead of inheriting one", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    local newName = GSE.DuplicateSequence(1, "SRC", "COPY")
+    assert.are.equal("COPY", newName)
+    local copy = GSE.Library[1]["COPY"]
+    assert.is_not_nil(copy)
+    assert.is_nil(copy.MetaData.PlatformID, "a copy is not the record it was copied from")
+    assert.are.equal("COPY|Bob@Realm", copy.MetaData.OriginKey, "and begins its own history")
+    assert.are.equal("COPY", copy.MetaData.Name)
+  end)
+
+  it("leaves the source untouched", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    GSE.DuplicateSequence(1, "SRC", "COPY")
+    local src = GSE.Library[1]["SRC"]
+    assert.are.equal("pid-source", src.MetaData.PlatformID)
+    assert.are.equal("SRC|Bob@Realm", src.MetaData.OriginKey)
+    assert.are.equal("SRC", src.MetaData.Name)
+  end)
+
+  it("copies the body deeply", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    GSE.DuplicateSequence(1, "SRC", "COPY")
+    GSE.Library[1]["COPY"].Versions[1].Actions[1].macro = "/cast Bravo"
+    assert.are.equal("/cast Alpha", GSE.Library[1]["SRC"].Versions[1].Actions[1].macro)
+  end)
+
+  it("normalises a supplied name the way import does", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    assert.are.equal("My_New_Seq", GSE.DuplicateSequence(1, "SRC", "My New,Seq"))
+  end)
+
+  it("auto-numbers when no name is given", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    assert.are.equal("SRCCopy", GSE.DuplicateSequence(1, "SRC"))
+    assert.are.equal("SRCCopy2", GSE.DuplicateSequence(1, "SRC"))
+    assert.are.equal("SRCCopy3", GSE.DuplicateSequence(1, "SRC"))
+  end)
+
+  it("refuses a name already in use rather than overwriting it", function()
+    GSE.Library[1]["SRC"] = source("SRC")
+    GSE.Library[1]["TAKEN"] = source("TAKEN")
+    assert.is_nil(GSE.DuplicateSequence(1, "SRC", "TAKEN"))
+    assert.are.equal("TAKEN", GSE.Library[1]["TAKEN"].MetaData.Name, "the occupant is untouched")
+  end)
+
+  it("refuses what it cannot find or name", function()
+    assert.is_nil(GSE.DuplicateSequence(1, "NOSUCH", "X"))
+    assert.is_nil(GSE.DuplicateSequence(1, nil, "X"))
+  end)
+end)
