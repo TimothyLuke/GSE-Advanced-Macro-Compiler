@@ -5,6 +5,16 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
+-- How many steps ride in one chunk of the secure Execute payload. The step
+-- list is split because a single secure string is length-limited; the secure
+-- snippet calls each chunk an "iteration" and wraps from the last step of the
+-- last iteration back to the first step of the first.
+--
+-- GSE.SequencesExec keeps the SAME steps as ONE flat list, so anything that
+-- wants the flat index from a (iteration, step) pair has to use this number.
+-- Both sides are derived from it here so they cannot drift apart.
+local SECURE_STEPS_PER_ITERATION = 253
+
 local gseEvalEnv = setmetatable({GSE = GSE}, {__index = _G})
 local function gseLoadstring(code, chunkname)
     local chunk, err = loadstring(code, chunkname)
@@ -1897,8 +1907,11 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
 
     local step = self:GetAttribute("step") or 1
     local iteration = self:GetAttribute("iteration") or 1
+    -- Flat index into SequencesExec. Iteration 2 step 1 is the 254th step of
+    -- the rotation, not the 509th: the offset is the number of steps in the
+    -- iterations ALREADY consumed, so iteration-1 of them, not iteration.
     if iteration > 1 then
-        step = step + iteration * 254
+        step = (iteration - 1) * SECURE_STEPS_PER_ITERATION + step
     end
 
     local gsebutton = self:GetName()
@@ -2096,8 +2109,11 @@ end
 function GSE.UpdateIcon(self, reseticon)
     local step = self:GetAttribute("step") or 1
     local iteration = self:GetAttribute("iteration") or 1
+    -- Same flat index as GSE.GetCurrentButtonIconInfo computes. It is needed
+    -- again here: this `step` is the fallback lookup into SequencesExec, and
+    -- it is the Step reported outward to WeakAuras and the sequence debugger.
     if iteration > 1 then
-        step = step + iteration * 254
+        step = (iteration - 1) * SECURE_STEPS_PER_ITERATION + step
     end
     local gsebutton = self:GetName()
     if not reseticon and self:GetAttribute("combatreset") == true then
@@ -2788,7 +2804,7 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     for k, v in ipairs(compressedsteps) do
         table.insert(temptable, v)
         finalsteps = finalsteps + 1
-        if finalsteps == 254 or k == #compressedsteps then
+        if finalsteps == SECURE_STEPS_PER_ITERATION + 1 or k == #compressedsteps then
             table.insert(bigsequence, string.join("\001", unpack(temptable)))
             temptable = {}
             finalsteps = 1
