@@ -3319,8 +3319,16 @@ function GSE.ManageMacros()
             }
             GSE.UpdateMacro(node)
         else
+            -- GetMacroIndexByName answers 0, not nil, for a name this character
+            -- does not have -- and 0 is truthy. Tested as `if slot`, every miss
+            -- went to GetMacroInfo(0), came back nil, and was deleted. That
+            -- includes the character buckets themselves: this loop walks every
+            -- key in GSEMacros, "Name-Realm" is never a macro name, so each
+            -- bucket was dropped the moment it was created. The else branch
+            -- below, which keeps tables, was written for exactly this case and
+            -- could never be reached.
             local slot = GetMacroIndexByName(k)
-            if slot then
+            if slot and slot > 0 then
                 local mname, micon, mbody = GetMacroInfo(slot)
                 if mname then
                     GSEMacros[mname] = {
@@ -3370,8 +3378,10 @@ function GSE.ManageMacros()
                     }
                     GSE.UpdateMacro(node)
                 else
+                    -- 0 on a miss, as above: a macro this bucket holds that the
+                    -- character does not is kept, not deleted.
                     local slot = GetMacroIndexByName(k)
-                    if slot then
+                    if slot and slot > 0 then
                         local mname, micon, mbody = GetMacroInfo(slot)
                         if mname then
                             GSEMacros[char .. "-" .. realm][mname] = {
