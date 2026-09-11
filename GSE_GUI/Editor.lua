@@ -4459,6 +4459,23 @@ function GSE.CreateEditor()
                         if targetList and delObj and delObj >= 1 and delObj <= #targetList then
                             table.remove(targetList, delObj)
                             removed = true
+                            -- A sequence always keeps one block. Deleting the last
+                            -- one used to leave Actions empty with the selection still
+                            -- pointing at the block just removed, and the next Add
+                            -- walked that stale path into nothing and errored. Put
+                            -- back the same single Action a new sequence starts with;
+                            -- the refocus below then selects it as {1}.
+                            if #delPath == 0 and #targetList == 0 then
+                                table.insert(targetList, {
+                                    ["macro"] = "Need Stuff Here",
+                                    ["type"] = "macro",
+                                    ["Type"] = Statics.Actions.Action
+                                })
+                                -- From the top: the saved scroll position belongs to
+                                -- the list that just emptied, and the rebuild restores
+                                -- it (finishDraw and ChooseVersion both SetScroll it).
+                                editframe.scrollStatus.scrollvalue = 0
+                            end
                         end
 
                         -- Deleting a block used to leave the rebuilt editor scrolled to the
