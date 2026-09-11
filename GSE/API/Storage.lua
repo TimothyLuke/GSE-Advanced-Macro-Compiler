@@ -1426,14 +1426,22 @@ function GSE.PerformReloadSequences(force)
         end
         func = GSE.UpdateSequence
     end
+    -- A record with no MetaData or no Versions -- one the editor's tree flags
+    -- as corrupt -- has nothing in it to compile, and reading either field off
+    -- it stopped the reload for every sequence after it. Anything else is
+    -- compiled exactly as before: a missing SpecID, say, still runs.
+    local function reloadable(sequence)
+        return type(sequence) == "table" and type(sequence.MetaData) == "table"
+            and type(sequence.Versions) == "table"
+    end
     for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
-        if not sequence.MetaData.Disabled then
+        if reloadable(sequence) and not sequence.MetaData.Disabled then
             func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
         end
     end
     if not GSE.isEmpty(GSE.Library[0]) then
         for name, sequence in pairs(GSE.Library[0]) do
-            if GSE.isEmpty(sequence.MetaData.Disabled) then
+            if reloadable(sequence) and GSE.isEmpty(sequence.MetaData.Disabled) then
                 func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
             end
         end
@@ -1638,6 +1646,15 @@ function GSE.GetSequenceNames(Library)
         GSEOptions.filterList[Statics.Global] = true
     end
     local currentClassID = GSE.GetCurrentClassID()
+    -- A record with no MetaData or no SpecID still gets a key -- spec 0, the
+    -- key a not-yet-decoded foreign-class sequence already gets below --
+    -- rather than throwing. This runs before the tree isolates each sequence,
+    -- so one such record blanked the whole list, New Sequence and Import
+    -- included; the tree now lists it and flags it red for deletion.
+    local function specOf(j)
+        local meta = type(j) == "table" and j.MetaData
+        return (type(meta) == "table" and meta.SpecID) or 0
+    end
     local keyset = {}
     for k, _ in pairs(Library) do
         if GSEOptions.filterList[Statics.All] or k == currentClassID then
@@ -1645,14 +1662,14 @@ function GSE.GetSequenceNames(Library)
                 -- Library already loaded for these classes ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â full metadata available.
                 for i, j in pairs(Library[k]) do
                     local disable = 0
-                    if j.DisableEditor then
+                    if type(j) == "table" and j.DisableEditor then
                         disable = 1
                     end
-                    local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
+                    local keyLabel = k .. "," .. specOf(j) .. "," .. i .. "," .. disable
                     if k == currentClassID and GSEOptions.filterList["Class"] then
                         keyset[keyLabel] = i
                     elseif k == currentClassID and not GSEOptions.filterList["Class"] then
-                        if j.MetaData.SpecID == GSE.GetCurrentSpecID() or j.MetaData.SpecID == currentClassID then
+                        if specOf(j) == GSE.GetCurrentSpecID() or specOf(j) == currentClassID then
                             keyset[keyLabel] = i
                         end
                     else
@@ -1672,10 +1689,10 @@ function GSE.GetSequenceNames(Library)
             if k == 0 and GSEOptions.filterList[Statics.Global] then
                 for i, j in pairs(Library[k]) do
                     local disable = 0
-                    if j.DisableEditor then
+                    if type(j) == "table" and j.DisableEditor then
                         disable = 1
                     end
-                    local keyLabel = k .. "," .. j.MetaData.SpecID .. "," .. i .. "," .. disable
+                    local keyLabel = k .. "," .. specOf(j) .. "," .. i .. "," .. disable
                     keyset[keyLabel] = i
                 end
             end
@@ -2325,7 +2342,10 @@ function GSE.GetSequenceSummary()
     for k, v in ipairs(GSE.Library) do
         returntable[k] = {}
         for i, j in pairs(v) do
-            if not (j["MetaData"] and j["MetaData"].noExport) then
+            -- No MetaData, no summary. `not (MetaData and noExport)` is true
+            -- when MetaData is missing, so a record the tree flags as corrupt
+            -- went on to read .Help off nil. Healthy records are unchanged.
+            if type(j) == "table" and type(j["MetaData"]) == "table" and not j["MetaData"].noExport then
                 returntable[k][i] = {}
                 returntable[k][i].Help = j["MetaData"].Help
                 returntable[k][i].LastUpdated = j["MetaData"].LastUpdated

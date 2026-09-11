@@ -1534,10 +1534,15 @@ local function ManageTree(editframe)
         local tnode = {}
         if k > 0 then
             local classinfo, classfile = GetClassInfo(k)
-            local text =
-                C_ClassColor and
-                WrapTextInColorCode(classinfo, C_ClassColor.GetClassColor(classfile):GenerateHexColor()) or
-                classinfo
+            -- A class this client does not have -- a Demon Hunter or Evoker
+            -- sequence on a Classic client, or a bad class id -- has no info and
+            -- no colour. :GenerateHexColor() on that nil threw after every
+            -- sequence was built and before SetTree, so the list came up blank.
+            local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
+            local text = classinfo or ("Class " .. tostring(k))
+            if color and classinfo then
+                text = WrapTextInColorCode(classinfo, color:GenerateHexColor())
+            end
             tnode = {
                 value = k,
                 text = text,
