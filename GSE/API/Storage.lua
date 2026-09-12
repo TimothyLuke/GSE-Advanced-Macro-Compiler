@@ -746,6 +746,77 @@ function GSE.StoreEncodedSequence(name, encoded)
     return true
 end
 
+--- For an addon that writes a sequence into GSESequences itself: re-read that
+--- one sequence from the store and rebuild its button, rather than leave the
+--- change unseen until the next reload.
+--
+-- GSE decodes the store into its in-memory Library at load and compiles the
+-- buttons from that copy, and nothing watches GSESequences afterwards -- so a
+-- write from outside GSE reached disk at once and the running game only at the
+-- next /reload. /gse recompilesequences does not help: it recompiles from the
+-- same stale in-memory copy.
+--
+-- `classid` is optional; without it the sequence is looked for in the current
+-- class, then Global, then any other. The rebuild goes through the OOC queue,
+-- so in combat it lands as combat ends. A sequence of a class this character is
+-- not is re-read but not built, the same as at load.
+--
+-- Returns true when the sequence was found and re-read.
+function GSE.ApplyStoredSequence(sequenceName, classid)
+    if type(sequenceName) ~= "string" or type(GSESequences) ~= "table" then return false end
+    classid = tonumber(classid)
+    if not (classid and type(GSESequences[classid]) == "table" and GSESequences[classid][sequenceName]) then
+        classid = nil
+        local current = GSE.GetCurrentClassID()
+        for _, cid in ipairs({current, 0}) do
+            if type(GSESequences[cid]) == "table" and GSESequences[cid][sequenceName] then
+                classid = cid
+                break
+            end
+        end
+        if not classid then
+            for cid, store in pairs(GSESequences) do
+                if type(store) == "table" and store[sequenceName] then
+                    classid = cid
+                    break
+                end
+            end
+        end
+    end
+    if not classid then return false end
+
+    -- Drop the stale decoded copy so the loader re-reads the store.
+    if type(GSE.Library[classid]) == "table" then GSE.Library[classid][sequenceName] = nil end
+    GSE.EnsureSequenceLoaded(classid, sequenceName)
+    local sequence = GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    if type(sequence) ~= "table" then return false end
+
+    if (classid == GSE.GetCurrentClassID() or classid == 0) and type(sequence.Versions) == "table" then
+        local version = GSE.GetActiveSequenceVersion(sequenceName)
+        if version and sequence.Versions[version] then
+            GSE.UpdateSequence(sequenceName, sequence.Versions[version])
+        end
+    end
+    -- Marks this update as one that came from the store, so an editor showing
+    -- the sequence reloads it instead of only reporting it is behind.
+    GSE.ApplyingStoredSequence = sequenceName
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+    GSE.ApplyingStoredSequence = nil
+    return true
+end
+
+--- The same for a variable an addon writes into GSEVariables itself. GSE.V
+--- reloads any missing entry from the store on its next use, so clearing the
+--- compiled copy is all it takes -- the same thing StoreEncodedVariable does.
+function GSE.ApplyStoredVariable(name)
+    if type(name) ~= "string" or type(GSEVariables) ~= "table" or GSE.isEmpty(GSEVariables[name]) then
+        return false
+    end
+    if GSE.V then GSE.V[name] = nil end
+    GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
+    return true
+end
+
 function GSE.StoreEncodedVariable(name, encoded)
     if type(name) ~= "string" or type(encoded) ~= "string" then return false end
     local ok, decoded = GSE.DecodeMessage(encoded)

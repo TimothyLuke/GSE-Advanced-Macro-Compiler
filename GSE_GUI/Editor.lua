@@ -8160,6 +8160,24 @@ function GSE.CreateEditor()
                         editframe:SetStatusText(editframe.statusText or ("GSE: " .. GSE.VersionString))
                     end
                 )
+            elseif GSE.ApplyingStoredSequence == seqName then
+                -- Written into GSE's store by another addon and applied live
+                -- (GSE.ApplyStoredSequence). Reload this view from the store the
+                -- way clicking back onto the sequence does, instead of leaving
+                -- it showing the old blocks. Anything edited here and not saved
+                -- is replaced; the addon that wrote it owns the sequence.
+                local tree = editframe.treeContainer
+                local status = tree and (tree.status or tree.localstatus)
+                local selected = status and status.selected
+                if selected then
+                    -- The click path re-reads the store only when this differs.
+                    editframe.OrigSequenceName = nil
+                    C_Timer.After(0, function()
+                        if editframe.SequenceName == seqName and GSE.GUI.SelectEditorTreePath then
+                            GSE.GUI.SelectEditorTreePath(editframe, selected)
+                        end
+                    end)
+                end
             else
                 editframe:SetStatusText(
                     seqName .. " " .. L["modified in other window.  This view is now behind the current sequence."]

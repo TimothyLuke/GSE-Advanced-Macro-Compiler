@@ -210,6 +210,10 @@ local publicProxy = {
     -- Sequences table before handing it to RegisterAddon. Without it the
     -- registration handshake errors before it reaches the two methods above.
     isEmpty = GSE.isEmpty,
+    -- For an addon that writes a sequence or variable into GSE's store itself:
+    -- have GSE re-read it and rebuild, instead of waiting for a reload.
+    ApplyStoredSequence = GSE.ApplyStoredSequence,
+    ApplyStoredVariable = GSE.ApplyStoredVariable,
     Statics = {}
 }
 setmetatable(publicProxy, {
