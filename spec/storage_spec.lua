@@ -73,6 +73,56 @@ describe(
         )
 
         it(
+          "is stamped on save, not only on the next load",
+          function()
+            -- A sequence created, exported or renamed within one session never
+            -- goes through the loader; the save path must stamp it itself.
+            local sent = {}
+            local saveSendMessage, saveDeps = GSE.SendMessage, GSE.ComputeSequenceDependencies
+            GSE.SendMessage = function(_, msg, name) sent[#sent + 1] = msg end
+            GSE.ComputeSequenceDependencies = function() end
+            -- busted sandboxes spec globals; the module reads the real _G.
+            _G.GSESequences = {[1] = {}}
+            GSE.Library = {[1] = {}}
+            local seq = {MetaData = {Author = "Bob@Realm", Default = 1}, Versions = {{Actions = {}}}}
+            GSE.ReplaceSequence(1, "SBA", seq)
+            assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA"].MetaData.OriginKey)
+            -- the mock codec is an identity; the real one returns ok, table
+            local decoded = {GSE.DecodeMessage(_G.GSESequences[1]["SBA"])}
+            local stored = type(decoded[1]) == "table" and decoded[1] or decoded[2]
+            assert.are.equal("SBA|Bob@Realm", stored[2].MetaData.OriginKey)
+            -- a later save under a new name keeps the birth key
+            GSE.ReplaceSequence(1, "SBA-Renamed", GSE.Library[1]["SBA"])
+            assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA-Renamed"].MetaData.OriginKey)
+            GSE.SendMessage, GSE.ComputeSequenceDependencies = saveSendMessage, saveDeps
+          end
+        )
+
+        it(
+          "is stamped when imported, not only on the next load",
+          function()
+            -- A new or replaced import stores through OOCPerformMergeAction,
+            -- which writes into the Library directly rather than through
+            -- ReplaceSequence, so the stamp on save never sees it.
+            local saveSendMessage, saveDeps = GSE.SendMessage, GSE.ComputeSequenceDependencies
+            GSE.SendMessage = function() end
+            GSE.ComputeSequenceDependencies = function() end
+            _G.GSESequences = {[1] = {}}
+            GSE.Library = {[1] = {}}
+            local seq = {MetaData = {Author = "Bob@Realm", Default = 1}, Versions = {{Actions = {}}},
+                         LastUpdated = "20260912000000"}
+            GSE.OOCPerformMergeAction("REPLACE", 1, "SBA", seq)
+            assert.are.equal("SBA|Bob@Realm", GSE.Library[1]["SBA"].MetaData.OriginKey)
+            -- replacing it again with a body that already carries a key keeps that key
+            local again = {MetaData = {Author = "Bob@Realm", Default = 1, OriginKey = "Old|Bob@Realm"},
+                           Versions = {{Actions = {}}}, LastUpdated = "20260912000001"}
+            GSE.OOCPerformMergeAction("REPLACE", 1, "SBA", again)
+            assert.are.equal("Old|Bob@Realm", GSE.Library[1]["SBA"].MetaData.OriginKey)
+            GSE.SendMessage, GSE.ComputeSequenceDependencies = saveSendMessage, saveDeps
+          end
+        )
+
+        it(
           "survives the author being rewritten to a site nickname",
           function()
             -- What exportGSE does to every installed sequence. The stored key
