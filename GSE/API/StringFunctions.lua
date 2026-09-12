@@ -87,7 +87,7 @@ end
 function GSE.DecodeMacroEditorText(text)
     text = GSE.DecodeEditorText(text)
     if type(text) ~= "string" then return text end
-    text = text:gsub("(^[ \t]*)|([%a]+)", "%1/%2")
+    text = text:gsub("^([ \t]*)|([%a]+)", "%1/%2")
     text = text:gsub("(\n[ \t]*)|([%a]+)", "%1/%2")
     return text
 end
@@ -364,12 +364,9 @@ end
 
 function GSE.CleanStringsArray(tabl)
     for k, v in ipairs(tabl) do
-        local tempval = GSE.CleanStrings(v)
-        if tempval == [[""]] then
-            tabl[k] = nil
-        else
-            tabl[k] = tempval
-        end
+        -- GSE.CleanStrings has already collapsed an exact `""` to an empty
+        -- string, so there is nothing left here to special-case.
+        tabl[k] = GSE.CleanStrings(v)
     end
     return tabl
 end
@@ -387,7 +384,7 @@ function GSE.StripControlandExtendedCodes(str)
         elseif str:byte(i) == 10 then -- Leave line breaks Unix style
             s = s .. str:sub(i, i)
         elseif str:byte(i) == 13 then -- Leave line breaks Windows style
-            s = s .. str:sub(i, str:byte(10))
+            s = s .. str:sub(i, i)
         elseif str:byte(i) >= 128 then -- Extended characters including accented characters for international languages
             s = s .. str:sub(i, i)
         else -- Convert everything else to whitespace
@@ -448,8 +445,7 @@ function GSE.Dump(node)
                         break
                     else
                         if #GSE.SplitMeIntoLines(v) > 1 then
-                            output_str =
-                                output_str .. string.rep("\t", depth) .. key .. " = [[\n" .. tostring(v) .. "\n]]"
+                            output_str = output_str .. string.rep("\t", depth) .. key .. " = [[\n" .. tostring(v) .. "\n]]"
                         else
                             output_str = output_str .. string.rep("\t", depth) .. key .. ' = "' .. tostring(v) .. '"'
                         end
