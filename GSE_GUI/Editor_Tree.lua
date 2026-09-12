@@ -504,7 +504,19 @@ end
 local function SaveLastSequenceEditorPath(group, unique)
     if unique[1] ~= "Sequences" or #unique < 4 or unique[#unique] == "newversion" then return end
     local opts = GetSequenceEditorOptions()
-    if opts then opts.lastSequencePath = group end
+    if not opts then return end
+    opts.lastSequencePath = group
+    -- Remembered per class as well. The single path above belongs to whichever
+    -- class was used last, and the editor drops it when this character's tree
+    -- cannot show it -- so logging in on another character landed on New
+    -- Sequence. Kept per class, each one comes back to where it left off, and a
+    -- Shaman's sequence is never opened on a Demon Hunter.
+    local elements = GSE.split(unique[3] or "", ",")
+    local pathClass = tonumber(elements[1])
+    if pathClass then
+        opts.lastSequencePathByClass = opts.lastSequencePathByClass or {}
+        opts.lastSequencePathByClass[pathClass] = group
+    end
 end
 
 function GSE.GUI.GetLastSequenceEditorPath()
@@ -533,10 +545,24 @@ end
 -- so forgetting means clearing all four. Called from PLAYER_LOGOUT when
 -- GSEOptions.forgetLastSequenceOnLogout is set; the state is still kept during
 -- the session, so only the next login sees a fresh editor.
+--- The last sequence opened on `classid`, or nil. Asked when the most recent
+--- sequence belongs to a class this character's tree cannot show.
+function GSE.GUI.GetLastSequenceEditorPathForClass(classid)
+    classid = tonumber(classid)
+    local opts = GetSequenceEditorOptions()
+    local byClass = opts and opts.lastSequencePathByClass
+    if not (classid and byClass) then return nil end
+    local path = byClass[classid]
+    if SequenceEditorPathExists(path) then return path end
+    byClass[classid] = nil
+    return nil
+end
+
 function GSE.GUI.ForgetLastSequenceEditorNode()
     local opts = GetSequenceEditorOptions()
     if not opts then return end
     opts.lastSequencePath = nil
+    opts.lastSequencePathByClass = nil
     opts.lastArea = nil
     opts.lastKey = nil
     opts.lastClassId = nil

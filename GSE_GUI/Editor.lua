@@ -8266,7 +8266,11 @@ function GSE.ShowSequences()
         local parts = {("\001"):split(lastSequencePath)}
         local pathClass = parts[2] and tostring(parts[2]) or ""
         if pathClass ~= classID and not (showingGlobal and tonumber(pathClass) == 0) then
-            lastSequencePath = nil   -- wrong class, fall back to current class
+            -- Not a class this tree shows. Fall back to the last sequence opened
+            -- on THIS class, so each character lands where it left off instead
+            -- of on New Sequence -- and never on another class's sequence.
+            lastSequencePath = GSE.GUI.GetLastSequenceEditorPathForClass
+                and GSE.GUI.GetLastSequenceEditorPathForClass(tonumber(classID)) or nil
         end
     end
 
