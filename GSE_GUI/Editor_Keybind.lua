@@ -1751,15 +1751,56 @@ end
 -- hotspot's right edge sits as far in from the pane's right as the left
 -- hotspot's left edge sits in from the pane's left.  Measured after layout,
 -- so the row's own width arithmetic never has to be right for this to be.
+-- Gap between the section divider and the top of a column highlight, so it
+-- clears the line by the same margin the highlight leaves at the bottom of
+-- the pane.
+local KB_HOTSPOT_TOP_GAP = 4
+
 local function mirrorHotspots(container)
     local parent = container.content or container.frame
+    local pane = container.frame or parent
     local pair = hotspots[parent]
     local left, right = pair and pair[1], pair and pair[2]
-    if not (left and right and parent.GetLeft and left.GetLeft) then return end
-    local parentLeft, parentRight, leftEdge = parent:GetLeft(), parent:GetRight(), left:GetLeft()
-    if not (parentLeft and parentRight and leftEdge) then return end
-    local inset = leftEdge - parentLeft
-    right:SetPoint("RIGHT", parent, "RIGHT", -inset, 0)
+    if not (left and right and pane.GetLeft and left.GetLeft) then return end
+    local paneLeft, paneRight = pane:GetLeft(), pane:GetRight()
+    local leftEdge, leftRightEdge = left:GetLeft(), left:GetRight()
+    if not (paneLeft and paneRight and leftEdge and leftRightEdge) then return end
+    local inset = leftEdge - paneLeft
+    local width = leftRightEdge - leftEdge
+    -- Outer edges line up with the ends of the divider line above, which is
+    -- what the eye measures them against. Mirroring the left inset put the
+    -- right edge past the line's end: the pane keeps space on the right for
+    -- its scrollbar, so the line stops short of the pane edge on that side.
+    local rightInset = inset
+    local edgeRef = container.gseChooserTopAnchor
+    if edgeRef and edgeRef.GetLeft and edgeRef.GetRight then
+        local lineLeft, lineRight = edgeRef:GetLeft(), edgeRef:GetRight()
+        if lineLeft and lineRight then
+            inset = lineLeft - paneLeft
+            rightInset = paneRight - lineRight
+        end
+    end
+    -- Start under the section divider rather than over the "Bindings" header.
+    -- Measured, so it follows whatever height that header ends up with.
+    local topOffset = 0
+    local topAnchor = container.gseChooserTopAnchor
+    if topAnchor and topAnchor.GetBottom then
+        local anchorBottom, paneTop = topAnchor:GetBottom(), pane:GetTop()
+        if anchorBottom and paneTop then
+            topOffset = math.min(0, anchorBottom - paneTop) - KB_HOTSPOT_TOP_GAP
+        end
+    end
+    -- Both columns run the pane's full height. The top used to come from the
+    -- column's own top cell, which is fine while the tiles start at the top of
+    -- the pane; centred, that left the highlight starting halfway down.
+    left:ClearAllPoints()
+    left:SetWidth(width)
+    left:SetPoint("TOPLEFT", pane, "TOPLEFT", inset, topOffset)
+    left:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inset, 0)
+    right:ClearAllPoints()
+    right:SetWidth(width)
+    right:SetPoint("TOPRIGHT", pane, "TOPRIGHT", -rightInset, topOffset)
+    right:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -rightInset, 0)
 end
 
 -- A tile is TWO stacked groups, not one: the top (icon, title, blurb, note)
@@ -1816,6 +1857,21 @@ local function chooserTile(icon, title, blurb, note, points, onClick)
         bullets:AddChild(paragraph("|cffffd100-|r  " .. point, "|cffbbbbbb"))
     end
     return tile, noteGroup, bullets
+end
+
+-- The two cells are 0.49 of the row each and pack from the left, so the 2%
+-- left over sits to the right of the second column and its content reads as
+-- shifted left. Push the right cell over by exactly that, measured after
+-- layout, so each column sits the same distance inside its own edge.
+local function alignRightColumn(row, leftCell, rightCell)
+    if not (row and leftCell and rightCell) then return end
+    if not (row.frame and leftCell.frame and rightCell.frame) then return end
+    local rowWidth = row.frame:GetWidth()
+    local leftWidth = leftCell.frame:GetWidth()
+    local rightWidth = rightCell.frame:GetWidth()
+    if not (rowWidth and leftWidth and rightWidth) then return end
+    local slack = rowWidth - leftWidth - rightWidth
+    if slack > 0 and rightCell.SetFlowOffset then rightCell:SetFlowOffset(slack, 0) end
 end
 
 local function showKeybindChooser(editframe, rightContainer)
@@ -1879,9 +1935,24 @@ local function showKeybindChooser(editframe, rightContainer)
         function() goTo(keybindPath) end
     )
 
+    -- The section divider is the last thing already in the pane; the column
+    -- highlights below start under its line rather than over the header.
+    local existing = rightContainer.children
+    local divider = existing and existing[#existing]
+    rightContainer.gseChooserTopAnchor = divider and divider.frame or nil
+
+    -- The tiles sit centred on the pane rather than at the top. The spacer is
+    -- sized once the layout has landed, below; the two columns keep their
+    -- alignment to each other -- the whole block simply moves down together.
+    local centreSpacer = UI:Create("Spacer")
+    if centreSpacer.SetFullWidth then centreSpacer:SetFullWidth(true) end
+    centreSpacer:SetHeight(1)
+    rightContainer:AddChild(centreSpacer)
+
     local topRow, overrideTopCell, keybindTopCell = halfRow(overrideTop, keybindTop)
     rightContainer:AddChild(topRow)
-    rightContainer:AddChild(halfRow(overrideNote, keybindNote, 6, true))
+    local noteRow, overrideNoteCell, keybindNoteCell = halfRow(overrideNote, keybindNote, 6, true)
+    rightContainer:AddChild(noteRow)
     -- The bullets are the bottom of each column now: the two pictures below
     -- them illustrated the key-up / key-down split, and that split is gone.
     local bulletRow, overrideBulletCell, keybindBulletCell =
@@ -1901,7 +1972,26 @@ local function showKeybindChooser(editframe, rightContainer)
     if C_Timer and C_Timer.After then
         C_Timer.After(0, function()
             fitParagraphs(rightContainer)
+            alignRightColumn(topRow, overrideTopCell, keybindTopCell)
+            alignRightColumn(noteRow, overrideNoteCell, keybindNoteCell)
+            alignRightColumn(bulletRow, overrideBulletCell, keybindBulletCell)
             mirrorHotspots(rightContainer)
+            -- A frame later again, once those heights have landed: measure the
+            -- block and grow the spacer so its middle sits on the pane's middle.
+            -- Straight from the geometry, and the spacer only ever grows, so a
+            -- block taller than the pane stays where it is.
+            C_Timer.After(0, function()
+                if centreSpacer.parent ~= rightContainer or not rightContainer.scrollframe then return end
+                local viewTop = rightContainer.scrollframe:GetTop()
+                local viewBottom = rightContainer.scrollframe:GetBottom()
+                local blockTop = topRow.frame:GetTop()
+                local blockBottom = bulletRow.frame:GetBottom()
+                if not (viewTop and viewBottom and blockTop and blockBottom) then return end
+                local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
+                centreSpacer:SetHeight(math.max(1, math.floor(1 + blockTop - wantTop)))
+                if rightContainer.DoLayout then rightContainer:DoLayout() end
+                mirrorHotspots(rightContainer)
+            end)
         end)
     end
 end
