@@ -538,13 +538,6 @@ function GSE.GUI.GetLastSequenceEditorPath()
     return nil
 end
 
--- Drop everything the editor remembers about where the user last was: the
--- sequence path used by GSE.ShowSequences, and the area/key/classid trio
--- RestoreLastNode uses for the Variables, Macros and Keybindings tabs. Both
--- live in the same saved-variable table and are written as you click around,
--- so forgetting means clearing all four. Called from PLAYER_LOGOUT when
--- GSEOptions.forgetLastSequenceOnLogout is set; the state is still kept during
--- the session, so only the next login sees a fresh editor.
 --- The last sequence opened on `classid`, or nil. Asked when the most recent
 --- sequence belongs to a class this character's tree cannot show.
 function GSE.GUI.GetLastSequenceEditorPathForClass(classid)
@@ -558,6 +551,15 @@ function GSE.GUI.GetLastSequenceEditorPathForClass(classid)
     return nil
 end
 
+-- Drop everything the editor remembers about where the user last was: the
+-- sequence path used by GSE.ShowSequences, the per-class paths behind it, and
+-- the area/key/classid trio RestoreLastNode uses for the Variables, Macros and
+-- Keybindings tabs. They all live in the same saved-variable table and are
+-- written as you click around, so forgetting means clearing every one of them
+-- -- leaving the per-class table behind would reopen on the next login exactly
+-- what the option asked to forget. Called from PLAYER_LOGOUT when
+-- GSEOptions.forgetLastSequenceOnLogout is set; the state is still kept during
+-- the session, so only the next login sees a fresh editor.
 function GSE.GUI.ForgetLastSequenceEditorNode()
     local opts = GetSequenceEditorOptions()
     if not opts then return end
