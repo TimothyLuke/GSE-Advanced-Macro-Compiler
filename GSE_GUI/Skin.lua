@@ -542,6 +542,14 @@ function GSE.Skin.ApplyHostFontToTree(frame)
             end
         end
     end
+    -- An EditBox's text is not among its regions: it carries the font itself.
+    if frame.SetMultiLine and frame.GetFont and frame.SetFont then
+        local face, size, flags = frame:GetFont()
+        if size then
+            local ok = frame:SetFont(font, size, flags)
+            if ok == false and face then frame:SetFont(face, size, flags) end
+        end
+    end
     if frame.GetChildren then
         for _, child in ipairs({frame:GetChildren()}) do
             GSE.Skin.ApplyHostFontToTree(child)

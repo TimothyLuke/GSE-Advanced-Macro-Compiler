@@ -177,6 +177,34 @@ local function textValue(value)
     return tostring(value)
 end
 
+-- One font for every piece of GSE text. The face is the host UI's
+-- (GSE.Skin.HostFont: the user's font addon or skin, else Blizzard's default);
+-- the size and flags come from the Blizzard font object the caller names, so
+-- the size steps (Small, Normal, Large) stay and only the face is shared.
+--
+-- Set explicitly with SetFont rather than inherited with SetFontObject. An
+-- inherited font follows whatever another addon does to that global object
+-- later -- chat addons resize ChatFontNormal, skins re-face GameFontNormal --
+-- and a pooled widget hands its font on to its next life. Between the two,
+-- the same edit box came out at two sizes in two blocks of one sequence.
+local function applyGSEFont(target, fontObject, fixedSize)
+    local object = type(fontObject) == "string" and _G[fontObject] or fontObject
+    if not (target and target.SetFont and type(object) == "table" and object.GetFont) then return end
+    local file, size, flags = object:GetFont()
+    size = fixedSize or size
+    local face = GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont() or file
+    if not (face and size) then return end
+    if target:SetFont(face, size, flags or "") == false and file then
+        target:SetFont(file, size, flags or "")
+    end
+end
+UI.ApplyFont = applyGSEFont
+
+-- Text typed into GSE's boxes (macro text, names): the 14 ChatFontNormal gave
+-- them before, but fixed, so a chat addon resizing the chat font no longer
+-- resizes some blocks and not others.
+local EDIT_BOX_FONT_SIZE = 14
+
 local GSE_WINDOW_TITLE_PREFIX = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 
 local function formatWindowTitle(text)
@@ -2556,6 +2584,7 @@ local function createLabel(typeName, fontObject)
     end
 
     local text = frame:CreateFontString(nil, "ARTWORK", fontObject or "GameFontNormal")
+    applyGSEFont(text, fontObject or "GameFontNormal")
     text:SetPoint("TOPLEFT")
     text:SetPoint("BOTTOMRIGHT")
     text:SetJustifyH("LEFT")
@@ -2590,6 +2619,10 @@ local function createLabel(typeName, fontObject)
 
     function widget:SetFontObject(font)
         text:SetFontObject(font)
+        -- Explicit as well: resetForReuse hands a pooled label back with its
+        -- creation font set explicitly, which outranks SetFontObject, so on a
+        -- recycled label the Large or Small a block asked for did nothing.
+        applyGSEFont(text, font)
     end
 
     function widget:SetJustifyH(value)
@@ -2623,6 +2656,7 @@ local function createEditBox()
     editBox:SetPoint("RIGHT", -STYLE.padSmall, 0)
     editBox:SetHeight(STYLE.compactControlHeight)
     editBox:SetAutoFocus(false)
+    applyGSEFont(editBox, "GameFontHighlight", EDIT_BOX_FONT_SIZE)
 
     local gseNativeSetNumeric = editBox.SetNumeric
     if gseNativeSetNumeric then
@@ -2772,6 +2806,7 @@ local function createMultiLineEditBox()
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
     editBox:SetFontObject(ChatFontNormal)
+    applyGSEFont(editBox, "GameFontHighlight", EDIT_BOX_FONT_SIZE)
     editBox:SetWidth(260)
     editBox:SetScript("OnEscapePressed", editBox.ClearFocus)
     scrollFrame:SetScrollChild(editBox)
@@ -6020,6 +6055,11 @@ local function snapshotPristine(widget)
             if v.IsEnabled and v.Enable then
                 rec.enabled = v:IsEnabled() and true or false
             end
+            -- An EditBox's font is frame-level too, and was the one thing a
+            -- reused box kept from its previous life.
+            if v.SetMultiLine and v.GetFont then
+                rec.font = { v:GetFont() }
+            end
             frames[v] = rec
         end
     end
@@ -6081,6 +6121,9 @@ local function resetForReuse(widget)
         end
         for _, child in ipairs({ subframe:GetChildren() }) do
             if not rec.owned[child] then child:Hide() end
+        end
+        if rec.font and rec.font[1] then
+            pcall(subframe.SetFont, subframe, unpack(rec.font))
         end
         if rec.textColor then
             pcall(subframe.SetTextColor, subframe, unpack(rec.textColor))
