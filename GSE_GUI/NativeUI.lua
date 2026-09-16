@@ -2607,6 +2607,37 @@ local function createLabel(typeName, fontObject)
     return widget
 end
 
+-- Every GSE edit box's font, derived rather than stored.
+--
+-- Size and flags come from ChatFontNormal and the face from the host font, both
+-- read at apply time. Not a literal: a hardcoded 14 is only legible at one
+-- resolution and UI scale, and on a large monitor at a small scale it is not
+-- (issue #2104). Not a snapshot either -- snapshotPristine only runs on the
+-- fresh-construct branch of UI:Create, so a recorded font is frozen at login
+-- and would be re-pinned on every acquire, fighting ApplyHostFontToTree. The
+-- derived value moves when the user changes skin, ElvUI profile or chat font,
+-- so deriving it on each acquire is what keeps a pooled box current.
+--
+-- Called from BOTH edit box constructors and from resetForReuse, so creation
+-- and reuse cannot drift -- which is the actual cause of one sequence's blocks
+-- rendering at different sizes.
+--
+-- Note this is applied with SetFont, so a later SetFontObject on an edit box is
+-- outranked and silently does nothing (the same trap Editor_Tree.lua:1118
+-- records for headings). This helper is the styling path for edit boxes.
+local function applyEditBoxFont(eb)
+    if not (eb and eb.SetFont) then return end
+    local src = _G.ChatFontNormal or _G.GameFontHighlightSmall
+    if not (src and src.GetFont) then return end
+    local face, size, flags = src:GetFont()
+    if not size then return end
+    local host = GSE.Skin and GSE.Skin.HostFont and GSE.Skin.HostFont()
+    -- Restore the original face if the host font is rejected, so a bad path
+    -- from a skin never blanks the text (same guard as ApplyHostFontToTree).
+    local ok = eb:SetFont(host or face, size, flags)
+    if ok == false and face then eb:SetFont(face, size, flags) end
+end
+
 local function createEditBox()
     local labelHeight = STYLE.labelHeight
     local frame = CreateFrame("Frame", nextName("EditBox"), UIParent)
@@ -2623,6 +2654,7 @@ local function createEditBox()
     editBox:SetPoint("RIGHT", -STYLE.padSmall, 0)
     editBox:SetHeight(STYLE.compactControlHeight)
     editBox:SetAutoFocus(false)
+    applyEditBoxFont(editBox)
 
     local gseNativeSetNumeric = editBox.SetNumeric
     if gseNativeSetNumeric then
@@ -2771,7 +2803,7 @@ local function createMultiLineEditBox()
     local editBox = CreateFrame("EditBox", nil, scrollFrame)
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
-    editBox:SetFontObject(ChatFontNormal)
+    applyEditBoxFont(editBox)
     editBox:SetWidth(260)
     editBox:SetScript("OnEscapePressed", editBox.ClearFocus)
     scrollFrame:SetScrollChild(editBox)
@@ -6107,6 +6139,13 @@ local function resetForReuse(widget)
         if eb.SetMaxLetters then
             pcall(eb.SetMaxLetters, eb, widget.__gsePristineMaxLetters or 0)
         end
+        -- Re-derive the font rather than restore a recorded one. An EditBox's
+        -- font is frame-level, so __gsePristineTexts never captured it (that
+        -- sweep filters on `not v.CreateFontString`, and an EditBox has one) --
+        -- a box that had been re-faced or resized carried that into the next
+        -- block it was reused for, which is the "different blocks, different
+        -- sizes, changes between opens" report in issue #2104.
+        pcall(applyEditBoxFont, eb)
     end
     -- Widget-specific teardown the generic sweep above cannot reach.
     if widget.__gseResetState then pcall(widget.__gseResetState) end

@@ -530,6 +530,19 @@ end
 function GSE.Skin.ApplyHostFontToTree(frame)
     local font = GSE.Skin.HostFont and GSE.Skin.HostFont()
     if not (font and frame) then return end
+    -- EditBoxes first: the region sweep below cannot reach them. An EditBox
+    -- holds its font at frame level rather than in a FontString, so it is not
+    -- returned by GetRegions() and every edit box sat out the host-font pass
+    -- that each label followed (issue #2104). Size and flags are preserved, as
+    -- for a FontString -- only the face changes.
+    if frame.GetObjectType and frame:GetObjectType() == "EditBox"
+        and frame.GetFont and frame.SetFont then
+        local face, size, flags = frame:GetFont()
+        if size then
+            local ok = frame:SetFont(font, size, flags)
+            if ok == false and face then frame:SetFont(face, size, flags) end
+        end
+    end
     if frame.GetRegions then
         for _, region in ipairs({frame:GetRegions()}) do
             if region and region.GetObjectType and region:GetObjectType() == "FontString"
