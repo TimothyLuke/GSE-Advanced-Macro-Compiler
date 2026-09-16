@@ -4812,7 +4812,21 @@ local function updateTreeButton(button, line, selected, expanded)
     button.hasChildren = line.hasChildren
     button.disabled = line.disabled
     button.selected = selected
-    if button.selectBand then button.selectBand:SetShown(selected and line.selectHighlight and true or false) end
+    -- Not under an external skin provider. ElvUI/EllesmereUI already paint the
+    -- selected row in the host's accent colour just below, and this band is
+    -- ADD-blended gold over the full row -- stacked, the two wash an ElvUI
+    -- user's accent with gold, which is the opposite of what HostAccentColor
+    -- exists for ("the single shared source for every host-accent paint site",
+    -- Skin.lua). GSE's own skins paint no selected-row band at all, so this
+    -- fills a gap under NATIVE and MODERN rather than competing with a host.
+    --
+    -- NATIVE is the point of this, not just MODERN: it is the default whenever
+    -- no provider is installed, so it is where most players had no selection
+    -- affordance in this tree.
+    if button.selectBand then
+        button.selectBand:SetShown(
+            selected and line.selectHighlight and not hasExternalSkinProvider() and true or false)
+    end
 
     -- Selection highlight: EUI / ElvUI panels paint a subtle accent-coloured
     -- band behind the currently-selected list item (e.g. inventory "All Items").
