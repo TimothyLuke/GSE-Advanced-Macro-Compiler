@@ -38,6 +38,21 @@ end
 -- Every saved talent loadout for a spec of the player's class, newest API
 -- first.  Empty on clients without talent loadouts, which is what the callers
 -- want -- no loadout nodes and a loadout dropdown holding only "All".
+-- The saved talent loadout the player is in, for the spec at specIndex: nil
+-- unless that is the player's current spec. The same call the keybind and
+-- override rebuilds use (GetLastSelectedSavedConfigID), so the loadout with the
+-- gold ring is the one whose binds are live.
+local function activeLoadoutForSpec(specIndex)
+    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and GetSpecializationInfo) then
+        return nil
+    end
+    local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
+    if not (getSpec and getSpec() == specIndex) then return nil end
+    local specid = GetSpecializationInfo(specIndex)
+    local ok, configid = pcall(C_ClassTalents.GetLastSelectedSavedConfigID, specid)
+    return ok and configid or nil
+end
+
 local function loadoutsForSpec(specIndex)
     if not (C_ClassTalents and C_ClassTalents.GetConfigIDsBySpecID and GetSpecializationInfoForClassID) then
         return {}
@@ -185,7 +200,7 @@ end
 
 -- Defined further down beside the widget helpers; the tree builder only runs
 -- at ManageTree time, long after this file has finished loading.
-local KB_HERO_RING
+local KB_HERO_RING, KB_HERO_RING_ACTIVE
 
 -- ---------------------------------------------------------------------------
 -- buildKeybindMenu()  →  full KEYBINDINGS tree node
@@ -229,7 +244,8 @@ local function buildKeybindMenu()
         if GetSpecializationInfo then
             for specIndex = 1, (GetNumSpecializations and GetNumSpecializations() or 0) do
                 local _, speclabel, _, specIcon = GetSpecializationInfo(specIndex)
-                local node = {value = tostring(specIndex), text = speclabel, icon = specIcon, children = {}}
+                local node = {value = tostring(specIndex), text = speclabel, icon = specIcon, selectHighlight = true, children = {}}
+                local activeLoadout = activeLoadoutForSpec(specIndex)
                 for _, configid in ipairs(loadoutsForSpec(specIndex)) do
                     local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(configid)
                     if info then
@@ -239,7 +255,9 @@ local function buildKeybindMenu()
                             text = "|cffffcc00" .. info.name .. Statics.StringReset,
                             icon = icon or Statics.Icons.Talents,
                             iconCoords = iconCoords,
-                            iconRing = icon and KB_HERO_RING or nil
+                            iconRing = (configid == activeLoadout and KB_HERO_RING_ACTIVE)
+                                or (icon and KB_HERO_RING or nil),
+                            selectHighlight = true
                         })
                     end
                 end
@@ -287,11 +305,13 @@ local function buildKeybindMenu()
                     value = tostring(specIndex),
                     text = speclabel,
                     icon = specIcon,
+                    selectHighlight = true,
                     children = {}
                 }
                 -- Every loadout for the spec, not only those that already have
                 -- binds -- the panel is where binds get added, so you have to
                 -- be able to navigate to an empty loadout.
+                local activeLoadout = activeLoadoutForSpec(specIndex)
                 for _, configid in ipairs(loadoutsForSpec(specIndex)) do
                     local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(configid)
                     if info then
@@ -303,7 +323,9 @@ local function buildKeybindMenu()
                                 text = "|cffffcc00" .. info.name .. Statics.StringReset,
                                 icon = icon or Statics.Icons.Talents,
                                 iconCoords = iconCoords,
-                                iconRing = icon and KB_HERO_RING or nil
+                                iconRing = (configid == activeLoadout and KB_HERO_RING_ACTIVE)
+                                    or (icon and KB_HERO_RING or nil),
+                                selectHighlight = true
                             }
                         )
                     end
@@ -374,13 +396,18 @@ end
 -- they stop reading as floating.  talents-node-choiceflyout-circle-gray, the
 -- variant Larry picked from the four drawn live on 2026-09-07.
 KB_HERO_RING = "talents-node-choiceflyout-circle-gray"
+-- The same ring in Blizzard's gold: marks the loadout the player is in, on
+-- its tree icon and on the medallion at the top of its panel.
+KB_HERO_RING_ACTIVE = "talents-node-choiceflyout-circle-yellow"
 
 -- A hero medallion with the ring over it, as a fixed-size group the panel
 -- can flow beside a heading.  Inline text cannot do this: two |A| escapes sit
 -- side by side, they do not stack.  Textures are cached per frame in a weak
 -- table because SimpleGroup is pooled and the pool sweeps caller fields.
 local heroBadgeArt = setmetatable({}, {__mode = "k"})
-local function heroBadge(element, size)
+-- active: the loadout is the one the player is in -- its ring is drawn gold,
+-- as the tree draws it on that loadout's icon.
+local function heroBadge(element, size, active)
     local badge = UI:Create("SimpleGroup")
     badge:SetWidth(size)
     badge:SetHeight(size)
@@ -402,7 +429,7 @@ local function heroBadge(element, size)
         heroBadgeArt[host] = art
     end
     art.icon:SetAtlas(element)
-    art.ring:SetAtlas(KB_HERO_RING)
+    art.ring:SetAtlas(active and KB_HERO_RING_ACTIVE or KB_HERO_RING)
     art.icon:Show()
     art.ring:Show()
     return badge
@@ -812,7 +839,8 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         if loadoutRow.SetFlowGap then loadoutRow:SetFlowGap(6) end
         if loadoutRow.SetFlowHAlign then loadoutRow:SetFlowHAlign("CENTER") end
         if loadoutRow.SetFlowVAlign then loadoutRow:SetFlowVAlign("CENTER") end
-        loadoutRow:AddChild(heroBadge(loadoutArt, 28))
+        loadoutRow:AddChild(heroBadge(loadoutArt, 28,
+            tonumber(loadout) == activeLoadoutForSpec(tonumber(specialization))))
         loadoutRow:AddChild(loadoutLabel)
     else
         loadoutLabel:SetWidth(KB_ROW_WIDTH)
@@ -1522,7 +1550,8 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local textWidth = fs and fs.GetStringWidth and fs:GetStringWidth() or 0
         loadoutLabel:SetWidth(math.max(40, math.ceil(textWidth) + 6))
         loadoutRow = centeredRow(nil)
-        loadoutRow:AddChild(heroBadge(loadoutArt, 28))
+        loadoutRow:AddChild(heroBadge(loadoutArt, 28,
+            tonumber(loadout) == activeLoadoutForSpec(tonumber(specialization))))
         loadoutRow:AddChild(loadoutLabel)
     else
         loadoutLabel:SetWidth(AO_ROW_WIDTH)
@@ -1876,6 +1905,19 @@ end
 
 local function showKeybindChooser(editframe, rightContainer)
     wipe(pendingParagraphs)
+
+    -- Opening Bindings unfolds this character's spec under both areas, so its
+    -- talent loadouts -- and the gold ring on the one in use -- show without a click.
+    local tree = editframe.treeContainer
+    local status = tree and (tree.status or tree.localstatus)
+    if GetSpecializationInfo and status and status.groups and tree.RefreshTree then
+        local spec = tostring(defaultSpecIndex())
+        for _, area in ipairs({"KB", "AO"}) do
+            status.groups["KEYBINDINGS\001" .. area] = true
+            status.groups["KEYBINDINGS\001" .. area .. "\001" .. spec] = true
+        end
+        tree:RefreshTree()
+    end
 
     -- The whole chooser sits 5px right of where the pane's padding puts it.
     if rightContainer.SetListPadding then

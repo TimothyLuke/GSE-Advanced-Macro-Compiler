@@ -4705,6 +4705,16 @@ local function createTreeButton(widget)
     button.iconRing:SetAllPoints(button.icon)
     button.iconRing:Hide()
 
+    -- Optional band behind the SELECTED row (line.selectHighlight): the
+    -- node the right-hand panel is editing, e.g. the spec or loadout whose
+    -- keybinds are being made. Behind the text, full width.
+    button.selectBand = button:CreateTexture(nil, "BACKGROUND", nil, 1)
+    button.selectBand:SetAllPoints()
+    button.selectBand:SetTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight")
+    button.selectBand:SetBlendMode("ADD")
+    button.selectBand:SetVertexColor(1, 0.82, 0, 0.45)
+    button.selectBand:Hide()
+
     button.text = button:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     button.text:SetPoint("RIGHT", -STYLE.padSmall, 0)
     button.text:SetJustifyH("LEFT")
@@ -4802,6 +4812,7 @@ local function updateTreeButton(button, line, selected, expanded)
     button.hasChildren = line.hasChildren
     button.disabled = line.disabled
     button.selected = selected
+    if button.selectBand then button.selectBand:SetShown(selected and line.selectHighlight and true or false) end
 
     -- Selection highlight: EUI / ElvUI panels paint a subtle accent-coloured
     -- band behind the currently-selected list item (e.g. inventory "All Items").
@@ -5530,6 +5541,7 @@ local function createTreeGroup()
                         icon = node.icon,
                         iconCoords = node.iconCoords,
                         iconRing = node.iconRing,
+                        selectHighlight = node.selectHighlight,
                         disabled = node.disabled,
                         level = level,
                         parent = parent,
@@ -5547,6 +5559,7 @@ local function createTreeGroup()
                     icon = node.icon,
                     iconCoords = node.iconCoords,
                     iconRing = node.iconRing,
+                    selectHighlight = node.selectHighlight,
                     disabled = node.disabled,
                     level = level,
                     parent = parent,
