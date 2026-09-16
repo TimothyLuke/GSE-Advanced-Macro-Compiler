@@ -56,7 +56,45 @@ end
 local gameversion, _, _, _, _, buildType = GetBuildInfo()
 local majorVersion = GSE.split(gameversion, ".")
 
-GSE.GameMode = tonumber(majorVersion[1])
+-- GSE.GameMode gates API AVAILABILITY, not content. Every `GameMode > x` test
+-- in GSE is asking "does this client have the APIs introduced at x" -- the
+-- empowered-cast events, the Settings menu API, C_SpecializationInfo. Until now
+-- the expansion major answered that, because content and API generation always
+-- advanced together.
+--
+-- Forever breaks that: vanilla-era content (1.60.x) on Retail's API surface.
+-- Taken at face value its major is 1, which is Classic Era, so every retail
+-- path would switch off and every classic path would switch on -- the whole
+-- ruleset inverted. It reports 12 instead, the generation whose APIs it
+-- actually has, and all 40-odd existing tests are then correct unedited.
+--
+-- 12 is deliberately a fixed value and not "whatever retail is now". When The
+-- Last Titan introduces APIs at 13, a `>= 13` test must be FALSE on Forever
+-- until Forever ships them; reporting 12 gets that right for free. Picking an
+-- ordinal ABOVE retail was the obvious-looking alternative and is wrong -- it
+-- burns a number retail will itself reach (13 is already announced).
+--
+-- This deliberately does NOT carry identity. A sequence's flavour is its TOC
+-- (MetaData.TOC, stamped from GetBuildInfo's tocversion, which is unaffected by
+-- this), so Forever stays distinguishable from Midnight everywhere that
+-- matters without GameMode having to encode two different facts in one integer.
+-- Anything asking "am I on Forever?" reads the TOC, not this.
+--
+-- Vanilla stopped at 1.12 and Classic Era is 1.15.x, so major 1 at a minor of
+-- 60 or above is Forever and nothing else. Keyed on the version rather than the
+-- product/install folder on purpose: Forever currently ships on the shared
+-- classic test product (wow_classic_beta), which is not its own product and
+-- will move.
+local FOREVER_MAJOR, FOREVER_MIN_MINOR = 1, 60
+local FOREVER_API_GENERATION = 12
+
+local gameMode = tonumber(majorVersion[1])
+local minorVersion = tonumber(majorVersion[2])
+if gameMode == FOREVER_MAJOR and minorVersion and minorVersion >= FOREVER_MIN_MINOR then
+    gameMode = FOREVER_API_GENERATION
+end
+
+GSE.GameMode = gameMode
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
