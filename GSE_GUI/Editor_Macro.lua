@@ -134,6 +134,15 @@ local function buildMacroMenu()
             end
         end
     end
+
+    -- Alphabetical within each group. The loop above walks WoW's macro slots,
+    -- which is creation order, and a node's value is its slot id -- so sorting
+    -- what is displayed leaves what each node points at alone.
+    local function byName(a, b)
+        return GSE.AlphabeticalTableSortAlgorithm(a.text or "", b.text or "")
+    end
+    table.sort(tree.children[1].children, byName)
+    table.sort(tree.children[2].children, byName)
     return tree
 end
 

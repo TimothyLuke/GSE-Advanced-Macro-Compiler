@@ -1780,6 +1780,8 @@ local function ManageTree(editframe)
                 icon = GSE.GetClassIcon(k),
                 children = {}
             }
+            -- Sorted on the plain name: `text` is wrapped in the class colour.
+            tnode.gseSortName = classinfo or ("Class " .. tostring(k))
         elseif k == 0 then
             -- value is the classid, 0, NOT the string "GLOBAL" it used to be.
             -- Node values are what AceGUI concatenates into a node's path, and
@@ -1793,6 +1795,7 @@ local function ManageTree(editframe)
                 text = L["Global"],
                 children = {}
             }
+            tnode.gseSortName = L["Global"]
         end
         for _, j in pairs(v) do
             for _, h in ipairs(j) do
@@ -1801,6 +1804,15 @@ local function ManageTree(editframe)
         end
         table.insert(subtree.children, tnode)
     end
+
+    -- Classes in alphabetical order rather than class-id order, with Global
+    -- last: it is not a class, and it reads as the catch-all at the end rather
+    -- than sitting between Evoker and Hunter.
+    table.sort(subtree.children, function(a, b)
+        if a.value == 0 then return false end
+        if b.value == 0 then return true end
+        return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName or "", b.gseSortName or "")
+    end)
 
     table.insert(tree, subtree)
     table.insert(tree, editframe.buildKeybindMenu())

@@ -56,7 +56,9 @@ local function buildVariablesMenu()
             }
         }
     }
-    for k, _ in pairs(GSEVariables or {}) do
+    -- Alphabetical, the same order and the same comparison the sequence tree
+    -- uses. pairs() gave hash order, so the list shuffled between sessions.
+    for k, _ in GSE.pairsByKeys(GSEVariables or {}, GSE.AlphabeticalTableSortAlgorithm) do
         local node = {
             value = k,
             text = "|CFFFFFFFF" .. k .. Statics.StringReset
