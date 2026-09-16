@@ -1756,6 +1756,25 @@ end
 
 function baseMethods:Release()
     self:Fire("OnRelease")
+    -- A released widget must never be able to fire its previous life's
+    -- callbacks. They were only ever cleared on ACQUIRE (resetForReuse), so a
+    -- pooled widget sat in the pool with every callback still bound to the
+    -- keyPath of the block it used to be -- and anything that touched its text
+    -- before the next SetCallback wrote through that stale path.
+    --
+    -- That is not hypothetical. An action block's macro box is created for
+    -- EVERY action type and holds the spell's localised name for a spell
+    -- action, and its OnTextChanged unconditionally stores .macro and clears
+    -- .spell. Its own OnRelease handler calls IndentationLib.disable(), which
+    -- ends with `editbox:SetText(newGetText(editbox))` after restoring our
+    -- OnTextChanged bridge -- firing the live handler mid-teardown and
+    -- rewriting `{type="spell", spell=49998}` into a macro carrying the spell
+    -- name. Deleting one action released the whole container in one sweep, so
+    -- it converted many actions at once (#2106).
+    --
+    -- Cleared AFTER OnRelease so teardown handlers still run, and before
+    -- ReleaseChildren so a child's own Release does the same for itself.
+    self.callbacks = {}
     self:ReleaseChildren()
     self.parent = nil
     -- Widget-specific teardown, the same hook resetForReuse calls.  That only
@@ -6129,6 +6148,28 @@ local function resetForReuse(widget)
     frame:SetSize(widget.__gsePristineW, widget.__gsePristineH)
     local eb = widget.editBox or widget.editbox
     if eb then
+        -- Strip IndentationLib before anything else touches the box.
+        --
+        -- IndentationLib keys its state on the inner EditBox FRAME, in a module
+        -- table inside Indent.lua that this pool cannot see, so the generic
+        -- field sweep above cannot clear it. A box banked while still enabled
+        -- (the variable editor, the raw sequence-table editor, the macro
+        -- preview and the compare view all enable it) handed the next consumer
+        -- its SetText/GetText overrides and its OnTextChanged/OnTab/OnUpdate
+        -- hooks. Action blocks only escaped that because Editor.lua disables it
+        -- by hand right after UI:Create -- a per-caller courtesy, not a
+        -- guarantee.
+        --
+        -- Safe here specifically because widget.callbacks was emptied above:
+        -- disable() ends with `editbox:SetText(newGetText(editbox))`, which
+        -- fires our OnTextChanged bridge, and that is the same fire that
+        -- rewrote spell actions into macros during teardown (#2106). With no
+        -- callbacks bound it is inert.
+        --
+        -- First in the block, so the SetText("") and the pristine SetMaxLetters
+        -- below overwrite the text and the max-letters cap that disable()
+        -- restores from its own saved copies.
+        if IndentationLib and IndentationLib.disable then pcall(IndentationLib.disable, eb) end
         if eb.ClearFocus then pcall(eb.ClearFocus, eb) end
         if eb.SetText then pcall(eb.SetText, eb, "") end
         -- Restore the character cap. A caller that narrowed it (the loop-limit
