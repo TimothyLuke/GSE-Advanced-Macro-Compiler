@@ -96,6 +96,42 @@ end
 
 GSE.GameMode = gameMode
 
+--- Flavour key for a TOC, for asking "are these two TOCs the same flavour".
+--
+-- GSE.GameMode answers that for the RUNNING client and only for API gating.
+-- This answers it for an arbitrary stamped TOC -- a sequence's MetaData.TOC
+-- against the client's -- which is a different question with a different input,
+-- so it gets its own helper rather than a second reading of GameMode.
+--
+-- It exists because comparing TOCs at math.floor(toc / 10000) stopped being
+-- enough. That yields the major, and Forever shares Classic Era's major: a
+-- Forever sequence (16001) and an Era sequence (11509) both reduced to 1, so
+-- loading one on the other raised no "not designed for this version" warning
+-- despite opposite rulesets. The minor separates them -- Era is 1.15.x, Forever
+-- 1.60.x -- using the same constants as the GameMode mapping above, so the rule
+-- lives in exactly one place in the Mod.
+--
+-- Both TOC shapes divide the same way: major = floor(toc / 10000) gives 11 for
+-- 110005 and 1 for 11509, and minor = floor(toc / 100) % 100 gives 0 and 15.
+--
+-- Returns an OPAQUE key. Compare two of them with == ; do not order it, parse
+-- it, or store it -- Forever's key is deliberately not a number, so it cannot
+-- collide with a major that retail will itself reach one day.
+-- Returns nil for a missing or unparseable TOC; callers treat nil as "unknown",
+-- which differs from every real key and so warns.
+function GSE.TOCFlavour(toc)
+    toc = tonumber(toc)
+    if not toc or toc <= 0 then
+        return nil
+    end
+    local tocMajor = math.floor(toc / 10000)
+    local tocMinor = math.floor(toc / 100) % 100
+    if tocMajor == FOREVER_MAJOR and tocMinor >= FOREVER_MIN_MINOR then
+        return "forever"
+    end
+    return "exp" .. tocMajor
+end
+
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
     -- If it contains alpha or beta replace with the current version.  This will prevent notifying about test builds.

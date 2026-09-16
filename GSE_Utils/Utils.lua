@@ -72,16 +72,18 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     sequenceName = string.gsub(sequenceName, " ", "_")
     sequenceName = string.gsub(sequenceName, ",", "_")
 
-    -- check Sequence TOC matches the current TOC at expansion-major
-    -- resolution. TOCs are XXYYZZ (XX = expansion, YY = patch, ZZ = build);
-    -- a sequence stamped 120001 and a client running 120005 are both
-    -- Midnight and shouldn't warn. Only flag when the expansion itself
-    -- differs (e.g. a Midnight sequence loaded on TWW) or when the stored
-    -- TOC is empty.
+    -- check the Sequence TOC matches the current TOC at flavour resolution: a
+    -- sequence stamped 120001 and a client running 120005 are both Midnight and
+    -- shouldn't warn. Only flag when the flavour itself differs (a Midnight
+    -- sequence on TWW, or an Era sequence on Forever) or the stored TOC is empty.
+    --
+    -- This used to compare math.floor(toc / 10000), i.e. the major. Forever
+    -- shares Classic Era's major, so an Era sequence (11509) and a Forever one
+    -- (16001) both reduced to 1 and crossing between two opposite rulesets
+    -- warned about nothing. GSE.TOCFlavour keeps that rule in one place.
     local _, _, _, tocversion = GetBuildInfo()
-    local seqTOC = tonumber(sequence.MetaData.TOC)
-    local seqExp = seqTOC and math.floor(seqTOC / 10000) or nil
-    local clientExp = tocversion and math.floor(tonumber(tocversion) / 10000) or nil
+    local seqExp = GSE.TOCFlavour(sequence.MetaData.TOC)
+    local clientExp = GSE.TOCFlavour(tocversion)
     if GSE.isEmpty(sequence.MetaData.TOC) or seqExp ~= clientExp then
         GSE.Print(
             string.format(

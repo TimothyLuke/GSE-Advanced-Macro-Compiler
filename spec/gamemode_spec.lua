@@ -22,6 +22,21 @@ local function derivationChunk()
     return assert(compile("local majorVersion, GSE = ...\n" .. block .. "\nreturn GSE.GameMode"))
 end
 
+-- The same lift, extended through GSE.TOCFlavour so the flavour rule is tested
+-- from the shipped source as well. Both live in one contiguous block under the
+-- FOREVER constants precisely so one extraction covers them.
+local function flavourChunk()
+    local fh = assert(io.open("GSE/API/Init.lua", "r"), "cannot open GSE/API/Init.lua")
+    local src = fh:read("*a")
+    fh:close()
+    local block = src:match('(local FOREVER_MAJOR.-return "exp" %.%. tocMajor\nend)')
+    assert(block, "GSE.TOCFlavour block not found in Init.lua -- did it get rewritten?")
+    local compile = loadstring or load
+    local chunk = assert(compile(
+        "local majorVersion, GSE = ...\n" .. block .. "\nreturn GSE.TOCFlavour"))
+    return chunk({"12", "1", "0"}, {})
+end
+
 local function gameModeFor(versionString)
     local parts = {}
     for piece in string.gmatch(versionString, "[^.]+") do
@@ -65,5 +80,45 @@ describe("GSE.GameMode derivation", function()
     -- and picking an ordinal ABOVE retail would burn a number retail reaches.
     it("does not claim APIs newer than the generation it has", function()
         assert.is_false(gameModeFor("1.60.1") >= 13)
+    end)
+end)
+
+-- GSE.TOCFlavour answers "are these two TOCs the same flavour" for a stamped
+-- sequence TOC, which is a different question from GameMode's API gating.
+describe("GSE.TOCFlavour", function()
+    local flavour = flavourChunk()
+
+    it("treats patches of one flavour as the same flavour", function()
+        assert.equals(flavour(120001), flavour(120005))   -- both Midnight
+        assert.equals(flavour(11509), flavour(11502))     -- both Classic Era
+        assert.equals(flavour(16001), flavour(16005))     -- both Forever
+    end)
+
+    it("separates different flavours", function()
+        assert.are_not.equals(flavour(120001), flavour(110005))  -- Midnight vs TWW
+        assert.are_not.equals(flavour(50500), flavour(20405))    -- MoP vs TBC
+    end)
+
+    -- The bug this exists for. Both reduce to major 1, so the old
+    -- math.floor(toc / 10000) comparison saw them as the same flavour and
+    -- crossing between two opposite rulesets warned about nothing.
+    it("separates Forever from Classic Era", function()
+        assert.are_not.equals(flavour(16001), flavour(11509))
+        assert.equals("forever", flavour(16001))
+        assert.equals("exp1", flavour(11509))
+    end)
+
+    -- Forever's key must never be a number, or it collides with a major that
+    -- retail reaches on its own -- the same trap as picking an ordinal above 12.
+    it("keys Forever outside the numeric majors", function()
+        assert.equals("string", type(flavour(16001)))
+        assert.are_not.equals(flavour(16001), flavour(160001))
+    end)
+
+    it("returns nil for a missing or unusable TOC", function()
+        assert.is_nil(flavour(nil))
+        assert.is_nil(flavour(""))
+        assert.is_nil(flavour(0))
+        assert.is_nil(flavour("nonsense"))
     end)
 end)
