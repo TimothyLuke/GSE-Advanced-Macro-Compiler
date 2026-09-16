@@ -11,10 +11,20 @@
 -- WagoAnalytics, C_AddOns), so this lifts the derivation block out of the
 -- shipped file and runs it. That means it tests the real source rather than a
 -- copy of the rule: change the constants in Init.lua and this fails.
-local function derivationChunk()
+-- .gitattributes marks *.lua as eol=crlf, so the blob is stored LF and every
+-- checkout -- including CI's -- writes CRLF. Any pattern here anchored on "\n"
+-- then fails against a "\r\n" file while passing on a freshly written one,
+-- which is exactly how this spec went green locally and errored in CI. Normalise
+-- once, on read, and let the patterns below stay line-ending agnostic.
+local function readInit()
     local fh = assert(io.open("GSE/API/Init.lua", "r"), "cannot open GSE/API/Init.lua")
     local src = fh:read("*a")
     fh:close()
+    return (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
+end
+
+local function derivationChunk()
+    local src = readInit()
     local block = src:match("(local FOREVER_MAJOR.-GSE%.GameMode = gameMode)")
     assert(block, "GameMode derivation block not found in Init.lua -- did it get rewritten?")
     -- loadstring on 5.1 (what CI runs), load on 5.4 (what busted runs).
@@ -26,14 +36,15 @@ end
 -- from the shipped source as well. Both live in one contiguous block under the
 -- FOREVER constants precisely so one extraction covers them.
 local function flavourChunk()
-    local fh = assert(io.open("GSE/API/Init.lua", "r"), "cannot open GSE/API/Init.lua")
-    local src = fh:read("*a")
-    fh:close()
-    local block = src:match('(local FOREVER_MAJOR.-return "exp" %.%. tocMajor\nend)')
+    local src = readInit()
+    -- Anchored on the final return only, not on the "end" that follows it: the
+    -- closing "end" is supplied below, so neither a line ending nor an extra
+    -- line inside the function can break the lift.
+    local block = src:match('(local FOREVER_MAJOR.-return "exp" %.%. tocMajor)')
     assert(block, "GSE.TOCFlavour block not found in Init.lua -- did it get rewritten?")
     local compile = loadstring or load
     local chunk = assert(compile(
-        "local majorVersion, GSE = ...\n" .. block .. "\nreturn GSE.TOCFlavour"))
+        "local majorVersion, GSE = ...\n" .. block .. "\nend\nreturn GSE.TOCFlavour"))
     return chunk({"12", "1", "0"}, {})
 end
 
