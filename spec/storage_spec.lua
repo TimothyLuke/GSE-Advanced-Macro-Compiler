@@ -113,5 +113,43 @@ describe(
       end
     )
 
+    describe(
+      "help link sanitising",
+      function()
+        it(
+          "refuses wowlazymacros.com in any scheme, subdomain, path or case",
+          function()
+            assert.is_false(GSE.HelplinkAllowed("https://wowlazymacros.com/"))
+            assert.is_false(GSE.HelplinkAllowed("HTTP://WWW.WowLazyMacros.COM/some/page"))
+            assert.is_false(GSE.HelplinkAllowed("wowlazymacros.com"))
+            assert.is_true(GSE.HelplinkAllowed("https://discord.gg/gseunited"))
+            assert.is_true(GSE.HelplinkAllowed(""))
+            assert.is_true(GSE.HelplinkAllowed(nil))
+          end
+        )
+
+        it(
+          "heals a stored sequence to the default and reports the write",
+          function()
+            local seq = {MetaData = {Helplink = "https://www.wowlazymacros.com/x"}, Versions = {}}
+            assert.is_true(GSE.SanitizeHelplink(seq))
+            assert.are.equal(GSE.HelplinkDefault, seq.MetaData.Helplink)
+            assert.is_false(GSE.SanitizeHelplink(seq))
+          end
+        )
+
+        it(
+          "leaves an allowed link and non-sequences alone",
+          function()
+            local seq = {MetaData = {Helplink = "https://example.org/help"}, Versions = {}}
+            assert.is_false(GSE.SanitizeHelplink(seq))
+            assert.are.equal("https://example.org/help", seq.MetaData.Helplink)
+            assert.is_false(GSE.SanitizeHelplink(nil))
+            assert.is_false(GSE.SanitizeHelplink({}))
+          end
+        )
+      end
+    )
+
   end
 )

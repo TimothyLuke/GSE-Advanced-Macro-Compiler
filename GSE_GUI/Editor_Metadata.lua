@@ -621,6 +621,11 @@ local function addAuthorEditor(editframe, container)
     container:AddChild(authoreditbox)
 end
 
+-- The rule itself (which host, what replaces it) lives in Storage.lua with
+-- the load-time heal; this box only applies it as you type.
+local HELPLINK_DEFAULT = GSE.HelplinkDefault
+local helplinkAllowed = GSE.HelplinkAllowed
+
 local function addHelpLinkEditor(editframe, container)
     local helplinkeditbox = UI:Create("EditBox")
     helplinkeditbox:SetLabel(T("Help Link"))
@@ -644,13 +649,20 @@ local function addHelpLinkEditor(editframe, container)
         end
     )
 
-    if GSE.isEmpty(editframe.Sequence.MetaData.Helplink) then
-        editframe.Sequence.MetaData.Helplink = "https://discord.gg/gseunited"
+    if GSE.isEmpty(editframe.Sequence.MetaData.Helplink) or not helplinkAllowed(editframe.Sequence.MetaData.Helplink) then
+        editframe.Sequence.MetaData.Helplink = HELPLINK_DEFAULT
     end
     helplinkeditbox:SetText(editframe.Sequence.MetaData.Helplink)
     helplinkeditbox:SetCallback(
         "OnTextChanged",
         function(obj, event, key)
+            if not helplinkAllowed(key) then
+                -- SetText re-fires this callback with the default, which
+                -- passes, so there is no loop.
+                editframe.Sequence.MetaData.Helplink = HELPLINK_DEFAULT
+                helplinkeditbox:SetText(HELPLINK_DEFAULT)
+                return
+            end
             editframe.Sequence.MetaData.Helplink = key
         end
     )
