@@ -2243,6 +2243,34 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             ))
         end
 
+        -- Editor draw diagnostics. Two kill switches for the editor's draw
+        -- path, deliberately in Tools & Diagnostics rather than Developer
+        -- Debug: Developer Debug is gated on GSE.Developer and stripped from
+        -- packaged builds, so it cannot help the people who actually hit these
+        -- bugs. Asking a reporter to run a loose global (the old
+        -- `/run GSE_NoWidgetPool = true`) is not a substitute for a switch
+        -- they can find.
+        --
+        -- Both read positively -- checked means the optimisation is ON -- so
+        -- the box never says "disable" and store the inverse, which reads as a
+        -- double negative on screen.
+        do
+            local layout = SettingsPanel:GetLayout(troubleOptions)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Editor Draw Diagnostics", tooltip = "Switches for narrowing down editor drawing and redraw problems."}))
+        end
+        do
+            local function GetValue() return not GSEOptions.NoWidgetPool end
+            local function SetValue(val) GSEOptions.NoWidgetPool = not val end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "gseWidgetPool", Settings.VarType.Boolean, "Reuse editor widgets", true, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "The editor reuses its edit boxes and labels instead of rebuilding them, which keeps large sequences responsive. Turn this OFF only to test whether a drawing or data problem is caused by that reuse -- the editor will be slower. Same as /gse widgetpool on|off. Reload after changing for a clean start.")
+        end
+        do
+            local function GetValue() return not GSEOptions.NoLayoutBatch end
+            local function SetValue(val) GSEOptions.NoLayoutBatch = not val end
+            local setting = Settings.RegisterProxySetting(troubleOptions, "gseLayoutBatch", Settings.VarType.Boolean, "Batch editor layout", true, GetValue, SetValue)
+            Settings.CreateCheckbox(troubleOptions, setting, "The editor lays out each batch of blocks once rather than after every block, which makes opening a long sequence much faster. Turn this OFF only to test whether a layout problem is caused by that batching. Same as /gse layoutbatch on|off. Reopen the editor to apply.")
+        end
+
         do
             local layout = SettingsPanel:GetLayout(troubleOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Tracker / Keybind Diagnostics", tooltip = L["Keybinding Tools"]}))
