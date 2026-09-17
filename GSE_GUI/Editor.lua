@@ -917,6 +917,48 @@ local function DisableMultilineEditorColoring(editBox)
     end
 end
 
+-- Injecting text into a box is not a user edit, and must not be recorded as
+-- one. The editor rebuilds in deferred chunks (buildChunk, 4 blocks a frame),
+-- so a block's text is injected several frames after the redraw that asked for
+-- it, and SetText fires OnTextChanged synchronously through the widget's engine
+-- bridge. The write handlers below are what turn that fire into data: the macro
+-- box holds the SPELL NAME for a spell action, and its handler unconditionally
+-- stores .macro and clears .spell -- so one spurious fire rewrites
+-- {type="spell", spell=49998} into a macro carrying the localised name (#2106).
+--
+-- Same shape as the GSEMacroEditorColoring guard already used by
+-- RefreshMacroEditorColoredText: flag the widget for the duration of the
+-- programmatic SetText, which is synchronous, and let the handler ignore it.
+local function setTextQuietly(widget, text)
+    if not (widget and widget.SetText) then return end
+    widget.gseProgrammaticSetText = true
+    widget:SetText(text)
+    widget.gseProgrammaticSetText = nil
+end
+
+-- Should this text-change handler write at all?
+--
+-- Two ways it must not. The fire may be our own injection rather than the user
+-- typing (above). Or the box may have been recycled: every handler here closes
+-- over the keyPath of the block it was built for, and the widget pool hands one
+-- box to several blocks within a single rebuild -- liuli195 paired 14 of 36
+-- corrupted actions to a box firing for a block it no longer belonged to, one
+-- box rewriting 8 actions. The box carries its current owner, the closure
+-- carries the one it was created for; if they disagree the fire belongs to a
+-- previous life and writing would corrupt an unrelated action.
+--
+-- This is deliberately at the WRITE rather than in the widget lifecycle. The
+-- earlier attempt closed two lifecycle holes (stale callbacks surviving
+-- Release, IndentationLib firing during teardown) and the corruption survived
+-- both, because the fire arrives from the deferred draw instead. Guarding the
+-- write ends the class whichever path fires.
+local function editIsStale(sel, owner)
+    if not sel then return true end
+    if sel.gseProgrammaticSetText then return true end
+    if sel.gseOwner ~= owner then return true end
+    return false
+end
+
 local StoreMacroEditorText = GSE.StoreMacroEditorText
 local INGAME_MACRO_BLOCK_ICON = "Interface\\AddOns\\GSE_GUI\\Assets\\macro.png"
 local VARIABLE_BLOCK_ICON = "Interface\\AddOns\\GSE_GUI\\Assets\\variables.png"
@@ -3463,7 +3505,11 @@ function GSE.CreateEditor()
         local myGen = editframe.buildGeneration
         local scrollRestore = editframe.pendingScrollRestore
         editframe.pendingScrollRestore = nil
-        local batchLayout = not _G.GSE_NoLayoutBatch
+        -- Layout batching kill switch, the sibling of the widget pool one:
+        -- `/gse layoutbatch off`, stored in GSEOptions. Was a loose global that
+        -- had to be re-set after every /reload and existed nowhere in the
+        -- addon's own surface.
+        local batchLayout = not (GSEOptions and GSEOptions.NoLayoutBatch)
         if batchLayout and UI and UI.SuspendLayout then UI:SuspendLayout() end
         -- Paired with the report in finishDraw. Same reasoning as ManageTree's:
         -- block count and elapsed time are what turn "the editor freezes" into a
@@ -7863,6 +7909,10 @@ function GSE.CreateEditor()
     if GSE.isEmpty(GSE.CreateSpellEditBox) then
         GSE.CreateSpellEditBox = function(action, version, keyPath, sequence, compiledMacro, frame)
             local spellEditBox = UI:Create("EditBox")
+            -- Claimed before anything touches the text: this is exactly the
+            -- window a recycled box would fire its previous life's handler in,
+            -- and the stamp is what makes that fire detectable.
+            spellEditBox.gseOwner = action
 
             spellEditBox:SetWidth(ACTION_SPELL_UNIT_FIELD_WIDTH)
             spellEditBox:DisableButton(true)
@@ -7924,11 +7974,23 @@ function GSE.CreateEditor()
                 spelltext = DecodeEditorText(spelltext)
             end
 
-            spellEditBox:SetText(spelltext)
+            setTextQuietly(spellEditBox, spelltext)
 
             spellEditBox:SetCallback(
                 "OnTextChanged",
                 function(sel, object, value)
+                    -- Our own injection, or a box that has moved on to another
+                    -- block: either way this fire is not an edit of THIS action.
+                    if editIsStale(sel, action) then return end
+                    -- The block may be gone entirely -- a delete renumbers every
+                    -- keyPath after it, and this one is captured. Indexing a
+                    -- removed action errors; writing to a shifted one corrupts
+                    -- the wrong block silently, which is worse.
+                    if not (sequence.Versions[version]
+                        and sequence.Versions[version].Actions
+                        and sequence.Versions[version].Actions[keyPath]) then
+                        return
+                    end
                     value = DecodeEditorText(value)
                     if sequence.Versions[version].Actions[keyPath].type == "pet" then
                         sequence.Versions[version].Actions[keyPath].action = value
@@ -7989,12 +8051,13 @@ function GSE.CreateEditor()
                 end
             )
             local macroEditBox = UI:Create("MultiLineEditBox")
+            macroEditBox.gseOwner = action
             DisableMultilineEditorColoring(macroEditBox)
             macroEditBox:SetLabel(L["Macro Name or Macro Commands"])
             macroEditBox:DisableButton(true)
             macroEditBox:SetNumLines(MACRO_BOX_BASE_LINES)
             macroEditBox:SetRelativeWidth(0.5)
-            macroEditBox:SetText(spelltext)
+            setTextQuietly(macroEditBox, spelltext)
             ForwardMacroEditorMouseWheel(macroEditBox, frame)
             UpdateMacroLimitState(macroEditBox, action.macro, editframe, version)
             macroEditBox:SetCallback(
@@ -8011,6 +8074,17 @@ function GSE.CreateEditor()
                 "OnTextChanged",
                 function(sel, object, value)
                     if sel and (sel.GSEMacroEditorColoring or (sel.editBox and sel.editBox.GSEMacroEditorColoring) or (sel.editbox and sel.editbox.GSEMacroEditorColoring)) then return end
+                    -- The write that corrupted sequences in #2106. This box holds
+                    -- the SPELL NAME for a spell action, and everything below
+                    -- stores .macro and clears .spell unconditionally, so any
+                    -- fire that is not a real user edit of this block converts a
+                    -- working spell action into a macro carrying its own name.
+                    if editIsStale(sel, action) then return end
+                    if not (sequence.Versions[version]
+                        and sequence.Versions[version].Actions
+                        and sequence.Versions[version].Actions[keyPath]) then
+                        return
+                    end
 
                     value = DecodeMacroEditorText(value)
                     local storedMacro = StoreMacroEditorText(value)
