@@ -2309,6 +2309,51 @@ function GSE:GSSlash(input)
             GSE.Print("Tracker reset to the default layout.")
         end
 
+    -- ----------------------------------------------------------------
+    -- Widget pool kill switch, for reproducing and bisecting recycled-
+    -- widget bugs. Replaces `/run GSE_NoWidgetPool = true`: a loose
+    -- global that had to be re-set after every /reload and existed
+    -- nowhere in the addon's own surface. Stored in GSEOptions so it
+    -- survives a reload, which is what a soak test actually needs.
+    -- ----------------------------------------------------------------
+    elseif command == "widgetpool" then
+        local arg = params[2] and string.lower(params[2]) or nil
+        if not GSEOptions then
+            GSE.Print("Options are not loaded yet. Try again once you are in the world.")
+        elseif arg == "on" or arg == "off" then
+            GSEOptions.NoWidgetPool = (arg == "off")
+            GSE.Print(
+                "Widget pool " .. (arg == "off" and "DISABLED" or "enabled") ..
+                ". /reload for a clean pool state."
+            )
+        else
+            GSE.Print(
+                "Widget pool is " ..
+                (GSEOptions.NoWidgetPool and "DISABLED" or "enabled") ..
+                ". Use /gse widgetpool on|off."
+            )
+        end
+
+    -- Sibling switch: the editor draws blocks with layout batched per chunk.
+    -- Turning it off is the other half of bisecting a draw-path bug.
+    elseif command == "layoutbatch" then
+        local arg = params[2] and string.lower(params[2]) or nil
+        if not GSEOptions then
+            GSE.Print("Options are not loaded yet. Try again once you are in the world.")
+        elseif arg == "on" or arg == "off" then
+            GSEOptions.NoLayoutBatch = (arg == "off")
+            GSE.Print(
+                "Editor layout batching " .. (arg == "off" and "DISABLED" or "enabled") ..
+                ". Reopen the editor to apply."
+            )
+        else
+            GSE.Print(
+                "Editor layout batching is " ..
+                (GSEOptions.NoLayoutBatch and "DISABLED" or "enabled") ..
+                ". Use /gse layoutbatch on|off."
+            )
+        end
+
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then

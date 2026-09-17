@@ -440,6 +440,18 @@ local GSE_MODERN_CLASS_COLORS = {
 -- helpers) AND `getNormalAccentColor` (gates the apply*NormalAccent*
 -- helpers) check this; the modern theme has two colour modes (ElvUI-style
 -- and normal-accent), so we have to step aside from both, not just one.
+-- Widget pooling kill switch, for reproducing and bisecting recycled-widget
+-- bugs. Driven by `/gse widgetpool on|off` and stored in GSEOptions, so it
+-- survives a /reload -- which is what a soak test needs, and what the old
+-- `/run GSE_NoWidgetPool = true` could not do, being a loose global that had to
+-- be re-set every reload and appeared nowhere in the addon's own surface.
+--
+-- Read through one helper so the two call sites -- banking on Release and
+-- handing out on Create -- cannot drift apart and leave the pool half-on.
+local function widgetPoolDisabled()
+    return GSEOptions and GSEOptions.NoWidgetPool == true
+end
+
 local function hasExternalSkinProvider()
     if GSE.Skin and GSE.Skin.providerName then
         local provider = GSE.Skin.providerName
@@ -1791,7 +1803,7 @@ function baseMethods:Release()
     -- __gsePristineKeys marks a pooled type; the InPool flag guards a double
     -- Release from banking the same widget twice (two acquirers would then
     -- share one frame).
-    if not _G.GSE_NoWidgetPool and self.__gsePristineKeys and not self.__gseInPool then
+    if not widgetPoolDisabled() and self.__gsePristineKeys and not self.__gseInPool then
         self.__gseInPool = true
         local pool = UI.widgetPool[self.type]
         if not pool then pool = {}; UI.widgetPool[self.type] = pool end
@@ -6035,7 +6047,7 @@ end
 --     construction size; editbox text and label text are cleared
 -- HookScript cannot be undone, but every HookScript site in GSE_GUI guards
 -- with a once-only flag on the frame (audited), so reuse cannot stack hooks.
--- Kill switch for soak-testing: /run GSE_NoWidgetPool = true (then /reload).
+-- Kill switch for soak-testing: /gse widgetpool off (persists across /reload).
 -- Only high-churn leaf/container types pool; window-level widgets (Frame,
 -- ScrollFrame, TabGroup, tree) keep their old behaviour.
 local POOLED_TYPES = {
@@ -6230,7 +6242,7 @@ local function resetForReuse(widget)
 end
 
 function UI:Create(typeName)
-    if not _G.GSE_NoWidgetPool and POOLED_TYPES[typeName] then
+    if not widgetPoolDisabled() and POOLED_TYPES[typeName] then
         local pool = widgetPool[typeName]
         if pool and #pool > 0 then
             local widget = table.remove(pool)
