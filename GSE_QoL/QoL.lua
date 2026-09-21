@@ -1469,6 +1469,45 @@ if GSE.GameMode >= 11 then
     local VehicleBar = CreateFrame("Frame", nil, nil, "SecureHandlerAttributeTemplate")
     VehicleBar:Hide()
 
+    -- Can this client compile a secure snippet at all?
+    --
+    -- On WoW Forever (1.60.x) Blizzard's restricted environment has no
+    -- loadstring_untainted, so EVERY :Execute() dies with "attempt to call a
+    -- nil value" inside RestrictedExecution.lua. UpdateVehicleBar runs
+    -- unconditionally at login, so a completely empty GSE install threw this
+    -- three times before the user had done anything at all.
+    --
+    -- Blizzard's bug, and GSE cannot fix it -- but it can decline to trip over
+    -- it. The feature cannot work without secure snippets, so it goes quiet
+    -- instead of erroring.
+    --
+    -- A CAPABILITY test, deliberately, not another version test. The
+    -- `GameMode >= 11` gate above is already correct: GameMode answers "does
+    -- this client have Midnight's API level", and Forever genuinely does.
+    -- Whether a given API actually WORKS there is a different question that a
+    -- version check cannot answer -- and a Forever special-case here would just
+    -- be wrong again on the next client shipping the same hole.
+    --
+    -- Probed lazily rather than at file load: the restricted environment is not
+    -- necessarily ready that early. Cached, so a broken client pays one pcall.
+    local secureProbeDone, secureSnippetsWork = false, false
+    local function canRunSecureSnippets()
+        if secureProbeDone then
+            return secureSnippetsWork
+        end
+        secureProbeDone = true
+        -- Assigning nil is a no-op inside the environment; the only question is
+        -- whether the body compiles.
+        secureSnippetsWork = pcall(VehicleBar.Execute, VehicleBar, "GSEVehicleProbe = nil") and true or false
+        if not secureSnippetsWork then
+            GSE.PrintDebugMessage(
+                "Secure snippets will not compile on this client -- Skyriding / Vehicle keybinds disabled.",
+                "Events"
+            )
+        end
+        return secureSnippetsWork
+    end
+
     local function resolveMainBarButton(i)
         if _G["BT4Button" .. i] then return "BT4Button" .. i end
         if _G["DominosActionButton" .. i] then return "DominosActionButton" .. i end
@@ -1480,6 +1519,11 @@ if GSE.GameMode >= 11 then
     -- restricted environment. Called once at init and again whenever the
     -- user changes a bind in Options.
     function GSE.UpdateVehicleBar()
+        -- Nothing below can take effect without the restricted environment, so
+        -- do not build a snippet just to watch it fail.
+        if not canRunSecureSnippets() then
+            return
+        end
         local tableval = {}
         if GSE.isEmpty(GSEOptions.SkyRidingBinds) then
             GSEOptions.SkyRidingBinds = {}
