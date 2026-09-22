@@ -163,6 +163,28 @@ local function determineClassName(specID)
     return classInfo and classInfo.className or nil
 end
 
+-- Seven specs share a name with a spec of another class (Frost is both Mage and
+-- Death Knight, Holy both Paladin and Priest), so those entries are
+-- disambiguated as "Frost - Mage". Either half can legitimately be nil: the
+-- name comes from the client's CONTENT, not its API level, and a client can
+-- have the specialisation API while having no such spec or class to report.
+--
+-- That is WoW Forever. It runs Retail's API surface on vanilla content, so
+-- GameMode is honestly 12 and this retail branch is entered -- but
+-- GetSpecializationInfoByID(64) has no Frost Mage to return, C_CreatureInfo has
+-- no Death Knight, and concatenating the nil threw "attempt to concatenate a
+-- nil value" the moment a sequence was created.
+--
+-- Returning nil is the right answer, not a fallback string: the key is then
+-- simply never set, and Forever ends up with the class-only list that a client
+-- without specialisations should have.
+local function specWithClass(specID, classID)
+    local specName = determineSpecializationName(specID)
+    if not specName then return nil end
+    local className = determineClassName(classID)
+    return className and (specName .. " - " .. className) or specName
+end
+
 function GSE.GetClassName(classID)
     return determineClassName(classID)
 end
@@ -220,9 +242,9 @@ local function buildSpecList()
         Statics.SpecIDList[13]   = determineClassName(13)
         Statics.SpecIDList[62]   = determineSpecializationName(62)
         Statics.SpecIDList[63]   = determineSpecializationName(63)
-        Statics.SpecIDList[64]   = determineSpecializationName(64) .. " - " .. determineClassName(8)
-        Statics.SpecIDList[65]   = determineSpecializationName(65) .. " - " .. determineClassName(2)
-        Statics.SpecIDList[66]   = determineSpecializationName(66) .. " - " .. determineClassName(2)
+        Statics.SpecIDList[64]   = specWithClass(64, 8)
+        Statics.SpecIDList[65]   = specWithClass(65, 2)
+        Statics.SpecIDList[66]   = specWithClass(66, 2)
         Statics.SpecIDList[70]   = determineSpecializationName(70)
         Statics.SpecIDList[71]   = determineSpecializationName(71)
         Statics.SpecIDList[72]   = determineSpecializationName(72)
@@ -230,22 +252,22 @@ local function buildSpecList()
         Statics.SpecIDList[102]  = determineSpecializationName(102)
         Statics.SpecIDList[103]  = determineSpecializationName(103)
         Statics.SpecIDList[104]  = determineSpecializationName(104)
-        Statics.SpecIDList[105]  = determineSpecializationName(105) .. " - " .. determineClassName(11)
+        Statics.SpecIDList[105]  = specWithClass(105, 11)
         Statics.SpecIDList[250]  = determineSpecializationName(250)
-        Statics.SpecIDList[251]  = determineSpecializationName(251) .. " - " .. determineClassName(6)
+        Statics.SpecIDList[251]  = specWithClass(251, 6)
         Statics.SpecIDList[252]  = determineSpecializationName(252)
         Statics.SpecIDList[253]  = determineSpecializationName(253)
         Statics.SpecIDList[254]  = determineSpecializationName(254)
         Statics.SpecIDList[255]  = determineSpecializationName(255)
         Statics.SpecIDList[256]  = determineSpecializationName(256)
-        Statics.SpecIDList[257]  = determineSpecializationName(257) .. " - " .. determineClassName(5)
+        Statics.SpecIDList[257]  = specWithClass(257, 5)
         Statics.SpecIDList[258]  = determineSpecializationName(258)
         Statics.SpecIDList[259]  = determineSpecializationName(259)
         Statics.SpecIDList[260]  = determineSpecializationName(260)
         Statics.SpecIDList[261]  = determineSpecializationName(261)
         Statics.SpecIDList[262]  = determineSpecializationName(262)
         Statics.SpecIDList[263]  = determineSpecializationName(263)
-        Statics.SpecIDList[264]  = determineSpecializationName(264) .. " - " .. determineClassName(7)
+        Statics.SpecIDList[264]  = specWithClass(264, 7)
         Statics.SpecIDList[265]  = determineSpecializationName(265)
         Statics.SpecIDList[266]  = determineSpecializationName(266)
         Statics.SpecIDList[267]  = determineSpecializationName(267)
