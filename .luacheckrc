@@ -533,6 +533,7 @@ globals = {
     "C_ClassTalents",
     "PlayerUtil",
     "GetSpecializationInfoForClassID",
+    "GetNumSpecializationsForClassID",
     "C_Traits",
     "IsControlKeyDown",
     "IsAltKeyDown",

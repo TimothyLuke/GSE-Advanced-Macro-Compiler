@@ -189,6 +189,91 @@ function GSE.GetClassName(classID)
     return determineClassName(classID)
 end
 
+-- Talent-tree specs on a client that has one specialisation per class.
+--
+-- WoW Forever reports ONE specialisation per class -- the class itself, e.g.
+-- Paladin = 1486, Mage = 1482 -- and exposes Holy / Protection / Retribution as
+-- trait GROUPS on that spec's tree. GetSpecializationInfoByID with a RETAIL
+-- spec id returns nil there, which is why the hardcoded list above produces
+-- nothing for such a client and why a sequence could only ever be labelled with
+-- its class.
+--
+-- The groups map onto retail spec ids by position. Sequences then store an id
+-- the whole ecosystem ALREADY understands -- GetClassIDforSpec, the spec
+-- filters, the website and the Companion all keep working untouched, and a
+-- Protection Paladin sequence is recognisably that on either flavour. Nothing
+-- new crosses the wire; this table is a Mod-internal detail, and the Mod is the
+-- only place with a client to read it from.
+--
+-- Only the ids are hardcoded. Names and ordering come from the client, so the
+-- era-correct label appears by itself: Forever's rogue tree reports "Combat"
+-- and is stored as 260, which retail calls Outlaw.
+--
+-- Two positions are judgement calls, not lookups, and no API can answer them:
+--   Rogue    Combat  -> 260, retail's Outlaw. Same slot, later rename.
+--   Druid    Feral   -> 103. Guardian (104) split out of Feral in a later
+--                      expansion and has no tree here, so 104 never appears.
+local CLASS_TREE_SPECIDS = {
+    [1]  = {71, 72, 73},    -- Warrior  Arms, Fury, Protection
+    [2]  = {65, 66, 70},    -- Paladin  Holy, Protection, Retribution
+    [3]  = {253, 254, 255}, -- Hunter   Beast Mastery, Marksmanship, Survival
+    [4]  = {259, 260, 261}, -- Rogue    Assassination, Combat, Subtlety
+    [5]  = {256, 257, 258}, -- Priest   Discipline, Holy, Shadow
+    [7]  = {262, 263, 264}, -- Shaman   Elemental, Enhancement, Restoration
+    [8]  = {62, 63, 64},    -- Mage     Arcane, Fire, Frost
+    [9]  = {265, 266, 267}, -- Warlock  Affliction, Demonology, Destruction
+    [11] = {102, 103, 105}, -- Druid    Balance, Feral, Restoration
+}
+
+-- Read the client's trees and hand back { [retailSpecID] = displayName }.
+--
+-- Gated on SHAPE, not on version: a class with exactly one specialisation whose
+-- tree carries exactly three groups. On retail a class has three or four specs
+-- and those groups are hero talents, so the test fails there and nothing is
+-- touched -- which matters, because mapping hero-talent groups onto spec ids
+-- would rename every spec in the editor.
+--
+-- The class-level spec is registered too (1486 -> "Paladin"), so the id
+-- GetCurrentSpecID returns on such a client is a real entry meaning "any build
+-- of this class" rather than an unknown number.
+local function deriveClassTreeSpecs()
+    if not (GetSpecializationInfoForClassID and C_ClassTalents
+        and C_ClassTalents.GetTraitTreeForSpec and C_Traits
+        and C_Traits.GetGroupDisplayInfoByTreeID and GetNumSpecializationsForClassID) then
+        return nil
+    end
+    local found = nil
+    for classID, specIDs in pairs(CLASS_TREE_SPECIDS) do
+        local okCount, specCount = pcall(GetNumSpecializationsForClassID, classID)
+        if okCount and specCount == 1 then
+            local okSpec, classSpecID, classSpecName = pcall(GetSpecializationInfoForClassID, classID, 1)
+            if okSpec and classSpecID then
+                local okTree, treeID = pcall(C_ClassTalents.GetTraitTreeForSpec, classSpecID)
+                local groups
+                if okTree and treeID then
+                    local okGroups, result = pcall(C_Traits.GetGroupDisplayInfoByTreeID, treeID)
+                    groups = okGroups and result or nil
+                end
+                if type(groups) == "table" and #groups == #specIDs then
+                    found = found or {}
+                    -- The class-level spec, so GetCurrentSpecID resolves.
+                    found[classSpecID] = classSpecName or determineClassName(classID)
+                    for _, group in ipairs(groups) do
+                        -- orderIndex is 0-based and locale-independent, unlike
+                        -- displayName, and stable where groupID need not be.
+                        local slot = (tonumber(group.orderIndex) or -1) + 1
+                        local mapped = specIDs[slot]
+                        if mapped and group.displayName then
+                            found[mapped] = group.displayName
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return found
+end
+
 -- Spec/class name tables built lazily on first access.
 -- The 70+ WoW API calls are deferred until the editor is actually opened.
 local specListBuilt = false
@@ -280,6 +365,16 @@ local function buildSpecList()
         Statics.SpecIDList[1468] = determineSpecializationName(1468)
         Statics.SpecIDList[1473] = determineSpecializationName(1473)
         Statics.SpecIDList[1480] = determineSpecializationName(1480)
+    end
+
+    -- A client that exposes its talent trees as groups fills in the ids the
+    -- hardcoded list above could not resolve. Runs last so the client's own
+    -- names win over anything guessed above.
+    local treeSpecs = deriveClassTreeSpecs()
+    if treeSpecs then
+        for specID, name in pairs(treeSpecs) do
+            Statics.SpecIDList[specID] = name
+        end
     end
 
     -- Build the reverse lookup once all names are known.
