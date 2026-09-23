@@ -534,6 +534,7 @@ globals = {
     "PlayerUtil",
     "GetSpecializationInfoForClassID",
     "GetNumSpecializationsForClassID",
+    "GetNumSpecGroups",
     "C_Traits",
     "IsControlKeyDown",
     "IsAltKeyDown",

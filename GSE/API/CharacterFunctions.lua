@@ -242,6 +242,43 @@ function GSE.setActionButtonUseKeyDown()
     GSE.ReloadSequences()
 end
 
+--- Key identifying the current talent "loadout" for keybinding and action bar
+--- override storage, as a string.
+---
+--- Retail partitions these by saved loadout, which works because a loadout is
+--- 1:1 with the build you are actually playing. WoW Forever has no saved
+--- loadouts at all -- it has DUAL SPEC, Primary and Secondary, and one
+--- specialisation per class -- so every build returned the same key: GetSpec()
+--- is always "1" there and GetLastSelectedSavedConfigID has nothing to return.
+--- Both spec groups therefore shared one set of binds, and switching between
+--- them rebuilt the bindings to exactly what they already were.
+---
+--- The active spec group is the 1:1 on such a client, so it stands in for the
+--- loadout. Only when there is genuinely more than one group AND no saved
+--- loadout, so retail keeps its existing keys untouched: a real config id still
+--- wins, and a retail character without one still keys on tostring(nil) exactly
+--- as before rather than having its saved binds orphaned under a new key.
+---
+--- Prefixed rather than bare, so a group of 1 or 2 can never be mistaken for a
+--- config id of 1 or 2.
+function GSE.GetBindingLoadoutKey()
+    local currentSpecID = GSE.GetCurrentSpecID()
+    local saved =
+        currentSpecID and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and
+        C_ClassTalents.GetLastSelectedSavedConfigID(currentSpecID)
+    if saved then
+        return tostring(saved)
+    end
+    local groups = GetNumSpecGroups and GetNumSpecGroups() or 1
+    if groups and groups > 1 and C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup then
+        local group = C_SpecializationInfo.GetActiveSpecGroup()
+        if group then
+            return "specgroup:" .. tostring(group)
+        end
+    end
+    return tostring(saved)
+end
+
 function GSE.GetSelectedLoadoutConfigID()
     GSE.GetCurrentTalents()
     local currentSpecID = GSE.GetCurrentSpecID()

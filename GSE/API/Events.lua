@@ -1085,8 +1085,8 @@ local function LoadOverrides(force)
         for _, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
             overrideActionButton(v, force)
         end
-        if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
-            local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
+        do
+            local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
 
             if
                 selected and GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()] and
@@ -1134,12 +1134,12 @@ local LoadKeyBindings, scheduleBindingRecheck
 local BINDING_RECHECK_INTERVAL, BINDING_RECHECK_ATTEMPTS = 0.5, 20
 
 local function currentBindingContext()
-    local loadoutId = ""
-    local spec = playerSpec()
-    if spec and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
-        loadoutId = tostring(C_ClassTalents.GetLastSelectedSavedConfigID(spec))
-    end
-    return GetSpec() .. "\001" .. loadoutId
+    -- GetSpec() alone cannot separate the two builds on a dual-spec client: it
+    -- is always "1" where there is one specialisation per class, so a Primary
+    -- <-> Secondary switch produced an identical context and the rebuild
+    -- re-bound what was already bound. GetBindingLoadoutKey carries the spec
+    -- group there and the saved loadout id on retail.
+    return GetSpec() .. "\001" .. (GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey() or "")
 end
 
 local keybindingframe
@@ -1206,8 +1206,8 @@ function LoadKeyBindings(payload)
     end
 
     if payload and not InCombatLockdown() then
-        if C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID then
-            local selected = playerSpec() and tostring(C_ClassTalents.GetLastSelectedSavedConfigID(playerSpec()))
+        do
+            local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
             if
                 selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
                     GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
