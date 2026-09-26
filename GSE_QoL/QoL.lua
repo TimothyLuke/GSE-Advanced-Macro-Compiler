@@ -1377,37 +1377,11 @@ end
 --
 -- Every part of this block hands a snippet to the restricted environment: the
 -- Execute in UpdateVehicleBar, the _onattributechanged body below, and
--- RegisterAttributeDriver firing that body. On WoW Forever (1.60.x) Blizzard's
--- RestrictedExecution.lua has no loadstring_untainted, so each one dies with
--- "attempt to call a nil value" -- three errors at login on an install with no
--- sequences at all.
---
--- The capability CANNOT be probed. A trial :Execute() wrapped in pcall still
--- reports: the restricted environment calls the error handler directly rather
--- than raising something pcall can swallow, so the test is itself a fourth
--- error. Anything that asks the question by executing makes the problem worse.
---
--- API presence cannot answer it either. Forever ships the retail API surface
--- whole -- HasVehicleActionBar, HasOverrideActionBar, GetBonusBarOffset and
--- C_ActionBar.GetVehicleBarIndex all exist and are callable there. That is the
--- same reason GameMode is honestly 12 and why the >= 11 test passes.
---
--- So this is a flavour exclusion, and deliberately a temporary one. It is NOT
--- a claim that the feature is meaningless on Forever: [possessbar] is valid on
--- vanilla content, so these binds would be genuinely useful there. It is a
--- claim that nothing here can work while no snippet compiles, and that erroring
--- three times per login is the worse of the two nothings.
---
--- Remove this the moment Blizzard ships loadstring_untainted on that stream --
--- the feature then works on Forever with no other change. Fails OPEN: if the
--- flavour cannot be determined the block runs exactly as before.
-local function restrictedEnvironmentBroken()
-    if not (GSE.TOCFlavour and GetBuildInfo) then return false end
-    local _, _, _, tocversion = GetBuildInfo()
-    return GSE.TOCFlavour(tocversion) == "forever"
-end
-
-if GSE.GameMode >= 11 and not restrictedEnvironmentBroken() then
+-- RegisterAttributeDriver firing that body. WoW Forever (1.60.x) shipped
+-- without loadstring_untainted, so each died with "attempt to call a nil
+-- value"; this block was excluded there until Blizzard fixed it in
+-- 1.60.1.70009 (confirmed in-game 2026-09-25). Forever runs it like retail.
+if GSE.GameMode >= 11 then
     -- Native Blizzard Settings subcategory. Lifted from the master-branch
     -- pattern that was overwritten by the AceGUI removal pass — register a
     -- vertical layout subcategory and add native button initializers, one
