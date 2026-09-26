@@ -511,7 +511,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- than hidden, so a row already pointing at one still shows what it is.
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSESequences[GSE.GetCurrentClassID()] or {}, GSESequences[0] or {}}) do
+        for _, source in ipairs({GSE.Store("sequence")[GSE.GetCurrentClassID()] or {}, GSE.Store("sequence")[0] or {}}) do
             for k in pairs(source) do
                 if not names[k] then
                     names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
@@ -1213,7 +1213,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSESequences[GSE.GetCurrentClassID()] or {}, GSESequences[0] or {}}) do
+        for _, source in ipairs({GSE.Store("sequence")[GSE.GetCurrentClassID()] or {}, GSE.Store("sequence")[0] or {}}) do
             for k in pairs(source) do
                 if not names[k] then
                     names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k

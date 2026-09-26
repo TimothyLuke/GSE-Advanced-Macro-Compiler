@@ -109,11 +109,7 @@ local function isStoredMacroNode(node)
 end
 
 local function currentCharacterMacroBucket()
-    local char, realm = UnitFullName("player")
-    if GSE.isEmpty(realm) then
-        realm = string.gsub(GetRealmName(), "%s*", "")
-    end
-    return char .. "-" .. realm
+    return GSE.CharacterMacroBucketKey()
 end
 
 local function findStoredMacro(name)
@@ -203,7 +199,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
             SequenceDropDown:AddItem(v, v)
         end
     end
-    for k, _ in pairs(GSESequences[0]) do
+    for k, _ in pairs(GSE.Store("sequence")[0]) do
         GSE.EnsureSequenceLoaded(0, k)
         local globalSeq = GSE.Library[0] and GSE.Library[0][k]
         if not (globalSeq and globalSeq.MetaData and globalSeq.MetaData.noExport) then
@@ -506,7 +502,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         if not exportTable["Sequences"][sname] then
                             local found = false
                             for chkclass = 0, 13 do
-                                if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][sname]) then
+                                if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][sname]) then
                                     found = true
                                     break
                                 end

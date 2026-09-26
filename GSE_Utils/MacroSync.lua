@@ -47,16 +47,10 @@ local function captureWoWMacros()
     return account, character
 end
 
---- The GSEMacros bucket holding this character's macros. Same key, and the
--- same realm fallback, GSE.ManageMacros reads them back from.
+--- The GSEMacros bucket holding this character's macros -- the same one
+-- GSE.ManageMacros reads back, because both go through CharacterMacroBucket.
 local function characterBucket()
-    local char, realm = UnitFullName("player")
-    if GSE.isEmpty(realm) then
-        realm = string.gsub(GetRealmName(), "%s*", "")
-    end
-    local key = char .. "-" .. realm
-    if type(GSEMacros[key]) ~= "table" then GSEMacros[key] = {} end
-    return GSEMacros[key]
+    return GSE.CharacterMacroBucket(true)
 end
 
 --- Reflect one set of WoW macros into one GSEMacros store.

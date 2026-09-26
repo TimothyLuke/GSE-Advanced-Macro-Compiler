@@ -186,13 +186,7 @@ local function isStoredMacroNode(node)
 end
 
 local function currentCharacterMacroBucket()
-    if not UnitFullName then return nil end
-    local char, realm = UnitFullName("player")
-    if GSE.isEmpty(realm) and GetRealmName then
-        realm = string.gsub(GetRealmName(), "%s*", "")
-    end
-    if GSE.isEmpty(char) or GSE.isEmpty(realm) then return nil end
-    return char .. "-" .. realm
+    return GSE.CharacterMacroBucketKey and GSE.CharacterMacroBucketKey() or nil
 end
 
 local function storedMacroInfo(name)
@@ -371,7 +365,7 @@ local function addDependencyLabels(editframe, container, deps, hasDeps, usedBy, 
             for _, sname in ipairs(deps.Sequences) do
                 local exists = false
                 for chkclass = 0, 13 do
-                    if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][sname]) then
+                    if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][sname]) then
                         exists = true
                         break
                     end

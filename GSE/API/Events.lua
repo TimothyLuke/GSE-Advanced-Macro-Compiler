@@ -1397,8 +1397,7 @@ function GSE:PLAYER_ENTERING_WORLD()
 end
 
 local function startup()
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
+    local charKey = GSE.CharacterMacroBucketKey()
     GSE.PerformOneOffEvents()
 
     if GSE.isEmpty(GSESpellCache) then
@@ -1418,8 +1417,8 @@ local function startup()
 
     if GSE.LoadDeltaForks then GSE.LoadDeltaForks() end
 
-    if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
-        GSESequences[GSE.GetCurrentClassID()] = {}
+    if GSE.isEmpty(GSE.Store("sequence")[GSE.GetCurrentClassID()]) then
+        GSE.Store("sequence")[GSE.GetCurrentClassID()] = {}
     end
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
         GSE.Library[GSE.GetCurrentClassID()] = {}
@@ -1433,8 +1432,8 @@ local function startup()
     if GSE.isEmpty(GSEMacros) then
         GSEMacros = {}
     end
-    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-        GSEMacros[char .. "-" .. realm] = {}
+    if GSE.isEmpty(GSEMacros[charKey]) then
+        GSEMacros[charKey] = {}
     end
     --@debug@
     GSE.PrintDebugMessage("I am loaded")

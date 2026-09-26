@@ -154,14 +154,14 @@ local function showMacro(editframe, node, container)
     if GSE.GUI.AddSectionHeader then
         GSE.GUI.AddSectionHeader(container, L["Macros"] or "Macros", GSE.Static.Icons.Macros)
     end
-    local char, realm = UnitFullName("player")
+    local charKey = GSE.CharacterMacroBucketKey()
 
     local source = GSEMacros
     if node.value > GSE.GetMaxAccountMacros() then
-        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-            GSEMacros[char .. "-" .. realm] = {}
+        if GSE.isEmpty(GSEMacros[charKey]) then
+            GSEMacros[charKey] = {}
         end
-        source = GSEMacros[char .. "-" .. realm]
+        source = GSEMacros[charKey]
     end
 
     local manageGSE = UI:Create("CheckBox")

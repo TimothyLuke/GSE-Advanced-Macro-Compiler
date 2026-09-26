@@ -157,8 +157,8 @@ local function onSequenceSaved(_, sequenceName)
             seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
             -- The checksum is computed from the body, so it is recovered on the
             -- next load; protected content keeps its sealed blob instead.
-            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
-                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+            if not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], seq) then
+                GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
             end
             break
         end
@@ -544,7 +544,7 @@ end
 -- Sequences available to this character, for the Macro editor's /click list.
 local function getSequenceNames()
     local names, seen = {}, {}
-    for _, bucket in ipairs({GSESequences and GSESequences[GSE.GetCurrentClassID()], GSESequences and GSESequences[0]}) do
+    for _, bucket in ipairs({GSE.Store("sequence") and GSE.Store("sequence")[GSE.GetCurrentClassID()], GSE.Store("sequence") and GSE.Store("sequence")[0]}) do
         if type(bucket) == "table" then
             for k in pairs(bucket) do
                 if not seen[k] then seen[k] = true; names[#names + 1] = k end

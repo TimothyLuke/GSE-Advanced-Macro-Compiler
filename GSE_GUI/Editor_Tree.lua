@@ -489,7 +489,7 @@ local function SequenceEditorPathExists(path)
     local classid = tonumber(elements[1])
     local sequenceName = elements[3]
     if not classid or GSE.isEmpty(sequenceName) then return false end
-    if not (GSESequences and GSESequences[classid] and GSESequences[classid][sequenceName]) then return false end
+    if not (GSE.Store("sequence") and GSE.Store("sequence")[classid] and GSE.Store("sequence")[classid][sequenceName]) then return false end
 
     local key = unique[#unique]
     if key == "config" then return true end
@@ -1559,11 +1559,11 @@ local function onClick_Macro(editframe, container, group, unique, key)
             mtext = matext
         end
     else
-        local char, realm = UnitFullName("player")
-        if GSEMacros[char .. "-" .. realm] and GSEMacros[char .. "-" .. realm][mname] and
-           GSEMacros[char .. "-" .. realm][mname].text
+        local charKey = GSE.CharacterMacroBucketKey()
+        if GSEMacros[charKey] and GSEMacros[charKey][mname] and
+           GSEMacros[charKey][mname].text
         then
-            mtext = GSEMacros[char .. "-" .. realm][mname].text
+            mtext = GSEMacros[charKey][mname].text
         else
             mtext = matext
         end

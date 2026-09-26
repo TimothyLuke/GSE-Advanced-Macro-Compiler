@@ -5,6 +5,52 @@ local L = GSE.L
 
 local GNOME = "Storage"
 
+-- The one place that knows where each kind of GSE content is stored at rest.
+-- Kept here, at the top of Storage.lua, because this file owns the
+-- SavedVariables; the rest of it goes through GSE.Store rather than naming them.
+--
+-- Everything else asks GSE.Store(kind) for the root table rather than naming a
+-- SavedVariable directly, so the storage layout can change in this file alone.
+-- That is the point of it: sequences, variables and macros are being folded
+-- into a single store, and 107 places used to name GSESequences by hand.
+--
+-- Sequences keep their [classid][name] shape, so for them this is a pure
+-- indirection -- GSE.Store("sequence")[classid][name] reads and writes exactly
+-- what GSESequences[classid][name] did. Variables and macros change shape in
+-- the same rework (they gain the class level sequences already have); their
+-- call sites move to name-level accessors when that lands, not before.
+--
+-- The root is created on demand. That cannot hide saved data: the TOC sets
+-- LoadSavedVariablesFirst, so the saved value is already in _G before any GSE
+-- file runs, and a table is only created where there was genuinely nothing.
+
+local ROOTS = {
+    sequence = "GSESequences",
+}
+
+--- The at-rest root table for a kind of content, created if absent.
+function GSE.Store(kind)
+    local global = ROOTS[kind]
+    if not global then error("GSE.Store: unknown kind " .. tostring(kind), 2) end
+    local t = _G[global]
+    if type(t) ~= "table" then
+        t = {}
+        _G[global] = t
+    end
+    return t
+end
+
+--- One class's table within a kind's store; created only when asked to.
+function GSE.StoreClass(kind, classid, create)
+    local root = GSE.Store(kind)
+    local t = root[classid]
+    if t == nil and create then
+        t = {}
+        root[classid] = t
+    end
+    return t
+end
+
 -- How many steps ride in one chunk of the secure Execute payload. The step
 -- list is split because a single secure string is length-limited; the secure
 -- snippet calls each chunk an "iteration" and wraps from the last step of the
@@ -221,10 +267,10 @@ local function loadOneClass(classid)
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
-    if GSE.isEmpty(GSESequences) or GSE.isEmpty(GSESequences[classid]) then
+    if GSE.isEmpty(GSE.Store("sequence")) or GSE.isEmpty(GSE.Store("sequence")[classid]) then
         return
     end
-    for i, j in pairs(GSESequences[classid]) do
+    for i, j in pairs(GSE.Store("sequence")[classid]) do
         local status, err =
             pcall(
             function()
@@ -249,8 +295,8 @@ local function loadOneClass(classid)
                 -- so declining to persist them costs nothing. Rewriting them
                 -- over protected content, on the other hand, is what stripped
                 -- the packed envelope in #2054.
-                if changed and not GSE.IsProtectedAtRest(GSESequences[classid][i], GSE.Library[classid][i]) then
-                    GSESequences[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
+                if changed and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][i], GSE.Library[classid][i]) then
+                    GSE.Store("sequence")[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
                 end
             end
         )
@@ -279,23 +325,23 @@ end
 function GSE.EnsureSequenceLoaded(classid, sequenceName)
     if GSE.isEmpty(classid) or GSE.isEmpty(sequenceName) then return end
     if not GSE.isEmpty(GSE.Library[classid] and GSE.Library[classid][sequenceName]) then return end
-    if GSE.isEmpty(GSESequences) or GSE.isEmpty(GSESequences[classid]) then return end
-    if GSE.isEmpty(GSESequences[classid][sequenceName]) then return end
+    if GSE.isEmpty(GSE.Store("sequence")) or GSE.isEmpty(GSE.Store("sequence")[classid]) then return end
+    if GSE.isEmpty(GSE.Store("sequence")[classid][sequenceName]) then return end
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
     local status, err =
         pcall(
         function()
-            local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[classid][sequenceName])
+            local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSE.Store("sequence")[classid][sequenceName])
             if localsuccess then
                 GSE.Library[classid][sequenceName] = uncompressedVersion[2]
                 local forked = GSE.ApplyStoredDeltaFork
                     and GSE.ApplyStoredDeltaFork(GSE.Library[classid][sequenceName],
-                        GSESequences[classid][sequenceName])
+                        GSE.Store("sequence")[classid][sequenceName])
                 if forked then GSE.Library[classid][sequenceName] = forked end
                 GSE.AuditProtectedAtRest("sequence", classid, sequenceName,
-                    GSESequences[classid][sequenceName], GSE.Library[classid][sequenceName])
+                    GSE.Store("sequence")[classid][sequenceName], GSE.Library[classid][sequenceName])
                 local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
                 if reason == "macros-deprecated" then
                     GSE.Library[classid][sequenceName] = nil
@@ -303,9 +349,9 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
                         L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
                         sequenceName))
                 end
-                if changed and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName],
+                if changed and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName],
                     GSE.Library[classid][sequenceName]) then
-                    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
+                    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
                 end
             end
         end
@@ -345,8 +391,8 @@ function GSE.DeleteCorruptSequence(classid, name)
     if GSE.ForgetDeltaFork and type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
         GSE.ForgetDeltaFork(GSE.Library[classid][name])
     end
-    if type(GSESequences) == "table" and type(GSESequences[classid]) == "table" then
-        GSESequences[classid][name] = nil
+    if type(GSE.Store("sequence")) == "table" and type(GSE.Store("sequence")[classid]) == "table" then
+        GSE.Store("sequence")[classid][name] = nil
     end
     if type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
         GSE.Library[classid][name] = nil
@@ -398,7 +444,7 @@ function GSE.DeleteSequence(classid, sequenceName)
             and GSE.Library[tonumber(classid)][sequenceName])
     end
     GSE.Library[tonumber(classid)][sequenceName] = nil
-    GSESequences[tonumber(classid)][sequenceName] = nil
+    GSE.Store("sequence")[tonumber(classid)][sequenceName] = nil
     GSE.ForgetCorruptSequence(classid, sequenceName)
 
     -- Remove any actionbar overrides that reference this sequence
@@ -697,7 +743,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     -- every later edit swallowed by the fork it had outgrown. The owner then
     -- sees local-changes controls on their own unsealed sequence, and no
     -- amount of editing clears them, because each edit re-enters the fork.
-    local protectedAtRest = GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence)
+    local protectedAtRest = GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence)
     if protectedAtRest and GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
         GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
         GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
@@ -709,7 +755,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     -- This branch is for protected content ONLY -- an ordinary sequence falls
     -- through to the plain replace below, exactly as before.
     if protectedAtRest then
-        if not GSE.SeedDeltaFork(GSESequences[classid][sequenceName], sequence, "sequence") then
+        if not GSE.SeedDeltaFork(GSE.Store("sequence")[classid][sequenceName], sequence, "sequence") then
             -- Nothing to key a fork by, so the edit cannot be persisted here.
             -- Say so rather than writing it out in the clear.
             GSE.QueueRepack("sequence", classid, sequenceName, sequence, "edit-needs-repack")
@@ -727,7 +773,7 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.ForgetDeltaFork then GSE.ForgetDeltaFork(sequence) end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
-    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
     GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
 end
@@ -741,8 +787,7 @@ function GSE.StoreEncodedSequence(name, encoded)
     end
     local seq = decoded[2]
     local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
-    if GSE.isEmpty(GSESequences) then GSESequences = {} end
-    if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    if GSE.isEmpty(GSE.Store("sequence")[classid]) then GSE.Store("sequence")[classid] = {} end
     -- Arriving in the CLEAR for something we hold a fork of means the server
     -- flattened it: this is the owner's own work, their edit was applied to
     -- their record, and what just came back already contains it. The fork
@@ -758,7 +803,7 @@ function GSE.StoreEncodedSequence(name, encoded)
             GSE.ForgetDeltaFork(pid)
         end
     end
-    GSESequences[classid][name] = encoded
+    GSE.Store("sequence")[classid][name] = encoded
     -- Drop any stale decoded copy so the lazy loader re-decodes from the
     -- stored string (its canonical migrate + variable-load path).
     if type(GSE.Library[classid]) == "table" then GSE.Library[classid][name] = nil end
@@ -817,23 +862,23 @@ function GSE.RenameSequence(classid, oldName, newName, sequence)
     -- content moves as the string it already is -- the sealed blob is carried
     -- across untouched and nothing needs encoding. The name inside the body is
     -- MetaData.Name, which the caller has already updated.
-    if GSE.IsProtectedAtRest(GSESequences[classid][oldName], sequence) then
+    if GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][oldName], sequence) then
         -- Only a blob that actually exists can be carried. A protected body
         -- with nothing stored under the old key has nothing to move, and
         -- assigning the nil across would drop the sequence from storage
         -- altogether, so ask for a repack instead.
-        if GSESequences[classid][oldName] ~= nil then
-            GSESequences[classid][newName] = GSESequences[classid][oldName]
+        if GSE.Store("sequence")[classid][oldName] ~= nil then
+            GSE.Store("sequence")[classid][newName] = GSE.Store("sequence")[classid][oldName]
         else
             GSE.QueueRepack("sequence", classid, newName, sequence, "rename-needs-repack")
         end
     else
-        GSESequences[classid][newName] = GSE.EncodeMessage({newName, sequence})
+        GSE.Store("sequence")[classid][newName] = GSE.EncodeMessage({newName, sequence})
     end
     GSE.Library[classid][newName] = sequence
 
     -- Remove the old key so the old name is no longer in use.
-    GSESequences[classid][oldName] = nil
+    GSE.Store("sequence")[classid][oldName] = nil
     GSE.Library[classid][oldName]  = nil
 
     -- Migrate any actionbar overrides that referenced the old name so the
@@ -913,7 +958,7 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
     local src = GSE.FindSequence(sourceName)
     if GSE.isEmpty(src) then return nil end
     if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
-    if GSE.isEmpty(GSESequences[classid]) then GSESequences[classid] = {} end
+    if GSE.isEmpty(GSE.Store("sequence")[classid]) then GSE.Store("sequence")[classid] = {} end
 
     local clone = GSE.CloneSequence(src)
     if GSE.isEmpty(clone.MetaData) then clone.MetaData = {} end
@@ -966,19 +1011,15 @@ function GSE.LoadStorage(destination)
     if GSE.isEmpty(destination) then
         destination = {}
     end
-    if GSE.isEmpty(GSESequences) then
-        GSESequences = {}
-        for iind = 0, 13 do
-            GSESequences[iind] = {}
-        end
-    end
-    -- Pre-initialise all class slots so GSE.Library[k] is never nil.
+    -- Pre-initialise all class slots so GSE.Library[k] is never nil. The
+    -- store's root always exists (GSE.Store creates it), so this loop is what
+    -- guarantees each class table.
     for k = 0, 13 do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
         end
-        if GSE.isEmpty(GSESequences[k]) then
-            GSESequences[k] = {}
+        if GSE.isEmpty(GSE.Store("sequence")[k]) then
+            GSE.Store("sequence")[k] = {}
         end
     end
     -- Decompress sequences first so dependency data is readable.
@@ -1486,8 +1527,8 @@ end
 function GSE.CleanMacroLibrary(forcedelete)
     -- Clean out the sequences database except for the current version
     if forcedelete then
-        GSESequences[GSE.GetCurrentClassID()] = nil
-        GSESequences[GSE.GetCurrentClassID()] = {}
+        GSE.Store("sequence")[GSE.GetCurrentClassID()] = nil
+        GSE.Store("sequence")[GSE.GetCurrentClassID()] = {}
         GSE.Library[GSE.GetCurrentClassID()] = nil
         GSE.Library[GSE.GetCurrentClassID()] = {}
         if GSE.GUI and GSE.GUI.Editors then
@@ -1710,8 +1751,8 @@ function GSE.GetSequenceNames(Library)
             else
                 -- Foreign class under All filter: enumerate names from the compressed store
                 -- without decompressing. SpecID and disable are unknown until opened.
-                if not GSE.isEmpty(GSESequences[k]) then
-                    for i, _ in pairs(GSESequences[k]) do
+                if not GSE.isEmpty(GSE.Store("sequence")[k]) then
+                    for i, _ in pairs(GSE.Store("sequence")[k]) do
                         keyset[k .. ",0," .. i .. ",0"] = i
                     end
                 end
@@ -3087,11 +3128,11 @@ function GSE.BackfillLastUpdated()
                     -- an unwritten LastUpdated would be re-minted to a new
                     -- `now` on every load anyway -- drift, not a backfill.
                     if type(seq) == "table" and not seq.LastUpdated
-                        and not (GSESequences and GSESequences[classid]
-                            and GSE.IsProtectedAtRest(GSESequences[classid][name], seq)) then
+                        and not (GSE.Store("sequence") and GSE.Store("sequence")[classid]
+                            and GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][name], seq)) then
                         seq.LastUpdated = now
-                        if GSESequences and GSESequences[classid] then
-                            GSESequences[classid][name] = GSE.EncodeMessage({name, seq})
+                        if GSE.Store("sequence") and GSE.Store("sequence")[classid] then
+                            GSE.Store("sequence")[classid][name] = GSE.EncodeMessage({name, seq})
                         end
                         touched = touched + 1
                     end
@@ -3184,8 +3225,8 @@ function GSE.UpdateMacro(node, category, skipStore)
             if not skipStore then
                 if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(node)) then
                     if category then
-                        local char, realm = UnitFullName("player")
-                        GSEMacros[char .. "-" .. realm][node.name] = node
+                        local charKey = GSE.CharacterMacroBucketKey()
+                        GSEMacros[charKey][node.name] = node
                     else
                         GSEMacros[node.name] = node
                     end
@@ -3223,11 +3264,11 @@ function GSE.ImportMacro(node)
     local source = GSEMacros
     if node.category == "p" then
         characterMacro = true
-        local char, realm = UnitFullName("player")
-        if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-            GSEMacros[char .. "-" .. realm] = {}
+        local charKey = GSE.CharacterMacroBucketKey()
+        if GSE.isEmpty(GSEMacros[charKey]) then
+            GSEMacros[charKey] = {}
         end
-        source = GSEMacros[char .. "-" .. realm]
+        source = GSEMacros[charKey]
     end
     node.category = nil
 
@@ -3412,15 +3453,12 @@ function GSE.ManageMacros()
             end
         end
     end
-    local char, realm = UnitFullName("player")
-    if GSE.isEmpty(realm) then
-        realm = string.gsub(GetRealmName(), "%s*", "")
-    end
+    local charKey = GSE.CharacterMacroBucketKey()
 
-    if GSEMacros[char .. "-" .. realm] then
-        for k, v in pairs(GSEMacros[char .. "-" .. realm]) do
+    if GSEMacros[charKey] then
+        for k, v in pairs(GSEMacros[charKey]) do
             if k == "value" then
-                GSEMacros[char .. "-" .. realm][k] = nil
+                GSEMacros[charKey][k] = nil
             else
                 local cpnode, cEncodedEntry = resolveMacroNode(v)
                 if cEncodedEntry then
@@ -3429,7 +3467,7 @@ function GSE.ManageMacros()
                     local macroIndex = GetMacroIndexByName(k)
                     if macroIndex ~= v.value then
                         v.value = macroIndex
-                        GSEMacros[char .. "-" .. realm][k].value = macroIndex
+                        GSEMacros[charKey][k].value = macroIndex
                     end
                     local node = {
                         ["name"] = k,
@@ -3448,7 +3486,7 @@ function GSE.ManageMacros()
                     if slot and slot > 0 then
                         local mname, micon, mbody = GetMacroInfo(slot)
                         if mname then
-                            GSEMacros[char .. "-" .. realm][mname] = {
+                            GSEMacros[charKey][mname] = {
                                 ["name"] = mname,
                                 ["value"] = slot,
                                 ["icon"] = micon,
@@ -3456,11 +3494,11 @@ function GSE.ManageMacros()
                                 ["manageMacro"] = mbody
                             }
                         else
-                            GSEMacros[char .. "-" .. realm][k] = nil
+                            GSEMacros[charKey][k] = nil
                         end
                     else
-                        if type(GSEMacros[char .. "-" .. realm][k]) ~= "table" then
-                            GSEMacros[char .. "-" .. realm][k] = nil
+                        if type(GSEMacros[charKey][k]) ~= "table" then
+                            GSEMacros[charKey][k] = nil
                         end
                     end
                 end

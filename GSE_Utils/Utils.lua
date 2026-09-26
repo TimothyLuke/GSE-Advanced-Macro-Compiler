@@ -10,12 +10,9 @@ local GNOME = "Storage"
 local mname = nil
 
 function GSE.ImportLegacyStorage(Library)
-    if GSE.isEmpty(GSESequences) then
-        GSESequences = {}
-    end
     for i = 0, 13 do
-        if GSE.isEmpty(GSESequences[i]) then
-            GSESequences[i] = {}
+        if GSE.isEmpty(GSE.Store("sequence")[i]) then
+            GSE.Store("sequence")[i] = {}
         end
     end
 
@@ -23,7 +20,7 @@ function GSE.ImportLegacyStorage(Library)
         for k, v in pairs(Library) do
             for i, j in pairs(v) do
                 local compressedVersion = GSE.EncodeMessage({i, j})
-                GSESequences[k][i] = compressedVersion
+                GSE.Store("sequence")[k][i] = compressedVersion
             end
         end
     end
@@ -158,15 +155,15 @@ local function storeMergedSequence(classid, sequenceName, reason, sealed)
     -- RENAME produce something the addon cannot seal, and fall through to the
     -- repack request below.
     if sealed then
-        GSESequences[classid] = GSESequences[classid] or {}
-        GSESequences[classid][sequenceName] = sealed
+        GSE.Store("sequence")[classid] = GSE.Store("sequence")[classid] or {}
+        GSE.Store("sequence")[classid][sequenceName] = sealed
         return true
     end
-    if GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
+    if GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], seq) then
         GSE.QueueRepack("sequence", classid, sequenceName, seq, reason)
         return false
     end
-    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
     return true
 end
 
@@ -485,8 +482,8 @@ end
 -- forcing a lazy class load -- the name is the table KEY and is always in the
 -- clear, even for sealed content.
 local function sealedImportCollides(name)
-    if type(GSESequences) ~= "table" then return false end
-    for _, bucket in pairs(GSESequences) do
+    if type(GSE.Store("sequence")) ~= "table" then return false end
+    for _, bucket in pairs(GSE.Store("sequence")) do
         if type(bucket) == "table" and bucket[name] ~= nil then return true end
     end
     return false
@@ -1551,7 +1548,7 @@ function GSE.ScanMacrosForErrors()
                                         found = true
                                         break
                                     end
-                                    if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][depseq]) then
+                                    if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][depseq]) then
                                         found = true
                                         break
                                     end
@@ -1677,12 +1674,12 @@ function GSE.ScanMacrosForErrors()
     end
 
     -- 6. GSESequences encoding check (existing behaviour: remove malformed entries)
-    if type(GSESequences) == "table" then
-        for classlibid, classlib in ipairs(GSESequences) do
+    if type(GSE.Store("sequence")) == "table" then
+        for classlibid, classlib in ipairs(GSE.Store("sequence")) do
             if type(classlib) == "table" then
                 for k, v in pairs(classlib) do
                     if type(v) == "string" and string.sub(v, 1, 6) ~= "!GSE3!" then
-                        GSESequences[classlibid][k] = nil
+                        GSE.Store("sequence")[classlibid][k] = nil
                         GSE.Print(L["Removed unreadable sequence "] .. k, Statics.DebugModules["Storage"])
                     end
                 end
@@ -2104,8 +2101,8 @@ function GSE.FindSequence(sequenceName)
     if GSE.isEmpty(returnVal) then
         -- Thius is a sequence for another class
         for i = 1, 14, 1 do
-            if GSESequences[i] and GSESequences[i][sequenceName] then
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSESequences[i][sequenceName])
+            if GSE.Store("sequence")[i] and GSE.Store("sequence")[i][sequenceName] then
+                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSE.Store("sequence")[i][sequenceName])
                 if localsuccess then
                     returnVal = uncompressedVersion
                 end

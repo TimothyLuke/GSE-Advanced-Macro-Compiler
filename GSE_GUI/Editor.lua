@@ -1952,13 +1952,13 @@ function GSE.HydrateClassActionIcons(classid)
         -- migrateSequenceVersions changes a sequence; this only extends it to
         -- the retry, which has to run after GSE_GUI and warm spell data. Icon
         -- hydration keeps its existing deferred-save policy untouched.
-        if sequenceShowTooltipChanges > 0 and GSESequences and GSESequences[classid] and
-            GSESequences[classid][sequenceName] then
+        if sequenceShowTooltipChanges > 0 and GSE.Store("sequence") and GSE.Store("sequence")[classid] and
+            GSE.Store("sequence")[classid][sequenceName] then
             if type(sequence.MetaData) == "table" then sequence.MetaData.Checksum = nil end
             -- Resolved icons are a cache, re-derived on every load, so leaving
             -- protected content sealed costs one re-hydrate and nothing else.
-            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
-                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+            if not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
+                GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
             end
             sequenceChangedIcons = sequenceChangedIcons - sequenceShowTooltipChanges
         end
@@ -1986,8 +1986,8 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
     -- Force-load every class that exists in the saved-variable store so the
     -- scan covers all sequences, not just classes the user has browsed this
     -- session. EnsureClassLoaded is a no-op for classes already decompressed.
-    if type(GSESequences) == "table" and GSE.EnsureClassLoaded then
-        for classid, _ in pairs(GSESequences) do
+    if type(GSE.Store("sequence")) == "table" and GSE.EnsureClassLoaded then
+        for classid, _ in pairs(GSE.Store("sequence")) do
             GSE.EnsureClassLoaded(classid)
         end
     end
@@ -2019,9 +2019,9 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
 
                 local pendingIconSaves = actionIconDirtySequences[sequence] or 0
                 if saveChanges then
-                    if (changed or pendingIconSaves > 0) and GSESequences and GSESequences[classid]
-                        and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
-                        GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                    if (changed or pendingIconSaves > 0) and GSE.Store("sequence") and GSE.Store("sequence")[classid]
+                        and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
+                        GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
                         savedSequences = savedSequences + 1
                         savedIcons = savedIcons + sequenceChangedIcons + pendingIconSaves
                         actionIconDirtySequences[sequence] = nil
@@ -2041,8 +2041,8 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
     -- Force-load every class that exists in the saved-variable store so the
     -- reset covers all sequences, not just classes the user has browsed this
     -- session. EnsureClassLoaded is a no-op for classes already decompressed.
-    if type(GSESequences) == "table" and GSE.EnsureClassLoaded then
-        for classid, _ in pairs(GSESequences) do
+    if type(GSE.Store("sequence")) == "table" and GSE.EnsureClassLoaded then
+        for classid, _ in pairs(GSE.Store("sequence")) do
             GSE.EnsureClassLoaded(classid)
         end
     end
@@ -2080,9 +2080,9 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
                     changedSequences = changedSequences + 1
                 end
 
-                if saveChanges and changed and GSESequences and GSESequences[classid]
-                    and not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], sequence) then
-                    GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                if saveChanges and changed and GSE.Store("sequence") and GSE.Store("sequence")[classid]
+                    and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
+                    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
                     savedSequences = savedSequences + 1
                     savedIcons = savedIcons + sequenceRefreshedIcons + sequenceClearedUserSelections
                     actionIconDirtySequences[sequence] = nil
@@ -3100,8 +3100,8 @@ function GSE.CreateEditor()
                 local origClassID = editframe.OrigClassID
                 if origClassID and origClassID ~= classid then
                     local oldName = editframe.OrigSequenceName or plainName
-                    if GSESequences[origClassID] then
-                        GSESequences[origClassID][oldName] = nil
+                    if GSE.Store("sequence")[origClassID] then
+                        GSE.Store("sequence")[origClassID][oldName] = nil
                     end
                     if GSE.Library[origClassID] then
                         GSE.Library[origClassID][oldName] = nil
@@ -6287,7 +6287,7 @@ function GSE.CreateEditor()
                         SequenceDropDown:AddItem(v, v)
                     end
                 end
-                for k, _ in pairs((GSESequences and GSESequences[0]) or {}) do
+                for k, _ in pairs((GSE.Store("sequence") and GSE.Store("sequence")[0]) or {}) do
                     SequenceDropDown:AddItem(k, k)
                 end
                 SequenceDropDown:SetMultiselect(false)
@@ -8510,7 +8510,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
         sequence.Versions[1]["Actions"] = recordedMacro
     end
     if GSE.isEmpty(sequence.WeakAuras) then sequence.WeakAuras = {} end
-    GSESequences[classid][name] = GSE.EncodeMessage({name, sequence})
+    GSE.Store("sequence")[classid][name] = GSE.EncodeMessage({name, sequence})
     GSE.Library[classid][name]  = sequence
     editor:SetStatusText("GSE: " .. GSE.VersionString)
     editor.SequenceName     = name
@@ -8590,7 +8590,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     local classid = tonumber(elements[1])
     local sequenceName = elements[3]
 
-    local _, seq = GSE.DecodeMessage(GSESequences[classid][sequenceName])
+    local _, seq = GSE.DecodeMessage(GSE.Store("sequence")[classid][sequenceName])
     local sequence
     if seq then
         sequence = seq[2]
@@ -8606,7 +8606,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     -- reconstruction directly would make those edits land in whatever table the
     -- fork was rebuilt into, before the user has pressed anything.
     if sequence and GSE.ApplyStoredDeltaFork then
-        local forked = GSE.ApplyStoredDeltaFork(sequence, GSESequences[classid][sequenceName])
+        local forked = GSE.ApplyStoredDeltaFork(sequence, GSE.Store("sequence")[classid][sequenceName])
         if forked then sequence = GSE.CloneSequence(forked) end
     end
 
