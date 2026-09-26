@@ -1770,14 +1770,14 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
     end
     if GSE.isEmpty(sequence.Icon) and GSE.isEmpty(iconid) then
         --@debug@
-        GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.Metadata.SpecID, GNOME)
+        GSE.PrintDebugMessage("SequenceSpecID: " .. sequence.MetaData.SpecID, GNOME)
         --@end-debug@
-        if sequence.Metadata.SpecID == 0 then
+        if sequence.MetaData.SpecID == 0 then
             return "INV_MISC_QUESTIONMARK"
         else
             local _, _, _, specicon, _, _, _ =
                 GetSpecializationInfoByID(
-                    (GSE.isEmpty(sequence.Metadata.SpecID) and GSE.GetCurrentSpecID() or sequence.Metadata.SpecID)
+                    (GSE.isEmpty(sequence.MetaData.SpecID) and GSE.GetCurrentSpecID() or sequence.MetaData.SpecID)
                 )
             if specicon then
                 if type(specicon) == "string" then
