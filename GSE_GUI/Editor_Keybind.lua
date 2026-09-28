@@ -1736,7 +1736,7 @@ end
 -- it follows the layout.  Kept per container in a weak table because the
 -- rows are pooled widgets and their frames are swept on reuse.
 local hotspots = setmetatable({}, {__mode = "k"})
-local function columnHotspot(container, index, topCell, bottomCell, onClick)
+local function columnHotspot(container, index, topCell, bottomCell, onClick, onEnter, onLeave)
     local parent = container.content or container.frame
     hotspots[parent] = hotspots[parent] or {}
     local button = hotspots[parent][index]
@@ -1759,8 +1759,14 @@ local function columnHotspot(container, index, topCell, bottomCell, onClick)
             glow:SetBackdropBorderColor(1, 1, 1, 0.08)
         end
         glow:Hide()
-        button:SetScript("OnEnter", function() glow:Show() end)
-        button:SetScript("OnLeave", function() glow:Hide() end)
+        button:SetScript("OnEnter", function(self)
+            glow:Show()
+            if self.gseOnEnter then self.gseOnEnter() end
+        end)
+        button:SetScript("OnLeave", function(self)
+            glow:Hide()
+            if self.gseOnLeave then self.gseOnLeave() end
+        end)
         hotspots[parent][index] = button
     end
     -- Top and sides from the column's top cell; bottom from the pane itself,
@@ -1772,6 +1778,7 @@ local function columnHotspot(container, index, topCell, bottomCell, onClick)
     button:SetPoint("BOTTOM", container.frame, "BOTTOM", 0, 0)
     button:SetFrameLevel((bottomCell.frame:GetFrameLevel() or 1) + 20)
     button:SetScript("OnClick", onClick)
+    button.gseOnEnter, button.gseOnLeave = onEnter, onLeave
     button:Show()
     return button
 end
@@ -1938,9 +1945,33 @@ local function showKeybindChooser(editframe, rightContainer)
     local keybindPath = GetSpecializationInfo
         and ("KEYBINDINGS\001KB\001" .. tostring(defaultSpecIndex()))
         or "KEYBINDINGS\001KB"
+    -- The loadout the player is in, when there is one: each tile goes straight
+    -- to it rather than to the spec, and lights its row in the tree on hover.
+    local activeLoadout = GetSpecializationInfo and activeLoadoutForSpec(defaultSpecIndex())
     local overridePath = GetSpecializationInfo
         and ("KEYBINDINGS\001AO\001" .. tostring(defaultSpecIndex()))
         or "KEYBINDINGS\001AO"
+    if activeLoadout then
+        keybindPath = keybindPath .. "\001" .. tostring(activeLoadout)
+        overridePath = overridePath .. "\001" .. tostring(activeLoadout)
+    end
+
+    -- The tree row a tile leads to, lit with the tree's own selection band
+    -- while the tile is hovered, and put back as the tree left it after.
+    local function treeRow(path)
+        local tree = editframe.treeContainer
+        for _, row in ipairs(tree and tree.buttons or {}) do
+            if row:IsShown() and row.uniquevalue == path then return row end
+        end
+    end
+    local function lightRow(path)
+        local row = treeRow(path)
+        if row and row.selectBand then row.selectBand:Show() end
+    end
+    local function restoreRow(path)
+        local row = treeRow(path)
+        if row and row.selectBand then row.selectBand:SetShown(row.selected and true or false) end
+    end
 
     -- Content from the GSE wiki, KeyBinding and Button Bindings.
     local overrideTop, overrideNote, overrideBullets = chooserTile(
@@ -2003,8 +2034,10 @@ local function showKeybindChooser(editframe, rightContainer)
 
     -- Hover + click over each whole column, both running to the bottom of
     -- the pane.
-    columnHotspot(rightContainer, 1, overrideTopCell, overrideBulletCell, function() goTo(overridePath) end)
-    columnHotspot(rightContainer, 2, keybindTopCell, keybindBulletCell, function() goTo(keybindPath) end)
+    columnHotspot(rightContainer, 1, overrideTopCell, overrideBulletCell, function() goTo(overridePath) end,
+        function() lightRow(overridePath) end, function() restoreRow(overridePath) end)
+    columnHotspot(rightContainer, 2, keybindTopCell, keybindBulletCell, function() goTo(keybindPath) end,
+        function() lightRow(keybindPath) end, function() restoreRow(keybindPath) end)
 
     -- Heights are only right once the widths are: once now for the case
     -- where layout is live, and once more after the editor's suspended
