@@ -25,7 +25,6 @@ describe(
         GSE.UpdateDeltaFork = nil
         GSE.Library = GSE.Library or {}
         GSE.Library[1] = GSE.Library[1] or {}
-        GSE.StoreClass("sequence", 1, true)
         if not GSE.SendMessage then
           GSE.SendMessage = function() end
         end
@@ -52,7 +51,7 @@ describe(
     before_each(
       function()
         _G.GSERepackQueue = {}
-        _G.GSEStore = nil; GSE.LoadStore(); GSE.StoreClass("sequence", 1, true)
+        _G.GSEStore = nil; GSE.LoadStore()
         GSE.Library[1] = {}
       end
     )
@@ -76,6 +75,15 @@ describe(
       }
     end
 
+    -- Sequences are filed by id; "id-" .. name stands in for one here.
+    local function store(name, body)
+      GSE.PutSequenceBody(1, "id-" .. name, name, body)
+    end
+    local function body(name)
+      local env = GSE.SequenceEnvelope("id-" .. name, 1)
+      return env and env.Body
+    end
+
     describe(
       "GSE.ReplaceSequence",
       function()
@@ -83,9 +91,9 @@ describe(
           "leaves the sealed blob alone when the content is protected",
           function()
             local seq = protectedSeq("Prot")
-            GSE.Store("sequence")[1]["Prot"] = SEALED
-            GSE.ReplaceSequence(1, "Prot", seq)
-            assert.equals(SEALED, GSE.Store("sequence")[1]["Prot"])
+            store("Prot", SEALED)
+            GSE.ReplaceSequence(1, "id-Prot", seq)
+            assert.equals(SEALED, body("Prot"))
           end
         )
 
@@ -95,8 +103,8 @@ describe(
             -- SeedDeltaFork is stubbed false in the mock, so this is the
             -- documented fallback: say so rather than write it out plain.
             local seq = protectedSeq("Prot")
-            GSE.Store("sequence")[1]["Prot"] = SEALED
-            GSE.ReplaceSequence(1, "Prot", seq)
+            store("Prot", SEALED)
+            GSE.ReplaceSequence(1, "id-Prot", seq)
             local req = _G.GSERepackQueue["sequence:1:Prot"]
             assert.is_not_nil(req)
             assert.equals("pid-Prot", req.platformId)
@@ -109,9 +117,9 @@ describe(
           function()
             local seq = protectedSeq("Prot")
             seq.Versions[1].Actions = {"changed"}
-            GSE.Store("sequence")[1]["Prot"] = SEALED
-            GSE.ReplaceSequence(1, "Prot", seq)
-            assert.equals("changed", GSE.Library[1]["Prot"].Versions[1].Actions[1])
+            store("Prot", SEALED)
+            GSE.ReplaceSequence(1, "id-Prot", seq)
+            assert.equals("changed", GSE.Library[1]["id-Prot"].Versions[1].Actions[1])
           end
         )
 
@@ -121,8 +129,8 @@ describe(
             -- The delta path is for protected content ONLY; an ordinary save
             -- must keep going straight to the store, unchanged.
             local seq = ownSeq("Mine")
-            GSE.ReplaceSequence(1, "Mine", seq)
-            assert.is_not_nil(GSE.Store("sequence")[1]["Mine"])
+            GSE.ReplaceSequence(1, "id-Mine", seq)
+            assert.is_not_nil(body("Mine"))
             assert.is_nil(_G.GSERepackQueue["sequence:1:Mine"])
           end
         )
@@ -133,9 +141,9 @@ describe(
             -- The envelope alone is enough. A body whose noExport was stripped
             -- must not be able to talk GSE into rewriting the blob plain.
             local seq = ownSeq("Sealed")
-            GSE.Store("sequence")[1]["Sealed"] = SEALED
-            GSE.ReplaceSequence(1, "Sealed", seq)
-            assert.equals(SEALED, GSE.Store("sequence")[1]["Sealed"])
+            store("Sealed", SEALED)
+            GSE.ReplaceSequence(1, "id-Sealed", seq)
+            assert.equals(SEALED, body("Sealed"))
           end
         )
 
@@ -171,11 +179,11 @@ describe(
               "writes the edit into the record instead of the fork",
               function()
                 local seq = ownSeq("Mine")
-                GSE.Store("sequence")[1]["Mine"] = "!GSE3!PLAINRECORD"
-                GSE.ReplaceSequence(1, "Mine", seq)
+                store("Mine", "!GSE3!PLAINRECORD")
+                GSE.ReplaceSequence(1, "id-Mine", seq)
                 assert.is_false(forked)
                 assert.is_true(forgotten)
-                assert.are_not.equals("!GSE3!PLAINRECORD", GSE.Store("sequence")[1]["Mine"])
+                assert.are_not.equals("!GSE3!PLAINRECORD", body("Mine"))
               end
             )
 
@@ -183,11 +191,11 @@ describe(
               "still routes the edit to the fork while the blob is sealed",
               function()
                 local seq = ownSeq("Sealed")
-                GSE.Store("sequence")[1]["Sealed"] = SEALED
-                GSE.ReplaceSequence(1, "Sealed", seq)
+                store("Sealed", SEALED)
+                GSE.ReplaceSequence(1, "id-Sealed", seq)
                 assert.is_true(forked)
                 assert.is_false(forgotten)
-                assert.equals(SEALED, GSE.Store("sequence")[1]["Sealed"])
+                assert.equals(SEALED, body("Sealed"))
               end
             )
 
@@ -195,11 +203,11 @@ describe(
               "still routes the edit to the fork while the body says noExport",
               function()
                 local seq = protectedSeq("Prot")
-                GSE.Store("sequence")[1]["Prot"] = "!GSE3!PLAINRECORD"
-                GSE.ReplaceSequence(1, "Prot", seq)
+                store("Prot", "!GSE3!PLAINRECORD")
+                GSE.ReplaceSequence(1, "id-Prot", seq)
                 assert.is_true(forked)
                 assert.is_false(forgotten)
-                assert.equals("!GSE3!PLAINRECORD", GSE.Store("sequence")[1]["Prot"])
+                assert.equals("!GSE3!PLAINRECORD", body("Prot"))
               end
             )
           end
@@ -216,25 +224,27 @@ describe(
             -- Assigning the missing blob across would have removed the
             -- sequence from storage entirely.
             local seq = protectedSeq("Old")
-            GSE.Store("sequence")[1]["Old"] = nil
-            GSE.Library[1]["Old"] = seq
-            GSE.RenameSequence(1, "Old", "New", seq)
-            assert.is_nil(GSE.Store("sequence")[1]["New"])
+                        GSE.Library[1]["id-Old"] = seq
+            GSE.RenameSequence(1, "id-Old", "New", seq)
+            assert.is_nil(GSE.SequenceEnvelope("id-Old"), "still nothing stored, and nothing written plain")
             assert.equals("rename-needs-repack", _G.GSERepackQueue["sequence:1:New"].reason)
           end
         )
 
         it(
-          "moves the sealed blob to the new key untouched",
+          "keeps the sealed blob untouched and changes only the label",
           function()
-            -- A rename is a change of table key, so the blob travels as the
-            -- string it already is and nothing needs encoding.
+            -- A rename changes the envelope's Name; the id and the sealed body
+            -- stay exactly as they are and nothing needs encoding.
             local seq = protectedSeq("Old")
-            GSE.Store("sequence")[1]["Old"] = SEALED
-            GSE.Library[1]["Old"] = seq
-            GSE.RenameSequence(1, "Old", "New", seq)
-            assert.equals(SEALED, GSE.Store("sequence")[1]["New"])
-            assert.is_nil(GSE.Store("sequence")[1]["Old"])
+            store("Old", SEALED)
+            GSE.Library[1]["id-Old"] = seq
+            GSE.RenameSequence(1, "id-Old", "New", seq)
+            local env = GSE.SequenceEnvelope("id-Old", 1)
+            assert.equals(SEALED, env.Body)
+            assert.equals("New", env.Name)
+            assert.equals("id-Old", GSE.FindSequenceId("New", 1))
+            assert.is_nil(GSE.FindSequenceId("Old", 1))
           end
         )
       end
@@ -303,11 +313,11 @@ describe(
             -- `now` on every load -- drift, not a backfill.
             local seq = protectedSeq("Prot")
             seq.LastUpdated = nil
-            GSE.Store("sequence")[1]["Prot"] = SEALED
-            GSE.Library[1]["Prot"] = seq
+            store("Prot", SEALED)
+            GSE.Library[1]["id-Prot"] = seq
             GSE.BackfillLastUpdated()
             assert.is_nil(seq.LastUpdated)
-            assert.equals(SEALED, GSE.Store("sequence")[1]["Prot"])
+            assert.equals(SEALED, body("Prot"))
           end
         )
       end

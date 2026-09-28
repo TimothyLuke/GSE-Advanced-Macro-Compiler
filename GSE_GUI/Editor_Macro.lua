@@ -514,7 +514,7 @@ local function showMacro(editframe, node, container)
         local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
         local rows = {}
         for _, entry in ipairs(GSE.GetMacroDependents(node.name)) do
-            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.name]
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
             local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
             local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
             rows[#rows+1] = { name = entry.name, author = author, updated = updated }

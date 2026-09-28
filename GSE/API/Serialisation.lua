@@ -63,51 +63,15 @@ function GSE.DecodeMessage(data)
     end
 end
 
-function GSE.TransmitSequence(key, channel, target, transmissionFrame)
-    local t = {}
-    t.Command = "GS-E_TRANSMITSEQUENCE"
-    local elements = GSE.split(key, ",")
-    local classid = tonumber(elements[1])
-    local SequenceName = elements[3]
-    --@debug@
-    GSE.PrintDebugMessage("Sending Seqence [" .. classid .. "][" .. SequenceName .. "]", Statics.SourceTransmission)
-    --@end-debug@
-    t.ClassID = classid
-    t.SequenceName = SequenceName
-    GSE.EnsureSequenceLoaded(classid, SequenceName)
-    local txGuardSeq = GSE.Library[classid] and GSE.Library[classid][SequenceName]
-    if txGuardSeq and txGuardSeq.MetaData and txGuardSeq.MetaData.noExport then
-        GSE.Print(
-            string.format(L["'%s' cannot be shared — it is protected content."], SequenceName),
-            "Error"
-        )
-        if transmissionFrame then
-            transmissionFrame:SetStatusText(L["Cannot share protected content"])
-        end
-        return
-    end
-    t.Sequence = GSE.Library[classid][SequenceName]
-    GSE.sendMessage(t, channel, target)
-    if transmissionFrame then
-        transmissionFrame:SetStatusText(SequenceName .. L[" sent"])
-    end
-end
-
 function GSE.sendMessage(tab, channel, target, priority)
     --@debug@
     GSE.PrintDebugMessage(tab.Command, Statics.SourceTransmission)
     --@end-debug@
-    if tab.Command == "GS-E_TRANSMITSEQUENCE" then
-        --@debug@
-        GSE.PrintDebugMessage(tab.SequenceName, Statics.SourceTransmission)
-        --@end-debug@
-        --@debug@
-        GSE.PrintDebugMessage(GSE.isEmpty(tab.Sequence))
-        --@end-debug@
-        --@debug@
-        GSE.PrintDebugMessage(GSE.ExportSequence(tab.Sequence, tab.SequenceName), Statics.SourceTransmission)
-        --@end-debug@
+    --@debug@
+    if tab.Command == "GSE_TRANSMITELEMENT" then
+        GSE.PrintDebugMessage(tostring(tab.Kind) .. " " .. tostring(tab.Label), Statics.SourceTransmission)
     end
+    --@end-debug@
     local transmission = GSE.EncodeMessage(tab)
     --@debug@
     GSE.PrintDebugMessage("Transmission: \n" .. transmission, Statics.SourceTransmission)
@@ -156,26 +120,163 @@ function GSE.performVersionCheck(version)
     end
 end
 
-function GSE.SendSequence(ClassID, SequenceName, recipient, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
-    end
-    local key = ClassID .. "," .. SequenceName
-    GSE.TransmitSequence(key, channel, recipient)
+-- ── Sharing with other GSE players ──────────────────────────────────────────
+--
+-- Only GSE speaks this protocol, so it is shaped for ids. Every element is
+-- offered, requested and sent by its id -- a sequence's id here, a variable's
+-- or macro's envelope id -- with its label beside it for people to read. The
+-- label is what the receiver files it under: an id means nothing on another
+-- player's machine, and a synced element's PlatformID travels inside the body
+-- anyway, where the import matches it.
+--
+-- Protected content (sealed, or noExport) is never listed and never sent.
+
+-- A sequence this player may share: the sequence, its class and its label.
+local function shareableSequence(id, classid, label)
+    if id == nil and label then id = GSE.FindSequenceId(label, tonumber(classid)) end
+    local env, c = GSE.SequenceEnvelope(id)
+    if not env then return nil end
+    local seq = GSE.GetSequence(id, c)
+    if type(seq) ~= "table" or GSE.IsProtectedAtRest(env.Body, seq) then return nil end
+    return seq, c, env.Name
 end
 
-function GSE.SendSequenceMeta(ClassID, SequenceName, gseuser, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
+-- A variable this player may share, by id or name: the variable, its name, its id.
+local function shareableVariable(ref)
+    local name = GSE.StoredElementName("variable", ref) or ref
+    local stored = GSE.Store("variable")[name]
+    if type(stored) ~= "string" or GSE.IsPackedBlob(stored) then return nil end
+    local ok, decoded = GSE.DecodeMessage(stored)
+    if not ok or type(decoded) ~= "table" or GSE.IsProtectedContent(decoded) or decoded.noExport then return nil end
+    return decoded, name, GSE.StoredElementId("variable", name)
+end
+
+-- A macro this player may share, by id or name: an account macro, or one of
+-- this character's. Without its slot, which is this player's alone.
+local function shareableMacro(ref)
+    local name = GSE.StoredElementName("macro", ref) or ref
+    local node = GSE.Store("macro")[name]
+    if not GSE.IsStoredMacroNode(node) then
+        local bucket = GSE.Store("macro")[GSE.CharacterMacroBucketKey()]
+        node = type(bucket) == "table" and bucket[name] or nil
     end
-    local t = {}
-    t.Command = "GSE_SEQUENCEMETA"
-    t.ClassID = ClassID
-    t.SequenceName = SequenceName
-    GSE.EnsureSequenceLoaded(ClassID, SequenceName)
-    t.LastUpdated = GSE.Library[ClassID][SequenceName].MetaData.LastUpdated
-    t.Help = GSE.Library[ClassID][SequenceName].MetaData.Help
-    GSE.sendMessage(t, channel, gseuser)
+    if not GSE.IsStoredMacroNode(node) or type(node.GSEProtected) == "string" or GSE.IsProtectedContent(node) then
+        return nil
+    end
+    local copy = {}
+    for k, v in pairs(node) do if k ~= "value" then copy[k] = v end end
+    copy.name = copy.name or name
+    return copy, name, GSE.StoredElementId("macro", name)
+end
+
+--- What this player offers: { sequence = { [classid] = { [id] = row } },
+-- variable = { [id] = row }, macro = { [id] = row } }, row = { Label, Help,
+-- LastUpdated }. Keyed by name where an element has no id yet.
+function GSE.GetShareableSummary()
+    local out = {sequence = {}, variable = {}, macro = {}}
+    for classid = 0, 13 do
+        for id in pairs(GSE.SequenceEnvelopes(classid)) do
+            local seq, c, label = shareableSequence(id)
+            if seq then
+                out.sequence[c] = out.sequence[c] or {}
+                out.sequence[c][id] = {Label = label, Help = seq.MetaData and seq.MetaData.Help,
+                    LastUpdated = seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)}
+            end
+        end
+    end
+    for name in pairs(GSE.Store("variable")) do
+        local v, _, id = shareableVariable(name)
+        if v then out.variable[id or name] = {Label = name, Help = v.comments, LastUpdated = v.LastUpdated} end
+    end
+    local macroNames = {}
+    for k, v in pairs(GSE.Store("macro")) do
+        if GSE.IsStoredMacroNode(v) then macroNames[k] = true end
+    end
+    local bucket = GSE.Store("macro")[GSE.CharacterMacroBucketKey()]
+    if type(bucket) == "table" then
+        for k in pairs(bucket) do macroNames[k] = true end
+    end
+    for name in pairs(macroNames) do
+        local m, _, id = shareableMacro(name)
+        if m then out.macro[id or name] = {Label = name, Help = m.comments, LastUpdated = m.LastUpdated} end
+    end
+    return out
+end
+
+--- Send one element to another player. kind is "sequence", "variable" or
+-- "macro"; ref its id (or name). Refuses protected content.
+function GSE.TransmitElement(kind, ref, channel, target, transmissionFrame)
+    local element, classid, label, id
+    if kind == "sequence" then
+        element, classid, label = shareableSequence(ref)
+        id = element and GSE.ResolveSequenceId(ref)
+    elseif kind == "variable" then
+        element, label, id = shareableVariable(ref)
+    elseif kind == "macro" then
+        element, label, id = shareableMacro(ref)
+    end
+    if not element then
+        local shown = label or GSE.SequenceName(ref) or GSE.StoredElementName(kind, ref) or tostring(ref)
+        GSE.Print(string.format(L["'%s' cannot be shared — it is protected content."], shown), "Error")
+        if transmissionFrame then transmissionFrame:SetStatusText(L["Cannot share protected content"]) end
+        return false
+    end
+    GSE.sendMessage({
+        Command = "GSE_TRANSMITELEMENT",
+        Kind = kind, ID = id or label, Label = label, ClassID = classid,
+        Element = element,
+    }, channel or "WHISPER", target)
+    if transmissionFrame then transmissionFrame:SetStatusText(label .. L[" sent"]) end
+    return true
+end
+
+--- Ask a player for one element: by id, or -- from a chat link, which only
+-- ever had the text of the name -- by label.
+function GSE.RequestElement(kind, id, label, classid, gseuser, channel)
+    GSE.sendMessage({
+        Command = "GSE_REQUESTELEMENT",
+        Kind = kind, ID = id, Label = label, ClassID = classid,
+    }, channel or "WHISPER", gseuser)
+end
+
+--- A chat link names a sequence; ask for it by that name.
+function GSE.RequestSequence(ClassID, SequenceName, gseuser, channel)
+    GSE.RequestElement("sequence", nil, SequenceName, ClassID, gseuser, channel)
+end
+
+-- Answer a request: find what was asked for and send it, or stay silent (the
+-- requester's UI times out) when it is not ours to share.
+local function answerRequest(t, sender)
+    local kind = t.Kind or "sequence"
+    local ref = t.ID
+    if kind == "sequence" then
+        if ref == nil or not GSE.SequenceEnvelope(ref) then
+            ref = GSE.FindSequenceId(t.Label, tonumber(t.ClassID))
+        end
+    elseif ref == nil or not GSE.StoredElementName(kind, ref) then
+        ref = t.Label
+    end
+    if ref == nil then return end
+    GSE.TransmitElement(kind, ref, "WHISPER", sender)
+end
+
+--- File an element another player sent. It is filed under its label, like an
+-- import; a sequence it matches by PlatformID is the same record.
+function GSE.ReceiveElement(t, sender)
+    local kind, label, element = t.Kind or "sequence", t.Label, t.Element
+    if type(label) ~= "string" or label == "" or type(element) ~= "table" then return end
+    if kind == "sequence" then
+        GSE.AddSequenceToCollection(label, element, t.ClassID)
+    elseif kind == "variable" then
+        element.objectType = nil
+        GSE.EnqueueOOC({action = "updatevariable", variable = element, name = label})
+    elseif kind == "macro" then
+        element.name = label
+        GSE.EnqueueOOC({action = "importmacro", node = element})
+    else
+        return
+    end
+    GSE.Print(L["Received Sequence "] .. label .. L[" from "] .. sender)
 end
 
 function GSE.SendSpellCache(channel)
@@ -183,33 +284,6 @@ function GSE.SendSpellCache(channel)
     t.Command = "GSE_SPELLCACHE"
     t.cache = GSESpellCache
     GSE.sendMessage(t, channel)
-end
-
-function GSE.RequestSequence(ClassID, SequenceName, gseuser, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
-    end
-    local t = {}
-    t.Command = "GSE_REQUESTSEQUENCE"
-    t.ClassID = ClassID
-    t.SequenceName = SequenceName
-    GSE.sendMessage(t, channel, gseuser)
-end
-
-function GSE.RequestSequenceMeta(ClassID, SequenceName, gseuser, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
-    end
-    local t = {}
-    t.Command = "GSE_REQUESTSEQUENCEMETA"
-    t.ClassID = ClassID
-    t.SequenceName = SequenceName
-    GSE.sendMessage(t, channel, gseuser)
-end
-
-function GSE.ReceiveSequence(classid, SequenceName, Sequence, sender)
-    GSE.AddSequenceToCollection(SequenceName, Sequence, classid)
-    GSE.Print(L["Received Sequence "] .. SequenceName .. L[" from "] .. sender)
 end
 
 function GSE.storeSender(sender, senderversion)
@@ -226,25 +300,13 @@ function GSE.sendVersionCheck()
     GSE.sendMessage(t)
 end
 
-function GSE.ListSequences(recipient, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
-    end
-
-    local sequenceTable = GSE.GetSequenceSummary()
-    local t = {}
-    t.Command = "GSE_SEQUENCELIST"
-    t.SequenceTable = sequenceTable
-    GSE.sendMessage(t, channel, recipient)
+function GSE.ListElements(recipient, channel)
+    GSE.sendMessage({Command = "GSE_ELEMENTLIST", Elements = GSE.GetShareableSummary()},
+        channel or "WHISPER", recipient)
 end
 
-function GSE.RequestSequenceList(gseuser, channel)
-    if GSE.isEmpty(channel) then
-        channel = "WHISPER"
-    end
-    local t = {}
-    t.Command = "GSE_LISTSEQUENCES"
-    GSE.sendMessage(t, channel, gseuser)
+function GSE.RequestElementList(gseuser, channel)
+    GSE.sendMessage({Command = "GSE_LISTELEMENTS"}, channel or "WHISPER", gseuser)
 end
 
 function GSE:OnCommReceived(prefix, message, channel, sender)
@@ -271,73 +333,21 @@ function GSE:OnCommReceived(prefix, message, channel, sender)
                 GSE.performVersionCheck(t.Version)
             end
             GSE.storeSender(sender, t.Version)
-        elseif t.Command == "GS-E_TRANSMITSEQUENCE" then
-            if sender ~= GetUnitName("player", true) then
-                GSE.ReceiveSequence(t.ClassID, t.SequenceName, t.Sequence, sender)
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring Sequence from me.", Statics.SourceTransmission)
-                --@end-debug@
-                --@debug@
-                GSE.PrintDebugMessage(GSE.ExportSequence(t.Sequence, t.SequenceName, false), Statics.SourceTransmission)
-                --@end-debug@
-            end
-        elseif t.Command == "GSE_LISTSEQUENCES" then
-            if sender ~= GetUnitName("player", true) then
-                GSE.ListSequences(sender, "WHISPER")
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring List Request from me.", Statics.SourceTransmission)
-                --@end-debug@
-            end
-        elseif t.Command == "GSE_SEQUENCELIST" then
-            if sender ~= GetUnitName("player", true) then
-                GSE.ShowSequenceList(t.SequenceTable, sender, channel)
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring SequenceList from me.", Statics.SourceTransmission)
-                --@end-debug@
-            end
-        elseif t.Command == "GSE_REQUESTSEQUENCE" then
-            if sender ~= GetUnitName("player", true) then
-                local reqClassId = tonumber(t.ClassID)
-                local reqSeq = GSE.Library[reqClassId] and GSE.Library[reqClassId][t.SequenceName]
-                if reqSeq and reqSeq.MetaData and reqSeq.MetaData.noExport then
-                    return  -- silent refusal; requester's UI just times out
-                end
-                if not GSE.isEmpty(GSE.Store("sequence")[reqClassId][t.SequenceName]) then
-                    GSE.SendSequence(reqClassId, t.SequenceName, sender, "WHISPER")
-                end
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring RequestSequence from me.", Statics.SourceTransmission)
-                --@end-debug@
-            end
-        elseif t.Command == "GSE_REQUESTSEQUENCEMETA" then
-            if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSE.Store("sequence")[t.ClassID][t.SequenceName]) then
-                    GSE.SendSequenceMeta(t.ClassID, t.SequenceName, sender, "WHISPER")
-                end
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring SequenceMeta from me.", Statics.SourceTransmission)
-                --@end-debug@
-            end
-        elseif t.Command == "GSE_SEQUENCEMETA" then
-            if sender ~= GetUnitName("player", true) then
-                if not GSE.isEmpty(GSE.Store("sequence")[t.ClassID][t.SequenceName]) then
-                    local sequence = GSE.Library[t.ClassID][t.SequenceName]
-                    if sequence.MetaData.LastUpdated ~= t.LastUpdated then
-                        GSE.RequestSequence(t.ClassID, t.SequenceName, sender, "WHISPER")
-                    end
-                end
-            else
-                --@debug@
-                GSE.PrintDebugMessage("Ignoring SequenceMeta data from me.", Statics.SourceTransmission)
-                --@end-debug@
-            end
+        elseif sender == GetUnitName("player", true) then
+            -- Everything below is another player talking to us; ignore our own echo.
+            --@debug@
+            GSE.PrintDebugMessage("Ignoring " .. tostring(t.Command) .. " from me.", Statics.SourceTransmission)
+            --@end-debug@
+        elseif t.Command == "GSE_TRANSMITELEMENT" then
+            GSE.ReceiveElement(t, sender)
+        elseif t.Command == "GSE_LISTELEMENTS" then
+            GSE.ListElements(sender, "WHISPER")
+        elseif t.Command == "GSE_ELEMENTLIST" then
+            GSE.ShowSequenceList(t.Elements, sender, channel)
+        elseif t.Command == "GSE_REQUESTELEMENT" then
+            answerRequest(t, sender)
         elseif t.Command == "GSE_SPELLCACHE" then
-            if sender ~= GetUnitName("player", true) then
+            do
                 if GSE.isEmpty(GSESpellCache) then
                     GSESpellCache = {
                         ["enUS"] = {}
@@ -468,9 +478,14 @@ hooksecurefunc(
             local cmd, sequenceName, player, ClassID = string.split("@", param1)
             if cmd == "seq" then
                 if player == UnitName("player") then
-                    local editor = GSE.CreateEditor()
-                    editor.ManageTree()
-                    GSE.GUILoadEditor(editor, ClassID .. "," .. sequenceName)
+                    -- Our own link: open it. GUILoadEditor takes the tree's
+                    -- "classid,spec,id" key; this used to hand it "classid,name".
+                    local ownId = GSE.FindSequenceId(sequenceName, tonumber(ClassID))
+                    if ownId then
+                        local editor = GSE.CreateEditor()
+                        editor.ManageTree()
+                        GSE.GUILoadEditor(editor, ClassID .. ",0," .. ownId)
+                    end
                 else
                     GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
                     GSE.RequestSequence(ClassID, sequenceName, player, "WHISPER")

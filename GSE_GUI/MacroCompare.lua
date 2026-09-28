@@ -23,7 +23,7 @@ local function ExportVersionsForCompare(sequence)
   return GSE.Dump(translated.Versions) .. "\n"
 end
 
--- Queue of {name, classid, sequence} waiting for the open window to close.
+-- Queue of {id, classid, sequence} waiting for the open window to close.
 local compareQueue = {}
 local compareShowing = false
 local showCompareWindow
@@ -34,13 +34,13 @@ local showCompareWindow
 -- A collection import calls this once per colliding member. Without a queue
 -- they all appear at once, stacked and indistinguishable, and answering the
 -- top one leaves three more underneath.
-function GSE.GUIShowCompareWindow(sequenceName, classid, newsequence)
+function GSE.GUIShowCompareWindow(id, classid, newsequence)
     if compareShowing then
-        compareQueue[#compareQueue + 1] = {sequenceName, classid, newsequence}
+        compareQueue[#compareQueue + 1] = {id, classid, newsequence}
         return
     end
     compareShowing = true
-    showCompareWindow(sequenceName, classid, newsequence)
+    showCompareWindow(id, classid, newsequence)
 end
 
 --- The open window is done with: show the next one, if any.
@@ -54,7 +54,12 @@ local function compareWindowClosed()
     end
 end
 
-function showCompareWindow(sequenceName, classid, newsequence)
+-- id is the stored sequence the import collided with; the name shown -- and
+-- offered for a rename -- is its label.
+function showCompareWindow(id, classid, newsequence)
+  local existing = GSE.GetSequence(id)
+  local sequenceName = GSE.SequenceName(id)
+    or (type(newsequence.MetaData) == "table" and newsequence.MetaData.Name) or tostring(id)
   local compareframe = UI:Create("Frame")
   -- A recycled Frame keeps the callbacks of whoever used it last, and the
   -- Hide() below fires OnHide -> OnClose. Building this window would otherwise
@@ -83,6 +88,7 @@ function showCompareWindow(sequenceName, classid, newsequence)
   end
   compareframe.ChosenAction = GSEOptions.DefaultImportAction
   compareframe.classid = classid
+  compareframe.id = id
   compareframe.sequenceName = sequenceName
   compareframe.frame:SetFrameStrata("MEDIUM")
   compareframe.frame:SetClampedToScreen(true)
@@ -204,8 +210,9 @@ function showCompareWindow(sequenceName, classid, newsequence)
       GSE.PerformMergeAction(
         compareframe.ChosenAction,
         compareframe.classid,
-        compareframe.sequenceName,
-        compareframe.NewSequence
+        compareframe.id,
+        compareframe.NewSequence,
+        compareframe.sequenceName
       )
       -- Explicit: OnClose does not reliably reach this window's handler on the
       -- Continue path, and the queue stalled with three windows still in it.
@@ -219,9 +226,9 @@ function showCompareWindow(sequenceName, classid, newsequence)
 
   compareframe.NewSequence = newsequence
 
-  GSE.EnsureSequenceLoaded(classid, sequenceName)
-  if newsequence.MetaData.DisableEditor or GSE.Library[classid][sequenceName].MetaData.DisableEditor then
-    GSE.PerformMergeAction("REPLACE", classid, sequenceName, newsequence)
+  if newsequence.MetaData.DisableEditor or not existing
+    or (type(existing.MetaData) == "table" and existing.MetaData.DisableEditor) then
+    GSE.PerformMergeAction("REPLACE", classid, id, newsequence)
   else
     -- Rename mints a new record (see OOCPerformMergeAction), so it is offered
     -- on the same terms as Duplicate: not for protected content. Renaming
@@ -229,7 +236,7 @@ function showCompareWindow(sequenceName, classid, newsequence)
     -- sequence -- the id holds there and the edit uploads as a delta.
     local incomingProtected = GSE.IsProtectedContent and GSE.IsProtectedContent(newsequence)
     local localProtected = GSE.IsProtectedContent
-      and GSE.IsProtectedContent(GSE.Library[classid][sequenceName])
+      and GSE.IsProtectedContent(existing)
     if incomingProtected or localProtected then
       actionChoiceRadio:SetList(
         {
@@ -248,7 +255,7 @@ function showCompareWindow(sequenceName, classid, newsequence)
         }
       )
     end
-    compareframe.OrigText:SetText(ExportVersionsForCompare(GSE.Library[classid][sequenceName]))
+    compareframe.OrigText:SetText(ExportVersionsForCompare(existing))
     compareframe.NewText:SetText(ExportVersionsForCompare(newsequence))
     compareframe:Show()
     if compareframe.frame and GSE.RegisterUIScaleFrame then GSE.RegisterUIScaleFrame(compareframe.frame) end

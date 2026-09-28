@@ -57,7 +57,11 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   sendbutton:SetCallback(
     "OnClick",
     function()
-      GSE.TransmitSequence(transSequencevalue, "WHISPER", playereditbox:GetText(), transmissionFrame)
+      -- The key is "kind:ref" -- see the list built below.
+      local kind, ref = string.match(transSequencevalue or "", "^(%a+):(.+)$")
+      if kind then
+        GSE.TransmitElement(kind, ref, "WHISPER", playereditbox:GetText(), transmissionFrame)
+      end
     end
   )
   transmissionFrame:AddChild(sendbutton)
@@ -69,22 +73,42 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
     transmissionFrame:SetPoint("TOPLEFT", editframe.frame, editframe.Width + 10, 0)
   end
 
-  local allNames = GSE.GetSequenceNames()
-  local names = {}
-  for k, v in pairs(allNames) do
-    local txElements = GSE.split(k, ",")
-    local txClassId = tonumber(txElements[1])
-    local txSeqName = txElements[3]
-    GSE.EnsureSequenceLoaded(txClassId, txSeqName)
-    local txSeq = GSE.Library[txClassId] and GSE.Library[txClassId][txSeqName]
-    if not (txSeq and txSeq.MetaData and txSeq.MetaData.noExport) then
-      names[k] = v
+  -- Everything this player can send: sequences, variables and macros, keyed
+  -- "kind:ref" (ref is the id, or the name of one not yet filed) and shown by
+  -- label. Protected content is left out; TransmitElement would refuse it.
+  -- inckey preselects a sequence: its id, its label, or a tree key.
+  local offered = GSE.GetShareableSummary()
+  local names, order = {}, {}
+  local preselect
+  local function offer(key, label)
+    names[key] = label
+    order[#order + 1] = key
+  end
+  local classIds = {}
+  for c in pairs(offered.sequence) do classIds[#classIds + 1] = c end
+  table.sort(classIds)
+  for _, c in ipairs(classIds) do
+    local rows = offered.sequence[c]
+    for id, row in pairs(rows) do
+      local key = "sequence:" .. id
+      offer(key, row.Label)
+      if inckey ~= nil and (inckey == id or inckey == row.Label
+          or GSE.split(tostring(inckey), ",")[3] == id) then
+        preselect = key
+      end
     end
   end
-  transmissionFrame.SequenceListbox:SetList(names)
-  if not GSE.isEmpty(inckey) then
-    transmissionFrame.SequenceListbox:SetValue(inckey)
-    transSequencevalue = inckey
+  for id, row in pairs(offered.variable) do offer("variable:" .. id, L["Variable"] .. ": " .. row.Label) end
+  for id, row in pairs(offered.macro) do offer("macro:" .. id, L["Macro"] .. ": " .. row.Label) end
+  table.sort(order, function(a, b)
+    local ka, kb = a:match("^%a+"), b:match("^%a+")
+    if ka ~= kb then return ka == "sequence" or (ka == "variable" and kb == "macro") end
+    return tostring(names[a]):lower() < tostring(names[b]):lower()
+  end)
+  transmissionFrame.SequenceListbox:SetList(names, order)
+  if preselect then
+    transmissionFrame.SequenceListbox:SetValue(preselect)
+    transSequencevalue = preselect
   end
   transmissionFrame:Show()
   if transmissionFrame.frame and GSE.RegisterUIScaleFrame then GSE.RegisterUIScaleFrame(transmissionFrame.frame) end

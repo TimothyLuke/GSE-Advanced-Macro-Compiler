@@ -149,19 +149,15 @@ GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
 end
 
 -- Stamp the checksum onto the locally saved sequence on every save.
-local function onSequenceSaved(_, sequenceName)
+local function onSequenceSaved(_, id)
     if not GSE.ComputeSequenceChecksum then return end
-    for classid = 0, 13 do
-        local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
-        if seq and seq.MetaData then
-            seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
-            -- The checksum is computed from the body, so it is recovered on the
-            -- next load; protected content keeps its sealed blob instead.
-            if not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], seq) then
-                GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
-            end
-            break
-        end
+    local _, classid = GSE.SequenceEnvelope(id)
+    local seq = classid ~= nil and GSE.Library[classid] and GSE.Library[classid][id]
+    if seq and seq.MetaData then
+        seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
+        -- The checksum is computed from the body, so it is recovered on the
+        -- next load; protected content keeps its sealed blob instead.
+        GSE.StoreSequenceBody(classid, id, seq)
     end
 end
 GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
@@ -543,12 +539,12 @@ end
 
 -- Sequences available to this character, for the Macro editor's /click list.
 local function getSequenceNames()
+    -- Labels: a sequence's button is named by its label.
     local names, seen = {}, {}
-    for _, bucket in ipairs({GSE.Store("sequence") and GSE.Store("sequence")[GSE.GetCurrentClassID()], GSE.Store("sequence") and GSE.Store("sequence")[0]}) do
-        if type(bucket) == "table" then
-            for k in pairs(bucket) do
-                if not seen[k] then seen[k] = true; names[#names + 1] = k end
-            end
+    for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
+        for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
+            local k = env.Name
+            if k and not seen[k] then seen[k] = true; names[#names + 1] = k end
         end
     end
     table.sort(names)

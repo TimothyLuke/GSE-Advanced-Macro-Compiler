@@ -154,7 +154,8 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         local elements  = GSE.split(k, ",")
         local classid   = tonumber(elements[1]) or 0
         local specid    = tonumber(elements[2]) or 0
-        local seqName   = elements[3] or ""
+        -- Listed by label, selected by id.
+        local seqName   = GSE.SequenceName(elements[3], classid) or tostring(elements[3] or "")
         local className = GSE.GetClassName(classid) or L["Global"] or ""
         table.insert(seqEntries, {
             v         = v,
@@ -192,18 +193,17 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                 end
             end
         end
-        local seqName = e.seqName
-        GSE.EnsureSequenceLoaded(classid, seqName)
-        local seqObj = GSE.Library[classid] and GSE.Library[classid][seqName]
+        GSE.EnsureSequenceLoaded(classid, v)
+        local seqObj = GSE.Library[classid] and GSE.Library[classid][v]
         if not (seqObj and seqObj.MetaData and seqObj.MetaData.noExport) then
-            SequenceDropDown:AddItem(v, v)
+            SequenceDropDown:AddItem(v, e.seqName)
         end
     end
-    for k, _ in pairs(GSE.Store("sequence")[0]) do
+    for k, env in pairs(GSE.SequenceEnvelopes(0)) do
         GSE.EnsureSequenceLoaded(0, k)
         local globalSeq = GSE.Library[0] and GSE.Library[0][k]
         if not (globalSeq and globalSeq.MetaData and globalSeq.MetaData.noExport) then
-            SequenceDropDown:AddItem(k, k)
+            SequenceDropDown:AddItem(k, env.Name or tostring(k))
         end
     end
     SequenceDropDown:SetMultiselect(true)
@@ -427,9 +427,13 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     )
     SequenceDropDown:SetCallback(
         "OnValueChanged",
-        function(obj, event, key, checked)
+        function(obj, event, id, checked)
+            -- Selected by id; exported under its label, which is how every
+            -- importer knows it.
+            local key = GSE.SequenceName(id) or tostring(id)
             if checked then
-                local seq = GSE.FindSequence(key)
+                local seq = GSE.GetSequence(id)
+                if not seq then return end
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
@@ -500,13 +504,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     local missingSeqs = {}
                     for _, sname in ipairs(deps.Sequences) do
                         if not exportTable["Sequences"][sname] then
-                            local found = false
-                            for chkclass = 0, 13 do
-                                if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][sname]) then
-                                    found = true
-                                    break
-                                end
-                            end
+                            local found = GSE.FindSequenceId(sname, nil, true) ~= nil
                             if not found then
                                 table.insert(missingSeqs, sname)
                             else
@@ -531,6 +529,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     end
                 end
             else
+                if not exportTable["Sequences"][key] then return end
                 exportTable["Sequences"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end

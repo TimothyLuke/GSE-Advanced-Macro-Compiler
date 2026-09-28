@@ -493,7 +493,7 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSE.Store("sequence")[0][k] or GSE.Store("sequence")[GSE.GetCurrentClassID()][k] then
+      if GSE.FindSequenceId(k) then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -818,10 +818,7 @@ local function processQueueCollections(collections)
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, seqData in pairs(payload.Sequences or {}) do
-        local exists = false
-        for cid = 0, 13 do
-          if GSE.Store("sequence")[cid] and GSE.Store("sequence")[cid][k] then exists = true break end
-        end
+        local exists = GSE.FindSequenceId(k, nil, true) ~= nil
         addActionRow(scroll, k .. " " .. statusTag(exists), importset[i].Sequences, k, true)
         if type(seqData) == "table" and type(seqData.MetaData) == "table" then
           local eleDesc = truncate(seqData.MetaData.HelpTxt, 160)

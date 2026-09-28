@@ -1417,9 +1417,6 @@ local function startup()
 
     if GSE.LoadDeltaForks then GSE.LoadDeltaForks() end
 
-    if GSE.isEmpty(GSE.Store("sequence")[GSE.GetCurrentClassID()]) then
-        GSE.Store("sequence")[GSE.GetCurrentClassID()] = {}
-    end
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
         GSE.Library[GSE.GetCurrentClassID()] = {}
     end
@@ -1444,7 +1441,7 @@ local function startup()
                         v.MetaData.Disabled = true
                         local vals = {}
                         vals.action = "Replace"
-                        vals.sequencename = k
+                        vals.id = k
                         vals.sequence = v
                         vals.classid = iter
                         GSE.EnqueueOOC(vals)
@@ -1842,20 +1839,22 @@ function GSE:ProcessOOCQueue()
                 if encounterInProgress then
                     table.insert(GSE.OOCQueue, v)
                 else
-                    GSE.OOCUpdateSequence(v.name, v.macroversion)
+                    GSE.OOCUpdateSequence(v.id, v.macroversion)
                 end
             elseif v.action == "Save" then
-                GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+                GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid, v.id)
             elseif v.action == "Replace" then
-                if GSE.isEmpty(GSE.Library[v.classid][v.sequencename]) then
-                    GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+                if v.id == nil or not GSE.SequenceEnvelope(v.id) then
+                    local name = v.sequencename
+                        or (type(v.sequence) == "table" and type(v.sequence.MetaData) == "table" and v.sequence.MetaData.Name)
+                    GSE.AddSequenceToCollection(name, v.sequence, v.classid, v.id)
                 else
-                    GSE.ReplaceSequence(v.classid, v.sequencename, v.sequence)
-                    local macroVersion = v.sequence.Versions[GSE.GetActiveSequenceVersion(v.sequencename)]
+                    GSE.ReplaceSequence(v.classid, v.id, v.sequence)
+                    local macroVersion = v.sequence.Versions[GSE.GetActiveSequenceVersion(v.id)]
                     if encounterInProgress then
-                        GSE.UpdateSequence(v.sequencename, macroVersion)
+                        GSE.UpdateSequence(v.id, macroVersion)
                     else
-                        GSE.OOCUpdateSequence(v.sequencename, macroVersion)
+                        GSE.OOCUpdateSequence(v.id, macroVersion)
                     end
                 end
             elseif v.action == "updatevariable" then
@@ -1870,7 +1869,7 @@ function GSE:ProcessOOCQueue()
             elseif v.action == "CheckMacroCreated" then
                 GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then
-                GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.sequencename, v.newSequence)
+                GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.id, v.newSequence, v.newname)
             elseif v.action == "FinishReload" then
                 GSE.UnsavedOptions.ReloadQueued = nil
             elseif v.action == "migrateremainingclasses" then
@@ -1889,24 +1888,28 @@ function GSE:ProcessOOCQueue()
                 -- after the user confirms a delete (the website record has
                 -- already been soft-deleted by the time we get here) and
                 -- could be used by future Mod UI paths that need to delete
-                -- out-of-combat. classid resolved at enqueue time.
-                if v.sequencename and v.classid and tonumber(v.classid) and tonumber(v.classid) > 0 then
-                    GSE.DeleteSequence(tonumber(v.classid), v.sequencename)
+                -- out-of-combat. classid resolved at enqueue time. The bridge
+                -- names what it deletes; the name is looked up in that class
+                -- only, global (0) included -- that class used to be refused,
+                -- so a confirmed delete of a global sequence never happened.
+                local cid = tonumber(v.classid)
+                local id = v.id or (cid and GSE.FindSequenceId(v.sequencename, cid))
+                if id and cid then
+                    GSE.DeleteSequence(cid, id)
                 end
             elseif v.action == "renamesequence" then
-                -- True in-place rename: moves the Library/GSESequences entry
-                -- from oldname → sequencename, preserving PlatformID so the
-                -- GSE.Tools record stays associated with the renamed sequence.
-                if v.oldname and v.sequencename and v.classid and v.sequence then
-                    local ok = GSE.RenameSequence(v.classid, v.oldname, v.sequencename, v.sequence)
+                -- True in-place rename: the label changes, the id -- and so the
+                -- GSE.Tools record and everything that refers to it -- stays.
+                if v.id and v.newname and v.classid and v.sequence then
+                    local ok = GSE.RenameSequence(v.classid, v.id, v.newname, v.sequence)
                     if ok then
                         local macroVersion = v.sequence.Versions and
-                            v.sequence.Versions[GSE.GetActiveSequenceVersion(v.sequencename)]
+                            v.sequence.Versions[GSE.GetActiveSequenceVersion(v.id)]
                         if macroVersion then
                             if encounterInProgress then
-                                GSE.UpdateSequence(v.sequencename, macroVersion)
+                                GSE.UpdateSequence(v.id, macroVersion)
                             else
-                                GSE.OOCUpdateSequence(v.sequencename, macroVersion)
+                                GSE.OOCUpdateSequence(v.id, macroVersion)
                             end
                         end
                     end

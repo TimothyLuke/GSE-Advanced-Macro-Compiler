@@ -34,15 +34,16 @@ local GNOME = "Storage"
 -- always record where an element lives and what it is called, even for a
 -- protected element whose Body it cannot re-encode.
 --
--- In memory, GSE.Store(kind) returns WORKING VIEWS in the shapes the rest of
--- the Mod has always used: sequence[classid][name] = Body, variable[name] =
--- Body, macro[name] = node plus per-character buckets macro[charKey][name],
--- and the three PlatformID sidecars. They are rebuilt from GSEStore once per
--- session and are never saved. At PLAYER_LOGOUT -- which fires before WoW
--- writes SavedVariables, on /reload and on exit alike -- reconcileStore()
--- folds them back into envelopes. The ~400 call sites that read and write
--- the old shapes therefore do not change in this step; moving them to ids is
--- the next one.
+-- Sequences are worked on in GSEStore itself, by id: GSE.Library[classid][id]
+-- holds the decoded sequence and the envelope holds its Name, which is a
+-- label and nothing else. See "Sequences" below.
+--
+-- Variables and macros still go through WORKING VIEWS in the shapes the rest
+-- of the Mod has always used: variable[name] = Body, macro[name] = node plus
+-- per-character buckets macro[charKey][name], and their PlatformID sidecars.
+-- They are rebuilt from GSEStore once per session and never saved. At
+-- PLAYER_LOGOUT -- which fires before WoW writes SavedVariables, on /reload
+-- and on exit alike -- reconcileStore() folds them back into envelopes.
 --
 -- Migration: the first load of this build finds the old SavedVariables
 -- (GSESequences, GSEVariables, GSEMacros and the *PlatformIDs sidecars) and
@@ -65,6 +66,7 @@ local LEGACY = {
 }
 
 local VIEWS   -- kind -> working view; nil until the first GSE.Store call
+local settleSequenceIds, indexSequenceNames   -- defined under "Sequences"
 local INDEX   -- what the views were built from, for reconcileStore
 
 -- Macro fields that are the macro itself. Two per-character copies that agree
@@ -355,30 +357,234 @@ local function migrateLegacy(store)
     for _, global in pairs(LEGACY) do _G[global] = nil end
 end
 
--- ── Views ───────────────────────────────────────────────────────────────────
+-- ── Sequences ───────────────────────────────────────────────────────────────
+--
+-- A sequence is GSEStore.sequence[classid][id] = { Name, Body, PlatformID,
+-- Author }, and GSE.Library[classid][id] is its decoded form. Everything that
+-- refers to a sequence holds its id. Name is what the user sees and types; the
+-- only way from a name to a sequence is FindSequenceId, which is for input --
+-- an import, a command, a name typed into an Embed -- and nothing else.
+--
+-- An id never changes during a session. A sequence made in game gets a local
+-- id at once; when it has a PlatformID the next load moves it there
+-- (settleSequenceIds) before anything is built from it, and records the move
+-- in GSEStore.alias. Keybinds and overrides live in each character's own
+-- GSE_C, which cannot be rewritten while that character is logged out, so they
+-- are resolved through the alias when they are next read (ResolveSequenceId).
 
-local function buildViews(store)
-    local views = { sequence = {}, variable = {}, macro = {},
-                    sequencePid = {}, variablePid = {}, macroPid = {} }
-    local index = { sequence = {}, variable = {}, macroAccount = {}, macroChar = {}, shadowed = {} }
-    -- Every class slot exists, as LoadStorage expects.
-    for classid = 0, 13 do views.sequence[classid] = {} end
+local NAMES = {}   -- [classid][name] = id: the label index
 
-    for classid, envs in pairs(store.sequence) do
-        views.sequence[classid] = views.sequence[classid] or {}
-        index.sequence[classid] = index.sequence[classid] or {}
+local function seqEnvs(classid)
+    return bucket(GSEStore, "sequence", classid)
+end
+
+-- Move each sequence that has a PlatformID off its local id.
+settleSequenceIds = function(store)
+    -- Every id in use, in any class: two classes must not end up holding one.
+    local taken = {}
+    for _, envs in pairs(store.sequence) do
+        for id in pairs(envs) do taken[id] = true end
+    end
+    for _, envs in pairs(store.sequence) do
+        local moves = {}
         for id, env in pairs(envs) do
-            if views.sequence[classid][env.Name] ~= nil then
-                index.shadowed[id] = true      -- same name twice: never delete the hidden one
-            else
-                views.sequence[classid][env.Name] = env.Body
-                index.sequence[classid][env.Name] = id
-                if env.PlatformID then
-                    views.sequencePid[env.Name .. "|" .. (env.Author or "")] = env.PlatformID
-                end
+            if isLocalId(id) and type(env.PlatformID) == "string" and env.PlatformID ~= id then
+                moves[#moves + 1] = id
+            end
+        end
+        for _, id in ipairs(moves) do
+            local env = envs[id]
+            -- Never onto an id another sequence holds; that one keeps it.
+            if not taken[env.PlatformID] then
+                envs[id] = nil
+                envs[env.PlatformID] = env
+                taken[id], taken[env.PlatformID] = nil, true
+                store.alias[id] = env.PlatformID
             end
         end
     end
+end
+
+indexSequenceNames = function()
+    NAMES = {}
+    for classid, envs in pairs(GSEStore.sequence) do
+        local names = {}
+        NAMES[classid] = names
+        for id, env in pairs(envs) do
+            -- Two sequences may share a name now; the label then finds the one
+            -- whose id sorts first, so which one is stable.
+            if type(env.Name) == "string" and (names[env.Name] == nil or id < names[env.Name]) then
+                names[env.Name] = id
+            end
+        end
+    end
+end
+
+local function ensureStore()
+    if type(GSEStore) ~= "table" or GSEStore.v == nil or not VIEWS then GSE.LoadStore() end
+end
+
+--- The id a stored id now goes by: itself, or where it moved to.
+function GSE.ResolveSequenceId(id)
+    ensureStore()
+    local seen = 0
+    while type(id) == "string" and GSEStore.alias[id] and seen < 8 do
+        id, seen = GSEStore.alias[id], seen + 1
+    end
+    return id
+end
+
+--- The envelope for a sequence id, and its class. Searches every class when
+-- classid is nil.
+function GSE.SequenceEnvelope(id, classid)
+    ensureStore()
+    id = GSE.ResolveSequenceId(id)
+    if id == nil then return nil end
+    if classid ~= nil then
+        local envs = GSEStore.sequence[classid]
+        local env = envs and envs[id]
+        if env then return env, classid end
+        return nil
+    end
+    for c, envs in pairs(GSEStore.sequence) do
+        if envs[id] then return envs[id], c end
+    end
+end
+
+--- Every stored sequence of a class: { [id] = envelope }. Read only.
+function GSE.SequenceEnvelopes(classid)
+    ensureStore()
+    return GSEStore.sequence[classid] or {}
+end
+
+--- The id and class of the sequence carrying a PlatformID: the one stored
+-- under it, or -- until the next load moves it there -- the one whose envelope
+-- names it.
+function GSE.SequenceIdByPlatformID(pid)
+    if type(pid) ~= "string" or pid == "" then return nil end
+    local env, c = GSE.SequenceEnvelope(pid)
+    if env then return GSE.ResolveSequenceId(pid), c end
+    local classid, id = findByPid(GSEStore, "sequence", pid)
+    return id, classid
+end
+
+--- A stored variable's or macro's id, by name: an account macro before a
+-- character one. Nil for one made this session, which is filed -- and given
+-- an id -- at logout.
+function GSE.StoredElementId(kind, name)
+    ensureStore()
+    local fallback
+    for _, envs in pairs(GSEStore[kind] or {}) do
+        for id, env in pairs(envs) do
+            if env.Name == name then
+                if kind ~= "macro" or env.Scope ~= "character" then return id end
+                fallback = fallback or id
+            end
+        end
+    end
+    return fallback
+end
+
+--- A stored variable's or macro's name, by id.
+function GSE.StoredElementName(kind, id)
+    ensureStore()
+    for _, envs in pairs(GSEStore[kind] or {}) do
+        if envs[id] then return envs[id].Name end
+    end
+end
+
+--- A sequence's label.
+function GSE.SequenceName(id, classid)
+    local env = GSE.SequenceEnvelope(id, classid)
+    return env and env.Name or nil
+end
+
+--- The id of a sequence by its label, and its class. With a classid, that
+-- class; otherwise the current class, then global -- the order the runtime
+-- has always resolved a name in. With everywhere, every other class after.
+function GSE.FindSequenceId(name, classid, everywhere)
+    if type(name) ~= "string" or name == "" then return nil end
+    ensureStore()
+    local order = {}
+    if classid ~= nil then order[1] = classid
+    else
+        local cur = GSE.GetCurrentClassID and GSE.GetCurrentClassID()
+        if cur then order[#order + 1] = cur end
+        if cur ~= 0 then order[#order + 1] = 0 end
+    end
+    if everywhere then
+        for c = 0, 13 do order[#order + 1] = c end
+    end
+    for _, c in ipairs(order) do
+        local id = NAMES[c] and NAMES[c][name]
+        if id and GSEStore.sequence[c] and GSEStore.sequence[c][id] then return id, c end
+    end
+end
+
+--- Store a sequence's encoded body under its id, creating the envelope if it
+-- is new. Moves it from another class if it is filed elsewhere. The name is
+-- the label to show; it is not part of the identity.
+function GSE.PutSequenceBody(classid, id, name, body)
+    ensureStore()
+    local env, from = GSE.SequenceEnvelope(id)
+    if env and from ~= classid then
+        GSEStore.sequence[from][id] = nil
+        if NAMES[from] and NAMES[from][env.Name] == id then NAMES[from][env.Name] = nil end
+    end
+    env = env or {}
+    seqEnvs(classid)[id] = env
+    if env.Name and env.Name ~= name and NAMES[classid] and NAMES[classid][env.Name] == id then
+        NAMES[classid][env.Name] = nil
+    end
+    env.Name, env.Body = name, body
+    NAMES[classid] = NAMES[classid] or {}
+    if NAMES[classid][name] == nil or id < NAMES[classid][name] then NAMES[classid][name] = id end
+    return env
+end
+
+--- Write a loaded sequence back over its stored body -- unless the stored
+-- body is sealed, which is never rewritten in the clear. For derived changes
+-- (icons, migrations) to a sequence already stored; returns true if written.
+function GSE.StoreSequenceBody(classid, id, sequence)
+    local env = GSE.SequenceEnvelopes(classid)[id]
+    if not env or GSE.IsProtectedAtRest(env.Body, sequence) then return false end
+    env.Body = GSE.EncodeMessage({env.Name, sequence})
+    return true
+end
+
+--- Forget a stored sequence.
+function GSE.RemoveSequence(classid, id)
+    ensureStore()
+    local envs = GSEStore.sequence[classid]
+    local env = envs and envs[id]
+    if not env then return end
+    envs[id] = nil
+    if NAMES[classid] and NAMES[classid][env.Name] == id then
+        NAMES[classid][env.Name] = nil
+        -- Another sequence of the same name, if any, is found by it now.
+        for oid, o in pairs(envs) do
+            if o.Name == env.Name and (NAMES[classid][env.Name] == nil or oid < NAMES[classid][env.Name]) then
+                NAMES[classid][env.Name] = oid
+            end
+        end
+    end
+end
+
+--- The id a sequence arriving from outside should be stored under: its
+-- PlatformID when it has one, else the sequence already filed under that name
+-- in that class (an import replaces), else a new local id.
+function GSE.SequenceIdForIncoming(classid, name, sequence)
+    local pid = type(sequence) == "table" and type(sequence.MetaData) == "table" and sequence.MetaData.PlatformID
+    if type(pid) == "string" and pid ~= "" then return GSE.ResolveSequenceId(pid) end
+    local id = GSE.FindSequenceId(name, classid)
+    return id or GSE.NewLocalId()
+end
+
+-- ── Views ───────────────────────────────────────────────────────────────────
+
+local function buildViews(store)
+    local views = { variable = {}, macro = {}, variablePid = {}, macroPid = {} }
+    local index = { variable = {}, macroAccount = {}, macroChar = {}, shadowed = {} }
 
     for _, envs in pairs(store.variable) do
         for id, env in pairs(envs) do
@@ -450,44 +656,6 @@ local function dropUnseen(store, kind, seen, shadowed)
             if not seen[id] and not shadowed[id] then gone[#gone + 1] = id end
         end
         for _, id in ipairs(gone) do envs[id] = nil end
-    end
-end
-
-local function reconcileSequences(store, views, index, seen)
-    for classid, names in pairs(views.sequence) do
-        for name, body in pairs(names) do
-            local id = index.sequence[classid] and index.sequence[classid][name]
-            local envs = bucket(store, "sequence", classid)
-            local env = id and envs[id]
-            if not (env and env.Body == body) then
-                -- New or changed: the only case that decodes.
-                local meta = sequenceMeta(body)
-                local author = (meta and meta.Author) or (env and env.Author) or ""
-                local pid = views.sequencePid[name .. "|" .. author] or (meta and meta.PlatformID)
-                    or (env and env.PlatformID)
-                if not env and pid then
-                    -- Renamed, or moved to another class: the same element.
-                    local fromClass, fromId, found = findByPid(store, "sequence", pid)
-                    if found then
-                        store.sequence[fromClass][fromId] = nil
-                        env, id = found, fromId
-                        envs[id] = env
-                    end
-                end
-                if not env then
-                    id = pid or GSE.NewLocalId()
-                    env = {}
-                    envs[id] = env
-                end
-                env.Name, env.Body, env.Author = name, body, author
-                env.PlatformID = pid or env.PlatformID
-            end
-            -- A PlatformID can arrive by sidecar alone (the rename path moves it).
-            local p = views.sequencePid[name .. "|" .. (env.Author or "")]
-            if p then env.PlatformID = p end
-            seen[id] = true
-            rekey(envs, id, env, seen)
-        end
     end
 end
 
@@ -679,11 +847,10 @@ end
 function GSE.ReconcileStore()
     if not VIEWS then return end
     local store = GSEStore
-    local seenSeq, seenVar, seenMac = {}, {}, {}
-    reconcileSequences(store, VIEWS, INDEX, seenSeq)
+    -- Sequences are not here: they are edited in the store directly.
+    local seenVar, seenMac = {}, {}
     reconcileVariables(store, VIEWS, INDEX, seenVar)
     reconcileMacros(store, VIEWS, INDEX, seenMac)
-    dropUnseen(store, "sequence", seenSeq, INDEX.shadowed)
     dropUnseen(store, "variable", seenVar, INDEX.shadowed)
     dropUnseen(store, "macro", seenMac, INDEX.shadowed)
     -- The legacy globals were cleared at load; make sure nothing recreated one
@@ -705,6 +872,9 @@ function GSE.LoadStore()
         if _G[global] ~= nil then legacyPresent = true end
     end
     if legacyPresent then migrateLegacy(GSEStore) end
+    if type(GSEStore.alias) ~= "table" then GSEStore.alias = {} end
+    settleSequenceIds(GSEStore)
+    indexSequenceNames()
     VIEWS, INDEX = buildViews(GSEStore)
 end
 
@@ -746,31 +916,31 @@ function GSE.SetStoredPlatformID(kind, name, pid, classid)
         VIEWS.macroPid[name] = pid
         return true
     end
+    -- The hint first, then every class in order. Not "current class first":
+    -- the bridge runs this at load, and which character is logged in has no
+    -- bearing on which stored sequence the id belongs to.
     local hint = tonumber(classid)
-    local order = {}
-    if hint then order[1] = hint end
-    for c = 0, 13 do if c ~= hint then order[#order + 1] = c end end
-    for _, c in ipairs(order) do
-        local body = VIEWS.sequence[c] and VIEWS.sequence[c][name]
-        if body ~= nil then
-            local id = INDEX.sequence[c] and INDEX.sequence[c][name]
-            local env = id and GSEStore.sequence[c] and GSEStore.sequence[c][id]
-            local lib = GSE.Library and GSE.Library[c] and GSE.Library[c][name]
-            local author = (env and env.Author)
-                or (type(lib) == "table" and type(lib.MetaData) == "table" and lib.MetaData.Author)
-                or ((sequenceMeta(body) or {}).Author)
-                or ""
-            VIEWS.sequencePid[name .. "|" .. author] = pid
-            -- The loaded copy, so the editor shows the id without a /reload.
-            -- Memory only: the stored body is not rewritten.
-            if type(lib) == "table" then
-                lib.MetaData = lib.MetaData or {}
-                lib.MetaData.PlatformID = pid
-            end
-            return true
-        end
+    local id, c
+    if hint then id, c = GSE.FindSequenceId(name, hint) end
+    for cls = 0, 13 do
+        if id then break end
+        id, c = GSE.FindSequenceId(name, cls)
     end
-    return false
+    if not id then return false end
+    -- An id another sequence already holds is not this one's to take.
+    local holder = GSE.SequenceIdByPlatformID(pid)
+    if holder ~= nil and holder ~= id then return false end
+    -- The envelope carries it from now on; the element moves to it at the
+    -- next load (settleSequenceIds), never mid-session.
+    GSEStore.sequence[c][id].PlatformID = pid
+    local lib = GSE.Library and GSE.Library[c] and GSE.Library[c][id]
+    if type(lib) == "table" then
+        -- The loaded copy, so the editor shows the id without a /reload.
+        -- Memory only: the stored body is not rewritten.
+        lib.MetaData = lib.MetaData or {}
+        lib.MetaData.PlatformID = pid
+    end
+    return true
 end
 
 --- One class's table within a kind's view; created only when asked to.
@@ -993,50 +1163,60 @@ local function migrateSequenceVersions(sequence, sequenceName)
     return changed
 end
 
---- Decompress a single class from GSESequences into GSE.Library (internal).
+-- Decode one stored sequence into GSE.Library[classid][id]. Returns the error,
+-- if any, having recorded the sequence as corrupt.
+local function loadOneSequence(classid, id)
+    local env = GSE.SequenceEnvelopes(classid)[id]
+    if not env then return end
+    local body = env.Body
+    local ok, err = pcall(function()
+        local _, decoded = GSE.DecodeMessage(body)
+        local seq = type(decoded) == "table" and decoded[2] or nil
+        -- A locally-edited copy lives in GSEDeltas; the stored blob is only
+        -- its base. Prefer the reconstruction or the edit is lost the first
+        -- time this class is loaded lazily.
+        local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(seq, body)
+        if forked then seq = forked end
+        if type(seq) ~= "table" then error("undecodable") end
+        -- The envelope's Name is the label. A sealed body renamed here still
+        -- says the old name inside, and cannot be rewritten to say otherwise.
+        if type(seq.MetaData) == "table" then seq.MetaData.Name = env.Name end
+        GSE.Library[classid][id] = seq
+        -- The repack queue is read by the Companion, which knows the name.
+        GSE.AuditProtectedAtRest("sequence", classid, env.Name, body, seq)
+        local changed, reason = migrateSequenceVersions(seq, env.Name)
+        if reason == "macros-deprecated" then
+            -- Refuse to load. The on-disk record uses the old 'Macros' field;
+            -- the addon no longer auto-renames.
+            GSE.Library[classid][id] = nil
+            error(string.format(
+                L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
+                env.Name))
+        end
+        -- Migration results are derived and recomputed on every load, so
+        -- declining to persist them costs nothing. Rewriting them over
+        -- protected content, on the other hand, is what stripped the packed
+        -- envelope in #2054.
+        if changed and not GSE.IsProtectedAtRest(body, seq) then
+            env.Body = GSE.EncodeMessage({env.Name, seq})
+        end
+    end)
+    if not ok then
+        GSE.Print(tostring(err), "Error")
+        table.insert(GSE.CorruptSequences, {classid = classid, id = id, name = env.Name})
+        return err
+    end
+end
+
+--- Decompress a single class from GSEStore into GSE.Library (internal).
 local function loadOneClass(classid)
     if GSE.LoadedClasses[classid] then return end
     GSE.LoadedClasses[classid] = true
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
-    if GSE.isEmpty(GSE.Store("sequence")) or GSE.isEmpty(GSE.Store("sequence")[classid]) then
-        return
-    end
-    for i, j in pairs(GSE.Store("sequence")[classid]) do
-        local status, err =
-            pcall(
-            function()
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(j)
-                GSE.Library[classid][i] = uncompressedVersion[2]
-                -- A locally-edited copy lives in GSEDeltas; the stored blob is
-                -- only its base. Prefer the reconstruction or the edit is lost
-                -- the first time this class is loaded lazily.
-                local forked = GSE.ApplyStoredDeltaFork and GSE.ApplyStoredDeltaFork(GSE.Library[classid][i], j)
-                if forked then GSE.Library[classid][i] = forked end
-                GSE.AuditProtectedAtRest("sequence", classid, i, j, GSE.Library[classid][i])
-                local changed, reason = migrateSequenceVersions(GSE.Library[classid][i], i)
-                if reason == "macros-deprecated" then
-                    -- Refuse to load. The on-disk record uses the old
-                    -- 'Macros' field; the addon no longer auto-renames.
-                    GSE.Library[classid][i] = nil
-                    error(string.format(
-                        L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
-                        i))
-                end
-                -- Migration results are derived and recomputed on every load,
-                -- so declining to persist them costs nothing. Rewriting them
-                -- over protected content, on the other hand, is what stripped
-                -- the packed envelope in #2054.
-                if changed and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][i], GSE.Library[classid][i]) then
-                    GSE.Store("sequence")[classid][i] = GSE.EncodeMessage({i, GSE.Library[classid][i]})
-                end
-            end
-        )
-        if err then
-            GSE.Print(tostring(err), "Error")
-            table.insert(GSE.CorruptSequences, {classid = classid, name = i})
-        end
+    for id in pairs(GSE.SequenceEnvelopes(classid)) do
+        loadOneSequence(classid, id)
     end
     -- Resolve action icons for this class so foreign-class sequences show
     -- real icons the moment they're browsed. No-op until GSE_GUI defines the
@@ -1053,52 +1233,16 @@ function GSE.EnsureClassLoaded(classid)
     loadOneClass(classid)
 end
 
---- Decompress a single sequence from GSESequences into GSE.Library on demand.
--- No-op if the sequence is already loaded or does not exist in the compressed store.
-function GSE.EnsureSequenceLoaded(classid, sequenceName)
-    if GSE.isEmpty(classid) or GSE.isEmpty(sequenceName) then return end
-    if not GSE.isEmpty(GSE.Library[classid] and GSE.Library[classid][sequenceName]) then return end
-    if GSE.isEmpty(GSE.Store("sequence")) or GSE.isEmpty(GSE.Store("sequence")[classid]) then return end
-    if GSE.isEmpty(GSE.Store("sequence")[classid][sequenceName]) then return end
-    if GSE.isEmpty(GSE.Library[classid]) then
-        GSE.Library[classid] = {}
-    end
-    local status, err =
-        pcall(
-        function()
-            local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSE.Store("sequence")[classid][sequenceName])
-            if localsuccess then
-                GSE.Library[classid][sequenceName] = uncompressedVersion[2]
-                local forked = GSE.ApplyStoredDeltaFork
-                    and GSE.ApplyStoredDeltaFork(GSE.Library[classid][sequenceName],
-                        GSE.Store("sequence")[classid][sequenceName])
-                if forked then GSE.Library[classid][sequenceName] = forked end
-                GSE.AuditProtectedAtRest("sequence", classid, sequenceName,
-                    GSE.Store("sequence")[classid][sequenceName], GSE.Library[classid][sequenceName])
-                local changed, reason = migrateSequenceVersions(GSE.Library[classid][sequenceName], sequenceName)
-                if reason == "macros-deprecated" then
-                    GSE.Library[classid][sequenceName] = nil
-                    error(string.format(
-                        L["Sequence '%s' is incompatible with the current version of GSE. Upload it to https://gse.tools to update it to the current format, then re-import."],
-                        sequenceName))
-                end
-                if changed and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName],
-                    GSE.Library[classid][sequenceName]) then
-                    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, GSE.Library[classid][sequenceName]})
-                end
-            end
-        end
-    )
-    if not err and not GSE.isEmpty(GSE.Library[classid][sequenceName]) then
-        GSE.EnsureSequenceVariablesLoaded(GSE.Library[classid][sequenceName])
-    end
-    if err then
-        GSE.Print(
-            "There was an error processing " ..
-                sequenceName .. ", You will need to reimport this macro from another source.",
-            err
-        )
-        table.insert(GSE.CorruptSequences, {classid = classid, name = sequenceName})
+--- Decompress a single sequence into GSE.Library on demand. No-op if it is
+-- already loaded or is not stored.
+function GSE.EnsureSequenceLoaded(classid, id)
+    if GSE.isEmpty(classid) or GSE.isEmpty(id) then return end
+    if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
+    if not GSE.isEmpty(GSE.Library[classid][id]) then return end
+    if not GSE.SequenceEnvelopes(classid)[id] then return end
+    local err = loadOneSequence(classid, id)
+    if not err and not GSE.isEmpty(GSE.Library[classid][id]) then
+        GSE.EnsureSequenceVariablesLoaded(GSE.Library[classid][id])
     end
     -- Resolve action icons for this class so single-sequence loads also
     -- benefit from the load-time icon hydration. Cheap and idempotent.
@@ -1107,30 +1251,43 @@ function GSE.EnsureSequenceLoaded(classid, sequenceName)
     end
 end
 
+--- A loaded sequence by id, loading it if it is stored but not yet decoded.
+-- Searches every class when classid is nil. Returns the sequence and its class.
+function GSE.GetSequence(id, classid)
+    local env, c = GSE.SequenceEnvelope(id, classid)
+    if not env then return nil end
+    id = GSE.ResolveSequenceId(id)
+    GSE.EnsureSequenceLoaded(c, id)
+    return GSE.Library[c] and GSE.Library[c][id], c
+end
+
 -- ponytail: drop a seq from the corrupt list so the editor tree stops flagging
 -- it the moment it's deleted. Both delete paths call this.
-function GSE.ForgetCorruptSequence(classid, name)
+function GSE.ForgetCorruptSequence(classid, id)
     if type(GSE.CorruptSequences) ~= "table" then return end
     for i = #GSE.CorruptSequences, 1, -1 do
         local c = GSE.CorruptSequences[i]
-        if c and tonumber(c.classid) == tonumber(classid) and c.name == name then
+        if c and tonumber(c.classid) == tonumber(classid) and c.id == id then
             table.remove(GSE.CorruptSequences, i)
         end
     end
 end
 
 --- Remove a corrupt sequence from both compressed storage and the live library.
-function GSE.DeleteCorruptSequence(classid, name)
-    if GSE.ForgetDeltaFork and type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
-        GSE.ForgetDeltaFork(GSE.Library[classid][name])
+function GSE.DeleteCorruptSequence(classid, id)
+    local name = GSE.SequenceName(id, classid) or tostring(id)
+    -- The fork goes with the record. The body that failed to decode cannot say
+    -- which PlatformID it had; the envelope beside it can.
+    if GSE.ForgetDeltaFork then
+        local loaded = type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table"
+            and GSE.Library[classid][id]
+        if not GSE.ForgetDeltaFork(loaded) then GSE.ForgetDeltaFork(GSE.SequenceEnvelope(id, classid)) end
     end
-    if type(GSE.Store("sequence")) == "table" and type(GSE.Store("sequence")[classid]) == "table" then
-        GSE.Store("sequence")[classid][name] = nil
-    end
+    GSE.RemoveSequence(classid, id)
     if type(GSE.Library) == "table" and type(GSE.Library[classid]) == "table" then
-        GSE.Library[classid][name] = nil
+        GSE.Library[classid][id] = nil
     end
-    GSE.ForgetCorruptSequence(classid, name)
+    GSE.ForgetCorruptSequence(classid, id)
     GSE.Print(string.format(L["Corrupt sequence '%s' (class %d) deleted."], name, classid))
 end
 
@@ -1169,16 +1326,22 @@ function GSE.DeleteMacro(name)
     if GSE.Store("macroPid") then GSE.Store("macroPid")[name] = nil end
 end
 
---- Delete a sequence from the library
-function GSE.DeleteSequence(classid, sequenceName)
+--- Delete a sequence from the library, by id.
+function GSE.DeleteSequence(classid, id)
+    classid = tonumber(classid)
+    -- Keybinds and overrides still name the sequence; read the label before
+    -- the record goes.
+    local sequenceName = GSE.SequenceName(id, classid)
     -- Read the id before the record goes, or there is nothing left to key by.
     if GSE.ForgetDeltaFork then
-        GSE.ForgetDeltaFork(GSE.Library[tonumber(classid)]
-            and GSE.Library[tonumber(classid)][sequenceName])
+        if not GSE.ForgetDeltaFork(GSE.Library[classid] and GSE.Library[classid][id]) then
+            GSE.ForgetDeltaFork(GSE.SequenceEnvelope(id, classid))
+        end
     end
-    GSE.Library[tonumber(classid)][sequenceName] = nil
-    GSE.Store("sequence")[tonumber(classid)][sequenceName] = nil
-    GSE.ForgetCorruptSequence(classid, sequenceName)
+    if GSE.Library[classid] then GSE.Library[classid][id] = nil end
+    GSE.RemoveSequence(classid, id)
+    GSE.ForgetCorruptSequence(classid, id)
+    if sequenceName == nil then return end
 
     -- Remove any actionbar overrides that reference this sequence
     local overrideChanged = false
@@ -1292,6 +1455,18 @@ end
 --
 -- updatevariable: replaces existing entry for same variable name.
 -- FinishReload/managemacros/CheckMacroCreated: skipped if already present.
+-- Which sequence a queued operation is about: its id, or -- for an import
+-- that has none until it is filed -- its name.
+local function seqKey(v)
+    if v.id ~= nil then return v.id end
+    if v.sequencename ~= nil then return "name:" .. v.sequencename end
+end
+
+local function sameSequence(a, b)
+    local k = seqKey(a)
+    return k ~= nil and k == seqKey(b)
+end
+
 function GSE.EnqueueOOC(vals)
     local action = vals.action
     if GSE.StartOOCTimer then
@@ -1299,12 +1474,12 @@ function GSE.EnqueueOOC(vals)
     end
 
     if action == "MergeSequence" then
-        -- Remove all sequence operations for the same name; we supersede them.
+        -- Remove all sequence operations for the same sequence; we supersede them.
         local k = 1
         while k <= #GSE.OOCQueue do
             local v = GSE.OOCQueue[k]
             if (v.action == "MergeSequence" or v.action == "Save" or v.action == "Replace" or v.action == "UpdateSequence")
-                    and v.sequencename == vals.sequencename then
+                    and sameSequence(v, vals) then
                 table.remove(GSE.OOCQueue, k)
             else
                 k = k + 1
@@ -1312,9 +1487,9 @@ function GSE.EnqueueOOC(vals)
         end
 
     elseif action == "Save" or action == "Replace" then
-        -- Skip if a MergeSequence for the same name is already queued.
+        -- Skip if a MergeSequence for the same sequence is already queued.
         for _, v in ipairs(GSE.OOCQueue) do
-            if v.action == "MergeSequence" and v.sequencename == vals.sequencename then
+            if v.action == "MergeSequence" and sameSequence(v, vals) then
                 return
             end
         end
@@ -1323,9 +1498,9 @@ function GSE.EnqueueOOC(vals)
         local k = 1
         while k <= #GSE.OOCQueue do
             local v = GSE.OOCQueue[k]
-            if v.action == "UpdateSequence" and v.name == vals.sequencename then
+            if v.action == "UpdateSequence" and sameSequence(v, vals) then
                 table.remove(GSE.OOCQueue, k)
-            elseif (v.action == "Save" or v.action == "Replace") and v.sequencename == vals.sequencename then
+            elseif (v.action == "Save" or v.action == "Replace") and sameSequence(v, vals) then
                 GSE.OOCQueue[k] = vals
                 replaced = true
                 k = k + 1
@@ -1336,10 +1511,10 @@ function GSE.EnqueueOOC(vals)
         if replaced then return end
 
     elseif action == "UpdateSequence" then
-        -- Skip if any higher-priority sequence op for the same name is already queued.
+        -- Skip if any higher-priority sequence op for the same sequence is already queued.
         for _, v in ipairs(GSE.OOCQueue) do
             if (v.action == "MergeSequence" or v.action == "Save" or v.action == "Replace" or v.action == "UpdateSequence")
-                    and (v.sequencename == vals.name or v.name == vals.name) then
+                    and sameSequence(v, vals) then
                 return
             end
         end
@@ -1392,24 +1567,32 @@ function GSE.EnqueueOOC(vals)
     table.insert(GSE.OOCQueue, vals)
 end
 
---- Add a sequence to the library
-function GSE.AddSequenceToCollection(sequenceName, sequence, classid)
-    -- Save-cancels-delete (see UpdateVariable for rationale).
-    if GSE.CompanionCancelPendingDelete then
-        GSE.CompanionCancelPendingDelete("sequence", sequenceName)
+--- Add a sequence to the library. An import has only a name; which stored
+-- sequence it is -- or whether it is new -- is decided when it is filed and its
+-- class is known (OOCAddSequenceToCollection). A caller that already knows the
+-- id passes it.
+function GSE.AddSequenceToCollection(sequenceName, sequence, classid, id)
+    -- Save-cancels-delete (see UpdateVariable for rationale). The bridge's
+    -- pending deletes are named.
+    if GSE.CompanionCancelPendingDelete and type(sequence) == "table" and type(sequence.MetaData) == "table" then
+        GSE.CompanionCancelPendingDelete("sequence", sequence.MetaData.Name)
     end
     local vals = {}
     vals.action = "Save"
     vals.sequencename = sequenceName
+    vals.id = id
     vals.sequence = sequence
     vals.classid = classid
     GSE.EnqueueOOC(vals)
 end
 
-function GSE.PerformMergeAction(action, classid, sequenceName, newSequence)
+--- Merge, replace or rename an incoming sequence against stored sequence id.
+-- For RENAME, newName is the name the copy is stored under (with a new id).
+function GSE.PerformMergeAction(action, classid, id, newSequence, newName)
     local vals = {}
     vals.action = "MergeSequence"
-    vals.sequencename = sequenceName
+    vals.id = id
+    vals.newname = newName
     vals.newSequence = newSequence
     vals.classid = classid
     vals.mergeaction = action
@@ -1457,7 +1640,13 @@ end
 -- nil-index error on the way back into the editor. Cloning restores the
 -- invariant those mirror blocks were written against: the Library holds a
 -- separate copy that only this function replaces.
-function GSE.ReplaceSequence(classid, sequenceName, sequence)
+function GSE.ReplaceSequence(classid, id, sequence)
+    classid = tonumber(classid)
+    if type(sequence.MetaData) ~= "table" then sequence.MetaData = {} end
+    local prior, fromClass = GSE.SequenceEnvelope(id)
+    -- The label: what the sequence says it is called, else what it was.
+    local sequenceName = sequence.MetaData.Name or (prior and prior.Name)
+    sequence.MetaData.Name = sequenceName
     if GSE.SanitizeSequenceEditorMarkup then
         GSE.SanitizeSequenceEditorMarkup(sequence)
     end
@@ -1469,31 +1658,38 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     GSE.SanitizeHelplink(sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
+    if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
+    -- Filed in another class before: it moves, keeping its id.
+    if fromClass ~= nil and fromClass ~= classid and GSE.Library[fromClass] then
+        GSE.Library[fromClass][id] = nil
+    end
+    local storedBody = prior and prior.Body
     -- Asked ONCE, before the fork is consulted. A fork only exists because the
     -- record was protected when the first edit landed, and it used to be read
     -- first -- so a record that has since come back in the clear still had
     -- every later edit swallowed by the fork it had outgrown. The owner then
     -- sees local-changes controls on their own unsealed sequence, and no
     -- amount of editing clears them, because each edit re-enters the fork.
-    local protectedAtRest = GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence)
-    if protectedAtRest and GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
-        GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
-        GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
-        return
-    end
-    -- Protected content is never rewritten in the clear, so an edit to it is
-    -- stored as a delta over the sealed blob instead: the packed base moves
-    -- into the fork verbatim and only the divergence is written beside it.
-    -- This branch is for protected content ONLY -- an ordinary sequence falls
-    -- through to the plain replace below, exactly as before.
+    local protectedAtRest = GSE.IsProtectedAtRest(storedBody, sequence)
     if protectedAtRest then
-        if not GSE.SeedDeltaFork(GSE.Store("sequence")[classid][sequenceName], sequence, "sequence") then
+        -- The sealed body stays exactly as it is; only where it is filed and
+        -- what it is called can change, and those live in the envelope.
+        if storedBody ~= nil then GSE.PutSequenceBody(classid, id, sequenceName, storedBody) end
+        GSE.Library[classid][id] = GSE.CloneSequence(sequence)
+        if GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(sequence) then
+            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
+            return
+        end
+        -- Protected content is never rewritten in the clear, so an edit to it
+        -- is stored as a delta over the sealed blob instead: the packed base
+        -- moves into the fork verbatim and only the divergence is written
+        -- beside it.
+        if not GSE.SeedDeltaFork(storedBody, sequence, "sequence") then
             -- Nothing to key a fork by, so the edit cannot be persisted here.
             -- Say so rather than writing it out in the clear.
             GSE.QueueRepack("sequence", classid, sequenceName, sequence, "edit-needs-repack")
         end
-        GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
-        GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+        GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
         return
     end
     -- Nothing left to protect, so the fork has nothing left to describe: this
@@ -1505,9 +1701,9 @@ function GSE.ReplaceSequence(classid, sequenceName, sequence)
     if GSE.ForgetDeltaFork then GSE.ForgetDeltaFork(sequence) end
     -- Checksum is stamped on export only, not on save, so the stored checksum
     -- always reflects the last-exported state rather than the current edit state.
-    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
-    GSE.Library[classid][sequenceName] = GSE.CloneSequence(sequence)
-    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+    GSE.PutSequenceBody(classid, id, sequenceName, GSE.EncodeMessage({sequenceName, sequence}))
+    GSE.Library[classid][id] = GSE.CloneSequence(sequence)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
 end
 
 function GSE.StoreEncodedSequence(name, encoded)
@@ -1519,7 +1715,7 @@ function GSE.StoreEncodedSequence(name, encoded)
     end
     local seq = decoded[2]
     local classid = GSE.GetClassIDforSpec(seq.MetaData and seq.MetaData.SpecID) or 0
-    if GSE.isEmpty(GSE.Store("sequence")[classid]) then GSE.Store("sequence")[classid] = {} end
+    local id = GSE.SequenceIdForIncoming(classid, name, seq)
     -- Arriving in the CLEAR for something we hold a fork of means the server
     -- flattened it: this is the owner's own work, their edit was applied to
     -- their record, and what just came back already contains it. The fork
@@ -1535,13 +1731,15 @@ function GSE.StoreEncodedSequence(name, encoded)
             GSE.ForgetDeltaFork(pid)
         end
     end
-    GSE.Store("sequence")[classid][name] = encoded
+    local _, fromClass = GSE.SequenceEnvelope(id)
+    if fromClass ~= nil and type(GSE.Library[fromClass]) == "table" then GSE.Library[fromClass][id] = nil end
+    GSE.PutSequenceBody(classid, id, name, encoded)
     -- Drop any stale decoded copy so the lazy loader re-decodes from the
     -- stored string (its canonical migrate + variable-load path).
-    if type(GSE.Library[classid]) == "table" then GSE.Library[classid][name] = nil end
-    GSE.EnsureSequenceLoaded(classid, name)
-    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, name)
-    return true
+    if type(GSE.Library[classid]) == "table" then GSE.Library[classid][id] = nil end
+    GSE.EnsureSequenceLoaded(classid, id)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
+    return true, id
 end
 
 function GSE.StoreEncodedVariable(name, encoded)
@@ -1574,10 +1772,30 @@ end
 -- Moves the data from the old key to the new key in both Library and
 -- GSESequences, updates MetaData.Name, and removes the old entry.
 -- Does NOT wipe PlatformID — this is a rename, not a new-sequence creation.
-function GSE.RenameSequence(classid, oldName, newName, sequence)
+function GSE.RenameSequence(classid, id, newName, sequence)
     classid = tonumber(classid)
-    if not classid or GSE.isEmpty(oldName) or GSE.isEmpty(newName) then return false end
-    if GSE.isEmpty(GSE.Library[classid]) then return false end
+    if not classid or GSE.isEmpty(id) or GSE.isEmpty(newName) then return false end
+    -- Wherever it is filed: a rename can come with a class move.
+    local env, fromClass = GSE.SequenceEnvelope(id)
+    if not env then
+        -- Loaded but never stored: a protected edit that could not be written.
+        -- There is no sealed body to carry under the new name, and it must not
+        -- be written in the clear, so ask for a repack instead.
+        sequence = sequence or (GSE.Library[classid] and GSE.Library[classid][id])
+        if type(sequence) == "table" and GSE.IsProtectedAtRest(nil, sequence) then
+            if type(sequence.MetaData) ~= "table" then sequence.MetaData = {} end
+            sequence.MetaData.Name = newName
+            if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
+            GSE.Library[classid][id] = sequence
+            GSE.QueueRepack("sequence", classid, newName, sequence, "rename-needs-repack")
+            return true
+        end
+        return false
+    end
+    local oldName = env.Name
+    sequence = sequence or (GSE.Library[fromClass] and GSE.Library[fromClass][id])
+    if type(sequence) ~= "table" then return false end
+    if type(sequence.MetaData) ~= "table" then sequence.MetaData = {} end
 
     -- Update the human-readable name stored inside the sequence object.
     sequence.MetaData.Name = newName
@@ -1588,28 +1806,18 @@ function GSE.RenameSequence(classid, oldName, newName, sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
 
-    -- Write under the new key. A rename is a change of TABLE KEY, so protected
-    -- content moves as the string it already is -- the sealed blob is carried
-    -- across untouched and nothing needs encoding. The name inside the body is
-    -- MetaData.Name, which the caller has already updated.
-    if GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][oldName], sequence) then
-        -- Only a blob that actually exists can be carried. A protected body
-        -- with nothing stored under the old key has nothing to move, and
-        -- assigning the nil across would drop the sequence from storage
-        -- altogether, so ask for a repack instead.
-        if GSE.Store("sequence")[classid][oldName] ~= nil then
-            GSE.Store("sequence")[classid][newName] = GSE.Store("sequence")[classid][oldName]
-        else
-            GSE.QueueRepack("sequence", classid, newName, sequence, "rename-needs-repack")
-        end
+    -- A rename changes the label, not the identity: the id stays, so nothing
+    -- that holds it has to follow. Protected content keeps its sealed body
+    -- byte for byte -- only the envelope's Name changes. Anything else is
+    -- re-encoded so the name inside the body agrees.
+    if GSE.IsProtectedAtRest(env.Body, sequence) then
+        GSE.PutSequenceBody(classid, id, newName, env.Body)
     else
-        GSE.Store("sequence")[classid][newName] = GSE.EncodeMessage({newName, sequence})
+        GSE.PutSequenceBody(classid, id, newName, GSE.EncodeMessage({newName, sequence}))
     end
-    GSE.Library[classid][newName] = sequence
-
-    -- Remove the old key so the old name is no longer in use.
-    GSE.Store("sequence")[classid][oldName] = nil
-    GSE.Library[classid][oldName]  = nil
+    if fromClass ~= classid and GSE.Library[fromClass] then GSE.Library[fromClass][id] = nil end
+    if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
+    GSE.Library[classid][id] = sequence
 
     -- Migrate any actionbar overrides that referenced the old name so the
     -- bound buttons follow the rename instead of pointing at the stale name.
@@ -1669,7 +1877,7 @@ function GSE.RenameSequence(classid, oldName, newName, sequence)
         GSE.ReloadKeyBindings()
     end
 
-    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, newName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
     return true
 end
 
@@ -1679,16 +1887,17 @@ end
 -- record. If newName is supplied it is used (normalised + collision-checked);
 -- otherwise a unique "<source>Copy" name is generated. The sequence is stored
 -- synchronously (so open editor trees can show it immediately) and its secure
--- button is built on the next OOC tick. Returns the new name, or nil on failure.
-function GSE.DuplicateSequence(classid, sourceName, newName)
+-- button is built on the next OOC tick. Returns the new id and name, or nil
+-- on failure.
+function GSE.DuplicateSequence(classid, sourceId, newName)
     classid = tonumber(classid)
     if GSE.isEmpty(classid) then classid = GSE.GetCurrentClassID() end
-    if GSE.isEmpty(sourceName) then return nil end
+    if GSE.isEmpty(sourceId) then return nil end
 
-    local src = GSE.FindSequence(sourceName)
+    local src = GSE.GetSequence(sourceId)
     if GSE.isEmpty(src) then return nil end
+    local sourceName = GSE.SequenceName(sourceId) or "Sequence"
     if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
-    if GSE.isEmpty(GSE.Store("sequence")[classid]) then GSE.Store("sequence")[classid] = {} end
 
     local clone = GSE.CloneSequence(src)
     if GSE.isEmpty(clone.MetaData) then clone.MetaData = {} end
@@ -1697,7 +1906,7 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
         -- Caller-supplied name (from the rename-style prompt). Normalise like
         -- the import path (spaces/commas -> underscores); bail if it collides.
         newName = newName:gsub(" ", "_"):gsub(",", "_")
-        if not GSE.isEmpty(GSE.Library[classid][newName]) then
+        if GSE.FindSequenceId(newName, classid) then
             return nil
         end
     else
@@ -1705,7 +1914,7 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
         local base = sourceName .. "Copy"
         newName = base
         local suffix = 2
-        while not GSE.isEmpty(GSE.Library[classid][newName]) do
+        while GSE.FindSequenceId(newName, classid) do
             newName = base .. suffix
             suffix = suffix + 1
         end
@@ -1721,17 +1930,18 @@ function GSE.DuplicateSequence(classid, sourceName, newName)
     clone.MetaData.OriginKey = GSE.MintOriginKey(newName, clone.MetaData.Author)
     clone.LastUpdated = GSE.GetTimestamp()
 
-    -- Store synchronously (table writes only — safe in or out of combat).
-    GSE.ReplaceSequence(classid, newName, clone)
+    -- Store synchronously (table writes only -- safe in or out of combat).
+    local id = GSE.NewLocalId()
+    GSE.ReplaceSequence(classid, id, clone)
 
     -- Build the secure button out of combat via the OOC queue.
-    local versionIndex = GSE.GetActiveSequenceVersion(newName)
+    local versionIndex = GSE.GetActiveSequenceVersion(id)
         or (clone.MetaData and clone.MetaData.Default) or 1
     local version = clone.Versions and clone.Versions[versionIndex]
     if version then
-        GSE.UpdateSequence(newName, version)
+        GSE.UpdateSequence(id, version)
     end
-    return newName
+    return id, newName
 end
 
 --- Load the GSEStorage into a new table.
@@ -1741,15 +1951,10 @@ function GSE.LoadStorage(destination)
     if GSE.isEmpty(destination) then
         destination = {}
     end
-    -- Pre-initialise all class slots so GSE.Library[k] is never nil. The
-    -- store's root always exists (GSE.Store creates it), so this loop is what
-    -- guarantees each class table.
+    -- Pre-initialise all class slots so GSE.Library[k] is never nil.
     for k = 0, 13 do
         if GSE.isEmpty(destination[k]) then
             destination[k] = {}
-        end
-        if GSE.isEmpty(GSE.Store("sequence")[k]) then
-            GSE.Store("sequence")[k] = {}
         end
     end
     -- Decompress sequences first so dependency data is readable.
@@ -2174,15 +2379,12 @@ end
 
 
 --- Return the Active Sequence Version for a Sequence.
-function GSE.GetActiveSequenceVersion(sequenceName)
-    local classid = GSE.GetCurrentClassID()
-    if GSE.isEmpty(GSE.Library[classid][sequenceName]) then
-        classid = 0
-    end
-    if GSE.isEmpty(GSE.Library[classid][sequenceName]) then
+function GSE.GetActiveSequenceVersion(id)
+    local sequence = GSE.GetSequence(id)
+    if GSE.isEmpty(sequence) or type(sequence.MetaData) ~= "table" then
         return
     end
-    local meta = GSE.Library[classid][sequenceName]["MetaData"]
+    local meta = sequence.MetaData
     -- PVESolo is gone: it was never one of GSE's contexts (it is absent from
     -- contextVersionPriority), only an editor row plus this special case, and
     -- "solo" is what Default already means -- no context flag set. A sequence
@@ -2235,15 +2437,15 @@ function GSE.PerformReloadSequences(force)
         return type(sequence) == "table" and type(sequence.MetaData) == "table"
             and type(sequence.Versions) == "table"
     end
-    for name, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
+    for id, sequence in pairs(GSE.Library[GSE.GetCurrentClassID()]) do
         if reloadable(sequence) and not sequence.MetaData.Disabled then
-            func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
+            func(id, sequence.Versions[GSE.GetActiveSequenceVersion(id)])
         end
     end
     if not GSE.isEmpty(GSE.Library[0]) then
-        for name, sequence in pairs(GSE.Library[0]) do
+        for id, sequence in pairs(GSE.Library[0]) do
             if reloadable(sequence) and GSE.isEmpty(sequence.MetaData.Disabled) then
-                func(name, sequence.Versions[GSE.GetActiveSequenceVersion(name)])
+                func(id, sequence.Versions[GSE.GetActiveSequenceVersion(id)])
             end
         end
     end
@@ -2256,8 +2458,10 @@ end
 function GSE.CleanMacroLibrary(forcedelete)
     -- Clean out the sequences database except for the current version
     if forcedelete then
-        GSE.Store("sequence")[GSE.GetCurrentClassID()] = nil
-        GSE.Store("sequence")[GSE.GetCurrentClassID()] = {}
+        local classid = GSE.GetCurrentClassID()
+        local ids = {}
+        for id in pairs(GSE.SequenceEnvelopes(classid)) do ids[#ids + 1] = id end
+        for _, id in ipairs(ids) do GSE.RemoveSequence(classid, id) end
         GSE.Library[GSE.GetCurrentClassID()] = nil
         GSE.Library[GSE.GetCurrentClassID()] = {}
         if GSE.GUI and GSE.GUI.Editors then
@@ -2282,29 +2486,33 @@ function GSE.ResetButtons()
 end
 
 --- This functions schedules an update to a sequence in the OOCQueue.
-function GSE.UpdateSequence(name, sequence)
+function GSE.UpdateSequence(id, sequence)
     local vals = {}
     vals.action = "UpdateSequence"
-    vals.name = name
+    vals.id = id
     vals.macroversion = sequence
     GSE.EnqueueOOC(vals)
 end
 
 --- This function updates the button for an existing sequence.  It is called from the OOC queue
-function GSE.OOCUpdateSequence(name, sequence)
+function GSE.OOCUpdateSequence(id, sequence)
     if GSE.isEmpty(sequence) then
         return
     end
-    if GSE.isEmpty(name) then
+    if GSE.isEmpty(id) then
         return
     end
-    if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][name]) and GSE.isEmpty(GSE.Library[0][name]) then
+    -- Only a sequence the runtime would run: the current class or global.
+    local env, classid = GSE.SequenceEnvelope(id)
+    if not env or (classid ~= 0 and classid ~= GSE.GetCurrentClassID()) then
         return
     end
+    -- The secure button is still named by the sequence's label.
+    local name = env.Name
 
     -- Avoid rebuilding the secure button while a boss encounter is still active.
     if GSE.IsEncounterInProgress and GSE.IsEncounterInProgress() then
-        GSE.UpdateSequence(name, sequence)
+        GSE.UpdateSequence(id, sequence)
         return
     end
 
@@ -2434,7 +2642,23 @@ function GSE.DeleteMacroStub(sequenceName)
     end
 end
 
---- This returns a list of Sequence Names for the current spec
+--- Order for GetSequenceNames keys ("classid,spec,id,disable"): by class,
+-- then spec, then label as a person reads it, then id. Sorting the keys
+-- themselves would put sequences in id order, which means nothing to anyone.
+function GSE.SequenceKeyOrder(a, b)
+    local ea, eb = GSE.split(tostring(a), ","), GSE.split(tostring(b), ",")
+    local ca, cb = tonumber(ea[1]) or 0, tonumber(eb[1]) or 0
+    if ca ~= cb then return ca < cb end
+    local sa, sb = tonumber(ea[2]) or 0, tonumber(eb[2]) or 0
+    if sa ~= sb then return sa < sb end
+    local na = GSE.SequenceName(ea[3], ca) or tostring(ea[3])
+    local nb = GSE.SequenceName(eb[3], cb) or tostring(eb[3])
+    if na ~= nb then return GSE.AlphabeticalTableSortAlgorithm(na, nb) end
+    return tostring(ea[3]) < tostring(eb[3])
+end
+
+--- The sequences to list for the current filters, as { ["classid,spec,id,
+-- disable"] = id }. The label is GSE.SequenceName(id).
 function GSE.GetSequenceNames(Library)
     if not Library then
         Library = GSE.Library
@@ -2480,10 +2704,8 @@ function GSE.GetSequenceNames(Library)
             else
                 -- Foreign class under All filter: enumerate names from the compressed store
                 -- without decompressing. SpecID and disable are unknown until opened.
-                if not GSE.isEmpty(GSE.Store("sequence")[k]) then
-                    for i, _ in pairs(GSE.Store("sequence")[k]) do
-                        keyset[k .. ",0," .. i .. ",0"] = i
-                    end
+                for i in pairs(GSE.SequenceEnvelopes(k)) do
+                    keyset[k .. ",0," .. i .. ",0"] = i
                 end
             end
         else
@@ -2504,9 +2726,11 @@ function GSE.GetSequenceNames(Library)
 end
 
 --- Return the Macro Icon for the specified Sequence
-function GSE.GetMacroIcon(classid, sequenceIndex)
+function GSE.GetMacroIcon(classid, id)
     classid = tonumber(classid)
-    GSE.EnsureSequenceLoaded(classid, sequenceIndex)
+    GSE.EnsureSequenceLoaded(classid, id)
+    -- The macro stub is named by the label.
+    local sequenceIndex = GSE.SequenceName(id, classid) or tostring(id)
     --@debug@
     GSE.PrintDebugMessage("sequenceIndex: " .. (GSE.isEmpty(sequenceIndex) and "No value" or sequenceIndex), GNOME)
     --@end-debug@
@@ -2531,7 +2755,7 @@ function GSE.GetMacroIcon(classid, sequenceIndex)
         return GSEOptions.DefaultDisabledMacroIcon
     end
 
-    local sequence = GSE.Library[classid][sequenceIndex]
+    local sequence = GSE.Library[classid][id]
     if GSE.isEmpty(sequence) then
         --@debug@
         GSE.PrintDebugMessage("No Macro Found. Possibly different spec for Sequence " .. sequenceIndex, GNOME)
@@ -3144,24 +3368,6 @@ function GSE.DecompressSequenceFromString(importstring)
     return returnstr, seqName, decompresssuccess
 end
 
-function GSE.GetSequenceSummary()
-    local returntable = {}
-    for k, v in ipairs(GSE.Library) do
-        returntable[k] = {}
-        for i, j in pairs(v) do
-            -- No MetaData, no summary. `not (MetaData and noExport)` is true
-            -- when MetaData is missing, so a record the tree flags as corrupt
-            -- went on to read .Help off nil. Healthy records are unchanged.
-            if type(j) == "table" and type(j["MetaData"]) == "table" and not j["MetaData"].noExport then
-                returntable[k][i] = {}
-                returntable[k][i].Help = j["MetaData"].Help
-                returntable[k][i].LastUpdated = j["MetaData"].LastUpdated
-            end
-        end
-    end
-    return returntable
-end
-
 local function buildAction(action, metaData, blockPath)
     if action.Type == Statics.Actions.Loop then
         -- we have a loop within a loop
@@ -3433,9 +3639,10 @@ function GSE.processAction(action, metaData, variables, path)
     elseif action.Type == Statics.Actions.Embed then
         -- Get the sequence and its setup version then compile the actions
         if action.Sequence then
-            local sequence = GSE.FindSequence(action.Sequence)
+            -- An Embed names what it embeds (until it holds an id).
+            local sequence, id = GSE.FindSequence(action.Sequence)
             if sequence then
-                return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Versions[GSE.GetActiveSequenceVersion(action.Sequence)], Statics.TranslatorMode.String)))
+                return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Versions[GSE.GetActiveSequenceVersion(id)], Statics.TranslatorMode.String)))
             end
         end
         return
@@ -3845,24 +4052,22 @@ function GSE.BackfillLastUpdated()
     local now = GSE.GetTimestamp()
     local touched = 0
 
-    -- Sequences: GSE.Library[classid][name] is the in-memory shape;
-    -- GSESequences[classid][name] is the encoded SV blob. Re-encode
-    -- on stamp so the SV survives reload.
+    -- Sequences: GSE.Library[classid][id] is the in-memory shape; the
+    -- envelope's Body is the encoded blob. Re-encode on stamp so the store
+    -- survives reload.
     if GSE.Library then
         for classid, classLib in pairs(GSE.Library) do
             if type(classLib) == "table" then
-                for name, seq in pairs(classLib) do
+                for id, seq in pairs(classLib) do
+                    local env = GSE.SequenceEnvelopes(classid)[id]
                     -- Skip protected content outright. There is no way to
                     -- persist the stamp without rewriting the sealed blob, and
                     -- an unwritten LastUpdated would be re-minted to a new
                     -- `now` on every load anyway -- drift, not a backfill.
-                    if type(seq) == "table" and not seq.LastUpdated
-                        and not (GSE.Store("sequence") and GSE.Store("sequence")[classid]
-                            and GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][name], seq)) then
+                    if type(seq) == "table" and not seq.LastUpdated and env
+                        and not GSE.IsProtectedAtRest(env.Body, seq) then
                         seq.LastUpdated = now
-                        if GSE.Store("sequence") and GSE.Store("sequence")[classid] then
-                            GSE.Store("sequence")[classid][name] = GSE.EncodeMessage({name, seq})
-                        end
+                        env.Body = GSE.EncodeMessage({env.Name, seq})
                         touched = touched + 1
                     end
                 end

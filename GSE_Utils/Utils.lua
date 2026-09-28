@@ -10,17 +10,11 @@ local GNOME = "Storage"
 local mname = nil
 
 function GSE.ImportLegacyStorage(Library)
-    for i = 0, 13 do
-        if GSE.isEmpty(GSE.Store("sequence")[i]) then
-            GSE.Store("sequence")[i] = {}
-        end
-    end
-
     if not GSE.isEmpty(Library) then
         for k, v in pairs(Library) do
             for i, j in pairs(v) do
-                local compressedVersion = GSE.EncodeMessage({i, j})
-                GSE.Store("sequence")[k][i] = compressedVersion
+                local id = GSE.SequenceIdForIncoming(k, i, j)
+                GSE.PutSequenceBody(k, id, i, GSE.EncodeMessage({i, j}))
             end
         end
     end
@@ -29,7 +23,7 @@ function GSE.ImportLegacyStorage(Library)
 end
 
 --- Add a sequence to the library
-function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
+function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid, id)
     -- Check its not a GSE2 Sequence
     if GSE.isEmpty(sequence.Versions) then
         GSE.Print(string.format("%s " .. L["was unable to be interpreted."], sequenceName), L["Unrecognised Import"])
@@ -108,34 +102,40 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid)
     if GSE.isEmpty(GSE.Library[classid]) then
         GSE.Library[classid] = {}
     end
-    if not GSE.isEmpty(GSE.Library[classid][sequenceName]) then
+    -- Which stored sequence this is: its PlatformID, else the one filed under
+    -- this name in this class, else a new one.
+    id = id or GSE.SequenceIdForIncoming(classid, sequenceName, sequence)
+    if GSE.SequenceEnvelope(id) or not GSE.isEmpty(GSE.Library[classid][id]) then
         found = true
         --@debug@
         GSE.PrintDebugMessage("Macro Exists", "Storage")
         --@end-debug@
     end
+    -- The name it was imported under is its label; a sequence it matched by
+    -- PlatformID keeps the label it already has (OOCPerformMergeAction).
+    if type(sequence.MetaData) == "table" then sequence.MetaData.Name = sequenceName end
     if found then
         -- Existing sequence imports should let the user choose whether to merge,
         -- replace, rename, or ignore even when the local copy has no manual edits.
         if GSE.GUIShowCompareWindow then
-            GSE.GUIShowCompareWindow(sequenceName, classid, sequence)
+            GSE.GUIShowCompareWindow(id, classid, sequence)
         else
-            GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, sequenceName, sequence)
+            GSE.PerformMergeAction(GSEOptions.DefaultImportAction, classid, id, sequence)
         end
     else
         --@debug@
         GSE.PrintDebugMessage("Creating New Macro", "Storage")
         --@end-debug@
         -- New Sequence
-        GSE.PerformMergeAction("REPLACE", classid, sequenceName, sequence)
+        GSE.PerformMergeAction("REPLACE", classid, id, sequence)
     end
     if classid == GSE.GetCurrentClassID() or classid == 0 then
         --@debug@
         GSE.PrintDebugMessage("As its the current class updating buttons", "Storage")
         --@end-debug@
-        GSE.UpdateSequence(sequenceName, sequence.Versions[sequence.MetaData.Default])
+        GSE.UpdateSequence(id, sequence.Versions[sequence.MetaData.Default])
     end
-    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
 end
 
 --- Store the result of a merge action, unless that would put protected content
@@ -147,27 +147,35 @@ end
 -- protected the write is declined and a repack request is left instead: the
 -- session keeps working from the Library, and the Companion fetches the sealed
 -- blob from gse.tools to put the record straight.
-local function storeMergedSequence(classid, sequenceName, reason, sealed)
-    local seq = GSE.Library[classid][sequenceName]
+local function storeMergedSequence(classid, id, sequenceName, reason, sealed)
+    local seq = GSE.Library[classid][id]
     -- A REPLACE from a sealed import stores the blob it arrived in. The body
     -- on disk is exactly what was imported, so the envelope still describes
     -- it, and this is the one merge outcome where that is true -- MERGE and
     -- RENAME produce something the addon cannot seal, and fall through to the
     -- repack request below.
     if sealed then
-        GSE.Store("sequence")[classid] = GSE.Store("sequence")[classid] or {}
-        GSE.Store("sequence")[classid][sequenceName] = sealed
+        GSE.PutSequenceBody(classid, id, sequenceName, sealed)
         return true
     end
-    if GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], seq) then
+    local env = GSE.SequenceEnvelope(id)
+    if GSE.IsProtectedAtRest(env and env.Body, seq) then
+        -- The sealed body stays; the envelope still files and names it.
+        if env then GSE.PutSequenceBody(classid, id, sequenceName, env.Body) end
         GSE.QueueRepack("sequence", classid, sequenceName, seq, reason)
         return false
     end
-    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
+    GSE.PutSequenceBody(classid, id, sequenceName, GSE.EncodeMessage({sequenceName, seq}))
     return true
 end
 
-function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
+function GSE.OOCPerformMergeAction(action, classid, id, newSequence, newName)
+    -- The label: a RENAME's new name, else what the stored or incoming
+    -- sequence is called.
+    local sequenceName = (action == "RENAME" and newName)
+        or GSE.SequenceName(id)
+        or (type(newSequence) == "table" and type(newSequence.MetaData) == "table" and newSequence.MetaData.Name)
+        or tostring(id)
     -- Refuse to merge/replace with a Macros-only payload. Auto-rename
     -- has been retired; the user must re-export through gse.tools so
     -- the source is in the current schema before re-import.
@@ -197,12 +205,20 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
         )
         sequenceName = tempseqName
     end
+    if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
     if action == "MERGE" then
+        -- The stored copy, wherever it is filed; the merge lands in classid.
+        local existing, fromClass = GSE.GetSequence(id)
+        if existing == nil then existing = {MetaData = {Name = sequenceName}} end
+        if fromClass ~= nil and fromClass ~= classid and GSE.Library[fromClass] then
+            GSE.Library[fromClass][id] = nil
+        end
+        GSE.Library[classid][id] = existing
         -- Both sides need a Versions table. Migration above set them up;
         -- belt-and-braces: if either is still nil, init/empty out so the
         -- ipairs/insert doesn't crash and we don't silently no-op.
-        if type(GSE.Library[classid][sequenceName].Versions) ~= "table" then
-            GSE.Library[classid][sequenceName].Versions = {}
+        if type(GSE.Library[classid][id].Versions) ~= "table" then
+            GSE.Library[classid][id].Versions = {}
         end
         if type(newSequence.Versions) ~= "table" then
             newSequence.Versions = {}
@@ -211,30 +227,35 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
             --@debug@
             GSE.PrintDebugMessage("adding " .. k, "Storage")
             --@end-debug@
-            table.insert(GSE.Library[classid][sequenceName].Versions, v)
+            table.insert(GSE.Library[classid][id].Versions, v)
         end
         --@debug@
         GSE.PrintDebugMessage("Finished colliding entry entry", "Storage")
         --@end-debug@
         GSE.Print(string.format(L["Extra Sequence Versions of %s have been added."], sequenceName), GNOME)
-        GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
+        GSE.ComputeSequenceDependencies(GSE.Library[classid][id])
         if GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
-        storeMergedSequence(classid, sequenceName, "merge-needs-repack")
+        storeMergedSequence(classid, id, sequenceName, "merge-needs-repack")
     elseif action == "REPLACE" then
-        GSE.Library[classid][sequenceName] = {}
-        GSE.Library[classid][sequenceName] = newSequence
+        local _, fromClass = GSE.SequenceEnvelope(id)
+        if fromClass ~= nil and fromClass ~= classid and GSE.Library[fromClass] then
+            GSE.Library[fromClass][id] = nil
+        end
+        if type(newSequence.MetaData) == "table" then newSequence.MetaData.Name = sequenceName end
+        GSE.Library[classid][id] = {}
+        GSE.Library[classid][id] = newSequence
         --@debug@
         GSE.PrintDebugMessage("About to encode: Sequence " .. sequenceName)
         --@end-debug@
         --@debug@
-        GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]), "Storage")
+        GSE.PrintDebugMessage(" New Entry: " .. GSE.Dump(GSE.Library[classid][id]), "Storage")
         --@end-debug@
-        GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
+        GSE.ComputeSequenceDependencies(GSE.Library[classid][id])
         do
             -- Claim the sealed original this import arrived in, if it had one.
             local sealed = GSE.PendingSealedImports and GSE.PendingSealedImports[sequenceName]
             if sealed and GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
-            storeMergedSequence(classid, sequenceName, "replace-needs-repack", sealed)
+            storeMergedSequence(classid, id, sequenceName, "replace-needs-repack", sealed)
         end
         GSE.Print(sequenceName .. L[" was updated to new version."], "Storage")
     elseif action == "RENAME" then
@@ -256,29 +277,34 @@ function GSE.OOCPerformMergeAction(action, classid, sequenceName, newSequence)
             end
             newSequence.LastUpdated = GSE.GetTimestamp()
         end
-        GSE.Library[classid][sequenceName] = {}
-        GSE.Library[classid][sequenceName] = newSequence
-        GSE.ComputeSequenceDependencies(GSE.Library[classid][sequenceName])
+        -- A new work gets a new id; the sequence it collided with is untouched.
+        id = GSE.NewLocalId()
+        GSE.Library[classid][id] = {}
+        GSE.Library[classid][id] = newSequence
+        GSE.ComputeSequenceDependencies(GSE.Library[classid][id])
         if GSE.PendingSealedImports then GSE.PendingSealedImports[sequenceName] = nil end
-        storeMergedSequence(classid, sequenceName, "rename-needs-repack")
+        storeMergedSequence(classid, id, sequenceName, "rename-needs-repack")
         GSE.Print(sequenceName .. L[" was imported as a new sequence."], "Storage")
         --@debug@
         GSE.PrintDebugMessage(
-            "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
+            "Sequence " .. sequenceName .. " New Entry: " .. GSE.Dump(GSE.Library[classid][id]),
             "Storage"
         )
         --@end-debug@
     else
         GSE.Print(L["No changes were made to "] .. sequenceName, GNOME)
     end
-    GSE.Library[classid][sequenceName]["MetaData"].ManualIntervention = false
+    if type(GSE.Library[classid][id]) == "table" and type(GSE.Library[classid][id].MetaData) == "table" then
+        GSE.Library[classid][id].MetaData.ManualIntervention = false
+    end
     --@debug@
     GSE.PrintDebugMessage(
-        "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][sequenceName]),
+        "Sequence " .. sequenceName .. " Finalised Entry: " .. GSE.Dump(GSE.Library[classid][id]),
         "Storage"
     )
     --@end-debug@
-    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, sequenceName)
+    GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
+    return id
 end
 
 --- Load a collection of Sequences
@@ -476,17 +502,17 @@ function GSE.processWAGOImport(input, dontencode)
     end
 end
 
---- True when a sequence of this name is already stored, in any class.
+--- True when this sequence is already stored, in any class: the same
+-- PlatformID, or the same name.
 --
--- GSESequences is the store, so this answers without decoding anything or
--- forcing a lazy class load -- the name is the table KEY and is always in the
--- clear, even for sealed content.
-local function sealedImportCollides(name)
-    if type(GSE.Store("sequence")) ~= "table" then return false end
-    for _, bucket in pairs(GSE.Store("sequence")) do
-        if type(bucket) == "table" and bucket[name] ~= nil then return true end
-    end
-    return false
+-- Answered from the envelopes, so nothing is decoded and no class is forced to
+-- load -- the envelope's Name and id are always in the clear, even for sealed
+-- content.
+local function sealedImportCollides(name, body)
+    local meta = type(body) == "table" and body.MetaData
+    local pid = type(meta) == "table" and meta.PlatformID
+    if type(pid) == "string" and GSE.SequenceEnvelope(pid) then return true end
+    return GSE.FindSequenceId(name, nil, true) ~= nil
 end
 
 --- Load a serialised Sequence
@@ -520,7 +546,7 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
                 -- The body is only needed to compare against what is already
                 -- installed; the ENVELOPE is what gets stored, so the sealed
                 -- original is remembered for the action the user picks.
-                if name and body and sealedImportCollides(name) and not forcereplace then
+                if name and body and sealedImportCollides(name, body) and not forcereplace then
                     GSE.PendingSealedImports = GSE.PendingSealedImports or {}
                     GSE.PendingSealedImports[name] = importstring
                     GSE.AddSequenceToCollection(name, body)
@@ -711,24 +737,27 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
             end
 
             if forcereplace then
-                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(v.MetaData.SpecID), seqName, v)
+                local classid = GSE.GetClassIDforSpec(v.MetaData.SpecID)
+                v.MetaData.Name = seqName
+                GSE.PerformMergeAction("REPLACE", classid, GSE.SequenceIdForIncoming(classid, seqName, v), v)
             elseif forcemerge then
-                -- Route to MERGE without compare dialog. The classid lookup
-                -- mirrors AddSequenceToCollection's resolution: prefer the
-                -- spec's class id, fall back to scanning class libs for an
-                -- existing same-name sequence.
+                -- Route to MERGE without compare dialog. Which sequence it
+                -- merges into: the same PlatformID, else the same name in the
+                -- spec's class, else the same name in any class.
                 local classid = GSE.GetClassIDforSpec(v.MetaData and v.MetaData.SpecID)
-                if (classid == nil or classid == 0) and GSE.Library then
-                    for cid = 0, 13 do
-                        if GSE.Library[cid] and GSE.Library[cid][seqName] then classid = cid break end
-                    end
+                local id = GSE.SequenceIdForIncoming(classid, seqName, v)
+                local _, foundClass = GSE.SequenceEnvelope(id)
+                if foundClass == nil then
+                    local other, otherClass = GSE.FindSequenceId(seqName, nil, true)
+                    if other then id, foundClass = other, otherClass end
                 end
-                GSE.PerformMergeAction("MERGE", classid or 0, seqName, v)
+                if (classid == nil or classid == 0) and foundClass then classid = foundClass end
+                v.MetaData.Name = seqName
+                GSE.PerformMergeAction("MERGE", classid or 0, id, v)
             else
+                -- Filed, and announced, once its class and id are known.
                 GSE.AddSequenceToCollection(seqName, v)
             end
-
-            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end
     else
         GSE.Print(L["Unable to interpret sequence."], GNOME)
@@ -745,10 +774,8 @@ function GSE.CleanOrphanSequences()
     for _ = 1, maxmacros do
         local found = false
         if not GSE.isEmpty(mname) then
-            if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][mname]) then
-                found = true
-            end
-            if not GSE.isEmpty(GSE.Library[0][mname]) then
+            -- A stub is named by its sequence's label.
+            if GSE.FindSequenceId(mname) then
                 found = true
             end
 
@@ -774,22 +801,26 @@ function GSE.DebugDumpButton(SequenceName)
     GSE.Print("====================================\nEnd GSE Button Dump\n====================================")
 end
 
---- Moves Macros hidden in Global Macros to their appropriate class.
+--- Moves sequences filed as global (class 0) whose spec says they belong to a
+-- class into that class. The move is stored -- it used to change only the
+-- in-memory Library, so it was undone at the next login -- and it keeps the
+-- sequence's id, so its keybinds and GSE.Tools record follow it. It also read
+-- SpecID off the sequence itself, where it never is, so it moved nothing.
 function GSE.MoveMacroToClassFromGlobal()
-    for k, v in pairs(GSE.Library[0]) do
-        if not GSE.isEmpty(v.SpecID) and tonumber(v.SpecID) > 0 then
-            if v.SpecID < 13 then
-                GSE.Library[v.SpecID][k] = v
-                GSE.Print(string.format(L["Moved %s to class %s."], k, Statics.SpecIDList[v.SpecID]))
-                GSE.Library[0][k] = nil
-            else
-                GSE.Library[GSE.GetClassIDforSpec(v.SpecID)][k] = v
-                GSE.Print(
-                    string.format(L["Moved %s to class %s."], k, Statics.SpecIDList[GSE.GetClassIDforSpec(v.SpecID)])
-                )
-                GSE.Library[0][k] = nil
-            end
+    GSE.EnsureClassLoaded(0)
+    local moves = {}
+    for id, seq in pairs(GSE.Library[0] or {}) do
+        local specID = type(seq) == "table" and type(seq.MetaData) == "table" and tonumber(seq.MetaData.SpecID)
+        if specID and specID > 0 then
+            local classid = GSE.GetClassIDforSpec(specID)
+            if classid and classid > 0 then moves[#moves + 1] = {id = id, seq = seq, classid = classid} end
         end
+    end
+    for _, m in ipairs(moves) do
+        GSE.ReplaceSequence(m.classid, m.id, m.seq)
+        GSE.Library[0][m.id] = nil
+        GSE.Print(string.format(L["Moved %s to class %s."], GSE.SequenceName(m.id) or m.id,
+            Statics.SpecIDList[m.classid] or tostring(m.classid)))
     end
     GSE.ReloadSequences()
 end
@@ -1227,18 +1258,19 @@ end
 
 --- Find all loaded sequences and variables that directly depend on a variable.
 -- Only searches classes already in GSE.Library (lazy-loaded classes not forced).
--- Returns { sequences = {{classid=n, name=s}, ...}, variables = {name, ...} }
+-- Returns { sequences = {{classid=n, id=s, name=label}, ...}, variables = {name, ...} }
 function GSE.GetVariableDependents(varName)
     local seqs, vars = {}, {}
     for classid = 0, 13 do
         if GSE.Library[classid] then
-            for seqname, seq in pairs(GSE.Library[classid]) do
+            for id, seq in pairs(GSE.Library[classid]) do
                 if type(seq) == "table" and type(seq.MetaData) == "table" then
                     local deps = seq.MetaData.Dependencies
                     if deps and type(deps.Variables) == "table" then
                         for _, vname in ipairs(deps.Variables) do
                             if vname == varName then
-                                table.insert(seqs, {classid = classid, name = seqname})
+                                table.insert(seqs, {classid = classid, id = id,
+                                    name = GSE.SequenceName(id, classid) or seq.MetaData.Name or tostring(id)})
                                 break
                             end
                         end
@@ -1270,20 +1302,23 @@ function GSE.GetVariableDependents(varName)
     return {sequences = seqs, variables = vars}
 end
 
---- Find all loaded sequences that embed the given sequence name.
+--- Find all loaded sequences that embed the given sequence. Takes its id (or,
+-- from older callers, its name): an Embed still names what it embeds.
 -- Only searches classes already in GSE.Library (lazy-loaded classes not forced).
--- Returns array of {classid=n, name=s}.
-function GSE.GetSequenceDependents(seqName)
+-- Returns array of {classid=n, id=s, name=label}.
+function GSE.GetSequenceDependents(seqRef)
+    local seqName = GSE.SequenceName(seqRef) or seqRef
     local result = {}
     for classid = 0, 13 do
         if GSE.Library[classid] then
-            for name, seq in pairs(GSE.Library[classid]) do
+            for id, seq in pairs(GSE.Library[classid]) do
                 if type(seq) == "table" and type(seq.MetaData) == "table" then
                     local deps = seq.MetaData.Dependencies
                     if deps and type(deps.Sequences) == "table" then
                         for _, sname in ipairs(deps.Sequences) do
                             if sname == seqName then
-                                table.insert(result, {classid = classid, name = name})
+                                table.insert(result, {classid = classid, id = id,
+                                    name = GSE.SequenceName(id, classid) or seq.MetaData.Name or tostring(id)})
                                 break
                             end
                         end
@@ -1301,18 +1336,19 @@ end
 
 --- Find all loaded sequences that embed the given macro name.
 -- Searches GSE.Library sequences whose MetaData.Dependencies.Macros lists the macro.
--- Returns array of {classid=n, name=s}.
+-- Returns array of {classid=n, id=s, name=label}.
 function GSE.GetMacroDependents(macroName)
     local result = {}
     for classid = 0, 13 do
         if GSE.Library[classid] then
-            for name, seq in pairs(GSE.Library[classid]) do
+            for id, seq in pairs(GSE.Library[classid]) do
                 if type(seq) == "table" and type(seq.MetaData) == "table" then
                     local deps = seq.MetaData.Dependencies
                     if deps and type(deps.Macros) == "table" then
                         for _, mname in ipairs(deps.Macros) do
                             if mname == macroName then
-                                table.insert(result, {classid = classid, name = name})
+                                table.insert(result, {classid = classid, id = id,
+                                    name = GSE.SequenceName(id, classid) or seq.MetaData.Name or tostring(id)})
                                 break
                             end
                         end
@@ -1336,7 +1372,7 @@ local corruptQueue = {}
 function GSE.ProcessNextCorruptSequence()
     if #corruptQueue == 0 then return end
     local entry = table.remove(corruptQueue, 1)
-    GSE.GUICall("GUIConfirmCorruptSequence", entry.classid, entry.name,
+    GSE.GUICall("GUIConfirmCorruptSequence", entry.classid, entry.id,
         string.format(L["GSE_CORRUPT_SEQUENCE_TEXT"], entry.name, entry.classid))
 end
 
@@ -1346,9 +1382,9 @@ end
 -- findable. Dedup keeps the popup from double-presenting the same entry.
 function GSE.ProcessCorruptSequences()
     local queued = {}
-    for _, e in ipairs(corruptQueue) do queued[e.classid .. "|" .. e.name] = true end
+    for _, e in ipairs(corruptQueue) do queued[e.classid .. "|" .. tostring(e.id)] = true end
     for _, entry in ipairs(GSE.CorruptSequences or {}) do
-        local key = entry.classid .. "|" .. entry.name
+        local key = entry.classid .. "|" .. tostring(entry.id)
         if not queued[key] then
             table.insert(corruptQueue, entry)
             queued[key] = true
@@ -1393,7 +1429,8 @@ function GSE.ScanMacrosForErrors()
         GSE.EnsureClassLoaded(classlibid)
         local classlib = GSE.Library[classlibid]
         if classlib and type(classlib) == "table" then
-            for seqname, seq in pairs(classlib) do
+            for id, seq in pairs(classlib) do
+                local seqname = GSE.SequenceName(id, classlibid) or tostring(id)
                 local issues = checkSeqStructure(classlibid, seqname, seq)
 
                 -- Partition issues into auto-fixable vs. the rest. If
@@ -1407,12 +1444,12 @@ function GSE.ScanMacrosForErrors()
                     if isAutoFixableIssue(issue) then hadAutoFixable = true; break end
                 end
                 if hadAutoFixable then
-                    if GSE.FixSequenceStructure(classlibid, seqname, true) then
+                    if GSE.FixSequenceStructure(classlibid, id, true) then
                         autoFixedCount = autoFixedCount + 1
                         -- Re-fetch the sequence post-repair and re-scan
                         -- so the rest of this iteration sees the repaired
                         -- shape, not the broken one we entered with.
-                        seq = GSE.Library[classlibid] and GSE.Library[classlibid][seqname]
+                        seq = GSE.Library[classlibid] and GSE.Library[classlibid][id]
                         issues = seq and checkSeqStructure(classlibid, seqname, seq) or {}
                     end
                 end
@@ -1488,7 +1525,11 @@ function GSE.ScanMacrosForErrors()
     for classlibid = 0, 13 do
         local classlib = GSE.Library[classlibid]
         if classlib and type(classlib) == "table" then
-            for seqname, _ in pairs(classlib) do
+            for id, seq in pairs(classlib) do
+                -- The label, else the name the loaded copy carries (a sealed
+                -- sequence with no stored body has no envelope to ask).
+                local seqname = GSE.SequenceName(id, classlibid)
+                    or (type(seq) == "table" and type(seq.MetaData) == "table" and seq.MetaData.Name)
                 if seqname == "WW" then
                     GSE.Print(
                         string.format(
@@ -1520,7 +1561,8 @@ function GSE.ScanMacrosForErrors()
     for classlibid = 0, 13 do
         local classlib = GSE.Library[classlibid]
         if classlib and type(classlib) == "table" then
-            for seqname, seq in pairs(classlib) do
+            for id, seq in pairs(classlib) do
+                local seqname = GSE.SequenceName(id, classlibid) or tostring(id)
                 if type(seq) == "table" and type(seq.MetaData) == "table" then
                     local deps = seq.MetaData.Dependencies
                     if deps then
@@ -1542,17 +1584,8 @@ function GSE.ScanMacrosForErrors()
                         -- Check embedded sequence dependencies
                         if type(deps.Sequences) == "table" then
                             for _, depseq in ipairs(deps.Sequences) do
-                                local found = false
-                                for chkclass = 0, 13 do
-                                    if GSE.Library[chkclass] and not GSE.isEmpty(GSE.Library[chkclass][depseq]) then
-                                        found = true
-                                        break
-                                    end
-                                    if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][depseq]) then
-                                        found = true
-                                        break
-                                    end
-                                end
+                                -- An Embed names what it embeds; any class will do.
+                                local found = GSE.FindSequenceId(depseq, nil, true) ~= nil
                                 if not found then
                                     totalIssues = totalIssues + 1
                                     GSE.Print(
@@ -1617,7 +1650,8 @@ function GSE.ScanMacrosForErrors()
         for classlibid = 0, 13 do
             local classlib = GSE.Library[classlibid]
             if classlib and type(classlib) == "table" then
-                for seqname, seq in pairs(classlib) do
+                for id, seq in pairs(classlib) do
+                    local seqname = GSE.SequenceName(id, classlibid) or tostring(id)
                     if type(seq) == "table" and type(seq.Versions) == "table" then
                         for vidx, macroversion in ipairs(seq.Versions) do
                             if type(macroversion) == "table" and type(macroversion.Actions) == "table" then
@@ -1673,17 +1707,18 @@ function GSE.ScanMacrosForErrors()
         end
     end
 
-    -- 6. GSESequences encoding check (existing behaviour: remove malformed entries)
-    if type(GSE.Store("sequence")) == "table" then
-        for classlibid, classlib in ipairs(GSE.Store("sequence")) do
-            if type(classlib) == "table" then
-                for k, v in pairs(classlib) do
-                    if type(v) == "string" and string.sub(v, 1, 6) ~= "!GSE3!" then
-                        GSE.Store("sequence")[classlibid][k] = nil
-                        GSE.Print(L["Removed unreadable sequence "] .. k, Statics.DebugModules["Storage"])
-                    end
-                end
+    -- 6. Stored-body encoding check (existing behaviour: remove malformed entries)
+    for classlibid = 0, 13 do
+        local bad = {}
+        for id, env in pairs(GSE.SequenceEnvelopes(classlibid)) do
+            if type(env.Body) == "string" and string.sub(env.Body, 1, 6) ~= "!GSE3!" then
+                bad[#bad + 1] = id
             end
+        end
+        for _, id in ipairs(bad) do
+            local label = GSE.SequenceName(id, classlibid) or tostring(id)
+            GSE.RemoveSequence(classlibid, id)
+            GSE.Print(L["Removed unreadable sequence "] .. label, Statics.DebugModules["Storage"])
         end
     end
 
@@ -1743,6 +1778,7 @@ end
 -- 5. Re-indexes each Macro version's Actions array to remove gaps
 -- 6. Updates MetaData context version references to match the new indices
 -- 7. Saves the repaired sequence and queues a recompile
+-- Takes the sequence's id, or its name (the slash command passes a name).
 -- Usage: /gse fixsequence <classLibraryID> <SequenceName>  (the slash command
 -- is the only reachable route: GSE is private and _G.GSE is the plugin proxy)
 -- silent: when true, suppress informational/success prints. Errors
@@ -1750,14 +1786,17 @@ end
 -- because they signal the caller's request couldn't be honoured. Used
 -- by GSE.ScanMacrosForErrors's auto-repair path so the user gets one
 -- summary line rather than per-sequence chatter.
-function GSE.FixSequenceStructure(classlibid, seqname, silent)
+function GSE.FixSequenceStructure(classlibid, ref, silent)
     classlibid = tonumber(classlibid)
-    GSE.EnsureSequenceLoaded(classlibid, seqname)
     if not classlibid or not GSE.Library[classlibid] then
         GSE.Print(string.format(L["Invalid class library ID: %s"], tostring(classlibid)))
         return false
     end
-    local seq = GSE.Library[classlibid][seqname]
+    local id = ref
+    if not GSE.SequenceEnvelope(ref, classlibid) then id = GSE.FindSequenceId(ref, classlibid) or ref end
+    local seqname = GSE.SequenceName(id, classlibid) or tostring(ref)
+    GSE.EnsureSequenceLoaded(classlibid, id)
+    local seq = GSE.Library[classlibid][id]
     if GSE.isEmpty(seq) then
         GSE.Print(string.format(L["Sequence '%s' not found in class library %d."], seqname, classlibid))
         return false
@@ -1766,8 +1805,10 @@ function GSE.FixSequenceStructure(classlibid, seqname, silent)
     -- 1. Remove any pending OOC queue entries for this sequence
     local kept = {}
     for _, entry in ipairs(GSE.OOCQueue) do
-        local entryName = entry.sequencename or entry.name
-        if entryName ~= seqname then
+        -- Queued for this sequence: by its id, or -- an import not yet filed --
+        -- by its name.
+        local forThis = entry.id == id or (entry.id == nil and entry.sequencename == seqname)
+        if not forThis then
             table.insert(kept, entry)
         end
     end
@@ -1863,7 +1904,7 @@ function GSE.FixSequenceStructure(classlibid, seqname, silent)
     end
 
     -- 7. Save repaired sequence and trigger recompile
-    GSE.ReplaceSequence(classlibid, seqname, seq)
+    GSE.ReplaceSequence(classlibid, id, seq)
     if classlibid == GSE.GetCurrentClassID() or classlibid == 0 then
         GSE.ReloadSequences()
         if not silent then
@@ -2090,26 +2131,14 @@ function GSE.RemoveIncomingQueueEntry(index)
     return true
 end
 
---- This function finds a macro by name.  It checks current class first then global
+--- A sequence by its label: the current class first, then global, then any
+-- other class. For names a user or an Embed supplies; anything that already
+-- holds an id uses GSE.GetSequence. Returns the sequence and its id.
 function GSE.FindSequence(sequenceName)
-    local returnVal
-    if not GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()][sequenceName]) then
-        returnVal = GSE.Library[GSE.GetCurrentClassID()][sequenceName]
-    elseif not GSE.isEmpty(GSE.Library[0][sequenceName]) then
-        returnVal = GSE.Library[0][sequenceName]
-    end
-    if GSE.isEmpty(returnVal) then
-        -- Thius is a sequence for another class
-        for i = 1, 14, 1 do
-            if GSE.Store("sequence")[i] and GSE.Store("sequence")[i][sequenceName] then
-                local localsuccess, uncompressedVersion = GSE.DecodeMessage(GSE.Store("sequence")[i][sequenceName])
-                if localsuccess then
-                    returnVal = uncompressedVersion
-                end
-            end
-        end
-    end
-    return returnVal
+    local id, classid = GSE.FindSequenceId(sequenceName)
+    if not id then id, classid = GSE.FindSequenceId(sequenceName, nil, true) end
+    if not id then return nil end
+    return GSE.GetSequence(id, classid), id
 end
 
 --- Handle slash commands
@@ -2212,7 +2241,7 @@ function GSE:GSSlash(input)
         end
         if not classid or GSE.isEmpty(seqname) then
             GSE.Print(L["Usage: /gse fixsequence <classid> <sequence name>"], GNOME)
-        elseif not (GSE.Library[classid] and GSE.Library[classid][seqname]) then
+        elseif not GSE.FindSequenceId(seqname, classid) then
             GSE.Print(string.format(L["No sequence '%s' in class library %d."], seqname, classid), GNOME)
         else
             GSE.FixSequenceStructure(classid, seqname)
@@ -2487,7 +2516,9 @@ do
             for k, seq in pairs(GSE.Library[classID] or {}) do
                 local specID = seq and seq.MetaData and seq.MetaData.SpecID
                 local disabled = seq and seq.MetaData and seq.MetaData.Disabled
-                table.insert(names, { name = k, specID = specID, disabled = disabled })
+                -- Overrides still name the sequence they run.
+                table.insert(names, { id = k, name = GSE.SequenceName(k, classID) or tostring(k),
+                    specID = specID, disabled = disabled })
             end
         end
         addSequences(GSE.GetCurrentClassID())

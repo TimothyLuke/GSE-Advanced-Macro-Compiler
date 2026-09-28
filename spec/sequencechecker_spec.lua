@@ -672,7 +672,9 @@ describe(
         it(
           "warns about a sequence named 'WW'",
           function()
-            GSE.Library[0]["WW"] = makeSeq()
+            -- The label is what clashes; it is filed under an id like any other.
+            GSE.PutSequenceBody(0, "id-ww", "WW", "!GSE3!x")
+            GSE.Library[0]["id-ww"] = makeSeq()
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("WW"))
           end
@@ -681,7 +683,8 @@ describe(
         it(
           "warns about a sequence named 'PVP'",
           function()
-            GSE.Library[0]["PVP"] = makeSeq()
+            GSE.PutSequenceBody(0, "id-pvp", "PVP", "!GSE3!x")
+            GSE.Library[0]["id-pvp"] = makeSeq()
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("PVP"))
           end
@@ -690,7 +693,8 @@ describe(
         it(
           "warns about WW even in a class-specific library",
           function()
-            GSE.Library[5]["WW"] = makeSeq()
+            GSE.PutSequenceBody(5, "id-ww5", "WW", "!GSE3!x")
+            GSE.Library[5]["id-ww5"] = makeSeq()
             GSE.ScanMacrosForErrors()
             assert.is_true(hasMsg("WW"))
           end
@@ -988,15 +992,18 @@ describe(
         it(
           "removes sequencename-keyed OOC entries for the target sequence",
           function()
+            -- Queued work is keyed by id; an import not yet filed, by name.
             GSE.OOCQueue = {
+              {action = "Save",         id = "id-target", classid = 0},
+              {action = "Save",         id = "id-other",  classid = 0},
+              {action = "MergeSequence", id = "id-target", classid = 0},
               {action = "Save",         sequencename = "TargetSeq", classid = 0},
-              {action = "Save",         sequencename = "OtherSeq",  classid = 0},
-              {action = "MergeSequence", sequencename = "TargetSeq", classid = 0},
             }
-            GSE.Library[0]["TargetSeq"] = makeSeq()
+            GSE.PutSequenceBody(0, "id-target", "TargetSeq", "!GSE3!x")
+            GSE.Library[0]["id-target"] = makeSeq()
             GSE.FixSequenceStructure(0, "TargetSeq")
             assert.are.equal(1, #GSE.OOCQueue)
-            assert.are.equal("OtherSeq", GSE.OOCQueue[1].sequencename)
+            assert.are.equal("id-other", GSE.OOCQueue[1].id)
           end
         )
 
@@ -1004,13 +1011,14 @@ describe(
           "removes name-keyed OOC entries (UpdateSequence) for the target sequence",
           function()
             GSE.OOCQueue = {
-              {action = "UpdateSequence", name = "TargetSeq"},
-              {action = "UpdateSequence", name = "OtherSeq"},
+              {action = "UpdateSequence", id = "id-target"},
+              {action = "UpdateSequence", id = "id-other"},
             }
-            GSE.Library[0]["TargetSeq"] = makeSeq()
+            GSE.PutSequenceBody(0, "id-target", "TargetSeq", "!GSE3!x")
+            GSE.Library[0]["id-target"] = makeSeq()
             GSE.FixSequenceStructure(0, "TargetSeq")
             assert.are.equal(1, #GSE.OOCQueue)
-            assert.are.equal("OtherSeq", GSE.OOCQueue[1].name)
+            assert.are.equal("id-other", GSE.OOCQueue[1].id)
           end
         )
 
@@ -1033,9 +1041,10 @@ describe(
           function()
             GSE.OOCQueue = {
               {action = "Save",           sequencename = "TargetSeq"},
-              {action = "UpdateSequence", name          = "TargetSeq"},
+              {action = "UpdateSequence", id            = "id-target"},
             }
-            GSE.Library[0]["TargetSeq"] = makeSeq()
+            GSE.PutSequenceBody(0, "id-target", "TargetSeq", "!GSE3!x")
+            GSE.Library[0]["id-target"] = makeSeq()
             GSE.FixSequenceStructure(0, "TargetSeq")
             assert.is_true(hasMsg("Cleared 2 pending queue entries for 'TargetSeq'"))
           end

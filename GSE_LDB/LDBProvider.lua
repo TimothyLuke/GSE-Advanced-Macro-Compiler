@@ -77,24 +77,27 @@ local function CheckOOCQueueStatus()
 end
 
 local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
+  -- A queued sequence operation carries its id, and a name only if it came
+  -- in as an import; show the label either way.
+  local seqLabel = OOCEvent.sequencename or (OOCEvent.id and GSE.SequenceName(OOCEvent.id)) or OOCEvent.id
   local x = row:GetCell(1)
   x:SetText(OOCEvent.action)
   x:SetJustifyH("LEFT")
   if OOCEvent.action == "UpdateSequence" then
     x = row:GetCell(3)
-    x:SetText(OOCEvent.name)
+    x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "Save" then
     x = row:GetCell(3)
-    x:SetText(OOCEvent.sequencename)
+    x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "Replace" then
     x = row:GetCell(3)
-    x:SetText(OOCEvent.sequencename)
+    x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "CheckMacroCreated" then
     x = row:GetCell(3)
-    x:SetText(OOCEvent.sequencename)
+    x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "updatemacro" then
     x = row:GetCell(3)
@@ -110,7 +113,7 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
     x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "MergeSequence" then
     x = row:GetCell(3)
-    x:SetText(OOCEvent.sequencename)
+    x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
   end
   row:SetScript(
@@ -118,10 +121,10 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
     function()
       local label = OOCEvent.action
       if OOCEvent.action == "UpdateSequence" then
-        label = label .. " (" .. (OOCEvent.name or "?") .. ")"
+        label = label .. " (" .. (seqLabel or "?") .. ")"
       elseif OOCEvent.action == "Save" or OOCEvent.action == "Replace"
           or OOCEvent.action == "MergeSequence" or OOCEvent.action == "CheckMacroCreated" then
-        label = label .. " (" .. (OOCEvent.sequencename or "?") .. ")"
+        label = label .. " (" .. (seqLabel or "?") .. ")"
       elseif OOCEvent.action == "updatemacro" or OOCEvent.action == "importmacro" then
         label = label .. " (" .. (OOCEvent.node and OOCEvent.node.name or "?") .. ")"
       elseif OOCEvent.action == "updatevariable" then
@@ -187,7 +190,7 @@ function dataobj:OnEnter()
       local userline = tooltip:AddRow(k, nil, v)
       userline:SetScript("OnMouseDown",
         function(obj, button)
-          GSE.RequestSequenceList(k)
+          GSE.RequestElementList(k)
         end
       )
     end

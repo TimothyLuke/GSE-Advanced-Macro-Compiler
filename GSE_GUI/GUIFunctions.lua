@@ -58,18 +58,26 @@ function GSE.ClearTooltip(GSEFrame)
   GSEFrame.tooltip = nil
 end
 
-function GSE.ShowSequenceList(SequenceTable, GSEUser, channel)
+-- Elements is GSE.GetShareableSummary() from another player:
+-- { sequence = { [classid] = { [id] = row } }, variable = { [id] = row },
+--   macro = { [id] = row } }, row = { Label, Help, LastUpdated }.
+function GSE.ShowSequenceList(Elements, GSEUser, channel)
+  if type(Elements) ~= "table" then return end
   if GSE.UnsavedOptions["GUI"] then
-    GSE.ShowRemoteWindow(SequenceTable, GSEUser, channel)
+    GSE.ShowRemoteWindow(Elements, GSEUser, channel)
   else
-    for _, v in ipairs(SequenceTable) do
-      for i, j in pairs(v) do
-        local msg = i .. " "
-        if not GSE.isEmpty(j.Help) then
-          msg = msg .. j.Help
-        end
-        GSE.Print(msg, "TRANSMISSION")
+    local function printRow(row)
+      local msg = tostring(row.Label) .. " "
+      if not GSE.isEmpty(row.Help) then
+        msg = msg .. row.Help
       end
+      GSE.Print(msg, "TRANSMISSION")
+    end
+    for _, rows in pairs(Elements.sequence or {}) do
+      for _, row in pairs(rows) do printRow(row) end
+    end
+    for _, kind in ipairs({"variable", "macro"}) do
+      for _, row in pairs(Elements[kind] or {}) do printRow(row) end
     end
   end
 end

@@ -1933,7 +1933,7 @@ end
 function GSE.HydrateClassActionIcons(classid)
     if not classid then return end
     if type(GSE.Library) ~= "table" or type(GSE.Library[classid]) ~= "table" then return end
-    for sequenceName, sequence in pairs(GSE.Library[classid]) do
+    for id, sequence in pairs(GSE.Library[classid]) do
         local sequenceChangedIcons = 0
         local sequenceShowTooltipChanges = 0
         if type(sequence) == "table" and type(sequence.Versions) == "table" then
@@ -1952,14 +1952,11 @@ function GSE.HydrateClassActionIcons(classid)
         -- migrateSequenceVersions changes a sequence; this only extends it to
         -- the retry, which has to run after GSE_GUI and warm spell data. Icon
         -- hydration keeps its existing deferred-save policy untouched.
-        if sequenceShowTooltipChanges > 0 and GSE.Store("sequence") and GSE.Store("sequence")[classid] and
-            GSE.Store("sequence")[classid][sequenceName] then
+        if sequenceShowTooltipChanges > 0 and GSE.SequenceEnvelopes(classid)[id] then
             if type(sequence.MetaData) == "table" then sequence.MetaData.Checksum = nil end
             -- Resolved icons are a cache, re-derived on every load, so leaving
             -- protected content sealed costs one re-hydrate and nothing else.
-            if not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
-                GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
-            end
+            GSE.StoreSequenceBody(classid, id, sequence)
             sequenceChangedIcons = sequenceChangedIcons - sequenceShowTooltipChanges
         end
         if sequenceChangedIcons > 0 then
@@ -1986,8 +1983,8 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
     -- Force-load every class that exists in the saved-variable store so the
     -- scan covers all sequences, not just classes the user has browsed this
     -- session. EnsureClassLoaded is a no-op for classes already decompressed.
-    if type(GSE.Store("sequence")) == "table" and GSE.EnsureClassLoaded then
-        for classid, _ in pairs(GSE.Store("sequence")) do
+    if GSE.EnsureClassLoaded then
+        for classid = 0, 13 do
             GSE.EnsureClassLoaded(classid)
         end
     end
@@ -1999,7 +1996,7 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
     local savedIcons = 0
     for classid, classLibrary in pairs(GSE.Library) do
         if type(classLibrary) == "table" then
-            for sequenceName, sequence in pairs(classLibrary) do
+            for id, sequence in pairs(classLibrary) do
                 local changed = false
                 local sequenceChangedIcons = 0
                 if type(sequence) == "table" and type(sequence.Versions) == "table" then
@@ -2019,9 +2016,7 @@ function GSE.HydrateLoadedSequenceActionIcons(scanStats, saveChanges)
 
                 local pendingIconSaves = actionIconDirtySequences[sequence] or 0
                 if saveChanges then
-                    if (changed or pendingIconSaves > 0) and GSE.Store("sequence") and GSE.Store("sequence")[classid]
-                        and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
-                        GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                    if (changed or pendingIconSaves > 0) and GSE.StoreSequenceBody(classid, id, sequence) then
                         savedSequences = savedSequences + 1
                         savedIcons = savedIcons + sequenceChangedIcons + pendingIconSaves
                         actionIconDirtySequences[sequence] = nil
@@ -2041,8 +2036,8 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
     -- Force-load every class that exists in the saved-variable store so the
     -- reset covers all sequences, not just classes the user has browsed this
     -- session. EnsureClassLoaded is a no-op for classes already decompressed.
-    if type(GSE.Store("sequence")) == "table" and GSE.EnsureClassLoaded then
-        for classid, _ in pairs(GSE.Store("sequence")) do
+    if GSE.EnsureClassLoaded then
+        for classid = 0, 13 do
             GSE.EnsureClassLoaded(classid)
         end
     end
@@ -2056,7 +2051,7 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
 
     for classid, classLibrary in pairs(GSE.Library) do
         if type(classLibrary) == "table" then
-            for sequenceName, sequence in pairs(classLibrary) do
+            for id, sequence in pairs(classLibrary) do
                 local changed = false
                 local sequenceRefreshedIcons = 0
                 local sequenceClearedUserSelections = 0
@@ -2080,9 +2075,7 @@ function GSE.ResetLoadedSequenceActionIcons(scanStats, saveChanges)
                     changedSequences = changedSequences + 1
                 end
 
-                if saveChanges and changed and GSE.Store("sequence") and GSE.Store("sequence")[classid]
-                    and not GSE.IsProtectedAtRest(GSE.Store("sequence")[classid][sequenceName], sequence) then
-                    GSE.Store("sequence")[classid][sequenceName] = GSE.EncodeMessage({sequenceName, sequence})
+                if saveChanges and changed and GSE.StoreSequenceBody(classid, id, sequence) then
                     savedSequences = savedSequences + 1
                     savedIcons = savedIcons + sequenceRefreshedIcons + sequenceClearedUserSelections
                     actionIconDirtySequences[sequence] = nil
@@ -2564,15 +2557,16 @@ function GSE.CreateEditor()
     end
     editframe.GetVersionList = GetVersionList
 
-    local function GUIConfirmDeleteSequence(classid, sequenceName)
-        GSE.DeleteSequence(classid, sequenceName)
+    local function GUIConfirmDeleteSequence(classid, id)
+        GSE.DeleteSequence(classid, id)
         for _, v in ipairs(GSE.GUI.editors) do
             v.ManageTree()
         end
     end
 
     --- This function pops up a confirmation dialog.
-    local function GUIDeleteSequence(classid, sequenceName, afterDelete)
+    local function GUIDeleteSequence(classid, id, afterDelete)
+        local sequenceName = GSE.SequenceName(id, classid) or id
         GSE.UI.ShowConfirmDialog({
             owner       = editframe,
             title       = L["Delete Sequence"],
@@ -2586,7 +2580,7 @@ function GSE.CreateEditor()
             confirmText = L["Delete"],
             cancelText  = L["Cancel"],
             onConfirm   = function()
-                GUIConfirmDeleteSequence(classid, sequenceName)
+                GUIConfirmDeleteSequence(classid, id)
                 -- Optional, and only after the user has said yes: lets a caller
                 -- tidy up after itself, e.g. the corrupt-sequence panel closing.
                 if afterDelete then afterDelete() end
@@ -3068,19 +3062,22 @@ function GSE.CreateEditor()
                 if editframe.newname and GSE.UnEscapeString(SequenceName) == editframe.OrigSequenceName then
                     editframe.newname = nil
                 end
+                -- The sequence being edited. A new one gets its id here.
+                if GSE.isEmpty(editframe.SequenceID) then editframe.SequenceID = GSE.NewLocalId() end
+                local id = editframe.SequenceID
                 local vals = {}
                 vals.action = "Replace"
+                vals.id = id
                 vals.sequencename = SequenceName
                 vals.sequence = sequence
                 vals.classid = classid
 
-                -- "Name in use" check: query Library directly rather than G
-                -- so a just-deleted sequence's macro button (which lingers in
-                -- G until reload) does not falsely block reuse of that name.
+                -- "Name in use": another sequence already has this label in
+                -- this class. Asked of the store, not of _G, so a just-deleted
+                -- sequence's lingering button does not block the name.
                 local plainName = GSE.UnEscapeString(SequenceName)
-                local nameInUse = not GSE.isEmpty(
-                    GSE.Library[classid] and GSE.Library[classid][plainName]
-                )
+                local holder = GSE.FindSequenceId(plainName, classid)
+                local nameInUse = holder ~= nil and holder ~= id
                 if nameInUse and editframe.newname then
                     editframe:SetStatusText(
                         string.format(L["Sequence Name %s is in Use. Please choose a different name."], SequenceName)
@@ -3091,43 +3088,18 @@ function GSE.CreateEditor()
                     editframe.nameeditbox:SetFocus()
                     return false
                 end
-                -- A class/spec move (including to or from Global) writes the
-                -- record under the NEW classid, and nothing removed it from the
-                -- old one -- so a moved sequence came back under BOTH branches
-                -- on the next reload. Keyed on the ORIGINAL name so this also
-                -- covers a rename and a move in the same save; the rename
-                -- branch below returns early, so this has to run before it.
-                local origClassID = editframe.OrigClassID
-                if origClassID and origClassID ~= classid then
-                    local oldName = editframe.OrigSequenceName or plainName
-                    if GSE.Store("sequence")[origClassID] then
-                        GSE.Store("sequence")[origClassID][oldName] = nil
-                    end
-                    if GSE.Library[origClassID] then
-                        GSE.Library[origClassID][oldName] = nil
-                    end
-                    editframe.OrigClassID = classid
-                end
+                -- A class/spec move keeps the id: the save files it under the
+                -- new class and takes it out of the old one (ReplaceSequence).
+                editframe.OrigClassID = classid
                 if editframe.newname then
-                    -- True in-place rename: keep PlatformID so the GSE.Tools
-                    -- record stays bound to this sequence under its new name.
-                    -- Move the GSEPlatformIDs sidecar entry to the new key so
-                    -- the Companion still resolves the right server record.
-                    local author = sequence.MetaData and sequence.MetaData.Author or ""
-                    if GSE.Store("sequencePid") and editframe.OrigSequenceName then
-                        local oldKey = editframe.OrigSequenceName .. "|" .. author
-                        local newKey = plainName .. "|" .. author
-                        if GSE.Store("sequencePid")[oldKey] then
-                            GSE.Store("sequencePid")[newKey] = GSE.Store("sequencePid")[oldKey]
-                            GSE.Store("sequencePid")[oldKey] = nil
-                        end
-                    end
+                    -- True in-place rename: the id -- and so the GSE.Tools
+                    -- record -- stays; only the label changes.
                     local renameVals = {}
-                    renameVals.action       = "renamesequence"
-                    renameVals.oldname      = editframe.OrigSequenceName
-                    renameVals.sequencename = SequenceName
-                    renameVals.sequence     = sequence
-                    renameVals.classid      = classid
+                    renameVals.action   = "renamesequence"
+                    renameVals.id       = id
+                    renameVals.newname  = plainName
+                    renameVals.sequence = sequence
+                    renameVals.classid  = classid
                     GSE.EnqueueOOC(renameVals)
                     -- Confirm to the owner that renaming is gse.tools-id safe.
                     -- Fires for any sequence the user owns (i.e. not protected /
@@ -5709,7 +5681,7 @@ function GSE.CreateEditor()
                                     -- the fork, so there stays one story about
                                     -- how an edit is written.
                                     GSE.ReplaceSequence(editframe.ClassID or GSE.GetCurrentClassID(),
-                                        editframe.SequenceName, editframe.Sequence)
+                                        editframe.SequenceID, editframe.Sequence)
                                     editframe.forkReport = nil
                                     if editframe.RefreshCurrentVersion then editframe.RefreshCurrentVersion() end
                                 end)
@@ -6257,8 +6229,10 @@ function GSE.CreateEditor()
                 if SequenceDropDown.SetFlowFillRemaining then SequenceDropDown:SetFlowFillRemaining(true) end
 
                 local cid, sid = GSE.GetCurrentClassID(), GSE.GetCurrentSpecID()
-                for k, v in GSE.pairsByKeys(GSE.GetSequenceNames() or {}, GSE.AlphabeticalTableSortAlgorithm) do
-                    if v ~= editframe.Sequence.MetaData.Name then
+                -- An Embed still names what it embeds: list labels, store the label.
+                for k, v in GSE.pairsByKeys(GSE.GetSequenceNames() or {}, GSE.SequenceKeyOrder) do
+                    local label = GSE.SequenceName(v)
+                    if label and v ~= editframe.SequenceID then
                         local elements = GSE.split(tostring(k), ",") or {}
                         local classid, specid = tonumber(elements[1]), tonumber(elements[2])
 
@@ -6284,11 +6258,11 @@ function GSE.CreateEditor()
                                 sid = specid
                             end
                         end
-                        SequenceDropDown:AddItem(v, v)
+                        SequenceDropDown:AddItem(label, label)
                     end
                 end
-                for k, _ in pairs((GSE.Store("sequence") and GSE.Store("sequence")[0]) or {}) do
-                    SequenceDropDown:AddItem(k, k)
+                for _, env in pairs(GSE.SequenceEnvelopes(0)) do
+                    if env.Name then SequenceDropDown:AddItem(env.Name, env.Name) end
                 end
                 SequenceDropDown:SetMultiselect(false)
                 SequenceDropDown:SetLabel(L["Sequence"])
@@ -6589,8 +6563,8 @@ function GSE.CreateEditor()
                     -- as the New Version handler and the drag-reorder handler.
                     local delClassID = tonumber(editframe.ClassID)
                     if delClassID then
-                        GSE.EnsureSequenceLoaded(delClassID, editframe.SequenceName)
-                        local libSeq = GSE.Library[delClassID] and GSE.Library[delClassID][editframe.SequenceName]
+                        GSE.EnsureSequenceLoaded(delClassID, editframe.SequenceID)
+                        local libSeq = GSE.Library[delClassID] and GSE.Library[delClassID][editframe.SequenceID]
                         if libSeq and libSeq.Versions and libSeq.Versions[version] then
                             table.remove(libSeq.Versions, version)
                             if libSeq.MetaData then
@@ -6753,7 +6727,7 @@ function GSE.CreateEditor()
                 local merged, conflicts = GSE.RebaseDeltaFork(forkPid)
                 if not merged then return end
                 local classid = editframe.ClassID or GSE.GetCurrentClassID()
-                GSE.Library[classid][editframe.SequenceName] = merged
+                GSE.Library[classid][editframe.SequenceID] = merged
                 editframe.Sequence = merged
                 local n = conflicts and #conflicts or 0
                 if n == 0 then
@@ -6794,8 +6768,8 @@ function GSE.CreateEditor()
                     confirmText = L["Discard Local Changes"],
                     onConfirm = function()
                         local classid = editframe.ClassID or GSE.GetCurrentClassID()
-                        if GSE.DiscardDeltaFork(classid, editframe.SequenceName) then
-                            editframe.Sequence = GSE.Library[classid][editframe.SequenceName]
+                        if GSE.DiscardDeltaFork(classid, editframe.SequenceID) then
+                            editframe.Sequence = GSE.Library[classid][editframe.SequenceID]
                             editframe.ShowLocalChanges = false
                             GSE.Print(L["Local changes discarded."])
                         end
@@ -8221,8 +8195,11 @@ function GSE.CreateEditor()
     GSE.GUI.SetupMacro(editframe)
     GSE.GUI.SetupTree(editframe)
 
-    function editframe:remoteSequenceUpdated(seqName)
-        if seqName == editframe.SequenceName then
+    -- Told of a sequence by id (SEQUENCE_UPDATED) or of a variable or macro by
+    -- name (VARIABLE_UPDATED); the status line shows the label either way.
+    function editframe:remoteSequenceUpdated(ref)
+        local seqName = GSE.SequenceName(ref) or ref
+        if (editframe.SequenceID ~= nil and ref == editframe.SequenceID) or seqName == editframe.SequenceName then
             if editframe.save then
                 editframe.pendingSaveName = nil
                 editframe:SetStatusText(seqName .. " " .. L["Saved"])
@@ -8510,9 +8487,11 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
         sequence.Versions[1]["Actions"] = recordedMacro
     end
     if GSE.isEmpty(sequence.WeakAuras) then sequence.WeakAuras = {} end
-    GSE.Store("sequence")[classid][name] = GSE.EncodeMessage({name, sequence})
-    GSE.Library[classid][name]  = sequence
+    local id = GSE.NewLocalId()
+    GSE.PutSequenceBody(classid, id, name, GSE.EncodeMessage({name, sequence}))
+    GSE.Library[classid][id] = sequence
     editor:SetStatusText("GSE: " .. GSE.VersionString)
+    editor.SequenceID       = id
     editor.SequenceName     = name
     editor.OrigSequenceName = name
     editor.newname          = nil
@@ -8526,24 +8505,24 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
     editor.ManageTree()
     editor.treeContainer:SelectByValue(
-        table.concat({"Sequences", classid, classid .. "," .. GSE.GetCurrentSpecID() .. "," .. name .. ",0", "config"}, "\001")
+        table.concat({"Sequences", classid, classid .. "," .. GSE.GetCurrentSpecID() .. "," .. id .. ",0", "config"}, "\001")
     )
 end
 
 --- Duplicate an existing sequence under a user-supplied name and navigate to it.
 -- Called by the GSE_DUPLICATE_SEQUENCE_NAME StaticPopup OnAccept / Enter handler.
-function GSE.GUIDuplicateSequence(editor, classid, sourceName, newName)
+function GSE.GUIDuplicateSequence(editor, classid, sourceId, newName)
     classid = tonumber(classid) or GSE.GetCurrentClassID()
     local normalised = (newName or ""):gsub(" ", "_"):gsub(",", "_")
     if GSE.isEmpty(normalised) then return end
-    if not GSE.isEmpty(GSE.Library[classid] and GSE.Library[classid][normalised]) then
+    if GSE.FindSequenceId(normalised, classid) then
         GSE.Print(
             string.format(L["Sequence Name %s is in Use. Please choose a different name."], normalised),
             "ERROR"
         )
         return
     end
-    local created = GSE.DuplicateSequence(classid, sourceName, normalised)
+    local created = GSE.DuplicateSequence(classid, sourceId, normalised)
     if GSE.isEmpty(created) then return end
     for _, v in ipairs(GSE.GUI.editors) do
         if v.ManageTree then v.ManageTree() end
@@ -8588,9 +8567,12 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
 
     local elements = GSE.split(key, ",")
     local classid = tonumber(elements[1])
-    local sequenceName = elements[3]
+    local id = elements[3]
+    local env = GSE.SequenceEnvelope(id, classid)
+    if not env then return end
+    local sequenceName = env.Name
 
-    local _, seq = GSE.DecodeMessage(GSE.Store("sequence")[classid][sequenceName])
+    local _, seq = GSE.DecodeMessage(env.Body)
     local sequence
     if seq then
         sequence = seq[2]
@@ -8606,7 +8588,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     -- reconstruction directly would make those edits land in whatever table the
     -- fork was rebuilt into, before the user has pressed anything.
     if sequence and GSE.ApplyStoredDeltaFork then
-        local forked = GSE.ApplyStoredDeltaFork(sequence, GSE.Store("sequence")[classid][sequenceName])
+        local forked = GSE.ApplyStoredDeltaFork(sequence, env.Body)
         if forked then sequence = GSE.CloneSequence(forked) end
     end
 
@@ -8614,6 +8596,8 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
         sequence.WeakAuras = {}
     end
     editor:SetStatusText("GSE: " .. GSE.VersionString)
+    if type(sequence.MetaData) == "table" then sequence.MetaData.Name = sequenceName end
+    editor.SequenceID = id
     editor.SequenceName = sequenceName
     editor.OrigSequenceName = sequenceName
     editor.newname = nil

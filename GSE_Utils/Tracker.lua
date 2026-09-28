@@ -1743,16 +1743,10 @@ local function IsFallbackIcon(icon)
     return GSE.IsFallbackIcon(icon)
 end
 
+-- The tracker follows buttons, which are named by their sequence's label.
 local function FindSequenceObject(sequence)
     if type(sequence) ~= "string" or sequence == "" then return nil end
-
-    if GSE.Library then
-        for _, bucket in pairs(GSE.Library) do
-            if type(bucket) == "table" and type(bucket[sequence]) == "table" then
-                return bucket[sequence]
-            end
-        end
-    end
+    return (GSE.FindSequence(sequence))
 end
 
 function GSE.SequenceIconGetMetadata(sequence)
@@ -1763,7 +1757,8 @@ end
 
 function GSE.SequenceIconIsGlobalSequence(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
-    if GSE.Library and type(GSE.Library[0]) == "table" and type(GSE.Library[0][sequence]) == "table" then return true end
+    local _, classid = GSE.FindSequenceId(sequence)
+    if classid == 0 then return true end
 
     local metadata = GSE.SequenceIconGetMetadata(sequence)
     local specID = tonumber(metadata and (metadata.SpecID or metadata.specID or metadata.specid))
@@ -1826,8 +1821,9 @@ local function GetPrettySequenceNameWithVersion(sequence)
 
     local sequenceName = GetPrettySequenceName(sequence)
     local version
-    if GSE.GetActiveSequenceVersion then
-        local ok, result = pcall(GSE.GetActiveSequenceVersion, sequence)
+    local id = GSE.FindSequenceId(sequence)
+    if id and GSE.GetActiveSequenceVersion then
+        local ok, result = pcall(GSE.GetActiveSequenceVersion, id)
         if ok and result ~= nil then version = result end
     end
 
@@ -3584,8 +3580,10 @@ GSE.SequenceIconFrameUpdateFromButton = UpdateSequenceIconFromButton
 
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
 GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
-GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, sequence)
-    if EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
+GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
+    -- Announced by id; the tracker knows buttons by label.
+    local sequence = GSE.SequenceName(id)
+    if sequence and EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
         SetSequencePreview(sequence)
     end
 end)

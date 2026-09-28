@@ -487,17 +487,17 @@ local function SequenceEditorPathExists(path)
 
     local elements = GSE.split(unique[3] or "", ",")
     local classid = tonumber(elements[1])
-    local sequenceName = elements[3]
-    if not classid or GSE.isEmpty(sequenceName) then return false end
-    if not (GSE.Store("sequence") and GSE.Store("sequence")[classid] and GSE.Store("sequence")[classid][sequenceName]) then return false end
+    local id = elements[3]
+    if not classid or GSE.isEmpty(id) then return false end
+    if not GSE.SequenceEnvelope(id, classid) then return false end
 
     local key = unique[#unique]
     if key == "config" then return true end
     local version = tonumber(key)
     if not version then return false end
 
-    GSE.EnsureSequenceLoaded(classid, sequenceName)
-    local loadedSeq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    GSE.EnsureSequenceLoaded(classid, id)
+    local loadedSeq = GSE.Library[classid] and GSE.Library[classid][id]
     return loadedSeq and loadedSeq.Versions and loadedSeq.Versions[version] ~= nil
 end
 
@@ -580,27 +580,29 @@ end
 -- Right-click context menus, keyed by tree "area" (unique[1])
 -- ---------------------------------------------------------------------------
 
-local function isBrokenSeq(classid, name)
+local function isBrokenSeq(classid, id)
     local cid = tonumber(classid)
-    if not cid or GSE.isEmpty(name) then return false end
+    if not cid or GSE.isEmpty(id) then return false end
     for _, c in ipairs(GSE.CorruptSequences or {}) do
-        if tonumber(c.classid) == cid and c.name == name then return true end
+        if tonumber(c.classid) == cid and c.id == id then return true end
     end
-    local libSeq = GSE.Library[cid] and GSE.Library[cid][name]
+    local libSeq = GSE.Library[cid] and GSE.Library[cid][id]
     return libSeq ~= nil and GSE.IsSequenceStructurallyBroken(libSeq)
 end
 
-local function onRightClick_Sequences(editframe, container, group, unique, classid, sequencename)
+local function onRightClick_Sequences(editframe, container, group, unique, classid, id)
+    -- The tree node carries the id; what the user reads is the label.
+    local sequencename = GSE.SequenceName(id, tonumber(classid))
     MenuUtil.CreateContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
             -- ponytail: a flagged corrupt/broken seq can't be edited/duplicated/
             -- exported (those call FindSequence -> DecodeMessage on broken data and
             -- crash). Offer Delete only.
-            if not GSE.isEmpty(sequencename) and isBrokenSeq(classid, sequencename) then
+            if not GSE.isEmpty(id) and isBrokenSeq(classid, id) then
                 rootDescription:CreateTitle(L["Corrupt Sequence"])
                 rootDescription:CreateButton(L["Delete"], function()
-                    editframe.GUIDeleteSequence(classid, sequencename)
+                    editframe.GUIDeleteSequence(classid, id)
                     if editframe.ManageTree then editframe.ManageTree() end
                 end)
                 return
@@ -617,8 +619,8 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                 GSE.GUILoadEditor(editframe)
                 container:AddChild(rightContainer)
             end)
-            if not GSE.isEmpty(sequencename) then
-                local rcSeq = GSE.FindSequence(sequencename)
+            if not GSE.isEmpty(id) and not GSE.isEmpty(sequencename) then
+                local rcSeq = GSE.GetSequence(id, tonumber(classid))
                 -- Protected/foreign content (noExport) is not owned by this user,
                 -- so it cannot be copied — the Duplicate option is shown greyed out.
                 local isProtected = rcSeq and rcSeq.MetaData and rcSeq.MetaData.noExport
@@ -632,7 +634,7 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                         acceptText = L["Create"],
                         maxLetters = 60,
                         onAccept   = function(name)
-                            GSE.GUIDuplicateSequence(editframe, classid, sequencename, name)
+                            GSE.GUIDuplicateSequence(editframe, classid, id, name)
                         end,
                     })
                 end)
@@ -641,14 +643,14 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                 end
                 if not isProtected then
                     rootDescription:CreateButton(L["Export"], function()
-                        GSE.GUIExport(classid, sequencename, "SEQUENCE")
+                        GSE.GUIExport(classid, id, "SEQUENCE")
                     end)
                 end
                 rootDescription:CreateButton(L["Send"], function()
                     GSE.GUIShowTransmissionGui(sequencename, editframe)
                 end)
                 if GSE.OnTreeContextMenuExtras then
-                    GSE.OnTreeContextMenuExtras(rootDescription, {sequencename = sequencename, group = group, unique = unique})
+                    GSE.OnTreeContextMenuExtras(rootDescription, {sequencename = sequencename, id = id, group = group, unique = unique})
                 end
                 rootDescription:CreateButton(L["Chat Link"], function()
                     GSE.UI.ShowLinkDialog({
@@ -664,9 +666,9 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
             rootDescription:CreateButton(L["Keybindings"], function()
                 GSE.ShowKeyBindings()
             end)
-            if not GSE.isEmpty(sequencename) then
+            if not GSE.isEmpty(id) then
                 rootDescription:CreateButton(L["Delete"], function()
-                    editframe.GUIDeleteSequence(classid, sequencename)
+                    editframe.GUIDeleteSequence(classid, id)
                 end)
             end
         end
@@ -829,7 +831,7 @@ local function InitEditorFooterButtons(editframe)
     transbutton:SetWidth(100)
     if transbutton.SetElvUIBackgroundShown then transbutton:SetElvUIBackgroundShown(true) end
     transbutton:SetCallback("OnClick", function()
-        GSE.GUIShowTransmissionGui(editframe.ClassID .. "," .. editframe.SequenceName, editframe)
+        GSE.GUIShowTransmissionGui(editframe.SequenceID, editframe)
     end)
     transbutton:SetCallback("OnEnter", function()
         GSE.CreateToolTip(
@@ -895,19 +897,19 @@ local function InitEditorFooterButtons(editframe)
     savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
     editframe.SaveButton = savebutton
 
-    -- Export reads editframe.ClassID / editframe.SequenceName at click time so it
+    -- Export reads editframe.ClassID / editframe.SequenceID at click time so it
     -- always reflects the currently-loaded sequence, not a stale init-time closure.
     local exportbutton = UI:Create("Button")
     exportbutton:SetText(L["Export"])
     exportbutton:SetWidth(100)
     if exportbutton.SetElvUIBackgroundShown then exportbutton:SetElvUIBackgroundShown(true) end
     exportbutton:SetCallback("OnClick", function()
-        local sequence = GSE.FindSequence and GSE.FindSequence(editframe.SequenceName)
+        local sequence = editframe.SequenceID and GSE.GetSequence(editframe.SequenceID)
         if sequence and sequence.MetaData and sequence.MetaData.noExport then
             if editframe.SetStatusText then editframe:SetStatusText(L["This sequence is unable to be exported."]) end
             return
         end
-        GSE.GUIExport(editframe.ClassID, editframe.SequenceName, "SEQUENCE")
+        GSE.GUIExport(editframe.ClassID, editframe.SequenceID, "SEQUENCE")
     end)
     exportbutton:SetCallback("OnEnter", function()
         GSE.CreateToolTip(L["Export"], L["Export this sequence."], editframe)
@@ -951,9 +953,8 @@ local function InitEditorFooterButtons(editframe)
     delbutton:SetWidth(130)
     if delbutton.SetElvUIBackgroundShown then delbutton:SetElvUIBackgroundShown(true) end
     delbutton:SetCallback("OnClick", function()
-        local seqname = editframe.SequenceName
         local cid = editframe.ClassID
-        editframe.GUIDeleteSequence(cid, seqname)
+        editframe.GUIDeleteSequence(cid, editframe.SequenceID)
         editframe.ManageTree()
     end)
     delbutton:SetCallback("OnEnter", function()
@@ -1142,12 +1143,14 @@ local function specNamesForClass(cid)
     return list
 end
 
-local function onClick_Sequences(editframe, container, group, unique, path, key, classid, sequencename)
+local function onClick_Sequences(editframe, container, group, unique, path, key, classid, id)
     if #unique < 3 then return end
+    -- The node carries the id; the label is for the user.
+    local sequencename = GSE.SequenceName(id, tonumber(classid)) or tostring(id)
     -- ponytail: never load a corrupt/broken seq into the editor — the decode
     -- crashes (Serialisation DecodeMessage on unreadable data). Surface it and
     -- stop; use right-click -> Delete to remove it.
-    if not GSE.isEmpty(sequencename) and isBrokenSeq(classid, sequencename) then
+    if not GSE.isEmpty(id) and isBrokenSeq(classid, id) then
         -- Say so in the editor rather than in chat, and offer the two ways out.
         ReleaseEditorFooterButtons(editframe)
         container:ReleaseChildren()
@@ -1163,7 +1166,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         -- One that failed to decode is not in the Library to check; it gets the
         -- text the load-time corrupt-sequence popup shows for it.
         local cid = tonumber(classid)
-        local seq = cid and GSE.Library[cid] and GSE.Library[cid][sequencename]
+        local seq = cid and GSE.Library[cid] and GSE.Library[cid][id]
         local lines, issues = {}, {}
         if seq and GSE.CheckSequenceStructure then
             lines[1] = string.format(L["Issues found in '%s' (class library %d):"], tostring(sequencename), cid)
@@ -1246,7 +1249,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
                 seq.LastUpdated = GSE.GetTimestamp()
                 -- Saved the way the editor's Save does it: queued, so the
                 -- write and recompile land out of combat.
-                GSE.EnqueueOOC({action = "Replace", sequencename = sequencename, sequence = seq, classid = cid})
+                GSE.EnqueueOOC({action = "Replace", id = id, sequencename = sequencename, sequence = seq, classid = cid})
                 closePanel()
             end)
             specRow:AddChild(specPicker)
@@ -1267,7 +1270,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         deleteButton:SetText(L["Delete"])
         deleteButton:SetWidth(150)
         deleteButton:SetCallback("OnClick", function()
-            editframe.GUIDeleteSequence(classid, sequencename, closePanel)
+            editframe.GUIDeleteSequence(classid, id, closePanel)
         end)
         buttons:AddChild(deleteButton)
         -- Repair only when it can actually fix something here; otherwise
@@ -1396,7 +1399,8 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     container:AddChild(basecontainer)
     basecontainer:AddChild(staticHeaderContainer)
     basecontainer:AddChild(scrollcontainer)
-    editframe.SequenceName = sequencename
+    -- Switching sequences loads the new one (GUILoadEditor sets SequenceID and
+    -- SequenceName); staying on the same one keeps a name being edited.
 
     -- Navigate to sequence-level node -> auto-select config.
     -- Defer SelectByValue to the next frame so that Button_OnClick's Expand_OnClick
@@ -1412,7 +1416,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         if editframe.SetStaticHeaderHeight then editframe:SetStaticHeaderHeight(0) end
         -- Pull content flush to the top of the content pane for config
         if container.SetListPadding then container:SetListPadding(0, 0, 0, 0) end
-        if editframe.OrigSequenceName ~= sequencename then
+        if editframe.SequenceID ~= id then
             GSE.GUILoadEditor(editframe, path[#path])
         end
         local treeWidth = editframe.treeContainer and editframe.treeContainer.GetTreeWidth and editframe.treeContainer:GetTreeWidth() or 0
@@ -1434,7 +1438,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         ShowSequenceFooter(editframe)   -- full editor buttons (Save/Delete/Export/...) on the config page
         if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
     elseif key == "newversion" then
-        if editframe.OrigSequenceName ~= sequencename then
+        if editframe.SequenceID ~= id then
             GSE.GUILoadEditor(editframe, path[#path])
         end
         ShowSequenceFooter(editframe)
@@ -1448,8 +1452,8 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         -- explicit Save). Same approach as the version drag-reorder handler above.
         local numericClassID = tonumber(classid)
         if numericClassID then
-            GSE.EnsureSequenceLoaded(numericClassID, sequencename)
-            local libSeq = GSE.Library[numericClassID] and GSE.Library[numericClassID][sequencename]
+            GSE.EnsureSequenceLoaded(numericClassID, id)
+            local libSeq = GSE.Library[numericClassID] and GSE.Library[numericClassID][id]
             if libSeq and libSeq.Versions then
                 table.insert(libSeq.Versions, GSE.CloneSequence(newVersion))
             end
@@ -1480,7 +1484,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
             GSE.GUI.SelectEditorTreePath(editframe, newVersionPath)
         end)
     else
-        if editframe.OrigSequenceName ~= sequencename then
+        if editframe.SequenceID ~= id then
             GSE.GUILoadEditor(editframe, path[#path])
         end
         if container.SetListPadding then container:SetListPadding(nil, nil, nil, nil) end
@@ -1654,9 +1658,11 @@ local function ManageTree(editframe)
         if specid and GSE.isEmpty(classtree[tclassid][specid]) then
             classtree[tclassid][specid] = {}
         end
+        -- The node's value carries the id; its text is the label.
+        local label = GSE.SequenceName(elements[3], tclassid) or tostring(elements[3])
         local node = {
             value = k,
-            text = elements[3],
+            text = label,
             children = {
                 {
                     text = L["Configuration"],
@@ -1688,13 +1694,12 @@ local function ManageTree(editframe)
         local loadedSeq = GSE.Library[tclassid] and GSE.Library[tclassid][elements[3]]
         -- ponytail: flag ONLY when the record is actually in the Library and
         -- structurally broken (the real corruption). loadedSeq==nil is NOT proof
-        -- of corruption — it usually just means the comma-split key didn't resolve
-        -- (e.g. a name that contains a comma), so flagging on nil would false-flag
-        -- a healthy seq. A flagged node gets red text + flag icon and no version /
+        -- of corruption -- a sequence not yet decoded is not loaded either -- so
+        -- flagging on nil would false-flag a healthy seq. A flagged node gets red text + flag icon and no version /
         -- "New Version" children (a click can't re-enter the broken editor);
         -- right-click -> Delete still works (keyed by class+name, not Versions).
         if loadedSeq and GSE.IsSequenceStructurallyBroken(loadedSeq) then
-            node.text = "|cFFFF3030" .. tostring(elements[3]) .. " |r"
+            node.text = "|cFFFF3030" .. label .. " |r"
             node.icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew"  -- swap for any flag texture
         else
             -- Build version children for ANY sequence already in memory. The
@@ -1722,7 +1727,7 @@ local function ManageTree(editframe)
         seenSeq[tclassid .. "|" .. tostring(elements[3])] = true
     end
 
-    for k, _ in GSE.pairsByKeys(names, GSE.AlphabeticalTableSortAlgorithm) do
+    for k, _ in GSE.pairsByKeys(names, GSE.SequenceKeyOrder) do
       --@debug@
       treeSequences = treeSequences + 1
       --@end-debug@
@@ -1739,13 +1744,13 @@ local function ManageTree(editframe)
     -- Skips/dismisses the popup can still find and remove them. They live in
     -- GSE.CorruptSequences, not the Library, so the loop above never sees them.
     for _, corrupt in ipairs(GSE.CorruptSequences or {}) do
-        local cid, cname = tonumber(corrupt.classid), corrupt.name
-        if cid and cname and not seenSeq[cid .. "|" .. cname] then
-            seenSeq[cid .. "|" .. cname] = true
+        local cid, cid2, cname = tonumber(corrupt.classid), corrupt.id, corrupt.name or tostring(corrupt.id)
+        if cid and cid2 and not seenSeq[cid .. "|" .. tostring(cid2)] then
+            seenSeq[cid .. "|" .. tostring(cid2)] = true
             classtree[cid] = classtree[cid] or {}
             classtree[cid][0] = classtree[cid][0] or {}
             table.insert(classtree[cid][0], {
-                value = cid .. ",0," .. cname .. ",0",
+                value = cid .. ",0," .. cid2 .. ",0",
                 text = "|cFFFF3030" .. tostring(cname) .. " |r",
                 icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew",
                 children = {
@@ -1876,13 +1881,12 @@ local function ManageTree(editframe)
             -- Must be the same sequence node (srcParts[2] and [3] must match dstParts)
             if srcParts[2] ~= dstParts[2] or srcParts[3] ~= dstParts[3] then return end
 
-            -- Resolve classid and sequence name from the sequence key "classid,specid,name"
+            -- Resolve classid and sequence id from the sequence key "classid,specid,id"
             local elements = GSE.split(srcParts[3], ",")
             local classid = tonumber(elements[1])
-            local seqname = elements[3]
-            if not classid or not seqname then return end
+            local seqid = elements[3]
+            if not classid or not seqid then return end
 
-            -- Resolve classid and sequence name from the sequence key "classid,specid,name"
             -- GUILoadEditor decodes a fresh copy into editframe.Sequence, separate from
             -- GSE.Library.  We must modify editframe.Sequence (the working copy the Save
             -- button will persist) rather than auto-saving — reorder is a pending edit.
@@ -1890,7 +1894,7 @@ local function ManageTree(editframe)
             -- tree (Library is an in-memory display cache; GSESequences is only written
             -- on explicit Save).
             local isLoadedSeq = tostring(editframe.ClassID) == tostring(classid)
-                and editframe.SequenceName == seqname
+                and editframe.SequenceID == seqid
                 and not GSE.isEmpty(editframe.Sequence)
 
             if not isLoadedSeq then return end  -- only reorder the currently open sequence
@@ -1940,8 +1944,8 @@ local function ManageTree(editframe)
 
             -- Mirror the reorder into the Library copy so ManageTree() draws the
             -- correct order.  This does NOT persist to GSESequences.
-            GSE.EnsureSequenceLoaded(classid, seqname)
-            local libSeq = GSE.Library[classid] and GSE.Library[classid][seqname]
+            GSE.EnsureSequenceLoaded(classid, seqid)
+            local libSeq = GSE.Library[classid] and GSE.Library[classid][seqid]
             if libSeq and libSeq.Versions then
                 local libMoved = table.remove(libSeq.Versions, srcIdx)
                 table.insert(libSeq.Versions, dstIdx, libMoved)
@@ -1976,7 +1980,7 @@ local function ManageTree(editframe)
         function(container, event, group, ...)
             local unique = {("\001"):split(group)}
             local key = unique[#unique]
-            local elements, classid, sequencename
+            local elements, classid, seqid
             local area = unique[1]
 
 
@@ -1985,7 +1989,7 @@ local function ManageTree(editframe)
                     elements = GSE.split(unique[3], ",")
                     if #elements >= 3 then
                         classid = elements[1]
-                        sequencename = elements[3]
+                        seqid = elements[3]
                     end
                 end
             end
@@ -1999,18 +2003,19 @@ local function ManageTree(editframe)
                 -- KEYBINDINGS has no per-bind leaves any more (both areas are
                 -- panels), so there is nothing a right-click could act on.
                 if area == "Sequences" then
-                    onRightClick_Sequences(editframe, container, group, unique, classid, sequencename)
+                    onRightClick_Sequences(editframe, container, group, unique, classid, seqid)
                 elseif area == "VARIABLES" then
                     onRightClick_VARIABLES(editframe, container, group, unique, key)
                 end
                 -- area == "Macro": no right-click menu
             elseif mbutton == "LeftButton" and IsShiftKeyDown() then
-                if classid and sequencename then
+                if classid and seqid then
                     GSE.UI.ShowLinkDialog({
                         owner      = editframe,
                         title      = L["Chat Link"],
                         prompt     = L["Copy this Link and Paste into a Chat Window."],
-                        link       = GSE.SequenceChatPattern(sequencename, classid),
+                        -- Other players' clients ask for it by name.
+                        link       = GSE.SequenceChatPattern(GSE.SequenceName(seqid, tonumber(classid)) or seqid, classid),
                         buttonText = CLOSE,
                         note       = L["Text selected. Press Ctrl+C to Copy"],
                     })
@@ -2037,7 +2042,7 @@ local function ManageTree(editframe)
                 elseif area == "Sequences" then
                     local path = GSE.CloneSequence(unique)
                     table.remove(path, #path)
-                    onClick_Sequences(editframe, container, group, unique, path, key, classid, sequencename)
+                    onClick_Sequences(editframe, container, group, unique, path, key, classid, seqid)
                 elseif area == "VARIABLES" then
                     onClick_VARIABLES(editframe, container, group, unique, key)
                 elseif area == "Macro" then

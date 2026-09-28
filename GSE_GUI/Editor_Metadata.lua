@@ -332,7 +332,7 @@ local function dependencyData(editframe)
         ((type(deps.Variables) == "table" and #deps.Variables > 0) or
          (type(deps.Sequences) == "table" and #deps.Sequences > 0) or
          (type(deps.Macros)    == "table" and #deps.Macros    > 0))
-    local usedBy = GSE.GetSequenceDependents(editframe.SequenceName) or {}
+    local usedBy = GSE.GetSequenceDependents(editframe.SequenceID or editframe.SequenceName) or {}
     return deps, hasDeps, usedBy
 end
 
@@ -363,13 +363,8 @@ local function addDependencyLabels(editframe, container, deps, hasDeps, usedBy, 
         if deps.Sequences and #deps.Sequences > 0 then
             addDependencyLine(container, L["Embeds Sequences:"])
             for _, sname in ipairs(deps.Sequences) do
-                local exists = false
-                for chkclass = 0, 13 do
-                    if GSE.Store("sequence")[chkclass] and not GSE.isEmpty(GSE.Store("sequence")[chkclass][sname]) then
-                        exists = true
-                        break
-                    end
-                end
+                -- An Embed names what it embeds; any class will do.
+                local exists = GSE.FindSequenceId(sname, nil, true) ~= nil
                 addDependencyLine(container, (exists and "  " or "  |cFFFF0000") .. sname .. (exists and "" or " (!)|r"))
             end
         end

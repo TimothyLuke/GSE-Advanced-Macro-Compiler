@@ -6822,7 +6822,7 @@ function GSE.GUINewVariablePrompt(editor)
 end
 
 -- Corrupt-sequence recovery prompt (Delete / Skip); advances the chain either way.
-function GSE.GUIConfirmCorruptSequence(classid, name, bodyText)
+function GSE.GUIConfirmCorruptSequence(classid, id, bodyText)
     UI.ShowConfirmDialog({
         title       = L["Corrupt Sequence"],
         message     = tostring(bodyText or ""),
@@ -6831,7 +6831,7 @@ function GSE.GUIConfirmCorruptSequence(classid, name, bodyText)
         width       = 420,
         height      = 220,
         onConfirm   = function()
-            GSE.DeleteCorruptSequence(classid, name)
+            GSE.DeleteCorruptSequence(classid, id)
             GSE.ProcessNextCorruptSequence()
         end,
         onCancel    = function()
@@ -6851,12 +6851,14 @@ function GSE.GUIConfirmSequenceIntegrity(seqName, sequence, forcereplace)
         width       = 420,
         height      = 240,
         onConfirm   = function()
+            -- Filed, and announced, once its class and id are known.
             if forcereplace then
-                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(sequence.MetaData.SpecID), seqName, sequence)
+                local classid = GSE.GetClassIDforSpec(sequence.MetaData.SpecID)
+                sequence.MetaData.Name = seqName
+                GSE.PerformMergeAction("REPLACE", classid, GSE.SequenceIdForIncoming(classid, seqName, sequence), sequence)
             else
                 GSE.AddSequenceToCollection(seqName, sequence)
             end
-            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end,
     })
 end
@@ -6880,12 +6882,14 @@ function GSE.GUIConfirmSequenceOlderVersion(seqName, sequence, forcereplace)
                     return
                 end
             end
+            -- Filed, and announced, once its class and id are known.
             if forcereplace then
-                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(sequence.MetaData.SpecID), seqName, sequence)
+                local classid = GSE.GetClassIDforSpec(sequence.MetaData.SpecID)
+                sequence.MetaData.Name = seqName
+                GSE.PerformMergeAction("REPLACE", classid, GSE.SequenceIdForIncoming(classid, seqName, sequence), sequence)
             else
                 GSE.AddSequenceToCollection(seqName, sequence)
             end
-            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end,
     })
 end

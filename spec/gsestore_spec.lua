@@ -125,19 +125,18 @@ describe("GSEStore", function()
       for _, g in ipairs(LEGACY) do assert.is_nil(_G[g], g .. " still set") end
     end)
 
-    it("hands the rest of the Mod the same shapes it has always used", function()
+    it("hands variables and macros to the rest of the Mod in their old shapes", function()
       firstRun({
         GSESequences = { [2] = { Alpha = SEQ_A } },
         GSEVariables = { V = "VARBODY" },
         GSEMacros = { Pull = { text = "/cast Charge", value = 3 } },
       })
-      assert.equals(SEQ_A, GSE.Store("sequence")[2].Alpha)
       assert.equals("VARBODY", GSE.Store("variable").V)
       assert.equals("/cast Charge", GSE.Store("macro").Pull.text)
       assert.equals(3, GSE.Store("macro").Pull.value)
-      for classid = 0, 13 do
-        assert.equals("table", type(GSE.Store("sequence")[classid]), "class " .. classid .. " table")
-      end
+      -- Sequences have no name-keyed view any more: they are reached by id.
+      assert.is_false((pcall(GSE.Store, "sequence")))
+      assert.equals(SEQ_A, GSE.SequenceEnvelope("pidA000000000000000000aa", 2).Body)
     end)
 
     -- Once this build has run, the old tables are cleared at every logout, so
@@ -209,54 +208,97 @@ describe("GSEStore", function()
     it("saves an edit under the same id", function()
       firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
       local edited = "SEQ|Alpha|Tim@Realm|pidA000000000000000000aa|v2"
-      GSE.Store("sequence")[2].Alpha = edited
+      GSE.PutSequenceBody(2, "pidA000000000000000000aa", "Alpha", edited)
       reload()
       assert.equals(edited, envs("sequence", 2)["pidA000000000000000000aa"].Body)
-      assert.equals(edited, GSE.Store("sequence")[2].Alpha)
+      assert.equals(1, count(envs("sequence", 2)))
     end)
 
-    it("stores a new sequence under a local id, then moves it to its PlatformID", function()
+    it("files a new sequence under a local id, then moves it to its PlatformID at load", function()
       firstRun({})
-      GSE.Store("sequence")[3] = GSE.Store("sequence")[3] or {}
-      GSE.Store("sequence")[3].Gamma = "SEQ|Gamma|Tim@Realm|"
+      local id = GSE.NewLocalId()
+      GSE.PutSequenceBody(3, id, "Gamma", "SEQ|Gamma|Tim@Realm|")
       reload()
-      local id = onlyId(envs("sequence", 3))
-      assert.is_true(isLocal(id))
-      -- The round trip to GSE.Tools comes back through the sidecar.
-      GSE.Store("sequencePid")["Gamma|Tim@Realm"] = "newpid000000000000000001"
+      assert.is_not_nil(envs("sequence", 3)[id], "a local id is kept until there is a PlatformID")
+      -- The round trip to GSE.Tools: the id arrives, and nothing moves mid-session.
+      assert.is_true(GSE.SetStoredPlatformID("sequence", "Gamma", "newpid000000000000000001"))
+      assert.is_not_nil(envs("sequence", 3)[id], "not moved while the session is running")
       reload()
       assert.is_nil(envs("sequence", 3)[id], "the local key is gone")
       assert.equals("Gamma", envs("sequence", 3)["newpid000000000000000001"].Name)
+      -- Anything still holding the local id -- another character's keybind --
+      -- finds it where it went.
+      assert.equals("newpid000000000000000001", GSE.ResolveSequenceId(id))
+      assert.equals("Gamma", GSE.SequenceName(id))
+    end)
+
+    it("never moves a sequence onto an id another sequence holds", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      local id = GSE.NewLocalId()
+      GSE.PutSequenceBody(2, id, "Copy", "SEQ|Copy|Tim@Realm|")
+      GSE.SequenceEnvelope(id).PlatformID = "pidA000000000000000000aa"
+      reload()
+      assert.equals("Alpha", envs("sequence", 2)["pidA000000000000000000aa"].Name, "the holder keeps it")
+      assert.equals("Copy", envs("sequence", 2)[id].Name, "the other stays where it was")
+    end)
+
+    it("never moves a sequence onto an id held in another class", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      local id = GSE.NewLocalId()
+      GSE.PutSequenceBody(5, id, "Other", "SEQ|Other|Tim@Realm|")
+      GSE.SequenceEnvelope(id).PlatformID = "pidA000000000000000000aa"
+      reload()
+      assert.equals("Alpha", envs("sequence", 2)["pidA000000000000000000aa"].Name)
+      assert.is_nil(envs("sequence", 5)["pidA000000000000000000aa"], "no second holder of one id")
+      assert.equals("Other", envs("sequence", 5)[id].Name)
+    end)
+
+    it("will not record a PlatformID another sequence already holds", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      GSE.PutSequenceBody(5, "local-other", "Other", "SEQ|Other|Tim@Realm|")
+      assert.is_false(GSE.SetStoredPlatformID("sequence", "Other", "pidA000000000000000000aa", 5))
+      assert.is_nil(GSE.SequenceEnvelope("local-other").PlatformID)
     end)
 
     it("drops a deleted sequence", function()
       firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
-      GSE.Store("sequence")[2].Alpha = nil
+      GSE.RemoveSequence(2, "pidA000000000000000000aa")
       reload()
       assert.equals(0, count(envs("sequence", 2)))
+      assert.is_nil(GSE.FindSequenceId("Alpha", 2))
     end)
 
-    it("keeps the id across a rename (the editor moves the sidecar key)", function()
-      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } },
-                 GSEPlatformIDs = { ["Alpha|Tim@Realm"] = "pidA000000000000000000aa" } })
-      local v = GSE.Store("sequence")[2]
-      v.Omega, v.Alpha = "SEQ|Omega|Tim@Realm|", nil
-      local pids = GSE.Store("sequencePid")
-      pids["Omega|Tim@Realm"], pids["Alpha|Tim@Realm"] = pids["Alpha|Tim@Realm"], nil
+    it("keeps the id across a rename", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      GSE.PutSequenceBody(2, "pidA000000000000000000aa", "Omega", "SEQ|Omega|Tim@Realm|")
       reload()
       local env = envs("sequence", 2)["pidA000000000000000000aa"]
       assert.is_not_nil(env, "same record on GSE.Tools, same key here")
       assert.equals("Omega", env.Name)
       assert.equals(1, count(envs("sequence", 2)), "not a copy plus a delete")
+      assert.equals("pidA000000000000000000aa", GSE.FindSequenceId("Omega", 2))
+      assert.is_nil(GSE.FindSequenceId("Alpha", 2), "the old label finds nothing")
     end)
 
     it("keeps the id when a sequence moves to another class", function()
       firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
-      GSE.Store("sequence")[2].Alpha = nil
-      GSE.Store("sequence")[5].Alpha = SEQ_A
+      GSE.PutSequenceBody(5, "pidA000000000000000000aa", "Alpha", SEQ_A)
       reload()
       assert.equals(0, count(envs("sequence", 2)))
       assert.is_not_nil(envs("sequence", 5)["pidA000000000000000000aa"])
+      assert.is_nil(GSE.FindSequenceId("Alpha", 2))
+      assert.equals("pidA000000000000000000aa", GSE.FindSequenceId("Alpha", 5))
+    end)
+
+    it("lets two sequences share a name, finding the same one every time", function()
+      firstRun({})
+      GSE.PutSequenceBody(2, "local-b", "Same", "SEQ|Same|A|")
+      GSE.PutSequenceBody(2, "local-a", "Same", "SEQ|Same|B|")
+      reload()
+      assert.equals(2, count(envs("sequence", 2)), "both kept")
+      assert.equals("local-a", GSE.FindSequenceId("Same", 2))
+      GSE.RemoveSequence(2, "local-a")
+      assert.equals("local-b", GSE.FindSequenceId("Same", 2), "the other is found once one goes")
     end)
 
     -- Two records with one name cannot both appear in a name-keyed view. The
@@ -406,7 +448,7 @@ describe("GSEStore", function()
 
     it("records a PlatformID for a sequence created this session", function()
       firstRun({})
-      GSE.Store("sequence")[3].Fresh = "SEQ|Fresh|Tim@Realm|"
+      GSE.PutSequenceBody(3, GSE.NewLocalId(), "Fresh", "SEQ|Fresh|Tim@Realm|")
       assert.is_true(GSE.SetStoredPlatformID("sequence", "Fresh", "pidF000000000000000000ff"))
       reload()
       assert.equals("Fresh", envs("sequence", 3)["pidF000000000000000000ff"].Name)

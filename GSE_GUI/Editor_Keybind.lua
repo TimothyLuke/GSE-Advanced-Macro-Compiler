@@ -9,19 +9,17 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
+-- Keybinds still name the sequence they click; these take that name.
 local function sequenceExists(seqName)
-    for _, classLib in pairs(GSE.Library or {}) do
-        if classLib[seqName] then return true end
-    end
-    return false
+    return GSE.FindSequenceId(seqName, nil, true) ~= nil
 end
 
 local function sequenceIsDisabled(seqName)
-    for _, classLib in pairs(GSE.Library or {}) do
-        local seq = classLib[seqName]
-        if seq then
-            return seq.MetaData and seq.MetaData.Disabled == true
-        end
+    local id, classid = GSE.FindSequenceId(seqName)
+    if not id then id, classid = GSE.FindSequenceId(seqName, nil, true) end
+    local seq = id and GSE.Library[classid] and GSE.Library[classid][id]
+    if seq then
+        return seq.MetaData and seq.MetaData.Disabled == true
     end
     return false
 end
@@ -511,9 +509,10 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- than hidden, so a row already pointing at one still shows what it is.
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSE.Store("sequence")[GSE.GetCurrentClassID()] or {}, GSE.Store("sequence")[0] or {}}) do
-            for k in pairs(source) do
-                if not names[k] then
+        for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
+            for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                local k = env.Name
+                if k and not names[k] then
                     names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
                     table.insert(order, k)
                 end
@@ -1213,9 +1212,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSE.Store("sequence")[GSE.GetCurrentClassID()] or {}, GSE.Store("sequence")[0] or {}}) do
-            for k in pairs(source) do
-                if not names[k] then
+        for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
+            for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                local k = env.Name
+                if k and not names[k] then
                     names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
                     table.insert(order, k)
                 end
