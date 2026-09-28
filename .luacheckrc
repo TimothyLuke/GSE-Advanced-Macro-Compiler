@@ -101,6 +101,7 @@ globals = {
     "GSEOptions",
     "GSELibrary",
     "GSELegacyLibraryBackup",
+    "GSEStore",
     "GSESequences",
     "GSESupportReports",
     "GSEDeltas",

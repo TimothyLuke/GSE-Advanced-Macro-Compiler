@@ -367,7 +367,7 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
                 rootDescription:CreateButton(v, function() apply(v) end)
             end
             rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
+            for k, _ in pairs(GSE.Store("variable")) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
             end
         end)
@@ -526,8 +526,8 @@ local function getManagedMacroNames()
         return type(v) == "table" and (v.text ~= nil or v.icon ~= nil or v.value ~= nil
             or v.Managed ~= nil or v.managedMacro ~= nil or v.manageMacro ~= nil)
     end
-    if type(GSEMacros) == "table" then
-        for k, v in pairs(GSEMacros) do
+    if type(GSE.Store("macro")) == "table" then
+        for k, v in pairs(GSE.Store("macro")) do
             if isMacroNode(v) then
                 if not seen[k] then seen[k] = true; names[#names + 1] = k end
             elseif type(v) == "table" then -- per-character bucket
@@ -1211,7 +1211,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                     end
                     if offerVariables then
                         local vars = rootDescription:CreateButton(L["GSE Variables"])
-                        for k, _ in pairs(GSEVariables or {}) do
+                        for k, _ in pairs(GSE.Store("variable") or {}) do
                             vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
                         end
                     end
@@ -1238,7 +1238,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                         macros:CreateButton(name, function() return setWhole(name) end)
                     end
                     local vars = rootDescription:CreateButton(L["GSE Variables"])
-                    for k, _ in pairs(GSEVariables or {}) do
+                    for k, _ in pairs(GSE.Store("variable") or {}) do
                         vars:CreateButton(k, function() return setWhole([[=GSE.V["]] .. k .. [["]()]]) end)
                     end
                 end
@@ -1353,7 +1353,7 @@ GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
     editBox:SetScript("OnTabPressed", function()
         MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
+            for k, _ in pairs(GSE.Store("variable")) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
             end
             rootDescription:CreateTitle(L["Insert Test Case"])

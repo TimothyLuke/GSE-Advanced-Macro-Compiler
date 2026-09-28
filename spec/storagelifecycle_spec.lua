@@ -35,7 +35,7 @@ describe("Storage lifecycle", function()
   end)
 
   before_each(function()
-    _G.GSESequences = {[1] = {}}
+    _G.GSEStore = nil; GSE.LoadStore(); GSE.StoreClass("sequence", 1, true)
     _G.GSEDeltas = {}
     _G.GSERepackQueue = {}
     _G.GSE_C = {}
@@ -61,14 +61,14 @@ describe("Storage lifecycle", function()
       -- GSEDeltas forever waiting to be adopted by the next thing installed
       -- under that PlatformID.
       GSE.Library[1]["GONE"] = seq("GONE", "pid-gone")
-      GSESequences[1]["GONE"] = "!GSE3!+1SEALED"
+      GSE.Store("sequence")[1]["GONE"] = "!GSE3!+1SEALED"
       GSEDeltas["pid-gone"] = forkFor("pid-gone")
 
       GSE.DeleteSequence(1, "GONE")
 
       assert.is_nil(GSEDeltas["pid-gone"], "the fork went with the record")
       assert.is_nil(GSE.Library[1]["GONE"])
-      assert.is_nil(GSESequences[1]["GONE"])
+      assert.is_nil(GSE.Store("sequence")[1]["GONE"])
     end)
 
     it("leaves another sequence's fork alone", function()
@@ -85,7 +85,7 @@ describe("Storage lifecycle", function()
 
     it("survives a record that never had a fork", function()
       GSE.Library[1]["PLAIN"] = seq("PLAIN", nil)
-      GSESequences[1]["PLAIN"] = {}
+      GSE.Store("sequence")[1]["PLAIN"] = {}
       assert.has_no.errors(function() GSE.DeleteSequence(1, "PLAIN") end)
       assert.is_nil(GSE.Library[1]["PLAIN"])
     end)
@@ -110,13 +110,13 @@ describe("Storage lifecycle", function()
   describe("GSE.DeleteCorruptSequence", function()
     it("forgets the fork when the body did load", function()
       GSE.Library[1]["BAD"] = seq("BAD", "pid-bad")
-      GSESequences[1]["BAD"] = "!GSE3!+1SEALED"
+      GSE.Store("sequence")[1]["BAD"] = "!GSE3!+1SEALED"
       GSEDeltas["pid-bad"] = forkFor("pid-bad")
 
       GSE.DeleteCorruptSequence(1, "BAD")
 
       assert.is_nil(GSEDeltas["pid-bad"])
-      assert.is_nil(GSESequences[1]["BAD"])
+      assert.is_nil(GSE.Store("sequence")[1]["BAD"])
       assert.is_nil(GSE.Library[1]["BAD"])
     end)
 
@@ -127,13 +127,13 @@ describe("Storage lifecycle", function()
     -- GSEPlatformIDs is no help: it is keyed name|author, and the author is in
     -- the body we could not read.
     it("cannot forget the fork when the body never loaded", function()
-      GSESequences[1]["BAD"] = "!GSE3!+1SEALED"
+      GSE.Store("sequence")[1]["BAD"] = "!GSE3!+1SEALED"
       GSE.Library[1]["BAD"] = nil
       GSEDeltas["pid-bad"] = forkFor("pid-bad")
 
       GSE.DeleteCorruptSequence(1, "BAD")
 
-      assert.is_nil(GSESequences[1]["BAD"], "the record still goes")
+      assert.is_nil(GSE.Store("sequence")[1]["BAD"], "the record still goes")
       assert.is_not_nil(GSEDeltas["pid-bad"],
         "but its fork is stranded -- nothing links the name to the id once the body is unreadable")
     end)

@@ -156,12 +156,12 @@ local function showMacro(editframe, node, container)
     end
     local charKey = GSE.CharacterMacroBucketKey()
 
-    local source = GSEMacros
+    local source = GSE.Store("macro")
     if node.value > GSE.GetMaxAccountMacros() then
-        if GSE.isEmpty(GSEMacros[charKey]) then
-            GSEMacros[charKey] = {}
+        if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+            GSE.Store("macro")[charKey] = {}
         end
-        source = GSEMacros[charKey]
+        source = GSE.Store("macro")[charKey]
     end
 
     local manageGSE = UI:Create("CheckBox")
@@ -212,8 +212,8 @@ local function showMacro(editframe, node, container)
                 -- the next Companion sync mints a fresh server identity.
                 -- See Editor_Variable / Editor sequence rename for the
                 -- v4↔v5 bouncing pattern this prevents.
-                if oldName ~= text and GSEMacroPlatformIDs then
-                    GSEMacroPlatformIDs[oldName] = nil
+                if oldName ~= text and GSE.Store("macroPid") then
+                    GSE.Store("macroPid")[oldName] = nil
                 end
             end
         end

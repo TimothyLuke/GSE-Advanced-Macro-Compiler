@@ -1210,8 +1210,8 @@ function GSE.GetTransitiveVariableDeps(varNames)
     while i <= #queue do
         local name = queue[i]
         i = i + 1
-        if not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[name]) then
-            local ok, decoded = GSE.DecodeMessage(GSEVariables[name])
+        if not GSE.isEmpty(GSE.Store("variable")) and not GSE.isEmpty(GSE.Store("variable")[name]) then
+            local ok, decoded = GSE.DecodeMessage(GSE.Store("variable")[name])
             if ok and decoded and decoded.Dependencies and decoded.Dependencies.Variables then
                 for _, depname in ipairs(decoded.Dependencies.Variables) do
                     if not result[depname] then
@@ -1247,8 +1247,8 @@ function GSE.GetVariableDependents(varName)
             end
         end
     end
-    if not GSE.isEmpty(GSEVariables) then
-        for vname, vdata in pairs(GSEVariables) do
+    if not GSE.isEmpty(GSE.Store("variable")) then
+        for vname, vdata in pairs(GSE.Store("variable")) do
             if vname ~= varName then
                 local ok, decoded = GSE.DecodeMessage(vdata)
                 if ok and decoded and decoded.Dependencies and type(decoded.Dependencies.Variables) == "table" then
@@ -1527,7 +1527,7 @@ function GSE.ScanMacrosForErrors()
                         -- Check variable dependencies
                         if type(deps.Variables) == "table" then
                             for _, vname in ipairs(deps.Variables) do
-                                if GSE.isEmpty(GSEVariables) or GSE.isEmpty(GSEVariables[vname]) then
+                                if GSE.isEmpty(GSE.Store("variable")) or GSE.isEmpty(GSE.Store("variable")[vname]) then
                                     totalIssues = totalIssues + 1
                                     GSE.Print(
                                         string.format(
@@ -1569,7 +1569,7 @@ function GSE.ScanMacrosForErrors()
                         if type(deps.Macros) == "table" and GetMacroIndexByName then
                             for _, macname in ipairs(deps.Macros) do
                                 local slot = GetMacroIndexByName(macname)
-                                local inStore = not GSE.isEmpty(GSEMacros) and not GSE.isEmpty(GSEMacros[macname])
+                                local inStore = not GSE.isEmpty(GSE.Store("macro")) and not GSE.isEmpty(GSE.Store("macro")[macname])
                                 if (not slot or slot == 0) and not inStore then
                                     totalIssues = totalIssues + 1
                                     GSE.Print(
@@ -1589,12 +1589,12 @@ function GSE.ScanMacrosForErrors()
     end
 
     -- 4. Variable dependency checks
-    if not GSE.isEmpty(GSEVariables) then
-        for vname, vdata in pairs(GSEVariables) do
+    if not GSE.isEmpty(GSE.Store("variable")) then
+        for vname, vdata in pairs(GSE.Store("variable")) do
             local ok, decoded = GSE.DecodeMessage(vdata)
             if ok and decoded and decoded.Dependencies and type(decoded.Dependencies.Variables) == "table" then
                 for _, depname in ipairs(decoded.Dependencies.Variables) do
-                    if GSE.isEmpty(GSEVariables[depname]) then
+                    if GSE.isEmpty(GSE.Store("variable")[depname]) then
                         totalIssues = totalIssues + 1
                         GSE.Print(
                             string.format(

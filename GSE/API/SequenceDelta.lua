@@ -306,8 +306,8 @@ local function installReconstructed(t, obj, pid)
         GSE.Library[classid][nm] = obj
     elseif t == "variable" and GSE.V then
         GSE.V[nm] = obj
-    elseif t == "macro" and type(GSEMacros) == "table" then
-        GSEMacros[nm] = obj
+    elseif t == "macro" and type(GSE.Store("macro")) == "table" then
+        GSE.Store("macro")[nm] = obj
     end
 end
 

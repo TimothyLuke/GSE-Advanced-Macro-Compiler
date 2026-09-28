@@ -678,7 +678,7 @@ local function onRightClick_VARIABLES(editframe, container, group, unique, key)
         editframe.frame,
         function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Manage Variables"])
-            local varOk, varDecoded = GSE.DecodeMessage(GSEVariables[key])
+            local varOk, varDecoded = GSE.DecodeMessage(GSE.Store("variable")[key])
             if not (varOk and varDecoded and varDecoded.MetaData and varDecoded.MetaData.noExport) then
                 rootDescription:CreateButton(L["Export Variable"], function()
                     GSE.GUIExport(nil, key, "VARIABLE")
@@ -1553,17 +1553,17 @@ local function onClick_Macro(editframe, container, group, unique, key)
     local mname, micon, matext = GetMacroInfo(macroID)
     if not mname then return end
     if unique[2] == "A" then
-        if GSEMacros[mname] and GSEMacros[mname].text then
-            mtext = GSEMacros[mname].text
+        if GSE.Store("macro")[mname] and GSE.Store("macro")[mname].text then
+            mtext = GSE.Store("macro")[mname].text
         else
             mtext = matext
         end
     else
         local charKey = GSE.CharacterMacroBucketKey()
-        if GSEMacros[charKey] and GSEMacros[charKey][mname] and
-           GSEMacros[charKey][mname].text
+        if GSE.Store("macro")[charKey] and GSE.Store("macro")[charKey][mname] and
+           GSE.Store("macro")[charKey][mname].text
         then
-            mtext = GSEMacros[charKey][mname].text
+            mtext = GSE.Store("macro")[charKey][mname].text
         else
             mtext = matext
         end

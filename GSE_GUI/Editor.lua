@@ -3114,12 +3114,12 @@ function GSE.CreateEditor()
                     -- Move the GSEPlatformIDs sidecar entry to the new key so
                     -- the Companion still resolves the right server record.
                     local author = sequence.MetaData and sequence.MetaData.Author or ""
-                    if GSEPlatformIDs and editframe.OrigSequenceName then
+                    if GSE.Store("sequencePid") and editframe.OrigSequenceName then
                         local oldKey = editframe.OrigSequenceName .. "|" .. author
                         local newKey = plainName .. "|" .. author
-                        if GSEPlatformIDs[oldKey] then
-                            GSEPlatformIDs[newKey] = GSEPlatformIDs[oldKey]
-                            GSEPlatformIDs[oldKey] = nil
+                        if GSE.Store("sequencePid")[oldKey] then
+                            GSE.Store("sequencePid")[newKey] = GSE.Store("sequencePid")[oldKey]
+                            GSE.Store("sequencePid")[oldKey] = nil
                         end
                     end
                     local renameVals = {}

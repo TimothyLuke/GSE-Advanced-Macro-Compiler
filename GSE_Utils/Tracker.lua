@@ -1779,7 +1779,7 @@ function GSE.SequenceIconIsAccountMacro(sequence)
         if macroIndex and macroIndex > 0 and macroIndex <= maxAccountMacros then return true end
     end
 
-    local macro = GSEMacros and GSEMacros[sequence]
+    local macro = GSE.Store("macro") and GSE.Store("macro")[sequence]
     return type(macro) == "table" and macro.name == sequence
 end
 

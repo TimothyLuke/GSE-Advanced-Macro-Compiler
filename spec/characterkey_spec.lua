@@ -48,6 +48,14 @@ local function env(guid, first, second, realmName, fullName, macros)
         UnitName = function() return first end,
     }
     e.GSE.isEmpty = function(v) return v == nil or v == "" end
+    -- The code reaches macros through GSE.Store, never the global by name.
+    -- Answer from e.GSEMacros so each test reads back what the code wrote;
+    -- like the real store, the root is created on demand.
+    e.GSE.Store = function(kind)
+        assert(kind == "macro", "unexpected store kind " .. tostring(kind))
+        if type(e.GSEMacros) ~= "table" then e.GSEMacros = {} end
+        return e.GSEMacros
+    end
     return setmetatable(e, { __index = _G })
 end
 

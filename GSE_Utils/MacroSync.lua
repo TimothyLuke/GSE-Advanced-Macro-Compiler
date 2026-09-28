@@ -95,10 +95,9 @@ end
 -- through GSE.ImportMacro into General Macros on every character.
 function GSE.SyncWoWMacrosToGSE()
     if not GSEOptions.SyncWoWMacros then return end
-    if GSE.isEmpty(GSEMacros) then GSEMacros = {} end
 
     local account, character = captureWoWMacros()
-    syncInto(GSEMacros, account, syncTrackedNames.account)
+    syncInto(GSE.Store("macro"), account, syncTrackedNames.account)
     syncInto(characterBucket(), character, syncTrackedNames.character)
 end
 

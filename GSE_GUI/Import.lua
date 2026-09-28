@@ -533,7 +533,7 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSEVariables[k] then
+      if GSE.Store("variable")[k] then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -575,10 +575,10 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSE.isEmpty(GSEMacros[charKey]) then
-        GSEMacros[charKey] = {}
+      if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
       end
-      if GSEMacros[k] or GSEMacros[charKey][k] or GetMacroIndexByName(k) then
+      if GSE.Store("macro")[k] or GSE.Store("macro")[charKey][k] or GetMacroIndexByName(k) then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -849,7 +849,7 @@ local function processQueueCollections(collections)
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, _ in pairs(payload.Variables or {}) do
-        addActionRow(scroll, k .. " " .. statusTag(not GSE.isEmpty(GSEVariables[k])),
+        addActionRow(scroll, k .. " " .. statusTag(not GSE.isEmpty(GSE.Store("variable")[k])),
                      importset[i].Variables, k, false)
       end
     end
@@ -861,14 +861,14 @@ local function processQueueCollections(collections)
       lbl:SetText(L["Macros"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
-      if GSE.isEmpty(GSEMacros[charKey]) then
-        GSEMacros[charKey] = {}
+      if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
       end
       for k, _ in pairs(payload.Macros or {}) do
-        local topLevel = GSEMacros[k]
+        local topLevel = GSE.Store("macro")[k]
         local isMacroNode = type(topLevel) == "table"
             and (type(topLevel.text) == "string" or type(topLevel.name) == "string")
-        local charBucket = GSEMacros[charKey]
+        local charBucket = GSE.Store("macro")[charKey]
         local macIdx = GetMacroIndexByName(k)
         local exists = isMacroNode
                     or (type(charBucket) == "table" and charBucket[k] ~= nil)

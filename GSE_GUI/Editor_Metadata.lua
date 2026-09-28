@@ -163,9 +163,9 @@ end
 GSE.GUI.FormatDependencyTimestamp = formatDependencyTimestamp
 
 local function storedVariableInfo(name)
-    if GSE.isEmpty(GSEVariables) or GSE.isEmpty(GSEVariables[name]) then return nil end
+    if GSE.isEmpty(GSE.Store("variable")) or GSE.isEmpty(GSE.Store("variable")[name]) then return nil end
 
-    local stored = GSEVariables[name]
+    local stored = GSE.Store("variable")[name]
     if type(stored) == "table" then return stored end
     if not GSE.DecodeMessage then return nil end
 
@@ -190,15 +190,15 @@ local function currentCharacterMacroBucket()
 end
 
 local function storedMacroInfo(name)
-    if GSE.isEmpty(GSEMacros) then return nil end
-    if isStoredMacroNode(GSEMacros[name]) then return GSEMacros[name] end
+    if GSE.isEmpty(GSE.Store("macro")) then return nil end
+    if isStoredMacroNode(GSE.Store("macro")[name]) then return GSE.Store("macro")[name] end
 
     local currentBucket = currentCharacterMacroBucket()
-    if currentBucket and type(GSEMacros[currentBucket]) == "table" and isStoredMacroNode(GSEMacros[currentBucket][name]) then
-        return GSEMacros[currentBucket][name]
+    if currentBucket and type(GSE.Store("macro")[currentBucket]) == "table" and isStoredMacroNode(GSE.Store("macro")[currentBucket][name]) then
+        return GSE.Store("macro")[currentBucket][name]
     end
 
-    for _, bucket in pairs(GSEMacros) do
+    for _, bucket in pairs(GSE.Store("macro")) do
         if type(bucket) == "table" and isStoredMacroNode(bucket[name]) then
             return bucket[name]
         end

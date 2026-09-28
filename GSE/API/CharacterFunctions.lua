@@ -160,6 +160,9 @@ local function isMacroNode(t)
         t.text ~= nil or t.value ~= nil or t.icon ~= nil or t.Managed ~= nil
         or t.managedMacro ~= nil or t.manageMacro ~= nil or t.GSEProtected ~= nil)
 end
+-- Shared with the store (Storage.lua), which has to make the same call when
+-- it splits account macros from per-character buckets.
+GSE.IsStoredMacroNode = isMacroNode
 
 --- Every key an older build may have filed this character's macro bucket
 -- under. Read by the migration below and nothing else; nothing writes these.
@@ -206,17 +209,16 @@ GSE.LegacyCharacterKeys = legacyCharacterKeys
 function GSE.CharacterMacroBucketKey()
     local key = GSE.CharacterKey()
     if not key then return legacyCharacterKeys()[1] end
-    if type(GSEMacros) == "table" then
-        for _, old in ipairs(legacyCharacterKeys()) do
-            local bucket = GSEMacros[old]
-            if old ~= key and type(bucket) == "table" and not isMacroNode(bucket) then
-                local target = GSEMacros[key]
-                if type(target) ~= "table" then target = {}; GSEMacros[key] = target end
-                for name, node in pairs(bucket) do
-                    if target[name] == nil then target[name] = node end
-                end
-                GSEMacros[old] = nil
+    local macros = GSE.Store("macro")
+    for _, old in ipairs(legacyCharacterKeys()) do
+        local bucket = macros[old]
+        if old ~= key and type(bucket) == "table" and not isMacroNode(bucket) then
+            local target = macros[key]
+            if type(target) ~= "table" then target = {}; macros[key] = target end
+            for name, node in pairs(bucket) do
+                if target[name] == nil then target[name] = node end
             end
+            macros[old] = nil
         end
     end
     return key
@@ -226,12 +228,9 @@ end
 function GSE.CharacterMacroBucket(create)
     local key = GSE.CharacterMacroBucketKey()
     if not key then return nil end
-    if type(GSEMacros) ~= "table" then
-        if not create then return nil end
-        GSEMacros = {}
-    end
-    if create and type(GSEMacros[key]) ~= "table" then GSEMacros[key] = {} end
-    return GSEMacros[key]
+    local macros = GSE.Store("macro")
+    if create and type(macros[key]) ~= "table" then macros[key] = {} end
+    return macros[key]
 end
 
 --- Returns the current Talent Selections as a string

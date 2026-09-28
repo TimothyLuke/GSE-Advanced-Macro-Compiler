@@ -1426,14 +1426,8 @@ local function startup()
     if GSE.isEmpty(GSE.Library[0]) then
         GSE.Library[0] = {}
     end
-    if GSE.isEmpty(GSEVariables) then
-        GSEVariables = {}
-    end
-    if GSE.isEmpty(GSEMacros) then
-        GSEMacros = {}
-    end
-    if GSE.isEmpty(GSEMacros[charKey]) then
-        GSEMacros[charKey] = {}
+    if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
     end
     --@debug@
     GSE.PrintDebugMessage("I am loaded")
@@ -1639,6 +1633,11 @@ function GSE:PLAYER_LOGOUT()
             GSEOptions.frameLocations.keybindingframe.left = GSE.GUIkeybindingframe.frame:GetLeft()
         end
     end
+    -- Last, so nothing above can still be writing content: fold this session's
+    -- working views back into GSEStore before WoW writes SavedVariables. This
+    -- event fires on /reload as well as on exit, and nothing else in GSE writes
+    -- content during logout.
+    if GSE.ReconcileStore then GSE.ReconcileStore() end
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()

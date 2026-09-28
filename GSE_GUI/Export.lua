@@ -113,17 +113,17 @@ local function currentCharacterMacroBucket()
 end
 
 local function findStoredMacro(name)
-    if GSE.isEmpty(GSEMacros) then return nil, "a" end
-    if isStoredMacroNode(GSEMacros[name]) then
-        return GSEMacros[name], "a"
+    if GSE.isEmpty(GSE.Store("macro")) then return nil, "a" end
+    if isStoredMacroNode(GSE.Store("macro")[name]) then
+        return GSE.Store("macro")[name], "a"
     end
 
     local currentBucket = currentCharacterMacroBucket()
-    if type(GSEMacros[currentBucket]) == "table" and isStoredMacroNode(GSEMacros[currentBucket][name]) then
-        return GSEMacros[currentBucket][name], "p"
+    if type(GSE.Store("macro")[currentBucket]) == "table" and isStoredMacroNode(GSE.Store("macro")[currentBucket][name]) then
+        return GSE.Store("macro")[currentBucket][name], "p"
     end
 
-    for _, bucket in pairs(GSEMacros) do
+    for _, bucket in pairs(GSE.Store("macro")) do
         if type(bucket) == "table" and isStoredMacroNode(bucket[name]) then
             return bucket[name], "p"
         end
@@ -211,10 +211,10 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     if SequenceDropDown.SetMaxVisibleItems then SequenceDropDown:SetMaxVisibleItems(20) end
 
     local VariableDropDown = UI:Create("Dropdown")
-    if not GSE.isEmpty(GSEVariables) then
+    if not GSE.isEmpty(GSE.Store("variable")) then
         local varOrder = {}
-        for k, _ in pairs(GSEVariables) do
-            local varOk, varDecoded = GSE.DecodeMessage(GSEVariables[k])
+        for k, _ in pairs(GSE.Store("variable")) do
+            local varOk, varDecoded = GSE.DecodeMessage(GSE.Store("variable")[k])
             if varOk and not (varDecoded and varDecoded.MetaData and varDecoded.MetaData.noExport) then
                 table.insert(varOrder, k)
             end
@@ -241,14 +241,14 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         addMacroName(mname)
     end
 
-    if not GSE.isEmpty(GSEMacros) then
-        for k, v in pairs(GSEMacros) do
+    if not GSE.isEmpty(GSE.Store("macro")) then
+        for k, v in pairs(GSE.Store("macro")) do
             if isStoredMacroNode(v) then
                 addMacroName(k)
             end
         end
 
-        for _, bucket in pairs(GSEMacros) do
+        for _, bucket in pairs(GSE.Store("macro")) do
             if type(bucket) == "table" and not isStoredMacroNode(bucket) then
                 for k, v in pairs(bucket) do
                     if isStoredMacroNode(v) then
@@ -399,7 +399,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         function(obj, event, key, checked)
             if checked then
                 if exportTable["Variables"][key] then return end
-                local stored = not GSE.isEmpty(GSEVariables) and GSEVariables[key] or nil
+                local stored = not GSE.isEmpty(GSE.Store("variable")) and GSE.Store("variable")[key] or nil
                 local payload
                 if type(stored) == "string" and stored:sub(1, 7) == "!GSE3!+" then
                     -- Protected variable: ship the packed string untouched so the
@@ -454,9 +454,9 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     local allDeps = GSE.GetTransitiveVariableDeps(deps.Variables)
                     local missing, included = {}, {}
                     for vname in pairs(allDeps) do
-                        if not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname]) then
+                        if not GSE.isEmpty(GSE.Store("variable")) and not GSE.isEmpty(GSE.Store("variable")[vname]) then
                             if not exportTable["Variables"][vname] then
-                                local storedVar = GSEVariables[vname]
+                                local storedVar = GSE.Store("variable")[vname]
                                 if type(storedVar) == "string" and storedVar:sub(1, 7) == "!GSE3!+" then
                                     exportTable["Variables"][vname] = storedVar
                                     exportTable.ElementCount = exportTable.ElementCount + 1
@@ -544,14 +544,11 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
             if checked then
                 local source, category = findStoredMacro(key)
                 if GSE.isEmpty(source) then
-                    if GSE.isEmpty(GSEMacros) then
-                        GSEMacros = {}
-                    end
                     local currentBucket = currentCharacterMacroBucket()
-                    if GSE.isEmpty(GSEMacros[currentBucket]) then
-                        GSEMacros[currentBucket] = {}
+                    if GSE.isEmpty(GSE.Store("macro")[currentBucket]) then
+                        GSE.Store("macro")[currentBucket] = {}
                     end
-                    if GSE.isEmpty(GSEMacros[currentBucket][key]) then
+                    if GSE.isEmpty(GSE.Store("macro")[currentBucket][key]) then
                         -- need to find the macro as its not managed by GSE
                         source = {}
                         local mslot = GetMacroIndexByName(key)
@@ -565,7 +562,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                             category = "p"
                         end
                     else
-                        source = GSEMacros[currentBucket][key]
+                        source = GSE.Store("macro")[currentBucket][key]
                         category = "p"
                     end
                 end

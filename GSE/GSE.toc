@@ -4,7 +4,11 @@
 ## Notes: Create Sequence buttons and Macros using powerful API functions.
 ## Author: TimothyLuke
 ## Version: @project-version@
-## SavedVariables: GSEOptions GSESequences GSESpellCache GSEVariables GSEMacros GSEPlatformIDs GSEVariablePlatformIDs GSEMacroPlatformIDs GSESupportReports GSEDeltas GSERepackQueue
+# GSEStore holds all sequences, variables and macros. GSESequences, GSEVariables,
+# GSEMacros and the three *PlatformIDs names are the pre-GSEStore layout: they MUST
+# stay declared, because WoW only loads names listed here and the migration reads
+# them. GSE sets them to nil once migrated, so they stay out of the file.
+## SavedVariables: GSEOptions GSEStore GSESequences GSESpellCache GSEVariables GSEMacros GSEPlatformIDs GSEVariablePlatformIDs GSEMacroPlatformIDs GSESupportReports GSEDeltas GSERepackQueue
 ## SavedVariablesPerCharacter: GSE_C GSELegacyLibraryBackup
 ## LoadSavedVariablesFirst: 1
 

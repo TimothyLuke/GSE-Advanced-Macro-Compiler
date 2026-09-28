@@ -25,8 +25,7 @@ describe(
         GSE.UpdateDeltaFork = nil
         GSE.Library = GSE.Library or {}
         GSE.Library[1] = GSE.Library[1] or {}
-        _G.GSESequences = _G.GSESequences or {}
-        _G.GSESequences[1] = _G.GSESequences[1] or {}
+        GSE.StoreClass("sequence", 1, true)
         if not GSE.SendMessage then
           GSE.SendMessage = function() end
         end
@@ -53,7 +52,7 @@ describe(
     before_each(
       function()
         _G.GSERepackQueue = {}
-        _G.GSESequences[1] = {}
+        _G.GSEStore = nil; GSE.LoadStore(); GSE.StoreClass("sequence", 1, true)
         GSE.Library[1] = {}
       end
     )
@@ -84,9 +83,9 @@ describe(
           "leaves the sealed blob alone when the content is protected",
           function()
             local seq = protectedSeq("Prot")
-            _G.GSESequences[1]["Prot"] = SEALED
+            GSE.Store("sequence")[1]["Prot"] = SEALED
             GSE.ReplaceSequence(1, "Prot", seq)
-            assert.equals(SEALED, _G.GSESequences[1]["Prot"])
+            assert.equals(SEALED, GSE.Store("sequence")[1]["Prot"])
           end
         )
 
@@ -96,7 +95,7 @@ describe(
             -- SeedDeltaFork is stubbed false in the mock, so this is the
             -- documented fallback: say so rather than write it out plain.
             local seq = protectedSeq("Prot")
-            _G.GSESequences[1]["Prot"] = SEALED
+            GSE.Store("sequence")[1]["Prot"] = SEALED
             GSE.ReplaceSequence(1, "Prot", seq)
             local req = _G.GSERepackQueue["sequence:1:Prot"]
             assert.is_not_nil(req)
@@ -110,7 +109,7 @@ describe(
           function()
             local seq = protectedSeq("Prot")
             seq.Versions[1].Actions = {"changed"}
-            _G.GSESequences[1]["Prot"] = SEALED
+            GSE.Store("sequence")[1]["Prot"] = SEALED
             GSE.ReplaceSequence(1, "Prot", seq)
             assert.equals("changed", GSE.Library[1]["Prot"].Versions[1].Actions[1])
           end
@@ -123,7 +122,7 @@ describe(
             -- must keep going straight to the store, unchanged.
             local seq = ownSeq("Mine")
             GSE.ReplaceSequence(1, "Mine", seq)
-            assert.is_not_nil(_G.GSESequences[1]["Mine"])
+            assert.is_not_nil(GSE.Store("sequence")[1]["Mine"])
             assert.is_nil(_G.GSERepackQueue["sequence:1:Mine"])
           end
         )
@@ -134,9 +133,9 @@ describe(
             -- The envelope alone is enough. A body whose noExport was stripped
             -- must not be able to talk GSE into rewriting the blob plain.
             local seq = ownSeq("Sealed")
-            _G.GSESequences[1]["Sealed"] = SEALED
+            GSE.Store("sequence")[1]["Sealed"] = SEALED
             GSE.ReplaceSequence(1, "Sealed", seq)
-            assert.equals(SEALED, _G.GSESequences[1]["Sealed"])
+            assert.equals(SEALED, GSE.Store("sequence")[1]["Sealed"])
           end
         )
 
@@ -172,11 +171,11 @@ describe(
               "writes the edit into the record instead of the fork",
               function()
                 local seq = ownSeq("Mine")
-                _G.GSESequences[1]["Mine"] = "!GSE3!PLAINRECORD"
+                GSE.Store("sequence")[1]["Mine"] = "!GSE3!PLAINRECORD"
                 GSE.ReplaceSequence(1, "Mine", seq)
                 assert.is_false(forked)
                 assert.is_true(forgotten)
-                assert.are_not.equals("!GSE3!PLAINRECORD", _G.GSESequences[1]["Mine"])
+                assert.are_not.equals("!GSE3!PLAINRECORD", GSE.Store("sequence")[1]["Mine"])
               end
             )
 
@@ -184,11 +183,11 @@ describe(
               "still routes the edit to the fork while the blob is sealed",
               function()
                 local seq = ownSeq("Sealed")
-                _G.GSESequences[1]["Sealed"] = SEALED
+                GSE.Store("sequence")[1]["Sealed"] = SEALED
                 GSE.ReplaceSequence(1, "Sealed", seq)
                 assert.is_true(forked)
                 assert.is_false(forgotten)
-                assert.equals(SEALED, _G.GSESequences[1]["Sealed"])
+                assert.equals(SEALED, GSE.Store("sequence")[1]["Sealed"])
               end
             )
 
@@ -196,11 +195,11 @@ describe(
               "still routes the edit to the fork while the body says noExport",
               function()
                 local seq = protectedSeq("Prot")
-                _G.GSESequences[1]["Prot"] = "!GSE3!PLAINRECORD"
+                GSE.Store("sequence")[1]["Prot"] = "!GSE3!PLAINRECORD"
                 GSE.ReplaceSequence(1, "Prot", seq)
                 assert.is_true(forked)
                 assert.is_false(forgotten)
-                assert.equals("!GSE3!PLAINRECORD", _G.GSESequences[1]["Prot"])
+                assert.equals("!GSE3!PLAINRECORD", GSE.Store("sequence")[1]["Prot"])
               end
             )
           end
@@ -217,10 +216,10 @@ describe(
             -- Assigning the missing blob across would have removed the
             -- sequence from storage entirely.
             local seq = protectedSeq("Old")
-            _G.GSESequences[1]["Old"] = nil
+            GSE.Store("sequence")[1]["Old"] = nil
             GSE.Library[1]["Old"] = seq
             GSE.RenameSequence(1, "Old", "New", seq)
-            assert.is_nil(_G.GSESequences[1]["New"])
+            assert.is_nil(GSE.Store("sequence")[1]["New"])
             assert.equals("rename-needs-repack", _G.GSERepackQueue["sequence:1:New"].reason)
           end
         )
@@ -231,11 +230,11 @@ describe(
             -- A rename is a change of table key, so the blob travels as the
             -- string it already is and nothing needs encoding.
             local seq = protectedSeq("Old")
-            _G.GSESequences[1]["Old"] = SEALED
+            GSE.Store("sequence")[1]["Old"] = SEALED
             GSE.Library[1]["Old"] = seq
             GSE.RenameSequence(1, "Old", "New", seq)
-            assert.equals(SEALED, _G.GSESequences[1]["New"])
-            assert.is_nil(_G.GSESequences[1]["Old"])
+            assert.equals(SEALED, GSE.Store("sequence")[1]["New"])
+            assert.is_nil(GSE.Store("sequence")[1]["Old"])
           end
         )
       end
@@ -304,11 +303,11 @@ describe(
             -- `now` on every load -- drift, not a backfill.
             local seq = protectedSeq("Prot")
             seq.LastUpdated = nil
-            _G.GSESequences[1]["Prot"] = SEALED
+            GSE.Store("sequence")[1]["Prot"] = SEALED
             GSE.Library[1]["Prot"] = seq
             GSE.BackfillLastUpdated()
             assert.is_nil(seq.LastUpdated)
-            assert.equals(SEALED, _G.GSESequences[1]["Prot"])
+            assert.equals(SEALED, GSE.Store("sequence")[1]["Prot"])
           end
         )
       end

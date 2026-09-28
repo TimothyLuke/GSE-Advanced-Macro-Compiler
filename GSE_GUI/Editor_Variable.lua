@@ -58,7 +58,7 @@ local function buildVariablesMenu()
     }
     -- Alphabetical, the same order and the same comparison the sequence tree
     -- uses. pairs() gave hash order, so the list shuffled between sessions.
-    for k, _ in GSE.pairsByKeys(GSEVariables or {}, GSE.AlphabeticalTableSortAlgorithm) do
+    for k, _ in GSE.pairsByKeys(GSE.Store("variable") or {}, GSE.AlphabeticalTableSortAlgorithm) do
         local node = {
             value = k,
             text = "|CFFFFFFFF" .. k .. Statics.StringReset
@@ -82,11 +82,11 @@ local function showVariable(editframe, name, container)
 end]],
         ["comments"] = ""
     }
-    if GSEVariables and not GSE.isEmpty(GSEVariables[name]) then
+    if GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[name]) then
         local status, err =
             pcall(
             function()
-                local _, uncompressedVersion = GSE.DecodeMessage(GSEVariables[name])
+                local _, uncompressedVersion = GSE.DecodeMessage(GSE.Store("variable")[name])
                 variable = uncompressedVersion
             end
         )
@@ -510,7 +510,7 @@ end]],
                     ["name"] = saveName
                 }
                 GSE.EnqueueOOC(oocaction)
-                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSEVariables and not GSE.isEmpty(GSEVariables[currentKey]) then
+                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[currentKey]) then
                     GSE.EnqueueOOC(
                         {
                             ["action"] = "deletevariable",

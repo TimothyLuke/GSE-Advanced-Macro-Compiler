@@ -82,8 +82,7 @@ describe(
         end
 
         -- GSESequences must exist (indexed 0-13) for the encoding check loop
-        GSESequences = {}
-        for i = 0, 13 do GSESequences[i] = {} end
+        if GSE.LoadStore then _G.GSEStore = nil; GSE.LoadStore() end
 
         require("../GSE_Utils/Utils")
       end
@@ -98,8 +97,7 @@ describe(
         -- GSESequences is normally initialised by Storage.lua; provide a clean
         -- stub here so the GSESequences encoding-check loop in ScanMacrosForErrors
         -- can iterate without error.
-        GSESequences = {}
-        for i = 0, 13 do GSESequences[i] = {} end
+        if GSE.LoadStore then _G.GSEStore = nil; GSE.LoadStore() end
 
         GSE.OOCQueue = {}
 
