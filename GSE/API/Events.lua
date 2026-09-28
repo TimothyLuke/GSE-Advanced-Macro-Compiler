@@ -258,6 +258,15 @@ end
 -- WoW's RegisterAttributeDriver writes the final computed slot into the "action"
 -- attribute on every button (Blizzard, Dominos, etc.), so prefer that first.
 -- Fall back to GetID()+actionpage for bars that don't use the driver.
+-- The secure button behind a GSE sequence macro sitting on an action slot, or
+-- nil when the macro is the player's own. A sequence's WoW macro carries the
+-- sequence's label; the button it clicks carries its handle.
+local function gseMacroButton(macroName)
+    if not macroName then return nil end
+    local id = GSE.FindSequenceId(macroName)
+    return id and GSE.ButtonForSequence(id) or nil
+end
+
 local function getButtonEffectiveSlot(btn)
     local action = tonumber(btn:GetAttribute("action"))
     if action and action > 0 then return action end
@@ -298,7 +307,7 @@ function GSE.ActionBarSlotHasForeignAction(button)
     if actionType == "macro" then
         if macroIndex and GetMacroInfo then
             local macroName = GetMacroInfo(macroIndex)
-            if macroName and ((GSE.SequencesExec and GSE.SequencesExec[macroName]) or _G[macroName]) then
+            if gseMacroButton(macroName) then
                 return false
             end
         end
@@ -651,9 +660,9 @@ local function hookActionButtonUpdate()
             if effectiveSlot and GetActionInfo and GetMacroInfo then
                 local actionType, macroIndex = GetActionInfo(effectiveSlot)
                 if actionType == "macro" and macroIndex then
-                    local macroName = GetMacroInfo(macroIndex)
-                    if macroName and ((GSE.SequencesExec and GSE.SequencesExec[macroName]) or _G[macroName]) then
-                        texture = getGSESequenceIcon(macroName)
+                    local stubButton = gseMacroButton(GetMacroInfo(macroIndex))
+                    if stubButton then
+                        texture = getGSESequenceIcon(stubButton)
                     end
                 end
             end
@@ -679,7 +688,11 @@ local function overrideActionButton(savedBind, force)
     if not _G[Button] then
         return
     end
-    local Sequence = savedBind.Sequence
+    -- The bind holds the sequence's id; everything below works with the frame
+    -- name of its secure button. Nothing to run means nothing to override.
+    local Sequence = GSE.ButtonForSequence(savedBind.Sequence)
+    if not Sequence then return end
+    local SequenceLabel = GSE.SequenceName(savedBind.Sequence) or Sequence
     local state =
         savedBind.State and savedBind.State or string.sub(Button, 1, 3) == "BT4" and "0" or
         string.sub(Button, 1, 4) == "CPB_" and "" or
@@ -766,7 +779,7 @@ local function overrideActionButton(savedBind, force)
                             self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
                         end
                     end,
-                    tooltip = "GSE: " .. Sequence,
+                    tooltip = "GSE: " .. SequenceLabel,
                     texture = getGSESequenceIcon(Sequence) or Statics.Icons.GSE_Logo_Dark,
                     type = "click",
                     clickbutton = _G[Sequence]
@@ -1192,9 +1205,11 @@ function LoadKeyBindings(payload)
         end
     end
 
+    -- A keybind holds the sequence's id; it clicks that sequence's button.
     for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
-        if k ~= "LoadOuts" and not InCombatLockdown() then
-            local target = GSE.GetKeybindClickTarget(v)
+        local button = k ~= "LoadOuts" and GSE.ButtonForSequence(v)
+        if button and not InCombatLockdown() then
+            local target = GSE.GetKeybindClickTarget(button)
             k = normalizeBindKey(k)
             SetBindingClick(k, target, "LeftButton")
             boundKeys[k] = true
@@ -1221,7 +1236,7 @@ function LoadKeyBindings(payload)
                 for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
                     k = normalizeBindKey(k)
                     SetBinding(k)
-                    local target = GSE.GetKeybindClickTarget(v)
+                    local target = GSE.GetKeybindClickTarget(GSE.ButtonForSequence(v) or v)
                     SetBindingClick(k, target, "LeftButton")
                     boundKeys[k] = true
                     if GSE.GameMode == 5 then
@@ -1255,7 +1270,8 @@ function GSE.ReloadOverrides(force)
     LoadOverrides(force)
 end
 
-function GSE.CreateActionBarOverride(buttonName, sequenceName)
+--- Put sequence id on action-bar button buttonName.
+function GSE.CreateActionBarOverride(buttonName, sequenceId)
     if InCombatLockdown() then return end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
@@ -1268,7 +1284,7 @@ function GSE.CreateActionBarOverride(buttonName, sequenceName)
     end
     local bind = {
         Bind = buttonName,
-        Sequence = sequenceName
+        Sequence = sequenceId
     }
     GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()][buttonName] = bind
     GSE.ReloadOverrides()
@@ -1414,6 +1430,9 @@ local function startup()
     end
 
     GSE.LoadStorage(GSE.Library)
+    -- Before anything is bound: this character's keybinds and overrides hold
+    -- sequence ids, not names.
+    GSE.UpdateCharacterSequenceRefs()
 
     if GSE.LoadDeltaForks then GSE.LoadDeltaForks() end
 
@@ -1866,8 +1885,6 @@ function GSE:ProcessOOCQueue()
             elseif v.action == "managemacros" then
                 GSE.ManageMacros()
                 scheduleGSEOverrideIconRepaint()
-            elseif v.action == "CheckMacroCreated" then
-                GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then
                 GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.id, v.newSequence, v.newname)
             elseif v.action == "FinishReload" then

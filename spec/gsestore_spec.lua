@@ -260,6 +260,71 @@ describe("GSEStore", function()
       assert.is_nil(GSE.SequenceEnvelope("local-other").PlatformID)
     end)
 
+    -- ── buttons ─────────────────────────────────────────────────────────────
+    it("gives a sequence a short button name that a rename does not change", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      local b = GSE.ButtonForSequence("pidA000000000000000000aa")
+      assert.is_truthy(b:match("^GSES%d+$"))
+      assert.is_true(#b <= 10, "short enough for a macro's /click line")
+      GSE.PutSequenceBody(2, "pidA000000000000000000aa", "Omega", SEQ_A)
+      reload()
+      assert.equals(b, GSE.ButtonForSequence("pidA000000000000000000aa"), "same button after a rename and a reload")
+      assert.equals("pidA000000000000000000aa", GSE.SequenceIdForButton(b))
+    end)
+
+    it("moves a sequence's button with it to its PlatformID", function()
+      firstRun({})
+      local id = GSE.NewLocalId()
+      GSE.PutSequenceBody(3, id, "Gamma", "SEQ|Gamma|Tim@Realm|")
+      local b = GSE.ButtonForSequence(id)
+      GSE.SetStoredPlatformID("sequence", "Gamma", "newpid000000000000000001")
+      reload()
+      assert.equals(b, GSE.ButtonForSequence("newpid000000000000000001"), "binds keep clicking the same button")
+      assert.equals(b, GSE.ButtonForSequence(id), "and the old id still finds it")
+      assert.equals("newpid000000000000000001", GSE.SequenceIdForButton(b))
+    end)
+
+    it("retires a deleted sequence's button instead of handing it to another", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      local b = GSE.ButtonForSequence("pidA000000000000000000aa")
+      GSE.RemoveSequence(2, "pidA000000000000000000aa")
+      assert.is_nil(GSE.SequenceIdForButton(b))
+      GSE.PutSequenceBody(2, "local-new", "New", "SEQ|New|Tim@Realm|")
+      assert.are_not.equal(b, GSE.ButtonForSequence("local-new"), "a stale keybind must not fire the new sequence")
+    end)
+
+    it("has no button for something that is not a stored sequence", function()
+      firstRun({})
+      assert.is_nil(GSE.ButtonForSequence("nope"))
+      assert.is_nil(GSE.ButtonForSequence(nil))
+    end)
+
+    -- ── this character's keybinds and overrides ─────────────────────────────
+    it("rewrites a character's keybinds and overrides from names and old ids to ids", function()
+      firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
+      local id = GSE.NewLocalId()
+      GSE.PutSequenceBody(0, id, "Gamma", "SEQ|Gamma|Tim@Realm|")
+      GSE.SequenceEnvelope(id).PlatformID = "newpid000000000000000001"
+      reload()                                       -- Gamma moved; id is now an alias
+      _G.UnitClass = function() return "Warrior", "WARRIOR", 2 end
+      _G.GSE_C = {
+        KeyBindings = { ["1"] = { F = "Alpha", G = id, H = "NoSuchThing",
+                                  LoadOuts = { ["7"] = { J = "Alpha" } } } },
+        ActionBarBinds = {
+          Specialisations = { ["1"] = { ActionButton1 = { Bind = "ActionButton1", Sequence = "Gamma" } } },
+          LoadOuts = { ["1"] = { ["7"] = { ActionButton2 = { Bind = "ActionButton2", Sequence = id } } } },
+        },
+      }
+      GSE.UpdateCharacterSequenceRefs()
+      local kb = GSE_C.KeyBindings["1"]
+      assert.equals("pidA000000000000000000aa", kb.F, "a name becomes the id")
+      assert.equals("newpid000000000000000001", kb.G, "an old id follows its alias")
+      assert.equals("NoSuchThing", kb.H, "a reference to nothing is left alone")
+      assert.equals("pidA000000000000000000aa", kb.LoadOuts["7"].J)
+      assert.equals("newpid000000000000000001", GSE_C.ActionBarBinds.Specialisations["1"].ActionButton1.Sequence)
+      assert.equals("newpid000000000000000001", GSE_C.ActionBarBinds.LoadOuts["1"]["7"].ActionButton2.Sequence)
+    end)
+
     it("drops a deleted sequence", function()
       firstRun({ GSESequences = { [2] = { Alpha = SEQ_A } } })
       GSE.RemoveSequence(2, "pidA000000000000000000aa")

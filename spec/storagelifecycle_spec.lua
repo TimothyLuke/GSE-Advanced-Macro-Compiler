@@ -100,8 +100,9 @@ describe("Storage lifecycle", function()
       GSE_C["ActionBarBinds"] = {
         Specialisations = {
           ["1"] = {
-            ActionButton1 = {Bind = "ActionButton1", Sequence = "GONE"},
-            ActionButton2 = {Bind = "ActionButton2", Sequence = "KEEP"},
+            -- Saved binds hold the sequence's id.
+            ActionButton1 = {Bind = "ActionButton1", Sequence = "id-gone"},
+            ActionButton2 = {Bind = "ActionButton2", Sequence = "id-keep"},
           },
         },
       }

@@ -95,10 +95,6 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
     x = row:GetCell(3)
     x:SetText(seqLabel)
     x:SetJustifyH("RIGHT")
-  elseif OOCEvent.action == "CheckMacroCreated" then
-    x = row:GetCell(3)
-    x:SetText(seqLabel)
-    x:SetJustifyH("RIGHT")
   elseif OOCEvent.action == "updatemacro" then
     x = row:GetCell(3)
     x:SetText(OOCEvent.node.name)
@@ -123,7 +119,7 @@ local function prepareTooltipOOCLine(row, OOCEvent, oockey, rebuildFn)
       if OOCEvent.action == "UpdateSequence" then
         label = label .. " (" .. (seqLabel or "?") .. ")"
       elseif OOCEvent.action == "Save" or OOCEvent.action == "Replace"
-          or OOCEvent.action == "MergeSequence" or OOCEvent.action == "CheckMacroCreated" then
+          or OOCEvent.action == "MergeSequence" then
         label = label .. " (" .. (seqLabel or "?") .. ")"
       elseif OOCEvent.action == "updatemacro" or OOCEvent.action == "importmacro" then
         label = label .. " (" .. (OOCEvent.node and OOCEvent.node.name or "?") .. ")"

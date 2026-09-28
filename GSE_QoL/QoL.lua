@@ -537,18 +537,19 @@ local function getManagedMacroNames()
     return names
 end
 
--- Sequences available to this character, for the Macro editor's /click list.
+-- Sequences available to this character, for the Macro editor's /click list:
+-- { label, id } pairs, by label. The /click line targets the sequence's button,
+-- whose name is not its label (see GSE.ButtonForSequence). A WoW macro, by
+-- contrast, is picked by the name it has in /macro -- see getMacroNames.
 local function getSequenceNames()
-    -- Labels: a sequence's button is named by its label.
-    local names, seen = {}, {}
+    local list = {}
     for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
-        for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
-            local k = env.Name
-            if k and not seen[k] then seen[k] = true; names[#names + 1] = k end
+        for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+            if env.Name then list[#list + 1] = {label = env.Name, id = id} end
         end
     end
-    table.sort(names)
-    return names
+    table.sort(list, function(a, b) return a.label:lower() < b.label:lower() end)
+    return list
 end
 
 -- The /click line that fires a sequence. Its shape depends on KeyUp vs KeyDown
@@ -556,7 +557,8 @@ end
 -- that logic lives -- so lift its /click line instead of rebuilding the string.
 -- The Tab menu this replaces hand-built `"/click " .. name .. "LeftButton t"`,
 -- which is missing the space before LeftButton and so never matched a button.
-local function sequenceClickLine(name)
+local function sequenceClickLine(id)
+    local name = GSE.ButtonForSequence(id) or tostring(id)
     local full = (GSE.CreateMacroString and GSE.CreateMacroString(name)) or ""
     local click = full:match("([^\n]*/click[^\n]*)")
     if click and click ~= "" then return click end
@@ -1213,8 +1215,8 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                     end
                     if offerSequences then
                         local seqs = rootDescription:CreateButton(L["GSE Sequences"])
-                        for _, name in ipairs(getSequenceNames()) do
-                            seqs:CreateButton(name, function() return insertLine(sequenceClickLine(name)) end)
+                        for _, seq in ipairs(getSequenceNames()) do
+                            seqs:CreateButton(seq.label, function() return insertLine(sequenceClickLine(seq.id)) end)
                         end
                     end
                 elseif liveHasText then

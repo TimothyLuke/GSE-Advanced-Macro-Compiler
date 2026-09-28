@@ -26,6 +26,9 @@ local GNOME = "Storage"
 --   GSEStore.character[GUID] = { Label, ClassID, Macros = { [macroId] = slot } }
 --     -- which character macros each character holds (see "Characters")
 --
+--   GSEStore.alias[oldId] = newId      -- where a sequence moved (see "Sequences")
+--   GSEStore.button[id] = "GSES12"      -- each sequence's secure button (see "Buttons")
+--
 -- id is the GSE.Tools PlatformID once an element has synced, and a
 -- "local-..." id until then (a PlatformID is 24 hex, so the two cannot
 -- collide). Body is the element as it has always been stored -- an encoded
@@ -373,6 +376,7 @@ end
 -- are resolved through the alias when they are next read (ResolveSequenceId).
 
 local NAMES = {}   -- [classid][name] = id: the label index
+local BUTTONS = {} -- [button name] = id: which sequence a button runs
 
 local function seqEnvs(classid)
     return bucket(GSEStore, "sequence", classid)
@@ -400,12 +404,29 @@ settleSequenceIds = function(store)
                 envs[env.PlatformID] = env
                 taken[id], taken[env.PlatformID] = nil, true
                 store.alias[id] = env.PlatformID
+                -- Its button goes with it: keybinds and overrides click the
+                -- button, and it must not change name under them.
+                if type(store.button) == "table" and store.button[id] then
+                    store.button[env.PlatformID] = store.button[id]
+                    store.button[id] = nil
+                end
             end
         end
     end
 end
 
 indexSequenceNames = function()
+    BUTTONS = {}
+    if type(GSEStore.button) ~= "table" then GSEStore.button = {} end
+    local gone = {}
+    for id, b in pairs(GSEStore.button) do
+        local held = false
+        for _, envs in pairs(GSEStore.sequence) do
+            if envs[id] then held = true break end
+        end
+        if held then BUTTONS[b] = id else gone[#gone + 1] = id end
+    end
+    for _, id in ipairs(gone) do GSEStore.button[id] = nil end
     NAMES = {}
     for classid, envs in pairs(GSEStore.sequence) do
         local names = {}
@@ -493,6 +514,84 @@ function GSE.StoredElementName(kind, id)
     end
 end
 
+-- ── Buttons ─────────────────────────────────────────────────────────────────
+--
+-- Each sequence runs from a secure button, and keybinds, action-bar overrides
+-- and macros click that button by its frame name. The name is a short handle,
+-- GSES<n>, kept in GSEStore.button and never reused: not the sequence's id,
+-- because a macro's /click line repeats it up to seven times inside 255
+-- characters; and not its label, which changes on a rename and can be shared by
+-- two sequences. It moves with the sequence to its PlatformID.
+local BUTTON_PREFIX = "GSES"
+
+--- The name of a sequence's secure button, given its id. Assigned the first
+--- time it is asked for; nil for an id that is not a stored sequence.
+function GSE.ButtonForSequence(id)
+    ensureStore()
+    id = GSE.ResolveSequenceId(id)
+    if id == nil or not GSE.SequenceEnvelope(id) then return nil end
+    local b = GSEStore.button[id]
+    if not b then
+        GSEStore.nextButton = (tonumber(GSEStore.nextButton) or 0) + 1
+        b = BUTTON_PREFIX .. GSEStore.nextButton
+        GSEStore.button[id] = b
+        BUTTONS[b] = id
+    end
+    return b
+end
+
+--- Bring this character's keybinds and action-bar overrides up to date: each
+--- names the sequence it runs by id. Older builds stored the sequence's name,
+--- and a sequence that has since moved to its PlatformID is still held under
+--- its old id (GSE_C is per character, so it cannot be rewritten while the
+--- character is logged out). Once per login, before anything is bound. A
+--- reference to nothing that exists is left as it is: it binds nothing, as
+--- before.
+function GSE.UpdateCharacterSequenceRefs()
+    if type(GSE_C) ~= "table" then return end
+    local function toId(v)
+        if type(v) ~= "string" or v == "" then return v end
+        local resolved = GSE.ResolveSequenceId(v)
+        if GSE.SequenceEnvelope(resolved) then return resolved end
+        return GSE.FindSequenceId(v) or v      -- a name, from before ids
+    end
+    local function fixBinds(t)
+        for key, v in pairs(t) do
+            if key ~= "LoadOuts" then t[key] = toId(v) end
+        end
+    end
+    local function fixOverrides(buttons)
+        for _, bind in pairs(buttons) do
+            if type(bind) == "table" then bind.Sequence = toId(bind.Sequence) end
+        end
+    end
+    for _, spec in pairs(type(GSE_C.KeyBindings) == "table" and GSE_C.KeyBindings or {}) do
+        if type(spec) == "table" then
+            fixBinds(spec)
+            for _, loadout in pairs(type(spec.LoadOuts) == "table" and spec.LoadOuts or {}) do
+                if type(loadout) == "table" then fixBinds(loadout) end
+            end
+        end
+    end
+    local ab = type(GSE_C.ActionBarBinds) == "table" and GSE_C.ActionBarBinds or {}
+    for _, buttons in pairs(type(ab.Specialisations) == "table" and ab.Specialisations or {}) do
+        if type(buttons) == "table" then fixOverrides(buttons) end
+    end
+    for _, loadouts in pairs(type(ab.LoadOuts) == "table" and ab.LoadOuts or {}) do
+        if type(loadouts) == "table" then
+            for _, buttons in pairs(loadouts) do
+                if type(buttons) == "table" then fixOverrides(buttons) end
+            end
+        end
+    end
+end
+
+--- The id of the sequence a button runs, or nil for a button that is not one.
+function GSE.SequenceIdForButton(buttonName)
+    ensureStore()
+    return BUTTONS[buttonName]
+end
+
 --- A sequence's label.
 function GSE.SequenceName(id, classid)
     local env = GSE.SequenceEnvelope(id, classid)
@@ -559,6 +658,12 @@ function GSE.RemoveSequence(classid, id)
     local env = envs and envs[id]
     if not env then return end
     envs[id] = nil
+    -- Its button name is retired, never reused: a stale keybind or macro must
+    -- not end up clicking some other sequence.
+    if type(GSEStore.button) == "table" and GSEStore.button[id] then
+        BUTTONS[GSEStore.button[id]] = nil
+        GSEStore.button[id] = nil
+    end
     if NAMES[classid] and NAMES[classid][env.Name] == id then
         NAMES[classid][env.Name] = nil
         -- Another sequence of the same name, if any, is found by it now.
@@ -1329,9 +1434,6 @@ end
 --- Delete a sequence from the library, by id.
 function GSE.DeleteSequence(classid, id)
     classid = tonumber(classid)
-    -- Keybinds and overrides still name the sequence; read the label before
-    -- the record goes.
-    local sequenceName = GSE.SequenceName(id, classid)
     -- Read the id before the record goes, or there is nothing left to key by.
     if GSE.ForgetDeltaFork then
         if not GSE.ForgetDeltaFork(GSE.Library[classid] and GSE.Library[classid][id]) then
@@ -1341,16 +1443,16 @@ function GSE.DeleteSequence(classid, id)
     if GSE.Library[classid] then GSE.Library[classid][id] = nil end
     GSE.RemoveSequence(classid, id)
     GSE.ForgetCorruptSequence(classid, id)
-    if sequenceName == nil then return end
 
-    -- Remove any actionbar overrides that reference this sequence
+    -- Remove any actionbar overrides and keybinds that run this sequence (they
+    -- hold its id; see GSE.UpdateCharacterSequenceRefs).
     local overrideChanged = false
     if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
             for _, buttons in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
                 local toDelete = {}
                 for buttonName, bind in pairs(buttons) do
-                    if bind.Sequence == sequenceName then
+                    if bind.Sequence == id then
                         table.insert(toDelete, buttonName)
                     end
                 end
@@ -1365,7 +1467,7 @@ function GSE.DeleteSequence(classid, id)
                 for _, buttons in pairs(loadouts) do
                     local toDelete = {}
                     for buttonName, bind in pairs(buttons) do
-                        if bind.Sequence == sequenceName then
+                        if bind.Sequence == id then
                             table.insert(toDelete, buttonName)
                         end
                     end
@@ -1386,7 +1488,7 @@ function GSE.DeleteSequence(classid, id)
         for _, specData in pairs(GSE_C["KeyBindings"]) do
             local toDelete = {}
             for key, seqName in pairs(specData) do
-                if key ~= "LoadOuts" and seqName == sequenceName then
+                if key ~= "LoadOuts" and seqName == id then
                     table.insert(toDelete, key)
                 end
             end
@@ -1398,7 +1500,7 @@ function GSE.DeleteSequence(classid, id)
                 for _, loadoutData in pairs(specData["LoadOuts"]) do
                     local toDeleteLO = {}
                     for key, seqName in pairs(loadoutData) do
-                        if seqName == sequenceName then
+                        if seqName == id then
                             table.insert(toDeleteLO, key)
                         end
                     end
@@ -1454,7 +1556,7 @@ end
 --   updatemacro:   skipped if importmacro or updatemacro already queued for same node.name.
 --
 -- updatevariable: replaces existing entry for same variable name.
--- FinishReload/managemacros/CheckMacroCreated: skipped if already present.
+-- FinishReload/managemacros: skipped if already present.
 -- Which sequence a queued operation is about: its id, or -- for an import
 -- that has none until it is filed -- its name.
 local function seqKey(v)
@@ -1556,12 +1658,6 @@ function GSE.EnqueueOOC(vals)
             end
         end
 
-    elseif action == "CheckMacroCreated" then
-        for _, v in ipairs(GSE.OOCQueue) do
-            if v.action == "CheckMacroCreated" and v.sequencename == vals.sequencename then
-                return
-            end
-        end
     end
 
     table.insert(GSE.OOCQueue, vals)
@@ -1819,64 +1915,8 @@ function GSE.RenameSequence(classid, id, newName, sequence)
     if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
     GSE.Library[classid][id] = sequence
 
-    -- Migrate any actionbar overrides that referenced the old name so the
-    -- bound buttons follow the rename instead of pointing at the stale name.
-    local overrideChanged = false
-    if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
-        if not GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
-            for _, buttons in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do
-                for _, bind in pairs(buttons) do
-                    if bind.Sequence == oldName then
-                        bind.Sequence = newName
-                        overrideChanged = true
-                    end
-                end
-            end
-        end
-        if not GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
-            for _, loadouts in pairs(GSE_C["ActionBarBinds"]["LoadOuts"]) do
-                for _, buttons in pairs(loadouts) do
-                    for _, bind in pairs(buttons) do
-                        if bind.Sequence == oldName then
-                            bind.Sequence = newName
-                            overrideChanged = true
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if overrideChanged and GSE.ReloadOverrides then
-        GSE.ReloadOverrides()
-    end
-
-    -- Migrate any keybindings that referenced the old name. Reassign in the
-    -- saved table, then re-apply so the key clicks the renamed button.
-    local keybindChanged = false
-    if not InCombatLockdown() and not GSE.isEmpty(GSE_C["KeyBindings"]) then
-        for _, specData in pairs(GSE_C["KeyBindings"]) do
-            for key, seqName in pairs(specData) do
-                if key ~= "LoadOuts" and seqName == oldName then
-                    specData[key] = newName
-                    keybindChanged = true
-                end
-            end
-            if not GSE.isEmpty(specData["LoadOuts"]) then
-                for _, loadoutData in pairs(specData["LoadOuts"]) do
-                    for key, seqName in pairs(loadoutData) do
-                        if seqName == oldName then
-                            loadoutData[key] = newName
-                            keybindChanged = true
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if keybindChanged and GSE.ReloadKeyBindings then
-        GSE.ReloadKeyBindings()
-    end
-
+    -- Keybinds and action-bar overrides hold the id and click the sequence's
+    -- button, whose name is not its label: a rename touches neither.
     GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, id)
     return true
 end
@@ -2507,8 +2547,9 @@ function GSE.OOCUpdateSequence(id, sequence)
     if not env or (classid ~= 0 and classid ~= GSE.GetCurrentClassID()) then
         return
     end
-    -- The secure button is still named by the sequence's label.
-    local name = env.Name
+    -- The secure button's frame name (see "Buttons"); messages show the label.
+    local name = GSE.ButtonForSequence(id)
+    local label = env.Name
 
     -- Avoid rebuilding the secure button while a boss encounter is still active.
     if GSE.IsEncounterInProgress and GSE.IsEncounterInProgress() then
@@ -2532,13 +2573,13 @@ function GSE.OOCUpdateSequence(id, sequence)
                 L[
                     "%s sequence may cause a 'RestrictedExecution.lua:431' error as it has %s actions when compiled.  This get interesting when you go past 255 actions.  You may need to simplify this sequence."
                 ],
-                name,
+                label,
                 actionCount
             ),
             "MACRO ERROR"
         )
     end
-    GSE.CreateGSE3Button(compiledTemplate, name, combatReset)
+    GSE.CreateGSE3Button(compiledTemplate, name, combatReset, label)
     if GSE.RefreshActionBarOverrideIcons then
         GSE.RefreshActionBarOverrideIcons(name, false)
         C_Timer.After(0, function() GSE.RefreshActionBarOverrideIcons(name, false) end)
@@ -2548,7 +2589,7 @@ function GSE.OOCUpdateSequence(id, sequence)
     if GSE.GUI and not GSE.isEmpty(GSE.GUIEditFrame) then
         if not GSE.isEmpty(GSE.GUIEditFrame.IsVisible) then
             if GSE.GUIEditFrame:IsVisible() then
-                GSE.GUIEditFrame:SetStatusText(name .. " " .. L["Saved"])
+                GSE.GUIEditFrame:SetStatusText(label .. " " .. L["Saved"])
                 C_Timer.After(
                     5,
                     function()
@@ -2598,48 +2639,6 @@ function GSE.CreateMacroString(macroname)
 
     returnVal = returnVal .. macroname
     return returnVal
-end
-
---- Add a Create Macro to the Out of Combat Queue
-function GSE.CheckMacroCreated(SequenceName, create)
-    local vals = {}
-    vals.action = "CheckMacroCreated"
-    vals.sequencename = SequenceName
-    vals.create = create
-    GSE.EnqueueOOC(vals)
-end
-
---- Check if a macro has been created and if the create flag is true and the macro hasn't been created, then create it.
-function GSE.OOCCheckMacroCreated(SequenceName, create)
-    local found = false
-
-    local macroIndex = GetMacroIndexByName(SequenceName)
-    if macroIndex and macroIndex ~= 0 then
-        found = true
-        if create then
-            EditMacro(macroIndex, nil, GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(SequenceName, select(2, GetMacroInfo(macroIndex))) or nil, GSE.CreateMacroString(SequenceName))
-        end
-    else
-        if create then
-            GSE.CreateMacroIcon(SequenceName, GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(SequenceName, Statics.QuestionMark) or Statics.QuestionMark)
-            found = true
-        end
-    end
-    return found
-end
-
---- This removes a macro Stub.
-function GSE.DeleteMacroStub(sequenceName)
-    local mname, _, mbody = GetMacroInfo(sequenceName)
-    if mname == sequenceName then
-        local trimmedmbody = mbody:gsub("[^%w ]", "")
-        local compar = GSE.CreateMacroString(mname)
-        local trimmedcompar = compar:gsub("[^%w ]", "")
-        if string.lower(trimmedmbody) == string.lower(trimmedcompar) then
-            GSE.Print(L[" Deleted Orphaned Macro "] .. mname, GNOME)
-            DeleteMacro(sequenceName)
-        end
-    end
 end
 
 --- Order for GetSequenceNames keys ("classid,spec,id,disable"): by class,
@@ -3928,14 +3927,14 @@ end
 end
 
 --- Build GSE3 Executable Buttons
-function GSE.CreateGSE3Button(spelllist, name, combatReset)
+function GSE.CreateGSE3Button(spelllist, name, combatReset, label)
     local status, err = pcall(PCallCreateGSE3Button, spelllist, name, combatReset)
     if err or not status then
         GSE.Print(
             string.format(
                 "%s " ..
                     L["was unable to be programmed.  This sequence will not fire until errors in the sequence are corrected."],
-                name
+                label or name
             ),
             "BROKEN MACRO"
         )
@@ -4449,7 +4448,8 @@ function GSE.ManageMacros()
     for _, classid in ipairs({0, currentClass}) do
         local classlib = GSE.Library[classid]
         if classlib then
-            for seqname, seq in pairs(classlib) do
+            for id, seq in pairs(classlib) do
+                local seqname = GSE.SequenceName(id, classid) or tostring(id)
                 if type(seq) == "table" and type(seq.MetaData) == "table" then
                     local deps = seq.MetaData.Dependencies
                     if deps and type(deps.Macros) == "table" then

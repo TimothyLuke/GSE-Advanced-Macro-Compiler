@@ -7,7 +7,6 @@ local Statics = GSE.Static
 local L = GSE.L
 
 local GNOME = "Storage"
-local mname = nil
 
 function GSE.ImportLegacyStorage(Library)
     if not GSE.isEmpty(Library) then
@@ -315,61 +314,6 @@ function GSE.ImportMacroCollection(Sequences)
 end
 
 --- Add a macro for a sequence and register it in the list of known sequences
-function GSE.CreateMacroIcon(sequenceName, icon, forceglobalstub)
-    local sequenceIndex = GetMacroIndexByName(sequenceName)
-    local numAccountMacros, numCharacterMacros = GetNumMacros()
-    local maxAccountMacros = GSE.GetMaxAccountMacros()
-    local maxCharacterMacros = GSE.GetMaxCharacterMacros()
-    if sequenceIndex > 0 then
-        -- Sequence exists, do nothing
-        --@debug@
-        GSE.PrintDebugMessage("Moving on - macro for " .. sequenceName .. " already exists.", GNOME)
-        --@end-debug@
-    else
-        -- Create Sequence as a player sequence
-        if numCharacterMacros >= maxCharacterMacros and not GSEOptions.overflowPersonalMacros and not forceglobalstub then
-            GSE.Print(
-                GSEOptions.AuthorColour ..
-                    L["Close to Maximum Personal Macros.|r  You can have a maximum of "] ..
-                        maxCharacterMacros ..
-                            L[" macros per character.  You currently have "] ..
-                                GSEOptions.EmphasisColour ..
-                                    numCharacterMacros ..
-                                        L[
-                                            "|r.  As a result this macro was not created.  Please delete some macros and reenter "
-                                        ] ..
-                                            GSEOptions.CommandColour .. L["/gse|r again."],
-                GNOME
-            )
-        elseif numAccountMacros >= maxAccountMacros and GSEOptions.overflowPersonalMacros then
-            GSE.Print(
-                L["Close to Maximum Macros.|r  You can have a maximum of "] ..
-                    maxCharacterMacros ..
-                        L[" macros per character.  You currently have "] ..
-                            GSEOptions.EmphasisColour ..
-                                numCharacterMacros ..
-                                    L["|r.  You can also have a  maximum of "] ..
-                                        maxAccountMacros ..
-                                            L[" macros per Account.  You currently have "] ..
-                                                GSEOptions.EmphasisColour ..
-                                                    numAccountMacros ..
-                                                        L[
-                                                            "|r. As a result this macro was not created.  Please delete some macros and reenter "
-                                                        ] ..
-                                                            GSEOptions.CommandColour .. L["/gse|r again."],
-                GNOME
-            )
-        else
-            CreateMacro(
-                sequenceName,
-                (GSEOptions.setDefaultIconQuestionMark and "INV_MISC_QUESTIONMARK" or icon),
-                GSE.CreateMacroString(sequenceName),
-                (forceglobalstub and false or GSE.SetMacroLocation())
-            )
-        end
-    end
-end
-
 local function fixContainer(v)
     local fixedTable = {}
     for k, val in pairs(v) do
@@ -767,31 +711,11 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
     return decompresssuccess
 end
 
---- This function removes any macro stubs that do not relate to a GSE macro
-function GSE.CleanOrphanSequences()
-    local maxmacros = GSE.GetMaxAccountMacros() + GSE.GetMaxCharacterMacros() + 2
-    local todelete = {}
-    for _ = 1, maxmacros do
-        local found = false
-        if not GSE.isEmpty(mname) then
-            -- A stub is named by its sequence's label.
-            if GSE.FindSequenceId(mname) then
-                found = true
-            end
-
-            if not found then
-                -- Check if body is a gs one and delete the orphan
-                todelete[mname] = true
-            end
-        end
-    end
-    for k, _ in pairs(todelete) do
-        GSE.DeleteMacroStub(k)
-    end
-end
-
 --- This function dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
+    -- Given a sequence's label, dump its button.
+    local id = GSE.FindSequenceId(SequenceName)
+    SequenceName = (id and GSE.ButtonForSequence(id)) or SequenceName
     GSE.Print("====================================\nStart GSE Button Dump\n====================================")
     GSE.Print("Button name: " .. SequenceName)
     GSE.Print("Step Id: " .. _G[SequenceName]:GetAttribute("step"))
@@ -2062,14 +1986,6 @@ function GSE.PrintGnomeHelp()
         L["The command "] ..
             GSEOptions.CommandColour ..
                 L[
-                    "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
-                ],
-        GNOME
-    )
-    GSE.Print(
-        L["The command "] ..
-            GSEOptions.CommandColour ..
-                L[
                     "/gse checksequencesforerrors|r will loop through your sequences and check for corrupt sequence versions.  This will then show how to correct these issues."
                 ],
         GNOME
@@ -2164,10 +2080,7 @@ function GSE:GSSlash(input)
         end
     elseif command == "help" then
         GSE.PrintGnomeHelp()
-    elseif command == "cleanorphans" or command == "clean" then
-        GSE.CleanOrphanSequences()
     elseif command == "forceclean" then
-        GSE.CleanOrphanSequences()
         GSE.CleanMacroLibrary(true)
         if not InCombatLockdown() then
             if not GSE.isEmpty(GSE_C["KeyBindings"]) then
@@ -2516,7 +2429,6 @@ do
             for k, seq in pairs(GSE.Library[classID] or {}) do
                 local specID = seq and seq.MetaData and seq.MetaData.SpecID
                 local disabled = seq and seq.MetaData and seq.MetaData.Disabled
-                -- Overrides still name the sequence they run.
                 table.insert(names, { id = k, name = GSE.SequenceName(k, classID) or tostring(k),
                     specID = specID, disabled = disabled })
             end
@@ -2529,7 +2441,10 @@ do
         local buttonName = self:GetName()
         MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
             if existingSequence then
-                rootDescription:CreateTitle(L["GSE"] .. ": " .. existingSequence)
+                -- gse-button is the sequence's button; show its label.
+                local existingId = GSE.SequenceIdForButton(existingSequence)
+                rootDescription:CreateTitle(L["GSE"] .. ": "
+                    .. (existingId and GSE.SequenceName(existingId) or existingSequence))
                 rootDescription:CreateButton(L["Clear Override"], function()
                     GSE.RemoveActionBarOverride(buttonName)
                 end)
@@ -2557,7 +2472,7 @@ do
                     end)
                 else
                     rootDescription:CreateButton(label, function()
-                        GSE.CreateActionBarOverride(buttonName, entry.name)
+                        GSE.CreateActionBarOverride(buttonName, entry.id)
                     end)
                 end
             end

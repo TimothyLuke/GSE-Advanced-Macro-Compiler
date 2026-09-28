@@ -153,13 +153,6 @@ describe("GSE.EnqueueOOC", function()
       end
       assert.are.same({"FinishReload", "managemacros", "openoptions"}, actions())
     end)
-
-    it("CheckMacroCreated is one per sequence, not one overall", function()
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "A"})
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "A"})
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "B"})
-      assert.are.same({"A", "B"}, names())
-    end)
   end)
 
   it("appends anything it has no rule for", function()

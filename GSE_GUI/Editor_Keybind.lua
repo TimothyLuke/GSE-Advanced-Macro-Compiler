@@ -9,24 +9,37 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
--- Keybinds still name the sequence they click; these take that name.
-local function sequenceExists(seqName)
-    return GSE.FindSequenceId(seqName, nil, true) ~= nil
+-- Keybinds and overrides hold the id of the sequence they run (GSE_C is
+-- brought up to date at login -- GSE.UpdateCharacterSequenceRefs). A value
+-- that is not an id is looked up as a name, for anything that slipped past.
+local function sequenceIdOf(ref)
+    if ref == nil then return nil end
+    if GSE.SequenceEnvelope(ref) then return GSE.ResolveSequenceId(ref) end
+    return GSE.FindSequenceId(ref) or GSE.FindSequenceId(ref, nil, true)
 end
 
-local function sequenceIsDisabled(seqName)
-    local id, classid = GSE.FindSequenceId(seqName)
-    if not id then id, classid = GSE.FindSequenceId(seqName, nil, true) end
-    local seq = id and GSE.Library[classid] and GSE.Library[classid][id]
+local function sequenceExists(ref)
+    return sequenceIdOf(ref) ~= nil
+end
+
+local function sequenceIsDisabled(ref)
+    local id = sequenceIdOf(ref)
+    local seq = id and GSE.GetSequence(id)
     if seq then
         return seq.MetaData and seq.MetaData.Disabled == true
     end
     return false
 end
 
+-- What the player reads for a sequence reference: its label.
+local function sequenceLabel(ref)
+    local id = sequenceIdOf(ref)
+    return (id and GSE.SequenceName(id)) or tostring(ref)
+end
+
 -- Append a disabled warning to a tree node label when the sequence is disabled.
 local function keybindNodeText(bindLabel, seqName)
-    local base = bindLabel .. " " .. GSEOptions.KEYWORD .. "(" .. seqName .. ")" .. Statics.StringReset
+    local base = bindLabel .. " " .. GSEOptions.KEYWORD .. "(" .. sequenceLabel(seqName) .. ")" .. Statics.StringReset
     if sequenceIsDisabled(seqName) then
         base = base .. " |cFFFF6600" .. L["Sequence Disabled"] .. "|r"
     end
@@ -509,16 +522,17 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- than hidden, so a row already pointing at one still shows what it is.
     local function sequenceList()
         local names, order = {}, {}
+        -- Keyed by id, shown by label: what is saved is the id.
         for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
-            for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
-                local k = env.Name
-                if k and not names[k] then
-                    names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
-                    table.insert(order, k)
+            for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                if env.Name and not names[id] then
+                    names[id] = sequenceIsDisabled(id) and env.Name .. " (" .. L["Sequence Disabled"] .. ")" or env.Name
+                    table.insert(order, id)
                 end
             end
         end
-        return names, GSE.SortTableAlphabetical(order)
+        table.sort(order, function(a, b) return names[a]:lower() < names[b]:lower() end)
+        return names, order
     end
 
     local function save()
@@ -573,7 +587,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         for _, r in ipairs(incomplete) do
             table.insert(rows, r)
             GSE.Print(string.format(L["%s was not saved: it still needs a %s."],
-                GSE.isEmpty(r.key) and r.seq or r.key,
+                GSE.isEmpty(r.key) and sequenceLabel(r.seq) or r.key,
                 GSE.isEmpty(r.key) and L["Keybind"] or L["Sequence"]))
         end
         if #incomplete > 0 and saveButton then saveButton:SetDisabled(false) end
@@ -1212,16 +1226,17 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     local function sequenceList()
         local names, order = {}, {}
+        -- Keyed by id, shown by label: what is saved is the id.
         for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
-            for _, env in pairs(GSE.SequenceEnvelopes(classid)) do
-                local k = env.Name
-                if k and not names[k] then
-                    names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
-                    table.insert(order, k)
+            for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                if env.Name and not names[id] then
+                    names[id] = sequenceIsDisabled(id) and env.Name .. " (" .. L["Sequence Disabled"] .. ")" or env.Name
+                    table.insert(order, id)
                 end
             end
         end
-        return names, GSE.SortTableAlphabetical(order)
+        table.sort(order, function(a, b) return names[a]:lower() < names[b]:lower() end)
+        return names, order
     end
 
     local function rowKey(r)
@@ -1269,7 +1284,8 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- data, so rows removed here go dead on this call.
         GSE.ReloadOverrides()
         for _, r in ipairs(rows) do
-            if not GSE.isEmpty(r.seq) and _G[r.seq] and GSE.UpdateIcon then GSE.UpdateIcon(_G[r.seq]) end
+            local rowButton = not GSE.isEmpty(r.seq) and GSE.ButtonForSequence(r.seq)
+            if rowButton and _G[rowButton] and GSE.UpdateIcon then GSE.UpdateIcon(_G[rowButton]) end
         end
         if saveButton then saveButton:SetDisabled(true) end
         loadRows()

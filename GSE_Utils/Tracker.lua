@@ -1743,10 +1743,16 @@ local function IsFallbackIcon(icon)
     return GSE.IsFallbackIcon(icon)
 end
 
--- The tracker follows buttons, which are named by their sequence's label.
-local function FindSequenceObject(sequence)
+-- The tracker follows buttons. A button's name is its sequence's handle
+-- (GSE.ButtonForSequence), not its label; this is the sequence it runs.
+local function SequenceIdOf(sequence)
     if type(sequence) ~= "string" or sequence == "" then return nil end
-    return (GSE.FindSequence(sequence))
+    return GSE.SequenceIdForButton(sequence)
+end
+
+local function FindSequenceObject(sequence)
+    local id = SequenceIdOf(sequence)
+    return id and (GSE.GetSequence(id)) or nil
 end
 
 function GSE.SequenceIconGetMetadata(sequence)
@@ -1757,7 +1763,8 @@ end
 
 function GSE.SequenceIconIsGlobalSequence(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
-    local _, classid = GSE.FindSequenceId(sequence)
+    local id = SequenceIdOf(sequence)
+    local _, classid = GSE.SequenceEnvelope(id)
     if classid == 0 then return true end
 
     local metadata = GSE.SequenceIconGetMetadata(sequence)
@@ -1767,6 +1774,9 @@ end
 
 function GSE.SequenceIconIsAccountMacro(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
+    -- A sequence's WoW macro, if it has one, carries its label.
+    local id = SequenceIdOf(sequence)
+    sequence = (id and GSE.SequenceName(id)) or sequence
 
     local maxAccountMacros = GSE.GetMaxAccountMacros()
     if GetMacroIndexByName and maxAccountMacros then
@@ -1804,6 +1814,9 @@ local function IsValidSequence(sequence)
 end
 
 local function GetPrettySequenceName(sequence)
+    local id = SequenceIdOf(sequence)
+    local label = id and GSE.SequenceName(id)
+    if label then return label end
     local seq = FindSequenceObject(sequence)
     if type(seq) == "table" then
         local metadata = seq.MetaData or seq.metadata
@@ -1821,7 +1834,7 @@ local function GetPrettySequenceNameWithVersion(sequence)
 
     local sequenceName = GetPrettySequenceName(sequence)
     local version
-    local id = GSE.FindSequenceId(sequence)
+    local id = SequenceIdOf(sequence)
     if id and GSE.GetActiveSequenceVersion then
         local ok, result = pcall(GSE.GetActiveSequenceVersion, id)
         if ok and result ~= nil then version = result end
@@ -1928,9 +1941,13 @@ local function AddUniqueValue(values, seen, value)
     table.insert(values, value)
 end
 
+-- Saved keybinds and overrides hold the sequence's id; live override state
+-- (GSE.ButtonOverrides) holds its button.
 local function BindingTargetMatches(target, sequence, buttonName)
     if type(target) ~= "string" or target == "" then return false end
     if target == sequence or target == buttonName then return true end
+    local id = SequenceIdOf(sequence)
+    if id and GSE.ResolveSequenceId(target) == id then return true end
     if GSE.ButtonOverrides and GSE.ButtonOverrides[target] == sequence then return true end
     return false
 end
@@ -2010,6 +2027,7 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
 
     local actionBarBinds = GSE_C and GSE_C["ActionBarBinds"]
     if type(actionBarBinds) ~= "table" then return end
+    local seqId = SequenceIdOf(sequence)
 
     local specKey = GetCurrentSpecKey()
     local specs = actionBarBinds["Specialisations"]
@@ -2017,7 +2035,7 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
         local specBinds = specs[specKey]
         if type(specBinds) == "table" then
             for _, savedBind in pairs(specBinds) do
-                if type(savedBind) == "table" and savedBind.Sequence == sequence then
+                if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                     AddBindingKeysForButton(values, seen, savedBind.Bind)
                 end
             end
@@ -2029,7 +2047,7 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
     local loadoutBinds = loadoutKey and loadouts and loadouts[specKey] and loadouts[specKey][loadoutKey]
     if type(loadoutBinds) == "table" then
         for _, savedBind in pairs(loadoutBinds) do
-            if type(savedBind) == "table" and savedBind.Sequence == sequence then
+            if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                 AddBindingKeysForButton(values, seen, savedBind.Bind)
             end
         end
@@ -2210,10 +2228,12 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         return false
     end
 
+    -- Saved overrides hold the sequence's id.
+    local seqId = SequenceIdOf(sequence)
     local function ActionBarTableMatches(bindings)
         if type(bindings) ~= "table" then return false end
         for _, savedBind in pairs(bindings) do
-            if type(savedBind) == "table" and savedBind.Sequence == sequence then
+            if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                 return true
             end
         end
@@ -3581,8 +3601,8 @@ GSE.SequenceIconFrameUpdateFromButton = UpdateSequenceIconFromButton
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
 GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
 GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
-    -- Announced by id; the tracker knows buttons by label.
-    local sequence = GSE.SequenceName(id)
+    -- Announced by id; the tracker knows its button.
+    local sequence = GSE.ButtonForSequence(id)
     if sequence and EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
         SetSequencePreview(sequence)
     end

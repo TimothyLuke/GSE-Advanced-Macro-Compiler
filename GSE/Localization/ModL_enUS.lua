@@ -572,9 +572,6 @@ L["Local Function: "] = true
 L[
         "/gse|r will list any sequences available to your spec.  This will also add an in-game macro for each sequence available to your current spec to the macro interface."
     ] = true
-L[
-        "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
-    ] = true
 L["/gse help|r to get started."] = true
 L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["GSE Plugins"] = true
