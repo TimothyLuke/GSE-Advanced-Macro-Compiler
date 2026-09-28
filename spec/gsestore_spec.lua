@@ -389,6 +389,46 @@ describe("GSEStore", function()
       assert.equals(7, GSE.Store("macro").Pull.value)
     end)
 
+    it("records a PlatformID from the bridge without rewriting the body", function()
+      -- A sealed body must come back byte for byte; the id lives in the envelope.
+      local sealed = "SEQ|Sealed|Tim@Realm|"
+      firstRun({ GSESequences = { [0] = { Sealed = sealed } } })
+      local encoded = 0
+      GSE.EncodeMessage = function() encoded = encoded + 1; return "REENCODED" end
+      assert.is_true(GSE.SetStoredPlatformID("sequence", "Sealed", "pidS000000000000000000ss", 4))
+      reload()
+      assert.equals(0, encoded, "nothing re-encoded")
+      local env = envs("sequence", 0)["pidS000000000000000000ss"]
+      assert.is_not_nil(env, "global sequences get their id too")
+      assert.equals(sealed, env.Body)
+      assert.equals("pidS000000000000000000ss", env.PlatformID)
+    end)
+
+    it("records a PlatformID for a sequence created this session", function()
+      firstRun({})
+      GSE.Store("sequence")[3].Fresh = "SEQ|Fresh|Tim@Realm|"
+      assert.is_true(GSE.SetStoredPlatformID("sequence", "Fresh", "pidF000000000000000000ff"))
+      reload()
+      assert.equals("Fresh", envs("sequence", 3)["pidF000000000000000000ff"].Name)
+    end)
+
+    it("records a PlatformID for a variable and a macro", function()
+      firstRun({ GSEVariables = { V = "VARBODY" },
+                 GSEMacros = { Pull = { text = "/cast Charge", value = 3 } } })
+      assert.is_true(GSE.SetStoredPlatformID("variable", "V", "pidV000000000000000000vv"))
+      assert.is_true(GSE.SetStoredPlatformID("macro", "Pull", "pidM000000000000000000mm"))
+      reload()
+      assert.equals("V", envs("variable", 0)["pidV000000000000000000vv"].Name)
+      assert.equals("Pull", envs("macro", 0)["pidM000000000000000000mm"].Name)
+    end)
+
+    it("reports a name it does not hold, so the bridge retries later", function()
+      firstRun({})
+      assert.is_false(GSE.SetStoredPlatformID("sequence", "Nobody", "pidN000000000000000000nn"))
+      assert.is_false(GSE.SetStoredPlatformID("variable", "Nobody", "pidN000000000000000000nn"))
+      assert.is_false(GSE.SetStoredPlatformID("macro", "Nobody", "pidN000000000000000000nn"))
+    end)
+
     it("does not let a recreated old SavedVariable be written beside the store", function()
       firstRun({})
       _G.GSESequences = { [1] = {} }

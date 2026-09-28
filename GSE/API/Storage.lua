@@ -716,6 +716,63 @@ function GSE.Store(kind)
     return t
 end
 
+--- Record the GSE.Tools id of a stored element, found by name, without
+-- touching its body.
+--
+-- The body may be sealed (!GSE3!+). The Mod can read a sealed body but must
+-- never write one back in the clear, and re-encoding it to change one MetaData
+-- field would do exactly that -- which is what the Companion bridge used to do.
+-- The id goes into the same sidecar view the GSE.Tools round trip has always
+-- used, and ReconcileStore moves the element to it at logout; the body is not
+-- read unless nothing else says who the author is, and is never written.
+--
+-- classid is a hint for sequences: that class is tried first, then every
+-- class, global (0) included. Returns true when the element was found.
+function GSE.SetStoredPlatformID(kind, name, pid, classid)
+    if type(name) ~= "string" or type(pid) ~= "string" or pid == "" then return false end
+    if not VIEWS then GSE.LoadStore() end
+    if kind == "variable" then
+        if VIEWS.variable[name] == nil then return false end
+        VIEWS.variablePid[name] = pid
+        return true
+    elseif kind == "macro" then
+        local found = VIEWS.macro[name] ~= nil and isMacroNode(VIEWS.macro[name])
+        if not found then
+            for _, b in pairs(VIEWS.macro) do
+                if type(b) == "table" and not isMacroNode(b) and b[name] ~= nil then found = true; break end
+            end
+        end
+        if not found then return false end
+        VIEWS.macroPid[name] = pid
+        return true
+    end
+    local hint = tonumber(classid)
+    local order = {}
+    if hint then order[1] = hint end
+    for c = 0, 13 do if c ~= hint then order[#order + 1] = c end end
+    for _, c in ipairs(order) do
+        local body = VIEWS.sequence[c] and VIEWS.sequence[c][name]
+        if body ~= nil then
+            local id = INDEX.sequence[c] and INDEX.sequence[c][name]
+            local env = id and GSEStore.sequence[c] and GSEStore.sequence[c][id]
+            local lib = GSE.Library and GSE.Library[c] and GSE.Library[c][name]
+            local author = (env and env.Author)
+                or (type(lib) == "table" and type(lib.MetaData) == "table" and lib.MetaData.Author)
+                or ((sequenceMeta(body) or {}).Author)
+                or ""
+            VIEWS.sequencePid[name .. "|" .. author] = pid
+            -- The loaded copy, so the editor shows the id without a /reload.
+            -- Memory only: the stored body is not rewritten.
+            if type(lib) == "table" then
+                lib.MetaData = lib.MetaData or {}
+                lib.MetaData.PlatformID = pid
+            end
+            return true
+        end
+    end
+    return false
+end
+
 --- One class's table within a kind's view; created only when asked to.
 function GSE.StoreClass(kind, classid, create)
     local root = GSE.Store(kind)
