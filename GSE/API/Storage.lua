@@ -3885,6 +3885,8 @@ function GSE.UpdateMacro(node, category, skipStore)
     -- it's comparable across timezones.
     if node then
         node.LastUpdated = GSE.GetTimestamp()
+        -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
+        node.GSEVersion = GSE.VersionNumber
         node.text = CleanMacroBookText(node.text)
     end
     if not InCombatLockdown() then

@@ -503,6 +503,9 @@ end]],
                 end
                 editframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
                 variable.LastUpdated = GSE.GetTimestamp()
+                -- The build that saved it, as the sequence editor stamps
+                -- MetaData.GSEVersion.
+                variable.GSEVersion = GSE.VersionNumber
                 local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
                 local oocaction = {
                     ["action"] = "updatevariable",
