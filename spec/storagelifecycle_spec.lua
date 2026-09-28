@@ -206,6 +206,56 @@ describe("Storage lifecycle", function()
     end)
   end)
 
+  -- ── Embed blocks ──────────────────────────────────────────────────────────
+  -- An Embed carries the id and the label: the id when this machine has it,
+  -- the label otherwise; and what leaves the machine never carries a local id.
+  describe("Embed blocks", function()
+    local function embedding(block)
+      return {MetaData = {Name = "OUTER"}, Versions = {{Actions = {block}}}}
+    end
+    local function inner(id, name, pid)
+      local env = GSE.PutSequenceBody(1, id, name, "!GSE3!" .. name)
+      env.PlatformID = pid
+      GSE.Library[1][id] = {MetaData = {Name = name}, Versions = {{Actions = {}}}}
+    end
+
+    it("runs the embedded sequence by id, however it was renamed", function()
+      inner("id-in", "RENAMED")
+      local _, id = GSE.ResolveEmbed({Type = "Embed", SequenceID = "id-in", Sequence = "OLDNAME"})
+      assert.are.equal("id-in", id)
+    end)
+
+    it("falls back to the label for an id this machine does not have", function()
+      inner("id-in", "INNER")
+      local _, id = GSE.ResolveEmbed({Type = "Embed", SequenceID = "someone-elses", Sequence = "INNER"})
+      assert.are.equal("id-in", id)
+    end)
+
+    it("brings the block up to date on save: the id, and the current label", function()
+      inner("id-in", "NEWNAME")
+      local named = {Type = "Embed", Sequence = "NEWNAME"}
+      local renamed = {Type = "Embed", SequenceID = "id-in", Sequence = "OLDNAME"}
+      local seq = embedding(named)
+      seq.Versions[2] = {Actions = {{Type = "Loop", renamed}}}
+      GSE.NormaliseEmbeds(seq)
+      assert.are.equal("id-in", named.SequenceID, "a label-only block gains the id")
+      assert.are.equal("NEWNAME", renamed.Sequence, "the label follows a rename, even inside a Loop")
+    end)
+
+    it("never lets a local id leave the machine", function()
+      inner("local-unsynced", "UNSYNCED")
+      inner("local-synced", "SYNCED", "pid-synced0000000000000000")
+      local a = {Type = "Embed", SequenceID = "local-unsynced", Sequence = "UNSYNCED"}
+      local b = {Type = "Embed", SequenceID = "local-synced", Sequence = "SYNCED"}
+      local seq = embedding(a)
+      seq.Versions[1].Actions[2] = b
+      GSE.NormaliseEmbeds(seq, true)
+      assert.is_nil(a.SequenceID, "no PlatformID yet: the label decides elsewhere")
+      assert.are.equal("UNSYNCED", a.Sequence)
+      assert.are.equal("pid-synced0000000000000000", b.SequenceID)
+    end)
+  end)
+
   -- ── the repack request ────────────────────────────────────────────────────
   describe("GSE.QueueRepack", function()
     it("carries identity only, never a body", function()

@@ -979,7 +979,7 @@ local function checkSeqStructure(classlibid, seqname, seq) -- luacheck: ignore c
                                         macIdx, actIdx))
                                 end
                             elseif action.Type == Statics.Actions.Embed then
-                                if GSE.isEmpty(action.Sequence) then
+                                if GSE.isEmpty(action.Sequence) and GSE.isEmpty(action.SequenceID) then
                                     table.insert(issues, string.format(
                                         L["Macros[%d].Actions[%d] (Embed) is missing the Sequence field"],
                                         macIdx, actIdx))

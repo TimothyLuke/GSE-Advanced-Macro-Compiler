@@ -138,6 +138,9 @@ local function shareableSequence(id, classid, label)
     if not env then return nil end
     local seq = GSE.GetSequence(id, c)
     if type(seq) ~= "table" or GSE.IsProtectedAtRest(env.Body, seq) then return nil end
+    -- A copy to send: its Embed blocks carry a PlatformID or no id at all.
+    seq = GSE.CloneSequence(seq)
+    GSE.NormaliseEmbeds(seq, true)
     return seq, c, env.Name
 end
 

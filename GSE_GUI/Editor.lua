@@ -4027,7 +4027,8 @@ function GSE.CreateEditor()
             elseif actionType == Statics.Actions.If then
                 detail = FirstLine(action.Variable)
             elseif actionType == Statics.Actions.Embed then
-                detail = tostring(action.Sequence or "Embed")
+                local _, embeddedId = GSE.ResolveEmbed(action)
+                detail = tostring((embeddedId and GSE.SequenceName(embeddedId)) or action.Sequence or "Embed")
             end
 
             return title, detail, Statics.ActionsIcons[actionType] or Statics.ActionsIcons.Action
@@ -6229,7 +6230,8 @@ function GSE.CreateEditor()
                 if SequenceDropDown.SetFlowFillRemaining then SequenceDropDown:SetFlowFillRemaining(true) end
 
                 local cid, sid = GSE.GetCurrentClassID(), GSE.GetCurrentSpecID()
-                -- An Embed still names what it embeds: list labels, store the label.
+                -- Listed by label, chosen by id: the block keeps both
+                -- (SequenceID, and Sequence as the label -- see GSE.ResolveEmbed).
                 for k, v in GSE.pairsByKeys(GSE.GetSequenceNames() or {}, GSE.SequenceKeyOrder) do
                     local label = GSE.SequenceName(v)
                     if label and v ~= editframe.SequenceID then
@@ -6258,23 +6260,25 @@ function GSE.CreateEditor()
                                 sid = specid
                             end
                         end
-                        SequenceDropDown:AddItem(label, label)
+                        SequenceDropDown:AddItem(v, label)
                     end
                 end
-                for _, env in pairs(GSE.SequenceEnvelopes(0)) do
-                    if env.Name then SequenceDropDown:AddItem(env.Name, env.Name) end
+                for gid, env in pairs(GSE.SequenceEnvelopes(0)) do
+                    if env.Name and gid ~= editframe.SequenceID then SequenceDropDown:AddItem(gid, env.Name) end
                 end
                 SequenceDropDown:SetMultiselect(false)
                 SequenceDropDown:SetLabel(L["Sequence"])
-                if action.Sequence then
-                    SequenceDropDown:SetValue(action.Sequence)
+                local _, embeddedId = GSE.ResolveEmbed(action)
+                if embeddedId then
+                    SequenceDropDown:SetValue(embeddedId)
                 end
                 SequenceDropDown:SetCallback(
                     "OnValueChanged",
                     function(obj, event, key, checked)
                         local embedAction = editframe.Sequence.Versions[version].Actions[keyPath]
                         embedAction.Type = Statics.Actions.Embed
-                        embedAction.Sequence = key
+                        embedAction.SequenceID = key
+                        embedAction.Sequence = GSE.SequenceName(key)
                     end
                 )
 

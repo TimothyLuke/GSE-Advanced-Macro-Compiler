@@ -514,6 +514,66 @@ function GSE.StoredElementName(kind, id)
     end
 end
 
+-- ── Embed blocks ────────────────────────────────────────────────────────────
+--
+-- An Embed block names the sequence it embeds twice: SequenceID, the id, and
+-- Sequence, its label. It runs the sequence with that id when this machine has
+-- it, and otherwise the one the label finds -- content travels, and on someone
+-- else's machine only a PlatformID means anything. Every save brings both up
+-- to date (NormaliseEmbeds); anything leaving the machine carries a PlatformID
+-- or no id at all, never a local one.
+
+--- The sequence an Embed block runs, and its id.
+function GSE.ResolveEmbed(block)
+    if type(block) ~= "table" then return nil end
+    local ref = rawget(block, "SequenceID")
+    if type(ref) == "string" and ref ~= "" then
+        local id = GSE.ResolveSequenceId(ref)
+        if GSE.SequenceEnvelope(id) then return GSE.GetSequence(id), id end
+    end
+    local name = rawget(block, "Sequence")
+    if type(name) == "string" and name ~= "" then return GSE.FindSequence(name) end
+    return nil
+end
+
+-- Every Embed block in a table, however deep (Loop children, If branches).
+-- rawget, like walkTableForDeps: block tables may carry an __index that
+-- expects array paths.
+local function eachEmbed(t, fn, seen)
+    seen = seen or {}
+    if type(t) ~= "table" or seen[t] then return end
+    seen[t] = true
+    if rawget(t, "Type") == Statics.Actions.Embed then fn(t) end
+    for _, v in pairs(t) do
+        if type(v) == "table" then eachEmbed(v, fn, seen) end
+    end
+end
+
+--- Bring a sequence's Embed blocks up to date: the id follows any move to a
+--- PlatformID, the label follows the embedded sequence's current name, and a
+--- block that has only a label gains the id it resolves to. With forExport,
+--- a local id -- meaningless anywhere else -- becomes the embedded sequence's
+--- PlatformID, or is dropped so the label decides.
+-- Returns true when anything changed.
+function GSE.NormaliseEmbeds(sequence, forExport)
+    if type(sequence) ~= "table" or type(sequence.Versions) ~= "table" then return false end
+    local changed = false
+    eachEmbed(sequence.Versions, function(block)
+        local beforeId, beforeName = block.SequenceID, block.Sequence
+        local _, id = GSE.ResolveEmbed(block)
+        if id then
+            block.SequenceID = id
+            block.Sequence = GSE.SequenceName(id) or block.Sequence
+        end
+        if forExport and isLocalId(block.SequenceID) then
+            local env = GSE.SequenceEnvelope(block.SequenceID)
+            block.SequenceID = env and env.PlatformID or nil
+        end
+        if block.SequenceID ~= beforeId or block.Sequence ~= beforeName then changed = true end
+    end)
+    return changed
+end
+
 -- ── Buttons ─────────────────────────────────────────────────────────────────
 --
 -- Each sequence runs from a secure button, and keybinds, action-bar overrides
@@ -1290,6 +1350,9 @@ local function loadOneSequence(classid, id)
         -- The repack queue is read by the Companion, which knows the name.
         GSE.AuditProtectedAtRest("sequence", classid, env.Name, body, seq)
         local changed, reason = migrateSequenceVersions(seq, env.Name)
+        -- Embed ids follow a move to a PlatformID here too, not only on the
+        -- next edit: the stored body is what the Companion uploads.
+        if GSE.NormaliseEmbeds(seq) then changed = true end
         if reason == "macros-deprecated" then
             -- Refuse to load. The on-disk record uses the old 'Macros' field;
             -- the addon no longer auto-renames.
@@ -1752,6 +1815,7 @@ function GSE.ReplaceSequence(classid, id, sequence)
     -- existing stamp is left alone.
     GSE.StampOriginKey(sequence, sequenceName)
     GSE.SanitizeHelplink(sequence)
+    GSE.NormaliseEmbeds(sequence)
     GSE.ComputeSequenceDependencies(sequence)
     GSE.SnapshotDependentMacros(sequence)
     if GSE.isEmpty(GSE.Library[classid]) then GSE.Library[classid] = {} end
@@ -3637,9 +3701,8 @@ function GSE.processAction(action, metaData, variables, path)
         return returnAction
     elseif action.Type == Statics.Actions.Embed then
         -- Get the sequence and its setup version then compile the actions
-        if action.Sequence then
-            -- An Embed names what it embeds (until it holds an id).
-            local sequence, id = GSE.FindSequence(action.Sequence)
+        if action.SequenceID or action.Sequence then
+            local sequence, id = GSE.ResolveEmbed(action)
             if sequence then
                 return GSE.CompileTemplate(GSE.UnEscapeTable(GSE.TranslateSequence(sequence.Versions[GSE.GetActiveSequenceVersion(id)], Statics.TranslatorMode.String)))
             end

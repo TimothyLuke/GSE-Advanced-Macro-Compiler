@@ -444,6 +444,8 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                 -- when re-importing sequences that were originally created in an earlier
                 -- GSE build but have been running fine in the current one.
                 local exportedSeq = exportTable["Sequences"][key]
+                -- Its Embed blocks leave with a PlatformID or no id at all.
+                GSE.NormaliseEmbeds(exportedSeq, true)
                 if exportedSeq and exportedSeq.MetaData then
                     exportedSeq.MetaData.GSEVersion = GSE.VersionNumber
                     if GSE.ComputeSequenceChecksum then
