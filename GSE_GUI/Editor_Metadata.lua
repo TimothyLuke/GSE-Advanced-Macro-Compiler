@@ -697,6 +697,117 @@ end
 -- for the placeholder width and clip its last lines.
 -- `label` is the field name; the read-only hint is appended here so the three
 -- editors that show notes cannot drift apart on wording or colour.
+-- Links in a note. The server's rendering is plain escape-coded text, which a
+-- FontString draws but cannot click; every http(s) address in it is wrapped
+-- in a gseurl hyperlink (blue), and clicking one opens a popup with the
+-- address selected for Ctrl+C -- WoW cannot open a browser itself.
+local NOTES_LINK_COLOUR = "|cff4fb8ff"
+
+local function notesLink(url, label)
+    return NOTES_LINK_COLOUR .. "|Hgseurl:" .. url .. "|h" .. (label or url) .. "|h|r"
+end
+
+local function linkifyNotes(text)
+    text = tostring(text or "")
+    -- Named links first, parked behind placeholders so the bare-address pass
+    -- below does not find their addresses again inside the link code.
+    local parked = {}
+    local function park(url, label)
+        parked[#parked + 1] = notesLink(url, label)
+        return "\1" .. #parked .. "\1"
+    end
+    -- [Ko-Fi](https://ko-fi.com/...) as gse.tools renders it: the name in a
+    -- colour code, then the address in brackets. The name becomes the link.
+    text = text:gsub("|c%x%x%x%x%x%x%x%x([^|]-)|r%s*%((https?://[^%s%)|]+)%)", function(label, url)
+        return park(url, label)
+    end)
+    -- The same, if any arrives as raw Markdown.
+    text = text:gsub("%[([^%]]+)%]%((https?://[^%s%)|]+)%)", function(label, url)
+        return park(url, label)
+    end)
+    -- Every other bare address.
+    text = text:gsub("(https?://[^%s|%)%]\"'<>]+)", function(url)
+        -- Sentence punctuation after an address is not part of it.
+        local trail = url:match("[%.,;:!%?]+$") or ""
+        if trail ~= "" then url = url:sub(1, #url - #trail) end
+        return notesLink(url) .. trail
+    end)
+    return (text:gsub("\1(%d+)\1", function(n) return parked[tonumber(n)] end))
+end
+
+StaticPopupDialogs["GSE_COPY_NOTES_LINK"] = {
+    text = "Copy this link with Ctrl+C:",
+    button1 = CLOSE or "Close",
+    hasEditBox = true,
+    editBoxWidth = 360,
+    OnShow = function(self, data)
+        local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+        if not editBox then return end
+        editBox:SetText(data or "")
+        editBox:HighlightText()
+        editBox:SetFocus()
+        -- Typing over it would lose the address; put it back.
+        editBox:SetScript("OnTextChanged", function(box, userInput)
+            if userInput then
+                box:SetText(data or "")
+                box:HighlightText()
+            end
+        end)
+    end,
+    OnHide = function(self)
+        local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+        if editBox then editBox:SetScript("OnTextChanged", nil) end
+    end,
+    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+-- The note is drawn in a frame of our own laid over the body label rather than
+-- in the label itself: a hyperlink is only clickable in a frame with its
+-- hyperlinks and mouse enabled, and the label is pooled -- switching those on
+-- would ride along to whatever the label is used for next. A child frame the
+-- pool did not create is hidden on reuse; this one is cached per label frame
+-- and shown again when the notes panel takes that label.
+local notesTextFrames = setmetatable({}, {__mode = "k"})
+
+local function notesTextFrame(body)
+    local host = body.frame
+    local entry = notesTextFrames[host]
+    if not entry then
+        local frame = CreateFrame("Frame", nil, host)
+        frame:SetAllPoints(host)
+        frame:EnableMouse(true)
+        frame:SetHyperlinksEnabled(true)
+        local fontString = frame:CreateFontString(nil, "ARTWORK")
+        fontString:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+        fontString:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+        fontString:SetJustifyH("LEFT")
+        fontString:SetJustifyV("TOP")
+        fontString:SetWordWrap(true)
+        frame:SetScript("OnHyperlinkClick", function(_, link)
+            local url = type(link) == "string" and link:match("^gseurl:(.+)$")
+            if url then StaticPopup_Show("GSE_COPY_NOTES_LINK", nil, nil, url) end
+        end)
+        frame:SetScript("OnHyperlinkEnter", function(self, link)
+            local url = type(link) == "string" and link:match("^gseurl:(.+)$")
+            if not url then return end
+            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            GameTooltip:SetText("Click to copy this link")
+            GameTooltip:AddLine(url, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        frame:SetScript("OnHyperlinkLeave", function() GameTooltip:Hide() end)
+        entry = {frame = frame, text = fontString}
+        notesTextFrames[host] = entry
+    end
+    entry.frame:Show()
+    return entry
+end
+
 local function addRenderedNotesPanel(container, label, text, options)
     local gap        = (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
     local boxHeight  = (options and options.height) or NOTES_RENDERED_HEIGHT
@@ -738,6 +849,9 @@ local function addRenderedNotesPanel(container, label, text, options)
     box:SetLayout("Fill")
     if box.title then box.title:SetText("") end
     if box.SetListPadding then box:SetListPadding(0, 0, 0, 0) end
+    -- The action-block teal rail down the left edge, set on purpose. It used to
+    -- show only when the box happened to be a recycled block frame.
+    if box.SetLeftBorderColor then box:SetLeftBorderColor(0.00, 0.784, 0.784, 1, 3) end
 
     local scroll = UI:Create("ScrollFrame")
     scroll:SetFullWidth(true)
@@ -749,14 +863,58 @@ local function addRenderedNotesPanel(container, label, text, options)
     nudgeWidgetScrollBar(scroll, 3)
 
     local body = UI:Create("Label")
-    if body.SetFontObject then body:SetFontObject(GameFontHighlight) end
+    -- Gold base text, set explicitly: the server's rendering marks emphasis in
+    -- white, and it only stands out against a gold base. SetFontObject alone
+    -- came out gold on a recycled label and white on a fresh one, so the same
+    -- note looked styled one time and flat the next.
+    local bodyFont = GameFontNormal
+    if body.SetFontObject then body:SetFontObject(bodyFont) end
+    local bodyText = body.label or body.text
+    if bodyText and bodyText.SetFont and bodyFont and bodyFont.GetFont then
+        local file, size, flags = bodyFont:GetFont()
+        if file then bodyText:SetFont(file, size, flags or "") end
+    end
+    if body.SetColor and bodyFont and bodyFont.GetTextColor then
+        body:SetColor(bodyFont:GetTextColor())
+    end
     body:SetWidth(width)
-    body:SetText(text)
+    if bodyText and bodyText.SetWordWrap then bodyText:SetWordWrap(true) end
+    text = linkifyNotes(text)
+    -- The label only holds the space; the overlay draws the note, links and all.
+    body:SetText("")
+    local overlay = notesTextFrame(body)
+    if bodyFont and bodyFont.GetFont then
+        local file, size, flags = bodyFont:GetFont()
+        if file then overlay.text:SetFont(file, size, flags or "") end
+        overlay.text:SetTextColor(bodyFont:GetTextColor())
+    end
+    overlay.text:SetText(text)
+    -- Height from a ruler, not from the label: a Label sizes itself to its own
+    -- measurement when its text is set, and until the layout anchors it that
+    -- measurement is one line -- which clipped the note to an ellipsis, every
+    -- time on a tab swap. A detached FontString given the same font and the
+    -- known width measures the wrapped text correctly straight away.
+    local rulerText = GSE.GUI.NotesRuler
+    if not rulerText then
+        rulerText = UIParent:CreateFontString(nil, "ARTWORK")
+        rulerText:Hide()
+        GSE.GUI.NotesRuler = rulerText
+    end
+    if bodyText and bodyText.GetFont then
+        local file, size, flags = bodyText:GetFont()
+        if file then rulerText:SetFont(file, size, flags or "") end
+    end
+    rulerText:SetWordWrap(true)
+    rulerText:SetWidth(width)
+    rulerText:SetText(text)
+    local measured = rulerText:GetStringHeight()
+    if measured and measured > 0 and body.SetHeight then body:SetHeight(math.ceil(measured) + 4) end
     scroll:AddChild(body)
 
     box:AddChild(scroll)
     wrapper:AddChild(box)
     container:AddChild(wrapper)
+
     return wrapper
 end
 

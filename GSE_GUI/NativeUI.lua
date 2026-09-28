@@ -6130,6 +6130,12 @@ local function snapshotPristine(widget)
                 color = { v:GetTextColor() },
                 justifyH = v.GetJustifyH and v:GetJustifyH() or nil,
                 justifyV = v.GetJustifyV and v:GetJustifyV() or nil,
+                -- Word wrap too: a caller that turned it off (a one-line
+                -- heading) left it off for the label's next life, and a notes
+                -- body that drew a recycled heading showed its whole text as
+                -- one line cut off with an ellipsis.
+                wordWrap = v.GetWordWrap and v:GetWordWrap(),
+                nonSpaceWrap = v.GetNonSpaceWrap and v:GetNonSpaceWrap(),
             }
         end
     end
@@ -6238,6 +6244,8 @@ local function resetForReuse(widget)
         pcall(fontString.SetTextColor, fontString, unpack(style.color))
         if style.justifyH then pcall(fontString.SetJustifyH, fontString, style.justifyH) end
         if style.justifyV then pcall(fontString.SetJustifyV, fontString, style.justifyV) end
+        if style.wordWrap ~= nil then pcall(fontString.SetWordWrap, fontString, style.wordWrap) end
+        if style.nonSpaceWrap ~= nil then pcall(fontString.SetNonSpaceWrap, fontString, style.nonSpaceWrap) end
     end
 end
 
