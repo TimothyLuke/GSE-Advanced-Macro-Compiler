@@ -55,26 +55,20 @@ end
 
 --- Reflect one set of WoW macros into one GSEMacros store.
 --
--- The entry carries `text`. GSE.ManageMacros, GSE.UpdateMacro and the
--- Companion all read the body from `text`; the Companion goes further and
--- treats any entry WITHOUT a string `text` as a character bucket, so an entry
--- holding only `manageMacro` had its own fields read back as macros.
+-- Through GSE.SnapshotMacro, which never writes over a managed macro -- its
+-- source lives in GSE and WoW holds only what it compiles to -- and for any
+-- other macro updates just the version that runs. Compared against what the
+-- stored macro puts into WoW, so an unchanged macro is left alone.
 local function syncInto(store, current, tracked)
     for name, data in pairs(current) do
         tracked[name] = true
         local stored = store[name]
         local storedBody = ""
-        if type(stored) == "table" then
-            storedBody = stored.manageMacro or stored.text or ""
+        if GSE.IsStoredMacroNode(stored) then
+            storedBody = GSE.MacroText(GSE.UpgradeMacro(stored, name))
         end
         if storedBody ~= data.body then
-            store[name] = {
-                name        = name,
-                icon        = data.icon,
-                value       = data.slot,
-                text        = data.body,
-                manageMacro = data.body,
-            }
+            GSE.SnapshotMacro(store, name, name, data.icon, data.body, data.slot)
         end
     end
 

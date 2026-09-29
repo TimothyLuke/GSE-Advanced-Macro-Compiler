@@ -155,10 +155,13 @@ end
 -- A stored macro node, as opposed to a per-character bucket of them. Same
 -- rule as Export.lua's isStoredMacroNode: iteration everywhere tells the two
 -- apart by shape, never by key.
+-- A macro in the current shape has Versions = { [1] = {...} }; a bucket that
+-- happens to hold a macro named "Versions" holds a node there, not a list.
 local function isMacroNode(t)
     return type(t) == "table" and (
         t.text ~= nil or t.value ~= nil or t.icon ~= nil or t.Managed ~= nil
-        or t.managedMacro ~= nil or t.manageMacro ~= nil or t.GSEProtected ~= nil)
+        or t.managedMacro ~= nil or t.manageMacro ~= nil or t.GSEProtected ~= nil
+        or (type(t.Versions) == "table" and type(t.Versions[1]) == "table"))
 end
 -- Shared with the store (Storage.lua), which has to make the same call when
 -- it splits account macros from per-character buckets.

@@ -75,7 +75,8 @@ local INDEX   -- what the views were built from, for reconcileStore
 -- Macro fields that are the macro itself. Two per-character copies that agree
 -- on these are one macro held by two characters, whatever else differs
 -- (LastUpdated, Author).
-local MACRO_CONTENT = { "text", "managedMacro", "manageMacro", "icon", "Managed", "GSEProtected" }
+local MACRO_CONTENT = { "text", "managedMacro", "manageMacro", "icon", "Managed", "GSEProtected",
+    "Versions", "MetaData" }
 
 local localIdCounter = 0
 --- A fresh id for an element GSE.Tools has not seen yet.
@@ -99,10 +100,19 @@ local function copyShallow(t)
     return c
 end
 
+-- Deep: a macro's Versions and MetaData are tables, and two copies read from
+-- two characters are never the same table.
+local function sameValue(a, b)
+    if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+    for k, v in pairs(a) do if not sameValue(v, b[k]) then return false end end
+    for k in pairs(b) do if a[k] == nil then return false end end
+    return true
+end
+
 local function macroContentEqual(a, b)
     if type(a) ~= "table" or type(b) ~= "table" then return false end
     for _, k in ipairs(MACRO_CONTENT) do
-        if a[k] ~= b[k] then return false end
+        if not sameValue(a[k], b[k]) then return false end
     end
     return true
 end
@@ -652,6 +662,24 @@ function GSE.SequenceIdForButton(buttonName)
     return BUTTONS[buttonName]
 end
 
+--- The class a stored variable or macro is filed in, by name; nil for one
+--- made this session and not yet filed.
+function GSE.StoredElementClass(kind, name)
+    ensureStore()
+    local id = kind == "variable" and INDEX.variable[name] or (kind == "macro" and INDEX.macroAccount[name])
+    if not id then return nil end
+    for classid, envs in pairs(GSEStore[kind] or {}) do
+        if envs[id] then return classid end
+    end
+end
+
+--- Whether a variable or account macro is live for the character playing:
+--- global, or the current class's. One not yet filed is live.
+function GSE.ElementAvailable(kind, name)
+    local classid = GSE.StoredElementClass(kind, name)
+    return classid == nil or classid == 0 or classid == currentClassId()
+end
+
 --- A sequence's label.
 function GSE.SequenceName(id, classid)
     local env = GSE.SequenceEnvelope(id, classid)
@@ -745,13 +773,80 @@ function GSE.SequenceIdForIncoming(classid, name, sequence)
     return id or GSE.NewLocalId()
 end
 
+-- ── Scope of variables and macros ───────────────────────────────────────────
+--
+-- A variable or macro is global, class or spec level exactly as a sequence is:
+-- MetaData.SpecID is 0 (or absent) for global, 1-13 for a class, a spec id
+-- above that. Its envelope is filed in that class's bucket, at every load
+-- (fileElementsByScope) -- so a change of scope takes effect from the next
+-- load. Variables and account macros are filed by it whenever it is known; a
+-- character macro only when its author set it -- otherwise the holders rule in
+-- "Characters" files it.
+--
+-- At runtime only the current class and global are live: a variable of another
+-- class is not compiled into GSE.V and a macro of another class is not written
+-- to the player's macros. Where two share a name, the current class's wins over
+-- the global one, as a sequence's does.
+
+-- The class a variable's or macro's body asks to be filed in, or nil when it
+-- does not say. A variable body is encoded; a macro body is its node.
+local function elementClassOf(kind, body)
+    local meta
+    if kind == "variable" then
+        if type(body) ~= "string" or not GSE.DecodeMessage then return nil end
+        local pok, ok, decoded = pcall(GSE.DecodeMessage, body)
+        meta = pok and ok and type(decoded) == "table" and decoded.MetaData or nil
+    elseif type(body) == "table" then
+        meta = body.MetaData
+    end
+    local spec = type(meta) == "table" and tonumber(meta.SpecID) or nil
+    if spec == nil then return nil end
+    if spec <= 0 then return 0 end
+    if spec <= 13 then return spec end
+    local ok, classid = pcall(GSE.GetClassIDforSpec, spec)
+    return ok and tonumber(classid) or nil
+end
+
+-- File each variable and macro envelope in the class its body names.
+local function fileElementsByScope(store)
+    for _, kind in ipairs({"variable", "macro"}) do
+        local moves = {}
+        for classid, envs in pairs(store[kind]) do
+            for id, env in pairs(envs) do
+                if kind == "variable" or env.Scope ~= "character" or elementClassOf(kind, env.Body) ~= nil then
+                    local target = elementClassOf(kind, env.Body)
+                    if target ~= nil and target ~= classid then moves[#moves + 1] = {classid, id, target} end
+                end
+            end
+        end
+        for _, m in ipairs(moves) do
+            local env = store[kind][m[1]][m[2]]
+            store[kind][m[1]][m[2]] = nil
+            bucket(store, kind, m[3])[m[2]] = env
+        end
+    end
+end
+
+-- The classes to read a kind's buckets in: the current class, then global,
+-- then the rest -- so a name held twice resolves to the current class's.
+local function classOrder(byClass)
+    local order, cur = {}, currentClassId()
+    if cur and byClass[cur] then order[#order + 1] = cur end
+    if byClass[0] and cur ~= 0 then order[#order + 1] = 0 end
+    for classid in pairs(byClass) do
+        if classid ~= cur and classid ~= 0 then order[#order + 1] = classid end
+    end
+    return order
+end
+
 -- ── Views ───────────────────────────────────────────────────────────────────
 
 local function buildViews(store)
     local views = { variable = {}, macro = {}, variablePid = {}, macroPid = {} }
     local index = { variable = {}, macroAccount = {}, macroChar = {}, shadowed = {} }
 
-    for _, envs in pairs(store.variable) do
+    for _, classid in ipairs(classOrder(store.variable)) do
+        local envs = store.variable[classid]
         for id, env in pairs(envs) do
             if views.variable[env.Name] ~= nil then
                 index.shadowed[id] = true
@@ -763,7 +858,8 @@ local function buildViews(store)
         end
     end
 
-    for _, envs in pairs(store.macro) do
+    for _, classid in ipairs(classOrder(store.macro)) do
+        local envs = store.macro[classid]
         for id, env in pairs(envs) do
             if env.Scope ~= "character" then
                 if views.macro[env.Name] ~= nil then
@@ -1039,6 +1135,7 @@ function GSE.LoadStore()
     if legacyPresent then migrateLegacy(GSEStore) end
     if type(GSEStore.alias) ~= "table" then GSEStore.alias = {} end
     settleSequenceIds(GSEStore)
+    fileElementsByScope(GSEStore)
     indexSequenceNames()
     VIEWS, INDEX = buildViews(GSEStore)
 end
@@ -1772,13 +1869,7 @@ function GSE.SnapshotDependentMacros(sequence)
             local mname, micon, mbody = GetMacroInfo(slot)
             if mname then
                 -- Always overwrite so the account-level copy stays current.
-                GSE.Store("macro")[macname] = {
-                    name     = mname,
-                    value    = slot,
-                    icon     = micon,
-                    text     = mbody,
-                    manageMacro = mbody,
-                }
+                GSE.SnapshotMacro(GSE.Store("macro"), macname, mname, micon, mbody, slot)
             end
         end
     end
@@ -2085,6 +2176,37 @@ end
 
 --- Compile and register a single variable from its compressed store entry.
 -- Shared by LoadVariables and EnsureSequenceVariablesLoaded.
+-- Put a variable's version for the current context into GSE.V: compile its
+-- funct, note a boolean result, and (re)register the events it listens to. The
+-- variable is in the current shape (GSE.UpgradeVariable). Used by the load, a
+-- save, and a change of context -- one place, so the three agree.
+local function compileVariable(name, variable)
+    local active = GSE.ActiveElementVersion(variable) or {}
+    local funct = active.funct
+    if type(funct) ~= "string" or funct == "" then
+        GSE.V[name] = nil
+        GSE.UnregisterVariableEvents(name)
+        return
+    end
+    local chunk, err = gseLoadstring("return " .. funct)
+    if err then
+        --@debug@
+        if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(err), "Storage") end
+        --@end-debug@
+    end
+    if type(chunk) == "function" then
+        GSE.V[name] = chunk()
+    end
+    if type(GSE.V[name]) == "function" and type(GSE.V[name]()) == "boolean" then
+        GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
+    end
+    if active.eventEnabled and not GSE.isEmpty(active.eventNames) then
+        GSE.RegisterVariableEvents(name, active.eventNames)
+    else
+        GSE.UnregisterVariableEvents(name)
+    end
+end
+
 local function loadOneVariable(k, v)
     local status, err =
         pcall(
@@ -2095,13 +2217,7 @@ local function loadOneVariable(k, v)
             -- envelope where sequences lost it -- so there is nothing to gate,
             -- only damage from an earlier build to report.
             GSE.AuditProtectedAtRest("variable", nil, k, v, uncompressedVersion)
-            GSE.V[k] = gseLoadstring("return " .. uncompressedVersion.funct)()
-            if type(GSE.V[k]()) == "boolean" then
-                GSE.BooleanVariables["GSE.V['" .. k .. "']()"] = "GSE.V['" .. k .. "']()"
-            end
-            if uncompressedVersion.eventEnabled and not GSE.isEmpty(uncompressedVersion.eventNames) then
-                GSE.RegisterVariableEvents(k, uncompressedVersion.eventNames)
-            end
+            compileVariable(k, GSE.UpgradeVariable(uncompressedVersion, k))
         end
     )
     if err then
@@ -2128,7 +2244,9 @@ end
 if type(GSE.V) == "table" and not getmetatable(GSE.V) then
     setmetatable(GSE.V, {
         __index = function(t, k)
-            if not GSE.isEmpty(GSE.Store("variable")[k]) then
+            -- Another class's variable is not live here (see "Scope of
+            -- variables and macros"); it reads as missing, like any other.
+            if not GSE.isEmpty(GSE.Store("variable")[k]) and GSE.ElementAvailable("variable", k) then
                 loadOneVariable(k, GSE.Store("variable")[k])
                 return rawget(t, k)
             end
@@ -2207,9 +2325,10 @@ function GSE.LoadVariables()
     local needed = collectNeededVariables()
 
     if needed == nil then
-        -- Fallback: at least one sequence has no dep data; load everything.
+        -- Fallback: at least one sequence has no dep data; load everything
+        -- that is live for this class.
         for k, v in pairs(GSE.Store("variable")) do
-            loadOneVariable(k, v)
+            if GSE.ElementAvailable("variable", k) then loadOneVariable(k, v) end
         end
         return
     end
@@ -2217,7 +2336,7 @@ function GSE.LoadVariables()
     -- Selective load: only compile variables the current sequences need.
     local deferred = 0
     for k, v in pairs(GSE.Store("variable")) do
-        if needed[k] then
+        if needed[k] and GSE.ElementAvailable("variable", k) then
             loadOneVariable(k, v)
         else
             deferred = deferred + 1
@@ -2482,13 +2601,12 @@ function GSE.ShiftVersionReferencesAfterDelete(metadata, version)
 end
 
 
---- Return the Active Sequence Version for a Sequence.
-function GSE.GetActiveSequenceVersion(id)
-    local sequence = GSE.GetSequence(id)
-    if GSE.isEmpty(sequence) or type(sequence.MetaData) ~= "table" then
-        return
-    end
-    local meta = sequence.MetaData
+--- The version to run for an element's MetaData in the current context: the
+--- first context flag that is set and that the element configures, else
+--- Default. One selector for sequences, variables and macros alike, so the
+--- three can never disagree about which context they are in.
+function GSE.GetActiveVersion(meta)
+    if type(meta) ~= "table" then return 1 end
     -- PVESolo is gone: it was never one of GSE's contexts (it is absent from
     -- contextVersionPriority), only an editor row plus this special case, and
     -- "solo" is what Default already means -- no context flag set. A sequence
@@ -2504,7 +2622,161 @@ function GSE.GetActiveSequenceVersion(id)
     return (vers == 0) and 1 or vers
 end
 
+--- Return the Active Sequence Version for a Sequence.
+function GSE.GetActiveSequenceVersion(id)
+    local sequence = GSE.GetSequence(id)
+    if GSE.isEmpty(sequence) or type(sequence.MetaData) ~= "table" then
+        return
+    end
+    return GSE.GetActiveVersion(sequence.MetaData)
+end
+
+-- ── Variables and macros: one shape with sequences ───────────────────────────
+--
+--   variable = { MetaData = { Name, Author, SpecID, Default, <contexts>,
+--                             Notes, Help },
+--                Versions = { [n] = { Label, funct, eventEnabled, eventNames } },
+--                Dependencies, LastUpdated, GSEVersion }
+--   macro    = { MetaData = { ...the same... },
+--                Versions = { [n] = { Label, text, managedMacro } },
+--                name, icon, Managed, value (its WoW slot -- never uploaded),
+--                LastUpdated, GSEVersion }
+--
+-- Older content is flat: a variable's funct and events, a macro's text and
+-- managedMacro, and its help as comments/commentsHelp, all at the top. These
+-- turn either shape into the new one; one already new comes back as it is.
+-- Everything that reads a variable or a macro reads it through them, so older
+-- exports, older players' shares and records not yet migrated keep working.
+
+local ELEMENT_META = { Author = true, comments = "Notes", commentsHelp = "Help" }
+
+-- Move the flat fields that belong in MetaData into it.
+local function liftMeta(t, name)
+    local meta = type(t.MetaData) == "table" and t.MetaData or {}
+    for field, into in pairs(ELEMENT_META) do
+        local target = (into == true) and field or into
+        if t[field] ~= nil then
+            if meta[target] == nil then meta[target] = t[field] end
+            t[field] = nil
+        end
+    end
+    if name and meta.Name == nil then meta.Name = name end
+    if meta.Default == nil then meta.Default = 1 end
+    t.MetaData = meta
+end
+
+--- A variable in the current shape. Changes and returns the table given.
+function GSE.UpgradeVariable(v, name)
+    if type(v) ~= "table" then return v end
+    if type(v.Versions) ~= "table" then
+        v.Versions = { { funct = v.funct, eventEnabled = v.eventEnabled, eventNames = v.eventNames } }
+        v.funct, v.eventEnabled, v.eventNames = nil, nil, nil
+    end
+    liftMeta(v, name)
+    return v
+end
+
+--- A macro node in the current shape. Changes and returns the table given.
+--- The legacy lowercase manageMacro was a copy of the text; it goes.
+function GSE.UpgradeMacro(node, name)
+    if type(node) ~= "table" or type(node.GSEProtected) == "string" then return node end
+    if type(node.Versions) ~= "table" then
+        node.Versions = { { text = node.text, managedMacro = node.managedMacro } }
+        node.text, node.managedMacro = nil, nil
+    end
+    node.manageMacro = nil
+    liftMeta(node, name or node.name)
+    return node
+end
+
+--- The version of a variable or macro that runs now (see GetActiveVersion).
+function GSE.ActiveElementVersion(element)
+    if type(element) ~= "table" or type(element.Versions) ~= "table" then return nil end
+    local n = GSE.GetActiveVersion(element.MetaData)
+    return element.Versions[n] or element.Versions[1]
+end
+
+--- What a macro's running version is authored as: managedMacro for a managed
+--- macro (it may call variables), text otherwise. Accepts either shape.
+function GSE.MacroSource(node)
+    if type(node) ~= "table" then return "" end
+    if type(node.Versions) ~= "table" then return node.managedMacro or node.text or "" end
+    local v = GSE.ActiveElementVersion(node) or {}
+    return v.managedMacro or v.text or ""
+end
+
+--- What goes into the player's WoW macro for a macro node: a managed macro's
+--- source compiled (variables and all), anything else its text as written.
+--- A flat node -- a WoW macro in the making, not a stored macro -- is its text.
+function GSE.MacroText(node)
+    if type(node) ~= "table" then return "" end
+    if type(node.Versions) ~= "table" then return node.text or "" end
+    if node.Managed then
+        return GSE.CompileMacroText(GSE.MacroSource(node), Statics.TranslatorMode.String)
+    end
+    local v = GSE.ActiveElementVersion(node) or {}
+    return v.text or ""
+end
+
+--- A stored macro node, in the current shape, for a macro read out of WoW.
+function GSE.NewMacroNode(name, icon, text, slot)
+    return {
+        name = name, icon = icon, value = slot,
+        MetaData = { Name = name, Default = 1 },
+        Versions = { { text = text } },
+    }
+end
+
+--- Does GSE write this stored macro into WoW, rather than read it from there?
+--- A managed macro does: WoW holds what its source compiles to. So does one
+--- with more than one version: WoW holds whichever the context selects, and
+--- reading that back would copy one version over another when it changes.
+function GSE.MacroDrivenByGSE(node)
+    if type(node) ~= "table" then return false end
+    if node.Managed then return true end
+    return type(node.Versions) == "table" and #node.Versions > 1
+end
+
+--- Record a macro read out of WoW in a store table (the account level, or a
+--- character's bucket). WoW holds only what one version compiles to, so this
+--- never writes over a macro GSE drives (MacroDrivenByGSE) or a sealed one --
+--- its source lives in GSE, and a snapshot would replace it with what WoW
+--- holds -- and for any other macro it updates its text, the icon and the
+--- slot, leaving its metadata alone. Returns the node.
+function GSE.SnapshotMacro(store, key, name, icon, text, slot)
+    local node = store[key]
+    if type(node) == "table" and (GSE.MacroDrivenByGSE(node) or type(node.GSEProtected) == "string") then
+        node.value = slot
+        return node
+    end
+    if not GSE.IsStoredMacroNode(node) then
+        node = GSE.NewMacroNode(name, icon, text, slot)
+        store[key] = node
+        return node
+    end
+    GSE.UpgradeMacro(node, name)
+    local active = GSE.ActiveElementVersion(node)
+    if active then active.text = text else node.Versions[1] = { text = text } end
+    node.icon, node.value = icon, slot
+    return node
+end
+
+--- Recompile every variable already in GSE.V with the version the current
+--- context selects. Run when the context changes, beside the sequences.
+function GSE.ReloadVariables()
+    local names = {}
+    for name in pairs(GSE.V) do names[#names + 1] = name end
+    for _, name in ipairs(names) do
+        local stored = GSE.Store("variable")[name]
+        if stored ~= nil and GSE.ElementAvailable("variable", name) then
+            local pok, ok, decoded = pcall(GSE.DecodeMessage, stored)
+            if pok and ok and type(decoded) == "table" then compileVariable(name, GSE.UpgradeVariable(decoded, name)) end
+        end
+    end
+end
+
 function GSE.ReloadSequences()
+    GSE.ReloadVariables()
     if GSE.ClearTranslateStringCache then GSE.ClearTranslateStringCache() end
     if GSE.isEmpty(GSE.UnsavedOptions.ReloadQueued) then
         GSE.PerformReloadSequences()
@@ -4061,6 +4333,7 @@ function GSE.UpdateVariable(variable, name, status)
     if GSE.CompanionCancelPendingDelete then
         GSE.CompanionCancelPendingDelete("variable", name)
     end
+    GSE.UpgradeVariable(variable, name)
     GSE.ComputeVariableDependencies(variable)
     local storedVariable = GSE.Store("variable") and GSE.Store("variable")[name]
     if GSE.IsProtectedAtRest(storedVariable, variable) then
@@ -4078,24 +4351,7 @@ function GSE.UpdateVariable(variable, name, status)
             GSE.Store("variable")[name] = compressedvariable
         end
     end
-    local actualfunct, error = gseLoadstring("return " .. variable.funct)
-    if error then
-        --@debug@
-        if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(error), "Storage") end
-        --@end-debug@
-    end
-    if type(actualfunct) == "function" then
-        GSE.V[name] = actualfunct()
-    end
-    if GSE.V[name] and type(GSE.V[name]()) == "boolean" then
-        GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
-    end
-    -- Re-register or remove event/message callbacks based on updated variable config
-    if variable.eventEnabled and not GSE.isEmpty(variable.eventNames) then
-        GSE.RegisterVariableEvents(name, variable.eventNames)
-    else
-        GSE.UnregisterVariableEvents(name)
-    end
+    compileVariable(name, variable)
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
 end
 
@@ -4154,10 +4410,7 @@ function GSE.BackfillLastUpdated()
     if GSE.Store("macro") then
         for _, scopeOrNode in pairs(GSE.Store("macro")) do
             if type(scopeOrNode) == "table" then
-                local isNode = scopeOrNode.text ~= nil
-                    or scopeOrNode.value ~= nil
-                    or scopeOrNode.icon ~= nil
-                    or scopeOrNode.Managed ~= nil
+                local isNode = GSE.IsStoredMacroNode(scopeOrNode)
                 if isNode then
                     if not scopeOrNode.LastUpdated then
                         scopeOrNode.LastUpdated = now
@@ -4198,29 +4451,46 @@ local function CleanMacroBookText(text)
     return text
 end
 
+--- Write a macro into the player's WoW macros, creating it if they do not
+--- have it. `node` is either a stored macro (current shape -- MacroText says
+--- what the WoW macro holds) or a flat { name, icon, text } built for WoW
+--- alone. Only a stored macro is ever stored, and only when it is new here
+--- and skipStore is not set. A flat node used to be stored too: that is how a
+--- managed macro missing from a character's macro book lost its source --
+--- ManageMacros handed over the compiled text, and it replaced the macro.
 function GSE.UpdateMacro(node, category, skipStore)
     -- Save-cancels-delete (see UpdateVariable for rationale).
     if node and node.name and GSE.CompanionCancelPendingDelete then
         GSE.CompanionCancelPendingDelete("macro", node.name)
     end
-    -- Stamp LastUpdated so server-side newer-wins resolution can pick the
-    -- most-recently-edited copy when one Companion is syncing the same
-    -- macro across two WoW accounts. UTC-formatted via GetServerTime() so
-    -- it's comparable across timezones.
+    local stored = node and type(node.Versions) == "table"
+    local text
     if node then
-        node.LastUpdated = GSE.GetTimestamp()
-        -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
-        node.GSEVersion = GSE.VersionNumber
-        node.text = CleanMacroBookText(node.text)
+        if stored then
+            -- Stamp LastUpdated so server-side newer-wins resolution can pick
+            -- the most-recently-edited copy when one Companion is syncing the
+            -- same macro across two WoW accounts. UTC via GetServerTime().
+            node.LastUpdated = GSE.GetTimestamp()
+            -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
+            node.GSEVersion = GSE.VersionNumber
+            if not node.Managed then
+                for _, version in pairs(node.Versions) do
+                    if type(version) == "table" and type(version.text) == "string" then
+                        version.text = CleanMacroBookText(version.text)
+                    end
+                end
+            end
+        end
+        text = CleanMacroBookText(GSE.MacroText(node))
     end
     if not InCombatLockdown() then
         GSE:UnregisterEvent("UPDATE_MACROS")
         local slot = GetMacroIndexByName(node.name)
         if slot > 0 then
-            EditMacro(slot, node.name, node.icon, node.text)
+            EditMacro(slot, node.name, node.icon, text)
         else
-            node.value = CreateMacro(node.name, node.icon, node.text, category)
-            if not skipStore then
+            node.value = CreateMacro(node.name, node.icon, text, category)
+            if stored and not skipStore then
                 if not (GSE.UpdateDeltaFork and GSE.UpdateDeltaFork(node)) then
                     if category then
                         local charKey = GSE.CharacterMacroBucketKey()
@@ -4248,7 +4518,7 @@ end
 
 local function materialiseEncodedMacro(name, node, category)
     if not node then return end
-    local text = node.managedMacro or node.text
+    local text = GSE.MacroSource(node)
     GSE.UpdateMacro({
         ["name"] = name,
         ["icon"] = (node.Managed and GSE.GetManagedMacroStubIcon)
@@ -4269,6 +4539,7 @@ function GSE.ImportMacro(node)
         source = GSE.Store("macro")[charKey]
     end
     node.category = nil
+    GSE.UpgradeMacro(node)
 
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
     GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
@@ -4401,26 +4672,29 @@ end
 function GSE.ManageMacros()
     for k, v in pairs(GSE.Store("macro")) do
         local pnode, encodedEntry = resolveMacroNode(v)
-        if encodedEntry then
+        -- Another class's macro is not written to this character's macros.
+        if GSE.IsStoredMacroNode(v) and not GSE.ElementAvailable("macro", k) then
+            -- left as stored
+        elseif encodedEntry then
             -- Entry held in received encoded form: materialise without writing
             -- a plaintext node back over it (see resolveMacroNode).
             materialiseEncodedMacro(k, pnode, nil)
-        elseif v.Managed then
+        elseif GSE.MacroDrivenByGSE(v) then
             local macroIndex = GetMacroIndexByName(k)
             if macroIndex ~= v.value then
                 v.value = macroIndex
                 GSE.Store("macro")[k].value = macroIndex
             end
+            -- Written to WoW only; the stored macro keeps its source. The slot
+            -- a created macro lands in is recorded on it.
             local node = {
                 ["name"] = k,
                 ["value"] = v.value,
-                ["icon"] = GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
-                ["text"] = GSE.CompileMacroText(
-                    (v.managedMacro and v.managedMacro or v.text),
-                    Statics.TranslatorMode.String
-                )
+                ["icon"] = (v.Managed and GSE.GetManagedMacroStubIcon) and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
+                ["text"] = GSE.MacroText(GSE.UpgradeMacro(v, k))
             }
-            GSE.UpdateMacro(node)
+            GSE.UpdateMacro(node, nil, true)
+            v.value = node.value
         else
             -- GetMacroIndexByName answers 0, not nil, for a name this character
             -- does not have -- and 0 is truthy. Tested as `if slot`, every miss
@@ -4434,13 +4708,7 @@ function GSE.ManageMacros()
             if slot and slot > 0 then
                 local mname, micon, mbody = GetMacroInfo(slot)
                 if mname then
-                    GSE.Store("macro")[mname] = {
-                        ["name"] = mname,
-                        ["value"] = slot,
-                        ["icon"] = micon,
-                        ["text"] = mbody,
-                        ["manageMacro"] = mbody
-                    }
+                    GSE.SnapshotMacro(GSE.Store("macro"), mname, mname, micon, mbody, slot)
                 else
                     GSE.Store("macro")[k] = nil
                 end
@@ -4461,7 +4729,7 @@ function GSE.ManageMacros()
                 local cpnode, cEncodedEntry = resolveMacroNode(v)
                 if cEncodedEntry then
                     materialiseEncodedMacro(k, cpnode, true)
-                elseif v.Managed then
+                elseif GSE.MacroDrivenByGSE(v) then
                     local macroIndex = GetMacroIndexByName(k)
                     if macroIndex ~= v.value then
                         v.value = macroIndex
@@ -4470,13 +4738,11 @@ function GSE.ManageMacros()
                     local node = {
                         ["name"] = k,
                         ["value"] = v.value,
-                        ["icon"] = GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
-                        ["text"] = GSE.CompileMacroText(
-                            (v.managedMacro and v.managedMacro or v.text),
-                            Statics.TranslatorMode.String
-                        )
+                        ["icon"] = (v.Managed and GSE.GetManagedMacroStubIcon) and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
+                        ["text"] = GSE.MacroText(GSE.UpgradeMacro(v, k))
                     }
-                    GSE.UpdateMacro(node)
+                    GSE.UpdateMacro(node, true, true)
+                    v.value = node.value
                 else
                     -- 0 on a miss, as above: a macro this bucket holds that the
                     -- character does not is kept, not deleted.
@@ -4484,13 +4750,7 @@ function GSE.ManageMacros()
                     if slot and slot > 0 then
                         local mname, micon, mbody = GetMacroInfo(slot)
                         if mname then
-                            GSE.Store("macro")[charKey][mname] = {
-                                ["name"] = mname,
-                                ["value"] = slot,
-                                ["icon"] = micon,
-                                ["text"] = mbody,
-                                ["manageMacro"] = mbody
-                            }
+                            GSE.SnapshotMacro(GSE.Store("macro")[charKey], mname, mname, micon, mbody, slot)
                         else
                             GSE.Store("macro")[charKey][k] = nil
                         end
@@ -4522,22 +4782,17 @@ function GSE.ManageMacros()
                                 -- Macro exists on this character: refresh the account-level snapshot.
                                 local mname, micon, mbody = GetMacroInfo(slot)
                                 if mname then
-                                    GSE.Store("macro")[macname] = {
-                                        name        = mname,
-                                        value       = slot,
-                                        icon        = micon,
-                                        text        = mbody,
-                                        manageMacro = mbody,
-                                    }
+                                    GSE.SnapshotMacro(GSE.Store("macro"), macname, mname, micon, mbody, slot)
                                 end
                             else
                                 -- Macro missing on this character: restore from account-level store.
                                 local stored = GSE.Store("macro")[macname]
-                                if stored and not GSE.isEmpty(stored.text) then
+                                local restoreText = GSE.IsStoredMacroNode(stored) and GSE.MacroText(GSE.UpgradeMacro(stored, macname)) or ""
+                                if not GSE.isEmpty(restoreText) then
                                     CreateMacro(
                                         macname,
                                         stored.icon or Statics.QuestionMark,
-                                        CleanMacroBookText(stored.text),
+                                        CleanMacroBookText(restoreText),
                                         GSE.SetMacroLocation()
                                     )
                                     GSE.Print(

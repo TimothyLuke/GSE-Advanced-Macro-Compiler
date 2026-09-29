@@ -31,6 +31,12 @@ describe("GSEStore", function()
     _G.UnitClass = nil
     GSE.DecodeMessage = function(body)
       if type(body) ~= "string" then return false end
+      -- "VAR|<spec>|<tag>": a variable whose MetaData.SpecID is <spec> ("" for none).
+      local vspec = body:match("^VAR|([^|]*)|")
+      if vspec then
+        return true, { funct = "function() return true end",
+                       MetaData = { SpecID = tonumber(vspec) } }
+      end
       local name, author, pid = body:match("^SEQ|([^|]*)|([^|]*)|([^|]*)")
       if not name then return false end
       return true, { name, { MetaData = { Name = name, Author = author,
@@ -189,6 +195,69 @@ describe("GSEStore", function()
       assert.equals("/cast X", GSE.Store("macro")["Player-1-AAA"].Burst.text)
       assert.equals("/cast Y", GSE.Store("macro")["Player-1-BBB"].Burst.text)
       assert.equals(125, GSE.Store("macro")["Player-1-BBB"].Burst.value)
+    end)
+  end)
+
+  -- ── scope of variables and macros ───────────────────────────────────────────
+  describe("scope", function()
+    local function classOf(kind, name)
+      for classid, envs in pairs(GSEStore[kind]) do
+        for _, env in pairs(envs) do if env.Name == name then return classid end end
+      end
+    end
+    local function asWarrior() _G.UnitClass = function() return "Warrior", "WARRIOR", 1 end end
+
+    it("files a variable in the class its SpecID names", function()
+      firstRun({ GSEVariables = { Glob = "VAR||g", Mine = "VAR|4|m", Also = "VAR|0|a" } })
+      assert.equals(0, classOf("variable", "Glob"), "no SpecID: global")
+      assert.equals(4, classOf("variable", "Mine"))
+      assert.equals(0, classOf("variable", "Also"))
+    end)
+
+    it("files a spec-level variable in that spec's class", function()
+      local saved = GSE.GetClassIDforSpec
+      GSE.GetClassIDforSpec = function(spec) return spec == 71 and 1 or 0 end
+      firstRun({ GSEVariables = { Arms = "VAR|71|a" } })
+      GSE.GetClassIDforSpec = saved
+      assert.equals(1, classOf("variable", "Arms"))
+    end)
+
+    it("re-files a variable whose SpecID changed, at the next load", function()
+      firstRun({ GSEVariables = { V = "VAR||v" } })
+      GSE.Store("variable").V = "VAR|6|v2"
+      reload()
+      assert.equals(6, classOf("variable", "V"))
+      assert.equals(1, count(envs("variable", 6)), "moved, not copied")
+      assert.equals(0, count(envs("variable", 0)))
+    end)
+
+    it("lets the current class's variable win over a global one of the same name", function()
+      asWarrior()
+      _G.GSEStore = { v = 1, sequence = {}, macro = {}, variable = {
+        [0] = { ["local-g"] = { Name = "Dup", Body = "VAR||global" } },
+        [1] = { ["local-w"] = { Name = "Dup", Body = "VAR|1|warrior" } },
+      } }
+      GSE.LoadStore()
+      assert.equals("VAR|1|warrior", GSE.Store("variable").Dup)
+      reload()
+      assert.equals(1, count(envs("variable", 0)), "the global one is kept, not deleted")
+      assert.equals(1, count(envs("variable", 1)))
+    end)
+
+    it("makes only the current class and global live", function()
+      asWarrior()
+      firstRun({ GSEVariables = { G = "VAR||g", W = "VAR|1|w", P = "VAR|2|p" } })
+      assert.is_true(GSE.ElementAvailable("variable", "G"))
+      assert.is_true(GSE.ElementAvailable("variable", "W"))
+      assert.is_false(GSE.ElementAvailable("variable", "P"), "a Paladin variable is not live on a Warrior")
+    end)
+
+    it("files an account macro by its SpecID, and re-files it when that changes", function()
+      firstRun({ GSEMacros = { Pull = { text = "/cast Charge", value = 3, MetaData = { SpecID = 1 } } } })
+      assert.equals(1, classOf("macro", "Pull"))
+      GSE.Store("macro").Pull.MetaData = { SpecID = 5 }
+      reload()
+      assert.equals(5, classOf("macro", "Pull"))
     end)
   end)
 

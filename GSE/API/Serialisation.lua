@@ -151,7 +151,7 @@ local function shareableVariable(ref)
     if type(stored) ~= "string" or GSE.IsPackedBlob(stored) then return nil end
     local ok, decoded = GSE.DecodeMessage(stored)
     if not ok or type(decoded) ~= "table" or GSE.IsProtectedContent(decoded) or decoded.noExport then return nil end
-    return decoded, name, GSE.StoredElementId("variable", name)
+    return GSE.UpgradeVariable(decoded, name), name, GSE.StoredElementId("variable", name)
 end
 
 -- A macro this player may share, by id or name: an account macro, or one of
@@ -166,8 +166,10 @@ local function shareableMacro(ref)
     if not GSE.IsStoredMacroNode(node) or type(node.GSEProtected) == "string" or GSE.IsProtectedContent(node) then
         return nil
     end
-    local copy = {}
-    for k, v in pairs(node) do if k ~= "value" then copy[k] = v end end
+    -- Sent in the current shape, without its slot: that is where this
+    -- player keeps it.
+    local copy = GSE.UpgradeMacro(GSE.CloneSequence(node), name)
+    copy.value = nil
     copy.name = copy.name or name
     return copy, name, GSE.StoredElementId("macro", name)
 end
@@ -189,7 +191,7 @@ function GSE.GetShareableSummary()
     end
     for name in pairs(GSE.Store("variable")) do
         local v, _, id = shareableVariable(name)
-        if v then out.variable[id or name] = {Label = name, Help = v.comments, LastUpdated = v.LastUpdated} end
+        if v then out.variable[id or name] = {Label = name, Help = v.MetaData and v.MetaData.Notes, LastUpdated = v.LastUpdated} end
     end
     local macroNames = {}
     for k, v in pairs(GSE.Store("macro")) do
@@ -201,7 +203,7 @@ function GSE.GetShareableSummary()
     end
     for name in pairs(macroNames) do
         local m, _, id = shareableMacro(name)
-        if m then out.macro[id or name] = {Label = name, Help = m.comments, LastUpdated = m.LastUpdated} end
+        if m then out.macro[id or name] = {Label = name, Help = m.MetaData.Notes, LastUpdated = m.LastUpdated} end
     end
     return out
 end

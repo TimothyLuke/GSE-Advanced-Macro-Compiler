@@ -1551,32 +1551,17 @@ local function onClick_Macro(editframe, container, group, unique, key)
     end
     if #unique ~= 3 then return end
     ShowSectionFooter(editframe)
-    local mtext
     local macroID = tonumber(key)
     if not macroID then return end
     local mname, micon, matext = GetMacroInfo(macroID)
     if not mname then return end
-    if unique[2] == "A" then
-        if GSE.Store("macro")[mname] and GSE.Store("macro")[mname].text then
-            mtext = GSE.Store("macro")[mname].text
-        else
-            mtext = matext
-        end
-    else
-        local charKey = GSE.CharacterMacroBucketKey()
-        if GSE.Store("macro")[charKey] and GSE.Store("macro")[charKey][mname] and
-           GSE.Store("macro")[charKey][mname].text
-        then
-            mtext = GSE.Store("macro")[charKey][mname].text
-        else
-            mtext = matext
-        end
-    end
+    -- The macro as WoW holds it. The editor reads what GSE keeps for it (its
+    -- versions and metadata) from the store itself.
     local node = {
         value = macroID,
         name = mname,
         icon = micon,
-        text = mtext
+        text = matext
     }
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
     -- Scroll wrapper keeps the macro view (header + buttons + edit box) usable

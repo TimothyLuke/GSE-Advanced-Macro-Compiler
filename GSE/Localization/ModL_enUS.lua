@@ -1034,3 +1034,11 @@ L["Local changes discarded."] = true
 
 L["Use the author's %s"] = true
 L["Replace your %s on this block with the author's.  Your other changes stay."] = true
+L["Version Label"] = true
+L["Copy the selected version into a new one."] = true
+L["Version %d is still selected for: %s"] = true
+L["Use %s"] = true
+L["A macro named %s already exists."] = true
+L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
+L["The version used where no other version has been configured."] = true
+L["Everything that uses it is %s."] = true

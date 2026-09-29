@@ -518,10 +518,7 @@ local TAB_CONDITIONALS = {
 -- Names of GSE-managed in-game macros (the editor's Macros section).
 local function getManagedMacroNames()
     local names, seen = {}, {}
-    local function isMacroNode(v)
-        return type(v) == "table" and (v.text ~= nil or v.icon ~= nil or v.value ~= nil
-            or v.Managed ~= nil or v.managedMacro ~= nil or v.manageMacro ~= nil)
-    end
+    local isMacroNode = GSE.IsStoredMacroNode
     if type(GSE.Store("macro")) == "table" then
         for k, v in pairs(GSE.Store("macro")) do
             if isMacroNode(v) then

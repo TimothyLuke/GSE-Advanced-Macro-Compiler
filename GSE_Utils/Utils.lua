@@ -1129,13 +1129,18 @@ function GSE.ComputeSequenceDependencies(sequence)
     return deps
 end
 
---- Compute the direct variable dependencies of a variable's funct string.
--- Mutates variable.Dependencies in place and returns it.
+--- Compute the direct variable dependencies of a variable: every variable
+-- any of its versions calls. Mutates variable.Dependencies and returns it.
 function GSE.ComputeVariableDependencies(variable)
     if type(variable) ~= "table" then return end
     local vars = {}
     if type(variable.funct) == "string" then
         scanStringForVarRefs(variable.funct, vars)
+    end
+    for _, version in pairs(type(variable.Versions) == "table" and variable.Versions or {}) do
+        if type(version) == "table" and type(version.funct) == "string" then
+            scanStringForVarRefs(version.funct, vars)
+        end
     end
     local varList = {}
     for k in pairs(vars) do table.insert(varList, k) end
@@ -1286,6 +1291,56 @@ function GSE.GetMacroDependents(macroName)
         return a.name < b.name
     end)
     return result
+end
+
+--- A scope to suggest for a variable or macro, from what uses it: the spec
+--- every user shares, else the class they share, else nothing (it stays
+--- global). A variable's users are the sequences that call it and the managed
+--- macros that do; a macro's are the sequences that run it. Only loaded
+--- sequences are counted, as the dependents lookups count them. Returns
+--- { specID, reason } or nil. Offered to the author, never applied.
+function GSE.SuggestElementScope(kind, name)
+    local specs = {}
+    local users = kind == "variable" and GSE.GetVariableDependents(name).sequences or GSE.GetMacroDependents(name)
+    for _, entry in ipairs(users or {}) do
+        local seq = GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
+        specs[#specs + 1] = tonumber(seq and seq.MetaData and seq.MetaData.SpecID) or entry.classid or 0
+    end
+    if kind == "variable" then
+        -- A managed macro that calls it: it only compiles where the variable is live.
+        local calls = {"GSE.V." .. name .. "(", "GSE.V['" .. name .. "']", 'GSE.V["' .. name .. '"]'}
+        local function visit(mname, node)
+            if not GSE.IsStoredMacroNode(node) or not node.Managed then return end
+            local src = GSE.MacroSource(GSE.UpgradeMacro(node, mname))
+            for _, c in ipairs(calls) do
+                if src:find(c, 1, true) then
+                    specs[#specs + 1] = tonumber(node.MetaData and node.MetaData.SpecID) or 0
+                    return
+                end
+            end
+        end
+        for k, v in pairs(GSE.Store("macro")) do
+            if GSE.IsStoredMacroNode(v) then visit(k, v)
+            elseif type(v) == "table" then for k2, v2 in pairs(v) do visit(k2, v2) end end
+        end
+    end
+    if #specs == 0 then return nil end
+    local classOf = function(spec)
+        if spec <= 13 then return spec end
+        local ok, c = pcall(GSE.GetClassIDforSpec, spec)
+        return ok and tonumber(c) or 0
+    end
+    local oneSpec, oneClass = specs[1], classOf(specs[1])
+    for _, sp in ipairs(specs) do
+        if sp ~= oneSpec then oneSpec = nil end
+        if classOf(sp) ~= oneClass then oneClass = nil end
+    end
+    local pick = (oneSpec and oneSpec > 0) and oneSpec or ((oneClass and oneClass > 0) and oneClass or nil)
+    if not pick then return nil end
+    return {
+        specID = pick,
+        reason = string.format(L["Everything that uses it is %s."], Statics.SpecIDList[pick] or tostring(pick)),
+    }
 end
 
 -- Queue of corrupt sequences waiting for the player to act on them.

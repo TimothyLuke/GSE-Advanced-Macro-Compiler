@@ -98,14 +98,7 @@ local function compileExport(exportTable, humanReadable)
 end
 
 local function isStoredMacroNode(node)
-    return type(node) == "table" and (
-        node.text ~= nil
-        or node.value ~= nil
-        or node.icon ~= nil
-        or node.Managed ~= nil
-        or node.managedMacro ~= nil
-        or node.manageMacro ~= nil
-    )
+    return GSE.IsStoredMacroNode(node)
 end
 
 local function currentCharacterMacroBucket()
@@ -412,7 +405,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         return
                     end
                     decoded.name = key
-                    payload = decoded
+                    payload = GSE.UpgradeVariable(decoded, key)
                 end
                 exportTable["Variables"][key] = payload
                 exportTable.ElementCount = exportTable.ElementCount + 1
@@ -470,7 +463,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                                 else
                                     local ok, decoded = GSE.DecodeMessage(storedVar)
                                     if ok and type(decoded) == "table" then
-                                        exportTable["Variables"][vname] = decoded
+                                        exportTable["Variables"][vname] = GSE.UpgradeVariable(decoded, vname)
                                         exportTable.ElementCount = exportTable.ElementCount + 1
                                         table.insert(included, vname)
                                     end
@@ -551,14 +544,10 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     end
                     if GSE.isEmpty(GSE.Store("macro")[currentBucket][key]) then
                         -- need to find the macro as its not managed by GSE
-                        source = {}
                         local mslot = GetMacroIndexByName(key)
                         if not mslot or mslot == 0 then return end
                         local _, micon, mbody = GetMacroInfo(mslot)
-                        source.name = key
-                        source.icon = micon
-                        source.text = mbody
-                        source.managedMacro = GSE.CompileMacroText(mbody or "", Statics.TranslatorMode.ID)
+                        source = GSE.NewMacroNode(key, micon, mbody)
                         if mslot > GSE.GetMaxAccountMacros() then
                             category = "p"
                         end
@@ -567,7 +556,10 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         category = "p"
                     end
                 end
-                local exportobject = GSE.CloneSequence(source)
+                -- In the current shape, and without its slot: that is where
+                -- this player keeps it, meaningless to anyone else.
+                local exportobject = GSE.UpgradeMacro(GSE.CloneSequence(source), key)
+                exportobject.value = nil
                 exportobject.objectType = "MACRO"
                 exportobject.category = category
                 exportobject.name = key

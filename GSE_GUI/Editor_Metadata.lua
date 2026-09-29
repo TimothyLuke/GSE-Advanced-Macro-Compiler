@@ -175,14 +175,7 @@ local function storedVariableInfo(name)
 end
 
 local function isStoredMacroNode(node)
-    return type(node) == "table" and (
-        node.text ~= nil or
-        node.icon ~= nil or
-        node.value ~= nil or
-        node.Managed ~= nil or
-        node.managedMacro ~= nil or
-        node.manageMacro ~= nil
-    )
+    return GSE.IsStoredMacroNode(node)
 end
 
 local function currentCharacterMacroBucket()
@@ -1010,6 +1003,179 @@ GUIDrawMetadataEditor = function(editframe, container)
         drawMetadataTab(editframe, container)
     else
         drawNotesTab(editframe, container)
+    end
+end
+
+-- ---------------------------------------------------------------------------
+-- Variables and macros: scope, versions and version selection
+-- ---------------------------------------------------------------------------
+-- A variable or macro is scoped and versioned as a sequence is (MetaData.SpecID,
+-- Versions, MetaData.Default and the context overrides). These draw the same
+-- controls the sequence Configuration tab does, bound to any such element, so
+-- the three editors look and behave alike.
+
+local ELEMENT_LABEL_WIDTH = 150
+local ELEMENT_DROPDOWN_WIDTH = 250
+
+-- { ["1"] = "1 - Label", ... } for a version dropdown.
+local function elementVersionList(element)
+    local list, order = {}, {}
+    for i, v in ipairs(element.Versions or {}) do
+        local key = tostring(i)
+        list[key] = (type(v) == "table" and not GSE.isEmpty(v.Label)) and (key .. " - " .. v.Label) or key
+        order[#order + 1] = key
+    end
+    return list, order
+end
+
+--- The scope picker: Global, a class, or a spec. `suggestion`, when given, is
+--- { specID, reason } -- a scope the element's users all share -- offered for the
+--- author to take with one click; nothing is ever moved without them.
+function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onChange)
+    element.MetaData = element.MetaData or {}
+    local dd = UI:Create("Dropdown")
+    dd:SetWidth(ELEMENT_DROPDOWN_WIDTH)
+    if dd.SetDropdownStyle then dd:SetDropdownStyle(true) end
+    dd:SetList(GSE.GetSpecNames())
+    dd:SetValue(Statics.SpecIDList[tonumber(element.MetaData.SpecID) or 0])
+    dd:SetCallback("OnValueChanged", function(_, _, key)
+        element.MetaData.SpecID = Statics.SpecIDHashList[key]
+        if onChange then onChange() end
+    end)
+    dd:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(T("Specialization/Class ID"),
+            T("What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."),
+            editframe)
+    end)
+    dd:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    container:AddChild(inlineFieldRow(T("Specialization/Class ID"), dd, ELEMENT_LABEL_WIDTH))
+
+    local current = tonumber(element.MetaData.SpecID) or 0
+    if suggestion and suggestion.specID and suggestion.specID ~= current then
+        local row = UI:Create("SimpleGroup")
+        row:SetLayout("Flow")
+        row:SetFullWidth(true)
+        if row.SetFlowGap then row:SetFlowGap(8) end
+        local hint = UI:Create("Label")
+        hint:SetText(suggestion.reason)
+        hint:SetWidth(360)
+        local use = UI:Create("Button")
+        use:SetText(string.format(T("Use %s"), Statics.SpecIDList[suggestion.specID] or tostring(suggestion.specID)))
+        use:SetWidth(160)
+        use:SetCallback("OnClick", function()
+            element.MetaData.SpecID = suggestion.specID
+            if onChange then onChange() end
+        end)
+        row:AddChild(hint)
+        row:AddChild(use)
+        container:AddChild(row)
+    end
+end
+
+--- The version bar: choose which version to edit, label it, copy it into a new
+--- one, or delete it. `onSelect(index)` redraws the editor on that version;
+--- `onChange()`, when given, runs after the versions themselves change.
+function GSE.GUI.DrawElementVersionBar(editframe, container, element, selected, onSelect, onChange)
+    element.Versions = element.Versions or {{}}
+    local row = UI:Create("SimpleGroup")
+    row:SetLayout("Flow")
+    row:SetFullWidth(true)
+    if row.SetFlowGap then row:SetFlowGap(8) end
+    if row.SetFlowVAlign then row:SetFlowVAlign("BOTTOM") end
+
+    local pick = UI:Create("Dropdown")
+    pick:SetLabel(T("Version"))
+    pick:SetWidth(180)
+    if pick.SetDropdownStyle then pick:SetDropdownStyle(true) end
+    pick:SetList(elementVersionList(element))
+    pick:SetValue(tostring(selected))
+    pick:SetCallback("OnValueChanged", function(_, _, key) onSelect(tonumber(key) or 1) end)
+
+    local label = UI:Create("EditBox")
+    label:SetLabel(T("Version Label"))
+    label:SetWidth(200)
+    label:DisableButton(true)
+    label:SetText(element.Versions[selected] and element.Versions[selected].Label or "")
+    label:SetCallback("OnTextChanged", function(_, _, text)
+        if element.Versions[selected] then
+            element.Versions[selected].Label = (text ~= "") and text or nil
+        end
+    end)
+    label:SetCallback("OnEditFocusLost", function() if onChange then onChange() end end)
+
+    local add = UI:Create("Button")
+    add:SetText(T("New") .. " " .. T("Version"))
+    add:SetWidth(130)
+    add:SetCallback("OnClick", function()
+        table.insert(element.Versions, GSE.CloneSequence(element.Versions[selected] or {}))
+        element.Versions[#element.Versions].Label = nil
+        if onChange then onChange() end
+        onSelect(#element.Versions)
+    end)
+    add:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(T("New") .. " " .. T("Version"), T("Copy the selected version into a new one."), editframe)
+    end)
+    add:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local del = UI:Create("Button")
+    del:SetText(T("Delete Version"))
+    del:SetWidth(130)
+    del:SetDisabled(#element.Versions < 2)
+    del:SetCallback("OnClick", function()
+        if #element.Versions < 2 then return end
+        -- Refused, not repointed, while anything selects it -- as for a sequence.
+        local blocking = GSE.VersionReferencesInUse(element.MetaData, selected)
+        if #blocking > 0 then
+            editframe:SetStatusText(string.format(T("Version %d is still selected for: %s"),
+                selected, table.concat(blocking, ", ")))
+            return
+        end
+        GSE.ShiftVersionReferencesAfterDelete(element.MetaData, selected)
+        table.remove(element.Versions, selected)
+        if onChange then onChange() end
+        onSelect(math.min(selected, #element.Versions))
+    end)
+
+    row:AddChild(pick)
+    row:AddChild(label)
+    row:AddChild(add)
+    row:AddChild(del)
+    container:AddChild(row)
+end
+
+--- Which version runs where: Default, then the PvE and PvP context overrides.
+--- A context set to the Default version is cleared, as the sequence editor does.
+--- `onChange()`, when given, runs after any of them changes.
+function GSE.GUI.DrawElementVersionConfig(editframe, container, element, onChange)
+    element.MetaData = element.MetaData or {}
+    local meta = element.MetaData
+    local list, order = elementVersionList(element)
+
+    local function dropdown(labelText, tip, value, set)
+        local dd = UI:Create("Dropdown")
+        dd:SetWidth(ELEMENT_DROPDOWN_WIDTH)
+        if dd.SetDropdownStyle then dd:SetDropdownStyle(true) end
+        dd:SetList(list, order)
+        dd:SetValue(value)
+        dd:SetCallback("OnValueChanged", function(_, _, key)
+            set(tonumber(key))
+            if onChange then onChange() end
+        end)
+        dd:SetCallback("OnEnter", function() GSE.CreateToolTip(labelText, tip, editframe) end)
+        dd:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        container:AddChild(inlineFieldRow(labelText, dd, ELEMENT_LABEL_WIDTH))
+    end
+
+    dropdown(T("Default Version"), T("The version used where no other version has been configured."),
+        tostring(meta.Default or 1), function(n) meta.Default = n end)
+    for _, section in ipairs({{T("PvE"), pveVersionConfigs}, {T("PvP"), pvpVersionConfigs}}) do
+        container:AddChild(metadataHeading(section[1], ELEMENT_LABEL_WIDTH + ELEMENT_DROPDOWN_WIDTH))
+        for _, cfg in ipairs(section[2]) do
+            local key = cfg.key
+            dropdown(cfg.label, cfg.tip, versionValue(meta, key), function(n)
+                meta[key] = (n ~= tonumber(meta.Default)) and n or nil
+            end)
+        end
     end
 end
 
