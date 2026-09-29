@@ -365,6 +365,7 @@ globals = {
     "GetNumSpecializations",
     "UnitRace",
     "IsSpellKnown",
+    "IsPlayerSpell",
     "GetSpecializationInfoByID",
     "GetSpecializationRole",
     "GetSpellCooldown",

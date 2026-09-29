@@ -2422,7 +2422,7 @@ local function buildAction(action, metaData, blockPath)
         local spelllist = {}
         for k, v in pairs(action) do
             local value = v
-            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" then
+            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" or k == "Ranks" then
                 -- we dont want to do anything here
             else
                 if string.sub(value, 1, 1) == "=" then
@@ -2442,17 +2442,18 @@ local function buildAction(action, metaData, blockPath)
                 end
 
                 if k == "spell" then
-                    spelllist[k] =
-                        GSE.GetSpellId(value, Statics.TranslatorMode.ID) or
-                        GSE.GetSpellId(value, Statics.TranslatorMode.String)
+                    -- Resolved per character: a ranked spell casts the highest
+                    -- rank known up to the one written (see "Spell ranks" in
+                    -- translator.lua).
+                    spelllist[k] = GSE.GetCastableSpell(value, action.Ranks)
                 elseif k == "macro" then
                     if GSE.DecodeMacroEditorText then
                         value = GSE.DecodeMacroEditorText(value)
                     end
                     if GSE.IsMacroTextBody(GSE.UnEscapeString(value)) then
                         -- we have a line of macrotext
-                        spelllist["macrotext"] =
-                            GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
+                        spelllist["macrotext"] = GSE.UnEscapeString(
+                            GSE.WithSpellRanks(action.Ranks, GSE.CompileMacroText, value, Statics.TranslatorMode.String))
                     else
                         spelllist[k] = value
                     end
@@ -3214,7 +3215,7 @@ local function materialiseEncodedMacro(name, node, category)
         ["name"] = name,
         ["icon"] = (node.Managed and GSE.GetManagedMacroStubIcon)
             and GSE.GetManagedMacroStubIcon(name, node.icon) or node.icon,
-        ["text"] = GSE.CompileMacroText(text, Statics.TranslatorMode.String),
+        ["text"] = GSE.WithSpellRanks(node.Ranks, GSE.CompileMacroText, text, Statics.TranslatorMode.String),
     }, category, true)
 end
 
@@ -3376,7 +3377,9 @@ function GSE.ManageMacros()
                 ["name"] = k,
                 ["value"] = v.value,
                 ["icon"] = GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
-                ["text"] = GSE.CompileMacroText(
+                ["text"] = GSE.WithSpellRanks(
+                    v.Ranks,
+                    GSE.CompileMacroText,
                     (v.managedMacro and v.managedMacro or v.text),
                     Statics.TranslatorMode.String
                 )
@@ -3435,7 +3438,9 @@ function GSE.ManageMacros()
                         ["name"] = k,
                         ["value"] = v.value,
                         ["icon"] = GSE.GetManagedMacroStubIcon and GSE.GetManagedMacroStubIcon(k, v.icon) or v.icon,
-                        ["text"] = GSE.CompileMacroText(
+                        ["text"] = GSE.WithSpellRanks(
+                            v.Ranks,
+                            GSE.CompileMacroText,
                             (v.managedMacro and v.managedMacro or v.text),
                             Statics.TranslatorMode.String
                         )

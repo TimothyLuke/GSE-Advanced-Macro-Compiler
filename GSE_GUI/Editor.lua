@@ -444,11 +444,12 @@ end
 -- Visible compiled length, matching what the runtime emits and what WoW would
 -- count once color escapes are stripped. UnEscapeString already removes both
 -- single and doubled |c..|r forms, so this is the right thing to count.
-local function GetCompiledMacroBodyLength(macroText)
+local function GetCompiledMacroBodyLength(macroText, ranks)
     if type(macroText) ~= "string" or macroText == "" then return 0 end
     local compiled = macroText
     if GSE.CompileMacroText then
-        local ok, result = pcall(GSE.CompileMacroText, macroText, Statics.TranslatorMode.String)
+        -- ranks: the block's ranked casts, which compile longer ("(Rank 3)").
+        local ok, result = pcall(GSE.WithSpellRanks, ranks, GSE.CompileMacroText, macroText, Statics.TranslatorMode.String)
         if ok and result then compiled = result end
     end
     if GSE.UnEscapeString then
@@ -474,7 +475,7 @@ local function CountSequenceMacroBlocksOverLimit(sequence, version)
         for _, action in ipairs(actions) do
             if type(action) == "table" then
                 if type(action.macro) == "string" and action.macro ~= "" then
-                    local lenMacro = GetCompiledMacroBodyLength(action.macro)
+                    local lenMacro = GetCompiledMacroBodyLength(action.macro, action.Ranks)
                     maxLength = math.max(maxLength, lenMacro)
                     if lenMacro > MAX_MACRO_BODY then
                         overCount = overCount + 1
@@ -5532,6 +5533,8 @@ function GSE.CreateEditor()
                         else
                             sourceText = DecodeEditorText(sourceText)
                         end
+                        -- Typed text, so its written ranks can still be read.
+                        action.Ranks = GSE.GetRankedSpellIDs(sourceText)
                         if cfg.type == "macro" then
                             sourceText = StoreMacroEditorText(sourceText)
                         else
@@ -5634,9 +5637,9 @@ function GSE.CreateEditor()
 			-- visibility ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â it's a no-op SetText when the Label
                     -- isn't in the layout, but means we don't have to
                     -- re-derive it on Compiled Template open/close.
-                    local compiledmacrotext =
-                        GSE.UnEscapeString(GSE.CompileMacroText(action.macro, Statics.TranslatorMode.String))
-                    local compiledLen = GetCompiledMacroBodyLength(action.macro)
+                    local compiledmacrotext = GSE.UnEscapeString(
+                        GSE.WithSpellRanks(action.Ranks, GSE.CompileMacroText, action.macro, Statics.TranslatorMode.String))
+                    local compiledLen = GetCompiledMacroBodyLength(action.macro, action.Ranks)
                     local charcount
                     if compiledLen > 255 then
                         charcount = string.format(
@@ -7954,7 +7957,7 @@ function GSE.CreateEditor()
                     action.macro = repairedMacro
                 end
                 if GSE.IsMacroTextBody(GSE.UnEscapeString(action.macro)) then
-                    spelltext = GSE.CompileMacroText(action.macro, Statics.TranslatorMode.Current)
+                    spelltext = GSE.WithSpellRanks(action.Ranks, GSE.CompileMacroText, action.macro, Statics.TranslatorMode.Current)
                 else
                     spelltext = GSE.UnEscapeString(action.macro)
                 end
@@ -7963,7 +7966,7 @@ function GSE.CreateEditor()
                 spelltext = action.action
             else
                 spellEditBox:SetLabel(L["Spell"])
-                local translatedSpell = GSE.GetSpellId(action.spell, Statics.TranslatorMode.Current)
+                local translatedSpell = GSE.WithSpellRanks(action.Ranks, GSE.GetSpellId, action.spell, Statics.TranslatorMode.Current)
                 if translatedSpell then
                     spelltext = translatedSpell
                 else
@@ -8000,6 +8003,8 @@ function GSE.CreateEditor()
                         sequence.Versions[version].Actions[keyPath].toy = nil
                     elseif sequence.Versions[version].Actions[keyPath].type == "macro" then
                         sequence.Versions[version].Actions[keyPath].macro = StoreMacroEditorText(value)
+                        sequence.Versions[version].Actions[keyPath].Ranks = GSE.GetRankedSpellIDs(value,
+                            sequence.Versions[version].Actions[keyPath].Ranks, sequence.Versions[version].Actions[keyPath].macro)
                         sequence.Versions[version].Actions[keyPath].spell = nil
                         sequence.Versions[version].Actions[keyPath].action = nil
                         sequence.Versions[version].Actions[keyPath].item = nil
@@ -8019,6 +8024,11 @@ function GSE.CreateEditor()
                         sequence.Versions[version].Actions[keyPath].item = nil
                     else
                         local storedValue = GSE.GetSpellId(value, Statics.TranslatorMode.ID)
+                        -- Stored as an ID either way; the block remembers
+                        -- whether a rank was written (see "Spell ranks" in
+                        -- translator.lua).
+                        sequence.Versions[version].Actions[keyPath].Ranks = GSE.GetRankedSpellIDs(value,
+                            sequence.Versions[version].Actions[keyPath].Ranks, storedValue)
                         if storedValue then
                             sequence.Versions[version].Actions[keyPath].spell = storedValue
                         else
@@ -8038,6 +8048,7 @@ function GSE.CreateEditor()
                     action.toy = editedAction.toy
                     action.action = editedAction.action
                     action.unit = editedAction.unit
+                    action.Ranks = editedAction.Ranks
                     if not editedAction.IconUserSelected then
                         editedAction.Icon = nil
                         action.Icon = nil
@@ -8088,7 +8099,11 @@ function GSE.CreateEditor()
 
                     value = DecodeMacroEditorText(value)
                     local storedMacro = StoreMacroEditorText(value)
+                    local ranks = GSE.GetRankedSpellIDs(value,
+                        sequence.Versions[version].Actions[keyPath].Ranks, storedMacro)
                     sequence.Versions[version].Actions[keyPath].macro = storedMacro
+                    sequence.Versions[version].Actions[keyPath].Ranks = ranks
+                    action.Ranks = ranks
                     sequence.Versions[version].Actions[keyPath].spell = nil
                     sequence.Versions[version].Actions[keyPath].action = nil
                     sequence.Versions[version].Actions[keyPath].item = nil
@@ -8136,7 +8151,9 @@ function GSE.CreateEditor()
                         local body =
                             DecodeMacroEditorText(
                             GSE.UnEscapeString(
-                                GSE.CompileMacroText(
+                                GSE.WithSpellRanks(
+                                    sequence.Versions[version].Actions[keyPath].Ranks,
+                                    GSE.CompileMacroText,
                                     sequence.Versions[version].Actions[keyPath].macro,
                                     Statics.TranslatorMode.String
                                 )
@@ -8149,7 +8166,7 @@ function GSE.CreateEditor()
                     -- the Save gate (and as the draw-time count). Counting the raw
                     -- display text here let the counter drop under 255 while the
                     -- compiled body stayed over -- so Save "never un-greyed".
-                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(storedMacro))
+                    SetMacroCountText(macroEditBox, GetCompiledMacroBodyLength(storedMacro, ranks))
                     FitMacroEditBoxToContent(macroEditBox, value)
                     UpdateMacroLimitState(macroEditBox, sequence.Versions[version].Actions[keyPath].macro, editframe, version)
                 end
@@ -8182,7 +8199,11 @@ function GSE.CreateEditor()
                     end
                     local storedMacro = sequence.Versions[version].Actions[keyPath].macro
                     if storedMacro and GSE.GUI and GSE.GUI.RefreshMacroEditorColoredText then
-                        GSE.GUI.RefreshMacroEditorColoredText(sel, storedMacro)
+                        -- storedMacro is the ID form, so the block's ranked casts
+                        -- must be in force or the repaint writes `Seal of the
+                        -- Crusader` over the `(Rank 1)` the user just typed.
+                        GSE.WithSpellRanks(sequence.Versions[version].Actions[keyPath].Ranks,
+                            GSE.GUI.RefreshMacroEditorColoredText, sel, storedMacro)
                     end
                 end
             )

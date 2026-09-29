@@ -565,6 +565,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         source.icon = micon
                         source.text = mbody
                         source.managedMacro = GSE.CompileMacroText(mbody or "", Statics.TranslatorMode.ID)
+                        source.Ranks = GSE.GetRankedSpellIDs(mbody)
                         if mslot > GSE.GetMaxAccountMacros() then
                             category = "p"
                         end

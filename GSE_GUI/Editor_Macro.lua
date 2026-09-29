@@ -362,7 +362,7 @@ local function showMacro(editframe, node, container)
         SetMultiLineContentPadding(managedMacro, 2)
         local managedtext =
             (source[node.name].managedMacro and
-            DecodeMacroEditorText(GSE.CompileMacroText(
+            DecodeMacroEditorText(GSE.WithSpellRanks(source[node.name].Ranks, GSE.CompileMacroText,
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
                 Statics.TranslatorMode.Current
             )) or DecodeMacroEditorText(node.text))
@@ -376,7 +376,7 @@ local function showMacro(editframe, node, container)
 
         local compiledtext =
             (source[node.name].managedMacro and
-            DecodeMacroEditorText(GSE.CompileMacroText(
+            DecodeMacroEditorText(GSE.WithSpellRanks(source[node.name].Ranks, GSE.CompileMacroText,
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
                 Statics.TranslatorMode.String
             )) or DecodeMacroEditorText(node.text))
@@ -402,6 +402,10 @@ local function showMacro(editframe, node, container)
                 editframe:SetStatusText(L["Save pending for "] .. node.name)
                 -- Always persist the authored macro so nothing is lost.
                 source[node.name].managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
+                -- Stored as IDs; the macro remembers which casts had a rank
+                -- written (see "Spell ranks" in translator.lua).
+                source[node.name].Ranks = GSE.GetRankedSpellIDs(text,
+                    source[node.name].Ranks, source[node.name].managedMacro)
                 if GSE.ShouldTranslateLive() then
                     -- Live: compile + queue the in-game macro update on every change.
                     commitManagedMacroCompile(text)
@@ -532,6 +536,11 @@ local function showMacro(editframe, node, container)
             for k, v in pairs(node) do
                 source[node.name][k] = v
             end
+            -- Taking over an existing macro: its body is spell names, so this
+            -- is the last point its written ranks can be read.
+            if not source[node.name].managedMacro then
+                source[node.name].Ranks = GSE.GetRankedSpellIDs(node.text)
+            end
             source[node.name].managedMacro =
                 GSE.TranslateString(
                 (source[node.name].managedMacro and source[node.name].managedMacro or node.text),
@@ -539,7 +548,8 @@ local function showMacro(editframe, node, container)
             )
             source[node.name].text =
                 GSE.UnEscapeString(
-                GSE.TranslateString(source[node.name].managedMacro, Statics.TranslatorMode.Current)
+                GSE.WithSpellRanks(source[node.name].Ranks, GSE.TranslateString,
+                    source[node.name].managedMacro, Statics.TranslatorMode.Current)
             )
             if not value and editframe.pendingSaveName == node.name then
                 editframe:SetStatusText(editframe.statusText or ("GSE: " .. GSE.VersionString))

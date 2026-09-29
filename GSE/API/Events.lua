@@ -556,6 +556,16 @@ local function showGSEButtonTooltip(btn)
         else
             GameTooltip:SetHyperlink("spell:" .. spellID)
         end
+        -- The rank, top right, as Blizzard's own action buttons show it. They
+        -- read it from the action slot; SetSpellByID has only the ID and
+        -- leaves the line empty on WoW Forever.
+        local rankText = GSE.GetSpellRankText and GSE.GetSpellRankText(spellID)
+        local rightLine = _G.GameTooltipTextRight1
+        if rankText and rightLine and GSE.isEmpty(rightLine:GetText()) then
+            rightLine:SetText(rankText)
+            rightLine:SetTextColor(0.5, 0.5, 0.5)
+            rightLine:Show()
+        end
     else
         GameTooltip:SetText(seqName, 1, 1, 1)
         GameTooltip:AddLine(L["GSE Sequence"], 0.6, 0.6, 0.6)
@@ -1665,6 +1675,20 @@ function GSE:SPELLS_CHANGED()
     GSE.ReloadSequences()
 end
 
+-- A newly trained spell rank. A ranked cast steps up to it (see "Spell ranks"
+-- in translator.lua), and SPELLS_CHANGED is only registered on Classic, so WoW
+-- Forever -- which reports GameMode 12 -- would otherwise keep the old rank
+-- until the next level-up or reload.
+function GSE:LEARNED_SPELL_IN_SKILL_LINE()
+    GSE.ReloadSequences()
+end
+
+function GSE:SPELL_DATA_LOAD_RESULT(_, spellID, success)
+    if success and GSE.SpellRankDataLoaded and GSE.SpellRankDataLoaded(spellID) then
+        GSE.ReloadSequences()
+    end
+end
+
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
     LoadKeyBindings(GSE.PlayerEntered)
     LoadOverrides()
@@ -1793,6 +1817,14 @@ end
 if GSE.GameMode <= 3 then
     GSE:RegisterEvent("CHARACTER_POINTS_CHANGED")
     GSE:RegisterEvent("SPELLS_CHANGED")
+end
+
+-- Spell ranks. Keyed on the event existing, not the game version: registering
+-- an event a client does not have is an error.
+for _, eventName in ipairs({"LEARNED_SPELL_IN_SKILL_LINE", "SPELL_DATA_LOAD_RESULT"}) do
+    if C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(eventName) then
+        GSE:RegisterEvent(eventName)
+    end
 end
 
 function GSE:OnEnable()
