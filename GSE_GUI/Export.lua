@@ -548,6 +548,9 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         if not mslot or mslot == 0 then return end
                         local _, micon, mbody = GetMacroInfo(mslot)
                         source = GSE.NewMacroNode(key, micon, mbody)
+                        -- Its written ranks, read while it is still spell names (see
+                        -- "Spell ranks" in translator.lua).
+                        source.Versions[1].Ranks = GSE.GetRankedSpellIDs(mbody)
                         if mslot > GSE.GetMaxAccountMacros() then
                             category = "p"
                         end

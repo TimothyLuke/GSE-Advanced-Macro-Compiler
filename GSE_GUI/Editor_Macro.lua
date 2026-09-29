@@ -385,7 +385,9 @@ local function showMacro(editframe, node, container, selected)
         SetMultiLineLabelGap(managedMacro, 2)
         SetMultiLineContentPadding(managedMacro, 2)
         local authored = version.managedMacro or version.text or ""
-        local managedtext = DecodeMacroEditorText(GSE.CompileMacroText(authored, Statics.TranslatorMode.Current))
+        -- A version's ranked casts compile as written (see "Spell ranks" in translator.lua).
+        local managedtext = DecodeMacroEditorText(GSE.WithSpellRanks(version.Ranks, GSE.CompileMacroText,
+            authored, Statics.TranslatorMode.Current))
         managedMacro:SetText(managedtext)
         managedMacro:SetNumLines(8)
         managedMacro:SetFullWidth(true)
@@ -410,6 +412,9 @@ local function showMacro(editframe, node, container, selected)
                 editframe:SetStatusText(L["Save pending for "] .. node.name)
                 -- Always persist the authored macro so nothing is lost.
                 version.managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
+                -- Stored as IDs; the version remembers which casts had a rank
+                -- written (see "Spell ranks" in translator.lua).
+                version.Ranks = GSE.GetRankedSpellIDs(text, version.Ranks, version.managedMacro)
                 if GSE.ShouldTranslateLive() then
                     -- Live: compile + queue the in-game macro update on every change.
                     commitManagedMacroCompile(text)
@@ -545,8 +550,12 @@ local function showMacro(editframe, node, container, selected)
             -- Every version gets an authored form (spell IDs) and the text it
             -- compiles to, so either kind of page can show any version.
             for _, v in ipairs(element.Versions) do
+                -- Taking over a version still in spell names: the last point its
+                -- written ranks can be read (see "Spell ranks" in translator.lua).
+                if not v.managedMacro then v.Ranks = GSE.GetRankedSpellIDs(v.text or "") end
                 v.managedMacro = GSE.TranslateString(v.managedMacro or v.text or "", Statics.TranslatorMode.ID)
-                v.text = GSE.UnEscapeString(GSE.TranslateString(v.managedMacro, Statics.TranslatorMode.Current))
+                v.text = GSE.UnEscapeString(GSE.WithSpellRanks(v.Ranks, GSE.TranslateString,
+                    v.managedMacro, Statics.TranslatorMode.Current))
             end
             if not value and editframe.pendingSaveName == node.name then
                 editframe:SetStatusText(editframe.statusText or ("GSE: " .. GSE.VersionString))

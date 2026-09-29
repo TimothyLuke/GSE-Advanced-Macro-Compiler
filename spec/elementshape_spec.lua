@@ -87,6 +87,14 @@ describe("Variable and macro shape", function()
       assert.equals("/cast 133", m.Versions[1].managedMacro)
     end)
 
+    it("moves a flat macro's ranked casts into the version whose text they describe", function()
+      local m = GSE.UpgradeMacro({ name = "Bolt", Managed = true, managedMacro = "/cast 116", Ranks = {116} })
+      assert.equals(116, m.Versions[1].Ranks[1])
+      assert.is_nil(m.Ranks)
+      assert.equals(116, GSE.MacroRanks(m)[1], "the running version's ranks")
+      assert.equals(205, GSE.MacroRanks({ text = "/cast x", Ranks = {205} })[1], "a flat node's own")
+    end)
+
     it("does not touch a sealed macro", function()
       local sealed = {GSEProtected = "!GSE3!+X"}
       assert.equals(sealed, GSE.UpgradeMacro(sealed))

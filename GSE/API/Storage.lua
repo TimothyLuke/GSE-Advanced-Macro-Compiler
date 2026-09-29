@@ -75,7 +75,7 @@ local INDEX   -- what the views were built from, for reconcileStore
 -- Macro fields that are the macro itself. Two per-character copies that agree
 -- on these are one macro held by two characters, whatever else differs
 -- (LastUpdated, Author).
-local MACRO_CONTENT = { "text", "managedMacro", "manageMacro", "icon", "Managed", "GSEProtected",
+local MACRO_CONTENT = { "text", "managedMacro", "manageMacro", "Ranks", "icon", "Managed", "GSEProtected",
     "Versions", "MetaData" }
 
 local localIdCounter = 0
@@ -2638,7 +2638,7 @@ end
 --                Versions = { [n] = { Label, funct, eventEnabled, eventNames } },
 --                Dependencies, LastUpdated, GSEVersion }
 --   macro    = { MetaData = { ...the same... },
---                Versions = { [n] = { Label, text, managedMacro } },
+--                Versions = { [n] = { Label, text, managedMacro, Ranks } },
 --                name, icon, Managed, value (its WoW slot -- never uploaded),
 --                LastUpdated, GSEVersion }
 --
@@ -2681,8 +2681,10 @@ end
 function GSE.UpgradeMacro(node, name)
     if type(node) ~= "table" or type(node.GSEProtected) == "string" then return node end
     if type(node.Versions) ~= "table" then
-        node.Versions = { { text = node.text, managedMacro = node.managedMacro } }
-        node.text, node.managedMacro = nil, nil
+        -- Ranks: the casts its text wrote with a rank -- they describe that
+        -- text, so they move with it (see "Spell ranks" in translator.lua).
+        node.Versions = { { text = node.text, managedMacro = node.managedMacro, Ranks = node.Ranks } }
+        node.text, node.managedMacro, node.Ranks = nil, nil, nil
     end
     node.manageMacro = nil
     liftMeta(node, name or node.name)
@@ -2705,14 +2707,30 @@ function GSE.MacroSource(node)
     return v.managedMacro or v.text or ""
 end
 
+--- The ranked casts of a macro's running version (see "Spell ranks" in
+--- translator.lua). Accepts either shape.
+function GSE.MacroRanks(node)
+    if type(node) ~= "table" then return nil end
+    if type(node.Versions) ~= "table" then return node.Ranks end
+    local v = GSE.ActiveElementVersion(node)
+    return v and v.Ranks
+end
+
+-- Compile macro source with its ranked casts in force.
+local function compileWithRanks(ranks, text, mode)
+    if GSE.WithSpellRanks then return GSE.WithSpellRanks(ranks, GSE.CompileMacroText, text, mode) end
+    return GSE.CompileMacroText(text, mode)
+end
+
 --- What goes into the player's WoW macro for a macro node: a managed macro's
---- source compiled (variables and all), anything else its text as written.
---- A flat node -- a WoW macro in the making, not a stored macro -- is its text.
+--- source compiled (variables, ranks and all), anything else its text as
+--- written. A flat node -- a WoW macro in the making, not a stored macro -- is
+--- its text.
 function GSE.MacroText(node)
     if type(node) ~= "table" then return "" end
     if type(node.Versions) ~= "table" then return node.text or "" end
     if node.Managed then
-        return GSE.CompileMacroText(GSE.MacroSource(node), Statics.TranslatorMode.String)
+        return compileWithRanks(GSE.MacroRanks(node), GSE.MacroSource(node), Statics.TranslatorMode.String)
     end
     local v = GSE.ActiveElementVersion(node) or {}
     return v.text or ""
@@ -3733,7 +3751,7 @@ local function buildAction(action, metaData, blockPath)
         local spelllist = {}
         for k, v in pairs(action) do
             local value = v
-            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" then
+            if k == "Disabled" or type(value) == "boolean" or k == "Type" or k == "Interval" or k == "Ranks" then
                 -- we dont want to do anything here
             else
                 if string.sub(value, 1, 1) == "=" then
@@ -3753,17 +3771,18 @@ local function buildAction(action, metaData, blockPath)
                 end
 
                 if k == "spell" then
-                    spelllist[k] =
-                        GSE.GetSpellId(value, Statics.TranslatorMode.ID) or
-                        GSE.GetSpellId(value, Statics.TranslatorMode.String)
+                    -- Resolved per character: a ranked spell casts the highest
+                    -- rank known up to the one written (see "Spell ranks" in
+                    -- translator.lua).
+                    spelllist[k] = GSE.GetCastableSpell(value, action.Ranks)
                 elseif k == "macro" then
                     if GSE.DecodeMacroEditorText then
                         value = GSE.DecodeMacroEditorText(value)
                     end
                     if GSE.IsMacroTextBody(GSE.UnEscapeString(value)) then
                         -- we have a line of macrotext
-                        spelllist["macrotext"] =
-                            GSE.UnEscapeString(GSE.CompileMacroText(value, Statics.TranslatorMode.String))
+                        spelllist["macrotext"] = GSE.UnEscapeString(
+                            GSE.WithSpellRanks(action.Ranks, GSE.CompileMacroText, value, Statics.TranslatorMode.String))
                     else
                         spelllist[k] = value
                     end
@@ -4523,7 +4542,7 @@ local function materialiseEncodedMacro(name, node, category)
         ["name"] = name,
         ["icon"] = (node.Managed and GSE.GetManagedMacroStubIcon)
             and GSE.GetManagedMacroStubIcon(name, node.icon) or node.icon,
-        ["text"] = GSE.CompileMacroText(text, Statics.TranslatorMode.String),
+        ["text"] = compileWithRanks(GSE.MacroRanks(node), text, Statics.TranslatorMode.String),
     }, category, true)
 end
 
