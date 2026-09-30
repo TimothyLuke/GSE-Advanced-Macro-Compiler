@@ -1688,8 +1688,9 @@ local function buildGroupedTree(grouping, classtree)
             for _, n in ipairs(list) do
                 local elements = GSE.split(n.value, ",")
                 local id = elements[3]
+                -- key: "classid,spec,id,disable", for the by-type tree's order.
+                local e = { classid = cid, node = n, key = n.value, sort = GSE.SequenceName(id, cid) or tostring(id) }
                 n.value = "Sequences\001" .. tostring(cid) .. "\001" .. n.value
-                local e = { classid = cid, node = n, sort = GSE.SequenceName(id, cid) or tostring(id) }
                 seqs[#seqs + 1] = e
                 seqByKey[tostring(cid) .. "|" .. tostring(id)] = e
             end
@@ -1713,7 +1714,9 @@ local function buildGroupedTree(grouping, classtree)
         end
     end
     local byName = function(a, b) return GSE.AlphabeticalTableSortAlgorithm(a.sort or "", b.sort or "") end
-    table.sort(seqs, byName)
+    -- Sequences in the by-type tree's order: class, then spec, then name.
+    local bySequenceKey = function(a, b) return GSE.SequenceKeyOrder(a.key, b.key) end
+    table.sort(seqs, bySequenceKey)
     table.sort(vars, byName)
     table.sort(macs, byName)
 
@@ -1754,7 +1757,7 @@ local function buildGroupedTree(grouping, classtree)
                 local e = seqByKey[tostring(cid) .. "|" .. tostring(id)]
                 if e then members[#members + 1] = e end
             end
-            table.sort(members, byName)
+            table.sort(members, bySequenceKey)
             local more = {}
             for name in pairs(info.variable) do if varByName[name] then more[#more + 1] = varByName[name] end end
             table.sort(more, byName)
