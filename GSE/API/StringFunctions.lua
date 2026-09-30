@@ -628,12 +628,6 @@ function GSE.GUIGetColour(option)
 end
 
 
-function GSE.GetMacroStringFormat()
-    local CVarValue = C_CVar.GetCVar("ActionButtonUseKeyDown") and "DOWN" or "UP"
-    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or CVarValue
-    return state
-end
-
 function GSE.SafeConcat(tab, delimiter)
     local output = ""
     for k, v in pairs(tab) do

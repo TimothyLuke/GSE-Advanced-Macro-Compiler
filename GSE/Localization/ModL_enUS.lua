@@ -664,7 +664,6 @@ L["Commands"] = true
 L["Conditionals"] = true
 L["Spells"] = true
 L["GSE Variables"] = true
-L["GSE Sequences"] = true
 L["Reset"] = true
 L["Only valid after a /castsequence command."] = true
 L["Requires a reset= on the line."] = true

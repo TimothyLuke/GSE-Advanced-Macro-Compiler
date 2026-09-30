@@ -451,33 +451,4 @@ describe("StringFunctions: text", function()
       assert.equals(192 / 255, b)
     end)
   end)
-
-  describe("GSE.GetMacroStringFormat", function()
-    local prevCVar, prevState
-    before_each(function()
-      prevCVar, prevState = _G.C_CVar, GSEOptions.CvarActionButtonState
-      _G.C_CVar = {GetCVar = function() return "0" end}
-      GSEOptions.CvarActionButtonState = nil
-    end)
-    after_each(function()
-      _G.C_CVar = prevCVar
-      GSEOptions.CvarActionButtonState = prevState
-    end)
-
-    it("prefers the stored state when there is one", function()
-      GSEOptions.CvarActionButtonState = "UP"
-      assert.equals("UP", GSE.GetMacroStringFormat())
-    end)
-
-    it("falls back to the CVar", function()
-      -- Note what this actually asks: GetCVar returns the STRING "0" or "1",
-      -- and both are truthy in Lua, so any answer at all reads as DOWN. Only an
-      -- unset CVar produces UP. Pinned as it behaves today.
-      assert.equals("DOWN", GSE.GetMacroStringFormat())
-      _G.C_CVar = {GetCVar = function() return "1" end}
-      assert.equals("DOWN", GSE.GetMacroStringFormat())
-      _G.C_CVar = {GetCVar = function() return nil end}
-      assert.equals("UP", GSE.GetMacroStringFormat())
-    end)
-  end)
 end)

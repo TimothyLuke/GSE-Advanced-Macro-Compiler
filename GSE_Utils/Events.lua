@@ -73,8 +73,10 @@ local function GetSequenceDebugNameWithVersion(sequenceName)
     if cleanName:match(":%d+$") then return cleanName end
 
     local version
-    -- Debug output names the button, which carries the sequence's label.
-    local id = GSE.FindSequenceId and GSE.FindSequenceId(cleanName)
+    -- Called with the button, which is named by the sequence's id; the
+    -- debugger shows the sequence's label.
+    local id = GSE.StoredSequenceId(cleanName)
+    cleanName = (id and GSE.SequenceName(id)) or cleanName
     if id and GSE.GetActiveSequenceVersion then
         local ok, result = pcall(GSE.GetActiveSequenceVersion, id)
         if ok and result ~= nil then version = result end

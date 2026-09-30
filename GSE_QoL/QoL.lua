@@ -534,34 +534,6 @@ local function getManagedMacroNames()
     return names
 end
 
--- Sequences available to this character, for the Macro editor's /click list:
--- { label, id } pairs, by label. The /click line targets the sequence's button,
--- whose name is not its label (see GSE.ButtonForSequence). A WoW macro, by
--- contrast, is picked by the name it has in /macro -- see getMacroNames.
-local function getSequenceNames()
-    local list = {}
-    for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
-        for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
-            if env.Name then list[#list + 1] = {label = env.Name, id = id} end
-        end
-    end
-    table.sort(list, function(a, b) return a.label:lower() < b.label:lower() end)
-    return list
-end
-
--- The /click line that fires a sequence. Its shape depends on KeyUp vs KeyDown
--- AND on which reset modifiers are enabled, and GSE.CreateMacroString is where
--- that logic lives -- so lift its /click line instead of rebuilding the string.
--- The Tab menu this replaces hand-built `"/click " .. name .. "LeftButton t"`,
--- which is missing the space before LeftButton and so never matched a button.
-local function sequenceClickLine(id)
-    local name = GSE.ButtonForSequence(id) or tostring(id)
-    local full = (GSE.CreateMacroString and GSE.CreateMacroString(name)) or ""
-    local click = full:match("([^\n]*/click[^\n]*)")
-    if click and click ~= "" then return click end
-    return "/click " .. name
-end
-
 -- Tab line builder. Shared by the sequence editor's macro block and by the
 -- Macro editor's boxes; `opts` carries the two differences between them:
 --   opts.macroMode  the gates read the CURRENT LINE instead of the whole box.
@@ -572,12 +544,10 @@ end
 --   opts.variables  offer GSE variables. A managed macro is compiled through
 --                   GSE.CompileMacroText, which evaluates a leading "=" -- an
 --                   unmanaged box is raw WoW macro text and is not.
---   opts.sequences  offer the /click line that fires a GSE sequence.
 local function attachMacroLineBuilder(widget, menuOwner, opts)
     opts = opts or {}
     local macroMode      = opts.macroMode and true or false
     local offerVariables = macroMode and (opts.variables and true or false) or true
-    local offerSequences = opts.sequences and true or false
     -- Tolerant on purpose: the Macro editor's original hook was called with the
     -- editbox itself, and resolving only widget.editBox would turn Tab into a
     -- silent no-op for any caller that still passes one.
@@ -1210,12 +1180,6 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                             vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
                         end
                     end
-                    if offerSequences then
-                        local seqs = rootDescription:CreateButton(L["GSE Sequences"])
-                        for _, seq in ipairs(getSequenceNames()) do
-                            seqs:CreateButton(seq.label, function() return insertLine(sequenceClickLine(seq.id)) end)
-                        end
-                    end
                 elseif liveHasText then
                     greyed(rootDescription, L["Macros"], NAME_ONLY)
                     greyed(rootDescription, L["GSE Variables"], NAME_ONLY)
@@ -1357,13 +1321,11 @@ GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
         end)
     end)
 end
--- The Macro editor's boxes get the same builder, line-scoped, plus the /click
--- sequence list. `opts.variables` for the managed box only -- see the compile
--- note on attachMacroLineBuilder.
+-- The Macro editor's boxes get the same builder, line-scoped. `opts.variables`
+-- for the managed box only -- see the compile note on attachMacroLineBuilder.
 GSE.OnEditorMacroTab = function(widget, menuOwner, opts)
     attachMacroLineBuilder(widget, menuOwner, {
         macroMode = true,
-        sequences = true,
         variables = opts and opts.variables or false,
     })
 end

@@ -1349,7 +1349,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- data, so rows removed here go dead on this call.
         GSE.ReloadOverrides()
         for _, r in ipairs(rows) do
-            local rowButton = not GSE.isEmpty(r.seq) and GSE.ButtonForSequence(r.seq)
+            local rowButton = not GSE.isEmpty(r.seq) and GSE.StoredSequenceId(r.seq)
             if rowButton and _G[rowButton] and GSE.UpdateIcon then GSE.UpdateIcon(_G[rowButton]) end
         end
         if saveButton then saveButton:SetDisabled(true) end

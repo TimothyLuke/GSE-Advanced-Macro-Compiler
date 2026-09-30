@@ -1743,11 +1743,11 @@ local function IsFallbackIcon(icon)
     return GSE.IsFallbackIcon(icon)
 end
 
--- The tracker follows buttons. A button's name is its sequence's handle
--- (GSE.ButtonForSequence), not its label; this is the sequence it runs.
+-- The tracker follows buttons, and a sequence's button is named by its id.
+-- What it shows is the label, GSE.SequenceName(id).
 local function SequenceIdOf(sequence)
     if type(sequence) ~= "string" or sequence == "" then return nil end
-    return GSE.SequenceIdForButton(sequence)
+    return GSE.StoredSequenceId(sequence)
 end
 
 local function FindSequenceObject(sequence)
@@ -2996,7 +2996,8 @@ local function ResolveSequenceIcon(sequence)
     end
 
     if GetMacroIndexByName and sequence then
-        local macroIndex = GetMacroIndexByName(sequence)
+        -- A sequence's WoW macro carries its label.
+        local macroIndex = GetMacroIndexByName(GSE.SequenceName(sequence) or sequence)
         if macroIndex and macroIndex > 0 then
             local _, macroIcon = GetMacroInfo(macroIndex)
             if macroIcon and not IsFallbackIcon(macroIcon) then return macroIcon end
@@ -3476,7 +3477,7 @@ function GSE.SequenceIconNormalizePayload(payload, second)
     local info = {}
 
     if type(payload) == "table" then
-        info.sequence = payload.SequenceName or payload.sequenceName or payload.Sequence or payload.sequence or payload.Name or payload.name or payload[1]
+        info.sequence = payload.SequenceID or payload.Sequence or payload.sequence or payload.Name or payload.name or payload[1]
         info.buttonName = payload.ButtonName or payload.buttonName or payload.Button or payload.button or info.sequence
         info.spamKey = payload.SpamKey or payload.spamKey or payload.Key or payload.key or payload.Binding or payload.binding
         info.hardwareEvent = payload.HardwareEvent or payload.hardwareEvent or payload.Hardware or payload.hardware or payload.MouseButton or payload.mouseButton
@@ -3596,8 +3597,8 @@ GSE.SequenceIconFrameUpdateFromButton = UpdateSequenceIconFromButton
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
 GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
 GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
-    -- Announced by id; the tracker knows its button.
-    local sequence = GSE.ButtonForSequence(id)
+    -- Announced by id, which names its button.
+    local sequence = GSE.StoredSequenceId(id)
     if sequence and EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
         SetSequencePreview(sequence)
     end

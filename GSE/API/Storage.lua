@@ -27,7 +27,6 @@ local GNOME = "Storage"
 --     -- which character macros each character holds (see "Characters")
 --
 --   GSEStore.alias[oldId] = newId      -- where a sequence moved (see "Sequences")
---   GSEStore.button[id] = "GSES12"      -- each sequence's secure button (see "Buttons")
 --
 -- id is the GSE.Tools PlatformID once an element has synced, and a
 -- "local-..." id until then (a PlatformID is 24 hex, so the two cannot
@@ -386,7 +385,6 @@ end
 -- are resolved through the alias when they are next read (ResolveSequenceId).
 
 local NAMES = {}   -- [classid][name] = id: the label index
-local BUTTONS = {} -- [button name] = id: which sequence a button runs
 
 local function seqEnvs(classid)
     return bucket(GSEStore, "sequence", classid)
@@ -414,29 +412,15 @@ settleSequenceIds = function(store)
                 envs[env.PlatformID] = env
                 taken[id], taken[env.PlatformID] = nil, true
                 store.alias[id] = env.PlatformID
-                -- Its button goes with it: keybinds and overrides click the
-                -- button, and it must not change name under them.
-                if type(store.button) == "table" and store.button[id] then
-                    store.button[env.PlatformID] = store.button[id]
-                    store.button[id] = nil
-                end
             end
         end
     end
 end
 
 indexSequenceNames = function()
-    BUTTONS = {}
-    if type(GSEStore.button) ~= "table" then GSEStore.button = {} end
-    local gone = {}
-    for id, b in pairs(GSEStore.button) do
-        local held = false
-        for _, envs in pairs(GSEStore.sequence) do
-            if envs[id] then held = true break end
-        end
-        if held then BUTTONS[b] = id else gone[#gone + 1] = id end
-    end
-    for _, id in ipairs(gone) do GSEStore.button[id] = nil end
+    -- A sequence's button is named by its id; the GSES<n> handles an earlier
+    -- build kept here are gone.
+    GSEStore.button, GSEStore.nextButton = nil, nil
     NAMES = {}
     for classid, envs in pairs(GSEStore.sequence) do
         local names = {}
@@ -586,28 +570,16 @@ end
 
 -- ── Buttons ─────────────────────────────────────────────────────────────────
 --
--- Each sequence runs from a secure button, and keybinds, action-bar overrides
--- and macros click that button by its frame name. The name is a short handle,
--- GSES<n>, kept in GSEStore.button and never reused: not the sequence's id,
--- because a macro's /click line repeats it up to seven times inside 255
--- characters; and not its label, which changes on a rename and can be shared by
--- two sequences. It moves with the sequence to its PlatformID.
-local BUTTON_PREFIX = "GSES"
+-- Each sequence runs from a secure button named by the sequence's id. Keybinds
+-- and action-bar overrides hold that id, and everything that shows a sequence
+-- shows its label, GSE.SequenceName(id).
 
---- The name of a sequence's secure button, given its id. Assigned the first
---- time it is asked for; nil for an id that is not a stored sequence.
-function GSE.ButtonForSequence(id)
-    ensureStore()
+--- The id of a stored sequence, through any alias it has moved by; nil for
+--- anything else. This is also the name of its secure button.
+function GSE.StoredSequenceId(id)
     id = GSE.ResolveSequenceId(id)
     if id == nil or not GSE.SequenceEnvelope(id) then return nil end
-    local b = GSEStore.button[id]
-    if not b then
-        GSEStore.nextButton = (tonumber(GSEStore.nextButton) or 0) + 1
-        b = BUTTON_PREFIX .. GSEStore.nextButton
-        GSEStore.button[id] = b
-        BUTTONS[b] = id
-    end
-    return b
+    return id
 end
 
 --- Bring this character's keybinds and action-bar overrides up to date: each
@@ -656,12 +628,6 @@ function GSE.UpdateCharacterSequenceRefs()
     end
     -- The shared profiles hold ids too (Profiles.lua).
     if GSE.UpdateProfileSequenceRefs then GSE.UpdateProfileSequenceRefs() end
-end
-
---- The id of the sequence a button runs, or nil for a button that is not one.
-function GSE.SequenceIdForButton(buttonName)
-    ensureStore()
-    return BUTTONS[buttonName]
 end
 
 --- The class a stored variable or macro is filed in, by name; nil for one
@@ -749,12 +715,6 @@ function GSE.RemoveSequence(classid, id)
     local env = envs and envs[id]
     if not env then return end
     envs[id] = nil
-    -- Its button name is retired, never reused: a stale keybind or macro must
-    -- not end up clicking some other sequence.
-    if type(GSEStore.button) == "table" and GSEStore.button[id] then
-        BUTTONS[GSEStore.button[id]] = nil
-        GSEStore.button[id] = nil
-    end
     if NAMES[classid] and NAMES[classid][env.Name] == id then
         NAMES[classid][env.Name] = nil
         -- Another sequence of the same name, if any, is found by it now.
@@ -3127,8 +3087,8 @@ function GSE.OOCUpdateSequence(id, sequence)
     if not env or (classid ~= 0 and classid ~= GSE.GetCurrentClassID()) then
         return
     end
-    -- The secure button's frame name (see "Buttons"); messages show the label.
-    local name = GSE.ButtonForSequence(id)
+    -- The secure button is named by the id (see "Buttons"); messages show the label.
+    local name = GSE.ResolveSequenceId(id)
     local label = env.Name
 
     -- Avoid rebuilding the secure button while a boss encounter is still active.
@@ -3191,34 +3151,6 @@ function GSE.SetMacroLocation()
         returnval = nil
     end
     return returnval
-end
-
-function GSE.CreateMacroString(macroname)
-    local returnVal = "#showtooltip\n/click "
-    local state = GSE.GetMacroStringFormat()
-    local t = state == "DOWN" and "t" or "f"
-
-    if GSE.GetMacroStringFormat() == "DOWN" or GSEOptions.MacroResetModifiers["LeftButton"] then
-        returnVal = returnVal .. "[button:1] " .. macroname .. " LeftButton " .. t .. "; "
-    end
-    if GSEOptions.MacroResetModifiers["RightButton"] then
-        returnVal = returnVal .. "[button:2] " .. macroname .. " RightButton " .. t .. "; "
-    end
-    if GSEOptions.MacroResetModifiers["MiddleButton"] then
-        returnVal = returnVal .. "[button:3] " .. macroname .. " MiddleButton " .. t .. "; "
-    end
-    if GSEOptions.MacroResetModifiers["Button4"] then
-        returnVal = returnVal .. "[button:4] " .. macroname .. " Button4 " .. t .. "; "
-    end
-    if GSEOptions.MacroResetModifiers["Button5"] then
-        returnVal = returnVal .. "[button:5] " .. macroname .. " Button5 " .. t .. "; "
-    end
-    if GSEOptions.virtualButtonSupport then
-        returnVal = returnVal .. "[nobutton:1] " .. macroname .. "; "
-    end
-
-    returnVal = returnVal .. macroname
-    return returnVal
 end
 
 --- Order for GetSequenceNames keys ("classid,spec,id,disable"): by class,
@@ -3518,9 +3450,10 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
     spellinfo.iconID = Statics.QuestionMarkIconID
 
     if reseticon == true then
-        spellinfo.name = gsebutton
+        local label = GSE.SequenceName(gsebutton) or gsebutton
+        spellinfo.name = label
         spellinfo.iconID = Statics.Icons.GSE_Logo_Dark
-        foundSpell = gsebutton
+        foundSpell = label
     elseif action.type == "macro" and action.macrotext then
         local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
         if macroIconInfo and #macroIconInfo > 1 then
@@ -3605,7 +3538,7 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
             if spellinfo then
                 foundSpell = spellinfo.name
             else
-                GSE.Print("Unable to find spell: " .. tostring(spell) .. " from " .. self:GetName() .. " - Compiled Step " .. step)
+                GSE.Print("Unable to find spell: " .. tostring(spell) .. " from " .. (GSE.SequenceName(gsebutton) or gsebutton) .. " - Compiled Step " .. step)
             end
         end
     end
@@ -3709,7 +3642,9 @@ function GSE.UpdateIcon(self, reseticon)
     if iteration > 1 then
         step = (iteration - 1) * SECURE_STEPS_PER_ITERATION + step
     end
+    -- The button is named by its sequence's id; what is shown is the label.
     local gsebutton = self:GetName()
+    local label = GSE.SequenceName(gsebutton) or gsebutton
     if not reseticon and self:GetAttribute("combatreset") == true then
         GSE.UsedSequences[gsebutton] = true
     end
@@ -3752,8 +3687,7 @@ function GSE.UpdateIcon(self, reseticon)
             end
         end
         local trackerPayload = {
-            SequenceName = gsebutton,
-            ButtonName = gsebutton,
+            SequenceID = gsebutton,
             Mods = modlist,
             HardwareEvent = modlist.MOUSEBUTTON,
             ClickSerial = clickSerial
@@ -3774,8 +3708,7 @@ function GSE.UpdateIcon(self, reseticon)
             WeakAuras.ScanEvents(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, gsebutton, spellinfo)
         end
         GSE:SendMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, {
-            SequenceName = gsebutton,
-            ButtonName = gsebutton,
+            SequenceID = gsebutton,
             SpellInfo = spellinfo,
             Step = step,
             BlockPath = action and action.blockPath
@@ -3812,7 +3745,7 @@ function GSE.UpdateIcon(self, reseticon)
                                     -- showActionBarLabel (default on) gates it; off
                                     -- writes an empty string so no label shows.
                                     _G[k].TextOverlayContainer.Count:SetText(
-                                        GSEOptions.showActionBarLabel ~= false and gsebutton or "")
+                                        GSEOptions.showActionBarLabel ~= false and label or "")
                                     _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
                                 end
                             end
@@ -3823,7 +3756,7 @@ function GSE.UpdateIcon(self, reseticon)
                                 end
                                 _G[k].icon:SetTexture(spellinfo.iconID)
                                 _G[k].icon:Show()
-                            -- _G[k].TextOverlayContainer.Count:SetText(gsebutton)
+                            -- _G[k].TextOverlayContainer.Count:SetText(label)
                             -- _G[k].TextOverlayContainer.Count:SetTextScale(0.6)
                             end
                         end
@@ -3841,7 +3774,7 @@ function GSE.UpdateIcon(self, reseticon)
     if clickSerial > 0 then
         GSE.SequenceDebugLastClickSerials[gsebutton] = clickSerial
     end
-    GSE.WagoAnalytics:Switch(gsebutton .. "_" .. GSE.GetCurrentClassID(), true)
+    GSE.WagoAnalytics:Switch(label .. "_" .. GSE.GetCurrentClassID(), true)
 end
 
 --- Re-apply the action-bar override label option live (from the options panel,

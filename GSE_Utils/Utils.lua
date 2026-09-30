@@ -733,11 +733,11 @@ end
 
 --- This function dumps what is currently running on an existing button.
 function GSE.DebugDumpButton(SequenceName)
-    -- Given a sequence's label, dump its button.
-    local id = GSE.FindSequenceId(SequenceName)
-    SequenceName = (id and GSE.ButtonForSequence(id)) or SequenceName
+    -- Given a sequence's label, dump its button, which is named by its id.
+    local label = SequenceName
+    SequenceName = GSE.FindSequenceId(label) or label
     GSE.Print("====================================\nStart GSE Button Dump\n====================================")
-    GSE.Print("Button name: " .. SequenceName)
+    GSE.Print("Sequence: " .. label .. " (" .. SequenceName .. ")")
     GSE.Print("Step Id: " .. _G[SequenceName]:GetAttribute("step"))
     GSE.Print("ms: " .. _G[SequenceName]:GetAttribute("ms"))
     GSE.Print("====================================\nStep\n====================================")
@@ -2527,10 +2527,9 @@ do
         local buttonName = self:GetName()
         MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
             if existingSequence then
-                -- gse-button is the sequence's button; show its label.
-                local existingId = GSE.SequenceIdForButton(existingSequence)
+                -- gse-button holds the sequence's id; show its label.
                 rootDescription:CreateTitle(L["GSE"] .. ": "
-                    .. (existingId and GSE.SequenceName(existingId) or existingSequence))
+                    .. (GSE.SequenceName(existingSequence) or existingSequence))
                 rootDescription:CreateButton(L["Clear Override"], function()
                     GSE.RemoveActionBarOverride(buttonName)
                 end)

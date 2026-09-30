@@ -191,7 +191,7 @@ local VEHICLE_OAC_LAB = [[
 -- values secure, so GSE seeds no taint.
 --
 -- gse-secure (boolean) is the snippet gate and is ONLY ever written here.
--- The "gse-button" string (sequence name) is still set insecurely elsewhere for
+-- The "gse-button" string (sequence id) is still set insecurely elsewhere for
 -- the non-secure icon / yield hooks; no secure code reads it, so its taint is
 -- inert. Callers must be out of combat (SetFrameRef writes a protected attr).
 -- ---------------------------------------------------------------------------
@@ -252,11 +252,10 @@ end
 -- Fall back to GetID()+actionpage for bars that don't use the driver.
 -- The secure button behind a GSE sequence macro sitting on an action slot, or
 -- nil when the macro is the player's own. A sequence's WoW macro carries the
--- sequence's label; the button it clicks carries its handle.
+-- sequence's label; its button is named by the sequence's id.
 local function gseMacroButton(macroName)
     if not macroName then return nil end
-    local id = GSE.FindSequenceId(macroName)
-    return id and GSE.ButtonForSequence(id) or nil
+    return (GSE.FindSequenceId(macroName))
 end
 
 local function getButtonEffectiveSlot(btn)
@@ -690,9 +689,9 @@ local function overrideActionButton(savedBind, force)
     if not _G[Button] then
         return
     end
-    -- The bind holds the sequence's id; everything below works with the frame
-    -- name of its secure button. Nothing to run means nothing to override.
-    local Sequence = GSE.ButtonForSequence(savedBind.Sequence)
+    -- The bind holds the sequence's id, which names its secure button. Nothing
+    -- to run means nothing to override.
+    local Sequence = GSE.StoredSequenceId(savedBind.Sequence)
     if not Sequence then return end
     local SequenceLabel = GSE.SequenceName(savedBind.Sequence) or Sequence
     local state =
@@ -1207,7 +1206,7 @@ function LoadKeyBindings(payload)
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.
     for k, v in pairs(GSE.SpecKeyBinds(GetSpec(), false) or {}) do
-        local button = k ~= "LoadOuts" and GSE.ButtonForSequence(v)
+        local button = k ~= "LoadOuts" and GSE.StoredSequenceId(v)
         if button and not InCombatLockdown() then
             local target = GSE.GetKeybindClickTarget(button)
             k = normalizeBindKey(k)
@@ -1234,7 +1233,7 @@ function LoadKeyBindings(payload)
                 for k, v in pairs(loadouts[selected]) do
                     k = normalizeBindKey(k)
                     SetBinding(k)
-                    local target = GSE.GetKeybindClickTarget(GSE.ButtonForSequence(v) or v)
+                    local target = GSE.GetKeybindClickTarget(GSE.StoredSequenceId(v) or v)
                     SetBindingClick(k, target, "LeftButton")
                     boundKeys[k] = true
                     if GSE.GameMode == 5 then

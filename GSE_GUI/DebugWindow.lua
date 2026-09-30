@@ -3278,7 +3278,8 @@ local function UpdateHardwareStateFromPayload(_, payload, mods)
         hardwareState.mods[key] = value == true
     end
     hardwareState.mouseButton = (type(payload) == "table" and payload.HardwareEvent) or modSource.MOUSEBUTTON
-    hardwareState.sequenceName = (type(payload) == "table" and (payload.SequenceName or payload.ButtonName)) or tostring(payload or "None")
+    local sequenceId = type(payload) == "table" and payload.SequenceID
+    hardwareState.sequenceName = (sequenceId and (GSE.SequenceName(sequenceId) or sequenceId)) or tostring(payload or "None")
     hardwareState.spamKey = (type(payload) == "table" and payload.SpamKey) or "None"
     hardwareState.lastUpdate = date and date("%H:%M:%S") or "Now"
     hardwareState.lastSeen = GetTime and GetTime() or 0
