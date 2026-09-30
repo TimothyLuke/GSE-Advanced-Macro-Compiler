@@ -141,27 +141,19 @@ end
 -- The table a keybind for this spec (and optionally this talent loadout) lives
 -- in.  `create` builds the intermediate tables; without it a missing scope
 -- returns nil rather than littering GSE_C on a read.
+--
+-- A spec's own binds are the shared profile's for the class, unless this
+-- character has opted out of it for that spec (Profiles.lua); a talent
+-- loadout's are always this character's.
 local function keybindScope(specialization, loadout, create)
-    if not GSE_C["KeyBindings"] then
+    if not loadout then return GSE.SpecKeyBinds(specialization, create) end
+    local loadouts = GSE.SpecLoadoutKeyBinds(specialization, create)
+    if not loadouts then return nil end
+    if not loadouts[loadout] then
         if not create then return nil end
-        GSE_C["KeyBindings"] = {}
+        loadouts[loadout] = {}
     end
-    local spec = GSE_C["KeyBindings"][tostring(specialization)]
-    if not spec then
-        if not create then return nil end
-        spec = {}
-        GSE_C["KeyBindings"][tostring(specialization)] = spec
-    end
-    if not loadout then return spec end
-    if not spec["LoadOuts"] then
-        if not create then return nil end
-        spec["LoadOuts"] = {}
-    end
-    if not spec["LoadOuts"][loadout] then
-        if not create then return nil end
-        spec["LoadOuts"][loadout] = {}
-    end
-    return spec["LoadOuts"][loadout]
+    return loadouts[loadout]
 end
 
 -- The table an actionbar override for this spec (and optionally this talent
@@ -176,17 +168,8 @@ local function overrideScope(specialization, loadout, create)
         GSE_C["ActionBarBinds"] = binds
     end
     specialization = tostring(specialization)
-    if not loadout then
-        if not binds["Specialisations"] then
-            if not create then return nil end
-            binds["Specialisations"] = {}
-        end
-        if not binds["Specialisations"][specialization] then
-            if not create then return nil end
-            binds["Specialisations"][specialization] = {}
-        end
-        return binds["Specialisations"][specialization]
-    end
+    -- The spec's: the shared profile's, or this character's own (Profiles.lua).
+    if not loadout then return GSE.SpecOverrides(specialization, create) end
     if not binds["LoadOuts"] then
         if not create then return nil end
         binds["LoadOuts"] = {}
@@ -203,10 +186,67 @@ local function overrideScope(specialization, loadout, create)
 end
 
 -- The player's current spec index, for the panel's default scope.
+-- The binder's own key (Profiles.lua): this used to switch at GameMode 10 where
+-- the binder switches at 7, so Legion to Shadowlands clients opened on spec 1.
 local function defaultSpecIndex()
-    if GSE.GameMode < 10 then return 1 end
-    local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-    return getSpec and getSpec() or 1
+    return tonumber(GSE.CurrentSpecKey()) or 1
+end
+
+-- Redraw whatever panel the tree has selected, after its data changed.
+local function reselect(editframe)
+    local tc = editframe.treeContainer
+    local st = tc and (tc.status or tc.localstatus)
+    local selected = st and st.selected
+    if editframe.ManageTree then editframe.ManageTree() end
+    if selected and tc and tc.SelectByValue then
+        editframe.forceTreeSelection = true
+        tc:SelectByValue(selected)
+    end
+end
+
+-- "Shared with every <class> character": whether this spec's binds and
+-- overrides are the class's shared profile (Profiles.lua) or this character's
+-- own. Unticking gives the character its own copy of the profile's; ticking
+-- drops its own for the profile's, after asking, since they are gone then.
+local function sharedProfileRow(editframe, specialization, classname)
+    local row = UI:Create("SimpleGroup")
+    row:SetFullWidth(true)
+    row:SetLayout("Flow")
+    if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
+    local box = UI:Create("CheckBox")
+    box:SetLabel(string.format(L["Shared with every %s character"], classname or ""))
+    box:SetWidth(360)
+    box:SetValue(GSE.UsesSharedProfile(specialization))
+    box:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Shared Profile"],
+            L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."],
+            editframe)
+    end)
+    box:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    box:SetCallback("OnValueChanged", function(_, _, value)
+        local function apply()
+            GSE.SetSharedProfile(specialization, value)
+            if not InCombatLockdown() then
+                GSE.ReloadKeyBindings()
+                GSE.ReloadOverrides()
+            end
+            reselect(editframe)
+        end
+        if not value then return apply() end
+        GSE.UI.ShowConfirmDialog({
+            owner       = editframe,
+            title       = L["Shared Profile"],
+            message     = L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."],
+            width       = 360,
+            height      = 200,
+            confirmText = L["Use Shared"],
+            cancelText  = L["Cancel"],
+            onConfirm   = apply,
+            onCancel    = function() box:SetValue(false) end,
+        })
+    end)
+    row:AddChild(box)
+    return row
 end
 
 -- Defined further down beside the widget helpers; the tree builder only runs
@@ -251,6 +291,13 @@ local function buildKeybindMenu()
                 if not next(buttons) then loadouts[loadoutid] = nil end
             end
         end
+        -- And the shared profiles' for this class's specs.
+        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+            local buttons = GSE.SpecOverrides(tostring(specIndex), false)
+            for key, override in pairs(buttons or {}) do
+                if type(override) ~= "table" or not sequenceExists(override.Sequence) then buttons[key] = nil end
+            end
+        end
 
         if GetSpecializationInfo then
             for specIndex = 1, (GetNumSpecializations and GetNumSpecializations() or 0) do
@@ -285,7 +332,14 @@ local function buildKeybindMenu()
         -- Binds whose sequence no longer exists used to be pruned while
         -- building their leaf nodes.  There are no leaf nodes any more, so
         -- prune in one pass over the saved data instead.
-        for _, v in pairs(GSE_C["KeyBindings"]) do
+        -- This character's tables, and the shared profiles' for its class.
+        local tables = {}
+        for _, v in pairs(GSE_C["KeyBindings"] or {}) do tables[#tables + 1] = v end
+        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+            local shared = GSE.UsesSharedProfile(tostring(specIndex)) and GSE.SpecKeyBinds(tostring(specIndex), false)
+            if shared then tables[#tables + 1] = shared end
+        end
+        for _, v in ipairs(tables) do
             local orphans = {}
             for i, j in pairs(v) do
                 if i ~= "LoadOuts" and not sequenceExists(j) then
@@ -574,7 +628,8 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         -- only drop it when nothing is still being filled in, or a half-set row
         -- would take the whole loadout with it.
         if loadout and not next(scope) and #incomplete == 0 then
-            GSE_C["KeyBindings"][specialization]["LoadOuts"][loadout] = nil
+            local loadouts = GSE.SpecLoadoutKeyBinds(specialization, false)
+            if loadouts then loadouts[loadout] = nil end
         end
 
         -- The rebuild releases every key the previous one bound before adding
@@ -918,6 +973,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow or centeredRow(loadoutLabel))
+    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 
@@ -1059,7 +1115,13 @@ local function actionButtonNames()
     end
     -- Anything a saved override names that exists but was not auto-detected.
     local binds = GSE_C["ActionBarBinds"] or {}
-    for _, buttons in pairs(binds["Specialisations"] or {}) do
+    local specTables = {}
+    for _, buttons in pairs(binds["Specialisations"] or {}) do specTables[#specTables + 1] = buttons end
+    for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+        local shared = GSE.SpecOverrides(tostring(specIndex), false)
+        if shared then specTables[#specTables + 1] = shared end
+    end
+    for _, buttons in ipairs(specTables) do
         for _, override in pairs(buttons) do
             local name = type(override) == "table" and override.Bind
             if name and _G[name] then buttonlist[name] = name end
@@ -1623,6 +1685,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow)
+    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 

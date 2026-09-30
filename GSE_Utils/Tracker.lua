@@ -1865,30 +1865,31 @@ local function TryGetAttribute(button, attribute)
     if ok and type(value) == "string" and value ~= "" then return value end
 end
 
+-- The keys the binds are kept by, as the binder itself works them out
+-- (Profiles.lua, CharacterFunctions.lua). This used to have its own copies,
+-- and the loadout one lacked the spec-group fallback, so on a dual-spec
+-- client without saved loadouts the display looked in a table the binder
+-- never uses.
 local function GetCurrentSpecKey()
-    if GSE.GameMode and GSE.GameMode < 7 then return "1" end
-
-    local spec
-    if GSE.GameMode and GSE.GameMode >= 12 then
-        local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-        spec = getSpec and getSpec()
-    elseif GetSpecialization then
-        spec = GetSpecialization()
-    end
-
-    return tostring(spec or 1)
+    return GSE.CurrentSpecKey()
 end
 
 local function GetCurrentLoadoutKey()
-    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and GSE.GetCurrentSpecID) then return nil end
+    local key = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
+    if key == nil or key == "nil" then return nil end
+    return key
+end
 
-    local specID = GSE.GetCurrentSpecID()
-    if not specID then return nil end
-
-    local loadoutID = C_ClassTalents.GetLastSelectedSavedConfigID(specID)
-    if not loadoutID then return nil end
-
-    return tostring(loadoutID)
+-- Every spec key this character has binds for: its own tables and each spec
+-- of its class (the shared profiles).
+local function AllSpecKeys()
+    local keys = {}
+    for k in pairs((GSE_C and type(GSE_C.KeyBindings) == "table" and GSE_C.KeyBindings) or {}) do keys[tostring(k)] = true end
+    local ab = GSE_C and type(GSE_C.ActionBarBinds) == "table" and GSE_C.ActionBarBinds
+    for k in pairs((ab and type(ab.Specialisations) == "table" and ab.Specialisations) or {}) do keys[tostring(k)] = true end
+    local n = (GSE.GameMode and GSE.GameMode >= 7 and GetNumSpecializations and GetNumSpecializations()) or 1
+    for i = 1, n do keys[tostring(i)] = true end
+    return keys
 end
 
 local function ResolveUsedSequence(buttonName)
@@ -2030,9 +2031,8 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
     local seqId = SequenceIdOf(sequence)
 
     local specKey = GetCurrentSpecKey()
-    local specs = actionBarBinds["Specialisations"]
-    if type(specs) == "table" then
-        local specBinds = specs[specKey]
+    do
+        local specBinds = GSE.SpecOverrides(specKey, false)
         if type(specBinds) == "table" then
             for _, savedBind in pairs(specBinds) do
                 if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
@@ -2059,13 +2059,14 @@ local function FormatSpamKey(sequence, mods, explicitButtonName)
     local seen = {}
     local buttonName = explicitButtonName or lastSequenceButtonName
 
-    if sequence and GSE_C and type(GSE_C["KeyBindings"]) == "table" then
+    if sequence and GSE_C then
         local specKey = GetCurrentSpecKey()
-        local specBinds = GSE_C["KeyBindings"][specKey]
+        local specBinds = GSE.SpecKeyBinds(specKey, false)
         AddMatchingGSEKeyBindings(values, seen, specBinds, sequence, buttonName)
 
         local loadoutKey = GetCurrentLoadoutKey()
-        local loadoutBinds = loadoutKey and specBinds and specBinds["LoadOuts"] and specBinds["LoadOuts"][loadoutKey]
+        local loadouts = GSE.SpecLoadoutKeyBinds(specKey, false)
+        local loadoutBinds = loadoutKey and loadouts and loadouts[loadoutKey]
         AddMatchingGSEKeyBindings(values, seen, loadoutBinds, sequence, buttonName)
     end
 
@@ -2240,13 +2241,13 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         return false
     end
 
-    local keyBindings = GSE_C and type(GSE_C["KeyBindings"]) == "table" and GSE_C["KeyBindings"]
-    local currentSpecBinds = specKey and keyBindings and keyBindings[specKey]
+    local currentSpecBinds = specKey and GSE.SpecKeyBinds(specKey, false)
     if BindingTableMatches(currentSpecBinds) then return true end
-    if loadoutKey and type(currentSpecBinds) == "table" and BindingTableMatches(currentSpecBinds["LoadOuts"] and currentSpecBinds["LoadOuts"][loadoutKey]) then return true end
+    local currentLoadouts = specKey and GSE.SpecLoadoutKeyBinds(specKey, false)
+    if loadoutKey and currentLoadouts and BindingTableMatches(currentLoadouts[loadoutKey]) then return true end
 
     local actionBarBinds = GSE_C and type(GSE_C["ActionBarBinds"]) == "table" and GSE_C["ActionBarBinds"]
-    local currentActionSpecBinds = actionBarBinds and actionBarBinds["Specialisations"] and specKey and actionBarBinds["Specialisations"][specKey]
+    local currentActionSpecBinds = specKey and GSE.SpecOverrides(specKey, false)
     if ActionBarTableMatches(currentActionSpecBinds) then return true end
     local currentActionLoadoutBinds = actionBarBinds and actionBarBinds["LoadOuts"] and specKey and loadoutKey
         and actionBarBinds["LoadOuts"][specKey] and actionBarBinds["LoadOuts"][specKey][loadoutKey]
@@ -2256,24 +2257,18 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         return false
     end
 
-    if keyBindings then
-        for otherSpec, bindings in pairs(keyBindings) do
-            if tostring(otherSpec) ~= tostring(specKey) and (BindingTableMatches(bindings)
-                or (type(bindings) == "table" and bindings["LoadOuts"] and loadoutKey and BindingTableMatches(bindings["LoadOuts"][loadoutKey]))) then
+    for otherSpec in pairs(AllSpecKeys()) do
+        if tostring(otherSpec) ~= tostring(specKey) then
+            local otherLoadouts = GSE.SpecLoadoutKeyBinds(otherSpec, false)
+            if BindingTableMatches(GSE.SpecKeyBinds(otherSpec, false))
+                or (loadoutKey and otherLoadouts and BindingTableMatches(otherLoadouts[loadoutKey]))
+                or ActionBarTableMatches(GSE.SpecOverrides(otherSpec, false)) then
                 return false
             end
         end
     end
 
     if actionBarBinds then
-        local specs = actionBarBinds["Specialisations"]
-        if type(specs) == "table" then
-            for otherSpec, bindings in pairs(specs) do
-                if tostring(otherSpec) ~= tostring(specKey) and ActionBarTableMatches(bindings) then
-                    return false
-                end
-            end
-        end
 
         local loadouts = actionBarBinds["LoadOuts"]
         if type(loadouts) == "table" then

@@ -54,17 +54,9 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.ReloadSequences()
 end
 
+-- The current spec's key in the binds (Profiles.lua).
 local function GetSpec()
-    if GSE.GameMode < 7 then
-        return "1"
-    else
-        if GSE.GameMode < 12 then
-            return tostring(GetSpecialization())
-        else
-            local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-            return tostring(getSpec and getSpec() or 1)
-        end
-    end
+    return GSE.CurrentSpecKey()
 end
 
 local function playerSpec()
@@ -1053,14 +1045,10 @@ local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
     end
+    -- This character's spec-level overrides into the shared profiles, once.
+    GSE.MigrateToProfiles()
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
-        GSE_C["ActionBarBinds"]["Specialisations"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
-        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
         GSE_C["ActionBarBinds"]["LoadOuts"] = {}
@@ -1105,7 +1093,8 @@ local function LoadOverrides(force)
         end
         GSE.ButtonOverrides = {}
 
-        for _, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
+        -- The spec's overrides: the shared profile's, or this character's own.
+        for _, v in pairs(GSE.SpecOverrides(GetSpec(), false) or {}) do
             overrideActionButton(v, force)
         end
         do
@@ -1190,10 +1179,8 @@ function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
-
-    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
-        GSE_C["KeyBindings"][GetSpec()] = {}
-    end
+    -- This character's spec-level binds into the shared profiles, once.
+    GSE.MigrateToProfiles()
 
     -- What this rebuild is about to bind for. See scheduleBindingRecheck.
     lastBindingContext = currentBindingContext()
@@ -1215,8 +1202,9 @@ function LoadKeyBindings(payload)
         end
     end
 
-    -- A keybind holds the sequence's id; it clicks that sequence's button.
-    for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
+    -- A keybind holds the sequence's id; it clicks that sequence's button. The
+    -- spec's binds are the shared profile's, or this character's own.
+    for k, v in pairs(GSE.SpecKeyBinds(GetSpec(), false) or {}) do
         local button = k ~= "LoadOuts" and GSE.ButtonForSequence(v)
         if button and not InCombatLockdown() then
             local target = GSE.GetKeybindClickTarget(button)
@@ -1233,17 +1221,15 @@ function LoadKeyBindings(payload)
     if payload and not InCombatLockdown() then
         do
             local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
-            if
-                selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
-                    GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
-             then
+            local loadouts = GSE.SpecLoadoutKeyBinds(GetSpec(), false)
+            if selected and loadouts and loadouts[selected] then
                 --@debug@
                 GSE.PrintDebugMessage(
                     "changing from " .. tostring(payload) .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
                     "EVENTS"
                 )
                 --@end-debug@
-                for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
+                for k, v in pairs(loadouts[selected]) do
                     k = normalizeBindKey(k)
                     SetBinding(k)
                     local target = GSE.GetKeybindClickTarget(GSE.ButtonForSequence(v) or v)
@@ -1286,28 +1272,20 @@ function GSE.CreateActionBarOverride(buttonName, sequenceId)
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
     end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
-        GSE_C["ActionBarBinds"]["Specialisations"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
-        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
-    end
     local bind = {
         Bind = buttonName,
         Sequence = sequenceId
     }
-    GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()][buttonName] = bind
+    GSE.SpecOverrides(GetSpec(), true)[buttonName] = bind
     GSE.ReloadOverrides()
 end
 
 function GSE.RemoveActionBarOverride(buttonName)
     if InCombatLockdown() then return end
     local spec = GetSpec()
+    local overrides = GSE.SpecOverrides(spec, false)
+    if overrides then overrides[buttonName] = nil end
     if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
-        local specs = GSE_C["ActionBarBinds"]["Specialisations"]
-        if specs and specs[spec] then
-            specs[spec][buttonName] = nil
-        end
         local loadouts = GSE_C["ActionBarBinds"]["LoadOuts"]
         if loadouts and loadouts[spec] then
             for _, loadout in pairs(loadouts[spec]) do
@@ -1424,6 +1402,8 @@ end
 
 local function startup()
     local charKey = GSE.CharacterMacroBucketKey()
+    -- Before anything reads a setting a profile carries (Profiles.lua).
+    GSE.InstallProfileSettings()
     GSE.PerformOneOffEvents()
 
     if GSE.isEmpty(GSESpellCache) then
@@ -1667,9 +1647,6 @@ function GSE:PLAYER_LOGOUT()
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
-    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
-        GSE_C["KeyBindings"][GetSpec()] = {}
-    end
     if not InCombatLockdown() then
         LoadKeyBindings(GSE.PlayerEntered)
         GSE.ReloadSequences()

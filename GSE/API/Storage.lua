@@ -654,6 +654,8 @@ function GSE.UpdateCharacterSequenceRefs()
             end
         end
     end
+    -- The shared profiles hold ids too (Profiles.lua).
+    if GSE.UpdateProfileSequenceRefs then GSE.UpdateProfileSequenceRefs() end
 end
 
 --- The id of the sequence a button runs, or nil for a button that is not one.
@@ -1843,8 +1845,26 @@ function GSE.DeleteSequence(classid, id)
             end
         end
     end
+    -- And from every shared profile, whichever class or spec it is for.
+    local profileBindsChanged = false
+    for _, byClass in pairs(type(GSEStore.profile) == "table" and GSEStore.profile or {}) do
+        for _, p in pairs(type(byClass) == "table" and byClass or {}) do
+            for key, seq in pairs(type(p.KeyBindings) == "table" and p.KeyBindings or {}) do
+                if seq == id then p.KeyBindings[key] = nil; profileBindsChanged = true end
+            end
+            for buttonName, bind in pairs(type(p.ActionBarBinds) == "table" and p.ActionBarBinds or {}) do
+                if type(bind) == "table" and bind.Sequence == id then
+                    p.ActionBarBinds[buttonName] = nil
+                    overrideChanged = true
+                end
+            end
+        end
+    end
     if overrideChanged then
         GSE.ReloadOverrides()
+    end
+    if profileBindsChanged and GSE.ReloadKeyBindings and not InCombatLockdown() then
+        GSE.ReloadKeyBindings()
     end
 
     -- Remove any keybindings that reference this sequence

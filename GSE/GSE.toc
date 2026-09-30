@@ -69,6 +69,7 @@ API\Checksum.lua
 API\Codec.lua
 API\SequenceDelta.lua
 API\Storage.lua
+API\Profiles.lua
 API\Plugins.lua
 API\Serialisation.lua
 API\OneOffEvents.lua

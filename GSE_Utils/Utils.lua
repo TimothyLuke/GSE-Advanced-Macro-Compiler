@@ -2172,7 +2172,14 @@ function GSE:GSSlash(input)
             end
             GSE_C["KeyBindings"] = {}
             GSE_C["ActionBarBinds"] = {}
+            -- This character's binds only: the shared profiles belong to every
+            -- character of the class, so it leaves them, with none of its own.
+            GSE_C.ProfileOptOut = {}
+            for i = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+                GSE_C.ProfileOptOut[tostring(i)] = true
+            end
             GSE.ReloadOverrides()
+            if GSE.ReloadKeyBindings then GSE.ReloadKeyBindings() end
         end
     elseif command == "export" then
         GSE.CheckGUI()
@@ -2269,7 +2276,9 @@ function GSE:GSSlash(input)
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
         if spec and sequence and physicalkey then
-            GSE_C["KeyBindings"][tostring(spec)][physicalkey] = sequence
+            -- Into the binds in force for that spec: the shared profile's, or
+            -- this character's own (Profiles.lua).
+            GSE.SpecKeyBinds(spec, true)[physicalkey] = sequence
             GSE.ReloadKeyBindings()
         else
            GSE.Print("Invalid Bind - /gse bind spec sequence key")
