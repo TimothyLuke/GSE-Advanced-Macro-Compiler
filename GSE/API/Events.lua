@@ -1201,6 +1201,8 @@ function LoadKeyBindings(payload)
             ClearOverrideBindings(keybindingframe)
         end
     end
+    -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
+    if not GSE.KeybindingsEnabled() then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.

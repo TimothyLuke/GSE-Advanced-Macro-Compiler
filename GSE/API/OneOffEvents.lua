@@ -83,6 +83,25 @@ function GSE.PerformOneOffEvents()
         GSEOptions.actionBarOverridePopup = not (hasKeybinds and not hasOverrides)
         GSEOptions.Updates["actionBarOverridePopupDefault"] = true
     end
+    -- WoW Forever: keybinding is a switch that starts off (#2109). A character
+    -- that already binds keys turns it on, so nothing it uses stops working;
+    -- only ever on -- turning it off is the player's call.
+    if GSE.isEmpty(GSE_C.Updates["foreverKeybinds"]) then
+        local _, _, _, tocversion = GetBuildInfo()
+        if GSE.TOCFlavour(tocversion) == "forever" then
+            local hasKeybinds = false
+            for specKey, specData in pairs(GSE_C["KeyBindings"] or {}) do
+                if specKey ~= "LoadOuts" and type(specData) == "table" then
+                    for k, v in pairs(specData) do
+                        if k ~= "LoadOuts" or next(v) then hasKeybinds = true; break end
+                    end
+                end
+                if hasKeybinds then break end
+            end
+            if hasKeybinds then GSEOptions.ForeverKeybindings = true end
+        end
+        GSE_C.Updates["foreverKeybinds"] = true
+    end
     if GSE.isEmpty(GSE_C.Updates["3218"]) then
         if GSE_C["ActionBarBinds"] then
             for k, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"]) do

@@ -2275,7 +2275,9 @@ function GSE:GSSlash(input)
         local spec = tostring(params[2])
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
-        if spec and sequence and physicalkey then
+        if not GSE.KeybindingsEnabled() then
+            GSE.Print(L["Keybinding is turned off. Turn it on in GSE's options first."])
+        elseif spec and sequence and physicalkey then
             -- Into the binds in force for that spec: the shared profile's, or
             -- this character's own (Profiles.lua).
             GSE.SpecKeyBinds(spec, true)[physicalkey] = sequence

@@ -400,6 +400,9 @@ local function buildKeybindMenu()
         end
     end
 
+    -- Keybinding switched off (WoW Forever, #2109): Button Bindings only.
+    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
+
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
     -- child of the same name inside it and read as though the Actionbar
