@@ -14,6 +14,37 @@ if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 GSE.GUI.CONTENT_PADDING = 20
 local CONFIG_CONTENT_LEFT_PADDING = GSE.GUI.CONTENT_PADDING
 
+-- ── Tree grouping ───────────────────────────────────────────────────────────
+-- GSEOptions.editorTreeGrouping: "type" (Sequences / Variables / Macros, the
+-- default), "class" (each class holds its sequences, variables and macros
+-- together) or "collection" (what came through each collection). A grouped
+-- tree puts a group node on top whose value starts with GROUP_PREFIX, and
+-- under it each element's node carries its by-type path as its value -- so
+-- the path below the group is exactly the by-type path, and every handler
+-- works on it once the group segment is dropped (splitElementPath).
+local GROUP_PREFIX = "GROUP:"
+
+local function treeGrouping()
+    local g = GSEOptions and GSEOptions.editorTreeGrouping
+    if g == "class" or g == "collection" then return g end
+    return "type"
+end
+
+-- A tree path's segments, the group segment of a grouped tree dropped.
+local function splitElementPath(path)
+    local parts = {("\001"):split(path or "")}
+    if parts[1] and parts[1]:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then table.remove(parts, 1) end
+    return parts
+end
+
+-- A tree path with the group segment of a grouped tree dropped.
+local function stripGroup(path)
+    if type(path) ~= "string" then return path end
+    local first = path:match("^([^\001]*)")
+    if first and first:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then return path:sub(#first + 2) end
+    return path
+end
+
 local function SmoothEditorScrollFrame(scrollWidget)
     if not scrollWidget or scrollWidget.gseSmoothMouseWheel then return end
     scrollWidget.gseSmoothMouseWheel = true
@@ -482,7 +513,7 @@ end
 
 local function SequenceEditorPathExists(path)
     if GSE.isEmpty(path) then return false end
-    local unique = {("\001"):split(path)}
+    local unique = splitElementPath(path)
     if unique[1] ~= "Sequences" or #unique < 4 then return false end
 
     local elements = GSE.split(unique[3] or "", ",")
@@ -689,6 +720,45 @@ local function onRightClick_VARIABLES(editframe, container, group, unique, key)
             rootDescription:CreateButton(L["Delete"], function()
                 GSE.DeleteVariable(key)
                 editframe.ManageTree()
+            end)
+        end
+    )
+end
+
+-- A collection's group node (the "collection" grouping): act on everything it
+-- brought at once. `key` as in GSE.KnownCollections.
+local function onRightClick_Collection(editframe, key)
+    local info = GSE.KnownCollections and GSE.KnownCollections()[key]
+    if not info then return end
+    MenuUtil.CreateContextMenu(
+        editframe.frame,
+        function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(info.name or key)
+            rootDescription:CreateButton(L["Export this Collection"], function()
+                GSE.GUIExportCollection(key)
+            end)
+            rootDescription:CreateButton(L["Remove this Collection's Elements"], function()
+                GSE.UI.ShowConfirmDialog({
+                    owner       = editframe,
+                    title       = L["Remove this Collection's Elements"],
+                    message     = string.format(L["Delete everything that came only through %s? Anything another collection also brought is kept, and only forgets %s."],
+                        "|cFFFFFFFF" .. tostring(info.name or key) .. "|r", tostring(info.name or key))
+                        .. "\n\n|cFFFF3030" .. L["This Action Cannot be Undone!"] .. "|r",
+                    width       = 380,
+                    height      = 230,
+                    confirmText = L["Delete"],
+                    cancelText  = L["Cancel"],
+                    onConfirm   = function()
+                        local deleted, released = GSE.RemoveCollection(key, true)
+                        GSE.Print(string.format(L["%s: %d deleted, %d kept for other collections."],
+                            tostring(info.name or key), deleted, released), L["Collections"])
+                        if editframe.ManageTree then editframe.ManageTree() end
+                    end,
+                })
+            end)
+            rootDescription:CreateButton(L["Forget this Collection"], function()
+                GSE.RemoveCollection(key, false)
+                if editframe.ManageTree then editframe.ManageTree() end
             end)
         end
     )
@@ -1573,6 +1643,130 @@ local function onClick_Macro(editframe, container, group, unique, key)
 end
 
 -- ---------------------------------------------------------------------------
+-- The grouped trees (see treeGrouping). `classtree` is what ManageTree built
+-- for the by-type tree: classtree[classid][specid] = { sequence nodes }.
+-- Returns the group nodes, and the by-type path -> grouped path map that
+-- SelectByValue uses to find an element in them.
+-- ---------------------------------------------------------------------------
+local function classLabel(k)
+    if k == 0 then return L["Global"], L["Global"] end
+    local classinfo, classfile = GetClassInfo(k)
+    local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
+    local text = classinfo or ("Class " .. tostring(k))
+    if color and classinfo then text = WrapTextInColorCode(classinfo, color:GenerateHexColor()) end
+    return text, classinfo or ("Class " .. tostring(k))
+end
+
+local function copyNode(n)
+    local c = { value = n.value, text = n.text, icon = n.icon }
+    if n.children then
+        c.children = {}
+        for i, ch in ipairs(n.children) do c.children[i] = copyNode(ch) end
+    end
+    return c
+end
+
+local function buildGroupedTree(grouping, classtree)
+    -- Every element, with its by-type path as its node value.
+    local seqs, vars, macs = {}, {}, {}
+    local seqByKey, varByName, macByName = {}, {}, {}
+    for cid, specs in pairs(classtree) do
+        for _, list in pairs(specs) do
+            for _, n in ipairs(list) do
+                local elements = GSE.split(n.value, ",")
+                local id = elements[3]
+                n.value = "Sequences\001" .. tostring(cid) .. "\001" .. n.value
+                local e = { classid = cid, node = n, sort = GSE.SequenceName(id, cid) or tostring(id) }
+                seqs[#seqs + 1] = e
+                seqByKey[tostring(cid) .. "|" .. tostring(id)] = e
+            end
+        end
+    end
+    for name in pairs(GSE.Store("variable") or {}) do
+        local e = { classid = GSE.StoredElementClass("variable", name) or 0, sort = name,
+            node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables } }
+        vars[#vars + 1] = e
+        varByName[name] = e
+    end
+    local maxAccount = GSE.GetMaxAccountMacros()
+    for slot = 1, maxAccount + GSE.GetMaxCharacterMacros() + 2 do
+        local mname, micon = GetMacroInfo(slot)
+        if mname and not macByName[mname] then
+            local e = { classid = GSE.StoredElementClass("macro", mname) or 0, sort = mname,
+                node = { value = "Macro\001" .. (slot <= maxAccount and "A" or "P") .. "\001" .. slot,
+                         text = mname, icon = micon or Statics.Icons.Macros } }
+            macs[#macs + 1] = e
+            macByName[mname] = e
+        end
+    end
+    local byName = function(a, b) return GSE.AlphabeticalTableSortAlgorithm(a.sort or "", b.sort or "") end
+    table.sort(seqs, byName)
+    table.sort(vars, byName)
+    table.sort(macs, byName)
+
+    local groups, pathOf = {}, {}
+    local function addTo(group, e)
+        local node = copyNode(e.node)
+        table.insert(group.children, node)
+        pathOf[e.node.value] = pathOf[e.node.value] or (group.value .. "\001" .. e.node.value)
+    end
+
+    if grouping == "class" then
+        local byClass = {}
+        local function groupFor(cid)
+            if not byClass[cid] then
+                local text, sortName = classLabel(cid)
+                byClass[cid] = { value = GROUP_PREFIX .. "class:" .. cid, text = text,
+                    icon = cid > 0 and GSE.GetClassIcon(cid) or nil, children = {}, gseSortName = sortName }
+                groups[#groups + 1] = byClass[cid]
+            end
+            return byClass[cid]
+        end
+        -- Sequences, then variables, then macros, each by name.
+        for _, list in ipairs({ seqs, vars, macs }) do
+            for _, e in ipairs(list) do addTo(groupFor(e.classid), e) end
+        end
+        table.sort(groups, function(a, b)
+            if a.value == GROUP_PREFIX .. "class:0" then return false end
+            if b.value == GROUP_PREFIX .. "class:0" then return true end
+            return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName or "", b.gseSortName or "")
+        end)
+    else
+        local placed = {}
+        for key, info in pairs(GSE.KnownCollections and GSE.KnownCollections() or {}) do
+            local group = { value = GROUP_PREFIX .. "col:" .. key, text = info.name or key,
+                icon = Statics.Icons.Import, children = {}, gseSortName = info.name or key }
+            local members = {}
+            for id, cid in pairs(info.sequence) do
+                local e = seqByKey[tostring(cid) .. "|" .. tostring(id)]
+                if e then members[#members + 1] = e end
+            end
+            table.sort(members, byName)
+            local more = {}
+            for name in pairs(info.variable) do if varByName[name] then more[#more + 1] = varByName[name] end end
+            table.sort(more, byName)
+            for _, e in ipairs(more) do members[#members + 1] = e end
+            more = {}
+            for name in pairs(info.macro) do if macByName[name] then more[#more + 1] = macByName[name] end end
+            table.sort(more, byName)
+            for _, e in ipairs(more) do members[#members + 1] = e end
+            for _, e in ipairs(members) do
+                addTo(group, e)
+                placed[e] = true
+            end
+            if #group.children > 0 then groups[#groups + 1] = group end
+        end
+        table.sort(groups, function(a, b) return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName, b.gseSortName) end)
+        local rest = { value = GROUP_PREFIX .. "col:", text = L["Not from a collection"], children = {} }
+        for _, list in ipairs({ seqs, vars, macs }) do
+            for _, e in ipairs(list) do if not placed[e] then addTo(rest, e) end end
+        end
+        if #rest.children > 0 then groups[#groups + 1] = rest end
+    end
+    return groups, pathOf
+end
+
+-- ---------------------------------------------------------------------------
 -- ManageTree(editframe)
 -- Builds the full sequence tree and wires up OnGroupSelected.
 -- ---------------------------------------------------------------------------
@@ -1609,8 +1803,13 @@ local function ManageTree(editframe)
     -- draws an expand toggle; expanding fires OnGroupExpanded (registered below)
     -- which rebuilds the tree with that one sequence loaded.
     local treeStatus = treeContainer.status or treeContainer.localstatus
-    local expandedGroups = (treeStatus and treeStatus.groups) or {}
-    local selectedPath = (treeStatus and treeStatus.selected) or ""
+    -- By-type paths, whichever grouping drew the tree: a grouped node's path
+    -- is its group plus the by-type path.
+    local expandedGroups = {}
+    for path, open in pairs((treeStatus and treeStatus.groups) or {}) do
+        if open then expandedGroups[stripGroup(path)] = true end
+    end
+    local selectedPath = stripGroup((treeStatus and treeStatus.selected) or "")
     -- Which case are we in? LoadStorage decompresses only Global and the
     -- current class at login, so EnsureSequenceLoaded is free for those. Under
     -- the All-classes filter, foreign classes are enumerated straight from the
@@ -1745,70 +1944,111 @@ local function ManageTree(editframe)
         end
     end
 
-    local subtree = {
-        value = "Sequences",
-        text = L["Sequences"],
-        icon = Statics.Icons.Sequences,
-        children = {}
-    }
-    for k, v in pairs(classtree) do
-        local tnode = {}
-        if k > 0 then
-            local classinfo, classfile = GetClassInfo(k)
-            -- A class this client does not have -- a Demon Hunter or Evoker
-            -- sequence on a Classic client, or a bad class id -- has no info and
-            -- no colour. :GenerateHexColor() on that nil threw after every
-            -- sequence was built and before SetTree, so the list came up blank.
-            local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
-            local text = classinfo or ("Class " .. tostring(k))
-            if color and classinfo then
-                text = WrapTextInColorCode(classinfo, color:GenerateHexColor())
+    local grouping = treeGrouping()
+    editframe.treeGroupedPaths = nil
+    if grouping ~= "type" then
+        local groups, pathOf = buildGroupedTree(grouping, classtree)
+        table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
+            icon = Statics.ActionsIcons.Add })
+        for _, g in ipairs(groups) do table.insert(tree, g) end
+        table.insert(tree, editframe.buildKeybindMenu())
+        editframe.treeGroupedPaths = pathOf
+    else
+        local subtree = {
+            value = "Sequences",
+            text = L["Sequences"],
+            icon = Statics.Icons.Sequences,
+            children = {}
+        }
+        for k, v in pairs(classtree) do
+            local tnode = {}
+            if k > 0 then
+                local classinfo, classfile = GetClassInfo(k)
+                -- A class this client does not have -- a Demon Hunter or Evoker
+                -- sequence on a Classic client, or a bad class id -- has no info and
+                -- no colour. :GenerateHexColor() on that nil threw after every
+                -- sequence was built and before SetTree, so the list came up blank.
+                local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
+                local text = classinfo or ("Class " .. tostring(k))
+                if color and classinfo then
+                    text = WrapTextInColorCode(classinfo, color:GenerateHexColor())
+                end
+                tnode = {
+                    value = k,
+                    text = text,
+                    icon = GSE.GetClassIcon(k),
+                    children = {}
+                }
+                -- Sorted on the plain name: `text` is wrapped in the class colour.
+                tnode.gseSortName = classinfo or ("Class " .. tostring(k))
+            elseif k == 0 then
+                -- value is the classid, 0, NOT the string "GLOBAL" it used to be.
+                -- Node values are what AceGUI concatenates into a node's path, and
+                -- every other producer and consumer of these paths -- the version
+                -- children built above, the OnGroupExpanded rebuild below -- spells
+                -- segment 2 as a number. "GLOBAL" agreed with none of them, so no
+                -- Global sequence ever matched its own path and none of them ever
+                -- showed a version (#2036). Only `text` is user-facing.
+                tnode = {
+                    value = k,
+                    text = L["Global"],
+                    children = {}
+                }
+                tnode.gseSortName = L["Global"]
             end
-            tnode = {
-                value = k,
-                text = text,
-                icon = GSE.GetClassIcon(k),
-                children = {}
-            }
-            -- Sorted on the plain name: `text` is wrapped in the class colour.
-            tnode.gseSortName = classinfo or ("Class " .. tostring(k))
-        elseif k == 0 then
-            -- value is the classid, 0, NOT the string "GLOBAL" it used to be.
-            -- Node values are what AceGUI concatenates into a node's path, and
-            -- every other producer and consumer of these paths -- the version
-            -- children built above, the OnGroupExpanded rebuild below -- spells
-            -- segment 2 as a number. "GLOBAL" agreed with none of them, so no
-            -- Global sequence ever matched its own path and none of them ever
-            -- showed a version (#2036). Only `text` is user-facing.
-            tnode = {
-                value = k,
-                text = L["Global"],
-                children = {}
-            }
-            tnode.gseSortName = L["Global"]
-        end
-        for _, j in pairs(v) do
-            for _, h in ipairs(j) do
-                table.insert(tnode.children, h)
+            for _, j in pairs(v) do
+                for _, h in ipairs(j) do
+                    table.insert(tnode.children, h)
+                end
             end
+            table.insert(subtree.children, tnode)
         end
-        table.insert(subtree.children, tnode)
+
+        -- Classes in alphabetical order rather than class-id order, with Global
+        -- last: it is not a class, and it reads as the catch-all at the end rather
+        -- than sitting between Evoker and Hunter.
+        table.sort(subtree.children, function(a, b)
+            if a.value == 0 then return false end
+            if b.value == 0 then return true end
+            return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName or "", b.gseSortName or "")
+        end)
+
+        table.insert(tree, subtree)
+        table.insert(tree, editframe.buildKeybindMenu())
+        table.insert(tree, editframe.buildVariablesMenu())
+        table.insert(tree, editframe.buildMacroMenu())
     end
 
-    -- Classes in alphabetical order rather than class-id order, with Global
-    -- last: it is not a class, and it reads as the catch-all at the end rather
-    -- than sitting between Evoker and Hunter.
-    table.sort(subtree.children, function(a, b)
-        if a.value == 0 then return false end
-        if b.value == 0 then return true end
-        return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName or "", b.gseSortName or "")
-    end)
-
-    table.insert(tree, subtree)
-    table.insert(tree, editframe.buildKeybindMenu())
-    table.insert(tree, editframe.buildVariablesMenu())
-    table.insert(tree, editframe.buildMacroMenu())
-
+    -- Callers select an element by its by-type path ("VARIABLES\001Name",
+    -- "Sequences\001<class>\001<key>\001<version>"); in a grouped tree that
+    -- element sits under a group, so translate the longest known prefix.
+    if not treeContainer.gseGroupedSelect then
+        local raw = treeContainer.SelectByValue
+        treeContainer.SelectByValue = function(self, path, ...)
+            local map = editframe.treeGroupedPaths
+            -- A path from another grouping (the selection kept across a
+            -- switch) drops its group and is found again from its by-type part.
+            if type(path) == "string" and path:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then
+                local kind = treeGrouping() == "class" and "class:" or "col:"
+                if not map or path:sub(#GROUP_PREFIX + 1, #GROUP_PREFIX + #kind) ~= kind then
+                    path = stripGroup(path)
+                end
+            end
+            if map and type(path) == "string" and path:sub(1, #GROUP_PREFIX) ~= GROUP_PREFIX then
+                local parts = {("\001"):split(path)}
+                for n = #parts, 1, -1 do
+                    local grouped = map[table.concat(parts, "\001", 1, n)]
+                    if grouped then
+                        if n < #parts then grouped = grouped .. "\001" .. table.concat(parts, "\001", n + 1) end
+                        path = grouped
+                        break
+                    end
+                end
+            end
+            return raw(self, path, ...)
+        end
+        treeContainer.gseGroupedSelect = true
+    end
     treeContainer:SetTree(tree)
     --@debug@
     editframe.lastTreeSequences, editframe.lastTreeLoads = treeSequences, treeLoads
@@ -1829,7 +2069,7 @@ local function ManageTree(editframe)
         "OnGroupExpanded",
         function(container, event, path, expanded)
             if not (expanded and path) then return end
-            local parts = {("\001"):split(path)}
+            local parts = splitElementPath(path)
             if parts[1] ~= "Sequences" or #parts ~= 3 then return end
             if not tonumber(parts[2]) then return end
             -- Rebuild unconditionally. The first cut of this skipped the rebuild
@@ -1851,8 +2091,8 @@ local function ManageTree(editframe)
         "OnButtonDrop",
         function(container, event, srcValue, dstValue)
             -- Parse the uniquevalue paths (segments separated by \001)
-            local srcParts = {("\001"):split(srcValue)}
-            local dstParts = {("\001"):split(dstValue)}
+            local srcParts = splitElementPath(srcValue)
+            local dstParts = splitElementPath(dstValue)
 
             -- Both must be Sequences > class > sequence > numeric version index
             if srcParts[1] ~= "Sequences" or dstParts[1] ~= "Sequences" then return end
@@ -1947,7 +2187,7 @@ local function ManageTree(editframe)
 
             if currentSelected then
                 local newSelected = currentSelected
-                local selParts = {("\001"):split(currentSelected)}
+                local selParts = splitElementPath(currentSelected)
                 if selParts[1] == "Sequences" and #selParts == 4
                         and selParts[2] == srcParts[2] and selParts[3] == srcParts[3] then
                     local selIdx = tonumber(selParts[4])
@@ -1963,7 +2203,7 @@ local function ManageTree(editframe)
     treeContainer:SetCallback(
         "OnGroupSelected",
         function(container, event, group, ...)
-            local unique = {("\001"):split(group)}
+            local unique = splitElementPath(group)
             local key = unique[#unique]
             local elements, classid, seqid
             local area = unique[1]
@@ -1983,7 +2223,11 @@ local function ManageTree(editframe)
             editframe.forceTreeSelection = nil
             local mbutton = forceTreeSelection and nil or GetMouseButtonClicked()
 
-            if mbutton == "RightButton" then
+            local groupSeg = group and group:match("^([^\001]*)") or ""
+            if mbutton == "RightButton" and #unique == 0
+                and groupSeg:sub(1, #GROUP_PREFIX + 4) == GROUP_PREFIX .. "col:" and #groupSeg > #GROUP_PREFIX + 4 then
+                onRightClick_Collection(editframe, groupSeg:sub(#GROUP_PREFIX + 5))
+            elseif mbutton == "RightButton" then
                 -- Dispatch table for right-click by area
                 -- KEYBINDINGS has no per-bind leaves any more (both areas are
                 -- panels), so there is nothing a right-click could act on.

@@ -182,6 +182,9 @@ end]]}},
         GSE.GUI.DrawElementScope(editframe, container, variable,
             currentKey and GSE.SuggestElementScope and GSE.SuggestElementScope("variable", currentKey), redraw)
     end
+    if currentKey and GSE.GUI.DrawElementCollections then
+        GSE.GUI.DrawElementCollections(container, "variable", currentKey)
+    end
 
     -- Help written on gse.tools arrives as markdown in MetaData.Notes with the
     -- server's WoW-escape rendering alongside in MetaData.Help. Show the

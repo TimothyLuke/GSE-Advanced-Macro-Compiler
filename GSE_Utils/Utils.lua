@@ -292,6 +292,9 @@ function GSE.OOCPerformMergeAction(action, classid, id, newSequence, newName)
         --@end-debug@
     else
         GSE.Print(L["No changes were made to "] .. sequenceName, GNOME)
+        -- Nothing was written, but it still came through whatever collection
+        -- brought it: settle that here, as a store would.
+        if GSE.SettleCollections then GSE.SettleCollections("sequence", sequenceName, id, classid) end
     end
     if type(GSE.Library[classid][id]) == "table" and type(GSE.Library[classid][id].MetaData) == "table" then
         GSE.Library[classid][id].MetaData.ManualIntervention = false
@@ -530,6 +533,23 @@ function GSE.ImportSerialisedSequence(importstring, forcereplace, skipDialogs, f
         if actiontable.type == "COLLECTION" then
             actiontable = actiontable.payload or {}
             scrubCollectionPayload(actiontable)
+            -- Collection provenance: the collections these elements came
+            -- through (payload.Collections, absent for a single element in its
+            -- container). Recorded as each member is stored -- see
+            -- GSE.ExpectCollection.
+            if GSE.ExpectCollection and type(actiontable.Collections) == "table" then
+                local kinds = { sequence = "Sequences", variable = "Variables", macro = "Macros" }
+                for _, col in ipairs(actiontable.Collections) do
+                    if type(col) == "table" then
+                        local pid = not GSE.isEmpty(col.PlatformID) and col.PlatformID or nil
+                        for kind, field in pairs(kinds) do
+                            for _, n in ipairs(type(col[field]) == "table" and col[field] or {}) do
+                                GSE.ExpectCollection(kind, n, pid, col.Name)
+                            end
+                        end
+                    end
+                end
+            end
             -- A collection reported nothing at all: COLLECTION_IMPORTED only
             -- refreshes an open editor tree. Count what actually goes in so
             -- the user is told, the way a single sealed import already is.

@@ -726,6 +726,7 @@ function GSE.PutSequenceBody(classid, id, name, body)
     env.Name, env.Body = name, body
     NAMES[classid] = NAMES[classid] or {}
     if NAMES[classid][name] == nil or id < NAMES[classid][name] then NAMES[classid][name] = id end
+    if GSE.SettleCollections then GSE.SettleCollections("sequence", name, id, classid) end
     return env
 end
 
@@ -842,7 +843,10 @@ end
 -- ── Views ───────────────────────────────────────────────────────────────────
 
 local function buildViews(store)
-    local views = { variable = {}, macro = {}, variablePid = {}, macroPid = {} }
+    -- *Collections: collection provenance by name, as the *Pid sidecars carry
+    -- ids -- the envelope's Collections, which the views have no other place for.
+    local views = { variable = {}, macro = {}, variablePid = {}, macroPid = {},
+        variableCollections = {}, macroCollections = {} }
     local index = { variable = {}, macroAccount = {}, macroChar = {}, shadowed = {} }
 
     for _, classid in ipairs(classOrder(store.variable)) do
@@ -854,6 +858,9 @@ local function buildViews(store)
                 views.variable[env.Name] = env.Body
                 index.variable[env.Name] = id
                 if env.PlatformID then views.variablePid[env.Name] = env.PlatformID end
+                if type(env.Collections) == "table" and next(env.Collections) then
+                    views.variableCollections[env.Name] = copyShallow(env.Collections)
+                end
             end
         end
     end
@@ -873,6 +880,11 @@ local function buildViews(store)
                 end
             end
             if env.PlatformID and env.Name then views.macroPid[env.Name] = env.PlatformID end
+            if env.Name and type(env.Collections) == "table" and next(env.Collections) then
+                local held = views.macroCollections[env.Name] or {}
+                for k, v in pairs(env.Collections) do held[k] = v end
+                views.macroCollections[env.Name] = held
+            end
         end
     end
     -- Each character's bucket, from its record's references.
@@ -898,6 +910,12 @@ local function buildViews(store)
 end
 
 -- ── Reconcile ───────────────────────────────────────────────────────────────
+
+-- A copy of a non-empty table, else nil: an envelope carries no empty fields.
+local function nonEmpty(t)
+    if type(t) ~= "table" or next(t) == nil then return nil end
+    return copyShallow(t)
+end
 
 -- Move an envelope to its PlatformID once it has one.
 local function rekey(envs, id, env, seen)
@@ -942,6 +960,7 @@ local function reconcileVariables(store, views, index, seen)
         end
         env.Name, env.Body = name, body
         if pid then env.PlatformID = pid end
+        env.Collections = nonEmpty(views.variableCollections and views.variableCollections[name])
         seen[id] = true
         rekey(envs, id, env, seen)
     end
@@ -970,6 +989,7 @@ local function reconcileMacros(store, views, index, seen)
                 global[id] = env
             end
             env.Name, env.Body, env.Scope = name, node, "account"
+            env.Collections = nonEmpty(views.macroCollections and views.macroCollections[name])
             if pid then env.PlatformID = pid end
             seen[id] = true
         end
@@ -1026,6 +1046,7 @@ local function reconcileMacros(store, views, index, seen)
                         env.Body = body
                     end
                     env.Name = name
+                    env.Collections = nonEmpty(views.macroCollections and views.macroCollections[name])
                     rec.Macros[id] = slot or 0
                     held[charKey][id] = true
                 end
@@ -1203,6 +1224,189 @@ function GSE.SetStoredPlatformID(kind, name, pid, classid)
         lib.MetaData.PlatformID = pid
     end
     return true
+end
+
+-- ── Collection provenance ───────────────────────────────────────────────────
+--
+-- The collections an element came through, kept on its envelope as
+-- Collections = { [key] = name }: key is the collection's PlatformID, or
+-- "name:" .. its name for one with no site id (a string another player
+-- pasted). Envelope, not body, so it is recorded on sealed content too.
+-- A sequence is named by id; a variable or macro by name (see the views'
+-- *Collections, written to the envelope at reconcile).
+
+local function collectionsTable(kind, ref, classid, create)
+    if not VIEWS then GSE.LoadStore() end
+    if kind == "sequence" then
+        local env = GSE.SequenceEnvelope(ref, classid)
+        if not env then return nil end
+        if create and type(env.Collections) ~= "table" then env.Collections = {} end
+        return env.Collections
+    end
+    local map = VIEWS[kind .. "Collections"]
+    if not map then return nil end
+    if create and type(map[ref]) ~= "table" then map[ref] = {} end
+    return map[ref]
+end
+
+--- { [key] = name } for the collections an element came through, or nil.
+function GSE.ElementCollections(kind, ref, classid)
+    local t = collectionsTable(kind, ref, classid, false)
+    if type(t) ~= "table" or next(t) == nil then return nil end
+    return t
+end
+
+--- Record that an element came through a collection. A collection known by
+--- name alone is replaced by its site id when that arrives. False when the
+--- element is not stored (yet).
+function GSE.AddElementCollection(kind, ref, platformID, name, classid)
+    if ref == nil or (GSE.isEmpty(platformID) and GSE.isEmpty(name)) then return false end
+    if kind ~= "sequence" then
+        local view = VIEWS and VIEWS[kind]
+        local held = view and view[ref] ~= nil
+        if not held and kind == "macro" and view then
+            for _, b in pairs(view) do
+                if type(b) == "table" and not isMacroNode(b) and b[ref] ~= nil then held = true; break end
+            end
+        end
+        if not held then return false end
+    end
+    local t = collectionsTable(kind, ref, classid, true)
+    if not t then return false end
+    if not GSE.isEmpty(platformID) then
+        if name then t["name:" .. name] = nil end
+        t[platformID] = name or t[platformID] or platformID
+    else
+        t["name:" .. name] = name
+    end
+    return true
+end
+
+--- Forget a collection on an element (key as in ElementCollections).
+function GSE.RemoveElementCollection(kind, ref, key, classid)
+    local t = collectionsTable(kind, ref, classid, false)
+    if type(t) ~= "table" then return false end
+    t[key] = nil
+    if next(t) == nil then
+        if kind == "sequence" then
+            local env = GSE.SequenceEnvelope(ref, classid)
+            if env then env.Collections = nil end
+        else
+            VIEWS[kind .. "Collections"][ref] = nil
+        end
+    end
+    return true
+end
+
+-- An import names the elements a collection brings, but most are stored later
+-- -- variables and macros out of combat, a clashing sequence after the import
+-- dialog -- so it leaves an expectation, and the store functions settle it
+-- when the element is written. One the user declined lapses unused.
+local PENDING_TTL = 1800
+local pendingCollections = { sequence = {}, variable = {}, macro = {} }
+
+local function now()
+    if GetServerTime then return GetServerTime() end
+    return os and os.time and os.time() or 0
+end
+
+--- Expect `name` of `kind` to be stored soon, as having come through a
+--- collection (platformID may be nil: a pasted collection has only a name).
+function GSE.ExpectCollection(kind, name, platformID, collectionName)
+    if not pendingCollections[kind] or type(name) ~= "string" then return end
+    if GSE.isEmpty(platformID) and GSE.isEmpty(collectionName) then return end
+    local list = pendingCollections[kind][name] or {}
+    list[#list + 1] = { pid = platformID, name = collectionName, at = now() }
+    pendingCollections[kind][name] = list
+end
+
+-- Record what was expected of an element just stored.
+local function settleCollections(kind, name, ref, classid)
+    local list = pendingCollections[kind] and pendingCollections[kind][name]
+    if not list then return end
+    pendingCollections[kind][name] = nil
+    local t = now()
+    for _, e in ipairs(list) do
+        if t - (e.at or 0) <= PENDING_TTL then
+            GSE.AddElementCollection(kind, ref, e.pid, e.name, classid)
+        end
+    end
+end
+GSE.SettleCollections = settleCollections
+
+--- Every collection anything came through: { [key] = { name, sequence =
+--- { [id] = classid }, variable = { [name] = true }, macro = { [name] = true } } }.
+function GSE.KnownCollections()
+    if not VIEWS then GSE.LoadStore() end
+    local out = {}
+    local function entry(key, name)
+        out[key] = out[key] or { name = name, sequence = {}, variable = {}, macro = {} }
+        if name then out[key].name = name end
+        return out[key]
+    end
+    for classid = 0, 13 do
+        for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+            for key, name in pairs(type(env.Collections) == "table" and env.Collections or {}) do
+                entry(key, name).sequence[id] = classid
+            end
+        end
+    end
+    for _, kind in ipairs({ "variable", "macro" }) do
+        for ref, cols in pairs(VIEWS[kind .. "Collections"] or {}) do
+            for key, name in pairs(cols) do entry(key, name)[kind][ref] = true end
+        end
+    end
+    return out
+end
+
+--- Take a collection off everything it brought. With deleteElements, also
+--- delete what came through it alone -- anything another collection brought
+--- too only loses this one. A deleted macro leaves the player's WoW macros as
+--- well, out of combat. Returns deleted, released counts.
+function GSE.RemoveCollection(key, deleteElements)
+    local info = GSE.KnownCollections()[key]
+    if not info then return 0, 0 end
+    local deleted, released = 0, 0
+    local function onlyThis(kind, ref, classid)
+        local cols = GSE.ElementCollections(kind, ref, classid)
+        if not cols then return true end
+        for k in pairs(cols) do if k ~= key then return false end end
+        return true
+    end
+    for id, classid in pairs(info.sequence) do
+        if deleteElements and onlyThis("sequence", id, classid) then
+            GSE.DeleteSequence(classid, id)
+            deleted = deleted + 1
+        else
+            GSE.RemoveElementCollection("sequence", id, key, classid)
+            released = released + 1
+        end
+    end
+    for name in pairs(info.variable) do
+        if deleteElements and onlyThis("variable", name) then
+            GSE.DeleteVariable(name)
+            VIEWS.variableCollections[name] = nil
+            deleted = deleted + 1
+        else
+            GSE.RemoveElementCollection("variable", name, key)
+            released = released + 1
+        end
+    end
+    for name in pairs(info.macro) do
+        if deleteElements and onlyThis("macro", name) then
+            GSE.DeleteMacro(name)
+            VIEWS.macroCollections[name] = nil
+            if DeleteMacro and not (InCombatLockdown and InCombatLockdown()) then
+                local slot = GetMacroIndexByName and GetMacroIndexByName(name)
+                if slot and slot > 0 then DeleteMacro(slot) end
+            end
+            deleted = deleted + 1
+        else
+            GSE.RemoveElementCollection("macro", name, key)
+            released = released + 1
+        end
+    end
+    return deleted, released
 end
 
 --- One class's table within a kind's view; created only when asked to.
@@ -2002,6 +2206,7 @@ function GSE.StoreEncodedVariable(name, encoded)
     end
     GSE.Store("variable")[name] = encoded
     if GSE.V then GSE.V[name] = nil end
+    settleCollections("variable", name, name)
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
     return true
 end
@@ -2014,6 +2219,7 @@ function GSE.StoreEncodedMacro(name, encoded)
         return false
     end
     GSE.Store("macro")[name] = { GSEProtected = encoded }
+    settleCollections("macro", name, name)
     if GSE.ManageMacros then GSE.ManageMacros() end
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
     return true
@@ -4371,6 +4577,7 @@ function GSE.UpdateVariable(variable, name, status)
         end
     end
     compileVariable(name, variable)
+    settleCollections("variable", name, name)
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, name)
 end
 
@@ -4561,6 +4768,7 @@ function GSE.ImportMacro(node)
     GSE.UpgradeMacro(node)
 
     source[node.name] = GSE.UpdateMacro(node, characterMacro)
+    settleCollections("macro", node.name, node.name)
     GSE.Print(L["Macro"] .. " " .. node.name .. L[" was imported."], L["Macros"])
     GSE.ManageMacros()
     GSE:SendMessage(Statics.Messages.VARIABLE_UPDATED, node.name)

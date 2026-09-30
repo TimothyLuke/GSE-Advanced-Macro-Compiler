@@ -5244,11 +5244,10 @@ local function createTreeGroup()
     --   by (textWidth + gap) / 2. To center the unit on navContent we shift the
     --   checkbox anchor LEFT by that same amount. WoW's anchor system keeps the
     --   center dynamic as navContent resizes — no per-frame recompute needed.
+    -- Left-aligned now: the row's right side holds the grouping switch.
     local function recenterCheckbox()
-        local textWidth = (allSeqCheckbox.text and allSeqCheckbox.text:GetStringWidth()) or 0
-        local xOffset = -((textWidth + NAV_CHECKBOX_GAP) / 2)
         allSeqCheckbox:ClearAllPoints()
-        allSeqCheckbox:SetPoint("BOTTOM", navContent, "BOTTOM", xOffset, 2)
+        allSeqCheckbox:SetPoint("BOTTOMLEFT", navContent, "BOTTOMLEFT", 0, 2)
     end
     recenterCheckbox()
     local function syncAllSeqCheckbox()
@@ -5270,6 +5269,40 @@ local function createTreeGroup()
     syncAllSeqCheckbox()
     navWindow.GSEAllSeqCheckbox = allSeqCheckbox
     navWindow.GSESyncAllSeqCheckbox = syncAllSeqCheckbox
+
+    -- How the tree groups content (GSEOptions.editorTreeGrouping, read by
+    -- Editor_Tree's ManageTree): by type, by class -- each class's sequences,
+    -- variables and macros together -- or by the collection they came from.
+    -- One click moves to the next, and every open editor redraws its tree.
+    local GROUPINGS = { "type", "class", "collection" }
+    local GROUPING_LABEL = { type = "By Type", class = "By Class", collection = "By Collection" }
+    local groupingButton = CreateFrame("Button", nil, navContent, "UIPanelButtonTemplate")
+    groupingButton:SetSize(96, NAV_CHECKBOX_SIZE)
+    groupingButton:SetPoint("BOTTOMRIGHT", navContent, "BOTTOMRIGHT", 0, 2)
+    local function currentGrouping()
+        local g = GSEOptions and GSEOptions.editorTreeGrouping
+        return GROUPING_LABEL[g] and g or "type"
+    end
+    local function syncGroupingButton()
+        local label = GROUPING_LABEL[currentGrouping()]
+        groupingButton:SetText(L and L[label] or label)
+    end
+    groupingButton:SetScript("OnClick", function()
+        if not GSEOptions then GSEOptions = {} end
+        local now = currentGrouping()
+        local nextOne = GROUPINGS[1]
+        for i, g in ipairs(GROUPINGS) do
+            if g == now then nextOne = GROUPINGS[(i % #GROUPINGS) + 1] end
+        end
+        GSEOptions.editorTreeGrouping = nextOne
+        syncGroupingButton()
+        if GSE.GUI and GSE.GUI.RefreshOpenEditorTrees then
+            GSE.GUI.RefreshOpenEditorTrees()
+        end
+    end)
+    groupingButton:HookScript("OnShow", syncGroupingButton)
+    syncGroupingButton()
+    navWindow.GSEGroupingButton = groupingButton
 
     -- Move treeframe into navContent
     treeframe:SetParent(navContent)

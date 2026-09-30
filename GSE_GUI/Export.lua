@@ -26,12 +26,33 @@ exportframe:SetCallback(
 )
 exportframe:SetLayout("List")
 
+-- The package name makes a collection of an export of more than one element:
+-- whoever imports it records that its elements came through that collection
+-- (collection provenance). One element, or no name given, is only the
+-- container every export ships in, and records nothing.
+local DEFAULT_PACKAGE_NAME = "UPDATE PACKAGE NAME"
+local function withCollection(exportTable)
+    local name = exportframe and exportframe.packageName
+    if GSE.isEmpty(name) or name == DEFAULT_PACKAGE_NAME or (exportTable.ElementCount or 0) < 2 then
+        return exportTable
+    end
+    local entry = { Name = name, Sequences = {}, Variables = {}, Macros = {} }
+    for _, kind in ipairs({ "Sequences", "Variables", "Macros" }) do
+        for n in pairs(exportTable[kind] or {}) do entry[kind][#entry[kind] + 1] = n end
+        table.sort(entry[kind])
+    end
+    local payload = {}
+    for k, v in pairs(exportTable) do payload[k] = v end
+    payload.Collections = { entry }
+    return payload
+end
+
 local function compileExport(exportTable, humanReadable)
     local exportstring =
         GSE.EncodeMessage(
         {
             type = "COLLECTION",
-            payload = exportTable
+            payload = withCollection(exportTable)
         }
     )
 
@@ -40,7 +61,7 @@ local function compileExport(exportTable, humanReadable)
         local pkgDate = (exportframe and exportframe.packageDate) or date("%m/%d/%Y/%H:%M")
         -- No name given -> fall back to the literal "UPDATE PACKAGE NAME"
         -- so the H1 line stays well-formed in either case.
-        local nameForHeader = (pkgName ~= "" and pkgName) or "UPDATE PACKAGE NAME"
+        local nameForHeader = (pkgName ~= "" and pkgName) or DEFAULT_PACKAGE_NAME
         local header = "# " .. nameForHeader .. "    Date: " .. pkgDate
         exportstring = header .. "\n```\n" .. exportstring .. "\n```\n\n"
 
@@ -594,23 +615,50 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     -- options-driven re-render from Utils.lua) or when the object is not a
     -- selectable item in its dropdown (e.g. a noExport sequence), so those paths
     -- keep the previous empty-window behaviour.
-    if not GSE.isEmpty(objectname) then
+    local function preselect(category, name)
         local preselectDropDown
-        if exportCategory == "SEQUENCE" then
+        if category == "SEQUENCE" then
             preselectDropDown = SequenceDropDown
-        elseif exportCategory == "MACRO" then
+        elseif category == "MACRO" then
             preselectDropDown = MacroDropDown
-        elseif exportCategory == "VARIABLE" then
+        elseif category == "VARIABLE" then
             preselectDropDown = VariableDropDown
         end
-        if preselectDropDown and preselectDropDown.list and preselectDropDown.list[objectname] ~= nil
-            and not (preselectDropDown.disabledItems and preselectDropDown.disabledItems[objectname]) then
-            preselectDropDown:SetValue(objectname, true)
-            preselectDropDown:Fire("OnValueChanged", objectname, true)
+        if preselectDropDown and preselectDropDown.list and preselectDropDown.list[name] ~= nil
+            and not (preselectDropDown.disabledItems and preselectDropDown.disabledItems[name]) then
+            preselectDropDown:SetValue(name, true)
+            preselectDropDown:Fire("OnValueChanged", name, true)
         end
+    end
+    -- Kept for GUIExportCollection, which ticks every member of a collection.
+    exportframe.gsePreselect = preselect
+    if not GSE.isEmpty(objectname) then
+        preselect(exportCategory, objectname)
     end
 end
 
+
+--- Export a collection as it came: everything it brought, named after it, so
+--- whoever imports it records the same collection (collection provenance).
+--- `key` as in GSE.KnownCollections.
+function GSE.GUIExportCollection(key)
+    local info = GSE.KnownCollections and GSE.KnownCollections()[key]
+    if not info then return end
+    exportframe.classid = nil
+    exportframe.packageName = info.name or ""
+    exportframe.packageDate = date("%m/%d/%Y/%H:%M")
+    exportframe:SetSize(760, 560)
+    GSE.GUIAdvancedExport(exportframe)
+    local preselect = exportframe.gsePreselect
+    if preselect then
+        for id in pairs(info.sequence) do preselect("SEQUENCE", id) end
+        for name in pairs(info.variable) do preselect("VARIABLE", name) end
+        for name in pairs(info.macro) do preselect("MACRO", name) end
+    end
+    UI.MakePopup(exportframe.frame, {center = true})
+    if exportframe.frame.Raise then exportframe.frame:Raise() end
+    exportframe:Show()
+end
 
 function GSE.GUIExport(category, objectname, exportCategory)
     exportframe.classid = category
@@ -626,7 +674,7 @@ function GSE.GUIExport(category, objectname, exportCategory)
     GSE.UI.ShowInputDialog({
         title      = L["Export"],
         prompt     = L["Enter Export Package Name"],
-        default    = "UPDATE PACKAGE NAME",
+        default    = DEFAULT_PACKAGE_NAME,
         acceptText = L["Export"],
         maxLetters = 80,
         onAccept   = function(name)

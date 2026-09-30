@@ -612,4 +612,107 @@ describe("GSEStore", function()
       assert.is_nil(_G.GSESequences)
     end)
   end)
+
+  -- Collection provenance (#2111 phase 3): the collections an element came
+  -- through, on its envelope -- recorded when an import's expectation is
+  -- settled by the store, kept across a reload, sealed or not.
+  describe("collection provenance", function()
+    local clock
+    before_each(function()
+      clock = 1000
+      _G.GetServerTime = function() return clock end
+      _G.InCombatLockdown = _G.InCombatLockdown or function() return false end
+      GSE.SendMessage = GSE.SendMessage or function() end
+    end)
+    after_each(function() _G.GetServerTime = nil end)
+
+    it("records a sequence's collection when the import stores it, and keeps it", function()
+      firstRun({ GSESequences = { [2] = { Alpha = "SEQ|Alpha|Tim|" } } })
+      local id = GSE.FindSequenceId("Alpha", 2)
+      GSE.ExpectCollection("sequence", "Alpha", "pidC000000000000000000cc", "Warrior Pack")
+      GSE.PutSequenceBody(2, id, "Alpha", "SEQ|Alpha|Tim|")
+      assert.are.same({ pidC000000000000000000cc = "Warrior Pack" }, GSE.ElementCollections("sequence", id, 2))
+      reload()
+      assert.are.same({ pidC000000000000000000cc = "Warrior Pack" },
+        GSE.ElementCollections("sequence", GSE.FindSequenceId("Alpha", 2), 2))
+    end)
+
+    it("records a pasted collection by name, and replaces it with the site id later", function()
+      firstRun({ GSEVariables = { V = "VAR||x" } })
+      GSE.ExpectCollection("variable", "V", nil, "Pasted Pack")
+      assert.is_true(GSE.StoreEncodedVariable("V", "VAR||y"))
+      assert.are.same({ ["name:Pasted Pack"] = "Pasted Pack" }, GSE.ElementCollections("variable", "V"))
+      GSE.AddElementCollection("variable", "V", "pidP000000000000000000pp", "Pasted Pack")
+      assert.are.same({ pidP000000000000000000pp = "Pasted Pack" }, GSE.ElementCollections("variable", "V"))
+      reload()
+      local env = envs("variable", 0)[onlyId(envs("variable", 0))]
+      assert.are.same({ pidP000000000000000000pp = "Pasted Pack" }, env.Collections, "on the envelope")
+    end)
+
+    it("records a macro's collections and lets one be forgotten", function()
+      firstRun({ GSEMacros = { Pull = { text = "/cast Charge", value = 3 } } })
+      assert.is_true(GSE.AddElementCollection("macro", "Pull", "pidA000000000000000000aa", "A"))
+      assert.is_true(GSE.AddElementCollection("macro", "Pull", "pidB000000000000000000bb", "B"))
+      reload()
+      assert.are.same({ pidA000000000000000000aa = "A", pidB000000000000000000bb = "B" },
+        GSE.ElementCollections("macro", "Pull"))
+      GSE.RemoveElementCollection("macro", "Pull", "pidA000000000000000000aa")
+      GSE.RemoveElementCollection("macro", "Pull", "pidB000000000000000000bb")
+      reload()
+      assert.is_nil(GSE.ElementCollections("macro", "Pull"))
+      assert.is_nil(envs("macro", 0)[onlyId(envs("macro", 0))].Collections, "no empty field left behind")
+    end)
+
+    it("lets an expectation lapse -- a member the user declined takes nothing", function()
+      firstRun({ GSEVariables = { V = "VAR||x" } })
+      GSE.ExpectCollection("variable", "V", "pidC000000000000000000cc", "Pack")
+      clock = clock + 3600
+      GSE.StoreEncodedVariable("V", "VAR||y")
+      assert.is_nil(GSE.ElementCollections("variable", "V"))
+    end)
+
+    it("records nothing on an element that is not stored", function()
+      firstRun({})
+      assert.is_false(GSE.AddElementCollection("variable", "Nope", "pidC000000000000000000cc", "Pack"))
+      assert.is_nil(GSE.ElementCollections("variable", "Nope"))
+    end)
+
+    it("removes what came only through a collection, and keeps what another brought", function()
+      firstRun({ GSESequences = { [2] = { Alpha = "SEQ|Alpha|Tim|", Beta = "SEQ|Beta|Tim|" } },
+                 GSEVariables = { V = "VAR||x" } })
+      GSE.Library = GSE.Library or {}
+      local alpha, beta = GSE.FindSequenceId("Alpha", 2), GSE.FindSequenceId("Beta", 2)
+      GSE.AddElementCollection("sequence", alpha, "pidC000000000000000000cc", "Pack", 2)
+      GSE.AddElementCollection("sequence", beta, "pidC000000000000000000cc", "Pack", 2)
+      GSE.AddElementCollection("sequence", beta, "pidD000000000000000000dd", "Other", 2)
+      GSE.AddElementCollection("variable", "V", "pidC000000000000000000cc", "Pack")
+      local deleted, kept = GSE.RemoveCollection("pidC000000000000000000cc", true)
+      assert.are.equal(2, deleted, "Alpha and V came only through Pack")
+      assert.are.equal(1, kept)
+      assert.is_nil(GSE.FindSequenceId("Alpha", 2))
+      assert.is_nil(GSE.Store("variable").V)
+      assert.are.same({ pidD000000000000000000dd = "Other" }, GSE.ElementCollections("sequence", beta, 2),
+        "Beta stays, and only forgets Pack")
+      assert.is_nil(GSE.KnownCollections()["pidC000000000000000000cc"])
+    end)
+
+    it("forgets a collection without deleting anything", function()
+      firstRun({ GSEVariables = { V = "VAR||x" } })
+      GSE.AddElementCollection("variable", "V", "pidC000000000000000000cc", "Pack")
+      GSE.RemoveCollection("pidC000000000000000000cc", false)
+      assert.is_not_nil(GSE.Store("variable").V)
+      assert.is_nil(GSE.ElementCollections("variable", "V"))
+    end)
+
+    it("lists what each collection brought", function()
+      firstRun({ GSESequences = { [2] = { Alpha = "SEQ|Alpha|Tim|" } }, GSEVariables = { V = "VAR||x" } })
+      local id = GSE.FindSequenceId("Alpha", 2)
+      GSE.AddElementCollection("sequence", id, "pidC000000000000000000cc", "Pack", 2)
+      GSE.AddElementCollection("variable", "V", "pidC000000000000000000cc", "Pack")
+      local known = GSE.KnownCollections()["pidC000000000000000000cc"]
+      assert.are.equal("Pack", known.name)
+      assert.are.equal(2, known.sequence[id])
+      assert.is_true(known.variable.V)
+    end)
+  end)
 end)

@@ -985,6 +985,10 @@ local function drawMetadataTab(editframe, container)
 
     container:AddChild(versionColumn)
 
+    if GSE.GUI.DrawElementCollections and editframe.SequenceID then
+        GSE.GUI.DrawElementCollections(container, "sequence", editframe.SequenceID, editframe.ClassID)
+    end
+
     local deps, hasDeps, usedBy = dependencyData(editframe)
     addMetadataSpacer(container, METADATA_SECTION_GAP)
     addDependencyWindow(editframe, container, deps, hasDeps, usedBy)
@@ -1070,6 +1074,22 @@ function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onC
         row:AddChild(use)
         container:AddChild(row)
     end
+end
+
+--- "From collections: A, B" -- the collections an element came through
+--- (collection provenance, GSE.ElementCollections). Nothing when there are none.
+function GSE.GUI.DrawElementCollections(container, kind, ref, classid)
+    local cols = GSE.ElementCollections and GSE.ElementCollections(kind, ref, classid)
+    if not cols then return end
+    local names = {}
+    for key, name in pairs(cols) do
+        names[#names + 1] = name or key
+    end
+    table.sort(names)
+    local text = UI:Create("Label")
+    text:SetText(table.concat(names, ", "))
+    text:SetWidth(ELEMENT_DROPDOWN_WIDTH + 200)
+    container:AddChild(inlineFieldRow(T("From collections"), text, ELEMENT_LABEL_WIDTH))
 end
 
 --- The version bar: choose which version to edit, label it, copy it into a new

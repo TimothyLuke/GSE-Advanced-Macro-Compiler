@@ -606,7 +606,10 @@ local function processCollection(payload)
         ["Sequences"] = {},
         ["Variables"] = {},
         ["Macros"] = {},
-        ["ElementCount"] = 0
+        ["ElementCount"] = 0,
+        -- Collection provenance rides along; only the members picked here
+        -- are stored, so only they take it.
+        ["Collections"] = payload["Collections"],
       }
       -- processWAGOImport returns nil when it refuses an incompatible
       -- legacy record (Macros-only). Skip those silently — the function

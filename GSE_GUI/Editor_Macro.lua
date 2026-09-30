@@ -339,6 +339,9 @@ local function showMacro(editframe, node, container, selected)
                 GSE.SuggestElementScope and GSE.SuggestElementScope("macro", node.name),
                 function() commit(); redraw() end)
         end
+        if GSE.GUI.DrawElementCollections then
+            GSE.GUI.DrawElementCollections(container, "macro", node.name)
+        end
 
         -- Help written on gse.tools arrives as markdown in MetaData.Notes, with
         -- the server's WoW-escape rendering alongside in MetaData.Help. Show the
