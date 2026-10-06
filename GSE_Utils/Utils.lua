@@ -2276,7 +2276,7 @@ function GSE:GSSlash(input)
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
         if not GSE.KeybindingsEnabled() then
-            GSE.Print(L["Keybinding is turned off. Turn it on in GSE's options first."])
+            GSE.Print(L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."])
         elseif spec and sequence and physicalkey then
             -- Into the binds in force for that spec: the shared profile's, or
             -- this character's own (Profiles.lua).
@@ -2525,40 +2525,51 @@ do
         table.sort(names, function(a, b) return a.name < b.name end)
 
         local buttonName = self:GetName()
-        MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
-            if existingSequence then
-                -- gse-button holds the sequence's id; show its label.
-                rootDescription:CreateTitle(L["GSE"] .. ": "
-                    .. (GSE.SequenceName(existingSequence) or existingSequence))
-                rootDescription:CreateButton(L["Clear Override"], function()
-                    GSE.RemoveActionBarOverride(buttonName)
-                end)
-                if #names > 0 then
-                    rootDescription:CreateDivider()
-                    rootDescription:CreateTitle(L["Change Sequence"])
-                end
-            else
-                rootDescription:CreateTitle(L["Assign GSE Sequence"])
+        -- One list, two ways to draw it. kind: "title", "divider", "button".
+        local rows = {}
+        if existingSequence then
+            -- gse-button holds the sequence's id; show its label.
+            rows[#rows + 1] = { kind = "title", text = L["GSE"] .. ": "
+                .. (GSE.SequenceName(existingSequence) or existingSequence) }
+            rows[#rows + 1] = { kind = "button", text = L["Clear Override"], onClick = function()
+                GSE.RemoveActionBarOverride(buttonName)
+            end }
+            if #names > 0 then
+                rows[#rows + 1] = { kind = "divider" }
+                rows[#rows + 1] = { kind = "title", text = L["Change Sequence"] }
             end
-            for _, entry in ipairs(names) do
-                local iconText = classIconText
-                local specID = entry.specID
-                if specID and specID >= 15 then
-                    local _, _, _, specIconID = GetSpecializationInfoByID(specID)
-                    if specIconID then
-                        iconText = "|T" .. specIconID .. ":16:16|t "
-                    end
+        else
+            rows[#rows + 1] = { kind = "title", text = L["Assign GSE Sequence"] }
+        end
+        for _, entry in ipairs(names) do
+            local iconText = classIconText
+            local specID = entry.specID
+            if specID and specID >= 15 then
+                local _, _, _, specIconID = GetSpecializationInfoByID(specID)
+                if specIconID then
+                    iconText = "|T" .. specIconID .. ":16:16|t "
                 end
-                local label = iconText .. entry.name
-                if entry.disabled then
-                    local element = rootDescription:CreateButton("|cFF808080" .. label .. "|r", function() end)
+            end
+            local entryId = entry.id
+            rows[#rows + 1] = { kind = "button", text = iconText .. entry.name, disabled = entry.disabled,
+                onClick = function() GSE.CreateActionBarOverride(buttonName, entryId) end }
+        end
+
+        -- Through GSE.OpenContextMenu: Blizzard's menu cannot be opened from an
+        -- addon in Forever's gamepad mode (see GSE/API/ContextMenu.lua).
+        GSE.OpenContextMenu(self, function(ownerRegion, rootDescription)
+            for _, row in ipairs(rows) do
+                if row.kind == "title" then
+                    rootDescription:CreateTitle(row.text)
+                elseif row.kind == "divider" then
+                    rootDescription:CreateDivider()
+                elseif row.disabled then
+                    local element = rootDescription:CreateButton("|cFF808080" .. row.text .. "|r", function() end)
                     element:SetTooltip(function(tooltip, elementDescription)
                         GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
                     end)
                 else
-                    rootDescription:CreateButton(label, function()
-                        GSE.CreateActionBarOverride(buttonName, entry.id)
-                    end)
+                    rootDescription:CreateButton(row.text, row.onClick)
                 end
             end
         end)
@@ -2680,6 +2691,55 @@ do
                 if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
             end
         end
+    end)
+
+    -- Blizzard's Gamepad action bars (WoW Forever). Their buttons sit several
+    -- frames deep under GamepadMainActionBarFrame and friends, named from their
+    -- parents rather than with a fixed prefix + index, so they are found by
+    -- walking each Gamepad bar's frame tree instead of by name. The bars can be
+    -- built after login, so the walk runs again whenever gamepad mode changes;
+    -- gseRightClickHooked keeps a button from being hooked twice.
+    local function isNamedActionButton(frame)
+        if not frame.GetName or not frame:GetName() or not frame.HookScript then return false end
+        if frame.action ~= nil or frame.UpdateAction then return true end
+        return frame.GetAttribute and frame:GetAttribute("action") ~= nil or false
+    end
+    local function hookActionButtonsUnder(frame, depth)
+        if depth > 8 or not frame.GetChildren then return end
+        for _, child in ipairs({ frame:GetChildren() }) do
+            if isNamedActionButton(child) then
+                if not child.gseRightClickHooked then
+                    child.gseRightClickHooked = true
+                    child:HookScript("OnClick", gseEmptyButtonHandler)
+                end
+            else
+                hookActionButtonsUnder(child, depth + 1)
+            end
+        end
+    end
+    local function hookGamepadActionBars()
+        for name, frame in pairs(_G) do
+            if type(name) == "string" and type(frame) == "table"
+                and string.sub(name, 1, 7) == "Gamepad" and string.find(name, "ActionBar", 8, true)
+                and frame.GetChildren and not (frame.GetParent and frame:GetParent()
+                    and string.sub(frame:GetParent():GetName() or "", 1, 7) == "Gamepad") then
+                hookActionButtonsUnder(frame, 0)
+            end
+        end
+    end
+    local gseGamepadBarFrame = CreateFrame("Frame")
+    gseGamepadBarFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    -- Fired by Forever when play switches between keyboard/mouse and gamepad.
+    -- Other clients do not know it, and registering an unknown event errors.
+    pcall(gseGamepadBarFrame.RegisterEvent, gseGamepadBarFrame, "INPUT_DEVICE_INTERFACE_TRANSITION")
+    gseGamepadBarFrame:SetScript("OnEvent", function()
+        if InCombatLockdown() then return end
+        hookGamepadActionBars()
+        -- A bar shown in response to the same event may finish building on
+        -- the next frame.
+        C_Timer.After(1, function()
+            if not InCombatLockdown() then hookGamepadActionBars() end
+        end)
     end)
 end
 

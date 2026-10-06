@@ -190,7 +190,7 @@ local dirLabels = {
 }
 
 local function showContextMenu(owner)
-    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+    GSE.OpenContextMenu(owner, function(_, rootDescription)
         rootDescription:CreateTitle(L["Growth Direction"])
         for _, dir in ipairs({ "UP", "DOWN", "LEFT", "RIGHT" }) do
             rootDescription:CreateRadio(

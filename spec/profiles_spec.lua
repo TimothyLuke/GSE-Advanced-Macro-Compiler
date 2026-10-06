@@ -148,8 +148,8 @@ describe("Profiles", function()
     assert.are.equal("pidA00000000000000000000", GSEStore.profile[2][70].ActionBarBinds.B1.Sequence)
   end)
 
-  -- WoW Forever (#2109): keybinding is a switch, off unless turned on; a
-  -- character that already binds keys turns it on.
+  -- WoW Forever (#2109): GSE never binds keys there, and nothing turns it on --
+  -- not an option, and not a character that already has keybinds.
   describe("keybinding on WoW Forever", function()
     local toc
     before_each(function()
@@ -157,42 +157,27 @@ describe("Profiles", function()
       _G.GetBuildInfo = function() return "1.60.1", "69893", "", toc end
       GSE.TOCFlavour = function(t) return t == 16001 and "forever" or "exp12" end
       require("../GSE/API/OneOffEvents")
-      -- Every earlier one-off already done, so only this one runs.
       GSEOptions.Updates = { ["3200"] = true, ["3304"] = true, ["3310"] = true,
         actionBarOverridePopupDefault = true, MacroResetModifiers = true, modifierPause = true, showMiniMap = true }
     end)
-
-    local function loginAs(binds)
-      _G.GSE_C = { KeyBindings = binds or {}, ActionBarBinds = {},
-        Updates = { ["3201"] = true, ["3202"] = true, ["3212"] = true, ["3218"] = true } }
-    end
 
     it("is always on elsewhere", function()
       toc = 120001
       assert.is_true(GSE.KeybindingsEnabled())
     end)
 
-    it("is off on Forever until turned on", function()
+    it("is always off on Forever", function()
       assert.is_false(GSE.KeybindingsEnabled())
+      -- The old switch's saved value no longer turns it on.
       GSEOptions.ForeverKeybindings = true
-      assert.is_true(GSE.KeybindingsEnabled())
+      assert.is_false(GSE.KeybindingsEnabled())
     end)
 
-    it("is turned on for a character that already binds keys", function()
-      loginAs({ ["1"] = { ["CTRL-1"] = "seqA" } })
-      GSE.PerformOneOffEvents()
-      assert.is_true(GSE.KeybindingsEnabled())
-      assert.is_true(GSE_C.Updates.foreverKeybinds)
-    end)
-
-    it("stays off for a character with none, and never turns it off", function()
-      loginAs({})
+    it("stays off for a character that already binds keys", function()
+      _G.GSE_C = { KeyBindings = { ["1"] = { ["CTRL-1"] = "seqA" } }, ActionBarBinds = {},
+        Updates = { ["3201"] = true, ["3202"] = true, ["3212"] = true, ["3218"] = true } }
       GSE.PerformOneOffEvents()
       assert.is_false(GSE.KeybindingsEnabled())
-      GSEOptions.ForeverKeybindings = true
-      loginAs({})
-      GSE.PerformOneOffEvents()
-      assert.is_true(GSE.KeybindingsEnabled(), "another character's binds keep it on")
     end)
   end)
 end)

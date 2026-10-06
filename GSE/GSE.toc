@@ -75,3 +75,4 @@ API\Serialisation.lua
 API\OneOffEvents.lua
 API\WhatsNew.lua
 API\Events.lua
+API\ContextMenu.lua

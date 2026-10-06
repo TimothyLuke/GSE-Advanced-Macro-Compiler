@@ -892,7 +892,9 @@ local function overrideActionButton(savedBind, force)
                     string.sub(Button, 1, 13) == "MultiBar6Button" or
                     string.sub(Button, 1, 13) == "MultiBar7Button" or
                     string.sub(Button, 1, 18) == "MultiBarRightButton" or
-                    string.sub(Button, 1, 17) == "MultiBarLeftButton"
+                    string.sub(Button, 1, 17) == "MultiBarLeftButton" or
+                    -- WoW Forever's Gamepad action bars are Blizzard frames too.
+                    string.sub(Button, 1, 7) == "Gamepad"
 
                 if isBlizzardButton then
                     -- For Blizzard bars: WrapScript on OnClick is still allowed,

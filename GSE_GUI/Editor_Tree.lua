@@ -624,7 +624,7 @@ end
 local function onRightClick_Sequences(editframe, container, group, unique, classid, id)
     -- The tree node carries the id; what the user reads is the label.
     local sequencename = GSE.SequenceName(id, tonumber(classid))
-    MenuUtil.CreateContextMenu(
+    GSE.OpenContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
             -- ponytail: a flagged corrupt/broken seq can't be edited/duplicated/
@@ -707,7 +707,7 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
 end
 
 local function onRightClick_VARIABLES(editframe, container, group, unique, key)
-    MenuUtil.CreateContextMenu(
+    GSE.OpenContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Manage Variables"])
@@ -730,7 +730,7 @@ end
 local function onRightClick_Collection(editframe, key)
     local info = GSE.KnownCollections and GSE.KnownCollections()[key]
     if not info then return end
-    MenuUtil.CreateContextMenu(
+    GSE.OpenContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(info.name or key)

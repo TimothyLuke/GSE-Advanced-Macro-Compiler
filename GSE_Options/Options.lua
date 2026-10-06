@@ -1549,52 +1549,6 @@ local function AddDebuggerWindowSizeOptions(optionsCategory)
     end
 end
 
--- WoW Forever only (#2109): keybinding is off unless turned on here. Forever's
--- gamepad handling is still moving, so a sequence goes on an action-bar button
--- (Button Bindings) and WoW binds the button. See GSE.KeybindingsEnabled.
-local function AddForeverKeybindingsOption(optionsCategory)
-    local _, _, _, tocversion = GetBuildInfo()
-    if GSE.TOCFlavour(tocversion) ~= "forever" then return end
-    local setting
-    local function GetValue()
-        return GSEOptions.ForeverKeybindings == true
-    end
-    local function apply(val)
-        GSEOptions.ForeverKeybindings = val == true
-        -- Turning it off frees every key GSE bound; on binds them again.
-        if not InCombatLockdown() and GSE.ReloadKeyBindings then GSE.ReloadKeyBindings() end
-        RefreshOpenEditorTrees()
-    end
-    local function SetValue(val)
-        if val ~= true or GSEOptions.ForeverKeybindings == true then return apply(val) end
-        -- Turning it on is for those who know WoW's keybinding system: warn
-        -- first, and leave it off unless confirmed.
-        if GSE.CheckGUI then GSE.CheckGUI() end
-        if not (GSE.UI and GSE.UI.ShowConfirmDialog) then
-            -- No GUI to ask with: turn it on, and say the same in chat.
-            GSE.Print(L["Keybinding on WoW Forever is for power users who understand WoW's keybinding system and know how to undo a keybind if things start behaving unexpectedly."]
-                .. " " .. L["Controller (gamepad) keybinds are not supported."])
-            return apply(true)
-        end
-        GSE.UI.ShowConfirmDialog({
-            title       = L["Enable Keybindings"],
-            message     = L["Keybinding on WoW Forever is for power users who understand WoW's keybinding system and know how to undo a keybind if things start behaving unexpectedly."]
-                .. "\n\n|cFFFF3030" .. L["Controller (gamepad) keybinds are not supported."] .. "|r",
-            width       = 380,
-            height      = 220,
-            confirmText = L["Turn On"],
-            cancelText  = L["Cancel"],
-            onConfirm   = function() apply(true) end,
-            onCancel    = function() if setting then setting:SetValue(false) end end,
-        })
-    end
-    setting = Settings.RegisterProxySetting(optionsCategory, "foreverKeybindings", Settings.VarType.Boolean,
-        L["Enable Keybindings"], false, GetValue, SetValue)
-    Settings.CreateCheckbox(optionsCategory, setting,
-        L["Bind sequences to keys. Off on WoW Forever unless turned on: put the sequence on an action bar button (Button Bindings) and let WoW bind the button, which handles gamepads."]
-            .. " " .. L["Controller (gamepad) keybinds are not supported."])
-end
-
 local function AddActionBarWatermarkOption(optionsCategory)
     do
         local function GetValue()
@@ -3059,7 +3013,6 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Button Binding Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
-        AddForeverKeybindingsOption(generalOptions)
         AddActionBarWatermarkOption(generalOptions)
         AddActionBarLabelOption(generalOptions)
         AddCompanionAppOptions(importExportOptions)

@@ -2295,7 +2295,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     end
 
     lbl:SetCallback("OnClick", function(widget, button)
-        MenuUtil.CreateContextMenu(frame, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(frame, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Select Icon"])
             for _, v in pairs(spellinfolist) do
                 rootDescription:CreateButton(

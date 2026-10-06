@@ -357,7 +357,7 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Spell"])
             for _, v in ipairs(getPlayerSpells()) do
                 rootDescription:CreateButton(v, function() apply(v) end)
@@ -426,7 +426,7 @@ GSE.OnEditorUnitTab = function(widget, menuOwner, apply, action)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
         local atype = actionTypeOf(action)
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Unit"])
             for _, group in ipairs(TAB_UNITS) do
                 if not group.types or group.types[atype] then
@@ -568,6 +568,11 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         -- pin the menu under the macro box for the whole build session. Falls back
         -- to the cursor-anchored path if any piece is missing on older flavours.
         local function openMenu()
+            -- Gamepad mode cannot use Blizzard's menu at all; see GSE/API/ContextMenu.lua.
+            if GSE.IsGamepadInterface() then
+                GSE.OpenContextMenu(editBox, buildMenu)
+                return
+            end
             local mgr = Menu and Menu.GetManager and Menu.GetManager()
             if mgr and mgr.OpenMenu and AnchorUtil and AnchorUtil.CreateAnchor
                 and MenuUtil.CreateRootMenuDescription and Menu.PopulateDescription then
@@ -579,7 +584,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 mgr:OpenMenu(editBox, desc, AnchorUtil.CreateAnchor("TOPLEFT", editBox, "BOTTOMLEFT", 0, -2))
                 return
             end
-            MenuUtil.CreateContextMenu(editBox, buildMenu)
+            GSE.OpenContextMenu(editBox, buildMenu)
         end
         -- Start every session on DECODED text: colour codes injected by repaints
         -- between sessions make raw offsets lie (splices landed inside escape
@@ -1310,7 +1315,7 @@ end
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert GSE Variable"])
             for k, _ in pairs(GSE.Store("variable")) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
