@@ -1381,14 +1381,24 @@ local STRATA_RANK = {
 }
 
 -- A frame an override can go on: a named button that holds an action slot.
-local function isOverrideTarget(frame)
+local function isOverrideTargetUnsafe(frame)
     if not frame or not frame.IsObjectType or not frame:IsObjectType("Button") then return false end
+    -- Some UI code reuses method names for other things: Blizzard's damage
+    -- meter rows define GetName() to return their name FontString. Only a
+    -- real string name counts.
     local name = frame.GetName and frame:GetName()
-    if not name or name == "" then return false end
+    if type(name) ~= "string" or name == "" then return false end
     if GSE.SequencesExec and GSE.SequencesExec[name] then return false end -- a GSE sequence button
     if string.sub(name, 1, 4) == "CPB_" then return true end -- ConsolePort: controller-mapped, no slot
     if frame.action ~= nil or frame._state_action ~= nil or frame.UpdateAction then return true end
     return frame.GetAttribute and frame:GetAttribute("action") ~= nil or false
+end
+
+-- Every frame in the UI passes through this when a drag starts, including ones
+-- built in ways nobody planned for; one that errors is simply not a target.
+local function isOverrideTarget(frame)
+    local ok, result = pcall(isOverrideTargetUnsafe, frame)
+    return ok and result == true
 end
 
 local drag -- the drag in progress: { sequenceId, candidates, target }
