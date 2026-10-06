@@ -573,11 +573,55 @@ local function showGSEButtonTooltip(btn)
     GameTooltip:Show()
 end
 
+-- Keep override icons in full colour (#2123, approach from PR #2124). Off by
+-- default: GSEOptions.actionBarKeepIconColour.
+--
+-- Bar skins grey or desaturate an icon whose slot is "not usable", and an
+-- override's slot is empty, so it always reads as unusable to them (e.g.
+-- HUI_ActionBars' "Custom color for Not Usable spells"). They recolour from
+-- their own hooks and timers, so rather than race each one, watch the icon and
+-- put it back whenever anything recolours it while GSE owns the slot. A real
+-- action in the slot keeps its colour (the override yields to it).
+--
+-- Opt-in because it overrides whatever the bar draws, including the usable /
+-- GCD dimming the player may rely on; a skin's option is the first place to
+-- fix this. The hooks go on only when the option is on; turned off, they stay
+-- (hooksecurefunc cannot be undone) but do nothing.
+local colourGuardedButtons = {}
+local function guardOverrideIconColour(Button)
+    if GSEOptions.actionBarKeepIconColour ~= true or colourGuardedButtons[Button] then return end
+    local button = _G[Button]
+    local icon = button and (button.icon or _G[Button .. "Icon"])
+    if not icon or not icon.SetVertexColor then return end
+    colourGuardedButtons[Button] = true
+    local restoring = false
+    local function restore()
+        if restoring or GSEOptions.actionBarKeepIconColour ~= true then return end
+        if not button:GetAttribute("gse-button") then return end
+        if GSE.ActionBarSlotHasForeignAction(button) then return end
+        restoring = true
+        icon:SetVertexColor(1, 1, 1)
+        if icon.SetDesaturated then icon:SetDesaturated(false) end
+        restoring = false
+    end
+    hooksecurefunc(icon, "SetVertexColor", restore)
+    if icon.SetDesaturated then hooksecurefunc(icon, "SetDesaturated", restore) end
+    restore()
+end
+
+function GSE.SetActionBarKeepIconColour(enabled)
+    if not enabled then return end
+    for Button in pairs(GSE.ButtonOverrides or {}) do guardOverrideIconColour(Button) end
+end
+
 -- Non-secure hook that watches attributes written by BAR_SWAP_OAC / BAR_SWAP_ONCLICK.
 -- gse-eff-action > 0  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ bar has swapped (vehicle/skyriding), show the override icon.
 -- gse-eff-action == 0 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ back to normal GSE state, restore the macro icon.
 -- type == "click"     ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ WoW just reset the type (OnEnter / post-combat), restore icon.
 local function hookButtonIconUpdates(Button)
+    -- Before the once-only check: it has its own, and must still go on for a
+    -- button first hooked while the option was off.
+    guardOverrideIconColour(Button)
     if iconHookedButtons[Button] then return end
     iconHookedButtons[Button] = true
 
