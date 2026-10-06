@@ -167,6 +167,31 @@ local ELVUI_TEXT_BUTTON_HOVER_SCALE = 1.12
 local activeTreeDrag
 local activeDropdownList
 
+-- A row dragged out of its tree. The held row keeps the mouse, so whether the
+-- pointer has left the tree is checked every frame while the button is down;
+-- the first time it has, the tree fires OnButtonDragOut(value), and the
+-- release then fires OnButtonDragOutEnd(value) instead of an in-tree drop.
+-- The editor uses this to carry a sequence on to an action button.
+local treeDragWatcher = CreateFrame("Frame")
+treeDragWatcher:Hide()
+treeDragWatcher:SetScript("OnUpdate", function(self)
+    local drag = activeTreeDrag
+    if not drag or not IsMouseButtonDown("LeftButton") then
+        -- Released somewhere the row never heard about (it was hidden or
+        -- recycled mid-drag): forget the drag.
+        if drag and drag.draggedOut then drag.widget:Fire("OnButtonDragOutEnd", drag.value) end
+        activeTreeDrag = nil
+        self:Hide()
+        return
+    end
+    if drag.draggedOut then return end
+    local tree = drag.widget.treeframe
+    if tree and not tree:IsMouseOver() then
+        drag.draggedOut = true
+        drag.widget:Fire("OnButtonDragOut", drag.value)
+    end
+end)
+
 local function nextName(prefix)
     widgetId = widgetId + 1
     return ("GSEUI%s%d"):format(prefix, widgetId)
@@ -4738,6 +4763,7 @@ local function createTreeButton(widget)
             if mouseButton ~= "LeftButton" then return end
             local x, y = GetCursorPosition()
             activeTreeDrag = {value = self.uniquevalue, widget = widget, x = x, y = y}
+            treeDragWatcher:Show()
         end
     )
     button:SetScript(
@@ -4749,7 +4775,13 @@ local function createTreeButton(widget)
             local dy = y - activeTreeDrag.y
             local source = activeTreeDrag.value
             local dragWidget = activeTreeDrag.widget
+            local draggedOut = activeTreeDrag.draggedOut
             activeTreeDrag = nil
+            treeDragWatcher:Hide()
+            if draggedOut then
+                dragWidget:Fire("OnButtonDragOutEnd", source)
+                return
+            end
             if (dx * dx + dy * dy) < 100 then return end
             for _, candidate in ipairs(dragWidget.buttons or {}) do
                 if candidate:IsShown() and candidate:IsMouseOver() and candidate.uniquevalue ~= source then

@@ -2103,6 +2103,20 @@ local function ManageTree(editframe)
             if editframe.ManageTree then editframe.ManageTree() end
         end
     )
+    -- A sequence row dragged out of the tree goes on to an action button, the
+    -- same as dragging the icon on its Config tab (GSE.BeginSequenceDrag).
+    -- Only sequence rows (Sequences > class > "classid,specid,id"); versions,
+    -- variables, macros and headings do nothing.
+    treeContainer:SetCallback(
+        "OnButtonDragOut",
+        function(_, _, value)
+            local parts = splitElementPath(value)
+            if parts[1] ~= "Sequences" or #parts ~= 3 then return end
+            local seqid = GSE.split(parts[3], ",")[3]
+            if seqid then GSE.BeginSequenceDrag(seqid) end
+        end
+    )
+    treeContainer:SetCallback("OnButtonDragOutEnd", function() GSE.FinishSequenceDrag() end)
     treeContainer:SetCallback(
         "OnButtonDrop",
         function(container, event, srcValue, dstValue)
