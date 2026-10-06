@@ -1345,6 +1345,180 @@ function GSE.RemoveActionBarOverride(buttonName)
     GSE.ReloadOverrides()
 end
 
+-- ---------------------------------------------------------------------------
+-- Drag a sequence onto an action button.
+--
+-- Long ago a sequence came with a macro holding /click <button>, and dragging
+-- that macro to a bar was how a sequence got onto a button. WoW no longer lets
+-- that macro work. This gives the same gesture back without one: the editor
+-- shows the sequence's icon, and dragging it draws GSE's own copy of the icon
+-- under the mouse. Nothing is put on WoW's cursor and nothing goes into a
+-- slot. On release, the action button under the mouse gets an action-bar
+-- override, exactly as the right-click picker would set.
+--
+-- The button is found by testing which one the mouse is over, not by name and
+-- not by mouse focus (the drag keeps the mouse captured by the editor icon), so
+-- any bar works -- Blizzard, Bartender, ElvUI, Dominos, ConsolePort, Forever's
+-- gamepad bars -- as long as its buttons are named, which overrides need.
+
+-- The icon of the sequence's first compiled step, as the override button would
+-- show it, or nil.
+function GSE.GetSequenceStartIcon(sequenceId)
+    if not sequenceId or not (GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then return nil end
+    local firstStep = {
+        GetAttribute = function() return 1 end,
+        GetName = function() return sequenceId end,
+    }
+    local info = GSE.GetCurrentButtonIconInfo and GSE.GetCurrentButtonIconInfo(firstStep, false)
+    local icon = info and info.iconID
+    if icon and not isGSEFallbackTexture(icon) then return icon end
+    return getGSESequenceIcon(sequenceId)
+end
+
+local STRATA_RANK = {
+    BACKGROUND = 1, LOW = 2, MEDIUM = 3, HIGH = 4, DIALOG = 5,
+    FULLSCREEN = 6, FULLSCREEN_DIALOG = 7, TOOLTIP = 8,
+}
+
+-- A frame an override can go on: a named button that holds an action slot.
+local function isOverrideTarget(frame)
+    if not frame or not frame.IsObjectType or not frame:IsObjectType("Button") then return false end
+    local name = frame.GetName and frame:GetName()
+    if not name or name == "" then return false end
+    if GSE.SequencesExec and GSE.SequencesExec[name] then return false end -- a GSE sequence button
+    if string.sub(name, 1, 4) == "CPB_" then return true end -- ConsolePort: controller-mapped, no slot
+    if frame.action ~= nil or frame._state_action ~= nil or frame.UpdateAction then return true end
+    return frame.GetAttribute and frame:GetAttribute("action") ~= nil or false
+end
+
+local drag -- the drag in progress: { sequenceId, candidates, target }
+
+local function overrideTargetUnderMouse()
+    local best, bestRank, bestLevel
+    for _, frame in ipairs(drag.candidates) do
+        if frame:IsVisible() and frame:IsMouseOver() then
+            local rank = STRATA_RANK[frame:GetFrameStrata()] or 0
+            local level = frame:GetFrameLevel() or 0
+            if not best or rank > bestRank or (rank == bestRank and level > bestLevel) then
+                best, bestRank, bestLevel = frame, rank, level
+            end
+        end
+    end
+    return best
+end
+
+local dragIcon, dragHighlight
+local function ensureDragFrames()
+    if dragIcon then return end
+    dragIcon = CreateFrame("Frame", nil, UIParent)
+    dragIcon:SetSize(36, 36)
+    dragIcon:SetFrameStrata("TOOLTIP")
+    dragIcon:EnableMouse(false)
+    dragIcon.texture = dragIcon:CreateTexture(nil, "ARTWORK")
+    dragIcon.texture:SetAllPoints()
+    dragIcon:Hide()
+
+    dragHighlight = CreateFrame("Frame", nil, UIParent)
+    dragHighlight:SetFrameStrata("TOOLTIP")
+    dragHighlight:EnableMouse(false)
+    dragHighlight.texture = dragHighlight:CreateTexture(nil, "OVERLAY")
+    dragHighlight.texture:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+    dragHighlight.texture:SetBlendMode("ADD")
+    dragHighlight.texture:SetAllPoints()
+    dragHighlight:Hide()
+
+    dragIcon:SetScript("OnUpdate", function(self)
+        if not drag then return end
+        local scale = UIParent:GetEffectiveScale()
+        local x, y = GetCursorPosition()
+        self:ClearAllPoints()
+        self:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+        local target = overrideTargetUnderMouse()
+        drag.target = target
+        if target then
+            dragHighlight:ClearAllPoints()
+            dragHighlight:SetAllPoints(target)
+            dragHighlight:Show()
+        else
+            dragHighlight:Hide()
+        end
+    end)
+    -- The editor icon normally ends the drag (OnDragStop). If the editor closes
+    -- mid-drag that never comes, so any mouse release, or entering combat, ends
+    -- it too.
+    dragIcon:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            GSE.CancelSequenceDrag()
+        else
+            GSE.FinishSequenceDrag()
+        end
+    end)
+end
+
+local function endDrag()
+    drag = nil
+    if dragIcon then
+        dragIcon:UnregisterAllEvents()
+        dragIcon:Hide()
+        dragHighlight:Hide()
+    end
+end
+
+function GSE.CancelSequenceDrag()
+    endDrag()
+end
+
+-- Start dragging a sequence. Returns false (and says why) when it cannot.
+function GSE.BeginSequenceDrag(sequenceId)
+    if drag then endDrag() end
+    if InCombatLockdown() then
+        GSE.Print(L["Sequences cannot be put on action buttons in combat."])
+        return false
+    end
+    if not (sequenceId and _G[sequenceId] and GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then
+        GSE.Print(L["Only a saved sequence for this character's class can be put on an action button."])
+        return false
+    end
+    ensureDragFrames()
+    -- Every action button that exists now; the drag tests these for the mouse.
+    local candidates = {}
+    local frame = EnumerateFrames()
+    while frame do
+        if isOverrideTarget(frame) then candidates[#candidates + 1] = frame end
+        frame = EnumerateFrames(frame)
+    end
+    drag = { sequenceId = sequenceId, candidates = candidates }
+    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
+    dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
+    dragIcon:Show()
+    return true
+end
+
+-- Release: bind the sequence to the button under the mouse, if there is one
+-- it can go on.
+function GSE.FinishSequenceDrag()
+    if not drag then return end
+    local sequenceId = drag.sequenceId
+    local target = overrideTargetUnderMouse() or drag.target
+    endDrag()
+    if not target then return end -- dropped anywhere else: nothing to do
+    if InCombatLockdown() then
+        GSE.Print(L["Sequences cannot be put on action buttons in combat."])
+        return
+    end
+    -- A real spell or item in the slot would win over the override and hide it,
+    -- so only an empty slot, or one GSE already overrides, takes a sequence.
+    if not target:GetAttribute("gse-button") then
+        local slot = getButtonEffectiveSlot(target)
+        if slot and HasAction(slot) then
+            GSE.Print(L["That action button already holds something. Clear it first, then drop the sequence on it."])
+            return
+        end
+    end
+    GSE.CreateActionBarOverride(target:GetName(), sequenceId)
+end
+
 --- Watch the spec + loadout the game reports until it catches up with what the
 --- player actually swapped to, and rebuild when it does. Blizzard updates both
 --- only after the events GSE rebuilds on, so those rebuilds bind the previous
