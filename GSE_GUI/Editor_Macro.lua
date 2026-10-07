@@ -353,7 +353,7 @@ local function showMacro(editframe, node, container, selected)
                 container,
                 L["Help Information"],
                 element.MetaData.Help,
-                {height = INLINE_NOTES_PANEL_HEIGHT}
+                {height = INLINE_NOTES_PANEL_HEIGHT, editframe = editframe}
             )
         else
             local commentsEditBox = UI:Create("MultiLineEditBox")
