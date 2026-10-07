@@ -1581,6 +1581,24 @@ local function AddActionBarLabelOption(optionsCategory)
     end
 end
 
+-- Off by default (#2123): keep override icons in full colour when a bar skin
+-- greys "unusable" slots. See guardOverrideIconColour in GSE/API/Events.lua.
+local function AddActionBarIconColourOption(optionsCategory)
+    do
+        local function GetValue()
+            return GSEOptions.actionBarKeepIconColour == true
+        end
+        local function SetValue(val)
+            GSEOptions.actionBarKeepIconColour = val == true
+            if GSE.SetActionBarKeepIconColour then
+                GSE.SetActionBarKeepIconColour(GSEOptions.actionBarKeepIconColour)
+            end
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarKeepIconColour", Settings.VarType.Boolean, L["Keep Button Binding Icons in Full Colour"], false, GetValue, SetValue)
+        Settings.CreateCheckbox(optionsCategory, setting, L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."])
+    end
+end
+
 local function AddActionBarClickBehaviorOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -3015,6 +3033,7 @@ function GSE:CreateConfigPanels()
         end
         AddActionBarWatermarkOption(generalOptions)
         AddActionBarLabelOption(generalOptions)
+        AddActionBarIconColourOption(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)

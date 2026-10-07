@@ -27,8 +27,6 @@ describe(
         GSE.UpdateDeltaFork = nil
         GSE.Library = GSE.Library or {}
         GSE.Library[1] = GSE.Library[1] or {}
-        _G.GSESequences = _G.GSESequences or {}
-        _G.GSESequences[1] = _G.GSESequences[1] or {}
         if not GSE.SendMessage then
           GSE.SendMessage = function() end
         end

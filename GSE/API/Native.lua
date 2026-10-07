@@ -113,7 +113,7 @@ end
 --- as multi-return from the global GetSpellInfo. Retail's C_Spell.GetSpellInfo
 --- returns a table. This always returns the table shape so call sites stay
 --- uniform across game versions.
-function GSE.GetSpellInfo(spell)
+local function lookupSpellInfo(spell)
     if C_Spell and C_Spell.GetSpellInfo then
         local ok, spellInfo = pcall(C_Spell.GetSpellInfo, spell)
         if ok and spellInfo then
@@ -134,6 +134,21 @@ function GSE.GetSpellInfo(spell)
                 originalIconID = originalIconID or iconID
             }
         end
+    end
+    return nil
+end
+
+function GSE.GetSpellInfo(spell)
+    local info = lookupSpellInfo(spell)
+    if info or type(spell) ~= "string" then
+        return info
+    end
+    -- A ranked spell as compiled, "Frostbolt(Rank 1)" (see "Spell ranks" in
+    -- translator.lua). Icon and tooltip lookups read compiled macro text, so
+    -- they pass these straight in; answer for the spell itself.
+    local name = GSE.SplitSpellRank and GSE.SplitSpellRank(spell)
+    if name then
+        return lookupSpellInfo(tonumber(name) or name)
     end
     return nil
 end

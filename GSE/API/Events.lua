@@ -54,17 +54,9 @@ function GSE:ZONE_CHANGED_NEW_AREA()
     GSE.ReloadSequences()
 end
 
+-- The current spec's key in the binds (Profiles.lua).
 local function GetSpec()
-    if GSE.GameMode < 7 then
-        return "1"
-    else
-        if GSE.GameMode < 12 then
-            return tostring(GetSpecialization())
-        else
-            local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-            return tostring(getSpec and getSpec() or 1)
-        end
-    end
+    return GSE.CurrentSpecKey()
 end
 
 local function playerSpec()
@@ -199,7 +191,7 @@ local VEHICLE_OAC_LAB = [[
 -- values secure, so GSE seeds no taint.
 --
 -- gse-secure (boolean) is the snippet gate and is ONLY ever written here.
--- The "gse-button" string (sequence name) is still set insecurely elsewhere for
+-- The "gse-button" string (sequence id) is still set insecurely elsewhere for
 -- the non-secure icon / yield hooks; no secure code reads it, so its taint is
 -- inert. Callers must be out of combat (SetFrameRef writes a protected attr).
 -- ---------------------------------------------------------------------------
@@ -258,6 +250,14 @@ end
 -- WoW's RegisterAttributeDriver writes the final computed slot into the "action"
 -- attribute on every button (Blizzard, Dominos, etc.), so prefer that first.
 -- Fall back to GetID()+actionpage for bars that don't use the driver.
+-- The secure button behind a GSE sequence macro sitting on an action slot, or
+-- nil when the macro is the player's own. A sequence's WoW macro carries the
+-- sequence's label; its button is named by the sequence's id.
+local function gseMacroButton(macroName)
+    if not macroName then return nil end
+    return (GSE.FindSequenceId(macroName))
+end
+
 local function getButtonEffectiveSlot(btn)
     local action = tonumber(btn:GetAttribute("action"))
     if action and action > 0 then return action end
@@ -298,7 +298,7 @@ function GSE.ActionBarSlotHasForeignAction(button)
     if actionType == "macro" then
         if macroIndex and GetMacroInfo then
             local macroName = GetMacroInfo(macroIndex)
-            if macroName and ((GSE.SequencesExec and GSE.SequencesExec[macroName]) or _G[macroName]) then
+            if gseMacroButton(macroName) then
                 return false
             end
         end
@@ -556,6 +556,16 @@ local function showGSEButtonTooltip(btn)
         else
             GameTooltip:SetHyperlink("spell:" .. spellID)
         end
+        -- The rank, top right, as Blizzard's own action buttons show it. They
+        -- read it from the action slot; SetSpellByID has only the ID and
+        -- leaves the line empty on WoW Forever.
+        local rankText = GSE.GetSpellRankText and GSE.GetSpellRankText(spellID)
+        local rightLine = _G.GameTooltipTextRight1
+        if rankText and rightLine and GSE.isEmpty(rightLine:GetText()) then
+            rightLine:SetText(rankText)
+            rightLine:SetTextColor(0.5, 0.5, 0.5)
+            rightLine:Show()
+        end
     else
         GameTooltip:SetText(seqName, 1, 1, 1)
         GameTooltip:AddLine(L["GSE Sequence"], 0.6, 0.6, 0.6)
@@ -563,11 +573,55 @@ local function showGSEButtonTooltip(btn)
     GameTooltip:Show()
 end
 
+-- Keep override icons in full colour (#2123, approach from PR #2124). Off by
+-- default: GSEOptions.actionBarKeepIconColour.
+--
+-- Bar skins grey or desaturate an icon whose slot is "not usable", and an
+-- override's slot is empty, so it always reads as unusable to them (e.g.
+-- HUI_ActionBars' "Custom color for Not Usable spells"). They recolour from
+-- their own hooks and timers, so rather than race each one, watch the icon and
+-- put it back whenever anything recolours it while GSE owns the slot. A real
+-- action in the slot keeps its colour (the override yields to it).
+--
+-- Opt-in because it overrides whatever the bar draws, including the usable /
+-- GCD dimming the player may rely on; a skin's option is the first place to
+-- fix this. The hooks go on only when the option is on; turned off, they stay
+-- (hooksecurefunc cannot be undone) but do nothing.
+local colourGuardedButtons = {}
+local function guardOverrideIconColour(Button)
+    if GSEOptions.actionBarKeepIconColour ~= true or colourGuardedButtons[Button] then return end
+    local button = _G[Button]
+    local icon = button and (button.icon or _G[Button .. "Icon"])
+    if not icon or not icon.SetVertexColor then return end
+    colourGuardedButtons[Button] = true
+    local restoring = false
+    local function restore()
+        if restoring or GSEOptions.actionBarKeepIconColour ~= true then return end
+        if not button:GetAttribute("gse-button") then return end
+        if GSE.ActionBarSlotHasForeignAction(button) then return end
+        restoring = true
+        icon:SetVertexColor(1, 1, 1)
+        if icon.SetDesaturated then icon:SetDesaturated(false) end
+        restoring = false
+    end
+    hooksecurefunc(icon, "SetVertexColor", restore)
+    if icon.SetDesaturated then hooksecurefunc(icon, "SetDesaturated", restore) end
+    restore()
+end
+
+function GSE.SetActionBarKeepIconColour(enabled)
+    if not enabled then return end
+    for Button in pairs(GSE.ButtonOverrides or {}) do guardOverrideIconColour(Button) end
+end
+
 -- Non-secure hook that watches attributes written by BAR_SWAP_OAC / BAR_SWAP_ONCLICK.
 -- gse-eff-action > 0  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ bar has swapped (vehicle/skyriding), show the override icon.
 -- gse-eff-action == 0 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ back to normal GSE state, restore the macro icon.
 -- type == "click"     ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ WoW just reset the type (OnEnter / post-combat), restore icon.
 local function hookButtonIconUpdates(Button)
+    -- Before the once-only check: it has its own, and must still go on for a
+    -- button first hooked while the option was off.
+    guardOverrideIconColour(Button)
     if iconHookedButtons[Button] then return end
     iconHookedButtons[Button] = true
 
@@ -651,9 +705,9 @@ local function hookActionButtonUpdate()
             if effectiveSlot and GetActionInfo and GetMacroInfo then
                 local actionType, macroIndex = GetActionInfo(effectiveSlot)
                 if actionType == "macro" and macroIndex then
-                    local macroName = GetMacroInfo(macroIndex)
-                    if macroName and ((GSE.SequencesExec and GSE.SequencesExec[macroName]) or _G[macroName]) then
-                        texture = getGSESequenceIcon(macroName)
+                    local stubButton = gseMacroButton(GetMacroInfo(macroIndex))
+                    if stubButton then
+                        texture = getGSESequenceIcon(stubButton)
                     end
                 end
             end
@@ -679,7 +733,11 @@ local function overrideActionButton(savedBind, force)
     if not _G[Button] then
         return
     end
-    local Sequence = savedBind.Sequence
+    -- The bind holds the sequence's id, which names its secure button. Nothing
+    -- to run means nothing to override.
+    local Sequence = GSE.StoredSequenceId(savedBind.Sequence)
+    if not Sequence then return end
+    local SequenceLabel = GSE.SequenceName(savedBind.Sequence) or Sequence
     local state =
         savedBind.State and savedBind.State or string.sub(Button, 1, 3) == "BT4" and "0" or
         string.sub(Button, 1, 4) == "CPB_" and "" or
@@ -766,7 +824,7 @@ local function overrideActionButton(savedBind, force)
                             self:SetAttribute("clickbutton", _G[self:GetAttribute("gse-button")])
                         end
                     end,
-                    tooltip = "GSE: " .. Sequence,
+                    tooltip = "GSE: " .. SequenceLabel,
                     texture = getGSESequenceIcon(Sequence) or Statics.Icons.GSE_Logo_Dark,
                     type = "click",
                     clickbutton = _G[Sequence]
@@ -878,7 +936,9 @@ local function overrideActionButton(savedBind, force)
                     string.sub(Button, 1, 13) == "MultiBar6Button" or
                     string.sub(Button, 1, 13) == "MultiBar7Button" or
                     string.sub(Button, 1, 18) == "MultiBarRightButton" or
-                    string.sub(Button, 1, 17) == "MultiBarLeftButton"
+                    string.sub(Button, 1, 17) == "MultiBarLeftButton" or
+                    -- WoW Forever's Gamepad action bars are Blizzard frames too.
+                    string.sub(Button, 1, 7) == "Gamepad"
 
                 if isBlizzardButton then
                     -- For Blizzard bars: WrapScript on OnClick is still allowed,
@@ -1030,14 +1090,10 @@ local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
     end
+    -- This character's spec-level overrides into the shared profiles, once.
+    GSE.MigrateToProfiles()
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
-        GSE_C["ActionBarBinds"]["Specialisations"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
-        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
     end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]["LoadOuts"]) then
         GSE_C["ActionBarBinds"]["LoadOuts"] = {}
@@ -1082,7 +1138,8 @@ local function LoadOverrides(force)
         end
         GSE.ButtonOverrides = {}
 
-        for _, v in pairs(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) do
+        -- The spec's overrides: the shared profile's, or this character's own.
+        for _, v in pairs(GSE.SpecOverrides(GetSpec(), false) or {}) do
             overrideActionButton(v, force)
         end
         do
@@ -1167,10 +1224,8 @@ function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
-
-    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
-        GSE_C["KeyBindings"][GetSpec()] = {}
-    end
+    -- This character's spec-level binds into the shared profiles, once.
+    GSE.MigrateToProfiles()
 
     -- What this rebuild is about to bind for. See scheduleBindingRecheck.
     lastBindingContext = currentBindingContext()
@@ -1191,10 +1246,15 @@ function LoadKeyBindings(payload)
             ClearOverrideBindings(keybindingframe)
         end
     end
+    -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
+    if not GSE.KeybindingsEnabled() then return end
 
-    for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]) do
-        if k ~= "LoadOuts" and not InCombatLockdown() then
-            local target = GSE.GetKeybindClickTarget(v)
+    -- A keybind holds the sequence's id; it clicks that sequence's button. The
+    -- spec's binds are the shared profile's, or this character's own.
+    for k, v in pairs(GSE.SpecKeyBinds(GetSpec(), false) or {}) do
+        local button = k ~= "LoadOuts" and GSE.StoredSequenceId(v)
+        if button and not InCombatLockdown() then
+            local target = GSE.GetKeybindClickTarget(button)
             k = normalizeBindKey(k)
             SetBindingClick(k, target, "LeftButton")
             boundKeys[k] = true
@@ -1208,20 +1268,18 @@ function LoadKeyBindings(payload)
     if payload and not InCombatLockdown() then
         do
             local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
-            if
-                selected and GSE_C["KeyBindings"][GetSpec()]["LoadOuts"] and
-                    GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]
-             then
+            local loadouts = GSE.SpecLoadoutKeyBinds(GetSpec(), false)
+            if selected and loadouts and loadouts[selected] then
                 --@debug@
                 GSE.PrintDebugMessage(
                     "changing from " .. tostring(payload) .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
                     "EVENTS"
                 )
                 --@end-debug@
-                for k, v in pairs(GSE_C["KeyBindings"][GetSpec()]["LoadOuts"][selected]) do
+                for k, v in pairs(loadouts[selected]) do
                     k = normalizeBindKey(k)
                     SetBinding(k)
-                    local target = GSE.GetKeybindClickTarget(v)
+                    local target = GSE.GetKeybindClickTarget(GSE.StoredSequenceId(v) or v)
                     SetBindingClick(k, target, "LeftButton")
                     boundKeys[k] = true
                     if GSE.GameMode == 5 then
@@ -1255,33 +1313,26 @@ function GSE.ReloadOverrides(force)
     LoadOverrides(force)
 end
 
-function GSE.CreateActionBarOverride(buttonName, sequenceName)
+--- Put sequence id on action-bar button buttonName.
+function GSE.CreateActionBarOverride(buttonName, sequenceId)
     if InCombatLockdown() then return end
     if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
         GSE_C["ActionBarBinds"] = {}
     end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"]) then
-        GSE_C["ActionBarBinds"]["Specialisations"] = {}
-    end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()]) then
-        GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()] = {}
-    end
     local bind = {
         Bind = buttonName,
-        Sequence = sequenceName
+        Sequence = sequenceId
     }
-    GSE_C["ActionBarBinds"]["Specialisations"][GetSpec()][buttonName] = bind
+    GSE.SpecOverrides(GetSpec(), true)[buttonName] = bind
     GSE.ReloadOverrides()
 end
 
 function GSE.RemoveActionBarOverride(buttonName)
     if InCombatLockdown() then return end
     local spec = GetSpec()
+    local overrides = GSE.SpecOverrides(spec, false)
+    if overrides then overrides[buttonName] = nil end
     if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
-        local specs = GSE_C["ActionBarBinds"]["Specialisations"]
-        if specs and specs[spec] then
-            specs[spec][buttonName] = nil
-        end
         local loadouts = GSE_C["ActionBarBinds"]["LoadOuts"]
         if loadouts and loadouts[spec] then
             for _, loadout in pairs(loadouts[spec]) do
@@ -1292,6 +1343,190 @@ function GSE.RemoveActionBarOverride(buttonName)
         end
     end
     GSE.ReloadOverrides()
+end
+
+-- ---------------------------------------------------------------------------
+-- Drag a sequence onto an action button.
+--
+-- Long ago a sequence came with a macro holding /click <button>, and dragging
+-- that macro to a bar was how a sequence got onto a button. WoW no longer lets
+-- that macro work. This gives the same gesture back without one: the editor
+-- shows the sequence's icon, and dragging it draws GSE's own copy of the icon
+-- under the mouse. Nothing is put on WoW's cursor and nothing goes into a
+-- slot. On release, the action button under the mouse gets an action-bar
+-- override, exactly as the right-click picker would set.
+--
+-- The button is found by testing which one the mouse is over, not by name and
+-- not by mouse focus (the drag keeps the mouse captured by the editor icon), so
+-- any bar works -- Blizzard, Bartender, ElvUI, Dominos, ConsolePort, Forever's
+-- gamepad bars -- as long as its buttons are named, which overrides need.
+
+-- The icon of the sequence's first compiled step, as the override button would
+-- show it, or nil.
+function GSE.GetSequenceStartIcon(sequenceId)
+    if not sequenceId or not (GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then return nil end
+    local firstStep = {
+        GetAttribute = function() return 1 end,
+        GetName = function() return sequenceId end,
+    }
+    local info = GSE.GetCurrentButtonIconInfo and GSE.GetCurrentButtonIconInfo(firstStep, false)
+    local icon = info and info.iconID
+    if icon and not isGSEFallbackTexture(icon) then return icon end
+    return getGSESequenceIcon(sequenceId)
+end
+
+local STRATA_RANK = {
+    BACKGROUND = 1, LOW = 2, MEDIUM = 3, HIGH = 4, DIALOG = 5,
+    FULLSCREEN = 6, FULLSCREEN_DIALOG = 7, TOOLTIP = 8,
+}
+
+-- A frame an override can go on: a named button that holds an action slot.
+local function isOverrideTargetUnsafe(frame)
+    if not frame or not frame.IsObjectType or not frame:IsObjectType("Button") then return false end
+    -- Some UI code reuses method names for other things: Blizzard's damage
+    -- meter rows define GetName() to return their name FontString. Only a
+    -- real string name counts.
+    local name = frame.GetName and frame:GetName()
+    if type(name) ~= "string" or name == "" then return false end
+    if GSE.SequencesExec and GSE.SequencesExec[name] then return false end -- a GSE sequence button
+    if string.sub(name, 1, 4) == "CPB_" then return true end -- ConsolePort: controller-mapped, no slot
+    if frame.action ~= nil or frame._state_action ~= nil or frame.UpdateAction then return true end
+    return frame.GetAttribute and frame:GetAttribute("action") ~= nil or false
+end
+
+-- Every frame in the UI passes through this when a drag starts, including ones
+-- built in ways nobody planned for; one that errors is simply not a target.
+local function isOverrideTarget(frame)
+    local ok, result = pcall(isOverrideTargetUnsafe, frame)
+    return ok and result == true
+end
+
+local drag -- the drag in progress: { sequenceId, candidates, target }
+
+local function overrideTargetUnderMouse()
+    local best, bestRank, bestLevel
+    for _, frame in ipairs(drag.candidates) do
+        if frame:IsVisible() and frame:IsMouseOver() then
+            local rank = STRATA_RANK[frame:GetFrameStrata()] or 0
+            local level = frame:GetFrameLevel() or 0
+            if not best or rank > bestRank or (rank == bestRank and level > bestLevel) then
+                best, bestRank, bestLevel = frame, rank, level
+            end
+        end
+    end
+    return best
+end
+
+local dragIcon, dragHighlight
+local function ensureDragFrames()
+    if dragIcon then return end
+    dragIcon = CreateFrame("Frame", nil, UIParent)
+    dragIcon:SetSize(36, 36)
+    dragIcon:SetFrameStrata("TOOLTIP")
+    dragIcon:EnableMouse(false)
+    dragIcon.texture = dragIcon:CreateTexture(nil, "ARTWORK")
+    dragIcon.texture:SetAllPoints()
+    dragIcon:Hide()
+
+    dragHighlight = CreateFrame("Frame", nil, UIParent)
+    dragHighlight:SetFrameStrata("TOOLTIP")
+    dragHighlight:EnableMouse(false)
+    dragHighlight.texture = dragHighlight:CreateTexture(nil, "OVERLAY")
+    dragHighlight.texture:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+    dragHighlight.texture:SetBlendMode("ADD")
+    dragHighlight.texture:SetAllPoints()
+    dragHighlight:Hide()
+
+    dragIcon:SetScript("OnUpdate", function(self)
+        if not drag then return end
+        local scale = UIParent:GetEffectiveScale()
+        local x, y = GetCursorPosition()
+        self:ClearAllPoints()
+        self:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+        local target = overrideTargetUnderMouse()
+        drag.target = target
+        if target then
+            dragHighlight:ClearAllPoints()
+            dragHighlight:SetAllPoints(target)
+            dragHighlight:Show()
+        else
+            dragHighlight:Hide()
+        end
+    end)
+    -- The editor icon normally ends the drag (OnDragStop). If the editor closes
+    -- mid-drag that never comes, so any mouse release, or entering combat, ends
+    -- it too.
+    dragIcon:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            GSE.CancelSequenceDrag()
+        else
+            GSE.FinishSequenceDrag()
+        end
+    end)
+end
+
+local function endDrag()
+    drag = nil
+    if dragIcon then
+        dragIcon:UnregisterAllEvents()
+        dragIcon:Hide()
+        dragHighlight:Hide()
+    end
+end
+
+function GSE.CancelSequenceDrag()
+    endDrag()
+end
+
+-- Start dragging a sequence. Returns false (and says why) when it cannot.
+function GSE.BeginSequenceDrag(sequenceId)
+    if drag then endDrag() end
+    if InCombatLockdown() then
+        GSE.Print(L["Sequences cannot be put on action buttons in combat."])
+        return false
+    end
+    if not (sequenceId and _G[sequenceId] and GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then
+        GSE.Print(L["Only a saved sequence for this character's class can be put on an action button."])
+        return false
+    end
+    ensureDragFrames()
+    -- Every action button that exists now; the drag tests these for the mouse.
+    local candidates = {}
+    local frame = EnumerateFrames()
+    while frame do
+        if isOverrideTarget(frame) then candidates[#candidates + 1] = frame end
+        frame = EnumerateFrames(frame)
+    end
+    drag = { sequenceId = sequenceId, candidates = candidates }
+    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
+    dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
+    dragIcon:Show()
+    return true
+end
+
+-- Release: bind the sequence to the button under the mouse, if there is one
+-- it can go on.
+function GSE.FinishSequenceDrag()
+    if not drag then return end
+    local sequenceId = drag.sequenceId
+    local target = overrideTargetUnderMouse() or drag.target
+    endDrag()
+    if not target then return end -- dropped anywhere else: nothing to do
+    if InCombatLockdown() then
+        GSE.Print(L["Sequences cannot be put on action buttons in combat."])
+        return
+    end
+    -- A real spell or item in the slot would win over the override and hide it,
+    -- so only an empty slot, or one GSE already overrides, takes a sequence.
+    if not target:GetAttribute("gse-button") then
+        local slot = getButtonEffectiveSlot(target)
+        if slot and HasAction(slot) then
+            GSE.Print(L["That action button already holds something. Clear it first, then drop the sequence on it."])
+            return
+        end
+    end
+    GSE.CreateActionBarOverride(target:GetName(), sequenceId)
 end
 
 --- Watch the spec + loadout the game reports until it catches up with what the
@@ -1397,8 +1632,9 @@ function GSE:PLAYER_ENTERING_WORLD()
 end
 
 local function startup()
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
+    local charKey = GSE.CharacterMacroBucketKey()
+    -- Before anything reads a setting a profile carries (Profiles.lua).
+    GSE.InstallProfileSettings()
     GSE.PerformOneOffEvents()
 
     if GSE.isEmpty(GSESpellCache) then
@@ -1415,26 +1651,20 @@ local function startup()
     end
 
     GSE.LoadStorage(GSE.Library)
+    -- Before anything is bound: this character's keybinds and overrides hold
+    -- sequence ids, not names.
+    GSE.UpdateCharacterSequenceRefs()
 
     if GSE.LoadDeltaForks then GSE.LoadDeltaForks() end
 
-    if GSE.isEmpty(GSESequences[GSE.GetCurrentClassID()]) then
-        GSESequences[GSE.GetCurrentClassID()] = {}
-    end
     if GSE.isEmpty(GSE.Library[GSE.GetCurrentClassID()]) then
         GSE.Library[GSE.GetCurrentClassID()] = {}
     end
     if GSE.isEmpty(GSE.Library[0]) then
         GSE.Library[0] = {}
     end
-    if GSE.isEmpty(GSEVariables) then
-        GSEVariables = {}
-    end
-    if GSE.isEmpty(GSEMacros) then
-        GSEMacros = {}
-    end
-    if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-        GSEMacros[char .. "-" .. realm] = {}
+    if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
     end
     --@debug@
     GSE.PrintDebugMessage("I am loaded")
@@ -1451,7 +1681,7 @@ local function startup()
                         v.MetaData.Disabled = true
                         local vals = {}
                         vals.action = "Replace"
-                        vals.sequencename = k
+                        vals.id = k
                         vals.sequence = v
                         vals.classid = iter
                         GSE.EnqueueOOC(vals)
@@ -1640,12 +1870,14 @@ function GSE:PLAYER_LOGOUT()
             GSEOptions.frameLocations.keybindingframe.left = GSE.GUIkeybindingframe.frame:GetLeft()
         end
     end
+    -- Last, so nothing above can still be writing content: fold this session's
+    -- working views back into GSEStore before WoW writes SavedVariables. This
+    -- event fires on /reload as well as on exit, and nothing else in GSE writes
+    -- content during logout.
+    if GSE.ReconcileStore then GSE.ReconcileStore() end
 end
 
 function GSE:PLAYER_SPECIALIZATION_CHANGED()
-    if GSE.isEmpty(GSE_C["KeyBindings"][GetSpec()]) then
-        GSE_C["KeyBindings"][GetSpec()] = {}
-    end
     if not InCombatLockdown() then
         LoadKeyBindings(GSE.PlayerEntered)
         GSE.ReloadSequences()
@@ -1663,6 +1895,20 @@ end
 
 function GSE:SPELLS_CHANGED()
     GSE.ReloadSequences()
+end
+
+-- A newly trained spell rank. A ranked cast steps up to it (see "Spell ranks"
+-- in translator.lua), and SPELLS_CHANGED is only registered on Classic, so WoW
+-- Forever -- which reports GameMode 12 -- would otherwise keep the old rank
+-- until the next level-up or reload.
+function GSE:LEARNED_SPELL_IN_SKILL_LINE()
+    GSE.ReloadSequences()
+end
+
+function GSE:SPELL_DATA_LOAD_RESULT(_, spellID, success)
+    if success and GSE.SpellRankDataLoaded and GSE.SpellRankDataLoaded(spellID) then
+        GSE.ReloadSequences()
+    end
 end
 
 function GSE:ACTIVE_TALENT_GROUP_CHANGED()
@@ -1795,6 +2041,14 @@ if GSE.GameMode <= 3 then
     GSE:RegisterEvent("SPELLS_CHANGED")
 end
 
+-- Spell ranks. Keyed on the event existing, not the game version: registering
+-- an event a client does not have is an error.
+for _, eventName in ipairs({"LEARNED_SPELL_IN_SKILL_LINE", "SPELL_DATA_LOAD_RESULT"}) do
+    if C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(eventName) then
+        GSE:RegisterEvent(eventName)
+    end
+end
+
 function GSE:OnEnable()
     if GSE.OOCQueue and #GSE.OOCQueue > 0 then
         GSE.StartOOCTimer()
@@ -1844,20 +2098,22 @@ function GSE:ProcessOOCQueue()
                 if encounterInProgress then
                     table.insert(GSE.OOCQueue, v)
                 else
-                    GSE.OOCUpdateSequence(v.name, v.macroversion)
+                    GSE.OOCUpdateSequence(v.id, v.macroversion)
                 end
             elseif v.action == "Save" then
-                GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+                GSE.OOCAddSequenceToCollection(v.sequencename, v.sequence, v.classid, v.id)
             elseif v.action == "Replace" then
-                if GSE.isEmpty(GSE.Library[v.classid][v.sequencename]) then
-                    GSE.AddSequenceToCollection(v.sequencename, v.sequence, v.classid)
+                if v.id == nil or not GSE.SequenceEnvelope(v.id) then
+                    local name = v.sequencename
+                        or (type(v.sequence) == "table" and type(v.sequence.MetaData) == "table" and v.sequence.MetaData.Name)
+                    GSE.AddSequenceToCollection(name, v.sequence, v.classid, v.id)
                 else
-                    GSE.ReplaceSequence(v.classid, v.sequencename, v.sequence)
-                    local macroVersion = v.sequence.Versions[GSE.GetActiveSequenceVersion(v.sequencename)]
+                    GSE.ReplaceSequence(v.classid, v.id, v.sequence)
+                    local macroVersion = v.sequence.Versions[GSE.GetActiveSequenceVersion(v.id)]
                     if encounterInProgress then
-                        GSE.UpdateSequence(v.sequencename, macroVersion)
+                        GSE.UpdateSequence(v.id, macroVersion)
                     else
-                        GSE.OOCUpdateSequence(v.sequencename, macroVersion)
+                        GSE.OOCUpdateSequence(v.id, macroVersion)
                     end
                 end
             elseif v.action == "updatevariable" then
@@ -1869,10 +2125,8 @@ function GSE:ProcessOOCQueue()
             elseif v.action == "managemacros" then
                 GSE.ManageMacros()
                 scheduleGSEOverrideIconRepaint()
-            elseif v.action == "CheckMacroCreated" then
-                GSE.OOCCheckMacroCreated(v.sequencename, v.create)
             elseif v.action == "MergeSequence" then
-                GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.sequencename, v.newSequence)
+                GSE.OOCPerformMergeAction(v.mergeaction, v.classid, v.id, v.newSequence, v.newname)
             elseif v.action == "FinishReload" then
                 GSE.UnsavedOptions.ReloadQueued = nil
             elseif v.action == "migrateremainingclasses" then
@@ -1891,24 +2145,28 @@ function GSE:ProcessOOCQueue()
                 -- after the user confirms a delete (the website record has
                 -- already been soft-deleted by the time we get here) and
                 -- could be used by future Mod UI paths that need to delete
-                -- out-of-combat. classid resolved at enqueue time.
-                if v.sequencename and v.classid and tonumber(v.classid) and tonumber(v.classid) > 0 then
-                    GSE.DeleteSequence(tonumber(v.classid), v.sequencename)
+                -- out-of-combat. classid resolved at enqueue time. The bridge
+                -- names what it deletes; the name is looked up in that class
+                -- only, global (0) included -- that class used to be refused,
+                -- so a confirmed delete of a global sequence never happened.
+                local cid = tonumber(v.classid)
+                local id = v.id or (cid and GSE.FindSequenceId(v.sequencename, cid))
+                if id and cid then
+                    GSE.DeleteSequence(cid, id)
                 end
             elseif v.action == "renamesequence" then
-                -- True in-place rename: moves the Library/GSESequences entry
-                -- from oldname → sequencename, preserving PlatformID so the
-                -- GSE.Tools record stays associated with the renamed sequence.
-                if v.oldname and v.sequencename and v.classid and v.sequence then
-                    local ok = GSE.RenameSequence(v.classid, v.oldname, v.sequencename, v.sequence)
+                -- True in-place rename: the label changes, the id -- and so the
+                -- GSE.Tools record and everything that refers to it -- stays.
+                if v.id and v.newname and v.classid and v.sequence then
+                    local ok = GSE.RenameSequence(v.classid, v.id, v.newname, v.sequence)
                     if ok then
                         local macroVersion = v.sequence.Versions and
-                            v.sequence.Versions[GSE.GetActiveSequenceVersion(v.sequencename)]
+                            v.sequence.Versions[GSE.GetActiveSequenceVersion(v.id)]
                         if macroVersion then
                             if encounterInProgress then
-                                GSE.UpdateSequence(v.sequencename, macroVersion)
+                                GSE.UpdateSequence(v.id, macroVersion)
                             else
-                                GSE.OOCUpdateSequence(v.sequencename, macroVersion)
+                                GSE.OOCUpdateSequence(v.id, macroVersion)
                             end
                         end
                     end

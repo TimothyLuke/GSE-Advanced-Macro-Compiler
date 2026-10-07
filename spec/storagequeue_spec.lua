@@ -31,22 +31,22 @@ describe("GSE.EnqueueOOC", function()
   end
   local function names()
     local out = {}
-    for _, v in ipairs(GSE.OOCQueue) do out[#out + 1] = v.sequencename or v.name end
+    for _, v in ipairs(GSE.OOCQueue) do out[#out + 1] = v.id or v.sequencename end
     return out
   end
 
   describe("sequence operations", function()
     it("MergeSequence supersedes every lighter op for the same sequence", function()
-      GSE.EnqueueOOC({action = "Save", sequencename = "A"})
-      GSE.EnqueueOOC({action = "UpdateSequence", name = "A"})
-      GSE.EnqueueOOC({action = "Replace", sequencename = "A"})
-      GSE.EnqueueOOC({action = "MergeSequence", sequencename = "A"})
+      GSE.EnqueueOOC({action = "Save", id = "A"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
+      GSE.EnqueueOOC({action = "Replace", id = "A"})
+      GSE.EnqueueOOC({action = "MergeSequence", id = "A"})
       assert.are.same({"MergeSequence"}, actions())
     end)
 
     it("and leaves a different sequence's work alone", function()
-      GSE.EnqueueOOC({action = "Save", sequencename = "B"})
-      GSE.EnqueueOOC({action = "MergeSequence", sequencename = "A"})
+      GSE.EnqueueOOC({action = "Save", id = "B"})
+      GSE.EnqueueOOC({action = "MergeSequence", id = "A"})
       assert.are.same({"Save", "MergeSequence"}, actions())
       assert.are.same({"B", "A"}, names())
     end)
@@ -54,40 +54,53 @@ describe("GSE.EnqueueOOC", function()
     it("drops a Save that arrives behind a queued MergeSequence", function()
       -- The merge is the heavier operation and already accounts for this
       -- sequence; letting the save through would apply an older body after it.
-      GSE.EnqueueOOC({action = "MergeSequence", sequencename = "A"})
-      GSE.EnqueueOOC({action = "Save", sequencename = "A"})
-      GSE.EnqueueOOC({action = "Replace", sequencename = "A"})
+      GSE.EnqueueOOC({action = "MergeSequence", id = "A"})
+      GSE.EnqueueOOC({action = "Save", id = "A"})
+      GSE.EnqueueOOC({action = "Replace", id = "A"})
       assert.are.same({"MergeSequence"}, actions())
     end)
 
     it("replaces a queued Save in place rather than queueing a second", function()
-      GSE.EnqueueOOC({action = "Save", sequencename = "A", body = "first"})
-      GSE.EnqueueOOC({action = "Save", sequencename = "A", body = "second"})
+      GSE.EnqueueOOC({action = "Save", id = "A", body = "first"})
+      GSE.EnqueueOOC({action = "Save", id = "A", body = "second"})
       assert.are.same({"Save"}, actions())
       assert.are.equal("second", GSE.OOCQueue[1].body, "the newer body wins")
     end)
 
     it("a Save strips an UpdateSequence already queued for the same sequence", function()
-      GSE.EnqueueOOC({action = "UpdateSequence", name = "A"})
-      GSE.EnqueueOOC({action = "Save", sequencename = "A"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
+      GSE.EnqueueOOC({action = "Save", id = "A"})
       assert.are.same({"Save"}, actions())
     end)
 
     it("drops an UpdateSequence behind any heavier op", function()
       for _, heavier in ipairs({"MergeSequence", "Save", "Replace"}) do
         GSE.OOCQueue = {}
-        GSE.EnqueueOOC({action = heavier, sequencename = "A"})
-        GSE.EnqueueOOC({action = "UpdateSequence", name = "A"})
+        GSE.EnqueueOOC({action = heavier, id = "A"})
+        GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
         assert.are.same({heavier}, actions(), heavier .. " should absorb the update")
       end
     end)
 
     it("collapses repeated UpdateSequence for one sequence", function()
-      GSE.EnqueueOOC({action = "UpdateSequence", name = "A"})
-      GSE.EnqueueOOC({action = "UpdateSequence", name = "A"})
-      GSE.EnqueueOOC({action = "UpdateSequence", name = "B"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "B"})
       assert.are.same({"UpdateSequence", "UpdateSequence"}, actions())
       assert.are.same({"A", "B"}, names())
+    end)
+
+    -- An import has no id until it is filed, so it is known by its name. Two
+    -- different imports must not absorb each other, and an id-less one must
+    -- not absorb an unrelated sequence's work.
+    it("keeps imports apart by name until they have an id", function()
+      GSE.EnqueueOOC({action = "Save", sequencename = "Imported1"})
+      GSE.EnqueueOOC({action = "Save", sequencename = "Imported2"})
+      GSE.EnqueueOOC({action = "UpdateSequence", id = "A"})
+      assert.are.same({"Save", "Save", "UpdateSequence"}, actions())
+      GSE.EnqueueOOC({action = "Save", sequencename = "Imported1", body = "newer"})
+      assert.are.same({"Save", "Save", "UpdateSequence"}, actions(), "the same import replaces itself")
+      assert.are.equal("newer", GSE.OOCQueue[1].body)
     end)
   end)
 
@@ -139,13 +152,6 @@ describe("GSE.EnqueueOOC", function()
         GSE.EnqueueOOC({action = a})
       end
       assert.are.same({"FinishReload", "managemacros", "openoptions"}, actions())
-    end)
-
-    it("CheckMacroCreated is one per sequence, not one overall", function()
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "A"})
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "A"})
-      GSE.EnqueueOOC({action = "CheckMacroCreated", sequencename = "B"})
-      assert.are.same({"A", "B"}, names())
     end)
   end)
 

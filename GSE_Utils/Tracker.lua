@@ -1743,16 +1743,16 @@ local function IsFallbackIcon(icon)
     return GSE.IsFallbackIcon(icon)
 end
 
-local function FindSequenceObject(sequence)
+-- The tracker follows buttons, and a sequence's button is named by its id.
+-- What it shows is the label, GSE.SequenceName(id).
+local function SequenceIdOf(sequence)
     if type(sequence) ~= "string" or sequence == "" then return nil end
+    return GSE.StoredSequenceId(sequence)
+end
 
-    if GSE.Library then
-        for _, bucket in pairs(GSE.Library) do
-            if type(bucket) == "table" and type(bucket[sequence]) == "table" then
-                return bucket[sequence]
-            end
-        end
-    end
+local function FindSequenceObject(sequence)
+    local id = SequenceIdOf(sequence)
+    return id and (GSE.GetSequence(id)) or nil
 end
 
 function GSE.SequenceIconGetMetadata(sequence)
@@ -1763,7 +1763,9 @@ end
 
 function GSE.SequenceIconIsGlobalSequence(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
-    if GSE.Library and type(GSE.Library[0]) == "table" and type(GSE.Library[0][sequence]) == "table" then return true end
+    local id = SequenceIdOf(sequence)
+    local _, classid = GSE.SequenceEnvelope(id)
+    if classid == 0 then return true end
 
     local metadata = GSE.SequenceIconGetMetadata(sequence)
     local specID = tonumber(metadata and (metadata.SpecID or metadata.specID or metadata.specid))
@@ -1772,6 +1774,9 @@ end
 
 function GSE.SequenceIconIsAccountMacro(sequence)
     if type(sequence) ~= "string" or sequence == "" then return false end
+    -- A sequence's WoW macro, if it has one, carries its label.
+    local id = SequenceIdOf(sequence)
+    sequence = (id and GSE.SequenceName(id)) or sequence
 
     local maxAccountMacros = GSE.GetMaxAccountMacros()
     if GetMacroIndexByName and maxAccountMacros then
@@ -1779,7 +1784,7 @@ function GSE.SequenceIconIsAccountMacro(sequence)
         if macroIndex and macroIndex > 0 and macroIndex <= maxAccountMacros then return true end
     end
 
-    local macro = GSEMacros and GSEMacros[sequence]
+    local macro = GSE.Store("macro") and GSE.Store("macro")[sequence]
     return type(macro) == "table" and macro.name == sequence
 end
 
@@ -1809,6 +1814,9 @@ local function IsValidSequence(sequence)
 end
 
 local function GetPrettySequenceName(sequence)
+    local id = SequenceIdOf(sequence)
+    local label = id and GSE.SequenceName(id)
+    if label then return label end
     local seq = FindSequenceObject(sequence)
     if type(seq) == "table" then
         local metadata = seq.MetaData or seq.metadata
@@ -1826,8 +1834,9 @@ local function GetPrettySequenceNameWithVersion(sequence)
 
     local sequenceName = GetPrettySequenceName(sequence)
     local version
-    if GSE.GetActiveSequenceVersion then
-        local ok, result = pcall(GSE.GetActiveSequenceVersion, sequence)
+    local id = SequenceIdOf(sequence)
+    if id and GSE.GetActiveSequenceVersion then
+        local ok, result = pcall(GSE.GetActiveSequenceVersion, id)
         if ok and result ~= nil then version = result end
     end
 
@@ -1856,30 +1865,31 @@ local function TryGetAttribute(button, attribute)
     if ok and type(value) == "string" and value ~= "" then return value end
 end
 
+-- The keys the binds are kept by, as the binder itself works them out
+-- (Profiles.lua, CharacterFunctions.lua). This used to have its own copies,
+-- and the loadout one lacked the spec-group fallback, so on a dual-spec
+-- client without saved loadouts the display looked in a table the binder
+-- never uses.
 local function GetCurrentSpecKey()
-    if GSE.GameMode and GSE.GameMode < 7 then return "1" end
-
-    local spec
-    if GSE.GameMode and GSE.GameMode >= 12 then
-        local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-        spec = getSpec and getSpec()
-    elseif GetSpecialization then
-        spec = GetSpecialization()
-    end
-
-    return tostring(spec or 1)
+    return GSE.CurrentSpecKey()
 end
 
 local function GetCurrentLoadoutKey()
-    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and GSE.GetCurrentSpecID) then return nil end
+    local key = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
+    if key == nil or key == "nil" then return nil end
+    return key
+end
 
-    local specID = GSE.GetCurrentSpecID()
-    if not specID then return nil end
-
-    local loadoutID = C_ClassTalents.GetLastSelectedSavedConfigID(specID)
-    if not loadoutID then return nil end
-
-    return tostring(loadoutID)
+-- Every spec key this character has binds for: its own tables and each spec
+-- of its class (the shared profiles).
+local function AllSpecKeys()
+    local keys = {}
+    for k in pairs((GSE_C and type(GSE_C.KeyBindings) == "table" and GSE_C.KeyBindings) or {}) do keys[tostring(k)] = true end
+    local ab = GSE_C and type(GSE_C.ActionBarBinds) == "table" and GSE_C.ActionBarBinds
+    for k in pairs((ab and type(ab.Specialisations) == "table" and ab.Specialisations) or {}) do keys[tostring(k)] = true end
+    local n = (GSE.GameMode and GSE.GameMode >= 7 and GetNumSpecializations and GetNumSpecializations()) or 1
+    for i = 1, n do keys[tostring(i)] = true end
+    return keys
 end
 
 local function ResolveUsedSequence(buttonName)
@@ -1932,9 +1942,13 @@ local function AddUniqueValue(values, seen, value)
     table.insert(values, value)
 end
 
+-- Saved keybinds and overrides hold the sequence's id; live override state
+-- (GSE.ButtonOverrides) holds its button.
 local function BindingTargetMatches(target, sequence, buttonName)
     if type(target) ~= "string" or target == "" then return false end
     if target == sequence or target == buttonName then return true end
+    local id = SequenceIdOf(sequence)
+    if id and GSE.ResolveSequenceId(target) == id then return true end
     if GSE.ButtonOverrides and GSE.ButtonOverrides[target] == sequence then return true end
     return false
 end
@@ -2014,14 +2028,14 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
 
     local actionBarBinds = GSE_C and GSE_C["ActionBarBinds"]
     if type(actionBarBinds) ~= "table" then return end
+    local seqId = SequenceIdOf(sequence)
 
     local specKey = GetCurrentSpecKey()
-    local specs = actionBarBinds["Specialisations"]
-    if type(specs) == "table" then
-        local specBinds = specs[specKey]
+    do
+        local specBinds = GSE.SpecOverrides(specKey, false)
         if type(specBinds) == "table" then
             for _, savedBind in pairs(specBinds) do
-                if type(savedBind) == "table" and savedBind.Sequence == sequence then
+                if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                     AddBindingKeysForButton(values, seen, savedBind.Bind)
                 end
             end
@@ -2033,7 +2047,7 @@ local function AddActionBarOverrideKeys(values, seen, sequence, buttonName)
     local loadoutBinds = loadoutKey and loadouts and loadouts[specKey] and loadouts[specKey][loadoutKey]
     if type(loadoutBinds) == "table" then
         for _, savedBind in pairs(loadoutBinds) do
-            if type(savedBind) == "table" and savedBind.Sequence == sequence then
+            if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                 AddBindingKeysForButton(values, seen, savedBind.Bind)
             end
         end
@@ -2045,13 +2059,14 @@ local function FormatSpamKey(sequence, mods, explicitButtonName)
     local seen = {}
     local buttonName = explicitButtonName or lastSequenceButtonName
 
-    if sequence and GSE_C and type(GSE_C["KeyBindings"]) == "table" then
+    if sequence and GSE_C and GSE.KeybindingsEnabled() then
         local specKey = GetCurrentSpecKey()
-        local specBinds = GSE_C["KeyBindings"][specKey]
+        local specBinds = GSE.SpecKeyBinds(specKey, false)
         AddMatchingGSEKeyBindings(values, seen, specBinds, sequence, buttonName)
 
         local loadoutKey = GetCurrentLoadoutKey()
-        local loadoutBinds = loadoutKey and specBinds and specBinds["LoadOuts"] and specBinds["LoadOuts"][loadoutKey]
+        local loadouts = GSE.SpecLoadoutKeyBinds(specKey, false)
+        local loadoutBinds = loadoutKey and loadouts and loadouts[loadoutKey]
         AddMatchingGSEKeyBindings(values, seen, loadoutBinds, sequence, buttonName)
     end
 
@@ -2214,23 +2229,25 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         return false
     end
 
+    -- Saved overrides hold the sequence's id.
+    local seqId = SequenceIdOf(sequence)
     local function ActionBarTableMatches(bindings)
         if type(bindings) ~= "table" then return false end
         for _, savedBind in pairs(bindings) do
-            if type(savedBind) == "table" and savedBind.Sequence == sequence then
+            if type(savedBind) == "table" and savedBind.Sequence ~= nil and savedBind.Sequence == seqId then
                 return true
             end
         end
         return false
     end
 
-    local keyBindings = GSE_C and type(GSE_C["KeyBindings"]) == "table" and GSE_C["KeyBindings"]
-    local currentSpecBinds = specKey and keyBindings and keyBindings[specKey]
+    local currentSpecBinds = specKey and GSE.SpecKeyBinds(specKey, false)
     if BindingTableMatches(currentSpecBinds) then return true end
-    if loadoutKey and type(currentSpecBinds) == "table" and BindingTableMatches(currentSpecBinds["LoadOuts"] and currentSpecBinds["LoadOuts"][loadoutKey]) then return true end
+    local currentLoadouts = specKey and GSE.SpecLoadoutKeyBinds(specKey, false)
+    if loadoutKey and currentLoadouts and BindingTableMatches(currentLoadouts[loadoutKey]) then return true end
 
     local actionBarBinds = GSE_C and type(GSE_C["ActionBarBinds"]) == "table" and GSE_C["ActionBarBinds"]
-    local currentActionSpecBinds = actionBarBinds and actionBarBinds["Specialisations"] and specKey and actionBarBinds["Specialisations"][specKey]
+    local currentActionSpecBinds = specKey and GSE.SpecOverrides(specKey, false)
     if ActionBarTableMatches(currentActionSpecBinds) then return true end
     local currentActionLoadoutBinds = actionBarBinds and actionBarBinds["LoadOuts"] and specKey and loadoutKey
         and actionBarBinds["LoadOuts"][specKey] and actionBarBinds["LoadOuts"][specKey][loadoutKey]
@@ -2240,24 +2257,18 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         return false
     end
 
-    if keyBindings then
-        for otherSpec, bindings in pairs(keyBindings) do
-            if tostring(otherSpec) ~= tostring(specKey) and (BindingTableMatches(bindings)
-                or (type(bindings) == "table" and bindings["LoadOuts"] and loadoutKey and BindingTableMatches(bindings["LoadOuts"][loadoutKey]))) then
+    for otherSpec in pairs(AllSpecKeys()) do
+        if tostring(otherSpec) ~= tostring(specKey) then
+            local otherLoadouts = GSE.SpecLoadoutKeyBinds(otherSpec, false)
+            if BindingTableMatches(GSE.SpecKeyBinds(otherSpec, false))
+                or (loadoutKey and otherLoadouts and BindingTableMatches(otherLoadouts[loadoutKey]))
+                or ActionBarTableMatches(GSE.SpecOverrides(otherSpec, false)) then
                 return false
             end
         end
     end
 
     if actionBarBinds then
-        local specs = actionBarBinds["Specialisations"]
-        if type(specs) == "table" then
-            for otherSpec, bindings in pairs(specs) do
-                if tostring(otherSpec) ~= tostring(specKey) and ActionBarTableMatches(bindings) then
-                    return false
-                end
-            end
-        end
 
         local loadouts = actionBarBinds["LoadOuts"]
         if type(loadouts) == "table" then
@@ -2985,7 +2996,8 @@ local function ResolveSequenceIcon(sequence)
     end
 
     if GetMacroIndexByName and sequence then
-        local macroIndex = GetMacroIndexByName(sequence)
+        -- A sequence's WoW macro carries its label.
+        local macroIndex = GetMacroIndexByName(GSE.SequenceName(sequence) or sequence)
         if macroIndex and macroIndex > 0 then
             local _, macroIcon = GetMacroInfo(macroIndex)
             if macroIcon and not IsFallbackIcon(macroIcon) then return macroIcon end
@@ -3465,7 +3477,7 @@ function GSE.SequenceIconNormalizePayload(payload, second)
     local info = {}
 
     if type(payload) == "table" then
-        info.sequence = payload.SequenceName or payload.sequenceName or payload.Sequence or payload.sequence or payload.Name or payload.name or payload[1]
+        info.sequence = payload.SequenceID or payload.Sequence or payload.sequence or payload.Name or payload.name or payload[1]
         info.buttonName = payload.ButtonName or payload.buttonName or payload.Button or payload.button or info.sequence
         info.spamKey = payload.SpamKey or payload.spamKey or payload.Key or payload.key or payload.Binding or payload.binding
         info.hardwareEvent = payload.HardwareEvent or payload.hardwareEvent or payload.Hardware or payload.hardware or payload.MouseButton or payload.mouseButton
@@ -3584,8 +3596,10 @@ GSE.SequenceIconFrameUpdateFromButton = UpdateSequenceIconFromButton
 
 GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
 GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
-GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, sequence)
-    if EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
+GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
+    -- Announced by id, which names its button.
+    local sequence = GSE.StoredSequenceId(id)
+    if sequence and EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then
         SetSequencePreview(sequence)
     end
 end)

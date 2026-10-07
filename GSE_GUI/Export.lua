@@ -26,12 +26,33 @@ exportframe:SetCallback(
 )
 exportframe:SetLayout("List")
 
+-- The package name makes a collection of an export of more than one element:
+-- whoever imports it records that its elements came through that collection
+-- (collection provenance). One element, or no name given, is only the
+-- container every export ships in, and records nothing.
+local DEFAULT_PACKAGE_NAME = "UPDATE PACKAGE NAME"
+local function withCollection(exportTable)
+    local name = exportframe and exportframe.packageName
+    if GSE.isEmpty(name) or name == DEFAULT_PACKAGE_NAME or (exportTable.ElementCount or 0) < 2 then
+        return exportTable
+    end
+    local entry = { Name = name, Sequences = {}, Variables = {}, Macros = {} }
+    for _, kind in ipairs({ "Sequences", "Variables", "Macros" }) do
+        for n in pairs(exportTable[kind] or {}) do entry[kind][#entry[kind] + 1] = n end
+        table.sort(entry[kind])
+    end
+    local payload = {}
+    for k, v in pairs(exportTable) do payload[k] = v end
+    payload.Collections = { entry }
+    return payload
+end
+
 local function compileExport(exportTable, humanReadable)
     local exportstring =
         GSE.EncodeMessage(
         {
             type = "COLLECTION",
-            payload = exportTable
+            payload = withCollection(exportTable)
         }
     )
 
@@ -40,7 +61,7 @@ local function compileExport(exportTable, humanReadable)
         local pkgDate = (exportframe and exportframe.packageDate) or date("%m/%d/%Y/%H:%M")
         -- No name given -> fall back to the literal "UPDATE PACKAGE NAME"
         -- so the H1 line stays well-formed in either case.
-        local nameForHeader = (pkgName ~= "" and pkgName) or "UPDATE PACKAGE NAME"
+        local nameForHeader = (pkgName ~= "" and pkgName) or DEFAULT_PACKAGE_NAME
         local header = "# " .. nameForHeader .. "    Date: " .. pkgDate
         exportstring = header .. "\n```\n" .. exportstring .. "\n```\n\n"
 
@@ -98,36 +119,25 @@ local function compileExport(exportTable, humanReadable)
 end
 
 local function isStoredMacroNode(node)
-    return type(node) == "table" and (
-        node.text ~= nil
-        or node.value ~= nil
-        or node.icon ~= nil
-        or node.Managed ~= nil
-        or node.managedMacro ~= nil
-        or node.manageMacro ~= nil
-    )
+    return GSE.IsStoredMacroNode(node)
 end
 
 local function currentCharacterMacroBucket()
-    local char, realm = UnitFullName("player")
-    if GSE.isEmpty(realm) then
-        realm = string.gsub(GetRealmName(), "%s*", "")
-    end
-    return char .. "-" .. realm
+    return GSE.CharacterMacroBucketKey()
 end
 
 local function findStoredMacro(name)
-    if GSE.isEmpty(GSEMacros) then return nil, "a" end
-    if isStoredMacroNode(GSEMacros[name]) then
-        return GSEMacros[name], "a"
+    if GSE.isEmpty(GSE.Store("macro")) then return nil, "a" end
+    if isStoredMacroNode(GSE.Store("macro")[name]) then
+        return GSE.Store("macro")[name], "a"
     end
 
     local currentBucket = currentCharacterMacroBucket()
-    if type(GSEMacros[currentBucket]) == "table" and isStoredMacroNode(GSEMacros[currentBucket][name]) then
-        return GSEMacros[currentBucket][name], "p"
+    if type(GSE.Store("macro")[currentBucket]) == "table" and isStoredMacroNode(GSE.Store("macro")[currentBucket][name]) then
+        return GSE.Store("macro")[currentBucket][name], "p"
     end
 
-    for _, bucket in pairs(GSEMacros) do
+    for _, bucket in pairs(GSE.Store("macro")) do
         if type(bucket) == "table" and isStoredMacroNode(bucket[name]) then
             return bucket[name], "p"
         end
@@ -158,7 +168,8 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         local elements  = GSE.split(k, ",")
         local classid   = tonumber(elements[1]) or 0
         local specid    = tonumber(elements[2]) or 0
-        local seqName   = elements[3] or ""
+        -- Listed by label, selected by id.
+        local seqName   = GSE.SequenceName(elements[3], classid) or tostring(elements[3] or "")
         local className = GSE.GetClassName(classid) or L["Global"] or ""
         table.insert(seqEntries, {
             v         = v,
@@ -196,18 +207,17 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                 end
             end
         end
-        local seqName = e.seqName
-        GSE.EnsureSequenceLoaded(classid, seqName)
-        local seqObj = GSE.Library[classid] and GSE.Library[classid][seqName]
+        GSE.EnsureSequenceLoaded(classid, v)
+        local seqObj = GSE.Library[classid] and GSE.Library[classid][v]
         if not (seqObj and seqObj.MetaData and seqObj.MetaData.noExport) then
-            SequenceDropDown:AddItem(v, v)
+            SequenceDropDown:AddItem(v, e.seqName)
         end
     end
-    for k, _ in pairs(GSESequences[0]) do
+    for k, env in pairs(GSE.SequenceEnvelopes(0)) do
         GSE.EnsureSequenceLoaded(0, k)
         local globalSeq = GSE.Library[0] and GSE.Library[0][k]
         if not (globalSeq and globalSeq.MetaData and globalSeq.MetaData.noExport) then
-            SequenceDropDown:AddItem(k, k)
+            SequenceDropDown:AddItem(k, env.Name or tostring(k))
         end
     end
     SequenceDropDown:SetMultiselect(true)
@@ -215,10 +225,10 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     if SequenceDropDown.SetMaxVisibleItems then SequenceDropDown:SetMaxVisibleItems(20) end
 
     local VariableDropDown = UI:Create("Dropdown")
-    if not GSE.isEmpty(GSEVariables) then
+    if not GSE.isEmpty(GSE.Store("variable")) then
         local varOrder = {}
-        for k, _ in pairs(GSEVariables) do
-            local varOk, varDecoded = GSE.DecodeMessage(GSEVariables[k])
+        for k, _ in pairs(GSE.Store("variable")) do
+            local varOk, varDecoded = GSE.DecodeMessage(GSE.Store("variable")[k])
             if varOk and not (varDecoded and varDecoded.MetaData and varDecoded.MetaData.noExport) then
                 table.insert(varOrder, k)
             end
@@ -245,14 +255,14 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         addMacroName(mname)
     end
 
-    if not GSE.isEmpty(GSEMacros) then
-        for k, v in pairs(GSEMacros) do
+    if not GSE.isEmpty(GSE.Store("macro")) then
+        for k, v in pairs(GSE.Store("macro")) do
             if isStoredMacroNode(v) then
                 addMacroName(k)
             end
         end
 
-        for _, bucket in pairs(GSEMacros) do
+        for _, bucket in pairs(GSE.Store("macro")) do
             if type(bucket) == "table" and not isStoredMacroNode(bucket) then
                 for k, v in pairs(bucket) do
                     if isStoredMacroNode(v) then
@@ -403,7 +413,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
         function(obj, event, key, checked)
             if checked then
                 if exportTable["Variables"][key] then return end
-                local stored = not GSE.isEmpty(GSEVariables) and GSEVariables[key] or nil
+                local stored = not GSE.isEmpty(GSE.Store("variable")) and GSE.Store("variable")[key] or nil
                 local payload
                 if type(stored) == "string" and stored:sub(1, 7) == "!GSE3!+" then
                     -- Protected variable: ship the packed string untouched so the
@@ -416,7 +426,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                         return
                     end
                     decoded.name = key
-                    payload = decoded
+                    payload = GSE.UpgradeVariable(decoded, key)
                 end
                 exportTable["Variables"][key] = payload
                 exportTable.ElementCount = exportTable.ElementCount + 1
@@ -431,9 +441,13 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     )
     SequenceDropDown:SetCallback(
         "OnValueChanged",
-        function(obj, event, key, checked)
+        function(obj, event, id, checked)
+            -- Selected by id; exported under its label, which is how every
+            -- importer knows it.
+            local key = GSE.SequenceName(id) or tostring(id)
             if checked then
-                local seq = GSE.FindSequence(key)
+                local seq = GSE.GetSequence(id)
+                if not seq then return end
                 exportTable["Sequences"][key] =
                     GSE.UnEscapeTable(
                     GSE.TranslateSequence(GSE.CloneSequence(seq), Statics.TranslatorMode.ID)
@@ -444,6 +458,8 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                 -- when re-importing sequences that were originally created in an earlier
                 -- GSE build but have been running fine in the current one.
                 local exportedSeq = exportTable["Sequences"][key]
+                -- Its Embed blocks leave with a PlatformID or no id at all.
+                GSE.NormaliseEmbeds(exportedSeq, true)
                 if exportedSeq and exportedSeq.MetaData then
                     exportedSeq.MetaData.GSEVersion = GSE.VersionNumber
                     if GSE.ComputeSequenceChecksum then
@@ -458,9 +474,9 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     local allDeps = GSE.GetTransitiveVariableDeps(deps.Variables)
                     local missing, included = {}, {}
                     for vname in pairs(allDeps) do
-                        if not GSE.isEmpty(GSEVariables) and not GSE.isEmpty(GSEVariables[vname]) then
+                        if not GSE.isEmpty(GSE.Store("variable")) and not GSE.isEmpty(GSE.Store("variable")[vname]) then
                             if not exportTable["Variables"][vname] then
-                                local storedVar = GSEVariables[vname]
+                                local storedVar = GSE.Store("variable")[vname]
                                 if type(storedVar) == "string" and storedVar:sub(1, 7) == "!GSE3!+" then
                                     exportTable["Variables"][vname] = storedVar
                                     exportTable.ElementCount = exportTable.ElementCount + 1
@@ -468,7 +484,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                                 else
                                     local ok, decoded = GSE.DecodeMessage(storedVar)
                                     if ok and type(decoded) == "table" then
-                                        exportTable["Variables"][vname] = decoded
+                                        exportTable["Variables"][vname] = GSE.UpgradeVariable(decoded, vname)
                                         exportTable.ElementCount = exportTable.ElementCount + 1
                                         table.insert(included, vname)
                                     end
@@ -504,13 +520,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     local missingSeqs = {}
                     for _, sname in ipairs(deps.Sequences) do
                         if not exportTable["Sequences"][sname] then
-                            local found = false
-                            for chkclass = 0, 13 do
-                                if GSESequences[chkclass] and not GSE.isEmpty(GSESequences[chkclass][sname]) then
-                                    found = true
-                                    break
-                                end
-                            end
+                            local found = GSE.FindSequenceId(sname, nil, true) ~= nil
                             if not found then
                                 table.insert(missingSeqs, sname)
                             else
@@ -535,6 +545,7 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
                     end
                 end
             else
+                if not exportTable["Sequences"][key] then return end
                 exportTable["Sequences"][key] = nil
                 exportTable.ElementCount = exportTable.ElementCount - 1
             end
@@ -548,32 +559,31 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
             if checked then
                 local source, category = findStoredMacro(key)
                 if GSE.isEmpty(source) then
-                    if GSE.isEmpty(GSEMacros) then
-                        GSEMacros = {}
-                    end
                     local currentBucket = currentCharacterMacroBucket()
-                    if GSE.isEmpty(GSEMacros[currentBucket]) then
-                        GSEMacros[currentBucket] = {}
+                    if GSE.isEmpty(GSE.Store("macro")[currentBucket]) then
+                        GSE.Store("macro")[currentBucket] = {}
                     end
-                    if GSE.isEmpty(GSEMacros[currentBucket][key]) then
+                    if GSE.isEmpty(GSE.Store("macro")[currentBucket][key]) then
                         -- need to find the macro as its not managed by GSE
-                        source = {}
                         local mslot = GetMacroIndexByName(key)
                         if not mslot or mslot == 0 then return end
                         local _, micon, mbody = GetMacroInfo(mslot)
-                        source.name = key
-                        source.icon = micon
-                        source.text = mbody
-                        source.managedMacro = GSE.CompileMacroText(mbody or "", Statics.TranslatorMode.ID)
+                        source = GSE.NewMacroNode(key, micon, mbody)
+                        -- Its written ranks, read while it is still spell names (see
+                        -- "Spell ranks" in translator.lua).
+                        source.Versions[1].Ranks = GSE.GetRankedSpellIDs(mbody)
                         if mslot > GSE.GetMaxAccountMacros() then
                             category = "p"
                         end
                     else
-                        source = GSEMacros[currentBucket][key]
+                        source = GSE.Store("macro")[currentBucket][key]
                         category = "p"
                     end
                 end
-                local exportobject = GSE.CloneSequence(source)
+                -- In the current shape, and without its slot: that is where
+                -- this player keeps it, meaningless to anyone else.
+                local exportobject = GSE.UpgradeMacro(GSE.CloneSequence(source), key)
+                exportobject.value = nil
                 exportobject.objectType = "MACRO"
                 exportobject.category = category
                 exportobject.name = key
@@ -605,23 +615,50 @@ GSE.GUIAdvancedExport = function(exportframe, objectname, exportCategory)
     -- options-driven re-render from Utils.lua) or when the object is not a
     -- selectable item in its dropdown (e.g. a noExport sequence), so those paths
     -- keep the previous empty-window behaviour.
-    if not GSE.isEmpty(objectname) then
+    local function preselect(category, name)
         local preselectDropDown
-        if exportCategory == "SEQUENCE" then
+        if category == "SEQUENCE" then
             preselectDropDown = SequenceDropDown
-        elseif exportCategory == "MACRO" then
+        elseif category == "MACRO" then
             preselectDropDown = MacroDropDown
-        elseif exportCategory == "VARIABLE" then
+        elseif category == "VARIABLE" then
             preselectDropDown = VariableDropDown
         end
-        if preselectDropDown and preselectDropDown.list and preselectDropDown.list[objectname] ~= nil
-            and not (preselectDropDown.disabledItems and preselectDropDown.disabledItems[objectname]) then
-            preselectDropDown:SetValue(objectname, true)
-            preselectDropDown:Fire("OnValueChanged", objectname, true)
+        if preselectDropDown and preselectDropDown.list and preselectDropDown.list[name] ~= nil
+            and not (preselectDropDown.disabledItems and preselectDropDown.disabledItems[name]) then
+            preselectDropDown:SetValue(name, true)
+            preselectDropDown:Fire("OnValueChanged", name, true)
         end
+    end
+    -- Kept for GUIExportCollection, which ticks every member of a collection.
+    exportframe.gsePreselect = preselect
+    if not GSE.isEmpty(objectname) then
+        preselect(exportCategory, objectname)
     end
 end
 
+
+--- Export a collection as it came: everything it brought, named after it, so
+--- whoever imports it records the same collection (collection provenance).
+--- `key` as in GSE.KnownCollections.
+function GSE.GUIExportCollection(key)
+    local info = GSE.KnownCollections and GSE.KnownCollections()[key]
+    if not info then return end
+    exportframe.classid = nil
+    exportframe.packageName = info.name or ""
+    exportframe.packageDate = date("%m/%d/%Y/%H:%M")
+    exportframe:SetSize(760, 560)
+    GSE.GUIAdvancedExport(exportframe)
+    local preselect = exportframe.gsePreselect
+    if preselect then
+        for id in pairs(info.sequence) do preselect("SEQUENCE", id) end
+        for name in pairs(info.variable) do preselect("VARIABLE", name) end
+        for name in pairs(info.macro) do preselect("MACRO", name) end
+    end
+    UI.MakePopup(exportframe.frame, {center = true})
+    if exportframe.frame.Raise then exportframe.frame:Raise() end
+    exportframe:Show()
+end
 
 function GSE.GUIExport(category, objectname, exportCategory)
     exportframe.classid = category
@@ -637,7 +674,7 @@ function GSE.GUIExport(category, objectname, exportCategory)
     GSE.UI.ShowInputDialog({
         title      = L["Export"],
         prompt     = L["Enter Export Package Name"],
-        default    = "UPDATE PACKAGE NAME",
+        default    = DEFAULT_PACKAGE_NAME,
         acceptText = L["Export"],
         maxLetters = 80,
         onAccept   = function(name)

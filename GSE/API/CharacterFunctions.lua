@@ -127,6 +127,115 @@ function GSE.GetCharacterName()
     return GetUnitName("player", true) .. "@" .. GetRealmName()
 end
 
+--- The one identity for "this character": the player GUID.
+--
+-- Every name-based recipe the Mod used broke somewhere. UnitFullName's second
+-- return is the realm on retail but the SURNAME on WoW Forever ("Bob",
+-- "Geldoff"), so Forever characters were filed as "Bob-Geldoff". Retail was
+-- not consistent either: UnitFullName strips spaces from the realm and
+-- GetRealmName does not, and the Mod used both, so a character on Argent Dawn
+-- had two buckets. A GUID holds no name or realm, so none of that applies.
+-- Nil until the player unit exists (it is not dependable at ADDON_LOADED).
+function GSE.CharacterKey()
+    local guid = UnitGUID and UnitGUID("player")
+    if type(guid) == "string" and guid ~= "" then return guid end
+    return nil
+end
+
+--- Human-readable name for this character. Display only -- never a lookup
+-- key. GetUnitName(..., true) is used because it returns Forever's full
+-- two-part name, where UnitFullName splits it.
+function GSE.CharacterLabel()
+    local name = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player")) or ""
+    local realm = GetRealmName and GetRealmName() or ""
+    if realm == "" then return name end
+    return name .. "-" .. realm
+end
+
+-- A stored macro node, as opposed to a per-character bucket of them. Same
+-- rule as Export.lua's isStoredMacroNode: iteration everywhere tells the two
+-- apart by shape, never by key.
+-- A macro in the current shape has Versions = { [1] = {...} }; a bucket that
+-- happens to hold a macro named "Versions" holds a node there, not a list.
+local function isMacroNode(t)
+    return type(t) == "table" and (
+        t.text ~= nil or t.value ~= nil or t.icon ~= nil or t.Managed ~= nil
+        or t.managedMacro ~= nil or t.manageMacro ~= nil or t.GSEProtected ~= nil
+        or (type(t.Versions) == "table" and type(t.Versions[1]) == "table"))
+end
+-- Shared with the store (Storage.lua), which has to make the same call when
+-- it splits account macros from per-character buckets.
+GSE.IsStoredMacroNode = isMacroNode
+
+--- Every key an older build may have filed this character's macro bucket
+-- under. Read by the migration below and nothing else; nothing writes these.
+local function legacyCharacterKeys()
+    local keys, seen = {}, {}
+    local function add(k)
+        if type(k) == "string" and k ~= "" and not seen[k] then seen[k] = true; keys[#keys + 1] = k end
+    end
+    local char, ufRealm
+    if UnitFullName then char, ufRealm = UnitFullName("player") end
+    local realm = GetRealmName and GetRealmName() or ""
+    local stripped = string.gsub(realm, "%s*", "")
+    if char then
+        -- Storage / Export / MacroSync / the editors: UnitFullName's realm,
+        -- falling back to the spaceless realm name when it is empty.
+        add(char .. "-" .. (GSE.isEmpty(ufRealm) and stripped or ufRealm))
+        -- Events.lua startup: first name plus GetRealmName, spaces kept.
+        add(char .. "-" .. realm)
+        add(char .. "-" .. stripped)
+    end
+    local full = GetUnitName and GetUnitName("player", true)
+    if full then
+        -- Earlier WoW Forever builds, where the name came back whole.
+        add(full .. "-" .. realm)
+        add(full .. "-" .. stripped)
+    end
+    return keys
+end
+GSE.LegacyCharacterKeys = legacyCharacterKeys
+
+--- The key of this character's macro bucket in GSEMacros.
+--
+-- On first use after login, any bucket an older build filed under one of the
+-- legacy keys is folded into the GUID-keyed one (entries already under the
+-- GUID win) and the legacy key is removed, so the change orphans nothing. A
+-- legacy key that holds a MACRO rather than a bucket is left alone: macro
+-- names can contain hyphens, so "Bob-Geldoff" could be a user's macro. A GUID
+-- cannot collide that way -- it is longer than WoW's 16-character macro name
+-- limit.
+--
+-- Before the player GUID exists this returns the legacy key the storage path
+-- has always used, so an early write still lands somewhere the next call
+-- will migrate.
+function GSE.CharacterMacroBucketKey()
+    local key = GSE.CharacterKey()
+    if not key then return legacyCharacterKeys()[1] end
+    local macros = GSE.Store("macro")
+    for _, old in ipairs(legacyCharacterKeys()) do
+        local bucket = macros[old]
+        if old ~= key and type(bucket) == "table" and not isMacroNode(bucket) then
+            local target = macros[key]
+            if type(target) ~= "table" then target = {}; macros[key] = target end
+            for name, node in pairs(bucket) do
+                if target[name] == nil then target[name] = node end
+            end
+            macros[old] = nil
+        end
+    end
+    return key
+end
+
+--- This character's macro bucket, or nil. With create, it is made if absent.
+function GSE.CharacterMacroBucket(create)
+    local key = GSE.CharacterMacroBucketKey()
+    if not key then return nil end
+    local macros = GSE.Store("macro")
+    if create and type(macros[key]) ~= "table" then macros[key] = {} end
+    return macros[key]
+end
+
 --- Returns the current Talent Selections as a string
 function GSE.GetCurrentTalents()
     local talents
@@ -187,11 +296,11 @@ function GSE.ClearCommonKeyBinds()
         end
         SetBinding(p)
     end
-    local char = UnitFullName("player")
-    local realm = GetRealmName()
+    -- GSE_C is SavedVariablesPerCharacter, so it needs no character key. This
+    -- used to write KeyBindings["Char-Realm"][spec] -- the nesting update
+    -- 3201 removed -- while every reader looks at KeyBindings[spec].
     GSE_C["KeyBindings"] = {}
-    GSE_C["KeyBindings"][char .. "-" .. realm] = {}
-    GSE_C["KeyBindings"][char .. "-" .. realm][tostring(GetSpecialization())] = {}
+    GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
     -- Save for this character
     SaveBindings(2)
     GSE.Print("Common Keybinding combinations cleared for this character.")
@@ -261,6 +370,15 @@ end
 ---
 --- Prefixed rather than bare, so a group of 1 or 2 can never be mistaken for a
 --- config id of 1 or 2.
+--- Does GSE bind sequences to keys here? Always, except on WoW Forever, where
+--- it never does: Forever's gamepad handling is still moving, so there a
+--- sequence goes on an action-bar button (Button Bindings) and WoW binds the
+--- button (#2109). There is no option to turn it on.
+function GSE.KeybindingsEnabled()
+    local _, _, _, tocversion = GetBuildInfo()
+    return GSE.TOCFlavour(tocversion) ~= "forever"
+end
+
 function GSE.GetBindingLoadoutKey()
     local currentSpecID = GSE.GetCurrentSpecID()
     local saved =

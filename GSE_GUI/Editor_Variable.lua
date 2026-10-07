@@ -58,7 +58,7 @@ local function buildVariablesMenu()
     }
     -- Alphabetical, the same order and the same comparison the sequence tree
     -- uses. pairs() gave hash order, so the list shuffled between sessions.
-    for k, _ in GSE.pairsByKeys(GSEVariables or {}, GSE.AlphabeticalTableSortAlgorithm) do
+    for k, _ in GSE.pairsByKeys(GSE.Store("variable") or {}, GSE.AlphabeticalTableSortAlgorithm) do
         local node = {
             value = k,
             text = "|CFFFFFFFF" .. k .. Statics.StringReset
@@ -69,30 +69,50 @@ local function buildVariablesMenu()
 end
 
 -- ---------------------------------------------------------------------------
--- showVariable(editframe, name, container)
--- Renders the variable editor into container.
+-- showVariable(editframe, name, container, selected)
+-- Renders the variable editor into container, on version `selected`.
+--
+-- A variable is scoped and versioned as a sequence is (GSE.UpgradeVariable):
+-- MetaData carries its name, author, scope, help and which version runs where,
+-- Versions what runs. The element being edited is kept on the editframe as a
+-- draft, so choosing another version redraws the page without losing edits.
 -- ---------------------------------------------------------------------------
-local function showVariable(editframe, name, container)
+local function showVariable(editframe, name, container, selected)
     editframe.SequenceName = name
     local implementation = UI:Create("EditBox")
     local currentKey = name ~= "NEWVARIABLES" and name or nil
-    local variable = {
-        ["funct"] = [[function()
+    local draft = editframe.variableDraft
+    if not (draft and draft.name == name) then
+        local variable = {
+            MetaData = {Default = 1},
+            Versions = {{funct = [[function()
     return true
-end]],
-        ["comments"] = ""
-    }
-    if GSEVariables and not GSE.isEmpty(GSEVariables[name]) then
-        local status, err =
-            pcall(
-            function()
-                local _, uncompressedVersion = GSE.DecodeMessage(GSEVariables[name])
-                variable = uncompressedVersion
+end]]}},
+        }
+        if GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[name]) then
+            local status, err =
+                pcall(
+                function()
+                    local _, uncompressedVersion = GSE.DecodeMessage(GSE.Store("variable")[name])
+                    variable = uncompressedVersion
+                end
+            )
+            if err then
+                GSE.Print(err, Statics.DebugModules["Editor"])
             end
-        )
-        if err then
-            GSE.Print(err, Statics.DebugModules["Editor"])
         end
+        draft = {name = name, variable = GSE.UpgradeVariable(variable, currentKey), selected = 1}
+        editframe.variableDraft = draft
+    end
+    local variable = draft.variable
+    selected = tonumber(selected) or draft.selected or 1
+    if not variable.Versions[selected] then selected = 1 end
+    draft.selected = selected
+    local version = variable.Versions[selected]
+    local function redraw(newSelected)
+        container:ReleaseChildren()
+        showVariable(editframe, name, container, newSelected or draft.selected)
+        if container.DoLayout then container:DoLayout() end
     end
 
     local keyEditBox = UI:Create("EditBox")
@@ -126,16 +146,14 @@ end]],
             GSE.ClearTooltip(editframe)
         end
     )
-    if not GSE.isEmpty(variable.Author) then
-        authoreditbox:SetText(variable.Author)
-    else
-        variable.Author = GSE.GetCharacterName()
-        authoreditbox:SetText(variable.Author)
+    if GSE.isEmpty(variable.MetaData.Author) then
+        variable.MetaData.Author = GSE.GetCharacterName()
     end
+    authoreditbox:SetText(variable.MetaData.Author)
     authoreditbox:SetCallback(
         "OnTextChanged",
         function(obj, event, key)
-            variable.Author = key
+            variable.MetaData.Author = key
         end
     )
     local function createInlineFieldRow(labelText, field)
@@ -160,17 +178,23 @@ end]],
 
     container:AddChild(createInlineFieldRow(L["Name"], keyEditBox))
     container:AddChild(createInlineFieldRow(L["Author"], authoreditbox))
+    if GSE.GUI.DrawElementScope then
+        GSE.GUI.DrawElementScope(editframe, container, variable,
+            currentKey and GSE.SuggestElementScope and GSE.SuggestElementScope("variable", currentKey), redraw)
+    end
+    if currentKey and GSE.GUI.DrawElementCollections then
+        GSE.GUI.DrawElementCollections(container, "variable", currentKey)
+    end
 
-    -- Notes written on gse.tools arrive as markdown in `comments` with the
-    -- server's WoW-escape rendering alongside in `commentsHelp`. Show the
-    -- rendering read-only: the raw markdown is unreadable in-game, and an
-    -- in-game edit is discarded anyway (the server re-derives commentsHelp
-    -- from comments, and comments is only editable on the website).
-    if not GSE.isEmpty(variable.commentsHelp) and GSE.GUI.CreateReadOnlyNotesPanel then
+    -- Help written on gse.tools arrives as markdown in MetaData.Notes with the
+    -- server's WoW-escape rendering alongside in MetaData.Help. Show the
+    -- rendering read-only: the raw markdown is unreadable in-game, and the
+    -- server re-derives Help from Notes, which is edited on the website.
+    if not GSE.isEmpty(variable.MetaData.Help) and GSE.GUI.CreateReadOnlyNotesPanel then
         GSE.GUI.CreateReadOnlyNotesPanel(
             container,
             L["Help Information"],
-            variable.commentsHelp,
+            variable.MetaData.Help,
             {height = INLINE_NOTES_PANEL_HEIGHT}
         )
     else
@@ -179,20 +203,25 @@ end]],
         commentsEditBox:SetNumLines(3)
         commentsEditBox:SetFullWidth(true)
         commentsEditBox:DisableButton(true)
-        commentsEditBox:SetText(variable.comments)
+        commentsEditBox:SetText(variable.MetaData.Notes or "")
         commentsEditBox:SetCallback(
             "OnTextChanged",
             function(self, event, text)
-                variable.comments = text
+                variable.MetaData.Notes = text
             end
         )
         commentsEditBox:SetCallback(
             "OnEditFocusLost",
             function()
-                variable.comments = commentsEditBox:GetText()
+                variable.MetaData.Notes = commentsEditBox:GetText()
             end
         )
         container:AddChild(commentsEditBox)
+    end
+
+    -- Which version this page edits.
+    if GSE.GUI.DrawElementVersionBar then
+        GSE.GUI.DrawElementVersionBar(editframe, container, variable, selected, redraw)
     end
 
     -- Event Callback Section ─────────────────────────────────────────────────
@@ -213,7 +242,7 @@ end]],
         return table.concat(names, ", ")
     end
 
-    local isEventEnabled = variable.eventEnabled or false
+    local isEventEnabled = version.eventEnabled or false
 
     local eventToggle = UI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
@@ -239,11 +268,11 @@ end]],
     if eventEditBox.SetFlowFillRemaining then eventEditBox:SetFlowFillRemaining(true) end
     eventEditBox:DisableButton(true)
     eventEditBox:SetDisabled(not isEventEnabled)
-    eventEditBox:SetText(formatEventNames(variable.eventNames))
+    eventEditBox:SetText(formatEventNames(version.eventNames))
     eventEditBox:SetCallback(
         "OnTextChanged",
         function(obj, event, text)
-            variable.eventNames = parseEventNames(text)
+            version.eventNames = parseEventNames(text)
         end
     )
     eventEditBox:SetCallback(
@@ -303,7 +332,7 @@ end]],
             end
             if not found then
                 table.insert(current, key)
-                variable.eventNames = current
+                version.eventNames = current
                 eventEditBox:SetText(formatEventNames(current))
             end
         end
@@ -323,11 +352,11 @@ end]],
     eventToggle:SetCallback(
         "OnValueChanged",
         function(obj, event, val)
-            variable.eventEnabled = val
+            version.eventEnabled = val
             eventEditBox:SetDisabled(not val)
             eventDropdown:SetDisabled(not val)
             if not val then
-                variable.eventNames = {}
+                version.eventNames = {}
                 eventEditBox:SetText("")
             end
         end
@@ -353,18 +382,18 @@ end]],
     valueEditBox:SetNumLines(11)
     valueEditBox:SetFullWidth(true)
     valueEditBox:DisableButton(true)
-    valueEditBox:SetText(variable.funct)
+    valueEditBox:SetText(version.funct or "")
     valueEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            variable.funct = IndentationLib.encode(text)
+            version.funct = IndentationLib.encode(text)
         end
     )
     valueEditBox:SetCallback(
         "OnEditFocusLost",
         function()
             local variabletext = IndentationLib.decode(valueEditBox:GetText())
-            variable.funct = variabletext
+            version.funct = variabletext
         end
     )
     IndentationLib.enable(valueEditBox.editBox, Statics.IndentationColorTable, 4)
@@ -450,6 +479,15 @@ end]],
     implementationOutputRow:AddChild(currentOutput)
     container:AddChild(implementationOutputRow)
 
+    -- Which version runs where: Default and the context overrides.
+    if GSE.GUI.DrawElementVersionConfig then
+        local configHeading = UI:Create("Heading")
+        configHeading:SetText(L["Configuration"])
+        configHeading:SetFullWidth(true)
+        container:AddChild(configHeading)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, variable)
+    end
+
     local buttonRow = UI:Create("SimpleGroup")
     buttonRow:SetLayout("Flow")
     buttonRow:SetWidth(400)
@@ -494,7 +532,17 @@ end]],
     savebutton:SetCallback(
         "OnClick",
         function()
-            local checkvariable, error = GSE.CheckVariable(valueEditBox:GetText())
+            -- Every version has to compile, not only the one on screen.
+            version.funct = IndentationLib.decode(valueEditBox:GetText())
+            local checkvariable, error = true, nil
+            for index, v in ipairs(variable.Versions) do
+                local ok, err = GSE.CheckVariable(v.funct or "")
+                if not ok then
+                    checkvariable = false
+                    error = string.format("%s %d: %s", L["Version"], index, tostring(err))
+                    break
+                end
+            end
             if checkvariable then
                 local saveName = keyEditBox:GetText()
                 if GSE.isEmpty(saveName) then
@@ -503,14 +551,18 @@ end]],
                 end
                 editframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
                 variable.LastUpdated = GSE.GetTimestamp()
+                -- The build that saved it, as the sequence editor stamps
+                -- MetaData.GSEVersion.
+                variable.GSEVersion = GSE.VersionNumber
                 local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
+                variable.MetaData.Name = saveName
                 local oocaction = {
                     ["action"] = "updatevariable",
-                    ["variable"] = variable,
+                    ["variable"] = GSE.CloneSequence(variable),
                     ["name"] = saveName
                 }
                 GSE.EnqueueOOC(oocaction)
-                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSEVariables and not GSE.isEmpty(GSEVariables[currentKey]) then
+                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[currentKey]) then
                     GSE.EnqueueOOC(
                         {
                             ["action"] = "deletevariable",
@@ -519,6 +571,7 @@ end]],
                     )
                 end
                 currentKey = saveName
+                draft.name = saveName
             else
                 GSE.Print(
                     L["There is an error in the sequence that needs to be corrected before it can be saved."],
@@ -554,7 +607,7 @@ end]],
 
         local rows = {}
         for _, entry in ipairs(dependents.sequences) do
-            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.name]
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
             local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
             local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
             rows[#rows+1] = { name = entry.name, author = author, updated = updated }
@@ -569,6 +622,9 @@ end
 -- ---------------------------------------------------------------------------
 function GSE.GUI.SetupVariable(editframe)
     editframe.showVariable = function(name, container)
+        -- Opened from the tree: read it afresh. Only a version switch within
+        -- the page (redraw) carries the draft over.
+        editframe.variableDraft = nil
         showVariable(editframe, name, container)
     end
     editframe.buildVariablesMenu = buildVariablesMenu

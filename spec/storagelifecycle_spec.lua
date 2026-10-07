@@ -35,7 +35,7 @@ describe("Storage lifecycle", function()
   end)
 
   before_each(function()
-    _G.GSESequences = {[1] = {}}
+    _G.GSEStore = nil; GSE.LoadStore()
     _G.GSEDeltas = {}
     _G.GSERepackQueue = {}
     _G.GSE_C = {}
@@ -52,6 +52,13 @@ describe("Storage lifecycle", function()
   local function forkFor(pid)
     return {b = "!GSE3!+1BASE", d = "delta", t = "sequence", src = pid}
   end
+  -- A stored sequence: its envelope (id, label, body) and, if given, its
+  -- loaded form. envelopePid is the PlatformID the envelope records.
+  local function stored(id, name, body, loaded, envelopePid)
+    local env = GSE.PutSequenceBody(1, id, name, body or "!GSE3!+1SEALED")
+    env.PlatformID = envelopePid
+    GSE.Library[1][id] = loaded
+  end
 
   -- ── deleting ──────────────────────────────────────────────────────────────
   describe("GSE.DeleteSequence", function()
@@ -60,47 +67,46 @@ describe("Storage lifecycle", function()
       -- nil there is nothing left to key the fork by, and it would sit in
       -- GSEDeltas forever waiting to be adopted by the next thing installed
       -- under that PlatformID.
-      GSE.Library[1]["GONE"] = seq("GONE", "pid-gone")
-      GSESequences[1]["GONE"] = "!GSE3!+1SEALED"
+      stored("id-gone", "GONE", nil, seq("GONE", "pid-gone"))
       GSEDeltas["pid-gone"] = forkFor("pid-gone")
 
-      GSE.DeleteSequence(1, "GONE")
+      GSE.DeleteSequence(1, "id-gone")
 
       assert.is_nil(GSEDeltas["pid-gone"], "the fork went with the record")
-      assert.is_nil(GSE.Library[1]["GONE"])
-      assert.is_nil(GSESequences[1]["GONE"])
+      assert.is_nil(GSE.Library[1]["id-gone"])
+      assert.is_nil(GSE.SequenceEnvelope("id-gone"))
     end)
 
     it("leaves another sequence's fork alone", function()
-      GSE.Library[1]["GONE"] = seq("GONE", "pid-gone")
-      GSE.Library[1]["STAYS"] = seq("STAYS", "pid-stays")
+      stored("id-gone", "GONE", nil, seq("GONE", "pid-gone"))
+      stored("id-stays", "STAYS", nil, seq("STAYS", "pid-stays"))
       GSEDeltas["pid-gone"] = forkFor("pid-gone")
       GSEDeltas["pid-stays"] = forkFor("pid-stays")
 
-      GSE.DeleteSequence(1, "GONE")
+      GSE.DeleteSequence(1, "id-gone")
 
       assert.is_nil(GSEDeltas["pid-gone"])
       assert.is_not_nil(GSEDeltas["pid-stays"], "a neighbour's edits are not collateral")
     end)
 
     it("survives a record that never had a fork", function()
-      GSE.Library[1]["PLAIN"] = seq("PLAIN", nil)
-      GSESequences[1]["PLAIN"] = {}
-      assert.has_no.errors(function() GSE.DeleteSequence(1, "PLAIN") end)
-      assert.is_nil(GSE.Library[1]["PLAIN"])
+      stored("id-plain", "PLAIN", "!GSE3!PLAIN", seq("PLAIN", nil))
+      assert.has_no.errors(function() GSE.DeleteSequence(1, "id-plain") end)
+      assert.is_nil(GSE.Library[1]["id-plain"])
     end)
 
     it("drops actionbar overrides that pointed at it", function()
-      GSE.Library[1]["GONE"] = seq("GONE", "pid-gone")
+      stored("id-gone", "GONE", nil, seq("GONE", "pid-gone"))
       GSE_C["ActionBarBinds"] = {
         Specialisations = {
           ["1"] = {
-            ActionButton1 = {Bind = "ActionButton1", Sequence = "GONE"},
-            ActionButton2 = {Bind = "ActionButton2", Sequence = "KEEP"},
+            -- Saved binds hold the sequence's id.
+            ActionButton1 = {Bind = "ActionButton1", Sequence = "id-gone"},
+            ActionButton2 = {Bind = "ActionButton2", Sequence = "id-keep"},
           },
         },
       }
-      GSE.DeleteSequence(1, "GONE")
+      GSE.DeleteSequence(1, "id-gone")
       local binds = GSE_C["ActionBarBinds"]["Specialisations"]["1"]
       assert.is_nil(binds.ActionButton1, "a bind to a sequence that no longer exists is dead")
       assert.is_not_nil(binds.ActionButton2, "and the others are untouched")
@@ -109,33 +115,144 @@ describe("Storage lifecycle", function()
 
   describe("GSE.DeleteCorruptSequence", function()
     it("forgets the fork when the body did load", function()
-      GSE.Library[1]["BAD"] = seq("BAD", "pid-bad")
-      GSESequences[1]["BAD"] = "!GSE3!+1SEALED"
+      stored("id-bad", "BAD", nil, seq("BAD", "pid-bad"))
       GSEDeltas["pid-bad"] = forkFor("pid-bad")
 
-      GSE.DeleteCorruptSequence(1, "BAD")
+      GSE.DeleteCorruptSequence(1, "id-bad")
 
       assert.is_nil(GSEDeltas["pid-bad"])
-      assert.is_nil(GSESequences[1]["BAD"])
-      assert.is_nil(GSE.Library[1]["BAD"])
+      assert.is_nil(GSE.SequenceEnvelope("id-bad"))
+      assert.is_nil(GSE.Library[1]["id-bad"])
     end)
 
-    -- Documenting a real limit, not asserting it is desirable. The PlatformID
-    -- is read from GSE.Library, and a sequence is usually ON the corrupt list
-    -- BECAUSE loadOneClass could not decode it and set that entry to nil. So
-    -- for the common case the fork cannot be keyed and survives the delete.
-    -- GSEPlatformIDs is no help: it is keyed name|author, and the author is in
-    -- the body we could not read.
-    it("cannot forget the fork when the body never loaded", function()
-      GSESequences[1]["BAD"] = "!GSE3!+1SEALED"
-      GSE.Library[1]["BAD"] = nil
+    -- A sequence is usually ON the corrupt list because its body could not be
+    -- decoded, so the PlatformID inside it cannot be read. This used to strand
+    -- its fork; the envelope beside the body carries the PlatformID in the
+    -- clear, so the fork goes with the record.
+    it("forgets the fork even when the body never loaded", function()
+      stored("id-bad", "BAD", nil, nil, "pid-bad")
       GSEDeltas["pid-bad"] = forkFor("pid-bad")
 
-      GSE.DeleteCorruptSequence(1, "BAD")
+      GSE.DeleteCorruptSequence(1, "id-bad")
 
-      assert.is_nil(GSESequences[1]["BAD"], "the record still goes")
-      assert.is_not_nil(GSEDeltas["pid-bad"],
-        "but its fork is stranded -- nothing links the name to the id once the body is unreadable")
+      assert.is_nil(GSE.SequenceEnvelope("id-bad"), "the record goes")
+      assert.is_nil(GSEDeltas["pid-bad"], "and its fork with it")
+    end)
+  end)
+
+  -- ── renaming ──────────────────────────────────────────────────────────────
+  describe("GSE.RenameSequence", function()
+    before_each(function()
+      GSE.EncodeMessage = GSE.EncodeMessage or function(t) return "!GSE3!" .. tostring(t[1]) end
+      GSE.SanitizeSequenceEditorMarkup = function() return false end
+    end)
+
+    it("keeps the id and moves the record when the rename changes class too", function()
+      local s = seq("OLD", nil)
+      s.MetaData.noExport = nil
+      GSE.PutSequenceBody(1, "id-r", "OLD", "!GSE3!OLD")
+      GSE.Library[1]["id-r"] = s
+      GSE.Library[2] = {}
+      assert.is_true(GSE.RenameSequence(2, "id-r", "NEW", s))
+      assert.is_nil(GSE.Library[1]["id-r"], "no copy left in the old class")
+      assert.are.equal(s, GSE.Library[2]["id-r"])
+      local env, classid = GSE.SequenceEnvelope("id-r")
+      assert.are.equal(2, classid)
+      assert.are.equal("NEW", env.Name)
+      assert.are.equal("id-r", GSE.FindSequenceId("NEW", 2))
+    end)
+  end)
+
+  -- ── /gse movelostmacros ───────────────────────────────────────────────────
+  describe("GSE.MoveMacroToClassFromGlobal", function()
+    local savedClassFor, savedReload, savedStatics
+    before_each(function()
+      GSE.EncodeMessage = GSE.EncodeMessage or function(t) return "!GSE3!" .. tostring(t[1]) end
+      GSE.SanitizeSequenceEditorMarkup = function() return false end
+      savedClassFor, savedReload = GSE.GetClassIDforSpec, GSE.ReloadSequences
+      GSE.GetClassIDforSpec = function(spec) return (spec <= 13) and spec or 5 end
+      GSE.ReloadSequences = function() end
+      savedStatics = GSE.Static.SpecIDList
+      GSE.Static.SpecIDList = GSE.Static.SpecIDList or {}
+      GSE.L["Moved %s to class %s."] = "Moved %s to class %s."
+      require("../GSE_Utils/Utils")
+    end)
+    after_each(function()
+      GSE.GetClassIDforSpec, GSE.ReloadSequences = savedClassFor, savedReload
+      GSE.Static.SpecIDList = savedStatics
+    end)
+
+    it("moves a global sequence whose spec names a class, for good, keeping its id", function()
+      local s = {MetaData = {Name = "LOST", SpecID = 258, Default = 1}, Versions = {{Actions = {}}}}
+      GSE.Library[0] = {}
+      GSE.PutSequenceBody(0, "id-lost", "LOST", "!GSE3!LOST")
+      GSE.Library[0]["id-lost"] = s
+      GSE.MoveMacroToClassFromGlobal()
+      local env, classid = GSE.SequenceEnvelope("id-lost")
+      assert.are.equal(5, classid, "stored in its class, not only moved in memory")
+      assert.are.equal("LOST", env.Name)
+      assert.is_nil(GSE.Library[0]["id-lost"])
+      assert.is_not_nil(GSE.Library[5]["id-lost"])
+    end)
+
+    it("leaves a sequence that really is global", function()
+      local s = {MetaData = {Name = "ALL", SpecID = 0, Default = 1}, Versions = {{Actions = {}}}}
+      GSE.Library[0] = {}
+      GSE.PutSequenceBody(0, "id-all", "ALL", "!GSE3!ALL")
+      GSE.Library[0]["id-all"] = s
+      GSE.MoveMacroToClassFromGlobal()
+      local _, classid = GSE.SequenceEnvelope("id-all")
+      assert.are.equal(0, classid)
+    end)
+  end)
+
+  -- ── Embed blocks ──────────────────────────────────────────────────────────
+  -- An Embed carries the id and the label: the id when this machine has it,
+  -- the label otherwise; and what leaves the machine never carries a local id.
+  describe("Embed blocks", function()
+    local function embedding(block)
+      return {MetaData = {Name = "OUTER"}, Versions = {{Actions = {block}}}}
+    end
+    local function inner(id, name, pid)
+      local env = GSE.PutSequenceBody(1, id, name, "!GSE3!" .. name)
+      env.PlatformID = pid
+      GSE.Library[1][id] = {MetaData = {Name = name}, Versions = {{Actions = {}}}}
+    end
+
+    it("runs the embedded sequence by id, however it was renamed", function()
+      inner("id-in", "RENAMED")
+      local _, id = GSE.ResolveEmbed({Type = "Embed", SequenceID = "id-in", Sequence = "OLDNAME"})
+      assert.are.equal("id-in", id)
+    end)
+
+    it("falls back to the label for an id this machine does not have", function()
+      inner("id-in", "INNER")
+      local _, id = GSE.ResolveEmbed({Type = "Embed", SequenceID = "someone-elses", Sequence = "INNER"})
+      assert.are.equal("id-in", id)
+    end)
+
+    it("brings the block up to date on save: the id, and the current label", function()
+      inner("id-in", "NEWNAME")
+      local named = {Type = "Embed", Sequence = "NEWNAME"}
+      local renamed = {Type = "Embed", SequenceID = "id-in", Sequence = "OLDNAME"}
+      local seq = embedding(named)
+      seq.Versions[2] = {Actions = {{Type = "Loop", renamed}}}
+      GSE.NormaliseEmbeds(seq)
+      assert.are.equal("id-in", named.SequenceID, "a label-only block gains the id")
+      assert.are.equal("NEWNAME", renamed.Sequence, "the label follows a rename, even inside a Loop")
+    end)
+
+    it("never lets a local id leave the machine", function()
+      inner("local-unsynced", "UNSYNCED")
+      inner("local-synced", "SYNCED", "pid-synced0000000000000000")
+      local a = {Type = "Embed", SequenceID = "local-unsynced", Sequence = "UNSYNCED"}
+      local b = {Type = "Embed", SequenceID = "local-synced", Sequence = "SYNCED"}
+      local seq = embedding(a)
+      seq.Versions[1].Actions[2] = b
+      GSE.NormaliseEmbeds(seq, true)
+      assert.is_nil(a.SequenceID, "no PlatformID yet: the label decides elsewhere")
+      assert.are.equal("UNSYNCED", a.Sequence)
+      assert.are.equal("pid-synced0000000000000000", b.SequenceID)
     end)
   end)
 
@@ -217,11 +334,13 @@ describe("GSE.DuplicateSequence", function()
     GSE.GetCurrentClassID = GSE.GetCurrentClassID or function() return 1 end
     GSE.UpdateSequence = function() end
     GSE.GetActiveSequenceVersion = function() return 1 end
-    GSE.FindSequence = function(name)
-      for _, bucket in pairs(GSE.Library) do
-        if type(bucket) == "table" and bucket[name] then return bucket[name] end
-      end
-    end
+    GSE.SanitizeSequenceEditorMarkup = function() return false end
+    GSE.EncodeMessage = GSE.EncodeMessage or function(t) return "!GSE3!" .. tostring(t[1]) end
+  end)
+
+  before_each(function()
+    _G.GSEStore = nil; GSE.LoadStore()
+    GSE.Library = {[1] = {}}
   end)
 
   local function source(name)
@@ -231,12 +350,23 @@ describe("GSE.DuplicateSequence", function()
       Versions = {{Actions = {{macro = "/cast Alpha"}}}},
     }
   end
+  -- A stored, loaded sequence under id; returns the id.
+  local function put(id, name)
+    GSE.PutSequenceBody(1, id, name, "!GSE3!" .. name)
+    GSE.Library[1][id] = source(name)
+    return id
+  end
+  local function copyNamed(name)
+    local id = GSE.FindSequenceId(name, 1)
+    return id and GSE.Library[1][id], id
+  end
 
   it("mints its own identity instead of inheriting one", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    local newName = GSE.DuplicateSequence(1, "SRC", "COPY")
+    put("id-src", "SRC")
+    local newId, newName = GSE.DuplicateSequence(1, "id-src", "COPY")
     assert.are.equal("COPY", newName)
-    local copy = GSE.Library[1]["COPY"]
+    assert.are_not.equal("id-src", newId, "a copy is a new record here too")
+    local copy = GSE.Library[1][newId]
     assert.is_not_nil(copy)
     assert.is_nil(copy.MetaData.PlatformID, "a copy is not the record it was copied from")
     assert.are.equal("COPY|Bob@Realm", copy.MetaData.OriginKey, "and begins its own history")
@@ -244,42 +374,43 @@ describe("GSE.DuplicateSequence", function()
   end)
 
   it("leaves the source untouched", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    GSE.DuplicateSequence(1, "SRC", "COPY")
-    local src = GSE.Library[1]["SRC"]
+    put("id-src", "SRC")
+    GSE.DuplicateSequence(1, "id-src", "COPY")
+    local src = GSE.Library[1]["id-src"]
     assert.are.equal("pid-source", src.MetaData.PlatformID)
     assert.are.equal("SRC|Bob@Realm", src.MetaData.OriginKey)
     assert.are.equal("SRC", src.MetaData.Name)
   end)
 
   it("copies the body deeply", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    GSE.DuplicateSequence(1, "SRC", "COPY")
-    GSE.Library[1]["COPY"].Versions[1].Actions[1].macro = "/cast Bravo"
-    assert.are.equal("/cast Alpha", GSE.Library[1]["SRC"].Versions[1].Actions[1].macro)
+    put("id-src", "SRC")
+    GSE.DuplicateSequence(1, "id-src", "COPY")
+    copyNamed("COPY").Versions[1].Actions[1].macro = "/cast Bravo"
+    assert.are.equal("/cast Alpha", GSE.Library[1]["id-src"].Versions[1].Actions[1].macro)
   end)
 
   it("normalises a supplied name the way import does", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    assert.are.equal("My_New_Seq", GSE.DuplicateSequence(1, "SRC", "My New,Seq"))
+    put("id-src", "SRC")
+    assert.are.equal("My_New_Seq", select(2, GSE.DuplicateSequence(1, "id-src", "My New,Seq")))
   end)
 
   it("auto-numbers when no name is given", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    assert.are.equal("SRCCopy", GSE.DuplicateSequence(1, "SRC"))
-    assert.are.equal("SRCCopy2", GSE.DuplicateSequence(1, "SRC"))
-    assert.are.equal("SRCCopy3", GSE.DuplicateSequence(1, "SRC"))
+    put("id-src", "SRC")
+    assert.are.equal("SRCCopy", select(2, GSE.DuplicateSequence(1, "id-src")))
+    assert.are.equal("SRCCopy2", select(2, GSE.DuplicateSequence(1, "id-src")))
+    assert.are.equal("SRCCopy3", select(2, GSE.DuplicateSequence(1, "id-src")))
   end)
 
   it("refuses a name already in use rather than overwriting it", function()
-    GSE.Library[1]["SRC"] = source("SRC")
-    GSE.Library[1]["TAKEN"] = source("TAKEN")
-    assert.is_nil(GSE.DuplicateSequence(1, "SRC", "TAKEN"))
-    assert.are.equal("TAKEN", GSE.Library[1]["TAKEN"].MetaData.Name, "the occupant is untouched")
+    put("id-src", "SRC")
+    put("id-taken", "TAKEN")
+    assert.is_nil(GSE.DuplicateSequence(1, "id-src", "TAKEN"))
+    assert.are.equal("TAKEN", GSE.Library[1]["id-taken"].MetaData.Name, "the occupant is untouched")
+    assert.are.equal("id-taken", GSE.FindSequenceId("TAKEN", 1), "and still the one the name finds")
   end)
 
   it("refuses what it cannot find or name", function()
-    assert.is_nil(GSE.DuplicateSequence(1, "NOSUCH", "X"))
+    assert.is_nil(GSE.DuplicateSequence(1, "id-nosuch", "X"))
     assert.is_nil(GSE.DuplicateSequence(1, nil, "X"))
   end)
 end)

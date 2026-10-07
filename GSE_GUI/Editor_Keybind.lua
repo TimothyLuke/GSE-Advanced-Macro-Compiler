@@ -9,26 +9,37 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
-local function sequenceExists(seqName)
-    for _, classLib in pairs(GSE.Library or {}) do
-        if classLib[seqName] then return true end
+-- Keybinds and overrides hold the id of the sequence they run (GSE_C is
+-- brought up to date at login -- GSE.UpdateCharacterSequenceRefs). A value
+-- that is not an id is looked up as a name, for anything that slipped past.
+local function sequenceIdOf(ref)
+    if ref == nil then return nil end
+    if GSE.SequenceEnvelope(ref) then return GSE.ResolveSequenceId(ref) end
+    return GSE.FindSequenceId(ref) or GSE.FindSequenceId(ref, nil, true)
+end
+
+local function sequenceExists(ref)
+    return sequenceIdOf(ref) ~= nil
+end
+
+local function sequenceIsDisabled(ref)
+    local id = sequenceIdOf(ref)
+    local seq = id and GSE.GetSequence(id)
+    if seq then
+        return seq.MetaData and seq.MetaData.Disabled == true
     end
     return false
 end
 
-local function sequenceIsDisabled(seqName)
-    for _, classLib in pairs(GSE.Library or {}) do
-        local seq = classLib[seqName]
-        if seq then
-            return seq.MetaData and seq.MetaData.Disabled == true
-        end
-    end
-    return false
+-- What the player reads for a sequence reference: its label.
+local function sequenceLabel(ref)
+    local id = sequenceIdOf(ref)
+    return (id and GSE.SequenceName(id)) or tostring(ref)
 end
 
 -- Append a disabled warning to a tree node label when the sequence is disabled.
 local function keybindNodeText(bindLabel, seqName)
-    local base = bindLabel .. " " .. GSEOptions.KEYWORD .. "(" .. seqName .. ")" .. Statics.StringReset
+    local base = bindLabel .. " " .. GSEOptions.KEYWORD .. "(" .. sequenceLabel(seqName) .. ")" .. Statics.StringReset
     if sequenceIsDisabled(seqName) then
         base = base .. " |cFFFF6600" .. L["Sequence Disabled"] .. "|r"
     end
@@ -130,27 +141,19 @@ end
 -- The table a keybind for this spec (and optionally this talent loadout) lives
 -- in.  `create` builds the intermediate tables; without it a missing scope
 -- returns nil rather than littering GSE_C on a read.
+--
+-- A spec's own binds are the shared profile's for the class, unless this
+-- character has opted out of it for that spec (Profiles.lua); a talent
+-- loadout's are always this character's.
 local function keybindScope(specialization, loadout, create)
-    if not GSE_C["KeyBindings"] then
+    if not loadout then return GSE.SpecKeyBinds(specialization, create) end
+    local loadouts = GSE.SpecLoadoutKeyBinds(specialization, create)
+    if not loadouts then return nil end
+    if not loadouts[loadout] then
         if not create then return nil end
-        GSE_C["KeyBindings"] = {}
+        loadouts[loadout] = {}
     end
-    local spec = GSE_C["KeyBindings"][tostring(specialization)]
-    if not spec then
-        if not create then return nil end
-        spec = {}
-        GSE_C["KeyBindings"][tostring(specialization)] = spec
-    end
-    if not loadout then return spec end
-    if not spec["LoadOuts"] then
-        if not create then return nil end
-        spec["LoadOuts"] = {}
-    end
-    if not spec["LoadOuts"][loadout] then
-        if not create then return nil end
-        spec["LoadOuts"][loadout] = {}
-    end
-    return spec["LoadOuts"][loadout]
+    return loadouts[loadout]
 end
 
 -- The table an actionbar override for this spec (and optionally this talent
@@ -165,17 +168,8 @@ local function overrideScope(specialization, loadout, create)
         GSE_C["ActionBarBinds"] = binds
     end
     specialization = tostring(specialization)
-    if not loadout then
-        if not binds["Specialisations"] then
-            if not create then return nil end
-            binds["Specialisations"] = {}
-        end
-        if not binds["Specialisations"][specialization] then
-            if not create then return nil end
-            binds["Specialisations"][specialization] = {}
-        end
-        return binds["Specialisations"][specialization]
-    end
+    -- The spec's: the shared profile's, or this character's own (Profiles.lua).
+    if not loadout then return GSE.SpecOverrides(specialization, create) end
     if not binds["LoadOuts"] then
         if not create then return nil end
         binds["LoadOuts"] = {}
@@ -192,10 +186,67 @@ local function overrideScope(specialization, loadout, create)
 end
 
 -- The player's current spec index, for the panel's default scope.
+-- The binder's own key (Profiles.lua): this used to switch at GameMode 10 where
+-- the binder switches at 7, so Legion to Shadowlands clients opened on spec 1.
 local function defaultSpecIndex()
-    if GSE.GameMode < 10 then return 1 end
-    local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-    return getSpec and getSpec() or 1
+    return tonumber(GSE.CurrentSpecKey()) or 1
+end
+
+-- Redraw whatever panel the tree has selected, after its data changed.
+local function reselect(editframe)
+    local tc = editframe.treeContainer
+    local st = tc and (tc.status or tc.localstatus)
+    local selected = st and st.selected
+    if editframe.ManageTree then editframe.ManageTree() end
+    if selected and tc and tc.SelectByValue then
+        editframe.forceTreeSelection = true
+        tc:SelectByValue(selected)
+    end
+end
+
+-- "Shared with every <class> character": whether this spec's binds and
+-- overrides are the class's shared profile (Profiles.lua) or this character's
+-- own. Unticking gives the character its own copy of the profile's; ticking
+-- drops its own for the profile's, after asking, since they are gone then.
+local function sharedProfileRow(editframe, specialization, classname)
+    local row = UI:Create("SimpleGroup")
+    row:SetFullWidth(true)
+    row:SetLayout("Flow")
+    if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
+    local box = UI:Create("CheckBox")
+    box:SetLabel(string.format(L["Shared with every %s character"], classname or ""))
+    box:SetWidth(360)
+    box:SetValue(GSE.UsesSharedProfile(specialization))
+    box:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Shared Profile"],
+            L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."],
+            editframe)
+    end)
+    box:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    box:SetCallback("OnValueChanged", function(_, _, value)
+        local function apply()
+            GSE.SetSharedProfile(specialization, value)
+            if not InCombatLockdown() then
+                GSE.ReloadKeyBindings()
+                GSE.ReloadOverrides()
+            end
+            reselect(editframe)
+        end
+        if not value then return apply() end
+        GSE.UI.ShowConfirmDialog({
+            owner       = editframe,
+            title       = L["Shared Profile"],
+            message     = L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."],
+            width       = 360,
+            height      = 200,
+            confirmText = L["Use Shared"],
+            cancelText  = L["Cancel"],
+            onConfirm   = apply,
+            onCancel    = function() box:SetValue(false) end,
+        })
+    end)
+    row:AddChild(box)
+    return row
 end
 
 -- Defined further down beside the widget helpers; the tree builder only runs
@@ -240,6 +291,13 @@ local function buildKeybindMenu()
                 if not next(buttons) then loadouts[loadoutid] = nil end
             end
         end
+        -- And the shared profiles' for this class's specs.
+        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+            local buttons = GSE.SpecOverrides(tostring(specIndex), false)
+            for key, override in pairs(buttons or {}) do
+                if type(override) ~= "table" or not sequenceExists(override.Sequence) then buttons[key] = nil end
+            end
+        end
 
         if GetSpecializationInfo then
             for specIndex = 1, (GetNumSpecializations and GetNumSpecializations() or 0) do
@@ -274,7 +332,14 @@ local function buildKeybindMenu()
         -- Binds whose sequence no longer exists used to be pruned while
         -- building their leaf nodes.  There are no leaf nodes any more, so
         -- prune in one pass over the saved data instead.
-        for _, v in pairs(GSE_C["KeyBindings"]) do
+        -- This character's tables, and the shared profiles' for its class.
+        local tables = {}
+        for _, v in pairs(GSE_C["KeyBindings"] or {}) do tables[#tables + 1] = v end
+        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+            local shared = GSE.UsesSharedProfile(tostring(specIndex)) and GSE.SpecKeyBinds(tostring(specIndex), false)
+            if shared then tables[#tables + 1] = shared end
+        end
+        for _, v in ipairs(tables) do
             local orphans = {}
             for i, j in pairs(v) do
                 if i ~= "LoadOuts" and not sequenceExists(j) then
@@ -334,6 +399,9 @@ local function buildKeybindMenu()
             end
         end
     end
+
+    -- Keybinding switched off (WoW Forever, #2109): Button Bindings only.
+    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -511,15 +579,17 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- than hidden, so a row already pointing at one still shows what it is.
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSESequences[GSE.GetCurrentClassID()] or {}, GSESequences[0] or {}}) do
-            for k in pairs(source) do
-                if not names[k] then
-                    names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
-                    table.insert(order, k)
+        -- Keyed by id, shown by label: what is saved is the id.
+        for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
+            for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                if env.Name and not names[id] then
+                    names[id] = sequenceIsDisabled(id) and env.Name .. " (" .. L["Sequence Disabled"] .. ")" or env.Name
+                    table.insert(order, id)
                 end
             end
         end
-        return names, GSE.SortTableAlphabetical(order)
+        table.sort(order, function(a, b) return names[a]:lower() < names[b]:lower() end)
+        return names, order
     end
 
     local function save()
@@ -561,7 +631,8 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         -- only drop it when nothing is still being filled in, or a half-set row
         -- would take the whole loadout with it.
         if loadout and not next(scope) and #incomplete == 0 then
-            GSE_C["KeyBindings"][specialization]["LoadOuts"][loadout] = nil
+            local loadouts = GSE.SpecLoadoutKeyBinds(specialization, false)
+            if loadouts then loadouts[loadout] = nil end
         end
 
         -- The rebuild releases every key the previous one bound before adding
@@ -574,7 +645,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         for _, r in ipairs(incomplete) do
             table.insert(rows, r)
             GSE.Print(string.format(L["%s was not saved: it still needs a %s."],
-                GSE.isEmpty(r.key) and r.seq or r.key,
+                GSE.isEmpty(r.key) and sequenceLabel(r.seq) or r.key,
                 GSE.isEmpty(r.key) and L["Keybind"] or L["Sequence"]))
         end
         if #incomplete > 0 and saveButton then saveButton:SetDisabled(false) end
@@ -905,6 +976,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow or centeredRow(loadoutLabel))
+    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 
@@ -1046,7 +1118,13 @@ local function actionButtonNames()
     end
     -- Anything a saved override names that exists but was not auto-detected.
     local binds = GSE_C["ActionBarBinds"] or {}
-    for _, buttons in pairs(binds["Specialisations"] or {}) do
+    local specTables = {}
+    for _, buttons in pairs(binds["Specialisations"] or {}) do specTables[#specTables + 1] = buttons end
+    for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
+        local shared = GSE.SpecOverrides(tostring(specIndex), false)
+        if shared then specTables[#specTables + 1] = shared end
+    end
+    for _, buttons in ipairs(specTables) do
         for _, override in pairs(buttons) do
             local name = type(override) == "table" and override.Bind
             if name and _G[name] then buttonlist[name] = name end
@@ -1213,15 +1291,17 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     local function sequenceList()
         local names, order = {}, {}
-        for _, source in ipairs({GSESequences[GSE.GetCurrentClassID()] or {}, GSESequences[0] or {}}) do
-            for k in pairs(source) do
-                if not names[k] then
-                    names[k] = sequenceIsDisabled(k) and k .. " (" .. L["Sequence Disabled"] .. ")" or k
-                    table.insert(order, k)
+        -- Keyed by id, shown by label: what is saved is the id.
+        for _, classid in ipairs({GSE.GetCurrentClassID(), 0}) do
+            for id, env in pairs(GSE.SequenceEnvelopes(classid)) do
+                if env.Name and not names[id] then
+                    names[id] = sequenceIsDisabled(id) and env.Name .. " (" .. L["Sequence Disabled"] .. ")" or env.Name
+                    table.insert(order, id)
                 end
             end
         end
-        return names, GSE.SortTableAlphabetical(order)
+        table.sort(order, function(a, b) return names[a]:lower() < names[b]:lower() end)
+        return names, order
     end
 
     local function rowKey(r)
@@ -1269,7 +1349,8 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- data, so rows removed here go dead on this call.
         GSE.ReloadOverrides()
         for _, r in ipairs(rows) do
-            if not GSE.isEmpty(r.seq) and _G[r.seq] and GSE.UpdateIcon then GSE.UpdateIcon(_G[r.seq]) end
+            local rowButton = not GSE.isEmpty(r.seq) and GSE.StoredSequenceId(r.seq)
+            if rowButton and _G[rowButton] and GSE.UpdateIcon then GSE.UpdateIcon(_G[rowButton]) end
         end
         if saveButton then saveButton:SetDisabled(true) end
         loadRows()
@@ -1390,7 +1471,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
         button:SetCallback("OnClick", function()
             if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
-            MenuUtil.CreateContextMenu(button.frame, function(_, root)
+            GSE.OpenContextMenu(button.frame, function(_, root)
                 root:CreateTitle(L["Actionbar Buttons"])
                 -- A saved button not on this client right now still shows.
                 if not GSE.isEmpty(model.bind) and not buttonNames[model.bind] then
@@ -1607,6 +1688,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow)
+    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 
@@ -1736,7 +1818,7 @@ end
 -- it follows the layout.  Kept per container in a weak table because the
 -- rows are pooled widgets and their frames are swept on reuse.
 local hotspots = setmetatable({}, {__mode = "k"})
-local function columnHotspot(container, index, topCell, bottomCell, onClick)
+local function columnHotspot(container, index, topCell, bottomCell, onClick, onEnter, onLeave)
     local parent = container.content or container.frame
     hotspots[parent] = hotspots[parent] or {}
     local button = hotspots[parent][index]
@@ -1759,8 +1841,14 @@ local function columnHotspot(container, index, topCell, bottomCell, onClick)
             glow:SetBackdropBorderColor(1, 1, 1, 0.08)
         end
         glow:Hide()
-        button:SetScript("OnEnter", function() glow:Show() end)
-        button:SetScript("OnLeave", function() glow:Hide() end)
+        button:SetScript("OnEnter", function(self)
+            glow:Show()
+            if self.gseOnEnter then self.gseOnEnter() end
+        end)
+        button:SetScript("OnLeave", function(self)
+            glow:Hide()
+            if self.gseOnLeave then self.gseOnLeave() end
+        end)
         hotspots[parent][index] = button
     end
     -- Top and sides from the column's top cell; bottom from the pane itself,
@@ -1772,6 +1860,7 @@ local function columnHotspot(container, index, topCell, bottomCell, onClick)
     button:SetPoint("BOTTOM", container.frame, "BOTTOM", 0, 0)
     button:SetFrameLevel((bottomCell.frame:GetFrameLevel() or 1) + 20)
     button:SetScript("OnClick", onClick)
+    button.gseOnEnter, button.gseOnLeave = onEnter, onLeave
     button:Show()
     return button
 end
@@ -1822,14 +1911,41 @@ local function mirrorHotspots(container)
     -- Both columns run the pane's full height. The top used to come from the
     -- column's own top cell, which is fine while the tiles start at the top of
     -- the pane; centred, that left the highlight starting halfway down.
+    --
+    -- Anchored to the scrolled content, not the pane, so they move with the
+    -- page when it scrolls; the pane is the fixed viewport, and highlights
+    -- pinned to it stayed put while the tiles scrolled away under them. The
+    -- offsets measured against the pane above are carried over to the content
+    -- by the difference between the two frames' edges, taken at the same
+    -- moment. The bottom is the content's own bottom when it is taller than
+    -- the pane (the page scrolls), else the pane's, as before.
+    local anchor, dx, dy = pane, 0, 0
+    local contentTop, contentBottom = parent.GetTop and parent:GetTop(), parent.GetBottom and parent:GetBottom()
+    local paneTop, paneBottom = pane:GetTop(), pane:GetBottom()
+    local contentLeft, contentRight = parent.GetLeft and parent:GetLeft(), parent.GetRight and parent:GetRight()
+    if parent ~= pane and contentTop and contentBottom and paneTop and paneBottom and contentLeft and contentRight then
+        anchor = parent
+        dx = paneLeft - contentLeft
+        dy = paneTop - contentTop
+    end
+    local bottomAnchor, bottomDy = pane, 0
+    if anchor ~= pane and (contentTop - contentBottom) > (paneTop - paneBottom) + 1 then
+        bottomAnchor = parent
+    elseif anchor ~= pane then
+        -- Content fits: keep the bottom on the pane's, expressed against the
+        -- content so both ends move together.
+        bottomAnchor = parent
+        bottomDy = paneBottom - contentBottom
+    end
     left:ClearAllPoints()
     left:SetWidth(width)
-    left:SetPoint("TOPLEFT", pane, "TOPLEFT", inset, topOffset)
-    left:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inset, 0)
+    left:SetPoint("TOPLEFT", anchor, "TOPLEFT", inset + dx, topOffset + dy)
+    left:SetPoint("BOTTOMLEFT", bottomAnchor, "BOTTOMLEFT", inset + (bottomAnchor == pane and 0 or dx), bottomDy)
     right:ClearAllPoints()
     right:SetWidth(width)
-    right:SetPoint("TOPRIGHT", pane, "TOPRIGHT", -rightInset, topOffset)
-    right:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -rightInset, 0)
+    local rdx = (anchor ~= pane) and (paneRight - contentRight) or 0
+    right:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -rightInset + rdx, topOffset + dy)
+    right:SetPoint("BOTTOMRIGHT", bottomAnchor, "BOTTOMRIGHT", -rightInset + (bottomAnchor == pane and 0 or rdx), bottomDy)
 end
 
 -- A tile is TWO stacked groups, not one: the top (icon, title, blurb, note)
@@ -1938,9 +2054,33 @@ local function showKeybindChooser(editframe, rightContainer)
     local keybindPath = GetSpecializationInfo
         and ("KEYBINDINGS\001KB\001" .. tostring(defaultSpecIndex()))
         or "KEYBINDINGS\001KB"
+    -- The loadout the player is in, when there is one: each tile goes straight
+    -- to it rather than to the spec, and lights its row in the tree on hover.
+    local activeLoadout = GetSpecializationInfo and activeLoadoutForSpec(defaultSpecIndex())
     local overridePath = GetSpecializationInfo
         and ("KEYBINDINGS\001AO\001" .. tostring(defaultSpecIndex()))
         or "KEYBINDINGS\001AO"
+    if activeLoadout then
+        keybindPath = keybindPath .. "\001" .. tostring(activeLoadout)
+        overridePath = overridePath .. "\001" .. tostring(activeLoadout)
+    end
+
+    -- The tree row a tile leads to, lit with the tree's own selection band
+    -- while the tile is hovered, and put back as the tree left it after.
+    local function treeRow(path)
+        local tree = editframe.treeContainer
+        for _, row in ipairs(tree and tree.buttons or {}) do
+            if row:IsShown() and row.uniquevalue == path then return row end
+        end
+    end
+    local function lightRow(path)
+        local row = treeRow(path)
+        if row and row.selectBand then row.selectBand:Show() end
+    end
+    local function restoreRow(path)
+        local row = treeRow(path)
+        if row and row.selectBand then row.selectBand:SetShown(row.selected and true or false) end
+    end
 
     -- Content from the GSE wiki, KeyBinding and Button Bindings.
     local overrideTop, overrideNote, overrideBullets = chooserTile(
@@ -2003,8 +2143,10 @@ local function showKeybindChooser(editframe, rightContainer)
 
     -- Hover + click over each whole column, both running to the bottom of
     -- the pane.
-    columnHotspot(rightContainer, 1, overrideTopCell, overrideBulletCell, function() goTo(overridePath) end)
-    columnHotspot(rightContainer, 2, keybindTopCell, keybindBulletCell, function() goTo(keybindPath) end)
+    columnHotspot(rightContainer, 1, overrideTopCell, overrideBulletCell, function() goTo(overridePath) end,
+        function() lightRow(overridePath) end, function() restoreRow(overridePath) end)
+    columnHotspot(rightContainer, 2, keybindTopCell, keybindBulletCell, function() goTo(keybindPath) end,
+        function() lightRow(keybindPath) end, function() restoreRow(keybindPath) end)
 
     -- Heights are only right once the widths are: once now for the case
     -- where layout is live, and once more after the editor's suspended

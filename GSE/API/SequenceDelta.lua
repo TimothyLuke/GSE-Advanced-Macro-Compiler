@@ -301,13 +301,15 @@ local function installReconstructed(t, obj, pid)
     local nm = obj.name or meta.Name
     if not nm then return end
     if t == "sequence" then
-        local classid = (GSE.GetClassIDforSpec and GSE.GetClassIDforSpec(meta.SpecID)) or 0
+        -- The fork is keyed by PlatformID; so is the sequence it belongs to.
+        local id, classid = GSE.SequenceIdByPlatformID(pid)
+        if not id then return end
         if type(GSE.Library[classid]) ~= "table" then GSE.Library[classid] = {} end
-        GSE.Library[classid][nm] = obj
+        GSE.Library[classid][id] = obj
     elseif t == "variable" and GSE.V then
         GSE.V[nm] = obj
-    elseif t == "macro" and type(GSEMacros) == "table" then
-        GSEMacros[nm] = obj
+    elseif t == "macro" and type(GSE.Store("macro")) == "table" then
+        GSE.Store("macro")[nm] = obj
     end
 end
 
@@ -689,15 +691,15 @@ end
 -- so the edits stay on screen and in play until something reloads the record.
 -- Dropping the decoded copy and re-running the lazy loader is what actually
 -- puts the author's version back, and it is the same path a fresh import takes.
-function GSE.DiscardDeltaFork(classid, sequenceName)
+function GSE.DiscardDeltaFork(classid, id)
     classid = tonumber(classid)
-    if not classid or type(sequenceName) ~= "string" then return false end
-    local seq = GSE.Library and GSE.Library[classid] and GSE.Library[classid][sequenceName]
+    if not classid or type(id) ~= "string" then return false end
+    local seq = GSE.Library and GSE.Library[classid] and GSE.Library[classid][id]
     local meta = type(seq) == "table" and seq.MetaData or {}
     local pid = meta.PlatformID or (type(seq) == "table" and seq.PlatformID)
     if not GSE.ForgetDeltaFork or not GSE.ForgetDeltaFork(pid) then return false end
-    GSE.Library[classid][sequenceName] = nil
-    if GSE.EnsureSequenceLoaded then GSE.EnsureSequenceLoaded(classid, sequenceName) end
+    GSE.Library[classid][id] = nil
+    if GSE.EnsureSequenceLoaded then GSE.EnsureSequenceLoaded(classid, id) end
     return true
 end
 

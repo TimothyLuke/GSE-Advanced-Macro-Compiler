@@ -149,19 +149,15 @@ GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
 end
 
 -- Stamp the checksum onto the locally saved sequence on every save.
-local function onSequenceSaved(_, sequenceName)
+local function onSequenceSaved(_, id)
     if not GSE.ComputeSequenceChecksum then return end
-    for classid = 0, 13 do
-        local seq = GSE.Library[classid] and GSE.Library[classid][sequenceName]
-        if seq and seq.MetaData then
-            seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
-            -- The checksum is computed from the body, so it is recovered on the
-            -- next load; protected content keeps its sealed blob instead.
-            if not GSE.IsProtectedAtRest(GSESequences[classid][sequenceName], seq) then
-                GSESequences[classid][sequenceName] = GSE.EncodeMessage({sequenceName, seq})
-            end
-            break
-        end
+    local _, classid = GSE.SequenceEnvelope(id)
+    local seq = classid ~= nil and GSE.Library[classid] and GSE.Library[classid][id]
+    if seq and seq.MetaData then
+        seq.MetaData.Checksum = GSE.ComputeSequenceChecksum(seq)
+        -- The checksum is computed from the body, so it is recovered on the
+        -- next load; protected content keeps its sealed blob instead.
+        GSE.StoreSequenceBody(classid, id, seq)
     end
 end
 GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
@@ -361,13 +357,13 @@ GSE.OnEditorSpellTab = function(widget, menuOwner, apply)
     local editBox = widget and (widget.editBox or widget.editbox)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Spell"])
             for _, v in ipairs(getPlayerSpells()) do
                 rootDescription:CreateButton(v, function() apply(v) end)
             end
             rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
+            for k, _ in pairs(GSE.Store("variable")) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
             end
         end)
@@ -430,7 +426,7 @@ GSE.OnEditorUnitTab = function(widget, menuOwner, apply, action)
     if not editBox then return end
     editBox:SetScript("OnTabPressed", function()
         local atype = actionTypeOf(action)
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert Unit"])
             for _, group in ipairs(TAB_UNITS) do
                 if not group.types or group.types[atype] then
@@ -522,12 +518,9 @@ local TAB_CONDITIONALS = {
 -- Names of GSE-managed in-game macros (the editor's Macros section).
 local function getManagedMacroNames()
     local names, seen = {}, {}
-    local function isMacroNode(v)
-        return type(v) == "table" and (v.text ~= nil or v.icon ~= nil or v.value ~= nil
-            or v.Managed ~= nil or v.managedMacro ~= nil or v.manageMacro ~= nil)
-    end
-    if type(GSEMacros) == "table" then
-        for k, v in pairs(GSEMacros) do
+    local isMacroNode = GSE.IsStoredMacroNode
+    if type(GSE.Store("macro")) == "table" then
+        for k, v in pairs(GSE.Store("macro")) do
             if isMacroNode(v) then
                 if not seen[k] then seen[k] = true; names[#names + 1] = k end
             elseif type(v) == "table" then -- per-character bucket
@@ -541,32 +534,6 @@ local function getManagedMacroNames()
     return names
 end
 
--- Sequences available to this character, for the Macro editor's /click list.
-local function getSequenceNames()
-    local names, seen = {}, {}
-    for _, bucket in ipairs({GSESequences and GSESequences[GSE.GetCurrentClassID()], GSESequences and GSESequences[0]}) do
-        if type(bucket) == "table" then
-            for k in pairs(bucket) do
-                if not seen[k] then seen[k] = true; names[#names + 1] = k end
-            end
-        end
-    end
-    table.sort(names)
-    return names
-end
-
--- The /click line that fires a sequence. Its shape depends on KeyUp vs KeyDown
--- AND on which reset modifiers are enabled, and GSE.CreateMacroString is where
--- that logic lives -- so lift its /click line instead of rebuilding the string.
--- The Tab menu this replaces hand-built `"/click " .. name .. "LeftButton t"`,
--- which is missing the space before LeftButton and so never matched a button.
-local function sequenceClickLine(name)
-    local full = (GSE.CreateMacroString and GSE.CreateMacroString(name)) or ""
-    local click = full:match("([^\n]*/click[^\n]*)")
-    if click and click ~= "" then return click end
-    return "/click " .. name
-end
-
 -- Tab line builder. Shared by the sequence editor's macro block and by the
 -- Macro editor's boxes; `opts` carries the two differences between them:
 --   opts.macroMode  the gates read the CURRENT LINE instead of the whole box.
@@ -577,12 +544,10 @@ end
 --   opts.variables  offer GSE variables. A managed macro is compiled through
 --                   GSE.CompileMacroText, which evaluates a leading "=" -- an
 --                   unmanaged box is raw WoW macro text and is not.
---   opts.sequences  offer the /click line that fires a GSE sequence.
 local function attachMacroLineBuilder(widget, menuOwner, opts)
     opts = opts or {}
     local macroMode      = opts.macroMode and true or false
     local offerVariables = macroMode and (opts.variables and true or false) or true
-    local offerSequences = opts.sequences and true or false
     -- Tolerant on purpose: the Macro editor's original hook was called with the
     -- editbox itself, and resolving only widget.editBox would turn Tab into a
     -- silent no-op for any caller that still passes one.
@@ -603,6 +568,11 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
         -- pin the menu under the macro box for the whole build session. Falls back
         -- to the cursor-anchored path if any piece is missing on older flavours.
         local function openMenu()
+            -- Gamepad mode cannot use Blizzard's menu at all; see GSE/API/ContextMenu.lua.
+            if GSE.IsGamepadInterface() then
+                GSE.OpenContextMenu(editBox, buildMenu)
+                return
+            end
             local mgr = Menu and Menu.GetManager and Menu.GetManager()
             if mgr and mgr.OpenMenu and AnchorUtil and AnchorUtil.CreateAnchor
                 and MenuUtil.CreateRootMenuDescription and Menu.PopulateDescription then
@@ -614,7 +584,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                 mgr:OpenMenu(editBox, desc, AnchorUtil.CreateAnchor("TOPLEFT", editBox, "BOTTOMLEFT", 0, -2))
                 return
             end
-            MenuUtil.CreateContextMenu(editBox, buildMenu)
+            GSE.OpenContextMenu(editBox, buildMenu)
         end
         -- Start every session on DECODED text: colour codes injected by repaints
         -- between sessions make raw offsets lie (splices landed inside escape
@@ -1211,14 +1181,8 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                     end
                     if offerVariables then
                         local vars = rootDescription:CreateButton(L["GSE Variables"])
-                        for k, _ in pairs(GSEVariables or {}) do
+                        for k, _ in pairs(GSE.Store("variable") or {}) do
                             vars:CreateButton(k, function() return insertLine([[=GSE.V["]] .. k .. [["]()]]) end)
-                        end
-                    end
-                    if offerSequences then
-                        local seqs = rootDescription:CreateButton(L["GSE Sequences"])
-                        for _, name in ipairs(getSequenceNames()) do
-                            seqs:CreateButton(name, function() return insertLine(sequenceClickLine(name)) end)
                         end
                     end
                 elseif liveHasText then
@@ -1238,7 +1202,7 @@ local function attachMacroLineBuilder(widget, menuOwner, opts)
                         macros:CreateButton(name, function() return setWhole(name) end)
                     end
                     local vars = rootDescription:CreateButton(L["GSE Variables"])
-                    for k, _ in pairs(GSEVariables or {}) do
+                    for k, _ in pairs(GSE.Store("variable") or {}) do
                         vars:CreateButton(k, function() return setWhole([[=GSE.V["]] .. k .. [["]()]]) end)
                     end
                 end
@@ -1351,9 +1315,9 @@ end
 -- variable / test case (boolean field) or a variable / sequence (managed macro).
 GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
     editBox:SetScript("OnTabPressed", function()
-        MenuUtil.CreateContextMenu(editBox, function(ownerRegion, rootDescription)
+        GSE.OpenContextMenu(editBox, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Insert GSE Variable"])
-            for k, _ in pairs(GSEVariables) do
+            for k, _ in pairs(GSE.Store("variable")) do
                 rootDescription:CreateButton(k, function() apply([[=GSE.V["]] .. k .. [["]()]]) end)
             end
             rootDescription:CreateTitle(L["Insert Test Case"])
@@ -1362,13 +1326,11 @@ GSE.OnEditorBooleanTab = function(editBox, menuOwner, apply)
         end)
     end)
 end
--- The Macro editor's boxes get the same builder, line-scoped, plus the /click
--- sequence list. `opts.variables` for the managed box only -- see the compile
--- note on attachMacroLineBuilder.
+-- The Macro editor's boxes get the same builder, line-scoped. `opts.variables`
+-- for the managed box only -- see the compile note on attachMacroLineBuilder.
 GSE.OnEditorMacroTab = function(widget, menuOwner, opts)
     attachMacroLineBuilder(widget, menuOwner, {
         macroMode = true,
-        sequences = true,
         variables = opts and opts.variables or false,
     })
 end
@@ -1377,37 +1339,11 @@ end
 --
 -- Every part of this block hands a snippet to the restricted environment: the
 -- Execute in UpdateVehicleBar, the _onattributechanged body below, and
--- RegisterAttributeDriver firing that body. On WoW Forever (1.60.x) Blizzard's
--- RestrictedExecution.lua has no loadstring_untainted, so each one dies with
--- "attempt to call a nil value" -- three errors at login on an install with no
--- sequences at all.
---
--- The capability CANNOT be probed. A trial :Execute() wrapped in pcall still
--- reports: the restricted environment calls the error handler directly rather
--- than raising something pcall can swallow, so the test is itself a fourth
--- error. Anything that asks the question by executing makes the problem worse.
---
--- API presence cannot answer it either. Forever ships the retail API surface
--- whole -- HasVehicleActionBar, HasOverrideActionBar, GetBonusBarOffset and
--- C_ActionBar.GetVehicleBarIndex all exist and are callable there. That is the
--- same reason GameMode is honestly 12 and why the >= 11 test passes.
---
--- So this is a flavour exclusion, and deliberately a temporary one. It is NOT
--- a claim that the feature is meaningless on Forever: [possessbar] is valid on
--- vanilla content, so these binds would be genuinely useful there. It is a
--- claim that nothing here can work while no snippet compiles, and that erroring
--- three times per login is the worse of the two nothings.
---
--- Remove this the moment Blizzard ships loadstring_untainted on that stream --
--- the feature then works on Forever with no other change. Fails OPEN: if the
--- flavour cannot be determined the block runs exactly as before.
-local function restrictedEnvironmentBroken()
-    if not (GSE.TOCFlavour and GetBuildInfo) then return false end
-    local _, _, _, tocversion = GetBuildInfo()
-    return GSE.TOCFlavour(tocversion) == "forever"
-end
-
-if GSE.GameMode >= 11 and not restrictedEnvironmentBroken() then
+-- RegisterAttributeDriver firing that body. WoW Forever (1.60.x) shipped
+-- without loadstring_untainted, so each died with "attempt to call a nil
+-- value"; this block was excluded there until Blizzard fixed it in
+-- 1.60.1.70009 (confirmed in-game 2026-09-25). Forever runs it like retail.
+if GSE.GameMode >= 11 then
     -- Native Blizzard Settings subcategory. Lifted from the master-branch
     -- pattern that was overwritten by the AceGUI removal pass — register a
     -- vertical layout subcategory and add native button initializers, one

@@ -167,6 +167,31 @@ local ELVUI_TEXT_BUTTON_HOVER_SCALE = 1.12
 local activeTreeDrag
 local activeDropdownList
 
+-- A row dragged out of its tree. The held row keeps the mouse, so whether the
+-- pointer has left the tree is checked every frame while the button is down;
+-- the first time it has, the tree fires OnButtonDragOut(value), and the
+-- release then fires OnButtonDragOutEnd(value) instead of an in-tree drop.
+-- The editor uses this to carry a sequence on to an action button.
+local treeDragWatcher = CreateFrame("Frame")
+treeDragWatcher:Hide()
+treeDragWatcher:SetScript("OnUpdate", function(self)
+    local drag = activeTreeDrag
+    if not drag or not IsMouseButtonDown("LeftButton") then
+        -- Released somewhere the row never heard about (it was hidden or
+        -- recycled mid-drag): forget the drag.
+        if drag and drag.draggedOut then drag.widget:Fire("OnButtonDragOutEnd", drag.value) end
+        activeTreeDrag = nil
+        self:Hide()
+        return
+    end
+    if drag.draggedOut then return end
+    local tree = drag.widget.treeframe
+    if tree and not tree:IsMouseOver() then
+        drag.draggedOut = true
+        drag.widget:Fire("OnButtonDragOut", drag.value)
+    end
+end)
+
 local function nextName(prefix)
     widgetId = widgetId + 1
     return ("GSEUI%s%d"):format(prefix, widgetId)
@@ -4201,7 +4226,7 @@ local function createDropdown()
                 return
             end
             if MenuUtil and MenuUtil.CreateContextMenu then
-                MenuUtil.CreateContextMenu(
+                GSE.OpenContextMenu(
                     button,
                     function(ownerRegion, rootDescription)
                         if label:GetText() and label:GetText() ~= "" then
@@ -4738,6 +4763,7 @@ local function createTreeButton(widget)
             if mouseButton ~= "LeftButton" then return end
             local x, y = GetCursorPosition()
             activeTreeDrag = {value = self.uniquevalue, widget = widget, x = x, y = y}
+            treeDragWatcher:Show()
         end
     )
     button:SetScript(
@@ -4749,7 +4775,13 @@ local function createTreeButton(widget)
             local dy = y - activeTreeDrag.y
             local source = activeTreeDrag.value
             local dragWidget = activeTreeDrag.widget
+            local draggedOut = activeTreeDrag.draggedOut
             activeTreeDrag = nil
+            treeDragWatcher:Hide()
+            if draggedOut then
+                dragWidget:Fire("OnButtonDragOutEnd", source)
+                return
+            end
             if (dx * dx + dy * dy) < 100 then return end
             for _, candidate in ipairs(dragWidget.buttons or {}) do
                 if candidate:IsShown() and candidate:IsMouseOver() and candidate.uniquevalue ~= source then
@@ -5244,11 +5276,10 @@ local function createTreeGroup()
     --   by (textWidth + gap) / 2. To center the unit on navContent we shift the
     --   checkbox anchor LEFT by that same amount. WoW's anchor system keeps the
     --   center dynamic as navContent resizes — no per-frame recompute needed.
+    -- Left-aligned now: the row's right side holds the grouping switch.
     local function recenterCheckbox()
-        local textWidth = (allSeqCheckbox.text and allSeqCheckbox.text:GetStringWidth()) or 0
-        local xOffset = -((textWidth + NAV_CHECKBOX_GAP) / 2)
         allSeqCheckbox:ClearAllPoints()
-        allSeqCheckbox:SetPoint("BOTTOM", navContent, "BOTTOM", xOffset, 2)
+        allSeqCheckbox:SetPoint("BOTTOMLEFT", navContent, "BOTTOMLEFT", 0, 2)
     end
     recenterCheckbox()
     local function syncAllSeqCheckbox()
@@ -5270,6 +5301,40 @@ local function createTreeGroup()
     syncAllSeqCheckbox()
     navWindow.GSEAllSeqCheckbox = allSeqCheckbox
     navWindow.GSESyncAllSeqCheckbox = syncAllSeqCheckbox
+
+    -- How the tree groups content (GSEOptions.editorTreeGrouping, read by
+    -- Editor_Tree's ManageTree): by type, by class -- each class's sequences,
+    -- variables and macros together -- or by the collection they came from.
+    -- One click moves to the next, and every open editor redraws its tree.
+    local GROUPINGS = { "type", "class", "collection" }
+    local GROUPING_LABEL = { type = "By Type", class = "By Class", collection = "By Collection" }
+    local groupingButton = CreateFrame("Button", nil, navContent, "UIPanelButtonTemplate")
+    groupingButton:SetSize(96, NAV_CHECKBOX_SIZE)
+    groupingButton:SetPoint("BOTTOMRIGHT", navContent, "BOTTOMRIGHT", 0, 2)
+    local function currentGrouping()
+        local g = GSEOptions and GSEOptions.editorTreeGrouping
+        return GROUPING_LABEL[g] and g or "type"
+    end
+    local function syncGroupingButton()
+        local label = GROUPING_LABEL[currentGrouping()]
+        groupingButton:SetText(L and L[label] or label)
+    end
+    groupingButton:SetScript("OnClick", function()
+        if not GSEOptions then GSEOptions = {} end
+        local now = currentGrouping()
+        local nextOne = GROUPINGS[1]
+        for i, g in ipairs(GROUPINGS) do
+            if g == now then nextOne = GROUPINGS[(i % #GROUPINGS) + 1] end
+        end
+        GSEOptions.editorTreeGrouping = nextOne
+        syncGroupingButton()
+        if GSE.GUI and GSE.GUI.RefreshOpenEditorTrees then
+            GSE.GUI.RefreshOpenEditorTrees()
+        end
+    end)
+    groupingButton:HookScript("OnShow", syncGroupingButton)
+    syncGroupingButton()
+    navWindow.GSEGroupingButton = groupingButton
 
     -- Move treeframe into navContent
     treeframe:SetParent(navContent)
@@ -5627,9 +5692,17 @@ local function createTreeGroup()
         --
         -- Only react to a size we did NOT just set. A real user drag still
         -- differs from st.treewidth and still refreshes.
+        --
+        -- Height is not ours, though: RefreshTree never sets it, and it is what
+        -- decides how many rows fit. Skipping a height-only change left the
+        -- old row count drawn after the editor was made shorter, spilling rows
+        -- out below the panel. So a height change always refreshes.
         local st = widget.status or widget.localstatus
         local w = treeframe:GetWidth() or 0
-        if st and st.treewidth and math.abs(w - st.treewidth) <= 2 then return end
+        local h = treeframe:GetHeight() or 0
+        local heightChanged = math.abs(h - (widget.lastTreeHeight or -1)) > 1
+        widget.lastTreeHeight = h
+        if not heightChanged and st and st.treewidth and math.abs(w - st.treewidth) <= 2 then return end
         widget:RefreshTree()
     end)
 
@@ -6830,7 +6903,7 @@ function GSE.GUINewVariablePrompt(editor)
 end
 
 -- Corrupt-sequence recovery prompt (Delete / Skip); advances the chain either way.
-function GSE.GUIConfirmCorruptSequence(classid, name, bodyText)
+function GSE.GUIConfirmCorruptSequence(classid, id, bodyText)
     UI.ShowConfirmDialog({
         title       = L["Corrupt Sequence"],
         message     = tostring(bodyText or ""),
@@ -6839,7 +6912,7 @@ function GSE.GUIConfirmCorruptSequence(classid, name, bodyText)
         width       = 420,
         height      = 220,
         onConfirm   = function()
-            GSE.DeleteCorruptSequence(classid, name)
+            GSE.DeleteCorruptSequence(classid, id)
             GSE.ProcessNextCorruptSequence()
         end,
         onCancel    = function()
@@ -6859,12 +6932,14 @@ function GSE.GUIConfirmSequenceIntegrity(seqName, sequence, forcereplace)
         width       = 420,
         height      = 240,
         onConfirm   = function()
+            -- Filed, and announced, once its class and id are known.
             if forcereplace then
-                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(sequence.MetaData.SpecID), seqName, sequence)
+                local classid = GSE.GetClassIDforSpec(sequence.MetaData.SpecID)
+                sequence.MetaData.Name = seqName
+                GSE.PerformMergeAction("REPLACE", classid, GSE.SequenceIdForIncoming(classid, seqName, sequence), sequence)
             else
                 GSE.AddSequenceToCollection(seqName, sequence)
             end
-            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end,
     })
 end
@@ -6888,12 +6963,14 @@ function GSE.GUIConfirmSequenceOlderVersion(seqName, sequence, forcereplace)
                     return
                 end
             end
+            -- Filed, and announced, once its class and id are known.
             if forcereplace then
-                GSE.PerformMergeAction("REPLACE", GSE.GetClassIDforSpec(sequence.MetaData.SpecID), seqName, sequence)
+                local classid = GSE.GetClassIDforSpec(sequence.MetaData.SpecID)
+                sequence.MetaData.Name = seqName
+                GSE.PerformMergeAction("REPLACE", classid, GSE.SequenceIdForIncoming(classid, seqName, sequence), sequence)
             else
                 GSE.AddSequenceToCollection(seqName, sequence)
             end
-            GSE:SendMessage(Statics.Messages.SEQUENCE_UPDATED, seqName)
         end,
     })
 end

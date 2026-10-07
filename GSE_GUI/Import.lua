@@ -493,7 +493,7 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSESequences[0][k] or GSESequences[GSE.GetCurrentClassID()][k] then
+      if GSE.FindSequenceId(k) then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -533,7 +533,7 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSEVariables[k] then
+      if GSE.Store("variable")[k] then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -564,7 +564,7 @@ local function processCollection(payload)
     macroLabel:SetText(L["Macros"])
     macroLabel:SetFontObject(GameFontNormalLarge)
     scroll:AddChild(macroLabel)
-    local char, realm = UnitFullName("player")
+    local charKey = GSE.CharacterMacroBucketKey()
     for k, _ in pairs(payload["Macros"]) do
       local row = UI:Create("SimpleGroup")
       row:SetLayout("Flow")
@@ -575,10 +575,10 @@ local function processCollection(payload)
       row:AddChild(spacer)
       local chkbox = UI:Create("CheckBox")
       local label = k
-      if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-        GSEMacros[char .. "-" .. realm] = {}
+      if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
       end
-      if GSEMacros[k] or GSEMacros[char .. "-" .. realm][k] or GetMacroIndexByName(k) then
+      if GSE.Store("macro")[k] or GSE.Store("macro")[charKey][k] or GetMacroIndexByName(k) then
         label = label .. GSEOptions.COMMENT .. " (" .. L["Already Known"] .. ") " .. Statics.StringReset
       end
       chkbox:SetLabel(label)
@@ -606,7 +606,10 @@ local function processCollection(payload)
         ["Sequences"] = {},
         ["Variables"] = {},
         ["Macros"] = {},
-        ["ElementCount"] = 0
+        ["ElementCount"] = 0,
+        -- Collection provenance rides along; only the members picked here
+        -- are stored, so only they take it.
+        ["Collections"] = payload["Collections"],
       }
       -- processWAGOImport returns nil when it refuses an incompatible
       -- legacy record (Macros-only). Skip those silently — the function
@@ -787,7 +790,7 @@ local function processQueueCollections(collections)
   -- Per-collection, per-key per-action choice:
   --   importset[i][category][key] = "Import"|"Replace"|"Merge"|"Ignore"
   local importset = {}
-  local char, realm = UnitFullName("player")
+  local charKey = GSE.CharacterMacroBucketKey()
 
   for i, col in ipairs(collections) do
     importset[i] = { Sequences = {}, Variables = {}, Macros = {} }
@@ -818,10 +821,7 @@ local function processQueueCollections(collections)
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, seqData in pairs(payload.Sequences or {}) do
-        local exists = false
-        for cid = 0, 13 do
-          if GSESequences[cid] and GSESequences[cid][k] then exists = true break end
-        end
+        local exists = GSE.FindSequenceId(k, nil, true) ~= nil
         addActionRow(scroll, k .. " " .. statusTag(exists), importset[i].Sequences, k, true)
         if type(seqData) == "table" and type(seqData.MetaData) == "table" then
           local eleDesc = truncate(seqData.MetaData.HelpTxt, 160)
@@ -849,7 +849,7 @@ local function processQueueCollections(collections)
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
       for k, _ in pairs(payload.Variables or {}) do
-        addActionRow(scroll, k .. " " .. statusTag(not GSE.isEmpty(GSEVariables[k])),
+        addActionRow(scroll, k .. " " .. statusTag(not GSE.isEmpty(GSE.Store("variable")[k])),
                      importset[i].Variables, k, false)
       end
     end
@@ -861,14 +861,14 @@ local function processQueueCollections(collections)
       lbl:SetText(L["Macros"])
       lbl:SetFontObject(GameFontNormalLarge)
       scroll:AddChild(lbl)
-      if GSE.isEmpty(GSEMacros[char .. "-" .. realm]) then
-        GSEMacros[char .. "-" .. realm] = {}
+      if GSE.isEmpty(GSE.Store("macro")[charKey]) then
+        GSE.Store("macro")[charKey] = {}
       end
       for k, _ in pairs(payload.Macros or {}) do
-        local topLevel = GSEMacros[k]
+        local topLevel = GSE.Store("macro")[k]
         local isMacroNode = type(topLevel) == "table"
             and (type(topLevel.text) == "string" or type(topLevel.name) == "string")
-        local charBucket = GSEMacros[char .. "-" .. realm]
+        local charBucket = GSE.Store("macro")[charKey]
         local macIdx = GetMacroIndexByName(k)
         local exists = isMacroNode
                     or (type(charBucket) == "table" and charBucket[k] ~= nil)

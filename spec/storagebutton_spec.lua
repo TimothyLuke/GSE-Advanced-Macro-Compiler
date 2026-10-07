@@ -473,6 +473,88 @@ describe("GSE3 button build", function()
     end)
   end)
 
+  describe("what the icon path shows and sends (#2122)", function()
+    -- The button is named by its sequence's id. What the player sees is the
+    -- sequence's label; GSE's own listeners are handed the id.
+    local ID, LABEL = "pidA000000000000000000aa", "SQ-HUNTER-BEASTMASTERY-ST"
+    local messages, labelText
+    local STUBBED = {"SequenceName", "GetSpellInfo", "SendMessage", "ButtonOverrides", "GameMode", "UsedSequences"}
+    local saved = {}
+
+    local function overrideButton()
+      local page = {GetAttribute = function(_, k) return k == "actionpage" and 1 or nil end}
+      local bar = {GetParent = function() return page end}
+      return {
+        GetParent = function() return bar end,
+        GetID = function() return 1 end,
+        icon = {SetTexture = function() end, Show = function() end},
+        TextOverlayContainer = {Count = {
+          SetText = function(_, t) labelText = t end,
+          SetTextScale = function() end
+        }}
+      }
+    end
+
+    before_each(function()
+      messages, labelText = {}, nil
+      GSE.SequenceDebugLastClickSerials = {}
+      for _, k in ipairs(STUBBED) do saved[k] = GSE[k] end
+      saved.GetActionInfo, saved.strsplittable, saved.split =
+        _G.GetActionInfo, _G.strsplittable, string.split
+      saved.label = GSEOptions.showActionBarLabel
+      GSE.SequenceName = function(id) return id == ID and LABEL or nil end
+      GSE.GetSpellInfo = function() return {iconID = 4242, name = "Kill Command"} end
+      GSE.SendMessage = function(_, msg, payload) messages[msg] = payload end
+      GSE.UsedSequences = {}
+      GSE.GameMode = 12
+      GSE.ButtonOverrides = {GSETestOverride1 = ID}
+      _G.GSETestOverride1 = overrideButton()
+      _G.GetActionInfo = function() return nil end
+      _G.strsplittable = function(sep, s)
+        local out = {}
+        for part in string.gmatch(s, "[^" .. sep .. "]+") do out[#out + 1] = part end
+        return out
+      end
+      string.split = function(sep, s) return s:match("^([^" .. sep .. "]*)" .. sep .. "(.*)$") end
+      GSEOptions.showActionBarLabel = true
+    end)
+
+    after_each(function()
+      for _, k in ipairs(STUBBED) do GSE[k] = saved[k] end
+      _G.GetActionInfo, _G.strsplittable, string.split =
+        saved.GetActionInfo, saved.strsplittable, saved.split
+      GSEOptions.showActionBarLabel = saved.label
+      _G.GSETestOverride1 = nil
+    end)
+
+    local function click()
+      local f = build({spellStep(34026)}, false, ID)
+      f:SetAttribute("localmods", "LALT=false|MOUSEBUTTON=LeftButton")
+      f:SetAttribute("gseclickserial", 1)
+      realUpdateIcon(f, false)
+      return f
+    end
+
+    it("labels an action-bar override with the sequence's label, not its id", function()
+      click()
+      assert.equals(LABEL, labelText)
+    end)
+
+    it("blanks the override label when Action Bar Label is off", function()
+      GSEOptions.showActionBarLabel = false
+      click()
+      assert.equals("", labelText)
+    end)
+
+    it("hands GSE's listeners the sequence's id", function()
+      click()
+      local icon = messages.GSE_SEQUENCE_ICON_UPDATE
+      local mods = messages.GSE_MODS_VISIBLE
+      assert.equals(ID, icon.SequenceID)
+      assert.equals(ID, mods.SequenceID)
+    end)
+  end)
+
   describe("when the build cannot be done", function()
     it("says the macro is missing rather than creating a button", function()
       GSE.CreateGSE3Button(nil, "TESTBUTTON", false)

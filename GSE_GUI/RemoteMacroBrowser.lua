@@ -90,7 +90,11 @@ local function newRemoteRow(rowWidth)
     return row
 end
 
-local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
+-- One offered element: its label, its help, and a button that asks for it by
+-- id (the label rides along for the sender's messages).
+local function addKeyPairRow(container, rowWidth, kind, id, row, ClassID)
+    local SequenceName = row.Label or tostring(id)
+    local Help = GSE.isEmpty(row.Help) and L["No Help Information "] or row.Help
     local nameWidth, helpWidth = remoteColumnWidths(rowWidth)
     local linegroup1 = newRemoteRow(rowWidth)
 
@@ -120,7 +124,7 @@ local function addKeyPairRow(container, rowWidth, SequenceName, Help, ClassID)
     testRowButton:SetCallback(
         "OnClick",
         function()
-            GSE.RequestSequence(ClassID, SequenceName, remoteFrame.GSEUser, remoteFrame.Channel)
+            GSE.RequestElement(kind, id, SequenceName, ClassID, remoteFrame.GSEUser, remoteFrame.Channel)
         end
     )
     testRowButton:SetCallback(
@@ -191,8 +195,32 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
     remoteFrame.SequenceList = SequenceList
     remoteFrame.GSEUser = GSEUser
     remoteFrame.Channel = channel
-    for ClassID, v in ipairs(remoteFrame.SequenceList) do
-        local lClassID = tonumber(ClassID)
+
+    -- Rows sorted by label: hash order meant the same player's list came back
+    -- in a different order every time it was opened.
+    local function sortedIds(rows)
+        local ids = {}
+        for id in pairs(rows) do ids[#ids + 1] = id end
+        table.sort(ids, function(a, b)
+            return tostring(rows[a].Label or a):lower() < tostring(rows[b].Label or b):lower()
+        end)
+        return ids
+    end
+    local function addHeading(text)
+        local line = newRemoteRow(columnWidth)
+        local label = UI:Create("Label")
+        label:SetText(text)
+        line:AddChild(label)
+        contentcontainer:AddChild(line)
+    end
+
+    -- Sequences, one group per class, global (0) first. This used ipairs,
+    -- which starts at 1: nobody's global sequences were ever listed.
+    local classIds = {}
+    for c in pairs(SequenceList.sequence or {}) do classIds[#classIds + 1] = tonumber(c) end
+    table.sort(classIds)
+    for _, lClassID in ipairs(classIds) do
+        local v = SequenceList.sequence[lClassID] or SequenceList.sequence[tostring(lClassID)]
         local linegroup1 = newRemoteRow(columnWidth)
         if lClassID > 0 then
             local classbutton = UI:Create("Icon")
@@ -203,30 +231,22 @@ function GSE.ShowRemoteWindow(SequenceList, GSEUser, channel)
             linegroup1:AddChild(classbutton)
         end
         local classLabel = UI:Create("Label")
-        classLabel:SetText(Statics.SpecIDList[lClassID])
+        classLabel:SetText(lClassID == 0 and L["Global"] or Statics.SpecIDList[lClassID])
         linegroup1:AddChild(classLabel)
         contentcontainer:AddChild(linegroup1)
-        -- Sorted, not pairs(): hash order meant the same player's sequence
-        -- list came back in a different order every time it was opened.
-        local names = {}
-        for name in pairs(v) do
-            names[#names + 1] = name
+        for _, id in ipairs(sortedIds(v)) do
+            addKeyPairRow(contentcontainer, columnWidth, "sequence", id, v[id], lClassID)
         end
-        table.sort(
-            names,
-            function(a, b)
-                return tostring(a) < tostring(b)
-            end
-        )
-        for _, name in ipairs(names) do
-            local value = v[name]
-            local desc = value.Help
+    end
 
-            if GSE.isEmpty(value.Help) then
-                desc = L["No Help Information "]
+    -- Variables and macros: the summary used to carry sequences only.
+    for _, section in ipairs({{"variable", L["Variables"]}, {"macro", L["Macros"]}}) do
+        local rows = SequenceList[section[1]]
+        if type(rows) == "table" and next(rows) ~= nil then
+            addHeading(section[2])
+            for _, id in ipairs(sortedIds(rows)) do
+                addKeyPairRow(contentcontainer, columnWidth, section[1], id, rows[id])
             end
-
-            addKeyPairRow(contentcontainer, columnWidth, name, desc, lClassID)
         end
     end
     remoteFrame:SetTitle(string.format(L["GSE - %s's Sequences"], remoteFrame.GSEUser))

@@ -7,6 +7,13 @@ L["Show Button Binding Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
 L["Show Button Binding Label"] = true
 L["Show the sequence name as a text label on actionbar override buttons."] = true
+L["Keep Button Binding Icons in Full Colour"] = true
+L["Sequences cannot be put on action buttons in combat."] = true
+L["Only a saved sequence for this character's class can be put on an action button."] = true
+L["That action button already holds something. Clear it first, then drop the sequence on it."] = true
+L["Put on an Action Button"] = true
+L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
+L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
 L["Auto Accept Companion Updates"] = true
 L["Automatically import sequences pushed from the GSE Companion app without showing the import dialog. Deletes will still require confirmation."] = true
@@ -572,9 +579,6 @@ L["Local Function: "] = true
 L[
         "/gse|r will list any sequences available to your spec.  This will also add an in-game macro for each sequence available to your current spec to the macro interface."
     ] = true
-L[
-        "/gse cleanorphans|r will loop through your macros and delete any left over GSE macros that no longer have a sequence to match them."
-    ] = true
 L["/gse help|r to get started."] = true
 L["Advanced Macro Compiler loaded.|r  Type "] = true
 L["GSE Plugins"] = true
@@ -667,7 +671,6 @@ L["Commands"] = true
 L["Conditionals"] = true
 L["Spells"] = true
 L["GSE Variables"] = true
-L["GSE Sequences"] = true
 L["Reset"] = true
 L["Only valid after a /castsequence command."] = true
 L["Requires a reset= on the line."] = true
@@ -1037,3 +1040,28 @@ L["Local changes discarded."] = true
 
 L["Use the author's %s"] = true
 L["Replace your %s on this block with the author's.  Your other changes stay."] = true
+L["Version Label"] = true
+L["Copy the selected version into a new one."] = true
+L["Version %d is still selected for: %s"] = true
+L["Use %s"] = true
+L["From collections"] = true
+L["Not from a collection"] = true
+L["Collections"] = true
+L["Export this Collection"] = true
+L["Remove this Collection's Elements"] = true
+L["Forget this Collection"] = true
+L["Delete everything that came only through %s? Anything another collection also brought is kept, and only forgets %s."] = true
+L["%s: %d deleted, %d kept for other collections."] = true
+L["By Type"] = true
+L["By Class"] = true
+L["By Collection"] = true
+L["Shared with every %s character"] = true
+L["Shared Profile"] = true
+L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."] = true
+L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."] = true
+L["Use Shared"] = true
+L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."] = true
+L["A macro named %s already exists."] = true
+L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
+L["The version used where no other version has been configured."] = true
+L["Everything that uses it is %s."] = true
