@@ -1911,14 +1911,41 @@ local function mirrorHotspots(container)
     -- Both columns run the pane's full height. The top used to come from the
     -- column's own top cell, which is fine while the tiles start at the top of
     -- the pane; centred, that left the highlight starting halfway down.
+    --
+    -- Anchored to the scrolled content, not the pane, so they move with the
+    -- page when it scrolls; the pane is the fixed viewport, and highlights
+    -- pinned to it stayed put while the tiles scrolled away under them. The
+    -- offsets measured against the pane above are carried over to the content
+    -- by the difference between the two frames' edges, taken at the same
+    -- moment. The bottom is the content's own bottom when it is taller than
+    -- the pane (the page scrolls), else the pane's, as before.
+    local anchor, dx, dy = pane, 0, 0
+    local contentTop, contentBottom = parent.GetTop and parent:GetTop(), parent.GetBottom and parent:GetBottom()
+    local paneTop, paneBottom = pane:GetTop(), pane:GetBottom()
+    local contentLeft, contentRight = parent.GetLeft and parent:GetLeft(), parent.GetRight and parent:GetRight()
+    if parent ~= pane and contentTop and contentBottom and paneTop and paneBottom and contentLeft and contentRight then
+        anchor = parent
+        dx = paneLeft - contentLeft
+        dy = paneTop - contentTop
+    end
+    local bottomAnchor, bottomDy = pane, 0
+    if anchor ~= pane and (contentTop - contentBottom) > (paneTop - paneBottom) + 1 then
+        bottomAnchor = parent
+    elseif anchor ~= pane then
+        -- Content fits: keep the bottom on the pane's, expressed against the
+        -- content so both ends move together.
+        bottomAnchor = parent
+        bottomDy = paneBottom - contentBottom
+    end
     left:ClearAllPoints()
     left:SetWidth(width)
-    left:SetPoint("TOPLEFT", pane, "TOPLEFT", inset, topOffset)
-    left:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inset, 0)
+    left:SetPoint("TOPLEFT", anchor, "TOPLEFT", inset + dx, topOffset + dy)
+    left:SetPoint("BOTTOMLEFT", bottomAnchor, "BOTTOMLEFT", inset + (bottomAnchor == pane and 0 or dx), bottomDy)
     right:ClearAllPoints()
     right:SetWidth(width)
-    right:SetPoint("TOPRIGHT", pane, "TOPRIGHT", -rightInset, topOffset)
-    right:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -rightInset, 0)
+    local rdx = (anchor ~= pane) and (paneRight - contentRight) or 0
+    right:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -rightInset + rdx, topOffset + dy)
+    right:SetPoint("BOTTOMRIGHT", bottomAnchor, "BOTTOMRIGHT", -rightInset + (bottomAnchor == pane and 0 or rdx), bottomDy)
 end
 
 -- A tile is TWO stacked groups, not one: the top (icon, title, blurb, note)
