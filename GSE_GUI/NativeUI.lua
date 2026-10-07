@@ -5692,9 +5692,17 @@ local function createTreeGroup()
         --
         -- Only react to a size we did NOT just set. A real user drag still
         -- differs from st.treewidth and still refreshes.
+        --
+        -- Height is not ours, though: RefreshTree never sets it, and it is what
+        -- decides how many rows fit. Skipping a height-only change left the
+        -- old row count drawn after the editor was made shorter, spilling rows
+        -- out below the panel. So a height change always refreshes.
         local st = widget.status or widget.localstatus
         local w = treeframe:GetWidth() or 0
-        if st and st.treewidth and math.abs(w - st.treewidth) <= 2 then return end
+        local h = treeframe:GetHeight() or 0
+        local heightChanged = math.abs(h - (widget.lastTreeHeight or -1)) > 1
+        widget.lastTreeHeight = h
+        if not heightChanged and st and st.treewidth and math.abs(w - st.treewidth) <= 2 then return end
         widget:RefreshTree()
     end)
 
