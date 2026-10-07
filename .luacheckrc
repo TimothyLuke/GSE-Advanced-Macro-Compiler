@@ -525,6 +525,7 @@ globals = {
     "PlayerSpellsFrame",
     "C_SpellBook",
     "MenuUtil",
+    "EnumerateFrames",
     "C_InputInterfaceStyle",
     "UISpecialFrames",
     "NORMAL_FONT_COLOR_CODE",

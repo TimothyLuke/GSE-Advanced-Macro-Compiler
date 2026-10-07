@@ -514,6 +514,58 @@ local function redrawConfigurationSubTab(editframe, container, tab)
     C_Timer.After(0, redraw)
 end
 
+-- The sequence's icon, top right of the Config tab row. Dragging it onto any
+-- action button puts the sequence on that button (GSE.BeginSequenceDrag in
+-- GSE/API/Events.lua). One frame, reused: it is re-parented onto each tab row
+-- and taken back off when the row is released, so it never rides along on a
+-- recycled widget.
+local DRAG_ICON_SIZE = 28
+local sequenceDragIcon
+local function attachSequenceDragIcon(editframe, tabRow)
+    if not sequenceDragIcon then
+        sequenceDragIcon = CreateFrame("Button", nil, UIParent)
+        sequenceDragIcon:SetSize(DRAG_ICON_SIZE, DRAG_ICON_SIZE)
+        sequenceDragIcon.texture = sequenceDragIcon:CreateTexture(nil, "ARTWORK")
+        sequenceDragIcon.texture:SetAllPoints()
+        sequenceDragIcon:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        sequenceDragIcon:RegisterForDrag("LeftButton")
+        sequenceDragIcon:SetScript("OnDragStart", function(self)
+            if self.sequenceId then GSE.BeginSequenceDrag(self.sequenceId) end
+        end)
+        sequenceDragIcon:SetScript("OnDragStop", function()
+            GSE.FinishSequenceDrag()
+        end)
+        sequenceDragIcon:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            GameTooltip_SetTitle(GameTooltip, L["Put on an Action Button"])
+            if self.sequenceId then
+                GameTooltip_AddNormalLine(GameTooltip, L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."])
+            else
+                GameTooltip_AddNormalLine(GameTooltip, L["Only a saved sequence for this character's class can be put on an action button."])
+            end
+            GameTooltip:Show()
+        end)
+        sequenceDragIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+    local id = editframe.SequenceID
+    -- Draggable only when the sequence has a live button: saved, and of this
+    -- character's class.
+    local live = id and _G[id] and GSE.SequencesExec and GSE.SequencesExec[id] and true or false
+    sequenceDragIcon.sequenceId = live and id or nil
+    sequenceDragIcon.texture:SetTexture(live and GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark)
+    sequenceDragIcon.texture:SetDesaturated(not live)
+    sequenceDragIcon:SetParent(tabRow.frame)
+    sequenceDragIcon:SetFrameLevel(tabRow.frame:GetFrameLevel() + 5)
+    sequenceDragIcon:ClearAllPoints()
+    sequenceDragIcon:SetPoint("TOPRIGHT", tabRow.frame, "TOPRIGHT", -FORM_SIDE_PADDING, 0)
+    sequenceDragIcon:Show()
+    tabRow:SetCallback("OnRelease", function()
+        sequenceDragIcon:Hide()
+        sequenceDragIcon:SetParent(UIParent)
+        sequenceDragIcon:ClearAllPoints()
+    end)
+end
+
 local function addConfigurationTabs(editframe, container)
     local activeTab = currentConfigSubTab(editframe)
     local tabRow = UI:Create("SimpleGroup")
@@ -542,6 +594,7 @@ local function addConfigurationTabs(editframe, container)
     end
 
     container:AddChild(tabRow)
+    attachSequenceDragIcon(editframe, tabRow)
 end
 
 local function addSequenceNameEditor(editframe, container)
