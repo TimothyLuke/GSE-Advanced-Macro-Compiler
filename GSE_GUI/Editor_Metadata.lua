@@ -721,17 +721,6 @@ function markdownNotesText(sequence)
     return meta.Notes
 end
 
--- Read-only rendered notes. The text is already WoW escape sequences, so a
--- FontString shows the author's headings, emphasis and links as formatting --
--- an EditBox would print the raw |cFFffff00... codes, which is the whole
--- reason this replaces the editable box rather than just disabling it.
---
--- The label is given an explicit width BEFORE its text: Label:SetText measures
--- GetStringHeight at the frame's current width, and the list layout reads that
--- height back rather than re-measuring, so a full-width label would be sized
--- for the placeholder width and clip its last lines.
--- `label` is the field name; the read-only hint is appended here so the three
--- editors that show notes cannot drift apart on wording or colour.
 -- Links in a note. The server's rendering is plain escape-coded text, which a
 -- FontString draws but cannot click; every http(s) address in it is wrapped
 -- in a gseurl hyperlink (blue), and clicking one opens a popup with the
@@ -771,7 +760,7 @@ local function linkifyNotes(text)
 end
 
 StaticPopupDialogs["GSE_COPY_NOTES_LINK"] = {
-    text = "Copy this link with Ctrl+C:",
+    text = T("Copy this link with Ctrl+C:"),
     button1 = CLOSE or "Close",
     hasEditBox = true,
     editBoxWidth = 360,
@@ -831,7 +820,7 @@ local function notesTextFrame(body)
             local url = type(link) == "string" and link:match("^gseurl:(.+)$")
             if not url then return end
             GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            GameTooltip:SetText("Click to copy this link")
+            GameTooltip:SetText(T("Click to copy this link"))
             GameTooltip:AddLine(url, 1, 1, 1, true)
             GameTooltip:Show()
         end)
@@ -843,6 +832,17 @@ local function notesTextFrame(body)
     return entry
 end
 
+-- Read-only rendered notes. The text is already WoW escape sequences, so a
+-- FontString shows the author's headings, emphasis and links as formatting --
+-- an EditBox would print the raw |cFFffff00... codes, which is the whole
+-- reason this replaces the editable box rather than just disabling it.
+--
+-- The label is given an explicit width BEFORE its text: Label:SetText measures
+-- GetStringHeight at the frame's current width, and the list layout reads that
+-- height back rather than re-measuring, so a full-width label would be sized
+-- for the placeholder width and clip its last lines.
+-- `label` is the field name; the read-only hint is appended here so the three
+-- editors that show notes cannot drift apart on wording or colour.
 local function addRenderedNotesPanel(container, label, text, options)
     local gap        = (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
     local boxHeight  = (options and options.height) or NOTES_RENDERED_HEIGHT
@@ -1420,7 +1420,16 @@ end
 -- editors. `text` must already be WoW escape sequences (the server renders the
 -- markdown: MetaData.Notes -> MetaData.Help for sequences, comments ->
 -- commentsHelp for macros and variables).
+--
+-- The panel measures the note's height at its width, so it needs the real
+-- content width. options.editframe, when given, supplies it the way the
+-- sequence page does (metadataContentWidth); otherwise the container's current
+-- width is used, which is still 0 on a page that has not been laid out yet.
 function GSE.GUI.CreateReadOnlyNotesPanel(container, label, text, options)
+    options = options or {}
+    if not options.width and options.editframe then
+        options.width = metadataContentWidth(options.editframe, container)
+    end
     return addRenderedNotesPanel(container, label, text, options)
 end
 

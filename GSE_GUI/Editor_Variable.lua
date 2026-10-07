@@ -195,7 +195,7 @@ end]]}},
             container,
             L["Help Information"],
             variable.MetaData.Help,
-            {height = INLINE_NOTES_PANEL_HEIGHT}
+            {height = INLINE_NOTES_PANEL_HEIGHT, editframe = editframe}
         )
     else
         local commentsEditBox = UI:Create("MultiLineEditBox")
