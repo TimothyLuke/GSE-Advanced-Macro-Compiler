@@ -4518,9 +4518,13 @@ local function createControllerKeybinding()
     -- ON at rest, OFF only for the duration of a capture.  pcall because the
     -- call is combat-locked on current clients.
     local function propagateKeys(enabled)
-        if button.SetPropagateKeyboardInput then
-            pcall(button.SetPropagateKeyboardInput, button, enabled)
-        end
+        -- Only when it changes, and never in combat: the call is protected
+        -- there, and pcall stops the error but not WoW's ADDON_ACTION_BLOCKED
+        -- report -- closing the editor in combat (every key field resets on
+        -- release) blamed GSE_GUI. At rest propagation is already on.
+        if not button.SetPropagateKeyboardInput or InCombatLockdown() then return end
+        if button.GetPropagateKeyboardInput and button:GetPropagateKeyboardInput() == enabled then return end
+        pcall(button.SetPropagateKeyboardInput, button, enabled)
     end
     propagateKeys(true)
 
