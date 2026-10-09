@@ -335,7 +335,432 @@ local function getCurrentGSEAction(seq)
     return executionseq[step]
 end
 
+-- "Successful Casts Only" (Options > Action Bar Overrides, on by default): while a
+-- sequence runs, its override buttons show the spell that last went off from a
+-- press of them, not the next step's. A successful player cast goes to the
+-- latest press, inside the tracker's SuccessCastWindow, of a sequence that
+-- can cast it (sequenceCasts); a cast no pressed sequence can make is ignored.
+local lastCastSpell = {} -- sequence id -> the spell it last cast
+local pendingPresses = {} -- sequence id -> time of its latest press, until a cast claims it
+local lastPressedAt = {} -- sequence id -> time of its latest press
+local scheduleIdleCheck -- defined with the repaint below
+local function showLastCast()
+    return GSEOptions and GSEOptions.actionBarShowLastCast ~= false
+end
+local function noteOverridePress(button)
+    -- The sequence's own button (named by its id), or a bar button carrying it.
+    local name = button.GetName and button:GetName()
+    local seq = (button.GetAttribute and button:GetAttribute("gse-button"))
+        or (name and GSE.SequencesExec and GSE.SequencesExec[name] and name)
+    if seq then
+        pendingPresses[seq] = GetTime()
+        lastPressedAt[seq] = GetTime()
+        if lastCastSpell[seq] then scheduleIdleCheck(seq) end
+    end
+end
+-- Every click the sequence button executes, held-key repeats included, ends
+-- in GSE.UpdateIcon (its secure snippet calls it); a PostClick hook misses
+-- the repeats of a held key on Retail. Other repaints call it too, so only a new
+-- gseclickserial (bumped by each executed click) counts.
+local lastClickSerial = setmetatable({}, {__mode = "k"})
+function GSE.NoteSequencePress(button)
+    local serial = button.GetAttribute and button:GetAttribute("gseclickserial")
+    if not serial or serial == lastClickSerial[button] then return end
+    lastClickSerial[button] = serial
+    noteOverridePress(button)
+end
+-- Whether a sequence's compiled steps name a spell: its name, its base
+-- spell's name, or either ID. Presses of different sequences overlap (one
+-- pressed while another's cast is still on its way), so a cast only counts
+-- for a sequence that can cast it. Cached per compiled table.
+local sequenceTextCache = setmetatable({}, {__mode = "k"})
+local function sequenceText(seq)
+    local steps = GSE.SequencesExec and GSE.SequencesExec[seq]
+    if type(steps) ~= "table" then return "" end
+    local text = sequenceTextCache[steps]
+    if not text then
+        local parts = {}
+        for _, entry in pairs(steps) do
+            if type(entry) == "table" then
+                parts[#parts + 1] = tostring(entry.spell or "")
+                parts[#parts + 1] = tostring(entry.macrotext or "")
+            end
+        end
+        text = strlower(table.concat(parts, "\n"))
+        sequenceTextCache[steps] = text
+    end
+    return text
+end
+local function spellName(spellID)
+    return (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID))
+        or (GetSpellInfo and (GetSpellInfo(spellID)))
+end
+-- A sequence that casts Blizzard's Single-Button Assistant names none of the
+-- spells it fires; those are the assistant's rotation spells.
+local function assistantCasts(text, ids)
+    local assisted = C_AssistedCombat
+    local action = assisted and assisted.GetActionSpell and assisted.GetActionSpell()
+    local name = action and spellName(action)
+    if not (name and string.find(text, strlower(name), 1, true)) then return false end
+    for _, rotationID in ipairs(assisted.GetRotationSpells and assisted.GetRotationSpells() or {}) do
+        for _, id in ipairs(ids) do
+            if rotationID == id then return true end
+        end
+    end
+    return false
+end
+local function sequenceCasts(seq, spellID)
+    local text = sequenceText(seq)
+    local base = FindBaseSpellByID and FindBaseSpellByID(spellID)
+    local ids = {spellID, base}
+    for _, id in ipairs(ids) do
+        local name = spellName(id)
+        if name and string.find(text, strlower(name), 1, true) then return true end
+        if string.find(text, "%f[%d]" .. id .. "%f[%D]") then return true end
+    end
+    return assistantCasts(text, ids)
+end
+-- The spells a sequence would cast now, in the order its steps name them:
+-- each /cast, /use, /castsequence and /castrandom line resolved through its
+-- conditionals as the macro would resolve them this moment, so a line such as
+-- [nopet,dead] Revive Pet only counts when it would fire (WoW calls Revive Pet
+-- usable with a live pet). Equipment slots and items resolve to no spell.
+-- Then, for a Single-Button Assistant sequence, the assistant's rotation.
+local CAST_COMMANDS = {cast = true, use = true, castsequence = true, castrandom = true}
+local sequenceLinesCache = setmetatable({}, {__mode = "k"})
+local function sequenceLines(steps)
+    local lines = sequenceLinesCache[steps]
+    if lines then return lines end
+    lines = {}
+    local keys = {}
+    for k, entry in pairs(steps) do
+        if type(k) == "number" and type(entry) == "table" then keys[#keys + 1] = k end
+    end
+    table.sort(keys)
+    for _, k in ipairs(keys) do
+        local entry = steps[k]
+        if entry.spell then
+            lines[#lines + 1] = {spell = GSE.UnEscapeString and GSE.UnEscapeString(entry.spell) or entry.spell}
+        end
+        for line in string.gmatch(entry.macrotext or "", "[^\n]+") do
+            local cmd, args = string.match(line, "^%s*/(%a+)%s+(.*)")
+            if cmd and CAST_COMMANDS[strlower(cmd)] then
+                lines[#lines + 1] = {cmd = strlower(cmd), args = args}
+            end
+        end
+    end
+    sequenceLinesCache[steps] = lines
+    return lines
+end
+local function sequenceSpells(seq)
+    local steps = GSE.SequencesExec and GSE.SequencesExec[seq]
+    if type(steps) ~= "table" then return {} end
+    local spells, seen = {}, {}
+    local assistant = C_AssistedCombat and C_AssistedCombat.GetActionSpell and C_AssistedCombat.GetActionSpell()
+    local function add(nameOrID)
+        local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(nameOrID)
+        local id = info and info.spellID
+        if id and not seen[id] and id ~= assistant then
+            seen[id] = true
+            spells[#spells + 1] = id
+        end
+    end
+    for _, line in ipairs(sequenceLines(steps)) do
+        if line.spell then
+            add(line.spell)
+        else
+            local result = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(line.args)
+            for part in string.gmatch(result or "", "[^,]+") do
+                part = string.gsub(string.gsub(strtrim(part), "^reset=%S+%s*", ""), "^!", "")
+                local number = tonumber(part)
+                local slot = line.cmd == "use" and number and number <= 19
+                if part ~= "" and strlower(part) ~= "nil" and not slot then add(number or part) end
+            end
+        end
+    end
+    local assisted = C_AssistedCombat
+    if assisted and assisted.GetRotationSpells then
+        local action = assisted.GetActionSpell and assisted.GetActionSpell()
+        local name = action and spellName(action)
+        if name and string.find(sequenceText(seq), strlower(name), 1, true) then
+            local all = {}
+            for _, id in ipairs(spells) do all[#all + 1] = id end
+            for _, id in ipairs(assisted.GetRotationSpells() or {}) do all[#all + 1] = id end
+            return all
+        end
+    end
+    return spells
+end
+-- Ready: off cooldown, or only on the global cooldown. How long is left only
+-- where WoW gives it plainly (Retail can keep it secret in combat; isActive
+-- and isOnGCD never are). Clients without isActive: a GCD is not a cooldown.
+local isSecret = _G.issecretvalue or function() return false end
+local function cooldownState(spellID)
+    local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spellID)
+    if not info then return true end
+    local active = info.isActive
+    if active == nil then active = (info.duration or 0) > 1.5 end
+    if not active or info.isOnGCD == true then return true end
+    if isSecret(info.startTime) or isSecret(info.duration) then return false end
+    return false, info.startTime + info.duration - GetTime()
+end
+-- What a sequence's buttons show: the spell it last cast while it is being
+-- pressed, or while that spell is ready again. Left alone with that spell on
+-- cooldown, its own spells from there on: the first one ready, else the one
+-- off cooldown soonest, else (times kept secret) the next one.
+local function displayedSpell(seq)
+    local last = lastCastSpell[seq]
+    if not last then return nil end
+    local pressed = lastPressedAt[seq]
+    if pressed and GetTime() - pressed <= Statics.TrackerConfig.SuccessCastWindow then return last end
+    if cooldownState(last) then return last end
+    local spells = sequenceSpells(seq)
+    local count = #spells
+    local start = 0
+    local base = FindBaseSpellByID and FindBaseSpellByID(last)
+    for i, id in ipairs(spells) do
+        if id == last or id == base then
+            start = i
+            break
+        end
+    end
+    local soonest, soonestLeft, nextInLine
+    for k = 1, count do
+        local id = spells[(start + k - 1) % count + 1]
+        -- Only spells that can be cast now, short of resources or cooldown:
+        -- Revive Pet is never on cooldown, but only usable with a dead pet.
+        local usable, noPower = true, false
+        if C_Spell and C_Spell.IsSpellUsable then usable, noPower = C_Spell.IsSpellUsable(id) end
+        if usable or noPower then
+            local ready, left = cooldownState(id)
+            if ready then return id end
+            if left and (not soonestLeft or left < soonestLeft) then
+                soonest, soonestLeft = id, left
+            elseif not left and not nextInLine then
+                nextInLine = id
+            end
+        end
+    end
+    return soonest or nextInLine or last
+end
+local function spellTexture(spellID)
+    return (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID))
+        or (GetSpellTexture and GetSpellTexture(spellID))
+end
+-- A held key on an override button arrives as repeated presses whose down and
+-- up land in the same frame, so the button is PUSHED and NORMAL again before
+-- anything is drawn and the press-down never shows (a normal spell button
+-- stays pushed while held). Keep the pushed art up briefly after such a press.
+-- Visual only, so it works in combat.
+local PRESS_FLASH_SECONDS = 0.1
+local pressFlashHooked = setmetatable({}, {__mode = "k"})
+local function hookPressFlash(button)
+    if not (button and button.GetPushedTexture and not pressFlashHooked[button]) then return end
+    pressFlashHooked[button] = true
+    local pushedAt
+    hooksecurefunc(button, "SetButtonState", function(self, state)
+        if not self:GetAttribute("gse-button") then return end
+        if state == "PUSHED" then
+            pushedAt = GetTime()
+        elseif state == "NORMAL" and pushedAt and GetTime() - pushedAt < 0.02 then
+            local pushed = self:GetPushedTexture()
+            if pushed then
+                pushed:Show()
+                C_Timer.After(PRESS_FLASH_SECONDS, function()
+                    if self:GetButtonState() == "NORMAL" then pushed:Hide() end
+                end)
+            end
+        end
+    end)
+end
+-- The cooldown of the spell a sequence last cast, on its override buttons'
+-- own cooldown frame: the slot holds no action, so the bar never shows one
+-- and clears ours on its own cooldown updates (reapplied a frame later).
+-- Where WoW has duration objects (Retail; its cooldown values can be secret
+-- in combat, which SetCooldown refuses from an addon) the object goes to the
+-- frame; elsewhere the plain start and duration.
+local function setSpellCooldown(cooldown, spellID)
+    if C_Spell.GetSpellCooldownDuration and cooldown.SetCooldownFromDurationObject then
+        local duration = C_Spell.GetSpellCooldownDuration(spellID)
+        if duration then
+            cooldown:SetCooldownFromDurationObject(duration)
+        else
+            cooldown:Clear()
+        end
+    else
+        local info = C_Spell.GetSpellCooldown(spellID)
+        if info then cooldown:SetCooldown(info.startTime, info.duration, info.modRate) end
+    end
+end
+local applyingCooldown -- our own SetCooldown/Clear, not the bar's
+local function applyButtonCooldown(button, seq)
+    local cooldown = button and button.cooldown
+    if not (cooldown and cooldown.SetCooldown and C_Spell and C_Spell.GetSpellCooldown) then return end
+    if GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(button) then return end
+    local spellID = showLastCast() and displayedSpell(seq)
+    applyingCooldown = true
+    if spellID then
+        pcall(setSpellCooldown, cooldown, spellID)
+    else
+        cooldown:Clear()
+    end
+    applyingCooldown = nil
+end
+local function applyLastCastCooldowns(sequenceId)
+    for buttonName, seq in pairs(GSE.ButtonOverrides or {}) do
+        if not sequenceId or seq == sequenceId then applyButtonCooldown(_G[buttonName], seq) end
+    end
+end
+-- Repaint a sequence's buttons when what they show changes; the swipe always.
+local shownSpell = {}
+local function refreshShown(seq)
+    local spell = showLastCast() and displayedSpell(seq)
+    if spell ~= shownSpell[seq] then
+        shownSpell[seq] = spell
+        GSE.RefreshActionBarOverrideIcons(seq)
+    end
+    applyLastCastCooldowns(seq)
+end
+-- A sequence left alone for SuccessCastWindow after its last press moves on
+-- from a last cast that is on cooldown (displayedSpell); check then.
+local idleCheckQueued = {}
+scheduleIdleCheck = function(seq)
+    if idleCheckQueued[seq] then return end
+    idleCheckQueued[seq] = true
+    C_Timer.After(Statics.TrackerConfig.SuccessCastWindow + 0.05, function()
+        idleCheckQueued[seq] = nil
+        local pressed = lastPressedAt[seq]
+        if pressed and GetTime() - pressed <= Statics.TrackerConfig.SuccessCastWindow then
+            scheduleIdleCheck(seq)
+        else
+            refreshShown(seq)
+        end
+    end)
+end
+-- The bar clears an empty slot's cooldown on its own updates; put ours back
+-- in the same call, so no frame is drawn without it (a frame later flickered).
+local cooldownHooked = setmetatable({}, {__mode = "k"})
+local function hookCooldownKeep(button)
+    local cooldown = button and button.cooldown
+    if not (cooldown and cooldown.Clear and not cooldownHooked[cooldown]) then return end
+    cooldownHooked[cooldown] = true
+    local function reassert()
+        if applyingCooldown then return end
+        local seq = button:GetAttribute("gse-button")
+        if seq and lastCastSpell[seq] and showLastCast() then applyButtonCooldown(button, seq) end
+    end
+    hooksecurefunc(cooldown, "Clear", reassert)
+    hooksecurefunc(cooldown, "SetCooldown", reassert)
+end
+do
+    -- Spells lit up by a proc (Blizzard's SPELL_ACTIVATION_OVERLAY_GLOW), by
+    -- spell ID; the glow can drop just before the cast reports success, so a
+    -- spell whose glow ended a moment ago still counts as proc'd.
+    local procLit, procEndedAt = {}, {}
+    local PROC_GRACE_SECONDS = 0.5
+    local function wasProcced(spellID)
+        local base = FindBaseSpellByID and FindBaseSpellByID(spellID)
+        for _, id in ipairs({spellID, base}) do
+            if procLit[id] or (procEndedAt[id] and GetTime() - procEndedAt[id] < PROC_GRACE_SECONDS) then
+                return true
+            end
+        end
+        return false
+    end
+    -- A proc'd spell going off from a sequence plays Blizzard's proc burst on
+    -- that sequence's override buttons: its spell alert, shown and taken down
+    -- once the burst has played (a GSE slot has no action, so Blizzard never
+    -- shows one there itself).
+    local PROC_FLASH_SECONDS = 0.75
+    local function flashProc(sequenceId)
+        local alerts = _G.ActionButtonSpellAlertManager
+        for buttonName, seq in pairs(GSE.ButtonOverrides or {}) do
+            local button = seq == sequenceId and _G[buttonName]
+            if button then
+                if alerts and alerts.ShowAlert then
+                    pcall(alerts.ShowAlert, alerts, button)
+                    C_Timer.After(PROC_FLASH_SECONDS, function() pcall(alerts.HideAlert, alerts, button) end)
+                elseif _G.ActionButton_ShowOverlayGlow then
+                    pcall(_G.ActionButton_ShowOverlayGlow, button)
+                    C_Timer.After(PROC_FLASH_SECONDS, function() pcall(_G.ActionButton_HideOverlayGlow, button) end)
+                end
+            end
+        end
+    end
+
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE")
+    watcher:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+    watcher:SetScript("OnEvent", function(_, event, ...)
+        if event == "SPELL_UPDATE_COOLDOWN" then
+            -- A cooldown changed (started, ended, reset): what each sequence
+            -- shows may move on, and its swipe follows.
+            for seq in pairs(lastCastSpell) do refreshShown(seq) end
+            return
+        elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" then
+            local spellID = ...
+            if spellID then procLit[spellID] = true end
+            return
+        elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" then
+            local spellID = ...
+            if spellID then
+                procLit[spellID] = nil
+                procEndedAt[spellID] = GetTime()
+            end
+            return
+        end
+        local _, _, spellID = ...
+        -- The latest press, inside the window, of a sequence that casts it.
+        local now, sequence, pressedAt = GetTime()
+        for seq, at in pairs(pendingPresses) do
+            if now - at > Statics.TrackerConfig.SuccessCastWindow then
+                pendingPresses[seq] = nil
+            elseif (not pressedAt or at > pressedAt) and sequenceCasts(seq, spellID) then
+                sequence, pressedAt = seq, at
+            end
+        end
+        if not sequence then return end
+        pendingPresses[sequence] = nil
+        if wasProcced(spellID) then flashProc(sequence) end
+        if not showLastCast() then return end
+        if not spellTexture(spellID) then return end
+        lastCastSpell[sequence] = spellID
+        refreshShown(sequence)
+        scheduleIdleCheck(sequence)
+    end)
+end
+
 local function getGSESequenceIcon(seq)
+    -- Successful Casts Only: the last spell it actually cast, kept until GSE
+    -- resets the sequence (GSE.ResetButtons) -- a press that casts nothing
+    -- still advances the step, and a sequence that loops passes step 1 again
+    -- mid-run, so neither the step nor "step 1" can say what to show. Before
+    -- its first cast: its starting icon. Without the option: the step icons in
+    -- combat; out of combat the icon stays at rest (presses there still move
+    -- the step, which resets on leaving combat).
+    local shown = showLastCast() and displayedSpell(seq)
+    local shownIcon = shown and spellTexture(shown)
+    if shownIcon then return shownIcon end
+    local frame = seq and _G[seq]
+    local step = frame and frame:GetAttribute("step") or 1
+    local iteration = frame and frame:GetAttribute("iteration") or 1
+    local atRest = step <= 1 and iteration <= 1
+    if frame and not atRest and (showLastCast() or not InCombatLockdown()) then
+        -- Not moving with the step: a base icon the player picked, the first
+        -- block's icon (where this GSE has them), else the first compiled step's.
+        local start = GSE.GetSequenceBaseIcon and GSE.GetSequenceBaseIcon(seq)
+        if not start and GSE.GetSequenceFirstBlockIcon then
+            start = GSE.GetSequenceFirstBlockIcon(GSE.GetSequence and GSE.GetSequence(seq))
+        end
+        if not start and GSE.GetCurrentButtonIconInfo then
+            local firstStep = {GetAttribute = function() return 1 end, GetName = function() return seq end}
+            local info = GSE.GetCurrentButtonIconInfo(firstStep, false)
+            if info and info.iconID and not isGSEFallbackTexture(info.iconID) then start = info.iconID end
+        end
+        if start then return start end
+    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -428,6 +853,21 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
+end
+
+-- A reset sequence (GSE.ResetButtons, on leaving combat) forgets its last
+-- cast, and its buttons repaint to its starting icon.
+function GSE.ClearSequenceLastCast(sequenceId)
+    if not sequenceId then return end
+    lastCastSpell[sequenceId] = nil
+    refreshShown(sequenceId)
+    GSE.RefreshActionBarOverrideIcons(sequenceId)
+end
+
+-- The icon a sequence's override buttons show now (Successful Casts Only, at
+-- rest out of combat), for painters outside this file (GSE.UpdateIcon).
+function GSE.GetOverrideButtonIcon(sequenceId)
+    return getGSESequenceIcon(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -744,6 +1184,8 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
     _G[Button]:SetAttribute("gse-button", Sequence)
+    hookPressFlash(_G[Button])
+    hookCooldownKeep(_G[Button])
     if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
         local cmd = _G[Button].commandName
         if cmd then
