@@ -35,6 +35,8 @@ local L = GSE.L
 --     handles event registration; we just position once.
 local iconPickerCallback = nil
 local iconPickerFrame = nil
+-- The picker's search (by name or ID); defined below getPlayerSpells.
+local filterIcons
 
 local function buildIconPickerFrame()
     if iconPickerFrame then return iconPickerFrame end
@@ -42,13 +44,33 @@ local function buildIconPickerFrame()
 
     local f = CreateFrame("Frame", "GSE_IconSelectorPopupFrame", UIParent, "IconSelectorPopupFrameTemplate")
     f:Hide()
-    -- The template's instantiation adds its own anchor (TOPLEFT to UIParent),
-    -- so a plain SetPoint("CENTER") gets queued AFTER it -- GetPoint(1)
-    -- returns TOPLEFT and the popup paints in the screen's top-left corner
-    -- (behind addon trays, easy to miss). MakePopup's center=true clears
-    -- all points first, then anchors centre -- same pattern Jaliborc/
-    -- BagBrother uses.
-    GSE.UI.MakePopup(f, {center = true, movable = true})
+
+    -- Shown in a GSE window, like the rest of the addon: GSE title bar, X to
+    -- close, GSE skin. Blizzard's grid and filter sit in its content; the
+    -- macro popup's own border, backdrop and Cancel are hidden below. The
+    -- window is kept for the session (never released to the widget pool).
+    local window = GSE.UI:Create("Frame")
+    window:SetTitle(L["Choose an Icon"])
+    window.frame:SetFrameStrata("DIALOG")
+    window.frame:ClearAllPoints()
+    window.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    window:SetCallback("OnClose", function()
+        iconPickerCallback = nil
+        window.frame:Hide()
+    end)
+    f.gseWindow = window
+    f:SetParent(window.content)
+    f:ClearAllPoints()
+    f:SetAllPoints(window.content)
+    f:SetFrameStrata("DIALOG")
+    if f.BG then f.BG:Hide() end
+    if f.BorderBox then
+        for _, key in ipairs({"TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner",
+            "TopEdge", "BottomEdge", "LeftEdge", "RightEdge", "Center"}) do
+            if f.BorderBox[key] then f.BorderBox[key]:Hide() end
+        end
+        if f.BorderBox.CancelButton then f.BorderBox.CancelButton:Hide() end
+    end
 
     -- Strip the macro-name workflow Blizzard's template assumes Ã¢â‚¬â€ the
     -- name editbox, its header label, the "Currently Selected" preview
@@ -68,36 +90,77 @@ local function buildIconPickerFrame()
     f.iconDataProvider = CreateAndInitFromMixin(
         IconDataProviderMixin, IconDataProviderExtraType.None)
 
-    -- The icon grid needs an explicit anchor inside the BorderBox.
-    -- Anchored higher than BagBrother's offset because we hid the
-    -- name-entry section above it.
+    -- The name-entry section above is hidden, so the "Choose an Icon" header
+    -- and the icon-type filter move up into its place (Blizzard's template
+    -- has them at -79 and -68, below it) and the grid goes under them. With
+    -- only the grid moved up, the header and filter sat over its first rows.
+    if f.BorderBox then
+        if f.BorderBox.IconSelectionText then
+            f.BorderBox.IconSelectionText:ClearAllPoints()
+            f.BorderBox.IconSelectionText:SetPoint("LEFT", f.BorderBox, "TOPLEFT", 4, -14)
+        end
+        if f.BorderBox.IconTypeDropdown then
+            f.BorderBox.IconTypeDropdown:ClearAllPoints()
+            f.BorderBox.IconTypeDropdown:SetPoint("TOPRIGHT", f.BorderBox, "TOPRIGHT", 0, 0)
+        end
+    end
+    -- The icon grid needs an explicit anchor, under the header and filter.
+    -- Its template strata (HIGH) is reset to the window's, or the window's
+    -- own background would hide it.
     f.IconSelector:ClearAllPoints()
-    f.IconSelector:SetPoint("TOPLEFT", f.BorderBox, "TOPLEFT", 21, -56)
+    f.IconSelector:SetPoint("TOPLEFT", f.BorderBox, "TOPLEFT", 0, -34)
+    f.IconSelector:SetFrameStrata("DIALOG")
     f.IconSelector:SetSelectionsDataProvider(
         GenerateClosure(f.GetIconByIndex, f),
         GenerateClosure(f.GetNumIcons,    f))
 
+    -- Search along the bottom (filterIcons): a spell ID or icon file ID, or
+    -- part of a spell name. No match turns the text red and leaves every icon
+    -- showing; empty shows every icon again.
+    local allIcons = {GenerateClosure(f.GetIconByIndex, f), GenerateClosure(f.GetNumIcons, f)}
+    local search = CreateFrame("EditBox", nil, f, "SearchBoxTemplate")
+    search:SetSize(220, 20)
+    search:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 8, 4)
+    if search.Instructions then search.Instructions:SetText(L["Search by name or ID"]) end
+    local pending
+    search:HookScript("OnTextChanged", function(self)
+        if pending then pending:Cancel() end
+        pending = C_Timer.NewTimer(0.25, function()
+            local list = filterIcons(f, self:GetText())
+            if list and #list > 0 then
+                f.IconSelector:SetSelectionsDataProvider(function(i) return list[i] end, function() return #list end)
+            else
+                f.IconSelector:SetSelectionsDataProvider(allIcons[1], allIcons[2])
+            end
+            f.IconSelector:UpdateSelections()
+            if list and #list == 0 then
+                self:SetTextColor(1, 0.25, 0.25)
+            else
+                self:SetTextColor(1, 1, 1)
+            end
+        end)
+    end)
+    f.gseSearch = search
+
     -- Single-click commit: as soon as the user picks an icon, fire the
-    -- callback and hide. Cancel button still works normally Ã¢â‚¬â€ the user
-    -- can dismiss without a selection. No Okay-button round-trip.
+    -- callback and hide. The window's X dismisses without a selection.
+    -- No Okay-button round-trip.
     f.IconSelector:SetSelectedCallback(function(_, icon)
         if iconPickerCallback and icon then
             local cb = iconPickerCallback
             iconPickerCallback = nil
             cb(icon)
         end
-        f:Hide()
+        window.frame:Hide()
     end)
 
-    -- Trim the popup height since we removed the top section.
-    f:SetSize(525, 460)
-
-    -- Cancel still works Ã¢â‚¬â€ clear pending callback so a later Show
-    -- doesn't accidentally fire it.
-    function f:CancelButton_OnClick()
-        IconSelectorPopupFrameTemplateMixin.CancelButton_OnClick(self)
-        iconPickerCallback = nil
-    end
+    -- The window: the grid (494 x 361) under the 34 header row, the 28
+    -- search row under it, plus the window's own chrome round its content,
+    -- measured from the window.
+    window.frame:SetSize(600, 500)
+    local chromeW = window.frame:GetWidth() - window.content:GetWidth()
+    local chromeH = window.frame:GetHeight() - window.content:GetHeight()
+    window.frame:SetSize(494 + chromeW, 34 + 361 + 6 + 28 + chromeH)
 
     iconPickerFrame = f
     return f
@@ -124,7 +187,9 @@ local function ShowNativeIconPicker(callback)
     if not ok then
         GSE.Print("|cffff6666GSE QoL:|r icon picker init failed: " .. tostring(err), "Error")
     end
+    f.gseWindow.frame:Show()
     f:Show()
+    if f.gseSearch then f.gseSearch:SetText("") end
 end
 if GSE.WagoAnalytics then
     GSE.WagoAnalytics:Switch("Patron", true)
@@ -135,6 +200,10 @@ GSE.CanMultiWindow = function() return true end
 
 -- Editor capability: show the Raw Edit button.
 GSE.CanRawEdit = function() return true end
+
+-- The icon picker for other GSE menus (the Configuration page's base icon):
+-- callback(iconID) runs with the icon chosen.
+GSE.ShowIconPicker = ShowNativeIconPicker
 
 -- Appended to the icon context menu in the editor for QoL users.
 GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
@@ -346,6 +415,36 @@ local function getPlayerSpells()
 
     table.sort(spells)
     return spells
+end
+
+filterIcons = function(f, text)
+    text = strtrim(text or "")
+    if text == "" then return nil end
+    local list, seen = {}, {}
+    local function add(icon)
+        if icon and not seen[icon] then
+            seen[icon] = true
+            list[#list + 1] = icon
+        end
+    end
+    local function spellIcon(spell)
+        return (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spell))
+            or (GetSpellTexture and GetSpellTexture(spell))
+    end
+    -- A number: the spell with that ID and the icon file with that ID. Text:
+    -- every spell in the player's book whose name contains it (any case).
+    local id = tonumber(text)
+    if id then
+        add(spellIcon(id))
+        if f.GetIndexOfIcon and f:GetIndexOfIcon(id) then add(id) end
+    else
+        add(spellIcon(text))
+        local lower = text:lower()
+        for _, name in ipairs(getPlayerSpells()) do
+            if name:lower():find(lower, 1, true) then add(spellIcon(name)) end
+        end
+    end
+    return list
 end
 
 -- Tab spell list for the Action block (restores the pre-#1914 Patron
