@@ -1401,6 +1401,20 @@ local function isOverrideTarget(frame)
     return ok and result == true
 end
 
+-- Every shown action button under frame. Hidden branches are skipped (a
+-- hidden button is no drop target): walking every frame in the game with
+-- EnumerateFrames froze a Retail UI with many addons for seconds.
+local function collectOverrideTargets(frame, out)
+    if isOverrideTarget(frame) then out[#out + 1] = frame end
+    local children = { frame:GetChildren() }
+    for i = 1, #children do
+        local child = children[i]
+        if not (child.IsForbidden and child:IsForbidden()) and child:IsShown() then
+            collectOverrideTargets(child, out)
+        end
+    end
+end
+
 local drag -- the drag in progress: { sequenceId, candidates, target }
 
 local function overrideTargetUnderMouse()
@@ -1490,13 +1504,9 @@ function GSE.BeginSequenceDrag(sequenceId)
         return false
     end
     ensureDragFrames()
-    -- Every action button that exists now; the drag tests these for the mouse.
+    -- Every action button shown now; the drag tests these for the mouse.
     local candidates = {}
-    local frame = EnumerateFrames()
-    while frame do
-        if isOverrideTarget(frame) then candidates[#candidates + 1] = frame end
-        frame = EnumerateFrames(frame)
-    end
+    pcall(collectOverrideTargets, UIParent, candidates)
     drag = { sequenceId = sequenceId, candidates = candidates }
     dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
     pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
